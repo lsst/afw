@@ -89,7 +89,7 @@ def main():
     if warpedWcsImageOrExposurePath.lower().endswith(".fits"):
         # user specified an image, not an exposure
         warpedDI = afwImage.DecoratedImageF(warpedWcsImageOrExposurePath)
-        warpedWcs = afwImage.Wcs(warpedDI.getMetadata())
+        warpedWcs = afwImage.makeWcs(warpedDI.getMetadata())
         warpedMI = afwImage.MaskedImageF(warpedDI.getWidth(), warpedDI.getHeight())
         warpedExposure = afwImage.ExposureF(warpedMI, warpedWcs)
     else:

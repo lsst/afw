@@ -177,57 +177,59 @@ class KernelImagesForRegion(unittest.TestCase):
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
                 desImArr = imTestUtils.arrayFromImage(desImage)
                 
-                actImage = region.getImage(location)
+                actImage, imSum = region.getImageSumPair(location)
                 actImArr = imTestUtils.arrayFromImage(actImage)
                 errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
                 if errStr:
                     self.fail("exact image(%s) incorrect:\n%s" % (LocNameDict[location], errStr))
     
     def testInterpolateImage(self):
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)
-        actImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-        
-        bottomLeftImArr = imTestUtils.arrayFromImage(region.getImage(region.BOTTOM_LEFT))
-        bottomRightImArr = imTestUtils.arrayFromImage(region.getImage(region.BOTTOM_RIGHT))
-        topLeftImArr = imTestUtils.arrayFromImage(region.getImage(region.TOP_LEFT))
-        topRightImArr = imTestUtils.arrayFromImage(region.getImage(region.TOP_RIGHT))
-
-        leftInd, bottomInd = region.getPixelIndex(region.BOTTOM_LEFT)
-        rightInd, topInd = region.getPixelIndex(region.TOP_RIGHT)
-        ctrXInd, ctrYInd = region.getPixelIndex(region.CENTER)
-        
-        self.runInterpTest(region, region.BOTTOM, bottomLeftImArr, bottomRightImArr, leftInd, ctrXInd, rightInd)
-        self.runInterpTest(region, region.TOP,    topLeftImArr,    topRightImArr,    leftInd, ctrXInd, rightInd)
-        self.runInterpTest(region, region.LEFT,  bottomLeftImArr,  topLeftImArr,  bottomInd, ctrYInd, topInd)
-        self.runInterpTest(region, region.RIGHT, bottomRightImArr, topRightImArr, bottomInd, ctrYInd, topInd)
-
-        bottomIm = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-        region.interpolateImage(bottomIm, region.BOTTOM)
-        bottomImArr = imTestUtils.arrayFromImage(bottomIm)
-        topIm = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-        region.interpolateImage(topIm, region.TOP)
-        topImArr = imTestUtils.arrayFromImage(topIm)
-        self.runInterpTest(region, region.CENTER, bottomImArr, topImArr, bottomInd, ctrYInd, topInd)
+        for doNormalize in (False, True):
+            region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
+            actImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
+            
+            bottomLeftImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.BOTTOM_LEFT)[0])
+            bottomRightImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.BOTTOM_RIGHT)[0])
+            topLeftImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.TOP_LEFT)[0])
+            topRightImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.TOP_RIGHT)[0])
+    
+            leftInd, bottomInd = region.getPixelIndex(region.BOTTOM_LEFT)
+            rightInd, topInd = region.getPixelIndex(region.TOP_RIGHT)
+            ctrXInd, ctrYInd = region.getPixelIndex(region.CENTER)
+            
+            self.runInterpTest(region, region.BOTTOM, bottomLeftImArr, bottomRightImArr, leftInd, ctrXInd, rightInd)
+            self.runInterpTest(region, region.TOP,    topLeftImArr,    topRightImArr,    leftInd, ctrXInd, rightInd)
+            self.runInterpTest(region, region.LEFT,  bottomLeftImArr,  topLeftImArr,  bottomInd, ctrYInd, topInd)
+            self.runInterpTest(region, region.RIGHT, bottomRightImArr, topRightImArr, bottomInd, ctrYInd, topInd)
+    
+            bottomIm = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
+            region.interpolateImage(bottomIm, region.BOTTOM)
+            bottomImArr = imTestUtils.arrayFromImage(bottomIm)
+            topIm = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
+            region.interpolateImage(topIm, region.TOP)
+            topImArr = imTestUtils.arrayFromImage(topIm)
+            self.runInterpTest(region, region.CENTER, bottomImArr, topImArr, bottomInd, ctrYInd, topInd)
         
 
     def testIsInterpolateOk(self):
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, True)
-        
-        # compute max error
-        interpImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-        maxDiff = 0.0
-        for location in (region.BOTTOM, region.LEFT, region.CENTER, region.RIGHT, region.TOP):
-            region.interpolateImage(interpImage, location)
-            interpImArr = imTestUtils.arrayFromImage(interpImage)
-            actImage = region.getImage(location)
-            actImArr = imTestUtils.arrayFromImage(actImage)
-            diffImArr = interpImArr - actImArr
-            maxDiff = max(maxDiff, numpy.max(numpy.abs(diffImArr)))
-        for epsilon in (1.0e-99, 0.0, 1.0e-99):
-            if epsilon >= 0.0:
-                self.assert_(region.isInterpolationOk(maxDiff + epsilon))
-            else:
-                self.assert_(not region.isInterpolationOk(maxDiff + epsilon))
+        for doNormalize in (False, True):
+            region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
+            
+            # compute max error
+            interpImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
+            maxDiff = 0.0
+            for location in (region.BOTTOM, region.LEFT, region.CENTER, region.RIGHT, region.TOP):
+                region.interpolateImage(interpImage, location)
+                interpImArr = imTestUtils.arrayFromImage(interpImage)
+                actImage, imSum = region.getImageSumPair(location)
+                actImArr = imTestUtils.arrayFromImage(actImage)
+                diffImArr = (interpImArr - actImArr) / imSum
+                maxDiff = max(maxDiff, numpy.max(numpy.abs(diffImArr)))
+            for epsilon in (1.0e-99, 0.0, 1.0e-99):
+                if epsilon >= 0.0:
+                    self.assert_(region.isInterpolationOk(maxDiff + epsilon))
+                else:
+                    self.assert_(not region.isInterpolationOk(maxDiff + epsilon))
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
