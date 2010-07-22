@@ -255,6 +255,8 @@ void afwMath::scaledPlus(
  * - kernel.getCtrY() along the bottom edge
  * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+ * You can obtain a bounding box for the good pixels in the convolved image
+ * from a bounding box for the entire image using the Kernel method shrinkBBox.
  * 
  * Convolution has been optimized for the various kinds of kernels, as follows (listed approximately
  * in order of decreasing speed):

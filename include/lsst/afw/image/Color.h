@@ -11,9 +11,6 @@
 #include <limits>
 #include "lsst/afw/image/Filter.h"
 
-// make the code compile on older g++
-#define __ICC
-
 namespace lsst {
 namespace afw {
 namespace image {

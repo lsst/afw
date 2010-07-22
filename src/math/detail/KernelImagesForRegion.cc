@@ -396,10 +396,11 @@ const {
  *
  * The algorithm is as follows:
  * - for each location in (center, bottom, left, right, top):
- *     - error image = linearly interpolated kernel image - true kernel image (obeying doNormalize)
- *     - if the absolute value of any pixel of error image > maxInterpolationError then:
- *         - interpolation is unacceptable; stop the test
- * - interpolation is acceptable
+ *     - for each pixel of the kernel:
+ *         - if abs(linearly interpolated kernel image pixel - true kernel image pixel)
+ *           > maxInterpolationError * true kernel sum then:
+ *              return false (interpolation is unacceptable)
+ * - return true (interpolation is acceptable)
  *
  * This is not completely foolproof, but it should do if you are careful not to test too large a region
  * relative to the wiggliness of the kernel's spatial model.
