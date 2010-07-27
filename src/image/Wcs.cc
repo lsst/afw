@@ -506,9 +506,8 @@ static double square(double x) {
     return x*x;
 }
 
-///Sky area covered by a pixel at position \c pix00. In units of cunits.
-
-double Wcs::pixArea(GeomPoint pix00     ///< The point where the area is desired
+///Sky area covered by a pixel at position \c pix00. In units of square degrees.
+double Wcs::pixArea(GeomPoint pix00     ///< The pixel point where the area is desired
                    ) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -520,12 +519,14 @@ double Wcs::pixArea(GeomPoint pix00     ///< The point where the area is desired
     // Work in 3-space to avoid RA wrapping and pole issues.
     afwGeom::Point3D v0 = pixelToSky(pix00)->getVector();
 
-    // Move pix00 by an extent, slam it through the WCS, and convert to a 3-vector.
-    afwGeom::Point3D vx = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getVector();
-    afwGeom::Point3D vy = pixelToSky(pix00 + geom::makeExtentD(0, side))->getVector();
-
-    afwGeom::Point3D dx = vx - geom::Extent<double,3>(v0);
-    afwGeom::Point3D dy = vy - geom::Extent<double,3>(v0);
+    // Step by "side" in x and y pixel directions...
+    GeomPoint px(pix00);
+    GeomPoint py(pix00);
+    px.shift(geom::makeExtentD(side, 0));
+    py.shift(geom::makeExtentD(0, side));
+    // Push the points through the WCS, and find difference in 3-space.
+    afwGeom::Extent3D dx = pixelToSky(px)->getVector() - v0;
+    afwGeom::Extent3D dy = pixelToSky(py)->getVector() - v0;
 
     // Compute |cross product| = area of parallelogram with sides dx,dy
     // FIXME -- this is slightly incorrect -- it's making the small-angle
@@ -536,10 +537,12 @@ double Wcs::pixArea(GeomPoint pix00     ///< The point where the area is desired
                        square(dx[2]*dy[0] - dx[0]*dy[2]) +
                        square(dx[0]*dy[1] - dx[1]*dy[0]));
 
-    return area * square(180./M_PI);
+    return area / square(side) * square(180./M_PI);
 }
 
-
+double Wcs::pixelScale() const {
+    return 3600. * sqrt(pixArea(getPixelOrigin()));
+}
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
 ///

@@ -65,6 +65,16 @@ TanWcs::TanWcs() :
     _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
 }
 
+double TanWcs::pixelScale() const {
+	// deg2arcsec(sqrt(fabs(det(cd))));
+	//return 3600. * sqrt(fabs(CD(0,0)*CD(1,1) - CD(0,1)*CD(1,0)));
+
+	// HACK -- assume "cd" elements are set...
+	double* cd = _wcsInfo->m_cd;
+	assert(cd);
+	return 3600. * sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2]));
+}
+
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
 ///out which (if any) sub-class of Wcs is appropriate
 TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) : 

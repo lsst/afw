@@ -43,16 +43,25 @@ class WCSTestRaWrap(unittest.TestCase):
         #wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs')
         wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs2')
         hdr = afwImage.readMetadata(wcsfn)
-        wcs = afwImage.makeWcs(hdr)
-        #print wcs
-        print 'x, y, RA, Dec, pixscale ("/pix)'
-        for x,y in [(0,0),(300,0),(350,0),(360,0),(370,0),(380,0),(400,0)]:
-            radec = wcs.pixelToSky(x,y)
-            ra  = radec.getLongitude(afwCoord.DEGREES)
-            dec = radec.getLatitude (afwCoord.DEGREES)
-            pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.makePointD(x,y)))
-            print x,y,ra,dec,pixscale
-            self.assertTrue(abs(pixscale - 0.2) < 1e-3)
+        wcs1 = afwImage.makeWcs(hdr)
+
+        crval = wcs1.getSkyOrigin()
+        wcs2 = afwImage.Wcs(afwGeom.makePointD(crval.getLongitude(afwCoord.DEGREES), crval.getLatitude(afwCoord.DEGREES)),
+                            wcs1.getPixelOrigin(),
+                            wcs1.getCDMatrix())
+
+        for wcs in [wcs1,wcs2]:
+            print wcs
+            print 'x, y, RA, Dec, pixscale("/pix), pixscale2'
+            for x,y in [(0,0),(300,0),(350,0),(360,0),(370,0),(380,0),(400,0)]:
+                radec = wcs.pixelToSky(x,y)
+                ra  = radec.getLongitude(afwCoord.DEGREES)
+                dec = radec.getLatitude (afwCoord.DEGREES)
+                pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.makePointD(x,y)))
+                ps2 = wcs.pixelScale()
+                print x,y,ra,dec,pixscale,ps2
+                self.assertTrue(abs(pixscale - 0.2) < 1e-3)
+                self.assertTrue(abs(ps2 - 0.2) < 1e-3)
 
 
 

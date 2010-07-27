@@ -120,7 +120,12 @@ namespace image {
         operator bool() const { return _nWcsInfo != 0; }
 
         bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
+    
+        ///Sky area covered by a pixel at position \c pix00 in units of square degrees.
         double pixArea(lsst::afw::geom::PointD pix00) const;
+
+        // Returns the pixel scale, in arcsec/pixel.
+        double pixelScale() const;
 
         //Convert from raDec to pixel space. Formerly called raDecToXY() and
         //xyToRaDec(), but the name now reflects their increased generality. They may be
