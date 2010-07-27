@@ -112,7 +112,7 @@ void mathDetail::convolveWithInterpolation(
 
     for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
         rgnIter != subregionList.end(); ++rgnIter) {
-        pexLog::TTrace<1>("lsst.afw.math.convolve",
+        pexLog::TTrace<6>("lsst.afw.math.convolve",
             "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                 (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                 (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
