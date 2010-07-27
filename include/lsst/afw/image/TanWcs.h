@@ -96,6 +96,8 @@ namespace image {
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
         virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
 
+        // Returns the pixel scale, in arcsec/pixel.
+        double pixelScale() const;
         
         bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
