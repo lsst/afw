@@ -52,8 +52,6 @@ class WCSTestRaWrap(unittest.TestCase):
             dec = radec.getLatitude (afwCoord.DEGREES)
             pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.makePointD(x,y)))
             print x,y,ra,dec,pixscale
-
-            #pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.makePointD(0,0)))
             self.assertTrue(abs(pixscale - 0.2) < 1e-3)
 
 
