@@ -528,7 +528,7 @@ void mathDetail::convolveWithBruteForce(
     KernelXYLocator const kernelLoc = kernelImage.xy_at(0,0);
 
     if (kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        pexLog::TTrace<5>("lsst.afw.math.convolve",
             "convolveWithBruteForce: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
@@ -548,7 +548,7 @@ void mathDetail::convolveWithBruteForce(
             }
         }
     } else {
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        pexLog::TTrace<5>("lsst.afw.math.convolve",
             "convolveWithBruteForce: kernel is spatially invariant");
         (void)kernel.computeImage(kernelImage, doNormalize);
         
