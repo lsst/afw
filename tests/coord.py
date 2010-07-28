@@ -418,6 +418,16 @@ class CoordTestCase(unittest.TestCase):
         # machine precision
         self.assertAlmostEqual(deg, epsilonDeg)
 
+
+    def testTicket1394(self):
+        """Russell reports (1394) that this line causes a failure. """
+
+        # the problem was that the coordinate is < epsilon close to RA==0
+        # and bounds checking was getting a -ve RA.
+        c = afwCoord.makeCoord(afwCoord.ICRS,
+                               afwGeom.makePointD(0.6070619982, -1.264309928e-16, 0.7946544723))
+
+        self.assertEqual(c[0], 0.0)
         
 #################################################################
 # Test suite boiler plate

@@ -136,6 +136,11 @@ double reduceAngle(double theta) {
     if (theta < 0) {
         theta += 360.0;
     }
+    // if theta was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
+    // Thus, a rare equivalence conditional test for a double ...
+    if (theta == 360.0) {
+        theta = 0.0;
+    }
     return theta;
 }
 
@@ -292,7 +297,7 @@ afwCoord::Coord::Coord(
                        afwGeom::Point3D const &p3d,   ///< Point3D
                        double const epoch             ///< epoch of coordinate
                       ) :
-    _longitudeRad( atan2(p3d.getY(), p3d.getX()) ),
+    _longitudeRad(degToRad*reduceAngle( radToDeg*atan2(p3d.getY(), p3d.getX()) )),
     _latitudeRad(asin(p3d.getZ())),
     _epoch(epoch) {}
 
@@ -337,12 +342,12 @@ afwCoord::Coord::Coord() : _longitudeRad(NaN), _latitudeRad(NaN), _epoch(NaN) {}
 
 
 /**
- * @brief Make sure the values we've got are in the range 0 < x < 2PI
+ * @brief Make sure the values we've got are in the range 0 <= x < 2PI
  */
 void afwCoord::Coord::_verifyValues() const {
     if (_longitudeRad < 0.0 || _longitudeRad >= 2.0*M_PI) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
-                          (boost::format("Azimuthal coord must be: 0 < long < 2PI (%f).") %
+                          (boost::format("Azimuthal coord must be: 0 <= long < 2PI (%f).") %
                            _longitudeRad).str());
     }
     if (_latitudeRad < -M_PI/2.0 || _latitudeRad > M_PI/2.0) {
