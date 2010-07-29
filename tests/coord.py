@@ -420,7 +420,7 @@ class CoordTestCase(unittest.TestCase):
 
 
     def testTicket1394(self):
-        """Russell reports (1394) that this line causes a failure. """
+        """Ticket #1394 bug: coord within epsilon of RA=0 leads to negative RA and fails bounds check. """
 
         # the problem was that the coordinate is < epsilon close to RA==0
         # and bounds checking was getting a -ve RA.
@@ -428,6 +428,74 @@ class CoordTestCase(unittest.TestCase):
                                afwGeom.makePointD(0.6070619982, -1.264309928e-16, 0.7946544723))
 
         self.assertEqual(c[0], 0.0)
+
+        
+    def testRotate(self):
+        """Verify rotation of coord about a user provided axis."""
+
+        # try rotating about the equatorial pole (ie. along a parallel)
+        longitude = 90.0
+        latitudes = [0.0, 30.0, 60.0]
+        arcLen = 10.0
+        pole = afwCoord.Fk5Coord(0.0, 90.0)
+        for latitude in latitudes:
+            c = afwCoord.Fk5Coord(longitude, latitude)
+            r = c.rotate(pole, arcLen*afwCoord.degToRad)
+
+            lon = r.getLongitude(afwCoord.DEGREES)
+            lat = r.getLatitude(afwCoord.DEGREES)
+            
+            print "Rotate along a parallel: %.10f %.10f   %.10f %.10f" % (lon, lat,
+                                                                          longitude+arcLen, latitude)
+            self.assertAlmostEqual(lon, longitude + arcLen)
+            self.assertAlmostEqual(lat, latitude)
+
+
+        # try with pole = vernal equinox and rotate up a meridian
+        pole = afwCoord.Fk5Coord(0.0, 0.0)
+        for latitude in latitudes:
+            c = afwCoord.Fk5Coord(longitude, latitude)
+            r = c.rotate(pole, arcLen*afwCoord.degToRad)
+
+            lon = r.getLongitude(afwCoord.DEGREES)
+            lat = r.getLatitude(afwCoord.DEGREES)
+            
+            print "Rotate along a meridian: %.10f %.10f   %.10f %.10f" % (lon, lat,
+                                                                          longitude, latitude+arcLen)
+            self.assertAlmostEqual(lon, longitude)
+            self.assertAlmostEqual(lat, latitude + arcLen)
+
+            
+    def testOffset(self):
+        """Verify offset of coord along a great circle."""
+
+        longitude = 90.0
+        latitude = 0.0   # These tests only work from the equator
+        arcLen = 10.0
+        
+        c = afwCoord.Fk5Coord(longitude, latitude)
+
+        trials = [
+            [0.0, arcLen, longitude+arcLen, latitude],   # along celestial equator
+            [90.0, arcLen, longitude, latitude+arcLen],  # along a meridian
+            [45.0, 180.0, longitude+180.0, -latitude],    # 180 arc (should go to antipodal point)
+            [45.0, 90.0, longitude+90.0, latitude+45.0],  # 
+            ]
+
+        for trial in trials:
+            
+            phi, arc, longExp, latExp = trial
+            r = c.offset(phi*afwCoord.degToRad, arc*afwCoord.degToRad)
+
+            lon = r.getLongitude(afwCoord.DEGREES)
+            lat = r.getLatitude(afwCoord.DEGREES)
+
+            print "Offset: %.10f %.10f   %.10f %.10f" % (lon, lat, longExp, latExp)
+            self.assertAlmostEqual(lon, longExp)
+            self.assertAlmostEqual(lat, latExp)
+        
+
+        
         
 #################################################################
 # Test suite boiler plate

@@ -35,6 +35,11 @@
 #include <limits>
 #include <cstdio>
 
+#include "Eigen/Core.h"
+#include "Eigen/LU"
+#include "Eigen/SVD"
+#include "Eigen/Geometry"
+
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string.hpp"
 #include "boost/tuple/tuple.hpp"
@@ -425,6 +430,89 @@ afwCoord::Coord afwCoord::Coord::transform(
 
     return Coord(reduceAngle(l), b);
 }
+
+
+/**
+ * @brief Rotate our current coords about a pole
+ *
+ */
+afwCoord::Coord afwCoord::Coord::rotate(
+    Coord const &pole,   ///< Pole of the great circle to offset along
+    double const theta   ///< angle to offset in radians
+                                       ) const {
+
+    double const c = cos(theta);
+    double const mc = 1.0 - c;
+    double const s = sin(theta);
+    
+    // convert to cartesian
+    afwGeom::Point3D const x = getVector();
+    afwGeom::Point3D const u = pole.getVector();
+    double const ux = u[0];
+    double const uy = u[1];
+    double const uz = u[2];
+        
+    // rotate
+    afwGeom::Point3D xprime;
+    xprime[0] = (ux*ux + (1.0 - ux*ux)*c)*x[0] +  (ux*uy*mc - uz*s)*x[1] +  (ux*uz*mc + uy*s)*x[2];
+    xprime[1] = (uy*uy + (1.0 - uy*uy)*c)*x[1] +  (uy*uz*mc - ux*s)*x[2] +  (ux*uy*mc + uz*s)*x[0];
+    xprime[2] = (uz*uz + (1.0 - uz*uz)*c)*x[2] +  (uz*ux*mc - uy*s)*x[0] +  (uy*uz*mc + ux*s)*x[1];
+    
+    // construct a Coord to convert back to spherical polar
+    return Coord(xprime, getEpoch());
+}
+
+
+/**
+ * @brief offset our current coords along a great circle defined by an angle wrt a declination parallel
+ *
+ */
+afwCoord::Coord afwCoord::Coord::offset(
+                                        double const phi,    ///< angle wrt parallel to offset
+                                        double const arcLen  ///< angle to offset in radians
+                                       ) const {
+
+    // let v = vector in the direction arcLen points (tangent to surface of sphere)
+    // thus: |v| = arcLen
+    //       phi defines the orientation of v in a tangent plane wrt to a parallel of declination
+    
+    // take the cross product r x v to get the pole
+
+    // get the vector r
+    afwGeom::Point3D const rP3d = getVector();
+    Eigen::Vector3d r;
+    r << rP3d[0], rP3d[1], rP3d[2];
+
+
+    // Get the vector v:
+    // let u = unit vector lying on a parallel of declination
+    // let w = unit vector along line of longitude = r x u
+    // the vector v must satisfy the following:
+    // |v| = arcLen
+    // r . v = 0
+    // u . v = |v| cos(phi) = arcLen*cos(phi)
+    // w . v = |v| sin(phi) = arcLen*sin(phi)
+
+    // v is a linear combination of u and w
+    // v = arcLen*cos(phi)*u + arcLen*sin(phi)*w
+    
+    // Thus, we must:
+    // - create u vector
+    // - solve w vector
+    // - compute v
+    Eigen::Vector3d u;
+    u << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
+    Eigen::Vector3d w = r.cross(u);
+    Eigen::Vector3d v = arcLen*cos(phi)*u + arcLen*sin(phi)*w;
+
+    Eigen::Vector3d pole = r.cross(v);
+    pole.normalize();
+    afwGeom::Point3D pole3d = afwGeom::makePointD(pole[0], pole[1], pole[2]);
+    Coord c = Coord(pole3d, getEpoch());
+        
+    return rotate(c, arcLen);
+}
+
 
 
 /**

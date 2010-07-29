@@ -103,7 +103,9 @@ public:
     
     Coord transform(Coord const &poleFrom, Coord const &poleTo) const;
     double angularSeparation(Coord const &c, CoordUnit unit) const;
-
+    Coord rotate(Coord const &pole, double const theta) const;
+    Coord offset(double const phi, double const arcLen) const;
+    
     Coord::Ptr convert(CoordSystem system) const;
 
     virtual Fk5Coord toFk5(double const epoch) const;
