@@ -92,7 +92,7 @@ double const NaN          = std::numeric_limits<double>::quiet_NaN();
 double const arcsecToRad  = M_PI/(3600.0*180.0); // arcsec per radian  = 2.062648e5;
 double const JD2000       = 2451544.50;
 
-
+    
 /*
  * A local class to handle dd:mm:ss coordinates
  *
@@ -169,9 +169,19 @@ double meanSiderealTimeGreenwich(
     return 280.46061837 + 360.98564736629*(jd - 2451545.0) + 0.000387933*T*T - (T*T*T/38710000.0);
 }
 
+
+/*
+ * A pair of utility functions to go from cartesian to spherical
+ */
+double pointToLongitude(afwGeom::Point3D const &p3d) {
+    return afwCoord::degToRad*reduceAngle( afwCoord::radToDeg*atan2(p3d.getY(), p3d.getX()) );    
+}
+double pointToLatitude(afwGeom::Point3D const &p3d) {
+    return asin(p3d.getZ());
+}
+
     
 double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
-    
 
 } // end anonymous namespace
 
@@ -302,8 +312,8 @@ afwCoord::Coord::Coord(
                        afwGeom::Point3D const &p3d,   ///< Point3D
                        double const epoch             ///< epoch of coordinate
                       ) :
-    _longitudeRad(degToRad*reduceAngle( radToDeg*atan2(p3d.getY(), p3d.getX()) )),
-    _latitudeRad(asin(p3d.getZ())),
+    _longitudeRad(pointToLongitude(p3d)),
+    _latitudeRad(pointToLatitude(p3d)),
     _epoch(epoch) {}
 
 
@@ -436,10 +446,10 @@ afwCoord::Coord afwCoord::Coord::transform(
  * @brief Rotate our current coords about a pole
  *
  */
-afwCoord::Coord afwCoord::Coord::rotate(
-    Coord const &pole,   ///< Pole of the great circle to offset along
-    double const theta   ///< angle to offset in radians
-                                       ) const {
+void afwCoord::Coord::rotate(
+                             Coord const &axis,   ///< axis of rotation (right handed)
+                             double const theta   ///< angle to offset in radians
+                            ) {
 
     double const c = cos(theta);
     double const mc = 1.0 - c;
@@ -447,7 +457,7 @@ afwCoord::Coord afwCoord::Coord::rotate(
     
     // convert to cartesian
     afwGeom::Point3D const x = getVector();
-    afwGeom::Point3D const u = pole.getVector();
+    afwGeom::Point3D const u = axis.getVector();
     double const ux = u[0];
     double const uy = u[1];
     double const uz = u[2];
@@ -458,25 +468,29 @@ afwCoord::Coord afwCoord::Coord::rotate(
     xprime[1] = (uy*uy + (1.0 - uy*uy)*c)*x[1] +  (uy*uz*mc - ux*s)*x[2] +  (ux*uy*mc + uz*s)*x[0];
     xprime[2] = (uz*uz + (1.0 - uz*uz)*c)*x[2] +  (uz*ux*mc - uy*s)*x[0] +  (uy*uz*mc + ux*s)*x[1];
     
-    // construct a Coord to convert back to spherical polar
-    return Coord(xprime, getEpoch());
+    // in-situ
+    _longitudeRad = pointToLongitude(xprime);
+    _latitudeRad  = pointToLatitude(xprime);
 }
 
 
 /**
  * @brief offset our current coords along a great circle defined by an angle wrt a declination parallel
  *
+ * @note This will break down near the pole of the coordinate system.
+ *
  */
-afwCoord::Coord afwCoord::Coord::offset(
-                                        double const phi,    ///< angle wrt parallel to offset
-                                        double const arcLen  ///< angle to offset in radians
-                                       ) const {
+void afwCoord::Coord::offset(
+                             double const phi,    ///< angle wrt parallel to offset
+                             double const arcLen  ///< angle to offset in radians
+                            ) {
 
     // let v = vector in the direction arcLen points (tangent to surface of sphere)
     // thus: |v| = arcLen
-    //       phi defines the orientation of v in a tangent plane wrt to a parallel of declination
+    //       angle phi = orientation of v in a tangent plane, measured wrt to a parallel of declination
     
-    // take the cross product r x v to get the pole
+    // To do the rotation, use rotate() method.
+    // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
     // get the vector r
     afwGeom::Point3D const rP3d = getVector();
@@ -498,19 +512,20 @@ afwCoord::Coord afwCoord::Coord::offset(
     
     // Thus, we must:
     // - create u vector
-    // - solve w vector
+    // - solve w vector (r cross u)
     // - compute v
     Eigen::Vector3d u;
     u << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
     Eigen::Vector3d w = r.cross(u);
     Eigen::Vector3d v = arcLen*cos(phi)*u + arcLen*sin(phi)*w;
 
-    Eigen::Vector3d pole = r.cross(v);
-    pole.normalize();
-    afwGeom::Point3D pole3d = afwGeom::makePointD(pole[0], pole[1], pole[2]);
-    Coord c = Coord(pole3d, getEpoch());
-        
-    return rotate(c, arcLen);
+    // take r x v to get the axis
+    Eigen::Vector3d axisVector = r.cross(v);
+    axisVector.normalize();
+    afwGeom::Point3D axisPoint = afwGeom::makePointD(axisVector[0], axisVector[1], axisVector[2]);
+    Coord axisCoord = Coord(axisPoint, getEpoch());
+    
+    rotate(axisCoord, arcLen);
 }
 
 

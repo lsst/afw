@@ -440,25 +440,24 @@ class CoordTestCase(unittest.TestCase):
         pole = afwCoord.Fk5Coord(0.0, 90.0)
         for latitude in latitudes:
             c = afwCoord.Fk5Coord(longitude, latitude)
-            r = c.rotate(pole, arcLen*afwCoord.degToRad)
+            c.rotate(pole, arcLen*afwCoord.degToRad)
 
-            lon = r.getLongitude(afwCoord.DEGREES)
-            lat = r.getLatitude(afwCoord.DEGREES)
+            lon = c.getLongitude(afwCoord.DEGREES)
+            lat = c.getLatitude(afwCoord.DEGREES)
             
             print "Rotate along a parallel: %.10f %.10f   %.10f %.10f" % (lon, lat,
                                                                           longitude+arcLen, latitude)
             self.assertAlmostEqual(lon, longitude + arcLen)
             self.assertAlmostEqual(lat, latitude)
 
-
         # try with pole = vernal equinox and rotate up a meridian
         pole = afwCoord.Fk5Coord(0.0, 0.0)
         for latitude in latitudes:
             c = afwCoord.Fk5Coord(longitude, latitude)
-            r = c.rotate(pole, arcLen*afwCoord.degToRad)
+            c.rotate(pole, arcLen*afwCoord.degToRad)
 
-            lon = r.getLongitude(afwCoord.DEGREES)
-            lat = r.getLatitude(afwCoord.DEGREES)
+            lon = c.getLongitude(afwCoord.DEGREES)
+            lat = c.getLatitude(afwCoord.DEGREES)
             
             print "Rotate along a meridian: %.10f %.10f   %.10f %.10f" % (lon, lat,
                                                                           longitude, latitude+arcLen)
@@ -473,8 +472,8 @@ class CoordTestCase(unittest.TestCase):
         latitude = 0.0   # These tests only work from the equator
         arcLen = 10.0
         
-        c = afwCoord.Fk5Coord(longitude, latitude)
-
+        c0 = afwCoord.Fk5Coord(longitude, latitude)
+        
         trials = [
             [0.0, arcLen, longitude+arcLen, latitude],   # along celestial equator
             [90.0, arcLen, longitude, latitude+arcLen],  # along a meridian
@@ -485,10 +484,11 @@ class CoordTestCase(unittest.TestCase):
         for trial in trials:
             
             phi, arc, longExp, latExp = trial
-            r = c.offset(phi*afwCoord.degToRad, arc*afwCoord.degToRad)
+            c = c0.clone()
+            c.offset(phi*afwCoord.degToRad, arc*afwCoord.degToRad)
 
-            lon = r.getLongitude(afwCoord.DEGREES)
-            lat = r.getLatitude(afwCoord.DEGREES)
+            lon = c.getLongitude(afwCoord.DEGREES)
+            lat = c.getLatitude(afwCoord.DEGREES)
 
             print "Offset: %.10f %.10f   %.10f %.10f" % (lon, lat, longExp, latExp)
             self.assertAlmostEqual(lon, longExp)

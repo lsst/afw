@@ -82,6 +82,8 @@ public:
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
     virtual ~Coord() {}
+
+    virtual Coord::Ptr clone() const { return Coord::Ptr(new Coord(*this)); }
     
     void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
@@ -103,8 +105,9 @@ public:
     
     Coord transform(Coord const &poleFrom, Coord const &poleTo) const;
     double angularSeparation(Coord const &c, CoordUnit unit) const;
-    Coord rotate(Coord const &pole, double const theta) const;
-    Coord offset(double const phi, double const arcLen) const;
+    
+    void rotate(Coord const &axis, double const theta);
+    void offset(double const phi, double const arcLen);
     
     Coord::Ptr convert(CoordSystem system) const;
 
@@ -140,6 +143,8 @@ public:
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
+    virtual Coord::Ptr clone() const { return IcrsCoord::Ptr(new IcrsCoord(*this)); }
+    
     void reset(double const longitude, double const latitude);
     
     double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
@@ -174,6 +179,8 @@ public:
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
     
+    virtual Coord::Ptr clone() const { return Fk5Coord::Ptr(new Fk5Coord(*this)); }
+
     Fk5Coord precess(double const epochTo) const;
     
     double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
@@ -208,6 +215,8 @@ public:
     GalacticCoord(double const l, double const b) : Coord(l, b) {}
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
+
+    virtual Coord::Ptr clone() const { return GalacticCoord::Ptr(new GalacticCoord(*this)); }
 
     void reset(double const longitude, double const latitude);
     
@@ -247,6 +256,8 @@ public:
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
     
+    virtual Coord::Ptr clone() const { return EclipticCoord::Ptr(new EclipticCoord(*this)); }
+
     std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Lambda", "Beta");
     }
@@ -285,6 +296,8 @@ public:
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
     TopocentricCoord(std::string const az, std::string const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
+
+    virtual Coord::Ptr clone() const { return TopocentricCoord::Ptr(new TopocentricCoord(*this)); }
 
     std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Az", "Alt");
