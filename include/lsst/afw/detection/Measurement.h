@@ -66,8 +66,16 @@ public:
 #endif
     /// Return a T::Ptr
     /// \throws lsst::pex::exceptions::NotFoundException
-    TPtr find(std::string const&name // The name of the desired algorithm
+    TPtr find(std::string const&name=std::string("") // The name of the desired algorithm
                     ) const {
+        typename Measurement::const_iterator ptr = begin();
+
+        if (name == "") {               // no name specified, ...
+            if (ptr + 1 == end()) {     // ... but only one registered algorithm
+                return *ptr;
+            }
+        }
+
         for (typename Measurement::const_iterator ptr = begin(); ptr != end(); ++ptr) {
             if ((*ptr)->getSchema()->getComponent() == name) {
                 return *ptr;
