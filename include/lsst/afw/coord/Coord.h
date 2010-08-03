@@ -332,7 +332,6 @@ double hmsStringToDegrees(std::string const hms);
 std::string degreesToDmsString(double const deg);
 std::string degreesToHmsString(double const deg);    
     
-
     
 }}}
 

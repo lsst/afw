@@ -126,24 +126,6 @@ public:
 };
 
     
-/**
- * @brief Adjust a large angle or negative angle to be between 0, 360 degrees
- *
- */
-double reduceAngle(double theta) {
-
-    theta = theta - (static_cast<int>(theta)/360)*360.0;
-    if (theta < 0) {
-        theta += 360.0;
-    }
-    // if theta was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
-    // Thus, a rare equivalence conditional test for a double ...
-    if (theta == 360.0) {
-        theta = 0.0;
-    }
-    return theta;
-}
-
     
 /**
  * Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
@@ -168,11 +150,33 @@ double meanSiderealTimeGreenwich(
 double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
     
 
+/******************* Public functions ********************/
+
+
+/**
+ * @brief Adjust a large angle or negative angle to be in range [0, 360) degrees
+ *
+ */
+double reduceAngle(
+                   double theta,           ///< angle to reduce
+                   bool midCentered=false  ///< return a value in range [-180,180), otherwise [0,360)
+                  ) {
+
+    theta = theta - (static_cast<int>(theta)/360)*360.0;
+    if (theta < 0) {
+        theta += 360.0;
+    }
+    // if theta was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
+    // Thus, a rare equivalence conditional test for a double ...
+    if (theta == 360.0) {
+        theta = 0.0;
+    }
+    return midCentered ? (theta - 180.0) : theta;
+}
+
 } // end anonymous namespace
 
 
-
-/******************* Public functions ********************/
     
 /**
  * @brief a Function to convert a coordinate in decimal degrees to a string with form dd:mm:ss
@@ -275,13 +279,13 @@ afwCoord::Coord::Coord(
     _longitudeRad(NaN), _latitudeRad(NaN), _epoch(epoch) {
 
     if (unit == DEGREES) {
-        _longitudeRad = degToRad*p2d.getX();
+        _longitudeRad = degToRad*reduceAngle(p2d.getX());
         _latitudeRad = degToRad*p2d.getY();
     } else if (unit == RADIANS) {
-        _longitudeRad = p2d.getX();
+        _longitudeRad = degToRad*reduceAngle(radToDeg*p2d.getX());
         _latitudeRad = p2d.getY();
     } else if (unit == HOURS) {
-        _longitudeRad = degToRad*15.0*p2d.getX();
+        _longitudeRad = degToRad*reduceAngle(15.0*p2d.getX());
         _latitudeRad = degToRad*p2d.getY();
     } else {
         throw LSST_EXCEPT(ex::InvalidParameterException, "CoordUnit must be DEGREES, RADIANS, or HOURS");
@@ -311,7 +315,7 @@ afwCoord::Coord::Coord(
                        double const dec,  ///< Declination, decimal degrees
                        double const epoch ///< epoch of coordinate
                       ) :
-    _longitudeRad(degToRad*ra), _latitudeRad(degToRad*dec), _epoch(epoch) {
+    _longitudeRad(degToRad*reduceAngle(ra)), _latitudeRad(degToRad*dec), _epoch(epoch) {
     _verifyValues();
 }
 
@@ -324,7 +328,7 @@ afwCoord::Coord::Coord(
                        std::string const dec, ///< Declination, dd:mm:ss.s format
                        double const epoch     ///< epoch of coordinate
                       ) :
-    _longitudeRad(degToRad*15.0*dmsStringToDegrees(ra)),
+    _longitudeRad(degToRad*reduceAngle(15.0*dmsStringToDegrees(ra))),
     _latitudeRad(degToRad*dmsStringToDegrees(dec)),
     _epoch(epoch) {
     _verifyValues();
@@ -345,11 +349,15 @@ afwCoord::Coord::Coord() : _longitudeRad(NaN), _latitudeRad(NaN), _epoch(NaN) {}
  * @brief Make sure the values we've got are in the range 0 <= x < 2PI
  */
 void afwCoord::Coord::_verifyValues() const {
+
+#if 0
+    // no longer verifying longitude.  we now use reduceAngle to map to [0,360)
     if (_longitudeRad < 0.0 || _longitudeRad >= 2.0*M_PI) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           (boost::format("Azimuthal coord must be: 0 <= long < 2PI (%f).") %
                            _longitudeRad).str());
     }
+#endif
     if (_latitudeRad < -M_PI/2.0 || _latitudeRad > M_PI/2.0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           (boost::format("Latitude coord must be: -PI/2 <= lat <= PI/2 (%f).") %
@@ -367,7 +375,7 @@ void afwCoord::Coord::reset(
                             double const latitudeDeg,  ///< Latitude coord (eg. Declination for Fk5)
                             double const epoch         ///< epoch of coordinate
                            ) {
-    _longitudeRad = degToRad*longitudeDeg;
+    _longitudeRad = degToRad*reduceAngle(longitudeDeg);
     _latitudeRad  = degToRad*latitudeDeg;
     _epoch = epoch;
     _verifyValues();
