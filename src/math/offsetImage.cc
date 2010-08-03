@@ -81,9 +81,8 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
         }
     }
     //
-    // We won't do the integral part of the shift, but we will set [XY]0 correctly
-    //
-    outImage->setXY0(afwImage::PointI(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
+    // We won't do the integral part of the shift, but we will set [XY]0 correctly (but only after
+    // we've done the convolution as convolve also sets [XY]0)
     //
     // And now the fractional part.  N.b. the fraction parts
     //
@@ -106,6 +105,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
     offsetKernel->setKernelParameters(std::make_pair(dx, dy));
 
     convolve(*outImage, inImage, *offsetKernel, true, true);
+    outImage->setXY0(afwImage::PointI(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
 
     return outImage;
 }
