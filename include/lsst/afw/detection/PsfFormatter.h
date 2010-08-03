@@ -60,7 +60,6 @@ private:
 
     static dafPersist::FormatterRegistration registration;
     static dafPersist::FormatterRegistration dgPsfRegistration;
-    static dafPersist::FormatterRegistration pcaPsfRegistration;
 };
 
 }}}
