@@ -107,7 +107,7 @@ public:
     double angularSeparation(Coord const &c, CoordUnit unit) const;
     
     void rotate(Coord const &axis, double const theta);
-    void offset(double const phi, double const arcLen);
+    double offset(double const phi, double const arcLen);
     
     Coord::Ptr convert(CoordSystem system) const;
 

@@ -183,6 +183,20 @@ double pointToLatitude(afwGeom::Point3D const &p3d) {
     
 double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
 
+
+/*
+ * Utility function to put point3D objects in to Eigen vector3d
+ */
+Eigen::Vector3d point3dToVector(afwGeom::Point3D p3d) {
+    Eigen::Vector3d v;
+    v << p3d[0], p3d[1], p3d[2];
+    return v;
+}
+
+afwGeom::Point3D vectorToPoint3d(Eigen::Vector3d v) {
+    return afwGeom::makePointD(v[0], v[1], v[2]);
+}
+    
 } // end anonymous namespace
 
 
@@ -479,11 +493,12 @@ void afwCoord::Coord::rotate(
  *
  * @note This will break down near the pole of the coordinate system.
  *
+ * @return the angle wrt a declination parallel at new position
  */
-void afwCoord::Coord::offset(
-                             double const phi,    ///< angle wrt parallel to offset
-                             double const arcLen  ///< angle to offset in radians
-                            ) {
+double afwCoord::Coord::offset(
+                               double const phi,    ///< angle wrt parallel to offset
+                               double const arcLen  ///< angle to offset in radians
+                              ) {
 
     // let v = vector in the direction arcLen points (tangent to surface of sphere)
     // thus: |v| = arcLen
@@ -493,9 +508,9 @@ void afwCoord::Coord::offset(
     // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
     // get the vector r
-    afwGeom::Point3D const rP3d = getVector();
-    Eigen::Vector3d r;
-    r << rP3d[0], rP3d[1], rP3d[2];
+    //afwGeom::Point3D const rP3d = getVector();
+    Eigen::Vector3d r = point3dToVector(getVector());
+    //r << rP3d[0], rP3d[1], rP3d[2];
 
 
     // Get the vector v:
@@ -522,10 +537,32 @@ void afwCoord::Coord::offset(
     // take r x v to get the axis
     Eigen::Vector3d axisVector = r.cross(v);
     axisVector.normalize();
-    afwGeom::Point3D axisPoint = afwGeom::makePointD(axisVector[0], axisVector[1], axisVector[2]);
-    Coord axisCoord = Coord(axisPoint, getEpoch());
+    Coord axisCoord = Coord(vectorToPoint3d(axisVector), getEpoch());
     
     rotate(axisCoord, arcLen);
+
+    
+    // now get the position angle at our destination
+    // u2 . v2 = arcLen*cos(phi2)
+    // w2 . v2 = arcLen*sin(phi2)
+    // if we normalize v2:
+    // phi2 = atan2(w2.v2, u2.v2)
+    //
+    // we need to compute u2, and then rotate v (exactly as we rotated r) to get v2
+    Eigen::Vector3d r2 = point3dToVector(getVector());
+    Eigen::Vector3d u2;
+    u2 << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
+    Eigen::Vector3d w2 = r2.cross(u2);
+
+    // make v a unit vector and rotate v exactly as we rotated r
+    v.normalize();
+    Coord v2Coord = Coord(vectorToPoint3d(v), getEpoch());
+    v2Coord.rotate(axisCoord, arcLen);
+    Eigen::Vector3d v2 = point3dToVector(v2Coord.getVector());
+
+    double phi2 = atan2(w2.dot(v2), u2.dot(v2));
+
+    return phi2;
 }
 
 

@@ -473,26 +473,28 @@ class CoordTestCase(unittest.TestCase):
         arcLen = 10.0
         
         c0 = afwCoord.Fk5Coord(longitude, latitude)
-        
+
+        # phi, arcLen, expectedLong, expectedLat, expectedPhi2
         trials = [
-            [0.0, arcLen, longitude+arcLen, latitude],   # along celestial equator
-            [90.0, arcLen, longitude, latitude+arcLen],  # along a meridian
-            [45.0, 180.0, longitude+180.0, -latitude],    # 180 arc (should go to antipodal point)
-            [45.0, 90.0, longitude+90.0, latitude+45.0],  # 
+            [0.0, arcLen, longitude+arcLen, latitude, 0.0],   # along celestial equator
+            [90.0, arcLen, longitude, latitude+arcLen, 90.0],  # along a meridian
+            [45.0, 180.0, longitude+180.0, -latitude, -45.0],    # 180 arc (should go to antipodal point)
+            [45.0, 90.0, longitude+90.0, latitude+45.0, 0.0],  # 
             ]
 
         for trial in trials:
             
-            phi, arc, longExp, latExp = trial
+            phi, arc, longExp, latExp, phi2Exp = trial
             c = c0.clone()
-            c.offset(phi*afwCoord.degToRad, arc*afwCoord.degToRad)
-
+            phi2 = afwCoord.radToDeg*c.offset(phi*afwCoord.degToRad, arc*afwCoord.degToRad)
+            
             lon = c.getLongitude(afwCoord.DEGREES)
             lat = c.getLatitude(afwCoord.DEGREES)
 
-            print "Offset: %.10f %.10f   %.10f %.10f" % (lon, lat, longExp, latExp)
-            self.assertAlmostEqual(lon, longExp)
-            self.assertAlmostEqual(lat, latExp)
+            print "Offset: %.10f %.10f %.10f  %.10f %.10f %.10f" % (lon, lat, phi2, longExp, latExp, phi2Exp)
+            self.assertAlmostEqual(lon, longExp, 12)
+            self.assertAlmostEqual(lat, latExp, 12)
+            self.assertAlmostEqual(phi2, phi2Exp, 12)
         
 
         
