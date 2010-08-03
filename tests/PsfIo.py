@@ -3,10 +3,10 @@
 Tests for bad pixel interpolation code
 
 Run with:
-   python Interp.py
+   python PsfIo.py
 or
    python
-   >>> import Interp; Interp.run()
+   >>> import PsfIo; PsfIo.run()
 """
 
 import os, sys
@@ -29,13 +29,10 @@ import lsst.afw.display.utils as displayUtils
 try:
     type(verbose)
 except NameError:
-    verbose = 0
-    logging.Trace_setVerbosity("algorithms.Interp", verbose)
-
-try:
-    type(display)
-except NameError:
     display = False
+    verbose = 0
+
+logging.Trace_setVerbosity("afw.psf", verbose)
 
 psfFileNum = 1
 def roundTripPsf(key, psf):
