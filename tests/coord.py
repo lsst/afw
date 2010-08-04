@@ -468,24 +468,24 @@ class CoordTestCase(unittest.TestCase):
     def testOffset(self):
         """Verify offset of coord along a great circle."""
 
-        longitude = 90.0
-        latitude = 0.0   # These tests only work from the equator
+        lon0 = 90.0
+        lat0 = 0.0   # These tests only work from the equator
         arcLen = 10.0
         
-        c0 = afwCoord.Fk5Coord(longitude, latitude)
-
         # phi, arcLen, expectedLong, expectedLat, expectedPhi2
         trials = [
-            [0.0, arcLen, longitude+arcLen, latitude, 0.0],   # along celestial equator
-            [90.0, arcLen, longitude, latitude+arcLen, 90.0],  # along a meridian
-            [45.0, 180.0, longitude+180.0, -latitude, -45.0],    # 180 arc (should go to antipodal point)
-            [45.0, 90.0, longitude+90.0, latitude+45.0, 0.0],  # 
+            [lon0, lat0, 0.0, arcLen, lon0+arcLen, lat0, 0.0],   # along celestial equator
+            [lon0, lat0, 90.0, arcLen, lon0, lat0+arcLen, 90.0],  # along a meridian
+            [lon0, lat0, 45.0, 180.0, lon0+180.0, -lat0, -45.0],  # 180 arc (should go to antip. pt)
+            [lon0, lat0, 45.0, 90.0, lon0+90.0, lat0+45.0, 0.0],  #
+            [0.0, 90.0,  0.0, 90.0, 90.0, 0.0, -90.0],            # from pole, phi=0
+            [0.0, 90.0,  90.0, 90.0, 180.0, 0.0, -90.0],          # from pole, phi=90
             ]
 
         for trial in trials:
             
-            phi, arc, longExp, latExp, phi2Exp = trial
-            c = c0.clone()
+            lon0, lat0, phi, arc, longExp, latExp, phi2Exp = trial
+            c = afwCoord.Fk5Coord(lon0, lat0)
             phi2 = afwCoord.radToDeg*c.offset(phi*afwCoord.degToRad, arc*afwCoord.degToRad)
             
             lon = c.getLongitude(afwCoord.DEGREES)

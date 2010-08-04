@@ -491,7 +491,8 @@ void afwCoord::Coord::rotate(
 /**
  * @brief offset our current coords along a great circle defined by an angle wrt a declination parallel
  *
- * @note This will break down near the pole of the coordinate system.
+ * @note At/near the pole, longitude becomes degenerate with angle-wrt-declination.  So
+ *       the offset will trace a meridian with longitude = requested-longitude + angle-wrt-declination.
  *
  * @return the angle wrt a declination parallel at new position
  */
