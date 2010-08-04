@@ -121,8 +121,8 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
             _hasDistortion = true;
             
             //Hide the distortion from wcslib
-            fitsMetadata->set<string>("CTYPE1", ctype1.substr(0,7));
-            fitsMetadata->set<string>("CTYPE2", ctype2.substr(0,7));
+            fitsMetadata->set<string>("CTYPE1", ctype1.substr(0,8));
+            fitsMetadata->set<string>("CTYPE2", ctype2.substr(0,8));
             
             //Save SIP information
             decodeSipHeader(fitsMetadata, "A", &_sipA);
