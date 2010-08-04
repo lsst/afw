@@ -5,6 +5,7 @@
 #include "boost/make_shared.hpp"
 
 #include "lsst/base.h"
+#include "lsst/utils/Demangle.h"
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/detection/Schema.h"
@@ -82,7 +83,12 @@ public:
             }
         }
 
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Unknown algorithm " + name);
+        if (name == "") {
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                              "You may only omit the algorithm's name if exactly one is registered");
+        } else {
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Unknown algorithm " + name);
+        }
     }
 
     /// Add a (shared_pointer to) an individual measurement of type T
@@ -448,7 +454,9 @@ MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
             _registry->find(name);
         
         if (ptr == _registry->end()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Unknown algorithm " + name);
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                              (boost::format("Unknown algorithm %s for image of type %s")
+                               % name % lsst::utils::demangleType(typeid(ImageT).name())).str());
         }
         
         return ptr->second;
