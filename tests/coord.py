@@ -478,7 +478,7 @@ class CoordTestCase(unittest.TestCase):
             [lon0, lat0, 90.0, arcLen, lon0, lat0+arcLen, 90.0],  # along a meridian
             [lon0, lat0, 45.0, 180.0, lon0+180.0, -lat0, -45.0],  # 180 arc (should go to antip. pt)
             [lon0, lat0, 45.0, 90.0, lon0+90.0, lat0+45.0, 0.0],  #
-            [0.0, 90.0,  0.0, 90.0, 90.0, 0.0, -90.0],            # from pole, phi=0
+            [0.0, 90.0,  0.0, 90.0,  90.0, 0.0, -90.0],            # from pole, phi=0
             [0.0, 90.0,  90.0, 90.0, 180.0, 0.0, -90.0],          # from pole, phi=90
             ]
 
