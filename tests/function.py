@@ -24,7 +24,6 @@
 
 import itertools
 import math
-
 import unittest
 
 import numpy
@@ -329,18 +328,16 @@ class FunctionTestCase(unittest.TestCase):
         """Test that we can differentiate the Function2 with respect to its parameters"""
         
         nOrder = 3
-        coeffs = [1]*((nOrder + 1)*(nOrder + 2)//2)
+        coeffs = []
+        for i in range((nOrder + 1)*(nOrder + 2)//2):
+            coeffs.append(math.sin(1 + i)) # deterministic pretty-random numbers
+
         f = afwMath.PolynomialFunction2D(coeffs)
 
         for (x, y) in [(2, 1), (1, 2), (2, 2)]:
             dFdC = f.getDFuncDParameters(x, y)
 
-            o0 = 0
-            for o in range(nOrder + 1):
-                coeffs = dFdC[o0: o0 + o+1]
-                self.assertEqual(coeffs, [x**(o - r)*y**r for r in range(0, o+1)])
-
-                o0 += o + 1
+            self.assertAlmostEqual(f(x, y), sum([coeffs[i]*dFdC[i] for i in range(len(coeffs))]))
                 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
