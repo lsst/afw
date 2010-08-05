@@ -30,7 +30,7 @@ namespace afwMath = lsst::afw::math;
 
 /**
  * Return the coefficients of the Function's parameters, evaluated at (x, y)
- * I.e. given c0, c1, c2, c3 ... return c0, c1 x, c2 y, c3 x^2 ...
+ * I.e. given c0, c1, c2, c3 ... return 1, x, y, x^2 ...
  */
 template<typename ReturnT>
 std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, double y) const {
@@ -38,8 +38,8 @@ std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(d
     std::vector<double> coeffs((nOrder + 1)*(nOrder + 2)/2);
 
     //
-    // Go through params order by order, evaluating c x^r y^s;  we do this by first evaluating
-    // c x^r for a complete order, then going through again multiplying by y^s
+    // Go through params order by order, evaluating x^r y^s;  we do this by first evaluating
+    // y^s for a complete order, then going through again multiplying by x^r
     //
     int i0 = 0;                         // starting index for this order's coefficients
     for (int order = 0; order <= nOrder; ++order) {
