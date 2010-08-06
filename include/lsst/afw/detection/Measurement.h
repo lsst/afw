@@ -2,6 +2,7 @@
 #define LSST_AFW_DETECTION_MEASUREMENT_H 1
 
 #include <map>
+#include "boost/format.hpp"
 #include "boost/make_shared.hpp"
 
 #include "lsst/base.h"
