@@ -129,6 +129,11 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
             decodeSipHeader(fitsMetadata, "B", &_sipB);
             decodeSipHeader(fitsMetadata, "AP", &_sipAp);
             decodeSipHeader(fitsMetadata, "BP", &_sipBp);
+
+            // this gets called in the Wcs (base class) constructor
+            // We just changed fitsMetadata, so we have to re-init wcslib
+            initWcsLibFromFits(fitsMetadata);
+            
             break;
     }
     

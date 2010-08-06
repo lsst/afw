@@ -156,7 +156,6 @@ namespace image {
                         const std::string cunits1, const std::string cunits2
                        );
 
-        void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
 
     protected:
 
@@ -169,6 +168,9 @@ namespace image {
 
         lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
         lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
+
+    
+        void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
         
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
