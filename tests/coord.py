@@ -472,14 +472,14 @@ class CoordTestCase(unittest.TestCase):
         lat0 = 0.0   # These tests only work from the equator
         arcLen = 10.0
         
-        # phi, arcLen, expectedLong, expectedLat, expectedPhi2
+        #   lon,   lat    phi, arcLen,     expLong,      expLat, expPhi2
         trials = [
-            [lon0, lat0, 0.0, arcLen, lon0+arcLen, lat0, 0.0],   # along celestial equator
-            [lon0, lat0, 90.0, arcLen, lon0, lat0+arcLen, 90.0],  # along a meridian
-            [lon0, lat0, 45.0, 180.0, lon0+180.0, -lat0, -45.0],  # 180 arc (should go to antip. pt)
-            [lon0, lat0, 45.0, 90.0, lon0+90.0, lat0+45.0, 0.0],  #
-            [0.0, 90.0,  0.0, 90.0,  90.0, 0.0, -90.0],            # from pole, phi=0
-            [0.0, 90.0,  90.0, 90.0, 180.0, 0.0, -90.0],          # from pole, phi=90
+            [lon0, lat0,  0.0, arcLen, lon0+arcLen,        lat0,   0.0],  # along celestial equator
+            [lon0, lat0, 90.0, arcLen,        lon0, lat0+arcLen,  90.0],  # along a meridian
+            [lon0, lat0, 45.0,  180.0,  lon0+180.0,       -lat0, -45.0],  # 180 arc (should go to antip. pt)
+            [lon0, lat0, 45.0,   90.0,   lon0+90.0,   lat0+45.0,   0.0],  #
+            [0.0,  90.0,  0.0,   90.0,        90.0,         0.0, -90.0],  # from pole, phi=0
+            [0.0,  90.0, 90.0,   90.0,       180.0,         0.0, -90.0],  # from pole, phi=90
             ]
 
         for trial in trials:

@@ -192,11 +192,24 @@ double reduceAngle(
 /*
  * A pair of utility functions to go from cartesian to spherical
  */
-double pointToLongitude(afwGeom::Point3D const &p3d) {
-    return afwCoord::degToRad*reduceAngle( afwCoord::radToDeg*atan2(p3d.getY(), p3d.getX()) );    
+double const atPoleEpsilon = 0.0; //std::numeric_limits<double>::epsilon();
+double pointToLongitude(afwGeom::Point3D const &p3d, double const defaultLongitude=0.0) {
+    double lon;
+    if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
+        lon = 0.0;
+    } else {
+        lon = afwCoord::degToRad*reduceAngle( afwCoord::radToDeg*atan2(p3d.getY(), p3d.getX()) );
+    }
+    return lon;
 }
 double pointToLatitude(afwGeom::Point3D const &p3d) {
-    return asin(p3d.getZ());
+    double lat;
+    if ( fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
+        lat = (p3d.getZ() >= 0) ? M_PI/2.0 : -M_PI/2.0;
+    } else {
+        lat = asin(p3d.getZ());
+    }
+    return lat;
 }
 
 
@@ -330,9 +343,10 @@ afwCoord::Coord::Coord(
  */
 afwCoord::Coord::Coord(
                        afwGeom::Point3D const &p3d,   ///< Point3D
-                       double const epoch             ///< epoch of coordinate
+                       double const epoch,            ///< epoch of coordinate
+                       double const defaultLongitude  ///< longitude to use if x=y=0
                       ) :
-    _longitudeRad(pointToLongitude(p3d)),
+    _longitudeRad(pointToLongitude(p3d, defaultLongitude)),
     _latitudeRad(pointToLatitude(p3d)),
     _epoch(epoch) {}
 
@@ -1191,9 +1205,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
 afwCoord::Coord::Ptr afwCoord::makeCoord(
                                    CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
                                    afwGeom::Point3D const &p3d,     ///< the coord in Point3D format
-                                   double const epoch            ///< epoch of coordinate
+                                   double const epoch,            ///< epoch of coordinate
+                                   double const defaultLongitude ///< longitude to use if x=y=0
                                   ) {
-    Coord c(p3d, 2000.0);
+    Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES), epoch);
 }
 /**
@@ -1204,9 +1219,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
                                    CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   afwGeom::Point3D const &p3d     ///< the coord in Point3D format
+                                   afwGeom::Point3D const &p3d,  ///< the coord in Point3D format
+                                   double const defaultLongitude ///< longitude to use if x=y=0
                                   ) {
-    Coord c(p3d, 2000.0);
+    Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES));
 }
 
