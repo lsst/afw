@@ -34,6 +34,8 @@
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/math/Statistics.h"
 
+namespace afwMath = lsst::afw::math;
+
 namespace lsst {
 namespace afw {
 namespace image {
@@ -202,14 +204,14 @@ void ImagePca<ImageT>::analyze()
             continue;
         }
 
-        int const i = lambdaAndIndex[i].second; // the index after sorting (backwards) by eigenvalue
+        int const ii = lambdaAndIndex[i].second; // the index after sorting (backwards) by eigenvalue
 
         typename ImageT::Ptr eImage(new ImageT(_width, _height));
         *eImage = 0;
 
         for (int j = 0; j != nImage; ++j) {
             int const jj = lambdaAndIndex[j].second; // the index after sorting (backwards) by eigenvalue
-            double const weight = Q(jj, i)*(_constantWeight ? flux_bar/getFlux(jj) : 1);
+            double const weight = Q(jj, ii)*(_constantWeight ? flux_bar/getFlux(jj) : 1);
             eImage->scaledPlus(weight, *_imageList[jj]);
         }
 
