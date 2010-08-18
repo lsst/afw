@@ -123,7 +123,8 @@ namespace {
 }
 
 template <typename ImageT>
-void ImagePca<ImageT>::analyze() {
+void ImagePca<ImageT>::analyze()
+{
     int const nImage = _imageList.size();
 
     if (nImage == 0) {
@@ -196,28 +197,20 @@ void ImagePca<ImageT>::analyze() {
     _eigenImages.clear();
     _eigenImages.reserve(ncomp < nImage ? ncomp : nImage);
 
-    for(int _i = 0; _i < ncomp; ++_i) {
-        if(_i >= nImage) {
+    for(int i = 0; i < ncomp; ++i) {
+        if(i >= nImage) {
             continue;
         }
 
-        int const i = lambdaAndIndex[_i].second; // the index after sorting (backwards) by eigenvalue
+        int const i = lambdaAndIndex[i].second; // the index after sorting (backwards) by eigenvalue
 
         typename ImageT::Ptr eImage(new ImageT(_width, _height));
         *eImage = 0;
 
-        for (int _j = 0; _j != nImage; ++_j) {
-            int const j = lambdaAndIndex[_j].second; // the index after sorting (backwards) by eigenvalue
-#if 0                                                // scaledPlus is on trunk
-            double const weight = Q(j, i)*(_constantWeight ? flux_bar/getFlux(j) : 1);
-            *eImage.scaledPlus(weight, *_imageList[j]);
-#else       
-            ImageT tmp = ImageT(*_imageList[j], true); // deep copy --- use scaledPlus on trunk
-
-            tmp *= Q(j, i)*(_constantWeight ? flux_bar/getFlux(j) : 1);
-
-            *eImage += tmp;
-#endif
+        for (int j = 0; j != nImage; ++j) {
+            int const jj = lambdaAndIndex[j].second; // the index after sorting (backwards) by eigenvalue
+            double const weight = Q(jj, i)*(_constantWeight ? flux_bar/getFlux(jj) : 1);
+            eImage->scaledPlus(weight, *_imageList[jj]);
         }
 
 #define FIX_BKGD_LEVEL 0
