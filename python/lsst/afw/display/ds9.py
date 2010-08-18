@@ -195,9 +195,10 @@ def getXpaAccessPoint():
 def ds9Version():
     """Return the version of ds9 in use, as a string"""
     try:
-        return xpa.get(None, getXpaAccessPoint(), "about", "").splitlines()[1].split()[1]
+        v = xpa.get(None, getXpaAccessPoint(), "about", "").strip()
+        return v.splitlines()[1].split()[1]
     except Exception, e:
-        print >> sys.stderr, "Error reading version: %s" % e
+        print >> sys.stderr, "Error reading version: %s (%s)" % (v, e)
         return "0.0.0"
 
 def ds9Cmd(cmd, trap=True):
