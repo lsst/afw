@@ -192,7 +192,6 @@ double afwMath::LinearCombinationKernel::computeImage(
     std::vector<afwImage::Image<Pixel>::Ptr>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
-    afwImage::Image<Pixel>::Ptr tmpImage(new afwImage::Image<Pixel>(image.getDimensions()));
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
         image.scaledPlus(*kParIter, **kImPtrIter);
         imSum += (*kSumIter) * (*kParIter);
