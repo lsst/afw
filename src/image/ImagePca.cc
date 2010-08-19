@@ -214,46 +214,6 @@ void ImagePca<ImageT>::analyze()
             double const weight = Q(jj, ii)*(_constantWeight ? flux_bar/getFlux(jj) : 1);
             eImage->scaledPlus(weight, *_imageList[jj]);
         }
-
-#define FIX_BKGD_LEVEL 0
-#if FIX_BKGD_LEVEL
-/*
- * Estimate and subtract the mean background level from the i > 0
- * eigen images; if we don't do that then PSF variation can get mixed
- * with subtle variations in the background and potentially amplify
- * them disasterously.
- *
- * It is not at all clear that doing this is a good idea; it'd be
- * better to get the sky level right in the first place.
- *
- * N.b. this is unconverted SDSS code, so it won't compile for LSST
- */
-        if(i > 0) {                 /* not the zeroth KL component */
-            float sky = 0;          /* estimate of sky level */
-            REGION *sreg;           /* reg_i minus the border */
-
-            reg_i = basis->regs[i-1][0][0]->reg;
-            shAssert(reg_i->type == TYPE_FL32);
-
-            for(j = border + 1; j < nrow - border - 1; j++) {
-                sky += reg_i->rows_fl32[j][border] +
-                    reg_i->rows_fl32[j][ncol - border - 1];
-            }
-            for(k = border; k < ncol - border; k++) {
-                sky += reg_i->rows_fl32[border][k] +
-                    reg_i->rows_fl32[nrow - border - 1][k];
-            }
-            sky /= 2*((nrow - 2*border) + (ncol - 2*border)) - 4;
- 
-            sreg = shSubRegNew("", basis->regs[i-1][0][0]->reg,
-                               nrow - 2*border, ncol - 2*border,
-                               border, border, NO_FLAGS);
-            shAssert(sreg != NULL);
- 
-            shRegIntConstAdd(sreg, -sky, 0);
-            shRegDel(sreg);
-        }
-#endif
         /*
          * Normalise eigenImages to have a maximum of 1.0.  For n > 0 they
          * (should) have mean == 0, so we can't use that to normalize
@@ -267,6 +227,66 @@ void ImagePca<ImageT>::analyze()
         if (extreme != 0.0) {
             *eImage /= extreme;
         }
+#define FIX_BKGD_LEVEL 1
+#if FIX_BKGD_LEVEL
+/*
+ * Estimate and subtract the mean background level from the i > 0
+ * eigen images; if we don't do that then PSF variation can get mixed
+ * with subtle variations in the background and potentially amplify
+ * them disasterously.
+ *
+ * It is not at all clear that doing this is a good idea; it'd be
+ * better to get the sky level right in the first place.
+ */
+        if(i > 0) {                 /* not the zeroth KL component */
+#if 0                               // use the median of non-detected pixels
+            afw::math::StatisticsControl sctrl;
+            sctrl.setAndMask(Mask<>::getPlaneBitMask("DETECTED"));
+
+            double const med = afwMath::makeStatistics(*eImage, afwMath::MEDIAN, sctrl).getValue();
+            //std::cout << "Eigen image " << i << "  median " << med << std::endl;
+#else                               // use the median of the edge pixels, in a region of with border
+            int border = 3;
+            int const height = eImage->getHeight();
+            int const width = eImage->getWidth();
+            if (width < 2*border || height < 2*border) {
+                continue;               // not enough pixels
+            }
+            int const nEdge = width*height - (width - 2*border)*(height - 2*border);
+            std::vector<double> edgePixels(nEdge);
+
+            std::vector<double>::iterator bi = edgePixels.begin();
+
+            typedef typename ImageT::x_iterator imIter;
+            int y = 0;
+            for(; y != border; ++y) {   // Bottom border of eImage
+                for (imIter ptr = eImage->row_begin(y), end = eImage->row_end(y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+            }
+            for(; y != height - border; ++y) {   // Left and right borders of eImage
+                for (imIter ptr = eImage->row_begin(y),
+                         end = eImage->x_at(border, y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+                for (imIter ptr = eImage->x_at(width - border, y),
+                         end = eImage->row_end(y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+            }
+            for(; y != height; ++y) {   // Top border of eImage
+                for (imIter ptr = eImage->row_begin(y), end = eImage->row_end(y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+            }
+            assert(distance(edgePixels.begin(), bi) == nEdge);
+            
+            double const med = afwMath::makeStatistics(edgePixels, afwMath::MEDIAN).getValue();
+            //std::cout << "vector " << i << "  median " << med << std::endl;
+#endif 
+            *eImage -= med;
+        }
+#endif
 
         _eigenImages.push_back(eImage);
     }
