@@ -900,7 +900,10 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 typename image::Image<boost::uint16_t>::Ptr
-detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(bool const relativeIDs) {
+detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(
+        bool const relativeIDs          ///< Use IDs starting at 0 (rather than the ones in the Footprint%s)
+                                                                 )
+{
     typename image::Image<boost::uint16_t>::Ptr
         im(new image::Image<boost::uint16_t>(_region.getDimensions()));
     *im = 0;

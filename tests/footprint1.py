@@ -37,9 +37,10 @@ import sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.math.mathLib as afwMath
-import lsst.afw.detection.detectionLib as afwDetect
+import lsst.afw.geom as afwGeom
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
+import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
 
@@ -461,6 +462,15 @@ class FootprintTestCase(unittest.TestCase):
         
         if False and display:
             ds9.mtv(mi, frame=1)
+        #
+        # Check Footprint.contains() while we are about it
+        #
+        self.assertTrue(objects[0].contains(afwGeom.makePointI(7, 5)))
+        self.assertFalse(objects[0].contains(afwGeom.makePointI(10, 6)))
+        self.assertFalse(objects[0].contains(afwGeom.makePointI(7, 6)))
+        self.assertFalse(objects[0].contains(afwGeom.makePointI(4, 2)))
+
+        self.assertTrue(objects[1].contains(afwGeom.makePointI(3, 6)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

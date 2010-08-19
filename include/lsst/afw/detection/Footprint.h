@@ -37,7 +37,15 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+    namespace afw {
+        namespace geom {
+            template<typename T, int N> class Point;
+            
+            typedef Point<int,2> Point2I;
+        }
+    }
+namespace afw { namespace detection {
 /*!
  * \brief A range of pixels within one row of an Image
  *
@@ -174,6 +182,8 @@ public:
     image::BBox const& getRegion() const { return _region; }
     /// Set the corners of the MaskedImage wherein the footprints dwell
     void setRegion(lsst::afw::image::BBox const& region) { _region = region; }
+
+    bool contains(lsst::afw::geom::Point2I const& pix) const;
     
     void normalize();
     int setNpix();

@@ -36,6 +36,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/geom/Point.h"
 #include "lsst/utils/ieee.h"
 
 namespace afwMath = lsst::afw::math;
@@ -173,6 +174,25 @@ afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center
  * Destroy a Footprint
  */
 afwDetect::Footprint::~Footprint() {
+}
+
+/**
+ * Does this Footprint contain this pixel?
+ */
+bool afwDetect::Footprint::contains(lsst::afw::geom::Point2I const& pix ///< Pixel to check
+                        ) const
+{
+    if (_bbox.contains(afwImage::PointI(pix[0], pix[1]))) {
+        for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
+            afwDetect::Span::ConstPtr span = *siter;
+            
+            if (span->_y == pix[1] && pix[0] >= span->_x0 && pix[0] <= span->_x1) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 /**
