@@ -61,6 +61,8 @@ namespace image {
 
         typename ImageT::Ptr getMean() const;
         void analyze();
+        double updateBadPixels(unsigned long mask, int const ncomp);
+        
         /// Return Eigen values
         std::vector<double> const& getEigenValues() const { return _eigenValues; }
         /// Return Eigen images
