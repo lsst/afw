@@ -307,11 +307,14 @@ class StatisticsTestCase(unittest.TestCase):
         when all pixels in a stack are masked.  Returning a NaN pixel in the stack is preferred
         """
 
+        ctrl = afwMath.StatisticsControl()
+        ctrl.setAndMask(~0x0)
+        
         mimg = afwImage.MaskedImageF(10, 10)
         mimg.set([self.val, 0x1, self.val])
 
         # test the case with no valid pixels ... both mean and stdev should be nan
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertNotEqual(mean, mean)   # NaN does not equal itself
@@ -319,7 +322,7 @@ class StatisticsTestCase(unittest.TestCase):
         
         # test the case with one valid pixel ... mean is ok, but stdev should still be nan
         mimg.getMask().set(1, 1, 0x0)
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertEqual(mean, self.val)
@@ -327,7 +330,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         # test the case with two valid pixels ... both mean and stdev are ok
         mimg.getMask().set(1, 2, 0x0)
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertEqual(mean, self.val)
@@ -339,8 +342,11 @@ class StatisticsTestCase(unittest.TestCase):
         mimg = afwImage.MaskedImageF(10, 10)
         mimg.set([self.val, 0x1, self.val])
 
+        ctrl = afwMath.StatisticsControl()
+        ctrl.setAndMask(~0x0)
+        
         # test the case with no valid pixels ... try MEANCLIP and STDEVCLIP
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEANCLIP | afwMath.STDEVCLIP)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEANCLIP | afwMath.STDEVCLIP, ctrl)
         mean  = stat.getValue(afwMath.MEANCLIP)
         stdev = stat.getValue(afwMath.STDEVCLIP)
         self.assertNotEqual(mean, mean)   # NaN does not equal itself
