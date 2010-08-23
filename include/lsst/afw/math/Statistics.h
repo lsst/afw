@@ -84,11 +84,12 @@ enum Property {
  */
 class StatisticsControl {
 public:
-    StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
-                      int numIter = 3,           ///< Number of iterations
-                      image::MaskPixel andMask = 0x0, ///< and-Mask to specify planes to use
-                      bool isNanSafe = true,     ///< flag NaNs
-                      bool isWeighted = false    ///< use inverse Variance plane for weights
+    StatisticsControl(
+        double numSigmaClip = 3.0, ///< number of standard deviations to clip at
+        int numIter = 3,           ///< Number of iterations
+        image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
+        bool isNanSafe = true,     ///< flag NaNs
+        bool isWeighted = false    ///< use inverse Variance plane for weights
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
