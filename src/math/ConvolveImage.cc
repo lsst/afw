@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
@@ -232,6 +255,8 @@ void afwMath::scaledPlus(
  * - kernel.getCtrY() along the bottom edge
  * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+ * You can obtain a bounding box for the good pixels in the convolved image
+ * from a bounding box for the entire image using the Kernel method shrinkBBox.
  * 
  * Convolution has been optimized for the various kinds of kernels, as follows (listed approximately
  * in order of decreasing speed):

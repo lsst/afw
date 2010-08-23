@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
@@ -89,7 +112,7 @@ void mathDetail::convolveWithInterpolation(
 
     for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
         rgnIter != subregionList.end(); ++rgnIter) {
-        pexLog::TTrace<1>("lsst.afw.math.convolve",
+        pexLog::TTrace<6>("lsst.afw.math.convolve",
             "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                 (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                 (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
@@ -185,8 +208,8 @@ void mathDetail::convolveRegionWithInterpolation(
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
     std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
-    KernelImage leftKernelImage(*(region.getImage(KernelImagesForRegion::BOTTOM_LEFT)), true);
-    KernelImage rightKernelImage(*(region.getImage(KernelImagesForRegion::BOTTOM_RIGHT)), true);
+    KernelImage leftKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_LEFT).first), true);
+    KernelImage rightKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_RIGHT).first), true);
     KernelImage leftDeltaKernelImage(kernelDimensions);
     KernelImage rightDeltaKernelImage(kernelDimensions);
     KernelImage deltaKernelImage(kernelDimensions);  // interpolated in x
@@ -200,10 +223,10 @@ void mathDetail::convolveRegionWithInterpolation(
     double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
     afwMath::scaledPlus(leftDeltaKernelImage, 
-         yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
+         yfrac,  *(region.getImageSumPair(KernelImagesForRegion::TOP_LEFT).first),
         -yfrac, leftKernelImage);
     afwMath::scaledPlus(rightDeltaKernelImage,
-         yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
+         yfrac, *(region.getImageSumPair(KernelImagesForRegion::TOP_RIGHT).first),
         -yfrac, rightKernelImage);
 
     // note: it might be slightly more efficient to compute locators directly on outImage and inImage,

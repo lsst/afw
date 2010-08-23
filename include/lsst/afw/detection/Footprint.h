@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #if !defined(LSST_DETECTION_FOOTPRINT_H)
 #define LSST_DETECTION_FOOTPRINT_H
 /**
@@ -15,7 +37,15 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+    namespace afw {
+        namespace geom {
+            template<typename T, int N> class Point;
+            
+            typedef Point<int,2> Point2I;
+        }
+    }
+namespace afw { namespace detection {
 /*!
  * \brief A range of pixels within one row of an Image
  *
@@ -152,6 +182,8 @@ public:
     image::BBox const& getRegion() const { return _region; }
     /// Set the corners of the MaskedImage wherein the footprints dwell
     void setRegion(lsst::afw::image::BBox const& region) { _region = region; }
+
+    bool contains(lsst::afw::geom::Point2I const& pix) const;
     
     void normalize();
     int setNpix();

@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
   * @file
   *
@@ -25,6 +48,7 @@
 #include "boost/cstdint.hpp"
 #include "boost/shared_ptr.hpp"
 
+#include "lsst/base.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -35,6 +59,10 @@
 
 namespace lsst {
 namespace afw {
+    namespace detection {
+        class Psf;
+    }
+
     namespace formatters {
         template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
     }
@@ -49,6 +77,7 @@ namespace image {
     public:
         typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
         typedef boost::shared_ptr<Exposure> Ptr;
+        typedef boost::shared_ptr<Exposure const> ConstPtr;
         
         // Class Constructors and Destructor
         explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=NoWcs);
@@ -72,6 +101,7 @@ namespace image {
             _filter(rhs.getFilter()),
             _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
         {
+            _clonePsf(rhs.getPsf());    // a separate function so it can go in Exposure.cc
             setMetadata(rhs.getMetadata()->deepCopy());
         }
         
@@ -149,10 +179,19 @@ namespace image {
         /// Return the Exposure's Calib object
         boost::shared_ptr<Calib> getCalib() { return _calib; }
         boost::shared_ptr<const Calib> getCalib() const { return _calib; }
+        /// Set the Exposure's Psf
+        void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _clonePsf(psf); }
+
+        /// Return the Exposure's Psf object
+        PTR(lsst::afw::detection::Psf) getPsf() { return _psf; }
+        /// Return the Exposure's Psf object
+        CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _psf; }
         
-        // Has Member (inline)
-        bool hasWcs() const { return (*_wcs ? true : false); 
-        }
+        /// Does this Exposure have a Psf?
+        bool hasPsf() const { return static_cast<bool>(_psf); }
+
+        /// Does this Exposure have a Wcs?
+        bool hasWcs() const { return *_wcs ? true : false; }
         
         // FITS
         void writeFits(std::string const &expOutFile) const;
@@ -164,17 +203,21 @@ namespace image {
         Wcs::Ptr _wcs;
         cameraGeom::Detector::Ptr _detector;
         Filter _filter;
-        boost::shared_ptr<Calib> _calib;
+        PTR(Calib) _calib;
+        PTR(lsst::afw::detection::Psf) _psf;
+
+        void _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
     };
 
 /**
  * A function to return an Exposure of the correct type (cf. std::make_pair)
  */
     template<typename MaskedImageT>
-    Exposure<typename MaskedImageT::Image::Pixel>* makeExposure(MaskedImageT & mimage, ///< the Exposure's image
-                                                                Wcs const& wcs=NoWcs ///< the Exposure's WCS
-                                                               ) {
-        return new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs);
+    typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr makeExposure(MaskedImageT & mimage, ///< the Exposure's image
+                                                                             Wcs const& wcs=NoWcs ///< the Exposure's WCS
+                                                                            ) {
+        return typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr(
+                                                            new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs));
     }
 
 }}} // lsst::afw::image

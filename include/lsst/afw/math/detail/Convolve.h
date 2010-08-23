@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_DETAIL_CONVOLVE_H
 #define LSST_AFW_MATH_DETAIL_CONVOLVE_H
 /**
@@ -87,10 +110,10 @@ namespace detail {
     public:
         typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
         typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+        typedef boost::shared_ptr<const Image> ImageConstPtr;
         typedef boost::shared_ptr<const KernelImagesForRegion> ConstPtr;
         typedef boost::shared_ptr<KernelImagesForRegion> Ptr;
-        typedef Image::Ptr ImagePtr;
-        typedef Image::ConstPtr ImageConstPtr;
+        typedef std::pair<Image::ConstPtr, double> ImageSumPair;
         typedef std::vector<ConstPtr> List;
         /**
          * locations of various points in the region
@@ -122,10 +145,10 @@ namespace detail {
                 lsst::afw::geom::BoxI const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize,
-                ImageConstPtr bottomLeftImagePtr,
-                ImageConstPtr bottomRightImagePtr,
-                ImageConstPtr topLeftImagePtr,
-                ImageConstPtr topRightImagePtr);
+                ImageSumPair bottomLeftImageSumPair,
+                ImageSumPair bottomRightImageSumPair,
+                ImageSumPair topLeftImageSumPair,
+                ImageSumPair topRightImageSumPair);
 
         /** 
          * Get the bounding box for the region
@@ -139,7 +162,7 @@ namespace detail {
          * Get the doNormalize parameter
          */
         bool getDoNormalize() const { return _doNormalize; };
-        ImageConstPtr getImage(Location location) const;
+        ImageSumPair getImageSumPair(Location location) const;
         /**
          * Get the kernel (as a shared pointer to const)
          */
@@ -155,10 +178,10 @@ namespace detail {
         static int getMinInterpolationSize() { return _MinInterpolationSize; };
 
     private:
-        typedef std::map<Location, ImageConstPtr> ImageMap;
+        typedef std::map<Location, ImageSumPair> ImageMap;
         typedef std::vector<Location> LocationList;
 
-        inline void _insertImage(Location location, ImageConstPtr &imagePtr) const;
+        inline void _insertImage(Location location, ImageSumPair &imageSumPair) const;
         
         // static helper functions
         static lsst::afw::geom::Point2D _computeCenterFractionalPosition(lsst::afw::geom::BoxI const &bbox);
@@ -230,8 +253,9 @@ inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregion
  */
 inline void lsst::afw::math::detail::KernelImagesForRegion::_insertImage(
         Location location,          ///< location at which to insert image
-        ImageConstPtr &imagePtr)    ///< image to insert
+        ImageSumPair &imageSumPair) ///< image and sum to insert
 const {
+    ImageConstPtr imagePtr = imageSumPair.first;
     if (imagePtr) {
         if (_kernelPtr->getDimensions() != imagePtr->getDimensions()) {
             std::ostringstream os;
@@ -240,7 +264,7 @@ const {
                 << ") = kernel dimensions";
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
         }
-        _imageMap.insert(std::make_pair(location, imagePtr));
+        _imageMap.insert(std::make_pair(location, imageSumPair));
     }
 }
 

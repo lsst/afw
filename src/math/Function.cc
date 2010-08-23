@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /** \file
  *
  * Support routines for
@@ -8,7 +30,7 @@ namespace afwMath = lsst::afw::math;
 
 /**
  * Return the coefficients of the Function's parameters, evaluated at (x, y)
- * I.e. given c0, c1, c2, c3 ... return c0, c1 x, c2 y, c3 x^2 ...
+ * I.e. given c0, c1, c2, c3 ... return 1, x, y, x^2 ...
  */
 template<typename ReturnT>
 std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, double y) const {
@@ -16,8 +38,8 @@ std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(d
     std::vector<double> coeffs((nOrder + 1)*(nOrder + 2)/2);
 
     //
-    // Go through params order by order, evaluating c x^r y^s;  we do this by first evaluating
-    // c x^r for a complete order, then going through again multiplying by y^s
+    // Go through params order by order, evaluating x^r y^s;  we do this by first evaluating
+    // y^s for a complete order, then going through again multiplying by x^r
     //
     int i0 = 0;                         // starting index for this order's coefficients
     for (int order = 0; order <= nOrder; ++order) {

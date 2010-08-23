@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_CONVOLVEIMAGE_H
 #define LSST_AFW_MATH_CONVOLVEIMAGE_H
 /**
@@ -37,8 +60,9 @@ namespace math {
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
-                double maxInterpolationError = 1.0e-9,  ///< maximum allowed error
-                    ///< in computing the value of the kernel at any pixel by linear interpolation
+                double maxInterpolationError = 1.0e-3,  ///< maximum allowed error
+                    ///< in computing the value of the kernel at any pixel by linear interpolation,
+                    ///< where error = abs(interpolated kernel image - true kernel image) / true kernel sum
                 int maxInterpolationDistance = 50)  ///< maximum width or height of a region
                     ///< over which to test if interpolation works
         :
@@ -96,7 +120,7 @@ namespace math {
             OutImageT& convolvedImage,
             InImageT const& inImage,
             KernelT const& kernel,
-            ConvolutionControl const& convolutionControl);
+            ConvolutionControl const& convolutionControl = ConvolutionControl());
     
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(

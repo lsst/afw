@@ -4,6 +4,7 @@
 "boost", "boost/filesystem.hpp", "boost_system:C++"
 "boost", "boost/serialization/base_object.hpp", "boost_serialization:C++"
 "boost", "boost/test/unit_test.hpp", "boost_unit_test_framework:C++"
+"base", "lsst/base.h"
 "python", "Python.h"
 #"numpy", "Python.h numpy/arrayobject.h" # see numpy workaround below
 "m", "math.h", "m", "sqrt"

@@ -1,7 +1,29 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 import itertools
 import math
-
 import unittest
 
 import numpy
@@ -306,18 +328,16 @@ class FunctionTestCase(unittest.TestCase):
         """Test that we can differentiate the Function2 with respect to its parameters"""
         
         nOrder = 3
-        coeffs = [1]*((nOrder + 1)*(nOrder + 2)//2)
+        coeffs = []
+        for i in range((nOrder + 1)*(nOrder + 2)//2):
+            coeffs.append(math.sin(1 + i)) # deterministic pretty-random numbers
+
         f = afwMath.PolynomialFunction2D(coeffs)
 
         for (x, y) in [(2, 1), (1, 2), (2, 2)]:
             dFdC = f.getDFuncDParameters(x, y)
 
-            o0 = 0
-            for o in range(nOrder + 1):
-                coeffs = dFdC[o0: o0 + o+1]
-                self.assertEqual(coeffs, [x**(o - r)*y**r for r in range(0, o+1)])
-
-                o0 += o + 1
+            self.assertAlmostEqual(f(x, y), sum([coeffs[i]*dFdC[i] for i in range(len(coeffs))]))
                 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

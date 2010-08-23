@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 # -*- python -*-
 """
 Tests for Coord
@@ -395,6 +418,86 @@ class CoordTestCase(unittest.TestCase):
         # machine precision
         self.assertAlmostEqual(deg, epsilonDeg)
 
+
+    def testTicket1394(self):
+        """Ticket #1394 bug: coord within epsilon of RA=0 leads to negative RA and fails bounds check. """
+
+        # the problem was that the coordinate is < epsilon close to RA==0
+        # and bounds checking was getting a -ve RA.
+        c = afwCoord.makeCoord(afwCoord.ICRS,
+                               afwGeom.makePointD(0.6070619982, -1.264309928e-16, 0.7946544723))
+
+        self.assertEqual(c[0], 0.0)
+
+        
+    def testRotate(self):
+        """Verify rotation of coord about a user provided axis."""
+
+        # try rotating about the equatorial pole (ie. along a parallel)
+        longitude = 90.0
+        latitudes = [0.0, 30.0, 60.0]
+        arcLen = 10.0
+        pole = afwCoord.Fk5Coord(0.0, 90.0)
+        for latitude in latitudes:
+            c = afwCoord.Fk5Coord(longitude, latitude)
+            c.rotate(pole, arcLen*afwCoord.degToRad)
+
+            lon = c.getLongitude(afwCoord.DEGREES)
+            lat = c.getLatitude(afwCoord.DEGREES)
+            
+            print "Rotate along a parallel: %.10f %.10f   %.10f %.10f" % (lon, lat,
+                                                                          longitude+arcLen, latitude)
+            self.assertAlmostEqual(lon, longitude + arcLen)
+            self.assertAlmostEqual(lat, latitude)
+
+        # try with pole = vernal equinox and rotate up a meridian
+        pole = afwCoord.Fk5Coord(0.0, 0.0)
+        for latitude in latitudes:
+            c = afwCoord.Fk5Coord(longitude, latitude)
+            c.rotate(pole, arcLen*afwCoord.degToRad)
+
+            lon = c.getLongitude(afwCoord.DEGREES)
+            lat = c.getLatitude(afwCoord.DEGREES)
+            
+            print "Rotate along a meridian: %.10f %.10f   %.10f %.10f" % (lon, lat,
+                                                                          longitude, latitude+arcLen)
+            self.assertAlmostEqual(lon, longitude)
+            self.assertAlmostEqual(lat, latitude + arcLen)
+
+            
+    def testOffset(self):
+        """Verify offset of coord along a great circle."""
+
+        lon0 = 90.0
+        lat0 = 0.0   # These tests only work from the equator
+        arcLen = 10.0
+        
+        #   lon,   lat    phi, arcLen,     expLong,      expLat, expPhi2
+        trials = [
+            [lon0, lat0,  0.0, arcLen, lon0+arcLen,        lat0,   0.0],  # along celestial equator
+            [lon0, lat0, 90.0, arcLen,        lon0, lat0+arcLen,  90.0],  # along a meridian
+            [lon0, lat0, 45.0,  180.0,  lon0+180.0,       -lat0, -45.0],  # 180 arc (should go to antip. pt)
+            [lon0, lat0, 45.0,   90.0,   lon0+90.0,   lat0+45.0,   0.0],  #
+            [0.0,  90.0,  0.0,   90.0,        90.0,         0.0, -90.0],  # from pole, phi=0
+            [0.0,  90.0, 90.0,   90.0,       180.0,         0.0, -90.0],  # from pole, phi=90
+            ]
+
+        for trial in trials:
+            
+            lon0, lat0, phi, arc, longExp, latExp, phi2Exp = trial
+            c = afwCoord.Fk5Coord(lon0, lat0)
+            phi2 = afwCoord.radToDeg*c.offset(phi*afwCoord.degToRad, arc*afwCoord.degToRad)
+            
+            lon = c.getLongitude(afwCoord.DEGREES)
+            lat = c.getLatitude(afwCoord.DEGREES)
+
+            print "Offset: %.10f %.10f %.10f  %.10f %.10f %.10f" % (lon, lat, phi2, longExp, latExp, phi2Exp)
+            self.assertAlmostEqual(lon, longExp, 12)
+            self.assertAlmostEqual(lat, latExp, 12)
+            self.assertAlmostEqual(phi2, phi2Exp, 12)
+        
+
+        
         
 #################################################################
 # Test suite boiler plate

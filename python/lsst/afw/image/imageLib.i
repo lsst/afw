@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 %define imageLib_DOCSTRING
 "
 Basic routines to talk to lsst::afw::image classes
@@ -26,6 +49,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/image/Color.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Calib.h"
 
@@ -50,6 +74,8 @@ namespace boost {
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
+
+%include "lsst/base.h"
 
 %pythoncode %{
 import lsst.utils
@@ -137,29 +163,39 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
         return "(%g, %g)" % (self.getX(), self.getY())
 
     def __getitem__(self, i):
-        """Treat a Point as an array of length 2, [x, y]"""
+        """Treat as an array of length 2: [x, y]"""
         if i == 0:
             return self.getX()
         elif i == 1:
             return self.getY()
+        elif hasattr(i, "indices"):
+            return [self[ind] for ind in range(*i.indices(2))]
         else:
-            raise IndexError, i
+            raise IndexError(i)
 
     def __setitem__(self, i, val):
-        """Treat a Point as an array of length 2, [x, y]"""
+        """Treat as an array of length 2: [x, y]"""
         if i == 0:
             self.setX(val)
         elif i == 1:
             self.setY(val)
+        elif hasattr(i, "indices"):
+            indexList = range(*i.indices(2))
+            if len(val) != len(indexList):
+                raise IndexError("Need %s values but got %s" % (len(indexList), len(val)))
+            for ind in indexList:
+                self[ind] = val[ind]
         else:
-            raise IndexError, i
+            raise IndexError(i)
+    
+    def __iter__(self):
+        return iter(self[:])
 
     def __len__(self):
         return 2
                 
     def clone(self):
         return self.__class__(self.getX(), self.getY())
-                
     }
 }
 %enddef
@@ -274,6 +310,11 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %exposurePtr(F, float);
 %exposurePtr(D, double);
 
+namespace lsst { namespace afw { namespace detection {
+    class Psf;
+}}}
+SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
+
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
@@ -291,6 +332,10 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
             lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
     }
 }
+
+/************************************************************************************************************/
+
+%include "lsst/afw/image/Color.h"
 
 /************************************************************************************************************/
 

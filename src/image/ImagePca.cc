@@ -1,15 +1,43 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
  * @brief Utilities to support PCA analysis of a set of images
  */
+#include <algorithm>
+#include "boost/make_shared.hpp"
+
 #include "Eigen/Core"
 #include "Eigen/QR"
+#include "Eigen/SVD"
 
-#include <algorithm>
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/math/Statistics.h"
+
+namespace afwMath = lsst::afw::math;
 
 namespace lsst {
 namespace afw {
@@ -72,7 +100,7 @@ typename ImageT::Ptr ImagePca<ImageT>::getMean() const {
     }
 
     typename ImageT::Ptr mean(new ImageT(getDimensions()));
-    *mean = 0;
+    *mean = static_cast<typename ImageT::Pixel>(0);
 
     for (typename ImageList::const_iterator ptr = _imageList.begin(), end = _imageList.end();
          ptr != end; ++ptr) {
@@ -97,10 +125,46 @@ namespace {
             return a.first > b.first;   // N.b. sort on greater
         }
     };
+/*
+ * Some metafunctions to extract an Image::Ptr from a MaskedImage::Ptr (or return the original Image::Ptr)
+ *
+ * GetImage is the public interface (it forwards the tag --- just for the sake of the UI); the real work
+ * is in GetImage_ which defines a typedef for the Image and a static function, getImage
+ *
+ * E.g.
+ * In the function
+ *
+ * template<typename ImageT>
+ * void func(typename ImageT::Ptr image) {
+ *    typename GetImage<ImageT>::type::Ptr im = GetImage<ImageT>::getImage(image);
+ * }
+ *
+ * "im" is an Image::Ptr irrespective of whether ImageT is Masked or not.
+ */
+    template<typename ImageT, typename TagT>
+    struct GetImage_ {
+        typedef ImageT type;
+        static typename type::Ptr getImage(typename ImageT::Ptr image) {
+            return image;
+        }
+    };
+
+    template<typename ImageT>
+    struct GetImage_<ImageT, typename image::detail::MaskedImage_tag> {
+        typedef typename ImageT::Image type;
+        static typename type::Ptr getImage(typename ImageT::Ptr image) {
+            return image->getImage();
+        }
+    };
+
+    template<typename ImageT>
+    struct GetImage : public GetImage_<ImageT, typename ImageT::image_category> {
+    };
 }
 
 template <typename ImageT>
-void ImagePca<ImageT>::analyze() {
+void ImagePca<ImageT>::analyze()
+{
     int const nImage = _imageList.size();
 
     if (nImage == 0) {
@@ -126,12 +190,12 @@ void ImagePca<ImageT>::analyze() {
 
     double flux_bar = 0;              // mean of flux for all regions
     for (int i = 0; i != nImage; ++i) {
-        ImageT const& im_i = *_imageList[i];
+        typename GetImage<ImageT>::type const& im_i = *GetImage<ImageT>::getImage(_imageList[i]);
         double const flux_i = getFlux(i);
         flux_bar += flux_i;
 
         for (int j = i; j != nImage; ++j) {
-            ImageT const& im_j = *_imageList[j];
+            typename GetImage<ImageT>::type const& im_j = *GetImage<ImageT>::getImage(_imageList[j]);
             double const flux_j = getFlux(j);
 
             double dot = innerProduct(im_i, im_j);
@@ -173,69 +237,21 @@ void ImagePca<ImageT>::analyze() {
     _eigenImages.clear();
     _eigenImages.reserve(ncomp < nImage ? ncomp : nImage);
 
-    for(int _i = 0; _i < ncomp; ++_i) {
-        if(_i >= nImage) {
+    for(int i = 0; i < ncomp; ++i) {
+        if(i >= nImage) {
             continue;
         }
 
-        int const i = lambdaAndIndex[_i].second; // the index after sorting (backwards) by eigenvalue
+        int const ii = lambdaAndIndex[i].second; // the index after sorting (backwards) by eigenvalue
 
         typename ImageT::Ptr eImage(new ImageT(_width, _height));
-        *eImage = 0;
+        *eImage = static_cast<typename ImageT::Pixel>(0);
 
-        for (int _j = 0; _j != nImage; ++_j) {
-            int const j = lambdaAndIndex[_j].second; // the index after sorting (backwards) by eigenvalue
-#if 0                                                // scaledPlus is on trunk
-            double const weight = Q(j, i)*(_constantWeight ? flux_bar/getFlux(j) : 1);
-            *eImage.scaledPlus(weight, *_imageList[j]);
-#else       
-            ImageT tmp = ImageT(*_imageList[j], true); // deep copy --- use scaledPlus on trunk
-
-            tmp *= Q(j, i)*(_constantWeight ? flux_bar/getFlux(j) : 1);
-
-            *eImage += tmp;
-#endif
+        for (int j = 0; j != nImage; ++j) {
+            int const jj = lambdaAndIndex[j].second; // the index after sorting (backwards) by eigenvalue
+            double const weight = Q(jj, ii)*(_constantWeight ? flux_bar/getFlux(jj) : 1);
+            eImage->scaledPlus(weight, *_imageList[jj]);
         }
-
-#define FIX_BKGD_LEVEL 0
-#if FIX_BKGD_LEVEL
-/*
- * Estimate and subtract the mean background level from the i > 0
- * eigen images; if we don't do that then PSF variation can get mixed
- * with subtle variations in the background and potentially amplify
- * them disasterously.
- *
- * It is not at all clear that doing this is a good idea; it'd be
- * better to get the sky level right in the first place.
- *
- * N.b. this is unconverted SDSS code, so it won't compile for LSST
- */
-        if(i > 0) {                 /* not the zeroth KL component */
-            float sky = 0;          /* estimate of sky level */
-            REGION *sreg;           /* reg_i minus the border */
-
-            reg_i = basis->regs[i-1][0][0]->reg;
-            shAssert(reg_i->type == TYPE_FL32);
-
-            for(j = border + 1; j < nrow - border - 1; j++) {
-                sky += reg_i->rows_fl32[j][border] +
-                    reg_i->rows_fl32[j][ncol - border - 1];
-            }
-            for(k = border; k < ncol - border; k++) {
-                sky += reg_i->rows_fl32[border][k] +
-                    reg_i->rows_fl32[nrow - border - 1][k];
-            }
-            sky /= 2*((nrow - 2*border) + (ncol - 2*border)) - 4;
- 
-            sreg = shSubRegNew("", basis->regs[i-1][0][0]->reg,
-                               nrow - 2*border, ncol - 2*border,
-                               border, border, NO_FLAGS);
-            shAssert(sreg != NULL);
- 
-            shRegIntConstAdd(sreg, -sky, 0);
-            shRegDel(sreg);
-        }
-#endif
         /*
          * Normalise eigenImages to have a maximum of 1.0.  For n > 0 they
          * (should) have mean == 0, so we can't use that to normalize
@@ -249,11 +265,264 @@ void ImagePca<ImageT>::analyze() {
         if (extreme != 0.0) {
             *eImage /= extreme;
         }
+#define FIX_BKGD_LEVEL 1
+#if FIX_BKGD_LEVEL
+/*
+ * Estimate and subtract the mean background level from the i > 0
+ * eigen images; if we don't do that then PSF variation can get mixed
+ * with subtle variations in the background and potentially amplify
+ * them disasterously.
+ *
+ * It is not at all clear that doing this is a good idea; it'd be
+ * better to get the sky level right in the first place.
+ */
+        if(i > 0) {                 /* not the zeroth KL component */
+#if 0                               // use the median of non-detected pixels
+            afw::math::StatisticsControl sctrl;
+            sctrl.setAndMask(Mask<>::getPlaneBitMask("DETECTED"));
+
+            double const med = afwMath::makeStatistics(*eImage.getImage(), afwMath::MEDIAN, sctrl).getValue();
+            //std::cout << "Eigen image " << i << "  median " << med << std::endl;
+#else                               // use the median of the edge pixels, in a region of with border
+            // If ImageT is a MaskedImage, unpack the Image
+            typename GetImage<ImageT>::type::Ptr eImageIm = GetImage<ImageT>::getImage(eImage);
+
+            int border = 3;
+            int const height = eImage->getHeight();
+            int const width = eImage->getWidth();
+            if (width < 2*border || height < 2*border) {
+                continue;               // not enough pixels
+            }
+            int const nEdge = width*height - (width - 2*border)*(height - 2*border);
+            std::vector<double> edgePixels(nEdge);
+
+            std::vector<double>::iterator bi = edgePixels.begin();
+
+            typedef typename GetImage<ImageT>::type::x_iterator imIter;
+            int y = 0;
+            for(; y != border; ++y) {   // Bottom border of eImage
+                for (imIter ptr = eImageIm->row_begin(y), end = eImageIm->row_end(y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+            }
+            for(; y != height - border; ++y) {   // Left and right borders of eImage
+                for (imIter ptr = eImageIm->row_begin(y),
+                         end = eImageIm->x_at(border, y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+                for (imIter ptr = eImageIm->x_at(width - border, y),
+                         end = eImageIm->row_end(y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+            }
+            for(; y != height; ++y) {   // Top border of eImage
+                for (imIter ptr = eImageIm->row_begin(y), end = eImageIm->row_end(y); ptr != end; ++ptr, ++bi) {
+                    *bi = *ptr;
+                }
+            }
+            assert(distance(edgePixels.begin(), bi) == nEdge);
+            
+            double const med = afwMath::makeStatistics(edgePixels, afwMath::MEDIAN).getValue();
+            //std::cout << "vector " << i << "  median " << med << std::endl;
+#endif 
+            *eImageIm -= med;
+        }
+#endif
 
         _eigenImages.push_back(eImage);
     }
 }
 
+/************************************************************************************************************/
+/*
+ * 
+ */
+namespace {
+/*
+ * Fit a LinearCombinationKernel to an Image, allowing the coefficients of the components to vary
+ *
+ * return std::pair(best-fit kernel, std::pair(amp, chi^2))
+ */
+template<typename MaskedImageT>
+typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
+        typename ImagePca<MaskedImageT>::ImageList const& eigenImages, // Eigen images
+        int nEigen,                                                    // Number of eigen images to use
+        MaskedImageT const& image                                      // The image to be fit
+                                                 )
+{
+    typedef typename MaskedImageT::Image ImageT;
+
+    if (nEigen == 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          "You must have at least one eigen image");
+    } else if (nEigen > static_cast<int>(eigenImages.size())) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("You only have %d eigen images (you asked for %d)")
+                           % eigenImages.size() % nEigen).str());
+    }
+    /*
+     * Solve the linear problem  image = sum x_i K_i + epsilon; we solve this for x_i by constructing the
+     * normal equations, A x = b
+     */
+    Eigen::MatrixXd A(nEigen, nEigen);
+    Eigen::VectorXd b(nEigen);
+
+    for (int i = 0; i != nEigen; ++i) {
+        b(i) = innerProduct(*eigenImages[i]->getImage(), *image.getImage());
+
+        for (int j = i; j != nEigen; ++j) {
+            A(i, j) = A(j, i) = innerProduct(*eigenImages[i]->getImage(), *eigenImages[j]->getImage());
+        }
+    }
+    Eigen::VectorXd x(nEigen);
+
+    A.svd().solve(b, &x);
+    //
+    // Accumulate the best-fit-image in bestFitImage
+    //
+    typename ImageT::Ptr bestFitImage = boost::make_shared<ImageT>(eigenImages[0]->getDimensions());
+
+    for (int i = 0; i != nEigen; ++i) {
+        bestFitImage->scaledPlus(x[i], *eigenImages[i]->getImage());
+    }
+    
+    return bestFitImage;
+}
+
+/************************************************************************************************************/
+
+template <typename ImageT>
+double do_updateBadPixels(detail::basic_tag const&,
+                        typename ImagePca<ImageT>::ImageList const&,
+                        std::vector<double> const&,
+                        typename ImagePca<ImageT>::ImageList const&,
+                        unsigned long, int const)
+{
+    return 0.0;
+}
+
+template <typename ImageT>
+double do_updateBadPixels(
+        detail::MaskedImage_tag const&,
+        typename ImagePca<ImageT>::ImageList const& imageList,
+        std::vector<double> const& fluxes,   // fluxes of images
+        typename ImagePca<ImageT>::ImageList const& eigenImages, // Eigen images
+        unsigned long mask, ///< Mask defining bad pixels
+        int const ncomp     ///< Number of components to use in estimate
+                                                                )
+{
+    int const nImage = imageList.size();
+
+    if (nImage == 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          "Please provide at least one Image for me to update");
+    }
+    int const height = imageList[0]->getHeight();
+        
+    double maxChange = 0.0;             // maximum change to the input images
+
+    if (ncomp == 0) {                   // use mean of good pixels
+        typename ImageT::Image mean(imageList[0]->getDimensions()); // desired mean image
+        image::Image<float> weight(mean.getDimensions()); // weight of each pixel
+
+        for (int i = 0; i != nImage; ++i) {
+            double const flux_i = fluxes[i];
+
+            for (int y = 0; y != height; ++y) {
+                typename ImageT::const_x_iterator iptr = imageList[i]->row_begin(y);
+                image::Image<float>::x_iterator wptr = weight.row_begin(y);
+                for (typename ImageT::Image::x_iterator mptr = mean.row_begin(y), end = mean.row_end(y);
+                     mptr != end; ++mptr, ++iptr, ++wptr) {
+                    if (!(iptr.mask() & mask)) {
+                        typename ImageT::Image::Pixel value = iptr.image()/flux_i;
+                        float const var = iptr.image()/(flux_i*flux_i);
+                        float ivar = 1.0/var;
+                        *mptr += value*ivar;
+                        *wptr += ivar;
+                    }
+                }
+            }
+        }
+        //
+        // Calculate mean
+        //
+        for (int y = 0; y != height; ++y) {
+            image::Image<float>::x_iterator wptr = weight.row_begin(y);
+            for (typename ImageT::Image::x_iterator mptr = mean.row_begin(y), end = mean.row_end(y);
+                 mptr != end; ++mptr, ++wptr) {
+                *mptr /= *wptr;
+            }
+        }
+        //
+        // Replace bad values by mean
+        //
+        for (int i = 0; i != nImage; ++i) {
+            double const flux_i = fluxes[i];
+
+            for (int y = 0; y != height; ++y) {
+                typename ImageT::x_iterator iptr = imageList[i]->row_begin(y);
+                for (typename ImageT::Image::x_iterator mptr = mean.row_begin(y), end = mean.row_end(y);
+                     mptr != end; ++mptr, ++iptr) {
+                    if ((iptr.mask() & mask)) {
+                        double const delta = ::fabs(flux_i*(*mptr) - iptr.image());
+                        if (delta > maxChange) {
+                            maxChange = delta;
+                        }
+                        iptr.image() = flux_i*(*mptr);
+                        iptr.image() = flux_i*(*mptr);
+                    }
+                }
+            }
+        }
+    } else {
+        if (ncomp > static_cast<int>(eigenImages.size())) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              (boost::format("You only have %d eigen images (you asked for %d)")
+                               % eigenImages.size() % ncomp).str());
+        }
+
+        for (int i = 0; i != nImage; ++i) {
+            typename ImageT::Image::Ptr fitted = fitEigenImagesToImage(eigenImages, ncomp, *imageList[i]);
+
+            for (int y = 0; y != height; ++y) {
+                typename ImageT::x_iterator iptr = imageList[i]->row_begin(y);
+                for (typename ImageT::Image::const_x_iterator fptr = fitted->row_begin(y),
+                         end = fitted->row_end(y); fptr != end; ++fptr, ++iptr) {
+                    if (iptr.mask() & mask) {
+                        double const delta = ::fabs(*fptr - iptr.image());
+                        if (delta > maxChange) {
+                            maxChange = delta;
+                        }
+
+                        iptr.image() = *fptr;
+                    }
+                }
+            }
+        }
+    }
+
+    return maxChange;
+}
+}
+/**
+ * Update the bad pixels (i.e. those for which (value & mask) != 0) based on the current PCA decomposition;
+ * if none is available, use the mean of the good pixels
+ *
+ * \return the maximum change made to any pixel
+ *
+ * N.b. the work is actually done in do_updateBadPixels as the code only makes sense and compiles when we are
+ * doing a PCA on a set of MaskedImages
+ */
+template <typename ImageT>
+double ImagePca<ImageT>::updateBadPixels(
+        unsigned long mask, ///< Mask defining bad pixels
+        int const ncomp     ///< Number of components to use in estimate
+                                      )
+{
+    return do_updateBadPixels<ImageT>(typename ImageT::image_category(),
+                                      _imageList, _fluxList, _eigenImages, mask, ncomp);
+}
+    
 /*******************************************************************************************************/    
 namespace {
     template<typename T, typename U>
@@ -338,6 +607,7 @@ double innerProduct(Image1T const& lhs, ///< first image
 INSTANTIATE(boost::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
+template class ImagePca<MaskedImage<float> >;
 INSTANTIATE(double)
 
 INSTANTIATE2(float, double)             // the two types must be different

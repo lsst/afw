@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
@@ -68,16 +91,16 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
  * @throw lsst::pex::exceptions::InvalidParameterException if an image has the wrong dimensions
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr const kernelPtr,     ///< kernel
-        lsst::afw::geom::BoxI const &bbox,  ///< bounding box of region of an image
-                                            ///< for which we want to compute kernel images
-                                            ///< (inclusive and relative to parent image)
+        KernelConstPtr const kernelPtr,         ///< kernel
+        lsst::afw::geom::BoxI const &bbox,      ///< bounding box of region of an image
+                                                ///< for which we want to compute kernel images
+                                                ///< (inclusive and relative to parent image)
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image
-        bool doNormalize,                   ///< normalize the kernel images?
-        ImageConstPtr bottomLeftImagePtr,   ///< kernel image at bottom left of region
-        ImageConstPtr bottomRightImagePtr,  ///< kernel image at bottom right of region
-        ImageConstPtr topLeftImagePtr,      ///< kernel image at top left of region
-        ImageConstPtr topRightImagePtr)     ///< kernel image at top right of region
+        bool doNormalize,                       ///< normalize the kernel images?
+        ImageSumPair bottomLeftImageSumPair,    ///< kernel image and sum at bottom left of region
+        ImageSumPair bottomRightImageSumPair,   ///< kernel image and sum at bottom right of region
+        ImageSumPair topLeftImageSumPair,       ///< kernel image and sum at top left of region
+        ImageSumPair topRightImageSumPair)      ///< kernel image and sum at top right of region
 :
     lsst::daf::data::LsstBase::LsstBase(typeid(this)),
     _kernelPtr(kernelPtr),
@@ -91,21 +114,21 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
     }
-    _insertImage(BOTTOM_LEFT, bottomLeftImagePtr);
-    _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
-    _insertImage(TOP_LEFT, topLeftImagePtr);
-    _insertImage(TOP_RIGHT, topRightImagePtr);
+    _insertImage(BOTTOM_LEFT, bottomLeftImageSumPair);
+    _insertImage(BOTTOM_RIGHT, bottomRightImageSumPair);
+    _insertImage(TOP_LEFT, topLeftImageSumPair);
+    _insertImage(TOP_RIGHT, topRightImageSumPair);
     pexLog::TTrace<6>("lsst.afw.math.convolve",
     "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
 
 /**
- * Return the image at the specified location
+ * Return the image and sum at the specified location
  *
  * If the image has not yet been computed, it is computed at this time.
  */
-mathDetail::KernelImagesForRegion::ImageConstPtr mathDetail::KernelImagesForRegion::getImage(
+mathDetail::KernelImagesForRegion::ImageSumPair mathDetail::KernelImagesForRegion::getImageSumPair(
         Location location)  ///< location of image
 const {
     ImageMap::const_iterator imageMapIter = _imageMap.find(location);
@@ -115,13 +138,14 @@ const {
 
     afwGeom::Point2I pixelIndex = getPixelIndex(location);
     Image::Ptr kernelImagePtr(new Image(_kernelPtr->getDimensions()));
-    _kernelPtr->computeImage(
+    double kernelSum = _kernelPtr->computeImage(
         *kernelImagePtr,
         _doNormalize,
         afwImage::indexToPosition(pixelIndex.getX() + _xy0[0]),
         afwImage::indexToPosition(pixelIndex.getY() + _xy0[1]));
-    _imageMap.insert(std::make_pair(location, kernelImagePtr));
-    return kernelImagePtr;
+    ImageSumPair imageSumPair(kernelImagePtr, kernelSum);
+    _imageMap.insert(std::make_pair(location, imageSumPair));
+    return imageSumPair;
 }
 
 /**
@@ -184,10 +208,10 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
         afwGeom::BoxI(_bbox.getMin(), _centerIndex - afwGeom::Extent2I(1)),
         _xy0,
         _doNormalize,
-        getImage(BOTTOM_LEFT),
-        getImage(BOTTOM),
-        getImage(LEFT),
-        getImage(CENTER))));
+        getImageSumPair(BOTTOM_LEFT),
+        getImageSumPair(BOTTOM),
+        getImageSumPair(LEFT),
+        getImageSumPair(CENTER))));
 
     retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
@@ -196,10 +220,10 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
             afwGeom::Point2I::make(_bbox.getMaxX(), _centerIndex.getY() - 1)),
         _xy0,
         _doNormalize,
-        getImage(BOTTOM),
-        getImage(BOTTOM_RIGHT),
-        getImage(CENTER),
-        getImage(RIGHT))));
+        getImageSumPair(BOTTOM),
+        getImageSumPair(BOTTOM_RIGHT),
+        getImageSumPair(CENTER),
+        getImageSumPair(RIGHT))));
 
     retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
@@ -208,20 +232,20 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
             afwGeom::Point2I::make(_centerIndex.getX() - 1, _bbox.getMaxY())),
         _xy0,
         _doNormalize,
-        getImage(LEFT),
-        getImage(CENTER),
-        getImage(TOP_LEFT),
-        getImage(TOP))));
+        getImageSumPair(LEFT),
+        getImageSumPair(CENTER),
+        getImageSumPair(TOP_LEFT),
+        getImageSumPair(TOP))));
 
     retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
         afwGeom::BoxI(_centerIndex, _bbox.getMax()),
         _xy0,
         _doNormalize,
-        getImage(CENTER),
-        getImage(RIGHT),
-        getImage(TOP),
-        getImage(TOP_RIGHT))));
+        getImageSumPair(CENTER),
+        getImageSumPair(RIGHT),
+        getImageSumPair(TOP),
+        getImageSumPair(TOP_RIGHT))));
 
     return retList;
 }
@@ -247,10 +271,10 @@ mathDetail::KernelImagesForRegion::getSubregions(
         int nx, ///< number of x regions
         int ny) ///< number of y regions
 const {
-    ImageConstPtr blImagePtr(getImage(BOTTOM_LEFT));
-    ImageConstPtr brImagePtr;
-    ImageConstPtr tlImagePtr;
-    ImageConstPtr const trImageNullPtr;
+    ImageSumPair blImageSumPair(getImageSumPair(BOTTOM_LEFT));
+    ImageSumPair brImageSumPair;
+    ImageSumPair tlImageSumPair;
+    ImageSumPair const trImageNullPtr;
     
     typedef std::vector<int>::const_iterator IntIter;
     std::vector<int> widthList(_computeSubregionLengths(_bbox.getWidth(), nx));
@@ -265,18 +289,18 @@ const {
             int width = widthList[xInd];
             if (xInd > 0) {
                 // there is a region to the left; get its right-hand images
-                blImagePtr = retList[retInd-1]->getImage(BOTTOM_RIGHT);
-                tlImagePtr = retList[retInd-1]->getImage(TOP_RIGHT);
+                blImageSumPair = retList[retInd-1]->getImageSumPair(BOTTOM_RIGHT);
+                tlImageSumPair = retList[retInd-1]->getImageSumPair(TOP_RIGHT);
             } else {
-                blImagePtr.reset();
-                tlImagePtr.reset();
+                blImageSumPair.first.reset();
+                tlImageSumPair.first.reset();
             }
             if (yInd > 0) {
                 // there is a region below; get its top images
-                if (!blImagePtr) {
-                    blImagePtr = retList[retInd-nx]->getImage(TOP_LEFT);
+                if (!blImageSumPair.first) {
+                    blImageSumPair = retList[retInd-nx]->getImageSumPair(TOP_LEFT);
                 }
-                brImagePtr = retList[retInd-nx]->getImage(TOP_RIGHT);
+                brImageSumPair = retList[retInd-nx]->getImageSumPair(TOP_RIGHT);
             }
 
             retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
@@ -284,9 +308,9 @@ const {
                 afwGeom::BoxI(corner, afwGeom::Extent2I::make(width, height)),
                 _xy0,
                 _doNormalize,
-                blImagePtr,
-                brImagePtr,
-                tlImagePtr,
+                blImageSumPair,
+                brImageSumPair,
+                tlImageSumPair,
                 trImageNullPtr)));
             corner += afwGeom::Extent2I::make(width, 0);
         }
@@ -303,33 +327,33 @@ const {
  * @throw lsst::pex::exceptions::InvalidParameterException if outImage is not same dimensions as kernel.
  */
 void mathDetail::KernelImagesForRegion::interpolateImage(
-        Image &outImage,  ///< output image
-        Location location)      ///< location at which to compute interpolated image
+        Image &outImage,    ///< output image
+        Location location)  ///< location at which to compute interpolated image
 const {
     double fracDist;
     switch (location) {
         case BOTTOM: {
             fracDist = _centerFractionalPosition.getX();
-            scaledPlus(outImage, 1.0 - fracDist, *getImage(BOTTOM_LEFT),
-                                       fracDist, *getImage(BOTTOM_RIGHT));
+            scaledPlus(outImage, 1.0 - fracDist, *(getImageSumPair(BOTTOM_LEFT).first),
+                                       fracDist, *(getImageSumPair(BOTTOM_RIGHT)).first);
             break;
         }
         case TOP: {
                 fracDist = _centerFractionalPosition.getX();
-                scaledPlus(outImage, 1.0 - fracDist, *getImage(TOP_LEFT),
-                                           fracDist, *getImage(TOP_RIGHT));
+                scaledPlus(outImage, 1.0 - fracDist, *(getImageSumPair(TOP_LEFT).first),
+                                           fracDist, *(getImageSumPair(TOP_RIGHT)).first);
             break;
         }
         case LEFT: {
             fracDist = _centerFractionalPosition.getY();
-            scaledPlus(outImage, 1.0 - fracDist, *getImage(BOTTOM_LEFT),
-                                       fracDist, *getImage(TOP_LEFT));
+            scaledPlus(outImage, 1.0 - fracDist, *(getImageSumPair(BOTTOM_LEFT).first),
+                                       fracDist, *(getImageSumPair(TOP_LEFT)).first);
             break;
         }
         case RIGHT: {
             fracDist = _centerFractionalPosition.getY();
-            scaledPlus(outImage, 1.0 - fracDist, *getImage(BOTTOM_RIGHT),
-                                       fracDist, *getImage(TOP_RIGHT));
+            scaledPlus(outImage, 1.0 - fracDist, *(getImageSumPair(BOTTOM_RIGHT).first),
+                                       fracDist, *(getImageSumPair(TOP_RIGHT)).first);
             break;
         }
         case CENTER: {
@@ -345,11 +369,11 @@ const {
             double const xFrac = _centerFractionalPosition.getX();
             double const yFrac = _centerFractionalPosition.getY();
             for (int y = 0; y != _kernelPtr->getHeight(); ++y) {
-                Image::const_x_iterator const blEnd = getImage(BOTTOM_LEFT)->row_end(y);
-                Image::const_x_iterator blIter = getImage(BOTTOM_LEFT)->row_begin(y);
-                Image::const_x_iterator brIter = getImage(BOTTOM_RIGHT)->row_begin(y);
-                Image::const_x_iterator tlIter = getImage(TOP_LEFT)->row_begin(y);
-                Image::const_x_iterator trIter = getImage(TOP_RIGHT)->row_begin(y);
+                Image::const_x_iterator const blEnd = getImageSumPair(BOTTOM_LEFT).first->row_end(y);
+                Image::const_x_iterator blIter = getImageSumPair(BOTTOM_LEFT).first->row_begin(y);
+                Image::const_x_iterator brIter = getImageSumPair(BOTTOM_RIGHT).first->row_begin(y);
+                Image::const_x_iterator tlIter = getImageSumPair(TOP_LEFT).first->row_begin(y);
+                Image::const_x_iterator trIter = getImageSumPair(TOP_RIGHT).first->row_begin(y);
                 Image::x_iterator outIter = outImage.row_begin(y);
                 for (; blIter != blEnd; ++blIter, ++brIter, ++tlIter, ++trIter, ++outIter) {
                     *outIter = 
@@ -372,10 +396,11 @@ const {
  *
  * The algorithm is as follows:
  * - for each location in (center, bottom, left, right, top):
- *     - error image = linearly interpolated kernel image - true kernel image (obeying doNormalize)
- *     - if the absolute value of any pixel of error image > maxInterpolationError then:
- *         - interpolation is unacceptable; stop the test
- * - interpolation is acceptable
+ *     - for each pixel of the kernel:
+ *         - if abs(linearly interpolated kernel image pixel - true kernel image pixel)
+ *           > maxInterpolationError * true kernel sum then:
+ *              return false (interpolation is unacceptable)
+ * - return true (interpolation is acceptable)
  *
  * This is not completely foolproof, but it should do if you are careful not to test too large a region
  * relative to the wiggliness of the kernel's spatial model.
@@ -393,13 +418,14 @@ const {
     Image interpImage(kernelDim);
     for (LocationIter locIter = _TestLocationList.begin(); locIter != _TestLocationList.end(); ++locIter) {
         interpolateImage(interpImage, *locIter);
-        ImageConstPtr trueImagePtr(getImage(*locIter));
+        ImageSumPair trueImageSumPair(getImageSumPair(*locIter));
+        double const maxAllowedDiff = trueImageSumPair.second * maxInterpolationError;
         for (int row = 0; row < kernelDim.second; ++row) {
             ImageXIter interpPtr = interpImage.row_begin(row);
             ImageXIter const interpEnd = interpImage.row_end(row);
-            ImageXIter truePtr = trueImagePtr->row_begin(row);
+            ImageXIter truePtr = trueImageSumPair.first->row_begin(row);
             for ( ; interpPtr != interpEnd; ++interpPtr, ++truePtr) {
-                if (std::abs(*interpPtr - *truePtr) > maxInterpolationError) {
+                if (std::abs(*interpPtr - *truePtr) > maxAllowedDiff) {
                     return false;
                 }
             }

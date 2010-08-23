@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #include <iostream>
 #include <sstream>
 #include <cmath>
@@ -41,6 +63,16 @@ TanWcs::TanWcs() :
     Wcs(),
     _hasDistortion(false),
     _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+}
+
+double TanWcs::pixelScale() const {
+	// deg2arcsec(sqrt(fabs(det(cd))));
+	//return 3600. * sqrt(fabs(CD(0,0)*CD(1,1) - CD(0,1)*CD(1,0)));
+
+	// HACK -- assume "cd" elements are set...
+	double* cd = _wcsInfo->m_cd;
+	assert(cd);
+	return 3600. * sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2]));
 }
 
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
@@ -89,14 +121,19 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
             _hasDistortion = true;
             
             //Hide the distortion from wcslib
-            fitsMetadata->set<string>("CTYPE1", ctype1.substr(0,7));
-            fitsMetadata->set<string>("CTYPE2", ctype2.substr(0,7));
+            fitsMetadata->set<string>("CTYPE1", ctype1.substr(0,8));
+            fitsMetadata->set<string>("CTYPE2", ctype2.substr(0,8));
             
             //Save SIP information
             decodeSipHeader(fitsMetadata, "A", &_sipA);
             decodeSipHeader(fitsMetadata, "B", &_sipB);
             decodeSipHeader(fitsMetadata, "AP", &_sipAp);
             decodeSipHeader(fitsMetadata, "BP", &_sipBp);
+
+            // this gets called in the Wcs (base class) constructor
+            // We just changed fitsMetadata, so we have to re-init wcslib
+            initWcsLibFromFits(fitsMetadata);
+            
             break;
     }
     
