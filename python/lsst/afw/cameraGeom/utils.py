@@ -358,12 +358,13 @@ particular that it has an entry ampSerial which is a single-element list, the am
     raft = cameraGeom.Raft(raftId, nCol, nRow)
 
     if nCol*nRow != len(raftPol.getArray("Ccd")):
-        msg = "Expected location of %d amplifiers, got %d" % (nCol*nRow, len(raftPol.getArray("Ccd")))
-
-        if force:
-            print >> sys.stderr, msg
-        else:
-            raise RuntimeError, msg
+        if False:                       # many cameras don't use filled rafts at the edge (e.g. HSC)
+            msg = "Expected location of %d Ccds, got %d" % (nCol*nRow, len(raftPol.getArray("Ccd")))
+            
+            if force:
+                print >> sys.stderr, msg
+            else:
+                raise RuntimeError, msg
 
     for ccdPol in raftPol.getArray("Ccd"):
         Col, Row = ccdPol.getArray("index")
