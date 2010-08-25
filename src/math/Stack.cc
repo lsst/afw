@@ -156,12 +156,15 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                     psPtr.variance() = rows[i].variance();
                 }
 
-                msk |= mskTmp;
+                // if this pixel is not masked out, 'or' it with the output mask.
+                if (!(mskTmp & sctrlTmp.getAndMask())) {
+                    msk |= mskTmp;
+                }
                 
                 ++rows[i];
             }
             afwMath::Statistics stat = afwMath::makeStatistics(pixelSet, flags, sctrlTmp);
-            
+
             PixelT variance = stat.getError()*stat.getError();
             *ptr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), msk, variance);
         }

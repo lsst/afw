@@ -159,6 +159,32 @@ class StackTestCase(unittest.TestCase):
 
         self.assertEqual(img.get(0, 0)[0], imgStack.get(0, 0)[0])
 
+        
+    def testTicket1412(self):
+        """Ticket 1412: ignored mask bits are propegated to output stack."""
+
+        mimg1 = afwImage.MaskedImageF(1, 1)
+        mimg1.set(0, 0, (1, 0x4, 1)) # set 0100
+        mimg2 = afwImage.MaskedImageF(1, 1)
+        mimg2.set(0, 0, (2, 0x3, 1)) # set 0010 and 0001
+        
+        imgList = afwImage.vectorMaskedImageF()
+        imgList.push_back(mimg1)
+        imgList.push_back(mimg2)
+        
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setAndMask(0x1) # andmask only 0001
+
+        # try first with no sctrl (no andmask set), should see 0x0111 for all output mask pixels
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
+        self.assertEqual(imgStack.get(0, 0)[1], 0x7)
+
+        # now try with sctrl (andmask = 0x0001), should see 0x0100 for all output mask pixels
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl)
+        self.assertEqual(imgStack.get(0, 0)[1], 0x4)
+        
+
+        
 #################################################################
 # Test suite boiler plate
 #################################################################
