@@ -86,6 +86,10 @@ public:
     void add(Schema const& val) {
         add(val.clone());
     }
+    /// Reset the schema to be empty
+    void clear() {
+        _entries.clear();
+    }
     /// Add a Schema::Ptr to the list of components
     void add(Ptr val) {
         _entries.push_back(val);
