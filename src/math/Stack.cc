@@ -121,7 +121,6 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     // get a list to contain a pixel from x,y for each image
     afwMath::MaskedVector<PixelT> pixelSet(images.size());
     afwMath::StatisticsControl sctrlTmp(sctrl);
-    image::MaskPixel const andMask = sctrl.getAndMask();
 
     // if we're forcing the user variances ...
     if (UseVariance) {
@@ -156,19 +155,13 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                     psPtr.variance() = rows[i].variance();
                 }
 
-                // if this pixel is not masked out, 'or' it with the output mask.
-                // \todo Ignore NaNs too, if requested in StatisticsControl
-                if (!(mskTmp & sctrlTmp.getAndMask())) {
-                    msk |= mskTmp;
-                }
-                
                 ++rows[i];
             }
             afwMath::Statistics stat =
                 afwMath::makeStatistics(pixelSet, flags | afwMath::NPOINT | afwMath::ERRORS, sctrlTmp);
             
             PixelT variance = ::pow(stat.getError(flags), 2);
-            msk &= ~andMask;            // no bits with andMask set can have made it into the output
+            msk = stat.getOrMask();
             if (stat.getValue(afwMath::NPOINT) == 0) {
                 msk = sctrlTmp.getNoGoodPixelsMask();
             }

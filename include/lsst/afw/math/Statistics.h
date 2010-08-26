@@ -71,7 +71,8 @@ enum Property {
     MIN = 0x400,           ///< estimate sample minimum
     MAX = 0x800,           ///< estimate sample maximum
     SUM = 0x1000,          ///< find sum of pixels in the image
-    MEANSQUARE = 0x2000    ///< find mean value of square of pixel values
+    MEANSQUARE = 0x2000,   ///< find mean value of square of pixel values
+    ORMASK = 0x4000        ///< get the or-mask of all pixels used.
 };
 
     
@@ -188,12 +189,15 @@ public:
     
     double getError(Property const prop = NOTHING) const;
     double getValue(Property const prop = NOTHING) const;
+    image::MaskPixel getOrMask() const {
+        return _allPixelOrMask;
+    }
     
 private:
 
     // return type for _getStandard
-    typedef boost::tuple<double, double, double, double, double> StandardReturn; 
-    typedef boost::tuple<int, double, double, double, double, double> SumReturn; 
+    typedef boost::tuple<double, double, double, double, double, image::MaskPixel> StandardReturn; 
+    typedef boost::tuple<int, double, double, double, double, double, image::MaskPixel> SumReturn; 
     typedef boost::tuple<double, double, double> MedianQuartileReturn;
     
     long _flags;                        // The desired calculation
@@ -208,6 +212,7 @@ private:
     double _varianceclip;               // the image's N-sigma clipped variance
     double _median;                     // the image's median
     double _iqrange;                    // the image's interquartile range
+    image::MaskPixel _allPixelOrMask;   //  the 'or' of all masked pixels
 
     StatisticsControl _sctrl;           // the control structure
 
