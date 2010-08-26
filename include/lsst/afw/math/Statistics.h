@@ -94,6 +94,7 @@ public:
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
+        _noGoodPixelsMask(0x0),
         _isNanSafe(isNanSafe),
         _isWeighted(isWeighted),
         _isMultiplyingWeights(false) {
@@ -104,7 +105,8 @@ public:
 
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
-    image::MaskPixel getAndMask() const { return _andMask; }
+    int getAndMask() const { return _andMask; }
+    int getNoGoodPixelsMask() const { return _noGoodPixelsMask; }
     bool getNanSafe() const { return _isNanSafe; }
     bool getWeighted() const { return _isWeighted; }
     bool getMultiplyWeights() const { return _isMultiplyingWeights; }
@@ -112,7 +114,8 @@ public:
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
-    void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
+    void setAndMask(int andMask) { _andMask = andMask; }
+    void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
     void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
     void setMultiplyWeights(bool isMultiplyingWeights) { _isMultiplyingWeights = isMultiplyingWeights; }
@@ -121,7 +124,8 @@ public:
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
-    image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
+    int _andMask;               // and-Mask to specify which mask planes to ignore
+    int _noGoodPixelsMask;      // mask to set if no values are acceptable
     bool _isNanSafe;                      // Check for NaNs before running (slower)
     bool _isWeighted;                     // Use inverse variance to weight statistics.
     bool _isMultiplyingWeights;           // Treat variance plane as weights and multiply instead of dividing

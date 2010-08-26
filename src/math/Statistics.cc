@@ -698,7 +698,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
     
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
     afwMath::Property const prop =
-        (iProp == NOTHING) ? static_cast<afwMath::Property>(_flags & ~ERRORS) : iProp;
+        static_cast<afwMath::Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
     
     if (!(prop & _flags)) {             // we didn't calculate it
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -786,7 +786,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case MEDIAN:
         ret.first = _median;
         if ( _flags & ERRORS ) {
-            ret.second = 0;
+            ret.second = sqrt(M_PI/2*_variance/_n); // assumes Gaussian
         }
         break;
       case IQRANGE:
