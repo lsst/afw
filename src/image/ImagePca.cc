@@ -29,6 +29,7 @@
  */
 #include <algorithm>
 #include "boost/make_shared.hpp"
+#include "lsst/utils/ieee.h"
 
 #include "Eigen/Core"
 #include "Eigen/QR"
@@ -436,7 +437,11 @@ double do_updateBadPixels(
                     if (!(iptr.mask() & mask)) {
                         typename ImageT::Image::Pixel value = iptr.image()/flux_i;
                         float const var = iptr.image()/(flux_i*flux_i);
-                        float ivar = 1.0/var;
+                        float const ivar = 1.0/var;
+                        if (!lsst::utils::isfinite(ivar)) {
+                            continue;
+                        }
+
                         *mptr += value*ivar;
                         *wptr += ivar;
                     }
@@ -468,7 +473,6 @@ double do_updateBadPixels(
                         if (delta > maxChange) {
                             maxChange = delta;
                         }
-                        iptr.image() = flux_i*(*mptr);
                         iptr.image() = flux_i*(*mptr);
                     }
                 }
