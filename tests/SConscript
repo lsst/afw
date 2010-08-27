@@ -41,11 +41,14 @@ else:
 
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
+    inFileRamFitsIO1 = os.path.join(dataDir, "fpC-002570-r6-0199_sub.fits")
+    inFileRamFitsIO2 = os.path.join(dataDir, "fpC-005902-r6-0677_sub.fits")
     testArgs = dict(
         maskedImage1 =   "%s %s file:maskedImage1_output_1 file:maskedImage1_output_2" % (inFile, inFile),
         maskedImageIo1 = inFile,
         maskedImageIo2 = inFile,
         maskIo1 =         "%s_msk.fits" % inFile,
+        ramFitsIO =       "%s %s" % (inFileRamFitsIO1, inFileRamFitsIO2),
     )
 
     ignoreList=["testLib.py", "testEigenLib.py",
