@@ -91,17 +91,36 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// Triggers a compile assert if the image channel depth is not supported by the FITS library or by the I/O
 /// extension.  Throws lsst::afw::image::FitsException if the file is not a valid FITS file, or
 /// if its color space or channel depth are not compatible with the ones specified by Image
-template <typename Image>
-inline void fits_read_image(const std::string& filename, Image& im,
-                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-                            int hdu=1,
-                            BBox const& bbox=BBox()
-                           ) {
-    BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);
-
-    detail::fits_reader m(filename, metadata, hdu, bbox);
-    m.read_image(im);
-}
+ template <typename Image>
+   inline void fits_read_image(const std::string& filename, Image& im,
+			       lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+			       int hdu=1,
+			       BBox const& bbox=BBox()
+			       ) {
+   BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);
+   
+   detail::fits_reader m(filename, metadata, hdu, bbox);
+   m.read_image(im);
+ }
+	
+/// \ingroup FITS_IO
+/// \brief Allocates a new image whose dimensions are determined by the given fits image file from RAM, and loads the
+/// pixels into it.
+///
+/// Triggers a compile assert if the image channel depth is not supported by the FITS library or by the I/O
+/// extension.  Throws lsst::afw::image::FitsException if the file is not a valid FITS file, or
+/// if its color space or channel depth are not compatible with the ones specified by Image
+ template <typename Image>
+   inline void fits_read_ramImage(char **ramFile, size_t *ramFileLen, Image& im,
+				  lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+				  int hdu=1,
+				  BBox const& bbox=BBox()
+				  ) {
+   BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);
+   
+   detail::fits_reader m(ramFile, ramFileLen, metadata, hdu, bbox);
+   m.read_image(im);
+ }
 
 /// \ingroup FITS_IO
 /// \brief Saves the view to a fits file specified by the given fits image file name.
@@ -116,6 +135,21 @@ inline void fits_write_view(const std::string& filename, const View& view,
 
     detail::fits_writer m(filename, mode);
     m.apply(view, metadata);
+}
+
+/// \ingroup FITS_IO
+/// \brief Saves the view to a fits ram file.
+/// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
+/// Throws lsst::afw::image::FitsException if it fails to create the ram file.
+template <typename View>
+inline void fits_write_view(char **ramFile, size_t *ramFileLen,const View& view,
+							boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
+							std::string const& mode="w"
+							) {
+	BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
+	
+	detail::fits_writer m(ramFile, ramFileLen, mode);
+	m.apply(view, metadata);
 }
 
 }}}                                     // namespace lsst::afw::image

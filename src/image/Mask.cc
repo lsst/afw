@@ -258,18 +258,12 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     ;                                   // defined by Mask::_maskPlaneDict
 }
 
-/**
- * \brief Write a Mask to the specified file
- */
 template<typename MaskPixelT>
-void afwImage::Mask<MaskPixelT>::writeFits(
-    std::string const& fileName, ///< File to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< metadata to write to header,
-        ///< or a null pointer if none
-    std::string const& mode    ///< "w" to write a new file; "a" to append
+dafBase::PropertySet::Ptr afwImage::Mask<MaskPixelT>::generateMetadata(
+	boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i
+		///< metadata to write to header, or a null pointer if none
 ) const {
-
-    dafBase::PropertySet::Ptr metadata;
+	dafBase::PropertySet::Ptr metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
@@ -282,8 +276,39 @@ void afwImage::Mask<MaskPixelT>::writeFits(
     dafBase::PropertySet::Ptr wcsAMetadata = afwImage::detail::createTrivialWcsAsPropertySet(
         afwImage::detail::wcsNameForXY0, this->getX0(), this->getY0());
     metadata->combine(wcsAMetadata);
+	
+	return metadata;
+}
 
+/**
+ * \brief Write a Mask to the specified file
+ */
+template<typename MaskPixelT>
+void afwImage::Mask<MaskPixelT>::writeFits(
+    std::string const& fileName, ///< File to write
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< metadata to write to header,
+        ///< or a null pointer if none
+    std::string const& mode    ///< "w" to write a new file; "a" to append
+) const {
+    dafBase::PropertySet::Ptr metadata = generateMetadata(metadata_i);
     afwImage::fits_write_view(fileName, _getRawView(), metadata, mode);
+}
+
+/**
+ * \brief Write a Mask to the specified RAM file
+ */
+template<typename MaskPixelT>
+void afwImage::Mask<MaskPixelT>::writeFits(
+    char **ramFile,		///< RAM buffer to receive RAM FITS file
+	size_t *ramFileLen,	///< RAM buffer length
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< metadata to write to header,
+        ///< or a null pointer if none
+    std::string const& mode    ///< "w" to write a new file; "a" to append
+) const {
+    dafBase::PropertySet::Ptr metadata = generateMetadata(metadata_i);
+	int debugData = 0;
+	std::string debugFilename = "";
+    afwImage::fits_write_view(ramFile, ramFileLen, _getRawView(), metadata, mode);
 }
 
 template<typename MaskPixelT>

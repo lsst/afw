@@ -25,7 +25,7 @@
 /**
  * @file simpleStacker.cc
  * @author Steve Bickerton
- * @brief An example executible which calls the example 'stack' code 
+ * @brief An example executable which calls the example 'stack' code 
  *
  */
 #include <iostream>
@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
             wvec[iImg] = 0.0;
         }
     }
+    
     // we'll need a StatisticsControl object with weighted stats specified.
     math::StatisticsControl sctrl;
     if ( argc > 1 && std::atoi(argv[1]) > 0 ) {
@@ -72,8 +73,7 @@ int main(int argc, char **argv) {
     std::cout << "Image:                      " << (*imgStack)(nX/2, nY/2) << std::endl;
     ImageF::Ptr wimgStack = math::statisticsStack<float>(imgList, math::MEAN, sctrl, wvec);
     std::cout << "Image (const weight):       " << (*wimgStack)(nX/2, nY/2) << std::endl;
-
-
+    
     // masked image
     std::vector<MImageF::Ptr> mimgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
@@ -88,8 +88,6 @@ int main(int argc, char **argv) {
     MImageF::Ptr wmimgStack = math::statisticsStack<float>(mimgList, math::MEAN, sctrl, wvec);
     std::cout << "MaskedImage (const weight): " << (*wmimgStack->getImage())(nX/2, nY/2) << std::endl;
     
-
-
     // std::vector, and also with a constant weight vector
     std::vector<VecFPtr> vecList;
     for (int iImg = 0; iImg < nImg; ++iImg) {

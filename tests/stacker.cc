@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
 
     // ===========================================================================
     // Plan: build lists (std::vectors) of Image, MaskedImage, and std::vector
-    //       and set the pixels in each image to it's number in the list.
+    //       and set the pixels in each image to its number in the list.
     // Crudely test the weighting by setting the weights to zero for the first half of the list
 
     

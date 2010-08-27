@@ -411,6 +411,50 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
 }
 
 /**
+ * Construct an Image from a block of memory containing the raw contents of a FITS file
+ *
+ * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
+ * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
+ */
+template<typename PixelT>
+image::Image<PixelT>::Image(char **ramFile, ///< byte array containing a FITS file fully read into memory
+							size_t *ramFileLen,	///< byte array length
+                            int const hdu,               ///< Desired HDU
+                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            BBox const& bbox                            ///< Only read these pixels
+							) :
+	image::ImageBase<PixelT>() {
+	
+    typedef boost::mpl::vector<
+	lsst::afw::image::detail::types_traits<unsigned char>::image_t,
+	lsst::afw::image::detail::types_traits<unsigned short>::image_t,
+	lsst::afw::image::detail::types_traits<short>::image_t,
+	lsst::afw::image::detail::types_traits<int>::image_t,
+	lsst::afw::image::detail::types_traits<float>::image_t,
+	lsst::afw::image::detail::types_traits<double>::image_t
+    > fits_img_types;
+	
+	if (!metadata) {
+		metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+	}
+	
+	if (!image::fits_read_ramImage<fits_img_types>(ramFile, ramFileLen, *this->_getRawImagePtr(), metadata, hdu, bbox)) {
+		throw LSST_EXCEPT(image::FitsException,
+						  (boost::format("Failed to read FITS HDU %d") % hdu).str());
+	}
+	this->_setRawView();
+	
+	if (bbox) {
+		this->setXY0(bbox.getLLC());
+	}
+	/*
+	 * We will interpret one of the header WCSs as providing the (X0, Y0) values
+	 */
+	this->setXY0(this->getXY0() +
+				 image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
+}
+
+/**
  * Write an Image to the specified file
  */
 template<typename PixelT>
@@ -439,6 +483,38 @@ void image::Image<PixelT>::writeFits(
     }
 
     image::fits_write_view(fileName, _getRawView(), metadata, mode);
+}
+
+/**
+ * Write an Image to the specified ram buffer
+ */
+template<typename PixelT>
+void image::Image<PixelT>::writeFits(
+	char **ramFile,							///< Ram buffer to receive the FITS file
+	size_t *ramFileLen,
+	boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
+	std::string const& mode                     //!< "w" to write a new file; "a" to append
+) const {
+    using lsst::daf::base::PropertySet;
+	
+    if (mode == "pdu") {
+        image::fits_write_view(ramFile, ramFileLen, _getRawView(), metadata_i, mode);
+        return;
+    }
+	
+    lsst::daf::base::PropertySet::Ptr metadata;
+    PropertySet::Ptr wcsAMetadata =
+		image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+													 this->getX0(), this->getY0());
+    
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+        metadata->combine(wcsAMetadata);
+    } else {
+        metadata = wcsAMetadata;
+    }
+	
+    image::fits_write_view(ramFile, ramFileLen, _getRawView(), metadata, mode);
 }
 
 /************************************************************************************************************/

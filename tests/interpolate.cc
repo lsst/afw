@@ -106,5 +106,3 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) { /* parasoft-suppress  LsstDm-3
         BOOST_CHECK_CLOSE(youtS, ytest, 1.0e-8);
     }
 }
-
-

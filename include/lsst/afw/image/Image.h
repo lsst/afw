@@ -372,7 +372,7 @@ namespace image {
         typedef detail::Image_tag image_category;
 
 #if !defined(SWIG)
-        /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
+        /// A templated class to return this class's type (present in Image/Mask/MaskedImage)
         template<typename ImagePT=PixelT>
         struct ImageTypeFactory {
             /// Return the desired type
@@ -386,6 +386,9 @@ namespace image {
         Image(const Image& rhs, const bool deep=false);
         explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,
+                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                       BBox const& bbox=BBox());
+        explicit Image(char **ramFile, size_t *ramFileLen, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        BBox const& bbox=BBox());
 
@@ -406,7 +409,11 @@ namespace image {
                        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
                        std::string const& mode="w"
                       ) const;
-
+		void writeFits(char **ramFile, size_t *ramFileLen,
+                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
+					   std::string const& mode="w"
+					  ) const;
+		
         void swap(Image &rhs);
         //
         // Operators etc.

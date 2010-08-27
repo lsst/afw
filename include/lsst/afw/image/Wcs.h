@@ -54,7 +54,7 @@ namespace image {
 /// - Greisen & Calabretta, 2002 A&A 395, 1061
 /// - Calabretta & Greisen, 2002, A&A 395, 1077
 ///  
-/// In it's simplest sense, Wcs is used to convert from position in the sky (in right ascension 
+/// In its simplest sense, Wcs is used to convert from position in the sky (in right ascension 
 /// and declination) to pixel position on an image (and back again). It is, however, much more general 
 /// than that and can understand a myriad of different coordinate systems.
 /// 
@@ -85,7 +85,7 @@ namespace image {
 /// 
 /// Note that we violate the Wcs standard in one minor way. The standard states that none
 /// of the CRPIX or CRVAL keywords are required, for the header to be valid, and the appropriate values
-/// should be set to 0.0 if the keywords are absent. This is a recipie for painful bugs in analysis, so
+/// should be set to 0.0 if the keywords are absent. This is a recipe for painful bugs in analysis, so
 /// we violate the standard by insisting that the keywords CRPIX[1,2] and CRVAL[1,2] are present when
 /// reading a header (keywords CRPIX1a etc are also accepted)
 

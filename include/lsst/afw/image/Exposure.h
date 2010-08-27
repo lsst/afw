@@ -195,6 +195,7 @@ namespace image {
         
         // FITS
         void writeFits(std::string const &expOutFile) const;
+		void writeFits(char **ramFile, size_t *ramFileLen) const;
         
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
@@ -205,7 +206,8 @@ namespace image {
         Filter _filter;
         PTR(Calib) _calib;
         PTR(lsst::afw::detection::Psf) _psf;
-
+		
+		lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;	//Used by writeFits()
         void _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
     };
 

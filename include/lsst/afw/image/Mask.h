@@ -67,7 +67,7 @@ namespace image {
         typedef detail::Mask_tag image_category;
 
 #if !defined(SWIG)
-        /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
+        /// A templated class to return this class's type (present in Image/Mask/MaskedImage)
         template<typename MaskPT=MaskPixelT>
         struct ImageTypeFactory {
             /// Return the desired type
@@ -117,6 +117,11 @@ namespace image {
                                                                                    lsst::daf::base::PropertySet::Ptr(),
                        std::string const& mode="w"
                       ) const;
+        void writeFits(char **ramFile, size_t *ramFileLen,
+                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=
+                                                                                   lsst::daf::base::PropertySet::Ptr(),
+                       std::string const& mode="w"
+                      ) const;
         
         // Mask Plane ops
         
@@ -160,6 +165,10 @@ private:
         static MaskPixelT getBitMask(int plane);
 
         static int _maskDictVersion;    // version number for bitplane dictionary
+		
+		dafBase::PropertySet::Ptr generateMetadata(
+			boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i
+		) const;	//Used by writeFits()
 
         void _initializePlanes(MaskPlaneDict const& planeDefs); // called by ctors
         //

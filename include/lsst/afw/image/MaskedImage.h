@@ -97,7 +97,7 @@ namespace image {
         typedef detail::MaskedImage_tag image_category;
 
 #if !defined(SWIG)
-        /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
+        /// A templated class to return this class's type (present in Image/Mask/MaskedImage)
         template<typename ImagePT=ImagePixelT, typename MaskPT=MaskPixelT, typename VarPT=VariancePixelT>
         struct ImageTypeFactory {
             /// Return the desired type
@@ -733,6 +733,12 @@ namespace image {
                        std::string const& mode="w",
                        bool const writeMef=false
                       ) const;
+		void writeFits(char **ramFile, size_t *ramFileLen,
+					   boost::shared_ptr<const lsst::daf::base::PropertySet> metadata =
+					   lsst::daf::base::PropertySet::Ptr(),
+					   std::string const& mode="w",
+                       bool const writeMef=true	//writeMef=false is not supported, it will throw an exception
+					   ) const;
         
         // Getters
         /// Return a (Ptr to) the MaskedImage's %image

@@ -251,7 +251,48 @@ protected:
         }
 
         _fd = boost::shared_ptr<FD>(_fd_s, close_cfitsio());
+	}
+	
+    fits_file_mgr(char **ramFile, size_t *ramFileLen, const std::string& flags) :
+		_fd(static_cast<FD *>(NULL)), _flags(flags) {
+		if (flags == "r" || flags == "rb") {
+			int status = 0;
+			if (fits_open_memfile(&_fd_s, "UnusedFilenameParameter", READONLY, (void**)ramFile,
+								  ramFileLen, 0,
+								  NULL/*Memory allocator unnecessary for READONLY*/, &status) != 0) {
+				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
+			}
+		} else if (flags == "w" || flags == "wb" || flags == "pdu") {
+			int status = 0;
+			*ramFileLen = 2880;	//Initial buffer size (file length)
+			size_t deltaSize = 0;	//0 is a flag that this parameter will be ignored and the default 2880 used instead
+			*ramFile = new char[*ramFileLen];
+			if (fits_create_memfile(&_fd_s, (void**)ramFile,
+									ramFileLen, deltaSize, &realloc, &status) != 0) {
+				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_create_memfile", status));
+			}
+        } else if (flags == "a" || flags == "ab") {
+            int status = 0;
+			size_t deltaSize = 0;	//0 is a flag that this parameter will be ignored and the default 2880 used instead
+            if (fits_open_memfile(&_fd_s, "UnusedFilenameParameter", READWRITE, (void**)ramFile,
+									  ramFileLen, deltaSize,
+									  &realloc, &status) != 0) {
+				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
+            }
+            /*
+             * Seek to end of the file
+             */
+            int nHdu = 0;
+            if (fits_get_num_hdus(_fd_s, &nHdu, &status) != 0 ||
+                fits_movabs_hdu(_fd_s, nHdu, NULL, &status) != 0) {
+                (void)cfitsio::fits_close_file(_fd_s, &status);
+				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_close_file", status));
+            }
+        }
+		
+        _fd = boost::shared_ptr<FD>(_fd_s, close_cfitsio());
     }
+	
     virtual ~fits_file_mgr() {}
 public:
     FD* get() { return _fd.get(); }
@@ -279,7 +320,7 @@ protected:
             throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
         /*
-         * Lookip cfitsio data type
+         * Lookup cfitsio data type
          */
         _ttype = cfitsio::ttypeFromBitpix(bitpix);
     
@@ -336,7 +377,11 @@ public:
     fits_reader(const std::string& filename,
                 lsst::daf::base::PropertySet::Ptr  metadata,
                 int hdu=0, BBox const& bbox=BBox()) :
-        fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
+		fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
+    fits_reader(char **ramFile, size_t *ramFileLen,
+                lsst::daf::base::PropertySet::Ptr  metadata,
+                int hdu=0, BBox const& bbox=BBox()) :
+		fits_file_mgr(ramFile, ramFileLen, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
 
     ~fits_reader() { }
 
@@ -429,6 +474,8 @@ class fits_writer : public fits_file_mgr {
 public:
     fits_writer(cfitsio::fitsfile *file) :     fits_file_mgr(file)           { init(); }
     fits_writer(std::string const& filename, std::string const&mode) : fits_file_mgr(filename, mode) { init(); }
+    fits_writer(char **ramFile, size_t *ramFileLen, std::string const&mode) :
+		fits_file_mgr(ramFile, ramFileLen, mode) { init(); }
     ~fits_writer() { }
     
     template <typename View>
@@ -488,7 +535,7 @@ public:
         for (int y = 0; y != view.height(); ++y, tptr += view.width()) {
             std::copy(view.row_begin(y), view.row_end(y), tptr);
         }
-
+		
         if (fits_write_img(_fd.get(), ttype, 1, tmp.size(), &tmp[0], &status) != 0) {
             throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }

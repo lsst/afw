@@ -604,6 +604,68 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
     }
 }
+
+/**
+ * Write \c this to a FITS RAM file
+ *
+ * \deprecated Please avoid using the interface that writes three separate files;  it may be
+ * removed in some future release.
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+	char **ramFile,		///< RAM buffer to receive RAM FITS file
+	size_t *ramFileLen,	///< RAM buffer length
+	boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i,
+		///< Metadata to write to file or NULL
+	std::string const& mode, //!< "w" to write a new file; "a" to append
+	bool const writeMef
+		///< write an MEF file,
+		///< even if basename doesn't look like a fully qualified FITS file
+) const {
+	
+    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
+    }
+	
+	if (!writeMef) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
+	}
+	
+    lsst::daf::base::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+    } else {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+    }
+	
+	static boost::regex const fitsFileRE_compiled(image::detail::fitsFileRE);
+    if (writeMef) { 
+        static boost::regex const compressedFileRE_compiled(image::detail::compressedFileRE);
+        
+		//
+        // Write the PDU
+        //
+        if (mode == "w" || mode == "wb") {
+            _image->writeFits(ramFile, ramFileLen, metadata, "pdu");
+#if 0	// this has the consequence of _only_ writing the WCS to the PDU
+            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+#endif
+        }
+
+        metadata->set("EXTTYPE", "IMAGE");
+        _image->writeFits(ramFile, ramFileLen, metadata, "w");	//First one can't be 'a', must be 'w'
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "MASK");
+        _mask->writeFits(ramFile, ramFileLen, metadata, "a");
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "VARIANCE");
+        _variance->writeFits(ramFile, ramFileLen, metadata, "a");
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
+	}
+}
         
 /************************************************************************************************************/
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions
