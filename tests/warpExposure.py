@@ -291,6 +291,9 @@ class WarpExposureTestCase(unittest.TestCase):
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
             afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage, originalWcs, warpingKernel)
+            if display:
+                ds9.mtv(afwWarpedImage, frame=1, title="Warped")
+                ds9.mtv(swarpedImage, frame=2, title="SWarped")
             if SAVE_FITS_FILES:
                 afwWarpedImage.writeFits(afwWarpedImagePath)
             
