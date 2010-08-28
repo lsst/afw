@@ -284,21 +284,28 @@ int afwMath::warpImage(
                                                          destImage.indexToPosition(-1, afwImage::Y));
         srcPosXY[x] = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
     }
-    
-    std::vector<afwGeom::Point2D> _prevRowSrcPosXY(destWidth); // previous row's srcPosXY vector
-    std::vector<afwGeom::Point2D>::iterator prevRowSrcPosXY = _prevRowSrcPosXY.begin();
+    //
+    // We overallocate a pixel here, and make prevSrcPosXY point to second element (which will be pixel [0])
+    // so that prevSrcPosXY[-1] is valid
+    //
+    std::vector<afwGeom::Point2D> _prevSrcPosXY(1 + destWidth); // previous row's srcPosXY vector
+    std::vector<afwGeom::Point2D>::iterator prevSrcPosXY = _prevSrcPosXY.begin() + 1;
     std::vector<float> relativeArea(destWidth);               // relative dest and src area for each pixel
     
     afwGeom::Point2D oneSrcPosXY;
     for (int y = 0; y < destHeight; ++y) {
+        //
+        // Set prevSrcPosXY from last row's srcPosXY. Note that we overallocated a pixel,
+        // so it's safe to set the [-1] element
+        //
+        std::copy(srcPosXY.begin(), srcPosXY.end(), prevSrcPosXY); // prevSrcPosXY is an iterator
+
         afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(-1, afwImage::X),
                                                          destImage.indexToPosition(y, afwImage::Y));
-        afwGeom::Point2D prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+        prevSrcPosXY[-1] = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
         //
-        // Save last row's srcPosXY as prevRowSrcPosXY
+        // Compute the transformations for this row
         //
-        std::copy(srcPosXY.begin(), srcPosXY.end(), _prevRowSrcPosXY.begin());
-
         for (int x = 0; x < destWidth; ++x) {
             // compute sky position associated with this pixel of remapped MaskedImage
             destPosXY[0] = destImage.indexToPosition(x, afwImage::X);
@@ -309,11 +316,9 @@ int afwMath::warpImage(
                 // Correct intensity due to relative pixel spatial scale and kernel sum.
                 // The area computation is for a parallellogram.
                 oneSrcPosXY = srcPosXY[x];
-                afwGeom::Point2D dSrcA = oneSrcPosXY - afwGeom::Extent<double>(prevSrcPosXY);
-                afwGeom::Point2D dSrcB = oneSrcPosXY - afwGeom::Extent<double>(prevRowSrcPosXY[x]);
+                afwGeom::Point2D dSrcA = oneSrcPosXY - afwGeom::Extent<double>(prevSrcPosXY[x - 1]);
+                afwGeom::Point2D dSrcB = oneSrcPosXY - afwGeom::Extent<double>(prevSrcPosXY[x    ]);
                 relativeArea[x] = std::abs(dSrcA.getX()*dSrcB.getY() - dSrcA.getY()*dSrcB.getX());
-
-                prevSrcPosXY = srcPosXY[x];
             }
         }
         
