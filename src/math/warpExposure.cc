@@ -278,30 +278,53 @@ int afwMath::warpImage(
     
     // compute source position X,Y corresponding to row -1 of the destination image;
     // this is used for computing relative pixel scale
-    std::vector<afwGeom::Point2D> prevRowSrcPosXY(destWidth+1);
-    for (int destIndX = 0; destIndX < destWidth; ++destIndX) {
-        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(destIndX, afwImage::X),
+    std::vector<afwGeom::Point2D> srcPosXY(destWidth);
+    for (int x = 0; x != destWidth; ++x) {
+        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(x, afwImage::X),
                                                          destImage.indexToPosition(-1, afwImage::Y));
-        afw::geom::Point2D srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
-        prevRowSrcPosXY[destIndX] = srcPosXY;
+        srcPosXY[x] = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
     }
-    for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
+    
+    std::vector<afwGeom::Point2D> _prevRowSrcPosXY(destWidth); // previous row's srcPosXY vector
+    std::vector<afwGeom::Point2D>::iterator prevRowSrcPosXY = _prevRowSrcPosXY.begin();
+    std::vector<float> relativeArea(destWidth);               // relative dest and src area for each pixel
+    
+    afwGeom::Point2D oneSrcPosXY;
+    for (int y = 0; y < destHeight; ++y) {
         afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(-1, afwImage::X),
-                                                         destImage.indexToPosition(destIndY, afwImage::Y));
-        afw::geom::Point2D prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
-        afw::geom::Point2D srcPosXY;
-        typename DestImageT::x_iterator destXIter = destImage.row_begin(destIndY);
-        for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
+                                                         destImage.indexToPosition(y, afwImage::Y));
+        afwGeom::Point2D prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+        //
+        // Save last row's srcPosXY as prevRowSrcPosXY
+        //
+        std::copy(srcPosXY.begin(), srcPosXY.end(), _prevRowSrcPosXY.begin());
+
+        for (int x = 0; x < destWidth; ++x) {
             // compute sky position associated with this pixel of remapped MaskedImage
-            destPosXY[0] = destImage.indexToPosition(destIndX, afwImage::X);
+            destPosXY[0] = destImage.indexToPosition(x, afwImage::X);
 
             // Compute associated pixel position on source MaskedImage
-            srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+            srcPosXY[x] = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+            {
+                // Correct intensity due to relative pixel spatial scale and kernel sum.
+                // The area computation is for a parallellogram.
+                oneSrcPosXY = srcPosXY[x];
+                afwGeom::Point2D dSrcA = oneSrcPosXY - afwGeom::Extent<double>(prevSrcPosXY);
+                afwGeom::Point2D dSrcB = oneSrcPosXY - afwGeom::Extent<double>(prevRowSrcPosXY[x]);
+                relativeArea[x] = std::abs(dSrcA.getX()*dSrcB.getY() - dSrcA.getY()*dSrcB.getX());
+
+                prevSrcPosXY = srcPosXY[x];
+            }
+        }
+        
+        typename DestImageT::x_iterator destXIter = destImage.row_begin(y);
+        for (int x = 0; x < destWidth; ++x, ++destXIter) {
+            oneSrcPosXY = srcPosXY[x];  // pixel position on source
 
             // Compute associated source pixel index as integer and nonnegative fractional parts;
             // the latter is used to compute the remapping kernel.
-            std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPosXY[0], afwImage::X);
-            std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPosXY[1], afwImage::Y);
+            std::pair<int, double> srcIndFracX = srcImage.positionToIndex(oneSrcPosXY[0], afwImage::X);
+            std::pair<int, double> srcIndFracY = srcImage.positionToIndex(oneSrcPosXY[1], afwImage::Y);
             if (srcIndFracX.second < 0) {
                 ++srcIndFracX.second;
                 --srcIndFracX.first;
@@ -317,8 +340,8 @@ int afwMath::warpImage(
             srcIndFracY.first -= kernelCtrY;
           
             // If location is too near the edge of the source, or off the source, mark the dest as edge
-            if ((srcIndFracX.first < 0) || (srcIndFracX.first + kernelWidth > srcWidth) 
-                || (srcIndFracY.first < 0) || (srcIndFracY.first + kernelHeight > srcHeight)) {
+            if ((srcIndFracX.first < 0) || (srcIndFracX.first + kernelWidth > srcWidth) ||
+                (srcIndFracY.first < 0) || (srcIndFracY.first + kernelHeight > srcHeight)) {
                 // skip this pixel
                 *destXIter = edgePixel;
             } else {
@@ -329,30 +352,15 @@ int afwMath::warpImage(
                 warpingKernel.setKernelParameters(srcFracInd);
                 double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
 
-                typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
-                *destXIter = afwMath::convolveAtAPoint<DestImageT, SrcImageT>(
-                    srcLoc, kernelXList, kernelYList);
-    
-                // Correct intensity due to relative pixel spatial scale and kernel sum.
-                // The area computation is for a parallellogram.
-                afwGeom::Point2D dSrcA = srcPosXY - afwGeom::Extent<double>(prevSrcPosXY);
-                afwGeom::Point2D dSrcB = srcPosXY - afwGeom::Extent<double>(prevRowSrcPosXY[destIndX]);
-                double multFac = std::abs((dSrcA.getX() * dSrcB.getY())
-                    - (dSrcA.getY() * dSrcB.getX())) / kSum;
-                *destXIter *= multFac;
-//                destXIter.image() *= static_cast<typename DestImageT::Image::SinglePixel>(multFac);
-//                destXIter.variance() *=
-//                    static_cast<typename DestImageT::Variance::SinglePixel>(multFac * multFac);
+                typename SrcImageT::const_xy_locator srcLoc =
+                    srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
+                
+                *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(srcLoc, kernelXList, kernelYList);
+                *destXIter *= relativeArea[x]/kSum;
             }
-
-            // Copy srcPosXY to prevRowSrcPosXY to use for computing area scaling for pixels in the next row
-            // (we've finished with that value in prevRowSrcPosXY for this row)
-            // and to prevSrcPosXY for computation the area scaling of the next pixel in this row
-            prevRowSrcPosXY[destIndX] = srcPosXY;
-            prevSrcPosXY = srcPosXY;
-
         } // dest x pixels
     } // dest y pixels
+
     return numGoodPixels;
 } // warpExposure
 
