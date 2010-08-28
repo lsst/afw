@@ -369,11 +369,6 @@ int afwMath::warpImage(
                 // compute sky position associated with [xend] pixel of remapped MaskedImage
                 destPosXY[0] = destImage.indexToPosition(xend, afwImage::X);
 
-                // Compute associated pixel position on source MaskedImage
-                srcPosXY[xend] = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
-                // compute sky position associated with [xend] pixel of remapped MaskedImage
-                destPosXY[0] = destImage.indexToPosition(xend, afwImage::X);
-
                 std::pair<afwGeom::Point2D, float> res = getSrcPos(destPosXY, destWcs, srcWcs,
                                                                    prevSrcPosXY + xend);
                 srcPosXY[xend] = res.first;
@@ -381,10 +376,10 @@ int afwMath::warpImage(
 
                 for (int i = 0; i < interval - 1; ++i) {
                     for (int j = 0; j != 2; ++j) {
-                        srcPosXY[x + i][j] = srcPosXY[x - 1][j] +
-                            (i + 1)*(srcPosXY[xend][j] - srcPosXY[x - 1][j])/interval;
+                        srcPosXY[x + i].coeffRef(j) = srcPosXY[x - 1].coeffRef(j) +
+                            (i + 1)*(srcPosXY[xend].coeffRef(j) - srcPosXY[x - 1].coeffRef(j))/interval;
                     }
-                
+
                     relativeArea[x + i] = relativeArea[x - 1] +
                         (i + 1)*(relativeArea[xend] - relativeArea[x - 1])/interval;
                 }
