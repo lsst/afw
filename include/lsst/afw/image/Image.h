@@ -188,7 +188,9 @@ namespace image {
         // Operators etc.
         //
         PixelReference operator()(int x, int y);
+        PixelReference operator()(int x, int y, bool);
         PixelConstReference operator()(int x, int y) const;
+        PixelConstReference operator()(int x, int y, bool) const;
 
         /// Return the number of columns in the %image
         int getWidth() const { return _gilView.width(); }
