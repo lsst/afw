@@ -93,7 +93,29 @@ class ImageTestCase(unittest.TestCase):
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
                 self.assertEqual(self.image1.get(i, j), self.val1 + self.function(i, j))
-    
+
+    def testBoundsChecking(self):
+        """Check that pixel indexes are checked in python"""
+        tsts = []
+        def tst():
+            self.image1.get(-1, 0)
+        tsts.append(tst)
+
+        def tst():
+            self.image1.get(0, -1)
+        tsts.append(tst)
+
+        def tst():
+            self.image1.get(self.image1.getWidth(), 0)
+        tsts.append(tst)
+
+        def tst():
+            self.image1.get(0, self.image1.getHeight())
+        tsts.append(tst)
+
+        for tst in tsts:
+            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
+
     def testAddScaledImages(self):
         c = 10.0
         self.image1.scaledPlus(c, self.image2)

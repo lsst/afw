@@ -66,11 +66,11 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
      * Set pixel (x,y) to val
      */
     void set(int x, int y, double val) {
-        self->operator()(x, y) = val;
+        self->operator()(x, y, true) = val;
     }
 
     PIXEL_TYPE get(int x, int y) {
-        return self->operator()(x, y);
+        return self->operator()(x, y, true);
     }
 
     %pythoncode {

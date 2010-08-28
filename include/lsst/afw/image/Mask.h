@@ -108,6 +108,9 @@ namespace image {
         typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y);
         typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y) const;
         bool operator()(int x, int y, int plane) const;
+        typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y, bool);
+        typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y, bool) const;
+        bool operator()(int x, int y, int plane, bool) const;
 
         // I/O and FITS metadata
         

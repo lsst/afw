@@ -230,9 +230,9 @@ namespace image {
                 lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
         ) const {
             double const fullIndex = pos - PixelZeroPos - (xy == X ? getX0() : getY0());
-            double const roundedIndex = std::floor(fullIndex + 0.5);
+            int const roundedIndex = static_cast<int>(fullIndex + 0.5);
             double const residual = fullIndex - roundedIndex;
-            return std::pair<int, double>(static_cast<int>(roundedIndex), residual);
+            return std::pair<int, double>(roundedIndex, residual);
         }
 
         /**
