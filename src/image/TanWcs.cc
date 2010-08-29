@@ -375,33 +375,22 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
 
 }
 
-
-
-///\brief Convert from (possibly) distorted pixel position to sky coordinates (e.g ra/dec)
-///
-///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-///system will be
-///be RA--TAN and DEC-TAN. 
-Coord::Ptr TanWcs::pixelToSky(const GeomPoint pixel) const {
-    return pixelToSky(pixel[0], pixel[1]);
-}
-
-///\brief Convert from (possibly) distorted pixel position to sky coordinates (e.g ra/dec)
-///
-///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-///system will be RA--TAN and DEC-TAN. 
-Coord::Ptr TanWcs::pixelToSky(double pixel1, double pixel2) const {
+/************************************************************************************************************/
+/*
+ * Worker routine for pixelToSky
+ */
+void
+TanWcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
+{
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
     // wcslib assumes 1-indexed coordinates
     double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
-                               pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
+                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
     double imgcrd[2];
     double phi, theta;
-    double skyTmp[2];
-
     
     //Correct pixel positions for distortion if necessary
     if( _hasDistortion) {
@@ -434,18 +423,15 @@ Coord::Ptr TanWcs::pixelToSky(double pixel1, double pixel2) const {
         pixTmp[1]+= g;
     }
  
-    int stat[1];
     int status = 0;
-    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
-    if (status > 0) {
+    if (wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status) > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of  %d. %s") %
                            status % wcs_errmsg[status]).str());
     }
-
-    return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
+/************************************************************************************************************/
 
 lsst::daf::base::PropertySet::Ptr TanWcs::getFitsMetadata() const {
     return lsst::afw::formatters::TanWcsFormatter::generatePropertySet(*this);       

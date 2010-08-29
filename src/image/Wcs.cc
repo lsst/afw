@@ -676,6 +676,30 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
     return geom::makePointD(imgcrd[0], imgcrd[1]); 
 }
 
+/*
+ * Worker routine for pixelToSky
+ */
+void
+Wcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
+{
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+    
+    // wcslib assumes 1-indexed coordinates
+    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
+                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
+    double imgcrd[2];
+    double phi, theta;
+    
+    int status = 0;
+    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
+    if (status > 0) {
+        throw LSST_EXCEPT(except::RuntimeErrorException,
+                          (boost::format("Error: wcslib returned a status code of %d. %s") %
+                           status % wcs_errmsg[status]).str());
+    }
+}
 
 ///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
 ///
@@ -696,27 +720,25 @@ CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
-    // wcslib assumes 1-indexed coordinates
-    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
-                               pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
-    double imgcrd[2];
-    double phi, theta;
     double skyTmp[2];
+    pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
-    
-    int stat[1];
-    int status = 0;
-    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
-    if (status > 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
-    }
-
-    return makeCorrectCoord(skyTmp[0], skyTmp[1]);    
+    return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
+///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
+///
+///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec)
+///
+/// \note This routine is designed for the knowledgeable user in need of performance; it's safer to call
+/// the version that returns a CoordPtr
+///
+afwGeom::Point2D Wcs::pixelToSky(double pixel1, double pixel2, bool) const {
+    double skyTmp[2];
+    pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
+    return afwGeom::makePointD(skyTmp[0], skyTmp[1]);
+}
 
 ///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
 ///sub-class of Coord
