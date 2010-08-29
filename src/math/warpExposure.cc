@@ -199,7 +199,17 @@ namespace {
               afwImage::Wcs const &srcWcs,    ///< WCS of source %image
               std::vector<afwGeom::Point2D>::iterator const prevSrcPosXY)
     {
+        /*
+         * These two versions are equivalent, but the second is faster as it doesn't need to build a Coord
+         */
+#if 0
         afwGeom::Point2D srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+#else
+        double const x = destPosXY[0];
+        double const y = destPosXY[1];
+        afwGeom::PointD sky = destWcs.pixelToSky(x, y, true);
+        afwGeom::Point2D srcPosXY = srcWcs.skyToPixel(sky[0], sky[1]);
+#endif
         // Correct intensity due to relative pixel spatial scale and kernel sum.
         // The area computation is for a parallellogram.
         afwGeom::Point2D dSrcA = srcPosXY - afwGeom::Extent<double>(prevSrcPosXY[-1]);

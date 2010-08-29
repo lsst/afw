@@ -62,7 +62,7 @@ originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 class WarpExposureTestCase(unittest.TestCase):
     """Test case for warpExposure
     """
-    def testNullWarpExposure(self):
+    def testNullWarpExposure(self, interpLength=10):
         """Test that warpExposure maps an image onto itself.
         
         Note:
@@ -73,7 +73,7 @@ class WarpExposureTestCase(unittest.TestCase):
         originalExposure = afwImage.ExposureF(originalExposurePath)
         afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
         warpingKernel = afwMath.LanczosWarpingKernel(4)
-        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
+        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull")
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
@@ -99,7 +99,7 @@ class WarpExposureTestCase(unittest.TestCase):
         if errStr:
             self.fail("afw null-warped MaskedImage (good pixels, max tolerance): %s" % (errStr,))
 
-    def testNullWarpImage(self):
+    def testNullWarpImage(self, interpLength=10):
         """Test that warpImage maps an image onto itself.
         """
         originalExposure = afwImage.ExposureF(originalExposurePath)
@@ -109,7 +109,8 @@ class WarpExposureTestCase(unittest.TestCase):
         originalWcs = originalExposure.getWcs()
         afwWarpedWcs = afwWarpedExposure.getWcs()
         warpingKernel = afwMath.LanczosWarpingKernel(4)
-        afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage, originalWcs, warpingKernel)
+        afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage,
+                          originalWcs, warpingKernel, interpLength)
         if SAVE_FITS_FILES:
             afwWarpedImage.writeFits("afwWarpedImageNull.fits")
         afwWarpedImageArr = imageTestUtils.arrayFromImage(afwWarpedImage)
@@ -121,7 +122,7 @@ class WarpExposureTestCase(unittest.TestCase):
         if errStr:
             self.fail("afw null-warped Image: %s" % (errStr,))
 
-    def testNullWcs(self):
+    def testNullWcs(self, interpLength=10):
         """Cannot warp from or into an exposure without a Wcs.
         """
         exposureWithWcs = afwImage.ExposureF(originalExposurePath)
@@ -129,35 +130,35 @@ class WarpExposureTestCase(unittest.TestCase):
         exposureWithoutWcs = afwImage.ExposureF(mi.getWidth(), mi.getHeight())
         warpingKernel = afwMath.BilinearWarpingKernel()
         try:
-            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingKernel)
+            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingKernel, interpLength)
             self.fail("warping from a source Exception with no Wcs should fail")
         except Exception:
             pass
         try:
-            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingKernel)
+            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingKernel, interpLength)
             self.fail("warping into a destination Exception with no Wcs should fail")
         except Exception:
             pass
     
-    def testWarpIntoSelf(self):
+    def testWarpIntoSelf(self, interpLength=10):
         """Cannot warp in-place
         """
         originalExposure = afwImage.ExposureF(100, 100)
         warpingKernel = afwMath.BilinearWarpingKernel()
         try:
-            afwMath.warpExposure(originalExposure, originalExposure, warpingKernel)
+            afwMath.warpExposure(originalExposure, originalExposure, warpingKernel, interpLength)
             self.fail("warpExposure in place (dest is src) should fail")
         except Exception:
             pass
         try:
             afwMath.warpImage(originalExposure.getMaskedImage(), originalExposure.getWcs(),
-                originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingKernel)
+                originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingKernel, interpLength)
             self.fail("warpImage<MaskedImage> in place (dest is src) should fail")
         except Exception:
             pass
         try:
             afwMath.warpImage(originalExposure.getImage(), originalExposure.getWcs(),
-                originalExposure.getImage(), originalExposure.getWcs(), warpingKernel)
+                originalExposure.getImage(), originalExposure.getWcs(), warpingKernel, interpLength)
             self.fail("warpImage<Image> in place (dest is src) should fail")
         except Exception:
             pass
@@ -214,7 +215,7 @@ class WarpExposureTestCase(unittest.TestCase):
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
     def compareToSwarp(self, kernelName, rtol=1.0e-05, atol=1e-08,
-        useWarpExposure=True, useSubregion=False, useDeepCopy=False):
+                       useWarpExposure=True, useSubregion=False, useDeepCopy=False, interpLength=10):
         """Compare warpExposure to swarp for given warping kernel.
         
         Note that swarp only warps the image plane, so only test that plane.
@@ -256,7 +257,7 @@ class WarpExposureTestCase(unittest.TestCase):
     
             afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
             afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
+            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
             if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
             if display:
@@ -290,7 +291,8 @@ class WarpExposureTestCase(unittest.TestCase):
             afwWarpedImage = afwImage.ImageF(destWidth, destHeight)
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
-            afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage, originalWcs, warpingKernel)
+            afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
+                              originalWcs, warpingKernel, interpLength)
             if display:
                 ds9.mtv(afwWarpedImage, frame=1, title="Warped")
                 ds9.mtv(swarpedImage, frame=2, title="SWarped")
