@@ -527,9 +527,9 @@ typename afwImage::ImageBase<MaskPixelT>::PixelReference afwImage::Mask<MaskPixe
  */
 template<typename MaskPixelT>
 typename afwImage::ImageBase<MaskPixelT>::PixelReference afwImage::Mask<MaskPixelT>::operator()(
-    int x,  ///< x index
-    int y,  ///< y index
-    bool check
+    int x,                              ///< x index
+    int y,                              ///< y index
+    afwImage::CheckIndices const& check ///< Check array bounds?
 ) {
     return this->ImageBase<MaskPixelT>::operator()(x, y, check);
 }
@@ -550,9 +550,9 @@ typename afwImage::ImageBase<MaskPixelT>::PixelConstReference afwImage::Mask<Mas
  */
 template<typename MaskPixelT>
 typename afwImage::ImageBase<MaskPixelT>::PixelConstReference afwImage::Mask<MaskPixelT>::operator()(
-    int x,  ///< x index
-    int y,  ///< y index
-    bool check
+    int x,                              ///< x index
+    int y,                              ///< y index
+    afwImage::CheckIndices const& check ///< Check array bounds?
 ) const {
     return this->ImageBase<MaskPixelT>::operator()(x, y, check);
 }
@@ -578,7 +578,7 @@ bool afwImage::Mask<MaskPixelT>::operator()(
     int x,                              ///< x index
     int y,                              ///< y index
     int planeId,                        ///< plane ID
-    bool check
+    afwImage::CheckIndices const& check ///< Check array bounds?
 ) const {
     // !! converts an int to a bool
     return !!(this->ImageBase<MaskPixelT>::operator()(x, y, check) & getBitMask(planeId));

@@ -269,6 +269,7 @@ class FourierLocalKernel;
         inline void setCtr(lsst::afw::geom::Point2I ctr) {
             _ctrX = ctr.getX();
             _ctrY = ctr.getY();
+            _setKernelXY();
         }
 
         /**
@@ -278,6 +279,7 @@ class FourierLocalKernel;
          */
         inline void setCtrX(int ctrX) {
             _ctrX = ctrX;
+            _setKernelXY();
         }
 
         /**
@@ -287,6 +289,7 @@ class FourierLocalKernel;
          */
         inline void setCtrY(int ctrY) {
             _ctrY = ctrY;
+            _setKernelXY();
         }
 
         /**
@@ -371,6 +374,8 @@ class FourierLocalKernel;
         // prevent copying and assignment (to avoid problems from type slicing)
         Kernel(const Kernel&);
         Kernel& operator=(const Kernel&);
+        // Set the Kernel's ideas about the x- and y- coordinates
+        virtual void _setKernelXY() {}
     };
 
     typedef std::vector<Kernel::Ptr> KernelList;
@@ -708,6 +713,8 @@ class FourierLocalKernel;
         KernelFunctionPtr _kernelRowFunctionPtr;
         mutable std::vector<Pixel> _localColList;  // used by computeImage
         mutable std::vector<Pixel> _localRowList;
+        mutable std::vector<double> _kernelX; // used by SeparableKernel::basicComputeVectors
+        mutable std::vector<double> _kernelY;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -718,7 +725,21 @@ class FourierLocalKernel;
                 ar & make_nvp("rowfn", _kernelRowFunctionPtr);
                 ar & make_nvp("cols", _localColList);
                 ar & make_nvp("rows", _localRowList);
+                ar & make_nvp("kernelX", _kernelX);
+                ar & make_nvp("kernelY", _kernelY);
             }
+
+        virtual void _setKernelXY() {
+            assert (getWidth() == static_cast<int>(_kernelX.size()));
+            for (int i = 0; i != getWidth(); ++i) {
+                _kernelX[i] = i - getCtrX();
+            }
+
+            assert (getHeight() == static_cast<int>(_kernelY.size()));
+            for (int i = 0; i != getHeight(); ++i) {
+                _kernelY[i] = i - getCtrY();
+            }
+        }
     };
 
 }}}   // lsst:afw::math

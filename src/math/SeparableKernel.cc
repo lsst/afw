@@ -50,9 +50,11 @@ afwMath::SeparableKernel::SeparableKernel()
     Kernel(),
     _kernelColFunctionPtr(),
     _kernelRowFunctionPtr(),
-    _localColList(0),
-    _localRowList(0)
-{}
+    _localColList(0), _localRowList(0),
+    _kernelX(0), _kernelY(0)
+{
+    _setKernelXY();
+}
 
 /**
  * @brief Construct a spatially invariant SeparableKernel, or a spatially varying SeparableKernel
@@ -71,9 +73,11 @@ afwMath::SeparableKernel::SeparableKernel(
         spatialFunction),
     _kernelColFunctionPtr(kernelColFunction.clone()),
     _kernelRowFunctionPtr(kernelRowFunction.clone()),
-    _localColList(width),
-    _localRowList(height)
-{}
+    _localColList(width), _localRowList(height),
+    _kernelX(width), _kernelY(height)    
+{
+    _setKernelXY();
+}
 
 /**
  * @brief Construct a spatially varying SeparableKernel
@@ -92,8 +96,8 @@ afwMath::SeparableKernel::SeparableKernel(
     Kernel(width, height, spatialFunctionList),
     _kernelColFunctionPtr(kernelColFunction.clone()),
     _kernelRowFunctionPtr(kernelRowFunction.clone()),
-    _localColList(width),
-    _localRowList(height)
+    _localColList(width), _localRowList(height),
+    _kernelX(width), _kernelY(height)    
 {
     if (kernelColFunction.getNParameters() + kernelRowFunction.getNParameters()
         != spatialFunctionList.size()) {
@@ -103,6 +107,8 @@ afwMath::SeparableKernel::SeparableKernel(
             << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
+
+    _setKernelXY();
 }
 
 afwMath::Kernel::Ptr afwMath::SeparableKernel::clone() const {
@@ -244,10 +250,28 @@ void afwMath::SeparableKernel::setKernelParameter(unsigned int ind, double value
  * exactly 0
  */
 double afwMath::SeparableKernel::basicComputeVectors(
-    std::vector<Pixel> &colList,   ///< column vector
-    std::vector<Pixel> &rowList,   ///< row vector
-    bool doNormalize   ///< normalize the arrays (so sum of each is 1)?
+    std::vector<Pixel> &colList,        ///< column vector
+    std::vector<Pixel> &rowList,        ///< row vector
+    bool doNormalize                    ///< normalize the arrays (so sum of each is 1)?
 ) const {
+#if 0
+    double colSum = _kernelColFunctionPtr->fillVector(_kernelX, colList);
+    double rowSum = _kernelRowFunctionPtr->fillVector(_kernelY, rowList);
+#elif 1
+    double colSum = 0.0;
+    for (unsigned int i = 0; i != colList.size(); ++i) {
+        double colFuncValue = (*_kernelColFunctionPtr)(_kernelX[i]);
+        colList[i] = colFuncValue;
+        colSum += colFuncValue;
+    }
+
+    double rowSum = 0.0;
+    for (unsigned int i = 0; i != rowList.size(); ++i) {
+        double rowFuncValue = (*_kernelRowFunctionPtr)(_kernelX[i]);
+        rowList[i] = rowFuncValue;
+        rowSum += rowFuncValue;
+    }
+#else
     double colSum = 0.0;
     double xArg = - static_cast<double>(this->getCtrX());
     for (std::vector<Pixel>::iterator colIter = colList.begin();
@@ -265,6 +289,7 @@ double afwMath::SeparableKernel::basicComputeVectors(
         *rowIter = rowFuncValue;
         rowSum += rowFuncValue;
     }
+#endif
 
     double imSum = colSum * rowSum;
     if (doNormalize) {

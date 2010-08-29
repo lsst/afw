@@ -59,15 +59,15 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lss
      * Set pixel (x,y) to val
      */
     void set(int x, int y, double val) {
-        self->operator()(x, y, true) = val;
+        self->operator()(x, y, lsst::afw::image::CheckIndices(true)) = val;
     }
 
     PIXEL_TYPE get(int x, int y) const {
-        return self->operator()(x, y, true);
+        return self->operator()(x, y, lsst::afw::image::CheckIndices(true));
     }
 
     bool get(int x, int y, int plane) const {
-        return self->operator()(x, y, plane);
+        return self->operator()(x, y, plane, lsst::afw::image::CheckIndices(true));
     }
     %pythoncode {
     def Factory(self, *args):

@@ -60,15 +60,84 @@ std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(d
         i0 += order + 1;
     }
 
-    assert (i0 == coeffs.size());
+    assert (i0 == static_cast<int>(coeffs.size()));
 
     return coeffs;
 }
 
 /************************************************************************************************************/
+/**
+ * Compute a cache for Lanczos kernels
+ */
+template<typename ReturnT>
+void afwMath::LanczosFunction1<ReturnT>::computeCache(int const cacheSize) {
+    if (cacheSize <= 0) {
+        _kernelCache.erase(_kernelCache.begin(), _kernelCache.end());
+        return;
+    }
+
+    if (cacheSize < static_cast<int>(_kernelCache.size())) {
+        _kernelCache.erase(_kernelCache.begin() + cacheSize, _kernelCache.end());
+    } else {
+        _kernelCache.reserve(cacheSize);
+        for (int i = _kernelCache.size(); i != cacheSize; ++i) {
+            _kernelCache[i].resize(_n);
+        }
+    }
+    //
+    // Actually fill the cache
+    //
+#if 0
+    std::<double> x;
+    for (int i = 0; i != cacheSize; ++i) {
+        this->setParameter(0, i/static_cast<double>(cacheSize - 1));
+        fillVector(this->_kernelX, _kernelCache[i]);
+    }
+#endif
+}
+
+template<typename ReturnT>
+std::vector<std::vector<ReturnT> > afwMath::LanczosFunction1<ReturnT>::_kernelCache;
+
+/**
+ * Fill the vector values with the value of the function at the points x
+ *
+ * \note No array bound checking is performed;  the vectors are assumed to be the same size
+ */
+template<typename ReturnT>
+double afwMath::LanczosFunction1<ReturnT>::fillVector(std::vector<double> const& x,
+                                                      std::vector<ReturnT> &values) const
+{
+    double sum = 0.0;
+    int const cacheSize = _kernelCache.size();
+    if (cacheSize == 0) {
+        for (unsigned int i = 0; i != x.size(); ++i) {
+            ReturnT val = operator()(x[i]);
+            values[i] = val;
+            sum += val;
+        }
+    } else {
+        std::cout << "Using cache" << std::endl;
+
+        std::vector<ReturnT> &cachedValues = _kernelCache.at(this->getParameter(0)*cacheSize);
+        for (unsigned int i = 0; i != x.size(); ++i) {
+            ReturnT val = cachedValues[i];
+            values[i] = val;
+            sum += val;
+        }
+    }
+
+    return sum;
+}
+
+/************************************************************************************************************/
 #define INSTANTIATE(TYPE) \
     template std::vector<double> \
-    afwMath::PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) const
+    afwMath::PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) const; \
+    template std::vector<std::vector<TYPE> > afwMath::LanczosFunction1<TYPE>::_kernelCache; \
+    template void afwMath::LanczosFunction1<TYPE>::computeCache(int const n); \
+    template double afwMath::LanczosFunction1<TYPE>::fillVector(std::vector<double> const& x, \
+                                                                std::vector<TYPE> &values) const
 
 INSTANTIATE(double);
 INSTANTIATE(float);

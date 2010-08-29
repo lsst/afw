@@ -73,7 +73,17 @@ namespace image {
         std::string const wcsNameForXY0 = "A"; // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
     }
 
-    /************************************************************************************************************/
+    /*********************************************************************************************************/
+    /// A class used to request that array accesses be checked
+    class CheckIndices {
+    public:
+        explicit CheckIndices(bool check=true) : _check(check) {}
+        operator bool() const { return _check; }
+    private:
+        bool _check;
+    };
+
+    /*********************************************************************************************************/
     /// \brief metafunction to extract reference type from PixelT
     template<typename PixelT>
     struct Reference {
@@ -188,9 +198,9 @@ namespace image {
         // Operators etc.
         //
         PixelReference operator()(int x, int y);
-        PixelReference operator()(int x, int y, bool);
+        PixelReference operator()(int x, int y, CheckIndices const&);
         PixelConstReference operator()(int x, int y) const;
-        PixelConstReference operator()(int x, int y, bool) const;
+        PixelConstReference operator()(int x, int y, CheckIndices const&) const;
 
         /// Return the number of columns in the %image
         int getWidth() const { return _gilView.width(); }
