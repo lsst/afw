@@ -257,6 +257,12 @@ class FourierLocalKernel;
 
         std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
 
+        /// Return a particular Kernel Parameter (no bounds checking).  This version is slow,
+        /// but specialisations may be faster
+        virtual double getKernelParameter(unsigned int i) const {
+            return getKernelParameters()[i];
+        }
+        
         virtual std::vector<double> getKernelParameters() const;
         
         lsst::afw::geom::BoxI growBBox(lsst::afw::geom::BoxI const &bbox) const;
@@ -351,6 +357,9 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+        // Compute a cache of Kernel values if so desired
+        virtual void computeCache(int const) {}
+        
 #if 0                                   // fails to compile with icc; is it actually used?
         virtual void toFile(std::string fileName) const;
 #endif
@@ -691,6 +700,15 @@ class FourierLocalKernel;
             double y = 0.0
         ) const;
 
+        virtual double getKernelParameter(unsigned int i) const {
+            unsigned int const ncol = _kernelColFunctionPtr->getNParameters();
+            if (i < ncol) {
+                return _kernelColFunctionPtr->getParameter(i);
+            } else {
+                i -= ncol;
+                return _kernelRowFunctionPtr->getParameter(i);
+            }
+        }
         virtual std::vector<double> getKernelParameters() const;
 
         KernelFunctionPtr getKernelColFunction() const;
@@ -698,6 +716,8 @@ class FourierLocalKernel;
         KernelFunctionPtr getKernelRowFunction() const;
 
         virtual std::string toString(std::string const& prefix="") const;
+
+        virtual void computeCache(int const cacheSize);
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
@@ -740,6 +760,11 @@ class FourierLocalKernel;
                 _kernelY[i] = i - getCtrY();
             }
         }
+        //
+        // Cached values of the row- and column- kernels
+        //
+        static std::vector<std::vector<double> > _kernelRowCache;
+        static std::vector<std::vector<double> > _kernelColCache;
     };
 
 }}}   // lsst:afw::math
