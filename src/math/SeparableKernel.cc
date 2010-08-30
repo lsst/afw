@@ -277,7 +277,7 @@ double afwMath::SeparableKernel::basicComputeVectors(
     double rowSum = 0.0;
     if (_kernelRowCache.empty()) {
         for (unsigned int i = 0; i != rowList.size(); ++i) {
-            double rowFuncValue = (*_kernelRowFunctionPtr)(_kernelX[i]);
+            double rowFuncValue = (*_kernelRowFunctionPtr)(_kernelY[i]);
             rowList[i] = rowFuncValue;
             rowSum += rowFuncValue;
         }
