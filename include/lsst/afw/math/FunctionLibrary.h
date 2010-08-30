@@ -780,8 +780,6 @@ using boost::serialization::make_nvp;
             return Function1Ptr(new LanczosFunction1(_n, this->_params[0]));
         }
         
-        virtual double fillVector(std::vector<double> const& x, std::vector<ReturnT> &values) const;
-
         virtual ReturnT operator() (double x) const {
             double xArg1 = (x - this->_params[0]) * M_PI;
             double xArg2 = xArg1 * _invN;
@@ -799,12 +797,9 @@ using boost::serialization::make_nvp;
             return os.str();
         }
 
-        virtual void computeCache(int const n);
-
     private:
         int _n;
         double _invN;                   // == 1/n
-        static std::vector<std::vector<ReturnT> > _kernelCache;
 
     private:
         friend class boost::serialization::access;

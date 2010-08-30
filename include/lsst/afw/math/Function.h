@@ -239,22 +239,6 @@ using boost::serialization::make_nvp;
         virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x) const = 0;
-
-        /**
-         * Fill the vector values with the value of the function at the points x
-         *
-         * \note No array bound checking is performed;  the vectors are assumed to be the same size
-         */
-        virtual double fillVector(std::vector<double> const& x, std::vector<ReturnT> &values) const {
-            double sum = 0.0;
-            for (unsigned int i = 0; i != x.size(); ++i) {
-                ReturnT val = operator()(x[i]);
-                values[i] = val;
-                sum += val;
-            }
-
-            return sum;
-        }
         
         virtual std::string toString(std::string const& prefix="") const {
             return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
