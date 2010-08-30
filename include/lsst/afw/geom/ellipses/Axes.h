@@ -99,6 +99,10 @@ protected:
 /**
  *  \brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
  *
+ *  \warning The conversion Jacobians (result of dAssign) between Axes and other types are not
+ *           well-defined for exact circles.  To avoid problems, avoid differentiating expressions
+ *           involving Axes ellipse cores.
+ *
  *  \ingroup EllipseGroup
  */
 class Axes : public BaseCore {
