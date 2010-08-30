@@ -148,7 +148,26 @@ namespace image {
         virtual bool hasDistortion() const {    return false;};
         
         lsst::afw::geom::LinearTransform getLinearTransform() const;
-        virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const& sky) const;
+
+        lsst::afw::geom::AffineTransform linearizePixelToSky(
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
+        
+        lsst::afw::geom::AffineTransform linearizePixelToSky(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
+
+        lsst::afw::geom::AffineTransform linearizeSkyToPixel(
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
+        
+        lsst::afw::geom::AffineTransform linearizeSkyToPixel(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
 
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
@@ -176,6 +195,18 @@ namespace image {
 
         lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
         lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
+
+        virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit
+        ) const;
+
+        virtual lsst::afw::geom::AffineTransform linearizeSkyToPixelInternal(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit
+        ) const;
 
     
         void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);

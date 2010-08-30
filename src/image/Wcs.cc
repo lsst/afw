@@ -797,30 +797,58 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
 }
 
 
-
 /**
- * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
+ * Return the local linear approximation to Wcs::pixelToSky at the given point (in sky coordinates).
  *
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param[in] sky Position in sky coordinates where transform is desired
+ * @param(in) coord   Position in sky coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates.
  */
+lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizePixelToSkyInternal(skyToPixel(coord), coord, skyUnit);
+}
 
-lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
-{
+/**
+ * Return the local linear approximation to Wcs::pixelToSky at the given point (in pixel coordinates).
+ *
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) pix     Position in pixel coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
+    lsst::afw::geom::Point2D const & pix,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizePixelToSkyInternal(pix, pixelToSky(pix), skyUnit);
+}
+
+/**
+ * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate
+ * and the corresponding sky coordinate.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
+    lsst::afw::geom::Point2D const & pix00,
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
     // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
     // pixel coordinates so I didn't bother
     //
     const double side = 10;             // length of the square's sides in pixels
-    GeomPoint const sky00 = sky;
-    GeomPoint const pix00 = skyToPixel(sky00[0], sky00[1]);
+    GeomPoint const sky00 = coord->getPosition(skyUnit);
 
-    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getPosition() -
+    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getPosition(skyUnit) -
         geom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side))->getPosition() -
+    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side))->getPosition(skyUnit) -
         geom::Extent<double>(sky00);
     
     Eigen::Matrix2d m;
@@ -836,6 +864,52 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
     //return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
     return lsst::afw::geom::AffineTransform(m, (sky00v - m * pix00v));
 }
+
+/**
+ * Return the local linear approximation to Wcs::skyToPixel at the given point (in sky coordinates).
+ *
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) coord   Position in sky coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizeSkyToPixelInternal(skyToPixel(coord), coord, skyUnit);
+}
+
+/**
+ * Return the local linear approximation to Wcs::skyToPixel at the given point (in pixel coordinates).
+ *
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) pix     Position in pixel coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
+    lsst::afw::geom::Point2D const & pix,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizeSkyToPixelInternal(pix, pixelToSky(pix), skyUnit);
+}
+
+/**
+ * Implementation for the overloaded public linearizeSkyToPixel methods, requiring both a pixel coordinate
+ * and the corresponding sky coordinate.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
+    lsst::afw::geom::Point2D const & pix00,
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    lsst::afw::geom::AffineTransform inverse = linearizePixelToSkyInternal(pix00, coord, skyUnit);
+    return inverse.invert();
+}
+
 
 
 /**
