@@ -22,6 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+#include "boost/make_shared.hpp"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 
@@ -30,28 +31,35 @@ namespace afwImg = lsst::afw::image;
 
 using namespace std;
 
-typedef lsst::daf::base::PropertySet PropertySet;
-typedef lsst::afw::image::Wcs Wcs;
-typedef lsst::afw::image::PointD PointD;
-
-
-/// Use this function to create a Wcs object using a fits header. It examines the header and determines the 
-/// most suitable object to return, either a general Wcs object, or a more specific object specialised to a 
-/// given coordinate system (e.g TanWcs)
-/// 
-afwImg::Wcs::Ptr afwImg::makeWcs(PropertySet::Ptr fitsMetadata){
+/**
+ * Create a Wcs object from a fits header.
+ * It examines the header and determines the 
+ * most suitable object to return, either a general Wcs object, or a more specific object specialised to a 
+ * given coordinate system (e.g TanWcs)
+ */
+afwImg::Wcs::Ptr afwImg::makeWcs(
+        lsst::daf::base::PropertySet::Ptr metadata, ///< input metadata
+        bool stripMetadata                              ///< Remove FITS keywords from metadata?
+                                )
+{
     std::string ctype1;
-    if( fitsMetadata->exists("CTYPE1")) {
-        ctype1 = fitsMetadata->getAsString("CTYPE1");
+    if (metadata->exists("CTYPE1")) {
+        ctype1 = metadata->getAsString("CTYPE1");
     } else {
-        return afwImg::Wcs::Ptr(new afwImg::Wcs());
+        return boost::make_shared<afwImg::Wcs>();
     }
-    
+
+    afwImg::Wcs::Ptr wcs;
     if( ctype1.substr(5, 3) == "TAN") {
-        return afwImg::Wcs::Ptr(new afwImg::TanWcs(fitsMetadata));
+        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata)); // can't use make_shared as ctor is private
+    } else {
+        wcs = afwImg::Wcs::Ptr(new afwImg::Wcs(metadata));
     }
-    
-    //Default Wcs class
-    return afwImg::Wcs::Ptr(new afwImg::Wcs(fitsMetadata));
+
+    if (stripMetadata) {
+        afwImg::detail::stripWcsKeywords(metadata, wcs);
+    }
+
+    return wcs;
 }
     

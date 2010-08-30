@@ -68,7 +68,7 @@ namespace image {
 
         //Constructors
         TanWcs();
-        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr metadata, bool);
         TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
                const Eigen::Matrix2d &CD, 
                double equinox=2000, std::string raDecSys="FK5",
