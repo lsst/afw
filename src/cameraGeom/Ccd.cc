@@ -24,7 +24,6 @@
  * \file
  */
 #include <algorithm>
-#include "lsst/afw/math.h"
 #include "lsst/afw/cameraGeom/Ccd.h"
 
 namespace afwGeom = lsst::afw::geom;
