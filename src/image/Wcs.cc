@@ -957,4 +957,26 @@ image::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///
     return image::PointI(x0, y0);
 }
 
+/**
+ * Strip keywords from the input metadata that are related to the generated Wcs
+ *
+ * It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
+ * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12],
+ * but there may be others
+ */
+int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
+                     CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
+                    )
+{
+    PTR(lsst::daf::base::PropertySet) wcsMetadata = wcs->getFitsMetadata();
+    std::vector<std::string> paramNames = wcsMetadata->paramNames();
+    paramNames.push_back("CDELT1");
+    paramNames.push_back("CDELT2");
+    for (std::vector<std::string>::const_iterator ptr = paramNames.begin(); ptr != paramNames.end(); ++ptr) {
+        metadata->remove(*ptr);
+    }
+
+    return 0;                           // would be ncard if remove returned a status
+}
+
 }}}}

@@ -143,7 +143,18 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertRaises(lsst.pex.exceptions.exceptionsLib.LsstCppException, self.wcs.skyToPixel, raDec)
 
     def testCD(self):
-        print self.wcs.getCDMatrix()
+        self.wcs.getCDMatrix()
+
+    def testStripKeywords(self):
+        """Test that we can strip WCS keywords from metadata when constructing a Wcs"""
+        metadata = self.im.getMetadata()
+        self.wcs = afwImage.makeWcs(metadata)
+
+        self.assertTrue(metadata.exists("CRPIX1"))
+
+        strip = True
+        self.wcs = afwImage.makeWcs(metadata, strip)
+        self.assertFalse(metadata.exists("CRPIX1"))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

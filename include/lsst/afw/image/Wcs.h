@@ -28,6 +28,7 @@
 
 
 #include "Eigen/Core.h"
+#include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
@@ -40,6 +41,11 @@
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
+    namespace daf {
+        namespace base {
+            class PropertySet;
+        }
+    }
 namespace afw {
     namespace formatters {
         class WcsFormatter;
@@ -99,7 +105,9 @@ namespace image {
         //Constructors
         Wcs();
         //Create a Wcs of the correct class using a fits header.
-        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
+                                bool stripMetadata);
+                               
         Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
                 const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
                 double equinox=2000, std::string raDecSys="ICRS",
@@ -114,7 +122,7 @@ namespace image {
         lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
         Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
         
-        virtual lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
+        virtual PTR(lsst::daf::base::PropertySet) getFitsMetadata() const;
 
         /// Return true iff Wcs is valid
         operator bool() const { return _nWcsInfo != 0; }
@@ -161,7 +169,7 @@ namespace image {
 
         //If you want to create a Wcs from a fits header, use makeWcs(). 
         //This is protected because the derived classes need to be able to see it.
-        Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+        Wcs(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
 
         Wcs(lsst::afw::image::Wcs const & rhs);
         Wcs& operator= (const Wcs &);        
@@ -170,7 +178,7 @@ namespace image {
         lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
 
     
-        void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+        void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
         
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
@@ -182,13 +190,19 @@ namespace image {
     };
 
     namespace detail {
-        lsst::daf::base::PropertySet::Ptr
+        PTR(lsst::daf::base::PropertySet)
         createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
 
         image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
     }
 
-    Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+    Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
+
+    namespace detail {
+        int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
+                             CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
+                            );
+    }
 
 #if !defined(SWIG)
     extern Wcs NoWcs;
