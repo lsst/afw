@@ -75,7 +75,6 @@ class WarpExposureTestCase(unittest.TestCase):
         originalExposure = afwImage.ExposureF(originalExposurePath)
         afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
         warpingKernel = afwMath.LanczosWarpingKernel(4)
-        warpingKernel.computeCache(0)
         afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull")

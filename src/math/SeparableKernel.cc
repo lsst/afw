@@ -51,7 +51,8 @@ afwMath::SeparableKernel::SeparableKernel()
     _kernelColFunctionPtr(),
     _kernelRowFunctionPtr(),
     _localColList(0), _localRowList(0),
-    _kernelX(0), _kernelY(0)
+    _kernelX(0), _kernelY(0),
+    _kernelRowCache(0), _kernelColCache(0)
 {
     _setKernelXY();
 }
@@ -74,7 +75,8 @@ afwMath::SeparableKernel::SeparableKernel(
     _kernelColFunctionPtr(kernelColFunction.clone()),
     _kernelRowFunctionPtr(kernelRowFunction.clone()),
     _localColList(width), _localRowList(height),
-    _kernelX(width), _kernelY(height)    
+    _kernelX(width), _kernelY(height),
+    _kernelRowCache(0), _kernelColCache(0)
 {
     _setKernelXY();
 }
@@ -97,7 +99,8 @@ afwMath::SeparableKernel::SeparableKernel(
     _kernelColFunctionPtr(kernelColFunction.clone()),
     _kernelRowFunctionPtr(kernelRowFunction.clone()),
     _localColList(width), _localRowList(height),
-    _kernelX(width), _kernelY(height)    
+    _kernelX(width), _kernelY(height),
+    _kernelRowCache(0), _kernelColCache(0)    
 {
     if (kernelColFunction.getNParameters() + kernelRowFunction.getNParameters()
         != spatialFunctionList.size()) {
@@ -376,6 +379,3 @@ void afwMath::SeparableKernel::computeCache(int const cacheSize) {
     func = getKernelRowFunction();
     _computeCache(cacheSize, _kernelX, func, &_kernelRowCache);
 }
-
-std::vector<std::vector<double> > afwMath::SeparableKernel::_kernelRowCache;
-std::vector<std::vector<double> > afwMath::SeparableKernel::_kernelColCache;

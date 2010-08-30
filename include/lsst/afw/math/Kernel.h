@@ -735,6 +735,11 @@ class FourierLocalKernel;
         mutable std::vector<Pixel> _localRowList;
         mutable std::vector<double> _kernelX; // used by SeparableKernel::basicComputeVectors
         mutable std::vector<double> _kernelY;
+        //
+        // Cached values of the row- and column- kernels
+        //
+        mutable std::vector<std::vector<double> > _kernelRowCache;
+        mutable std::vector<std::vector<double> > _kernelColCache;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -760,11 +765,6 @@ class FourierLocalKernel;
                 _kernelY[i] = i - getCtrY();
             }
         }
-        //
-        // Cached values of the row- and column- kernels
-        //
-        static std::vector<std::vector<double> > _kernelRowCache;
-        static std::vector<std::vector<double> > _kernelColCache;
     };
 
 }}}   // lsst:afw::math
