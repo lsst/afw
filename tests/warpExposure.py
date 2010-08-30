@@ -45,6 +45,8 @@ except:
     VERBOSITY = 0                       # increase to see trace
     # set True to save afw-warped images as FITS files
     SAVE_FITS_FILES = False
+    # set True to save failed afw-warped images as FITS files even if SAVE_FITS_FILES is False
+    SAVE_FAILED_FITS_FILES = False
 
 logging.Debug("lsst.afw.math", VERBOSITY)
 
@@ -73,6 +75,7 @@ class WarpExposureTestCase(unittest.TestCase):
         originalExposure = afwImage.ExposureF(originalExposurePath)
         afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
         warpingKernel = afwMath.LanczosWarpingKernel(4)
+        warpingKernel.computeCache(0)
         afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull")
@@ -232,6 +235,15 @@ class WarpExposureTestCase(unittest.TestCase):
             else it is a shallow copy; ignored if useSubregion is False
         """
         warpingKernel = afwMath.makeWarpingKernel(kernelName)
+        try:
+            cacheSize = 10000
+            if cacheSize > 0:
+                atol = max(atol, 0.15)
+                rtol = 4e-5
+
+            warpingKernel.computeCache(cacheSize)
+        except AttributeError:          # old API
+            pass
 
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
@@ -257,7 +269,10 @@ class WarpExposureTestCase(unittest.TestCase):
     
             afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
             afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
+            try:
+                afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
+            except NotImplementedError: # old API
+                afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
             if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
             if display:
@@ -280,9 +295,9 @@ class WarpExposureTestCase(unittest.TestCase):
                 doImage=True, doMask=False, doVariance=False, skipMaskArr=afwWarpedMaskArr,
                 rtol=rtol, atol=atol)
             if errStr:
-                if not SAVE_FITS_FILES:
+                if SAVE_FAILED_FITS_FILES:
                     afwWarpedExposure.writeFits(afwWarpedImagePath)
-                print "Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,)
+                    print "Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,)
                 self.fail("afw and swarp %s-warped %s (ignoring bad pixels)" % (kernelName, errStr))
         else:
             # path for saved afw-warped image
@@ -291,11 +306,18 @@ class WarpExposureTestCase(unittest.TestCase):
             afwWarpedImage = afwImage.ImageF(destWidth, destHeight)
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
-            afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                              originalWcs, warpingKernel, interpLength)
+            try:
+                afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
+                                  originalWcs, warpingKernel, interpLength)
+            except NotImplementedError: # old API
+                afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
+                                  originalWcs, warpingKernel)
             if display:
                 ds9.mtv(afwWarpedImage, frame=1, title="Warped")
                 ds9.mtv(swarpedImage, frame=2, title="SWarped")
+                diff = swarpedImage.Factory(swarpedImage, True)
+                diff -= afwWarpedImage
+                ds9.mtv(diff, frame=3, title="swarp - afw")
             if SAVE_FITS_FILES:
                 afwWarpedImage.writeFits(afwWarpedImagePath)
             
@@ -305,10 +327,10 @@ class WarpExposureTestCase(unittest.TestCase):
             errStr = imageTestUtils.imagesDiffer(afwWarpedImageArr, swarpedImageArr,
                 skipMaskArr=edgeMaskArr, rtol=rtol, atol=atol)
             if errStr:
-                if not SAVE_FITS_FILES:
+                if SAVE_FAILED_FITS_FILES:
                     # save the image anyway
                     afwWarpedImage.writeFits(afwWarpedImagePath)
-                print "Saved failed afw-warped image as: %s" % (afwWarpedImagePath,)
+                    print "Saved failed afw-warped image as: %s" % (afwWarpedImagePath,)
                 self.fail("afw and swarp %s-warped images do not match (ignoring NaN pixels): %s" % \
                     (kernelName, errStr))
     
