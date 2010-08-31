@@ -234,15 +234,12 @@ class WarpExposureTestCase(unittest.TestCase):
             else it is a shallow copy; ignored if useSubregion is False
         """
         warpingKernel = afwMath.makeWarpingKernel(kernelName)
-        try:
-            cacheSize = 10000
-            if cacheSize > 0:
-                atol = max(atol, 0.15)
-                rtol = 4e-5
-
-            warpingKernel.computeCache(cacheSize)
-        except AttributeError:          # old API
-            pass
+        cacheSize = 10000
+        if cacheSize > 0:
+            atol = max(atol, 0.15)
+            rtol = 4e-5
+            
+        warpingKernel.computeCache(cacheSize)
 
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
@@ -268,10 +265,7 @@ class WarpExposureTestCase(unittest.TestCase):
     
             afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
             afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-            try:
-                afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
-            except NotImplementedError: # old API
-                afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
+            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
             if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
             if display:
@@ -305,12 +299,8 @@ class WarpExposureTestCase(unittest.TestCase):
             afwWarpedImage = afwImage.ImageF(destWidth, destHeight)
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
-            try:
-                afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                                  originalWcs, warpingKernel, interpLength)
-            except NotImplementedError: # old API
-                afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                                  originalWcs, warpingKernel)
+            afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
+                              originalWcs, warpingKernel, interpLength)
             if display:
                 ds9.mtv(afwWarpedImage, frame=1, title="Warped")
                 ds9.mtv(swarpedImage, frame=2, title="SWarped")
