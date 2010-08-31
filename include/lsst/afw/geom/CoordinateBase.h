@@ -56,6 +56,8 @@ public:
 #ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
+    T & coeffRef(int n) { return _vector.coeffRef(n); }
+    T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
 #endif
 
     /**
@@ -106,6 +108,8 @@ public:
 #ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
+    T & coeffRef(int n) { return _vector.coeffRef(n); }
+    T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
 #endif
 
     T getX() const { return _vector.x(); }
@@ -169,6 +173,8 @@ public:
 #ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
+    T & coeffRef(int n) { return _vector.coeffRef(n); }
+    T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
 #endif
 
     T getX() const { return _vector.x(); }

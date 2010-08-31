@@ -559,64 +559,53 @@ GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
 ///and the second element corresponds to ctype2.
 GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
     //Construct a coord object of the correct type
-    std::string type(_wcsInfo->ctype[0], 4);
-    std::string radesys(_wcsInfo->radesys);
+    int const ncompare = 4;                       // we only care about type's first 4 chars
+    char const *type = _wcsInfo->ctype[0];
+    char const *radesys = _wcsInfo->radesys;
     CoordPtr convertedCoord;
 
-    bool reversed=false;
-    if(type == "RA--") {
-        if(radesys == "ICRS") {
+    bool reversed = false;
+    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
+        ;                                       // using an tr1::unordered_strcmp(map
+        if(strcmp(radesys, "ICRS") == 0) {
             convertedCoord = coord->convert(afwCoord::ICRS);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             convertedCoord = coord->convert(afwCoord::FK5);
         }
-    }
-    else if(type == "GLON")
-    {  convertedCoord = coord->convert(afwCoord::GALACTIC);
-    }
-    else if(type == "ELON")
-    {   convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    }
-    //Check for strange images where the ctypes as swapped.
-    else if(type == "DEC-") {
+    } else if(strncmp(type, "GLON", ncompare) == 0) {
+        convertedCoord = coord->convert(afwCoord::GALACTIC);
+    } else if(strncmp(type, "ELON", ncompare) == 0) {
+        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
+    } else if(strncmp(type, "DEC-", ncompare) == 0) {
+        //Check for strange images where the ctypes as swapped.
         reversed=true;
-        if(radesys == "ICRS") {
+        if(strcmp(radesys, "ICRS") == 0) {
             convertedCoord = coord->convert(afwCoord::ICRS);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             convertedCoord = coord->convert(afwCoord::FK5);
-        }
-        else {   
+        } else {   
             throw LSST_EXCEPT(except::RuntimeErrorException,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
-        
-    }
-    else if(type == "GLON") {  
+    } else if(strncmp(type, "GLON", ncompare) == 0) {  
         reversed=true;
         convertedCoord = coord->convert(afwCoord::GALACTIC);
-    }
-    else if(type == "ELON") {   
+    } else if(strncmp(type, "ELON", ncompare) == 0) {   
         reversed=true;
         convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    }
-
-    else if(type == "GLAT") {
+    } else if(strncmp(type, "GLAT", ncompare) == 0) {
         reversed=true;
         convertedCoord = coord->convert(afwCoord::GALACTIC);
-    }
-    else if(type == "ELAT") {
+    } else if(strncmp(type, "ELAT", ncompare) == 0) {
         reversed=true;
         convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    }
-    else
-    {   
+    } else {   
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Coord object doesn't support type %s") % type).str());
     }
-
 
     if (reversed) {
         return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
@@ -625,7 +614,6 @@ GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const 
         return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
                                 convertedCoord->getLatitude(afwCoord::DEGREES));
     }
-
 }
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
@@ -688,6 +676,30 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
     return geom::makePointD(imgcrd[0], imgcrd[1]); 
 }
 
+/*
+ * Worker routine for pixelToSky
+ */
+void
+Wcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
+{
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+    
+    // wcslib assumes 1-indexed coordinates
+    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
+                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
+    double imgcrd[2];
+    double phi, theta;
+    
+    int status = 0;
+    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
+    if (status > 0) {
+        throw LSST_EXCEPT(except::RuntimeErrorException,
+                          (boost::format("Error: wcslib returned a status code of %d. %s") %
+                           status % wcs_errmsg[status]).str());
+    }
+}
 
 ///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
 ///
@@ -708,85 +720,73 @@ CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
-    // wcslib assumes 1-indexed coordinates
-    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
-                               pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
-    double imgcrd[2];
-    double phi, theta;
     double skyTmp[2];
+    pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
-    
-    int stat[1];
-    int status = 0;
-    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
-    if (status > 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
-    }
-
-    return makeCorrectCoord(skyTmp[0], skyTmp[1]);    
+    return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
+///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
+///
+///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec)
+///
+/// \note This routine is designed for the knowledgeable user in need of performance; it's safer to call
+/// the version that returns a CoordPtr
+///
+afwGeom::Point2D Wcs::pixelToSky(double pixel1, double pixel2, bool) const {
+    double skyTmp[2];
+    pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
+    return afwGeom::makePointD(skyTmp[0], skyTmp[1]);
+}
 
 ///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
 ///sub-class of Coord
 CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
 
     //Construct a coord object of the correct type
-    std::string type(_wcsInfo->ctype[0], 4);
-    std::string radesys(_wcsInfo->radesys);
+    int const ncompare = 4;                       // we only care about type's first 4 chars
+    char *type = _wcsInfo->ctype[0];
+    char *radesys = _wcsInfo->radesys;
     double equinox = _wcsInfo->equinox;
 
-    if(type == "RA--") {
-        //Our default
-        if(radesys == "ICRS") {
+    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
+        ;                                       // using an tr1::unordered_map
+        if(strcmp(radesys, "ICRS") == 0) {
             return afwCoord::makeCoord(afwCoord::ICRS, sky0, sky1);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             return afwCoord::makeCoord(afwCoord::FK5, sky0, sky1, equinox);
-        }
-        else
-        {   
+        } else {   
             throw LSST_EXCEPT(except::RuntimeErrorException,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
 
-    }
-    else if(type == "GLON")
-    {   return afwCoord::makeCoord(afwCoord::GALACTIC, sky0, sky1);   
-    }
-    else if(type == "ELON")
-    {   return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky0, sky1, equinox);
-    }
-    //check for the case where the ctypes are swapped. Note how sky0 and sky1 are swapped as well
-    else if(type == "DEC-") {
+    } else if (strncmp(type, "GLON", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::GALACTIC, sky0, sky1);   
+    } else if (strncmp(type, "ELON", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky0, sky1, equinox);
+    } else if (strncmp(type, "DEC-", ncompare) == 0) {
+        //check for the case where the ctypes are swapped. Note how sky0 and sky1 are swapped as well
+
         //Our default
-        if(radesys == "ICRS") {
+        if(strcmp(radesys, "ICRS") == 0) {
             return afwCoord::makeCoord(afwCoord::ICRS, sky1, sky0);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             return afwCoord::makeCoord(afwCoord::FK5, sky1, sky0, equinox);
-        }
-        else
-        {   
+        } else {   
             throw LSST_EXCEPT(except::RuntimeErrorException,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
-
-    }
-    else if(type == "GLAT")
-    {   return afwCoord::makeCoord(afwCoord::GALACTIC, sky1, sky0);   
-    }
-    else if(type == "ELAT")
-    {   return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
-    }
+    } else if (strncmp(type, "GLAT", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::GALACTIC, sky1, sky0);   
+    } else if (strncmp(type, "ELAT", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
+    } else {
     //Give up in disgust
-    else
-    {   
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Can't create Coord object: Unrecognised sys %s") %
                            type).str());
