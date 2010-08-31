@@ -204,6 +204,28 @@ namespace detail {
         static LocationList const _TestLocationList;   ///< locations at which to test
             ///< linear interpolation to see if it is accurate enough
     };
+
+    /**
+     * Divide a region into subregions with specified overlap
+     */
+    class SubregionIterator {
+    public:
+        SubregionIterator(
+                lsst::afw::geom::BoxI const &region,
+                lsst::afw::geom::Extent2I const &subregionSize,
+                lsst::afw::geom::Extent2I const &overlapSize);
+                
+        lsst::afw::geom::BoxI begin() const;
+
+        lsst::afw::geom::BoxI getNext(lsst::afw::geom::BoxI const &subregion) const;
+        
+        inline bool isEnd(lsst::afw::geom::BoxI const &subregion) const;
+
+    private:
+        lsst::afw::geom::BoxI const &_region;   ///< full region
+        lsst::afw::geom::Extent2I const _subregionSize;    ///< size of a subregion (pixels)
+        lsst::afw::geom::Extent2I const _overlapSize;    ///< size of overlap (pixels)
+    };
     
     template <typename OutImageT, typename InImageT>
     void convolveWithInterpolation(
@@ -266,6 +288,15 @@ const {
         }
         _imageMap.insert(std::make_pair(location, imageSumPair));
     }
+}
+
+/**
+ * Return True if there are no more subregions
+ *
+ * Does not sanity-check the input
+ */
+inline bool lsst::afw::math::detail::SubregionIterator::isEnd(lsst::afw::geom::BoxI const &subregion) const {
+    return ((subregion.getWidth() == 0) || (subregion.getHeight() == 0));
 }
 
 #endif // !defined(LSST_AFW_MATH_DETAIL_CONVOLVE_H)

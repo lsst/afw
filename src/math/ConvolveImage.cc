@@ -44,6 +44,8 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/deprecated.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math.h"
@@ -296,7 +298,16 @@ void afwMath::convolve(
         KernelT const& kernel,      ///< convolution kernel
         ConvolutionControl const& convolutionControl)   ///< convolution control parameters
 {
-    mathDetail::basicConvolve(convolvedImage, inImage, kernel, convolutionControl);
+    afwGeom::BoxI inImageBBox(afwGeom::makePointI(0, 0),
+        afwGeom::makeExtentI(inImage.getWidth(), inImage.getHeight()));
+    afwGeom::Extent2I overlap = afwGeom::makeExtentI(kernel.getWidth() - 1, kernel.getHeight() - 1);
+    afwMath::detail::SubregionIterator rgnIter(inImageBBox, convolutionControl.getBlockSize(), overlap);
+    for (afwGeom::BoxI bbox = rgnIter.begin(); !rgnIter.isEnd(bbox); bbox = rgnIter.getNext(bbox)) {
+        afwImage::BBox oldStyleBBox(afwGeom::convertToImage(bbox));
+        OutImageT convolvedView(convolvedImage, oldStyleBBox, false);
+        InImageT inView(inImage, oldStyleBBox, false);
+        mathDetail::basicConvolve(convolvedView, inView, kernel, convolutionControl);
+    }
     setEdgePixels(convolvedImage, kernel, inImage, convolutionControl.getDoCopyEdge(),
         typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
     );

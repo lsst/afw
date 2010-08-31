@@ -133,6 +133,88 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
     
 }   // anonymous namespace
 
+
+/**
+ * Construct a SubregionIterator
+ */
+mathDetail::SubregionIterator::SubregionIterator(
+        lsst::afw::geom::BoxI const &region,    ///< full region
+        lsst::afw::geom::Extent2I const &subregionSize, ///< size of subregion (pixels)
+        lsst::afw::geom::Extent2I const &overlapSize) ///< size of overlap (pixels)
+:
+    _region(region),
+    _subregionSize(subregionSize),
+    _overlapSize(overlapSize)
+{
+    if ((region.getWidth() < 1) || (region.getHeight() < 1)) {
+        std::ostringstream os;
+        os << "region size = ("
+            << region.getWidth() << ", " << region.getHeight()
+            << ") not positive in both dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+    if ((subregionSize[0] < 1) || (subregionSize[1] < 1)) {
+        std::ostringstream os;
+        os << "subregionSize = ("
+            << subregionSize[0] << ", " << subregionSize[1]
+            << ") not positive in both dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+};
+
+/**
+ * Get the first subregion
+ */
+lsst::afw::geom::BoxI mathDetail::SubregionIterator::begin() const {
+    afwGeom::BoxI retBox(_region.getMin(), _subregionSize);
+    retBox.clip(_region);
+    return retBox;
+}
+
+/**
+ * Given a subregion, get the next subregion
+ *
+ * If the subregion is at the end of the region
+ * then a subregion of size 0 one past the end is returned
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if subregion not fully contained in main region
+ */
+lsst::afw::geom::BoxI mathDetail::SubregionIterator::getNext(lsst::afw::geom::BoxI const &subregion) const {
+    // sanity-check inputs
+    if (!_region.contains(subregion)) {
+        std::ostringstream os;
+        os << "region = ( "
+            << _region.getMinX() << ", " << _region.getMinY() << "; "
+            << _region.getMaxX() << ", " << _region.getMaxY()
+            << ") does not contain subregion ("
+            << subregion.getMinX() << ", " << subregion.getMinY() << "; "
+            << subregion.getMaxX() << ", " << subregion.getMaxY()
+            << ")";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+
+    int const maxX = _region.getMaxX();
+    int const maxY = _region.getMaxY();
+    int x0, y0;
+    if (subregion.getMaxX() < maxX) {
+        /// next box in this row (increment x and keep y the same)
+        x0 = subregion.getMaxX() + 1 - _overlapSize.getX();
+        y0 = subregion.getMinY();
+    } else if (subregion.getMaxY() < maxY) {
+        /// start next row (reset x to minimum and increment y)
+        x0 = _region.getMinX();
+        y0 = subregion.getMaxY() + 1 - _overlapSize.getY();
+    } else {
+        /// done
+        return afwGeom::BoxI(afwGeom::makePointI(maxX + 1, maxY + 1), afwGeom::makeExtentI(0, 0));
+    }
+    int x1 = x0 + _subregionSize.getX() - 1;
+    if (x1 > maxX) x1 = maxX;
+    int y1 = y0 + _subregionSize.getY() - 1;
+    if (y1 > maxY) y1 = maxY;
+    return afwGeom::BoxI(afwGeom::makePointI(x0, y0), afwGeom::makePointI(x1, y1));
+}
+
 /**
  * @brief Low-level convolution function that does not set edge pixels.
  *

@@ -55,7 +55,7 @@ LocNameDict = {
 
 NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.iteritems())
 
-class KernelImagesForRegion(unittest.TestCase):
+class KernelImagesForRegionTestCase(unittest.TestCase):
     def setUp(self):
         boxCorner = afwGeom.makePointI(11, 50)
         boxExtent = afwGeom.makeExtentI(100, 99)
@@ -239,7 +239,7 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(KernelImagesForRegion)
+    suites += unittest.makeSuite(KernelImagesForRegionTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)

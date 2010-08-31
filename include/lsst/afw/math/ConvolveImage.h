@@ -60,6 +60,11 @@ namespace math {
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
+                lsst::afw::geom::Extent2I const &subregionSize = lsst::afw::geom::makeExtentI(256, 256),
+                    ///< size of subregion into which to divide input image;
+                    ///< each subregion is convolved separately to improve cache performance.
+                    ///< For best results the block size should be small enough that both an input
+                    ///< and output subimage fit into cache, along with the kernel.
                 double maxInterpolationError = 1.0e-3,  ///< maximum allowed error
                     ///< in computing the value of the kernel at any pixel by linear interpolation,
                     ///< where error = abs(interpolated kernel image - true kernel image) / true kernel sum
@@ -74,11 +79,13 @@ namespace math {
     
         bool getDoNormalize() const { return _doNormalize; }
         bool getDoCopyEdge() const { return _doCopyEdge; }
+        lsst::afw::geom::Extent2I getBlockSize() const { return _subregionSize; }
         double getMaxInterpolationError() const { return _maxInterpolationError; }
         int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
         
         void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
         void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
+        void setBlockSize(lsst::afw::geom::Extent2I const &subregionSize) { _subregionSize = subregionSize; }
         void setMaxInterpolationError(double maxInterpolationError) {
             _maxInterpolationError = maxInterpolationError; }
         void setMaxInterpolationDistance(int maxInterpolationDistance) {
@@ -88,6 +95,7 @@ namespace math {
         bool _doNormalize;  ///< normalize the kernel to sum=1?
         bool _doCopyEdge;   ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
+        lsst::afw::geom::Extent2I _subregionSize; ///< size of maximum subregion to convolve at one time
         double _maxInterpolationError;  ///< maximum allowed error in computing the kernel image;
                     ///< applies to linear interpolation and perhaps other approximate methods in the future
         int _maxInterpolationDistance;  ///< maximum width or height of a region
