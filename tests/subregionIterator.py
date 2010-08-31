@@ -114,6 +114,12 @@ class SubregionIteratorTestCase(unittest.TestCase):
         ):
             bbox = afwGeom.BoxI(self.regionStart, bboxEnd)
             nextBBox = self.regionIter.getNext(bbox)
+
+            # basic tests
+            self.assertTrue(nextBBox.getWidth() > 0)
+            self.assertTrue(nextBBox.getHeight() > 0)
+            self.assertFalse(self.regionIter.isEnd(nextBBox))
+
             # verify starting x,y of nextBBox
             if bbox.getMaxX() == self.regionEnd.getX():
                 # start new row
@@ -123,7 +129,8 @@ class SubregionIteratorTestCase(unittest.TestCase):
                 # continue on same row
                 self.assertTrue(nextBBox.getMinX() == bbox.getMaxX() + 1 - self.overlap.getX())
                 self.assertTrue(nextBBox.getMinY() == bbox.getMinY())
-            # verify ending x,y of nextBBox
+
+            # verify size or ending x,y of nextBBox
             if nextBBox.getMaxX() < self.region.getMaxX():
                 self.assertTrue(nextBBox.getWidth() == self.subregionSize.getX())
             else:

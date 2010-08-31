@@ -73,19 +73,20 @@ namespace math {
         :
             _doNormalize(doNormalize),
             _doCopyEdge(doCopyEdge),
+            _subregionSize(subregionSize),
             _maxInterpolationError(maxInterpolationError),
             _maxInterpolationDistance(maxInterpolationDistance)
         { }
     
         bool getDoNormalize() const { return _doNormalize; }
         bool getDoCopyEdge() const { return _doCopyEdge; }
-        lsst::afw::geom::Extent2I getBlockSize() const { return _subregionSize; }
+        lsst::afw::geom::Extent2I getSubregionSize() const { return _subregionSize; }
         double getMaxInterpolationError() const { return _maxInterpolationError; }
         int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
         
         void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
         void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
-        void setBlockSize(lsst::afw::geom::Extent2I const &subregionSize) { _subregionSize = subregionSize; }
+        void setSubregionSize(lsst::afw::geom::Extent2I const &subregionSize) { _subregionSize = subregionSize; }
         void setMaxInterpolationError(double maxInterpolationError) {
             _maxInterpolationError = maxInterpolationError; }
         void setMaxInterpolationDistance(int maxInterpolationDistance) {

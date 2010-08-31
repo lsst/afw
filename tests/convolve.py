@@ -29,12 +29,14 @@ Tests convolution of various kernels with Images and MaskedImages.
 import math
 import os
 import unittest
+import string
 
 import numpy
 
 import eups
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
@@ -68,6 +70,9 @@ EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
 # Ignore kernel pixels whose value is exactly 0 when smearing the mask plane?
 # Set this to match the afw code
 IgnoreKernelZeroPixels = True
+
+NullTranslator = string.maketrans("", "")
+GarbageChars = string.punctuation + string.whitespace
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -234,7 +239,8 @@ class ConvolveTestCase(unittest.TestCase):
         """
         if refKernel == None:
             refKernel = kernel
-        shortKernelDescr = kernelDescr.replace(" ", "")
+        # strip garbage characters (whitespace and punctuation) to make a short description for saving files
+        shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
 
         doNormalize = convControl.getDoNormalize()
         doCopyEdge = convControl.getDoCopyEdge()
@@ -306,6 +312,7 @@ class ConvolveTestCase(unittest.TestCase):
         
         convControl = afwMath.ConvolutionControl()
         convControl.setMaxInterpolationError(maxInterpErr)
+        convControl.setSubregionSize(afwGeom.makeExtentI(25, 30))
         
         # verify dimension assertions:
         # - output image dimensions = input image dimensions
@@ -332,17 +339,22 @@ class ConvolveTestCase(unittest.TestCase):
         self.assert_(convControl.getDoNormalize())
         for doNormalize in (False, True):
             convControl.setDoNormalize(doNormalize)
-            self.assert_(convControl.getDoNormalize() == doNormalize)
+            self.assertEqual(convControl.getDoNormalize(), doNormalize)
         
         self.assert_(not convControl.getDoCopyEdge())
         for doCopyEdge in (False, True):
             convControl.setDoCopyEdge(doCopyEdge)
             self.assert_(convControl.getDoCopyEdge() == doCopyEdge)
+        
+        self.assertEqual(tuple(convControl.getSubregionSize()), (256, 256))
+        for subregionSize in ((1, 1), (2, 1), (50, 37)):
+            convControl.setSubregionSize(afwGeom.makeExtentI(subregionSize[0], subregionSize[1]))
+            self.assertEqual(tuple(convControl.getSubregionSize()), subregionSize)
 
-        self.assert_(convControl.getMaxInterpolationError() == 1.0e-3)
+        self.assertEqual(convControl.getMaxInterpolationError(), 1.0e-3)
         for maxInterpErr in (0.0, 1.0e-99, 1.1e-5, 2.0e99):
             convControl.setMaxInterpolationError(maxInterpErr)
-            self.assert_(convControl.getMaxInterpolationError() == maxInterpErr)
+            self.assertEqual(convControl.getMaxInterpolationError(), maxInterpErr)
         
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.

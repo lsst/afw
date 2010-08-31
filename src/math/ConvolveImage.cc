@@ -298,10 +298,18 @@ void afwMath::convolve(
         KernelT const& kernel,      ///< convolution kernel
         ConvolutionControl const& convolutionControl)   ///< convolution control parameters
 {
+    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
+        std::ostringstream os;
+        os << "convolvedImage dimensions = ( "
+            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+
     afwGeom::BoxI inImageBBox(afwGeom::makePointI(0, 0),
         afwGeom::makeExtentI(inImage.getWidth(), inImage.getHeight()));
     afwGeom::Extent2I overlap = afwGeom::makeExtentI(kernel.getWidth() - 1, kernel.getHeight() - 1);
-    afwMath::detail::SubregionIterator rgnIter(inImageBBox, convolutionControl.getBlockSize(), overlap);
+    afwMath::detail::SubregionIterator rgnIter(inImageBBox, convolutionControl.getSubregionSize(), overlap);
     for (afwGeom::BoxI bbox = rgnIter.begin(); !rgnIter.isEnd(bbox); bbox = rgnIter.getNext(bbox)) {
         afwImage::BBox oldStyleBBox(afwGeom::convertToImage(bbox));
         OutImageT convolvedView(convolvedImage, oldStyleBBox, false);
