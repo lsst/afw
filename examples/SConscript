@@ -33,6 +33,7 @@ env.Program("fixedKernel", ["fixedKernel.cc"], LIBS=env.getlibs("afw"))
 env.Program("lanczosKernel", ["lanczosKernel.cc"], LIBS=env.getlibs("afw"))
 
 env.Program("convolveLinear", ["convolveLinear.cc"], LIBS=env.getlibs("afw"))
+env.Program("convolveSeparable", ["convolveSeparable.cc"], LIBS=env.getlibs("afw"))
 env.Program("simpleConvolve", ["simpleConvolve.cc"], LIBS=env.getlibs("afw"))
 env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("afw"))
 env.Program("timeConvolve", ["timeConvolve.cc"], LIBS=env.getlibs("afw"))

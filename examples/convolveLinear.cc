@@ -49,12 +49,10 @@ int main(int argc, char **argv) {
     if (argc < 2) {
         std::string afwdata = getenv("AFWDATA_DIR");
         if (afwdata.empty()) {
-            std::cerr << "Usage: linearConvolve fitsFile [doBothWays]" << std::endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
+            std::cerr << "Usage: linearConvolve [fitsFile [doBothWays]]" << std::endl;
             std::cerr << "doBothWays (default 0); if 1 then also compute using the normal convolve function"
                       << std::endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
-            std::cerr << "Is afwdata set up?\n" << std::endl;
+            std::cerr << "Error: afwdata is not setup, so I cannot find the default fitsFile." << std::endl;
             exit(EXIT_FAILURE);
         } else {
             mimg = afwdata + "/small_MI";
@@ -113,7 +111,7 @@ int main(int argc, char **argv) {
     
         // convolve
         afwImage::MaskedImage<ImagePixel> resMaskedImage(mImage.getDimensions());
-        afwMath::convolve(resMaskedImage, mImage, lcSpVarKernel, false);
+        afwMath::convolve(resMaskedImage, mImage, lcSpVarKernel);
         
         // write results
         resMaskedImage.writeFits(outFile);
@@ -121,7 +119,7 @@ int main(int argc, char **argv) {
 
         if (doBothWays) {
             afwImage::MaskedImage<ImagePixel> altResMaskedImage(mImage.getDimensions());
-            afwMath::convolve(altResMaskedImage, mImage, lcSpVarKernel, false);
+            afwMath::convolve(altResMaskedImage, mImage, lcSpVarKernel);
             altResMaskedImage.writeFits(altOutFile);
             std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using afwMath::convolve)" << std::endl;
         }

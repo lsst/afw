@@ -316,15 +316,10 @@ void mathDetail::basicConvolve(
  * @brief A version of basicConvolve that should be used when convolving a LinearCombinationKernel
  *
  * The Algorithm:
- * - If the kernel is spatially varying, then convolves the input Image by each basis kernel in turn,
- *   solves the spatial model for that component and adds in the appropriate amount of the convolved %image.
- * - If the kernel is not spatially varying, then computes a fixed kernel and calls the
- *   the general version of basicConvolve.
- *
- * @warning The variance will be mis-computed if your basis kernels contain home-brew delta function kernels
- * (instead of instances of afwMath::DeltaFunctionKernel). It may also be mis-computed if your basis kernels
- * contain many pixels with value zero, or if your basis kernels contain a mix of
- * afwMath::DeltaFunctionKernel with other kernels.
+ * - If the kernel is spatially varying and contains only DeltaFunctionKernels
+ *   then convolves the input Image by each basis kernel in turn, solves the spatial model
+ *   for that component and adds in the appropriate amount of the convolved %image.
+ * - In all other cases uses normal convolution
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
@@ -474,37 +469,31 @@ void mathDetail::basicConvolve(
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
     
-    int const imWidth = inImage.getWidth();
-    int const imHeight = inImage.getHeight();
-    int const kWidth = kernel.getWidth();
-    int const kHeight = kernel.getHeight();
-    int const cnvWidth = static_cast<int>(imWidth) + 1 - static_cast<int>(kernel.getWidth());
-    int const cnvHeight = static_cast<int>(imHeight) + 1 - static_cast<int>(kernel.getHeight());
-    int const cnvStartX = static_cast<int>(kernel.getCtrX());
-    int const cnvStartY = static_cast<int>(kernel.getCtrY());
-    int const cnvEndX = cnvStartX + cnvWidth; // end index + 1
-    int const cnvEndY = cnvStartY + cnvHeight; // end index + 1
+    afwGeom::BoxI const fullBBox(afwGeom::makePointI(0, 0),
+        afwGeom::makeExtentI(inImage.getWidth(), inImage.getHeight()));
+    afwGeom::BoxI const goodBBox = kernel.shrinkBBox(fullBBox);
 
-    KernelVector kXVec(kWidth);
-    KernelVector kYVec(kHeight);
+    KernelVector kernelXVec(kernel.getWidth());
+    KernelVector kernelYVec(kernel.getHeight());
     
     if (kernel.isSpatiallyVarying()) {
         pexLog::TTrace<3>("lsst.afw.math.convolve",
             "SeparableKernel basicConvolve: kernel is spatially varying");
 
-        for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
+        for (int cnvY = goodBBox.getMinY(); cnvY <= goodBBox.getMaxY(); ++cnvY) {
             double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
             
-            InXYLocator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
-            OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
-            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
+            InXYLocator inImLoc = inImage.xy_at(0, cnvY - goodBBox.getMinY());
+            OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + goodBBox.getMinX();
+            for (int cnvX = goodBBox.getMinX(); cnvX <= goodBBox.getMaxX();
+                ++cnvX, ++inImLoc.x(), ++cnvXIter) {
                 double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
 
-                KernelPixel kSum = kernel.computeVectors(kXVec, kYVec, convolutionControl.getDoNormalize(),
-                    colPos, rowPos);
+                KernelPixel kSum = kernel.computeVectors(kernelXVec, kernelYVec,
+                    convolutionControl.getDoNormalize(), colPos, rowPos);
 
                 // why does this trigger warnings? It did not in the past.
-                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelXVec, kernelYVec);
                 if (convolutionControl.getDoNormalize()) {
                     *cnvXIter = *cnvXIter/kSum;
                 }
@@ -512,47 +501,67 @@ void mathDetail::basicConvolve(
         }
     } else {
         // kernel is spatially invariant
+        // The basic sequence:
+        // - For each output row:
+        // - Compute x-convolved data: a kernel height's strip of input image convolved with kernel x vector
+        // - Compute one row of output by dotting each column of x-convolved data with the kernel y vector
+        // The x-convolved data is stored in a kernel-height by good-width buffer
+        // (rather than using the output image as a buffer, which requires writing outside the good region).
+        // The trick is to fill just one row of this buffer each time; this puts the x-convolved data
+        // out of order relative to the kernel y vector, so rotate the kernel y vector to match.
+
         pexLog::TTrace<3>("lsst.afw.math.convolve",
             "SeparableKernel basicConvolve: kernel is spatially invariant");
 
-        kernel.computeVectors(kXVec, kYVec, convolutionControl.getDoNormalize());
-        KernelIterator const kXVecBegin = kXVec.begin();
-        KernelIterator const kYVecBegin = kYVec.begin();
+        kernel.computeVectors(kernelXVec, kernelYVec, convolutionControl.getDoNormalize());
+        KernelIterator const kernelXVecBegin = kernelXVec.begin();
+        KernelIterator const kernelYVecBegin = kernelYVec.begin();
 
-        // Handle the x kernel vector first, putting results into convolved image as a temporary buffer
-        // (all remaining processing must read from and write to the convolved image,
-        // thus being careful not to modify pixels that still need to be read)
-        for (int imageY = 0; imageY < imHeight; ++imageY) {
-            OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, imageY);
-            InXIterator inXIter = inImage.x_at(0, imageY);
-            InXIterator const inXIterEnd = inImage.x_at(cnvWidth, imageY);
-            for ( ; inXIter != inXIterEnd; ++cnvXIter, ++inXIter) {
-                *cnvXIter = kernelDotProduct<OutPixel, InXIterator, KernelIterator, KernelPixel>(
-                    inXIter, kXVecBegin, kWidth);
-            }
-        }
+        // buffer for x-convolved data
+        OutImageT buffer(goodBBox.getWidth(), kernel.getHeight());
         
-        // Handle the y kernel vector. It turns out to be faster for the innermost loop to be along y,
-        // probably because one can accumulate into a temporary variable.
-        // For each row of output, compute the output pixel, putting it at the bottom
-        // (a pixel that will not be read again).
-        // The resulting image is correct, but shifted down by kernel ctr y pixels.
-        for (int cnvY = 0; cnvY < cnvHeight; ++cnvY) {
-            for (int x = cnvStartX; x < cnvEndX; ++x) {
-                OutYIterator cnvYIter = convolvedImage.y_at(x, cnvY);
-                *cnvYIter = kernelDotProduct<OutPixel, OutYIterator, KernelIterator, KernelPixel>(
-                    cnvYIter, kYVecBegin, kHeight);
+        // pre-fill x-convolved data buffer with all but one row of data
+        int yInd = 0; // during initial fill bufY = inImageY
+        int const yPrefillEnd = buffer.getHeight() - 1;
+        for (; yInd < yPrefillEnd; ++yInd) {
+            OutXIterator bufXIter = buffer.x_at(0, yInd);
+            OutXIterator const bufXEnd = buffer.x_at(goodBBox.getWidth(), yInd);
+            InXIterator inXIter = inImage.x_at(0, yInd);
+            for ( ; bufXIter != bufXEnd; ++bufXIter, ++inXIter) {
+                *bufXIter = kernelDotProduct<OutPixel, InXIterator, KernelIterator, KernelPixel>(
+                    inXIter, kernelXVecBegin, kernel.getWidth());
             }
         }
 
-        // Move the good pixels up by kernel ctr Y (working down to avoid overwriting data)
-        for (int destY = cnvEndY - 1, srcY = cnvHeight - 1; srcY >= 0; --destY, --srcY) {
-            OutXIterator destIter = convolvedImage.x_at(cnvStartX, destY);
-            OutXIterator const destIterEnd = convolvedImage.x_at(cnvEndX, destY);
-            OutXIterator srcIter = convolvedImage.x_at(cnvStartX, srcY);
-            for ( ; destIter != destIterEnd; ++destIter, ++srcIter) {
-                *destIter = *srcIter;
+        // compute output pixels using the sequence described above
+        int inY = yPrefillEnd;
+        int bufY = yPrefillEnd;
+        int cnvY = goodBBox.getMinY();
+        while (true) {
+            // fill next buffer row and compute output row
+            InXIterator inXIter = inImage.x_at(0, inY);
+            OutXIterator bufXIter = buffer.x_at(0, bufY);
+            OutXIterator cnvXIter = convolvedImage.x_at(goodBBox.getMinX(), cnvY);
+            for (int bufX = 0; bufX < goodBBox.getWidth(); ++bufX, ++cnvXIter, ++bufXIter, ++inXIter) {
+                // note: bufXIter points to the row of the buffer that is being updated,
+                // whereas bufYIter points to row 0 of the buffer
+                *bufXIter = kernelDotProduct<OutPixel, InXIterator, KernelIterator, KernelPixel>(
+                    inXIter, kernelXVecBegin, kernel.getWidth());
+
+                OutYIterator bufYIter = buffer.y_at(bufX, 0);
+                *cnvXIter = kernelDotProduct<OutPixel, OutYIterator, KernelIterator, KernelPixel>(
+                    bufYIter, kernelYVecBegin, kernel.getHeight());
             }
+            
+            // test for done now, instead of the start of the loop,
+            // to avoid an unnecessary extra rotation of the kernel Y vector
+            if (cnvY > goodBBox.getMaxY()) break;
+            
+            // update y indices, including bufY, and rotate the kernel y vector to match
+            ++inY;
+            bufY = (bufY + 1) % kernel.getHeight();
+            ++cnvY;
+            std::rotate(kernelYVec.begin(), kernelYVec.end()-1, kernelYVec.end());
         }
     }
 }

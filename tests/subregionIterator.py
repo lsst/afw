@@ -116,8 +116,8 @@ class SubregionIteratorTestCase(unittest.TestCase):
             nextBBox = self.regionIter.getNext(bbox)
 
             # basic tests
-            self.assertTrue(nextBBox.getWidth() > 0)
-            self.assertTrue(nextBBox.getHeight() > 0)
+            self.assertTrue(nextBBox.getWidth() > self.overlap.getX())
+            self.assertTrue(nextBBox.getHeight() > self.overlap.getY())
             self.assertFalse(self.regionIter.isEnd(nextBBox))
 
             # verify starting x,y of nextBBox
