@@ -555,7 +555,7 @@ void mathDetail::basicConvolve(
             
             // test for done now, instead of the start of the loop,
             // to avoid an unnecessary extra rotation of the kernel Y vector
-            if (cnvY > goodBBox.getMaxY()) break;
+            if (cnvY >= goodBBox.getMaxY()) break;
             
             // update y indices, including bufY, and rotate the kernel y vector to match
             ++inY;
