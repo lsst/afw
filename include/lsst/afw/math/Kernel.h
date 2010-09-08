@@ -257,6 +257,12 @@ class FourierLocalKernel;
 
         std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
 
+        /// Return a particular Kernel Parameter (no bounds checking).  This version is slow,
+        /// but specialisations may be faster
+        virtual double getKernelParameter(unsigned int i) const {
+            return getKernelParameters()[i];
+        }
+        
         virtual std::vector<double> getKernelParameters() const;
         
         lsst::afw::geom::BoxI growBBox(lsst::afw::geom::BoxI const &bbox) const;
@@ -269,6 +275,7 @@ class FourierLocalKernel;
         inline void setCtr(lsst::afw::geom::Point2I ctr) {
             _ctrX = ctr.getX();
             _ctrY = ctr.getY();
+            _setKernelXY();
         }
 
         /**
@@ -278,6 +285,7 @@ class FourierLocalKernel;
          */
         inline void setCtrX(int ctrX) {
             _ctrX = ctrX;
+            _setKernelXY();
         }
 
         /**
@@ -287,6 +295,7 @@ class FourierLocalKernel;
          */
         inline void setCtrY(int ctrY) {
             _ctrY = ctrY;
+            _setKernelXY();
         }
 
         /**
@@ -348,6 +357,9 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+        // Compute a cache of Kernel values if so desired
+        virtual void computeCache(int const) {}
+        
 #if 0                                   // fails to compile with icc; is it actually used?
         virtual void toFile(std::string fileName) const;
 #endif
@@ -371,6 +383,8 @@ class FourierLocalKernel;
         // prevent copying and assignment (to avoid problems from type slicing)
         Kernel(const Kernel&);
         Kernel& operator=(const Kernel&);
+        // Set the Kernel's ideas about the x- and y- coordinates
+        virtual void _setKernelXY() {}
     };
 
     typedef std::vector<Kernel::Ptr> KernelList;
@@ -686,6 +700,15 @@ class FourierLocalKernel;
             double y = 0.0
         ) const;
 
+        virtual double getKernelParameter(unsigned int i) const {
+            unsigned int const ncol = _kernelColFunctionPtr->getNParameters();
+            if (i < ncol) {
+                return _kernelColFunctionPtr->getParameter(i);
+            } else {
+                i -= ncol;
+                return _kernelRowFunctionPtr->getParameter(i);
+            }
+        }
         virtual std::vector<double> getKernelParameters() const;
 
         KernelFunctionPtr getKernelColFunction() const;
@@ -693,6 +716,8 @@ class FourierLocalKernel;
         KernelFunctionPtr getKernelRowFunction() const;
 
         virtual std::string toString(std::string const& prefix="") const;
+
+        virtual void computeCache(int const cacheSize);
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
@@ -708,6 +733,13 @@ class FourierLocalKernel;
         KernelFunctionPtr _kernelRowFunctionPtr;
         mutable std::vector<Pixel> _localColList;  // used by computeImage
         mutable std::vector<Pixel> _localRowList;
+        mutable std::vector<double> _kernelX; // used by SeparableKernel::basicComputeVectors
+        mutable std::vector<double> _kernelY;
+        //
+        // Cached values of the row- and column- kernels
+        //
+        mutable std::vector<std::vector<double> > _kernelRowCache;
+        mutable std::vector<std::vector<double> > _kernelColCache;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -718,7 +750,21 @@ class FourierLocalKernel;
                 ar & make_nvp("rowfn", _kernelRowFunctionPtr);
                 ar & make_nvp("cols", _localColList);
                 ar & make_nvp("rows", _localRowList);
+                ar & make_nvp("kernelX", _kernelX);
+                ar & make_nvp("kernelY", _kernelY);
             }
+
+        virtual void _setKernelXY() {
+            assert (getWidth() == static_cast<int>(_kernelX.size()));
+            for (int i = 0; i != getWidth(); ++i) {
+                _kernelX[i] = i - getCtrX();
+            }
+
+            assert (getHeight() == static_cast<int>(_kernelY.size()));
+            for (int i = 0; i != getHeight(); ++i) {
+                _kernelY[i] = i - getCtrY();
+            }
+        }
     };
 
 }}}   // lsst:afw::math

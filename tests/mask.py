@@ -282,6 +282,28 @@ class MaskTestCase(unittest.TestCase):
         self.mask1 = factory(20, 20)
         self.assertEqual(self.mask1.get(10, 10), 0)
 
+    def testBoundsChecking(self):
+        """Check that pixel indexes are checked in python"""
+        tsts = []
+        def tst():
+            self.mask1.get(-1, 0)
+        tsts.append(tst)
+
+        def tst():
+            self.mask1.get(0, -1)
+        tsts.append(tst)
+
+        def tst():
+            self.mask1.get(self.mask1.getWidth(), 0)
+        tsts.append(tst)
+
+        def tst():
+            self.mask1.get(0, self.mask1.getHeight())
+        tsts.append(tst)
+
+        for tst in tsts:
+            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class OldMaskTestCase(unittest.TestCase):

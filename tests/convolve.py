@@ -29,14 +29,17 @@ Tests convolution of various kernels with Images and MaskedImages.
 import math
 import os
 import unittest
+import string
 
 import numpy
 
 import eups
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.math.detail as mathDetail
 import lsst.afw.image.testUtils as imTestUtils
 
 VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
@@ -68,6 +71,9 @@ EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
 # Ignore kernel pixels whose value is exactly 0 when smearing the mask plane?
 # Set this to match the afw code
 IgnoreKernelZeroPixels = True
+
+NullTranslator = string.maketrans("", "")
+GarbageChars = string.punctuation + string.whitespace
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -234,7 +240,8 @@ class ConvolveTestCase(unittest.TestCase):
         """
         if refKernel == None:
             refKernel = kernel
-        shortKernelDescr = kernelDescr.replace(" ", "")
+        # strip garbage characters (whitespace and punctuation) to make a short description for saving files
+        shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
 
         doNormalize = convControl.getDoNormalize()
         doCopyEdge = convControl.getDoCopyEdge()
@@ -325,6 +332,46 @@ class ConvolveTestCase(unittest.TestCase):
                 self.runBasicTest(kernel, convControl=convControl, refKernel=refKernel,
                     kernelDescr=kernelDescr, rtol=rtol, atol=atol)
 
+        # verify that basicConvolve does not write to edge pixels
+        self.runBasicConvolveEdgeTest(kernel, kernelDescr)
+
+    def runBasicConvolveEdgeTest(self, kernel, kernelDescr):
+        """Verify that basicConvolve does not write to edge pixels for this kind of kernel
+        """
+        fullBox = afwGeom.BoxI(
+            afwGeom.makePointI(0, 0),
+            afwGeom.makeExtentI(ShiftedBBox.getWidth(), ShiftedBBox.getHeight()),
+        )
+        fullBBox = afwImage.BBox(afwImage.PointI(fullBox.getMinX(), fullBox.getMinY()),
+            fullBox.getWidth(), fullBox.getHeight())
+        goodBox = kernel.shrinkBBox(fullBox)
+        goodBBox = afwImage.BBox(afwImage.PointI(goodBox.getMinX(), goodBox.getMinY()),
+            goodBox.getWidth(), goodBox.getHeight())
+        cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, True)
+        cnvMaskedImageCopy = afwImage.MaskedImageF(cnvMaskedImage, fullBBox, True)
+        cnvMaskedImageCopyViewOfGoodRegion = afwImage.MaskedImageF(cnvMaskedImageCopy, goodBBox, False)
+
+        # convolve with basicConvolve, which should leave the edge pixels alone
+        convControl = afwMath.ConvolutionControl()
+        mathDetail.basicConvolve(cnvMaskedImage, self.maskedImage, kernel, convControl)
+
+        # reset the good region to the original convolved image;
+        # this should reset the entire convolved image to its original self
+        cnvMaskedImageGoodView = afwImage.MaskedImageF(cnvMaskedImage, goodBBox, False)
+        cnvMaskedImageGoodView <<= cnvMaskedImageCopyViewOfGoodRegion
+
+        # assert that these two are equal
+        cnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+        desCnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(cnvMaskedImageCopy)
+        errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, desCnvImMaskVarArr,
+            doVariance = True, rtol=0, atol=0)
+        shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
+        if errStr:
+            cnvMaskedImage.writeFits("actBasicConvolve%s" % (shortKernelDescr,))
+            cnvMaskedImageCopy.writeFits("desBasicConvolve%s" % (shortKernelDescr,))
+            self.fail("basicConvolve(MaskedImage, kernel=%s) wrote to edge pixels:\n%s" % \
+                (kernelDescr, errStr))
+
     def testConvolutionControl(self):
         """Test the ConvolutionControl object
         """
@@ -332,17 +379,17 @@ class ConvolveTestCase(unittest.TestCase):
         self.assert_(convControl.getDoNormalize())
         for doNormalize in (False, True):
             convControl.setDoNormalize(doNormalize)
-            self.assert_(convControl.getDoNormalize() == doNormalize)
+            self.assertEqual(convControl.getDoNormalize(), doNormalize)
         
         self.assert_(not convControl.getDoCopyEdge())
         for doCopyEdge in (False, True):
             convControl.setDoCopyEdge(doCopyEdge)
             self.assert_(convControl.getDoCopyEdge() == doCopyEdge)
-
-        self.assert_(convControl.getMaxInterpolationError() == 1.0e-3)
+        
+        self.assertEqual(convControl.getMaxInterpolationError(), 1.0e-3)
         for maxInterpErr in (0.0, 1.0e-99, 1.1e-5, 2.0e99):
             convControl.setMaxInterpolationError(maxInterpErr)
-            self.assert_(convControl.getMaxInterpolationError() == maxInterpErr)
+            self.assertEqual(convControl.getMaxInterpolationError(), maxInterpErr)
         
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.

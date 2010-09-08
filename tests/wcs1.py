@@ -156,6 +156,12 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.wcs = afwImage.makeWcs(metadata, strip)
         self.assertFalse(metadata.exists("CRPIX1"))
 
+    def testAffineTransform(self):
+        a = self.wcs.getLinearTransform()
+        l = self.wcs.getCDMatrix()
+        #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
+        print a, l
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class WCSTestCaseCFHT(unittest.TestCase):
@@ -254,8 +260,9 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
         sky00g = afwGeom.makePointD(10, 10)
         sky00i = afwGeom.makePointD(sky00g.getX(), sky00g.getY())
-        a = self.wcs.linearizeAt(sky00i)
-        pix00i = self.wcs.skyToPixel(afwCoord.makeCoord(afwCoord.ICRS, sky00i, afwCoord.DEGREES))
+        sky00c = afwCoord.makeCoord(afwCoord.ICRS, sky00i, afwCoord.DEGREES)
+        a = self.wcs.linearizeSkyToPixel(sky00c)
+        pix00i = self.wcs.skyToPixel(sky00c)
         pix00g = afwGeom.makePointD(pix00i.getX(), pix00i.getY())
         sky00gApprox = a(pix00g);
         self.assertAlmostEqual(sky00g.getX(), sky00gApprox.getX())
@@ -271,7 +278,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(WCSTestCaseSDSS)
-    #suites += unittest.makeSuite(WCSTestCaseCFHT)
+#    suites += unittest.makeSuite(WCSTestCaseCFHT)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)

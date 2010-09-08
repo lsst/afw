@@ -368,6 +368,21 @@ class StatisticsTestCase(unittest.TestCase):
         # precision at "4 places" as images are floats
         # ... variance = 0.1 is stored as 0.100000001
         self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
+
+        
+    def testMeanClip(self):
+        """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
+        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
+        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+
+        # this bug was caused by the iterative nature of the MEANCLIP.
+        # With only one point, the sample variance returns NaN to avoid a divide by zero error
+        # Thus, on the second iteration, the clip width (based on _variance) is NaN and corrupts
+        #   all further calculations.
+        img = afwImage.ImageF(1, 1)
+        img.set(0)
+        stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
+        self.assertEqual(stats.getValue(), 0)
         
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

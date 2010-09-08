@@ -239,10 +239,12 @@ using boost::serialization::make_nvp;
         virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x) const = 0;
-
+        
         virtual std::string toString(std::string const& prefix="") const {
             return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
         }
+
+        virtual void computeCache(int const n) {}
 
     private:
         friend class boost::serialization::access;
@@ -254,7 +256,6 @@ using boost::serialization::make_nvp;
                     static_cast< Function<ReturnT>* >(0));
         }
     };    
-
     
     /**
      * @brief A Function taking two arguments.

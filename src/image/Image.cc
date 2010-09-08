@@ -171,10 +171,42 @@ typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::oper
     );
 }
 
+/// Return a reference to the pixel <tt>(x, y)</tt> with bounds checking
+template<typename PixelT>
+typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(
+        int x,
+        int y,
+        image::CheckIndices const& check
+                                                                                      )
+{
+    if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
+                           x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
+    }
+                                          
+    return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
+        static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
+    );
+}
+
 /// Return a const reference to the pixel <tt>(x, y)</tt>
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelConstReference
     image::ImageBase<PixelT>::operator()(int x, int y) const {
+    return _gilView(x, y)[0];
+}
+
+/// Return a const reference to the pixel <tt>(x, y)</tt> with bounds checking
+template<typename PixelT>
+typename image::ImageBase<PixelT>::PixelConstReference
+    image::ImageBase<PixelT>::operator()(int x, int y, image::CheckIndices const& check) const {
+    if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
+                           x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
+    }
+                                          
     return _gilView(x, y)[0];
 }
 

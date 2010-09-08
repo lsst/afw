@@ -139,6 +139,7 @@ namespace image {
         //xyToRaDec(), but the name now reflects their increased generality. They may be
         //used, e.g. to convert xy to Galactic coordinates
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
+        virtual lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
         
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
@@ -183,6 +184,7 @@ namespace image {
                         const std::string cunits1, const std::string cunits2
                        );
 
+        virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
 
     protected:
 
@@ -217,7 +219,6 @@ namespace image {
         int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
         int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
         int _nReject;
-
     };
 
     namespace detail {

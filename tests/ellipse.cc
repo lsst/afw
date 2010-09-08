@@ -234,6 +234,18 @@ BOOST_AUTO_TEST_CASE(EllipseJacobian) { /* parasoft-suppress  LsstDm-3-2a LsstDm
     testEllipseJacobian<LogShear>(Distortion(std::complex<double>(0.5, 0.65), 2.5));
     testEllipseJacobian<LogShear>(LogShear(3.0, 2.0, 1.234));
 
+    testEllipseJacobian<Quadrupole>(Quadrupole(1.0, 1.0, 0.0));
+    testEllipseJacobian<Quadrupole>(Distortion(std::complex<double>(0.0, 0.0), 1.0));
+    testEllipseJacobian<Quadrupole>(LogShear(0.0, 0.0, 1.0));
+
+    testEllipseJacobian<Distortion>(Quadrupole(1.0, 1.0, 0.0));
+    testEllipseJacobian<Distortion>(Distortion(std::complex<double>(0.0, 0.0), 1.0));
+    testEllipseJacobian<Distortion>(LogShear(0.0, 0.0, 1.0));
+
+    testEllipseJacobian<LogShear>(Quadrupole(1.0, 1.0, 0.0));
+    testEllipseJacobian<LogShear>(Distortion(std::complex<double>(0.0, 0.0), 1.0));
+    testEllipseJacobian<LogShear>(LogShear(0.0, 0.0, 1.0));
+    
 }
 
 template <typename TCore>
@@ -294,6 +306,11 @@ BOOST_AUTO_TEST_CASE(EllipseTransformDerivative) { /* parasoft-suppress  LsstDm-
     testEllipseTransformer<Axes>(Axes(3.0, 2.0, 1.234));
     testEllipseTransformer<Distortion>(Distortion(std::complex<double>(0.5, 0.65), 2.5));
     testEllipseTransformer<LogShear>(LogShear(3.0, 2.0, 1.234));
+
+    testEllipseTransformer<Quadrupole>(Quadrupole(1.0, 1.0, 0.0));
+    testEllipseTransformer<Axes>(Axes(1.0, 1.0, 0.0));
+    testEllipseTransformer<Distortion>(Distortion(std::complex<double>(0.0, 0.0), 1.0));
+    testEllipseTransformer<LogShear>(LogShear(0.0, 0.0, 1.0));
 }
 
 template <typename TCore>
