@@ -259,15 +259,27 @@ void mathDetail::basicConvolve(
         return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
     } else if (!kernel.isDeltaFunctionBasis()) {
-        // use the standard algorithm for the spatially varying case
+        // refactor the kernel if this is reasonable and possible;
+        // then use the standard algorithm for the spatially varying case
+        afwMath::Kernel::Ptr refKernelPtr; // possibly refactored version of kernel
+        if (static_cast<int>(kernel.getNKernelParameters()) > kernel.getNSpatialParameters()) {
+            // refactoring will speed convolution, so try it
+            refKernelPtr = kernel.refactor();
+            if (!refKernelPtr) {
+                refKernelPtr = kernel.clone();
+            }
+        } else {
+            // too few basis kernels for refactoring to be worthwhile
+            refKernelPtr = kernel.clone();
+        }
         if (convolutionControl.getMaxInterpolationError() > 0.0) {
             pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "basicConvolve for LinearCombinationKernel: using interpolation");
-            return mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
+            return mathDetail::convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);
         } else {
             pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "basicConvolve for LinearCombinationKernel: maxInterpolationError < 0; using brute force");
-            return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
+            return mathDetail::convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
                 convolutionControl.getDoNormalize());
         }
     }

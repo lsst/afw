@@ -526,35 +526,40 @@ class ConvolveTestCase(unittest.TestCase):
         kHeight = 5
 
         # create spatial model
-        sFunc = afwMath.PolynomialFunction2D(1)
-        
-        # spatial parameters are a list of entries, one per kernel parameter;
-        # each entry is a list of spatial parameters
-        sParams = (
-            (1.0, -0.01/self.width, -0.01/self.height),
-            (0.0,  0.01/self.width,  0.0/self.height),
-            (0.0,  0.0/self.width,  0.01/self.height),
-        )
-        
-        gaussParamsList = [
-            (1.5, 1.5, 0.0),
-            (2.5, 1.5, 0.0),
-            (2.5, 1.5, math.pi / 2.0),
-        ]
-        kVec = makeGaussianKernelList(kWidth, kHeight, gaussParamsList)
-        kernel = afwMath.LinearCombinationKernel(kVec, sFunc)
-        kernel.setSpatialParameters(sParams)
-
-        for maxInterpErr, rtol, methodStr in (
-            (0.0,     1.0e-5, "brute force with no iteration"),
-            (1.0e-99, 1.0e5,  "brute force after iteration"),
-            (1.0e-9,  0.02,   "interpolation"),
-        ):
-            self.runStdTest(
-                kernel,
-                kernelDescr="Spatially Varying Gaussian Analytic Kernel with %s" % (methodStr,),
-                maxInterpErr=maxInterpErr,
-                rtol=rtol)
+        for nBasisKernels in (3, 4):
+            # at 3 the kernel will not be refactored, at 4 it will be
+            sFunc = afwMath.PolynomialFunction2D(1)
+            
+            # spatial parameters are a list of entries, one per kernel parameter;
+            # each entry is a list of spatial parameters
+            sParams = (
+                (1.0, -0.01/self.width, -0.01/self.height),
+                (0.0,  0.01/self.width,  0.0/self.height),
+                (0.0,  0.0/self.width,  0.01/self.height),
+                (0.5,  0.005/self.width,  -0.005/self.height),
+            )[:nBasisKernels]
+            
+            gaussParamsList = (
+                (1.5, 1.5, 0.0),
+                (2.5, 1.5, 0.0),
+                (2.5, 1.5, math.pi / 2.0),
+                (2.5, 2.5, 0.0),
+            )[:nBasisKernels]
+            basisKernelList = makeGaussianKernelList(kWidth, kHeight, gaussParamsList)
+            kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)
+            kernel.setSpatialParameters(sParams)
+    
+            for maxInterpErr, rtol, methodStr in (
+                (0.0,     1.0e-5, "brute force with no iteration"),
+                (1.0e-99, 1.0e5,  "brute force after iteration"),
+                (1.0e-9,  0.02,   "interpolation"),
+            ):
+                self.runStdTest(
+                    kernel,
+                    kernelDescr = "%s with %d basis kernels convolved using %s" % \
+                        ("Spatially Varying Gaussian Analytic Kernel", nBasisKernels, methodStr),
+                    maxInterpErr=maxInterpErr,
+                    rtol=rtol)
 
     def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of delta function basis kernels.
@@ -574,8 +579,8 @@ class ConvolveTestCase(unittest.TestCase):
             (0.5, 0.0, 0.0),
             )
         
-        kVec = makeDeltaFunctionKernelList(kWidth, kHeight)
-        kernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        basisKernelList = makeDeltaFunctionKernelList(kWidth, kHeight)
+        kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)
         kernel.setSpatialParameters(sParams)
 
         self.runStdTest(kernel,
@@ -617,24 +622,24 @@ class ConvolveTestCase(unittest.TestCase):
         # create three kernels with some non-overlapping pixels
         # (non-zero pixels in one kernel vs. zero pixels in other kernels);
         # note: the extreme example of this is delta function kernels, but this is less extreme
-        kVec = afwMath.KernelList()
+        basisKernelList = afwMath.KernelList()
         kImArr = numpy.zeros([5, 5], dtype=float)
         kImArr[1:4, 1:4] = 0.5
         kImArr[2, 2] = 1.0
         kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
-        kVec.append(afwMath.FixedKernel(kImage))
+        basisKernelList.append(afwMath.FixedKernel(kImage))
         kImArr[:, :] = 0.0
         kImArr[0:2, 0:2] = 0.125
         kImArr[3:5, 3:5] = 0.125
         kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
-        kVec.append(afwMath.FixedKernel(kImage))
+        basisKernelList.append(afwMath.FixedKernel(kImage))
         kImArr[:, :] = 0.0
         kImArr[0:2, 3:5] = 0.125
         kImArr[3:5, 0:2] = 0.125
         kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
-        kVec.append(afwMath.FixedKernel(kImage))
+        basisKernelList.append(afwMath.FixedKernel(kImage))
 
-        kernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)
         kernel.setSpatialParameters(sParams)
 
         self.runStdTest(kernel,

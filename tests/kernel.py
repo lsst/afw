@@ -49,11 +49,6 @@ def makeGaussianKernelList(kWidth, kHeight, gaussParamsList):
     - kWidth, kHeight: width and height of kernel
     - gaussParamsList: a list of parameters for GaussianFunction2D (each a 3-tuple of floats)
     """
-    gaussParamsList = [
-        (1.5, 1.5, 0.0),
-        (2.5, 1.5, 0.0),
-        (2.5, 1.5, math.pi / 2.0),
-    ]
     kVec = afwMath.KernelList()
     for majorSigma, minorSigma, angle in gaussParamsList:
         kFunc = afwMath.GaussianFunction2D(majorSigma, minorSigma, angle)
@@ -664,7 +659,6 @@ class KernelTestCase(unittest.TestCase):
             errStr = self.compareKernels(kernel, refKernel, compareParams=False)
             if errStr:
                 self.fail("failed with %s for spOrder=%s; numSpCoeff=%s" % (errStr, spOrder, numSpParams))
-
 
     def basicTests(self, kernel, nKernelParams, nSpatialParams=0):
         """Basic tests of a kernel"""
