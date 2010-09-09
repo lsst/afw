@@ -159,21 +159,21 @@ void mathDetail::basicConvolve(
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
-    if (ISINSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
+    if (IS_INSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
             convolutionControl);
         return;
-    } else if (ISINSTANCE(kernel, afwMath::SeparableKernel)) {
+    } else if (IS_INSTANCE(kernel, afwMath::SeparableKernel)) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
             convolutionControl);
         return;
-    } else if (ISINSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
+    } else if (IS_INSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
@@ -259,15 +259,27 @@ void mathDetail::basicConvolve(
         return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
     } else if (!kernel.isDeltaFunctionBasis()) {
-        // use the standard algorithm for the spatially varying case
+        // refactor the kernel if this is reasonable and possible;
+        // then use the standard algorithm for the spatially varying case
+        afwMath::Kernel::Ptr refKernelPtr; // possibly refactored version of kernel
+        if (static_cast<int>(kernel.getNKernelParameters()) > kernel.getNSpatialParameters()) {
+            // refactoring will speed convolution, so try it
+            refKernelPtr = kernel.refactor();
+            if (!refKernelPtr) {
+                refKernelPtr = kernel.clone();
+            }
+        } else {
+            // too few basis kernels for refactoring to be worthwhile
+            refKernelPtr = kernel.clone();
+        }
         if (convolutionControl.getMaxInterpolationError() > 0.0) {
             pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "basicConvolve for LinearCombinationKernel: using interpolation");
-            return mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
+            return mathDetail::convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);
         } else {
             pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "basicConvolve for LinearCombinationKernel: maxInterpolationError < 0; using brute force");
-            return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
+            return mathDetail::convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
                 convolutionControl.getDoNormalize());
         }
     }

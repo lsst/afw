@@ -455,6 +455,8 @@ using boost::serialization::make_nvp;
         virtual Function1Ptr clone() const {
             return Function1Ptr(new PolynomialFunction1(this->_params));
         }
+
+        virtual bool isLinearCombination() const { return true; };
         
         virtual ReturnT operator() (double x) const {
             int maxInd = static_cast<int>(this->_params.size()) - 1;
@@ -551,6 +553,8 @@ using boost::serialization::make_nvp;
         virtual Function2Ptr clone() const {
             return Function2Ptr(new PolynomialFunction2(this->_params));
         }
+
+        virtual bool isLinearCombination() const { return true; };
         
         virtual ReturnT operator() (double x, double y) const {
             /* Solve as follows:
@@ -674,6 +678,8 @@ using boost::serialization::make_nvp;
         virtual Function1Ptr clone() const {
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
+
+        virtual bool isLinearCombination() const { return true; };
         
         virtual ReturnT operator() (double x) const {
             double xPrime = (x + _offset) * _scale;

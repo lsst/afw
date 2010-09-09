@@ -44,7 +44,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/ConvolveImage.h"
 
-# define ISINSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
+#define IS_INSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
 
 namespace lsst {
 namespace afw {
