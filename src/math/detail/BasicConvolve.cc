@@ -159,21 +159,21 @@ void mathDetail::basicConvolve(
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
-    if (ISINSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
+    if (IS_INSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
             convolutionControl);
         return;
-    } else if (ISINSTANCE(kernel, afwMath::SeparableKernel)) {
+    } else if (IS_INSTANCE(kernel, afwMath::SeparableKernel)) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
             convolutionControl);
         return;
-    } else if (ISINSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
+    } else if (IS_INSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,

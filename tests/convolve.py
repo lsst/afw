@@ -41,6 +41,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
 import lsst.afw.image.testUtils as imTestUtils
+from kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 
 VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
 
@@ -107,16 +108,16 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
         retVariance = numpy.zeros(variance.shape, dtype=image.dtype)
         retVariance[:, :] = numpy.inf
     
-    kCols = kernel.getWidth()
-    kRows = kernel.getHeight()
-    numCols = image.shape[0] + 1 - kCols
-    numRows = image.shape[1] + 1 - kRows
+    kWidth = kernel.getWidth()
+    kHeight = kernel.getHeight()
+    numCols = image.shape[0] + 1 - kWidth
+    numRows = image.shape[1] + 1 - kHeight
     if numCols < 0 or numRows < 0:
         raise RuntimeError("image must be larger than kernel in both dimensions")
     colRange = range(numCols)
 
 
-    kImage = afwImage.ImageD(kCols, kRows)
+    kImage = afwImage.ImageD(kWidth, kHeight)
     isSpatiallyVarying = kernel.isSpatiallyVarying()
     if not isSpatiallyVarying:
         kernel.computeImage(kImage, doNormalize)
@@ -124,7 +125,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
 
     retRow = kernel.getCtrY()
     for inRowBeg in range(numRows):
-        inRowEnd = inRowBeg + kRows
+        inRowEnd = inRowBeg + kHeight
         retCol = kernel.getCtrX()
         if isSpatiallyVarying:
             rowPos = afwImage.indexToPosition(retRow) + xy0[1]
@@ -133,7 +134,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
                 colPos = afwImage.indexToPosition(retCol) + xy0[0]
                 kernel.computeImage(kImage, doNormalize, colPos, rowPos)
                 kImArr = imTestUtils.arrayFromImage(kImage)
-            inColEnd = inColBeg + kCols
+            inColEnd = inColBeg + kWidth
             subImage = image[inColBeg:inColEnd, inRowBeg:inRowEnd]
             subVariance = variance[inColBeg:inColEnd, inRowBeg:inRowEnd]
             subMask = mask[inColBeg:inColEnd, inRowBeg:inRowEnd]
@@ -148,31 +149,6 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
             retCol += 1
         retRow += 1
     return (retImage, retMask, retVariance)
-
-def makeGaussianKernelVec(kCols, kRows):
-    """Create a list of gaussian kernels.
-
-    This is useful for constructing a LinearCombinationKernel.
-    """
-    gaussParamsList = [
-        (1.5, 1.5, 0.0),
-        (2.5, 1.5, 0.0),
-        (2.5, 1.5, math.pi / 2.0),
-    ]
-    kVec = afwMath.KernelList()
-    for majorSigma, minorSigma, angle in gaussParamsList:
-        kFunc = afwMath.GaussianFunction2D(majorSigma, minorSigma, angle)
-        kVec.append(afwMath.AnalyticKernel(kCols, kRows, kFunc))
-    return kVec
-
-def makeDeltaFunctionKernelVec(kCols, kRows):
-    """Create a list of delta function kernels
-    """
-    kVec = afwMath.KernelList()
-    for activeCol in range(kCols):
-        for activeRow in range(kRows):
-            kVec.append(afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow)))
-    return kVec
 
 def sameMaskPlaneDicts(maskedImageA, maskedImageB):
     """Return True if the mask plane dicts are the same, False otherwise.
@@ -427,12 +403,12 @@ class ConvolveTestCase(unittest.TestCase):
     def testFixedKernelConvolve(self):
         """Test convolve with a fixed kernel
         """
-        kCols = 6
-        kRows = 7
+        kWidth = 6
+        kHeight = 7
 
         kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
-        analyticKernel = afwMath.AnalyticKernel(kCols, kRows, kFunc)
-        kernelImage = afwImage.ImageD(kCols, kRows)
+        analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc)
+        kernelImage = afwImage.ImageD(kWidth, kHeight)
         analyticKernel.computeImage(kernelImage, False)
         fixedKernel = afwMath.FixedKernel(kernelImage)
         
@@ -441,13 +417,13 @@ class ConvolveTestCase(unittest.TestCase):
     def testSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially invariant Gaussian function
         """
-        kCols = 7
-        kRows = 6
+        kWidth = 7
+        kHeight = 6
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
-        separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
-        analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
+        separableKernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
+        analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc2)
         
         self.runStdTest(separableKernel, refKernel=analyticKernel,
             kernelDescr="Gaussian Separable Kernel (compared to AnalyticKernel equivalent)")
@@ -455,19 +431,19 @@ class ConvolveTestCase(unittest.TestCase):
     def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
         """
-        kCols = 6
-        kRows = 7
+        kWidth = 6
+        kHeight = 7
 
         kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
-        kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc)
+        kernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc)
         
         self.runStdTest(kernel, kernelDescr="Gaussian Analytic Kernel")
 
     def testSpatiallyVaryingAnalyticConvolve(self):
         """Test in-place convolution with a spatially varying AnalyticKernel
         """
-        kCols = 7
-        kRows = 6
+        kWidth = 7
+        kHeight = 6
 
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -484,7 +460,7 @@ class ConvolveTestCase(unittest.TestCase):
         )
 
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
-        kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
+        kernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc, sFunc)
         kernel.setSpatialParameters(sParams)
         
         for maxInterpErr, rtol, methodStr in (
@@ -501,8 +477,8 @@ class ConvolveTestCase(unittest.TestCase):
     def testSpatiallyVaryingSeparableConvolve(self):
         """Test convolution with a spatially varying SeparableKernel
         """
-        kCols = 7
-        kRows = 6
+        kWidth = 7
+        kHeight = 6
 
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -520,8 +496,8 @@ class ConvolveTestCase(unittest.TestCase):
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
-        separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1, sFunc)
-        analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2, sFunc)
+        separableKernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1, sFunc)
+        analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc2, sFunc)
         separableKernel.setSpatialParameters(sParams[0:2])
         analyticKernel.setSpatialParameters(sParams)
 
@@ -531,14 +507,14 @@ class ConvolveTestCase(unittest.TestCase):
     def testDeltaConvolve(self):
         """Test convolution with various delta function kernels using optimized code
         """
-        for kCols in range(1, 4):
-            for kRows in range(1, 4):
-                for activeCol in range(kCols):
-                    for activeRow in range(kRows):
-                        kernel = afwMath.DeltaFunctionKernel(kCols, kRows,
+        for kWidth in range(1, 4):
+            for kHeight in range(1, 4):
+                for activeCol in range(kWidth):
+                    for activeRow in range(kHeight):
+                        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
                             afwImage.PointI(activeCol, activeRow))
                         if display and False:
-                            kim = afwImage.ImageD(kCols, kRows); kernel.computeImage(kim, False)
+                            kim = afwImage.ImageD(kWidth, kHeight); kernel.computeImage(kim, False)
                             ds9.mtv(kim, frame=1)
 
                         self.runStdTest(kernel, kernelDescr="Delta Function Kernel")
@@ -546,8 +522,8 @@ class ConvolveTestCase(unittest.TestCase):
     def testSpatiallyVaryingGaussianLinerCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of two Gaussian basis kernels.
         """
-        kCols = 5
-        kRows = 5
+        kWidth = 5
+        kHeight = 5
 
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -560,7 +536,12 @@ class ConvolveTestCase(unittest.TestCase):
             (0.0,  0.0/self.width,  0.01/self.height),
         )
         
-        kVec = makeGaussianKernelVec(kCols, kRows)
+        gaussParamsList = [
+            (1.5, 1.5, 0.0),
+            (2.5, 1.5, 0.0),
+            (2.5, 1.5, math.pi / 2.0),
+        ]
+        kVec = makeGaussianKernelList(kWidth, kHeight, gaussParamsList)
         kernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         kernel.setSpatialParameters(sParams)
 
@@ -578,8 +559,8 @@ class ConvolveTestCase(unittest.TestCase):
     def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of delta function basis kernels.
         """
-        kCols = 2
-        kRows = 2
+        kWidth = 2
+        kHeight = 2
 
         # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -593,7 +574,7 @@ class ConvolveTestCase(unittest.TestCase):
             (0.5, 0.0, 0.0),
             )
         
-        kVec = makeDeltaFunctionKernelVec(kCols, kRows)
+        kVec = makeDeltaFunctionKernelList(kWidth, kHeight)
         kernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         kernel.setSpatialParameters(sParams)
 

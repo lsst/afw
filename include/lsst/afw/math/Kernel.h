@@ -33,6 +33,7 @@
  *
  * @ingroup afw
  */
+#include <utility>
 #include <vector>
 
 #include "boost/mpl/or.hpp"
@@ -615,6 +616,8 @@ class FourierLocalKernel;
          * Return true if all basis kernels are instances of DeltaFunctionKernel
          */
         bool isDeltaFunctionBasis() const { return _isDeltaFunctionBasis; };
+        
+        Kernel::Ptr refactor() const;
 
         virtual std::string toString(std::string const& prefix="") const;
 

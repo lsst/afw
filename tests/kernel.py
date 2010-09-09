@@ -21,8 +21,7 @@
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
-
+import math
 import unittest
 
 import numpy
@@ -40,6 +39,37 @@ VERBOSITY = 0 # increase to see trace
 pexLog.Debug("lsst.afw", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def makeGaussianKernelList(kWidth, kHeight, gaussParamsList):
+    """Create a list of gaussian kernels.
+
+    This is useful for constructing a LinearCombinationKernel.
+    
+    Inputs:
+    - kWidth, kHeight: width and height of kernel
+    - gaussParamsList: a list of parameters for GaussianFunction2D (each a 3-tuple of floats)
+    """
+    gaussParamsList = [
+        (1.5, 1.5, 0.0),
+        (2.5, 1.5, 0.0),
+        (2.5, 1.5, math.pi / 2.0),
+    ]
+    kVec = afwMath.KernelList()
+    for majorSigma, minorSigma, angle in gaussParamsList:
+        kFunc = afwMath.GaussianFunction2D(majorSigma, minorSigma, angle)
+        kVec.append(afwMath.AnalyticKernel(kWidth, kHeight, kFunc))
+    return kVec
+
+def makeDeltaFunctionKernelList(kWidth, kHeight):
+    """Create a list of delta function kernels
+
+    This is useful for constructing a LinearCombinationKernel.
+    """
+    kVec = afwMath.KernelList()
+    for activeCol in range(kWidth):
+        for activeRow in range(kHeight):
+            kVec.append(afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(activeCol, activeRow)))
+    return kVec
 
 class KernelTestCase(unittest.TestCase):
     """A test case for Kernels"""
@@ -188,15 +218,12 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 2
         
         # create list of kernels
+        basisKernelList = makeDeltaFunctionKernelList(kWidth, kHeight)
         basisImArrList = []
-        basisKernelList = afwMath.KernelList()
-        for row in range(kHeight):
-            for col in range(kWidth):
-                basisKernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
-                basisImage = afwImage.ImageD(basisKernel.getDimensions())
-                basisKernel.computeImage(basisImage, True)
-                basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
-                basisKernelList.append(basisKernel)
+        for basisKernel in basisKernelList:
+            basisImage = afwImage.ImageD(basisKernel.getDimensions())
+            basisKernel.computeImage(basisImage, True)
+            basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
 
         kParams = [0.0]*len(basisKernelList)
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
@@ -585,6 +612,59 @@ class KernelTestCase(unittest.TestCase):
                 self.assertRaises(Exception, afwMath.SeparableKernel, kWidth, kHeight, gaussFunc1D, gaussFunc1D)
                 self.assertRaises(Exception, afwMath.DeltaFunctionKernel, kWidth, kHeight, zeroPoint)
 
+    def testRefactorDeltaLinearCombinationKernel(self):
+        """Test LinearCombinationKernel.refactor with delta function basis kernels
+        """
+        kWidth = 4
+        kHeight = 3
+
+        for spOrder in (0, 1, 2):
+            spFunc = afwMath.PolynomialFunction2D(spOrder)
+            numSpParams = spFunc.getNParameters()
+
+            basisKernelList = makeDeltaFunctionKernelList(kWidth, kHeight)
+            kernel = afwMath.LinearCombinationKernel(basisKernelList, spFunc)
+
+            numBasisKernels = kernel.getNKernelParameters()
+            maxVal = 1.01 + ((numSpParams - 1) * 0.1)
+            sParamList = [numpy.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
+            kernel.setSpatialParameters(sParamList)
+
+            refKernel = kernel.refactor()
+            self.assert_(refKernel)
+            errStr = self.compareKernels(kernel, refKernel, compareParams=False)
+            if errStr:
+                self.fail("failed with %s for spOrder=%s (numSpCoeff=%s)" % (errStr, spOrder, numSpParams))
+
+    def testRefactorGaussianLinearCombinationKernel(self):
+        """Test LinearCombinationKernel.refactor with Gaussian basis kernels
+        """
+        kWidth = 4
+        kHeight = 3
+
+        for spOrder in (0, 1, 2):
+            spFunc = afwMath.PolynomialFunction2D(spOrder)
+            numSpParams = spFunc.getNParameters()
+
+            gaussParamsList = [
+                (1.5, 1.5, 0.0),
+                (2.5, 1.5, 0.0),
+                (2.5, 1.5, math.pi / 2.0),
+            ]
+            gaussBasisKernelList = makeGaussianKernelList(kWidth, kHeight, gaussParamsList)
+            kernel = afwMath.LinearCombinationKernel(gaussBasisKernelList, spFunc)
+
+            numBasisKernels = kernel.getNKernelParameters()
+            maxVal = 1.01 + ((numSpParams - 1) * 0.1)
+            sParamList = [numpy.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
+            kernel.setSpatialParameters(sParamList)
+
+            refKernel = kernel.refactor()
+            self.assert_(refKernel)
+            errStr = self.compareKernels(kernel, refKernel, compareParams=False)
+            if errStr:
+                self.fail("failed with %s for spOrder=%s; numSpCoeff=%s" % (errStr, spOrder, numSpParams))
+
 
     def basicTests(self, kernel, nKernelParams, nSpatialParams=0):
         """Basic tests of a kernel"""
@@ -644,11 +724,12 @@ class KernelTestCase(unittest.TestCase):
                     except pexExcept.LsstCppException:
                         pass
 
-    def compareKernels(self, kernel1, kernel2, newCtr1=(0, 0)):
+    def compareKernels(self, kernel1, kernel2, compareParams=True, newCtr1=(0, 0)):
         """Compare two kernels; return None if they match, else return a string kernelDescribing a difference.
         
         kernel1: one kernel to test
         kernel2: the other kernel to test
+        compareParams: compare spatial parameters and kernel parameters if they exist
         newCtr: if not None then set the center of kernel1 and see if it changes the center of kernel2
         """
         retStrs = []
@@ -658,19 +739,21 @@ class KernelTestCase(unittest.TestCase):
         ctr2 = kernel2.getCtrX(), kernel2.getCtrY()
         if ctr1 != ctr2:
             retStrs.append("centers differ: %s != %s" % (ctr1, ctr2))
-        if kernel1.getSpatialParameters() != kernel2.getSpatialParameters():
-            retStrs.append("spatial parameters differs: %s != %s" % \
-                (kernel1.getSpatialParameters(), kernel2.getSpatialParameters()))
         if kernel1.isSpatiallyVarying() != kernel2.isSpatiallyVarying():
             retStrs.append("isSpatiallyVarying differs: %s != %s" % \
                 (kernel1.isSpatiallyVarying(), kernel2.isSpatiallyVarying()))
-        if kernel1.getNSpatialParameters() != kernel2.getNSpatialParameters():
-            retStrs.append("# spatial parameters differs: %s != %s" % \
-                (kernel1.getNSpatialParameters(), kernel2.getNSpatialParameters()))
-        if not kernel1.isSpatiallyVarying() and hasattr(kernel1, "getKernelParameters"):
-            if kernel1.getKernelParameters() != kernel2.getKernelParameters():
-                retStrs.append("kernel parameters differs: %s != %s" % \
-                    (kernel1.getKernelParameters(), kernel2.getKernelParameters()))
+
+        if compareParams:
+            if kernel1.getSpatialParameters() != kernel2.getSpatialParameters():
+                retStrs.append("spatial parameters differ: %s != %s" % \
+                    (kernel1.getSpatialParameters(), kernel2.getSpatialParameters()))
+            if kernel1.getNSpatialParameters() != kernel2.getNSpatialParameters():
+                retStrs.append("# spatial parameters differs: %s != %s" % \
+                    (kernel1.getNSpatialParameters(), kernel2.getNSpatialParameters()))
+            if not kernel1.isSpatiallyVarying() and hasattr(kernel1, "getKernelParameters"):
+                if kernel1.getKernelParameters() != kernel2.getKernelParameters():
+                    retStrs.append("kernel parameters differs: %s != %s" % \
+                        (kernel1.getKernelParameters(), kernel2.getKernelParameters()))
         if retStrs:
             return "; ".join(retStrs)
         

@@ -34,10 +34,12 @@
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
+#include <typeinfo>
 
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/LocalKernel.h"
 
@@ -131,7 +133,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
 }
 
 afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::clone() const {
-    afwMath::Kernel::Ptr retPtr;
+    Kernel::Ptr retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
     } else {
@@ -224,6 +226,81 @@ std::vector<double> afwMath::LinearCombinationKernel::getKernelSumList() const {
 
 std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() const {
     return _kernelParams;
+}
+
+/**
+* @brief Refactor the kernel as a linear combination of N bases where N is the number of parameters
+* for the spatial model.
+*
+* Refactoring is only possible if all of the following are true:
+*  * Kernel is spatially varying
+*  * The spatial functions are a linear combination of coefficients (return isLinearCombination() true).
+*  * The spatial functions all are the same class (and so have the same functional form)
+* Refactoring produces a kernel that is faster to compute only if the number of basis kernels
+* is greater than the number of parameters in the spatial model.
+*
+* @return a shared pointer to new kernel, or empty pointer if refactoring not possible
+*/
+afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
+    if (!this->isSpatiallyVarying()) {
+        return Kernel::Ptr();
+    }
+    Kernel::SpatialFunctionPtr const firstSpFuncPtr = this->_spatialFunctionList[0];
+    if (!firstSpFuncPtr->isLinearCombination()) {
+        return Kernel::Ptr();
+    }
+    
+    typedef lsst::afw::image::Image<Kernel::Pixel> KernelImage;
+    typedef boost::shared_ptr<KernelImage> KernelImagePtr;
+    typedef std::vector<KernelImagePtr> KernelImageList;
+    
+    // create kernel images for new refactored basis kernels
+    int const nSpatialParameters = this->getNSpatialParameters();
+    KernelImageList newKernelImagePtrList;
+    newKernelImagePtrList.reserve(nSpatialParameters);
+    for (int i = 0; i < nSpatialParameters; ++i) {
+        KernelImagePtr kernelImagePtr(new KernelImage(this->getWidth(), this->getHeight()));
+        newKernelImagePtrList.push_back(kernelImagePtr);
+    }
+    KernelImage kernelImage(this->getWidth(), this->getHeight());
+    std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncPtrIter = 
+        this->_spatialFunctionList.begin();
+    afwMath::KernelList::const_iterator kIter = _kernelList.begin();
+    afwMath::KernelList::const_iterator const kEnd = _kernelList.end();
+    for ( ; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
+        if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
+            return Kernel::Ptr();
+        }
+    
+        (**kIter).computeImage(kernelImage, false);
+        for (int i = 0; i < nSpatialParameters; ++i) {
+            double spParam = (*spFuncPtrIter)->getParameter(i);
+            newKernelImagePtrList[i]->scaledPlus(spParam, kernelImage);
+        }
+    }
+    
+    // create new kernel; the basis kernels are fixed kernels computed above
+    // and the corresponding spatial model is the same function as the original kernel,
+    // but with all coefficients zero except coeff_i = 1.0
+    afwMath::KernelList newKernelList;
+    newKernelList.reserve(nSpatialParameters);
+    KernelImageList::iterator newKImPtrIter = newKernelImagePtrList.begin();
+    KernelImageList::iterator const newKImPtrEnd = newKernelImagePtrList.end();
+    for ( ; newKImPtrIter != newKImPtrEnd; ++newKImPtrIter) {
+        newKernelList.push_back(Kernel::Ptr(new afwMath::FixedKernel(**newKImPtrIter)));
+    }
+    std::vector<SpatialFunctionPtr> newSpFunctionPtrList;
+    for (int i = 0; i < nSpatialParameters; ++i) {
+        std::vector<double> newSpParameters(nSpatialParameters, 0.0);
+        newSpParameters[i] = 1.0;
+        SpatialFunctionPtr newSpFunctionPtr = firstSpFuncPtr->clone();
+        newSpFunctionPtr->setParameters(newSpParameters);
+        newSpFunctionPtrList.push_back(newSpFunctionPtr);
+    }
+    LinearCombinationKernel::Ptr refactoredKernel(
+        new LinearCombinationKernel(newKernelList, newSpFunctionPtrList));
+    refactoredKernel->setCtr(this->getCtr());
+    return refactoredKernel;
 }
 
 std::string afwMath::LinearCombinationKernel::toString(std::string const& prefix) const {

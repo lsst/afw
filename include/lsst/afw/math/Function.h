@@ -69,14 +69,14 @@ using boost::serialization::make_nvp;
      * - Have one or more constructors, all of which must initialize _params
      * - Define operator() with code to compute the function
      *   using this->_params or this->getParams() to reference the parameters
+     * - If the function is a linear combination of parameters then override the function isLinearCombination.
      *
      * Design Notes:
      * The reason these functions exist (rather than using a pre-existing function class,
      * such as Functor in VisualWorkbench) is because the Kernel class requires function
      * objects with a standard interface for setting and getting function parameters.
      *
-     * To do:
-     * - Implement separable functions
+     * The reason isLinearCombination exists is to support refactoring LinearCombinationKernels.
      *
      * @ingroup afw
      */
@@ -136,6 +136,15 @@ using boost::serialization::make_nvp;
         std::vector<double> const &getParameters() const {
             return _params;
         }
+
+        /**
+         * @brief Is the function a linear combination of its parameters?
+         *
+         * @return true if the function can be expressed as: sum over i of parameter_i * function_i(args)
+         *
+         * @warning: subclasses must override if true.
+         */
+        virtual bool isLinearCombination() const { return false; };
         
         /**
          * @brief Set one function parameter without range checking
