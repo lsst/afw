@@ -49,7 +49,7 @@ namespace ex           = lsst::pex::exceptions;
  * @brief Constructor for the observatory with lat/long as doubles
  */
 coord::Observatory::Observatory(
-                                double const longitude, ///< observatory longitude
+                                double const longitude, ///< observatory longitude (+ve E of Greenwich)
                                 double const latitude,  ///< observatory latitude 
                                 double const elevation  ///< observatory elevation
                                ) :

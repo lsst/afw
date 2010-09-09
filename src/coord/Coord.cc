@@ -843,7 +843,7 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     double const alpha           = fk5.getRa(RADIANS);
     double const delta           = fk5.getDec(RADIANS);
                                
-    double const H               = theta0 - L - alpha;
+    double const H               = theta0 + L - alpha;
 
     // compute the altitude, h
     double const sinh            = sin(phi)*sin(delta) + cos(phi)*cos(delta)*cos(H);
