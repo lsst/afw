@@ -182,7 +182,7 @@ void mathDetail::basicConvolve(
         return;
     }
     // OK, use general (and slower) form
-    if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationError() > 0.0)) {
+    if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationDistance() > 1)) {
         // use linear interpolation
         pexLog::TTrace<3>("lsst.afw.math.convolve", "generic basicConvolve: using linear interpolation");
         mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
@@ -272,7 +272,7 @@ void mathDetail::basicConvolve(
             // too few basis kernels for refactoring to be worthwhile
             refKernelPtr = kernel.clone();
         }
-        if (convolutionControl.getMaxInterpolationError() > 0.0) {
+        if (convolutionControl.getMaxInterpolationDistance() > 1) {
             pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "basicConvolve for LinearCombinationKernel: using interpolation");
             return mathDetail::convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);

@@ -190,17 +190,17 @@ def timeSet(outImage, inImage, kernelFunction, kernelDescr, convControl, stdOnly
     """
     imSize = inImage.getDimensions()
     if stdOnly:
-        methodDescrInterpErrList = (
-            ("the only method", 1.0e-5),
+        methodDescrInterpDistList = (
+            ("no interpolation", 0),
         )
     else:
-        methodDescrInterpErrList = (
-            ("Interpolation Works Immediately", 1000.0),
-            ("Brute Force Immediately", 0.0),
-            ("Interplation Fails; Recurse to Brute Force", 1.0e-99),
+        methodDescrInterpDistList = (
+            ("no interpolation", 0),
+            ("linear interpolation over 5 x 5 pixels", 5),
+            ("linear interpolation over 10 x 10 pixels", 10),
         )
-    for methodDescr, maxInterpolationError in methodDescrInterpErrList:
-        convControl.setMaxInterpolationError(maxInterpolationError)
+    for methodDescr, maxInterpolationDistance in methodDescrInterpDistList:
+        convControl.setMaxInterpolationDistance(maxInterpolationDistance)
         print "%s using %s" % (kernelDescr, methodDescr)
         print "ImWid\tImHt\tKerWid\tKerHt\tSec/Cnv"
         for kSize in (5, 11, 19):

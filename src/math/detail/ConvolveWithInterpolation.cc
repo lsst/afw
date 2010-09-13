@@ -55,8 +55,7 @@ namespace afwMath = lsst::afw::math;
 namespace mathDetail = lsst::afw::math::detail;
 
 /**
- * @brief Convolve an Image or MaskedImage with a spatially varying Kernel using linear interpolation
- * (if it is sufficiently accurate, else fall back to brute force computation).
+ * @brief Convolve an Image or MaskedImage with a spatially varying Kernel using linear interpolation.
  *
  * This is a low-level convolution function that does not set edge pixels.
  *
@@ -120,8 +119,7 @@ void mathDetail::convolveWithInterpolation(
    
     for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
         rgnIter != subregionList.end(); ++rgnIter) {
-        convolveRegionWithRecursiveInterpolation(outImage, inImage, *(*rgnIter),
-            convolutionControl.getMaxInterpolationError());
+        convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
     }            
 }
 
