@@ -162,6 +162,8 @@ boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_ma
                                                                                          )
 {
 
+    // Note to self: I'm not going to keep track of allPixelOrMask here ... sumImage() does that
+    // and it always gets called
     boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
         typename MaskT::x_iterator mptr = msk.row_begin(i_y);
@@ -212,6 +214,7 @@ afwMath::Statistics::Statistics(
     _min = standard.get<2>();
     _max = standard.get<3>();
     _sum = standard.get<4>();
+    _allPixelOrMask = standard.get<5>();
 
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
@@ -241,7 +244,7 @@ afwMath::Statistics::Statistics(
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
                 
                 double const center = (i_i > 0) ? _meanclip : _median;
-                double const hwidth = (i_i > 0) ?
+                double const hwidth = (i_i > 0 && _n > 1) ?
                     _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) :
                     _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
                 std::pair<double, double> const clipinfo(center, hwidth);
@@ -287,6 +290,8 @@ afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
     double min = (nCrude) ? meanCrude : MAX_DOUBLE;
     double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
 
+    afwImage::MaskPixel allPixelOrMask = 0x0;
+    
     for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
         typename MaskT::x_iterator mptr = msk.row_begin(iY);
@@ -319,6 +324,8 @@ afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
                     sumx2 += delta*delta;
                 }
 
+                allPixelOrMask |= *mptr;
+                
                 if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
                 if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
                 n++;
@@ -331,7 +338,7 @@ afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
         max = NaN;
     }
 
-    return afwMath::Statistics::SumReturn(n, sum, sumx2, min, max, wsum);
+    return afwMath::Statistics::SumReturn(n, sum, sumx2, min, max, wsum, allPixelOrMask);
 }
 
 /* =========================================================================
@@ -432,7 +439,8 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT con
     double min   = loopValues.get<3>();
     double max   = loopValues.get<4>();
     double wsum  = loopValues.get<5>();
-
+    afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
+    
     // estimate of population mean and variance
     double mean, variance;
     if (_sctrl.getWeighted()) {
@@ -446,7 +454,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT con
     }
     _n = n;
     
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum, allPixelOrMask);
 }
 
 
@@ -474,7 +482,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
 
     if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
         //return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
-        return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN);
+        return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN, ~0x0);
     }
     
     // =======================================================
@@ -528,6 +536,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     double min   = loopValues.get<3>();
     double max   = loopValues.get<4>();
     double wsum  = loopValues.get<5>();
+    afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
     
     // estimate of population variance
     double mean, variance;
@@ -542,7 +551,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     }
     _n = n;
     
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum, allPixelOrMask);
 }
 
 
@@ -698,7 +707,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
     
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
     afwMath::Property const prop =
-        (iProp == NOTHING) ? static_cast<afwMath::Property>(_flags & ~ERRORS) : iProp;
+        static_cast<afwMath::Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
     
     if (!(prop & _flags)) {             // we didn't calculate it
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -786,7 +795,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case MEDIAN:
         ret.first = _median;
         if ( _flags & ERRORS ) {
-            ret.second = 0;
+            ret.second = sqrt(M_PI/2*_variance/_n); // assumes Gaussian
         }
         break;
       case IQRANGE:
@@ -795,7 +804,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
             ret.second = 0;
         }
         break;
-        
+
         // no-op to satisfy the compiler
       case ERRORS:
         break;
@@ -825,6 +834,7 @@ double afwMath::Statistics::getError(afwMath::Property const prop ///< Desired p
                                      ) const {
     return getResult(prop).second;
 }
+
 
 /************************************************************************************************/
 /**

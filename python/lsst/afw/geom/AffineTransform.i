@@ -65,6 +65,11 @@ SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
     }   
          
     %pythoncode {
+    def getMatrix(self):
+        import numpy
+        return numpy.matrix(((self[0,0], self[0,1], self[0,2]),
+                             (self[1,0], self[1,1], self[1,2]),
+                             (      0.0,       0.0,       1.0)))
     def __getitem__(self, k):
         try:
             i,j = k

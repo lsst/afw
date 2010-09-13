@@ -36,6 +36,7 @@
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/fits/fits_io.h"
 
 namespace bl = boost::lambda;
 namespace image = lsst::afw::image;
@@ -46,9 +47,9 @@ namespace image = lsst::afw::image;
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        int width,                      //!< Number of columns in image
-        int height,                     //!< Number of rows in image
-        MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+                                                                         int width,                      //!< Number of columns in image
+                                                                         int height,                     //!< Number of rows in image
+                                                                         MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(width, height)),
@@ -69,8 +70,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        const std::pair<int, int> dimensions, //!< dimensions of image: width x height
-        MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+                                                                         const std::pair<int, int> dimensions, //!< dimensions of image: width x height
+                                                                         MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(dimensions)),
@@ -97,7 +98,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         const int hdu,                  //!< The HDU in the file (default: 1)
         lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
         BBox const& bbox,                           //!< Only read these pixels
-        bool const conformMasks         //!< Make Mask conform to mask layout in file?
+        bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
+        bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(), _mask(), _variance() {
@@ -142,23 +144,43 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "IMAGE") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                           (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
-                            baseName % real_hdu % exttype).str());           
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+                                   baseName % real_hdu % exttype).str());           
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
-        _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, conformMasks));
+        try {
+            _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, conformMasks));
+        } catch(image::FitsException &e) {
+            if (needAllHdus) {
+                LSST_EXCEPT_ADD(e, "Reading Mask");
+                throw e;
+            }
+
+            _mask = typename Mask::Ptr(new Mask(_image->getDimensions()));
+        }
+
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
 
             if (exttype != "" && exttype != "MASK") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                            (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
-                             baseName % (real_hdu + 1) % exttype).str());
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+                                   baseName % (real_hdu + 1) % exttype).str());
             }
-        } catch(lsst::pex::exceptions::NotFoundException) {}
+        } catch(lsst::pex::exceptions::NotFoundException) {
+            ;
+        }
 
-        _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox));
+        try {
+            _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox));
+        } catch(image::FitsException &e) {
+            if (needAllHdus) {
+                LSST_EXCEPT_ADD(e, "Reading Variance");
+                throw e;
+            }
+            _variance = typename Variance::Ptr(new Variance(_image->getDimensions()));
+        }
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
 

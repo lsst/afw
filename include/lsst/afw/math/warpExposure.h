@@ -40,7 +40,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include "lsst/afw/image/Exposure.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"
@@ -48,6 +47,9 @@
 
 namespace lsst {
 namespace afw {
+namespace image {
+    class Wcs;
+}
 namespace math {
        
     /**
@@ -185,7 +187,7 @@ namespace math {
     int warpExposure(
         DestExposureT &destExposure,
         SrcExposureT const &srcExposure,
-        SeparableKernel &warpingKernel);
+        SeparableKernel &warpingKernel, int const interpLength=0);
 
     template<typename DestImageT, typename SrcImageT>
     int warpImage(
@@ -193,7 +195,7 @@ namespace math {
         lsst::afw::image::Wcs const &destWcs,
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,
-        SeparableKernel &warpingKernel);
+        SeparableKernel &warpingKernel, int const interpLength=0);
 
     namespace details {
         template <typename A, typename B>

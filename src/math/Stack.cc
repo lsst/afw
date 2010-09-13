@@ -74,7 +74,7 @@ int bitcount(unsigned int x)
  * Check that only one type of statistics has been requested.
  */
 void checkOnlyOneFlag(unsigned int flags) {
-    if (bitcount(flags) != 1) {
+    if (bitcount(flags & ~afwMath::ERRORS) != 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Requested more than one type of statistic to make the image stack.");
                           
@@ -113,7 +113,6 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     typedef afwImage::MaskedImage<PixelT> Image;
     typename Image::Ptr imgStack(new Image(images[0]->getDimensions()));
 
-    
     // get a list of row_begin iterators
     typedef typename afwImage::MaskedImage<PixelT>::x_iterator x_iterator;
     std::vector<x_iterator> rows;
@@ -156,14 +155,17 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                     psPtr.variance() = rows[i].variance();
                 }
 
-                msk |= mskTmp;
-                
                 ++rows[i];
             }
-            afwMath::Statistics stat = afwMath::makeStatistics(pixelSet, flags, sctrlTmp);
+            afwMath::Statistics stat =
+                afwMath::makeStatistics(pixelSet, flags | afwMath::NPOINT | afwMath::ERRORS, sctrlTmp);
             
-            PixelT variance = stat.getError()*stat.getError();
-            *ptr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), msk, variance);
+            PixelT variance = ::pow(stat.getError(flags), 2);
+            msk = stat.getOrMask();
+            if (stat.getValue(afwMath::NPOINT) == 0) {
+                msk = sctrlTmp.getNoGoodPixelsMask();
+            }
+            *ptr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(flags), msk, variance);
         }
     }
 
@@ -178,16 +180,19 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
  * @brief A function to compute some statistics of a stack of Masked Images
  * @relates Statistics
  *
+ * If none of the input images are valid for some pixel,
+ * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
+ *
  * All the work is done in the function comuteMaskedImageStack.
  * A boolean template variable has been used to allow the compiler to generate the different instantiations
  *   to handle cases when we are, or are not, dealing with the variance plane.
  */
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
-        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images,
-        afwMath::Property flags,               
-        afwMath::StatisticsControl const& sctrl,
-        std::vector<PixelT> const &wvector
+        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images, //!< images to process
+        afwMath::Property flags,                                           //!< Desired statistic (only one!)
+        afwMath::StatisticsControl const& sctrl,                           //!< Fine control over processing
+        std::vector<PixelT> const &wvector                                 //!< optional weights vector
                                                               ) {
 
     checkOnlyOneFlag(flags);

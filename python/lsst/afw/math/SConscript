@@ -4,6 +4,10 @@ Import("env")
 
 env.CheckSwig("python", ilang="c++",
     includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw")
+CCFLAGS = re.sub("-Wall", "", " ".join(env['CCFLAGS']))
+
+if re.search(r"_wrap\.cc$", env.get("noOptFiles", "")):
+    CCFLAGS = re.sub(r"-O\d\s*", "", CCFLAGS)
+
 env.LoadableModuleIncomplete("_mathLib", Split("mathLib.i"),
-                             CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
-                             LIBS=env.getlibs("afw"))
+                             CCFLAGS=CCFLAGS, LIBS=env.getlibs("afw"))

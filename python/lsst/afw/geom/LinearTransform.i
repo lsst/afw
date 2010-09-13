@@ -62,6 +62,9 @@ SWIG_SHARED_PTR(LinearTransformPtr, lsst::afw::geom::LinearTransform);
     }   
          
     %pythoncode {
+    def getMatrix(self):
+        import numpy
+        return numpy.matrix(((self[0,0], self[0,1]), (self[1,0], self[1,1])))
     def __getitem__(self, k):
         try:
             i,j = k

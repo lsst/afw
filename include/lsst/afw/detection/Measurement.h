@@ -312,7 +312,7 @@ template<typename T, typename ImageT, typename PeakT>
 class MeasureQuantity {
 public:
     typedef Measurement<T> Values;
-    typedef boost::shared_ptr<T> (*makeMeasureQuantityFunc)(typename ImageT::ConstPtr, PeakT const&);
+    typedef boost::shared_ptr<T> (*makeMeasureQuantityFunc)(typename ImageT::ConstPtr, PeakT const*);
     typedef bool (*configureMeasureQuantityFunc)(lsst::pex::policy::Policy const&);
     typedef std::pair<makeMeasureQuantityFunc, configureMeasureQuantityFunc> measureQuantityFuncs;
 private:
@@ -359,18 +359,19 @@ public:
         _algorithms[name] = _lookupAlgorithm(name);
     }
     /// Actually measure im using all requested algorithms, returning the result
-    Values measure(PeakT const& peak     ///< approximate position of object's centre
-                  ) {
-        Values values;
+    PTR(Values) measure(PeakT const* peak     ///< approximate position of object's centre
+                       ) {
+        PTR(Values) values = boost::make_shared<Values>();
 
         if (!_im) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "I cannot measure a NULL image");
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "I cannot measure a NULL image");
         }
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
             boost::shared_ptr<T> val = ptr->second.first(_im, peak);
             val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
-            values.add(val);
+            values->add(val);
         }
 
         return values;
@@ -414,7 +415,7 @@ private:
                                                       );
     static measureQuantityFuncs _lookupAlgorithm(std::string const& name);
     /// The unknown algorithm; used to allow _lookupAlgorithm use _registryWorker
-    static boost::shared_ptr<T> _iefbr14(typename ImageT::ConstPtr, PeakT const &) {
+    static boost::shared_ptr<T> _iefbr14(typename ImageT::ConstPtr, PeakT const*) {
         return boost::shared_ptr<T>();
     }
     static bool _iefbr15(lsst::pex::policy::Policy const &) {
@@ -425,7 +426,7 @@ private:
     //
     // Can't be pure virtual as we create a do-nothing MeasureQuantity which we then add to
     //
-    virtual boost::shared_ptr<T> doMeasure(typename ImageT::ConstPtr, PeakT const&) {
+    virtual boost::shared_ptr<T> doMeasure(typename ImageT::ConstPtr, PeakT const*) {
         return boost::shared_ptr<T>();
     }
 };

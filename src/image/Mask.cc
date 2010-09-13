@@ -523,6 +523,18 @@ typename afwImage::ImageBase<MaskPixelT>::PixelReference afwImage::Mask<MaskPixe
 }
 
 /**
+ * \brief get a reference to the specified pixel checking array bounds
+ */
+template<typename MaskPixelT>
+typename afwImage::ImageBase<MaskPixelT>::PixelReference afwImage::Mask<MaskPixelT>::operator()(
+    int x,                              ///< x index
+    int y,                              ///< y index
+    afwImage::CheckIndices const& check ///< Check array bounds?
+) {
+    return this->ImageBase<MaskPixelT>::operator()(x, y, check);
+}
+
+/**
  * \brief get the specified pixel (const version)
  */
 template<typename MaskPixelT>
@@ -531,6 +543,18 @@ typename afwImage::ImageBase<MaskPixelT>::PixelConstReference afwImage::Mask<Mas
     int y   ///< y index
 ) const {
     return this->ImageBase<MaskPixelT>::operator()(x, y);
+}
+
+/**
+ * \brief get the specified pixel with array checking (const version)
+ */
+template<typename MaskPixelT>
+typename afwImage::ImageBase<MaskPixelT>::PixelConstReference afwImage::Mask<MaskPixelT>::operator()(
+    int x,                              ///< x index
+    int y,                              ///< y index
+    afwImage::CheckIndices const& check ///< Check array bounds?
+) const {
+    return this->ImageBase<MaskPixelT>::operator()(x, y, check);
 }
 
 /**
@@ -544,6 +568,20 @@ bool afwImage::Mask<MaskPixelT>::operator()(
 ) const {
     // !! converts an int to a bool
     return !!(this->ImageBase<MaskPixelT>::operator()(x, y) & getBitMask(planeId));
+}
+
+/**
+ * \brief is the specified mask plane set in the specified pixel, checking array bounds?
+ */
+template<typename MaskPixelT>
+bool afwImage::Mask<MaskPixelT>::operator()(
+    int x,                              ///< x index
+    int y,                              ///< y index
+    int planeId,                        ///< plane ID
+    afwImage::CheckIndices const& check ///< Check array bounds?
+) const {
+    // !! converts an int to a bool
+    return !!(this->ImageBase<MaskPixelT>::operator()(x, y, check) & getBitMask(planeId));
 }
 
 /************************************************************************************************************/

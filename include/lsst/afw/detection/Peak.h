@@ -59,6 +59,8 @@ public:
     int getIy() const { return _iy; }         //!< Return the row pixel position
     float getFx() const { return _fx; }       //!< Return the column centroid
     float getFy() const { return _fy; }       //!< Return the row centroid
+    void setFx(float fx) { _fx = fx; }        //!< Set the column centroid
+    void setFy(float fy) { _fy = fy; }        //!< Set the row centroid
 
     std::string toString();    
 private:

@@ -71,7 +71,8 @@ enum Property {
     MIN = 0x400,           ///< estimate sample minimum
     MAX = 0x800,           ///< estimate sample maximum
     SUM = 0x1000,          ///< find sum of pixels in the image
-    MEANSQUARE = 0x2000    ///< find mean value of square of pixel values
+    MEANSQUARE = 0x2000,   ///< find mean value of square of pixel values
+    ORMASK = 0x4000        ///< get the or-mask of all pixels used.
 };
 
     
@@ -94,6 +95,7 @@ public:
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
+        _noGoodPixelsMask(lsst::afw::image::Mask<>::getPlaneBitMask("BAD")),
         _isNanSafe(isNanSafe),
         _isWeighted(isWeighted),
         _isMultiplyingWeights(false) {
@@ -104,7 +106,8 @@ public:
 
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
-    image::MaskPixel getAndMask() const { return _andMask; }
+    int getAndMask() const { return _andMask; }
+    int getNoGoodPixelsMask() const { return _noGoodPixelsMask; }
     bool getNanSafe() const { return _isNanSafe; }
     bool getWeighted() const { return _isWeighted; }
     bool getMultiplyWeights() const { return _isMultiplyingWeights; }
@@ -112,7 +115,8 @@ public:
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
-    void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
+    void setAndMask(int andMask) { _andMask = andMask; }
+    void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
     void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
     void setMultiplyWeights(bool isMultiplyingWeights) { _isMultiplyingWeights = isMultiplyingWeights; }
@@ -121,7 +125,8 @@ public:
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
-    image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
+    int _andMask;               // and-Mask to specify which mask planes to ignore
+    int _noGoodPixelsMask;      // mask to set if no values are acceptable
     bool _isNanSafe;                      // Check for NaNs before running (slower)
     bool _isWeighted;                     // Use inverse variance to weight statistics.
     bool _isMultiplyingWeights;           // Treat variance plane as weights and multiply instead of dividing
@@ -184,12 +189,15 @@ public:
     
     double getError(Property const prop = NOTHING) const;
     double getValue(Property const prop = NOTHING) const;
+    image::MaskPixel getOrMask() const {
+        return _allPixelOrMask;
+    }
     
 private:
 
     // return type for _getStandard
-    typedef boost::tuple<double, double, double, double, double> StandardReturn; 
-    typedef boost::tuple<int, double, double, double, double, double> SumReturn; 
+    typedef boost::tuple<double, double, double, double, double, image::MaskPixel> StandardReturn; 
+    typedef boost::tuple<int, double, double, double, double, double, image::MaskPixel> SumReturn; 
     typedef boost::tuple<double, double, double> MedianQuartileReturn;
     
     long _flags;                        // The desired calculation
@@ -204,6 +212,7 @@ private:
     double _varianceclip;               // the image's N-sigma clipped variance
     double _median;                     // the image's median
     double _iqrange;                    // the image's interquartile range
+    image::MaskPixel _allPixelOrMask;   //  the 'or' of all masked pixels
 
     StatisticsControl _sctrl;           // the control structure
 
