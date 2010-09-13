@@ -228,7 +228,7 @@ def run():
     timeSet(outImage, inImage, getGaussianLinearCombinationKernel,
         "LinearCombinationKernel with 5 Gaussian Basis Kernels", convControl)
     timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
-        "LinearCombinationKernel with Delta Function Basis", convControl, stdOnly=True)
+        "LinearCombinationKernel with Delta Function Basis", convControl)
 
 if __name__ == "__main__":
     run()

@@ -62,7 +62,7 @@ namespace mathDetail = lsst::afw::math::detail;
  * The algorithm is as follows:
  * - divide the image into regions whose size is no larger than maxInterpolationDistance
  * - for each region:
- *   - convolve it using convolveRegionWithRecursiveInterpolation (which see)
+ *   - convolve it using convolveRegionWithInterpolation (which see)
  *
  * Note that this routine will also work with spatially invariant kernels, but not efficiently.
  *
@@ -108,17 +108,13 @@ void mathDetail::convolveWithInterpolation(
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
     KernelImagesForRegion::List subregionList = goodRegion.getSubregions(nx, ny);
-
+   
     for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
         rgnIter != subregionList.end(); ++rgnIter) {
         pexLog::TTrace<6>("lsst.afw.math.convolve",
             "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                 (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                 (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
-    }            
-   
-    for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
-        rgnIter != subregionList.end(); ++rgnIter) {
         convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
     }            
 }
