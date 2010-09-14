@@ -215,7 +215,9 @@ def run():
     convControl.setDoNormalize(True)
     
     if len(sys.argv) < 2:
-        inImage = afwImage.MaskedImageF(InputMaskedImagePath)
+        fullInImage = afwImage.MaskedImageF(InputMaskedImagePath)
+        bbox = afwImage.BBox(afwImage.PointI(0, 0), 256, 256)
+        inImage = afwImage.MaskedImageF(fullInImage, bbox, False)
     else:
         inImage = afwImage.MaskedImageF(sys.argv[1])
     outImage = afwImage.MaskedImageF(inImage.getDimensions())
