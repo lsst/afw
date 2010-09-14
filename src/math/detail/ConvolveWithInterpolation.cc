@@ -107,16 +107,17 @@ void mathDetail::convolveWithInterpolation(
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
-    KernelImagesForRegion::List subregionList = goodRegion.getSubregions(nx, ny);
-   
-    for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
-        rgnIter != subregionList.end(); ++rgnIter) {
-        pexLog::TTrace<6>("lsst.afw.math.convolve",
-            "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
-                (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
-                (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
-        convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
-    }            
+    RowOfKernelImagesForRegion regionRow(nx, ny);
+    while (goodRegion.computeNextRow(regionRow)) {
+        for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
+            rgnIter != rgnEnd; ++rgnIter) {
+            pexLog::TTrace<6>("lsst.afw.math.convolve",
+                "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
+                    (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
+                    (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
+            convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
+        }
+    }
 }
 
 /**

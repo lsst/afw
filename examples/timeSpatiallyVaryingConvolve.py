@@ -23,6 +23,7 @@
 #
 
 import math
+import sys
 import os
 import time
 import random
@@ -212,12 +213,11 @@ def timeSet(outImage, inImage, kernelFunction, kernelDescr, convControl, stdOnly
 def run():
     convControl = afwMath.ConvolutionControl()
     convControl.setDoNormalize(True)
-    fullInImage = afwImage.MaskedImageF(InputMaskedImagePath)
-    imSize = (256, 256)
-#     print "hack: made image smaller"
-#     imSize = (100, 100)
-    bbox = afwImage.BBox(afwImage.PointI(0, 0), imSize[0], imSize[1])
-    inImage = afwImage.MaskedImageF(fullInImage, bbox, False)
+    
+    if len(sys.argv) < 2:
+        inImage = afwImage.MaskedImageF(InputMaskedImagePath)
+    else:
+        inImage = afwImage.MaskedImageF(sys.argv[1])
     outImage = afwImage.MaskedImageF(inImage.getDimensions())
     
     getSeparableKernel(5, (10, 10))

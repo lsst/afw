@@ -85,6 +85,8 @@ namespace detail {
             lsst::afw::math::Kernel const& kernel,
             bool doNormalize);
 
+    class RowOfKernelImagesForRegion;
+
     /**
      * A collection of Kernel images for special locations on a rectangular region of an image
      *
@@ -170,6 +172,7 @@ namespace detail {
         lsst::afw::geom::Point2I getPixelIndex(Location location) const;
         List getSubregions() const;
         List getSubregions(int nx, int ny) const;
+        bool computeNextRow(RowOfKernelImagesForRegion &regionRow) const;
         void interpolateImage(Image &outImage, Location location) const;
         bool isInterpolationOk(double maxInterpolationError) const;
         /**
@@ -203,6 +206,36 @@ namespace detail {
         static int const _MinInterpolationSize;
         static LocationList const _TestLocationList;   ///< locations at which to test
             ///< linear interpolation to see if it is accurate enough
+    };
+    
+    /**
+     * @brief A row of KernelImagesForRegion
+     *
+     * Intended for iterating over subregions of a KernelImagesForRegion using computeNextRow.
+     */
+    class RowOfKernelImagesForRegion {
+    public:
+        typedef std::vector<KernelImagesForRegion::ConstPtr> RegionList;
+        typedef RegionList::iterator Iterator;
+        typedef RegionList::const_iterator ConstIterator;
+        
+        
+        RowOfKernelImagesForRegion(int nx, int ny);
+        RegionList::const_iterator begin() const { return _regionList.begin(); };
+        RegionList::const_iterator end() const { return _regionList.end(); };
+        RegionList::iterator begin() { return _regionList.begin(); };
+        RegionList::iterator end() { return _regionList.end(); };
+        int getNX() const { return _nx; };
+        int getNY() const { return _ny; };
+        int getYInd() const { return _yInd; };
+        int isLastRow() const { return _yInd + 1 >= _ny; };
+        int incrYInd() { return ++_yInd; };
+        
+    private:
+        int _nx;
+        int _ny;
+        int _yInd;
+        std::vector<KernelImagesForRegion::ConstPtr> _regionList;
     };
     
     template <typename OutImageT, typename InImageT>

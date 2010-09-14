@@ -584,7 +584,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         self.runStdTest(kernel,
             kernelDescr = "Spatially varying LinearCombinationKernel of delta function basis kernels",
-            maxInterpDist = 5)
+            maxInterpDist = 0)
 
     def testZeroWidthKernel(self):
         """Convolution by a 0x0 kernel should raise an exception.

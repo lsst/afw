@@ -250,6 +250,94 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
     return retList;
 }
 
+/**
+ * @brief Compute next row of subregions
+ *
+ * For the first row call with a new RowOfKernelImagesForRegion (with the desired number of columns and rows).
+ * Every subequent call updates the data in the RowOfKernelImagesForRegion.
+ *
+ * @return true if a new row was computed, false if the supplied RowOfKernelImagesForRegion is for the last row.
+ */
+bool mathDetail::KernelImagesForRegion::computeNextRow(
+        RowOfKernelImagesForRegion &regionRow) ///< RowOfKernelImagesForRegion object
+const {
+    if (regionRow.isLastRow()) {
+        return false;
+    }
+
+    ImageSumPair blImageSumPair;
+    ImageSumPair brImageSumPair;
+    ImageSumPair tlImageSumPair;
+    ImageSumPair const trImageNullPtr;
+    
+    int yInd = regionRow.incrYInd();
+    bool isFirstRow = (yInd == 0);
+    
+    int startY;
+    if (isFirstRow) {
+        startY = this->_bbox.getMinY();
+    } else {
+        startY = (*regionRow.begin())->getBBox().getMaxY() + 1;
+    }
+    afwGeom::Point2I blCorner = afwGeom::makePointI(this->_bbox.getMinX(), startY);
+
+    int remHeight = 1 + this->_bbox.getMaxY() - startY;
+    int remYDiv = regionRow.getNY() - yInd;
+    int height = _computeNextSubregionLength(remHeight, remYDiv);
+    
+    if (isFirstRow) {
+        blImageSumPair = getImageSumPair(BOTTOM_LEFT);
+
+        int remWidth = this->_bbox.getWidth();
+        int remXDiv = regionRow.getNX();
+        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end(); rgnIter != rgnEnd;
+            ++rgnIter) {
+            int width = _computeNextSubregionLength(remWidth, remXDiv);
+            --remXDiv;
+            remWidth -= width;
+            
+            KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
+                _kernelPtr,
+                afwGeom::BoxI(blCorner, afwGeom::Extent2I::make(width, height)),
+                _xy0,
+                _doNormalize,
+                blImageSumPair,
+                brImageSumPair,
+                tlImageSumPair,
+                trImageNullPtr));
+            *rgnIter = regionPtr;
+            
+            blCorner += afwGeom::Extent2I::make(width, 0);
+            blImageSumPair = regionPtr->getImageSumPair(BOTTOM_RIGHT);
+            tlImageSumPair = regionPtr->getImageSumPair(TOP_RIGHT);
+        }
+    } else {
+        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end(); rgnIter != rgnEnd;
+            ++rgnIter) {
+            
+            // rgnIter points to the region just below the one we are computing;
+            // it has the same width and shares two images
+            int width = (**rgnIter).getBBox().getWidth();
+            blImageSumPair = (**rgnIter).getImageSumPair(TOP_LEFT);
+            brImageSumPair = (**rgnIter).getImageSumPair(TOP_RIGHT);
+            
+            KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
+                _kernelPtr,
+                afwGeom::BoxI(blCorner, afwGeom::Extent2I::make(width, height)),
+                _xy0,
+                _doNormalize,
+                blImageSumPair,
+                brImageSumPair,
+                tlImageSumPair,
+                trImageNullPtr));
+            *rgnIter = regionPtr;
+            
+            blCorner += afwGeom::Extent2I::make(width, 0);
+            tlImageSumPair = regionPtr->getImageSumPair(TOP_RIGHT);
+        }
+    }
+    return true;
+}
 
 /**
  * Divide region into nx by ny sub-regions of approximately equal size.
@@ -266,8 +354,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
  * @throw lsst::pex::exceptions::InvalidParameterException if nx >= region width or ny >= region height.
  * @throw lsst::pex::exceptions::InvalidParameterException if nx < 1 or ny < 1.
  */
-mathDetail::KernelImagesForRegion::List
-mathDetail::KernelImagesForRegion::getSubregions(
+mathDetail::KernelImagesForRegion::List mathDetail::KernelImagesForRegion::getSubregions(
         int nx, ///< number of x regions
         int ny) ///< number of y regions
 const {
@@ -498,3 +585,22 @@ int const mathDetail::KernelImagesForRegion::_MinInterpolationSize = 10;
 
 mathDetail::KernelImagesForRegion::LocationList const mathDetail::KernelImagesForRegion::_TestLocationList =
     boost::assign::list_of(CENTER)(BOTTOM)(LEFT)(RIGHT)(TOP);
+
+/**
+ * @brief Construct a RowOfKernelImagesForRegion
+ */
+mathDetail::RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
+        int nx, ///< number of columns
+        int ny) ///< number of rows
+:
+    _nx(nx),
+    _ny(ny),
+    _yInd(-1),
+    _regionList(ny)
+{
+    if ((nx < 1) || (ny < 1)) {
+        std::ostringstream os;
+        os << "nx = " << nx << " and/or ny = " << ny << " < 1";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    };
+}
