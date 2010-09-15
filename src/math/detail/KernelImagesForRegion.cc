@@ -256,7 +256,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
  * For the first row call with a new RowOfKernelImagesForRegion (with the desired number of columns and rows).
  * Every subequent call updates the data in the RowOfKernelImagesForRegion.
  *
- * @return true if a new row was computed, false if the supplied RowOfKernelImagesForRegion is for the last row.
+ * @return true if a new row was computed, false if supplied RowOfKernelImagesForRegion is for the last row.
  */
 bool mathDetail::KernelImagesForRegion::computeNextRow(
         RowOfKernelImagesForRegion &regionRow) ///< RowOfKernelImagesForRegion object
@@ -271,13 +271,13 @@ const {
     ImageSumPair const trImageNullPtr;
     
     int yInd = regionRow.incrYInd();
-    bool isFirstRow = (yInd == 0);
+    bool hasData = regionRow.hasData();
     
     int startY;
-    if (isFirstRow) {
-        startY = this->_bbox.getMinY();
-    } else {
+    if (hasData) {
         startY = (*regionRow.begin())->getBBox().getMaxY() + 1;
+    } else {
+        startY = this->_bbox.getMinY();
     }
     afwGeom::Point2I blCorner = afwGeom::makePointI(this->_bbox.getMinX(), startY);
 
@@ -285,35 +285,9 @@ const {
     int remYDiv = regionRow.getNY() - yInd;
     int height = _computeNextSubregionLength(remHeight, remYDiv);
     
-    if (isFirstRow) {
-        blImageSumPair = getImageSumPair(BOTTOM_LEFT);
-
-        int remWidth = this->_bbox.getWidth();
-        int remXDiv = regionRow.getNX();
-        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end(); rgnIter != rgnEnd;
-            ++rgnIter) {
-            int width = _computeNextSubregionLength(remWidth, remXDiv);
-            --remXDiv;
-            remWidth -= width;
-            
-            KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
-                _kernelPtr,
-                afwGeom::BoxI(blCorner, afwGeom::Extent2I::make(width, height)),
-                _xy0,
-                _doNormalize,
-                blImageSumPair,
-                brImageSumPair,
-                tlImageSumPair,
-                trImageNullPtr));
-            *rgnIter = regionPtr;
-            
-            blCorner += afwGeom::Extent2I::make(width, 0);
-            blImageSumPair = regionPtr->getImageSumPair(BOTTOM_RIGHT);
-            tlImageSumPair = regionPtr->getImageSumPair(TOP_RIGHT);
-        }
-    } else {
-        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end(); rgnIter != rgnEnd;
-            ++rgnIter) {
+    if (hasData) {
+        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
+            rgnIter != rgnEnd; ++rgnIter) {
             
             // rgnIter points to the region just below the one we are computing;
             // it has the same width and shares two images
@@ -335,75 +309,34 @@ const {
             blCorner += afwGeom::Extent2I::make(width, 0);
             tlImageSumPair = regionPtr->getImageSumPair(TOP_RIGHT);
         }
-    }
-    return true;
-}
+    } else {
+        blImageSumPair = getImageSumPair(BOTTOM_LEFT);
 
-/**
- * Divide region into nx by ny sub-regions of approximately equal size.
- *
- * Adjacent regions share two corner kernel images.
- *
- * All kernel images shared by the returned regions are computed, but others may not be.
- * In particular note that the extreme corner images may not be computed
- * (unlike the no-argument version of this function) to reduce code complexity.
- *
- * @return a list of subregions in order: bottom row left to right, next row left to right...,
- * top row left to right
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if nx >= region width or ny >= region height.
- * @throw lsst::pex::exceptions::InvalidParameterException if nx < 1 or ny < 1.
- */
-mathDetail::KernelImagesForRegion::List mathDetail::KernelImagesForRegion::getSubregions(
-        int nx, ///< number of x regions
-        int ny) ///< number of y regions
-const {
-    ImageSumPair blImageSumPair(getImageSumPair(BOTTOM_LEFT));
-    ImageSumPair brImageSumPair;
-    ImageSumPair tlImageSumPair;
-    ImageSumPair const trImageNullPtr;
-    
-    typedef std::vector<int>::const_iterator IntIter;
-    std::vector<int> widthList(_computeSubregionLengths(_bbox.getWidth(), nx));
-    std::vector<int> heightList(_computeSubregionLengths(_bbox.getHeight(), ny));
-    List retList;
-
-    afwGeom::Point2I leftCorner(_bbox.getMin());
-    for (int yInd = 0, retInd = 0; yInd < ny; ++yInd) {
-        int height = heightList[yInd];
-        afwGeom::Point2I corner = leftCorner;
-        for (int xInd = 0; xInd < nx; ++xInd, ++retInd) {
-            int width = widthList[xInd];
-            if (xInd > 0) {
-                // there is a region to the left; get its right-hand images
-                blImageSumPair = retList[retInd-1]->getImageSumPair(BOTTOM_RIGHT);
-                tlImageSumPair = retList[retInd-1]->getImageSumPair(TOP_RIGHT);
-            } else {
-                blImageSumPair.first.reset();
-                tlImageSumPair.first.reset();
-            }
-            if (yInd > 0) {
-                // there is a region below; get its top images
-                if (!blImageSumPair.first) {
-                    blImageSumPair = retList[retInd-nx]->getImageSumPair(TOP_LEFT);
-                }
-                brImageSumPair = retList[retInd-nx]->getImageSumPair(TOP_RIGHT);
-            }
-
-            retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
+        int remWidth = this->_bbox.getWidth();
+        int remXDiv = regionRow.getNX();
+        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
+            rgnIter != rgnEnd; ++rgnIter) {
+            int width = _computeNextSubregionLength(remWidth, remXDiv);
+            --remXDiv;
+            remWidth -= width;
+            
+            KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
                 _kernelPtr,
-                afwGeom::BoxI(corner, afwGeom::Extent2I::make(width, height)),
+                afwGeom::BoxI(blCorner, afwGeom::Extent2I::make(width, height)),
                 _xy0,
                 _doNormalize,
                 blImageSumPair,
                 brImageSumPair,
                 tlImageSumPair,
-                trImageNullPtr)));
-            corner += afwGeom::Extent2I::make(width, 0);
+                trImageNullPtr));
+            *rgnIter = regionPtr;
+            
+            blCorner += afwGeom::Extent2I::make(width, 0);
+            blImageSumPair = regionPtr->getImageSumPair(BOTTOM_RIGHT);
+            tlImageSumPair = regionPtr->getImageSumPair(TOP_RIGHT);
         }
-        leftCorner += afwGeom::Extent2I::make(0, height);
     }
-    return retList;
+    return true;
 }
 
 /**
@@ -596,7 +529,7 @@ mathDetail::RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
     _nx(nx),
     _ny(ny),
     _yInd(-1),
-    _regionList(ny)
+    _regionList(nx)
 {
     if ((nx < 1) || (ny < 1)) {
         std::ostringstream os;

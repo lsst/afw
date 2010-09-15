@@ -171,7 +171,6 @@ namespace detail {
         KernelConstPtr getKernel() const { return _kernelPtr; };
         lsst::afw::geom::Point2I getPixelIndex(Location location) const;
         List getSubregions() const;
-        List getSubregions(int nx, int ny) const;
         bool computeNextRow(RowOfKernelImagesForRegion &regionRow) const;
         void interpolateImage(Image &outImage, Location location) const;
         bool isInterpolationOk(double maxInterpolationError) const;
@@ -228,7 +227,14 @@ namespace detail {
         int getNX() const { return _nx; };
         int getNY() const { return _ny; };
         int getYInd() const { return _yInd; };
-        int isLastRow() const { return _yInd + 1 >= _ny; };
+        /**
+         * @brief get the specified region (range-checked)
+         *
+         * @throw std::range_error if ind out of range
+         */
+        KernelImagesForRegion::ConstPtr getRegion(int ind) const { return _regionList.at(ind); };
+        bool hasData() const { return static_cast<bool>(_regionList[0]); };
+        bool isLastRow() const { return _yInd + 1 >= _ny; };
         int incrYInd() { return ++_yInd; };
         
     private:

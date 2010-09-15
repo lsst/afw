@@ -115,7 +115,7 @@ void mathDetail::convolveWithInterpolation(
                 "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                     (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                     (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
-            convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
+            convolveRegionWithInterpolation(outImage, inImage, **rgnIter);
         }
     }
 }
