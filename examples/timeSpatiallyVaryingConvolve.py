@@ -204,10 +204,10 @@ def run():
         inImage = afwImage.MaskedImageF(sys.argv[1])
     outImage = afwImage.MaskedImageF(inImage.getDimensions())
     
-#     timeSet(outImage, inImage, getAnalyticKernel,
-#         "AnalyticKernel", convControl, spOrder=spOrder)
-#     timeSet(outImage, inImage, getSeparableKernel,
-#         "SeparableKernel", convControl, spOrder=spOrder, doInterp=False)
+    timeSet(outImage, inImage, getAnalyticKernel,
+        "AnalyticKernel", convControl, spOrder=spOrder)
+    timeSet(outImage, inImage, getSeparableKernel,
+        "SeparableKernel", convControl, spOrder=spOrder, doInterp=False)
     timeSet(outImage, inImage, getGaussianLinearCombinationKernel,
         "LinearCombinationKernel with 5 Gaussian Basis Kernels", convControl, spOrder=spOrder)
     timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
