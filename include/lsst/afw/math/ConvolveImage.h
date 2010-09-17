@@ -60,27 +60,20 @@ namespace math {
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
-                double maxInterpolationError = 1.0e-3,  ///< maximum allowed error
-                    ///< in computing the value of the kernel at any pixel by linear interpolation,
-                    ///< where error = abs(interpolated kernel image - true kernel image) / true kernel sum
-                int maxInterpolationDistance = 50)  ///< maximum width or height of a region
-                    ///< over which to test if interpolation works
+                int maxInterpolationDistance = 10)  ///< maximum width or height of a region
+                    ///< over which to use linear interpolation interpolate
         :
             _doNormalize(doNormalize),
             _doCopyEdge(doCopyEdge),
-            _maxInterpolationError(maxInterpolationError),
             _maxInterpolationDistance(maxInterpolationDistance)
         { }
     
         bool getDoNormalize() const { return _doNormalize; }
         bool getDoCopyEdge() const { return _doCopyEdge; }
-        double getMaxInterpolationError() const { return _maxInterpolationError; }
         int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
         
         void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
         void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
-        void setMaxInterpolationError(double maxInterpolationError) {
-            _maxInterpolationError = maxInterpolationError; }
         void setMaxInterpolationDistance(int maxInterpolationDistance) {
             _maxInterpolationDistance = maxInterpolationDistance; }
     
@@ -88,8 +81,6 @@ namespace math {
         bool _doNormalize;  ///< normalize the kernel to sum=1?
         bool _doCopyEdge;   ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
-        double _maxInterpolationError;  ///< maximum allowed error in computing the kernel image;
-                    ///< applies to linear interpolation and perhaps other approximate methods in the future
         int _maxInterpolationDistance;  ///< maximum width or height of a region
                     ///< over which to attempt interpolation
     };

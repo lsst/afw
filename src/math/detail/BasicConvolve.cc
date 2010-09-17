@@ -182,7 +182,7 @@ void mathDetail::basicConvolve(
         return;
     }
     // OK, use general (and slower) form
-    if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationError() > 0.0)) {
+    if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationDistance() > 1)) {
         // use linear interpolation
         pexLog::TTrace<3>("lsst.afw.math.convolve", "generic basicConvolve: using linear interpolation");
         mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
@@ -258,7 +258,7 @@ void mathDetail::basicConvolve(
             "basicConvolve for LinearCombinationKernel: spatially invariant; using brute force");
         return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
-    } else if (!kernel.isDeltaFunctionBasis()) {
+    } else {
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
         afwMath::Kernel::Ptr refKernelPtr; // possibly refactored version of kernel
@@ -272,7 +272,7 @@ void mathDetail::basicConvolve(
             // too few basis kernels for refactoring to be worthwhile
             refKernelPtr = kernel.clone();
         }
-        if (convolutionControl.getMaxInterpolationError() > 0.0) {
+        if (convolutionControl.getMaxInterpolationDistance() > 1) {
             pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "basicConvolve for LinearCombinationKernel: using interpolation");
             return mathDetail::convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);
@@ -281,97 +281,6 @@ void mathDetail::basicConvolve(
                 "basicConvolve for LinearCombinationKernel: maxInterpolationError < 0; using brute force");
             return mathDetail::convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
                 convolutionControl.getDoNormalize());
-        }
-    }
-    
-    // use specialization for delta function basis; this is faster then
-    // the standard algorithm but requires more memory
-
-    assertDimensionsOK(convolvedImage, inImage, kernel);
-    
-    pexLog::TTrace<3>("lsst.afw.math.convolve",
-        "basicConvolve for LinearCombinationKernel: spatially varying delta function basis");
-    
-    typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
-    typedef typename BasisImage::x_iterator BasisXIterator;
-    typedef typename OutImageT::x_iterator OutXIterator;
-    typedef afwMath::KernelList KernelList;
-
-    int const imWidth = inImage.getWidth();
-    int const imHeight = inImage.getHeight();
-    int const cnvWidth = imWidth + 1 - kernel.getWidth();
-    int const cnvHeight = imHeight + 1 - kernel.getHeight();
-    int const cnvStartX = kernel.getCtrX();
-    int const cnvStartY = kernel.getCtrY();
-    int const cnvEndX = cnvStartX + cnvWidth;  // end index + 1
-    int const cnvEndY = cnvStartY + cnvHeight; // end index + 1
-    // create a BasisImage to hold the source convolved with a basis kernel
-    BasisImage basisImage(inImage.getDimensions());
-
-    // initialize good area of output image to zero so we can add the convolved basis images into it
-    typename OutImageT::SinglePixel const nullPixel(0);
-    for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
-        OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
-        for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter) {
-            *cnvXIter = nullPixel;
-        }
-    }
-    
-    // iterate over basis kernels
-    KernelList const basisKernelList = kernel.getKernelList();
-    int i = 0;
-    for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
-        basisKernelIter != basisKernelList.end(); ++basisKernelIter, ++i) {
-        mathDetail::basicConvolve(basisImage, inImage, **basisKernelIter, false);
-
-        // iterate over matching pixels of all images to compute output image
-        afwMath::Kernel::SpatialFunctionPtr spatialFunctionPtr = kernel.getSpatialFunction(i);
-        std::vector<double> kernelCoeffList(kernel.getNKernelParameters());
-            // weights of basis images at this point
-        for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
-            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
-        
-            OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
-            BasisXIterator basisXIter = basisImage.row_begin(cnvY) + cnvStartX;
-            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter, ++basisXIter) {
-                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
-                double basisCoeff = (*spatialFunctionPtr)(colPos, rowPos);
-                
-                typename OutImageT::SinglePixel cnvPixel(*cnvXIter);
-                cnvPixel += (*basisXIter) * basisCoeff;
-                *cnvXIter = cnvPixel;
-                // note: cnvPixel avoids compiler complaints; the following does not build:
-                // *cnvXIter += (*basisXIter) * basisCoeff;
-            }
-        }
-    }
-
-    if (convolutionControl.getDoNormalize()) {
-        /*
-        For each pixel of the output image: compute the kernel sum for that pixel and scale
-        the output image. One obvious alternative is to create a temporary kernel sum image
-        and accumulate into that while iterating over the basis kernels above. This saves
-        computing the spatial functions again here, but requires a temporary image
-        the same size as the output image, so it is likely to suffer from cache issues.
-        */
-        std::vector<double> const kernelSumList = kernel.getKernelSumList();
-        std::vector<Kernel::SpatialFunctionPtr> spatialFunctionList = kernel.getSpatialFunctionList();
-        for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
-            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
-        
-            OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
-            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter) {
-                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
-
-                std::vector<double>::const_iterator kSumIter = kernelSumList.begin();
-                std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncIter =
-                    spatialFunctionList.begin();
-                double kSum = 0.0;
-                for ( ; kSumIter != kernelSumList.end(); ++kSumIter, ++spFuncIter) {
-                    kSum += (**spFuncIter)(colPos, rowPos) * (*kSumIter);
-                }
-                *cnvXIter /= kSum;
-            }
         }
     }
 }
