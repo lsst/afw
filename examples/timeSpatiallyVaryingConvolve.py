@@ -172,8 +172,8 @@ def timeSet(outImage, inImage, kernelFunction, kernelDescr, convControl, spOrder
     if doInterp:
         methodDescrInterpDistList = (
             ("no interpolation", 0),
-            ("linear interpolation over 5 x 5 pixels", 5),
             ("linear interpolation over 10 x 10 pixels", 10),
+            ("linear interpolation over 20 x 20 pixels", 20),
         )
     else:
         methodDescrInterpDistList = (

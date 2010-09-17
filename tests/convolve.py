@@ -424,8 +424,10 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc2)
         
-        self.runStdTest(separableKernel, refKernel=analyticKernel,
-            kernelDescr="Gaussian Separable Kernel (compared to AnalyticKernel equivalent)")
+        self.runStdTest(
+            separableKernel,
+            refKernel = analyticKernel,
+            kernelDescr = "Gaussian Separable Kernel (compared to AnalyticKernel equivalent)")
 
     def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
@@ -464,14 +466,13 @@ class ConvolveTestCase(unittest.TestCase):
         
         for maxInterpDist, rtol, methodStr in (
             (0,   1.0e-5, "brute force"),
-            (10,  1.0e-5, "interpolate 10"),
-            (20,  0.01,   "interpolate 20"),
+            (10,  1.0e-5, "interpolation over 10 x 10 pixels"),
         ):
             self.runStdTest(
                 kernel,
-                kernelDescr="Spatially Varying Gaussian Analytic Kernel with %s" % (methodStr,),
-                maxInterpDist=maxInterpDist,
-                rtol=rtol)
+                kernelDescr = "Spatially Varying Gaussian Analytic Kernel using %s" % (methodStr,),
+                maxInterpDist = maxInterpDist,
+                rtol = rtol)
 
     def testSpatiallyVaryingSeparableConvolve(self):
         """Test convolution with a spatially varying SeparableKernel
@@ -550,15 +551,14 @@ class ConvolveTestCase(unittest.TestCase):
     
             for maxInterpDist, rtol, methodStr in (
                 (0,   1.0e-5, "brute force"),
-                (10,  1.0e-5, "interpolate 10"),
-                (20,  0.01,   "interpolate 20"),
+                (10,  1.0e-5, "interpolation over 10 x 10 pixels"),
             ):
                 self.runStdTest(
                     kernel,
                     kernelDescr = "%s with %d basis kernels convolved using %s" % \
                         ("Spatially Varying Gaussian Analytic Kernel", nBasisKernels, methodStr),
-                    maxInterpDist=maxInterpDist,
-                    rtol=rtol)
+                    maxInterpDist = maxInterpDist,
+                    rtol = rtol)
 
     def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of delta function basis kernels.
@@ -582,9 +582,16 @@ class ConvolveTestCase(unittest.TestCase):
         kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)
         kernel.setSpatialParameters(sParams)
 
-        self.runStdTest(kernel,
-            kernelDescr = "Spatially varying LinearCombinationKernel of delta function basis kernels",
-            maxInterpDist = 0)
+        for maxInterpDist, rtol, methodStr in (
+            (0,   1.0e-5, "brute force"),
+            (10,  1.0e-3, "interpolation over 10 x 10 pixels"),
+        ):
+            self.runStdTest(
+                kernel,
+                kernelDescr = "Spatially varying LinearCombinationKernel of delta function kernels using %s" %\
+                    (methodStr,),
+                maxInterpDist = maxInterpDist,
+                rtol = rtol)
 
     def testZeroWidthKernel(self):
         """Convolution by a 0x0 kernel should raise an exception.
@@ -642,9 +649,16 @@ class ConvolveTestCase(unittest.TestCase):
         kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)
         kernel.setSpatialParameters(sParams)
 
-        self.runStdTest(kernel,
-            kernelDescr = "Spatially varying LinearCombinationKernel of basis kernels with low covariance",
-            maxInterpDist = 0)
+        for maxInterpDist, rtol, methodStr in (
+            (0,   1.0e-5, "brute force"),
+            (10,  3.0e-3, "interpolation over 10 x 10 pixels"),
+        ):
+            self.runStdTest(
+                kernel,
+                kernelDescr = \
+"Spatially varying LinearCombinationKernel of basis kernels with low covariance, using %s" % (methodStr,),
+                maxInterpDist = maxInterpDist,
+                rtol = rtol)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
