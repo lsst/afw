@@ -50,9 +50,12 @@ afwMath::SeparableKernel::SeparableKernel()
     Kernel(),
     _kernelColFunctionPtr(),
     _kernelRowFunctionPtr(),
-    _localColList(0),
-    _localRowList(0)
-{}
+    _localColList(0), _localRowList(0),
+    _kernelX(0), _kernelY(0),
+    _kernelRowCache(0), _kernelColCache(0)
+{
+    _setKernelXY();
+}
 
 /**
  * @brief Construct a spatially invariant SeparableKernel, or a spatially varying SeparableKernel
@@ -71,9 +74,12 @@ afwMath::SeparableKernel::SeparableKernel(
         spatialFunction),
     _kernelColFunctionPtr(kernelColFunction.clone()),
     _kernelRowFunctionPtr(kernelRowFunction.clone()),
-    _localColList(width),
-    _localRowList(height)
-{}
+    _localColList(width), _localRowList(height),
+    _kernelX(width), _kernelY(height),
+    _kernelRowCache(0), _kernelColCache(0)
+{
+    _setKernelXY();
+}
 
 /**
  * @brief Construct a spatially varying SeparableKernel
@@ -92,8 +98,9 @@ afwMath::SeparableKernel::SeparableKernel(
     Kernel(width, height, spatialFunctionList),
     _kernelColFunctionPtr(kernelColFunction.clone()),
     _kernelRowFunctionPtr(kernelRowFunction.clone()),
-    _localColList(width),
-    _localRowList(height)
+    _localColList(width), _localRowList(height),
+    _kernelX(width), _kernelY(height),
+    _kernelRowCache(0), _kernelColCache(0)    
 {
     if (kernelColFunction.getNParameters() + kernelRowFunction.getNParameters()
         != spatialFunctionList.size()) {
@@ -103,6 +110,8 @@ afwMath::SeparableKernel::SeparableKernel(
             << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
+
+    _setKernelXY();
 }
 
 afwMath::Kernel::Ptr afwMath::SeparableKernel::clone() const {
@@ -244,26 +253,59 @@ void afwMath::SeparableKernel::setKernelParameter(unsigned int ind, double value
  * exactly 0
  */
 double afwMath::SeparableKernel::basicComputeVectors(
-    std::vector<Pixel> &colList,   ///< column vector
-    std::vector<Pixel> &rowList,   ///< row vector
-    bool doNormalize   ///< normalize the arrays (so sum of each is 1)?
+    std::vector<Pixel> &colList,        ///< column vector
+    std::vector<Pixel> &rowList,        ///< row vector
+    bool doNormalize                    ///< normalize the arrays (so sum of each is 1)?
 ) const {
     double colSum = 0.0;
-    double xArg = - static_cast<double>(this->getCtrX());
-    for (std::vector<Pixel>::iterator colIter = colList.begin();
-        colIter != colList.end(); ++colIter, ++xArg) {
-        double colFuncValue = (*_kernelColFunctionPtr)(xArg);
-        *colIter = colFuncValue;
-        colSum += colFuncValue;
+    if (_kernelColCache.empty()) {
+        for (unsigned int i = 0; i != colList.size(); ++i) {
+            double colFuncValue = (*_kernelColFunctionPtr)(_kernelX[i]);
+            colList[i] = colFuncValue;
+            colSum += colFuncValue;
+        }
+    } else {
+        int const cacheSize = _kernelColCache.size();
+        
+        int const indx = this->getKernelParameter(0)*cacheSize;
+
+        std::vector<double> &cachedValues = _kernelColCache.at(indx);
+        for (unsigned int i = 0; i != colList.size(); ++i) {
+            double colFuncValue = cachedValues[i];
+            colList[i] = colFuncValue;
+            colSum += colFuncValue;
+        }
     }
 
     double rowSum = 0.0;
-    double yArg = - static_cast<double>(this->getCtrY());
-    for (std::vector<Pixel>::iterator rowIter = rowList.begin();
-        rowIter != rowList.end(); ++rowIter, ++yArg) {
-        double rowFuncValue = (*_kernelRowFunctionPtr)(yArg);
-        *rowIter = rowFuncValue;
-        rowSum += rowFuncValue;
+    if (_kernelRowCache.empty()) {
+        for (unsigned int i = 0; i != rowList.size(); ++i) {
+            double rowFuncValue = (*_kernelRowFunctionPtr)(_kernelY[i]);
+            rowList[i] = rowFuncValue;
+            rowSum += rowFuncValue;
+        }
+    } else {
+        int const cacheSize = _kernelRowCache.size();
+        
+        int const indx = this->getKernelParameter(1)*cacheSize;
+        
+        std::vector<double> &cachedValues = _kernelRowCache.at(indx);
+        for (unsigned int i = 0; i != rowList.size(); ++i) {
+            double rowFuncValue = cachedValues[i];
+            rowList[i] = rowFuncValue;
+            rowSum += rowFuncValue;
+
+#if 0
+            if (indx == cacheSize/2) {
+                if (::fabs(rowFuncValue - (*_kernelRowFunctionPtr)(_kernelX[i])) > 1e-2) {
+                    std::cout << indx << " " << i << " "
+                              << rowFuncValue << " "
+                              << (*_kernelRowFunctionPtr)(_kernelX[i])
+                              << std::endl;
+                }
+            }
+#endif
+        }
     }
 
     double imSum = colSum * rowSum;
@@ -281,4 +323,59 @@ double afwMath::SeparableKernel::basicComputeVectors(
         imSum = 1.0;
     }
     return imSum;
+}
+
+/************************************************************************************************************/
+/**
+ * Compute a cache of pre-computed Kernels
+ */
+namespace {
+void _computeCache(int const cacheSize,
+                   std::vector<double> const& x,
+                   afwMath::SeparableKernel::KernelFunctionPtr & func,
+                   std::vector<std::vector<double> > *kernelCache)
+{
+    if (cacheSize <= 0) {
+        kernelCache->erase(kernelCache->begin(), kernelCache->end());
+        return;
+    }
+
+    if (kernelCache[0].size() != x.size()) { // invalid
+        kernelCache->erase(kernelCache->begin(), kernelCache->end());
+    }
+
+    int const old_cacheSize = kernelCache->size();
+
+    if (cacheSize == old_cacheSize) {
+        return;                     // nothing to do
+    }
+
+    if (cacheSize < old_cacheSize) {
+        kernelCache->erase(kernelCache->begin() + cacheSize, kernelCache->end());
+    } else {
+        kernelCache->resize(cacheSize);
+        for (int i = old_cacheSize; i != cacheSize; ++i) {
+            (*kernelCache)[i].resize(x.size());
+        }
+    }
+    //
+    // Actually fill the cache
+    //
+    for (int i = 0; i != cacheSize; ++i) {
+        func->setParameter(0, (i + 0.5)/static_cast<double>(cacheSize));
+        for (unsigned int j = 0; j != x.size(); ++j) {
+            (*kernelCache)[i][j] = (*func)(x[j]);
+        }
+    }
+}
+}
+
+void afwMath::SeparableKernel::computeCache(int const cacheSize) {
+    afwMath::SeparableKernel::KernelFunctionPtr func;
+
+    func = getKernelColFunction();
+    _computeCache(cacheSize, _kernelY, func, &_kernelColCache);
+
+    func = getKernelRowFunction();
+    _computeCache(cacheSize, _kernelX, func, &_kernelRowCache);
 }

@@ -60,7 +60,7 @@ std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(d
         i0 += order + 1;
     }
 
-    assert (i0 == coeffs.size());
+    assert (i0 == static_cast<int>(coeffs.size()));
 
     return coeffs;
 }

@@ -68,7 +68,7 @@ class SavingSubImagesTest(unittest.TestCase):
         self.testPositions.append(afwGeom.makePointD(20,30))        
         self.testPositions.append(afwGeom.makePointD(60,50))        
         self.testPositions.append(afwGeom.makePointD(80, 80))        
-        self.testPositions.append(afwGeom.makePointD(256,256))
+        self.testPositions.append(afwGeom.makePointD(255,255))
 
         self.parent.getMaskedImage().set(0)
         for p in self.testPositions:

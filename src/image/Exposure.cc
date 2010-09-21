@@ -182,21 +182,12 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
     _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, conformMasks);
+
     _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
     //
     // Strip keywords from the input metadata that are related to the generated Wcs
     //
-    // It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
-    // WCS keywords such as CDELT[12] they won't be stripped
-    //
-    {
-        lsst::daf::base::PropertySet::Ptr wcsMetadata = _wcs->getFitsMetadata();
-        std::vector<std::string> paramNames = wcsMetadata->paramNames();
-        for (std::vector<std::string>::const_iterator namePtr =
-                 paramNames.begin(); namePtr != paramNames.end(); ++namePtr) {
-            metadata->remove(*namePtr);
-        }
-    }
+    detail::stripWcsKeywords(metadata, _wcs);
 
     //If keywords LTV[1,2] are present, the image on disk is already a subimage, so
     //we should note this fact. Also, shift the wcs so the crpix values refer to 

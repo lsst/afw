@@ -21,7 +21,7 @@
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
+import math
 import unittest
 
 import numpy
@@ -61,8 +61,6 @@ class KernelImagesForRegion(unittest.TestCase):
         boxExtent = afwGeom.makeExtentI(100, 99)
         self.bbox = afwGeom.BoxI(boxCorner, boxExtent)
         self.xy0 = afwGeom.makePointI(100, 251)
-        self.imWidth = 200
-        self.imHeight = 200
         self.kernel = self.makeKernel()
 
     def tearDown(self):
@@ -81,8 +79,8 @@ class KernelImagesForRegion(unittest.TestCase):
 
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
-        xSlope = (maxSigma - minSigma) / self.imWidth
-        ySlope = (maxSigma - minSigma) / self.imHeight
+        xSlope = (maxSigma - minSigma) / self.bbox.getWidth()
+        ySlope = (maxSigma - minSigma) / self.bbox.getHeight()
         xOrigin = minSigma - (self.xy0[0] * xSlope)
         yOrigin = minSigma - (self.xy0[1] * ySlope)
         sParams = (
@@ -152,6 +150,59 @@ class KernelImagesForRegion(unittest.TestCase):
                 "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
                     desPixIndex)
             )
+
+    def testComputeNextRow(self):
+        """Test computeNextRow method and the resulting RowOfKernelImagesForRegion
+        """
+        nx = 6
+        ny = 5
+        regionRow = mathDetail.RowOfKernelImagesForRegion(nx, ny)
+        self.assert_(not regionRow.hasData())
+        self.assert_(not regionRow.isLastRow())
+        self.assert_(regionRow.getYInd() == -1)
+
+        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)
+        floatWidth = self.bbox.getWidth() / float(nx)
+        validWidths = (int(math.floor(floatWidth)), int(math.ceil(floatWidth)))
+        floatHeight = self.bbox.getHeight() / float(ny)
+        validHeights = (int(math.floor(floatHeight)), int(math.ceil(floatHeight)))
+
+        totalHeight = 0
+        for yInd in range(ny):
+            rowWidth = 0
+            isOK = region.computeNextRow(regionRow)
+            self.assert_(isOK)
+            self.assert_(regionRow.hasData())
+            self.assert_(regionRow.isLastRow() == (yInd + 1 >= ny))
+            self.assert_(regionRow.getYInd() == yInd)
+            firstBBox = regionRow.getRegion(0).getBBox()
+            self.assert_(firstBBox.getMinX() == self.bbox.getMinX())
+            if yInd == 0:
+                self.assert_(firstBBox.getMinY() == self.bbox.getMinY())
+            firstBBoxHeight = firstBBox.getHeight()
+            self.assert_(firstBBoxHeight in validHeights)
+            totalHeight += firstBBoxHeight
+            if yInd > 0:
+                self.assert_(firstBBox.getMinY() == prevFirstBBox.getMaxY() + 1)
+                if yInd == ny - 1:
+                    self.assert_(firstBBox.getMaxY() == self.bbox.getMaxY())
+            prevFirstBBox = firstBBox
+            for xInd in range(nx):
+                subregion = regionRow.getRegion(xInd)
+                bbox = subregion.getBBox()
+                rowWidth += bbox.getWidth()
+                self.assert_(bbox.getWidth() in validWidths)
+                self.assert_(bbox.getHeight() == firstBBoxHeight)
+                if xInd > 0:
+                    self.assert_(bbox.getMinX() == prevBBox.getMaxX() + 1)
+                    self.assert_(bbox.getMinY() == prevBBox.getMinY())
+                    self.assert_(bbox.getMaxY() == prevBBox.getMaxY())
+                    if xInd == nx - 1:
+                        self.assert_(bbox.getMaxX() == self.bbox.getMaxX())
+                prevBBox = bbox
+            self.assert_(rowWidth == self.bbox.getWidth())
+        self.assert_(totalHeight == self.bbox.getHeight())
+        self.assert_(not region.computeNextRow(regionRow))
     
     def testExactImages(self):
         """Confirm that kernel image at each location is correct

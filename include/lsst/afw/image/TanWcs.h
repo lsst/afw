@@ -68,7 +68,7 @@ namespace image {
 
         //Constructors
         TanWcs();
-        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr metadata, bool);
         TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
                const Eigen::Matrix2d &CD, 
                double equinox=2000, std::string raDecSys="FK5",
@@ -89,10 +89,7 @@ namespace image {
         
         virtual lsst::afw::image::Wcs::Ptr clone(void) const;
 
-        //Accessors
-        virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-        virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
-        
+        // Working routines;  note that pixelToSky is inherited (pixelToSkyImpl is virtual)
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
         virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
 
@@ -123,6 +120,8 @@ namespace image {
         
         TanWcs(lsst::afw::image::TanWcs const & rhs);
         TanWcs & operator = (const TanWcs &);        
+
+        virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
 
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)

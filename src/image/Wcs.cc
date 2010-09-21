@@ -559,64 +559,53 @@ GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
 ///and the second element corresponds to ctype2.
 GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
     //Construct a coord object of the correct type
-    std::string type(_wcsInfo->ctype[0], 4);
-    std::string radesys(_wcsInfo->radesys);
+    int const ncompare = 4;                       // we only care about type's first 4 chars
+    char const *type = _wcsInfo->ctype[0];
+    char const *radesys = _wcsInfo->radesys;
     CoordPtr convertedCoord;
 
-    bool reversed=false;
-    if(type == "RA--") {
-        if(radesys == "ICRS") {
+    bool reversed = false;
+    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
+        ;                                       // using an tr1::unordered_strcmp(map
+        if(strcmp(radesys, "ICRS") == 0) {
             convertedCoord = coord->convert(afwCoord::ICRS);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             convertedCoord = coord->convert(afwCoord::FK5);
         }
-    }
-    else if(type == "GLON")
-    {  convertedCoord = coord->convert(afwCoord::GALACTIC);
-    }
-    else if(type == "ELON")
-    {   convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    }
-    //Check for strange images where the ctypes as swapped.
-    else if(type == "DEC-") {
+    } else if(strncmp(type, "GLON", ncompare) == 0) {
+        convertedCoord = coord->convert(afwCoord::GALACTIC);
+    } else if(strncmp(type, "ELON", ncompare) == 0) {
+        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
+    } else if(strncmp(type, "DEC-", ncompare) == 0) {
+        //Check for strange images where the ctypes as swapped.
         reversed=true;
-        if(radesys == "ICRS") {
+        if(strcmp(radesys, "ICRS") == 0) {
             convertedCoord = coord->convert(afwCoord::ICRS);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             convertedCoord = coord->convert(afwCoord::FK5);
-        }
-        else {   
+        } else {   
             throw LSST_EXCEPT(except::RuntimeErrorException,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
-        
-    }
-    else if(type == "GLON") {  
+    } else if(strncmp(type, "GLON", ncompare) == 0) {  
         reversed=true;
         convertedCoord = coord->convert(afwCoord::GALACTIC);
-    }
-    else if(type == "ELON") {   
+    } else if(strncmp(type, "ELON", ncompare) == 0) {   
         reversed=true;
         convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    }
-
-    else if(type == "GLAT") {
+    } else if(strncmp(type, "GLAT", ncompare) == 0) {
         reversed=true;
         convertedCoord = coord->convert(afwCoord::GALACTIC);
-    }
-    else if(type == "ELAT") {
+    } else if(strncmp(type, "ELAT", ncompare) == 0) {
         reversed=true;
         convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    }
-    else
-    {   
+    } else {   
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Coord object doesn't support type %s") % type).str());
     }
-
 
     if (reversed) {
         return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
@@ -625,7 +614,6 @@ GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const 
         return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
                                 convertedCoord->getLatitude(afwCoord::DEGREES));
     }
-
 }
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
@@ -688,6 +676,30 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
     return geom::makePointD(imgcrd[0], imgcrd[1]); 
 }
 
+/*
+ * Worker routine for pixelToSky
+ */
+void
+Wcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
+{
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+    
+    // wcslib assumes 1-indexed coordinates
+    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
+                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
+    double imgcrd[2];
+    double phi, theta;
+    
+    int status = 0;
+    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
+    if (status > 0) {
+        throw LSST_EXCEPT(except::RuntimeErrorException,
+                          (boost::format("Error: wcslib returned a status code of %d. %s") %
+                           status % wcs_errmsg[status]).str());
+    }
+}
 
 ///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
 ///
@@ -708,85 +720,73 @@ CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
-    // wcslib assumes 1-indexed coordinates
-    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
-                               pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
-    double imgcrd[2];
-    double phi, theta;
     double skyTmp[2];
+    pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
-    
-    int stat[1];
-    int status = 0;
-    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
-    if (status > 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
-    }
-
-    return makeCorrectCoord(skyTmp[0], skyTmp[1]);    
+    return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
+///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
+///
+///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec)
+///
+/// \note This routine is designed for the knowledgeable user in need of performance; it's safer to call
+/// the version that returns a CoordPtr
+///
+afwGeom::Point2D Wcs::pixelToSky(double pixel1, double pixel2, bool) const {
+    double skyTmp[2];
+    pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
+    return afwGeom::makePointD(skyTmp[0], skyTmp[1]);
+}
 
 ///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
 ///sub-class of Coord
 CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
 
     //Construct a coord object of the correct type
-    std::string type(_wcsInfo->ctype[0], 4);
-    std::string radesys(_wcsInfo->radesys);
+    int const ncompare = 4;                       // we only care about type's first 4 chars
+    char *type = _wcsInfo->ctype[0];
+    char *radesys = _wcsInfo->radesys;
     double equinox = _wcsInfo->equinox;
 
-    if(type == "RA--") {
-        //Our default
-        if(radesys == "ICRS") {
+    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
+        ;                                       // using an tr1::unordered_map
+        if(strcmp(radesys, "ICRS") == 0) {
             return afwCoord::makeCoord(afwCoord::ICRS, sky0, sky1);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             return afwCoord::makeCoord(afwCoord::FK5, sky0, sky1, equinox);
-        }
-        else
-        {   
+        } else {   
             throw LSST_EXCEPT(except::RuntimeErrorException,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
 
-    }
-    else if(type == "GLON")
-    {   return afwCoord::makeCoord(afwCoord::GALACTIC, sky0, sky1);   
-    }
-    else if(type == "ELON")
-    {   return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky0, sky1, equinox);
-    }
-    //check for the case where the ctypes are swapped. Note how sky0 and sky1 are swapped as well
-    else if(type == "DEC-") {
+    } else if (strncmp(type, "GLON", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::GALACTIC, sky0, sky1);   
+    } else if (strncmp(type, "ELON", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky0, sky1, equinox);
+    } else if (strncmp(type, "DEC-", ncompare) == 0) {
+        //check for the case where the ctypes are swapped. Note how sky0 and sky1 are swapped as well
+
         //Our default
-        if(radesys == "ICRS") {
+        if(strcmp(radesys, "ICRS") == 0) {
             return afwCoord::makeCoord(afwCoord::ICRS, sky1, sky0);
         }
-        if(radesys == "FK5") {
+        if(strcmp(radesys, "FK5") == 0) {
             return afwCoord::makeCoord(afwCoord::FK5, sky1, sky0, equinox);
-        }
-        else
-        {   
+        } else {   
             throw LSST_EXCEPT(except::RuntimeErrorException,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
-
-    }
-    else if(type == "GLAT")
-    {   return afwCoord::makeCoord(afwCoord::GALACTIC, sky1, sky0);   
-    }
-    else if(type == "ELAT")
-    {   return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
-    }
+    } else if (strncmp(type, "GLAT", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::GALACTIC, sky1, sky0);   
+    } else if (strncmp(type, "ELAT", ncompare) == 0) {
+        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
+    } else {
     //Give up in disgust
-    else
-    {   
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Can't create Coord object: Unrecognised sys %s") %
                            type).str());
@@ -797,30 +797,70 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
 }
 
 
-
 /**
- * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
+ * Return the local linear approximation to Wcs::pixelToSky at the given point (in sky coordinates).
+ *
+ * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+ * @code
+ * wcs.linearizePixelToSky(sky, skyUnit)(wcs.skyToPixel(sky)) == sky.getPosition(skyUnit);
+ * @endcode
+ * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
  *
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param[in] sky Position in sky coordinates where transform is desired
+ * @param(in) coord   Position in sky coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
+lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizePixelToSkyInternal(skyToPixel(coord), coord, skyUnit);
+}
 
-lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
-{
+/**
+ * Return the local linear approximation to Wcs::pixelToSky at the given point (in pixel coordinates).
+ *
+ * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+ * @code
+ * wcs.linearizePixelToSky(pix, skyUnit)(pix) == wcs.pixelToSky(pix).getPosition(skyUnit)
+ * @endcode
+ * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
+ *
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) pix     Position in pixel coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
+    lsst::afw::geom::Point2D const & pix,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizePixelToSkyInternal(pix, pixelToSky(pix), skyUnit);
+}
+
+/**
+ * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate
+ * and the corresponding sky coordinate.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
+    lsst::afw::geom::Point2D const & pix00,
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
     // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
     // pixel coordinates so I didn't bother
     //
     const double side = 10;             // length of the square's sides in pixels
-    GeomPoint const sky00 = sky;
-    GeomPoint const pix00 = skyToPixel(sky00[0], sky00[1]);
+    GeomPoint const sky00 = coord->getPosition(skyUnit);
 
-    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getPosition() -
+    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getPosition(skyUnit) -
         geom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side))->getPosition() -
+    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side))->getPosition(skyUnit) -
         geom::Extent<double>(sky00);
     
     Eigen::Matrix2d m;
@@ -836,6 +876,65 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
     //return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
     return lsst::afw::geom::AffineTransform(m, (sky00v - m * pix00v));
 }
+
+/**
+ * Return the local linear approximation to Wcs::skyToPixel at the given point (in sky coordinates).
+ *
+ *
+ * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+ * @code
+ * wcs.linearizeSkyToPixel(sky, skyUnit)(sky.getPosition(skyUnit)) == wcs.skyToPixel(sky)
+ * @endcode
+ * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
+ *
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) coord   Position in sky coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizeSkyToPixelInternal(skyToPixel(coord), coord, skyUnit);
+}
+
+/**
+ * Return the local linear approximation to Wcs::skyToPixel at the given point (in pixel coordinates).
+ *
+ * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+ * @code
+ * wcs.linearizeSkyToPixel(pix, skyUnit)(wcs.pixelToSky(pix).getPosition(skyUnit)) == pix
+ * @endcode
+ * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
+ *
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) pix     Position in pixel coordinates where transform is desired.
+ * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
+    lsst::afw::geom::Point2D const & pix,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    return linearizeSkyToPixelInternal(pix, pixelToSky(pix), skyUnit);
+}
+
+/**
+ * Implementation for the overloaded public linearizeSkyToPixel methods, requiring both a pixel coordinate
+ * and the corresponding sky coordinate.
+ */
+lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
+    lsst::afw::geom::Point2D const & pix00,
+    lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::coord::CoordUnit skyUnit
+) const {
+    lsst::afw::geom::AffineTransform inverse = linearizePixelToSkyInternal(pix00, coord, skyUnit);
+    return inverse.invert();
+}
+
 
 
 /**
@@ -955,6 +1054,28 @@ image::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///
     }
 
     return image::PointI(x0, y0);
+}
+
+/**
+ * Strip keywords from the input metadata that are related to the generated Wcs
+ *
+ * It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
+ * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12],
+ * but there may be others
+ */
+int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
+                     CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
+                    )
+{
+    PTR(lsst::daf::base::PropertySet) wcsMetadata = wcs->getFitsMetadata();
+    std::vector<std::string> paramNames = wcsMetadata->paramNames();
+    paramNames.push_back("CDELT1");
+    paramNames.push_back("CDELT2");
+    for (std::vector<std::string>::const_iterator ptr = paramNames.begin(); ptr != paramNames.end(); ++ptr) {
+        metadata->remove(*ptr);
+    }
+
+    return 0;                           // would be ncard if remove returned a status
 }
 
 }}}}

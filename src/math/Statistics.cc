@@ -244,7 +244,7 @@ afwMath::Statistics::Statistics(
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
                 
                 double const center = (i_i > 0) ? _meanclip : _median;
-                double const hwidth = (i_i > 0) ?
+                double const hwidth = (i_i > 0 && _n > 1) ?
                     _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) :
                     _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
                 std::pair<double, double> const clipinfo(center, hwidth);

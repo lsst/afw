@@ -59,12 +59,14 @@ void ellipses::Distortion::_assignTo(Axes & other) const {
 void ellipses::Distortion::_assignTo(LogShear & other) const {
     double e = getE();
     double gamma = 0.25*std::log((1.0+e)/(1.0-e));
-    if (e < 1E-12) {
-        other[LogShear::GAMMA1] = 0.0;
-        other[LogShear::GAMMA2] = 0.0;
+    double e1 = _vector[E1];
+    double e2 = _vector[E2];
+    if (e < 1E-8) {
+        other[LogShear::GAMMA1] = 0.5 * e1; // + e1*e1*e1
+        other[LogShear::GAMMA2] = 0.5 * e2; // + e2*e2*e2
     } else {
-        other[LogShear::GAMMA1] = _vector[E1]*gamma/e;
-        other[LogShear::GAMMA2] = _vector[E2]*gamma/e;
+        other[LogShear::GAMMA1] = e1*gamma/e;
+        other[LogShear::GAMMA2] = e2*gamma/e;
     }
     other[LogShear::KAPPA] = std::log(_vector[R]);
 }
@@ -106,49 +108,55 @@ ellipses::BaseCore::Jacobian ellipses::Distortion::_dAssignTo(Quadrupole & other
 ellipses::BaseCore::Jacobian ellipses::Distortion::_dAssignTo(Axes & other) const {
     BaseCore::Jacobian m;
     double e = getE();
-    double dp = std::pow(1.0 + e,0.25);
-    double dm = std::pow(1.0 - e,0.25);
+    double dp = std::pow(1.0 + e, 0.25);
+    double dm = std::pow(1.0 - e, 0.25);
     other[Axes::A] = _vector[R]*dp/dm;
     other[Axes::B] = _vector[R]*dm/dp;
-    other[Axes::THETA] = 0.5*std::atan2(_vector[E2],_vector[E1]);
-    m(2,0) = m(2,1) = 1.0 / (2*e*e);
-    m(2,0) *= -_vector[E2];
-    m(2,1) *= _vector[E1];
-    m(2,2) = 0.0;
-    m(0,2) = dp/dm;
-    m(1,2) = dm/dp;
-    m.corner<2,2>(Eigen::TopLeft).setConstant(_vector[R] / (2 * e * std::pow(dp*dm,3)));
-    dm *= dm;
-    dp *= dp;
-    m(0,0) *= _vector[E1] / dm;
-    m(0,1) *= _vector[E2] / dm;
-    m(1,0) *= -_vector[E1] / dp;
-    m(1,1) *= -_vector[E2] / dp;
+    other[Axes::THETA] = 0.5*std::atan2(_vector[E2], _vector[E1]);
+    m(Axes::A, E1) = m(Axes::A, E2) = 0.5 * _vector[R] * std::pow(dm,-5) * std::pow(dp,-3);
+    m(Axes::B, E1) = m(Axes::B, E2) = -0.5 * _vector[R] * std::pow(dm,-3) * std::pow(dp,-5);
+    double de_de1 = _vector[E1] / e;
+    double de_de2 = _vector[E2] / e;
+    if (de_de1 != de_de1) de_de1 = 0.0;
+    if (de_de2 != de_de2) de_de2 = 0.0;
+    m(Axes::A, E1) *= de_de1;
+    m(Axes::B, E1) *= de_de1;
+    m(Axes::A, E2) *= de_de2;
+    m(Axes::B, E2) *= de_de2;
+    m(Axes::A, R) = dp/dm;
+    m(Axes::B, R) = dm/dp;
+    m(Axes::THETA, E1) = -0.5 * de_de2 / e;
+    m(Axes::THETA, E2) = 0.5 * de_de1 / e;
+    m(Axes::THETA, R) = 0.0;
+    if (m(Axes::THETA, E1) != m(Axes::THETA, E1)) m(Axes::THETA, E1) = 0.0;
+    if (m(Axes::THETA, E2) != m(Axes::THETA, E2)) m(Axes::THETA, E2) = 0.0;
     return m;
 }
 
 ellipses::BaseCore::Jacobian ellipses::Distortion::_dAssignTo(LogShear & other) const {
-    BaseCore::Jacobian m;
+    Jacobian result = Jacobian::Zero();
     double e = getE();
-    double dp = 1.0 + e;
-    double dm = 1.0 - e;
-    double gamma = 0.25*std::log(dp/dm);
-    double f1 = 0.5 / (dp*dm);
-    double f2 = gamma / e;
-    double d1 = _vector[E1] / e;
-    double d2 = _vector[E2] / e;
-    if (e < 1E-12) {
-        other[LogShear::GAMMA1] = 0.0;
-        other[LogShear::GAMMA2] = 0.0;
+    double gamma = 0.25*std::log((1.0+e)/(1.0-e));
+    double e1 = _vector[E1];
+    double e2 = _vector[E2];
+    if (e < 1E-8) {
+        other[LogShear::GAMMA1] = 0.5 * e1; // + e1*e1*e1
+        other[LogShear::GAMMA2] = 0.5 * e2; // + e2*e2*e2
+        result(LogShear::GAMMA1, E1) = 0.5 + 3.0*e1*e1;
+        result(LogShear::GAMMA2, E2) = 0.5 + 3.0*e2*e2;
     } else {
-        other[LogShear::GAMMA1] = _vector[E1]*f2;
-        other[LogShear::GAMMA2] = _vector[E2]*f2;
+        other[LogShear::GAMMA1] = e1*gamma/e;
+        other[LogShear::GAMMA2] = e2*gamma/e;
+        double cth = 0.5*e1/e;
+        double sth = 0.5*e2/e;
+        double tmp1 = (e - 1.0)*(e + 1.0)/e;
+        double tmp2 = -(2.0/tmp1 + 4.0*gamma)/e;
+        result(LogShear::GAMMA1, E1) = result(LogShear::GAMMA2, E2) = gamma / e;
+        result(LogShear::GAMMA1, E1) += cth*cth*tmp2;
+        result(LogShear::GAMMA2, E2) += sth*sth*tmp2;
+        result(LogShear::GAMMA1, E2) = result(LogShear::GAMMA2, E1) = cth*sth*tmp2;
     }
     other[LogShear::KAPPA] = std::log(_vector[R]);
-    m(0,0) = d1*d1*f1 + d2*d2*f2;
-    m(0,1) = m(1,0) = d1*d2*(f1 - f2);
-    m(1,1) = d2*d2*f1 + d1*d1*f2;
-    m(0,2) = m(2,0) = m(1,2) = m(2,1) = 0.0;
-    m(2,2) = 1.0 / _vector[R];
-    return m;
+    result(LogShear::KAPPA, R) = 1.0 / _vector[R];
+    return result;
 }

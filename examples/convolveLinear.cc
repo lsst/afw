@@ -37,7 +37,7 @@ const std::string altOutFile("clAltOut");
 
 int main(int argc, char **argv) {
     lsst::pex::logging::Trace::setDestination(std::cout);
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
+    lsst::pex::logging::Trace::setVerbosity("lsst.afw.math", 5);
 
     typedef float ImagePixel;
     unsigned int const KernelCols = 5;
@@ -49,10 +49,8 @@ int main(int argc, char **argv) {
     if (argc < 2) {
         std::string afwdata = getenv("AFWDATA_DIR");
         if (afwdata.empty()) {
-            std::cerr << "Usage: linearConvolve fitsFile [doBothWays]" << std::endl;
+            std::cerr << "Usage: linearConvolve fitsFile" << std::endl;
             std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-            std::cerr << "doBothWays (default 0); if 1 then also compute using the normal convolve function"
-                      << std::endl;
             std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
             std::cerr << "Is afwdata set up?\n" << std::endl;
             exit(EXIT_FAILURE);
@@ -65,14 +63,8 @@ int main(int argc, char **argv) {
         mimg = std::string(argv[1]);
     }
 
-    
-    { // block in which to allocate and deallocate memory
-    
-        bool doBothWays = 0;
-        if (argc > 3) {
-            std::istringstream(argv[3]) >> doBothWays;
-        }
-        
+    // block in which to allocate and deallocate memory
+    {
         // read in fits file
         afwImage::MaskedImage<ImagePixel> mImage(mimg);
         
@@ -118,18 +110,9 @@ int main(int argc, char **argv) {
         // write results
         resMaskedImage.writeFits(outFile);
         std::cout << "Wrote " << outFile << "_img.fits, etc." << std::endl;
-
-        if (doBothWays) {
-            afwImage::MaskedImage<ImagePixel> altResMaskedImage(mImage.getDimensions());
-            afwMath::convolve(altResMaskedImage, mImage, lcSpVarKernel, false);
-            altResMaskedImage.writeFits(altOutFile);
-            std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using afwMath::convolve)" << std::endl;
-        }
     }
 
-     //
      // Check for memory leaks
-     //
      if (lsst::daf::base::Citizen::census(0) != 0) {
          std::cerr << "Leaked memory blocks:" << std::endl;
          lsst::daf::base::Citizen::census(std::cerr);

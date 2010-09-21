@@ -288,7 +288,7 @@ class CoordTestCase(unittest.TestCase):
         # sedna (from jpl) for 2010-03-03 00:00 UT
         ra, dec = "03:26:42.61",  "+06:32:07.1"
         az, alt = 231.5947, 44.3375
-        obs = afwCoord.Observatory(74.659, 40.384, 100.0) # peyton
+        obs = afwCoord.Observatory(-74.659, 40.384, 100.0) # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
         sedna = afwCoord.Fk5Coord(ra, dec, obsDate.get(dafBase.DateTime.EPOCH))
         altaz = sedna.toTopocentric(obs, obsDate)

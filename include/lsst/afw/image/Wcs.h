@@ -28,6 +28,7 @@
 
 
 #include "Eigen/Core.h"
+#include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
@@ -40,6 +41,11 @@
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
+    namespace daf {
+        namespace base {
+            class PropertySet;
+        }
+    }
 namespace afw {
     namespace formatters {
         class WcsFormatter;
@@ -99,7 +105,9 @@ namespace image {
         //Constructors
         Wcs();
         //Create a Wcs of the correct class using a fits header.
-        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
+                                bool stripMetadata);
+                               
         Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
                 const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
                 double equinox=2000, std::string raDecSys="ICRS",
@@ -114,7 +122,7 @@ namespace image {
         lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
         Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
         
-        virtual lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
+        virtual PTR(lsst::daf::base::PropertySet) getFitsMetadata() const;
 
         /// Return true iff Wcs is valid
         operator bool() const { return _nWcsInfo != 0; }
@@ -131,6 +139,7 @@ namespace image {
         //xyToRaDec(), but the name now reflects their increased generality. They may be
         //used, e.g. to convert xy to Galactic coordinates
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
+        virtual lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
         
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
@@ -140,7 +149,26 @@ namespace image {
         virtual bool hasDistortion() const {    return false;};
         
         lsst::afw::geom::LinearTransform getLinearTransform() const;
-        virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const& sky) const;
+
+        lsst::afw::geom::AffineTransform linearizePixelToSky(
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
+        
+        lsst::afw::geom::AffineTransform linearizePixelToSky(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
+
+        lsst::afw::geom::AffineTransform linearizeSkyToPixel(
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
+        
+        lsst::afw::geom::AffineTransform linearizeSkyToPixel(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
 
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
@@ -156,12 +184,13 @@ namespace image {
                         const std::string cunits1, const std::string cunits2
                        );
 
+        virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
 
     protected:
 
         //If you want to create a Wcs from a fits header, use makeWcs(). 
         //This is protected because the derived classes need to be able to see it.
-        Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+        Wcs(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
 
         Wcs(lsst::afw::image::Wcs const & rhs);
         Wcs& operator= (const Wcs &);        
@@ -169,8 +198,20 @@ namespace image {
         lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
         lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
 
+        virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit
+        ) const;
+
+        virtual lsst::afw::geom::AffineTransform linearizeSkyToPixelInternal(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit
+        ) const;
+
     
-        void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+        void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
         
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
@@ -178,17 +219,22 @@ namespace image {
         int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
         int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
         int _nReject;
-
     };
 
     namespace detail {
-        lsst::daf::base::PropertySet::Ptr
+        PTR(lsst::daf::base::PropertySet)
         createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
 
         image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
     }
 
-    Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+    Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
+
+    namespace detail {
+        int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
+                             CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
+                            );
+    }
 
 #if !defined(SWIG)
     extern Wcs NoWcs;
