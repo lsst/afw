@@ -382,7 +382,9 @@ public:
         bool value = true;
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
-            if (policy.exists(ptr->first)) {
+            if (policy.exists(ptr->first) &&
+                (!policy.getPolicy(ptr->first)->exists("enabled") ||
+                 policy.getPolicy(ptr->first)->getBool("enabled"))) {
                 lsst::pex::policy::Policy::ConstPtr subPol = policy.getPolicy(ptr->first);
                 value = ptr->second.second(*subPol) && value; // don't short-circuit the call
             }
