@@ -217,7 +217,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
             int iX = 0;
             for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
                      end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgHeight : _nxSample;
+                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgWidth : _nxSample - 1;
                 *ptr = static_cast<PixelT>(_gridcolumns[iGridX][iY]);
             }
         }
