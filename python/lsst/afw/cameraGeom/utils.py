@@ -134,7 +134,10 @@ def mergeGeomDefaults(cameraGeomPolicy):
    
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def getGeomPolicy(cameraGeomPolicy):
+def getGeomPolicy(cameraGeomPolicy,     # Policy or relative file name for a policy file
+                  module=None,          # Name of module for the policy file
+                  directory=None        # Directory within module for the policy file
+                  ):
     """Return a Policy describing a Camera's geometry given a filename; the Policy will be validated using the
     dictionary, and defaults will be supplied.  If you pass a Policy, it will be validated and completed.
 """
@@ -148,7 +151,7 @@ def getGeomPolicy(cameraGeomPolicy):
         if os.path.exists(cameraGeomPolicy):
             geomPolicy = pexPolicy.Policy.createPolicy(cameraGeomPolicy)
         else:
-            policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicy, "examples")
+            policyFile = pexPolicy.DefaultPolicyFile(module, cameraGeomPolicy, directory)
             geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
     geomPolicy.mergeDefaults(defPolicy.getDictionary())
