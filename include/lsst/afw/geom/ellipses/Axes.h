@@ -195,7 +195,7 @@ inline AxesEllipse::AxesEllipse(PointD const & center) :
 inline AxesEllipse::AxesEllipse(Axes const & core, PointD const & center) : 
     BaseEllipse(core,center) {}
 inline AxesEllipse::AxesEllipse(BaseEllipse const & other) : 
-    BaseEllipse(other.getCore(),other.getCenter()) {}
+    BaseEllipse(new Axes(other.getCore()),other.getCenter()) {}
 inline AxesEllipse::AxesEllipse(AxesEllipse const & other) : 
     BaseEllipse(other.getCore(),other.getCenter()) {}
 
