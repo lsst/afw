@@ -64,27 +64,29 @@ public:
         Interpolate::Style const style = Interpolate::AKIMA_SPLINE, ///< Style of the interpolation
         int const nxSample = 10,        ///< Num. grid samples in x
         int const nySample = 10,        ///< Num. grid samples in y
-        UndersampleStyle const undersampleStyle = THROW_EXCEPTION ///< Behaviour if there are too few points
+        UndersampleStyle const undersampleStyle = THROW_EXCEPTION, ///< Behaviour if there are too few points
+        StatisticsControl const sctrl = StatisticsControl() ///< Configuration for Stats to be computed
                      )
         : _style(style), _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(undersampleStyle) {
+          _undersampleStyle(undersampleStyle), _sctrl(sctrl) {
         assert(nxSample > 0);
         assert(nySample > 0);
-        sctrl = StatisticsControl();
     }
     
     // overload constructor to handle strings for both interp and undersample styles.
-    BackgroundControl(std::string const style,
-                      int const nxSample = 10, 
-                      int const nySample = 10, 
-                      std::string const undersampleStyle = "THROW_EXCEPTION" )
+    BackgroundControl(
+         std::string const style,
+        int const nxSample = 10, 
+        int const nySample = 10, 
+        std::string const undersampleStyle = "THROW_EXCEPTION",
+        StatisticsControl const sctrl = StatisticsControl()
+                     )
         : _style(math::stringToInterpStyle(style)), _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)) {
+          _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)), _sctrl(sctrl) {
         assert(nxSample > 0);
         assert(nySample > 0);
-        sctrl = StatisticsControl();
     }
-    
+                      
 
     virtual ~BackgroundControl() {}
     void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
@@ -106,12 +108,13 @@ public:
     int getNySample() const { return _nySample; }
     Interpolate::Style getInterpStyle() const { return _style; }
     UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
-    StatisticsControl sctrl;
+    StatisticsControl &getStatisticsControl() { return _sctrl; }
 private:
     Interpolate::Style _style;                       // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
+    StatisticsControl _sctrl;           // statistics control object
 };
     
 /**

@@ -118,7 +118,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             
             math::Statistics stats =
                 math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
-                                     math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
+                                     math::IQRANGE | math::STDEVCLIP, _bctrl.getStatisticsControl());
             
             _grid[iX][iY] = stats.getValue(math::MEANCLIP);
         }

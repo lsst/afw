@@ -83,8 +83,8 @@ int main() {
     bgCtrl.setNySample(5);
 
     // we can also control the statistics
-    bgCtrl.sctrl.setNumIter(3);
-    bgCtrl.sctrl.setNumSigmaClip(2.5);
+    bgCtrl.getStatisticsControl().setNumIter(3);
+    bgCtrl.getStatisticsControl().setNumSigmaClip(2.5);
 
     // initialize a background object (derivates for interpolation are computed in the constructor
     Back back = math::makeBackground(img, bgCtrl);
