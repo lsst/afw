@@ -147,6 +147,32 @@ typedef AlwaysFalse     AlwaysF;
 
 
 /**
+ * @brief Conversion function to switch a string to a Property (see Statistics.h)
+ */
+math::Property math::stringToStatisticsProperty(std::string const property) {
+    static std::map<std::string, Property> statisticsProperty;
+    if (statisticsProperty.size() == 0) {
+        statisticsProperty["NOTHING"]      = NOTHING;
+        statisticsProperty["ERRORS"]       = ERRORS;
+        statisticsProperty["NPOINT"]       = NPOINT;
+        statisticsProperty["MEAN"]         = MEAN;
+        statisticsProperty["STDEV"]        = STDEV;
+        statisticsProperty["VARIANCE"]     = VARIANCE;
+        statisticsProperty["MEDIAN"]       = MEDIAN;
+        statisticsProperty["IQRANGE"]      = IQRANGE;
+        statisticsProperty["MEANCLIP"]     = MEANCLIP;
+        statisticsProperty["STDEVCLIP"]    = STDEVCLIP;
+        statisticsProperty["VARIANCECLIP"] = VARIANCECLIP;
+        statisticsProperty["MIN"]          = MIN;
+        statisticsProperty["MAX"]          = MAX;
+        statisticsProperty["SUM"]          = SUM;
+        statisticsProperty["MEANSQUARE"]   = MEANSQUARE;
+        statisticsProperty["ORMASK"]       = ORMASK;
+    }
+    return statisticsProperty[property];
+}
+
+/**
  * @brief A private function to copy an image into a vector
  *
  * This is used for percentile and iq_range as these must reorder the values.

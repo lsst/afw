@@ -41,6 +41,7 @@
 #include <limits>
 #include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/MaskedVector.h"
@@ -74,6 +75,7 @@ enum Property {
     MEANSQUARE = 0x2000,   ///< find mean value of square of pixel values
     ORMASK = 0x4000        ///< get the or-mask of all pixels used.
 };
+Property stringToStatisticsProperty(std::string const property);
 
     
 /**
@@ -85,6 +87,10 @@ enum Property {
  */
 class StatisticsControl {
 public:
+
+    typedef boost::shared_ptr<StatisticsControl> Ptr;
+    typedef boost::shared_ptr<StatisticsControl> const ConstPtr;
+    
     StatisticsControl(
         double numSigmaClip = 3.0, ///< number of standard deviations to clip at
         int numIter = 3,           ///< Number of iterations
