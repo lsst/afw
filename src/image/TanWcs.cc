@@ -302,24 +302,9 @@ afwImg::Wcs::Ptr TanWcs::clone(void) const {
 //
 // Accessors
 //
-
-///\brief Convert from sky coordinates (e.g ra/dec) to (possibly) distorted pixel positions.
-///
-///Convert a sky position (e.g ra/dec) to a pixel position. 
-GeomPoint TanWcs::skyToPixel(const Coord::ConstPtr coord) const {
-
-    GeomPoint sky = convertCoordToSky(coord);
-    
-    return skyToPixel(sky[0], sky[1]);
-}
-
-
-
-///\brief Convert from sky coordinates (e.g ra/dec) to (possibly) distorted pixel positions.
-///
-///Convert a sky position (e.g ra/dec) to a pixel position. 
-///The input coordinate (sky1, sky2) must be RA--TAN and DEC-TAN. 
-GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
+GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
+                                 double sky2  ///< Latitude  coordinate, DEGREES
+                                ) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -372,7 +357,6 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
     // wcslib assumes 1-indexed coords
     double offset = lsst::afw::image::PixelZeroPos + fitsToLsstPixels;
     return geom::makePointD(pixTmp[0]+offset, pixTmp[1]+offset); 
-
 }
 
 /************************************************************************************************************/
