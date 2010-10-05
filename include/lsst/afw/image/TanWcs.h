@@ -89,10 +89,6 @@ namespace image {
         
         virtual lsst::afw::image::Wcs::Ptr clone(void) const;
 
-        // Working routines;  note that pixelToSky is inherited (pixelToSkyImpl is virtual)
-        virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
-
         // Returns the pixel scale, in arcsec/pixel.
         double pixelScale() const;
         
@@ -122,6 +118,7 @@ namespace image {
         TanWcs & operator = (const TanWcs &);        
 
         virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
+        virtual lsst::afw::geom::PointD skyToPixelImpl(double sky1, double sky2) const;
 
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
