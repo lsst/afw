@@ -117,10 +117,10 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
                                         _subimgWidth, _subimgHeight));
             
             math::Statistics stats =
-                math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
-                                     math::IQRANGE | math::STDEVCLIP, _bctrl.getStatisticsControl());
+                math::makeStatistics(subimg, _bctrl.getStatisticsProperty(),
+                                     *(_bctrl.getStatisticsControl()));
             
-            _grid[iX][iY] = stats.getValue(math::MEANCLIP);
+            _grid[iX][iY] = stats.getValue(_bctrl.getStatisticsProperty());
         }
 
         _gridcolumns[iX].resize(_imgHeight);

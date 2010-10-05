@@ -139,8 +139,8 @@ readImage() {
     afwMath::BackgroundControl bctrl(afwMath::Interpolate::NATURAL_SPLINE);
     bctrl.setNxSample(mi->getWidth()/256 + 1);
     bctrl.setNySample(mi->getHeight()/256 + 1);
-    bctrl.getStatisticsControl().setNumSigmaClip(3.0);
-    bctrl.getStatisticsControl().setNumIter(2);
+    bctrl.getStatisticsControl()->setNumSigmaClip(3.0);
+    bctrl.getStatisticsControl()->setNumIter(2);
 
     afwImage::Image<PixelT>::Ptr im = mi->getImage();
     try {

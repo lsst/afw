@@ -65,24 +65,32 @@ public:
         int const nxSample = 10,        ///< Num. grid samples in x
         int const nySample = 10,        ///< Num. grid samples in y
         UndersampleStyle const undersampleStyle = THROW_EXCEPTION, ///< Behaviour if there are too few points
-        StatisticsControl const sctrl = StatisticsControl() ///< Configuration for Stats to be computed
+        StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
+        Property const prop = MEANCLIP ///< statistical property to use for grid points
                      )
-        : _style(style), _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(undersampleStyle), _sctrl(sctrl) {
+        : _style(style),
+          _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(undersampleStyle),
+          _sctrl(new StatisticsControl(sctrl)),
+          _prop(prop) {
         assert(nxSample > 0);
         assert(nySample > 0);
     }
     
     // overload constructor to handle strings for both interp and undersample styles.
     BackgroundControl(
-         std::string const style,
-        int const nxSample = 10, 
-        int const nySample = 10, 
-        std::string const undersampleStyle = "THROW_EXCEPTION",
-        StatisticsControl const sctrl = StatisticsControl()
+        std::string const style, ///< Style of the interpolation
+        int const nxSample = 10, ///< num. grid samples in x
+        int const nySample = 10, ///< num. grid samples in y
+        std::string const undersampleStyle = "THROW_EXCEPTION", ///< behaviour if there are too few points
+        StatisticsControl const sctrl = StatisticsControl(), ///< configuration for stats to be computed
+        std::string const prop = "MEANCLIP" ///< statistical property to use for grid points
                      )
-        : _style(math::stringToInterpStyle(style)), _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)), _sctrl(sctrl) {
+        : _style(math::stringToInterpStyle(style)),
+          _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)),
+          _sctrl(new StatisticsControl(sctrl)),
+          _prop(stringToStatisticsProperty(prop)) {
         assert(nxSample > 0);
         assert(nySample > 0);
     }
@@ -108,13 +116,19 @@ public:
     int getNySample() const { return _nySample; }
     Interpolate::Style getInterpStyle() const { return _style; }
     UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
-    StatisticsControl &getStatisticsControl() { return _sctrl; }
+    StatisticsControl::Ptr getStatisticsControl() { return _sctrl; }
+
+    Property getStatisticsProperty() { return _prop; }
+    void setStatisticsProperty(Property prop) { _prop = prop; }
+    void setStatisticsProperty(std::string prop) { _prop = stringToStatisticsProperty(prop); }
+    
 private:
     Interpolate::Style _style;                       // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
-    StatisticsControl _sctrl;           // statistics control object
+    StatisticsControl::Ptr _sctrl;           // statistics control object
+    Property _prop;                          // statistics Property
 };
     
 /**
