@@ -264,9 +264,14 @@ protected:
 			}
 		} else if (flags == "w" || flags == "wb" || flags == "pdu") {
 			int status = 0;
-			*ramFileLen = 2880;	//Initial buffer size (file length)
+			//If ramFile is NULL, we will allocate it here.
+			//Otherwise we will assume that ramFileLen is correct for ramFile.
+			if (ramFile == NULL)
+			{
+				*ramFileLen = 2880;	//Initial buffer size (file length)
+				*ramFile = new char[*ramFileLen];
+			}
 			size_t deltaSize = 0;	//0 is a flag that this parameter will be ignored and the default 2880 used instead
-			*ramFile = new char[*ramFileLen];
 			if (fits_create_memfile(&_fd_s, (void**)ramFile,
 									ramFileLen, deltaSize, &realloc, &status) != 0) {
 				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_create_memfile", status));

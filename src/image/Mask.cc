@@ -258,6 +258,77 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     ;                                   // defined by Mask::_maskPlaneDict
 }
 
+/**
+ * \brief Create a Mask from a FITS file in RAM
+ *
+ * See filename ctor for more information.
+ * Admittedly, much of this function is duplicated in the filename ctor.
+ * I couldn't quite decide if there was enough code in question
+ * to pull it out into a tertiary function, but be aware...
+ */
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
+		char **ramFile,										///< RAM buffer to receive RAM FITS file
+		size_t *ramFileLen,									///< RAM buffer length
+        int const hdu,                                     ///< HDU to read 
+        lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
+        BBox const& bbox,                                  ///< Only read these pixels
+        bool const conformMasks                            ///< Make Mask conform to mask layout in file?
+) :
+    afwImage::ImageBase<MaskPixelT>(),
+    _myMaskDictVersion(_maskDictVersion) {
+    
+    if (!metadata) {
+        //TODOsmm createPropertyNode("FitsMetadata");
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet()); 
+    }
+    //
+    // These are the permitted input file types
+    //
+    typedef boost::mpl::vector<
+        lsst::afw::image::detail::types_traits<unsigned char>::image_t,
+        lsst::afw::image::detail::types_traits<unsigned short>::image_t,
+        lsst::afw::image::detail::types_traits<short>::image_t
+    > fits_mask_types;
+
+    if (!metadata) {
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet);
+    }
+
+    if (!afwImage::fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *_getRawImagePtr(), metadata, hdu, bbox)) {
+        throw LSST_EXCEPT(afwImage::FitsException,
+            (boost::format("Failed to read RAM FITS HDU %d") % hdu).str());
+    }
+    _setRawView();
+
+    if (bbox) {
+        this->setXY0(bbox.getLLC());
+    }
+    /*
+     * We will interpret one of the header WCSs as providing the (X0, Y0) values
+     */
+    this->setXY0(this->getXY0() + afwImage::detail::getImageXY0FromMetadata(afwImage::detail::wcsNameForXY0,
+                                                                            metadata.get()));
+    //
+    // OK, we've read it.  Now make sense of its mask planes
+    //
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); // look for mask planes in the file
+
+    if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
+        return;
+    }
+    
+    if (conformMasks) {                 // adopt the definitions in the file
+        if (_maskPlaneDict != fileMaskDict) {
+            _maskPlaneDict = fileMaskDict;
+            _maskDictVersion++;
+        }
+    }
+
+    conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
+    ;                                   // defined by Mask::_maskPlaneDict
+}
+
 template<typename MaskPixelT>
 dafBase::PropertySet::Ptr afwImage::Mask<MaskPixelT>::generateMetadata(
 	boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i

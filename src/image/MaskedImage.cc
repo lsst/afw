@@ -100,7 +100,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         BBox const& bbox,                           //!< Only read these pixels
         bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
         bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
-                                                                        ) :
+) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(), _mask(), _variance() {
 
@@ -123,7 +123,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
     }
     /*
-     * We need to read the metadata so's to check that the EXTTYPEs are correct
+     * We need to read the metadata so as to check that the EXTTYPEs are correct
      */
     if (!metadata) {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
@@ -226,6 +226,92 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
     }
+}
+
+/**
+This ctor is conceptually identical to the ctor which takes a FITS file base name,
+except that the FITS file resides in RAM and must be MEF.
+*/
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+		char **ramFile,								///< RAM buffer to receive RAM FITS file
+		size_t *ramFileLen,							///< RAM buffer length
+        const int hdu,								//!< The HDU in the file (default: 1)
+        lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+        BBox const& bbox,                           //!< Only read these pixels
+        bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
+        bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _image(), _mask(), _variance() {
+	
+    /*
+     * We need to read the metadata so as to check that the EXTTYPEs are correct
+     */
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+    }
+	
+	int real_hdu = (hdu == 0) ? 2 : hdu;
+
+	if (hdu == 0) {                 // may be an old file with no PDU
+		lsst::daf::base::PropertySet::Ptr hdr = readMetadata(ramFile, ramFileLen, 1);
+		if (hdr->get<int>("NAXIS") != 0) { // yes, an old-style file
+			real_hdu = 1;
+		}
+	}
+
+	_image = typename Image::Ptr(new Image(ramFile, ramFileLen, real_hdu, metadata, bbox));
+	try {
+		std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+		if (exttype != "" && exttype != "IMAGE") {
+			throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+							  (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+							   real_hdu % exttype).str());           
+		}
+	} catch(lsst::pex::exceptions::NotFoundException) {}
+
+	try {
+		_mask = typename Mask::Ptr(new Mask(ramFile, ramFileLen, real_hdu + 1, metadata, bbox, conformMasks));
+	} catch(image::FitsException &e) {
+		if (needAllHdus) {
+			LSST_EXCEPT_ADD(e, "Reading Mask");
+			throw e;
+		}
+
+		_mask = typename Mask::Ptr(new Mask(_image->getDimensions()));
+	}
+
+	try {
+		std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+		if (exttype != "" && exttype != "MASK") {
+			throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+							  (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+							   (real_hdu + 1) % exttype).str());
+		}
+	} catch(lsst::pex::exceptions::NotFoundException) {
+		;
+	}
+
+	try {
+		_variance = typename Variance::Ptr(new Variance(ramFile, ramFileLen, real_hdu + 2, metadata, bbox));
+	} catch(image::FitsException &e) {
+		if (needAllHdus) {
+			LSST_EXCEPT_ADD(e, "Reading Variance");
+			throw e;
+		}
+		_variance = typename Variance::Ptr(new Variance(_image->getDimensions()));
+	}
+	try {
+		std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+		if (exttype != "" && exttype != "VARIANCE") {
+			throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+					   (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
+						(real_hdu + 2) % exttype).str());
+		}
+	} catch(lsst::pex::exceptions::NotFoundException) {}
 }
 
 /**

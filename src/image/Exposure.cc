@@ -42,6 +42,7 @@
   */
 
 #include <stdexcept>
+#include <sstream>
 
 #include "boost/cstdint.hpp" 
 #include "boost/format.hpp" 
@@ -182,7 +183,43 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
     _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, conformMasks);
+	
+	postFitsCtorInit(metadata);
+}
 
+/**
+This ctor is conceptually identical to the ctor which takes a FITS file base name,
+except that the FITS file resides in RAM.
+*/
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+	char **ramFile,					///< RAM buffer to receive RAM FITS file
+	size_t *ramFileLen,				///< RAM buffer length
+    int const hdu,                  ///< Desired HDU
+    BBox const& bbox,               //!< Only read these pixels
+    bool conformMasks               //!< Make Mask conform to mask layout in file?
+) :
+    lsst::daf::data::LsstBase(typeid(this))
+{
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
+
+    _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, conformMasks);
+	
+	postFitsCtorInit(metadata);
+}
+
+/** Destructor
+ */
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
+
+/**
+Finish initialization after constructing from a FITS file
+*/
+template<typename ImageT, typename MaskT, typename VarianceT> 
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
+	lsst::daf::base::PropertySet::Ptr metadata
+) {
     _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
     //
     // Strip keywords from the input metadata that are related to the generated Wcs
@@ -231,7 +268,17 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 
     key = "EXPTIME";
     if (metadata->exists(key)) {
-        _calib->setExptime(metadata->getAsDouble(key));
+	    try {
+			_calib->setExptime(metadata->getAsDouble(key));
+		} catch(lsst::daf::base::TypeMismatchException &) {
+			//In some SDSS images, EXPTIME is a string, not a double
+			std::string expTimeS = metadata->getAsString(key);
+			std::stringstream ss;
+			ss << expTimeS;
+			double expTime = 0.;
+			ss >> expTime;
+			_calib->setExptime(expTime);
+		}
         metadata->remove(key);
     }
 
@@ -253,11 +300,6 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     
     setMetadata(metadata);
 }
-
-/** Destructor
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
 
 /**
  * Clone a Psf; defined here so that we don't have to expose the insides of Psf in Exposure.h

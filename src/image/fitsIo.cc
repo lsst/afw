@@ -321,5 +321,21 @@ lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///<
 
     return metadata;
 }
+
+/**
+ * \brief Return the metadata from a fits RAM file
+ */
+lsst::daf::base::PropertySet::Ptr readMetadata(char **ramFile,				///< RAM buffer to receive RAM FITS file
+												size_t *ramFileLen,			///< RAM buffer length
+                                               const int hdu,               ///< HDU to read
+                                               bool strip       ///< Should I strip e.g. NAXIS1 from header?
+                                              ) {
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
+
+    detail::fits_reader m(ramFile, ramFileLen, metadata, hdu);
+    cfitsio::getMetadata(m.get(), metadata, strip);
+
+    return metadata;
+}
     
 }}} // namespace lsst::afw::image

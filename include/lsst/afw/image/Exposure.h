@@ -83,7 +83,8 @@ namespace image {
         explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=NoWcs);
         explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=NoWcs);
         explicit Exposure(std::string const &baseName, int const hdu=0, BBox const& bbox=BBox(), bool const conformMasks=false);
-
+		explicit Exposure(char **ramFile, size_t *ramFileLen, int const hdu=0, BBox const& bbox=BBox(), bool const conformMasks=false);
+		
         Exposure(Exposure const &src, BBox const& bbox, bool const deep=false);
 
         /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -193,12 +194,15 @@ namespace image {
         /// Does this Exposure have a Wcs?
         bool hasWcs() const { return *_wcs ? true : false; }
         
-        // FITS
+        /// Write FITS
         void writeFits(std::string const &expOutFile) const;
 		void writeFits(char **ramFile, size_t *ramFileLen) const;
         
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
+		
+		/// Finish initialization after constructing from a FITS file
+		void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
         MaskedImageT _maskedImage;             
         Wcs::Ptr _wcs;

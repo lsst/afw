@@ -86,7 +86,11 @@ namespace image {
                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                       BBox const& bbox=BBox(), bool const conformMasks=false
                      );                      
-
+		explicit Mask(char **ramFile, size_t *ramFileLen, int const hdu=0,
+                      lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                      BBox const& bbox=BBox(), bool const conformMasks=false
+                     );                      
+		
         Mask(const Mask& src, const bool deep=false);
         Mask(const Mask& src, const BBox& bbox, const bool deep=false);
         
