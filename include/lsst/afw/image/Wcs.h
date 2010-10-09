@@ -85,7 +85,7 @@ namespace image {
 /// \endcode
 /// 
 /// 
-/// 
+/// o[
 /// This class is implemented in by calls to the wcslib library
 /// by Mark Calabretta http://www.atnf.csiro.au/people/mcalabre/WCS/
 /// 
@@ -95,147 +95,152 @@ namespace image {
 /// we violate the standard by insisting that the keywords CRPIX[1,2] and CRVAL[1,2] are present when
 /// reading a header (keywords CRPIX1a etc are also accepted)
 
-    class Wcs : public lsst::daf::base::Persistable,
-                public lsst::daf::data::LsstBase
+class Wcs : public lsst::daf::base::Persistable,
+            public lsst::daf::data::LsstBase
 {
-    public:
-        typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
-        typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
-        
-        //Constructors
-        Wcs();
-        //Create a Wcs of the correct class using a fits header.
-        friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
-                                bool stripMetadata);
-                               
-        Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
-                const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
-                double equinox=2000, std::string raDecSys="ICRS",
-                const std::string cunits1="deg", const std::string cunits2="deg"
-           );
-
-        virtual ~Wcs();
-        virtual Ptr clone(void) const;
-
-        //Accessors
-        lsst::afw::coord::Coord::Ptr getSkyOrigin() const;      //Return crval
-        lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
-        Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
-        
-        virtual PTR(lsst::daf::base::PropertySet) getFitsMetadata() const;
-
-        /// Return true iff Wcs is valid
-        operator bool() const { return _nWcsInfo != 0; }
-
-        bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
+public:
+    typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
+    typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
     
-        ///Sky area covered by a pixel at position \c pix00 in units of square degrees.
-        double pixArea(lsst::afw::geom::PointD pix00) const;
+    //Constructors
+    Wcs();
+    //Create a Wcs of the correct class using a fits header.
+    friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
+                            bool stripMetadata);
 
-        // Returns the pixel scale, in arcsec/pixel.
-        double pixelScale() const;
+    Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
+        const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
+        double equinox=2000, std::string raDecSys="ICRS",
+        const std::string cunits1="deg", const std::string cunits2="deg"
+       );
 
-        //Convert from raDec to pixel space. Formerly called raDecToXY() and
-        //xyToRaDec(), but the name now reflects their increased generality. They may be
-        //used, e.g. to convert xy to Galactic coordinates
-        virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-        virtual lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
-        virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
-        
-        virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        virtual lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
-        lsst::afw::geom::PointD skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
+    virtual ~Wcs();
+    virtual Ptr clone(void) const;
+    
+    //Accessors
+    lsst::afw::coord::Coord::Ptr getSkyOrigin() const;      //Return crval
+    lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
+    Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
+    
+    virtual PTR(lsst::daf::base::PropertySet) getFitsMetadata() const;
+    
+    /// Return true iff Wcs is valid
+    operator bool() const { return _nWcsInfo != 0; }
+    
+    bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
+    
+    ///Sky area covered by a pixel at position \c pix00 in units of square degrees.
+    double pixArea(lsst::afw::geom::PointD pix00) const;
+    
+    // Returns the pixel scale, in arcsec/pixel.
+    double pixelScale() const;
+    
+    //Convert from raDec to pixel space. Formerly called raDecToXY() and
+    //xyToRaDec(), but the name now reflects their increased generality. They may be
+    //used, e.g. to convert xy to Galactic coordinates
+    virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
+    virtual lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
+    virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
+    
+    virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
+    virtual lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::PointD skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
+    
+    virtual bool hasDistortion() const {    return false;};
+    
+    lsst::afw::geom::LinearTransform getLinearTransform() const;
+    
+    lsst::afw::geom::AffineTransform linearizePixelToSky(
+        lsst::afw::coord::Coord::ConstPtr const & coord,
+        lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+                                                        ) const;
+    
+    lsst::afw::geom::AffineTransform linearizePixelToSky(
+        lsst::afw::geom::Point2D const & pix,
+        lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+                                                        ) const;
 
-        virtual bool hasDistortion() const {    return false;};
-        
-        lsst::afw::geom::LinearTransform getLinearTransform() const;
-
-        lsst::afw::geom::AffineTransform linearizePixelToSky(
-            lsst::afw::coord::Coord::ConstPtr const & coord,
+    lsst::afw::geom::AffineTransform linearizeSkyToPixel(
+        lsst::afw::coord::Coord::ConstPtr const & coord,
             lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
         ) const;
         
-        lsst::afw::geom::AffineTransform linearizePixelToSky(
-            lsst::afw::geom::Point2D const & pix,
-            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
-        ) const;
+    lsst::afw::geom::AffineTransform linearizeSkyToPixel(
+        lsst::afw::geom::Point2D const & pix,
+        lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+                                                        ) const;
 
-        lsst::afw::geom::AffineTransform linearizeSkyToPixel(
-            lsst::afw::coord::Coord::ConstPtr const & coord,
-            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
-        ) const;
-        
-        lsst::afw::geom::AffineTransform linearizeSkyToPixel(
-            lsst::afw::geom::Point2D const & pix,
-            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
-        ) const;
-
-        //Mutators
-        void shiftReferencePixel(double dx, double dy); 
+    //Mutators
+    void shiftReferencePixel(double dx, double dy); 
 
         
-    private:
-        //Allow the formatter to access private goo
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
-        
-        void initWcsLib(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const  Eigen::Matrix2d CD, 
-                        const std::string ctype1, const std::string ctype2,
-                        double equinox, std::string raDecSys,
-                        const std::string cunits1, const std::string cunits2
-                       );
+private:
+    //Allow the formatter to access private goo
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
+    
+    void initWcsLib(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix,
+                    const  Eigen::Matrix2d CD, 
+                    const std::string ctype1, const std::string ctype2,
+                    double equinox, std::string raDecSys,
+                    const std::string cunits1, const std::string cunits2
+                   );
 
-        virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
+    virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
 
-    protected:
+protected:
 
-        //If you want to create a Wcs from a fits header, use makeWcs(). 
-        //This is protected because the derived classes need to be able to see it.
-        Wcs(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    //If you want to create a Wcs from a fits header, use makeWcs(). 
+    //This is protected because the derived classes need to be able to see it.
+    Wcs(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    
+    Wcs(lsst::afw::image::Wcs const & rhs);
+    Wcs& operator= (const Wcs &);        
+    
+    lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
+    lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
+    
+    virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
+                                                 lsst::afw::geom::Point2D const & pix,
+                                                 lsst::afw::coord::Coord::ConstPtr const & coord,
+                                                 lsst::afw::coord::CoordUnit skyUnit
+                                                                        ) const;
 
-        Wcs(lsst::afw::image::Wcs const & rhs);
-        Wcs& operator= (const Wcs &);        
-
-        lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
-        lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
-
-        virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
-            lsst::afw::geom::Point2D const & pix,
-            lsst::afw::coord::Coord::ConstPtr const & coord,
-            lsst::afw::coord::CoordUnit skyUnit
-        ) const;
-
-        virtual lsst::afw::geom::AffineTransform linearizeSkyToPixelInternal(
-            lsst::afw::geom::Point2D const & pix,
-            lsst::afw::coord::Coord::ConstPtr const & coord,
-            lsst::afw::coord::CoordUnit skyUnit
-        ) const;
+    virtual lsst::afw::geom::AffineTransform linearizeSkyToPixelInternal(
+                                                 lsst::afw::geom::Point2D const & pix,
+                                                 lsst::afw::coord::Coord::ConstPtr const & coord,
+                                                 lsst::afw::coord::CoordUnit skyUnit
+                                                                        ) const;
 
     
-        void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
-        
-        struct wcsprm* _wcsInfo;
-        int _nWcsInfo;
-        int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.
-        int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
-        int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
-        int _nReject;
-    };
+    void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    
+    struct wcsprm* _wcsInfo;
+    int _nWcsInfo;
+    int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.
+    int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
+    int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
+    int _nReject;
+};
 
-    namespace detail {
-        PTR(lsst::daf::base::PropertySet)
-        createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
+namespace detail {
+    PTR(lsst::daf::base::PropertySet)
+    createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
+    
+    image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+}
 
-        image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
-    }
-
-    Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
-
-    namespace detail {
-        int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
-                             CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
-                            );
-    }
-
+Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
+    
+Wcs::Ptr makeWcs(lsst::afw::geom::PointD crval,
+                 lsst::afw::geom::PointD crpix,
+                 double CD11, double CD12, double CD21, double CD22);
+    
+namespace detail {
+    int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
+                         CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
+                        );
+}
+    
 #if !defined(SWIG)
     extern Wcs NoWcs;
 #endif
