@@ -65,13 +65,15 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
 }
     
 /**
- * Create a Wcs object from crval, crpix, CD, using CD elements (useful from python)
- *
+ * @brief Create a Wcs object from crval, crpix, CD, using CD elements (useful from python)
  */
 afwImg::Wcs::Ptr afwImg::makeWcs(
-                                 lsst::afw::geom::PointD crval,
-                                 lsst::afw::geom::PointD crpix,
-                                 double CD11, double CD12, double CD21, double CD22
+                                 lsst::afw::geom::PointD crval, ///< CRVAL1,2 (ie. the sky origin) in degrees 
+                                 lsst::afw::geom::PointD crpix, ///< CRPIX1,2 (ie. the pixel origin) in pixels
+                                 double CD11,                   ///< CD matrix element 1,1                    
+                                 double CD12,                   ///< CD matrix element 1,2                    
+                                 double CD21,                   ///< CD matrix element 2,1                    
+                                 double CD22                    ///< CD matrix element 2,2                    
                                 ) {
     Eigen::Matrix2d CD;
     CD << CD11, CD12, CD21, CD22;

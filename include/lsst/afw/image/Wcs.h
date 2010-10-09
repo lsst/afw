@@ -231,8 +231,7 @@ namespace detail {
 
 Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
     
-Wcs::Ptr makeWcs(lsst::afw::geom::PointD crval,
-                 lsst::afw::geom::PointD crpix,
+Wcs::Ptr makeWcs(lsst::afw::geom::PointD crval, lsst::afw::geom::PointD crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {
