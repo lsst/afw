@@ -617,63 +617,6 @@ GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
 ///and the second element corresponds to ctype2.
 GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
     //Construct a coord object of the correct type
-#if 0
-    int const ncompare = 4;                       // we only care about type's first 4 chars
-    char const *type = _wcsInfo->ctype[0];
-    char const *radesys = _wcsInfo->radesys;
-    CoordPtr convertedCoord;
-
-    bool reversed = false;
-    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
-        ;                                       // using an tr1::unordered_strcmp(map
-        if(strcmp(radesys, "ICRS") == 0) {
-            convertedCoord = coord->convert(afwCoord::ICRS);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            convertedCoord = coord->convert(afwCoord::FK5);
-        }
-    } else if(strncmp(type, "GLON", ncompare) == 0) {
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELON", ncompare) == 0) {
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else if(strncmp(type, "DEC-", ncompare) == 0) {
-        //Check for strange images where the ctypes as swapped.
-        reversed=true;
-        if(strcmp(radesys, "ICRS") == 0) {
-            convertedCoord = coord->convert(afwCoord::ICRS);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            convertedCoord = coord->convert(afwCoord::FK5);
-        } else {   
-            throw LSST_EXCEPT(except::RuntimeErrorException,
-                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
-                               radesys).str());
-        }
-    } else if(strncmp(type, "GLON", ncompare) == 0) {  
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELON", ncompare) == 0) {   
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else if(strncmp(type, "GLAT", ncompare) == 0) {
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELAT", ncompare) == 0) {
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else {   
-        throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Coord object doesn't support type %s") % type).str());
-    }
-
-    if (reversed) {
-        return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
-                                convertedCoord->getLongitude(afwCoord::DEGREES));
-    } else {    
-        return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
-                                convertedCoord->getLatitude(afwCoord::DEGREES));
-    }
-#else
     CONST_PTR(afwCoord::Coord) convertedCoord = coord->convert(_coordSystem);
 
     if (_skyCoordsReversed) {
@@ -683,7 +626,6 @@ GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const 
         return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
                                 convertedCoord->getLatitude(afwCoord::DEGREES));
     }
-#endif
 }
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
