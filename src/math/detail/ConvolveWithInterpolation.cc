@@ -121,69 +121,6 @@ void mathDetail::convolveWithInterpolation(
 }
 
 /**
- * @brief Convolve a region of an Image or MaskedImage with a spatially varying Kernel
- * using recursion and interpolation.
- *
- * This is a low-level convolution function that does not set edge pixels.
- *
- * The algorithm is:
- * - if the region is too small:
- *     - solve it with brute force
- * - if interpolation is acceptable (using KernelImagesForRegion::isInterpolationOk):
- *     - convolve with an interpolated kernel
- * - else:
- *     - divide the region into four subregions and call this subroutine for on each subregion
- *
- * Note that this routine will also work with spatially invariant kernels, but not efficiently.
- *
- * @warning This is a low-level routine that performs no bounds checking.
- */
-template <typename OutImageT, typename InImageT>
-void mathDetail::convolveRegionWithRecursiveInterpolation(
-        OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
-        InImageT const &inImage,    ///< input image
-        KernelImagesForRegion const &region,    ///< kernel image region over which to convolve
-        double maxInterpolationError)           ///< maximum allowed error in computing the kernel image
-            ///< at any pixel via linear interpolation
-{
-    
-    pexLog::TTrace<6>("lsst.afw.math.convolve",
-        "convolveRegionWithRecursiveInterpolation: region bbox minimum=(%d, %d), extent=(%d, %d)",
-            region.getBBox().getMinX(), region.getBBox().getMinY(),
-            region.getBBox().getWidth(), region.getBBox().getHeight());
-
-    if ((region.getBBox().getWidth() < region.getMinInterpolationSize())
-        || (region.getBBox().getHeight() < region.getMinInterpolationSize())) {
-        // region too small for interpolation; convolve using brute force
-        pexLog::TTrace<6>("lsst.afw.math.convolve",
-            "convolveRegionWithRecursiveInterpolation: region too small; using brute force");
-        afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
-        afwGeom::BoxI const bbox = kernelPtr->growBBox(region.getBBox());
-        OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(bbox)));
-        InImageT inView(InImageT(inImage, afwGeom::convertToImage(bbox)));
-        mathDetail::convolveWithBruteForce(outView, inView, *kernelPtr, region.getDoNormalize());
-    } else if (region.isInterpolationOk(maxInterpolationError)) {
-        // convolve region using linear interpolation
-        pexLog::TTrace<6>("lsst.afw.math.convolve",
-            "convolveRegionWithRecursiveInterpolation: linear interpolation is OK; use it");
-        KernelImagesForRegion::List subregionList = region.getSubregions();
-        for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
-            rgnIter != subregionList.end(); ++rgnIter) {
-            convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
-        }
-    } else {
-        // linear interpolation wasn't good enough; divide region into 2x2 subregions and recurse on those
-        pexLog::TTrace<6>("lsst.afw.math.convolve",
-            "convolveRegionWithRecursiveInterpolation: linear interpolation unsuitable; recurse");
-        KernelImagesForRegion::List subregionList = region.getSubregions();
-        for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
-            rgnIter != subregionList.end(); ++rgnIter) {
-            convolveRegionWithRecursiveInterpolation(outImage, inImage, *(*rgnIter), maxInterpolationError);
-        }
-    }
-}
-
-/**
  * @brief Convolve a region of an Image or MaskedImage with a spatially varying Kernel using interpolation.
  *
  * This is a low-level convolution function that does not set edge pixels.
@@ -203,8 +140,8 @@ void mathDetail::convolveRegionWithInterpolation(
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
     std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
-    KernelImage leftKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_LEFT).first), true);
-    KernelImage rightKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_RIGHT).first), true);
+    KernelImage leftKernelImage(region.getImageSumPtr(KernelImagesForRegion::BOTTOM_LEFT)->image, true);
+    KernelImage rightKernelImage(region.getImageSumPtr(KernelImagesForRegion::BOTTOM_RIGHT)->image, true);
     KernelImage leftDeltaKernelImage(kernelDimensions);
     KernelImage rightDeltaKernelImage(kernelDimensions);
     KernelImage deltaKernelImage(kernelDimensions);  // interpolated in x
@@ -218,10 +155,10 @@ void mathDetail::convolveRegionWithInterpolation(
     double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
     afwMath::scaledPlus(leftDeltaKernelImage, 
-         yfrac,  *(region.getImageSumPair(KernelImagesForRegion::TOP_LEFT).first),
+         yfrac,  region.getImageSumPtr(KernelImagesForRegion::TOP_LEFT)->image,
         -yfrac, leftKernelImage);
     afwMath::scaledPlus(rightDeltaKernelImage,
-         yfrac, *(region.getImageSumPair(KernelImagesForRegion::TOP_RIGHT).first),
+         yfrac, region.getImageSumPtr(KernelImagesForRegion::TOP_RIGHT)->image,
         -yfrac, rightKernelImage);
 
     // note: it might be slightly more efficient to compute locators directly on outImage and inImage,
@@ -273,8 +210,6 @@ void mathDetail::convolveRegionWithInterpolation(
     template void mathDetail::convolveWithInterpolation( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
             afwMath::ConvolutionControl const&); NL \
-    template void mathDetail::convolveRegionWithRecursiveInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&, double); NL \
     template void mathDetail::convolveRegionWithInterpolation( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&);
 // Instantiate both Image and MaskedImage versions

@@ -43,13 +43,8 @@ pexLog.Debug("lsst.afw", VERBOSITY)
 
 LocNameDict = {
     mathDetail.KernelImagesForRegion.BOTTOM_LEFT: "BOTTOM_LEFT",
-    mathDetail.KernelImagesForRegion.BOTTOM: "BOTTOM",
     mathDetail.KernelImagesForRegion.BOTTOM_RIGHT: "BOTTOM_RIGHT",
-    mathDetail.KernelImagesForRegion.LEFT: "LEFT",
-    mathDetail.KernelImagesForRegion.CENTER: "CENTER",
-    mathDetail.KernelImagesForRegion.RIGHT: "RIGHT",
     mathDetail.KernelImagesForRegion.TOP_LEFT: "TOP_LEFT",
-    mathDetail.KernelImagesForRegion.TOP: "TOP",
     mathDetail.KernelImagesForRegion.TOP_RIGHT: "TOP_RIGHT",
 }
 
@@ -94,27 +89,6 @@ class KernelImagesForRegion(unittest.TestCase):
         kernel.setSpatialParameters(sParams)
         return kernel
 
-    def runInterpTest(self, region, location, im0Arr, im1Arr, ind0, indCtr, ind1):
-        """Run one interpolation test
-        
-        Inputs:
-        - region: a KernelImagesForRegion
-        - location: a location on the region (e.g. region.BOTTOM)
-        - im0Arr: image array at one edge of the desired location (e.g. BOTTOM_LEFT for location=BOTTOM)
-        - im1Arr: image array at the other edge of the location (e.g. BOTTOM_RIGHT for location=BOTTOM)
-        - ind0: index of im0Arr along appropriate axis (e.g. LEFT for loation=BOTTOM)
-        - indCtr: index of center position along appropriate axis (e.g. CENTER for location=BOTTOM)
-        - ind1: index of im1Arr along appropriate axis (e.g. RIGHT for location=BOTTOM)
-        """
-        actImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-        region.interpolateImage(actImage, location)
-        actImArr = imTestUtils.arrayFromImage(actImage)
-        fracDist = float(indCtr - ind0) / float(ind1 - ind0)
-        desImArr = (im0Arr * (1.0 - fracDist)) + (im1Arr * fracDist)
-        errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
-        if errStr:
-            self.fail("interpolateImage(%s) failed:\n%s" % (LocNameDict[location], errStr))
-        
     def testDoNormalize(self):
         """Test getDoNormalize
         """
@@ -136,13 +110,8 @@ class KernelImagesForRegion(unittest.TestCase):
         
         for location, desIndex in (
             (region.BOTTOM_LEFT,  (leftInd,  bottomInd)),
-            (region.BOTTOM,       (ctrXInd,  bottomInd)),
             (region.BOTTOM_RIGHT, (rightInd, bottomInd)),
-            (region.LEFT,         (leftInd,  ctrYInd)),
-            (region.CENTER,       (ctrXInd,  ctrYInd)),
-            (region.RIGHT,        (rightInd, ctrYInd)),
             (region.TOP_LEFT,     (leftInd,  topInd)),
-            (region.TOP,          (ctrXInd,  topInd)),
             (region.TOP_RIGHT,    (rightInd, topInd)),
         ):
             desPixIndex = afwGeom.makePointI(desIndex[0], desIndex[1])
@@ -213,13 +182,8 @@ class KernelImagesForRegion(unittest.TestCase):
             region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
             for location in (
                 region.BOTTOM_LEFT,
-                region.BOTTOM,
                 region.BOTTOM_RIGHT,
-                region.LEFT,
-                region.CENTER,
-                region.RIGHT,
                 region.TOP_LEFT,
-                region.TOP,
                 region.TOP_RIGHT,
             ):
                 pixelIndex = region.getPixelIndex(location)
@@ -228,60 +192,12 @@ class KernelImagesForRegion(unittest.TestCase):
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
                 desImArr = imTestUtils.arrayFromImage(desImage)
                 
-                actImage, imSum = region.getImageSumPair(location)
-                actImArr = imTestUtils.arrayFromImage(actImage)
+                actImageSum = region.getImageSumPtr(location)
+                actImArr = imTestUtils.arrayFromImage(actImageSum.image)
                 errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
                 if errStr:
                     self.fail("exact image(%s) incorrect:\n%s" % (LocNameDict[location], errStr))
     
-    def testInterpolateImage(self):
-        for doNormalize in (False, True):
-            region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
-            actImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-            
-            bottomLeftImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.BOTTOM_LEFT)[0])
-            bottomRightImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.BOTTOM_RIGHT)[0])
-            topLeftImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.TOP_LEFT)[0])
-            topRightImArr = imTestUtils.arrayFromImage(region.getImageSumPair(region.TOP_RIGHT)[0])
-    
-            leftInd, bottomInd = region.getPixelIndex(region.BOTTOM_LEFT)
-            rightInd, topInd = region.getPixelIndex(region.TOP_RIGHT)
-            ctrXInd, ctrYInd = region.getPixelIndex(region.CENTER)
-            
-            self.runInterpTest(region, region.BOTTOM, bottomLeftImArr, bottomRightImArr, leftInd, ctrXInd, rightInd)
-            self.runInterpTest(region, region.TOP,    topLeftImArr,    topRightImArr,    leftInd, ctrXInd, rightInd)
-            self.runInterpTest(region, region.LEFT,  bottomLeftImArr,  topLeftImArr,  bottomInd, ctrYInd, topInd)
-            self.runInterpTest(region, region.RIGHT, bottomRightImArr, topRightImArr, bottomInd, ctrYInd, topInd)
-    
-            bottomIm = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-            region.interpolateImage(bottomIm, region.BOTTOM)
-            bottomImArr = imTestUtils.arrayFromImage(bottomIm)
-            topIm = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-            region.interpolateImage(topIm, region.TOP)
-            topImArr = imTestUtils.arrayFromImage(topIm)
-            self.runInterpTest(region, region.CENTER, bottomImArr, topImArr, bottomInd, ctrYInd, topInd)
-        
-
-    def testIsInterpolateOk(self):
-        for doNormalize in (False, True):
-            region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
-            
-            # compute max error
-            interpImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
-            maxDiff = 0.0
-            for location in (region.BOTTOM, region.LEFT, region.CENTER, region.RIGHT, region.TOP):
-                region.interpolateImage(interpImage, location)
-                interpImArr = imTestUtils.arrayFromImage(interpImage)
-                actImage, imSum = region.getImageSumPair(location)
-                actImArr = imTestUtils.arrayFromImage(actImage)
-                diffImArr = (interpImArr - actImArr) / imSum
-                maxDiff = max(maxDiff, numpy.max(numpy.abs(diffImArr)))
-            for epsilon in (1.0e-99, 0.0, 1.0e-99):
-                if epsilon >= 0.0:
-                    self.assert_(region.isInterpolationOk(maxDiff + epsilon))
-                else:
-                    self.assert_(not region.isInterpolationOk(maxDiff + epsilon))
-
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
