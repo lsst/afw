@@ -86,18 +86,6 @@ namespace detail {
             bool doNormalize);
 
     // I would prefer this to be nested in KernelImagesForRegion but SWIG doesn't support that
-    struct KernelImageSum {
-    public:
-        KernelImageSum(std::pair<int, int> dimensions)
-        :
-            image(dimensions),
-            sum(0)
-        { }
-        lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> image;
-        double sum;
-    };
-    typedef boost::shared_ptr<KernelImageSum> KernelImageSumPtr;
-
     class RowOfKernelImagesForRegion;
 
     /**
@@ -129,8 +117,6 @@ namespace detail {
         typedef boost::shared_ptr<const Image> ImageConstPtr;
         typedef boost::shared_ptr<const KernelImagesForRegion> ConstPtr;
         typedef boost::shared_ptr<KernelImagesForRegion> Ptr;
-        typedef KernelImageSum ImageSum;
-        typedef KernelImageSumPtr ImageSumPtr;
 
         /**
          * locations of various points in the region
@@ -159,10 +145,10 @@ namespace detail {
                 lsst::afw::geom::BoxI const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize,
-                ImageSumPtr bottomLeftImageSumPtr,
-                ImageSumPtr bottomRightImageSumPtr,
-                ImageSumPtr topLeftImageSumPtr,
-                ImageSumPtr topRightImageSumPtr);
+                ImagePtr bottomLeftImagePtr,
+                ImagePtr bottomRightImagePtr,
+                ImagePtr topLeftImagePtr,
+                ImagePtr topRightImagePtr);
 
         /** 
          * Get the bounding box for the region
@@ -176,7 +162,7 @@ namespace detail {
          * Get the doNormalize parameter
          */
         bool getDoNormalize() const { return _doNormalize; };
-        ImageSumPtr getImageSumPtr(Location location) const;
+        ImagePtr getImage(Location location) const;
         /**
          * Get the kernel (as a shared pointer to const)
          */
@@ -189,11 +175,11 @@ namespace detail {
          */
         static int getMinInterpolationSize() { return _MinInterpolationSize; };
     private:
-        typedef std::map<Location, ImageSumPtr> ImageMap;
         typedef std::vector<Location> LocationList;
 
-        void _computeImageSum(Location location) const;
-        inline void _insertImage(Location location, ImageSumPtr &imageSumPtr) const;
+        void _computeImage(Location location) const;
+        inline void _insertImage(Location location, ImagePtr imagePtr) const;
+        void _moveUp(bool isFirst, int newHeight);
         
         // static helper functions
         static inline int _computeNextSubregionLength(int length, int nDivisions);
@@ -204,7 +190,7 @@ namespace detail {
         lsst::afw::geom::BoxI _bbox;
         lsst::afw::geom::Point2I _xy0;
         bool _doNormalize;
-        mutable std::vector<ImageSumPtr> _imageSumPtrList;
+        mutable std::vector<ImagePtr> _imagePtrList;
 
         static int const _MinInterpolationSize;
     };
@@ -305,19 +291,19 @@ inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregion
  * @throw lsst::pex::exceptions::InvalidParameterException if image has the wrong dimensions
  */
 inline void lsst::afw::math::detail::KernelImagesForRegion::_insertImage(
-        Location location,          ///< location at which to insert image
-        ImageSumPtr &imageSumPtr) ///< image and sum to insert
+        Location location,      ///< location at which to insert image
+        ImagePtr imagePtr)      ///< image to insert
 const {
-    if (imageSumPtr) {
-        if (_kernelPtr->getDimensions() != imageSumPtr->image.getDimensions()) {
+    if (imagePtr) {
+        if (_kernelPtr->getDimensions() != imagePtr->getDimensions()) {
             std::ostringstream os;
             os << "image dimensions = ( " 
-                << imageSumPtr->image.getWidth() << ", " << imageSumPtr->image.getHeight()
+                << imagePtr->getWidth() << ", " << imagePtr->getHeight()
                 << ") != (" << _kernelPtr->getWidth() << ", " << _kernelPtr->getHeight()
                 << ") = kernel dimensions";
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
         }
-        _imageSumPtrList[location] = imageSumPtr;
+        _imagePtrList[location] = imagePtr;
     }
 }
 

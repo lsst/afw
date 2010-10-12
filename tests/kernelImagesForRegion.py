@@ -192,8 +192,8 @@ class KernelImagesForRegion(unittest.TestCase):
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
                 desImArr = imTestUtils.arrayFromImage(desImage)
                 
-                actImageSum = region.getImageSumPtr(location)
-                actImArr = imTestUtils.arrayFromImage(actImageSum.image)
+                actImage = region.getImage(location)
+                actImArr = imTestUtils.arrayFromImage(actImage)
                 errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
                 if errStr:
                     self.fail("exact image(%s) incorrect:\n%s" % (LocNameDict[location], errStr))

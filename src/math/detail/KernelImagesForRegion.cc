@@ -57,19 +57,19 @@ namespace mathDetail = lsst::afw::math::detail;
  * @throw lsst::pex::exceptions::InvalidParameterException if kernelPtr is null
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr kernelPtr,     ///< kernel
-        lsst::afw::geom::BoxI const &bbox,  ///< bounding box of region of an image
-                                            ///< for which we want to compute kernel images
-                                            ///< (inclusive and relative to parent image)
+        KernelConstPtr kernelPtr,               ///< kernel
+        lsst::afw::geom::BoxI const &bbox,      ///< bounding box of region of an image
+                                                ///< for which we want to compute kernel images
+                                                ///< (inclusive and relative to parent image)
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image for which we want to compute kernel images
-        bool doNormalize)                   ///< normalize the kernel images?
+        bool doNormalize)                       ///< normalize the kernel images?
 :
     lsst::daf::data::LsstBase::LsstBase(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
     _doNormalize(doNormalize),
-    _imageSumPtrList(4)
+    _imagePtrList(4)
 {
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
@@ -96,25 +96,25 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
                                                 ///< (inclusive and relative to parent image)
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image
         bool doNormalize,                       ///< normalize the kernel images?
-        ImageSumPtr bottomLeftImageSumPtr,    ///< kernel image and sum at bottom left of region
-        ImageSumPtr bottomRightImageSumPtr,   ///< kernel image and sum at bottom right of region
-        ImageSumPtr topLeftImageSumPtr,       ///< kernel image and sum at top left of region
-        ImageSumPtr topRightImageSumPtr)      ///< kernel image and sum at top right of region
+        ImagePtr bottomLeftImagePtr,            ///< kernel image and sum at bottom left of region
+        ImagePtr bottomRightImagePtr,           ///< kernel image and sum at bottom right of region
+        ImagePtr topLeftImagePtr,               ///< kernel image and sum at top left of region
+        ImagePtr topRightImagePtr)              ///< kernel image and sum at top right of region
 :
     lsst::daf::data::LsstBase::LsstBase(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
     _doNormalize(doNormalize),
-    _imageSumPtrList(4)
+    _imagePtrList(4)
 {
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
     }
-    _insertImage(BOTTOM_LEFT, bottomLeftImageSumPtr);
-    _insertImage(BOTTOM_RIGHT, bottomRightImageSumPtr);
-    _insertImage(TOP_LEFT, topLeftImageSumPtr);
-    _insertImage(TOP_RIGHT, topRightImageSumPtr);
+    _insertImage(BOTTOM_LEFT, bottomLeftImagePtr);
+    _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
+    _insertImage(TOP_LEFT, topLeftImagePtr);
+    _insertImage(TOP_RIGHT, topRightImagePtr);
     pexLog::TTrace<6>("lsst.afw.math.convolve",
     "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
@@ -125,17 +125,17 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
  *
  * If the image has not yet been computed, it is computed at this time.
  */
-mathDetail::KernelImagesForRegion::ImageSumPtr mathDetail::KernelImagesForRegion::getImageSumPtr(
+mathDetail::KernelImagesForRegion::ImagePtr mathDetail::KernelImagesForRegion::getImage(
         Location location)  ///< location of image
 const {
-    if (_imageSumPtrList[location]) {
-        return _imageSumPtrList[location];
+    if (_imagePtrList[location]) {
+        return _imagePtrList[location];
     }
 
-    ImageSumPtr imageSumPtr(new ImageSum(_kernelPtr->getDimensions()));
-    _imageSumPtrList[location] = imageSumPtr;
-    _computeImageSum(location);
-    return imageSumPtr;
+    ImagePtr imagePtr(new Image(_kernelPtr->getDimensions()));
+    _imagePtrList[location] = imagePtr;
+    _computeImage(location);
+    return imagePtr;
 }
 
 /**
@@ -196,38 +196,18 @@ const {
     
     if (hasData) {
         // Move each region up one segment
-        // To avoid reallocating memory for kernel images, swap the top and bottom kernel image pointers
-        // and recompute the top images
-        ImageSumPtr tempImageSumPtr;
-        
-        // move bboxes up, swap left-hand images and recompute top image
+        bool isFirst = true;
         for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
             rgnIter != rgnEnd; ++rgnIter) {
-            
-            // move bbox up (this must be done before recomputing the top kernel images)
-            (*rgnIter)->_bbox = afwGeom::BoxI(
-                afwGeom::makePointI((*rgnIter)->_bbox.getMinX(), startY),
-                afwGeom::makeExtentI((*rgnIter)->_bbox.getWidth(), height));
-
-            // swap left top and bottom images and recompute top
-            tempImageSumPtr = (*rgnIter)->_imageSumPtrList[BOTTOM_LEFT];
-            (*rgnIter)->_imageSumPtrList[BOTTOM_LEFT] = (*rgnIter)->_imageSumPtrList[TOP_LEFT];
-            (*rgnIter)->_imageSumPtrList[TOP_LEFT] = tempImageSumPtr;
-            (*rgnIter)->_computeImageSum(TOP_LEFT);
+            (*rgnIter)->_moveUp(isFirst, height);
+            isFirst = false;
         }
 
-        // swap right-hand image of last region and recompute top image (bbox was moved in the loop above)
-        KernelImagesForRegion::Ptr lastRegionPtr = regionRow.back();
-        tempImageSumPtr = lastRegionPtr->_imageSumPtrList[BOTTOM_RIGHT];
-        lastRegionPtr->_imageSumPtrList[BOTTOM_RIGHT] = lastRegionPtr->_imageSumPtrList[TOP_RIGHT];
-        lastRegionPtr->_imageSumPtrList[TOP_RIGHT] = tempImageSumPtr;
-        lastRegionPtr->_computeImageSum(TOP_RIGHT);
-
     } else {
-        ImageSumPtr blImageSumPtr = getImageSumPtr(BOTTOM_LEFT);
-        ImageSumPtr brImageSumPtr;
-        ImageSumPtr tlImageSumPtr;
-        ImageSumPtr const trImageNullPtr;
+        ImagePtr blImagePtr = getImage(BOTTOM_LEFT);
+        ImagePtr brImagePtr;
+        ImagePtr tlImagePtr;
+        ImagePtr const trImageNullPtr;
 
         afwGeom::Point2I blCorner = afwGeom::makePointI(this->_bbox.getMinX(), startY);
 
@@ -244,40 +224,40 @@ const {
                 afwGeom::BoxI(blCorner, afwGeom::Extent2I::make(width, height)),
                 _xy0,
                 _doNormalize,
-                blImageSumPtr,
-                brImageSumPtr,
-                tlImageSumPtr,
+                blImagePtr,
+                brImagePtr,
+                tlImagePtr,
                 trImageNullPtr));
             *rgnIter = regionPtr;
             
-            if (!tlImageSumPtr) {
-                regionPtr->getImageSumPtr(TOP_LEFT);
+            if (!tlImagePtr) {
+                regionPtr->getImage(TOP_LEFT);
             }
             
             blCorner += afwGeom::Extent2I::make(width, 0);
-            blImageSumPtr = regionPtr->getImageSumPtr(BOTTOM_RIGHT);
-            tlImageSumPtr = regionPtr->getImageSumPtr(TOP_RIGHT);
+            blImagePtr = regionPtr->getImage(BOTTOM_RIGHT);
+            tlImagePtr = regionPtr->getImage(TOP_RIGHT);
         }
     }
     return true;
 }
 
 /**
- * Compute image and sum at a particular location
+ * Compute image at a particular location
  *
  * @throw lsst::pex::exceptions::NotFoundException if there is no pointer at that location
  */
-void mathDetail::KernelImagesForRegion::_computeImageSum(Location location) const {
-    ImageSumPtr imageSumPtr = _imageSumPtrList[location];
-    if (!imageSumPtr) {
+void mathDetail::KernelImagesForRegion::_computeImage(Location location) const {
+    ImagePtr imagePtr = _imagePtrList[location];
+    if (!imagePtr) {
         std::ostringstream os;
-        os << "Null imageSumPtr at location " << location;
+        os << "Null imagePtr at location " << location;
         throw LSST_EXCEPT(pexExcept::NotFoundException, os.str());
     }
 
     afwGeom::Point2I pixelIndex = getPixelIndex(location);
-    imageSumPtr->sum = _kernelPtr->computeImage(
-        imageSumPtr->image,
+    _kernelPtr->computeImage(
+        *imagePtr,
         _doNormalize,
         afwImage::indexToPosition(pixelIndex.getX() + _xy0[0]),
         afwImage::indexToPosition(pixelIndex.getY() + _xy0[1]));
@@ -315,6 +295,41 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     }
     return regionLengths;
 }
+
+/**
+ * @brief Move the region up one segment
+ *
+ * To avoid reallocating memory for kernel images, swap the top and bottom kernel image pointers
+ * and recompute the top images. Actually, only does this to the right-hande images if isFirst is false
+ * since it assumes the left images were already handled.
+ *
+ * Intended to support computeNextRow; as such assumes that a list of adjacent regions will be moved,
+ * left to right.
+ */
+void mathDetail::KernelImagesForRegion::_moveUp(
+        bool isFirst,   ///< true if the first region in a row (or the only region you are moving)
+        int newHeight)  ///< new height of region
+{
+    // move bbox up (this must be done before recomputing the top kernel images)
+    _bbox = afwGeom::BoxI(
+        afwGeom::makePointI(_bbox.getMinX(), _bbox.getMaxY() + 1),
+        afwGeom::makeExtentI(_bbox.getWidth(), newHeight));
+
+    // swap right-hand image of last region and recompute top image (bbox was moved in the loop above)
+    ImagePtr tempImagePtr = _imagePtrList[BOTTOM_RIGHT];
+    _imagePtrList[BOTTOM_RIGHT] = _imagePtrList[TOP_RIGHT];
+    _imagePtrList[TOP_RIGHT] = tempImagePtr;
+    _computeImage(TOP_RIGHT);
+
+    if (isFirst) {
+        // swap left top and bottom images and recompute top
+        tempImagePtr = _imagePtrList[BOTTOM_LEFT];
+        _imagePtrList[BOTTOM_LEFT] = _imagePtrList[TOP_LEFT];
+        _imagePtrList[TOP_LEFT] = tempImagePtr;
+        _computeImage(TOP_LEFT);
+    }
+}
+
 
 int const mathDetail::KernelImagesForRegion::_MinInterpolationSize = 10;
 

@@ -58,9 +58,8 @@ int main(int argc, char **argv) {
     
     afwMath::detail::KernelImagesForRegion kernelImageSet(gaussSpVarKernelPtr, bbox, false);
 
-    afwMath::detail::KernelImagesForRegion::ImageSumPair imageSumPair = 
-        kernelImageSet.getImageAndSum(afwMath::detail::KernelImagesForRegion::CENTER);
+    afwMath::detail::KernelImagesForRegion::ImagePtr imagePtr = 
+        kernelImageSet.getImage(afwMath::detail::KernelImagesForRegion::CENTER);
 
-    std::cout << "image size=" << imageSumPair.first->getWidth()
-        << " x " << imageSumPair.first->getHeight() << std::endl;
+    std::cout << "image size=" << imagePtr->getWidth() << " x " << imagePtr->getHeight() << std::endl;
 }
