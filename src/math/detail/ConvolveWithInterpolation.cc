@@ -107,6 +107,7 @@ void mathDetail::convolveWithInterpolation(
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
+    ConvolveWithInterpolationWorkingImages workingImages(kernel.getWidth(), kernel.getHeight());
     RowOfKernelImagesForRegion regionRow(nx, ny);
     while (goodRegion.computeNextRow(regionRow)) {
         for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
@@ -115,7 +116,7 @@ void mathDetail::convolveWithInterpolation(
                 "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                     (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                     (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
-            convolveRegionWithInterpolation(outImage, inImage, **rgnIter);
+            convolveRegionWithInterpolation(outImage, inImage, **rgnIter, workingImages);
         }
     }
 }
@@ -131,7 +132,8 @@ template <typename OutImageT, typename InImageT>
 void mathDetail::convolveRegionWithInterpolation(
         OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
         InImageT const &inImage,    ///< input image
-        KernelImagesForRegion const &region)    ///< kernel image region over which to convolve
+        KernelImagesForRegion const &region,    ///< kernel image region over which to convolve
+        ConvolveWithInterpolationWorkingImages &workingImages)  ///< working kernel images
 {
     typedef typename OutImageT::x_iterator OutXIterator;
     typedef typename InImageT::const_xy_locator InLocator;
@@ -140,12 +142,9 @@ void mathDetail::convolveRegionWithInterpolation(
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
     std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
-    KernelImage leftKernelImage(*region.getImage(KernelImagesForRegion::BOTTOM_LEFT), true);
-    KernelImage rightKernelImage(*region.getImage(KernelImagesForRegion::BOTTOM_RIGHT), true);
-    KernelImage leftDeltaKernelImage(kernelDimensions);
-    KernelImage rightDeltaKernelImage(kernelDimensions);
-    KernelImage deltaKernelImage(kernelDimensions);  // interpolated in x
-    KernelImage kernelImage(leftKernelImage, true);  // final interpolated kernel image
+    workingImages.leftImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_LEFT);
+    workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);
+    workingImages.kernelImage <<= workingImages.leftImage;
 
     afwGeom::BoxI const outBBox = region.getBBox();
     afwGeom::BoxI const inBBox = kernelPtr->growBBox(outBBox);
@@ -154,25 +153,25 @@ void mathDetail::convolveRegionWithInterpolation(
     // so the distance between edge images is bbox width/height pixels
     double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
-    afwMath::scaledPlus(leftDeltaKernelImage, 
+    afwMath::scaledPlus(workingImages.leftDeltaImage, 
          yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
-        -yfrac, leftKernelImage);
-    afwMath::scaledPlus(rightDeltaKernelImage,
+        -yfrac, workingImages.leftImage);
+    afwMath::scaledPlus(workingImages.rightDeltaImage,
          yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
-        -yfrac, rightKernelImage);
+        -yfrac, workingImages.rightImage);
 
     // note: it might be slightly more efficient to compute locators directly on outImage and inImage,
     // without making views; however, using views seems a bit simpler and safer
     // (less likelihood of accidentally straying out of the region)
     OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(outBBox)));
     InImageT inView(InImageT(inImage, afwGeom::convertToImage(inBBox)));
-    KernelLocator const kernelLocator = kernelImage.xy_at(0, 0);
+    KernelLocator const kernelLocator = workingImages.kernelImage.xy_at(0, 0);
     
-    // the loop is a bit odd for efficiency: the initial value of kernelImage, leftKernelImage and
-    // rightKernelImage are set when they are allocated, so they are not computed in the loop
+    // the loop is a bit odd for efficiency: the initial value of workingImages.kernelImage, workingImages.leftImage and
+    // workingImages.rightImage are set when they are allocated, so they are not computed in the loop
     // until after the convolution; to save cpu cycles they are not computed at all in the last iteration.
     for (int row = 0; ; ) {
-        afwMath::scaledPlus(deltaKernelImage, xfrac, rightKernelImage, -xfrac, leftKernelImage);
+        afwMath::scaledPlus(workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
         OutXIterator outIter = outView.row_begin(row);
         OutXIterator const outEnd = outView.row_end(row);
         InLocator inLocator = inView.xy_at(0, row);
@@ -184,16 +183,16 @@ void mathDetail::convolveRegionWithInterpolation(
             if (outIter == outEnd) {
                 break;
             }
-            kernelImage += deltaKernelImage;
+            workingImages.kernelImage += workingImages.deltaImage;
         }
 
         row += 1;
         if (row >= outView.getHeight()) {
             break;
         }
-        leftKernelImage += leftDeltaKernelImage;
-        rightKernelImage += rightDeltaKernelImage;
-        kernelImage <<= leftKernelImage;
+        workingImages.leftImage += workingImages.leftDeltaImage;
+        workingImages.rightImage += workingImages.rightDeltaImage;
+        workingImages.kernelImage <<= workingImages.leftImage;
     }
 }
 
@@ -211,7 +210,8 @@ void mathDetail::convolveRegionWithInterpolation(
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
             afwMath::ConvolutionControl const&); NL \
     template void mathDetail::convolveRegionWithInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&);
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&, \
+        ConvolveWithInterpolationWorkingImages&);
 // Instantiate both Image and MaskedImage versions
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \

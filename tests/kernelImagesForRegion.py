@@ -62,6 +62,29 @@ class KernelImagesForRegion(unittest.TestCase):
         self.bbox = None
         self.kernel = None
 
+    def assertRegionCorrect(self, region):
+        """Assert that a region has correct corner images
+        
+        This test is only relevant for operations that try to reuse the image array data
+        """
+        regionCopy = mathDetail.KernelImagesForRegion(region.getKernel(), region.getBBox(), region.getXY0(), region.getDoNormalize())
+
+        for location in (
+            region.BOTTOM_LEFT,
+            region.BOTTOM_RIGHT,
+            region.TOP_LEFT,
+            region.TOP_RIGHT,
+        ):
+            actImage = region.getImage(location)
+            actImArr = imTestUtils.arrayFromImage(actImage)
+            desImage = regionCopy.getImage(location)
+            desImArr = imTestUtils.arrayFromImage(desImage)
+            actImArr -= desImArr
+            if not numpy.allclose(actImArr, 0):
+                actImage.writeFits("actImage%s.fits" % (location,))
+                desImage.writeFits("desImage%s.fits" % (location,))
+                self.fail("failed on location %s" % (location,))
+
     def makeKernel(self):
         kCols = 7
         kRows = 6
@@ -158,6 +181,11 @@ class KernelImagesForRegion(unittest.TestCase):
             prevFirstBBox = firstBBox
             for xInd in range(nx):
                 subregion = regionRow.getRegion(xInd)
+                try:
+                    self.assertRegionCorrect(subregion)
+                except:
+                    print "failed on xInd=%s, yInd=%s" % (xInd, yInd)
+                    raise
                 bbox = subregion.getBBox()
                 rowWidth += bbox.getWidth()
                 self.assert_(bbox.getWidth() in validWidths)

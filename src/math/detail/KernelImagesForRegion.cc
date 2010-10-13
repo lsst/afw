@@ -315,17 +315,13 @@ void mathDetail::KernelImagesForRegion::_moveUp(
         afwGeom::makePointI(_bbox.getMinX(), _bbox.getMaxY() + 1),
         afwGeom::makeExtentI(_bbox.getWidth(), newHeight));
 
-    // swap right-hand image of last region and recompute top image (bbox was moved in the loop above)
-    ImagePtr tempImagePtr = _imagePtrList[BOTTOM_RIGHT];
-    _imagePtrList[BOTTOM_RIGHT] = _imagePtrList[TOP_RIGHT];
-    _imagePtrList[TOP_RIGHT] = tempImagePtr;
-    _computeImage(TOP_RIGHT);
+    // swap top and bottom image pointers
+    _imagePtrList[BOTTOM_RIGHT].swap(_imagePtrList[TOP_RIGHT]);
+    _imagePtrList[BOTTOM_LEFT].swap(_imagePtrList[TOP_LEFT]);
 
+    // recompute top right, and if the first image also recompute top left
+    _computeImage(TOP_RIGHT);
     if (isFirst) {
-        // swap left top and bottom images and recompute top
-        tempImagePtr = _imagePtrList[BOTTOM_LEFT];
-        _imagePtrList[BOTTOM_LEFT] = _imagePtrList[TOP_LEFT];
-        _imagePtrList[TOP_LEFT] = tempImagePtr;
         _computeImage(TOP_LEFT);
     }
 }

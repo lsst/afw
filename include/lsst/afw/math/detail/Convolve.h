@@ -258,11 +258,34 @@ namespace detail {
             lsst::afw::math::Kernel const &kernel,
             ConvolutionControl const &convolutionControl);
 
+    /**
+     * @brief kernel images used by convolveRegionWithInterpolation
+     */
+    struct ConvolveWithInterpolationWorkingImages {
+    public:
+        typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+        ConvolveWithInterpolationWorkingImages(int width, int height) :
+            leftImage(width, height),
+            rightImage(width, height),
+            leftDeltaImage(width, height),
+            rightDeltaImage(width, height),
+            deltaImage(width, height),
+            kernelImage(width, height)
+        { }
+        Image leftImage;
+        Image rightImage;
+        Image leftDeltaImage;
+        Image rightDeltaImage;
+        Image deltaImage;
+        Image kernelImage;
+    };
+
     template <typename OutImageT, typename InImageT>
     void convolveRegionWithInterpolation(
             OutImageT &outImage,
             InImageT const &inImage,
-            KernelImagesForRegion const &region);
+            KernelImagesForRegion const &region,
+            ConvolveWithInterpolationWorkingImages &workingImages);
 }}}}   // lsst::afw::math::detail
 
 /*
