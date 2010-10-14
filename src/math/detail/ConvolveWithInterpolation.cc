@@ -135,10 +135,10 @@ void mathDetail::convolveRegionWithInterpolation(
         KernelImagesForRegion const &region,    ///< kernel image region over which to convolve
         ConvolveWithInterpolationWorkingImages &workingImages)  ///< working kernel images
 {
-    typedef typename OutImageT::x_iterator OutXIterator;
-    typedef typename InImageT::const_xy_locator InLocator;
+    typedef typename OutImageT::xy_locator OutLocator;
+    typedef typename InImageT::const_xy_locator InConstLocator;
     typedef KernelImagesForRegion::Image KernelImage;
-    typedef KernelImage::const_xy_locator KernelLocator;
+    typedef KernelImage::const_xy_locator KernelConstLocator;
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
     std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
@@ -146,13 +146,13 @@ void mathDetail::convolveRegionWithInterpolation(
     workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);
     workingImages.kernelImage <<= workingImages.leftImage;
 
-    afwGeom::BoxI const outBBox = region.getBBox();
-    afwGeom::BoxI const inBBox = kernelPtr->growBBox(outBBox);
+    afwGeom::BoxI const goodBBox = region.getBBox();
+    afwGeom::BoxI const fullBBox = kernelPtr->growBBox(goodBBox);
     
     // top and right images are computed one beyond bbox boundary,
     // so the distance between edge images is bbox width/height pixels
-    double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
-    double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
+    double xfrac = 1.0 / static_cast<double>(goodBBox.getWidth());
+    double yfrac = 1.0 / static_cast<double>(goodBBox.getHeight());
     afwMath::scaledPlus(workingImages.leftDeltaImage, 
          yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
         -yfrac, workingImages.leftImage);
@@ -160,39 +160,38 @@ void mathDetail::convolveRegionWithInterpolation(
          yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
         -yfrac, workingImages.rightImage);
 
-    // note: it might be slightly more efficient to compute locators directly on outImage and inImage,
-    // without making views; however, using views seems a bit simpler and safer
-    // (less likelihood of accidentally straying out of the region)
-    OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(outBBox)));
-    InImageT inView(InImageT(inImage, afwGeom::convertToImage(inBBox)));
-    KernelLocator const kernelLocator = workingImages.kernelImage.xy_at(0, 0);
+    KernelConstLocator const kernelLocator = workingImages.kernelImage.xy_at(0, 0);
     
-    // the loop is a bit odd for efficiency: the initial value of workingImages.kernelImage, workingImages.leftImage and
-    // workingImages.rightImage are set when they are allocated, so they are not computed in the loop
-    // until after the convolution; to save cpu cycles they are not computed at all in the last iteration.
-    for (int row = 0, regionHeight = outView.getHeight(); ; ) {
-        afwMath::scaledPlus(workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
-        OutXIterator outIter = outView.row_begin(row);
-        OutXIterator const outEnd = outView.row_end(row);
-        InLocator inLocator = inView.xy_at(0, row);
-        while(true) {
-            *outIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inLocator, kernelLocator,
-                kernelDimensions.first, kernelDimensions.second);
-            ++outIter;
+    // The loop is a bit odd for efficiency: the initial value of workingImages.kernelImage
+    // and related kernel images are set when they are allocated,
+    // so they are not computed in the loop until after the convolution; to save cpu cycles
+    // they are not computed at all for the last iteration.
+    InConstLocator inLocator = inImage.xy_at(fullBBox.getMinX(), fullBBox.getMinY());
+    OutLocator outLocator = outImage.xy_at(goodBBox.getMinX(), goodBBox.getMinY());
+    for (int j = 0; ; ) {
+        afwMath::scaledPlus(
+            workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
+        for (int i = 0; ; ) {
+            *outLocator = afwMath::convolveAtAPoint<OutImageT, InImageT>(
+                inLocator, kernelLocator, kernelDimensions.first, kernelDimensions.second);
+            ++outLocator.x();
             ++inLocator.x();
-            if (outIter == outEnd) {
+            ++i;
+            if (i >= goodBBox.getWidth()) {
                 break;
             }
             workingImages.kernelImage += workingImages.deltaImage;
         }
 
-        ++row;
-        if (row >= regionHeight) {
+        ++j;
+        if (j >= goodBBox.getHeight()) {
             break;
         }
         workingImages.leftImage += workingImages.leftDeltaImage;
         workingImages.rightImage += workingImages.rightDeltaImage;
         workingImages.kernelImage <<= workingImages.leftImage;
+        inLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
+        outLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
     }
 }
 
