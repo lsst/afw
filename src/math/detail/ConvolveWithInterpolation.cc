@@ -170,7 +170,7 @@ void mathDetail::convolveRegionWithInterpolation(
     // the loop is a bit odd for efficiency: the initial value of workingImages.kernelImage, workingImages.leftImage and
     // workingImages.rightImage are set when they are allocated, so they are not computed in the loop
     // until after the convolution; to save cpu cycles they are not computed at all in the last iteration.
-    for (int row = 0; ; ) {
+    for (int row = 0, regionHeight = outView.getHeight(); ; ) {
         afwMath::scaledPlus(workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
         OutXIterator outIter = outView.row_begin(row);
         OutXIterator const outEnd = outView.row_end(row);
@@ -186,8 +186,8 @@ void mathDetail::convolveRegionWithInterpolation(
             workingImages.kernelImage += workingImages.deltaImage;
         }
 
-        row += 1;
-        if (row >= outView.getHeight()) {
+        ++row;
+        if (row >= regionHeight) {
             break;
         }
         workingImages.leftImage += workingImages.leftDeltaImage;
