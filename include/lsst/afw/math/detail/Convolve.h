@@ -85,6 +85,7 @@ namespace detail {
             lsst::afw::math::Kernel const& kernel,
             bool doNormalize);
 
+    // I would prefer this to be nested in KernelImagesForRegion but SWIG doesn't support that
     class RowOfKernelImagesForRegion;
 
     /**
@@ -112,20 +113,18 @@ namespace detail {
     public:
         typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
         typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+        typedef boost::shared_ptr<Image> ImagePtr;
         typedef boost::shared_ptr<const Image> ImageConstPtr;
         typedef boost::shared_ptr<const KernelImagesForRegion> ConstPtr;
         typedef boost::shared_ptr<KernelImagesForRegion> Ptr;
-        typedef std::pair<Image::ConstPtr, double> ImageSumPair;
-        typedef std::vector<ConstPtr> List;
+
         /**
          * locations of various points in the region
          *
          * RIGHT and TOP are one column/row beyond the region's bounding box.
          * Thus adjacent regions share corner images.
          *
-         * The corners posiitions are: BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
-         * The "middle" positions are the middle of each side, plus the center of the region:
-         *    BOTTOM, TOP, LEFT, RIGHT, CENTER
+         * The posiitions are: BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
          *
          * These locations always refer to the center of a pixel. Thus if the region has an odd size
          * along an axis (so that the span to the top and right, which are one beyond, is even),
@@ -133,8 +132,7 @@ namespace detail {
          * (in an unspecified direction).
          */
         enum Location {
-            BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT,
-            BOTTOM, TOP, LEFT, RIGHT, CENTER
+            BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
         };
     
         KernelImagesForRegion(
@@ -147,10 +145,10 @@ namespace detail {
                 lsst::afw::geom::BoxI const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize,
-                ImageSumPair bottomLeftImageSumPair,
-                ImageSumPair bottomRightImageSumPair,
-                ImageSumPair topLeftImageSumPair,
-                ImageSumPair topRightImageSumPair);
+                ImagePtr bottomLeftImagePtr,
+                ImagePtr bottomRightImagePtr,
+                ImagePtr topLeftImagePtr,
+                ImagePtr topRightImagePtr);
 
         /** 
          * Get the bounding box for the region
@@ -164,47 +162,37 @@ namespace detail {
          * Get the doNormalize parameter
          */
         bool getDoNormalize() const { return _doNormalize; };
-        ImageSumPair getImageSumPair(Location location) const;
+        ImagePtr getImage(Location location) const;
         /**
          * Get the kernel (as a shared pointer to const)
          */
         KernelConstPtr getKernel() const { return _kernelPtr; };
         lsst::afw::geom::Point2I getPixelIndex(Location location) const;
-        List getSubregions() const;
         bool computeNextRow(RowOfKernelImagesForRegion &regionRow) const;
-        void interpolateImage(Image &outImage, Location location) const;
-        bool isInterpolationOk(double maxInterpolationError) const;
+
         /**
          * Get the minInterpolationSize class constant
          */
         static int getMinInterpolationSize() { return _MinInterpolationSize; };
-
     private:
-        typedef std::map<Location, ImageSumPair> ImageMap;
         typedef std::vector<Location> LocationList;
 
-        inline void _insertImage(Location location, ImageSumPair &imageSumPair) const;
+        void _computeImage(Location location) const;
+        inline void _insertImage(Location location, ImagePtr imagePtr) const;
+        void _moveUp(bool isFirst, int newHeight);
         
         // static helper functions
-        static lsst::afw::geom::Point2D _computeCenterFractionalPosition(lsst::afw::geom::BoxI const &bbox);
-        static lsst::afw::geom::Point2I _computeCenterIndex(lsst::afw::geom::BoxI const &bbox);
         static inline int _computeNextSubregionLength(int length, int nDivisions);
         static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
-        
+
         // member variables
         KernelConstPtr _kernelPtr;
         lsst::afw::geom::BoxI _bbox;
         lsst::afw::geom::Point2I _xy0;
-        lsst::afw::geom::Point2D _centerFractionalPosition;  ///< fractional position of center pixel
-            ///< from bottom left to top right; 0.5 if length of axis is odd, somewhat less if even
-        lsst::afw::geom::Point2I _centerIndex;  ///< index of center pixel
         bool _doNormalize;
-        mutable ImageMap _imageMap; ///< cache of location:kernel image;
-            ///< mutable to support lazy evaluation: const methods may add entries to the cache
+        mutable std::vector<ImagePtr> _imagePtrList;
 
         static int const _MinInterpolationSize;
-        static LocationList const _TestLocationList;   ///< locations at which to test
-            ///< linear interpolation to see if it is accurate enough
     };
     
     /**
@@ -214,16 +202,35 @@ namespace detail {
      */
     class RowOfKernelImagesForRegion {
     public:
-        typedef std::vector<KernelImagesForRegion::ConstPtr> RegionList;
+        typedef std::vector<KernelImagesForRegion::Ptr> RegionList;
         typedef RegionList::iterator Iterator;
         typedef RegionList::const_iterator ConstIterator;
         
-        
         RowOfKernelImagesForRegion(int nx, int ny);
+        /**
+         * @brief Return the begin iterator for the list
+         */
         RegionList::const_iterator begin() const { return _regionList.begin(); };
+        /**
+         * @brief Return the end iterator for the list
+         */
         RegionList::const_iterator end() const { return _regionList.end(); };
+        /**
+         * @brief Return the begin iterator for the list
+         */
         RegionList::iterator begin() { return _regionList.begin(); };
+        /**
+         * @brief Return the end iterator for the list
+         */
         RegionList::iterator end() { return _regionList.end(); };
+        /**
+         * @brief Return the first region in the list
+         */
+        KernelImagesForRegion::Ptr front() { return _regionList.front(); };
+        /**
+         * @brief Return the last region in the list
+         */
+        KernelImagesForRegion::Ptr back() { return _regionList.back(); };
         int getNX() const { return _nx; };
         int getNY() const { return _ny; };
         int getYInd() const { return _yInd; };
@@ -241,7 +248,7 @@ namespace detail {
         int _nx;
         int _ny;
         int _yInd;
-        std::vector<KernelImagesForRegion::ConstPtr> _regionList;
+        RegionList _regionList;
     };
     
     template <typename OutImageT, typename InImageT>
@@ -251,18 +258,34 @@ namespace detail {
             lsst::afw::math::Kernel const &kernel,
             ConvolutionControl const &convolutionControl);
 
-    template <typename OutImageT, typename InImageT>
-    void convolveRegionWithRecursiveInterpolation(
-            OutImageT &outImage,
-            InImageT const &inImage,
-            KernelImagesForRegion const &region,
-            double maxInterpolationError = 1.0e-5);
-    
+    /**
+     * @brief kernel images used by convolveRegionWithInterpolation
+     */
+    struct ConvolveWithInterpolationWorkingImages {
+    public:
+        typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+        ConvolveWithInterpolationWorkingImages(int width, int height) :
+            leftImage(width, height),
+            rightImage(width, height),
+            leftDeltaImage(width, height),
+            rightDeltaImage(width, height),
+            deltaImage(width, height),
+            kernelImage(width, height)
+        { }
+        Image leftImage;
+        Image rightImage;
+        Image leftDeltaImage;
+        Image rightDeltaImage;
+        Image deltaImage;
+        Image kernelImage;
+    };
+
     template <typename OutImageT, typename InImageT>
     void convolveRegionWithInterpolation(
             OutImageT &outImage,
             InImageT const &inImage,
-            KernelImagesForRegion const &region);
+            KernelImagesForRegion const &region,
+            ConvolveWithInterpolationWorkingImages &workingImages);
 }}}}   // lsst::afw::math::detail
 
 /*
@@ -291,19 +314,19 @@ inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregion
  * @throw lsst::pex::exceptions::InvalidParameterException if image has the wrong dimensions
  */
 inline void lsst::afw::math::detail::KernelImagesForRegion::_insertImage(
-        Location location,          ///< location at which to insert image
-        ImageSumPair &imageSumPair) ///< image and sum to insert
+        Location location,      ///< location at which to insert image
+        ImagePtr imagePtr)      ///< image to insert
 const {
-    ImageConstPtr imagePtr = imageSumPair.first;
     if (imagePtr) {
         if (_kernelPtr->getDimensions() != imagePtr->getDimensions()) {
             std::ostringstream os;
-            os << "image dimensions = ( " << imagePtr->getWidth() << ", " << imagePtr->getHeight()
+            os << "image dimensions = ( " 
+                << imagePtr->getWidth() << ", " << imagePtr->getHeight()
                 << ") != (" << _kernelPtr->getWidth() << ", " << _kernelPtr->getHeight()
                 << ") = kernel dimensions";
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
         }
-        _imageMap.insert(std::make_pair(location, imageSumPair));
+        _imagePtrList[location] = imagePtr;
     }
 }
 
