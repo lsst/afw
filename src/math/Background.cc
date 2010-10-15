@@ -238,7 +238,10 @@ math::UndersampleStyle math::stringToUndersampleStyle(std::string const style) {
         undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
         undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
     }
-    
+
+    if (undersampleStrings.find(style) == undersampleStrings.end()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Understample style not defined: "+style);
+    }
     return undersampleStrings[style];
 }
 

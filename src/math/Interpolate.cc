@@ -106,6 +106,9 @@ math::Interpolate::Style math::stringToInterpStyle(std::string const style) {
     gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = Interpolate::CUBIC_SPLINE_PERIODIC;
     gslInterpTypeStrings["AKIMA_SPLINE"]          = Interpolate::AKIMA_SPLINE;  
     gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = Interpolate::AKIMA_SPLINE_PERIODIC;
+    if ( gslInterpTypeStrings.find(style) == gslInterpTypeStrings.end()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Interp style not found: "+style);
+    }
     return gslInterpTypeStrings[style];
 }
 

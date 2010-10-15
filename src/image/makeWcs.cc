@@ -23,6 +23,7 @@
  */
  
 #include "boost/make_shared.hpp"
+// #include "Eigen/Core.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 
@@ -63,3 +64,18 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     return wcs;
 }
     
+/**
+ * @brief Create a Wcs object from crval, crpix, CD, using CD elements (useful from python)
+ */
+afwImg::Wcs::Ptr afwImg::makeWcs(
+                                 lsst::afw::geom::PointD crval, ///< CRVAL1,2 (ie. the sky origin) in degrees 
+                                 lsst::afw::geom::PointD crpix, ///< CRPIX1,2 (ie. the pixel origin) in pixels
+                                 double CD11,                   ///< CD matrix element 1,1                    
+                                 double CD12,                   ///< CD matrix element 1,2                    
+                                 double CD21,                   ///< CD matrix element 2,1                    
+                                 double CD22                    ///< CD matrix element 2,2                    
+                                ) {
+    Eigen::Matrix2d CD;
+    CD << CD11, CD12, CD21, CD22;
+    return afwImg::Wcs::Ptr(new lsst::afw::image::Wcs(crval, crpix, CD));
+}

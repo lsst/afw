@@ -275,9 +275,9 @@ class CoordTestCase(unittest.TestCase):
 
         # make sure it transforms back ... to machine precision
         self.assertAlmostEqual(sagAGal.toFk5().getRa(afwCoord.DEGREES),
-                               sagAKnownEqu.getRa(afwCoord.DEGREES), 14)
+                               sagAKnownEqu.getRa(afwCoord.DEGREES), 12)
         self.assertAlmostEqual(sagAGal.toFk5().getDec(afwCoord.DEGREES),
-                               sagAKnownEqu.getDec(afwCoord.DEGREES), 14)
+                               sagAKnownEqu.getDec(afwCoord.DEGREES), 12)
         
         
     def testTopocentric(self):
