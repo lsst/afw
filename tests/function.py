@@ -261,9 +261,21 @@ class FunctionTestCase(unittest.TestCase):
         deltaCoeff = 0.3
         allCoeffs = numpy.arange(deltaCoeff, deltaCoeff * (maxOrder + 1) + (deltaCoeff / 2.0), deltaCoeff)
         
+        # test value using coeffs constructor
         for order in range(maxOrder):
             coeffs = allCoeffs[0: order + 1]
             f = afwMath.PolynomialFunction1D(coeffs)
+            for x in numpy.arange(-10.0, 10.1, 1.0):
+                predVal = basic1DPoly(x, coeffs)
+                if not numpy.allclose(predVal, f(x)):
+                    self.fail("%s = %s != %s for x=%s, coeffs=%s" % \
+                        (f.__class__.__name__, f(x), predVal, x, coeffs))
+
+        # test value using order constructor
+        for order in range(maxOrder):
+            coeffs = allCoeffs[0: order + 1]
+            f = afwMath.PolynomialFunction1D(order)
+            f.setParameters(coeffs)
             for x in numpy.arange(-10.0, 10.1, 1.0):
                 predVal = basic1DPoly(x, coeffs)
                 if not numpy.allclose(predVal, f(x)):
@@ -295,9 +307,22 @@ class FunctionTestCase(unittest.TestCase):
         deltaCoeff = 0.3
         allCoeffs = numpy.arange(deltaCoeff, deltaCoeff * (maxCoeffs + 1) + (deltaCoeff / 2.0), deltaCoeff)
         
+        # test values using coeffs constructor
         for numCoeffs in numCoeffsList:
             coeffs = allCoeffs[0: numCoeffs]
             f = afwMath.PolynomialFunction2D(coeffs)
+            for x in numpy.arange(-10.0, 10.1, 2.5):
+                for y in numpy.arange(-10.0, 10.1, 2.5):
+                    predVal = basic2DPoly(x, y, coeffs)
+                    if not numpy.allclose(predVal, f(x, y)):
+                        self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s" % \
+                            (f.__class__.__name__, f(x, y), predVal, x, y, coeffs))
+
+        # test values using order constructor
+        for order, numCoeffs in enumerate(numCoeffsList):
+            coeffs = allCoeffs[0: numCoeffs]
+            f = afwMath.PolynomialFunction2D(order)
+            f.setParameters(coeffs)
             for x in numpy.arange(-10.0, 10.1, 2.5):
                 for y in numpy.arange(-10.0, 10.1, 2.5):
                     predVal = basic2DPoly(x, y, coeffs)
