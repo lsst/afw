@@ -26,6 +26,8 @@
 #include "lsst/afw/math/Statistics.h"
 %}
 
+SWIG_SHARED_PTR(StatisticsControlPtr, lsst::afw::math::StatisticsControl);
+
 %include "lsst/afw/math/Statistics.h"
 
 

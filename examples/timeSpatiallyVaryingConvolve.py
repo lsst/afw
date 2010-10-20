@@ -197,9 +197,11 @@ def run():
     print
     
     if len(sys.argv) < 2:
-        fullInImage = afwImage.MaskedImageF(InputMaskedImagePath)
-        bbox = afwImage.BBox(afwImage.PointI(0, 0), 256, 256)
-        inImage = afwImage.MaskedImageF(fullInImage, bbox, False)
+        inImage = afwImage.MaskedImageF(InputMaskedImagePath)
+        # to get original behavior change True to False:
+        if (False):
+            bbox = afwImage.BBox(afwImage.PointI(0, 0), 256, 256)
+            inImage = afwImage.MaskedImageF(inImage, bbox, False)
     else:
         inImage = afwImage.MaskedImageF(sys.argv[1])
     outImage = afwImage.MaskedImageF(inImage.getDimensions())

@@ -31,14 +31,14 @@ testLib = env.LoadableModuleIncomplete("_testLib", ["testLib.i"],
 dataDir = scons.ProductDir("afwdata")
 if not dataDir:
     print "Warning: afwdata is not set up; not running the tests!"
-else:
+else:    
     # copy AFWDATA_DIR to the test's environment
     env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
     
     if not lsst.daf.persistence.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
         print "WARNING: No database authenticator seen"
         print "Database tests may be skipped or may fail"
-
+    
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
     inFileRamFitsIO1 = os.path.join(dataDir, "fpC-002570-r6-0199_sub.fits")
@@ -50,24 +50,23 @@ else:
         maskIo1 =         "%s_msk.fits" % inFile,
         ramFitsIO =       "%s %s" % (inFileRamFitsIO1, inFileRamFitsIO2),
     )
-
+    
     ignoreList=["testLib.py", "testEigenLib.py",
                 "numpyEigen.py" # broken, but kept until a better fix is available
                 ]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
-
+    
     tests.run("*.cc")
-
+    
     # set up python tests
     for target in tests.run("*.py"):
-        for pkgName in ("detection", "display", "image", "math", "geom"):
+        for pkgName in ("cameraGeom", "coord", "detection", "display", "geom", "image", "math",
+            ): # packages with SWIG library
             env.Depends(target, os.path.join(
-                "#python", "lsst", "afw", pkgName, "_%sLib%s" % (pkgName, env["LDMODULESUFFIX"])))
+                "#python", "lsst", "afw", pkgName, "_%sLib%s" % (pkgName, env["LDMODULESUFFIX"],)))
         if target.endswith("spatialCell.py"):
             env.Depends(target, "_testLib%s" % (env["LDMODULESUFFIX"]))
             env.Depends(target, "testLib.py")
         elif target.endswith("numpyEigen.py"):
             env.Depends(target, "_testEigenLib%s" % (env["LDMODULESUFFIX"]))
             env.Depends(target, "testEigenLib.py")
-        elif os.path.basename(target) == "cameraGeom.py":
-            env.Depends(target, "../python/lsst/afw/cameraGeom/_cameraGeomLib%s" % (env["LDMODULESUFFIX"]))

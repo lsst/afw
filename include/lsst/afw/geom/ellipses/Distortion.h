@@ -212,7 +212,7 @@ inline DistortionEllipse::DistortionEllipse(PointD const & center) :
 inline DistortionEllipse::DistortionEllipse(Distortion const & core, PointD const & center) : 
     BaseEllipse(core,center) {}
 inline DistortionEllipse::DistortionEllipse(BaseEllipse const & other) : 
-    BaseEllipse(other.getCore(),other.getCenter()) {}
+    BaseEllipse(new Distortion(other.getCore()),other.getCenter()) {}
 inline DistortionEllipse::DistortionEllipse(DistortionEllipse const & other) : 
     BaseEllipse(other.getCore(),other.getCenter()) {}
 
