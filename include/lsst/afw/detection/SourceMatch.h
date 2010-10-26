@@ -34,7 +34,8 @@
 #include "boost/tuple/tuple.hpp"
 
 #include "lsst/afw/detection/Source.h"
-
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/afw/formatters/SourceMatchVectorFormatter.h"
 
 namespace lsst { namespace afw { namespace detection {
 
@@ -53,6 +54,26 @@ std::vector<SourceMatch> matchRaDec(SourceSet const &set1, SourceSet const &set2
 std::vector<SourceMatch> matchRaDec(SourceSet const &set, double radius, bool symmetric = true);
 std::vector<SourceMatch> matchXy(SourceSet const &set1, SourceSet const &set2, double radius);
 std::vector<SourceMatch> matchXy(SourceSet const &set, double radius, bool symmetric = true);
+
+
+typedef std::vector<SourceMatch> SourceMatchVector;
+
+class PersistableSourceMatchVector : public lsst::daf::base::Persistable {
+public:
+    typedef boost::shared_ptr<PersistableSourceMatchVector> Ptr;
+    PersistableSourceMatchVector() {}
+    PersistableSourceMatchVector(SourceMatchVector const & matches)
+        : _matches(matches) {}
+    ~PersistableSourceMatchVector(){_matches.clear();}
+        
+    SourceMatchVector getSourceMatches() const {return _matches; }
+    void setSourceMatches(SourceMatchVector const & matches) {_matches = matches; }
+    
+private:
+
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceMatchVectorFormatter)
+    SourceMatchVector _matches;
+};
 
 }}} // namespace lsst::afw::detection
 
