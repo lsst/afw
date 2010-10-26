@@ -328,7 +328,11 @@ public:
 
             for (lsst::pex::policy::Policy::StringArray::iterator ptr = names.begin();
                  ptr != names.end(); ++ptr) {
-                addAlgorithm(*ptr);
+                lsst::pex::policy::Policy::ConstPtr subPol = policy->getPolicy(*ptr);
+
+                if (!subPol->exists("enabled") || subPol->getBool("enabled")) {
+                    addAlgorithm(*ptr);
+                }
             }
 
             configure(*policy);
@@ -376,15 +380,13 @@ public:
 
         return values;
     }
-    /// Actually measure im using all requested algorithms, returning the result
+    /// Configure the behaviour of the algorithm
     bool configure(lsst::pex::policy::Policy const& policy ///< The Policy to configure algorithms
                   ) {
         bool value = true;
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
-            if (policy.exists(ptr->first) &&
-                (!policy.getPolicy(ptr->first)->exists("enabled") ||
-                 policy.getPolicy(ptr->first)->getBool("enabled"))) {
+            if (policy.exists(ptr->first)) {
                 lsst::pex::policy::Policy::ConstPtr subPol = policy.getPolicy(ptr->first);
                 value = ptr->second.second(*subPol) && value; // don't short-circuit the call
             }
