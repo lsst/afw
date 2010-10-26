@@ -64,13 +64,12 @@ public:
     PersistableSourceMatchVector() {}
     PersistableSourceMatchVector(SourceMatchVector const & matches)
         : _matches(matches) {}
-    ~PersistableSourceMatchVector(){_matches.clear();}
+    ~PersistableSourceMatchVector() { _matches.clear(); }
         
-    SourceMatchVector getSourceMatches() const {return _matches; }
+    SourceMatchVector getSourceMatches() const { return _matches; }
     void setSourceMatches(SourceMatchVector const & matches) {_matches = matches; }
     
 private:
-
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceMatchVectorFormatter)
     SourceMatchVector _matches;
 };

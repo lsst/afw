@@ -38,17 +38,15 @@
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
-#include "lsst/afw/formatters/SourceFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/detection/Source.h"
+#include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/afw/formatters/SourceMatchVectorFormatter.h"
 
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
 
 using lsst::daf::base::Persistable;
-using lsst::daf::persistence::BoostStorage;
-using lsst::daf::persistence::DbStorage;
-using lsst::daf::persistence::DbTsvStorage;
+using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 using lsst::afw::detection::SourceMatch;
@@ -56,9 +54,6 @@ using lsst::afw::detection::PersistableSourceMatchVector;
 using lsst::afw::image::Filter;
 
 namespace form = lsst::afw::formatters;
-
-
-namespace lsst { namespace afw { namespace formatters { namespace {
 
 // -- SourceMatchVectorFormatter ----------------
 
@@ -104,7 +99,7 @@ void form::SourceMatchVectorFormatter::write(
         FitsStorage* bs = dynamic_cast<FitsStorage *>(storage.get());
 
         printf("SourceMatchVectorFormatter: persisting to path \"%s\"\n",
-               bs->getPath());
+               bs->getPath().c_str());
         
     } else {
         throw LSST_EXCEPT(ex::InvalidParameterException, 
@@ -130,11 +125,10 @@ Persistable* form::SourceMatchVectorFormatter::read(
     return p.release();
 }
 
-/*
- void form::SourceMatchVectorFormatter::update(Persistable*, 
- Storage::Ptr, lsst::daf::base::PropertySet::Ptr
- ) {
- throw LSST_EXCEPT(ex::RuntimeErrorException, 
- "SourceMatchVectorFormatter: updates not supported");
- }
- */
+void form::SourceMatchVectorFormatter::update(Persistable*, 
+                                              Storage::Ptr, lsst::daf::base::PropertySet::Ptr
+                                              ) {
+    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                      "SourceMatchVectorFormatter: updates not supported");
+}
+

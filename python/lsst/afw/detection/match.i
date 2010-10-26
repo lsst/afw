@@ -82,5 +82,12 @@
     }
 }
 
-%template(SourceMatchSet) std::vector<lsst::afw::detection::SourceMatch>;
+%template(SourceMatchVector) std::vector<lsst::afw::detection::SourceMatch>;
 
+// Copied from source.i:
+
+SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
+                        lsst::daf::base::Persistable,
+                        lsst::afw::detection::PersistableSourceMatchVector);
+
+%lsst_persistable(lsst::afw::detection::PersistableSourceMatchVector);

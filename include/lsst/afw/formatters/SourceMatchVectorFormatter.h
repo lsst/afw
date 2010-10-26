@@ -58,13 +58,11 @@ public:
         lsst::daf::persistence::Storage::Ptr,
         lsst::daf::base::PropertySet::Ptr
     );
-    /*
-     virtual void update(
-     lsst::daf::base::Persistable*,
-     lsst::daf::persistence::Storage::Ptr,
-     lsst::daf::base::PropertySet::Ptr
-     );
-     */
+    virtual void update(
+        lsst::daf::base::Persistable*,
+        lsst::daf::persistence::Storage::Ptr,
+        lsst::daf::base::PropertySet::Ptr
+        );
 
     /*
     template <class Archive>
