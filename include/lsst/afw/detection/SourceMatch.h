@@ -35,7 +35,11 @@
 
 #include "lsst/afw/detection/Source.h"
 #include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/formatters/SourceMatchVectorFormatter.h"
+
+// forward declaration
+namespace lsst { namespace afw { namespace formatters {
+    class SourceMatchVectorFormatter;
+}}}
 
 namespace lsst { namespace afw { namespace detection {
 

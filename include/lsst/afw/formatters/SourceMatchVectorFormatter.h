@@ -39,6 +39,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/daf/persistence/FitsStorage.h"
 
 namespace lsst {
 namespace afw {
@@ -72,6 +73,10 @@ public:
         lsst::daf::base::Persistable *
     );
      */
+
+    void writeFits(const lsst::afw::detection::PersistableSourceMatchVector* p,
+                   lsst::daf::persistence::FitsStorage* fs,
+                   lsst::daf::base::PropertySet::Ptr additionalData);
 
     lsst::pex::policy::Policy::Ptr _policy;
 
