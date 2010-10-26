@@ -13,7 +13,7 @@ import lsst.pex.logging as logging
 import lsst.pex.policy as policy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-import lsst.afw.detection as afwDetect
+import lsst.afw.detection as afwDet
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
@@ -41,7 +41,7 @@ def roundTripSourceMatch(storagetype, filename, matchlist):
     storage2 = persistence.getRetrieveStorage(storagetype, loc)
     storageList2.append(storage2)
     matchlistptr = persistence.unsafeRetrieve("PersistableSourceMatchVector", storageList2, additionalData)
-    matchlist2 = afwDetect.PersistableSourceMatchVector.swigConvert(matchlistptr)
+    matchlist2 = afwDet.PersistableSourceMatchVector.swigConvert(matchlistptr)
 
     return matchlist2
 
@@ -49,8 +49,10 @@ class matchlistTestCase(unittest.TestCase):
     def setUp(self):
         self.smv = afwDet.SourceMatchVector()
         Nmatch = 20
-        self.refids = [long(random.random() * 2**64) for i in range(Nmatch)]
-        print 'refids:', refids
+        #self.refids = [long(random.random() * 2**64) for i in range(Nmatch)]
+        #self.refids = [int(random.random() * 2**64) for i in range(Nmatch)]
+        self.refids = [int(random.random() * 2**31) for i in range(Nmatch)]
+        print 'refids:', self.refids
         for m in range(Nmatch):
             sm = afwDet.SourceMatch()
             s1 = afwDet.Source()
@@ -63,15 +65,15 @@ class matchlistTestCase(unittest.TestCase):
             self.smv.push_back(sm)
 
         self.psmv = afwDet.PersistableSourceMatchVector(self.smv)
-        self.matchlist = roundTrimSourceMatch('FitsStorage', 'tests/data/matchlist.fits',
+        self.matchlist = roundTripSourceMatch('FitsStorage', 'tests/data/matchlist.fits',
                                               self.psmv)
 
     def tearDown(self):
         pass
 
-    #def testKernel(self):
-    #    # self.assertEqual(stats.getValue(afwMath.MAX), 0.0)
-    #    pass
+    def testStuff(self):
+        #    # self.assertEqual(stats.getValue(afwMath.MAX), 0.0)
+        pass
 
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= silly boilerplate -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

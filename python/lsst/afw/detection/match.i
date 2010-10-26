@@ -28,6 +28,9 @@
 #include "lsst/afw/detection/SourceMatch.h"
 %}
 
+SWIG_SHARED_PTR(PersistableSourceMatchVector,
+                lsst::afw::detection::PersistableSourceMatchVector);
+
 %include "lsst/afw/detection/SourceMatch.h"
 
 %extend lsst::afw::detection::SourceMatch {
