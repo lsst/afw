@@ -132,7 +132,7 @@ class BackgroundTestCase(unittest.TestCase):
             
             # test getPixel()
             testval = backobj.getPixel(naxis1/2, naxis2/2)
-            self.assertEqual( testval, centerValue )
+            self.assertAlmostEqual( testval, centerValue, places=12 )
             self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
             # test getImage() by checking the center pixel

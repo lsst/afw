@@ -4,6 +4,7 @@
 #include <map>
 #include "boost/format.hpp"
 #include "boost/make_shared.hpp"
+#include "boost/serialization/export.hpp"
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/variant.hpp"
 #include "boost/serialization/vector.hpp"
@@ -369,6 +370,20 @@ private:
     // T's schema
     Schema::Ptr _mySchema;
 };
+
+#define LSST_SERIALIZE_PARENT(c) \
+    friend class boost::serialization::access; \
+    template <class Archive> \
+    void serialize(Archive& ar, unsigned int const version) { \
+        boost::serialization::base_object< c >(*this); \
+    }
+
+#ifdef SWIG
+#define LSST_REGISTER_SERIALIZER(c) /**/
+#else
+#define LSST_REGISTER_SERIALIZER(c) \
+    BOOST_CLASS_EXPORT_GUID(c, #c)
+#endif
 
 /// Print v to os, using dynamic dispatch
 template<typename T>

@@ -141,7 +141,8 @@ class BoxITestCase(unittest.TestCase):
         self.assertEqual(box.getDimensions(), (pmax - pmin + geom.ExtentI(1)))
         self.assertEqual(box.getWidth(), (xmax - xmin  + 1))
         self.assertEqual(box.getHeight(), (ymax - ymin  + 1))
-        self.assertEqual(box.getArea(), box.getWidth() * box.getHeight())
+        self.assertAlmostEqual(box.getArea(), box.getWidth() * box.getHeight(),
+                places=14)
         
     def testRelations(self):
         box = geom.BoxI(geom.makePointI(-2,-3), geom.makePointI(2,1), True)

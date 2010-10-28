@@ -1,6 +1,8 @@
 #if !defined(LSST_AFW_DETECTION_SHAPE_H)
 #define LSST_AFW_DETECTION_SHAPE_H 1
 
+#include <boost/serialization/export.hpp>
+
 #include "lsst/afw/detection/Measurement.h"
 
 namespace lsst { namespace afw { namespace detection {
@@ -104,7 +106,12 @@ public:
     virtual ::std::ostream &output(std::ostream &os) const {
         return os << "(" << getX() << "+-" << getXErr() << ", " << getY() << "+-" << getYErr() << ")";
     }
+
+private:
+    LSST_SERIALIZE_PARENT(lsst::afw::detection::Measurement<Shape>)
 };
 }}}
+
+LSST_REGISTER_SERIALIZER(lsst::afw::detection::Shape)
 
 #endif
