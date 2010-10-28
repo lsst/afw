@@ -11,8 +11,15 @@
 
 #include "boost/any.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/serialization/shared_ptr.hpp"
+#include "boost/serialization/vector.hpp"
 
 namespace lsst { namespace afw { namespace detection {
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
+
 /**
  * Describe the schema of what we're measuring
  *
@@ -119,6 +126,19 @@ public:
 
     virtual std::ostream &output(std::ostream &os) const;
 private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, unsigned int const version) {
+        ar & const_cast<std::string&>(_name);
+        ar & const_cast<unsigned int&>(_index);
+        ar & const_cast<Schema::Type&>(_type);
+        ar & const_cast<int&>(_dimen);
+        ar & const_cast<std::string&>(_units);
+        ar & _component;
+        ar & _entries;
+    }
+
+
     // used if this is a leaf node
     std::string const _name;
     unsigned int const _index;
