@@ -4,6 +4,11 @@
 #include <map>
 #include "boost/format.hpp"
 #include "boost/make_shared.hpp"
+#include "boost/serialization/export.hpp"
+#include "boost/serialization/shared_ptr.hpp"
+#include "boost/serialization/variant.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/variant.hpp"
 
 #include "lsst/base.h"
 #include "lsst/utils/Demangle.h"
@@ -11,7 +16,23 @@
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/detection/Schema.h"
 
+namespace {
+    class VariantVisitor : public boost::static_visitor<> {
+    public:
+        VariantVisitor(boost::any& a) : _any(a) { }
+        template <typename Variant>
+        void operator()(Variant& var) const {
+            _any = var;
+        }
+        boost::any& _any;
+    };
+}
+
 namespace lsst { namespace afw { namespace detection {
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
 
 /************************************************************************************************************/
 /*
@@ -283,6 +304,59 @@ private:
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, msg.str());
     }
 
+
+    /// boost::serialization methods
+    friend class boost::serialization::access;
+
+    template <class Archive> void serialize(Archive& ar,
+              unsigned int const version) {
+        size_t dataLen;
+        if (Archive::is_saving::value) {
+            dataLen = _data.size();
+        }
+        ar & make_nvp("dataLen", dataLen);
+        if (Archive::is_loading::value) {
+            _data.reserve(dataLen);
+        }
+        boost::variant<char, short, int, long, float, double> var;
+        for (size_t i = 0; i < dataLen; ++i) {
+            if (Archive::is_saving::value) {
+                if (_data[i].type() == typeid(char)) {
+                    var = boost::any_cast<char>(_data[i]);
+                }
+                else if (_data[i].type() == typeid(short)) {
+                    var = boost::any_cast<short>(_data[i]);
+                }
+                else if (_data[i].type() == typeid(int)) {
+                    var = boost::any_cast<int>(_data[i]);
+                }
+                else if (_data[i].type() == typeid(long)) {
+                    var = boost::any_cast<long>(_data[i]);
+                }
+                else if (_data[i].type() == typeid(float)) {
+                    var = boost::any_cast<float>(_data[i]);
+                }
+                else if (_data[i].type() == typeid(double)) {
+                    var = boost::any_cast<double>(_data[i]);
+                }
+                else {
+                    std::ostringstream msg;
+                    msg << "Unable to convert measurement for persistence: type "
+                        << _data[i].type().name() << " at position " << i;
+                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, msg.str());
+                }
+            }
+            ar & make_nvp("data", var);
+            if (Archive::is_loading::value) {
+                boost::apply_visitor(VariantVisitor(_data[i]), var);
+            }
+        }
+
+        ar & make_nvp("values", _measuredValues);
+        ar & make_nvp("schema", _mySchema);
+    }
+
+
     typedef std::vector<boost::any> DataStore;
     // The elements of T (if a leaf)
     DataStore _data;
@@ -296,6 +370,20 @@ private:
     // T's schema
     Schema::Ptr _mySchema;
 };
+
+#define LSST_SERIALIZE_PARENT(c) \
+    friend class boost::serialization::access; \
+    template <class Archive> \
+    void serialize(Archive& ar, unsigned int const version) { \
+        boost::serialization::base_object< c >(*this); \
+    }
+
+#ifdef SWIG
+#define LSST_REGISTER_SERIALIZER(c) /**/
+#else
+#define LSST_REGISTER_SERIALIZER(c) \
+    BOOST_CLASS_EXPORT_GUID(c, #c)
+#endif
 
 /// Print v to os, using dynamic dispatch
 template<typename T>

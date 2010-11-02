@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "boost/shared_ptr.hpp"
+#include "boost/serialization/shared_ptr.hpp"
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
@@ -182,6 +183,7 @@ private :
         fpSerialize(ar, _skyErr);
 
         BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
+        ar & _astrom & _photom & _shape;
     }
 
     friend class boost::serialization::access;
