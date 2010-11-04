@@ -21,7 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
 
 %{
 #include "lsst/afw/detection/Source.h"
@@ -32,6 +31,12 @@ SWIG_SHARED_PTR(PersistableSourceMatchVector,
                 lsst::afw::detection::PersistableSourceMatchVector);
 
 %include "lsst/afw/detection/SourceMatch.h"
+
+%template(SourceMatchVector) std::vector<lsst::afw::detection::SourceMatch>;
+
+SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
+                        lsst::daf::base::Persistable,
+                        lsst::afw::detection::PersistableSourceMatchVector);
 
 %extend lsst::afw::detection::SourceMatch {
     %pythoncode {
@@ -84,13 +89,5 @@ SWIG_SHARED_PTR(PersistableSourceMatchVector,
 
     }
 }
-
-%template(SourceMatchVector) std::vector<lsst::afw::detection::SourceMatch>;
-
-// Copied from source.i:
-
-SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
-                        lsst::daf::base::Persistable,
-                        lsst::afw::detection::PersistableSourceMatchVector);
 
 %lsst_persistable(lsst::afw::detection::PersistableSourceMatchVector);
