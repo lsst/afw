@@ -195,6 +195,10 @@ namespace form = lsst::afw::formatters;
 
 // -- SourceMatchVectorFormatter ----------------
 
+// constants
+const std::string form::SourceMatchVectorFormatter::REF_ID_COLUMN_NAME("REF_ID");
+const std::string form::SourceMatchVectorFormatter::SOURCE_ID_COLUMN_NAME("SOURCE_ID");
+
 form::SourceMatchVectorFormatter::SourceMatchVectorFormatter(Policy::Ptr const & policy) :
     lsst::daf::persistence::Formatter(typeid(this)),
     _policy(policy)
@@ -219,7 +223,7 @@ lsst::daf::persistence::FormatterRegistration form::SourceMatchVectorFormatter::
 void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
                                                 FitsStorage* fs,
                                                 lsst::daf::base::PropertySet::Ptr metadata) {
-    printf("SourceMatchVectorFormatter: persisting to path \"%s\"\n", fs->getPath().c_str());
+    //printf("SourceMatchVectorFormatter: persisting to path \"%s\"\n", fs->getPath().c_str());
 
     cfitsio::fitsfile* fitsfile = NULL;
     int status;
@@ -234,7 +238,7 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
     if (fits_get_num_hdus(fitsfile, &nhdu, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
     }
-    printf("%i HDUs\n", nhdu);
+    //printf("%i HDUs\n", nhdu);
 
     if (nhdu != 2) {
         std::ostringstream os;
@@ -246,14 +250,14 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
     }
 
-    int hdu = -1;
-    printf("Current HDU: %i\n", fits_get_hdu_num(fitsfile, &hdu));
+    //int hdu = -1;
+    //printf("Current HDU: %i\n", fits_get_hdu_num(fitsfile, &hdu));
 
     int hdutype = -1;
     if (fits_get_hdu_type(fitsfile, &hdutype, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
     }
-    printf("Current HDU type: %i (want %i)\n", hdutype, BINARY_TBL);
+    //printf("Current HDU type: %i (want %i)\n", hdutype, BINARY_TBL);
 
     if (hdutype != BINARY_TBL) {
         throw LSST_EXCEPT(FitsException, "Expected FITS binary table extension; got type code " + hdutype);
@@ -263,22 +267,23 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
     if (fits_get_num_rows(fitsfile, &nrows, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
-    printf("Table has %i rows\n", (int)nrows);
+    //printf("Table has %i rows\n", (int)nrows);
 
     int ncols;
     if (fits_get_num_cols(fitsfile, &ncols, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
-    printf("Table has %i columns\n", ncols);
+    //printf("Table has %i columns\n", ncols);
     if (ncols != 2) {
         throw LSST_EXCEPT(FitsException, "Expected 2 columns; got " + ncols);
     }
 
     int refcol;
-    std::string cname0 = "REF_ID";
-    std::string cname1 = "SOURCE_ID";
-    char* cname = strdup(cname0.c_str());
-    // HACK -- make "REF_ID" and "SOURCE_ID" constants somewhere...
+    std::string cname0 = REF_ID_COLUMN_NAME;
+    std::string cname1 = SOURCE_ID_COLUMN_NAME;
+    char* cname;
+
+    cname = strdup(cname0.c_str());
     if (fits_get_colnum(fitsfile, CASEINSEN, cname, &refcol, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
@@ -289,8 +294,7 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
     free(cname);
-
-    printf("Reference ID column: %i.  Source ID column: %i\n", refcol, srccol);
+    //printf("Reference ID column: %i.  Source ID column: %i\n", refcol, srccol);
 
     int coltype;
     long repeat;
@@ -341,7 +345,7 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
 		m.second = s2;
 		m.distance = 0.0;
 		smv.push_back(m);
-        printf("  %li  =>  %li\n", (long)refids[i], (long)srcids[i]);
+        //printf("  %li  =>  %li\n", (long)refids[i], (long)srcids[i]);
     }
     p->setSourceMatches(smv);
 
@@ -408,8 +412,8 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
     int ncols = 2;
     int result;
     std::string coltype = "K";
-    std::string cname0 = "REF_ID";
-    std::string cname1 = "SOURCE_ID";
+    std::string cname0 = REF_ID_COLUMN_NAME;
+    std::string cname1 = SOURCE_ID_COLUMN_NAME;
     char* tform[] = { strdup(coltype.c_str()), strdup(coltype.c_str()) };
     char* ttype[] = { strdup(cname0.c_str()),  strdup(cname1.c_str()) };
 
