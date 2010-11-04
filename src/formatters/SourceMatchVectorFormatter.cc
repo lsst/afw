@@ -245,8 +245,8 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
     printf("Persisting a list of %i sources to file \"%s\"\n",
            (int)matches.size(), fs->getPath().c_str());
     for (size_t i=0; i<matches.size(); i++) {
-        printf("  %i: %li ==> %li\n", (int)i, matches[i].first->getSourceId(),
-               matches[i].second->getSourceId());
+        printf("  %i: %li ==> %li\n", (int)i, (long)matches[i].first->getSourceId(),
+               (long)matches[i].second->getSourceId());
     }
 
     // Much of this is stolen from afw/image/fits/fits_io_private.h --
@@ -313,7 +313,8 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
     for (int i=0; i<nrows; i++)
         values[i] = matches[i].first->getSourceId();
     // fitsfile, datatype, column, firstrow, firstelement, nelements, data, status
-    result = fits_write_col(fitsfile, TLONGLONG, 0, 0, 0, nrows, values, &status);
+    // In cfitsio's bizarro world, most things are 1-indexed (row, column, element)
+    result = fits_write_col(fitsfile, TLONGLONG, 1, 1, 1, nrows, values, &status);
     if (result) {
         free(values);
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
@@ -321,7 +322,7 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
 
     for (int i=0; i<nrows; i++)
         values[i] = matches[i].second->getSourceId();
-    result = fits_write_col(fitsfile, TLONGLONG, 1, 0, 0, nrows, values, &status);
+    result = fits_write_col(fitsfile, TLONGLONG, 2, 1, 1, nrows, values, &status);
     free(values);
     if (result) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
