@@ -323,7 +323,7 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
     for (int i=0; i<nrows; i++)
         values[i] = matches[i].second->getSourceId();
     result = fits_write_col(fitsfile, TLONGLONG, 2, 1, 1, nrows, values, &status);
-    free(values);
+    delete[] values;
     if (result) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
