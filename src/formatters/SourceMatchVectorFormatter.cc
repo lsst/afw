@@ -39,6 +39,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/formatters/SourceMatchVectorFormatter.h"
 
@@ -185,6 +186,7 @@ using lsst::daf::base::Persistable;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
+using lsst::afw::detection::Source;
 using lsst::afw::detection::SourceMatch;
 using lsst::afw::detection::SourceMatchVector;
 using lsst::afw::detection::PersistableSourceMatchVector;
@@ -213,51 +215,168 @@ lsst::daf::persistence::FormatterRegistration form::SourceMatchVectorFormatter::
     createInstance
 );
 
-/*
-readFits():
 
-            if (fits_open_file(&_fd_s, filename.c_str(), READONLY, &status) != 0) {
-                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
-            }
+void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
+                                                FitsStorage* fs,
+                                                lsst::daf::base::PropertySet::Ptr metadata) {
+    printf("SourceMatchVectorFormatter: persisting to path \"%s\"\n", fs->getPath().c_str());
 
- fits_open_table ?
+    cfitsio::fitsfile* fitsfile = NULL;
+    int status;
+    std::string filename = fs->getPath();
 
- fits_moveabs_hdu
- fits_get_num_hdus
- fits_get_hdu_type
+    status = 0;
+    if (fits_open_file(&fitsfile, filename.c_str(), READONLY, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+    }
 
- fits_get_num_rows
- fits_get_num_cols
- fits_get_colnum
- fits_get_colname
- fits_get_coltype
+    int nhdu = 0;
+    if (fits_get_num_hdus(fitsfile, &nhdu, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+    }
+    printf("%i HDUs\n", nhdu);
 
- fits_read_col
+    if (nhdu != 2) {
+        std::ostringstream os;
+        os << "readFits: expected 2 HDUs, got " << nhdu;
+        throw LSST_EXCEPT(FitsException, os.str());
+    }
 
- */
+    if (fits_movabs_hdu(fitsfile, 2, NULL, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+    }
 
+    int hdu = -1;
+    printf("Current HDU: %i\n", fits_get_hdu_num(fitsfile, &hdu));
+
+    int hdutype = -1;
+    if (fits_get_hdu_type(fitsfile, &hdutype, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+    }
+    printf("Current HDU type: %i (want %i)\n", hdutype, BINARY_TBL);
+
+    if (hdutype != BINARY_TBL) {
+        throw LSST_EXCEPT(FitsException, "Expected FITS binary table extension; got type code " + hdutype);
+    }
+
+    long nrows;
+    if (fits_get_num_rows(fitsfile, &nrows, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+    printf("Table has %i rows\n", (int)nrows);
+
+    int ncols;
+    if (fits_get_num_cols(fitsfile, &ncols, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+    printf("Table has %i columns\n", ncols);
+    if (ncols != 2) {
+        throw LSST_EXCEPT(FitsException, "Expected 2 columns; got " + ncols);
+    }
+
+    int refcol;
+    std::string cname0 = "REF_ID";
+    std::string cname1 = "SOURCE_ID";
+    char* cname = strdup(cname0.c_str());
+    // HACK -- make "REF_ID" and "SOURCE_ID" constants somewhere...
+    if (fits_get_colnum(fitsfile, CASEINSEN, cname, &refcol, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+    free(cname);
+    int srccol;
+    cname = strdup(cname1.c_str());
+    if (fits_get_colnum(fitsfile, CASEINSEN, cname, &srccol, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+    free(cname);
+
+    printf("Reference ID column: %i.  Source ID column: %i\n", refcol, srccol);
+
+    int coltype;
+    long repeat;
+    if (fits_get_coltype(fitsfile, refcol, &coltype, &repeat, NULL, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+    if (coltype != TLONGLONG) {
+        throw LSST_EXCEPT(FitsException, "Expected REF_ID column to be type TLONGLONG, got code " + coltype);
+    }
+    if (repeat != 1) {
+        throw LSST_EXCEPT(FitsException, "Expected REF_ID column to be a scalar, but got repeat count " + repeat);
+    }
+
+    if (fits_get_coltype(fitsfile, srccol, &coltype, &repeat, NULL, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+    if (coltype != TLONGLONG) {
+        throw LSST_EXCEPT(FitsException, "Expected SOURCE_ID column to be type TLONGLONG, got code " + coltype);
+    }
+    if (repeat != 1) {
+        throw LSST_EXCEPT(FitsException, "Expected SOURCE_ID column to be a scalar, but got repeat count " + repeat);
+    }
+
+    int64_t* refids = new int64_t[nrows];
+    int64_t nulval = -1;
+    int anynul = 0;
+
+    if (fits_read_col(fitsfile, TLONGLONG, refcol, 1, 1, nrows, &nulval, refids,
+                      &anynul, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+
+    int64_t* srcids = new int64_t[nrows];
+
+    if (fits_read_col(fitsfile, TLONGLONG, srccol, 1, 1, nrows, &nulval, srcids,
+                      &anynul, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+
+	SourceMatchVector smv;
+    for (int i=0; i<nrows; i++) {
+		Source::Ptr s1(new Source());
+		s1->setSourceId(refids[i]);
+		Source::Ptr s2(new Source());
+		s2->setSourceId(srcids[i]);
+		SourceMatch m;
+		m.first = s1;
+		m.second = s2;
+		m.distance = 0.0;
+		smv.push_back(m);
+        printf("  %li  =>  %li\n", (long)refids[i], (long)srcids[i]);
+    }
+    p->setSourceMatches(smv);
+
+    delete[] refids;
+    delete[] srcids;
+
+    status = 0;
+    if (cfitsio::fits_close_file(fitsfile, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+}
 
 void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVector* p,
                                                  FitsStorage* fs,
                                                  lsst::daf::base::PropertySet::Ptr metadata) {
     SourceMatchVector matches = p->getSourceMatches();
 
-    printf("Persisting a list of %i sources to file \"%s\"\n",
-           (int)matches.size(), fs->getPath().c_str());
-    for (size_t i=0; i<matches.size(); i++) {
-        printf("  %i: %li ==> %li\n", (int)i, (long)matches[i].first->getSourceId(),
-               (long)matches[i].second->getSourceId());
-    }
+    /*
+     printf("Persisting a list of %i sources to file \"%s\"\n",
+     (int)matches.size(), fs->getPath().c_str());
+     for (size_t i=0; i<matches.size(); i++) {
+     printf("  %i: %li ==> %li\n", (int)i, (long)matches[i].first->getSourceId(),
+     (long)matches[i].second->getSourceId());
+     }
+     */
 
-    // Much of this is stolen from afw/image/fits/fits_io_private.h --
+    // FIXME -- Much of this is stolen from afw/image/fits/fits_io_private.h --
     // should be refactored!!!
 
     cfitsio::fitsfile* fitsfile = NULL;
     int status;
-    //char* fn = fs->getPath().c_str();
     std::string filename = fs->getPath();
 
-    (void)unlink(filename.c_str()); // cfitsio doesn't like over-writing files
+    // cfitsio doesn't like over-writing files
+    (void)unlink(filename.c_str());
 
     status = 0;
     if (fits_create_file(&fitsfile, filename.c_str(), &status)) {
@@ -289,8 +408,8 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
     int ncols = 2;
     int result;
     std::string coltype = "K";
-    std::string cname0 = "SOURCE_ID";
-    std::string cname1 = "REF_ID";
+    std::string cname0 = "REF_ID";
+    std::string cname1 = "SOURCE_ID";
     char* tform[] = { strdup(coltype.c_str()), strdup(coltype.c_str()) };
     char* ttype[] = { strdup(cname0.c_str()),  strdup(cname1.c_str()) };
 
@@ -310,16 +429,18 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
 
     int nrows = matches.size();
     int64_t* values = new int64_t[nrows];
+    // Grab the "first" object IDs -- by convention, "first" is the reference catalog object.
     for (int i=0; i<nrows; i++)
         values[i] = matches[i].first->getSourceId();
-    // fitsfile, datatype, column, firstrow, firstelement, nelements, data, status
     // In cfitsio's bizarro world, most things are 1-indexed (row, column, element)
+    // fits_write_col(fitsfile, datatype, column, firstrow, firstelement, nelements, data, status)
     result = fits_write_col(fitsfile, TLONGLONG, 1, 1, 1, nrows, values, &status);
     if (result) {
         free(values);
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
 
+    // Grab the "second" object IDs -- by convention, "second" is the image source.
     for (int i=0; i<nrows; i++)
         values[i] = matches[i].second->getSourceId();
     result = fits_write_col(fitsfile, TLONGLONG, 2, 1, 1, nrows, values, &status);
@@ -355,14 +476,11 @@ void form::SourceMatchVectorFormatter::write(
 
     if (typeid(*storage) == typeid(FitsStorage)) {
         FitsStorage* bs = dynamic_cast<FitsStorage *>(storage.get());
-
-        printf("SourceMatchVectorFormatter: persisting to path \"%s\"\n",
-               bs->getPath().c_str());
+        //printf("SourceMatchVectorFormatter: persisting to path \"%s\"\n", bs->getPath().c_str());
         writeFits(p, bs, additionalData);
 
     } else {
-        throw LSST_EXCEPT(ex::InvalidParameterException, 
-                          "Storage type is not supported"); 
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Storage type is not supported"); 
     }
 }
 
@@ -377,9 +495,12 @@ Persistable* form::SourceMatchVectorFormatter::read(
     std::auto_ptr<PersistableSourceMatchVector> p(new PersistableSourceMatchVector);
     
     if (typeid(*storage) == typeid(FitsStorage)) {
+        FitsStorage* bs = dynamic_cast<FitsStorage *>(storage.get());
+        //printf("SourceMatchVectorFormatter: unpersisting from path \"%s\"\n", bs->getPath().c_str());
+        readFits(p.get(), bs, additionalData);
+
     } else {
-        throw LSST_EXCEPT(ex::InvalidParameterException, 
-                          "Storage type is not supported");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Storage type is not supported");
     }
     return p.release();
 }

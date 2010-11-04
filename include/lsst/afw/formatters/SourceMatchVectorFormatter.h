@@ -78,6 +78,10 @@ public:
                    lsst::daf::persistence::FitsStorage* fs,
                    lsst::daf::base::PropertySet::Ptr additionalData);
 
+    void readFits(lsst::afw::detection::PersistableSourceMatchVector* p,
+                  lsst::daf::persistence::FitsStorage* fs,
+                  lsst::daf::base::PropertySet::Ptr additionalData);
+
     lsst::pex::policy::Policy::Ptr _policy;
 
     explicit SourceMatchVectorFormatter(lsst::pex::policy::Policy::Ptr const & policy);
