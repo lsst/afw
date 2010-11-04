@@ -86,14 +86,3 @@ BOOST_AUTO_TEST_CASE(persistUnpersistMatchList) {
 
 }
 
-/*
-int main(int argc, char *argv[]) {
-    try {
-        test();
-    } catch (std::exception const &e) {
-        clog << e.what() << endl;
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
-}
- */
