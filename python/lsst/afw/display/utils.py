@@ -213,7 +213,7 @@ class Mosaic(object):
                 if not label:
                     continue
                     
-                ds9.dot(label, self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
+                ds9.dot(str(label), self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels

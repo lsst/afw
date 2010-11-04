@@ -193,8 +193,8 @@ class dgPsfTestCase(unittest.TestCase):
         #
         diff = type(kIm)(kIm, True); diff -= dgIm
         stats = afwMath.makeStatistics(diff, afwMath.MAX | afwMath.MIN)
-        self.assertEqual(stats.getValue(afwMath.MAX), 0.0)
-        self.assertEqual(stats.getValue(afwMath.MIN), 0.0)
+        self.assertAlmostEqual(stats.getValue(afwMath.MAX), 0.0, places=16)
+        self.assertAlmostEqual(stats.getValue(afwMath.MIN), 0.0, places=16)
 
         if display:
             mos = displayUtils.Mosaic()

@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief Implementation of the Class MaskedImage
@@ -93,7 +93,7 @@ namespace image {
         typedef lsst::afw::image::Image<VariancePixelT> Variance; // These need to be here, and in this order, as
         typedef lsst::afw::image::Image<ImagePixelT> Image;       // "typedef Image::Ptr ImagePtr;" confuses swig (it can't
         typedef lsst::afw::image::Mask<MaskPixelT> Mask;          // find ImagePtr) and we can't use Image<> after these typedefs
-        
+
         typedef detail::MaskedImage_tag image_category;
 
 #if !defined(SWIG)
@@ -124,7 +124,7 @@ namespace image {
         typedef lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> SinglePixel;
 
         /************************************************************************************************************/
-        /// The base class for MaskedImageIterators (const and non-const)        
+        /// The base class for MaskedImageIterators (const and non-const)
         template<typename ImageIterator, typename MaskIterator, typename VarianceIterator,
                  template<typename> class Ref=Reference>
         class MaskedImageIteratorBase {
@@ -148,7 +148,7 @@ namespace image {
             typename Ref<typename Image::Pixel>::type image() {
                 return _iter->template get<0>()[0];
             }
-        
+
             /// Return (a reference to) the mask part of the Pixel pointed at by the iterator
             typename Ref<typename Mask::Pixel>::type mask() {
                 return _iter->template get<1>()[0];
@@ -158,13 +158,13 @@ namespace image {
             typename Ref<typename Variance::Pixel>::type variance() {
                 return _iter->template get<2>()[0];
             }
-            
+
             /// Return the underlying iterator tuple
             /// \note not really for public consumption;  could be made protected
             const IMV_iterator_tuple get_iterator_tuple() const {
                 return _iter.get_iterator_tuple();
             }
-    
+
             /// Increment the iterator by \c delta
             void operator+=(std::ptrdiff_t delta ///< how far to move the iterator
                            ) {
@@ -416,7 +416,7 @@ namespace image {
             x_iterator x() {
                 return x_iterator(this);
             }
-        
+
             /// Return an iterator that can be used to move (or dereference) a locator
             ///
             /// \note this y_locator is xy_locator::y_locator, not MaskedImage::y_locator
@@ -439,12 +439,12 @@ namespace image {
             typename Ref<typename mpl::at<PixelTVec, N>::type>::type apply_IMV(cached_location_t const& cached_loc) {
                 return _loc.template get<N::value>()[cached_loc._imv.template get<N::value>()][0];
             }
-            
+
             template<typename N>
             typename Ref<typename mpl::at<PixelTVec, N>::type>::type apply_IMV() {
                 return _loc.template get<N::value>()[0][0];
             }
-            
+
             template<typename N>
             typename Ref<typename mpl::at<PixelTVec, N>::type>::type apply_IMV(int x, int y) {
                 return _loc.template get<N::value>()(x, y)[0];
@@ -455,16 +455,16 @@ namespace image {
             /// Return a reference to the %image at the offset set when we created the \c cached_location_t
             typename Ref<typename Image::Pixel>::type image(cached_location_t const& cached_loc) {
                 return apply_IMV<mpl::int_<0> >(cached_loc);
-            }            
+            }
             /// Return a reference to the %image at the current position of the locator
             typename Ref<typename Image::Pixel>::type image() {
                 return apply_IMV<mpl::int_<0> >();
-            }           
+            }
             /// Return a reference to the %image offset by <tt>(x, y)</tt> from the current position of the locator
             typename Ref<typename Image::Pixel>::type image(int x, int y) {
                 return apply_IMV<mpl::int_<0> >(x, y);
             }
-            
+
             /// Return a reference to the mask at the offset set when we created the \c cached_location_t
             typename Ref<typename Mask::Pixel>::type mask(cached_location_t const& cached_loc) {
                 return apply_IMV<mpl::int_<1> >(cached_loc);
@@ -477,7 +477,7 @@ namespace image {
             typename Ref<typename Mask::Pixel>::type mask(int x, int y) {
                 return apply_IMV<mpl::int_<1> >(x, y);
             }
-        
+
             /// Return a reference to the variance at the offset set when we created the \c cached_location_t
             typename Ref<typename Variance::Pixel>::type variance(cached_location_t const& cached_loc) {
                 return apply_IMV<mpl::int_<2> >(cached_loc);
@@ -630,7 +630,7 @@ namespace image {
         /// an y_iterator associated with an xy_locator
         typedef typename MaskedImageLocator<typename Image::xy_locator,
                                    typename Mask::xy_locator, typename Variance::xy_locator>::y_iterator xy_y_iterator;
-        
+
         /************************************************************************************************************/
 
         // Constructors
@@ -642,8 +642,8 @@ namespace image {
         explicit MaskedImage(std::string const& baseName, int const hdu=0,
                              lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                              BBox const& bbox=BBox(), bool const conformMasks=false,
-                             bool const needAllHdus=false);                             
-        
+                             bool const needAllHdus=false);
+
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
         MaskedImage(const MaskedImage& rhs, const BBox& bbox, const bool deep=false);
         /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -668,17 +668,14 @@ namespace image {
 #if defined(DOXYGEN)
         MaskedImage& operator=(MaskedImage const& rhs);
 #endif
-        
+
         virtual ~MaskedImage() {}
-        
+
         /// Return the %image's size;  useful for passing to constructors
         std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         void swap(MaskedImage &rhs);
 
-        // Variance functions
-        void setVarianceFromGain();     // was setDefaultVariance();
-        
         // Operators
         MaskedImage& operator=(Pixel const& rhs);
         MaskedImage& operator=(SinglePixel const& rhs);
@@ -713,7 +710,7 @@ namespace image {
             *_variance *= rhs;
         }
         void scaledMultiplies(double const c, MaskedImage const& rhs);
-        
+
         void operator/=(ImagePixelT const rhs);
         void operator/=(MaskedImage const& rhs);
         void operator/=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
@@ -722,7 +719,7 @@ namespace image {
             *_variance /= rhs;
         }
         void scaledDivides(double const c, MaskedImage const& rhs);
-        
+
         // IO functions
         static std::string imageFileName(std::string const& baseName) { return baseName + "_img.fits"; }
         static std::string maskFileName(std::string const& baseName) { return baseName + "_msk.fits"; }
@@ -734,7 +731,7 @@ namespace image {
                        std::string const& mode="w",
                        bool const writeMef=false
                       ) const;
-        
+
         // Getters
         /// Return a (Ptr to) the MaskedImage's %image
         ImagePtr getImage(bool const noThrow=false) const {
@@ -800,7 +797,7 @@ namespace image {
         ) const {
             return getImage()->indexToPosition(ind, xy);
         }
-        
+
         /**
          * @brief Convert image position to index  (see Image::positionToIndex)
          *
@@ -872,7 +869,7 @@ namespace image {
             typename Mask::xy_locator maskEnd = _mask->xy_at(x, y);
             typename Variance::xy_locator varianceEnd = _variance->xy_at(x, y);
 #endif
-            
+
             return xy_locator(imageEnd, maskEnd, varianceEnd);
         }
         /**
@@ -887,11 +884,11 @@ namespace image {
             if (_image) {
                 _image->setXY0(origin);
             }
-            
+
             if (_mask) {
                 _mask->setXY0(origin);
             }
-            
+
             if (_variance) {
                 _variance->setXY0(origin);
             }
@@ -913,7 +910,7 @@ namespace image {
 
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>)
         void conformSizes();
-        
+
         ImagePtr _image;
         MaskPtr _mask;
         VariancePtr _variance;
@@ -930,7 +927,7 @@ namespace image {
                                                                          ) {
         return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
     }
-    
+
 }}}  // lsst::afw::image
-        
+
 #endif //  LSST_IMAGE_MASKEDIMAGE_H
