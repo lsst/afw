@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 %{
 #   include "lsst/afw/image/MaskedImage.h"
 %}
@@ -16,12 +39,17 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 //
 %define %maskedImage(NAME, TYPE, PIXEL_TYPES...)
 %template(NAME##TYPE) lsst::afw::image::MaskedImage<PIXEL_TYPES>;
+%template(makeMaskedImage) lsst::afw::image::makeMaskedImage<PIXEL_TYPES>;
+%newobject makeMaskedImage;
 %lsst_persistable(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {
     def Factory(self, *args):
-        """Return a MaskedImage of this type"""
+        """Return a MaskedImage class of this type
+        
+        A synonym for the attribute __class__
+        """
         return NAME##TYPE(*args)
 
     def set(self, x, y=None, values=None):
@@ -41,8 +69,10 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
         else:
             try:
                 self.getImage().set(x, y, values[0])
-                self.getMask().set(x, y, values[1])
-                self.getVariance().set(x, y, values[2])
+                if len(values) > 1:
+                    self.getMask().set(x, y, values[1])
+                if len(values) > 2:
+                   self.getVariance().set(x, y, values[2])
             except TypeError:
                 self.getImage().set(x)
                 self.getMask().set(y)
@@ -127,9 +157,41 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %maskedImagePtr(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, I, int,    lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, U, boost::uint16_t,lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %include "lsst/afw/image/MaskedImage.h"
 
 %maskedImage(MaskedImage, D, double,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImage(MaskedImage, F, float,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImage(MaskedImage, I, int,     lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, U, boost::uint16_t,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+
+%extend lsst::afw::image::MaskedImage<float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertD;
+     lsst::afw::image::MaskedImage<double,
+                                   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD() {
+         return lsst::afw::image::MaskedImage<double,
+                                            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+    %pythoncode {
+    def convertDouble(self, *args):
+        """Alias for convertD"""
+
+        return self.convertD(*args)
+    }
+}
+
+%extend lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertF;
+     lsst::afw::image::MaskedImage<float,
+                                   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF() {
+         return lsst::afw::image::MaskedImage<float,
+                                            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+    %pythoncode {
+    def convertFloat(self, *args):
+        """Alias for convertF"""
+
+        return self.convertF(*args)
+    }
+}

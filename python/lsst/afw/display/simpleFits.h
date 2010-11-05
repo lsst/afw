@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief Definitions to write a FITS image
@@ -14,14 +36,12 @@ namespace afw {
 namespace display {
 
 template<typename ImageT>
-void writeBasicFits(int fd,                                      // file descriptor to write to
-                    ImageT const& data,                          // The data to write
-                    lsst::afw::image::Wcs const* Wcs = NULL);    // which Wcs to use for pixel
+void writeBasicFits(int fd, ImageT const& data,
+                    lsst::afw::image::Wcs const* Wcs=NULL, char const* title=NULL);
 
 template<typename ImageT>
-void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
-                    ImageT const& data,                          // The data to write
-                    lsst::afw::image::Wcs const* Wcs = NULL);    // which Wcs to use for pixel
+void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::image::Wcs const* Wcs=NULL,
+                    const char* title=NULL);
 
 }}} // namespace lsst::afw::display
 #endif

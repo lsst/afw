@@ -1,0 +1,5 @@
+The files numpy.i and pyfragments.swg come straight from the numpy distribution, but I'm not sure that they
+are always present.
+
+We should refactor all this code, moving eigen.i and eigenLib.i (both of which RHL wrote) into
+e.g. lsst.utils.  At the same time, we should consider using numpy.i/pyfragments.swg directly from numpy.

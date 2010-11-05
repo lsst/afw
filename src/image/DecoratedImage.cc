@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief An Image with associated metadata
@@ -46,7 +68,8 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  * Note that this ctor shares pixels with the rhs; it isn't a deep copy
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(typename Image<PixelT>::Ptr rhs ///< Image to go into the DecoratedImage
+image::DecoratedImage<PixelT>::DecoratedImage(
+                                 typename Image<PixelT>::Ptr rhs ///< Image to go into DecoratedImage
                                              ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(rhs)
@@ -115,12 +138,13 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
-                                              const int hdu                ///< The HDU to read
+                                              const int hdu,               ///< The HDU to read
+                                              BBox const& bbox             ///< Only read these pixels
                                              ) :
     lsst::daf::data::LsstBase(typeid(this))
 {             ///< HDU within the file
     init();
-    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata()));
+    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox));
 }
 
 /************************************************************************************************************/
@@ -129,10 +153,27 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
  */
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
-	const std::string& fileName,                        //!< the file to write
-        typename lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
-                                             ) const {
-    image::fits_write_view(fileName, _image->_getRawView(), metadata);
+    const std::string& fileName,                        //!< the file to write
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
+    std::string const& mode                              ///< "w" to write a new file; "a" to append
+) const {
+    lsst::daf::base::PropertySet::Ptr metadata;
+
+    if (metadata_i.get()) {
+        metadata = getMetadata()->deepCopy();
+#if 0
+        metadata->combine(metadata_i);  // combine takes a Ptr, not a ConstPtr
+#else
+        {
+            lsst::daf::base::PropertySet::Ptr tmpMetadata = metadata_i->deepCopy();
+            metadata->combine(tmpMetadata);
+        }
+#endif
+    } else {
+        metadata = getMetadata();
+    }
+
+    image::fits_write_view(fileName, _image->_getRawView(), metadata, mode);
 }
 
 /************************************************************************************************************/

@@ -1,5 +1,28 @@
 // -*- lsst-c++ -*-
 
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
+
 
 /** \file
  * \brief Implementation of KernelFormatter class
@@ -15,7 +38,8 @@
 #ifndef __GNUC__
 #  define __attribute__(x) /*NOTHING*/
 #endif
-static char const* SVNid __attribute__((unused)) = "$Id$";
+static char const* SVNid __attribute__((unused)) =
+    "$Id$";
 
 #include "lsst/afw/formatters/KernelFormatter.h"
 
@@ -44,40 +68,40 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <lsst/pex/policy/Policy.h>
 
 
-BOOST_CLASS_EXPORT(lsst::afw::math::Kernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::FixedKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::AnalyticKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::DeltaFunctionKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::LinearCombinationKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::SeparableKernel);
+BOOST_CLASS_EXPORT(lsst::afw::math::Kernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::FixedKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::AnalyticKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::DeltaFunctionKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::LinearCombinationKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::SeparableKernel)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::Function<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::Function<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<float>)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::Function<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::Function<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<double>)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<float>)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<double>)
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
@@ -121,7 +145,7 @@ afwForm::KernelFormatter::separableKernelRegistration(
  */
 afwForm::KernelFormatter::KernelFormatter(
     pexPolicy::Policy::Ptr policy) :
-    dafPersist::Formatter(typeid(*this)), _policy(policy) {
+    dafPersist::Formatter(typeid(this)), _policy(policy) {
 }
 
 /** Minimal destructor.
@@ -132,18 +156,18 @@ afwForm::KernelFormatter::~KernelFormatter(void) {
 void afwForm::KernelFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+    dafBase::PropertySet::Ptr) {
     execTrace("KernelFormatter write start");
-    afwMath::Kernel const* ps =
+    afwMath::Kernel const* kp =
         dynamic_cast<afwMath::Kernel const*>(persistable);
-    if (ps == 0) {
+    if (kp == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Kernel");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("KernelFormatter write BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
-        boost->getOArchive() & ps;
+        boost->getOArchive() & kp;
         execTrace("KernelFormatter write end");
         return;
     }
@@ -151,7 +175,7 @@ void afwForm::KernelFormatter::write(
         execTrace("KernelFormatter write XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
-        xml->getOArchive() & make_nvp("ptr", ps);
+        xml->getOArchive() & make_nvp("ptr", kp);
         execTrace("KernelFormatter write end");
         return;
     }
@@ -159,31 +183,31 @@ void afwForm::KernelFormatter::write(
 }
 
 dafBase::Persistable* afwForm::KernelFormatter::read(
-    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr additionalData) {
+    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
     execTrace("KernelFormatter read start");
-    afwMath::Kernel* ps;
+    afwMath::Kernel* kp;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("KernelFormatter read BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
-        boost->getIArchive() & ps;
+        boost->getIArchive() & kp;
         execTrace("KernelFormatter read end");
-        return ps;
+        return kp;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
         execTrace("KernelFormatter read XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
-        xml->getIArchive() & make_nvp("dataProperty", ps);
+        xml->getIArchive() & make_nvp("ptr", kp);
         execTrace("KernelFormatter read end");
-        return ps;
+        return kp;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Kernel");
 }
 
-void afwForm::KernelFormatter::update(dafBase::Persistable* persistable,
-                                   dafPersist::Storage::Ptr storage,
-                                   dafBase::PropertySet::Ptr additionalData) {
+void afwForm::KernelFormatter::update(dafBase::Persistable*,
+                                   dafPersist::Storage::Ptr,
+                                   dafBase::PropertySet::Ptr) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Kernel");
 }
 
@@ -195,21 +219,21 @@ void afwForm::KernelFormatter::update(dafBase::Persistable* persistable,
  */
 template <class Archive>
 void afwForm::KernelFormatter::delegateSerialize(
-    Archive& ar, unsigned int const version, dafBase::Persistable* persistable) {
+    Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
     execTrace("KernelFormatter delegateSerialize start");
-    afwMath::Kernel* ps =
+    afwMath::Kernel* kp =
         dynamic_cast<afwMath::Kernel*>(persistable);
-    if (ps == 0) {
+    if (kp == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Kernel");
     }
     ar & make_nvp("base",
-                  boost::serialization::base_object<dafBase::Persistable>(*ps));
-    ar & make_nvp("width", ps->_width);
-    ar & make_nvp("height", ps->_height);
-    ar & make_nvp("ctrX", ps->_ctrX);
-    ar & make_nvp("ctrY", ps->_ctrY);
-    ar & make_nvp("nParams", ps->_nKernelParams);
-    ar & make_nvp("spatialFunctionList", ps->_spatialFunctionList);
+                  boost::serialization::base_object<dafBase::Persistable>(*kp));
+    ar & make_nvp("width", kp->_width);
+    ar & make_nvp("height", kp->_height);
+    ar & make_nvp("ctrX", kp->_ctrX);
+    ar & make_nvp("ctrY", kp->_ctrY);
+    ar & make_nvp("nParams", kp->_nKernelParams);
+    ar & make_nvp("spatialFunctionList", kp->_spatialFunctionList);
                   
     execTrace("KernelFormatter delegateSerialize end");
 }

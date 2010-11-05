@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file Background.cc
  * @ingroup afw
@@ -9,6 +32,7 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <cmath>
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
@@ -36,14 +60,15 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
     _bctrl(bgCtrl) { 
 
-    assert(_bctrl.ictrl.getStyle() == math::NATURAL_SPLINE); // hard-coded for the time-being
-
+    //assert(_bctrl.ictrl.getInterpStyle() == math::NATURAL_SPLINE); // hard-coded for the time-being
 
     _n = _imgWidth*_imgHeight;
     
     if (_n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
     }
+
+    _checkSampling();
 
     _nxSample = _bctrl.getNxSample();
     _nySample = _bctrl.getNySample();
@@ -53,6 +78,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _yorig.resize(_nySample);
     _grid.resize(_nxSample);
     _gridcolumns.resize(_nxSample);
+
 
     // Check that an int's large enough to hold the number of pixels
     assert(_imgWidth*static_cast<double>(_imgHeight) < std::numeric_limits<int>::max());
@@ -65,45 +91,61 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     // Compute the centers and origins for the sub-images
     _subimgWidth = _imgWidth / _nxSample;
     _subimgHeight = _imgHeight / _nySample;
-    for (int i_x = 0; i_x < _nxSample; ++i_x) {
-        _xcen[i_x] = static_cast<int>((i_x + 0.5) * _subimgWidth);
-        _xorig[i_x] = i_x * _subimgWidth;
+    for (int iX = 0; iX < _nxSample; ++iX) {
+        _xcen[iX] = std::floor((iX + 0.5)*_subimgWidth);
+        _xorig[iX] = iX * _subimgWidth;
     }
-    for (int i_y = 0; i_y < _nySample; ++i_y) {
-        _ycen[i_y] = static_cast<int>((i_y + 0.5) * _subimgHeight);
-        _yorig[i_y] = i_y * _subimgHeight;
+    for (int iY = 0; iY < _nySample; ++iY) {
+        _ycen[iY] = std::floor((iY + 0.5)*_subimgHeight);
+        _yorig[iY] = iY * _subimgHeight;
     }
 
     // make a vector containing the y pixel coords for the column
     vector<int> ypix(_imgHeight);
-    for (int i_y = 0; i_y < _imgHeight; ++i_y) { ypix[i_y] = i_y; }
+    for (int iY = 0; iY < _imgHeight; ++iY) { ypix[iY] = iY; }
 
 
     // go to each sub-image and get it's stats.
     // -- do columns in the inner-loop and spline them as they complete
-    for (int i_x = 0; i_x < _nxSample; ++i_x) {
+    for (int iX = 0; iX < _nxSample; ++iX) {
         
-        _grid[i_x].resize(_nySample);
-        for (int i_y = 0; i_y < _nySample; ++i_y) {
+        _grid[iX].resize(_nySample);
+        for (int iY = 0; iY < _nySample; ++iY) {
             
-            ImageT subimg = ImageT(img,
-                                   image::BBox(image::PointI(_xorig[i_x], _yorig[i_y]), _subimgWidth, _subimgHeight));
+            ImageT subimg =
+                ImageT(img, image::BBox(image::PointI(_xorig[iX], _yorig[iY]),
+                                        _subimgWidth, _subimgHeight));
             
-            math::Statistics stats = math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
-                                                                   math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
+            math::Statistics stats =
+                math::makeStatistics(subimg, _bctrl.getStatisticsProperty(),
+                                     *(_bctrl.getStatisticsControl()));
             
-            _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
+            _grid[iX][iY] = stats.getValue(_bctrl.getStatisticsProperty());
         }
-        
-        typename math::SplineInterpolate<int,double> intobj(_ycen, _grid[i_x]);
-        _gridcolumns[i_x].resize(_imgHeight);
-        for (int i_y = 0; i_y < _imgHeight; ++i_y) {
-            _gridcolumns[i_x][i_y] = intobj.interpolate(ypix[i_y]);
+
+        _gridcolumns[iX].resize(_imgHeight);
+
+        // there isn't actually any way to interpolate as a constant ... do that manually here
+        if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
+            // this is the real interpolation
+            typename math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
+            for (int iY = 0; iY < _imgHeight; ++iY) {
+                _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
+            }
+        } else {
+            // this is the constant interpolation
+            // it should only be used sanely when nx,nySample are both 1,
+            //  but this should still work for other grid sizes.
+            for (int iY = 0; iY < _imgHeight; ++iY) {
+                int const iGridY = (iY/_subimgHeight < _nySample) ? iY/_subimgHeight : _nySample;
+                _gridcolumns[iX][iY] = _grid[iX][iGridY];
+            }
         }
 
     }
 
 }
+
 
 /**
  * @brief Method to retrieve the background level at a pixel coord.
@@ -120,9 +162,17 @@ double math::Background::getPixel(int const x, int const y) const {
 
     // build an interpobj along the row y and get the x'th value
     vector<double> bg_x(_nxSample);
-    for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
-    math::SplineInterpolate<int,double> intobj(_xcen, bg_x);
-    return static_cast<double>(intobj.interpolate(x));
+    for (int iX = 0; iX < _nxSample; iX++) {
+        bg_x[iX] = _gridcolumns[iX][y];
+    }
+
+    if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
+        math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
+        return static_cast<double>(intobj.interpolate(x));
+    } else {
+        int const iGridX = (x/_subimgWidth < _nxSample) ? x/_subimgHeight : _nxSample;
+        return static_cast<double>(_gridcolumns[iGridX][y]);
+    }
     
 }
 
@@ -141,40 +191,119 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
 
     // need a vector of all x pixel coords to spline over
     vector<int> xpix(bg->getWidth());
-    for (int i_x = 0; i_x < bg->getWidth(); ++i_x) { xpix[i_x] = i_x; }
+    for (int iX = 0; iX < bg->getWidth(); ++iX) { xpix[iX] = iX; }
     
     // go through row by row
     // - spline on the gridcolumns that were pre-computed by the constructor
     // - copy the values to an ImageT to return to the caller.
-    for (int i_y = 0; i_y < bg->getHeight(); ++i_y) {
+    for (int iY = 0; iY < bg->getHeight(); ++iY) {
 
         // build an interp object for this row
-        vector<PixelT> bg_x(_nxSample);
-        for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = static_cast<PixelT>(_gridcolumns[i_x][i_y]); }
-        math::SplineInterpolate<int,PixelT> intobj(_xcen, bg_x);
-
-        // fill the image with interpolated objects.
-        int i_x = 0;
-        for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(i_y), end = ptr + bg->getWidth();
-             ptr != end; ++ptr, ++i_x) {
-            *ptr = static_cast<PixelT>(intobj.interpolate(xpix[i_x]));
+        vector<double> bg_x(_nxSample);
+        for (int iX = 0; iX < _nxSample; iX++) {
+            bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]);
         }
+        
+        if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
+            math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
+            // fill the image with interpolated objects.
+            int iX = 0;
+            for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
+                     end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
+                *ptr = static_cast<PixelT>(intobj.interpolate(xpix[iX]));
+            }
+        } else {
+            // fill the image with interpolated objects.
+            int iX = 0;
+            for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
+                     end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
+                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgWidth : _nxSample - 1;
+                *ptr = static_cast<PixelT>(_gridcolumns[iGridX][iY]);
+            }
+        }
+
     }
     
     return bg;
 }
 
+/************************************************************************************************************/
+/**
+ * @brief Conversion function to switch a string to an UndersampleStyle
+ */
+math::UndersampleStyle math::stringToUndersampleStyle(std::string const style) {
+    static std::map<std::string, UndersampleStyle> undersampleStrings;
+    if (undersampleStrings.size() == 0) {
+        undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
+        undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
+        undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
+    }
 
+    if (undersampleStrings.find(style) == undersampleStrings.end()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Understample style not defined: "+style);
+    }
+    return undersampleStrings[style];
+}
 
 /**
- * @brief Explicit instantiations
+ * @brief Method to see if the requested nx,ny are sufficient for the requested interpolation style.
  *
  */
-#define INSTANTIATE_BACKGROUND(TYPE) \
-    template math::Background::Background(image::Image<TYPE> const& img, math::BackgroundControl const& bgCtrl=BackgroundControl()); \
+void math::Background::_checkSampling() {
+
+    bool isXundersampled = (_bctrl.getNxSample() < lookupMinInterpPoints(_bctrl.getInterpStyle()));
+    bool isYundersampled = (_bctrl.getNySample() < lookupMinInterpPoints(_bctrl.getInterpStyle()));
+
+    if (_bctrl.getUndersampleStyle() == THROW_EXCEPTION) {
+        if (isXundersampled && isYundersampled) {
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                              "nxSample and nySample have too few points for requested interpolation style.");
+        } else if (isXundersampled) {
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                              "nxSample has too few points for requested interpolation style.");
+        } else if (isYundersampled) {
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                              "nySample has too few points for requested interpolation style.");
+        }
+        
+    } else if (_bctrl.getUndersampleStyle() == REDUCE_INTERP_ORDER) {
+        if (isXundersampled || isYundersampled) {
+            math::Interpolate::Style const xStyle = lookupMaxInterpStyle(_bctrl.getNxSample());
+            math::Interpolate::Style const yStyle = lookupMaxInterpStyle(_bctrl.getNySample());
+            math::Interpolate::Style const style = (_bctrl.getNxSample() < _bctrl.getNySample()) ?
+                xStyle : yStyle;
+            _bctrl.setInterpStyle(style);
+        }
+        
+    } else if (_bctrl.getUndersampleStyle() == INCREASE_NXNYSAMPLE) {
+        if (isXundersampled) {
+            _bctrl.setNxSample(lookupMinInterpPoints(_bctrl.getInterpStyle()));
+        }
+        if (isYundersampled) {
+            _bctrl.setNySample(lookupMinInterpPoints(_bctrl.getInterpStyle()));
+        }
+        
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "The selected BackgroundControl UndersampleStyle is not defined.");
+    }
+    
+}
+
+/*
+ * Explicit instantiations
+ *
+ * \cond
+ */
+#define INSTANTIATE_BACKGROUND(TYPE)                                    \
+    template math::Background::Background(image::Image<TYPE> const& img, \
+                                          math::BackgroundControl const& bgCtrl); \
+    template math::Background::Background(image::MaskedImage<TYPE> const& img, \
+                                          math::BackgroundControl const& bgCtrl); \
     template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;
 
-INSTANTIATE_BACKGROUND(double);
-INSTANTIATE_BACKGROUND(float);
-INSTANTIATE_BACKGROUND(int);
+INSTANTIATE_BACKGROUND(double)
+INSTANTIATE_BACKGROUND(float)
+INSTANTIATE_BACKGROUND(int)
 
+// \endcond

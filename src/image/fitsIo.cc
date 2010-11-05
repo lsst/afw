@@ -1,3 +1,27 @@
+// -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /// \file
 /// \brief  Utilities that use cfitsio
 /// \author Robert Lupton (rhl@astro.princeton.edu)\n
@@ -80,15 +104,28 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
     if (relative) {
         if (fits_movrel_hdu(fd, hdu, NULL, &status) != 0) {
             throw LSST_EXCEPT(FitsException,
-                              err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu));
+                          err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu));
         }
     } else {
-        if (hdu == 0) { // PDU; go there
-            hdu = 1;
-        } else {
-            if (fits_movabs_hdu(fd, hdu, NULL, &status) != 0) {
-                throw LSST_EXCEPT(FitsException,
-                                  err_msg(fd, status, boost::format("Attempted to select absolute HDU %d") % hdu));
+        int const real_hdu = (hdu == 0) ? 1 : hdu;
+        
+        if (fits_movabs_hdu(fd, real_hdu, NULL, &status) != 0) {
+            throw LSST_EXCEPT(FitsException,
+                              err_msg(fd, status,
+                                      boost::format("Attempted to select absolute HDU %d") % real_hdu));
+        }
+        if (hdu == 0) {                 // they asked for the "default" HDU
+            int nAxis = 0;              // number of axes in file
+            if (fits_get_img_dim(fd, &nAxis, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fd, status, "Getting NAXIS"));
+            }
+
+            if (nAxis == 0) {
+                if (fits_movrel_hdu(fd, 1, NULL, &status) != 0) {
+                    throw LSST_EXCEPT(FitsException,
+                                      err_msg(fd, status,
+                                              boost::format("Attempted to skip data-less hdu %d") % hdu));
+                }
             }
         }
     }
@@ -98,7 +135,7 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
 // append a record to the FITS header.   Note the specialization to string values
 
 void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
-               std::string const &keyComment, lsst::daf::base::PropertySet::Ptr metadata) {
+               std::string const &keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata) {
 
     // NOTE:  the sizes of arrays are tied to FITS standard
     // These shenanigans are required only because fits_write_key does not take const args...
@@ -112,18 +149,66 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     
     int status = 0;
     std::type_info const & valueType = metadata->typeOf(keyWord); 
-    if (valueType == typeid(int)) {
-        int tmp = metadata->get<int>(keyWord);
-        fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
+    if (valueType == typeid(bool)) {
+        if (metadata->isArray(keyWord)) {
+            std::vector<bool> tmp = metadata->getArray<bool>(keyWord);
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
+                bool tmp_i = tmp[i];    // avoid icc warning; is vector<bool> special as it only needs 1 bit?
+                fits_write_key(fd, TLOGICAL, keyWordChars, &tmp_i, keyCommentChars, &status);
+            }
+        } else {
+            bool tmp = metadata->get<bool>(keyWord);
 
+            fits_write_key(fd, TLOGICAL, keyWordChars, &tmp, keyCommentChars, &status);
+        }
+    } else if (valueType == typeid(int)) {
+        if (metadata->isArray(keyWord)) {
+            std::vector<int> tmp = metadata->getArray<int>(keyWord);
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TINT, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            int tmp = metadata->get<int>(keyWord);
+
+            fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
+        }
+    } else if (valueType == typeid(long)) {
+        if (metadata->isArray(keyWord)) {
+            std::vector<long> tmp = metadata->getArray<long>(keyWord);
+            for (unsigned long i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TLONG, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            long tmp = metadata->get<long>(keyWord);
+
+            fits_write_key(fd, TLONG, keyWordChars, &tmp, keyCommentChars, &status);
+        }
     } else if (valueType == typeid(double)) {
-        double tmp = metadata->get<double>(keyWord);
-        fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
-
+        if (metadata->isArray(keyWord)) {
+            std::vector<double> tmp = metadata->getArray<double>(keyWord);
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TDOUBLE, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            double tmp = metadata->get<double>(keyWord);
+            fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
+        }
     } else if (valueType == typeid(std::string)) {
-        std::string tmp = metadata->get<std::string>(keyWord);
-        strncpy(keyValueChars, tmp.c_str(), 80);
-        fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+        if (metadata->isArray(keyWord)) {
+            std::vector<std::string> tmp = metadata->getArray<std::string>(keyWord);
+
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
+                strncpy(keyValueChars, tmp[i].c_str(), 80);
+                fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+            }
+        } else {
+            std::string tmp = metadata->get<std::string>(keyWord);
+            strncpy(keyValueChars, tmp.c_str(), 80);
+            fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+        }
+    } else {
+        std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() <<
+            " for keyword " << keyWord << std::endl;
     }
 
     if (status) {
@@ -162,14 +247,24 @@ void getKey(fitsfile* fd,
 }
 
 void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::string value) {
-    boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
-    boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
-    boost::regex const fitsStringRegex("'(.*)'");
+    static boost::regex const boolRegex("[tTfF]");
+    static boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
+    static boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
+    static boost::regex const fitsStringRegex("'(.*)'");
 
     boost::smatch matchStrings;
     std::istringstream converter(value);
 
-    if (boost::regex_match(value, intRegex)) {
+    if (boost::regex_match(value, boolRegex)) {
+        // convert the string to an bool
+#if 0
+        bool val;
+        converter >> val;               // converter doesn't handle bool; T/F always return 255
+#else
+        bool val = (value == "T" || value == "t");
+#endif
+        metadata->add(key, val);
+    } else if (boost::regex_match(value, intRegex)) {
         // convert the string to an int
         int val;
         converter >> val;
@@ -186,7 +281,7 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
 }
 
 // Private function to build a PropertySet that contains all the FITS kw-value pairs
-void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata, bool strip) {
     // Get all the kw-value pairs from the FITS file, and add each to DataProperty
     if (metadata.get() == NULL) {
         return;
@@ -197,10 +292,13 @@ void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
         std::string val;
         std::string comment;
         getKey(fd, i, keyName, val, comment);
-
-        if (keyName != "SIMPLE" && keyName != "BITPIX" && keyName != "EXTEND" &&
-            keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
-            keyName != "BSCALE" && keyName != "BZERO") {
+        // I could use std::tr1::unordered_map, but it probably isn't worth the trouble
+        if (strip && (keyName == "SIMPLE" || keyName == "BITPIX" || keyName == "EXTEND" ||
+                      keyName == "NAXIS" || keyName == "NAXIS1" || keyName == "NAXIS2" ||
+                      keyName == "GCOUNT" || keyName == "PCOUNT" || keyName == "XTENSION" ||
+                      keyName == "BSCALE" || keyName == "BZERO")) {
+            ;
+        } else {
             addKV(metadata, keyName, val);
         }
     }
@@ -212,11 +310,14 @@ void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
 /**
  * \brief Return the metadata from a fits file
  */
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu) {
+lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///< File to read
+                                               const int hdu,               ///< HDU to read
+                                               bool strip       ///< Should I strip e.g. NAXIS1 from header?
+                                              ) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
 
     detail::fits_reader m(fileName, metadata, hdu);
-    cfitsio::getMetadata(m.get(), metadata);
+    cfitsio::getMetadata(m.get(), metadata, strip);
 
     return metadata;
 }

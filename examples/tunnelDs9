@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+#
+# Allow remoteHost to talk to a local ds9 by talking to access point localhost:$xpa_port, e.g.
+#   xpaset -p localhost:10198 "frame 0; raise"
+#
+# You need to start ds9 locally with
+#    env XPA_PORT="DS9:ds9 $xpa_port $[$xpa_port + 1]" ds9 &
+#
+# Note that the LSST ds9 code understands XPA_PORT, so there's no need to play with XPANS
+#
+remoteHost=lsst8.ncsa.uiuc.edu
+ds9Port=22345
+kill=0
+list=0
+
+while [ ! -z $1 ]; do
+    case $1 in
+      -h|--help)
+         echo "Usage: ds9-tunnel [--kill|--list] [remote-machine [port]]" >&2
+	 exit 0;;
+      -k|--kill)
+	 kill=1;;
+      -l|--list)
+	 list=1;;
+      -*)
+         echo "Unknown option $1" >&2
+	 exit 1;;
+      *)
+         break;;
+    esac
+    shift
+done
+
+if [ $list = 1 ]; then
+    if [ $kill = 1 ]; then
+	echo "Ignoring request to kill the tunnel" >&2
+    fi
+    if [ ! -z $1 ]; then
+	echo "Ignoring arguments: $@" >&2
+    fi
+    
+    ls $HOME/.ds9* 2> /dev/null | perl -ne 'if(/-([^-]+)-(\d+)$/) { printf "%-30s %d\n", $1, $2 }'
+
+    exit 0
+fi
+
+if [ ! -z $1 ]; then
+   remoteHost=$1; shift
+fi
+if [ ! -z $1 ]; then
+    ds9Port=$1; shift
+fi
+
+pidFile=$HOME/.ds9-$remoteHost-$ds9Port
+
+if [ $kill = 1 ]; then
+    if [ ! -f $pidFile ]; then
+        echo "I can't find the PID as $pidFile doesn't exist" >&2
+	exit 1
+    fi
+
+    pid=$(cat $pidFile)
+    echo "Killing $pid" >&2
+
+    if kill -0 $pid > /dev/null 2>&1; then
+	kill $pid && rm -f $pidFile
+    else
+	echo "Process $pid doesn't seem to exist" >&2
+	rm -f $pidFile
+    fi
+
+
+    exit 0
+elif [ -f $pidFile ]; then
+    pid=$(cat $pidFile)
+
+    if kill -0 $pid > /dev/null 2>&1; then
+	echo "The ds9 tunnels already seem to exist, process $pid.  Please use ds9-remote --kill to remove them, then try again" >&2
+	exit 1
+    fi
+    rm -f $pidFile
+fi
+
+ssh -N -f $remoteHost \
+    -R $ds9Port:localhost:$ds9Port -R $[$ds9Port+1]:localhost:$[$ds9Port+1] > /dev/null 2>&1
+pid=$[$$+2]				# it must use the double-fork trick
+
+echo $pid > $pidFile &
+
+value="DS9:ds9 $ds9Port $[$ds9Port + 1]"
+echo "You'll need to set XPA_PORT to '$value' both locally (before starting ds9) and remotely (before starting the client)" >&2
+
+case $SHELL in
+  */csh)
+   echo "setenv XPA_PORT '$value'";;
+  *)
+   echo "export XPA_PORT='$value'";;
+esac

@@ -1,5 +1,28 @@
 // -*- lsst-c++ -*-
 
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
+
 /** @file
  * @brief Implementation of MaskedImageFormatter class
  *
@@ -15,7 +38,8 @@
 #ifndef __GNUC__
 #  define __attribute__(x) /*NOTHING*/
 #endif
-static char const* SVNid __attribute__((unused)) = "$Id$";
+static char const* SVNid __attribute__((unused)) =
+    "$Id$";
 
 #include "boost/serialization/shared_ptr.hpp"
 
@@ -50,21 +74,26 @@ public:
     static std::string name;
 };
 
-template<> std::string MaskedImageFormatterTraits<boost::uint16_t, MaskPixel, VariancePixel>::name("MaskedImageU");
+template<>
+std::string MaskedImageFormatterTraits<boost::uint16_t, MaskPixel, VariancePixel>::name("MaskedImageU");
 template<> std::string MaskedImageFormatterTraits<int, MaskPixel, VariancePixel>::name("MaskedImageI");
 template<> std::string MaskedImageFormatterTraits<float, MaskPixel, VariancePixel>::name("MaskedImageF");
 template<> std::string MaskedImageFormatterTraits<double, MaskPixel, VariancePixel>::name("MaskedImageD");
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::registration(
+lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT,
+                                                                   MaskPixelT,
+                                                                   VariancePixelT>::registration(
     MaskedImageFormatterTraits<ImagePixelT, MaskPixelT, VariancePixelT>::name,
     typeid(MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>),
     createInstance);
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImageFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+    lsst::pex::policy::Policy::Ptr
+                                                                                   )
+    :
+    lsst::daf::persistence::Formatter(typeid(this)) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -75,7 +104,7 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
     execTrace("MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
@@ -101,8 +130,10 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+        Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr
+                                                                                )
+{
     execTrace("MaskedImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskedImageFormatter read BoostStorage");
@@ -124,15 +155,18 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for MaskedImage");
+    Persistable*,
+    Storage::Ptr,
+    lsst::daf::base::PropertySet::Ptr
+                                                                          )
+{
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                      "Unexpected call to update for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> template <class Archive>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSerialize(
-    Archive& ar, unsigned int const version, Persistable* persistable) {
+    Archive& ar, unsigned int const, Persistable* persistable) {
     execTrace("MaskedImageFormatter delegateSerialize start");
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
@@ -144,7 +178,9 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeri
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::createInstance(
+lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT,
+                                                            MaskPixelT,
+                                                            VariancePixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
     return lsst::daf::persistence::Formatter::Ptr(
         new MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));

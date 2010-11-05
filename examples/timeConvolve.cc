@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #include <iostream>
 #include <sstream>
 #include <ctime>
@@ -15,7 +37,6 @@ typedef float ImageType;
 typedef double KernelType;
 
 const double Sigma = 3;
-const int EdgeMaskBit = -1;
 const unsigned DefNIter = 10;
 const unsigned MinKernelSize = 5;
 const unsigned MaxKernelSize = 15;
@@ -35,17 +56,18 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        afwMath::GaussianFunction2<KernelType> gaussFunc(Sigma, Sigma);
+        afwMath::GaussianFunction2<KernelType> gaussFunc(Sigma, Sigma, 0);
         afwMath::AnalyticKernel analyticKernel(kSize, kSize, gaussFunc);
         
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            afwMath::convolve(resImage, image, analyticKernel, EdgeMaskBit, true);
+            afwMath::convolve(resImage, image, analyticKernel, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
-        double mOps = static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOps = static_cast<double>(
+            (imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
         std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
             << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
@@ -62,11 +84,12 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            afwMath::convolve(resImage, image, separableKernel, EdgeMaskBit, true);
+            afwMath::convolve(resImage, image, separableKernel, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
-        double mOps = static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOps = static_cast<double>((
+            imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
         std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
             << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
@@ -75,16 +98,29 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
 
 int main(int argc, char **argv) {
 
+
+    std::string mimg;
     if (argc < 2) {
-        std::cout << "Time convolution with a spatially invariant kernel" << std::endl << std::endl;
-        std::cout << "Usage: timeConvolve fitsFile [nIter]" << std::endl;
-        std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cout << "nIter (default " << DefNIter << ") is the number of iterations per kernel size" << std::endl;
-        std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
-            << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
-        return 1;
+        std::string afwdata = getenv("AFWDATA_DIR");
+        if (afwdata.empty()) {
+            std::cout << "Time convolution with a spatially invariant kernel" << std::endl << std::endl;
+            std::cout << "Usage: timeConvolve fitsFile [nIter]" << std::endl;
+            std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
+            std::cout << "nIter (default " << DefNIter
+                      << ") is the number of iterations per kernel size" << std::endl;
+            std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
+                      << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
+            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
+            std::cerr << "Is afwdata set up?\n" << std::endl;
+            exit(EXIT_FAILURE);
+        } else {
+            mimg = afwdata + "/small_MI";
+            std::cerr << "Using " << mimg << std::endl;
+        }
+    } else {
+        mimg = std::string(argv[1]);
     }
-    
+
     unsigned int nIter = DefNIter;
     if (argc > 2) {
         std::istringstream(argv[2]) >> nIter;
@@ -99,7 +135,7 @@ int main(int argc, char **argv) {
     std::cout << "  * four pixel pointer increments (for image, variance, mask and kernel)" << std::endl;
     std::cout << "* CnvSec: time to perform one convolution (sec)" << std::endl;
 
-    std::string maskedImagePath(argv[1]);
+    std::string maskedImagePath(mimg);
     std::string imagePath = maskedImagePath + "_img.fits";
 
     std::cout << std::endl << "Image " << imagePath << std::endl;
@@ -107,6 +143,6 @@ int main(int argc, char **argv) {
     timeConvolution(image, nIter);
     
     std::cout << std::endl << "MaskedImage " << maskedImagePath << std::endl;
-    afwImage::MaskedImage<ImageType> mImage(argv[1]);
+    afwImage::MaskedImage<ImageType> mImage(mimg);
     timeConvolution(mImage, nIter);
 }

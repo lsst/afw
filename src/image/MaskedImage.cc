@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/*
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+
 /**
  * \file
  * \brief Implementation for MaskedImage
@@ -6,31 +29,27 @@
 #include <typeinfo>
 #include <sys/stat.h>
 #include "boost/lambda/lambda.hpp"
+#include "boost/regex.hpp"
+#include "boost/filesystem/path.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
+#include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/fits/fits_io.h"
 
-using boost::lambda::ret;
-using boost::lambda::_1;
-using boost::lambda::_2;
-using boost::lambda::_3;
-#if 0
-using boost::lambda::_4;                // doesn't exist
-#endif
-
+namespace bl = boost::lambda;
 namespace image = lsst::afw::image;
 
-        
-// Constructors
-//
-// \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
-//
+/** Constructors
+ *
+ * \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        int width,                      //!< Number of columns in image
-        int height,                     //!< Number of rows in image
-        MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+                                                                         int width,                      //!< Number of columns in image
+                                                                         int height,                     //!< Number of rows in image
+                                                                         MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(width, height)),
@@ -51,8 +70,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        const std::pair<int, int> dimensions, //!< dimensions of image: width x height
-        MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+                                                                         const std::pair<int, int> dimensions, //!< dimensions of image: width x height
+                                                                         MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(dimensions)),
@@ -65,20 +84,148 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
 /**
  * \brief Construct from an HDU in a FITS file.  Set metadata if it isn't a NULL pointer
+ *
+ * @note If baseName doesn't exist and ends ".fits" it's taken to be a single MEF file, with data, mask, and
+ * variance in three successive HDUs; otherwise it's taken to be the basename of three separate files,
+ * imageFileName(baseName), maskFileName(baseName), and varianceFileName(baseName)
+ *
+ * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we politely interpret 0 as meaning
+ * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-	std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
-        const int hdu,                  //!< The HDU in the file (default: 0)
+        std::string const& baseName,    //!< The file's baseName (e.g. foo reads foo_{img.msk.var}.fits)
+        const int hdu,                  //!< The HDU in the file (default: 1)
         lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
         BBox const& bbox,                           //!< Only read these pixels
-        bool const conformMasks         //!< Make Mask conform to mask layout in file?
+        bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
+        bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox)),
-    _mask(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, bbox, conformMasks)),
-    _variance(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata, bbox)) {
-    ;
+    _image(), _mask(), _variance() {
+
+    // Does it looks like an MEF file?
+    static boost::regex const fitsFileRE_compiled(image::detail::fitsFileRE);
+    bool isMef = boost::regex_search(baseName, fitsFileRE_compiled);
+    //
+    // If foo.fits doesn't exist, revert to old behaviour and read foo.fits_{img,msk,var}.fits;
+    // contrariwise, if foo_img.fits doesn't exist but foo does, read it as an MEF file
+    //
+    if (isMef) {
+        if (!boost::filesystem::exists(baseName) &&
+            boost::filesystem::exists(MaskedImage::imageFileName(baseName))) {
+            isMef = false;
+        }
+    } else {
+        if (boost::filesystem::exists(baseName) &&
+            !boost::filesystem::exists(MaskedImage::imageFileName(baseName))) {
+            isMef = true;
+        }
+    }
+    /*
+     * We need to read the metadata so's to check that the EXTTYPEs are correct
+     */
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+    }
+
+    if (isMef) {
+        int real_hdu = (hdu == 0) ? 2 : hdu;
+
+        if (hdu == 0) {                 // may be an old file with no PDU
+            lsst::daf::base::PropertySet::Ptr hdr = readMetadata(baseName, 1);
+            if (hdr->get<int>("NAXIS") != 0) { // yes, an old-style file
+                real_hdu = 1;
+            }
+        }
+
+        _image = typename Image::Ptr(new Image(baseName, real_hdu, metadata, bbox));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "IMAGE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+                                   baseName % real_hdu % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+
+        try {
+            _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, conformMasks));
+        } catch(image::FitsException &e) {
+            if (needAllHdus) {
+                LSST_EXCEPT_ADD(e, "Reading Mask");
+                throw e;
+            }
+
+            _mask = typename Mask::Ptr(new Mask(_image->getDimensions()));
+        }
+
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+            if (exttype != "" && exttype != "MASK") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+                                   baseName % (real_hdu + 1) % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {
+            ;
+        }
+
+        try {
+            _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox));
+        } catch(image::FitsException &e) {
+            if (needAllHdus) {
+                LSST_EXCEPT_ADD(e, "Reading Variance");
+                throw e;
+            }
+            _variance = typename Variance::Ptr(new Variance(_image->getDimensions()));
+        }
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+            if (exttype != "" && exttype != "VARIANCE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                           (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
+                            baseName % (real_hdu + 2) % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+    } else {
+        int real_hdu = (hdu == 0) ? 1 : hdu;
+
+        _image = typename Image::Ptr(new Image(MaskedImage::imageFileName(baseName),
+                                               real_hdu, metadata, bbox));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "IMAGE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                           (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+                            MaskedImage::imageFileName(baseName) % real_hdu % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+
+        _mask = typename Mask::Ptr(new Mask(MaskedImage::maskFileName(baseName),
+                                            real_hdu, metadata, bbox, conformMasks));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "MASK") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                           (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+                            MaskedImage::maskFileName(baseName) % real_hdu % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+
+        _variance = typename Variance::Ptr(new Variance(MaskedImage::varianceFileName(baseName),
+                                                        real_hdu, metadata, bbox));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "VARIANCE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                           (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
+                            MaskedImage::varianceFileName(baseName) % real_hdu % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+    }
 }
 
 /**
@@ -87,7 +234,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-	ImagePtr image,                 ///< %Image
+        ImagePtr image,                 ///< %Image
         MaskPtr mask,                   ///< %Mask
         VariancePtr variance            ///< Variance %Mask
                                                                         ) :
@@ -96,21 +243,22 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     _mask(mask),
     _variance(variance) {
     conformSizes();
-} 
+}
 
 /**
  * \brief Copy constructor;  shallow, unless deep is true.
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs, ///< %Image to copy
-                                                                         bool deep               ///< Make deep copy?
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+                                                    MaskedImage const& rhs, ///< %Image to copy
+                                                    bool deep               ///< Make deep copy?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
-        _image =    typename Image::Ptr(new Image(*rhs._image, deep));
-        _mask =     typename Mask::Ptr(new Mask(*rhs._mask, deep));
-        _variance = typename Variance::Ptr(new Variance(*rhs._variance, deep));
+        _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
+        _mask =     typename Mask::Ptr(new Mask(*rhs.getMask(), deep));
+        _variance = typename Variance::Ptr(new Variance(*rhs.getVariance(), deep));
     }
     conformSizes();
 }
@@ -123,9 +271,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
                                                                          const BBox& bbox,
                                                                          bool deep) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(*rhs._image, bbox, deep)),
-    _mask(new Mask(*rhs._mask, bbox, deep)),
-    _variance(new Variance(*rhs._variance, bbox, deep)) {
+    _image(new Image(*rhs.getImage(), bbox, deep)),
+    _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, deep) : static_cast<Mask *>(NULL)),
+    _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, deep) : static_cast<Variance *>(NULL)) {
     conformSizes();
 }
 
@@ -145,7 +293,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& image::MaskedImage<
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedImage &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
-    
+
     _image.swap(rhs._image);
     _mask.swap(rhs._mask);
     _variance.swap(rhs._variance);
@@ -153,45 +301,34 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedIma
 // Use compiler generated version of:
 //    MaskedImage<ImagePixelT, MaskPixelT> &operator=(const MaskedImage<ImagePixelT, MaskPixelT>& rhs);
 
-// Variance functions
-        
-/**
- * Set the variance from the image and the detector's gain
- *
- * Set the pixel values of the variance based on the image.  The assumption is
- * Gaussian statistics, so that variance = image / k, where k is the gain in
- * electrons per ADU
- *
- * \note Formerly known as setDefaultVariance(), but that name doesn't say what it does
- *
- * \deprecated
- * This function was present (as \c setDefaultVariance) in the DC2 API, but
- * it isn't really a very good idea.  The gain's taken to be a a single number, so
- * this function is equivalent to
- * \code
-  *MaskedImage.getVariance() /= gain
- * \endcode
- */
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFromGain() {
-    double gain = 1.0; 
-
-    try {
-        //gain = _image->getGain();
-    } catch (...) {                     // Should specify and propagate an exception XXX
-        lsst::pex::logging::Trace("afw.MaskedImage", 0,
-                                  boost::format("Gain could not be set in setVarianceFromGain().  Using gain=%g") % gain);
-    }
-
-    transform_pixels(_image->_getRawView(), _variance->_getRawView(), ret<VariancePixelT>(_1/gain));
-
-    lsst::pex::logging::Trace("afw.MaskedImage", 1,
-                              boost::format("Using gain = %f in setVarianceFromGain()") % gain);
-
-}
-
 /************************************************************************************************************/
 // Operators
+/**
+ * Set the pixels in the MaskedImage to the rhs
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::Pixel const& rhs) {
+    *_image = rhs.image();
+    *_mask = rhs.mask();
+    *_variance = rhs.variance();
+
+    return *this;
+}
+
+/**
+ * Set the pixels in the MaskedImage to the rhs
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::SinglePixel const& rhs) {
+    *_image = rhs.image();
+    *_mask = rhs.mask();
+    *_variance = rhs.variance();
+
+    return *this;
+}
+
 /**
  * Copy the pixels from the rhs to the lhs
  *
@@ -199,9 +336,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFro
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
-    *_image <<= *rhs._image;
-    *_mask <<= *rhs._mask;
-    *_variance <<= *rhs._variance;
+    *_image <<= *rhs.getImage();
+    *_mask <<= *rhs.getMask();
+    *_variance <<= *rhs.getVariance();
 }
 
 /// Add a MaskedImage rhs to a MaskedImage
@@ -213,9 +350,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(Ma
 /// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage const& rhs) {
-    *_image += *rhs._image;
-    *_mask  |= *rhs._mask;
-    *_variance += *rhs._variance;
+    *_image += *rhs.getImage();
+    *_mask  |= *rhs.getMask();
+    *_variance += *rhs.getVariance();
 }
 
 /// Add a scaled MaskedImage c*rhs to a MaskedImage
@@ -226,10 +363,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Mas
 /// a Pixel operation (plus) which models the covariance, but this is not (yet?)
 /// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(double const c, MaskedImage const& rhs) {
-    (*_image).scaledPlus(c, *rhs._image);
-    *_mask  |= *rhs._mask;
-    (*_variance).scaledPlus(c*c, *rhs._variance);
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(double const c,
+                                                                             MaskedImage const& rhs) {
+    (*_image).scaledPlus(c, *rhs.getImage());
+    *_mask  |= *rhs.getMask();
+    (*_variance).scaledPlus(c*c, *rhs.getVariance());
 }
 
 /// Add a scalar rhs to a MaskedImage
@@ -245,9 +383,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Ima
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage const& rhs) {
-    *_image -= *rhs._image;
-    *_mask  |= *rhs._mask;
-    *_variance += *rhs._variance;
+    *_image -= *rhs.getImage();
+    *_mask  |= *rhs.getMask();
+    *_variance += *rhs.getVariance();
 }
 
 /// Subtract a scaled MaskedImage c*rhs from a MaskedImage
@@ -256,10 +394,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(Mas
 ///
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(double const c, MaskedImage const& rhs) {
-    (*_image).scaledMinus(c, *rhs._image);
-    *_mask  |= *rhs._mask;
-    (*_variance).scaledPlus(c*c, *rhs._variance);
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(double const c,
+                                                                              MaskedImage const& rhs) {
+    (*_image).scaledMinus(c, *rhs.getImage());
+    *_mask  |= *rhs.getMask();
+    (*_variance).scaledPlus(c*c, *rhs.getVariance());
 }
 
 /// Subtract a scalar rhs from a MaskedImage
@@ -277,7 +416,7 @@ namespace {
         }
     };
 
-    /// Functor to calculate the variance of the product of two independent variables, with the rhs scaled by c
+    /// Functor to calculate variance of the product of two independent variables, with the rhs scaled by c
     template<typename ImagePixelT, typename VariancePixelT>
     struct scaledProductVariance {
         double _c;
@@ -291,30 +430,30 @@ namespace {
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
-    transform_pixels(_image->_getRawView(), // lhs 
+    transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
                      _variance->_getRawView(),  // Var(lhs),
                      rhs._variance->_getRawView(), // Var(rhs)
                      _variance->_getRawView(), // result
                      productVariance<ImagePixelT, VariancePixelT>());
 
-    *_image *= *rhs._image;
-    *_mask  |= *rhs._mask;
+    *_image *= *rhs.getImage();
+    *_mask  |= *rhs.getMask();
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultiplies(double const c,
                                                                                    MaskedImage const& rhs) {
     // Must do variance before we modify the image values
-    transform_pixels(_image->_getRawView(), // lhs 
+    transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
                      _variance->_getRawView(),  // Var(lhs),
                      rhs._variance->_getRawView(), // Var(rhs)
                      _variance->_getRawView(), // result
                      scaledProductVariance<ImagePixelT, VariancePixelT>(c));
 
-    (*_image).scaledMultiplies(c, *rhs._image);
-    *_mask  |= *rhs._mask;
+    (*_image).scaledMultiplies(c, *rhs.getImage());
+    *_mask  |= *rhs.getMask();
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -348,28 +487,29 @@ namespace {
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
-    transform_pixels(_image->_getRawView(), // lhs 
+    transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
                      _variance->_getRawView(),  // Var(lhs),
                      rhs._variance->_getRawView(), // Var(rhs)
                      _variance->_getRawView(), // result
                      quotientVariance<ImagePixelT, VariancePixelT>());
 
-    *_image /= *rhs._image;
-    *_mask  |= *rhs._mask;
+    *_image /= *rhs.getImage();
+    *_mask  |= *rhs.getMask();
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(double const c, MaskedImage const& rhs) {
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(double const c,
+                                                                                MaskedImage const& rhs) {
     // Must do variance before we modify the image values
-    transform_pixels(_image->_getRawView(), // lhs 
+    transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
                      _variance->_getRawView(),  // Var(lhs),
                      rhs._variance->_getRawView(), // Var(rhs)
                      _variance->_getRawView(), // result
                      scaledQuotientVariance<ImagePixelT, VariancePixelT>(c));
 
-    (*_image).scaledDivides(c, *rhs._image);
+    (*_image).scaledDivides(c, *rhs.getImage());
     *_mask  |= *rhs._mask;
 }
 
@@ -378,17 +518,78 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
     *_image /= rhs;
     *_variance /= rhs*rhs;
 }
-        
+/**
+ * Write \c this to a FITS file
+ *
+ * \deprecated Please avoid using the interface that writes three separate files;  it may be
+ * removed in some future release.
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
-        lsst::daf::base::PropertySet::Ptr metadata ///< Metadata to write to file; or NULL
+        std::string const& baseName, ///< The desired file's baseName (e.g. foo reads foo_{img.msk.var}.fits),
+                                     ///< unless file's has a .fits suffix (or you set writeMef to true)
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file
+                                                                          ///< or NULL
+        std::string const& mode,                    //!< "w" to write a new file; "a" to append
+        bool const writeMef  ///< write an MEF file,
+                             ///< even if basename doesn't look like a fully qualified FITS file
     ) const {
-    _image->writeFits(MaskedImage::imageFileName(baseName), metadata);
-    _mask->writeFits(MaskedImage::maskFileName(baseName));
-    _variance->writeFits(MaskedImage::varianceFileName(baseName));
+
+    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
+    }
+
+    lsst::daf::base::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+    } else {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+    }
+
+    static boost::regex const fitsFileRE_compiled(image::detail::fitsFileRE);
+    if (writeMef ||
+        // write an MEF if they call it *.fits"
+        boost::regex_search(baseName, fitsFileRE_compiled)) {
+
+        static boost::regex const compressedFileRE_compiled(image::detail::compressedFileRE);
+        bool const isCompressed = boost::regex_search(baseName, compressedFileRE_compiled);
+
+        if (isCompressed) {
+            // cfitsio refuses to write the 2nd HDU of the compressed MEF
+            throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException,
+                              "I don't know how to write a compressed MEF: " + baseName);
+        }
+        //
+        // Write the PDU
+        //
+        if (mode == "w" || mode == "wb") {
+            _image->writeFits(baseName, metadata, "pdu");
+#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
+            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+#endif
+        }
+
+        metadata->set("EXTTYPE", "IMAGE");
+        _image->writeFits(baseName, metadata, "a");
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "MASK");
+        _mask->writeFits(baseName, metadata, "a");
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "VARIANCE");
+        _variance->writeFits(baseName, metadata, "a");
+    } else {
+        _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        _mask->writeFits(MaskedImage::maskFileName(baseName), metadata, mode);
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
+    }
 }
-        
+
 /************************************************************************************************************/
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions
 // as Image.  If Mask and/or Variance have non-zero dimensions that conflict with the size of Image,
@@ -396,38 +597,34 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
-    int const imageCols = _image->getWidth();
-    int const imageRows = _image->getHeight();
+    int const imageWidth = _image->getWidth();
+    int const imageHeight = _image->getHeight();
 
-    if (_mask.get()) {
+    if (!_mask.get() || _mask->getWidth() == 0 || _mask->getHeight() == 0) {
+        _mask = MaskPtr(new Mask(imageWidth, imageHeight));
+        *_mask = 0;
+    } else {
         int const width = _mask->getWidth();
         int const height = _mask->getHeight();
-        
-        if (width == 0 && height == 0) {
-            _mask = MaskPtr(new Mask(width, height));
-            *_mask = 0;
-        }
 
-        if (width != imageCols || height != imageRows) {
+        if (width != imageWidth || height != imageHeight) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
-                                  imageCols % imageRows % width % height).str());
+                                  imageWidth % imageHeight % width % height).str());
         }
     }
 
-    if (_variance.get()) {
-        int const width = _variance->getWidth();
+    if (!_variance.get() || _variance->getWidth() == 0 || _variance->getHeight() == 0) {
+        _variance = VariancePtr(new Variance(imageWidth, imageHeight));
+        *_variance = 0;
+    } else {
         int const height = _variance->getHeight();
-        
-        if (width == 0 && height == 0) {
-            _variance = VariancePtr(new Variance(width, height));
-            *_variance = 0;
-        }
+        int const width = _variance->getWidth();
 
-        if (width != imageCols || height != imageRows) {
+        if (width != imageWidth || height != imageHeight) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
-                                  imageCols % imageRows % width % height).str());
+                                  imageWidth % imageHeight % width % height).str());
         }
     }
 }
@@ -445,7 +642,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
     typename Image::iterator imageBegin = _image->begin();
     typename Mask::iterator maskBegin = _mask->begin();
     typename Variance::iterator varianceBegin = _variance->begin();
-    
+
     return iterator(imageBegin, maskBegin, varianceBegin);
 #endif
 }
@@ -476,7 +673,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_it
     typename Image::reverse_iterator imageBegin = _image->rbegin();
     typename Mask::reverse_iterator maskBegin = _mask->rbegin();
     typename Variance::reverse_iterator varianceBegin = _variance->rbegin();
-    
+
     return reverse_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
@@ -496,7 +693,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
     typename Image::x_iterator imageBegin = _image->row_begin(y);
     typename Mask::x_iterator maskBegin = _mask->row_begin(y);
     typename Variance::x_iterator varianceBegin = _variance->row_begin(y);
-    
+
     return x_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
@@ -510,16 +707,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
     return x_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/// Return an \c x_iterator at the point <tt>(x, y)</tt>
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_at(int x, int y) const {
-    typename Image::x_iterator imageEnd = getImage()->x_at(x, y);
-    typename Mask::x_iterator maskEnd = getMask()->x_at(x, y);
-    typename Variance::x_iterator varianceEnd = getVariance()->x_at(x, y);
-
-    return x_iterator(imageEnd, maskEnd, varianceEnd);
-}
-
 /************************************************************************************************************/
 
 /// Return an \c y_iterator to the start of the %image
@@ -528,7 +715,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     typename Image::y_iterator imageBegin = _image->col_begin(x);
     typename Mask::y_iterator maskBegin = _mask->col_begin(x);
     typename Variance::y_iterator varianceBegin = _variance->col_begin(x);
-    
+
     return y_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
@@ -538,16 +725,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     typename Image::y_iterator imageEnd = getImage()->col_end(x);
     typename Mask::y_iterator maskEnd = getMask()->col_end(x);
     typename Variance::y_iterator varianceEnd = getVariance()->col_end(x);
-
-    return y_iterator(imageEnd, maskEnd, varianceEnd);
-}
-
-/// Return an \c y_iterator at the point <tt>(x, y)</tt>
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_at(int x, int y) const {
-    typename Image::y_iterator imageEnd = getImage()->y_at(x, y);
-    typename Mask::y_iterator maskEnd = getMask()->y_at(x, y);
-    typename Variance::y_iterator varianceEnd = getVariance()->y_at(x, y);
 
     return y_iterator(imageEnd, maskEnd, varianceEnd);
 }
@@ -563,12 +740,12 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
     image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin(
-		bool contiguous         ///< Pixels are contiguous (must be true)
+        bool contiguous         ///< Pixels are contiguous (must be true)
                                                                       ) const {
     typename Image::fast_iterator imageBegin = _image->begin(contiguous);
     typename Mask::fast_iterator maskBegin = _mask->begin(contiguous);
     typename Variance::fast_iterator varianceBegin = _variance->begin(contiguous);
-    
+
     return fast_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
@@ -587,18 +764,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_itera
     typename Variance::fast_iterator varianceEnd = getVariance()->end(contiguous);
 
     return fast_iterator(imageEnd, maskEnd, varianceEnd);
-}
-
-/************************************************************************************************************/
-
-/// Return an \c xy_locator at the point <tt>(x, y)</tt>
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_locator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_at(int x, int y) const {
-    typename Image::xy_locator imageEnd = getImage()->xy_at(x, y);
-    typename Mask::xy_locator maskEnd = getMask()->xy_at(x, y);
-    typename Variance::xy_locator varianceEnd = getVariance()->xy_at(x, y);
-
-    return xy_locator(imageEnd, maskEnd, varianceEnd);
 }
 
 /************************************************************************************************************/

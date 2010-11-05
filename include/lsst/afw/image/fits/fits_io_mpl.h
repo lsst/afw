@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief  Internal support for reading and writing FITS files
@@ -20,7 +42,7 @@
 #include "fits_io.h"
 
 namespace {
-struct found_type : std::exception { }; // type to throw when we've read our data
+struct found_type : public std::exception { }; // type to throw when we've read our data
 
 template<typename ImageT, typename ExceptionT>
 class try_fits_read_image {
@@ -31,16 +53,16 @@ public:
                         lsst::afw::image::BBox const& bbox
                        ) : _file(file), _img(img), _metadata(metadata), _hdu(hdu), _bbox(bbox) { }
 
-    void operator()(ImageT x) {         // read directly into the desired type if the file's the same type
+    void operator()(ImageT) {           // read directly into the desired type if the file's the same type
         try {
             lsst::afw::image::fits_read_image(_file, _img, _metadata, _hdu, _bbox);
             throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::image::FitsException const&) {
+        } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // ah well.  We'll try another image type
         }
     }
 
-    template<typename U> void operator()(U x) { // read and convert into the desired type
+    template<typename U> void operator()(U) { // read and convert into the desired type
         try {
             U img;
             lsst::afw::image::fits_read_image(_file, img, _metadata, _hdu, _bbox);
@@ -48,8 +70,8 @@ public:
             _img.recreate(img.dimensions());
             boost::gil::copy_and_convert_pixels(const_view(img), view(_img));
 
-            throw found_type();
-        } catch(lsst::afw::image::FitsException const&) {
+            throw ExceptionT();         // signal that we've succeeded
+        } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // pass
         }
     }
@@ -72,7 +94,7 @@ bool fits_read_image(std::string const& file, ImageT& img,
                     ) {
     try {
         boost::mpl::for_each<fits_img_types>(try_fits_read_image<ImageT, found_type>(file, img, metadata, hdu, bbox));
-    } catch (found_type &e) {
+    } catch (found_type &) {
         return true;                    // success
     }
 

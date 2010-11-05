@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief A set of classes of general utility in connection with images
@@ -51,6 +74,14 @@ namespace lsst { namespace afw { namespace image {
         
         Point operator+(const Point& rhs) const { return Point(_x + rhs._x, _y + rhs._y); }
         Point operator-(const Point& rhs) const { return Point(_x - rhs._x, _y - rhs._y); }
+
+        //! Offset a Point by the specified vector
+        Point& shift(T dx,                ///< How much to offset in x
+                     T dy                 ///< How much to offset in y
+                    ) {
+            *this = *this + Point(dx, dy);
+            return *this;
+        }
 #if !defined(SWIG)
         /// Return x (i == 0) or y (i == 1)
         T const& operator[](int const i) const {
@@ -138,14 +169,46 @@ namespace lsst { namespace afw { namespace image {
             }
 
         int getX0() const { return first.getX(); } ///< Return x coordinate of lower-left corner
+        /// Set x coordinate of lower-left corner
+        void setX0(int x0) {
+            second.first += (first.getX() - x0);
+            first.setX(x0);
+        }
         int getY0() const { return first.getY(); } ///< Return y coordinate of lower-left corner
+        /// Set y coordinate of lower-left corner
+        void setY0(int y0) {
+            second.second += (first.getY() - y0);
+            first.setY(y0);
+        }
         int getX1() const { return first.getX() + second.first - 1; } ///< Return x coordinate of upper-right corner
+        void setX1(int x1) { second.first = x1 - getX0() + 1; } ///< Set x coordinate of lower-left corner
         int getY1() const { return first.getY() + second.second - 1; } ///< Return y coordinate of upper-right corner
+        void setY1(int y1) { second.second = y1 - getY0() + 1; } ///< Set y coordinate of lower-left corner
         PointI getLLC() const { return first; } ///< Return lower-left corner
         PointI getURC() const { return PointI(getX1(), getY1()); } ///< Return upper-right corner
         int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
         int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
+        /// Set BBox's width
+        void setWidth(int width         ///< Desired width
+                     ) { second.first = width; } 
+        /// Set BBox's height
+        void setHeight(int height       ///< Desired height
+                     ) { second.second = height; } 
         const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+
+        /// Clip this with rhs
+        void clip(BBox const&rhs) {
+            if (rhs.getX1() < getX1()) { setX1(rhs.getX1()); } // do the width, which is set from (x0, y0), first
+            if (rhs.getY1() < getY1()) { setY1(rhs.getY1()); }
+
+            if (rhs.getX0() > getX0()) { setX0(rhs.getX0()); }
+            if (rhs.getY0() > getY0()) { setY0(rhs.getY0()); }
+
+            if (getWidth() < 0 || getHeight() < 0) {
+                setWidth(0);
+                setHeight(0);
+            }
+        }
 
         operator bool() const {
             return !(getWidth() == 0 && getHeight() == 0);
@@ -173,16 +236,38 @@ namespace lsst { namespace afw { namespace image {
         /// Create a BCircle given centre and radius
         BCircle(PointI center,               //!< Centre of circle
                 float r                      //!< Radius of circle
-               ) : std::pair<PointI, float>(center, r) {}
+               ) : std::pair<PointI, float>(center, fabs(r)) {}
 
         PointI const& getCenter() const { return first; } ///< Return the circle's centre
         float getRadius() const { return second; }        ///< Return the circle's radius
+        BBox getBBox() const {                           ///< Return the circle's bounding box
+            int const iradius = static_cast<int>(second + 0.5);
+            PointI llc(first[0] - iradius, first[1] - iradius);
+            PointI urc(first[0] + iradius, first[1] + iradius);
+            return BBox(llc, urc);
+        }
     };
 
 /************************************************************************************************************/
 
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0);
+lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0, bool strip=false);
 
+/************************************************************************************************************/
+/**
+ * Return a value indicating a bad pixel for the given Image type
+ *
+ * A quiet NaN is returned for types that support it otherwise @c bad
+ *
+ * @relates lsst::afw::image::Image
+ */
+template<typename ImageT>
+typename ImageT::SinglePixel badPixel(typename ImageT::Pixel bad=0 ///< The bad value if NaN isn't supported
+                                     ) {
+    typedef typename ImageT::SinglePixel SinglePixelT;
+    return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN ?
+                        std::numeric_limits<SinglePixelT>::quiet_NaN() : bad);
+}
+            
 }}}
 
 #endif

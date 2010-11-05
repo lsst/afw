@@ -1,180 +1,113 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #if !defined(LSST_AFW_MATH_INTERPOLATE_H)
 #define LSST_AFW_MATH_INTERPOLATE_H
 /**
  * @file Interpolate.h
- * @brief Interpolate values for a set of x,y vector<>s
+ * @brief Wrap GSL to interpolate values for a set of x,y vector<>s
  * @ingroup afw
  * @author Steve Bickerton
  */
 #include <limits>
-
+#include <map>
+#include "gsl/gsl_interp.h"
+#include "gsl/gsl_spline.h"
 #include "boost/shared_ptr.hpp"
 
-namespace lsst { namespace afw { namespace math {
+#include "lsst/pex/exceptions.h"
 
+namespace lsst {
+namespace afw {
+namespace math {
 
-    namespace {
-        double const NaN = std::numeric_limits<double>::quiet_NaN();
-    }
+class Interpolate {
+public:
 
-    /* @brief Select the style of interpolation to use
-     * @note This is not yet implemented.  User must instantiate Linear or Spline interplation object.
-     * @todo Implement this 
-     */
     enum Style {
-        LINEAR = 0x01,                  ///< use linear interpolation
-        NATURAL_SPLINE = 0x02,          ///< use a natural spline    [ y''(0) = y''(n-1) = 0 ]
-        NOTAKNOT_SPLINE = 0x04,         ///< use a not-a-knot spline [ y'''(0,n-1) = y'''(1,n-2) ]
-        CUBIC_SPLINE = 0x08,            ///< a generic cubic spline, with user-set y'(0), y'(n-1)
-    };
-
-    /**
-     * @class InterpControl
-     * @brief Pass parameters in to the interpolation routine
-     * @ingroup afw
-     *
-     * @note This class is not currently implemented with the Interpolate class.
-     */
-    class InterpControl {
-    public:
-        InterpControl( Style const style=math::NATURAL_SPLINE,
-                       double const dydx0=NaN, double const dydxN=NaN
-                     ) : _style(style), _dydx0(dydx0), _dydxN(dydxN) {
-        };
-        void setDydx0(double const dydx0) { _dydx0 = dydx0; }
-        void setDydxN(double const dydxN) { _dydxN = dydxN; }
-        double getDydx0() { return _dydx0; }
-        double getDydxN() { return _dydxN; }
-        Style getStyle() const { return _style; }
-    private:
-        Style _style;                   // interpolation style from "enum Style" above
-        double _dydx0;                  // user-set first deriv at x_i=0 (for spline boundary conditions)
-        double _dydxN;                  // user-set first deriv at x_i=N (for spline boundary conditions)
-    };
-
-
-    /**
-     * @class Interpolate
-     * @brief A class to handle interpolation between x,y points in vector<> inputs
-     * @ingroup afw
-     *
-     * An interpolator object is declared and initialized for a pair of
-     * vector<>s describing x,y coordinates to be interpolated
-     * over. Interpolated points are then obtained by calling an 'interp' method
-     * for the interpolator object.
-     *
-     * @code
-           vector<double> x;                                          // put x-coords in this
-           vector<double> y;                                          // put f(x) in this
-           double xinterp;                    // the x coord we'd like an interpolated value for
-           
-           math::LinearInterpolate<double,double> Linterpobj(x, y);    // make a LinearInterpolate object
-           double yinterp = Linterpobj.interpolate(xinterp1);              // a linear interpolated value
-
-           math::SplineInterpolate<double,double> Sinterpobj(x, y);    // make a SplineInterpolate object
-           double yinterp = Sinterpobj.interpolate(xinterp1);              // a spline interpolated value
-     * @endcode
-     *
-     * @note: The routines assume evenly spaced grid points.  This is not, in general, a requirement for the
-     *  algorithm, but was used here for speed.  Uneven grid spacing will not yield correct answers.
-     *
-     */
-    
-    template<typename xT, typename yT>
-    class Interpolate {
-    public:
-        Interpolate(std::vector<xT> const& x,
-                    std::vector<yT> const& y,
-                    InterpControl const& ictrl = InterpControl());
-        virtual ~Interpolate() { delete &_x; delete &_y; };
-        virtual yT interpolate(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
-        virtual yT interpolate_safe(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
-
-        //InterpControl const& ictrl = InterpControl());
-        
-    private:
-    protected:
-        int const _n;                         // the number of points in the _x,_y vectors
-        std::vector<xT>& _x;                  // _n x-coordinates
-        std::vector<yT>& _y;                  // _n y-coordinates        
-        double const _xgridspace;             // the grid spacing
-        double const _invxgrid;               // the inverse grid spacing (1/_xgridspacing)
-        xT const _xlo;                        // the lowest value in _x
-        xT const _xhi;                        // the highest value in _x
-        InterpControl _ictrl;
-    };
-
-
-    template<typename xT, typename yT>
-    class LinearInterpolate : public Interpolate<xT,yT> {
-    public:
-        
-        // pre-calculate dydx values
-        LinearInterpolate(std::vector<xT> const& x, ///< x-coords of the function to interpolate over
-                          std::vector<yT> const& y, ///< y-coords of the function to interpolate over
-                          InterpControl const& ictrl = InterpControl()); ///< Specify Interpolation Parameters
-        
-        ~LinearInterpolate() { delete &_dydx; };
-
-        // fast methods with *no* bounds checking
-        yT interpolate(xT const xinterp) const;  // linearly interpolate this object at x=xinterp
-        yT interpolateDyDx(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
-        yT interpolateD2yDx2(xT const xinterp) const; // lineary interpolate this obejct at x=xinterp
-
-        // slow methods with bounds checking
-        yT interpolate_safe(xT const xinterp) const;  // linearly interpolate this object at x=xinterp
-        yT interpolateDyDx_safe(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
-        yT interpolateD2yDx2_safe(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
-        
-    private:
-        // see Meyer's Item 43.
-        using Interpolate<xT,yT>::_n;
-        using Interpolate<xT,yT>::_x;
-        using Interpolate<xT,yT>::_y;
-        using Interpolate<xT,yT>::_xgridspace;
-        using Interpolate<xT,yT>::_invxgrid;
-        using Interpolate<xT,yT>::_xlo;           
-        using Interpolate<xT,yT>::_xhi;
-        using Interpolate<xT,yT>::_ictrl;
-        std::vector<yT>& _dydx;
+        CONSTANT = 0,
+        LINEAR = 1,
+        NATURAL_SPLINE = 2,
+        CUBIC_SPLINE = 3,
+        CUBIC_SPLINE_PERIODIC = 4,
+        AKIMA_SPLINE = 5,
+        AKIMA_SPLINE_PERIODIC = 6,
+        NUM_STYLES
     };
     
-    template<typename xT, typename yT>
-    class SplineInterpolate : public Interpolate<xT,yT> {
-    public:
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                ::gsl_interp_type const *gslInterpType = ::gsl_interp_akima);
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                Interpolate::Style const style);
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                std::string style);
+    
+    void initialize(std::vector<double> const &x, std::vector<double> const &y,
+                    ::gsl_interp_type const *gslInterpType);
 
-        // pre-calculate d2ydx2 values
-        SplineInterpolate(std::vector<xT> const& x, ///< x-coords of the function to interpolate over
-                          std::vector<yT> const& y, ///< y-coords of the function to interpolate over
-                          InterpControl const& ictrl = InterpControl()); ///< Specify Interpolation parameters
-        
-        ~SplineInterpolate() { delete &_d2ydx2; };
+    virtual ~Interpolate();
+    double interpolate(double const x);
+    
+private:
+    std::vector<double> const &_x;
+    std::vector<double> const &_y;
+    ::gsl_interp_accel *_acc;
+    ::gsl_interp *_interp;
+};
 
-        // fast methods with *no* bounds checking        
-        yT interpolate(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
-        yT interpolateDyDx(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
-        yT interpolateD2yDx2(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
 
-        // slow methods with bounds checking        
-        yT interpolate_safe(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
-        yT interpolateDyDx_safe(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
-        yT interpolateD2yDx2_safe(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
-        
-    private:
-        using Interpolate<xT,yT>::_n;
-        using Interpolate<xT,yT>::_x;
-        using Interpolate<xT,yT>::_y;
-        using Interpolate<xT,yT>::_xgridspace;
-        using Interpolate<xT,yT>::_invxgrid;
-        using Interpolate<xT,yT>::_xlo;           
-        using Interpolate<xT,yT>::_xhi;
-        using Interpolate<xT,yT>::_ictrl;
-        std::vector<yT>& _d2ydx2;    // _n second-derivatives used for spline interp
-        double _dydx0;                  // the first derivative at point 0 (user-set for spline)
-        double _dydxN;                  // the first derivative at point N (user-set for spline)
-    };
+    
+/**
+ * @brief Conversion function to switch an Interpolate::Style to a gsl_interp_type.
+ */
+::gsl_interp_type const *styleToGslInterpType(Interpolate::Style const style);
+    
+/**
+ * @brief Conversion function to switch a string to an Interpolate::Style.
+ */
+Interpolate::Style stringToInterpStyle(std::string const style);
 
+/**
+ * @brief Conversion function to switch a string to a gsl_interp_type.
+ */
+::gsl_interp_type const *stringToGslInterpType(std::string const style);
+    
+/**
+ * @brief Get the highest order Interpolation::Style available for 'n' points.
+ */
+    Interpolate::Style lookupMaxInterpStyle(int const n);
+    
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ */
+int lookupMinInterpPoints(Interpolate::Style const style);
+    
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ * Overload of lookupMinInterpPoints() which takes a string
+ */
+int lookupMinInterpPoints(std::string const style);
         
 }}}
                      

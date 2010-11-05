@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief  Internal support for reading and writing FITS files
@@ -72,7 +94,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
 template <typename Image>
 inline void fits_read_image(const std::string& filename, Image& im,
                             lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-                            int hdu=0,
+                            int hdu=1,
                             BBox const& bbox=BBox()
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);
@@ -87,11 +109,12 @@ inline void fits_read_image(const std::string& filename, Image& im,
 /// Throws lsst::afw::image::FitsException if it fails to create the file.
 template <typename View>
 inline void fits_write_view(const std::string& filename, const View& view,
-                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr()
+                            boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
+                            std::string const& mode="w"
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
 
-    detail::fits_writer m(filename);
+    detail::fits_writer m(filename, mode);
     m.apply(view, metadata);
 }
 

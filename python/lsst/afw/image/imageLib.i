@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 %define imageLib_DOCSTRING
 "
 Basic routines to talk to lsst::afw::image classes
@@ -12,28 +35,47 @@ Basic routines to talk to lsst::afw::image classes
 #pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
 #pragma SWIG nowarn=362                 // operator=  ignored
 
+
 %{
-#include <lsst/daf/base.h>
-#include <lsst/daf/data.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/pex/policy/Policy.h>
-#include <lsst/pex/policy/PolicyFile.h>
-#include <lsst/afw/image.h>
+#include "boost/cstdint.hpp"
+
+#include "lsst/daf/base.h"
+#include "lsst/daf/data.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/pex/policy.h"
+#include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/image.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/image/Color.h"
+#include "lsst/afw/image/Defect.h"
+#include "lsst/afw/image/Calib.h"
+
+#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
+#include "numpy/arrayobject.h"
+#include "lsst/afw/numpyTypemaps.h"
 %}
 
-%inline %{
-namespace boost {
-    typedef unsigned short uint16_t;
-    namespace mpl { }
-}
+%init %{
+    import_array();
 %}
+
+
+namespace boost {
+    namespace mpl { }
+    typedef signed char  int8_t;
+    typedef int int32_t;
+    typedef unsigned short uint16_t;
+}
 
 /************************************************************************************************************/
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
+
+%include "lsst/base.h"
 
 %pythoncode %{
 import lsst.utils
@@ -49,7 +91,7 @@ def version(HeadURL = r"$HeadURL$"):
         return version_svn
     else:
         try:
-            version_eups = eups.setup("afw")
+            version_eups = eups.getSetupVersion("afw")
         except AttributeError:
             return version_svn
 
@@ -66,13 +108,25 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/pex/policy/policyLib.i"
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/daf/data/dataLib.i"
+%import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/coord/coordLib.i"
+
+%include "lsst/afw/eigen.i"
+
+%declareEigenMatrix(Eigen::MatrixXd);
+%declareEigenMatrix(Eigen::VectorXd);
+%declareEigenMatrix(Eigen::Matrix2d);
+%declareEigenMatrix(Eigen::Vector2d);
+%declareEigenMatrix(Eigen::Matrix3d);
+%declareEigenMatrix(Eigen::Vector3d);
 
 %lsst_exceptions();
 
 /******************************************************************************/
 
-%template(pairIntInt)   std::pair<int, int>;
-%template(mapStringInt) std::map<std::string, int>;
+%template(pairIntInt)       std::pair<int, int>;
+%template(pairDoubleDouble) std::pair<double, double>;
+%template(mapStringInt)     std::map<std::string, int>;
 
 /************************************************************************************************************/
 // Images, Masks, and MaskedImages
@@ -81,32 +135,87 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
 
+SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
+%include "lsst/afw/image/Calib.h"
+
+#if defined(IMPORT_FUNCTION_I)
+%{
+#include "lsst/afw/math.h"
+%}
+%import "lsst/afw/math/function.i"
+#undef IMPORT_FUNCTION_I
+#endif
+
 %include "image.i"
 %include "mask.i"
 %include "maskedImage.i"
+%include "imageSlice.i"
 
-%template(PointD) lsst::afw::image::Point<double>;
-%template(PointI) lsst::afw::image::Point<int>;
+%define %POINT(NAME, TYPE)
+%template(Point##NAME) lsst::afw::image::Point<TYPE>;
 
-%define %EXTEND_POINT(TYPE)
 %extend lsst::afw::image::Point<TYPE> {
     %pythoncode {
+    def __repr__(self):
+        return "Point" + "NAME(%.10g, %.10g)" % (self.getX(), self.getY())
+
     def __str__(self):
-        return "(%.6f, %.6f)" % (self.getX(), self.getY())
+        return "(%g, %g)" % (self.getX(), self.getY())
 
     def __getitem__(self, i):
+        """Treat as an array of length 2: [x, y]"""
         if i == 0:
             return self.getX()
         elif i == 1:
             return self.getY()
+        elif hasattr(i, "indices"):
+            return [self[ind] for ind in range(*i.indices(2))]
         else:
-            raise IndexError, i
-    }    
+            raise IndexError(i)
+
+    def __setitem__(self, i, val):
+        """Treat as an array of length 2: [x, y]"""
+        if i == 0:
+            self.setX(val)
+        elif i == 1:
+            self.setY(val)
+        elif hasattr(i, "indices"):
+            indexList = range(*i.indices(2))
+            if len(val) != len(indexList):
+                raise IndexError("Need %s values but got %s" % (len(indexList), len(val)))
+            for ind in indexList:
+                self[ind] = val[ind]
+        else:
+            raise IndexError(i)
+    
+    def __iter__(self):
+        return iter(self[:])
+
+    def __len__(self):
+        return 2
+                
+    def clone(self):
+        return self.__class__(self.getX(), self.getY())
+    }
 }
 %enddef
 
-%EXTEND_POINT(double);
-%EXTEND_POINT(int);
+%POINT(D, double);
+%POINT(I, int);
+
+%extend lsst::afw::image::BBox {
+    lsst::afw::image::BBox clone() {
+        return lsst::afw::image::BBox(*self);
+    }
+
+    %pythoncode {
+    def __repr__(self):
+        return "BBox(PointI(%d, %d), %d, %d)" % (self.getX0(), self.getY0(), self.getWidth(), self.getHeight())
+
+    def __str__(self):
+        return "(%d, %d) -- (%d, %d)" % (self.getX0(), self.getY0(), self.getX1(), self.getY1())
+    }
+}
 
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
@@ -116,31 +225,78 @@ def version(HeadURL = r"$HeadURL$"):
 
 /************************************************************************************************************/
 
+SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
+SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs);
+
 %{
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
 %}
 
-SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
+%include "lsst/afw/image/TanWcs.h"
+
+%lsst_persistable(lsst::afw::image::Wcs);
+%lsst_persistable(lsst::afw::image::TanWcs);
+
+%newobject makeWcs;
+
+%inline %{
+    lsst::afw::image::TanWcs::Ptr
+    cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
+        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
+        
+        if(tanWcs.get() == NULL) {
+            throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
+        }
+        return tanWcs;
+    }
+%}
+
+
+%inline {
+    /**
+     * Create a WCS from crval, image, and the elements of CD
+     */
+    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::geom::PointD crval,
+                                         lsst::afw::geom::PointD crpix,
+                                         double CD11, double CD12, double CD21, double CD22) {
+
+    Eigen::Matrix2d CD;
+    CD(0, 0) = CD11;
+    CD(0, 1) = CD12;
+    CD(1, 0) = CD21;
+    CD(1, 1) = CD22;
+    
+    return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(crval, crpix, CD));
+}
+}
 
 /************************************************************************************************************/
 
+#if !defined(CAMERA_GEOM_LIB_I)
+%import "lsst/afw/cameraGeom/cameraGeomLib.i"
+#endif
+
+/************************************************************************************************************/
 %{
 #include "lsst/afw/image/Exposure.h"
 %}
 
 // Must go Before the %include
 %define %exposurePtr(TYPE, PIXEL_TYPE)
-SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %enddef
 
 // Must go After the %include
 %define %exposure(TYPE, PIXEL_TYPE)
-%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE>;
-%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE>);
+%newobject makeExposure;
+%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
 %template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
-%extend lsst::afw::image::Exposure<PIXEL_TYPE> {
+%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+
+%extend lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %pythoncode {
     def Factory(self, *args):
         """Return an Exposure of this type"""
@@ -154,10 +310,40 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %exposurePtr(F, float);
 %exposurePtr(D, double);
 
+namespace lsst { namespace afw { namespace detection {
+    class Psf;
+}}}
+SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
+
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
+
+
+%extend lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertF;
+    lsst::afw::image::Exposure<float,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
+    {
+        return lsst::afw::image::Exposure<float,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
+/************************************************************************************************************/
+
+%include "lsst/afw/image/Color.h"
+
+/************************************************************************************************************/
+
+SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
+
+%include "lsst/afw/image/Defect.h"
+
+%template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
+
+/************************************************************************************************************/
 

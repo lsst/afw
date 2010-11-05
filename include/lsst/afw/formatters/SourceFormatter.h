@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 //
 //##====----------------                                ----------------====##/
 //
@@ -96,33 +119,38 @@ private:
         RA_ASTROM_ERR,
         DEC_ASTROM,
         DEC_ASTROM_ERR,
+        RA_OBJECT,
+        DEC_OBJECT,
         TAI_MID_POINT,
         TAI_RANGE,
-        FWHM_A,
-        FWHM_B,
-        FWHM_THETA,
-        PSF_MAG,
-        PSF_MAG_ERR,
-        AP_MAG,
-        AP_MAG_ERR,
-        MODEL_MAG,
-        MODEL_MAG_ERR,
-        PETRO_MAG,
-        PETRO_MAG_ERR,
-        INST_MAG,
-        INST_MAG_ERR,
-        NON_GRAY_CORR_MAG,
-        NON_GRAY_CORR_MAG_ERR,
-        ATM_CORR_MAG,
-        ATM_CORR_MAG_ERR,
+        PSF_FLUX,
+        PSF_FLUX_ERR,
+        AP_FLUX,
+        AP_FLUX_ERR,
+        MODEL_FLUX,
+        MODEL_FLUX_ERR,
+        PETRO_FLUX,
+        PETRO_FLUX_ERR,
+        INST_FLUX,
+        INST_FLUX_ERR,
+        NON_GRAY_CORR_FLUX,
+        NON_GRAY_CORR_FLUX_ERR,
+        ATM_CORR_FLUX,
+        ATM_CORR_FLUX_ERR,
         AP_DIA,
+        IXX,
+        IXX_ERR,
+        IYY,
+        IYY_ERR,
+        IXY,
+        IXY_ERR,
         SNR,
         CHI2,
         SKY,
         SKY_ERR,
         FLAG_FOR_ASSOCIATION,
         FLAG_FOR_DETECTION,
-        FLAG_FOR_WCS,   
+        FLAG_FOR_WCS
     };
 
 
@@ -139,10 +167,6 @@ private:
     static void insertRow(
         T &,
         lsst::afw::detection::Source const &
-    );
-    static void setupFetch(
-        lsst::daf::persistence::DbStorage &,
-        lsst::afw::detection::Source &
     );
 };
 

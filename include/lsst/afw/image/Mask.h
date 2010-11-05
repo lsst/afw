@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief LSST bitmasks
@@ -31,7 +54,7 @@ namespace image {
     // all masks will initially be instantiated with the same pixel type
     namespace detail {
         /// tag for a Mask
-        struct Mask_tag : detail::basic_tag { };
+        struct Mask_tag : public detail::basic_tag { };
     }
     /// Represent a 2-dimensional array of bitmask pixels
     template<typename MaskPixelT=lsst::afw::image::MaskPixel>
@@ -79,30 +102,32 @@ namespace image {
         void operator&=(Mask const& rhs);
         void operator&=(MaskPixelT const rhs);
 
+        void operator^=(Mask const& rhs);
+        void operator^=(MaskPixelT const rhs);
+
         typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y);
         typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y) const;
         bool operator()(int x, int y, int plane) const;
+        typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y, CheckIndices const&);
+        typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y,
+                                                                       CheckIndices const&) const;
+        bool operator()(int x, int y, int plane, CheckIndices const&) const;
 
         // I/O and FITS metadata
         
         //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
-        void writeFits(std::string const& fileName) const;
+        void writeFits(std::string const& fileName,
+                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=
+                                                                                   lsst::daf::base::PropertySet::Ptr(),
+                       std::string const& mode="w"
+                      ) const;
         
         // Mask Plane ops
         
         void clearAllMaskPlanes();
         void clearMaskPlane(int plane);
-
-        //void setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList);
-
         void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
-
-        //void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
-        
         static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::PropertySet::Ptr const);
-        
-        //int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, const vw::BBox2i maskRegion) const;
-        
         //
         // Operations on the mask plane dictionary
         //
@@ -126,7 +151,7 @@ namespace image {
         // Getters
         
 private:
-        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter);
+        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)
         int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
 
         static MaskPlaneDict _maskPlaneDict;

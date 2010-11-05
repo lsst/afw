@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief Write a FITS image to a file descriptor; useful for talking to DS9
@@ -63,7 +85,7 @@ int Card::write(int fd,
 
     if (value.type() == typeid(std::string)) {
         const char *str = boost::any_cast<std::string>(value).c_str();
-        if(keyword == "" ||
+        if (keyword == "" ||
            keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
             sprintf(card, "%-8.8s%-72s", keyword.c_str(), str);
         } else {
@@ -73,7 +95,8 @@ int Card::write(int fd,
                     (int)(80 - 14 - strlen(str)), comment.c_str());
         }
     } else {
-        sprintf(card, "%-8.8s= ", keyword.c_str()); card += 10;
+        sprintf(card, "%-8.8s= ", keyword.c_str());
+        card += 10;
         if (value.type() == typeid(bool)) {
             sprintf(card, "%20s", boost::any_cast<bool>(value) ? "T" : "F");
         } else if (value.type() == typeid(int)) {
@@ -89,11 +112,11 @@ int Card::write(int fd,
 /*
  * Write record if full
  */
-    if(++ncard == 36) {
-	if(posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
-	    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Cannot write header record");
-	}
-	ncard = 0;
+    if (++ncard == 36) {
+        if (posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Cannot write header record");
+            }
+            ncard = 0;
     }
    
     return ncard;
@@ -109,7 +132,7 @@ int Card::write(int fd,
 namespace {
     void flip_high_bit(char *arr,              // array that needs bits swapped
                        const int n) {          // number of bytes in arr
-        if(n%2 != 0) {
+        if (n%2 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to bit flip odd number of bytes: %d") % n).str());
         }
@@ -127,7 +150,7 @@ namespace {
 namespace {
     void swap_2(char *arr,              // array to swap
                 const int n) {          // number of bytes
-        if(n%2 != 0) {
+        if (n%2 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to byte swap odd number of bytes: %d") % n).str());
         }
@@ -143,7 +166,7 @@ namespace {
      */
     void swap_4(char *arr,              // array to swap
                 const int n) {          // number of bytes
-        if(n%4 != 0) {
+        if (n%4 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n).str());
         }
@@ -163,7 +186,7 @@ namespace {
      */
     void swap_8(char *arr,              // array to swap
                 const int n) {          // number of bytes
-        if(n%8 != 0) {
+        if (n%8 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n).str());
         }
@@ -191,13 +214,13 @@ namespace {
                        int naxis,
                        int *naxes,
                        std::list<Card>& cards,  /* extra header cards */
-                       int primary)		/* is this the primary HDU? */
+                       int primary)             /* is this the primary HDU? */
     {
         int i;
-        char record[FITS_SIZE + 1];		/* write buffer */
+        char record[FITS_SIZE + 1];             /* write buffer */
    
         int ncard = 0;
-        if(primary) {
+        if (primary) {
             Card card("SIMPLE", true);
             ncard = card.write(fd, ncard, record);
         } else {
@@ -219,7 +242,7 @@ namespace {
             Card card(key, naxes[i]);
             ncard = card.write(fd, ncard, record);
         }
-        if(primary) {
+        if (primary) {
             Card card("EXTEND", true, "There may be extensions");
             ncard = card.write(fd,ncard,record);
         }
@@ -245,19 +268,19 @@ namespace {
 /*
  * Pad out to a FITS record boundary
  */
-    void pad_to_fits_record(int fd,		// output file descriptor
-                            int npixel,	// number of pixels already written to HDU
-                            int bitpix	// bitpix for this datatype
+    void pad_to_fits_record(int fd,             // output file descriptor
+                            int npixel, // number of pixels already written to HDU
+                            int bitpix  // bitpix for this datatype
                            ) {
         const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
         int nbyte = npixel*bytes_per_pixel;
     
-        if(nbyte%FITS_SIZE != 0) {
-            char record[FITS_SIZE + 1];	/* write buffer */
-	
+        if (nbyte%FITS_SIZE != 0) {
+            char record[FITS_SIZE + 1]; /* write buffer */
+        
             nbyte = FITS_SIZE - nbyte%FITS_SIZE;
             memset(record, ' ', nbyte);
-            if(write(fd, record, nbyte) != nbyte) {
+            if (write(fd, record, nbyte) != nbyte) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                                   "error padding file to multiple of fits block size");
             }
@@ -271,15 +294,15 @@ namespace {
                        ) {
         const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
         int swap_bytes = 0;             // the default
-#if defined(LSST_LITTLE_ENDIAN)		// we'll need to byte swap FITS
-        if(bytes_per_pixel > 1) {
+#if defined(LSST_LITTLE_ENDIAN)         // we'll need to byte swap FITS
+        if (bytes_per_pixel > 1) {
             swap_bytes = 1;
         }
 #endif
 
         char *buff = NULL;              // I/O buffer
         bool allocated = false;         // do I need to free it?
-        if(swap_bytes || bitpix == 16) {
+        if (swap_bytes || bitpix == 16) {
             buff = new char[FITS_SIZE*bytes_per_pixel];
             allocated = true;
         }
@@ -291,17 +314,17 @@ namespace {
                 nwrite = end - ptr;
             }
             
-            if(swap_bytes) {
+            if (swap_bytes) {
                 memcpy(buff, ptr, nwrite);
                 if (bitpix == 16) {     // flip high-order bit
                     flip_high_bit(buff, nwrite);
                 }
 
-                if(bytes_per_pixel == 2) {
+                if (bytes_per_pixel == 2) {
                     swap_2(buff, nwrite);
-                } else if(bytes_per_pixel == 4) {
+                } else if (bytes_per_pixel == 4) {
                     swap_4(buff, nwrite);
-                } else if(bytes_per_pixel == 8) {
+                } else if (bytes_per_pixel == 8) {
                     swap_8(buff, nwrite);
                 } else {
                     fprintf(stderr,"You cannot get here\n");
@@ -316,13 +339,13 @@ namespace {
                 }
             }
             
-            if(write(fd, buff, nwrite) != nwrite) {
+            if (write(fd, buff, nwrite) != nwrite) {
                 perror("Error writing image: ");
                 break;
             }
         }
         
-        if(allocated) {
+        if (allocated) {
             delete buff;
         }
         
@@ -335,7 +358,8 @@ namespace lsst { namespace afw { namespace display {
 template<typename ImageT>
 void writeBasicFits(int fd,                                      // file descriptor to write to
                     ImageT const& data,                          // The data to write
-                    image::Wcs const* Wcs                        // which Wcs to use for pixel
+                    image::Wcs const* Wcs,                       // which Wcs to use for pixel
+                    char const *title                            // title to write to DS9
                    ) {
     /*
      * Allocate cards for FITS headers
@@ -354,37 +378,50 @@ void writeBasicFits(int fd,                                      // file descrip
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unsupported image type");
     }
     /*
-     * Generate cards for Wcs, so that pixel (0,0) is correctly labelled
+     * Generate WcsA, pixel coordinates, allowing for X0 and Y0
      */
     std::string wcsName = "A";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), 0, "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), 0, "(output) Row pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
+                         data.getX0(), "(output) Column pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
+                         data.getY0(), "(output) Row pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0,
+                         "Column Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
     cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
     /*
-     * Now WCSB, pixel coordinates, but allowing for X0 and Y0
+     * Now WcsB, so that pixel (0,0) is correctly labelled (but ignoring XY0)
      */
     wcsName = "B";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
-                         data.getX0(), "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
-                         data.getY0(), "(output) Row pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), 0,
+                         "(output) Column pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), 0,
+                         "(output) Row pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0,
+                         "Column Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
     cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
+
+    if (title) {
+        cards.push_back(Card("OBJECT", title, "Image being displayed"));
+    }
     /*
      * Was there something else?
      */
     if (Wcs != NULL && *Wcs) {
         typedef std::vector<std::string> NameList;
-        lsst::daf::base::PropertySet::Ptr metadata = Wcs->getFitsMetadata();
+
+        image::Wcs::Ptr newWcs = Wcs->clone(); //Create a copy
+        newWcs->shiftReferencePixel(-data.getX0(), -data.getY0());
+        
+        lsst::daf::base::PropertySet::Ptr metadata = newWcs->getFitsMetadata();
+
         NameList paramNames = metadata->paramNames();
         
         for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
@@ -416,17 +453,17 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * Basic FITS stuff
      */
-    const int naxis = 2;		// == NAXIS
-    int naxes[naxis];			/* values of NAXIS1 etc */
+    const int naxis = 2;                // == NAXIS
+    int naxes[naxis];                   /* values of NAXIS1 etc */
     naxes[0] = data.getWidth();
     naxes[1] = data.getHeight();
     
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
     for (int y = 0; y != data.getHeight(); ++y) {
-	if(write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
-	    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        if (write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Error writing data for row %d") % y).str());
-	}
+        }
     }
 
     pad_to_fits_record(fd, data.getWidth()*data.getHeight(), bitpix);
@@ -437,18 +474,19 @@ void writeBasicFits(int fd,                                      // file descrip
 template<typename ImageT>
 void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
                     ImageT const& data,                          // The data to write
-                    image::Wcs const* Wcs                        // which Wcs to use for pixel
+                    image::Wcs const* Wcs,                       // which Wcs to use for pixel
+                    char const* title                            // title to write to DS9
                    ) {
     int fd;
-    if ((filename.c_str())[0] == '|') {		// a command
-	const char *cmd = filename.c_str() + 1;
-	while (isspace(*cmd)) {
-	    cmd++;
-	}
+    if ((filename.c_str())[0] == '|') {         // a command
+        const char *cmd = filename.c_str() + 1;
+        while (isspace(*cmd)) {
+            cmd++;
+        }
 
-	fd = fileno(popen(cmd, "w"));
+        fd = fileno(popen(cmd, "w"));
     } else {
-	fd = creat(filename.c_str(), 777);
+        fd = creat(filename.c_str(), 777);
     }
 
     if (fd < 0) {
@@ -457,7 +495,7 @@ void writeBasicFits(std::string const& filename,                 // file to writ
     }
 
     try {
-        writeBasicFits(fd, data, Wcs);
+        writeBasicFits(fd, data, Wcs, title);
     } catch(lsst::pex::exceptions::Exception &) {
         (void)close(fd);
         throw;
@@ -467,8 +505,8 @@ void writeBasicFits(std::string const& filename,                 // file to writ
 }
 
 #define INSTANTIATE(IMAGET)                                            \
-    template void writeBasicFits(int,                IMAGET const&, image::Wcs const *); \
-    template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *)
+    template void writeBasicFits(int,                IMAGET const&, image::Wcs const *, char const *); \
+    template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *, char const *)
 
 #define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
 #define INSTANTIATE_MASK(T)  INSTANTIATE(lsst::afw::image::Mask<T>)

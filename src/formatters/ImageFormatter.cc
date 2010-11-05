@@ -1,5 +1,28 @@
 // -*- lsst-c++ -*-
 
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
+
 /** @file
  * @brief Implementation of ImageFormatter class
  *
@@ -42,6 +65,8 @@ using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::Image;
 
+namespace afwImg = lsst::afw::image;
+
 namespace lsst {
 namespace afw {
 namespace formatters {
@@ -66,19 +91,36 @@ lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::regis
 
 template <typename ImagePixelT>
 ImageFormatter<ImagePixelT>::ImageFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+        lsst::pex::policy::Policy::Ptr
+                                           )
+    :
+    lsst::daf::persistence::Formatter(typeid(this))
+{
 }
 
 template <typename ImagePixelT>
-ImageFormatter<ImagePixelT>::~ImageFormatter(void) {
+ImageFormatter<ImagePixelT>::~ImageFormatter(void)
+{
+}
+
+namespace {
+    namespace dafBase = lsst::daf::base;
+    namespace afwImage = lsst::afw::image;
+    
+    void checkCast(dafBase::Persistable const* persistable) {
+        afwImage::Image<float> const* ip = dynamic_cast<afwImage::Image<float> const*>(persistable);
+        std::cout << "IP = " << ip << " " << typeid(persistable).name()
+                  << " " << typeid(ip).name() << std::endl;
+    }
 }
 
 template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
+    checkCast(persistable);
+
     execTrace("ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
@@ -138,7 +180,18 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         execTrace("ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         
-        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu());
+        afwImg::BBox box;
+        if (additionalData->exists("llcX")) {
+            int llcX = additionalData->get<int>("llcX");
+            int llcY = additionalData->get<int>("llcY");
+            int width = additionalData->get<int>("width");
+            int height = additionalData->get<int>("height");
+            box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
+        }
+        lsst::daf::base::PropertySet::Ptr metadata;
+
+        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu(),
+                                                        lsst::daf::base::PropertySet::Ptr(), box);
         // \note We're throwing away the metadata
         // \todo Do something with these fields?
         // int _X0;
@@ -151,15 +204,15 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
 
 template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    Persistable*,
+    Storage::Ptr,
+    lsst::daf::base::PropertySet::Ptr) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Image");
 }
 
 template <typename ImagePixelT> template <class Archive>
 void ImageFormatter<ImagePixelT>::delegateSerialize(
-    Archive& ar, int const version, Persistable* persistable) {
+    Archive& ar, int const, Persistable* persistable) {
     execTrace("ImageFormatter delegateSerialize start");
     Image<ImagePixelT>* ip = dynamic_cast<Image<ImagePixelT>*>(persistable);
     if (ip == 0) {
@@ -186,7 +239,8 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
         typename Image<ImagePixelT>::_image_t img(width, height);
         boost::gil::copy_pixels(ip->_getRawView(), flipped_up_down_view(view(img)));
         ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(boost::gil::interleaved_view_get_raw_data(view(img)), nbytes));
+                      boost::serialization::make_binary_object(
+                                       boost::gil::interleaved_view_get_raw_data(view(img)), nbytes));
     }
 }
 

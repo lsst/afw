@@ -1,52 +1,69 @@
 # -*- python -*-
 Import("env")
-import os
-import sys
+import os, re, sys
 import glob
 
 import lsst.tests
 import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
-for i in glob.glob("*.cc"):
-    # This test appears to be invalid
-    if i != "MaskIO_2.cc":
-        env.Program(i, LIBS=env.getlibs("afw"))
+for fileName in glob.glob("*.cc"):
+    if fileName == "maskIo2.cc":       # This test appears to be invalid
+        continue
 
+    if re.search(r"_wrap.cc", fileName): # not designed to be independently built!
+        continue
+
+    env.Program(fileName, LIBS=env.getlibs("afw"))
+
+env.CheckSwig("python", ilang="c++",
+              includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
+
+testEigenLib = env.LoadableModuleIncomplete("_testEigenLib", ["testEigenLib.i"],
+                                            CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
+                                            LIBS=env.getlibs("afw"))
+testLib = env.LoadableModuleIncomplete("_testLib", ["testLib.i"],
+                                       CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
+                                       LIBS=env.getlibs("afw"))
 #
 # Tests
 #
 dataDir = scons.ProductDir("afwdata")
 if not dataDir:
     print "Warning: afwdata is not set up; not running the tests!"
-else:
+else:    
     # copy AFWDATA_DIR to the test's environment
     env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
     
-    if lsst.daf.persistence.DbAuth.available():
-        if os.environ.has_key("LSST_DB_AUTH"):
-            env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]
-    else:
-        print "WARNING: No fallback database authenticator seen"
+    if not lsst.daf.persistence.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
+        print "WARNING: No database authenticator seen"
         print "Database tests may be skipped or may fail"
-
+    
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
     testArgs = dict(
-        MaskedImage_1 =   "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
-        MaskedImageIO_1 = inFile,
-        MaskedImageIO_2 = inFile,
-        MaskIO_1 =         "%s_msk.fits" % inFile,
+        maskedImage1 =   "%s %s file:maskedImage1_output_1 file:maskedImage1_output_2" % (inFile, inFile),
+        maskedImageIo1 = inFile,
+        maskedImageIo2 = inFile,
+        maskIo1 =         "%s_msk.fits" % inFile,
     )
-
-    ignoreList=[]
+    
+    ignoreList=["testLib.py", "testEigenLib.py",
+                "numpyEigen.py" # broken, but kept until a better fix is available
+                ]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
-
+    
     tests.run("*.cc")
     
     # set up python tests
     for target in tests.run("*.py"):
-        env.Depends(target, "../python/lsst/afw/detection/_detectionLib%s" % (env["LDMODULESUFFIX"]))
-        env.Depends(target, "../python/lsst/afw/display/_displayLib%s" % (env["LDMODULESUFFIX"]))
-        env.Depends(target, "../python/lsst/afw/image/_imageLib%s" % (env["LDMODULESUFFIX"]))
-        env.Depends(target, "../python/lsst/afw/math/_mathLib%s" % (env["LDMODULESUFFIX"]))
+        for pkgName in ("cameraGeom", "coord", "detection", "display", "geom", "image", "math",
+            ): # packages with SWIG library
+            env.Depends(target, os.path.join(
+                "#python", "lsst", "afw", pkgName, "_%sLib%s" % (pkgName, env["LDMODULESUFFIX"],)))
+        if target.endswith("spatialCell.py"):
+            env.Depends(target, "_testLib%s" % (env["LDMODULESUFFIX"]))
+            env.Depends(target, "testLib.py")
+        elif target.endswith("numpyEigen.py"):
+            env.Depends(target, "_testEigenLib%s" % (env["LDMODULESUFFIX"]))
+            env.Depends(target, "testEigenLib.py")

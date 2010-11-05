@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief Support for 2-D images
@@ -12,21 +35,24 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <functional>
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
+#include "lsst/afw/image/ImageUtils.h"
+#include "lsst/afw/math/Function.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
 
 namespace lsst { namespace afw {
 
 namespace formatters {
     template <typename PixelT> class ImageFormatter;
+    template <typename PixelT> class DecoratedImageFormatter;
 }
 
 namespace image {
@@ -37,15 +63,27 @@ namespace image {
         /// Base %image tag
         struct basic_tag { };
         /// tag for an Image
-        struct Image_tag : basic_tag { };
+        struct Image_tag : public basic_tag { };
         /// traits class for image categories
         template<typename ImageT>
         struct image_traits {
             typedef typename ImageT::image_category image_category;
         };
+        //
+        std::string const wcsNameForXY0 = "A"; // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
     }
 
-    /************************************************************************************************************/
+    /*********************************************************************************************************/
+    /// A class used to request that array accesses be checked
+    class CheckIndices {
+    public:
+        explicit CheckIndices(bool check=true) : _check(check) {}
+        operator bool() const { return _check; }
+    private:
+        bool _check;
+    };
+
+    /*********************************************************************************************************/
     /// \brief metafunction to extract reference type from PixelT
     template<typename PixelT>
     struct Reference {
@@ -129,8 +167,10 @@ namespace image {
         explicit ImageBase(const std::pair<int, int> dimensions);
         ImageBase(const ImageBase& src, const bool deep=false);
         explicit ImageBase(const ImageBase& src, const BBox& bbox, const bool deep=false);
-        /// generalised copy constructor; defined here in the header so that the compiler can instantiate
-        /// N(N-1)/2 conversions between N ImageBase types.
+        /// generalised copy constructor
+        ///
+        /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
+        /// ImageBase types.
         template<typename OtherPixelT>
         ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
             lsst::daf::data::LsstBase(typeid(this)) {
@@ -141,8 +181,8 @@ namespace image {
 
             ImageBase<PixelT> tmp(rhs.getDimensions());
             copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
-            tmp._ix0 = rhs._ix0;
-            tmp._iy0 = rhs._iy0;
+            tmp._ix0 = 0;                                        // we made a deep copy, so _i[xy]0 == 0
+            tmp._iy0 = 0;
             tmp._x0 = rhs._x0;
             tmp._y0 = rhs._y0;
 
@@ -158,7 +198,9 @@ namespace image {
         // Operators etc.
         //
         PixelReference operator()(int x, int y);
+        PixelReference operator()(int x, int y, CheckIndices const&);
         PixelConstReference operator()(int x, int y) const;
+        PixelConstReference operator()(int x, int y, CheckIndices const&) const;
 
         /// Return the number of columns in the %image
         int getWidth() const { return _gilView.width(); }
@@ -167,19 +209,62 @@ namespace image {
         /**
          * Return the %image's column-origin
          *
-         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be 0 except for images created using the
+         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
         int getX0() const { return _x0; }
         /**
          * Return the %image's row-origin
          *
-         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be 0 except for images created using the
+         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
         int getY0() const { return _y0; }
+
+        /**
+         * Return the %image's origin
+         *
+         * This will usually be (0, 0) except for images created using the
+         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return PointI(_x0, _y0); }
+        
+        /**
+         * @brief Convert image position to index (nearest integer and fractional parts)
+         *
+         * @return std::pair(nearest integer index, fractional part)
+         */
+        std::pair<int, double> positionToIndex(
+                double const pos, ///< image position
+                lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+        ) const {
+            double const fullIndex = pos - PixelZeroPos - (xy == X ? getX0() : getY0());
+            int const roundedIndex = static_cast<int>(fullIndex + 0.5);
+            double const residual = fullIndex - roundedIndex;
+            return std::pair<int, double>(roundedIndex, residual);
+        }
+
+        /**
+         * @brief Convert image index to image position
+         *
+         * The LSST indexing convention is:
+         * * the index of the bottom left pixel is 0,0
+         * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
+         *
+         * @return image position
+         */
+        inline double indexToPosition(
+                int ind, ///< image index
+                lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+        ) const {
+            return static_cast<double>(ind) + PixelZeroPos + (xy == X ? getX0() : getY0());
+        }
+        
         /// Return the %image's size;  useful for passing to constructors
-        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
         //
@@ -194,15 +279,44 @@ namespace image {
         fast_iterator begin(bool) const;
         fast_iterator end(bool) const;
 
-        x_iterator row_begin(int y) const;
-        x_iterator row_end(int y) const;
-        x_iterator x_at(int x, int y) const;
+        /// Return an \c x_iterator to the start of the \c y'th row
+        ///
+        /// Incrementing an \c x_iterator moves it across the row
+        x_iterator row_begin(int y) const {
+            return _gilView.row_begin(y);
+        }
 
-        y_iterator col_begin(int x) const;
-        y_iterator col_end(int x) const;
-        y_iterator y_at(int x, int y) const;
+        /// Return an \c x_iterator to the end of the \c y'th row
+        x_iterator row_end(int y) const {
+            return _gilView.row_end(y);
+        }
 
-        xy_locator xy_at(int x, int y) const;
+        /// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
+        x_iterator x_at(int x, int y) const { return _gilView.x_at(x, y); }
+
+        /// Return an \c y_iterator to the start of the \c y'th row
+        ///
+        /// Incrementing an \c y_iterator moves it up the column
+        y_iterator col_begin(int x) const {
+            return _gilView.col_begin(x);
+        }
+        
+        /// Return an \c y_iterator to the end of the \c y'th row
+        y_iterator col_end(int x) const {
+            return _gilView.col_end(x);
+        }
+
+        /// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
+        y_iterator y_at(int x, int y) const {
+            return _gilView.y_at(x, y);
+        }
+
+        /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
+        ///
+        /// Locators may be used to access a patch in an image
+        xy_locator xy_at(int x, int y) const {
+            return xy_locator(_gilView.xy_at(x, y));
+        }
         /**
          * Set the ImageBase's origin
          *
@@ -214,6 +328,18 @@ namespace image {
         void setXY0(PointI const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
+        }
+        /**
+         * Set the ImageBase's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            _x0 = x0;
+            _y0 = y0;
         }
 
     private:
@@ -267,10 +393,8 @@ namespace image {
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
         
-        explicit Image(const int width=0, int const height=0);
-        explicit Image(const int width, int const height, PixelT initialValue);
-        explicit Image(const std::pair<int, int> dimensions);
-        explicit Image(const std::pair<int, int> dimensions, PixelT initialValue);
+        explicit Image(const int width=0, int const height=0, PixelT initialValue=0);
+        explicit Image(const std::pair<int, int> dimensions, PixelT initialValue=0);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,
@@ -291,17 +415,21 @@ namespace image {
 
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(std::string const& fileName,
-            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
+                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
+                       std::string const& mode="w"
+                      ) const;
 
         void swap(Image &rhs);
         //
         // Operators etc.
         //
         void operator+=(PixelT const rhs);
-        void operator+=(Image<PixelT>const & rhs);
+        virtual void operator+=(Image<PixelT>const & rhs);
+        void operator+=(lsst::afw::math::Function2<double> const& function);
         void scaledPlus(double const c, Image<PixelT>const & rhs);
         void operator-=(PixelT const rhs);
         void operator-=(Image<PixelT> const& rhs);
+        void operator-=(lsst::afw::math::Function2<double> const& function);
         void scaledMinus(double const c, Image<PixelT>const & rhs);
         void operator*=(PixelT const rhs);
         void operator*=(Image<PixelT> const& rhs);
@@ -312,12 +440,21 @@ namespace image {
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>)
     };
     
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator-=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator*=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator/=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
-    
+
     /************************************************************************************************************/
     /**
      * \brief A container for an Image and its associated metadata
@@ -339,7 +476,7 @@ namespace image {
         explicit DecoratedImage(const std::pair<int, int> dimensions);
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
-        explicit DecoratedImage(std::string const& fileName, const int hdu=0);
+        explicit DecoratedImage(std::string const& fileName, const int hdu=0, BBox const& bbox=BBox());
 
         DecoratedImage& operator=(const DecoratedImage& image);
 
@@ -360,7 +497,10 @@ namespace image {
         
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(std::string const& fileName,
-            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
+                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata =
+                            lsst::daf::base::PropertySet::Ptr(),
+                       std::string const& mode="w"
+                      ) const;
         
         /// Return a shared_ptr to the DecoratedImage's Image
         ImagePtr      getImage()       { return _image; }
@@ -376,6 +516,7 @@ namespace image {
         /// Set the DecoratedImage's gain
         void setGain(double gain) { _gain = gain; }
     private:
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
         typename Image<PixelT>::Ptr _image;
         double _gain;
 
@@ -384,6 +525,7 @@ namespace image {
 
     template<typename PixelT>
     void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
+
 }}}  // lsst::afw::image
 
 #endif

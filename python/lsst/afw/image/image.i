@@ -1,6 +1,30 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 %{
 #   include "lsst/afw/image/Image.h"
+#   include "lsst/afw/image/ImagePca.h"
 %}
 
 %ignore lsst::afw::image::ImageBase::operator();
@@ -22,6 +46,13 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %template(NAME##TYPE) lsst::afw::image::Image<PIXEL_TYPE>;
 %template(Decorated##NAME##TYPE) lsst::afw::image::DecoratedImage<PIXEL_TYPE>;
 %lsst_persistable(lsst::afw::image::Image<PIXEL_TYPE>);
+%lsst_persistable(lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
+
+%template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> > >;
+%template(NAME##Pca##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::Image<PIXEL_TYPE> >;
+
+%template(innerProduct) lsst::afw::image::innerProduct<lsst::afw::image::Image<PIXEL_TYPE>,
+                                                       lsst::afw::image::Image<PIXEL_TYPE>  >;
 
 %extend lsst::afw::image::Image<PIXEL_TYPE> {
 
@@ -35,16 +66,19 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
      * Set pixel (x,y) to val
      */
     void set(int x, int y, double val) {
-        self->operator()(x, y) = val;
+        self->operator()(x, y, lsst::afw::image::CheckIndices(true)) = val;
     }
 
     PIXEL_TYPE get(int x, int y) {
-        return self->operator()(x, y);
+        return self->operator()(x, y, lsst::afw::image::CheckIndices(true));
     }
 
     %pythoncode {
     def Factory(self, *args):
-        """Return an Image of this type"""
+        """Return an Image class of this type
+        
+        A synonym for the attribute __class__
+        """
         return NAME##TYPE(*args)
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"
@@ -90,6 +124,11 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 }
 %enddef
 
+
+%define %mimage(NAME, TYPE, PIXEL_TYPE...)
+%template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::MaskedImage<PIXEL_TYPE> > >;
+%enddef
+
 /************************************************************************************************************/
 
 %ignore lsst::afw::image::ImageBase::swap;
@@ -106,7 +145,6 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %ignore lsst::afw::image::ImageBase::y_at;
 %ignore lsst::afw::image::ImageBase::xy_at;
 
-SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
 %imagePtr(Image, U, boost::uint16_t);
 %imagePtr(Image, I, int);
 %imagePtr(Image, F, float);
@@ -114,24 +152,55 @@ SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Utils.h"
 %include "lsst/afw/image/Image.h"
+%include "lsst/afw/image/ImagePca.h"
 
 %image(Image, U, boost::uint16_t);
 %image(Image, I, int);
 %image(Image, F, float);
 %image(Image, D, double);
 
+%mimage(MaskedImage, U, boost::uint16_t);
+%mimage(MaskedImage, I, int);
+%mimage(MaskedImage, F, float);
+%mimage(MaskedImage, D, double);
+
 %template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
 
 %extend lsst::afw::image::Image<boost::uint16_t> {
-    %newobject convertFloat;
-    lsst::afw::image::Image<float> convertFloat() {
+    %newobject convertF;
+    lsst::afw::image::Image<float> convertF() {
        return lsst::afw::image::Image<float>(*self, true);
+    }
+    %pythoncode {
+    def convertFloat(self, *args):
+        """Alias for convertF"""
+
+        return self.convertF(*args)
+    }
+}
+
+%extend lsst::afw::image::Image<double> {
+    %newobject convertF;
+    lsst::afw::image::Image<float> convertF() {
+       return lsst::afw::image::Image<float>(*self, true);
+    }
+    %pythoncode {
+    def convertFloat(self, *args):
+        """Alias for convertF"""
+
+        return self.convertF(*args)
     }
 }
 
 %extend lsst::afw::image::Image<float> {
-   %newobject convertU16;
-   lsst::afw::image::Image<boost::uint16_t> convertU16() {
-       return lsst::afw::image::Image<boost::uint16_t>(*self, true);
-   }
+    %newobject convertU;
+    lsst::afw::image::Image<boost::uint16_t> convertU() {
+        return lsst::afw::image::Image<boost::uint16_t>(*self, true);
+    }
+    %pythoncode {
+    def convertU16(self, *args):
+        """Alias for convertU"""
+
+        return self.convertU(*args)
+    }
 }

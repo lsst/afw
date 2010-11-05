@@ -1,5 +1,28 @@
 // -*- lsst-c++ -*-
 
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
+
 /** @file
  * @brief Implementation of MaskFormatter class
  *
@@ -62,8 +85,8 @@ lsst::daf::persistence::FormatterRegistration MaskFormatter<MaskPixelT>::registr
 
 template <typename MaskPixelT>
 MaskFormatter<MaskPixelT>::MaskFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+    lsst::pex::policy::Policy::Ptr) :
+    lsst::daf::persistence::Formatter(typeid(this)) {
 }
 
 template <typename MaskPixelT>
@@ -74,7 +97,7 @@ template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
     execTrace("MaskFormatter write start");
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
@@ -103,7 +126,7 @@ void MaskFormatter<MaskPixelT>::write(
 template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
     execTrace("MaskFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskFormatter read BoostStorage");
@@ -125,9 +148,9 @@ Persistable* MaskFormatter<MaskPixelT>::read(
 
 template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    Persistable*,
+    Storage::Ptr,
+    lsst::daf::base::PropertySet::Ptr) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Mask");
 }
 

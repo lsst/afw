@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_FUNCTION_H
 #define LSST_AFW_MATH_FUNCTION_H
 /**
@@ -14,6 +37,7 @@
 #include <sstream>
 #include <vector>
 
+#include "boost/format.hpp"
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/void_cast.hpp"
@@ -45,14 +69,14 @@ using boost::serialization::make_nvp;
      * - Have one or more constructors, all of which must initialize _params
      * - Define operator() with code to compute the function
      *   using this->_params or this->getParams() to reference the parameters
+     * - If the function is a linear combination of parameters then override the function isLinearCombination.
      *
      * Design Notes:
      * The reason these functions exist (rather than using a pre-existing function class,
      * such as Functor in VisualWorkbench) is because the Kernel class requires function
      * objects with a standard interface for setting and getting function parameters.
      *
-     * To do:
-     * - Implement separable functions
+     * The reason isLinearCombination exists is to support refactoring LinearCombinationKernels.
      *
      * @ingroup afw
      */
@@ -82,7 +106,7 @@ using boost::serialization::make_nvp;
             _params(params)   ///< function parameters
         {}
         
-        virtual ~Function() {};
+        virtual ~Function() {}
     
         /**
          * @brief Return the number of function parameters
@@ -112,16 +136,25 @@ using boost::serialization::make_nvp;
         std::vector<double> const &getParameters() const {
             return _params;
         }
+
+        /**
+         * @brief Is the function a linear combination of its parameters?
+         *
+         * @return true if the function can be expressed as: sum over i of parameter_i * function_i(args)
+         *
+         * @warning: subclasses must override if true.
+         */
+        virtual bool isLinearCombination() const { return false; };
         
         /**
          * @brief Set one function parameter without range checking
          */
-        virtual void setParameter(
+        void setParameter(
             unsigned int ind,   ///< index of parameter
             double newValue)    ///< new value for parameter
         {
             _params[ind] = newValue;
-        };
+        }
         
         /**
          * @brief Set all function parameters
@@ -133,8 +166,9 @@ using boost::serialization::make_nvp;
             std::vector<double> const &params)   ///< vector of function parameters
         {
             if (_params.size() != params.size()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                                  "Wrong number of parameters");
+                throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                    (boost::format("params has %d entries instead of %d") % \
+                    params.size() % _params.size()).str());
             }
             _params = params;
         }
@@ -144,7 +178,7 @@ using boost::serialization::make_nvp;
          *
          * @return a string representation of the function
          */
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const&) const {
             std::stringstream os;
             os << "parameters: [ ";
             for (std::vector<double>::const_iterator i = _params.begin(); i != _params.end(); ++i) {
@@ -153,7 +187,7 @@ using boost::serialization::make_nvp;
             }
             os << " ]";
             return os.str();
-        };
+        }
 
     protected:
         std::vector<double> _params;
@@ -162,8 +196,8 @@ using boost::serialization::make_nvp;
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
-        };
-    };   
+        }
+    };
 
     
     /**
@@ -198,7 +232,7 @@ using boost::serialization::make_nvp;
             Function<ReturnT>(params)
         {}
         
-        virtual ~Function1() {};
+        virtual ~Function1() {}
         
         /**
          * @brief Return a pointer to a deep copy of this function
@@ -211,13 +245,15 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr copy() const = 0; 
+        virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x) const = 0;
+        
+        virtual std::string toString(std::string const& prefix="") const {
+            return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
+        }
 
-        virtual std::string toString(void) const {
-            return std::string("Function1: ") + Function<ReturnT>::toString();
-        };
+        virtual void computeCache(int const n) {}
 
     private:
         friend class boost::serialization::access;
@@ -227,9 +263,8 @@ using boost::serialization::make_nvp;
                 Function1<ReturnT>, Function<ReturnT> >(
                     static_cast< Function1<ReturnT>* >(0),
                     static_cast< Function<ReturnT>* >(0));
-        };
+        }
     };    
-
     
     /**
      * @brief A Function taking two arguments.
@@ -265,7 +300,7 @@ using boost::serialization::make_nvp;
             Function<ReturnT>(params)
         {}
         
-        virtual ~Function2() {};
+        virtual ~Function2() {}
         
         /**
          * @brief Return a pointer to a deep copy of this function
@@ -278,13 +313,20 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr copy() const = 0; 
+        virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x, double y) const = 0;
 
-        virtual std::string toString(void) const {
-            return std::string("Function2: ") + Function<ReturnT>::toString();
-        };
+        virtual std::string toString(std::string const& prefix="") const {
+            return std::string("Function2: ") + Function<ReturnT>::toString(prefix);
+        }
+        /**
+         * Return the derivative of the Function with respect to its parameters
+         */
+        virtual std::vector<double> getDFuncDParameters(double, double) const {
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                              "getDFuncDParameters is not implemented for this class");
+        }
 
     private:
         friend class boost::serialization::access;
@@ -295,7 +337,7 @@ using boost::serialization::make_nvp;
                 Function2<ReturnT>, Function<ReturnT> >(
                     static_cast< Function2<ReturnT>* >(0),
                     static_cast< Function<ReturnT>* >(0));
-        };
+        }
 #endif
     };
 
@@ -307,10 +349,11 @@ using boost::serialization::make_nvp;
     class NullFunction1 : public Function1<ReturnT> {
     public:
         explicit NullFunction1() : Function1<ReturnT>(0) {}
-        typename Function1<ReturnT>::Ptr copy() const { return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
+        typename Function1<ReturnT>::Ptr clone() const {
+            return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
 
     private:
-        ReturnT operator() (double x) const { return static_cast<ReturnT>(0); }
+        ReturnT operator() (double) const { return static_cast<ReturnT>(0); }
 
     private:
         friend class boost::serialization::access;
@@ -319,7 +362,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("fn",
                           boost::serialization::base_object<
                           Function<ReturnT> >(*this));
-        };
+        }
     };
 
     /**
@@ -329,10 +372,11 @@ using boost::serialization::make_nvp;
     class NullFunction2 : public Function2<ReturnT> {
     public:
         explicit NullFunction2() : Function2<ReturnT>(0) {}
-        typename Function2<ReturnT>::Ptr copy() const { return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
+        typename Function2<ReturnT>::Ptr clone() const {
+            return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
 
     private:
-        ReturnT operator() (double x, double y) const { return static_cast<ReturnT>(0); }
+        ReturnT operator() (double, double) const { return static_cast<ReturnT>(0); }
 
     private:
         friend class boost::serialization::access;
@@ -341,7 +385,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("fn",
                           boost::serialization::base_object<
                           Function<ReturnT> >(*this));
-        };
+        }
     };
 
 }}}   // lsst::afw::math
@@ -354,7 +398,7 @@ inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::Function<ReturnT> const* f,
                                 unsigned int const version) {
     ar << make_nvp("params", f->getParameters());
-};
+}
 
 template <class Archive, typename ReturnT>
 inline void load_construct_data(Archive& ar,
@@ -363,7 +407,7 @@ inline void load_construct_data(Archive& ar,
     std::vector<double> params;
     ar >> make_nvp("params", params);
     ::new(f) lsst::afw::math::Function<ReturnT>(params);
-};
+}
 
 }}
 

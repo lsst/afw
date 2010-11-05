@@ -1,394 +1,170 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file Interpolate.cc
+ * @brief Wrap GSL to interpolate values for a set of x,y vector<>s
  * @ingroup afw
- * @brief Interpolation Classes, Linear, Spline, SplineNatural, SplineNotAKnot
  * @author Steve Bickerton
- * @date Jan 26, 2009
  */
-#include <iostream>
-#include <cmath>
 #include <limits>
-#include <vector>
-#include <cassert>
-#include <iterator>
-
+#include <map>
+#include "gsl/gsl_interp.h"
+#include "gsl/gsl_spline.h"
 #include "boost/shared_ptr.hpp"
+
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Interpolate.h"
 
-using namespace std;
 namespace math = lsst::afw::math;
+namespace ex = lsst::pex::exceptions;
 
-namespace {
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
+math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                               ::gsl_interp_type const *gslInterpType) : _x(x), _y(y) {
+    initialize(_x, _y, gslInterpType);
 }
 
-
-// =======================================================================================
-/**
- * @brief Constructor for Generic interpolation
- *
- * The constructor makes (allocates) private copies of the input x/y vectors and sets private member values
- * for x-vector bounds, and gridspacings.
- *
- * @note All routines include an extrapolation point at each end of the x,y vectors
- *       This results in some index-fiddling for [0] and [_n - 1] indices.
- *
- */
-template<typename xT, typename yT>
-math::Interpolate<xT,yT>::Interpolate(std::vector<xT> const& x,         ///< x-coords of function to interpolate 
-                                      std::vector<yT> const& y,         ///< y-value of function to interpolate  
-                                      math::InterpControl const& ictrl) ///< object with interpolation parameters
-    : _n(x.size() + 2),
-      _x(*new vector<xT>), _y(*new vector<yT>),
-      _xgridspace( static_cast<double>(x[1] - x[0]) ),
-      _invxgrid( 1.0/_xgridspace ),
-      _xlo( x[0] - static_cast<xT>(_xgridspace) ),
-      _xhi( x[x.size() - 1] + static_cast<xT>(_xgridspace)),
-      _ictrl( ictrl )  {
-    
-    assert ( x.size() == y.size() );
-    
-    _x.resize(_n);
-    _y.resize(_n);
-    std::copy(x.begin(), x.end(), _x.begin() + 1);
-    std::copy(y.begin(), y.end(), _y.begin() + 1);
-    _x[0] = _xlo;
-    _x[_n - 1] = _xhi;
-    
-}
-    
-
-// ======================  LINEAR ===========================================
-
-/**
- * @brief A private method to intialize for linear interpolation
- *
- * This pre-computes the first derivatives over the intervals
- */
-template<typename xT, typename yT>
-math::LinearInterpolate<xT,yT>::LinearInterpolate(std::vector<xT> const& x, ///< x-coords of function to interpolate 
-                                                  std::vector<yT> const& y, ///< y-value of function to interpolate  
-                                                  math::InterpControl const& ictrl) ///< object with interpolation parameters
-    : Interpolate<xT,yT>::Interpolate(x,y,ictrl), _dydx(*new vector<yT>) {
-    
-    _dydx.resize(_n - 1);
-    for (int i = 1; i < _n - 2; ++i) {
-        _dydx[i] = (_y[i + 1] - _y[i]) * static_cast<yT>(_invxgrid);
+math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                               Interpolate::Style const style) :  _x(x), _y(y) {
+    if (style == Interpolate::CONSTANT) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "CONSTANT interpolation not supported.");
     }
-    // carry extra points off the end to extrapolate.
-    _dydx[0] = _dydx[1];
-    _y[0] = _y[1] - static_cast<yT>(_dydx[1]*_xgridspace);
-    
-    _dydx[_n - 2] = _dydx[_n - 3];
-    _y[_n - 1] = _y[_n - 2] + static_cast<yT>(_dydx[_n - 2]*_xgridspace);
+    initialize(_x, _y, math::styleToGslInterpType(style));
 }
 
-// ==== LINEAR no-safe (no bounds checking to gain speed) ===
-/**
- * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking
- * @param xinterp the x-coord at which to interpolate a value
- * @return The value linearly-interpolated at xinterp
- */
-template<typename xT, typename yT>
-inline yT math::LinearInterpolate<xT,yT>::interpolate(xT const xinterp) const {
-    int const index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    return _y[index] + static_cast<yT>(_dydx[index]*(xinterp - _x[index]));
-}
-/**
- * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
- * @param xinterp the x-coord at which to interpolate a value
- * @return The function derivative linearly-interpolated at xinterp
- */
-template<typename xT, typename yT>
-inline yT math::LinearInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
-    // assume dydx represents the mid-value of the interval
-    xT const xinterp_tmp = static_cast<xT>(xinterp - 0.5*_xgridspace);
-    int const index = static_cast<int>((xinterp_tmp - _xlo) * _invxgrid);
-    yT const a = static_cast<yT>((_x[index + 1] - xinterp_tmp)*_invxgrid);
-    yT const b = static_cast<yT>((xinterp_tmp - _x[index])*_invxgrid );
-    return a*_dydx[index] + b*_dydx[index + 1];
-}
-/**
- * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
- * @param xinterp the x-coord at which to interpolate a value
- * @return The function second derivative linearly-interpolated at xinterp
- */
-template<typename xT, typename yT>
-inline yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2(xT const xinterp) const {
-    return 0;
-}
-
-// ==== LINEAR safe (with bounds checking, at the cost of being slower) ====
-/**
- * @brief Private method to return a linearly-interpolated value for a point *with* bounds checking.
- * @param xinterp the x-coord at which to interpolate a value
- * @return The value interpolated at xinterp
- */
-template<typename xT, typename yT>
-yT math::LinearInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
-    
-    int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    if ( index < 0 ) {
-        index = 0;
-    } else if ( index > _n - 1 ) {
-        index = _n - 1;
+math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                               std::string style) :  _x(x), _y(y) {
+    if (style == "CONSTANT") {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "CONSTANT interpolation not supported.");
     }
-    return _y[index] + static_cast<yT>(_dydx[index]*(xinterp - _x[index]));
+    initialize(_x, _y, math::stringToGslInterpType(style));
+}
+    
+void math::Interpolate::initialize(std::vector<double> const &x, std::vector<double> const &y,
+                                   ::gsl_interp_type const *gslInterpType) {
+    _acc    = ::gsl_interp_accel_alloc();
+    _interp = ::gsl_interp_alloc(gslInterpType, y.size());
+    ::gsl_interp_init(_interp, &x[0], &y[0], y.size());
+}
+
+math::Interpolate::~Interpolate() {
+    ::gsl_interp_free(_interp);
+    ::gsl_interp_accel_free(_acc);
+}
+
+double math::Interpolate::interpolate(double const x) {
+    return ::gsl_interp_eval(_interp, &_x[0], &_y[0], x, _acc);
 }
 
 /**
- * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
- * @param xinterp the x-coord at which to interpolate a value
- * @return The function derivative linearly-interpolated at xinterp
- */
-template<typename xT, typename yT>
-yT math::LinearInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const {
-    // assume dydx represents the mid-value of the interval
-    xT const xinterp_tmp = static_cast<xT>(xinterp - 0.5*_xgridspace);
-    int index = static_cast<int>((xinterp_tmp - _xlo) * _invxgrid);
-    if ( index < 0 ) {
-        index = 0;
-    } else if ( index > _n - 1 ) {
-        index = _n - 1;
-    }
-    yT const a = static_cast<yT>((_x[index + 1] - xinterp_tmp)*_invxgrid);
-    yT const b = static_cast<yT>((xinterp_tmp - _x[index])*_invxgrid );
-    return a*_dydx[index] + b*_dydx[index + 1];
-}
-/**
- * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
- * @param xinterp the x-coord at which to interpolate a value
- * @return The function second derivative linearly-interpolated at xinterp
- * @note This function returns zero as d2ydx2 = 0 for linearly function.
- * @warning See note!
- */
-template<typename xT, typename yT>
-yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) const {
-    return 0;
-}
-
-// =========================   END LINEAR ==================================
-
-
-
-
-
-// ==========================  SPLINE ======================================
-
-/**
- * @brief Initialization for Cubic Spline interpolation - Press et al. 2007
- *
- * This mainly just pre-computes the second derivatives over the intervals
- */
-template<typename xT, typename yT>
-math::SplineInterpolate<xT,yT>::SplineInterpolate(std::vector<xT> const& x,   ///< x-coords of function to interpolate 
-                                                  std::vector<yT> const& y,   ///< y-value of function to interpolate  
-                                                  InterpControl const& ictrl) ///< object with interpolation parameters
-    : Interpolate<xT,yT>::Interpolate(x, y, ictrl), _d2ydx2(*new vector<yT>) {
-    
-    //_dydx0 = _dydxN = std::numeric_limits<double>::quiet_NaN();
-    _dydx0 = _ictrl.getDydx0();
-    _dydxN = _ictrl.getDydxN();
-    
-    _d2ydx2.resize(_n);
-    vector<yT> u(_n);
-    
-    // =============================================================
-    // the lower boundary condition
-    if ( std::isnan(_dydx0) ) {
-        _d2ydx2[1] = u[1] = static_cast<yT>(0.0);
-    } else {
-        _d2ydx2[1] = static_cast<yT>(-0.5);
-        u[1] = static_cast<yT>((3.0*_invxgrid) * ((_y[2] - _y[1])*(_invxgrid) - _dydx0));
-    }
-
-    // =============================================================
-    // decomposition for the tri-diagonal matrix
-    for (int i = 2; i < _n - 2; ++i) {
-        yT const invp   = static_cast<yT>(1.0 / (0.5 * _d2ydx2[i - 1] + 2.0));
-        _d2ydx2[i] = static_cast<yT>(-0.5)*invp;
-        u[i] = static_cast<yT>(_invxgrid * ( _y[i + 1] - 2.0 * _y[i] + _y[i - 1] ));
-        u[i] = static_cast<yT>(0.5*(6.0*u[i]*_invxgrid - u[i - 1])*invp);
-    }
-
-    // =============================================================
-    // the upper boundary condition
-    yT qn, un;
-    if ( std::isnan(_dydxN) ) {
-        qn = un = static_cast<yT>(0.0);
-    } else {
-        qn = static_cast<yT>(0.5);
-        un = static_cast<yT>( (3.0*_invxgrid)*(_dydxN - (_y[_n - 2] - _y[_n - 3])*_invxgrid) );
-    }
-    _d2ydx2[_n - 2] = static_cast<yT>( (un - qn*u[_n - 3])/(qn*_d2ydx2[_n - 3] + 1.0) );
-
-    // =============================================================
-    // the back-substitution loop for tri-diag algorithm
-    for (int k = _n - 3; k >= 1; k--) {
-        _d2ydx2[k] = _d2ydx2[k] * _d2ydx2[k + 1] + u[k];
-    }
-
-    
-    // =============================================================
-    // solve for the extrapolated _y[0] and _y[_n-1] values;
-    // -- recall that we shifted the vectors by one to put anchor points in
-    //    the first and last vector positions.
-    _y[0]      = interpolate_safe(_x[0]);
-    _d2ydx2[0] = interpolateD2yDx2_safe(_x[0]);
-    
-    _y[_n - 1]      = interpolate_safe(_x[_n - 1]);
-    _d2ydx2[_n - 1] = interpolateD2yDx2_safe(_x[_n - 1]);
-    
-}
-
-
-// ==== SPLINE no-safe (no bounds checking for faster execution) ====
-
-/**
- * @brief Public method to return spline-interpolated values over a vector<> *without* bounds checking
- * @param xinterp the x-coord at which to interpolate a value
- * @return the function value spline-interpolated at xinterp
- */
-template<typename xT, typename yT>
-inline yT math::SplineInterpolate<xT,yT>::interpolate(xT const xinterp) const {
-    int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    double const a = (_x[index + 1] - xinterp) * _invxgrid;
-    double const b = ( xinterp - _x[index] ) * _invxgrid;
-    double const yinterp = a*_y[index] + b*_y[index + 1] +
-        ( (a*a*a - a)*_d2ydx2[index] + (b*b*b - b)*_d2ydx2[index + 1] ) * (_xgridspace*_xgridspace) / 6.0;
-    return static_cast<yT>(yinterp);
-}
-
-/**
- * @brief Public method to return spline-interpolated first derivatives over a vector<> *without* bounds checking
- * @param xinterp the x-coord at which to interpolate a value
- * @return the function derivative value spline-interpolated at xinterp
- */
-template<typename xT, typename yT>
-inline yT math::SplineInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
-    int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    double const a = (_x[index + 1] - xinterp) * _invxgrid;
-    double const b = ( xinterp - _x[index] ) * _invxgrid;
-    double const yinterp = (_y[index+1] - _y[index]) * _invxgrid -
-        ((3.0*a*a - 1.0)/6.0)*_xgridspace*_d2ydx2[index] +
-        ((3.0*b*b - 1.0)/6.0)*_xgridspace*_d2ydx2[index+1];
-    return static_cast<yT>(yinterp);
-}
-
-/**
- * @brief Public method to return spline-interpolated second derivatives over a vector<> *without* bounds checking
- * @param xinterp the x-coord at which to interpolate a value
- * @return the function second derivative spline-interpolated at xinterp
- */
-template<typename xT, typename yT>
-inline yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2(xT const xinterp) const {
-    int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    double const a = (_x[index + 1] - xinterp) * _invxgrid;
-    double const b = ( xinterp - _x[index] ) * _invxgrid;
-    double const yinterp = a*_d2ydx2[index] + b*_d2ydx2[index + 1];
-    return static_cast<yT>(yinterp);
-}
-
-
-// ==== SPLINE safe (with bounds-checking, at the cost of being slower ====
-
-/**
- * @brief Public method to return spline-interpolated values over a vector<> *with* bounds checking
- * @param xinterp the x-coord at which to interpolate a value
- * @return the function value spline-interpolated at xinterp
- */
-template<typename xT, typename yT>
-yT math::SplineInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
-    
-    // Caveat = only good for an even grid spacing.
-    int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    if ( index < 1 ) {
-        index = 1;
-    } else if ( index > _n - 3 ) {
-        index = _n - 3;
-    }
-    
-    double const a = (_x[index + 1] - xinterp) * _invxgrid;
-    double const b = ( xinterp - _x[index] ) * _invxgrid;
-    double const yinterp = a*_y[index] + b*_y[index + 1] +
-        ( (a*a*a - a)*_d2ydx2[index] + (b*b*b - b)*_d2ydx2[index + 1] ) * (_xgridspace*_xgridspace) / 6.0;
-    return static_cast<yT>(yinterp);
-}
-
-/**
- * @brief Public method to return spline-interpolated first derivatives over a vector<> *with* bounds checking
- * @param xinterp the x-coord at which to interpolate a value
- * @return the function derivative spline-interpolated at xinterp
- */
-template<typename xT, typename yT>
-yT math::SplineInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const {
-    
-    // Caveat = only good for an even grid spacing.
-    int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    if ( index < 0 ) {
-        index = 1;
-    } else if ( index > _n - 3 ) {
-        index = _n - 3;
-    }
-    
-    double const a = (_x[index + 1] - xinterp) * _invxgrid;
-    double const b = ( xinterp - _x[index] ) * _invxgrid;
-    double const yinterp = (_y[index+1] - _y[index]) * _invxgrid -
-        ((3.0*a*a - 1.0)/6.0)*_xgridspace*_d2ydx2[index] +
-        ((3.0*b*b - 1.0)/6.0)*_xgridspace*_d2ydx2[index+1];
-
-    return static_cast<yT>(yinterp);
-}
-
-/**
- * @brief Public method to return spline-interpolated second derivatives over a vector<> *with* bounds checking
- * @param xinterp the x-coord at which to interpolate a value
- * @return the function second derivative spline-interpolated at xinterp
- */
-template<typename xT, typename yT>
-yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) const {
-    
-    // Caveat = only good for an even grid spacing.
-    int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
-    if ( index < 1 ) {
-        index = 1;
-    } else if ( index > _n - 3 ) {
-        index = _n - 3;
-    }
-    
-    double const a = (_x[index + 1] - xinterp) * _invxgrid;
-    double const b = ( xinterp - _x[index] ) * _invxgrid;
-    double const yinterp = a*_d2ydx2[index] + b*_d2ydx2[index + 1];
-    return static_cast<yT>(yinterp);
-}
-
-// =========================================  END SPLINE ====================================
-
-
-
-
-
-/**
- * @brief Explicit instantiations
+ * @brief Conversion function to switch an Interpolate::Style to a gsl_interp_type.
  *
  */
+::gsl_interp_type const *math::styleToGslInterpType(Interpolate::Style const style) {
+    ::gsl_interp_type const* gslInterpTypeStyles[7];
+    gslInterpTypeStyles[Interpolate::CONSTANT]                 = ::gsl_interp_linear;           
+    gslInterpTypeStyles[Interpolate::LINEAR]                   = ::gsl_interp_linear;           
+    gslInterpTypeStyles[Interpolate::CUBIC_SPLINE]             = ::gsl_interp_cspline;          
+    gslInterpTypeStyles[Interpolate::NATURAL_SPLINE]           = ::gsl_interp_cspline;          
+    gslInterpTypeStyles[Interpolate::CUBIC_SPLINE_PERIODIC]    = ::gsl_interp_cspline_periodic; 
+    gslInterpTypeStyles[Interpolate::AKIMA_SPLINE]             = ::gsl_interp_akima;            
+    gslInterpTypeStyles[Interpolate::AKIMA_SPLINE_PERIODIC]    = ::gsl_interp_akima_periodic;
+    return gslInterpTypeStyles[style];
+}
+    
+/**
+ * @brief Conversion function to switch a string to an Interpolate::Style.
+ *
+ */
+math::Interpolate::Style math::stringToInterpStyle(std::string const style) {
+    std::map<std::string, Interpolate::Style> gslInterpTypeStrings;
+    gslInterpTypeStrings["CONSTANT"]              = Interpolate::CONSTANT;
+    gslInterpTypeStrings["LINEAR"]                = Interpolate::LINEAR;               
+    gslInterpTypeStrings["CUBIC_SPLINE"]          = Interpolate::CUBIC_SPLINE;         
+    gslInterpTypeStrings["NATURAL_SPLINE"]        = Interpolate::NATURAL_SPLINE;      
+    gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = Interpolate::CUBIC_SPLINE_PERIODIC;
+    gslInterpTypeStrings["AKIMA_SPLINE"]          = Interpolate::AKIMA_SPLINE;  
+    gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = Interpolate::AKIMA_SPLINE_PERIODIC;
+    if ( gslInterpTypeStrings.find(style) == gslInterpTypeStrings.end()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Interp style not found: "+style);
+    }
+    return gslInterpTypeStrings[style];
+}
 
-template class math::Interpolate<double,double>;
-template class math::Interpolate<float,float>;
-template class math::Interpolate<int,double>;
-template class math::Interpolate<int,float>;
-template class math::Interpolate<int,int>;
+/**
+ * @brief Conversion function to switch a string to a gsl_interp_type.
+ *
+ */
+::gsl_interp_type const *math::stringToGslInterpType(std::string const style) {
+    return styleToGslInterpType(stringToInterpStyle(style));
+}
+    
+    
+/**
+ * @brief Get the highest order Interpolation::Style available for 'n' points.
+ *
+ */
+math::Interpolate::Style math::lookupMaxInterpStyle(int const n) {
+    if (n < 1) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "nx,ny must be greater than 0");
+    }
+    if (n > 4) {
+        return math::Interpolate::AKIMA_SPLINE;
+    }
+    
+    std::vector<math::Interpolate::Style> styles(4);
+    styles[0] = math::Interpolate::CONSTANT;
+    styles[1] = math::Interpolate::LINEAR;
+    styles[2] = math::Interpolate::CUBIC_SPLINE;
+    styles[3] = math::Interpolate::CUBIC_SPLINE;
+    return styles[n - 1];
+}
 
-template class math::LinearInterpolate<double,double>;
-template class math::LinearInterpolate<float,float>;
-template class math::LinearInterpolate<int,double>;
-template class math::LinearInterpolate<int,float>;
-template class math::LinearInterpolate<int,int>;
+    
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ *
+ */
+int math::lookupMinInterpPoints(math::Interpolate::Style const style) {
+    std::vector<int> minPoints(math::Interpolate::NUM_STYLES);
+    minPoints[math::Interpolate::CONSTANT]               = 1;
+    minPoints[math::Interpolate::LINEAR]                 = 2;
+    minPoints[math::Interpolate::NATURAL_SPLINE]         = 3;
+    minPoints[math::Interpolate::CUBIC_SPLINE]           = 3;
+    minPoints[math::Interpolate::CUBIC_SPLINE_PERIODIC]  = 3;
+    minPoints[math::Interpolate::AKIMA_SPLINE]           = 5;
+    minPoints[math::Interpolate::AKIMA_SPLINE_PERIODIC]  = 5;
+    return minPoints[style];
+}
 
-template class math::SplineInterpolate<double,double>;
-template class math::SplineInterpolate<float,float>;
-template class math::SplineInterpolate<int,double>;
-template class math::SplineInterpolate<int,float>;
-template class math::SplineInterpolate<int,int>;
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ *
+ * Overload of lookupMinInterpPoints() which takes a string
+ *
+ */
+int math::lookupMinInterpPoints(std::string const style) {
+    return lookupMinInterpPoints(stringToInterpStyle(style));
+}
 
