@@ -41,11 +41,6 @@
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
-    namespace daf {
-        namespace base {
-            class PropertySet;
-        }
-    }
 namespace afw {
     namespace formatters {
         class WcsFormatter;
@@ -122,7 +117,7 @@ public:
     lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
     Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
     
-    virtual PTR(lsst::daf::base::PropertySet) getFitsMetadata() const;
+    virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
     
     /// Return true iff Wcs is valid
     operator bool() const { return _nWcsInfo != 0; }
@@ -223,7 +218,7 @@ protected:
 };
 
 namespace detail {
-    PTR(lsst::daf::base::PropertySet)
+    PTR(lsst::daf::base::PropertyList)
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
     
     image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);

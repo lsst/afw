@@ -71,7 +71,7 @@ public:
         lsst::daf::base::PropertySet::Ptr additionalData
     );
 
-    static lsst::daf::base::PropertySet::Ptr generatePropertySet(
+    static lsst::daf::base::PropertyList::Ptr generatePropertySet(
         lsst::afw::image::Wcs const& wcs
     );
     static lsst::daf::persistence::Formatter::Ptr createInstance(
