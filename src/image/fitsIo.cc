@@ -318,7 +318,10 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
         } else {
             metadata->add(key, matchStrings[1].str());
         }
-    } else if (key == "COMMENT" || key == "HISTORY") {
+    } else if (key == "HISTORY" ||
+               (key == "COMMENT" &&
+                comment != "  FITS (Flexible Image Transport System) format is defined in 'Astronomy" &&
+                comment != "  and Astrophysics', volume 376, page 359; bibcode: 2001A&A...376..359H")) {
         if (pl) {
             pl->add(key, comment);
         } else {
