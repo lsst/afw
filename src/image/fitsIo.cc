@@ -318,7 +318,7 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
         } else {
             metadata->add(key, matchStrings[1].str());
         }
-    } else if (key == "HISTORY") {
+    } else if (key == "COMMENT" || key == "HISTORY") {
         if (pl) {
             pl->add(key, comment);
         } else {
