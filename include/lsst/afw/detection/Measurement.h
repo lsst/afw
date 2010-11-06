@@ -16,6 +16,7 @@
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/detection/Schema.h"
 
+#ifndef SWIG
 namespace {
     class VariantVisitor : public boost::static_visitor<> {
     public:
@@ -27,6 +28,7 @@ namespace {
         boost::any& _any;
     };
 }
+#endif
 
 namespace lsst { namespace afw { namespace detection {
 
