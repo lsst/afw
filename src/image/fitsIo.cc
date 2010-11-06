@@ -31,6 +31,7 @@
 #include "boost/format.hpp"
 #include "boost/regex.hpp"
 
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/image/fits/fits_io_private.h"
@@ -145,7 +146,15 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     char keyCommentChars[80];
     
     strncpy(keyWordChars, keyWord.c_str(), 80);
-    strncpy(keyCommentChars, keyComment.c_str(), 80);
+    CONST_PTR(lsst::daf::base::PropertyList) pl =
+        boost::dynamic_pointer_cast<lsst::daf::base::PropertyList const,
+        lsst::daf::base::PropertySet const>(metadata);
+    if (keyComment == std::string() && pl) {
+        strncpy(keyCommentChars, pl->getComment(keyWord).c_str(), 80);
+    }
+    else {
+        strncpy(keyCommentChars, keyComment.c_str(), 80);
+    }
     
     int status = 0;
     std::type_info const & valueType = metadata->typeOf(keyWord); 
@@ -199,12 +208,24 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
 
             for (unsigned int i = 0; i != tmp.size(); ++i) {
                 strncpy(keyValueChars, tmp[i].c_str(), 80);
-                fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+                if (keyWord == "COMMENT") {
+                    fits_write_comment(fd, keyValueChars, &status);
+                } else if (keyWord == "HISTORY") {
+                    fits_write_history(fd, keyValueChars, &status);
+                } else {
+                    fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+                }
             }
         } else {
             std::string tmp = metadata->get<std::string>(keyWord);
             strncpy(keyValueChars, tmp.c_str(), 80);
-            fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+            if (keyWord == "COMMENT") {
+                fits_write_comment(fd, keyValueChars, &status);
+            } else if (keyWord == "HISTORY") {
+                fits_write_history(fd, keyValueChars, &status);
+            } else {
+                fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+            }
         }
     } else {
         std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() <<
@@ -246,7 +267,7 @@ void getKey(fitsfile* fd,
      keyComment = keyCommentChars;
 }
 
-void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::string value) {
+void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, std::string const& value, std::string const& comment) {
     static boost::regex const boolRegex("[tTfF]");
     static boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
     static boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
@@ -254,6 +275,10 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
 
     boost::smatch matchStrings;
     std::istringstream converter(value);
+
+    PTR(lsst::daf::base::PropertyList) pl =
+        boost::dynamic_pointer_cast<lsst::daf::base::PropertyList,
+        lsst::daf::base::PropertySet>(metadata);
 
     if (boost::regex_match(value, boolRegex)) {
         // convert the string to an bool
@@ -263,20 +288,42 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
 #else
         bool val = (value == "T" || value == "t");
 #endif
-        metadata->add(key, val);
+        if (pl) {
+            pl->add(key, val, comment);
+        } else {
+            metadata->add(key, val);
+        }
     } else if (boost::regex_match(value, intRegex)) {
         // convert the string to an int
         int val;
         converter >> val;
-        metadata->add(key, val);
+        if (pl) {
+            pl->add(key, val, comment);
+        } else {
+            metadata->add(key, val);
+        }
     } else if (boost::regex_match(value, doubleRegex)) {
         // convert the string to a double
         double val;
         converter >> val;
-        metadata->add(key, val);
+        if (pl) {
+            pl->add(key, val, comment);
+        } else {
+            metadata->add(key, val);
+        }
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         // strip off the enclosing single quotes and return the string
-        metadata->add(key, matchStrings[1].str());
+        if (pl) {
+            pl->add(key, matchStrings[1].str(), comment);
+        } else {
+            metadata->add(key, matchStrings[1].str());
+        }
+    } else if (key == "HISTORY") {
+        if (pl) {
+            pl->add(key, comment);
+        } else {
+            metadata->add(key, comment);
+        }
     }
 }
 
@@ -299,9 +346,10 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
                       keyName == "BSCALE" || keyName == "BZERO")) {
             ;
         } else {
-            addKV(metadata, keyName, val);
+            addKV(metadata, keyName, val, comment);
         }
     }
+
 }
 } // namespace cfitsio
 
@@ -314,7 +362,7 @@ lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///<
                                                const int hdu,               ///< HDU to read
                                                bool strip       ///< Should I strip e.g. NAXIS1 from header?
                                               ) {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList);
 
     detail::fits_reader m(fileName, metadata, hdu);
     cfitsio::getMetadata(m.get(), metadata, strip);

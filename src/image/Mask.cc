@@ -204,7 +204,7 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     
     if (!metadata) {
         //TODOsmm createPropertyNode("FitsMetadata");
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet()); 
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList()); 
     }
     //
     // These are the permitted input file types
@@ -221,7 +221,7 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     }
 
     if (!metadata) {
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet);
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList);
     }
 
     if (!afwImage::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata, hdu, bbox)) {
@@ -273,7 +273,7 @@ void afwImage::Mask<MaskPixelT>::writeFits(
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet());
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList());
     }
     addMaskPlanesToMetadata(metadata);
     //

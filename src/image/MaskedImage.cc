@@ -126,7 +126,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
      * We need to read the metadata so's to check that the EXTTYPEs are correct
      */
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
 
     if (isMef) {
@@ -543,7 +543,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
     }
 
     static boost::regex const fitsFileRE_compiled(image::detail::fitsFileRE);
@@ -565,27 +565,27 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         if (mode == "w" || mode == "wb") {
             _image->writeFits(baseName, metadata, "pdu");
 #if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
-            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
 #endif
         }
 
         metadata->set("EXTTYPE", "IMAGE");
         _image->writeFits(baseName, metadata, "a");
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
         metadata->set("EXTTYPE", "MASK");
         _mask->writeFits(baseName, metadata, "a");
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
         metadata->set("EXTTYPE", "VARIANCE");
         _variance->writeFits(baseName, metadata, "a");
     } else {
         _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
         _mask->writeFits(MaskedImage::maskFileName(baseName), metadata, mode);
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
         _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
     }
 }
