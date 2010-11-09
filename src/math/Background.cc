@@ -117,10 +117,10 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
                                         _subimgWidth, _subimgHeight));
             
             math::Statistics stats =
-                math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
-                                     math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
+                math::makeStatistics(subimg, _bctrl.getStatisticsProperty(),
+                                     *(_bctrl.getStatisticsControl()));
             
-            _grid[iX][iY] = stats.getValue(math::MEANCLIP);
+            _grid[iX][iY] = stats.getValue(_bctrl.getStatisticsProperty());
         }
 
         _gridcolumns[iX].resize(_imgHeight);
@@ -217,7 +217,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
             int iX = 0;
             for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
                      end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgHeight : _nxSample;
+                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgWidth : _nxSample - 1;
                 *ptr = static_cast<PixelT>(_gridcolumns[iGridX][iY]);
             }
         }
@@ -238,7 +238,10 @@ math::UndersampleStyle math::stringToUndersampleStyle(std::string const style) {
         undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
         undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
     }
-    
+
+    if (undersampleStrings.find(style) == undersampleStrings.end()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Understample style not defined: "+style);
+    }
     return undersampleStrings[style];
 }
 
@@ -294,6 +297,8 @@ void math::Background::_checkSampling() {
  */
 #define INSTANTIATE_BACKGROUND(TYPE)                                    \
     template math::Background::Background(image::Image<TYPE> const& img, \
+                                          math::BackgroundControl const& bgCtrl); \
+    template math::Background::Background(image::MaskedImage<TYPE> const& img, \
                                           math::BackgroundControl const& bgCtrl); \
     template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;
 

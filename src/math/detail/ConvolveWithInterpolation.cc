@@ -107,6 +107,7 @@ void mathDetail::convolveWithInterpolation(
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
+    ConvolveWithInterpolationWorkingImages workingImages(kernel.getWidth(), kernel.getHeight());
     RowOfKernelImagesForRegion regionRow(nx, ny);
     while (goodRegion.computeNextRow(regionRow)) {
         for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
@@ -115,70 +116,7 @@ void mathDetail::convolveWithInterpolation(
                 "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                     (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                     (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
-            convolveRegionWithInterpolation(outImage, inImage, **rgnIter);
-        }
-    }
-}
-
-/**
- * @brief Convolve a region of an Image or MaskedImage with a spatially varying Kernel
- * using recursion and interpolation.
- *
- * This is a low-level convolution function that does not set edge pixels.
- *
- * The algorithm is:
- * - if the region is too small:
- *     - solve it with brute force
- * - if interpolation is acceptable (using KernelImagesForRegion::isInterpolationOk):
- *     - convolve with an interpolated kernel
- * - else:
- *     - divide the region into four subregions and call this subroutine for on each subregion
- *
- * Note that this routine will also work with spatially invariant kernels, but not efficiently.
- *
- * @warning This is a low-level routine that performs no bounds checking.
- */
-template <typename OutImageT, typename InImageT>
-void mathDetail::convolveRegionWithRecursiveInterpolation(
-        OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
-        InImageT const &inImage,    ///< input image
-        KernelImagesForRegion const &region,    ///< kernel image region over which to convolve
-        double maxInterpolationError)           ///< maximum allowed error in computing the kernel image
-            ///< at any pixel via linear interpolation
-{
-    
-    pexLog::TTrace<6>("lsst.afw.math.convolve",
-        "convolveRegionWithRecursiveInterpolation: region bbox minimum=(%d, %d), extent=(%d, %d)",
-            region.getBBox().getMinX(), region.getBBox().getMinY(),
-            region.getBBox().getWidth(), region.getBBox().getHeight());
-
-    if ((region.getBBox().getWidth() < region.getMinInterpolationSize())
-        || (region.getBBox().getHeight() < region.getMinInterpolationSize())) {
-        // region too small for interpolation; convolve using brute force
-        pexLog::TTrace<6>("lsst.afw.math.convolve",
-            "convolveRegionWithRecursiveInterpolation: region too small; using brute force");
-        afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
-        afwGeom::BoxI const bbox = kernelPtr->growBBox(region.getBBox());
-        OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(bbox)));
-        InImageT inView(InImageT(inImage, afwGeom::convertToImage(bbox)));
-        mathDetail::convolveWithBruteForce(outView, inView, *kernelPtr, region.getDoNormalize());
-    } else if (region.isInterpolationOk(maxInterpolationError)) {
-        // convolve region using linear interpolation
-        pexLog::TTrace<6>("lsst.afw.math.convolve",
-            "convolveRegionWithRecursiveInterpolation: linear interpolation is OK; use it");
-        KernelImagesForRegion::List subregionList = region.getSubregions();
-        for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
-            rgnIter != subregionList.end(); ++rgnIter) {
-            convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
-        }
-    } else {
-        // linear interpolation wasn't good enough; divide region into 2x2 subregions and recurse on those
-        pexLog::TTrace<6>("lsst.afw.math.convolve",
-            "convolveRegionWithRecursiveInterpolation: linear interpolation unsuitable; recurse");
-        KernelImagesForRegion::List subregionList = region.getSubregions();
-        for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
-            rgnIter != subregionList.end(); ++rgnIter) {
-            convolveRegionWithRecursiveInterpolation(outImage, inImage, *(*rgnIter), maxInterpolationError);
+            convolveRegionWithInterpolation(outImage, inImage, **rgnIter, workingImages);
         }
     }
 }
@@ -194,69 +132,66 @@ template <typename OutImageT, typename InImageT>
 void mathDetail::convolveRegionWithInterpolation(
         OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
         InImageT const &inImage,    ///< input image
-        KernelImagesForRegion const &region)    ///< kernel image region over which to convolve
+        KernelImagesForRegion const &region,    ///< kernel image region over which to convolve
+        ConvolveWithInterpolationWorkingImages &workingImages)  ///< working kernel images
 {
-    typedef typename OutImageT::x_iterator OutXIterator;
-    typedef typename InImageT::const_xy_locator InLocator;
+    typedef typename OutImageT::xy_locator OutLocator;
+    typedef typename InImageT::const_xy_locator InConstLocator;
     typedef KernelImagesForRegion::Image KernelImage;
-    typedef KernelImage::const_xy_locator KernelLocator;
+    typedef KernelImage::const_xy_locator KernelConstLocator;
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
     std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
-    KernelImage leftKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_LEFT).first), true);
-    KernelImage rightKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_RIGHT).first), true);
-    KernelImage leftDeltaKernelImage(kernelDimensions);
-    KernelImage rightDeltaKernelImage(kernelDimensions);
-    KernelImage deltaKernelImage(kernelDimensions);  // interpolated in x
-    KernelImage kernelImage(leftKernelImage, true);  // final interpolated kernel image
+    workingImages.leftImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_LEFT);
+    workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);
+    workingImages.kernelImage <<= workingImages.leftImage;
 
-    afwGeom::BoxI const outBBox = region.getBBox();
-    afwGeom::BoxI const inBBox = kernelPtr->growBBox(outBBox);
+    afwGeom::BoxI const goodBBox = region.getBBox();
+    afwGeom::BoxI const fullBBox = kernelPtr->growBBox(goodBBox);
     
     // top and right images are computed one beyond bbox boundary,
     // so the distance between edge images is bbox width/height pixels
-    double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
-    double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
-    afwMath::scaledPlus(leftDeltaKernelImage, 
-         yfrac,  *(region.getImageSumPair(KernelImagesForRegion::TOP_LEFT).first),
-        -yfrac, leftKernelImage);
-    afwMath::scaledPlus(rightDeltaKernelImage,
-         yfrac, *(region.getImageSumPair(KernelImagesForRegion::TOP_RIGHT).first),
-        -yfrac, rightKernelImage);
+    double xfrac = 1.0 / static_cast<double>(goodBBox.getWidth());
+    double yfrac = 1.0 / static_cast<double>(goodBBox.getHeight());
+    afwMath::scaledPlus(workingImages.leftDeltaImage, 
+         yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
+        -yfrac, workingImages.leftImage);
+    afwMath::scaledPlus(workingImages.rightDeltaImage,
+         yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
+        -yfrac, workingImages.rightImage);
 
-    // note: it might be slightly more efficient to compute locators directly on outImage and inImage,
-    // without making views; however, using views seems a bit simpler and safer
-    // (less likelihood of accidentally straying out of the region)
-    OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(outBBox)));
-    InImageT inView(InImageT(inImage, afwGeom::convertToImage(inBBox)));
-    KernelLocator const kernelLocator = kernelImage.xy_at(0, 0);
+    KernelConstLocator const kernelLocator = workingImages.kernelImage.xy_at(0, 0);
     
-    // the loop is a bit odd for efficiency: the initial value of kernelImage, leftKernelImage and
-    // rightKernelImage are set when they are allocated, so they are not computed in the loop
-    // until after the convolution; to save cpu cycles they are not computed at all in the last iteration.
-    for (int row = 0; ; ) {
-        afwMath::scaledPlus(deltaKernelImage, xfrac, rightKernelImage, -xfrac, leftKernelImage);
-        OutXIterator outIter = outView.row_begin(row);
-        OutXIterator const outEnd = outView.row_end(row);
-        InLocator inLocator = inView.xy_at(0, row);
-        while(true) {
-            *outIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inLocator, kernelLocator,
-                kernelDimensions.first, kernelDimensions.second);
-            ++outIter;
+    // The loop is a bit odd for efficiency: the initial value of workingImages.kernelImage
+    // and related kernel images are set when they are allocated,
+    // so they are not computed in the loop until after the convolution; to save cpu cycles
+    // they are not computed at all for the last iteration.
+    InConstLocator inLocator = inImage.xy_at(fullBBox.getMinX(), fullBBox.getMinY());
+    OutLocator outLocator = outImage.xy_at(goodBBox.getMinX(), goodBBox.getMinY());
+    for (int j = 0; ; ) {
+        afwMath::scaledPlus(
+            workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
+        for (int i = 0; ; ) {
+            *outLocator = afwMath::convolveAtAPoint<OutImageT, InImageT>(
+                inLocator, kernelLocator, kernelDimensions.first, kernelDimensions.second);
+            ++outLocator.x();
             ++inLocator.x();
-            if (outIter == outEnd) {
+            ++i;
+            if (i >= goodBBox.getWidth()) {
                 break;
             }
-            kernelImage += deltaKernelImage;
+            workingImages.kernelImage += workingImages.deltaImage;
         }
 
-        row += 1;
-        if (row >= outView.getHeight()) {
+        ++j;
+        if (j >= goodBBox.getHeight()) {
             break;
         }
-        leftKernelImage += leftDeltaKernelImage;
-        rightKernelImage += rightDeltaKernelImage;
-        kernelImage <<= leftKernelImage;
+        workingImages.leftImage += workingImages.leftDeltaImage;
+        workingImages.rightImage += workingImages.rightDeltaImage;
+        workingImages.kernelImage <<= workingImages.leftImage;
+        inLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
+        outLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
     }
 }
 
@@ -273,10 +208,9 @@ void mathDetail::convolveRegionWithInterpolation(
     template void mathDetail::convolveWithInterpolation( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
             afwMath::ConvolutionControl const&); NL \
-    template void mathDetail::convolveRegionWithRecursiveInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&, double); NL \
     template void mathDetail::convolveRegionWithInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&);
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&, \
+        ConvolveWithInterpolationWorkingImages&);
 // Instantiate both Image and MaskedImage versions
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \

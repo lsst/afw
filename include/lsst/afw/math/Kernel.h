@@ -609,6 +609,11 @@ class FourierLocalKernel;
         virtual KernelList const &getKernelList() const;
 
         std::vector<double> getKernelSumList() const;
+        
+        /**
+         * @brief Get the number of basis kernels
+         */
+        int getNBasisKernels() const { return static_cast<int>(_kernelList.size()); };
 
         void checkKernelList(const KernelList &kernelList) const;
         

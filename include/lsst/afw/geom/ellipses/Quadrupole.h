@@ -196,7 +196,7 @@ inline QuadrupoleEllipse::QuadrupoleEllipse(PointD const & center) :
 inline QuadrupoleEllipse::QuadrupoleEllipse(Quadrupole const & core, PointD const & center) : 
     BaseEllipse(core,center) {}
 inline QuadrupoleEllipse::QuadrupoleEllipse(BaseEllipse const & other) : 
-    BaseEllipse(other.getCore(),other.getCenter()) {}
+    BaseEllipse(new Quadrupole(other.getCore()),other.getCenter()) {}
 inline QuadrupoleEllipse::QuadrupoleEllipse(QuadrupoleEllipse const & other) : 
     BaseEllipse(other.getCore(),other.getCenter()) {}
 

@@ -220,7 +220,7 @@ inline LogShearEllipse::LogShearEllipse(PointD const & center) :
 inline LogShearEllipse::LogShearEllipse(LogShear const & core, PointD const & center) : 
     BaseEllipse(core,center) {}
 inline LogShearEllipse::LogShearEllipse(BaseEllipse const & other) : 
-    BaseEllipse(other.getCore(),other.getCenter()) {}
+    BaseEllipse(new LogShear(other.getCore()),other.getCenter()) {}
 inline LogShearEllipse::LogShearEllipse(LogShearEllipse const & other) : 
     BaseEllipse(other.getCore(),other.getCenter()) {}
 

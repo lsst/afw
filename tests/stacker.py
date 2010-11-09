@@ -68,7 +68,8 @@ class StackTestCase(unittest.TestCase):
         for iImg in range(self.nImg):
             imgList.push_back(afwImage.ImageF(self.nX, self.nY, iImg))
             knownMean += iImg
-            imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
+
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         knownMean /= self.nImg
         
         self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)

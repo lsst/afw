@@ -54,6 +54,7 @@ namespace geom = lsst::afw::geom;
 using namespace std;
 
 typedef lsst::daf::base::PropertySet PropertySet;
+typedef lsst::daf::base::PropertyList PropertyList;
 typedef lsst::afw::image::Wcs Wcs;
 typedef lsst::afw::geom::PointD GeomPoint;
 typedef lsst::afw::coord::Coord::Ptr CoordPtr;
@@ -464,7 +465,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
 
 
 ///Return the Wcs as a fits header
-PropertySet::Ptr Wcs::getFitsMetadata() const {
+PropertyList::Ptr Wcs::getFitsMetadata() const {
     return lsst::afw::formatters::WcsFormatter::generatePropertySet(*this);
 }
 
@@ -997,21 +998,21 @@ namespace detail {
 /**
  * Define a trivial WCS that maps the lower left corner (LLC) pixel of an image to a given value
  */
-lsst::daf::base::PropertySet::Ptr
+lsst::daf::base::PropertyList::Ptr
 createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired WCS
                               int const x0,               ///< Column coordinate of LLC pixel
                               int const y0                ///< Row coordinate of LLC pixel
                              ) {
-    lsst::daf::base::PropertySet::Ptr wcsMetaData(new lsst::daf::base::PropertySet);
+    lsst::daf::base::PropertyList::Ptr wcsMetaData(new lsst::daf::base::PropertyList);
 
-    wcsMetaData->set("CRVAL1" + wcsName, x0); // (output) Column pixel of Reference Pixel
-    wcsMetaData->set("CRVAL2" + wcsName, y0); // (output) Row pixel of Reference Pixel
-    wcsMetaData->set("CRPIX1" + wcsName, 1);  //  Column Pixel Coordinate of Reference
-    wcsMetaData->set("CRPIX2" + wcsName, 1);  //  Row Pixel Coordinate of Reference
-    wcsMetaData->set("CTYPE1" + wcsName, "LINEAR"); // Type of projection
-    wcsMetaData->set("CTYPE1" + wcsName, "LINEAR"); // Type of projection
-    wcsMetaData->set("CUNIT1" + wcsName, "PIXEL");  // Column unit
-    wcsMetaData->set("CUNIT2" + wcsName, "PIXEL");  // Row unit
+    wcsMetaData->set("CRVAL1" + wcsName, x0, "Column pixel of Reference Pixel");
+    wcsMetaData->set("CRVAL2" + wcsName, y0, "Row pixel of Reference Pixel");
+    wcsMetaData->set("CRPIX1" + wcsName, 1, "Column Pixel Coordinate of Reference");
+    wcsMetaData->set("CRPIX2" + wcsName, 1, "Row Pixel Coordinate of Reference");
+    wcsMetaData->set("CTYPE1" + wcsName, "LINEAR", "Type of projection");
+    wcsMetaData->set("CTYPE2" + wcsName, "LINEAR", "Type of projection");
+    wcsMetaData->set("CUNIT1" + wcsName, "PIXEL", "Column unit");
+    wcsMetaData->set("CUNIT2" + wcsName, "PIXEL", "Row unit");
 
     return wcsMetaData;
 }

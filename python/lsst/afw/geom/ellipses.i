@@ -33,12 +33,15 @@
 %ignore lsst::afw::geom::ellipses::BaseCore::getVector;
 %ignore lsst::afw::geom::ellipses::BaseCore::setVector;
 %ignore lsst::afw::geom::ellipses::BaseCore::transform;
-%ignore lsst::afw::geom::ellipses::BaseCore::dAssign;
+//%ignore lsst::afw::geom::ellipses::BaseCore::dAssign;
+
+%declareEigenMatrix(lsst::afw::geom::ellipses::BaseCore::Jacobian)
 
 %rename(set) lsst::afw::geom::ellipses::BaseEllipse::operator=;
 %rename(set) lsst::afw::geom::ellipses::BaseCore::operator=;
 
 %include "boost_shared_ptr.i"
+%include "lsst/afw/eigen.i"
 
 SWIG_SHARED_PTR(BaseEllipsePtr, lsst::afw::geom::ellipses::BaseEllipse);
 SWIG_SHARED_PTR(BaseCorePtr, lsst::afw::geom::ellipses::BaseCore);

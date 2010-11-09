@@ -194,6 +194,9 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         afwMath::StatisticsControl const& sctrl,                           //!< Fine control over processing
         std::vector<PixelT> const &wvector                                 //!< optional weights vector
                                                               ) {
+    if (images.size() == 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException, "Please specify at least one image");
+    }
 
     checkOnlyOneFlag(flags);
 

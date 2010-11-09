@@ -97,7 +97,7 @@ namespace image {
         double pixelScale() const;
         
         bool hasDistortion() const {    return _hasDistortion;};
-        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
+        lsst::daf::base::PropertyList::Ptr getFitsMetadata() const;        
 #if 0
         //Rely on base class implementation for now.
         lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
