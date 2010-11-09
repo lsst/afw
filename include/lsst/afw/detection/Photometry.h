@@ -1,8 +1,6 @@
 #if !defined(LSST_AFW_DETECTION_PHOTOMETRY_H)
 #define LSST_AFW_DETECTION_PHOTOMETRY_H 1
 
-#include <boost/serialization/export.hpp>
-
 #include "lsst/afw/detection/Measurement.h"
 
 namespace lsst { namespace afw { namespace detection {
@@ -68,12 +66,6 @@ public:
     }
 
     virtual ::std::ostream &output(std::ostream &os) const;
-
-private:
-    LSST_SERIALIZE_PARENT(lsst::afw::detection::Measurement<Photometry>)
 };
 }}}
-
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::Photometry)
-
 #endif

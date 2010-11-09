@@ -41,10 +41,6 @@
 #include "lsst/afw/formatters/SourceFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/detection/Source.h"
-#include "lsst/afw/detection/Measurement.h"
-#include "lsst/afw/detection/Astrometry.h"
-#include "lsst/afw/detection/Photometry.h"
-#include "lsst/afw/detection/Shape.h"
 
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
