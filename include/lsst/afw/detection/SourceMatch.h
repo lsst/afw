@@ -35,6 +35,7 @@
 
 #include "lsst/afw/detection/Source.h"
 #include "lsst/daf/base/Persistable.h"
+#include "lsst/daf/base/PropertySet.h"
 
 // forward declaration
 namespace lsst { namespace afw { namespace formatters {
@@ -68,14 +69,20 @@ public:
     PersistableSourceMatchVector() {}
     PersistableSourceMatchVector(SourceMatchVector const & matches)
         : _matches(matches) {}
+    PersistableSourceMatchVector(SourceMatchVector const & matches,
+				 lsst::daf::base::PropertySet::Ptr matchMetadata)
+      : _matches(matches), _matchMeta(matchMetadata) {}
     ~PersistableSourceMatchVector() { _matches.clear(); }
         
     SourceMatchVector getSourceMatches() const { return _matches; }
+    lsst::daf::base::PropertySet::Ptr getSourceMatchMetadata() const { return _matchMeta; }
     void setSourceMatches(SourceMatchVector const & matches) {_matches = matches; }
+    void setSourceMatchMetadata(lsst::daf::base::PropertySet::Ptr meta) { _matchMeta = meta; }
     
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceMatchVectorFormatter)
     SourceMatchVector _matches;
+    lsst::daf::base::PropertySet::Ptr _matchMeta;
 };
 
 }}} // namespace lsst::afw::detection

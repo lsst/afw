@@ -99,7 +99,6 @@ void appendKey(lsst::afw::formatters::cfitsio::fitsfile* fd, std::string const &
     // These shenanigans are required only because fits_write_key does not take const args...
     
     char keyWordChars[80];
-    char keyValueChars[80];
     char keyCommentChars[80];
     
     strncpy(keyWordChars, keyWord.c_str(), 80);
@@ -152,17 +151,25 @@ void appendKey(lsst::afw::formatters::cfitsio::fitsfile* fd, std::string const &
             fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
         }
     } else if (valueType == typeid(std::string)) {
+        char* cval;
+        int N;
         if (metadata->isArray(keyWord)) {
             std::vector<std::string> tmp = metadata->getArray<std::string>(keyWord);
 
             for (unsigned int i = 0; i != tmp.size(); ++i) {
-                strncpy(keyValueChars, tmp[i].c_str(), 80);
-                fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+	      N = tmp[i].size();
+	      cval = new char[N+1];
+	      strncpy(cval, tmp[i].c_str(), N+1);
+	      fits_write_key_longstr(fd, keyWordChars, cval, keyCommentChars, &status);
+	      delete[] cval;
             }
         } else {
             std::string tmp = metadata->get<std::string>(keyWord);
-            strncpy(keyValueChars, tmp.c_str(), 80);
-            fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+	    N = tmp.size();
+	    cval = new char[N+1];
+	    strncpy(cval, tmp.c_str(), N+1);
+	    fits_write_key_longstr(fd, keyWordChars, cval, keyCommentChars, &status);
+	    delete[] cval;
         }
     } else {
         std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() <<
@@ -222,7 +229,7 @@ lsst::daf::persistence::FormatterRegistration form::SourceMatchVectorFormatter::
 
 void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
                                                 FitsStorage* fs,
-                                                lsst::daf::base::PropertySet::Ptr metadata) {
+                                                lsst::daf::base::PropertySet::Ptr additionalData) {
     //printf("SourceMatchVectorFormatter: persisting to path \"%s\"\n", fs->getPath().c_str());
 
     cfitsio::fitsfile* fitsfile = NULL;
@@ -341,6 +348,8 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
     }
     p->setSourceMatches(smv);
 
+    // FIXME -- read FITS header metadata and fill p->setSourceMatchMetadata()
+
     status = 0;
     if (cfitsio::fits_close_file(fitsfile, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
@@ -349,9 +358,9 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
 
 void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVector* p,
                                                  FitsStorage* fs,
-                                                 lsst::daf::base::PropertySet::Ptr metadata) {
+                                                 lsst::daf::base::PropertySet::Ptr additionalData) {
     SourceMatchVector matches = p->getSourceMatches();
-
+    lsst::daf::base::PropertySet::Ptr metadata = p->getSourceMatchMetadata();
     /*
      printf("Persisting a list of %i sources to file \"%s\"\n",
      (int)matches.size(), fs->getPath().c_str());
@@ -386,7 +395,12 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
 
-    if (metadata != NULL) {
+    // add warning that we use the CONTINUE convention.
+    if (fits_write_key_longwarn(fitsfile, &status)) {
+        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    }
+
+    if (metadata) { // != NULL) {
         typedef std::vector<std::string> NameList;
         NameList paramNames = metadata->paramNames(false);
         for (NameList::const_iterator i = paramNames.begin(), e = paramNames.end(); i != e; ++i) {
