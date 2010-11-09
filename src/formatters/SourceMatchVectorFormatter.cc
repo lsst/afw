@@ -61,7 +61,6 @@ extern "C" {
     void appendKey(lsst::afw::formatters::cfitsio::fitsfile* fd, std::string const &keyWord,
                    std::string const& keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata);
 
-
 std::string err_msg(std::string const& fileName, ///< (possibly empty) file name
                     int const status, ///< cfitsio error status (default 0 => no error)
                     std::string const & errMsg ///< optional error description
@@ -196,6 +195,7 @@ namespace form = lsst::afw::formatters;
 // -- SourceMatchVectorFormatter ----------------
 
 // constants
+const std::string form::SourceMatchVectorFormatter::REF_CAT_ID_COLUMN_NAME("REF_CAT_ID");
 const std::string form::SourceMatchVectorFormatter::REF_ID_COLUMN_NAME("REF_ID");
 const std::string form::SourceMatchVectorFormatter::SOURCE_ID_COLUMN_NAME("SOURCE_ID");
 
@@ -274,83 +274,72 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
     //printf("Table has %i columns\n", ncols);
-    if (ncols != 2) {
-        throw LSST_EXCEPT(FitsException, "Expected 2 columns; got " + ncols);
-    }
-
-    int refcol;
-    std::string cname0 = REF_ID_COLUMN_NAME;
-    std::string cname1 = SOURCE_ID_COLUMN_NAME;
-    char* cname;
-
-    cname = strdup(cname0.c_str());
-    if (fits_get_colnum(fitsfile, CASEINSEN, cname, &refcol, &status)) {
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
-    }
-    free(cname);
-    int srccol;
-    cname = strdup(cname1.c_str());
-    if (fits_get_colnum(fitsfile, CASEINSEN, cname, &srccol, &status)) {
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
-    }
-    free(cname);
-    //printf("Reference ID column: %i.  Source ID column: %i\n", refcol, srccol);
-
-    int coltype;
-    long repeat;
-    if (fits_get_coltype(fitsfile, refcol, &coltype, &repeat, NULL, &status)) {
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
-    }
-    if (coltype != TLONGLONG) {
-        throw LSST_EXCEPT(FitsException, "Expected REF_ID column to be type TLONGLONG, got code " + coltype);
-    }
-    if (repeat != 1) {
-        throw LSST_EXCEPT(FitsException, "Expected REF_ID column to be a scalar, but got repeat count " + repeat);
-    }
-
-    if (fits_get_coltype(fitsfile, srccol, &coltype, &repeat, NULL, &status)) {
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
-    }
-    if (coltype != TLONGLONG) {
-        throw LSST_EXCEPT(FitsException, "Expected SOURCE_ID column to be type TLONGLONG, got code " + coltype);
-    }
-    if (repeat != 1) {
-        throw LSST_EXCEPT(FitsException, "Expected SOURCE_ID column to be a scalar, but got repeat count " + repeat);
-    }
-
-    int64_t* refids = new int64_t[nrows];
-    int64_t nulval = -1;
-    int anynul = 0;
-
-    if (fits_read_col(fitsfile, TLONGLONG, refcol, 1, 1, nrows, &nulval, refids,
-                      &anynul, &status)) {
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
-    }
-
-    int64_t* srcids = new int64_t[nrows];
-
-    if (fits_read_col(fitsfile, TLONGLONG, srccol, 1, 1, nrows, &nulval, srcids,
-                      &anynul, &status)) {
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    int NCOLS = 3;
+    if (ncols != NCOLS) {
+        throw LSST_EXCEPT(FitsException, (boost::format("Expected %i columns; got %i") % NCOLS % ncols).str());
     }
 
 	SourceMatchVector smv;
     for (int i=0; i<nrows; i++) {
 		Source::Ptr s1(new Source());
-		s1->setSourceId(refids[i]);
 		Source::Ptr s2(new Source());
-		s2->setSourceId(srcids[i]);
 		SourceMatch m;
 		m.first = s1;
 		m.second = s2;
 		m.distance = 0.0;
 		smv.push_back(m);
+    }
+
+    for (int i=0; i<NCOLS; i++) {
+        const std::string names[] = { REF_CAT_ID_COLUMN_NAME, REF_ID_COLUMN_NAME, SOURCE_ID_COLUMN_NAME };
+        const std::string strcname = names[i];
+        int col;
+        char* cname;
+
+        cname = strdup(strcname.c_str());
+        if (fits_get_colnum(fitsfile, CASEINSEN, cname, &col, &status)) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+        }
+        free(cname);
+
+        int coltype;
+        long repeat;
+        if (fits_get_coltype(fitsfile, col, &coltype, &repeat, NULL, &status)) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+        }
+        if (coltype != TLONGLONG) {
+            throw LSST_EXCEPT(FitsException, (boost::format("Expected column \"%s\" to be type TLONGLONG, got code %i")
+                                              % strcname % coltype).str());
+        }
+        if (repeat != 1) {
+            throw LSST_EXCEPT(FitsException, (boost::format("Expected column \"%s\" to be a scalar, but got repeat count %i")
+                                              % strcname % repeat).str());
+        }
+
+        int64_t* ids = new int64_t[nrows];
+        int64_t nulval = -1;
+        int anynul = 0;
+
+        if (fits_read_col(fitsfile, TLONGLONG, col, 1, 1, nrows, &nulval, ids,
+                          &anynul, &status)) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+        }
+
+        for (int j=0; j<nrows; j++) {
+            if (i == 0) {
+                // pass
+            } else if (i == 1) {
+                smv[j].first->setSourceId(ids[j]);
+            } else if (i == 2) {
+                smv[j].second->setSourceId(ids[j]);
+            }
+        }
         //printf("  %li  =>  %li\n", (long)refids[i], (long)srcids[i]);
+
+        delete[] ids;
+
     }
     p->setSourceMatches(smv);
-
-    delete[] refids;
-    delete[] srcids;
 
     status = 0;
     if (cfitsio::fits_close_file(fitsfile, &status)) {
@@ -409,13 +398,19 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
     }
 
     status = 0;
-    int ncols = 2;
+    int ncols = 3;
     int result;
     std::string coltype = "K";
-    std::string cname0 = REF_ID_COLUMN_NAME;
-    std::string cname1 = SOURCE_ID_COLUMN_NAME;
-    char* tform[] = { strdup(coltype.c_str()), strdup(coltype.c_str()) };
-    char* ttype[] = { strdup(cname0.c_str()),  strdup(cname1.c_str()) };
+
+    std::string strcname[] = { REF_CAT_ID_COLUMN_NAME, REF_ID_COLUMN_NAME, SOURCE_ID_COLUMN_NAME };
+
+    char* tform[ncols];
+    char* ttype[ncols];
+
+    for (int i=0; i<ncols; i++) {
+        tform[i] = strdup(coltype.c_str());
+        ttype[i] = strdup(strcname[i].c_str());
+    }
 
     std::string extname = "MatchList";
     char* cextname = strdup(extname.c_str());
@@ -433,25 +428,33 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
 
     int nrows = matches.size();
     int64_t* values = new int64_t[nrows];
-    // Grab the "first" object IDs -- by convention, "first" is the reference catalog object.
-    for (int i=0; i<nrows; i++)
-        values[i] = matches[i].first->getSourceId();
-    // In cfitsio's bizarro world, most things are 1-indexed (row, column, element)
-    // fits_write_col(fitsfile, datatype, column, firstrow, firstelement, nelements, data, status)
-    result = fits_write_col(fitsfile, TLONGLONG, 1, 1, 1, nrows, values, &status);
-    if (result) {
-        free(values);
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
-    }
 
-    // Grab the "second" object IDs -- by convention, "second" is the image source.
-    for (int i=0; i<nrows; i++)
-        values[i] = matches[i].second->getSourceId();
-    result = fits_write_col(fitsfile, TLONGLONG, 2, 1, 1, nrows, values, &status);
-    delete[] values;
-    if (result) {
-        throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+    for (int j=0; j<ncols; j++) {
+
+        if (j == 0) {
+            // HACK -- REF_CAT_ID = 0.
+            for (int i=0; i<nrows; i++)
+                values[i] = 0;
+        } else if (j == 1) {
+            // Grab the "first" object IDs -- by convention, "first" is the reference catalog object.
+            for (int i=0; i<nrows; i++)
+                values[i] = matches[i].first->getSourceId();
+        } else if (j == 2) {
+            // Grab the "second" object IDs -- by convention, "second" is the image source.
+            for (int i=0; i<nrows; i++)
+                values[i] = matches[i].second->getSourceId();
+        }
+
+        // In cfitsio's bizarro world, most things are 1-indexed (row, column, element)
+        // fits_write_col(fitsfile, datatype, column, firstrow, firstelement, nelements, data, status)
+        result = fits_write_col(fitsfile, TLONGLONG, j+1, 1, 1, nrows, values, &status);
+        if (result) {
+            delete[] values;
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
+        }
+        
     }
+    delete[] values;
 
     status = 0;
     if (cfitsio::fits_close_file(fitsfile, &status)) {

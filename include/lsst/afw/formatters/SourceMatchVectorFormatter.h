@@ -48,6 +48,7 @@ namespace formatters {
 class SourceMatchVectorFormatter : public lsst::daf::persistence::Formatter {
 public:
     // FITS column names
+    static const std::string REF_CAT_ID_COLUMN_NAME;
     static const std::string REF_ID_COLUMN_NAME;
     static const std::string SOURCE_ID_COLUMN_NAME;
 
