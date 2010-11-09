@@ -184,10 +184,8 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
         int kHeight)    ///< number of rows in kernel
 {
     typename OutImageT::SinglePixel outValue = 0;
-    for (int kRow = 0; kRow != kHeight; ++kRow) {
-        for (lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kEnd = 
-            kernelLocator + lsst::afw::image::detail::difference_type(kWidth, 0);
-            kernelLocator != kEnd; ++inImageLocator.x(), ++kernelLocator.x()) {
+    for (int y = 0; y != kHeight; ++y) {
+        for (int x = 0; x != kWidth; ++x, ++inImageLocator.x(), ++kernelLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
             if (kVal != 0) {
                 outValue += *inImageLocator*kVal;

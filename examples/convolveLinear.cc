@@ -40,10 +40,10 @@ int main(int argc, char **argv) {
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.math", 5);
 
     typedef float ImagePixel;
-    unsigned int const KernelCols = 19;
-    unsigned int const KernelRows = 19;
+    unsigned int const KernelCols = 5;
+    unsigned int const KernelRows = 8;
     double const MinSigma = 1.5;
-    double const MaxSigma = 4.5;
+    double const MaxSigma = 2.5;
 
     std::string mimg;
     if (argc < 2) {
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
             std::cerr << "Is afwdata set up?\n" << std::endl;
             exit(EXIT_FAILURE);
         } else {
-            mimg = afwdata + "/med_MI";
+            mimg = afwdata + "/small_MI";
             std::cerr << "Using " << mimg << std::endl;
         }
         
@@ -69,7 +69,6 @@ int main(int argc, char **argv) {
         afwImage::MaskedImage<ImagePixel> mImage(mimg);
         
         // construct basis kernels
-        
         afwMath::KernelList kernelList;
         for (int ii = 0; ii < 3; ++ii) {
             double majorSigma = (ii == 1) ? MaxSigma : MinSigma;
@@ -83,12 +82,12 @@ int main(int argc, char **argv) {
         }
         
         // construct spatially varying linear combination kernel
-        int const polyOrder = 1;
+        unsigned int polyOrder = 1;
         afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
-        afwMath::LinearCombinationKernel kernel(kernelList, polyFunc);
+        afwMath::LinearCombinationKernel lcSpVarKernel(kernelList, polyFunc);
     
         // Get copy of spatial parameters (all zeros), set and feed back to the kernel
-        std::vector<std::vector<double> > polyParams = kernel.getSpatialParameters();
+        std::vector<std::vector<double> > polyParams = lcSpVarKernel.getSpatialParameters();
         // Set spatial parameters for basis kernel 0
         polyParams[0][0] =  1.0;
         polyParams[0][1] = -0.5 / static_cast<double>(mImage.getWidth());
@@ -102,16 +101,11 @@ int main(int argc, char **argv) {
         polyParams[2][1] = 0.0;
         polyParams[2][2] = 1.0 / static_cast<double>(mImage.getHeight());
         // Set spatial function parameters for kernel parameter 1
-        kernel.setSpatialParameters(polyParams);
-
-        std::cout << "Image size: " << mImage.getWidth() << " x " << mImage.getHeight() << std::endl;
-        std::cout << "Kernel size: " << KernelCols << " x " << KernelRows << std::endl;
-        std::cout << "Number of basis kernels: " << kernel.getNBasisKernels() << std::endl;
-        std::cout << "Spatial order: " << polyOrder << std::endl;
+        lcSpVarKernel.setSpatialParameters(polyParams);
     
         // convolve
         afwImage::MaskedImage<ImagePixel> resMaskedImage(mImage.getDimensions());
-        afwMath::convolve(resMaskedImage, mImage, kernel, false);
+        afwMath::convolve(resMaskedImage, mImage, lcSpVarKernel, false);
         
         // write results
         resMaskedImage.writeFits(outFile);

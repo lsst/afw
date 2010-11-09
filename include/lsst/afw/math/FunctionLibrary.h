@@ -515,8 +515,7 @@ using boost::serialization::make_nvp;
             unsigned int order) ///< order of polynomial (0 for constant)
         :
             Function2<ReturnT>((order + 1) * (order + 2) / 2),
-            _order(order),
-            _yCoeffs(_order + 1)
+            _order(order)
         {}
 
         /**
@@ -536,8 +535,7 @@ using boost::serialization::make_nvp;
             Function2<ReturnT>(params),
             _order(static_cast<unsigned int>(
                 0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(params.size()))))) / 2.0)
-            )),
-            _yCoeffs(_order + 1)
+            ))
         {
             unsigned int nParams = params.size();
             if (nParams < 1) {
@@ -570,16 +568,16 @@ using boost::serialization::make_nvp;
             Then compute the return value: a 1-d polynomial in y solved in the usual way.
             */
             const int maxYCoeffInd = this->_order;
-//            std::vector<double> yCoeffs(maxYCoeffInd + 1);
+            std::vector<double> yCoeffs(maxYCoeffInd + 1);
             int paramInd = static_cast<int>(this->_params.size()) - 1;
             // initialize the y coefficients
             for (int yCoeffInd = maxYCoeffInd; yCoeffInd >= 0; --yCoeffInd, --paramInd) {
-                _yCoeffs[yCoeffInd] = this->_params[paramInd];
+                yCoeffs[yCoeffInd] = this->_params[paramInd];
             }
             // finish computing the y coefficients
             for (int startYCoeffInd = maxYCoeffInd - 1, yCoeffInd = startYCoeffInd;
                 paramInd >= 0; --paramInd) {
-                _yCoeffs[yCoeffInd] = (_yCoeffs[yCoeffInd] * x) + this->_params[paramInd];
+                yCoeffs[yCoeffInd] = (yCoeffs[yCoeffInd] * x) + this->_params[paramInd];
                 if (yCoeffInd == 0) {
                     --startYCoeffInd;
                     yCoeffInd = startYCoeffInd;
@@ -588,9 +586,9 @@ using boost::serialization::make_nvp;
                 }
             }
             // compute y polynomial
-            double retVal = _yCoeffs[maxYCoeffInd];
+            double retVal = yCoeffs[maxYCoeffInd];
             for (int yCoeffInd = maxYCoeffInd - 1; yCoeffInd >= 0; --yCoeffInd) {
-                retVal = (retVal * y) + _yCoeffs[yCoeffInd];
+                retVal = (retVal * y) + yCoeffs[yCoeffInd];
             }
             return static_cast<ReturnT>(retVal);
         }
@@ -606,7 +604,6 @@ using boost::serialization::make_nvp;
 
     private:
         unsigned int _order; ///< order of polynomial
-        mutable std::vector<double> _yCoeffs; ///< working vector
 
     private:
         friend class boost::serialization::access;
