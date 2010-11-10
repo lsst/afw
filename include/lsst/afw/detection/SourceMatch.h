@@ -34,7 +34,13 @@
 #include "boost/tuple/tuple.hpp"
 
 #include "lsst/afw/detection/Source.h"
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/daf/base/PropertySet.h"
 
+// forward declaration
+namespace lsst { namespace afw { namespace formatters {
+    class SourceMatchVectorFormatter;
+}}}
 
 namespace lsst { namespace afw { namespace detection {
 
@@ -53,6 +59,31 @@ std::vector<SourceMatch> matchRaDec(SourceSet const &set1, SourceSet const &set2
 std::vector<SourceMatch> matchRaDec(SourceSet const &set, double radius, bool symmetric = true);
 std::vector<SourceMatch> matchXy(SourceSet const &set1, SourceSet const &set2, double radius);
 std::vector<SourceMatch> matchXy(SourceSet const &set, double radius, bool symmetric = true);
+
+
+typedef std::vector<SourceMatch> SourceMatchVector;
+
+class PersistableSourceMatchVector : public lsst::daf::base::Persistable {
+public:
+    typedef boost::shared_ptr<PersistableSourceMatchVector> Ptr;
+    PersistableSourceMatchVector() {}
+    PersistableSourceMatchVector(SourceMatchVector const & matches)
+        : _matches(matches) {}
+    PersistableSourceMatchVector(SourceMatchVector const & matches,
+				 lsst::daf::base::PropertySet::Ptr matchMetadata)
+      : _matches(matches), _matchMeta(matchMetadata) {}
+    ~PersistableSourceMatchVector() { _matches.clear(); }
+        
+    SourceMatchVector getSourceMatches() const { return _matches; }
+    lsst::daf::base::PropertySet::Ptr getSourceMatchMetadata() const { return _matchMeta; }
+    void setSourceMatches(SourceMatchVector const & matches) {_matches = matches; }
+    void setSourceMatchMetadata(lsst::daf::base::PropertySet::Ptr meta) { _matchMeta = meta; }
+    
+private:
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceMatchVectorFormatter)
+    SourceMatchVector _matches;
+    lsst::daf::base::PropertySet::Ptr _matchMeta;
+};
 
 }}} // namespace lsst::afw::detection
 
