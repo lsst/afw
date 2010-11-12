@@ -42,148 +42,17 @@
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/formatters/SourceMatchVectorFormatter.h"
+#include "lsst/afw/image/fits/fits_io_private.h"
+
+namespace cfitsio = lsst::afw::image::cfitsio;
 
 namespace lsst { namespace afw { namespace formatters {
 
 LSST_EXCEPTION_TYPE(FitsException,
                     lsst::pex::exceptions::Exception, lsst::pex::exceptions::LogicErrorException)
 
-namespace cfitsio {
-extern "C" {
-#include "fitsio.h"
-}
-
-    // stolen from afw/image/fits/fits_io_private.h:
-
-    std::string err_msg(fitsfile const *fd, int const status = 0, std::string const &errMsg = "");
-    std::string err_msg(std::string const &fileName, int const status = 0, std::string const &errMsg = "");
-    inline std::string err_msg(fitsfile const *fd, int const status, boost::format const &fmt) { return err_msg(fd, status, fmt.str()); }
-    void appendKey(lsst::afw::formatters::cfitsio::fitsfile* fd, std::string const &keyWord,
-                   std::string const& keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata);
-
-std::string err_msg(std::string const& fileName, ///< (possibly empty) file name
-                    int const status, ///< cfitsio error status (default 0 => no error)
-                    std::string const & errMsg ///< optional error description
-                   ) {
-    std::ostringstream os;
-    os << "cfitsio error";
-    if (fileName != "") {
-        os << " (" << fileName << ")";
-    }
-    if (status != 0) {
-        char fitsErrMsg[FLEN_ERRMSG];
-        (void)lsst::afw::formatters::cfitsio::fits_get_errstatus(status, fitsErrMsg);
-        os << ": " << fitsErrMsg << " (" << status << ")";
-    }
-    if (errMsg != "") {
-        os << " : " << errMsg;
-    }
-    return os.str();
-}
-
-std::string err_msg(lsst::afw::formatters::cfitsio::fitsfile const * fd, ///< (possibly invalid) file descriptor
-                    int const status, ///< cfitsio error status (default 0 => no error)
-                    std::string const & errMsg ///< optional error description
-                   ) {
-    std::string fileName = "";
-    if (fd != 0 && fd->Fptr != 0 && fd->Fptr->filename != 0) {
-        fileName = fd->Fptr->filename;
-    }
-    return err_msg(fileName, status, errMsg);
-}
-
-void appendKey(lsst::afw::formatters::cfitsio::fitsfile* fd, std::string const &keyWord,
-               std::string const &keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata) {
-
-    // NOTE:  the sizes of arrays are tied to FITS standard
-    // These shenanigans are required only because fits_write_key does not take const args...
-    
-    char keyWordChars[80];
-    char keyCommentChars[80];
-    
-    strncpy(keyWordChars, keyWord.c_str(), 80);
-    strncpy(keyCommentChars, keyComment.c_str(), 80);
-    
-    int status = 0;
-    std::type_info const & valueType = metadata->typeOf(keyWord); 
-    if (valueType == typeid(bool)) {
-        if (metadata->isArray(keyWord)) {
-            std::vector<bool> tmp = metadata->getArray<bool>(keyWord);
-            for (unsigned int i = 0; i != tmp.size(); ++i) {
-                bool tmp_i = tmp[i];    // avoid icc warning; is vector<bool> special as it only needs 1 bit?
-                fits_write_key(fd, TLOGICAL, keyWordChars, &tmp_i, keyCommentChars, &status);
-            }
-        } else {
-            bool tmp = metadata->get<bool>(keyWord);
-
-            fits_write_key(fd, TLOGICAL, keyWordChars, &tmp, keyCommentChars, &status);
-        }
-    } else if (valueType == typeid(int)) {
-        if (metadata->isArray(keyWord)) {
-            std::vector<int> tmp = metadata->getArray<int>(keyWord);
-            for (unsigned int i = 0; i != tmp.size(); ++i) {
-                fits_write_key(fd, TINT, keyWordChars, &tmp[i], keyCommentChars, &status);
-            }
-        } else {
-            int tmp = metadata->get<int>(keyWord);
-
-            fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
-        }
-    } else if (valueType == typeid(long)) {
-        if (metadata->isArray(keyWord)) {
-            std::vector<long> tmp = metadata->getArray<long>(keyWord);
-            for (unsigned long i = 0; i != tmp.size(); ++i) {
-                fits_write_key(fd, TLONG, keyWordChars, &tmp[i], keyCommentChars, &status);
-            }
-        } else {
-            long tmp = metadata->get<long>(keyWord);
-
-            fits_write_key(fd, TLONG, keyWordChars, &tmp, keyCommentChars, &status);
-        }
-    } else if (valueType == typeid(double)) {
-        if (metadata->isArray(keyWord)) {
-            std::vector<double> tmp = metadata->getArray<double>(keyWord);
-            for (unsigned int i = 0; i != tmp.size(); ++i) {
-                fits_write_key(fd, TDOUBLE, keyWordChars, &tmp[i], keyCommentChars, &status);
-            }
-        } else {
-            double tmp = metadata->get<double>(keyWord);
-            fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
-        }
-    } else if (valueType == typeid(std::string)) {
-        char* cval;
-        int N;
-        if (metadata->isArray(keyWord)) {
-            std::vector<std::string> tmp = metadata->getArray<std::string>(keyWord);
-
-            for (unsigned int i = 0; i != tmp.size(); ++i) {
-	      N = tmp[i].size();
-	      cval = new char[N+1];
-	      strncpy(cval, tmp[i].c_str(), N+1);
-	      fits_write_key_longstr(fd, keyWordChars, cval, keyCommentChars, &status);
-	      delete[] cval;
-            }
-        } else {
-            std::string tmp = metadata->get<std::string>(keyWord);
-	    N = tmp.size();
-	    cval = new char[N+1];
-	    strncpy(cval, tmp.c_str(), N+1);
-	    fits_write_key_longstr(fd, keyWordChars, cval, keyCommentChars, &status);
-	    delete[] cval;
-        }
-    } else {
-        std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() <<
-            " for keyword " << keyWord << std::endl;
-    }
-
-    if (status) {
-        throw LSST_EXCEPT(FitsException, err_msg(fd, status));
-    }
-}
-
-
-} // end of cfitsio namespace
 }}}
+
 
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
@@ -402,7 +271,15 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
 
     if (metadata) { // != NULL) {
         typedef std::vector<std::string> NameList;
-        NameList paramNames = metadata->paramNames(false);
+        NameList paramNames;
+        boost::shared_ptr<lsst::daf::base::PropertyList const> pl =
+            boost::dynamic_pointer_cast<lsst::daf::base::PropertyList const,
+            lsst::daf::base::PropertySet const>(metadata);
+        if (pl) {
+            paramNames = pl->getOrderedNames();
+        } else {
+            paramNames = metadata->paramNames(false);
+        }
         for (NameList::const_iterator i = paramNames.begin(), e = paramNames.end(); i != e; ++i) {
             if (*i != "SIMPLE" && *i != "BITPIX" &&
                 *i != "NAXIS" && *i != "NAXIS1" && *i != "NAXIS2" && *i != "EXTEND") {
