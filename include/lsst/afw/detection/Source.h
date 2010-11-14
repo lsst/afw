@@ -183,7 +183,9 @@ private :
         fpSerialize(ar, _skyErr);
 
         BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
-        ar & _astrom & _photom & _shape;
+        if (version > 0) {
+            ar & _astrom & _photom & _shape;
+        }
     }
 
     friend class boost::serialization::access;
@@ -236,6 +238,10 @@ private:
 
 
 }}}  // namespace lsst::afw::detection
+
+#ifndef SWIG
+BOOST_CLASS_VERSION(lsst::afw::detection::Source, 1)
+#endif
 
 #endif // LSST_AFW_DETECTION_SOURCE_H
 
