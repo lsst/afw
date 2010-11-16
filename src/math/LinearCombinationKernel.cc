@@ -388,7 +388,7 @@ afwMath::ImageLocalKernel::Ptr afwMath::LinearCombinationKernel::computeImageLoc
     lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(
         getCtrX(), getCtrY()
     );
-    computeImage(*imagePtr, false, location.getX(), location.getY());
+    computeImage(*imagePtr, true, location.getX(), location.getY());
     std::vector<double> kernelParameters(getNKernelParameters());
     computeKernelParametersFromSpatialModel(
         kernelParameters, 
