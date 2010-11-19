@@ -116,7 +116,7 @@ namespace lsst { namespace afw { namespace detection { namespace {
   */
 std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set1,
                                               lsst::afw::detection::SourceSet const &set2,
-                                              double radius) {
+                                              double radius, bool best) {
     if (&set1 == &set2) {
         return matchRaDec(set1, radius, true);
     }
@@ -147,15 +147,28 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
             break;
         }
         double maxDec = pos1[i].dec + radiusRad;
+        size_t bestIndex = -1;          // Index of best match (if any)
+        double d2Include = d2Limit;     // Squared distance for inclusion of match
+        bool found = false;             // Found anything?
         for (size_t j = start; j < len2 && pos2[j].dec <= maxDec; ++j) {
             double dx = pos1[i].x - pos2[j].x;
             double dy = pos1[i].y - pos2[j].y;
             double dz = pos1[i].z - pos2[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
-            if (d2 < d2Limit) {
-                matches.push_back(SourceMatch(*pos1[i].src, *pos2[j].src,
-                    DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2))));
+            if (d2 < d2Include) {
+                if (best) {
+                    d2Include = d2;
+                    bestIndex = j;
+                    found = true;
+                } else {
+                    matches.push_back(SourceMatch(*pos1[i].src, *pos2[j].src,
+                                                  DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2))));
+                }
             }
+        }
+        if (best && found) {
+            matches.push_back(SourceMatch(*pos1[i].src, *pos2[bestIndex].src,
+                                          DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2Include))));
         }
     }
     return matches;
@@ -222,7 +235,7 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
   */
 std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const &set1,
                                            lsst::afw::detection::SourceSet const &set2,
-                                           double radius) {
+                                           double radius, bool best) {
     if (&set1 == &set2) {
        return matchXy(set1, radius);
     }
@@ -256,13 +269,25 @@ std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const
         double x = (*pos1[i])->getXAstrom();
         double maxY = y + radius;
         double y2;
+        size_t bestIndex = -1;          // Index of best match (if any)
+        double r2Include = r2;          // Squared radius for inclusion of match
+        bool found = false;             // Found anything?
         for (size_t j = start; j < len2 && (y2 = (*pos2[j])->getYAstrom()) <= maxY; ++j) {
             double dx = x - (*pos2[j])->getXAstrom();
             double dy = y - y2;
             double d2 = dx*dx + dy*dy;
-            if (d2 < r2) {
-                matches.push_back(SourceMatch(*pos1[i], *pos2[j], std::sqrt(d2)));
+            if (d2 < r2Include) {
+                if (best) {
+                    r2Include = d2;
+                    bestIndex = j;
+                    found = true;
+                } else {
+                    matches.push_back(SourceMatch(*pos1[i], *pos2[j], std::sqrt(d2)));
+                }
             }
+        }
+        if (best && found) {
+            matches.push_back(SourceMatch(*pos1[i], *pos2[bestIndex], std::sqrt(r2Include)));
         }
     }
     return matches;
