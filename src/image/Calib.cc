@@ -109,7 +109,7 @@ std::pair<double, double> Calib::getFluxMag0() const
  * Return a magnitude given a flux
  */
 double Calib::getMagnitude(double const flux ///< the measured flux of the object
-                         )
+                         ) const
 {
     if (_fluxMag0 <= 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
@@ -130,7 +130,7 @@ double Calib::getMagnitude(double const flux ///< the measured flux of the objec
  */
 std::pair<double, double> Calib::getMagnitude(double const flux, ///< the measured flux of the object
                                             double const fluxErr ///< the error in the measured flux
-                                           )
+                                           ) const
 {
     if (_fluxMag0 <= 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
