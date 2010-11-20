@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(persistUnpersistMatchList) {
 		m.distance = 40.0;
 		smv.push_back(m);
 	}
-	std::string fn = "test/data/matchlist2.fits";
+	std::string fn = "tests/data/matchlist2.fits";
 
 	LogicalLocation loc(fn);
     Policy::Ptr      policy(new Policy);
