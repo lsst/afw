@@ -142,7 +142,6 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     // These shenanigans are required only because fits_write_key does not take const args...
     
     char keyWordChars[80];
-    char keyValueChars[80];
     char keyCommentChars[80];
     
     strncpy(keyWordChars, keyWord.c_str(), 80);
@@ -203,30 +202,39 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
             fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
         }
     } else if (valueType == typeid(std::string)) {
+        char* cval;
+        int N;
         if (metadata->isArray(keyWord)) {
             std::vector<std::string> tmp = metadata->getArray<std::string>(keyWord);
-
             for (unsigned int i = 0; i != tmp.size(); ++i) {
-                strncpy(keyValueChars, tmp[i].c_str(), 80);
+	      N = tmp[i].size();
+	      cval = new char[N+1];
+	      strncpy(cval, tmp[i].c_str(), N+1);
+
                 if (keyWord == "COMMENT") {
-                    fits_write_comment(fd, keyValueChars, &status);
+                    fits_write_comment(fd, cval, &status);
                 } else if (keyWord == "HISTORY") {
-                    fits_write_history(fd, keyValueChars, &status);
+                    fits_write_history(fd, cval, &status);
                 } else {
-                    fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+                    fits_write_key_longstr(fd, keyWordChars, cval, keyCommentChars, &status);
                 }
+	      delete[] cval;
             }
         } else {
             std::string tmp = metadata->get<std::string>(keyWord);
-            strncpy(keyValueChars, tmp.c_str(), 80);
+	    N = tmp.size();
+	    cval = new char[N+1];
+	    strncpy(cval, tmp.c_str(), N+1);
             if (keyWord == "COMMENT") {
-                fits_write_comment(fd, keyValueChars, &status);
+                fits_write_comment(fd, cval, &status);
             } else if (keyWord == "HISTORY") {
-                fits_write_history(fd, keyValueChars, &status);
+                fits_write_history(fd, cval, &status);
             } else {
-                fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+                fits_write_key_longstr(fd, keyWordChars, cval, keyCommentChars, &status);
             }
+	    delete[] cval;
         }
+
     } else {
         std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() <<
             " for keyword " << keyWord << std::endl;
