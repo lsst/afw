@@ -17,6 +17,7 @@ import lsst.afw.detection as afwDet
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
+import lsst
 
 try:
     type(verbose)
@@ -56,17 +57,37 @@ class matchlistTestCase(unittest.TestCase):
         for m in range(Nmatch):
             sm = afwDet.SourceMatch()
             s1 = afwDet.Source()
-            s1.setSourceId(m)
+            s1.setSourceId(self.refids[m])
             sm.first = s1
             s2 = afwDet.Source()
-            s2.setSourceId(self.refids[m])
+            s2.setSourceId(m)
             sm.second = s2
             sm.distance = 0
             self.smv.push_back(sm)
 
+        print 'Sent:', self.smv
+
         self.psmv = afwDet.PersistableSourceMatchVector(self.smv)
         self.matchlist = roundTripSourceMatch('FitsStorage', 'tests/data/matchlist.fits',
                                               self.psmv)
+        print 'Got PSMV:', self.matchlist
+        self.smv2 = self.matchlist.getSourceMatches()
+        print 'Got SMV:', self.smv2
+        self.assertEqual(len(self.smv2), len(self.smv))
+        for i,m in enumerate(self.smv2):
+            self.assertEqual(type(m), lsst.afw.detection.detectionLib.SourceMatch)
+            self.assertEqual(m.first.getId(), self.refids[i])
+            self.assertEqual(m.second.getId(), i)
+            #print '  type', type(m)
+            print '  first', m.first
+            print '  second', m.second
+            # Strangely, "print m" fails with "getX()" not found
+            # (from match.i : SourceMatch.__str__() )
+            #print '  dir(first)', dir(m.first)
+            #print '  dir(second)', dir(m.second)
+            #print '  type(first)', type(m.first)
+            #print '  dir(m)', dir(m)
+            #print '  m', m
 
     def tearDown(self):
         pass
