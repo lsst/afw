@@ -48,6 +48,11 @@ def roundTripSourceMatch(storagetype, filename, matchlist):
 
 class matchlistTestCase(unittest.TestCase):
     def setUp(self):
+        pass
+    def tearDown(self):
+        pass
+
+    def testRoundTrip(self):
         self.smv = afwDet.SourceMatchVector()
         Nmatch = 20
         #self.refids = [long(random.random() * 2**64) for i in range(Nmatch)]
@@ -68,11 +73,50 @@ class matchlistTestCase(unittest.TestCase):
         print 'Sent:', self.smv
 
         self.psmv = afwDet.PersistableSourceMatchVector(self.smv)
+        extra = dafBase.PropertyList()
+
+        # as in meas_astrom : determineWcs.py
+        #andata = os.environ.get('ASTROMETRY_NET_DATA_DIR')
+        #if andata is None:
+        #    extra.add('ANEUPS', 'none', 'ASTROMETRY_NET_DATA_DIR')
+        #else:
+        #    andata = os.path.basename(andata)
+        #    extra.add('ANEUPS', andata, 'ASTROMETRY_NET_DATA_DIR')
+        aneups = 'imsim-2010-11-09-0'
+        ra,dec,rad = 2.389, 3.287, 0.158
+        anindfn = '/home/dalang/lsst/astrometry_net_data/imsim-2010-11-09-0/index-101109003.fits'
+        anindid = 101109003
+        extra.add('ANEUPS', aneups)
+        extra.add('RA', ra)
+        extra.add('DEC', dec)
+        extra.add('RAD', rad)
+        extra.add('ANINDNM', anindfn)
+        extra.add('ANINDID', anindid)
+
+        # Sample:
+        '''
+        ANEUPS  = 'imsim-2010-11-09-0' / ASTROMETRY_NET_DATA_DIR
+        RA      =     2.38923749033107 / field center in degrees
+        DEC     =     3.28730056538314 / field center in degrees
+        RADIUS  =    0.158420562703962 / field radius in degrees, approximate
+        REFCAT  = 'none    '           / Reference catalog name
+        REFCAMD5= 'none    '           / Reference catalog MD5 checksum
+        ANINDID =            101109003 / Astrometry.net index id
+        ANINDHP =                   -1 / Astrometry.net index HEALPix
+        ANINDNM = '/home/dalang/lsst/astrometry_net_data/imsim-2010-11-09-0/index-1011&'
+        CONTINUE  '09003.fits'         / Astrometry.net index name
+        '''
+        self.psmv.setSourceMatchMetadata(extra)
+
         self.matchlist = roundTripSourceMatch('FitsStorage', 'tests/data/matchlist.fits',
                                               self.psmv)
         print 'Got PSMV:', self.matchlist
         self.smv2 = self.matchlist.getSourceMatches()
+        extra2 = self.matchlist.getSourceMatchMetadata()
+
         print 'Got SMV:', self.smv2
+        print 'Got metadata:', extra2
+        print '  ', extra2.toString()
         self.assertEqual(len(self.smv2), len(self.smv))
         for i,m in enumerate(self.smv2):
             self.assertEqual(type(m), lsst.afw.detection.detectionLib.SourceMatch)
@@ -89,12 +133,20 @@ class matchlistTestCase(unittest.TestCase):
             #print '  dir(m)', dir(m)
             #print '  m', m
 
-    def tearDown(self):
-        pass
+        self.assertEqual(aneups, extra2.get('ANEUPS'))
+        self.assertEqual(ra, extra2.get('RA'))
+        self.assertEqual(dec, extra2.get('DEC'))
+        self.assertEqual(rad, extra2.get('RAD'))
+        self.assertEqual(anindfn, extra2.get('ANINDNM'))
+        self.assertEqual(anindid, extra2.get('ANINDID'))
 
-    def testStuff(self):
-        #    # self.assertEqual(stats.getValue(afwMath.MAX), 0.0)
-        pass
+        del extra2
+        del self.smv2
+        del self.matchlist
+        del self.psmv
+        del extra
+        del self.smv
+
 
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= silly boilerplate -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

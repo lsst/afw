@@ -267,12 +267,30 @@ void getKey(fitsfile* fd,
 
      int status = 0;
      if (fits_read_keyn(fd, n, keyWordChars, keyValueChars, keyCommentChars, &status) != 0) {
-          throw LSST_EXCEPT(FitsException, err_msg(fd, status));
+         throw LSST_EXCEPT(FitsException, err_msg(fd, status));
      }
-         
+
+     // There's no long-string equivalent to fits_read_keyn, so hack it...
+
      keyWord = keyWordChars;
      keyValue = keyValueChars;
      keyComment = keyCommentChars;
+
+     // FIXME -- what about multi-line CONTINUEs?
+     status = 0;
+     char cval[80];
+     cval[0] = '\0';
+     if (ffgcnt(fd, cval, &status)) {
+         throw LSST_EXCEPT(FitsException, err_msg(fd, status));
+     }
+     //printf("got key \"%s\"; ffgcnt status = %i\n", keyWordChars, status);
+     if (cval[0]) {
+         printf("got CONTINUE: \"%s\"\n", cval);
+         std::string more = cval;
+         // the last character in a CONTINUE'd line is & -- trim it.
+         keyValue = keyValue.substr(0, keyValue.size()-1) + more;
+     }
+
 }
 
 void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, std::string const& value, std::string const& comment) {

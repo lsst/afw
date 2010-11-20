@@ -58,6 +58,7 @@ namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
 
 using lsst::daf::base::Persistable;
+using lsst::daf::base::PropertySet;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
@@ -122,6 +123,11 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
         throw LSST_EXCEPT(FitsException, os.str());
     }
 
+    // metadata entries are in the Primary HDU.
+    PropertySet::Ptr metadata(new PropertySet());
+    cfitsio::getMetadata(fitsfile, metadata, true);
+    p->setSourceMatchMetadata(metadata);
+
     if (fits_movabs_hdu(fitsfile, 2, NULL, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
     }
@@ -155,7 +161,7 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
         throw LSST_EXCEPT(FitsException, (boost::format("Expected %i columns; got %i") % NCOLS % ncols).str());
     }
 
-	SourceMatchVector smv;
+    SourceMatchVector smv;
     for (int i=0; i<nrows; i++) {
 		Source::Ptr s1(new Source());
 		Source::Ptr s2(new Source());
@@ -217,8 +223,6 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
     }
     p->setSourceMatches(smv);
 
-    // FIXME -- read FITS header metadata and fill p->setSourceMatchMetadata()
-
     status = 0;
     if (cfitsio::fits_close_file(fitsfile, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
@@ -254,11 +258,7 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
     }
 
-    /*
-     fits_update_key(fitsfile, TLONG, "EXPOSURE", &exposure, 
-     "Total Exposure Time", &status); 
-     */
-
+    // Create empty primary HDU
     status = 0;
     if (fits_create_img(fitsfile, 8, 0, NULL, &status)) {
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
@@ -269,7 +269,7 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
         throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fitsfile, status));
     }
 
-    if (metadata) { // != NULL) {
+    if (metadata) {
         typedef std::vector<std::string> NameList;
         NameList paramNames;
         boost::shared_ptr<lsst::daf::base::PropertyList const> pl =
