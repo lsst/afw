@@ -283,12 +283,15 @@ void getKey(fitsfile* fd,
      if (ffgcnt(fd, cval, &status)) {
          throw LSST_EXCEPT(FitsException, err_msg(fd, status));
      }
-     //printf("got key \"%s\"; ffgcnt status = %i\n", keyWordChars, status);
      if (cval[0]) {
          printf("got CONTINUE: \"%s\"\n", cval);
          std::string more = cval;
-         // the last character in a CONTINUE'd line is & -- trim it.
-         keyValue = keyValue.substr(0, keyValue.size()-1) + more;
+         printf("  key \"%s\"; value \"%s\"; continued value \"%s\"\n",
+                keyWord.c_str(), keyValue.c_str(), more.c_str());
+         // value "'/home/dalang/lsst/astrometry_net_data/imsim-2010-11-09-0/index-1011&'"; continued value "09003.fits"
+         // the last characters in a CONTINUE'd line are  &'  -- trim
+         keyValue = keyValue.substr(0, keyValue.size()-2) + more + "'";
+         printf("Returning: key \"%s\", vale \"%s\"\n", keyWord.c_str(), keyValue.c_str());
      }
 
 }
