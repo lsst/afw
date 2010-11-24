@@ -31,12 +31,14 @@
 //##====----------------                                ----------------====##/
 
 #include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
 #include "lsst/afw/detection/Shape.h"
 
+namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
 
 /**
@@ -51,7 +53,8 @@ det::Source::Source()
       _skyErr(0.0),
       _astrom(new Astrometry),
       _photom(new Photometry),
-      _shape(new Shape)
+      _shape(new Shape),
+      _sourceIdLocked(false)
 { }
 
 /**
@@ -64,11 +67,20 @@ det::Source::Source(Source const & other)
       _petroFlux(other._petroFlux),
       _petroFluxErr(other._petroFluxErr),
       _sky(other._sky),
-      _skyErr(other._skyErr)      
+      _skyErr(other._skyErr),
+      _sourceIdLocked(other._sourceIdLocked)
 {
     for (int i =0; i != NUM_SOURCE_NULLABLE_FIELDS; ++i) {
         setNull(i, other.isNull(i));
     }
+}
+
+void det::Source::setSourceId(boost::int64_t const sourceId) {
+    if (_sourceIdLocked) {
+        // throw?  scold?  refuse?
+        throw LSST_EXCEPT(ex::RuntimeErrorException, "Attempt to setSourceId() after a lockSourceId()");
+    }
+    setId(sourceId);
 }
 
 /**

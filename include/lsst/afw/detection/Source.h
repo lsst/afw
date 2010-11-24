@@ -107,8 +107,12 @@ public :
     double getRaObject() const { return _raObject; }
     double getDecObject() const { return _decObject; }
 
+    void lockSourceId() {
+        _sourceIdLocked = true;
+    }
+
     // setters
-    void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
+    void setSourceId( boost::int64_t const sourceId);
 
     void setPetroFlux(double const petroFlux) { 
         set(_petroFlux, petroFlux, PETRO_FLUX);         
@@ -172,6 +176,8 @@ private :
     float _petroFluxErr;
     float _sky;
     float _skyErr;
+
+    bool _sourceIdLocked;
 
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {
