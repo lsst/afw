@@ -370,7 +370,16 @@ void _computeCache(int const cacheSize,
 }
 }
 
-void afwMath::SeparableKernel::computeCache(int const cacheSize) {
+/***
+ * @brief Compute a cache of values for the x and y kernel functions
+ *
+ * A value of 0 disables the cache for maximum accuracy.
+ * 10,000 typically results in a warping error of a fraction of a count.
+ * 100,000 typically results in a warping error of less than 0.01 count.
+ */
+void afwMath::SeparableKernel::computeCache(
+        int const cacheSize ///< cache size (number of double precision array elements in the x and y caches)
+) {
     afwMath::SeparableKernel::KernelFunctionPtr func;
 
     func = getKernelColFunction();

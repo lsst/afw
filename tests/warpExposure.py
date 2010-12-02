@@ -91,7 +91,7 @@ class WarpExposureTestCase(unittest.TestCase):
         edgeMaskArr = afwWarpedMaskArr & edgeBitMask
         originalMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(originalExposure.getMaskedImage())
         errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, originalMaskedImageArrSet,
-            doMask=False, skipMaskArr=edgeMaskArr, atol=1.0e-5)
+            doMask=False, skipMaskArr=edgeMaskArr, atol=1e-5)
         if errStr:
             self.fail("afw null-warped MaskedImage (all pixels, relaxed tolerance): %s" % (errStr,))
         
@@ -120,7 +120,7 @@ class WarpExposureTestCase(unittest.TestCase):
         originalImageArr = imageTestUtils.arrayFromImage(originalImage)
         # relax specs a bit because of minor noise introduced by bad pixels
         errStr = imageTestUtils.imagesDiffer(originalImageArr, originalImageArr,
-            skipMaskArr=edgeMaskArr, atol=1.0e-5)
+            skipMaskArr=edgeMaskArr)
         if errStr:
             self.fail("afw null-warped Image: %s" % (errStr,))
 
@@ -168,7 +168,7 @@ class WarpExposureTestCase(unittest.TestCase):
     def testMatchSwarpBilinearImage(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
         """
-        self.compareToSwarp("bilinear", useWarpExposure=False, atol=1.0e-2)
+        self.compareToSwarp("bilinear", useWarpExposure=False, atol=0.15)
 
     def testMatchSwarpBilinearExposure(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
@@ -178,7 +178,7 @@ class WarpExposureTestCase(unittest.TestCase):
     def testMatchSwarpLanczos2Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
         """
-        self.compareToSwarp("lanczos2", useWarpExposure=False, atol=1.0e-2)
+        self.compareToSwarp("lanczos2", useWarpExposure=False)
 
     def testMatchSwarpLanczos2Exposure(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel.
@@ -194,7 +194,7 @@ class WarpExposureTestCase(unittest.TestCase):
     def testMatchSwarpLanczos3Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
         """
-        self.compareToSwarp("lanczos3", useWarpExposure=False, atol=1.0e-2)
+        self.compareToSwarp("lanczos3", useWarpExposure=False)
 
     def testMatchSwarpLanczos3(self):
         """Test that warpExposure matches swarp using a lanczos4 warping kernel.
@@ -204,7 +204,7 @@ class WarpExposureTestCase(unittest.TestCase):
     def testMatchSwarpLanczos4Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
         """
-        self.compareToSwarp("lanczos4", useWarpExposure=False, atol=1.0e-2)
+        self.compareToSwarp("lanczos4", useWarpExposure=False)
 
     def testMatchSwarpLanczos4(self):
         """Test that warpExposure matches swarp using a lanczos4 warping kernel.
@@ -216,29 +216,31 @@ class WarpExposureTestCase(unittest.TestCase):
         """
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
-    def compareToSwarp(self, kernelName, rtol=1.0e-05, atol=1e-08,
-                       useWarpExposure=True, useSubregion=False, useDeepCopy=False, interpLength=10):
+    def compareToSwarp(self, kernelName, 
+                       useWarpExposure=True, useSubregion=False, useDeepCopy=False,
+                       interpLength=10, cacheSize=100000,
+                       rtol=4e-05, atol=1e-2):
         """Compare warpExposure to swarp for given warping kernel.
         
         Note that swarp only warps the image plane, so only test that plane.
         
         Inputs:
         - kernelName: name of kernel in the form used by afwImage.makeKernel
-        - rtol: relative tolerance as used by numpy.allclose
-        - atol: absolute tolerance as used by numpy.allclose
         - useWarpExposure: if True, call warpExposure to warp an ExposureF,
             else call warpImage to warp an ImageF
         - useSubregion: if True then the original source exposure (from which the usual
             test exposure was extracted) is read and the correct subregion extracted
         - useDeepCopy: if True then the copy of the subimage is a deep copy,
             else it is a shallow copy; ignored if useSubregion is False
+        - interpLength: interpLength argument for lsst.afw.math.warpExposure
+        - cacheSize: cacheSize argument for lsst.afw.math.SeparableKernel.computeCache;
+            0 disables the cache
+            10000 gives some speed improvement but less accurate results (atol must be increased)
+            100000 gives better accuracy but no speed improvement in this test
+        - rtol: relative tolerance as used by numpy.allclose
+        - atol: absolute tolerance as used by numpy.allclose
         """
         warpingKernel = afwMath.makeWarpingKernel(kernelName)
-        cacheSize = 10000
-        if cacheSize > 0:
-            atol = max(atol, 0.15)
-            rtol = 4e-5
-            
         warpingKernel.computeCache(cacheSize)
 
         if useSubregion:
