@@ -134,6 +134,12 @@ Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD
     
 ///Parse a fits header, extract the relevant metadata and create a Wcs object
 void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
+    // Some headers (e.g. SDSS ones from FNAL) have EQUINOX as a string.  Fix this,
+    // as wcslib 4.4.4 refuses to handle it
+    if (fitsMetadata->typeOf("EQUINOX") == typeid(std::string)) {
+        double equinox = ::atof(fitsMetadata->getAsString("EQUINOX").c_str());
+        fitsMetadata->set("EQUINOX", equinox);
+    }
 
     //Check header isn't empty
     std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
@@ -144,7 +150,7 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     }
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
-    //is almost certain their abscence indicates a problem.   
+    //is almost certain their absence indicates a problem.   
     //Check for CRPIX
     if( !fitsMetadata->exists("CRPIX1") && !fitsMetadata->exists("CRPIX1a")) {
         string msg = "Neither CRPIX1 not CRPIX1a found";
@@ -201,17 +207,12 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     //The Wcs standard requires a default value for RADESYS if the keyword
     //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code 
     //conforms to Calbretta & Greisen 2002 \S 3.1
-    if( ! (fitsMetadata->exists("RADESYS") || fitsMetadata->exists("RADESYSa")) ) {
+    if (!(fitsMetadata->exists("RADESYS") || fitsMetadata->exists("RADESYSa"))) {
 
         //If equinox exist and < 1984, use FK5. If >= 1984, use FK5
-        if( (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) ) {
-            double equinox;
-            try {
-                equinox = fitsMetadata->getAsDouble("EQUINOX");
-            } catch(...) {
-                equinox = fitsMetadata->getAsDouble("EQUINOXa");
-            }
-            
+        if (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) {
+            std::string const EQUINOX = fitsMetadata->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
+            double const equinox = fitsMetadata->getAsDouble(EQUINOX);
             if(equinox < 1984) {
                 snprintf(_wcsInfo->radesys, STRLEN, "FK4");
             } else {
@@ -222,8 +223,6 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
             snprintf(_wcsInfo->radesys, STRLEN, "ICRS");
         }
     }
-                
-        
 }
 
 
@@ -810,8 +809,8 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) coord   Position in sky coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+ * @param (in) coord   Position in sky coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     lsst::afw::coord::Coord::ConstPtr const & coord,
@@ -832,8 +831,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) pix     Position in pixel coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+ * @param (in) pix     Position in pixel coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     lsst::afw::geom::Point2D const & pix,
@@ -891,8 +890,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) coord   Position in sky coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ * @param (in) coord   Position in sky coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     lsst::afw::coord::Coord::ConstPtr const & coord,
@@ -913,8 +912,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) pix     Position in pixel coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ * @param (in) pix     Position in pixel coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     lsst::afw::geom::Point2D const & pix,
