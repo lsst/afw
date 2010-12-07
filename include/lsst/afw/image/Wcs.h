@@ -86,7 +86,7 @@ namespace image {
 /// 
 /// Note that we violate the Wcs standard in one minor way. The standard states that none
 /// of the CRPIX or CRVAL keywords are required, for the header to be valid, and the appropriate values
-/// should be set to 0.0 if the keywords are absent. This is a recipie for painful bugs in analysis, so
+/// should be set to 0.0 if the keywords are absent. This is a recipe for painful bugs in analysis, so
 /// we violate the standard by insisting that the keywords CRPIX[1,2] and CRVAL[1,2] are present when
 /// reading a header (keywords CRPIX1a etc are also accepted)
 
@@ -133,12 +133,12 @@ public:
     //Convert from raDec to pixel space. Formerly called raDecToXY() and
     //xyToRaDec(), but the name now reflects their increased generality. They may be
     //used, e.g. to convert xy to Galactic coordinates
-    virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-    virtual lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
-    virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
+    lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
+    lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
+    lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
     
-    virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-    virtual lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
+    lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
     lsst::afw::geom::PointD skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
     
     virtual bool hasDistortion() const {    return false;};
@@ -181,6 +181,7 @@ private:
                    );
 
     virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
+        virtual lsst::afw::geom::PointD skyToPixelImpl(double sky1, double sky2) const;
 
 protected:
 
@@ -208,6 +209,7 @@ protected:
 
     
     void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    void _initWcs();
     
     struct wcsprm* _wcsInfo;
     int _nWcsInfo;
@@ -215,6 +217,8 @@ protected:
     int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
     int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
     int _nReject;
+    lsst::afw::coord::CoordSystem _coordSystem;
+    bool _skyCoordsReversed;
 };
 
 namespace detail {

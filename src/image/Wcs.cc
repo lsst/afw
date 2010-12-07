@@ -73,8 +73,9 @@ const int fitsToLsstPixels = -1;
 ///@brief Construct an invalid Wcs given no arguments
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
-    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
-    
+    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1)), _skyCoordsReversed(false) {
+    _initWcs();    
 }
 
 
@@ -87,16 +88,36 @@ Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
                 _relax(0), 
                 _wcsfixCtrl(0), 
                 _wcshdrCtrl(2),
-                _nReject(0) {
-
+                _nReject(0),
+                _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
+                _skyCoordsReversed(false)
+{
     //Internal params for wcslib. These should be set via policy - but for the moment...
     _relax = 1;
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
     initWcsLibFromFits(fitsMetadata);
+    _initWcs();
 }
 
+/*
+ * Set some internal variables that we need to refer to
+ */
+void Wcs::_initWcs()
+{
+    if (_wcsInfo) {
+        _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+        //Check for strange images where the ctypes as swapped.
+        char const *type = _wcsInfo->ctype[0];
+        int const ncompare = 4;                       // we only care about type's first 4 chars
+        _skyCoordsReversed = (strncmp(type, "DEC-", ncompare) == 0 ||
+                              strncmp(type, "ELON", ncompare) == 0 ||
+                              strncmp(type, "ELAT", ncompare) == 0 ||
+                              strncmp(type, "GLON", ncompare) == 0 ||
+                              strncmp(type, "GLAT", ncompare) == 0) ? true : false;
+    }
+}
 
 ///\brief Create a Wcs object with some known information.
 ///
@@ -123,12 +144,15 @@ Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD
                  _relax(1), 
                  _wcsfixCtrl(2), 
                  _wcshdrCtrl(2),
-                 _nReject(0) {
-    
+                 _nReject(0),
+                 _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
+                 _skyCoordsReversed(false)
+{
     initWcsLib(crval, crpix, CD, 
                ctype1, ctype2,
                equinox, raDecSys,
                cunits1, cunits2);
+    _initWcs();
 }
                
     
@@ -340,7 +364,10 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _relax(rhs._relax), 
     _wcsfixCtrl(rhs._wcsfixCtrl), 
     _wcshdrCtrl(rhs._wcshdrCtrl),
-    _nReject(rhs._nReject) {
+    _nReject(rhs._nReject),
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
+    _skyCoordsReversed(false)
+{
     
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
@@ -360,6 +387,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
             }
         }
     }
+    _initWcs();
 }
        
 
@@ -544,84 +572,12 @@ double Wcs::pixelScale() const {
     return 3600. * sqrt(pixArea(getPixelOrigin()));
 }
 
-///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
-///
-GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
-                         ) const {
-
-    GeomPoint const sky = convertCoordToSky(coord);
-    return skyToPixel(sky[0], sky[1]);
-}
-
-
-///Given a Coord (as a shared pointer), return the sky position in the correct coordinate system
-///for this Wcs. The first element of the pair is the coordinate value corresponding to ctype1
-///and the second element corresponds to ctype2.
-GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
-    //Construct a coord object of the correct type
-    int const ncompare = 4;                       // we only care about type's first 4 chars
-    char const *type = _wcsInfo->ctype[0];
-    char const *radesys = _wcsInfo->radesys;
-    CoordPtr convertedCoord;
-
-    bool reversed = false;
-    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
-        ;                                       // using an tr1::unordered_strcmp(map
-        if(strcmp(radesys, "ICRS") == 0) {
-            convertedCoord = coord->convert(afwCoord::ICRS);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            convertedCoord = coord->convert(afwCoord::FK5);
-        }
-    } else if(strncmp(type, "GLON", ncompare) == 0) {
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELON", ncompare) == 0) {
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else if(strncmp(type, "DEC-", ncompare) == 0) {
-        //Check for strange images where the ctypes as swapped.
-        reversed=true;
-        if(strcmp(radesys, "ICRS") == 0) {
-            convertedCoord = coord->convert(afwCoord::ICRS);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            convertedCoord = coord->convert(afwCoord::FK5);
-        } else {   
-            throw LSST_EXCEPT(except::RuntimeErrorException,
-                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
-                               radesys).str());
-        }
-    } else if(strncmp(type, "GLON", ncompare) == 0) {  
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELON", ncompare) == 0) {   
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else if(strncmp(type, "GLAT", ncompare) == 0) {
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELAT", ncompare) == 0) {
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else {   
-        throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Coord object doesn't support type %s") % type).str());
-    }
-
-    if (reversed) {
-        return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
-                                convertedCoord->getLongitude(afwCoord::DEGREES));
-    } else {    
-        return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
-                                convertedCoord->getLatitude(afwCoord::DEGREES));
-    }
-}
-
-///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
-///
-///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
-///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
-///CTYPE2), but the inputs are usually ra/dec. The outputs are x and y pixel position.
-GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
+/*
+ * Worker routine for skyToPixel
+ */
+GeomPoint Wcs::skyToPixelImpl(double sky1, ///< Longitude coordinate; DEGREES
+                              double sky2  ///< latitude  coordinate; DEGREES
+                             ) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -646,7 +602,43 @@ GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
                                     pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels); 
 }
 
+///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+///
+GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
+                         ) const {
 
+    GeomPoint const sky = convertCoordToSky(coord);
+    return skyToPixelImpl(sky[0], sky[1]);
+}
+
+
+///Given a Coord (as a shared pointer), return the sky position in the correct coordinate system
+///for this Wcs. The first element of the pair is the coordinate value corresponding to ctype1
+///and the second element corresponds to ctype2.
+GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
+    //Construct a coord object of the correct type
+    CONST_PTR(afwCoord::Coord) convertedCoord = coord->convert(_coordSystem);
+
+    if (_skyCoordsReversed) {
+        return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
+                                convertedCoord->getLongitude(afwCoord::DEGREES));
+    } else {    
+        return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
+                                convertedCoord->getLatitude(afwCoord::DEGREES));
+    }
+}
+
+///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+///
+///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
+///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
+///CTYPE2), but the inputs are usually ra/dec. The outputs are x and y pixel position.
+
+GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
+    return _skyCoordsReversed ?
+        skyToPixelImpl(sky2, sky1) :
+        skyToPixelImpl(sky1, sky2);
+}
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
 ///
