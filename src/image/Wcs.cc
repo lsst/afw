@@ -160,9 +160,12 @@ Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD
 void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     // Some headers (e.g. SDSS ones from FNAL) have EQUINOX as a string.  Fix this,
     // as wcslib 4.4.4 refuses to handle it
-    if (fitsMetadata->typeOf("EQUINOX") == typeid(std::string)) {
-        double equinox = ::atof(fitsMetadata->getAsString("EQUINOX").c_str());
-        fitsMetadata->set("EQUINOX", equinox);
+    {
+        std::string const& key = "EQUINOX";
+        if (fitsMetadata->exists(key) && fitsMetadata->typeOf(key) == typeid(std::string)) {
+            double equinox = ::atof(fitsMetadata->getAsString(key).c_str());
+            fitsMetadata->set(key, equinox);
+        }
     }
 
     //Check header isn't empty
