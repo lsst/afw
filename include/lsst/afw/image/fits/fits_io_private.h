@@ -69,7 +69,7 @@ LSST_EXCEPTION_TYPE(FitsWrongTypeException,
 namespace cfitsio {
 #if !defined(DOXYGEN)
     extern "C" {
-#       include "fitsio.h"
+#       include "fitsio2.h"
     }
 #endif
 

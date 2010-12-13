@@ -32,7 +32,6 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
-
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
@@ -92,6 +91,11 @@ namespace image {
         // Returns the pixel scale, in arcsec/pixel.
         double pixelScale() const;
         
+        // Applies the SIP AP and BP distortion (used in the skyToPixel direction)
+        lsst::afw::geom::PointD distortPixel(const lsst::afw::geom::PointD pixel) const;
+        // Applies the SIP A and B un-distortion (used in the pixelToSky direction)
+        lsst::afw::geom::PointD undistortPixel(const lsst::afw::geom::PointD pixel) const;
+
         bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertyList::Ptr getFitsMetadata() const;        
 #if 0
