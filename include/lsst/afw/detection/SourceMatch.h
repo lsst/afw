@@ -55,9 +55,11 @@ struct SourceMatch {
     ~SourceMatch() {}
 };
 
-std::vector<SourceMatch> matchRaDec(SourceSet const &set1, SourceSet const &set2, double radius);
+std::vector<SourceMatch> matchRaDec(SourceSet const &set1, SourceSet const &set2,
+                                    double radius, bool closest=true);
 std::vector<SourceMatch> matchRaDec(SourceSet const &set, double radius, bool symmetric = true);
-std::vector<SourceMatch> matchXy(SourceSet const &set1, SourceSet const &set2, double radius);
+std::vector<SourceMatch> matchXy(SourceSet const &set1, SourceSet const &set2,
+                                 double radius, bool closest=true);
 std::vector<SourceMatch> matchXy(SourceSet const &set, double radius, bool symmetric = true);
 
 
