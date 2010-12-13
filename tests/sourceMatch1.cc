@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     det::SourceSet set1, set2;
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<det::SourceMatch> matches = det::matchRaDec(set1, set2, radius);
+    std::vector<det::SourceMatch> matches = det::matchRaDec(set1, set2, radius, false);
     std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec()); 
     compareMatches(matches, refMatches, radius);
 }
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
     det::SourceSet set1, set2;
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<det::SourceMatch> matches = det::matchXy(set1, set2, radius);
+    std::vector<det::SourceMatch> matches = det::matchXy(set1, set2, radius, false);
     std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
