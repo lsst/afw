@@ -34,7 +34,7 @@ namespace image = lsst::afw::image;
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::init() {
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
     _gain = 0;
 }
 
@@ -161,14 +161,7 @@ void image::DecoratedImage<PixelT>::writeFits(
 
     if (metadata_i.get()) {
         metadata = getMetadata()->deepCopy();
-#if 0
-        metadata->combine(metadata_i);  // combine takes a Ptr, not a ConstPtr
-#else
-        {
-            lsst::daf::base::PropertySet::Ptr tmpMetadata = metadata_i->deepCopy();
-            metadata->combine(tmpMetadata);
-        }
-#endif
+        metadata->combine(metadata_i);
     } else {
         metadata = getMetadata();
     }

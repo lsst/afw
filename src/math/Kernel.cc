@@ -369,7 +369,7 @@ afwMath::ImageLocalKernel::Ptr afwMath::Kernel::computeImageLocalKernel(
         new ImageLocalKernel::Image(getWidth(), getHeight())
     );
 
-    computeImage(*imagePtr, false, location.getX(), location.getY());
+    computeImage(*imagePtr, true, location.getX(), location.getY());
     std::vector<double> kernelParameters(getNKernelParameters());
     computeKernelParametersFromSpatialModel(
         kernelParameters, 

@@ -72,8 +72,9 @@ def readImage(filename=None):
     bctrl = afwMath.BackgroundControl(afwMath.Interpolate.NATURAL_SPLINE)
     bctrl.setNxSample(int(mi.getWidth()/256) + 1)
     bctrl.setNySample(int(mi.getHeight()/256) + 1)
-    bctrl.sctrl.setNumSigmaClip(3.0)  
-    bctrl.sctrl.setNumIter(2)
+    sctrl = bctrl.getStatisticsControl()
+    sctrl.setNumSigmaClip(3.0)  
+    sctrl.setNumIter(2)
 
     im = mi.getImage()
     try:

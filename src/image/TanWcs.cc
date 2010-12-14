@@ -433,7 +433,7 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
 
 /************************************************************************************************************/
 
-lsst::daf::base::PropertySet::Ptr TanWcs::getFitsMetadata() const {
+lsst::daf::base::PropertyList::Ptr TanWcs::getFitsMetadata() const {
     return lsst::afw::formatters::TanWcsFormatter::generatePropertySet(*this);       
 }
 

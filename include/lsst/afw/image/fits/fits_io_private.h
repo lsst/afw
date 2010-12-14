@@ -512,7 +512,16 @@ public:
 #if 1
         if (metadata != NULL) {
             typedef std::vector<std::string> NameList;
-            NameList paramNames = metadata->paramNames(false);
+            NameList paramNames;
+
+            boost::shared_ptr<lsst::daf::base::PropertyList const> pl =
+                boost::dynamic_pointer_cast<lsst::daf::base::PropertyList const,
+                lsst::daf::base::PropertySet const>(metadata);
+            if (pl) {
+                paramNames = pl->getOrderedNames();
+            } else {
+                paramNames = metadata->paramNames(false);
+            }
             for (NameList::const_iterator i = paramNames.begin(), e = paramNames.end(); i != e; ++i) {
                 if (*i != "SIMPLE" && *i != "BITPIX" &&
                     *i != "NAXIS" && *i != "NAXIS1" && *i != "NAXIS2" && *i != "EXTEND") {

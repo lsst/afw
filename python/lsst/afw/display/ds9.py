@@ -1,7 +1,7 @@
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -9,14 +9,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -189,7 +189,7 @@ def getXpaAccessPoint():
             return "127.0.0.1:%s" % (port1)
         else:
             print >> sys.stderr, "Failed to parse XPA_PORT=%s" % xpa_port
-            
+
     return "ds9"
 
 def ds9Version():
@@ -203,7 +203,7 @@ def ds9Version():
 
 def ds9Cmd(cmd, trap=True):
     """Issue a ds9 command, raising errors as appropriate"""
-   
+
     if getDefaultFrame() is None:
         return
 
@@ -220,7 +220,7 @@ def initDS9(execDs9=True):
         xpa.reset()
         ds9Cmd("iconify no; raise", False)
         ds9Cmd("wcs wcsa", False)         # include the pixel coordinates WCS (WCSA)
-        
+
         v0, v1 = ds9Version().split('.')[0:2]
         global needShow
         needShow = False
@@ -238,7 +238,7 @@ def initDS9(execDs9=True):
         os.system('ds9 &')
         for i in range(10):
             try:
-                ds9Cmd(selectFrame(0), False)
+                ds9Cmd(selectFrame(1), False)
                 break
             except Ds9Error:
                 print "waiting for ds9...\r",
@@ -249,7 +249,7 @@ def initDS9(execDs9=True):
                 break
 
         sys.stdout.flush()
-        
+
         raise Ds9Error
 
 def show(frame=None):
@@ -259,7 +259,7 @@ def show(frame=None):
 
     if frame is None:
         return
-        
+
     ds9Cmd(selectFrame(frame) + "; raise", trap=False)
 
 def setMaskColor(color=GREEN):
@@ -282,7 +282,7 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
 
     if frame is None:
         return
-   
+
     if init:
         for i in range(3):
             try:
@@ -295,7 +295,7 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 print "                                     \r",
                 sys.stdout.flush()
                 break
-         
+
     ds9Cmd(selectFrame(frame))
 
     if settings:
@@ -333,10 +333,10 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
             planeList = range(nMaskPlanes - 1, -1, -1)
         else:
             planeList = range(nMaskPlanes)
-           
+
         usedPlanes = long(afwMath.makeStatistics(data, afwMath.SUM).getValue())
         mask = data.Factory(data.getDimensions())
-       
+
         for p in planeList:
             if planes[p] or True:
                 if not getMaskPlaneVisibility(planes[p]):
@@ -375,7 +375,7 @@ def _mtv(data, wcs, title, isMask):
                 data |= 0x8000  # Hack. ds9 mis-handles BZERO/BSCALE in masks. This is a copy we're modifying
         else:
             xpa_cmd = "xpaset %s fits" % getXpaAccessPoint()
-           
+
         pfd = os.popen(xpa_cmd, "w")
     else:
         pfd = file("foo.fits", "w")
@@ -388,7 +388,7 @@ def _mtv(data, wcs, title, isMask):
             pfd.close()
         except:
             pass
-       
+
         raise e
 
     try:
@@ -402,7 +402,7 @@ def erase(frame=None):
     """Erase the specified DS9 frame"""
     if frame is None:
         frame = getDefaultFrame()
-        
+
     if frame is None:
         return
 
@@ -455,7 +455,7 @@ Any other value is interpreted as a string to be drawn
         if A < B:
             A, B = B, A
             theta += 90
-       
+
         cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, A, B, theta, color)
     else:
         try:
@@ -473,7 +473,7 @@ def line(points, frame=None, symbs=False, ctype=None):
     """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
-   
+
     if frame is None:
         frame = getDefaultFrame()
 
@@ -507,10 +507,10 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 #
 def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
     """Zoom frame by specified amount, optionally panning also"""
-    
+
     if frame < 0:
         frame = getDefaultFrame()
-        
+
     if frame is None:
         return
 
@@ -522,7 +522,7 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
 
     if (rowc and colc is None) or (colc and rowc is None):
         raise Ds9Error, "Please specify row and column center to pan about"
-   
+
     if zoomfac == None and rowc == None:
         zoomfac = 2
 

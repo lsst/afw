@@ -125,8 +125,9 @@ image::ImageBase<PixelT>::ImageBase(
     if (_ix0 < 0 || _iy0 < 0 ||
         _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                          (boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
-                              bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight()).str());
+                          (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+                           bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight() %
+                           _gilImage->width() % _gilImage->height()).str());
     }
 
     if (deep) {
@@ -423,7 +424,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     }
 
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata, hdu, bbox)) {

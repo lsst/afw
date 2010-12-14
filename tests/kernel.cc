@@ -52,17 +52,7 @@ BOOST_AUTO_TEST_CASE(LocalKernelTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm
     img(width/2 + 1, height/2 + 1) = 1;
 
     
-    KernelList basisList;
-    for(int y = 0, i = 0; y < height; ++y) {
-        for(int x = 0; x < width; ++x, ++i) {
-            Image tmp(width, height, 0);
-            tmp(x,y) = 1;
-            basisList.push_back(boost::make_shared<FixedKernel>(tmp));
-        }
-    }
-
     FixedKernel fixedKernel(img);
-    LinearCombinationKernel linearCombinationKernel(basisList, std::vector<double>(basisList.size()));
 
     FourierLocalKernel::Ptr fourierKernel;
     ImageLocalKernel::Ptr imgKernel;
@@ -89,23 +79,4 @@ BOOST_AUTO_TEST_CASE(LocalKernelTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm
             BOOST_CHECK_CLOSE(static_cast<double>(*vIter), static_cast<double>(*iIter), 0.00001);
         }
     }
-
-
-    BOOST_CHECK_NO_THROW(imgKernel = linearCombinationKernel.computeImageLocalKernel(
-            lsst::afw::geom::makePointD(3.4, 0.8886))
-    );
-
-    BOOST_CHECK(imgKernel.get() != 0);
-    imgFromLocalKernel = imgKernel->getImage();
-
-    BOOST_CHECK_EQUAL(imgFromLocalKernel->getHeight(), height);
-    BOOST_CHECK_EQUAL(imgFromLocalKernel->getWidth(), width);
-    BOOST_CHECK_EQUAL(imgKernel->getNParameters(), width*height);
-
-    BOOST_CHECK_NO_THROW(fourierKernel = linearCombinationKernel.computeFourierLocalKernel(
-            lsst::afw::geom::makePointD(4.0, 33.2))
-    );
-    BOOST_CHECK(fourierKernel.get() !=0);
-    BOOST_CHECK_EQUAL(fourierKernel->getNParameters(), width*height);
-
 }

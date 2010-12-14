@@ -123,6 +123,8 @@ namespace image {
         int getWidth() const { return _maskedImage.getWidth(); }
         /// Return the Exposure's height
         int getHeight() const { return _maskedImage.getHeight(); }
+        /// Return the Exposure's size
+        std::pair<int, int> getDimensions() const { return _maskedImage.getDimensions(); }
         
         /**
          * Return the Exposure's row-origin

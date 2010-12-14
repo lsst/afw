@@ -56,7 +56,7 @@ struct fits_read_support {
 /// \brief Returns the width and height of the FITS file at the specified location.
 /// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
 inline boost::gil::point2<std::ptrdiff_t> fits_read_dimensions(const char* filename) {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
+    lsst::daf::base::PropertyList::Ptr metadata(new lsst::daf::base::PropertyList());
     detail::fits_reader m(filename, metadata);
     return m.get_Dimensions();
 }

@@ -58,7 +58,7 @@ class Ticket1045TestCase(unittest.TestCase):
         mean1 = dmean1.getValue(afwMath.MEAN)
         stdev1 = dmean1.getValue(afwMath.STDEV)
         self.assertAlmostEqual(mean1, knownMean, 8)
-        self.assertEqual(stdev1, knownStdev)
+        self.assertAlmostEqual(stdev1, knownStdev, places=16)
 
         # this was reported to fail
         # (problem was due to error in median)

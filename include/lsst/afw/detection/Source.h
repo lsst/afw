@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "boost/shared_ptr.hpp"
+#include "boost/serialization/shared_ptr.hpp"
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
@@ -182,6 +183,9 @@ private :
         fpSerialize(ar, _skyErr);
 
         BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
+        if (version > 0) {
+            ar & _astrom & _photom & _shape;
+        }
     }
 
     friend class boost::serialization::access;
@@ -234,6 +238,10 @@ private:
 
 
 }}}  // namespace lsst::afw::detection
+
+#ifndef SWIG
+BOOST_CLASS_VERSION(lsst::afw::detection::Source, 1)
+#endif
 
 #endif // LSST_AFW_DETECTION_SOURCE_H
 

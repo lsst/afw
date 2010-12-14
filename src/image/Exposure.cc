@@ -50,6 +50,7 @@
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Exposure.h"
@@ -107,7 +108,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
     _calib(new afwImage::Calib()),
     _psf(PTR(afwDetection::Psf)())
 {
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
 }
 
 /** @brief Construct an Exposure from a MaskedImage
@@ -125,7 +126,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _calib(new afwImage::Calib()),
     _psf(PTR(afwDetection::Psf)())
 {
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
 }
 
 /** @brief Construct a subExposure given an Exposure and a bounding box
@@ -180,7 +181,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::data::LsstBase(typeid(this))
 {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
 
     _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, conformMasks);
 	
