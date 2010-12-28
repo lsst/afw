@@ -85,6 +85,8 @@ int ttypeFromBitpix(const int bitpix) {
         return TUSHORT;                 // n.b. cfitsio does magic things with bzero/bscale to make Uint16
       case LONG_IMG:                    // int32
         return TINT;
+      case ULONG_IMG:                   // uint32
+        return TUINT;                   // n.b. cfitsio does magic things with bzero/bscale to make Uint32
       case FLOAT_IMG:                   // float
         return TFLOAT;
       case DOUBLE_IMG:                  // double

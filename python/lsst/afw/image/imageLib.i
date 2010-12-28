@@ -228,6 +228,8 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs);
 
+%ignore lsst::afw::image::NoWcs;
+
 %{
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"

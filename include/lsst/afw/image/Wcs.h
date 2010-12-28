@@ -239,9 +239,7 @@ namespace detail {
                         );
 }
     
-#if !defined(SWIG)
-    extern Wcs NoWcs;
-#endif
+extern Wcs NoWcs;
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H
