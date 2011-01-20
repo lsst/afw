@@ -386,7 +386,8 @@ def _mtv(data, wcs, title, isMask):
 
         if haveGzip:
             xpa_cmd = "gzip | " + xpa_cmd
-        print "RHL", xpa_cmd
+
+        pfd = os.popen(xpa_cmd, "w")
     else:
         pfd = file("foo.fits", "w")
 
