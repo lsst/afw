@@ -167,6 +167,9 @@ def setMaskTransparency(transparency=None):
 
     _maskTransparency = transparency
 
+    if transparency is not None:
+        ds9Cmd("mask transparency %d" % transparency)
+
 setMaskTransparency()
 
 def getMaskTransparency():
@@ -365,6 +368,11 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
     else:
         raise RuntimeError, "Unsupported type %s" % data.__repr__()
 
+try:
+    haveGzip
+except NameError:
+    haveGzip = not os.system("gzip < /dev/null > /dev/null 2>&1") # does gzip work?
+
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
@@ -376,7 +384,9 @@ def _mtv(data, wcs, title, isMask):
         else:
             xpa_cmd = "xpaset %s fits" % getXpaAccessPoint()
 
-        pfd = os.popen(xpa_cmd, "w")
+        if haveGzip:
+            xpa_cmd = "gzip | " + xpa_cmd
+        print "RHL", xpa_cmd
     else:
         pfd = file("foo.fits", "w")
 
