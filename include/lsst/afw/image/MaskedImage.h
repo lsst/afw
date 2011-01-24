@@ -792,7 +792,7 @@ namespace image {
          * @return image position
          */
         inline double indexToPosition(
-                int ind, ///< image index
+                double ind, ///< image index
                 lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
         ) const {
             return getImage()->indexToPosition(ind, xy);

@@ -52,9 +52,9 @@ namespace image {
      * @return image position
      */
     inline double indexToPosition(
-        int ind ///< image index
+        double ind ///< image index
     ) {
-        return static_cast<double>(ind) + PixelZeroPos;
+        return ind + PixelZeroPos;
     }
     
     /**
