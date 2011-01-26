@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
@@ -24,8 +47,8 @@
 namespace afwMath = lsst::afw::math;
 
 namespace {
-    /**
-     * @brief Minuit wrapper for a function(x)
+    /*
+     * Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
     class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
@@ -56,8 +79,8 @@ namespace {
         double _errorDef;
     };
         
-    /**
-     * @brief Minuit wrapper for a function(x, y)
+    /*
+     * Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
     class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
@@ -160,7 +183,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
 }
 
 /**
- * @brief Find the minimum of a function(x)
+ * Find the minimum of a function(x)
  *
  * @return true if minimum is valid, false otherwise
  *
@@ -244,7 +267,7 @@ afwMath::FitResults afwMath::minimize(
 
 
 /**
- * @brief Find the minimum of a function(x, y)
+ * Find the minimum of a function(x, y)
  *
  * Uses the Minuit fitting package with a standard definition of chiSq.
  * (see MinimizerFunctionBase2).

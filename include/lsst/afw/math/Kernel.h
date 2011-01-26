@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_KERNEL_H
 #define LSST_AFW_MATH_KERNEL_H
 /**
@@ -10,6 +33,7 @@
  *
  * @ingroup afw
  */
+#include <utility>
 #include <vector>
 
 #include "boost/mpl/or.hpp"
@@ -25,7 +49,7 @@
 
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
@@ -148,6 +172,8 @@ class FourierLocalKernel;
          *
          * x, y are ignored if there is no spatial function.
          *
+         * @return The kernel sum
+         *
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
          * @throw lsst::pex::exceptions::InvalidParameterException if the image is the wrong size
@@ -188,16 +214,27 @@ class FourierLocalKernel;
         inline int getHeight() const {
             return _height;
         }
+        
+        /**
+         * @brief Return index of kernel's center
+         */
+        inline lsst::afw::geom::Point2I getCtr() const {
+            return lsst::afw::geom::Point2I::make(_ctrX, _ctrY);
+        }
 
         /**
-         * @brief Return index of the center column
+         * @brief Return x index of kernel's center
+         *
+         * @deprecated Use getCtr instead
          */
         inline int getCtrX() const {
             return _ctrX;
         }
 
         /**
-         * @brief Return index of the center row
+         * @brief Return y index of kernel's center
+         *
+         * @deprecated Use getCtr instead
          */
         inline int getCtrY() const {
             return _ctrY;
@@ -221,20 +258,45 @@ class FourierLocalKernel;
 
         std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
 
+        /// Return a particular Kernel Parameter (no bounds checking).  This version is slow,
+        /// but specialisations may be faster
+        virtual double getKernelParameter(unsigned int i) const {
+            return getKernelParameters()[i];
+        }
+        
         virtual std::vector<double> getKernelParameters() const;
+        
+        lsst::afw::geom::BoxI growBBox(lsst::afw::geom::BoxI const &bbox) const;
+        
+        lsst::afw::geom::BoxI shrinkBBox(lsst::afw::geom::BoxI const &bbox) const;
 
         /**
-        * @brief Set the center index, x axis
-        */
-        inline void setCtrX(int ctrX) {
-            _ctrX = ctrX;
+         * @brief Set index of kernel's center
+         */
+        inline void setCtr(lsst::afw::geom::Point2I ctr) {
+            _ctrX = ctr.getX();
+            _ctrY = ctr.getY();
+            _setKernelXY();
         }
 
         /**
-        * @brief Set the center index, y axis
-        */
+         * @brief Set x index of kernel's center
+         *
+         * @deprecated Use setCtr instead
+         */
+        inline void setCtrX(int ctrX) {
+            _ctrX = ctrX;
+            _setKernelXY();
+        }
+
+        /**
+         * @brief Set y index of kernel's center
+         *
+         * @deprecated Use setCtr instead
+         */
         inline void setCtrY(int ctrY) {
             _ctrY = ctrY;
+            _setKernelXY();
         }
 
         /**
@@ -296,6 +358,9 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+        // Compute a cache of Kernel values if so desired
+        virtual void computeCache(int const) {}
+        
 #if 0                                   // fails to compile with icc; is it actually used?
         virtual void toFile(std::string fileName) const;
 #endif
@@ -315,6 +380,12 @@ class FourierLocalKernel;
         int _ctrX;
         int _ctrY;
         unsigned int _nKernelParams;
+        
+        // prevent copying and assignment (to avoid problems from type slicing)
+        Kernel(const Kernel&);
+        Kernel& operator=(const Kernel&);
+        // Set the Kernel's ideas about the x- and y- coordinates
+        virtual void _setKernelXY() {}
     };
 
     typedef std::vector<Kernel::Ptr> KernelList;
@@ -450,7 +521,7 @@ class FourierLocalKernel;
         explicit DeltaFunctionKernel(
             int width,
             int height,
-            lsst::afw::image::PointI const &point
+            lsst::afw::image::Point2I const &point
         );
 
         virtual ~DeltaFunctionKernel() {}
@@ -464,12 +535,12 @@ class FourierLocalKernel;
             double y = 0.0
         ) const;
 
-        lsst::afw::image::PointI getPixel() const { return _pixel; }
+        lsst::afw::image::Point2I getPixel() const { return _pixel; }
 
         virtual std::string toString(std::string const& prefix="") const;
 
     private:
-        lsst::afw::image::PointI _pixel;
+        lsst::afw::image::Point2I _pixel;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -538,8 +609,20 @@ class FourierLocalKernel;
         virtual KernelList const &getKernelList() const;
 
         std::vector<double> getKernelSumList() const;
+        
+        /**
+         * @brief Get the number of basis kernels
+         */
+        int getNBasisKernels() const { return static_cast<int>(_kernelList.size()); };
 
         void checkKernelList(const KernelList &kernelList) const;
+        
+        /**
+         * Return true if all basis kernels are instances of DeltaFunctionKernel
+         */
+        bool isDeltaFunctionBasis() const { return _isDeltaFunctionBasis; };
+        
+        Kernel::Ptr refactor() const;
 
         virtual std::string toString(std::string const& prefix="") const;
 
@@ -554,6 +637,7 @@ class FourierLocalKernel;
             ///< image of each basis kernel (a cache)
         std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
+        bool _isDeltaFunctionBasis;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -563,6 +647,12 @@ class FourierLocalKernel;
                 ar & make_nvp("kimglist", _kernelImagePtrList);
                 ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
+                if (version > 0) {
+                    ar & make_nvp("deltaBasis", _isDeltaFunctionBasis);
+                }
+                else if (Archive::is_loading::value) {
+                    _isDeltaFunctionBasis = false;
+                }
             }
     };
 
@@ -618,6 +708,15 @@ class FourierLocalKernel;
             double y = 0.0
         ) const;
 
+        virtual double getKernelParameter(unsigned int i) const {
+            unsigned int const ncol = _kernelColFunctionPtr->getNParameters();
+            if (i < ncol) {
+                return _kernelColFunctionPtr->getParameter(i);
+            } else {
+                i -= ncol;
+                return _kernelRowFunctionPtr->getParameter(i);
+            }
+        }
         virtual std::vector<double> getKernelParameters() const;
 
         KernelFunctionPtr getKernelColFunction() const;
@@ -625,6 +724,8 @@ class FourierLocalKernel;
         KernelFunctionPtr getKernelRowFunction() const;
 
         virtual std::string toString(std::string const& prefix="") const;
+
+        virtual void computeCache(int const cacheSize);
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
@@ -640,6 +741,13 @@ class FourierLocalKernel;
         KernelFunctionPtr _kernelRowFunctionPtr;
         mutable std::vector<Pixel> _localColList;  // used by computeImage
         mutable std::vector<Pixel> _localRowList;
+        mutable std::vector<double> _kernelX; // used by SeparableKernel::basicComputeVectors
+        mutable std::vector<double> _kernelY;
+        //
+        // Cached values of the row- and column- kernels
+        //
+        mutable std::vector<std::vector<double> > _kernelRowCache;
+        mutable std::vector<std::vector<double> > _kernelColCache;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -650,7 +758,21 @@ class FourierLocalKernel;
                 ar & make_nvp("rowfn", _kernelRowFunctionPtr);
                 ar & make_nvp("cols", _localColList);
                 ar & make_nvp("rows", _localRowList);
+                ar & make_nvp("kernelX", _kernelX);
+                ar & make_nvp("kernelY", _kernelY);
             }
+
+        virtual void _setKernelXY() {
+            assert (getWidth() == static_cast<int>(_kernelX.size()));
+            for (int i = 0; i != getWidth(); ++i) {
+                _kernelX[i] = i - getCtrX();
+            }
+
+            assert (getHeight() == static_cast<int>(_kernelY.size()));
+            for (int i = 0; i != getHeight(); ++i) {
+                _kernelY[i] = i - getCtrY();
+            }
+        }
     };
 
 }}}   // lsst:afw::math
@@ -685,9 +807,13 @@ inline void load_construct_data(
     ar >> make_nvp("pixX", x);
     ar >> make_nvp("pixY", y);
     ::new(k) lsst::afw::math::DeltaFunctionKernel(
-        width, height, lsst::afw::image::PointI(x, y));
+        width, height, lsst::afw::image::Point2I(x, y));
 }
 
 }}
+
+#ifndef SWIG
+BOOST_CLASS_VERSION(lsst::afw::math::LinearCombinationKernel, 1)
+#endif
 
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)

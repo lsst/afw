@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Tests for SpatialCell
 
@@ -124,7 +147,7 @@ class CameraGeomTestCase(unittest.TestCase):
             amp = cameraGeom.Amp(cameraGeom.Id(serial, "", Col, 0), allPixels, biasSec, dataSec,
                                  cameraGeom.Amp.LLC, eParams)
 
-            ccd.addAmp(afwGeom.makePointI(Col, 0), amp); Col += 1
+            ccd.addAmp(afwGeom.PointI(Col, 0), amp); Col += 1
         #
         # Check that Amps are sorted by Id
         #
@@ -158,29 +181,31 @@ class CameraGeomTestCase(unittest.TestCase):
         id = cameraGeom.Id("ID%d" % ccdInfo["ampIdMax"])
         self.assertTrue(ccd.findAmp(id), id)
 
-        self.assertEqual(ccd.findAmp(afwGeom.makePointI(10, 10)).getId().getSerial(), ccdInfo["ampIdMin"])
+        self.assertEqual(ccd.findAmp(afwGeom.PointI(10, 10)).getId().getSerial(), ccdInfo["ampIdMin"])
 
         self.assertEqual(ccd.getAllPixels().getLLC(),
-                         ccd.findAmp(afwGeom.makePointI(10, 10)).getAllPixels().getLLC())
+                         ccd.findAmp(afwGeom.PointI(10, 10)).getAllPixels().getLLC())
 
         self.assertEqual(ccd.getAllPixels().getURC(),
-                         ccd.findAmp(afwGeom.makePointI(ccdInfo["width"] - 1,
+                         ccd.findAmp(afwGeom.PointI(ccdInfo["width"] - 1,
                                                             ccdInfo["height"] - 1)).getAllPixels().getURC())
+        ps = ccd.getPixelSize()
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.makePointI(100, 204) # wrt bottom left
-        pos = afwGeom.makePointD(0.0, 1.02) # wrt CCD center
+        pix = afwGeom.PointI(100, 204) # wrt bottom left
+        pos = afwGeom.PointD(0.00+ps/2., 1.02+ps/2.) # pixel center wrt CCD center
+        posll = afwGeom.PointD(0.00, 1.02) # llc of pixel wrt CCD center
         #
         # Map pix into untrimmed coordinates
         #
         amp = ccd.findAmp(pix)
         corr = amp.getDataSec(False).getLLC() - amp.getDataSec(True).getLLC()
-        corr = afwGeom.Extent2I(afwGeom.makePointI(corr[0], corr[1]))
+        corr = afwGeom.Extent2I(afwGeom.PointI(corr[0], corr[1]))
         pix += corr
         
         self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
-        self.assertEqual(ccd.getPositionFromPixel(pix), pos)
+        self.assertEqual(ccd.getPositionFromPixel(pix), posll)
         #
         # Trim the CCD and try again
         #
@@ -200,11 +225,12 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.makePointI(100, 204) # wrt LLC
-        pos = afwGeom.makePointD(0.0, 1.02) # wrt chip centre
+        pix = afwGeom.PointI(100, 204) # wrt LLC
+        pos = afwGeom.PointD(0.00+ps/2., 1.02+ps/2.) #pixel center wrt CCD center
+        posll = afwGeom.PointD(0.0, 1.02) # llc of pixel wrt chip center 
         
         self.assertEqual(ccd.getPixelFromPosition(pos), pix)
-        self.assertEqual(ccd.getPositionFromPixel(pix), pos)
+        self.assertEqual(ccd.getPositionFromPixel(pix), posll)
 
     def testRotatedCcd(self):
         """Test if we can build a Ccd out of Amps"""
@@ -235,7 +261,7 @@ class CameraGeomTestCase(unittest.TestCase):
         Col = 0
         for serial in [7, 0, 1, 3, 2, 6, 5, 4]:
             ccd = cameraGeom.Ccd(cameraGeom.Id(serial))
-            raft.addDetector(afwGeom.makePointI(Col, 0), afwGeom.makePointD(0, 0),
+            raft.addDetector(afwGeom.PointI(Col, 0), afwGeom.PointD(0, 0),
                              cameraGeom.Orientation(0), ccd)
             Col += 1
         #
@@ -269,12 +295,12 @@ class CameraGeomTestCase(unittest.TestCase):
                                   (150, 250, 21, (-1.01,  0.0 )),
                                   (250, 250, 29, ( 1.01,  0.0 )),
                                   (300, 500, 42, ( 1.01,  2.02))]:
-            det = raft.findDetector(afwGeom.makePointI(x, y))
+            det = raft.findDetector(afwGeom.PointI(x, y))
             ccd = cameraGeom.cast_Ccd(det)
             if False:
                 print x, y, det.getId().getName(), \
-                      ccd.findAmp(afwGeom.makePointI(150, 152), True).getId().getSerial()
-            self.assertEqual(ccd.findAmp(afwGeom.makePointI(150, 152), True).getId().getSerial(), serial)
+                      ccd.findAmp(afwGeom.PointI(150, 152), True).getId().getSerial()
+            self.assertEqual(ccd.findAmp(afwGeom.PointI(150, 152), True).getId().getSerial(), serial)
             for i in range(2):
                 self.assertAlmostEqual(ccd.getCenter()[i], cen[i])
 
@@ -286,16 +312,20 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Test mapping pixel <--> mm
         #
+        ps = raft.getPixelSize()
         for ix, iy, x, y in [(102, 500, -1.01,  2.02),
                              (306, 100,  1.01, -2.02),
                              (306, 500,  1.01,  2.02),
                              (356, 525,  1.51,  2.27),
                              ]:
-            pix = afwGeom.makePointI(ix, iy) # wrt raft LLC
-            pos = afwGeom.makePointD(x, y) # wrt raft center
+            pix = afwGeom.PointI(ix, iy) # wrt raft LLC
+            #position of pixel center
+            pos = afwGeom.PointD(x+ps/2., y+ps/2.) # wrt raft center
+            #position of pixel lower left corner which is returned by getPositionFromPixel()
+            posll = afwGeom.PointD(x, y) # wrt raft center
 
             self.assertEqual(raft.getPixelFromPosition(pos), pix)
-            self.assertEqual(raft.getPositionFromPixel(pix), pos)
+            self.assertEqual(raft.getPositionFromPixel(pix), posll)
         
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
@@ -317,13 +347,13 @@ class CameraGeomTestCase(unittest.TestCase):
 
         for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,    4, (-3.12, -2.02)),
                                             (0,   0,   150, 250, 20, (-3.12,  0.00)),
-                                            (600, 300, 0,   0,   52, ( 1.1,  -2.02)),
-                                            (600, 300, 150, 250, 68, ( 1.1,  0.00)),
+                                            (600, 300, 0,   0,   52, ( 1.10,  -2.02)),
+                                            (600, 300, 150, 250, 68, ( 1.10,  0.00)),
                                             ]:
-            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.makePointI(rx, ry)))
+            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.PointI(rx, ry)))
 
-            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.makePointI(cx, cy)))
-            self.assertEqual(ccd.findAmp(afwGeom.makePointI(153, 152), True).getId().getSerial(), serial)
+            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.PointI(cx, cy)))
+            self.assertEqual(ccd.findAmp(afwGeom.PointI(153, 152), True).getId().getSerial(), serial)
             for i in range(2):
                 self.assertAlmostEqual(ccd.getCenter()[i], cen[i])
 
@@ -332,6 +362,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
         self.assertEqual(camera.getSize()[0], cameraInfo["widthMm"])
         self.assertEqual(camera.getSize()[1], cameraInfo["heightMm"])
+        ps = raft.getPixelSize()
         #
         # Test mapping pixel <--> mm
         #
@@ -339,11 +370,12 @@ class CameraGeomTestCase(unittest.TestCase):
                              (152, 525, -2.62, 2.27),
                              (714, 500,  3.12, 2.02),
                              ]:
-            pix = afwGeom.makePointI(ix, iy) # wrt raft LLC
-            pos = afwGeom.makePointD(x, y) # wrt raft center
+            pix = afwGeom.PointI(ix, iy) # wrt raft LLC
+            pos = afwGeom.PointD(x+ps/2., y+ps/2.) # center of pixel wrt raft center
+            posll = afwGeom.PointD(x, y) # llc of pixel wrt raft center
             
             self.assertEqual(camera.getPixelFromPosition(pos), pix)
-            self.assertEqual(camera.getPositionFromPixel(pix), pos)
+            self.assertEqual(camera.getPositionFromPixel(pix), posll)
         # Check that we can find an Amp in the bowels of the camera
         ccdName = "C:0,0"
         amp = cameraGeomUtils.findAmp(camera, cameraGeom.Id(ccdName), 1, 2)
@@ -416,8 +448,8 @@ class CameraGeomTestCase(unittest.TestCase):
                                        (600, 300, 0,   0,   52),
                                        (600, 300, 150, 250, 68),
                                        ]:
-            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.makePointI(rx, ry)))
-            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.makePointI(cx, cy)))
+            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.PointI(rx, ry)))
+            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.PointI(cx, cy)))
 
             amp = ccd[0]
             self.assertEqual(ccd.getId(),    amp.getParent().getId())

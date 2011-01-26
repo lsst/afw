@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_FOURIER_CUTOUT_H
 #define LSST_AFW_MATH_FOURIER_CUTOUT_H
 
@@ -173,42 +195,41 @@ public:
     typedef boost::shared_ptr<FourierCutoutStack const> ConstPtr;
     
     FourierCutout::Ptr getCutout(int i) const {
+        if(_depth == 0) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::MemoryException, 
+                "Cannot access uninitialized FourierCutoutStack"
+            );
+        }
         if( i< 0 || i >= _depth) {
-            if(_depth == 0) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, 
-                        "Zero-depth FourierCutoutStack object");
-            }
-            
-            throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
-                   (boost::format("Index %1% must be in range [0, %2%)")
-                    % i % _depth).str()
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::OutOfRangeException,
+                (boost::format("Requested cutout %1%. Must be in range [0, %2%)")% i % _depth).str()
             );
         }
 
         //cannot use boost::make_shared because constructor used is private 
         //memeber of FourierCutout
         return FourierCutout::Ptr(
-                new FourierCutout(
-                        _imageDimensions.second, _imageDimensions.first,
-                        _stackData.get() + _cutoutSize*i,
-                        _stackData
-                )
+            new FourierCutout(
+                _imageDimensions.second,
+                _imageDimensions.first,
+                _stackData.get() + _cutoutSize*i,
+                _stackData
+            )
         );
     }
     
     FourierCutoutVector getCutoutVector(int begin = 0, int n = 0) const {
-        if(begin < 0 || begin >= _depth) {
-            if(_depth == 0) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, 
-                        "Zero-depth FourierCutoutStack object");
-            }
-
-            throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
-                   (boost::format("Start index %1% must be in range [0, %2%)")
-                    % begin % _depth).str()
+        if(_depth == 0) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::MemoryException, 
+                "Cannot access uninitialized FourierCutoutStack"
             );
+        }
+        if(begin < 0) { 
+            begin = 0;
         } 
-
         if (n <= 0)
             n = _depth;
 
@@ -220,7 +241,7 @@ public:
         FourierCutoutVector cutoutVector(n);
         FourierCutoutVector::iterator i = cutoutVector.begin();
         for(int cutoutId = begin; cutoutId < end; ++cutoutId, ++i) {            
-            (*i) = getCutout(cutoutId);
+            *i = getCutout(cutoutId);
         }
 
         return cutoutVector;

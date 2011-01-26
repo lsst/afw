@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief Implementation for ImageBase and Image
@@ -66,6 +89,7 @@ image::ImageBase<PixelT>::ImageBase(
 {
     if (deep) {
         ImageBase tmp(getDimensions());
+        tmp.setXY0(getXY0());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -101,12 +125,14 @@ image::ImageBase<PixelT>::ImageBase(
     if (_ix0 < 0 || _iy0 < 0 ||
         _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                          (boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
-                              bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight()).str());
+                          (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+                           bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight() %
+                           _gilImage->width() % _gilImage->height()).str());
     }
 
     if (deep) {
         ImageBase tmp(getDimensions());
+        tmp.setXY0(getXY0());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -146,10 +172,42 @@ typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::oper
     );
 }
 
+/// Return a reference to the pixel <tt>(x, y)</tt> with bounds checking
+template<typename PixelT>
+typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(
+        int x,
+        int y,
+        image::CheckIndices const& check
+                                                                                      )
+{
+    if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
+                           x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
+    }
+                                          
+    return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
+        static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
+    );
+}
+
 /// Return a const reference to the pixel <tt>(x, y)</tt>
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelConstReference
     image::ImageBase<PixelT>::operator()(int x, int y) const {
+    return _gilView(x, y)[0];
+}
+
+/// Return a const reference to the pixel <tt>(x, y)</tt> with bounds checking
+template<typename PixelT>
+typename image::ImageBase<PixelT>::PixelConstReference
+    image::ImageBase<PixelT>::operator()(int x, int y, image::CheckIndices const& check) const {
+    if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
+                           x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
+    }
+                                          
     return _gilView(x, y)[0];
 }
 
@@ -244,54 +302,6 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
     }
 
     return row_end(0);
-}
-
-/// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
-///
-/// Locators may be used to access a patch in an image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::xy_locator image::ImageBase<PixelT>::xy_at(int x, int y) const {
-    return xy_locator(_gilView.xy_at(x, y));
-}
-
-/// Return an \c x_iterator to the start of the \c y'th row
-///
-/// Incrementing an \c x_iterator moves it across the row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_begin(int y) const {
-    return _gilView.row_begin(y);
-}
-
-/// Return an \c x_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_end(int y) const {
-    return _gilView.row_end(y);
-}
-
-/// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::x_at(int x, int y) const {
-    return _gilView.x_at(x, y);
-}
-
-/// Return an \c y_iterator to the start of the \c y'th row
-///
-/// Incrementing an \c y_iterator moves it up the column
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_begin(int x) const {
-    return _gilView.col_begin(x);
-}
-
-/// Return an \c y_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_end(int x) const {
-    return _gilView.col_end(x);
-}
-
-/// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::y_at(int x, int y) const {
-    return _gilView.y_at(x, y);
 }
 
 /************************************************************************************************************/
@@ -404,6 +414,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         lsst::afw::image::detail::types_traits<unsigned short>::image_t,
         lsst::afw::image::detail::types_traits<short>::image_t,
         lsst::afw::image::detail::types_traits<int>::image_t,
+        lsst::afw::image::detail::types_traits<unsigned int>::image_t,
         lsst::afw::image::detail::types_traits<float>::image_t,
         lsst::afw::image::detail::types_traits<double>::image_t
     > fits_img_types;
@@ -414,7 +425,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     }
 
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata, hdu, bbox)) {
@@ -513,8 +524,8 @@ void image::Image<PixelT>::operator+=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = image::positionToIndex(y + this->getY0());
-        double xPos = image::positionToIndex(this->getX0());
+        double const yPos = this->indexToPosition(y, image::Y);
+        double xPos = this->indexToPosition(0, image::X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr += function(xPos, yPos);
@@ -571,8 +582,8 @@ void image::Image<PixelT>::operator-=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = image::positionToIndex(y + this->getY0());
-        double xPos = image::positionToIndex(this->getX0());
+        double const yPos = this->indexToPosition(y, image::Y);
+        double xPos = this->indexToPosition(0, image::X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr -= function(xPos, yPos);

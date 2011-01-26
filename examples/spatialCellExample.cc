@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /*
  * This C++ example does the same thing as SpatialCellExample.py.  The latter of the python version
  * is that you can set display == True and see what's going on
@@ -31,7 +53,7 @@ void SpatialCellSetDemo() {
     /*
      * Create an (empty) SpatialCellSet
      */
-    afwMath::SpatialCellSet cellSet(afwImage::BBox(afwImage::PointI(0, 0), im->getWidth(), im->getHeight()),
+    afwMath::SpatialCellSet cellSet(afwImage::BBox(afwImage::Point2I(0, 0), im->getWidth(), im->getHeight()),
                                     260, 200);
     /*
      * Populate the cellSet using the detected object in the FootprintSet
@@ -101,11 +123,11 @@ readImage() {
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1";
         
-        afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(270, 2530), 512, 512);
+        afwImage::BBox bbox = afwImage::BBox(afwImage::Point2I(270, 2530), 512, 512);
         
         lsst::daf::base::PropertySet::Ptr md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, 0, md, bbox));
-        mi->setXY0(afwImage::PointI(0, 0));
+        mi->setXY0(afwImage::Point2I(0, 0));
     } catch (lsst::pex::exceptions::NotFoundException &e) {
         std::cerr << e << std::endl;
         exit(1);
@@ -117,8 +139,8 @@ readImage() {
     afwMath::BackgroundControl bctrl(afwMath::Interpolate::NATURAL_SPLINE);
     bctrl.setNxSample(mi->getWidth()/256 + 1);
     bctrl.setNySample(mi->getHeight()/256 + 1);
-    bctrl.sctrl.setNumSigmaClip(3.0);
-    bctrl.sctrl.setNumIter(2);
+    bctrl.getStatisticsControl()->setNumSigmaClip(3.0);
+    bctrl.getStatisticsControl()->setNumIter(2);
 
     afwImage::Image<PixelT>::Ptr im = mi->getImage();
     try {

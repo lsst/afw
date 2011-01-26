@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /// \file
 /// \brief Implementations of Mask class methods
 
@@ -181,7 +204,7 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     
     if (!metadata) {
         //TODOsmm createPropertyNode("FitsMetadata");
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet()); 
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList()); 
     }
     //
     // These are the permitted input file types
@@ -198,7 +221,7 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     }
 
     if (!metadata) {
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet);
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList);
     }
 
     if (!afwImage::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata, hdu, bbox)) {
@@ -250,7 +273,7 @@ void afwImage::Mask<MaskPixelT>::writeFits(
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertySet());
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList());
     }
     addMaskPlanesToMetadata(metadata);
     //
@@ -500,6 +523,18 @@ typename afwImage::ImageBase<MaskPixelT>::PixelReference afwImage::Mask<MaskPixe
 }
 
 /**
+ * \brief get a reference to the specified pixel checking array bounds
+ */
+template<typename MaskPixelT>
+typename afwImage::ImageBase<MaskPixelT>::PixelReference afwImage::Mask<MaskPixelT>::operator()(
+    int x,                              ///< x index
+    int y,                              ///< y index
+    afwImage::CheckIndices const& check ///< Check array bounds?
+) {
+    return this->ImageBase<MaskPixelT>::operator()(x, y, check);
+}
+
+/**
  * \brief get the specified pixel (const version)
  */
 template<typename MaskPixelT>
@@ -508,6 +543,18 @@ typename afwImage::ImageBase<MaskPixelT>::PixelConstReference afwImage::Mask<Mas
     int y   ///< y index
 ) const {
     return this->ImageBase<MaskPixelT>::operator()(x, y);
+}
+
+/**
+ * \brief get the specified pixel with array checking (const version)
+ */
+template<typename MaskPixelT>
+typename afwImage::ImageBase<MaskPixelT>::PixelConstReference afwImage::Mask<MaskPixelT>::operator()(
+    int x,                              ///< x index
+    int y,                              ///< y index
+    afwImage::CheckIndices const& check ///< Check array bounds?
+) const {
+    return this->ImageBase<MaskPixelT>::operator()(x, y, check);
 }
 
 /**
@@ -521,6 +568,20 @@ bool afwImage::Mask<MaskPixelT>::operator()(
 ) const {
     // !! converts an int to a bool
     return !!(this->ImageBase<MaskPixelT>::operator()(x, y) & getBitMask(planeId));
+}
+
+/**
+ * \brief is the specified mask plane set in the specified pixel, checking array bounds?
+ */
+template<typename MaskPixelT>
+bool afwImage::Mask<MaskPixelT>::operator()(
+    int x,                              ///< x index
+    int y,                              ///< y index
+    int planeId,                        ///< plane ID
+    afwImage::CheckIndices const& check ///< Check array bounds?
+) const {
+    // !! converts an int to a bool
+    return !!(this->ImageBase<MaskPixelT>::operator()(x, y, check) & getBitMask(planeId));
 }
 
 /************************************************************************************************************/

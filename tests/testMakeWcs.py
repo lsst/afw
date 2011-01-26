@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
@@ -7,6 +30,7 @@ import unittest
 import eups
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions.exceptionsLib as exceptions
@@ -82,16 +106,49 @@ class MakeWcsTestCase(unittest.TestCase):
         self.assertNotEqual( strRepresentation.find("image::TanWcs"), -1, "non TanWcs object returned")
 
     def testCreateTanSipWcs(self):
-        """Check that a non-TAN projection in the header creates a base Wcs object"""
-        
-        self.metadata.set("CTYPE1", "RA---TAN-SIP")
-        self.metadata.set("CTYPE2", "DEC--TAN-SIP")
+                
+        self.metadata.set("CTYPE1", "RA---TAN")
+        self.metadata.set("CTYPE2", "DEC--TAN")
         
         wcs = afwImage.cast_TanWcs(afwImage.makeWcs(self.metadata))
         strRepresentation = str(wcs)
         self.assertNotEqual( strRepresentation.find("image::TanWcs"), -1, "non TanWcs object returned")
 
 
+    def testPythonLevelMakeWcs(self):
+        """Verify that we can make a Wcs by providing the CD matrix elements in python."""
+        
+        m = self.metadata
+        crval = afwGeom.PointD(m.getDouble("CRVAL1"), m.getDouble("CRVAL2"))
+        crpix = afwGeom.PointD(m.getDouble("CRPIX1"), m.getDouble("CRPIX2"))
+        cd11, cd12 = m.getDouble("CD1_1"), m.getDouble("CD1_2")
+        cd21, cd22 = m.getDouble("CD2_1"), m.getDouble("CD2_2")
+        
+        # this is defined at the c++ level in src/image/makeWcs.cc
+        wcsMade = afwImage.makeWcs(crval, crpix, cd11, cd12, cd21, cd22)
+        
+        # this is defined at the python/swig level in python/lsst/afw/image/imageLib.i
+        # createWcs can probably be depricated
+        wcsCreated = afwImage.createWcs(crval, crpix, cd11, cd12, cd21, cd22)
+
+
+        # trivial test ... verify that we get back what we put in.
+        for wcs in [wcsMade, wcsCreated]:
+            crvalTest = wcs.getSkyOrigin().getPosition(afwCoord.DEGREES)
+            crpixTest = wcs.getPixelOrigin()
+            CD = wcs.getCDMatrix()
+            
+            self.assertAlmostEqual(crvalTest[0], crval[0])
+            self.assertAlmostEqual(crvalTest[1], crval[1])
+            self.assertAlmostEqual(crpixTest[0], crpix[0])
+            self.assertAlmostEqual(crpixTest[1], crpix[1])
+            self.assertAlmostEqual(CD[0,0], cd11)
+            self.assertAlmostEqual(CD[0,1], cd12)
+            self.assertAlmostEqual(CD[1,0], cd21)
+            self.assertAlmostEqual(CD[1,1], cd22)
+
+        
+        
 #####
 
 def suite():

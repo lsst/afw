@@ -1,6 +1,29 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
- * @file Date.cc
+ * @file
  * @brief Provide functions to handle dates
  * @ingroup afw
  * @author Steve Bickerton
@@ -10,6 +33,7 @@
 #include <cmath>
 
 #include "lsst/pex/exceptions.h"
+#include "boost/format.hpp"
 #include "boost/algorithm/string.hpp"
 #include "boost/tuple/tuple.hpp"
 
@@ -25,7 +49,7 @@ namespace ex           = lsst::pex::exceptions;
  * @brief Constructor for the observatory with lat/long as doubles
  */
 coord::Observatory::Observatory(
-                                double const longitude, ///< observatory longitude
+                                double const longitude, ///< observatory longitude (+ve E of Greenwich)
                                 double const latitude,  ///< observatory latitude 
                                 double const elevation  ///< observatory elevation
                                ) :
@@ -151,3 +175,17 @@ std::string coord::Observatory::getLatitudeStr() const {
     return degreesToDmsString(radToDeg*_latitudeRad);
 }
 
+/**
+ * Print an Observatory to the stream
+ */
+std::ostream & coord::operator<<(std::ostream &os,             ///< Stream to print to
+                                 coord::Observatory const& obs ///< the Observatory to print
+                                )
+{
+    return os << (boost::format("%gW, %gN  %g")
+                  % obs.getLatitude(coord::DEGREES)
+                  % obs.getLongitude(coord::DEGREES)
+                  % obs.getElevation()).str();
+}
+
+/************************************************************************************************************/

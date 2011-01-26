@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #include "lsst/afw/geom/ellipses/BaseEllipse.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
@@ -28,7 +51,7 @@ ellipses::BaseEllipse::ParameterVector const ellipses::BaseEllipse::getVector() 
  * Set the ellipse parameters from a vector.
  */
 void ellipses::BaseEllipse::setVector(BaseEllipse::ParameterVector const & vector) {
-    _center = PointD(vector.segment<2>(0));
+    _center = Point2D(vector.segment<2>(0));
     _core->setVector(vector.segment<3>(2));
 }
 
@@ -48,11 +71,11 @@ lsst::afw::geom::AffineTransform ellipses::BaseEllipse::getGenerator() const {
  * Return the bounding box of the ellipse.
  */
 ellipses::BaseEllipse::Envelope ellipses::BaseEllipse::computeEnvelope() const {
-    ExtentD size(getCore().computeDimensions());
+    Extent2D size(getCore().computeDimensions());
     return Envelope(_center - size * 0.5, size);
 }
 
-lsst::afw::geom::ExtentD ellipses::BaseCore::computeDimensions() const {
+lsst::afw::geom::Extent2D ellipses::BaseCore::computeDimensions() const {
     Axes axes(*this);
     double c = std::cos(axes[Axes::THETA]);
     double s = std::sin(axes[Axes::THETA]);
@@ -62,7 +85,7 @@ lsst::afw::geom::ExtentD ellipses::BaseCore::computeDimensions() const {
     double a2 = axes[Axes::A] * axes[Axes::A];
     double as2 = a2*s;
     double bc2 = b2*c;
-    ExtentD dimensions = ExtentD(std::sqrt(b2*s+a2*c),std::sqrt(as2+bc2));
+    Extent2D dimensions = Extent2D(std::sqrt(b2*s+a2*c),std::sqrt(as2+bc2));
     dimensions *= 2;
     return dimensions;
 }

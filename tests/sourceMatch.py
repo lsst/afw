@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Tests for matching SourceSets
 
@@ -46,7 +69,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
             self.ss2.append(s)
 
-        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0)
+        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0, False)
 
         self.assertEqual(len(mat), nobj)
 
@@ -54,6 +77,27 @@ class SourceMatchTestCase(unittest.TestCase):
             s0 = mat[0][0]
             s1 = mat[0][1]
             print s0.getRa(), s1.getRa(), s0.getId(), s1.getId()
+
+    def testNaNPositions(self):
+        ss1 = afwDetect.SourceSet()
+        ss2 = afwDetect.SourceSet()
+        for ss in (ss1, ss2):
+            s = afwDetect.Source()
+            s.setRa(float('nan'))
+            ss.append(s)
+            s = afwDetect.Source()
+            s.setDec(float('nan'))
+            ss.append(s)
+            s = afwDetect.Source()
+            s.setRa(0.0)
+            s.setDec(0.0)
+            ss.append(s)
+            s = afwDetect.Source()
+            s.setRa(float('nan'))
+            s.setDec(float('nan'))
+            ss.append(s)
+        mat = afwDetect.matchRaDec(ss1, ss2, 1.0, False)
+        self.assertEqual(len(mat), 1)
 
     def testPhotometricCalib(self):
         """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue"""
@@ -134,7 +178,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Actually do the match
         #
-        matches = afwDetect.matchRaDec(sdss, template, 1.0)
+        matches = afwDetect.matchRaDec(sdss, template, 1.0, False)
 
         self.assertEqual(len(matches), 901)
 

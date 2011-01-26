@@ -1,10 +1,37 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_DETECTION_BASE_SOURCE_ATTRIBUTES_H
 #define LSST_AFW_DETECTION_BASE_SOURCE_ATTRIBUTES_H
 
-#include <math.h>  // for the isnan macro
+#include <math.h>
+
 #include <bitset>
 #include <limits>
 #include "boost/cstdint.hpp"
+#include "lsst/utils/ieee.h"
+
+#include "lsst/afw/image/Filter.h"
+
 
 namespace boost {
 namespace serialization {
@@ -382,7 +409,7 @@ protected:
         _snr(0.0), _chi2(0.0),
         _procHistoryId(0),
         _flagForAssociation(0), _flagForWcs(0),
-        _filterId(0)
+        _filterId(lsst::afw::image::Filter::UNKNOWN)
     {
         setNull();
     }    
@@ -398,36 +425,49 @@ protected:
     }
     inline bool areEqual(float const & a, float const & b, int const field = -1) const {
         bool null = isNull(field);
-        return (isnan(a) ? isnan(b) : a == b) || null;
+        return (lsst::utils::isnan(a) ? lsst::utils::isnan(b) : a == b) || null;
     }
     inline bool areEqual(double const & a, double const & b, int const field = -1) const {
         bool null = isNull(field);
-        return (isnan(a) ? isnan(b) : a == b) || null;
+        return (lsst::utils::isnan(a) ? lsst::utils::isnan(b) : a == b) || null;
     }
 
     /**
      * \internal Set the value of a field, and if it is null
-     */    
+     */
     template<typename T>
     inline void set(T & dest, T const & src, int const field = -1) {
-        setNotNull(field);            
+        setNotNull(field);
         dest = src;
     }
 
     template <typename Archive, typename FloatT>
     static inline void fpSerialize(Archive & ar, FloatT & value) {
-        bool isNaN = isnan(value);
-        ar & isNaN;
-        if (isNaN) {
-            value = std::numeric_limits<FloatT>::quiet_NaN();
-        } else {
-            ar & value;
+        int fpClass = 0;
+        if (lsst::utils::isnan(value)) {
+            fpClass = 1;
+        } else if (lsst::utils::isinf(value)) {
+            fpClass = value > 0.0 ? 2 : 3;
+        }
+        ar & fpClass;
+        switch (fpClass) {
+            case 1:
+                value = std::numeric_limits<FloatT>::quiet_NaN();
+                break;
+            case 2:
+                value = std::numeric_limits<FloatT>::infinity();
+                break;
+            case 3:
+                value = -std::numeric_limits<FloatT>::infinity();
+                break;
+            default:
+                ar & value;
         }
     }
 
     /**
-     * \internal Serialize field values, and null statuses          
-     */    
+     * \internal Serialize field values, and null statuses
+     */
     template <class Archive> 
     void serialize(Archive & ar, unsigned int const) {
         ar & _id;

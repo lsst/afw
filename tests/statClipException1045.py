@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 # -*- lsst-python -*-
 """
 Tests for ticket 1043 - Photometry fails when no PSF is provided
@@ -35,7 +58,7 @@ class Ticket1045TestCase(unittest.TestCase):
         mean1 = dmean1.getValue(afwMath.MEAN)
         stdev1 = dmean1.getValue(afwMath.STDEV)
         self.assertAlmostEqual(mean1, knownMean, 8)
-        self.assertEqual(stdev1, knownStdev)
+        self.assertAlmostEqual(stdev1, knownStdev, places=16)
 
         # this was reported to fail
         # (problem was due to error in median)

@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file Coord.cc
  * @brief Provide functions to handle coordinates
@@ -11,6 +34,11 @@
 #include <cmath>
 #include <limits>
 #include <cstdio>
+
+#include "Eigen/Core.h"
+#include "Eigen/LU"
+#include "Eigen/SVD"
+#include "Eigen/Geometry"
 
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string.hpp"
@@ -64,7 +92,7 @@ double const NaN          = std::numeric_limits<double>::quiet_NaN();
 double const arcsecToRad  = M_PI/(3600.0*180.0); // arcsec per radian  = 2.062648e5;
 double const JD2000       = 2451544.50;
 
-
+    
 /*
  * A local class to handle dd:mm:ss coordinates
  *
@@ -103,19 +131,6 @@ public:
 };
 
     
-/**
- * @brief Adjust a large angle or negative angle to be between 0, 360 degrees
- *
- */
-double reduceAngle(double theta) {
-
-    theta = theta - (static_cast<int>(theta)/360)*360.0;
-    if (theta < 0) {
-        theta += 360.0;
-    }
-    return theta;
-}
-
     
 /**
  * Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
@@ -135,16 +150,63 @@ double meanSiderealTimeGreenwich(
     double const T = (jd - 2451545.0)/36525.0;
     return 280.46061837 + 360.98564736629*(jd - 2451545.0) + 0.000387933*T*T - (T*T*T/38710000.0);
 }
-
     
 double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
     
 
+/**
+ * @brief Adjust a large angle or negative angle to be in range [0, 360) degrees
+ *
+ */
+double reduceAngle(
+                   double theta,           ///< angle to reduce
+                   bool midCentered=false  ///< return a value in range [-180,180), otherwise [0,360)
+                  ) {
+
+    theta = theta - (static_cast<int>(theta)/360)*360.0;
+    if (theta < 0) {
+        theta += 360.0;
+    }
+    // if theta was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
+    // Thus, a rare equivalence conditional test for a double ...
+    if (theta == 360.0) {
+        theta = 0.0;
+    }
+    return midCentered ? (theta - 180.0) : theta;
+}
+
+/*
+ * A pair of utility functions to go from cartesian to spherical
+ */
+double const atPoleEpsilon = 0.0; //std::numeric_limits<double>::epsilon();
+double pointToLongitude(afwGeom::Point3D const &p3d, double const defaultLongitude=0.0) {
+    double lon;
+    if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
+        lon = 0.0;
+    } else {
+        lon = afwCoord::degToRad*reduceAngle( afwCoord::radToDeg*atan2(p3d.getY(), p3d.getX()) );
+    }
+    return lon;
+}
+double pointToLatitude(afwGeom::Point3D const &p3d) {
+    double lat;
+    if ( fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
+        lat = (p3d.getZ() >= 0) ? M_PI/2.0 : -M_PI/2.0;
+    } else {
+        lat = asin(p3d.getZ());
+    }
+    return lat;
+}
+
+
+    
 } // end anonymous namespace
 
 
 
 /******************* Public functions ********************/
+
+
     
 /**
  * @brief a Function to convert a coordinate in decimal degrees to a string with form dd:mm:ss
@@ -169,10 +231,8 @@ std::string afwCoord::degreesToDmsString(
             }
         }
     }
-    char s[12];
-    std::sprintf(s, "%02d:%02d:%05.2f", dms.sign*dms.deg, dms.min, dms.sec);
-    std::string dmsStr(s);
-    return dmsStr;
+
+    return (boost::format("%02d:%02d:%05.2f") % (dms.sign*dms.deg) % dms.min % dms.sec).str();
 }
 
 /**
@@ -249,13 +309,13 @@ afwCoord::Coord::Coord(
     _longitudeRad(NaN), _latitudeRad(NaN), _epoch(epoch) {
 
     if (unit == DEGREES) {
-        _longitudeRad = degToRad*p2d.getX();
+        _longitudeRad = degToRad*reduceAngle(p2d.getX());
         _latitudeRad = degToRad*p2d.getY();
     } else if (unit == RADIANS) {
-        _longitudeRad = p2d.getX();
+        _longitudeRad = degToRad*reduceAngle(radToDeg*p2d.getX());
         _latitudeRad = p2d.getY();
     } else if (unit == HOURS) {
-        _longitudeRad = degToRad*15.0*p2d.getX();
+        _longitudeRad = degToRad*reduceAngle(15.0*p2d.getX());
         _latitudeRad = degToRad*p2d.getY();
     } else {
         throw LSST_EXCEPT(ex::InvalidParameterException, "CoordUnit must be DEGREES, RADIANS, or HOURS");
@@ -269,10 +329,11 @@ afwCoord::Coord::Coord(
  */
 afwCoord::Coord::Coord(
                        afwGeom::Point3D const &p3d,   ///< Point3D
-                       double const epoch             ///< epoch of coordinate
+                       double const epoch,            ///< epoch of coordinate
+                       double const defaultLongitude  ///< longitude to use if x=y=0
                       ) :
-    _longitudeRad( atan2(p3d.getY(), p3d.getX()) ),
-    _latitudeRad(asin(p3d.getZ())),
+    _longitudeRad(pointToLongitude(p3d, defaultLongitude)),
+    _latitudeRad(pointToLatitude(p3d)),
     _epoch(epoch) {}
 
 
@@ -285,7 +346,7 @@ afwCoord::Coord::Coord(
                        double const dec,  ///< Declination, decimal degrees
                        double const epoch ///< epoch of coordinate
                       ) :
-    _longitudeRad(degToRad*ra), _latitudeRad(degToRad*dec), _epoch(epoch) {
+    _longitudeRad(degToRad*reduceAngle(ra)), _latitudeRad(degToRad*dec), _epoch(epoch) {
     _verifyValues();
 }
 
@@ -298,7 +359,7 @@ afwCoord::Coord::Coord(
                        std::string const dec, ///< Declination, dd:mm:ss.s format
                        double const epoch     ///< epoch of coordinate
                       ) :
-    _longitudeRad(degToRad*15.0*dmsStringToDegrees(ra)),
+    _longitudeRad(degToRad*reduceAngle(15.0*dmsStringToDegrees(ra))),
     _latitudeRad(degToRad*dmsStringToDegrees(dec)),
     _epoch(epoch) {
     _verifyValues();
@@ -316,14 +377,18 @@ afwCoord::Coord::Coord() : _longitudeRad(NaN), _latitudeRad(NaN), _epoch(NaN) {}
 
 
 /**
- * @brief Make sure the values we've got are in the range 0 < x < 2PI
+ * @brief Make sure the values we've got are in the range 0 <= x < 2PI
  */
 void afwCoord::Coord::_verifyValues() const {
+
+#if 0
+    // no longer verifying longitude.  we now use reduceAngle to map to [0,360)
     if (_longitudeRad < 0.0 || _longitudeRad >= 2.0*M_PI) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
-                          (boost::format("Azimuthal coord must be: 0 < long < 2PI (%f).") %
+                          (boost::format("Azimuthal coord must be: 0 <= long < 2PI (%f).") %
                            _longitudeRad).str());
     }
+#endif
     if (_latitudeRad < -M_PI/2.0 || _latitudeRad > M_PI/2.0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           (boost::format("Latitude coord must be: -PI/2 <= lat <= PI/2 (%f).") %
@@ -341,7 +406,7 @@ void afwCoord::Coord::reset(
                             double const latitudeDeg,  ///< Latitude coord (eg. Declination for Fk5)
                             double const epoch         ///< epoch of coordinate
                            ) {
-    _longitudeRad = degToRad*longitudeDeg;
+    _longitudeRad = degToRad*reduceAngle(longitudeDeg);
     _latitudeRad  = degToRad*latitudeDeg;
     _epoch = epoch;
     _verifyValues();
@@ -356,9 +421,9 @@ void afwCoord::Coord::reset(
 afwGeom::Point2D afwCoord::Coord::getPosition(CoordUnit unit) const {
     // treat HOURS specially, they must mean hours for RA, degrees for Dec
     if (unit == HOURS) {
-        return afwGeom::makePointD(getLongitude(unit), getLatitude(DEGREES));
+        return afwGeom::Point2D(getLongitude(unit), getLatitude(DEGREES));
     } else {
-        return afwGeom::makePointD(getLongitude(unit), getLatitude(unit));
+        return afwGeom::Point2D(getLongitude(unit), getLatitude(unit));
     }
 }
 
@@ -371,7 +436,7 @@ afwGeom::Point3D afwCoord::Coord::getVector() const {
     double const x = cos(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const y = sin(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const z = sin(getLatitude(RADIANS));
-    return afwGeom::makePointD(x, y, z);
+    return afwGeom::Point3D(x, y, z);
 }
 
 
@@ -399,6 +464,116 @@ afwCoord::Coord afwCoord::Coord::transform(
 
     return Coord(reduceAngle(l), b);
 }
+
+
+/**
+ * @brief Rotate our current coords about a pole
+ *
+ */
+void afwCoord::Coord::rotate(
+                             Coord const &axis,   ///< axis of rotation (right handed)
+                             double const theta   ///< angle to offset in radians
+                            ) {
+
+    double const c = cos(theta);
+    double const mc = 1.0 - c;
+    double const s = sin(theta);
+    
+    // convert to cartesian
+    afwGeom::Point3D const x = getVector();
+    afwGeom::Point3D const u = axis.getVector();
+    double const ux = u[0];
+    double const uy = u[1];
+    double const uz = u[2];
+        
+    // rotate
+    afwGeom::Point3D xprime;
+    xprime[0] = (ux*ux + (1.0 - ux*ux)*c)*x[0] +  (ux*uy*mc - uz*s)*x[1] +  (ux*uz*mc + uy*s)*x[2];
+    xprime[1] = (uy*uy + (1.0 - uy*uy)*c)*x[1] +  (uy*uz*mc - ux*s)*x[2] +  (ux*uy*mc + uz*s)*x[0];
+    xprime[2] = (uz*uz + (1.0 - uz*uz)*c)*x[2] +  (uz*ux*mc - uy*s)*x[0] +  (uy*uz*mc + ux*s)*x[1];
+    
+    // in-situ
+    _longitudeRad = pointToLongitude(xprime);
+    _latitudeRad  = pointToLatitude(xprime);
+}
+
+
+/**
+ * @brief offset our current coords along a great circle defined by an angle wrt a declination parallel
+ *
+ * @note At/near the pole, longitude becomes degenerate with angle-wrt-declination.  So
+ *       at the pole the offset will trace a meridian with longitude = 90 + longitude0 + phi
+ *
+ * @return the angle wrt a declination parallel at new position
+ */
+double afwCoord::Coord::offset(
+                               double const phi,    ///< angle wrt parallel to offset
+                               double const arcLen  ///< angle to offset in radians
+                              ) {
+
+    // let v = vector in the direction arcLen points (tangent to surface of sphere)
+    // thus: |v| = arcLen
+    //       angle phi = orientation of v in a tangent plane, measured wrt to a parallel of declination
+    
+    // To do the rotation, use rotate() method.
+    // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
+
+    // get the vector r
+    Eigen::Vector3d r = getVector().asVector();
+
+
+    // Get the vector v:
+    // let u = unit vector lying on a parallel of declination
+    // let w = unit vector along line of longitude = r x u
+    // the vector v must satisfy the following:
+    // |v| = arcLen
+    // r . v = 0
+    // u . v = |v| cos(phi) = arcLen*cos(phi)
+    // w . v = |v| sin(phi) = arcLen*sin(phi)
+
+    // v is a linear combination of u and w
+    // v = arcLen*cos(phi)*u + arcLen*sin(phi)*w
+    
+    // Thus, we must:
+    // - create u vector
+    // - solve w vector (r cross u)
+    // - compute v
+    Eigen::Vector3d u;
+    u << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
+    Eigen::Vector3d w = r.cross(u);
+    Eigen::Vector3d v = arcLen*cos(phi)*u + arcLen*sin(phi)*w;
+
+    // take r x v to get the axis
+    Eigen::Vector3d axisVector = r.cross(v);
+    axisVector.normalize();
+    Coord axisCoord = Coord(afwGeom::Point3D(axisVector), getEpoch());
+    
+    rotate(axisCoord, arcLen);
+
+    
+    // now get the position angle at our destination
+    // u2 . v2 = arcLen*cos(phi2)
+    // w2 . v2 = arcLen*sin(phi2)
+    // if we normalize v2:
+    // phi2 = atan2(w2.v2, u2.v2)
+    //
+    // we need to compute u2, and then rotate v (exactly as we rotated r) to get v2
+    Eigen::Vector3d r2 = getVector().asVector();
+    Eigen::Vector3d u2;
+    u2 << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
+    Eigen::Vector3d w2 = r2.cross(u2);
+
+    // make v a unit vector and rotate v exactly as we rotated r
+    v.normalize();
+    Coord v2Coord = Coord(afwGeom::Point3D(v), getEpoch());
+    v2Coord.rotate(axisCoord, arcLen);
+    Eigen::Vector3d v2 = v2Coord.getVector().asVector();
+
+    double phi2 = atan2(w2.dot(v2), u2.dot(v2));
+
+    return phi2;
+}
+
 
 
 /**
@@ -458,7 +633,7 @@ afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) const {
  */
 double afwCoord::Coord::angularSeparation(
                                           Coord const &c, ///< coordinate to compute our separation from
-                                          CoordUnit unit
+                                          CoordUnit unit  ///< Units to use for returned value
                                          ) const {
 
     // make sure they're fk5
@@ -652,7 +827,7 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     double const alpha           = fk5.getRa(RADIANS);
     double const delta           = fk5.getDec(RADIANS);
                                
-    double const H               = theta0 - L - alpha;
+    double const H               = theta0 + L - alpha;
 
     // compute the altitude, h
     double const sinh            = sin(phi)*sin(delta) + cos(phi)*cos(delta)*cos(H);
@@ -879,9 +1054,19 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5() const {
  * @brief Convert ourself from Topocentric to Topocentric ... a no-op
  */
 afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
-    Observatory const &obs, ///< observatory of observation
+    Observatory const &obs,             ///< observatory of observation
     dafBase::DateTime const &date        ///< date of observation
-                                                                    ) const {
+                                                                    ) const
+{
+    if (obs != _obs) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Expected observatory %s, saw %s") % _obs % obs).str());
+    }
+    if (fabs(date.get() - getEpoch()) > std::numeric_limits<double>::epsilon()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Expected date %g, saw %g") % getEpoch() % date.get()).str());
+    }
+        
     return TopocentricCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch(), _obs);
 }
 
@@ -1004,9 +1189,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
 afwCoord::Coord::Ptr afwCoord::makeCoord(
                                    CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
                                    afwGeom::Point3D const &p3d,     ///< the coord in Point3D format
-                                   double const epoch            ///< epoch of coordinate
+                                   double const epoch,            ///< epoch of coordinate
+                                   double const defaultLongitude ///< longitude to use if x=y=0
                                   ) {
-    Coord c(p3d, 2000.0);
+    Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES), epoch);
 }
 /**
@@ -1017,9 +1203,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
                                    CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   afwGeom::Point3D const &p3d     ///< the coord in Point3D format
+                                   afwGeom::Point3D const &p3d,  ///< the coord in Point3D format
+                                   double const defaultLongitude ///< longitude to use if x=y=0
                                   ) {
-    Coord c(p3d, 2000.0);
+    Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES));
 }
 

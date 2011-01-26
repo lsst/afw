@@ -1,5 +1,28 @@
 // -*- lsst-c++ -*-
 
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
+
 /** @file
  * @brief Implementation of TanWcsFormatter class
  *
@@ -147,26 +170,26 @@ static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
     }
 }
 
-dafBase::PropertySet::Ptr
+dafBase::PropertyList::Ptr
 afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
     // Only generates properties for the first wcsInfo.
-    dafBase::PropertySet::Ptr wcsProps(new dafBase::PropertySet());
+    dafBase::PropertyList::Ptr wcsProps(new dafBase::PropertyList());
 
     if (wcs._wcsInfo == NULL) {                  // nothing to add
         return wcsProps;
     }
 
-    wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis);
-    wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox);
-    wcsProps->add("RADECSYS", std::string(wcs._wcsInfo[0].radesys));
-    wcsProps->add("CRPIX1", wcs._wcsInfo[0].crpix[0]);
-    wcsProps->add("CRPIX2", wcs._wcsInfo[0].crpix[1]);
-    wcsProps->add("CD1_1", wcs._wcsInfo[0].cd[0]);
-    wcsProps->add("CD1_2", wcs._wcsInfo[0].cd[1]);
-    wcsProps->add("CD2_1", wcs._wcsInfo[0].cd[2]);
-    wcsProps->add("CD2_2", wcs._wcsInfo[0].cd[3]);
-    wcsProps->add("CRVAL1", wcs._wcsInfo[0].crval[0]);
-    wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1]);
+    wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis, "number of data axes");
+    wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox, "Equinox of coordinates");
+    wcsProps->add("RADESYS", std::string(wcs._wcsInfo[0].radesys), "Coordinate system for equinox");
+    wcsProps->add("CRPIX1", wcs._wcsInfo[0].crpix[0], "WCS Coordinate reference pixel");
+    wcsProps->add("CRPIX2", wcs._wcsInfo[0].crpix[1], "WCS Coordinate reference pixel");
+    wcsProps->add("CD1_1", wcs._wcsInfo[0].cd[0], "WCS Coordinate scale matrix");
+    wcsProps->add("CD1_2", wcs._wcsInfo[0].cd[1], "WCS Coordinate scale matrix");
+    wcsProps->add("CD2_1", wcs._wcsInfo[0].cd[2], "WCS Coordinate scale matrix");
+    wcsProps->add("CD2_2", wcs._wcsInfo[0].cd[3], "WCS Coordinate scale matrix");
+    wcsProps->add("CRVAL1", wcs._wcsInfo[0].crval[0], "WCS Ref value (RA in decimal degrees)");
+    wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1], "WCS Ref value (DEC in decimal degrees)");
     wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
     
@@ -191,8 +214,8 @@ afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
         encodeSipHeader(wcsProps, "AP", wcs._sipAp);
         encodeSipHeader(wcsProps, "BP", wcs._sipBp);
     }
-    wcsProps->add("CTYPE1", ctype1);
-    wcsProps->add("CTYPE2", ctype2);
+    wcsProps->add("CTYPE1", ctype1, "WCS Coordinate type");
+    wcsProps->add("CTYPE2", ctype2, "WCS Coordinate type");
 
     return wcsProps;
 }

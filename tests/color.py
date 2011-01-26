@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Tests for Color and Filter
 
@@ -10,10 +33,11 @@ or
 """
 
 
-import os, sys
+import math, os, sys
 import eups
 import unittest
 import lsst.utils.tests as tests
+import lsst.daf.base as dafBase
 import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
@@ -36,6 +60,43 @@ except NameError:
     display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class CalibTestCase(unittest.TestCase):
+    """A test case for Calib"""
+    def setUp(self):
+        self.calib = afwImage.Calib()
+
+    def tearDown(self):
+        del self.calib
+
+    def testTime(self):
+        """Test the exposure time information"""
+        
+        isoDate = "1995-01-26T07:32:00.000000000Z"
+        self.calib.setMidTime(dafBase.DateTime(isoDate))
+        self.assertEqual(isoDate, self.calib.getMidTime().toString())
+        self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
+
+        dt = 123.4
+        self.calib.setExptime(dt)
+        self.assertEqual(self.calib.getExptime(), dt)
+
+    def testPhotom(self):
+        """Test the zero-point information"""
+        
+        flux, fluxErr = 1000.0, 10.0
+        flux0, flux0Err = 1e12, 1e10
+        self.calib.setFluxMag0(flux0)
+
+        self.assertEqual(flux0, self.calib.getFluxMag0()[0])
+        self.assertEqual(0.0, self.calib.getFluxMag0()[1])
+        self.assertEqual(22.5, self.calib.getMagnitude(flux))
+        # Error just in flux
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1], 2.5/math.log(10)*fluxErr/flux)
+        # Error just in flux0
+        self.calib.setFluxMag0(flux0, flux0Err)
+        self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, 0)[1], 2.5/math.log(10)*flux0Err/flux0)
 
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
@@ -71,6 +132,7 @@ class FilterTestCase(unittest.TestCase):
         #
         filterPolicy = pexPolicy.Policy.createPolicy(
             os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
+        self.filters = tuple(sorted([f.get("name") for f in filterPolicy.getArray("Filter")]))
 
         imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
 
@@ -82,6 +144,9 @@ class FilterTestCase(unittest.TestCase):
         filterPolicy.add("lambdaEff", lambdaEff)
 
         return afwImage.FilterProperty(name, filterPolicy, force);
+
+    def testListFilters(self):
+        self.assertEqual(afwImage.Filter_getNames(), self.filters)
 
     def testCtor(self):
         """Test that we can construct a Filter"""
@@ -167,6 +232,7 @@ def suite():
     tests.init()
 
     suites = []
+    suites += unittest.makeSuite(CalibTestCase)
     if False:
         suites += unittest.makeSuite(ColorTestCase)
     else:

@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 %{
 #include "lsst/afw/math/FourierCutout.h"
 #include "lsst/afw/math/LocalKernel.h"
@@ -76,8 +99,10 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 
 // Next a macro to generate needed instantiations for IMAGE (e.g. %MASKEDIMAGE) and the specified pixel types
 //
+// @todo put convolveWith... functions in lsst.afw.math.detail instead of lsst.afw.math
+//
 // Note that IMAGE is a macro, not a class name
-%define %convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2)
+%define %templateKernelByType(IMAGE, PIXTYPE1, PIXTYPE2)
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::Kernel>;
     %template(convolve) lsst::afw::math::convolve<
@@ -90,21 +115,27 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
+    %template(scaledPlus) lsst::afw::math::scaledPlus<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage
 //
-%define %convolutionFuncs(PIXTYPE1, PIXTYPE2)
-    %convolutionFuncsByType(%IMAGE,       PIXTYPE1, PIXTYPE2);
-    %convolutionFuncsByType(%MASKEDIMAGE, PIXTYPE1, PIXTYPE2);
+%define %templateKernel(PIXTYPE1, PIXTYPE2)
+    %templateKernelByType(%IMAGE,       PIXTYPE1, PIXTYPE2);
+    %templateKernelByType(%MASKEDIMAGE, PIXTYPE1, PIXTYPE2);
 %enddef
 //
 // Finally, specify the functions we want
 //
-%convolutionFuncs(double, double);
-%convolutionFuncs(double, float);
-%convolutionFuncs(float, float);
-%convolutionFuncs(boost::uint16_t, boost::uint16_t);
+%templateKernel(double, double);
+%templateKernel(double, float);
+%templateKernel(double, int);
+%templateKernel(double, boost::uint16_t);
+%templateKernel(float, float);
+%templateKernel(float, int);
+%templateKernel(float, boost::uint16_t);
+%templateKernel(int, int);
+%templateKernel(boost::uint16_t, boost::uint16_t);
          
 //
 // When swig sees a Kernel it doesn't know about KERNEL_TYPE; all it knows is that it

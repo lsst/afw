@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
   * @file
   *
@@ -95,19 +118,16 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // as a PropertySet::Ptr.  getMetadata() returns a pointer to the metadata.
 
     dafBase::PropertySet::Ptr mData = miMetadata;
-
-    // make sure it can be copied.
-    afwImage::Wcs::Ptr myWcsPtr = afwImage::makeWcs(mData); 
-
-    afwImage::Wcs wcs2;
-    wcs2 = *myWcsPtr;
         
     // Now use Exposure class to create an Exposure from a MaskedImage and a
     // Wcs.
        
+    // make sure it can be copied.
+    afwImage::Wcs::Ptr myWcsPtr = afwImage::makeWcs(mData); 
+
     afwImage::Exposure<ImagePixel> miWcsExpImage(mImage, *myWcsPtr);
              
-    afwImage::Wcs wcsCopy(*myWcsPtr); 
+    afwImage::Wcs::Ptr wcsCopy = myWcsPtr->clone(); 
 
     // (4) Construct an Exposure from a given region (col, row) and a Wcs.
 
@@ -123,7 +143,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
        
     // try to get the Wcs when there isn't one
     try {
-        afwImage::Wcs noWcs = *regExpImage.getWcs();
+        afwImage::Wcs::Ptr noWcs = regExpImage.getWcs();
     } catch (lsst::pex::exceptions::Exception &e) {
         pexLog::Trace("lsst.afw.Exposure", 5, "Caught Exception for getting a null Wcs: %s", e.what());
     }
@@ -135,7 +155,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
         
     // (7) Get a Wcs. 
          
-    afwImage::Wcs newWcs = *miWcsExpImage.getWcs();
+    afwImage::Wcs::Ptr newWcs = miWcsExpImage.getWcs();
 
     // try to get a Wcs from an image where I have corrupted the Wcs
     // information (removed the CRPIX1/2 header keywords/values.  Lets see
@@ -173,7 +193,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // the original Exposure's MaskedImage BBox. 
     int subWidth = width - 5;
     int subHeight = height - 5;
-    afwImage::BBox subRegion = afwImage::BBox(afwImage::PointI(orx, ory), subWidth, subHeight);
+    afwImage::BBox subRegion = afwImage::BBox(afwImage::Point2I(orx, ory), subWidth, subHeight);
         
     try {
         afwImage::Exposure<ImagePixel> subExpImage(miWcsExpImage, subRegion);
@@ -188,7 +208,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // original Exposure's MaskedImage BBox.  
     int subWidth2 = width + 5;
     int subHeight2 = height + 5;
-    const afwImage::BBox subRegion2 = afwImage::BBox(afwImage::PointI(orx, ory), subWidth2, subHeight2); 
+    const afwImage::BBox subRegion2 = afwImage::BBox(afwImage::Point2I(orx, ory), subWidth2, subHeight2); 
      
     try {
         afwImage::Exposure<ImagePixel> subExpImage2(miWcsExpImage, subRegion2);

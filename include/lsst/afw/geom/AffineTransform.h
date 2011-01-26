@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_AFFINE_TRANSFORM_H
 #define LSST_AFW_MATH_AFFINE_TRANSFORM_H
 
@@ -88,13 +111,13 @@ public:
     explicit AffineTransform(LinearTransform const & linear) 
       : _linear(linear), _translation() {}
 
-    /** Construct a translation-only AffineTransform from an ExtentD. */
-    explicit AffineTransform(ExtentD const & translation) 
+    /** Construct a translation-only AffineTransform from an Extent2D. */
+    explicit AffineTransform(Extent2D const & translation) 
       : _linear(), _translation(translation) {}
 
-    /** Construct an AffineTransform from a LinearTransform and ExtentD. */
+    /** Construct an AffineTransform from a LinearTransform and Extent2D. */
     explicit AffineTransform(
-        LinearTransform const & linear, ExtentD const & translation
+        LinearTransform const & linear, Extent2D const & translation
     ) : _linear(linear), _translation(translation) {}
 
 
@@ -118,12 +141,12 @@ public:
      *
      * The result is unaffected by the translation parameters of the transform
      */
-    ExtentD operator()(ExtentD const &p) const {         
-        return ExtentD(_linear(p));
+    Extent2D operator()(Extent2D const &p) const {         
+        return Extent2D(_linear(p));
     }
 
-    ExtentD const & getTranslation() const {return _translation;}
-    ExtentD & getTranslation() {return _translation;}
+    Extent2D const & getTranslation() const {return _translation;}
+    Extent2D & getTranslation() {return _translation;}
 
     LinearTransform const & getLinear() const {return _linear;}
     LinearTransform & getLinear() {return _linear;}
@@ -218,14 +241,14 @@ public:
     }
 
     TransformDerivativeMatrix dTransform(Point2D const & input) const;
-    TransformDerivativeMatrix dTransform(ExtentD const & input) const;
+    TransformDerivativeMatrix dTransform(Extent2D const & input) const;
 
     friend std::ostream & operator<<(std::ostream & os, AffineTransform const & transform);
 
 private:
 
     LinearTransform _linear;
-    ExtentD _translation;
+    Extent2D _translation;
 };
 
 }}}

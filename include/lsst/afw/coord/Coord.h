@@ -1,8 +1,31 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #if !defined(LSST_AFW_COORD_COORD_H)
 #define LSST_AFW_COORD_COORD_H
 /**
- * @file Coord.h
+ * @file
  * @brief Functions to handle coordinates
  * @ingroup afw
  * @author Steve Bickerton
@@ -54,11 +77,13 @@ public:
     typedef boost::shared_ptr<Coord const> ConstPtr;
 
     Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
-    Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0);
+    Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0, double const defaultLongitude=0.0);
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
     virtual ~Coord() {}
+
+    virtual Coord::Ptr clone() const { return Coord::Ptr(new Coord(*this)); }
     
     void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
@@ -80,7 +105,10 @@ public:
     
     Coord transform(Coord const &poleFrom, Coord const &poleTo) const;
     double angularSeparation(Coord const &c, CoordUnit unit) const;
-
+    
+    void rotate(Coord const &axis, double const theta);
+    double offset(double const phi, double const arcLen);
+    
     Coord::Ptr convert(CoordSystem system) const;
 
     virtual Fk5Coord toFk5(double const epoch) const;
@@ -110,11 +138,14 @@ public:
     typedef boost::shared_ptr<IcrsCoord> Ptr;
 
     IcrsCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
-    IcrsCoord(afwGeom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
+    IcrsCoord(afwGeom::Point3D const &p3d, double const defaultLongitude=0.0) :
+        Coord(p3d, 2000.0, defaultLongitude) {}
     IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
+    virtual Coord::Ptr clone() const { return IcrsCoord::Ptr(new IcrsCoord(*this)); }
+    
     void reset(double const longitude, double const latitude);
     
     double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
@@ -141,14 +172,16 @@ public:
     
     Fk5Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    Fk5Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) :
-        Coord(p3d, epoch) {}
+    Fk5Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0, double const defaultLongitude=0.0) :
+        Coord(p3d, epoch, defaultLongitude) {}
     Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
         Coord(ra, dec, epoch) {}
     Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) :
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
     
+    virtual Coord::Ptr clone() const { return Fk5Coord::Ptr(new Fk5Coord(*this)); }
+
     Fk5Coord precess(double const epochTo) const;
     
     double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
@@ -179,10 +212,13 @@ public:
     typedef boost::shared_ptr<GalacticCoord> Ptr;
     
     GalacticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit) {}
-    GalacticCoord(afwGeom::Point3D const &p3d) : Coord(p3d) {}
+    GalacticCoord(afwGeom::Point3D const &p3d, double const defaultLongitude=0.0) :
+        Coord(p3d, defaultLongitude) {}
     GalacticCoord(double const l, double const b) : Coord(l, b) {}
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
+
+    virtual Coord::Ptr clone() const { return GalacticCoord::Ptr(new GalacticCoord(*this)); }
 
     void reset(double const longitude, double const latitude);
     
@@ -215,13 +251,16 @@ public:
 
     EclipticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    EclipticCoord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
+    EclipticCoord(afwGeom::Point3D const &p3d, double const epoch = 2000.0,
+                  double const defaultLongitude=0.0) : Coord(p3d, epoch, defaultLongitude) {}
     EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
     
+    virtual Coord::Ptr clone() const { return EclipticCoord::Ptr(new EclipticCoord(*this)); }
+
     std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Lambda", "Beta");
     }
@@ -255,11 +294,14 @@ public:
     TopocentricCoord(afwGeom::Point2D const &p2d, CoordUnit unit, double const epoch,
                      Observatory const &obs) : Coord(p2d, unit, epoch), _obs(obs) {}
     TopocentricCoord(afwGeom::Point3D const &p3d, double const epoch,
-                     Observatory const &obs) : Coord(p3d, epoch), _obs(obs) {}
+                     Observatory const &obs, double const defaultLongitude=0.0) :
+        Coord(p3d, epoch, defaultLongitude), _obs(obs) {}
     TopocentricCoord(double const az, double const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
     TopocentricCoord(std::string const az, std::string const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
+
+    virtual Coord::Ptr clone() const { return TopocentricCoord::Ptr(new TopocentricCoord(*this)); }
 
     std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Az", "Alt");
@@ -288,14 +330,16 @@ Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string
                      double const epoch);
 Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit,
                      double const epoch);
-Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d, double const epoch);
+Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d, double const epoch,
+                     double const defaultLongitude);
 Coord::Ptr makeCoord(CoordSystem const system);
 
 
 Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec);
 Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
 Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit);
-Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d);
+Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d,
+                     double const defaultLongitude=0.0);
 
 
 /*
@@ -309,7 +353,6 @@ double hmsStringToDegrees(std::string const hms);
 std::string degreesToDmsString(double const deg);
 std::string degreesToHmsString(double const deg);    
     
-
     
 }}}
 

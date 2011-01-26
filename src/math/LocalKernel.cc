@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #include <lsst/afw/math/LocalKernel.h>
 #include <fftw3.h>
 #include <cassert>
@@ -5,63 +27,91 @@
 namespace afwMath = lsst::afw::math;
 
 afwMath::FourierCutout::Ptr afwMath::FftLocalKernel::getFourierImage() const {        
-    if(_fourierStack.getStackDepth() > 0)
-        return _fourierStack.getCutout(0);
+    if(_fourierStack) {
+        if(_fourierStack->getStackDepth() > 0) {
+            return _fourierStack->getCutout(0);
+        }
+    }
    
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-            "Must previously call FourierLocalKernel::setDimensions");
+    throw LSST_EXCEPT(
+        lsst::pex::exceptions::RuntimeErrorException,
+        "Must previously call FourierLocalKernel::setDimensions"
+    );
 }
 
 std::vector<afwMath::FourierCutout::Ptr> 
 afwMath::FftLocalKernel::getFourierDerivatives() const {
-    if(_fourierStack.getStackDepth() > 1) {
-        //has already been transformed. return output of latest transform
-        return _fourierStack.getCutoutVector(1);
+    if(_fourierStack) {
+        if(_fourierStack->getStackDepth() > 1) {
+            //has already been transformed. return output of latest transform
+            return _fourierStack->getCutoutVector(1);
+        }
     }
     else if(getNParameters() == 0) {
         //no derivative info
         return std::vector<FourierCutout::Ptr>();
     }
 
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-            "Must previously call FourierLocalKernel::setDimensions");
+    throw LSST_EXCEPT(
+        lsst::pex::exceptions::RuntimeErrorException,
+        "Must previously call FourierLocalKernel::setDimensions"
+    );
 }
 
 
 void afwMath::FftLocalKernel::copyImage(
+        Image::Ptr const & src,
         Pixel * dest, 
-        Image::Ptr image, 
-        int const &destWidth
+        int const &width,
+        int const &height
 ) {
-    if(!image || !dest)
-        return;
-
-    double * destIter = dest;    
-    double * innerIter;
-    for(int y = 0; y < image->getHeight(); ++y, destIter += destWidth) {
-        Image::const_x_iterator rowIter(image->row_begin(y));
-        Image::const_x_iterator const rowEnd(image->row_end(y));
-        for(innerIter = destIter; rowIter != rowEnd; ++rowIter, ++innerIter) {
-            (*innerIter) = (*rowIter);
-        }
+    if(!src || !dest) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "src and dest must be valid"
+        );
+    }
+    int srcHeight = src->getHeight();
+    int srcWidth = src->getWidth();
+    int diff = width - srcWidth;
+    int y = 0;
+    for(; y < srcHeight; ++y, dest+=width) {
+        Image::const_x_iterator i(src->row_begin(y));
+        Image::const_x_iterator const end(src->row_end(y));
+        std::copy(i, end, dest);
+        //dest may be wider than src image
+        std::fill_n(dest+srcWidth, diff, 0.0);
+    }
+    //dest may be taller than src image
+    for(; y < height; ++y, dest += width) {
+        std::fill_n(dest, width, 0.0);
     }
 }
 
 void afwMath::FftLocalKernel::fillImageStack(
         Pixel * imageStack, 
         int const & imageSize,
-        int const & imageWidth
+        int const & imageWidth,
+        int const & imageHeight
 ) {
     Pixel * rowPtr = imageStack;
-    assert(rowPtr != 0);
-    copyImage(rowPtr, _imageKernel.getImage(), imageWidth);
+    if(!imageStack) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot fill unallocated image"
+        );
+    }
+    copyImage(getImage(), rowPtr, imageWidth, imageHeight);
 
-    rowPtr += imageSize;    
-    ImagePtrList derivatives = _imageKernel.getDerivatives();
-    ImagePtrList::const_iterator i(derivatives.begin());
-    ImagePtrList::const_iterator const end(derivatives.end());
-    for( ; i != end ; ++i, rowPtr += imageSize) {
-        copyImage(rowPtr, *i, imageWidth);   
+    
+    if(hasDerivatives()) {
+        rowPtr += imageSize;    
+        ImagePtrList derivatives = _imageKernel.getDerivatives();
+        ImagePtrList::const_iterator i(derivatives.begin());
+        ImagePtrList::const_iterator const end(derivatives.end());
+        for( ; i != end ; ++i, rowPtr += imageSize) {
+            copyImage(*i, rowPtr, imageWidth, imageHeight);   
+        }
     }
 }
 
@@ -81,13 +131,13 @@ void afwMath::FftLocalKernel::setDimensions(
         );
     }
 
-    int stackDepth = getNParameters() + 1;
+    int stackDepth = (hasDerivatives()) ? 1 + getNParameters() : 1;
     //construct imageStack (the input for fftw)
     int imageSize = width*height;
     boost::scoped_array<Pixel> imageStack(new Pixel[stackDepth * imageSize]);
    
-    FourierCutoutStack temp(width, height, stackDepth);
-    int cutoutSize = temp.getCutoutSize();
+    _fourierStack.reset(new FourierCutoutStack(width, height, stackDepth));
+    int cutoutSize = _fourierStack->getCutoutSize();
     std::pair<int, int> dimensions =std::make_pair(height, width);
 
     //construct a forward-transform plan
@@ -99,7 +149,7 @@ void afwMath::FftLocalKernel::setDimensions(
             NULL, //embeded input image dimensions
             1, //input images are contiguous
             imageSize, //input stack is contiguous
-            reinterpret_cast<fftw_complex*>(temp.getData().get()), //output ptr
+            reinterpret_cast<fftw_complex*>(_fourierStack->getData().get()), //output ptr
             NULL, //embeded output image dimensions
             1, //output images are contiguous
             cutoutSize, //output stack is contiguous
@@ -109,15 +159,13 @@ void afwMath::FftLocalKernel::setDimensions(
 
     //only fill after the plan has been constructed
     //this is because planner can destroy input data
-    fillImageStack(imageStack.get(), imageSize, width);
+    fillImageStack(imageStack.get(), imageSize, width, height);
    
     //finally execute the plan
     fftw_execute(plan);
 
     fftw_destroy_plan(plan);
 
-    _fourierStack.swap(temp);
-    
     //shift and if necessary, normalize each fft
     lsst::afw::geom::Point2I const & center = _imageKernel.getCenter();
     int dx = -center.getX();
@@ -126,7 +174,7 @@ void afwMath::FftLocalKernel::setDimensions(
     
     FourierCutout::Ptr cutoutPtr;
     for(int i = 0; i < stackDepth; ++i) {
-        cutoutPtr = _fourierStack.getCutout(i);
+        cutoutPtr = _fourierStack->getCutout(i);
         cutoutPtr->shift(dx, dy);
         if(normalize) 
             (*cutoutPtr) *= fftScale;

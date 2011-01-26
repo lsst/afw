@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -37,8 +60,8 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         bgCtrl.setNxSample(5);
         bgCtrl.setNySample(5);
         // test methods for public stats objects in bgCtrl
-        bgCtrl.sctrl.setNumSigmaClip(3);
-        bgCtrl.sctrl.setNumIter(3);
+        bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
+        bgCtrl.getStatisticsControl()->setNumIter(3);
         math::Background back = math::makeBackground(img, bgCtrl);
         double const TESTVAL = back.getPixel(xcen, ycen);
         
@@ -131,8 +154,8 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::AKIMA_SPLINE);
         bctrl.setNxSample(6);
         bctrl.setNySample(6);
-        bctrl.sctrl.setNumSigmaClip(20.0);  // something large enough to avoid clipping entirely
-        bctrl.sctrl.setNumIter(1);
+        bctrl.getStatisticsControl()->setNumSigmaClip(20.0); //something large enough to avoid clipping entirely
+        bctrl.getStatisticsControl()->setNumIter(1);
         math::Background backobj = math::Background(rampimg, bctrl);
 
         // test the values at the corners and in the middle
@@ -174,8 +197,8 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::CUBIC_SPLINE);
         bctrl.setNxSample(24);
         bctrl.setNySample(24);
-        bctrl.sctrl.setNumSigmaClip(10.0);
-        bctrl.sctrl.setNumIter(1);
+        bctrl.getStatisticsControl()->setNumSigmaClip(10.0);
+        bctrl.getStatisticsControl()->setNumIter(1);
         math::Background backobj = math::Background(parabimg, bctrl);
 
         // debug

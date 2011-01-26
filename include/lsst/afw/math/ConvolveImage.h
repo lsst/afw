@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_CONVOLVEIMAGE_H
 #define LSST_AFW_MATH_CONVOLVEIMAGE_H
 /**
@@ -14,7 +37,10 @@
  * @ingroup afw
  */
 #include <limits>
+#include <sstream>
 
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
@@ -23,59 +49,77 @@ namespace lsst {
 namespace afw {
 namespace math {
 
+    /**
+     * @brief Parameters to control convolution
+     *
+     * @ingroup afw
+     */
+    class ConvolutionControl {
+    public:
+        ConvolutionControl(
+                bool doNormalize = true,    ///< normalize the kernel to sum=1?
+                bool doCopyEdge = false,    ///< copy edge pixels from source image
+                    ///< instead of setting them to the standard edge pixel?
+                int maxInterpolationDistance = 10)  ///< maximum width or height of a region
+                    ///< over which to use linear interpolation interpolate
+        :
+            _doNormalize(doNormalize),
+            _doCopyEdge(doCopyEdge),
+            _maxInterpolationDistance(maxInterpolationDistance)
+        { }
+    
+        bool getDoNormalize() const { return _doNormalize; }
+        bool getDoCopyEdge() const { return _doCopyEdge; }
+        int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
+        
+        void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
+        void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
+        void setMaxInterpolationDistance(int maxInterpolationDistance) {
+            _maxInterpolationDistance = maxInterpolationDistance; }
+    
+    private:
+        bool _doNormalize;  ///< normalize the kernel to sum=1?
+        bool _doCopyEdge;   ///< copy edge pixels from source image
+                    ///< instead of setting them to the standard edge pixel?
+        int _maxInterpolationDistance;  ///< maximum width or height of a region
+                    ///< over which to attempt interpolation
+    };
+
+    template <typename OutImageT, typename InImageT>
+    void scaledPlus(
+            OutImageT &outImage,
+            double c1,
+            InImageT const &inImage1,
+            double c2,
+            InImageT const &inImage2);
+
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& inLocator,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator& kernelLocator,
-        int kWidth, int kHeight);
+            typename InImageT::const_xy_locator inImageLocator,
+            typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
+            int kWidth,
+            int kHeight);
     
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& inImage,
-        std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
-        std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList
-    );
-    
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::Kernel const& kernel,
-        bool doNormalize
-    );
-    
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::DeltaFunctionKernel const& kernel,
-        bool doNormalize
-    );
-    
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::LinearCombinationKernel const& kernel,
-        bool doNormalize
-    );
-    
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::SeparableKernel const& kernel,
-        bool doNormalize
-    );
+            typename InImageT::const_xy_locator inImageLocator,
+            std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
+            std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList);
     
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        KernelT const& kernel,
-        bool doNormalize,
-        bool copyEdge = false
-    );
+            OutImageT& convolvedImage,
+            InImageT const& inImage,
+            KernelT const& kernel,
+            ConvolutionControl const& convolutionControl = ConvolutionControl());
+    
+    template <typename OutImageT, typename InImageT, typename KernelT>
+    void convolve(
+            OutImageT& convolvedImage,
+            InImageT const& inImage,
+            KernelT const& kernel,
+            bool doNormalize,
+            bool doCopyEdge = false);
     
     /**
      * \brief Return an edge pixel appropriate for a given Image type
@@ -84,7 +128,8 @@ namespace math {
      */
     template <typename ImageT>
     typename ImageT::SinglePixel edgePixel(
-        lsst::afw::image::detail::Image_tag ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
+            lsst::afw::image::detail::Image_tag
+                ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
     ) {
         typedef typename ImageT::SinglePixel SinglePixelT;
         return SinglePixelT(
@@ -102,7 +147,8 @@ namespace math {
      */
     template <typename MaskedImageT>
     typename MaskedImageT::SinglePixel edgePixel(
-        lsst::afw::image::detail::MaskedImage_tag   ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
+            lsst::afw::image::detail::MaskedImage_tag
+            ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
     ) {
         typedef typename MaskedImageT::Image::Pixel ImagePixelT;
         typedef typename MaskedImageT::Variance::Pixel VariancePixelT;
@@ -115,6 +161,10 @@ namespace math {
     }
 }}}   // lsst::afw::math
 
+/*
+ * Define inline functions
+ */
+
 /**
  * @brief Apply convolution kernel to an %image at one point
  *
@@ -126,28 +176,27 @@ namespace math {
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
-    typename InImageT::const_xy_locator& imageLocator, ///< locator for %image pixel that overlaps
-        ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
-    lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator &kernelLocator,
-                    ///< locator for (0,0) pixel of kernel (the origin of the kernel, not its center)
-    int kWidth,     ///< number of columns in kernel
-    int kHeight     ///< number of rows in kernel
-                                  ) {
+        typename InImageT::const_xy_locator inImageLocator, ///< locator for %image pixel that overlaps
+            ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
+        lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
+                        ///< locator for (0,0) pixel of kernel (the origin of the kernel, not its center)
+        int kWidth,     ///< number of columns in kernel
+        int kHeight)    ///< number of rows in kernel
+{
     typename OutImageT::SinglePixel outValue = 0;
-    for (int y = 0; y != kHeight; ++y) {
-        for (int x = 0; x != kWidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
+    for (int kRow = 0; kRow != kHeight; ++kRow) {
+        for (lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kEnd = 
+            kernelLocator + lsst::afw::image::detail::difference_type(kWidth, 0);
+            kernelLocator != kEnd; ++inImageLocator.x(), ++kernelLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
             if (kVal != 0) {
-                outValue += *imageLocator*kVal;
+                outValue += *inImageLocator*kVal;
             }
         }
 
-        imageLocator  += lsst::afw::image::detail::difference_type(-kWidth, 1);
+        inImageLocator  += lsst::afw::image::detail::difference_type(-kWidth, 1);
         kernelLocator += lsst::afw::image::detail::difference_type(-kWidth, 1);
     }
-
-    imageLocator  += lsst::afw::image::detail::difference_type(0, -kHeight);
-    kernelLocator += lsst::afw::image::detail::difference_type(0, -kHeight);
 
     return outValue;
 }
@@ -163,11 +212,11 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
-    typename InImageT::const_xy_locator& imageLocator,
-                                        ///< locator for %image pixel that overlaps (0,0) pixel of kernel(!)
-    std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,  ///< kernel column vector
-    std::vector<lsst::afw::math::Kernel::Pixel> const &kernelYList   ///< kernel row vector
-) {
+        typename InImageT::const_xy_locator inImageLocator,   ///< locator for %image pixel that overlaps
+            ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
+        std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,  ///< kernel column vector
+        std::vector<lsst::afw::math::Kernel::Pixel> const &kernelYList)  ///< kernel row vector
+{
     typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
 
     typedef typename OutImageT::SinglePixel OutT;
@@ -177,10 +226,10 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
 
         OutT outValueY = 0;
         for (k_iter kernelXIter = kernelXList.begin(), xEnd = kernelXList.end();
-             kernelXIter != xEnd; ++kernelXIter, ++imageLocator.x()) {
+             kernelXIter != xEnd; ++kernelXIter, ++inImageLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
             if (kValX != 0) {
-                outValueY += *imageLocator*kValX;
+                outValueY += *inImageLocator*kValX;
             }
         }
         
@@ -189,12 +238,11 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
             outValue += outValueY*kValY;
         }
         
-        imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
+        inImageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
     }
-    
-    imageLocator += lsst::afw::image::detail::difference_type(0, -kernelYList.size());
 
     return outValue;
 }
+
 
 #endif // !defined(LSST_AFW_MATH_CONVOLVEIMAGE_H)

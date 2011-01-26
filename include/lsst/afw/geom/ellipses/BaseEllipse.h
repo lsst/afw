@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_GEOM_ELLIPSES_BASEELLIPSE_H
 #define LSST_AFW_GEOM_ELLIPSES_BASEELLIPSE_H
 
@@ -99,7 +122,7 @@ public:
     void scale(double factor);
 
     /// \brief Move the ellipse center by the given offset.
-    void shift(ExtentD const & offset);
+    void shift(Extent2D const & offset);
 
     Transformer transform(AffineTransform const & transform);
     Transformer const transform(AffineTransform const & transform) const; 
@@ -186,7 +209,7 @@ public:
     virtual LinearTransform getGenerator() const;
 
     /// \brief Return the size of the bounding box for the ellipse core.
-    ExtentD computeDimensions() const;
+    Extent2D computeDimensions() const;
 
     /// \brief Return the core parameters as a vector.
     ParameterVector const & getVector() const { return _vector; }
@@ -241,7 +264,7 @@ inline void BaseEllipse::setCore(BaseCore const & core) { *_core = core; }
 inline bool BaseEllipse::normalize() { return _core->normalize(); }
 inline void BaseEllipse::grow(double buffer) { getCore().grow(buffer); }
 inline void BaseEllipse::scale(double factor) { getCore().scale(factor); }
-inline void BaseEllipse::shift(ExtentD const & offset) { _center += offset; }
+inline void BaseEllipse::shift(Extent2D const & offset) { _center += offset; }
 
 inline double & BaseEllipse::operator[](int i) { return (i<2) ? _center[i] : (*_core)[i-2]; }
 inline double BaseEllipse::operator[](int i) const { return (i<2) ? _center[i] : (*_core)[i-2]; }

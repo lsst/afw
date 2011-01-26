@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Tests for SpatialCell
 
@@ -13,6 +36,7 @@ import math
 import os
 import sys
 import unittest
+import pyfits
 
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
@@ -27,15 +51,17 @@ try:
     type(display)
 except NameError:
     display = False
+    force = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class GetCcdImage(object):
     """A class to return an Image of a given Ccd"""
 
-    def __init__(self, imageFile):
+    def __init__(self, imageFile=None):
         self.imageFile = imageFile
         self.isTrimmed = False
+        self.isRaw = True
 
     def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
@@ -64,7 +90,10 @@ class SynthesizeCcdImage(GetCcdImage):
     """A class to return an Image of a given Ccd based on its cameraGeometry"""
     
     def __init__(self, isTrimmed=True):
+        """Initialise"""
+        super(SynthesizeCcdImage, self).__init__()
         self.isTrimmed = isTrimmed
+        self.isRaw = True               # we're always pretending to generate data straight from the DAQ
 
     def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
         """Return an image of the specified amp in the specified ccd"""
@@ -171,8 +200,12 @@ in particular that it has an entry ampSerial which is a single-element list, the
             pass
 
     if nCol*nRow != len(ccdPol.getArray("Amp")):
-        raise RuntimeError, ("Expected location of %d amplifiers, got %d" % \
-                             (nCol*nRow, len(ccdPol.getArray("Amp"))))
+        msg = "Expected location of %d amplifiers, got %d" % (nCol*nRow, len(ccdPol.getArray("Amp")))
+        
+        if force:
+            print >> sys.stderr, msg
+        else:
+            raise RuntimeError, msg
 
     if ccdInfo is None:
         ampSerial = [0]
@@ -199,7 +232,12 @@ in particular that it has an entry ampSerial which is a single-element list, the
         c =  ampPol.get("readoutCorner")
 
         if Col not in range(nCol) or Row not in range(nRow):
-            raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
+            msg = "Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow)
+            if force:
+                print >> sys.stderr, msg
+                continue
+            else:
+                raise RuntimeError, msg
 
         try:
             ePol = electronics[index]
@@ -320,8 +358,13 @@ particular that it has an entry ampSerial which is a single-element list, the am
     raft = cameraGeom.Raft(raftId, nCol, nRow)
 
     if nCol*nRow != len(raftPol.getArray("Ccd")):
-        raise RuntimeError, ("Expected location of %d amplifiers, got %d" % \
-                             (nCol*nRow, len(raftPol.getArray("Ccd"))))
+        if False:                       # many cameras don't use filled rafts at the edge (e.g. HSC)
+            msg = "Expected location of %d Ccds, got %d" % (nCol*nRow, len(raftPol.getArray("Ccd")))
+            
+            if force:
+                print >> sys.stderr, msg
+            else:
+                raise RuntimeError, msg
 
     for ccdPol in raftPol.getArray("Ccd"):
         Col, Row = ccdPol.getArray("index")
@@ -331,13 +374,18 @@ particular that it has an entry ampSerial which is a single-element list, the am
         pitch, roll, yaw = [float(math.radians(a)) for a in ccdPol.getArray("orientation")]
 
         if Col not in range(nCol) or Row not in range(nRow):
-            raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
+            msg = "Ccd location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow)
+            if force:
+                print >> sys.stderr, msg
+                continue
+            else:
+                raise RuntimeError, msg
 
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
 
-        raft.addDetector(afwGeom.makePointI(Col, Row),
-                         afwGeom.makePointD(xc, yc),
+        raft.addDetector(afwGeom.PointI(Col, Row),
+                         afwGeom.PointD(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
 
         #
@@ -346,7 +394,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         if hduPerAmp:
             for amp in ccd:
                 hdu, flipLR, flipTB = ampDiskLayout[amp.getId().getSerial()]
-                amp.setDiskLayout(afwGeom.makePointI(amp.getAllPixels().getX0(), amp.getAllPixels().getY0()),
+                amp.setDiskLayout(afwGeom.PointI(amp.getAllPixels().getX0(), amp.getAllPixels().getY0()),
                                   nQuarter, flipLR, flipTB)
 
         if raftInfo is not None:
@@ -405,8 +453,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         xc, yc = raftPol.getArray("offset")
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         raft = makeRaft(geomPolicy, raftId, raftInfo, defectDict=defDict)
-        camera.addDetector(afwGeom.makePointI(Col, Row),
-                           afwGeom.makePointD(xc, yc), cameraGeom.Orientation(), raft)
+        camera.addDetector(afwGeom.PointI(Col, Row),
+                           afwGeom.PointD(xc, yc), cameraGeom.Orientation(), raft)
 
         if cameraInfo is not None:
             # Guess the gutter between detectors
@@ -443,7 +491,7 @@ def makeAmpImageFromCcd(amp, imageSource=SynthesizeCcdImage(), isTrimmed=None, i
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
 def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
-                     isTrimmed=None, imageFactory=afwImage.ImageU):
+                     isTrimmed=None, imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Ccd (or just a single amp)"""
 
     if isTrimmed is None:
@@ -454,17 +502,26 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
         ampImage = imageFactory(amp.getAllPixels(isTrimmed).getDimensions())
         ampImage <<= imageSource.getImage(ccd, amp, imageFactory=imageFactory)
 
+        if bin > 1:
+            ampImage = afwMath.binImage(ampImage, bin)
+            
         return ampImage
 
-    ccdImage = imageFactory(ccd.getAllPixels(isTrimmed).getDimensions())
+    if imageSource.isRaw:
+        ccdImage = imageFactory(ccd.getAllPixels(isTrimmed).getDimensions())
         
-    for a in ccd:
-        im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
-        im <<= a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
+        for a in ccd:
+            im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
+            im <<= a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
+    else:
+        ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
+
+    if bin > 1:
+        ccdImage = afwMath.binImage(ccdImage, bin)
 
     return ccdImage
 
-def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True):
+def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1):
     """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
 of the detectors"""
     
@@ -472,7 +529,7 @@ of the detectors"""
         isTrimmed = ccd.isTrimmed()
 
     if ccdImage == "":
-        ccdImage = makeImageFromCcd(ccd)
+        ccdImage = makeImageFromCcd(ccd, bin=bin)
 
     if ccdImage:
         title = ccd.getId().getName()
@@ -495,66 +552,73 @@ of the detectors"""
         for bbox, borderWidth, ctype in bboxes:
             bbox = bbox.clone()
             bbox.shift(-x0, -y0)
-            displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame)
+            displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame, bin=bin)
 
         return
 
     for a in ccd:
-        displayUtils.drawBBox(a.getAllPixels(isTrimmed), origin=ccdOrigin, borderWidth=0.49, frame=frame)
+        displayUtils.drawBBox(a.getAllPixels(isTrimmed), origin=ccdOrigin, borderWidth=0.49,
+                              frame=frame, bin=bin)
         
         if not isTrimmed:
             displayUtils.drawBBox(a.getBiasSec(), origin=ccdOrigin,
-                                  borderWidth=0.49, ctype=ds9.RED, frame=frame)
+                                  borderWidth=0.49, ctype=ds9.RED, frame=frame, bin=bin)
             displayUtils.drawBBox(a.getDataSec(), origin=ccdOrigin,
-                                  borderWidth=0.49, ctype=ds9.BLUE, frame=frame)
+                                  borderWidth=0.49, ctype=ds9.BLUE, frame=frame, bin=bin)
         # Label each Amp
         ap = a.getAllPixels(isTrimmed)
         xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
-        cen = afwGeom.makePointI(xc, yc)
+        cen = afwGeom.PointI(xc, yc)
         if ccdOrigin:
             xc += ccdOrigin[0]
             yc += ccdOrigin[1]
 
-        ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc, yc, frame=frame)
+        ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc/bin, yc/bin, frame=frame)
 
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
-                          borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
+                          borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
 
-def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None, imageFactory=afwImage.ImageU):
+def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
+                      imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Raft"""
 
-    raftImage = imageFactory(raft.getAllPixels().getDimensions())
+    if raftCenter is None:
+        raftCenter = afwGeom.PointI(raft.getAllPixels().getWidth()//2,
+                                        raft.getAllPixels().getHeight()//2)
+
+    raftImage = imageFactory(raft.getAllPixels().getWidth()//bin, raft.getAllPixels().getHeight()//bin)
 
     for det in raft:
         ccd = cameraGeom.cast_Ccd(det)
         
         bbox = ccd.getAllPixels(True)
-        origin = ccd.getCenterPixel() - \
-                 afwGeom.makeExtentI(bbox.getWidth()/2, bbox.getHeight()/2)
-        if raftCenter:
-            origin = origin + afwGeom.Extent2I(raftCenter)
+        origin = ccd.getCenterPixel() - afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + \
+                 afwGeom.Extent2I(raftCenter)
 
-        bbox = ccd.getAllPixels(True).clone()
-        bbox.shift(origin[0], origin[1])
+        bbox = afwImage.BBox(afwImage.PointI((origin[0] + bbox.getLLC()[0])//bin,
+                                             (origin[1] + bbox.getLLC()[1])//bin),
+                             bbox.getWidth()//bin, bbox.getHeight()//bin)
+
         ccdImage = raftImage.Factory(raftImage, bbox)
-            
-        ccdImage <<= makeImageFromCcd(ccd, imageSource, isTrimmed=True)
+        ccdImage <<= makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
 
     return raftImage
 
-def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None, overlay=True):
+def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
     """Show a Raft on ds9.
 
-If imageSource isn't None, an image using the images specified by imageSource"""
+If imageSource isn't None, create an image using the images specified by imageSource"""
 
-    raftCenter = afwGeom.makePointI(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
+    raftCenter = afwGeom.PointI(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
     if raftOrigin:
         raftCenter += afwGeom.Extent2I(raftOrigin)
 
     if imageSource is None:
         raftImage = None
+    elif isinstance(imageSource, GetCcdImage):
+        raftImage = makeImageFromRaft(raft, imageSource=imageSource, raftCenter=raftCenter, bin=bin)
     else:
-        raftImage = makeImageFromRaft(raft, imageSource=imageSource, raftCenter=raftCenter)
+        raftImage = imageSource
 
     if raftImage:
         ds9.mtv(raftImage, frame=frame, title=raft.getId().getName())
@@ -567,36 +631,41 @@ If imageSource isn't None, an image using the images specified by imageSource"""
         
         bbox = ccd.getAllPixels(True)
         origin = ccd.getCenterPixel() - \
-                 afwGeom.makeExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + afwGeom.Extent2I(raftCenter)
+                 afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + afwGeom.Extent2I(raftCenter)
             
         if True:
             name = ccd.getId().getName()
         else:
             name = str(ccd.getCenter())
-        ds9.dot(name, origin[0] + bbox.getWidth()/2, origin[1] + bbox.getHeight()/2, frame=frame)
+        ds9.dot(name, (origin[0] + 0.5*bbox.getWidth())/bin,
+                (origin[1] + 0.4*bbox.getHeight())/bin, frame=frame)
 
-        showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay)
+        showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay, bin=bin)
 
-def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU):
+def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Camera"""
 
-    cameraImage = imageFactory(camera.getAllPixels().getDimensions())
+    cameraImage = imageFactory(camera.getAllPixels().getWidth()/bin, camera.getAllPixels().getHeight()/bin)
     for det in camera:
         raft = cameraGeom.cast_Raft(det);
-        bbox = raft.getAllPixels().clone()
+        bbox = raft.getAllPixels()
         origin = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel()) - \
-                 afwGeom.makeExtentI(bbox.getWidth()/2, bbox.getHeight()/2) 
-        bbox.shift(origin[0], origin[1])
+                 afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) 
+        bbox = afwImage.BBox(afwImage.PointI((origin[0] + bbox.getLLC()[0])//bin,
+                                             (origin[1] + bbox.getLLC()[1])//bin),
+                             bbox.getWidth()//bin, bbox.getHeight()//bin)
+
         im = cameraImage.Factory(cameraImage, bbox)
 
         im <<= makeImageFromRaft(raft, imageSource,
-                                 afwGeom.makePointI(bbox.getWidth()/2, bbox.getHeight()/2))
+                                 raftCenter=None, # afwGeom.PointI(bbox.getWidth()//2, bbox.getHeight()//2),
+                                 imageFactory=imageFactory, bin=bin)
         serial = raft.getId().getSerial()
         im += serial if serial > 0 else 0
 
     return cameraImage
 
-def showCamera(camera, imageSource=SynthesizeCcdImage(), frame=None, overlay=True):
+def showCamera(camera, imageSource=SynthesizeCcdImage(), frame=None, overlay=True, bin=1):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and amplifier boundaries
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
@@ -605,8 +674,10 @@ of the detectors"""
 
     if imageSource is None:
         cameraImage = None
+    elif isinstance(imageSource, GetCcdImage):
+        cameraImage = makeImageFromCamera(camera, imageSource, bin=bin)
     else:
-        cameraImage = makeImageFromCamera(camera, imageSource)
+        cameraImage = imageSource
 
     if cameraImage:
         ds9.mtv(cameraImage, frame=frame, title=camera.getId().getName())
@@ -618,18 +689,18 @@ of the detectors"""
 
         if overlay:
             bbox = raft.getAllPixels()
-            ds9.dot(raft.getId().getName(), center[0], center[1], frame=frame)
+            ds9.dot(raft.getId().getName(), center[0]/bin, center[1]/bin, frame=frame)
 
         showRaft(raft, None, frame=frame, overlay=overlay,
-                 raftOrigin=center - afwGeom.makeExtentI(raft.getAllPixels().getWidth()/2,
-                                                         raft.getAllPixels().getHeight()/2))
+                 raftOrigin=center - afwGeom.ExtentI(raft.getAllPixels().getWidth()/2,
+                                                         raft.getAllPixels().getHeight()/2), bin=bin)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def showMosaic(fileName, geomPolicy=None, camera=None,
-               display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=True, doTrim=False,
-               imageFactory=afwImage.ImageU, frame=None):
-    """Show a mosaic built from the MEF imageFile containing an exposure
+               display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=False, doTrim=False,
+               imageFactory=afwImage.ImageU, bin=1, frame=None):
+    """Return a mosaic for a given snapshot of the sky; if display is true, also show it on ds9
 
 The camera geometry is defined by cameraGeomPolicyFile;  raft IDs etc. are drawn on ds9 if overlay is True;
 The camera (or raft) is described if describe is True
@@ -664,9 +735,9 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
 
         ccd.setTrimmed(doTrim)
 
+        outImage = makeImageFromCcd(ccd, imageSource, amp=amp, imageFactory=imageFactory, bin=bin)
         if display:
-            ampImage = makeImageFromCcd(ccd, imageSource, amp=amp, imageFactory=imageFactory)
-            showCcd(ccd, ampImage, amp=amp, overlay=overlay, frame=frame)
+            showCcd(ccd, outImage, amp=amp, overlay=overlay, frame=frame, bin=bin)
     elif what == cameraGeom.Ccd:
         if id is None:
             ccd = makeCcd(geomPolicy)
@@ -678,9 +749,9 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
 
         ccd.setTrimmed(doTrim)
 
+        outImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, bin=bin)
         if display:
-            ccdImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory)
-            showCcd(ccd, ccdImage, overlay=overlay, frame=frame)
+            showCcd(ccd, outImage, overlay=overlay, frame=frame, bin=bin)
     elif what == cameraGeom.Raft:
         if id:
             raft = findRaft(camera, id)
@@ -689,21 +760,23 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
         if not raft:
             raise RuntimeError, "Failed to find Raft %s" % id
 
-        #raft = makeRaft(geomPolicy, raftId=id)
-
+        outImage = makeImageFromRaft(raft, imageSource, imageFactory=imageFactory, bin=bin)
         if display:
-            showRaft(raft, imageSource, overlay=overlay, frame=frame)
+            showRaft(raft, outImage, overlay=overlay, frame=frame, bin=bin)
 
         if describe:
             print describeRaft(raft)
     elif what == cameraGeom.Camera:
+        outImage = makeImageFromCamera(camera, imageSource, imageFactory=imageFactory, bin=bin)
         if display:
-            showCamera(camera, imageSource, overlay=overlay, frame=frame)
+            showCamera(camera, outImage, overlay=overlay, frame=frame, bin=bin)
 
         if describe:
             print describeCamera(camera)
     else:
         raise RuntimeError, ("I don't know how to display %s" % what)
+
+    return outImage
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -782,6 +855,28 @@ def findRaft(parent, id):
             return raft
 
     return None
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def makeDefectsFromFits(filename):
+    """Create a dictionary of DefectSets from a fits file with one ccd worth
+    of defects per extension.
+
+       The dictionay is indexed by an Id object --- remember to compare by str(id) not object identity
+    """
+    hdulist = pyfits.open(filename)
+    defects = {}
+    for hdu in hdulist[1:]:
+        id = cameraGeom.Id(hdu.header['serial'], hdu.header['name'])
+        data = hdu.data
+        defectList = []
+        for i in range(len(data)):
+            bbox = afwImage.BBox(afwImage.PointI(int(data[i]['x0']),\
+                int(data[i]['y0'])), int(data[i]['width']),\
+                int(data[i]['height']))
+            defectList.append(afwImage.DefectBase(bbox))
+        defects[id] = defectList
+    return defects
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

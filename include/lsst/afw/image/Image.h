@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief Support for 2-D images
@@ -50,7 +73,17 @@ namespace image {
         std::string const wcsNameForXY0 = "A"; // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
     }
 
-    /************************************************************************************************************/
+    /*********************************************************************************************************/
+    /// A class used to request that array accesses be checked
+    class CheckIndices {
+    public:
+        explicit CheckIndices(bool check=true) : _check(check) {}
+        operator bool() const { return _check; }
+    private:
+        bool _check;
+    };
+
+    /*********************************************************************************************************/
     /// \brief metafunction to extract reference type from PixelT
     template<typename PixelT>
     struct Reference {
@@ -165,7 +198,9 @@ namespace image {
         // Operators etc.
         //
         PixelReference operator()(int x, int y);
+        PixelReference operator()(int x, int y, CheckIndices const&);
         PixelConstReference operator()(int x, int y) const;
+        PixelConstReference operator()(int x, int y, CheckIndices const&) const;
 
         /// Return the number of columns in the %image
         int getWidth() const { return _gilView.width(); }
@@ -195,7 +230,7 @@ namespace image {
          * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        PointI getXY0() const { return PointI(_x0, _y0); }
+        Point2I getXY0() const { return Point2I(_x0, _y0); }
         
         /**
          * @brief Convert image position to index (nearest integer and fractional parts)
@@ -207,9 +242,9 @@ namespace image {
                 lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
         ) const {
             double const fullIndex = pos - PixelZeroPos - (xy == X ? getX0() : getY0());
-            double const roundedIndex = std::floor(fullIndex + 0.5);
+            int const roundedIndex = static_cast<int>(fullIndex + 0.5);
             double const residual = fullIndex - roundedIndex;
-            return std::pair<int, double>(static_cast<int>(roundedIndex), residual);
+            return std::pair<int, double>(roundedIndex, residual);
         }
 
         /**
@@ -222,10 +257,10 @@ namespace image {
          * @return image position
          */
         inline double indexToPosition(
-                int ind, ///< image index
+                double ind, ///< image index
                 lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
         ) const {
-            return static_cast<double>(ind) + PixelZeroPos + (xy == X ? getX0() : getY0());
+            return ind + PixelZeroPos + (xy == X ? getX0() : getY0());
         }
         
         /// Return the %image's size;  useful for passing to constructors
@@ -244,15 +279,44 @@ namespace image {
         fast_iterator begin(bool) const;
         fast_iterator end(bool) const;
 
-        x_iterator row_begin(int y) const;
-        x_iterator row_end(int y) const;
-        x_iterator x_at(int x, int y) const;
+        /// Return an \c x_iterator to the start of the \c y'th row
+        ///
+        /// Incrementing an \c x_iterator moves it across the row
+        x_iterator row_begin(int y) const {
+            return _gilView.row_begin(y);
+        }
 
-        y_iterator col_begin(int x) const;
-        y_iterator col_end(int x) const;
-        y_iterator y_at(int x, int y) const;
+        /// Return an \c x_iterator to the end of the \c y'th row
+        x_iterator row_end(int y) const {
+            return _gilView.row_end(y);
+        }
 
-        xy_locator xy_at(int x, int y) const;
+        /// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
+        x_iterator x_at(int x, int y) const { return _gilView.x_at(x, y); }
+
+        /// Return an \c y_iterator to the start of the \c y'th row
+        ///
+        /// Incrementing an \c y_iterator moves it up the column
+        y_iterator col_begin(int x) const {
+            return _gilView.col_begin(x);
+        }
+        
+        /// Return an \c y_iterator to the end of the \c y'th row
+        y_iterator col_end(int x) const {
+            return _gilView.col_end(x);
+        }
+
+        /// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
+        y_iterator y_at(int x, int y) const {
+            return _gilView.y_at(x, y);
+        }
+
+        /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
+        ///
+        /// Locators may be used to access a patch in an image
+        xy_locator xy_at(int x, int y) const {
+            return xy_locator(_gilView.xy_at(x, y));
+        }
         /**
          * Set the ImageBase's origin
          *
@@ -261,7 +325,7 @@ namespace image {
          * \note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
-        void setXY0(PointI const origin) {
+        void setXY0(Point2I const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
         }

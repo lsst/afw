@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * @brief A coordinate class intended to represent absolute positions.
@@ -241,24 +264,6 @@ public:
     /// @brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T,T> asTuple() const { return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z()); }
 
-    /**
-     *  @name Named constructors
-     *
-     *  While it might be nice to make these true constructors of CoordinateBase subclasses,
-     *  that would require either partial specialization of all those subclasses, or the
-     *  presence of constructors that would be invalid for certain dimensions.
-     *
-     *  And while it is slightly more verbose, having a named constructor also explicitly states
-     *  that the arguments are (x,y,z) rather than (z,y,x).
-     */
-    //@{
-    static Point make(T x, T y, T z) { return Point(typename Super::EigenVector(x, y, z)); }
-    static Point make(T const xyz[3]) { return Point(typename Super::EigenVector(xyz[0], xyz[1], xyz[2])); }
-    static Point make(boost::tuple<T,T,T> const & xyz) {
-        return Point(typename Super::EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>()));
-    }
-    //@}
-
 };
 
 typedef Point<int,2> PointI;
@@ -267,11 +272,6 @@ typedef Point<int,3> Point3I;
 typedef Point<double,2> PointD;
 typedef Point<double,2> Point2D;
 typedef Point<double,3> Point3D;
-
-inline Point2I makePointI(int x, int y) { return Point2I(x,y); }
-inline Point3I makePointI(int x, int y, int z) { return Point3I(x,y,z); }
-inline Point2D makePointD(double x, double y) { return Point2D(x,y); }
-inline Point3D makePointD(double x, double y, double z) { return Point3D(x,y,z); }
 
 }}}
 

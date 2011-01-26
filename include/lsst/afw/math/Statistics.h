@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #if !defined(LSST_AFW_MATH_STATISTICS_H)
 #define LSST_AFW_MATH_STATISTICS_H
 /**
@@ -18,6 +41,7 @@
 #include <limits>
 #include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/MaskedVector.h"
@@ -48,8 +72,10 @@ enum Property {
     MIN = 0x400,           ///< estimate sample minimum
     MAX = 0x800,           ///< estimate sample maximum
     SUM = 0x1000,          ///< find sum of pixels in the image
-    MEANSQUARE = 0x2000    ///< find mean value of square of pixel values
+    MEANSQUARE = 0x2000,   ///< find mean value of square of pixel values
+    ORMASK = 0x4000        ///< get the or-mask of all pixels used.
 };
+Property stringToStatisticsProperty(std::string const property);
 
     
 /**
@@ -61,15 +87,21 @@ enum Property {
  */
 class StatisticsControl {
 public:
-    StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
-                      int numIter = 3,           ///< Number of iterations
-                      image::MaskPixel andMask = ~0x0, ///< and-Mask to specify planes to use
-                      bool isNanSafe = true,     ///< flag NaNs
-                      bool isWeighted = false    ///< use inverse Variance plane for weights
+
+    typedef boost::shared_ptr<StatisticsControl> Ptr;
+    typedef boost::shared_ptr<StatisticsControl> const ConstPtr;
+    
+    StatisticsControl(
+        double numSigmaClip = 3.0, ///< number of standard deviations to clip at
+        int numIter = 3,           ///< Number of iterations
+        image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
+        bool isNanSafe = true,     ///< flag NaNs
+        bool isWeighted = false    ///< use inverse Variance plane for weights
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
+        _noGoodPixelsMask(lsst::afw::image::Mask<>::getPlaneBitMask("BAD")),
         _isNanSafe(isNanSafe),
         _isWeighted(isWeighted),
         _isMultiplyingWeights(false) {
@@ -80,7 +112,8 @@ public:
 
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
-    image::MaskPixel getAndMask() const { return _andMask; }
+    int getAndMask() const { return _andMask; }
+    int getNoGoodPixelsMask() const { return _noGoodPixelsMask; }
     bool getNanSafe() const { return _isNanSafe; }
     bool getWeighted() const { return _isWeighted; }
     bool getMultiplyWeights() const { return _isMultiplyingWeights; }
@@ -88,7 +121,8 @@ public:
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
-    void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
+    void setAndMask(int andMask) { _andMask = andMask; }
+    void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
     void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
     void setMultiplyWeights(bool isMultiplyingWeights) { _isMultiplyingWeights = isMultiplyingWeights; }
@@ -97,7 +131,8 @@ public:
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
-    image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
+    int _andMask;               // and-Mask to specify which mask planes to ignore
+    int _noGoodPixelsMask;      // mask to set if no values are acceptable
     bool _isNanSafe;                      // Check for NaNs before running (slower)
     bool _isWeighted;                     // Use inverse variance to weight statistics.
     bool _isMultiplyingWeights;           // Treat variance plane as weights and multiply instead of dividing
@@ -160,13 +195,17 @@ public:
     
     double getError(Property const prop = NOTHING) const;
     double getValue(Property const prop = NOTHING) const;
+    image::MaskPixel getOrMask() const {
+        return _allPixelOrMask;
+    }
     
 private:
 
     // return type for _getStandard
-    typedef boost::tuple<double, double, double, double, double> StandardReturn; 
-    typedef boost::tuple<int, double, double, double, double, double> SumReturn; 
-
+    typedef boost::tuple<double, double, double, double, double, image::MaskPixel> StandardReturn; 
+    typedef boost::tuple<int, double, double, double, double, double, image::MaskPixel> SumReturn; 
+    typedef boost::tuple<double, double, double> MedianQuartileReturn;
+    
     long _flags;                        // The desired calculation
 
     int _n;                             // number of pixels in the image
@@ -179,6 +218,7 @@ private:
     double _varianceclip;               // the image's N-sigma clipped variance
     double _median;                     // the image's median
     double _iqrange;                    // the image's interquartile range
+    image::MaskPixel _allPixelOrMask;   //  the 'or' of all masked pixels
 
     StatisticsControl _sctrl;           // the control structure
 
@@ -206,6 +246,9 @@ private:
 
     template<typename Pixel>
     double _percentile(std::vector<Pixel> &img, double const percentile);   
+
+    template<typename Pixel>
+    MedianQuartileReturn _medianAndQuartiles(std::vector<Pixel> &img);
     
     inline double _varianceError(double const variance, int const n) const {
         return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian

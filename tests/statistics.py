@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Tests for Statistics
 
@@ -284,11 +307,14 @@ class StatisticsTestCase(unittest.TestCase):
         when all pixels in a stack are masked.  Returning a NaN pixel in the stack is preferred
         """
 
+        ctrl = afwMath.StatisticsControl()
+        ctrl.setAndMask(~0x0)
+        
         mimg = afwImage.MaskedImageF(10, 10)
         mimg.set([self.val, 0x1, self.val])
 
         # test the case with no valid pixels ... both mean and stdev should be nan
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertNotEqual(mean, mean)   # NaN does not equal itself
@@ -296,7 +322,7 @@ class StatisticsTestCase(unittest.TestCase):
         
         # test the case with one valid pixel ... mean is ok, but stdev should still be nan
         mimg.getMask().set(1, 1, 0x0)
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertEqual(mean, self.val)
@@ -304,7 +330,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         # test the case with two valid pixels ... both mean and stdev are ok
         mimg.getMask().set(1, 2, 0x0)
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertEqual(mean, self.val)
@@ -316,14 +342,48 @@ class StatisticsTestCase(unittest.TestCase):
         mimg = afwImage.MaskedImageF(10, 10)
         mimg.set([self.val, 0x1, self.val])
 
+        ctrl = afwMath.StatisticsControl()
+        ctrl.setAndMask(~0x0)
+        
         # test the case with no valid pixels ... try MEANCLIP and STDEVCLIP
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEANCLIP | afwMath.STDEVCLIP)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEANCLIP | afwMath.STDEVCLIP, ctrl)
         mean  = stat.getValue(afwMath.MEANCLIP)
         stdev = stat.getValue(afwMath.STDEVCLIP)
         self.assertNotEqual(mean, mean)   # NaN does not equal itself
         self.assertNotEqual(stdev, stdev) # NaN does not equal itself
 
 
+
+    def testWeightedSum(self):
+        ctrl = afwMath.StatisticsControl()
+        mi = afwImage.MaskedImageF(10,10)
+        mi.getImage().set(1.0)
+        mi.getVariance().set(0.1)
+        
+        stats = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
+        self.assertEqual(stats.getValue(afwMath.SUM), 100.0)
+        
+        ctrl.setWeighted(True)
+        weighted = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
+        # precision at "4 places" as images are floats
+        # ... variance = 0.1 is stored as 0.100000001
+        self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
+
+        
+    def testMeanClip(self):
+        """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
+        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
+        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+
+        # this bug was caused by the iterative nature of the MEANCLIP.
+        # With only one point, the sample variance returns NaN to avoid a divide by zero error
+        # Thus, on the second iteration, the clip width (based on _variance) is NaN and corrupts
+        #   all further calculations.
+        img = afwImage.ImageF(1, 1)
+        img.set(0)
+        stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
+        self.assertEqual(stats.getValue(), 0)
+        
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

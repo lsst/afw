@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_FUNCTION_H
 #define LSST_AFW_MATH_FUNCTION_H
 /**
@@ -46,14 +69,14 @@ using boost::serialization::make_nvp;
      * - Have one or more constructors, all of which must initialize _params
      * - Define operator() with code to compute the function
      *   using this->_params or this->getParams() to reference the parameters
+     * - If the function is a linear combination of parameters then override the function isLinearCombination.
      *
      * Design Notes:
      * The reason these functions exist (rather than using a pre-existing function class,
      * such as Functor in VisualWorkbench) is because the Kernel class requires function
      * objects with a standard interface for setting and getting function parameters.
      *
-     * To do:
-     * - Implement separable functions
+     * The reason isLinearCombination exists is to support refactoring LinearCombinationKernels.
      *
      * @ingroup afw
      */
@@ -113,6 +136,15 @@ using boost::serialization::make_nvp;
         std::vector<double> const &getParameters() const {
             return _params;
         }
+
+        /**
+         * @brief Is the function a linear combination of its parameters?
+         *
+         * @return true if the function can be expressed as: sum over i of parameter_i * function_i(args)
+         *
+         * @warning: subclasses must override if true.
+         */
+        virtual bool isLinearCombination() const { return false; };
         
         /**
          * @brief Set one function parameter without range checking
@@ -216,10 +248,12 @@ using boost::serialization::make_nvp;
         virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x) const = 0;
-
+        
         virtual std::string toString(std::string const& prefix="") const {
             return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
         }
+
+        virtual void computeCache(int const n) {}
 
     private:
         friend class boost::serialization::access;
@@ -231,7 +265,6 @@ using boost::serialization::make_nvp;
                     static_cast< Function<ReturnT>* >(0));
         }
     };    
-
     
     /**
      * @brief A Function taking two arguments.

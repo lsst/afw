@@ -27,7 +27,7 @@ The constructor's first argument is the %image's
 bounding box --- it'd be nice to simply pass the %image, wouldn't it, but that's not currently supported.  The
 second and third arguments <TT>260, 200</TT> define the size (in pixels) of the SpatialCell%s.
 
-If you run the python version of this example, \link SpatialCellExample.py\endlink, with <TT>%display =
+If you run the python version of this example, \link spatialCellExample.py\endlink, with <TT>%display =
 True</TT> the 6 cells will be shown in green (why 6?  Because the %image is 512x512 and you can fit 260x200 into 512x512 6 times.)
 
 \until 260

@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
@@ -409,7 +432,7 @@ SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for 
         int x0 = region.getX0();
         for (int x = 0; x < nx; ++x) {
             int const x1 = (x == nx - 1) ? region.getX1() : x0 + xSize - 1; // nx may not be a factor of width
-            image::BBox bbox(image::PointI(x0, y0), image::PointI(x1, y1));
+            image::BBox bbox(image::Point2I(x0, y0), image::Point2I(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
             _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));        
@@ -428,7 +451,7 @@ namespace {
         CellContains(SpatialCellCandidate::Ptr candidate) : _candidate(candidate) {}
 
         bool operator()(SpatialCell::Ptr cell) {
-            return cell->getBBox().contains(image::PointI(image::positionToIndex(_candidate->getXCenter()),
+            return cell->getBBox().contains(image::Point2I(image::positionToIndex(_candidate->getXCenter()),
                                                           image::positionToIndex(_candidate->getYCenter())));
         }
     private:

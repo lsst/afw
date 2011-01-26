@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  *  \file
  *  \brief Conversions between afw::image:: and afw::geom:: Point objects.
@@ -44,8 +67,8 @@ namespace lsst { namespace afw { namespace geom {
       <td>The second template parameter of geom::Point defaults to 2.</td>
     </tr>
     <tr>
-      <td rowspan=2>@code image::PointD @endcode</td>
-      <td>@code geom::PointD @endcode</td> 
+      <td rowspan=2>@code image::Point2D @endcode</td>
+      <td>@code geom::Point2D @endcode</td> 
       <td>&nbsp;</td>
     </tr>
     <tr>
@@ -120,7 +143,7 @@ namespace lsst { namespace afw { namespace geom {
       <th rowspan=3>Construction</th> 
       <td>
 @code
-image::BBox::BBox(image::PointI llc, 
+image::BBox::BBox(image::Point2I llc, 
                   int width, 
                   int height)
 @endcode
@@ -128,7 +151,7 @@ image::BBox::BBox(image::PointI llc,
       <td>
 @code
 geom::BoxI::BoxI(geom::Point2I min, 
-                 geom::ExtentI dimensions, 
+                 geom::Extent2I dimensions, 
                  bool invert=true)
 @endcode
       </td> 
@@ -143,14 +166,14 @@ geom::BoxI::BoxI(geom::Point2I min,
     <tr>
       <td>
 @code
-image::BBox::BBox(image::PointI llc, 
-                  image::PointI urc)
+image::BBox::BBox(image::Point2I llc, 
+                  image::Point2I urc)
 @endcode
      </td>
       <td>
 @code
-geom::BoxI::BoxI(geom::PointI min, 
-                 geom::PointI max, 
+geom::BoxI::BoxI(geom::Point2I min, 
+                 geom::Point2I max, 
                  bool invert=true)
 @endcode
     </td> 
@@ -207,7 +230,7 @@ geom::BoxI::BoxI(geom::PointI min,
     <tr>
       <td>@code image::BBox::getDimensions() @endcode</td>
       <td>@code geom::BoxI::getDimensions() @endcode</td> 
-      <td>geom::BoxI returns geom::ExtentI, while image::BBox return std::pair<int,int></td>
+      <td>geom::BoxI returns geom::Extent2I, while image::BBox return std::pair<int,int></td>
     </tr>
     <tr>
       <th rowspan=3>Comparison</th> 
@@ -229,15 +252,15 @@ geom::BoxI::BoxI(geom::PointI min,
     </tr>
     <tr>
       <th rowspan=4>Spatial Relations</th> 
-      <td>@code image::BBox::contains(image::PointI) @endcode</td>
+      <td>@code image::BBox::contains(image::Point2I) @endcode</td>
       <td>@code geom::BoxI::contains(geom::Point2I) @endcode</td>
       <td>
         Containment of points is identical (aside from the data type switch 
-        from image::PointI to geom::Point2I).
+        from image::Point2I to geom::Point2I).
       </td>
     </tr>
     <tr>
-      <td>@code image::BBox::grow(image::PointI) @endcode</td>
+      <td>@code image::BBox::grow(image::Point2I) @endcode</td>
       <td>@code geom::BoxI::include(geom::Point2I) @endcode</td>
       <td>
         These expand the box to include the given point.  Behavior is identical,
@@ -249,7 +272,7 @@ geom::BoxI::BoxI(geom::PointI min,
     </tr>
     <tr>
       <td>@code image::BBox::shift(int x, int y) @endcode</td>
-      <td>@code geom::BoxI::shift(geom::ExtentI) @endcode</td>
+      <td>@code geom::BoxI::shift(geom::Extent2I) @endcode</td>
       <td>
         Translation is identical for non-empty boxes aside from the signature.  Shifting
         an image::BBox moves the box, while shifting a geom::BoxI is a no-op.

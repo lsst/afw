@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
@@ -32,15 +55,16 @@ class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
-        im = afwImage.DecoratedImageD(InputSmallImagePath)
+        self.im = afwImage.DecoratedImageD(InputSmallImagePath)
 
-        self.wcs = afwImage.makeWcs(im.getMetadata())
+        self.wcs = afwImage.makeWcs(self.im.getMetadata())
 
         if False:
             ds9.mtv(im, wcs=self.wcs)
 
     def tearDown(self):
         del self.wcs
+        del self.im
 
     def testValidWcs(self):
         """Test operator bool() (== isValid)"""
@@ -63,9 +87,19 @@ class WCSTestCaseSDSS(unittest.TestCase):
         
         self.assertRaises(exceptions.LsstCppException, afwImage.makeWcs, metadata)
 
+    def testCrpix(self):
+        metadata = self.im.getMetadata()
+        crpix0 = metadata.getAsDouble("CRPIX1")
+        crpix1 = metadata.getAsDouble("CRPIX2")
+        
+        lsstCrpix = self.wcs.getPixelOrigin()
+        
+        self.assertEqual(lsstCrpix[0], crpix0-1)
+        self.assertEqual(lsstCrpix[1], crpix1-1)
+        
     def testXyToRaDecArguments(self):
         """Check that conversion of xy to ra dec (and back again) works"""
-        xy = afwGeom.makePointD(110, 123)
+        xy = afwGeom.PointD(110, 123)
         raDec = self.wcs.pixelToSky(xy)
         xy2 = self.wcs.skyToPixel(raDec)
 
@@ -82,14 +116,13 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
+        # values from wcstools xy2sky (v3.8.1). Confirmed by ds9
+        raDec0 = afwGeom.PointD(245.15984167, +19.1960472) 
         raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
-        raDec0 = afwGeom.makePointD(245.1598413385, 19.1960467992) # values from wcstools' xy2sky
+        
 
-        print "A riotous assembly"
-        print raDec
-        print raDec0
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
-        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) # dec from ds9
+        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) 
 
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
@@ -110,7 +143,24 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertRaises(lsst.pex.exceptions.exceptionsLib.LsstCppException, self.wcs.skyToPixel, raDec)
 
     def testCD(self):
-        print self.wcs.getCDMatrix()
+        self.wcs.getCDMatrix()
+
+    def testStripKeywords(self):
+        """Test that we can strip WCS keywords from metadata when constructing a Wcs"""
+        metadata = self.im.getMetadata()
+        self.wcs = afwImage.makeWcs(metadata)
+
+        self.assertTrue(metadata.exists("CRPIX1"))
+
+        strip = True
+        self.wcs = afwImage.makeWcs(metadata, strip)
+        self.assertFalse(metadata.exists("CRPIX1"))
+
+    def testAffineTransform(self):
+        a = self.wcs.getLinearTransform()
+        l = self.wcs.getCDMatrix()
+        #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
+        print a, l
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -138,8 +188,8 @@ class WCSTestCaseCFHT(unittest.TestCase):
     def testPlateScale(self):
         """Test that we can measure the area of a pixel"""
 
-        p00 = afwGeom.makePointD(10, 10)
-        p00 = afwGeom.makePointD(self.metadata.getAsDouble("CRPIX1"), self.metadata.getAsDouble("CRPIX2"))
+        p00 = afwGeom.PointD(10, 10)
+        p00 = afwGeom.PointD(self.metadata.getAsDouble("CRPIX1"), self.metadata.getAsDouble("CRPIX2"))
 
         sky00 = self.wcs.pixelToSky(p00).getPosition()
         cosdec = math.cos(math.pi/180*sky00[1])
@@ -147,8 +197,8 @@ class WCSTestCaseCFHT(unittest.TestCase):
         side = 1e-3
         icrs = afwCoord.ICRS
         degrees = afwCoord.DEGREES
-        sky10 = afwCoord.makeCoord(icrs, sky00 + afwGeom.makeExtentD(side/cosdec, 0), degrees)
-        sky01 = afwCoord.makeCoord(icrs, sky00 + afwGeom.makeExtentD(0,side),         degrees)
+        sky10 = afwCoord.makeCoord(icrs, sky00 + afwGeom.ExtentD(side/cosdec, 0), degrees)
+        sky01 = afwCoord.makeCoord(icrs, sky00 + afwGeom.ExtentD(0,side),         degrees)
         p10 = self.wcs.skyToPixel(sky10) - p00
         p01 = self.wcs.skyToPixel(sky01) - p00
 
@@ -176,20 +226,20 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
     def testShiftWcs(self):
         """Test shifting the reference pixel"""
-        sky10_10 = self.wcs.pixelToSky(afwGeom.makePointD(10, 10))
+        sky10_10 = self.wcs.pixelToSky(afwGeom.PointD(10, 10))
 
         self.wcs.shiftReferencePixel(-10, -10)
-        sky00 = self.wcs.pixelToSky(afwGeom.makePointD(0, 0))
+        sky00 = self.wcs.pixelToSky(afwGeom.PointD(0, 0))
         self.assertEqual((sky00[0], sky00[1]), (sky10_10[0], sky10_10[1]))
 
     def testCloneWcs(self):
         """Test Cloning a Wcs"""
-        sky00 = self.wcs.pixelToSky(afwGeom.makePointD(0, 0)).getPosition()
+        sky00 = self.wcs.pixelToSky(afwGeom.PointD(0, 0)).getPosition()
 
         new = self.wcs.clone()
-        self.wcs.pixelToSky(afwGeom.makePointD(10, 10)) # shouldn't affect new
+        self.wcs.pixelToSky(afwGeom.PointD(10, 10)) # shouldn't affect new
 
-        nsky00 = new.pixelToSky(afwGeom.makePointD(0, 0)).getPosition()
+        nsky00 = new.pixelToSky(afwGeom.PointD(0, 0)).getPosition()
         self.assertEqual((sky00[0], sky00[1]), (nsky00[0], nsky00[1]))
 
     def testCD(self):
@@ -208,11 +258,12 @@ class WCSTestCaseCFHT(unittest.TestCase):
         l = self.wcs.getCDMatrix()
         #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 
-        sky00g = afwGeom.makePointD(10, 10)
-        sky00i = afwGeom.makePointD(sky00g.getX(), sky00g.getY())
-        a = self.wcs.linearizeAt(sky00i)
-        pix00i = self.wcs.skyToPixel(afwCoord.makeCoord(afwCoord.ICRS, sky00i, afwCoord.DEGREES))
-        pix00g = afwGeom.makePointD(pix00i.getX(), pix00i.getY())
+        sky00g = afwGeom.PointD(10, 10)
+        sky00i = afwGeom.PointD(sky00g.getX(), sky00g.getY())
+        sky00c = afwCoord.makeCoord(afwCoord.ICRS, sky00i, afwCoord.DEGREES)
+        a = self.wcs.linearizeSkyToPixel(sky00c)
+        pix00i = self.wcs.skyToPixel(sky00c)
+        pix00g = afwGeom.PointD(pix00i.getX(), pix00i.getY())
         sky00gApprox = a(pix00g);
         self.assertAlmostEqual(sky00g.getX(), sky00gApprox.getX())
         self.assertAlmostEqual(sky00g.getY(), sky00gApprox.getY())
@@ -227,7 +278,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(WCSTestCaseSDSS)
-    #suites += unittest.makeSuite(WCSTestCaseCFHT)
+#    suites += unittest.makeSuite(WCSTestCaseCFHT)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)

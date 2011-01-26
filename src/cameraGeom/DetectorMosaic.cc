@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  */
@@ -113,7 +135,7 @@ void cameraGeom::DetectorMosaic::addDetector(
     // we didn't know the detector size
     //
     if (_detectors.size() == 0) {
-        setCenterPixel(afwGeom::makePointI(0.5*_nDetector.first*det->getAllPixels(isTrimmed).getWidth(),
+        setCenterPixel(afwGeom::Point2I(0.5*_nDetector.first*det->getAllPixels(isTrimmed).getWidth(),
                                                0.5*_nDetector.second*det->getAllPixels(isTrimmed).getHeight())
                       );
     }
@@ -127,7 +149,7 @@ void cameraGeom::DetectorMosaic::addDetector(
     getAllPixels().grow(detPixels.getURC());
     
     afwGeom::Point2I centerPixel =
-        afwGeom::makePointI(iX*detPixels.getWidth() + detPixels.getWidth()/2,
+        afwGeom::Point2I(iX*detPixels.getWidth() + detPixels.getWidth()/2,
                                  iY*detPixels.getHeight() + detPixels.getHeight()/2) -
         afwGeom::Extent2I(getCenterPixel());
     det->setCenter(center);
@@ -153,10 +175,10 @@ namespace {
 
     struct findByPixel {
         findByPixel(afwGeom::Point2I point) :
-            _point(afwImage::PointI(point[0], point[1])) {}
+            _point(afwImage::Point2I(point[0], point[1])) {}
         
         bool operator()(cameraGeom::Detector::Ptr det) const {
-            afwImage::PointI relPoint = _point;
+            afwImage::Point2I relPoint = _point;
             // Position wrt center of detector
             relPoint.shift(-det->getCenterPixel()[0],
                            -det->getCenterPixel()[1]);
@@ -167,7 +189,7 @@ namespace {
             return det->getAllPixels().contains(relPoint);
         }
     private:
-        afwImage::PointI _point;
+        afwImage::Point2I _point;
     };
 
     struct findByPos {
@@ -227,7 +249,7 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
         bool const fromCenter            ///< pixel is measured wrt the detector center, not LL corner
                                                                         ) const {
     if (!fromCenter) {
-        return findDetector(pixel - afwGeom::makeExtentI(getAllPixels().getWidth()/2,
+        return findDetector(pixel - afwGeom::Extent2I(getAllPixels().getWidth()/2,
                                                               getAllPixels().getHeight()/2), true);
     }
 

@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H
 #define LSST_AFW_MATH_FUNCTIONLIBRARY_H
 /**
@@ -432,6 +455,8 @@ using boost::serialization::make_nvp;
         virtual Function1Ptr clone() const {
             return Function1Ptr(new PolynomialFunction1(this->_params));
         }
+
+        virtual bool isLinearCombination() const { return true; };
         
         virtual ReturnT operator() (double x) const {
             int maxInd = static_cast<int>(this->_params.size()) - 1;
@@ -490,7 +515,8 @@ using boost::serialization::make_nvp;
             unsigned int order) ///< order of polynomial (0 for constant)
         :
             Function2<ReturnT>((order + 1) * (order + 2) / 2),
-            _order(order)
+            _order(order),
+            _yCoeffs(_order + 1)
         {}
 
         /**
@@ -510,7 +536,8 @@ using boost::serialization::make_nvp;
             Function2<ReturnT>(params),
             _order(static_cast<unsigned int>(
                 0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(params.size()))))) / 2.0)
-            ))
+            )),
+            _yCoeffs(_order + 1)
         {
             unsigned int nParams = params.size();
             if (nParams < 1) {
@@ -528,6 +555,8 @@ using boost::serialization::make_nvp;
         virtual Function2Ptr clone() const {
             return Function2Ptr(new PolynomialFunction2(this->_params));
         }
+
+        virtual bool isLinearCombination() const { return true; };
         
         virtual ReturnT operator() (double x, double y) const {
             /* Solve as follows:
@@ -541,16 +570,16 @@ using boost::serialization::make_nvp;
             Then compute the return value: a 1-d polynomial in y solved in the usual way.
             */
             const int maxYCoeffInd = this->_order;
-            std::vector<double> yCoeffs(maxYCoeffInd + 1);
+//            std::vector<double> yCoeffs(maxYCoeffInd + 1);
             int paramInd = static_cast<int>(this->_params.size()) - 1;
             // initialize the y coefficients
             for (int yCoeffInd = maxYCoeffInd; yCoeffInd >= 0; --yCoeffInd, --paramInd) {
-                yCoeffs[yCoeffInd] = this->_params[paramInd];
+                _yCoeffs[yCoeffInd] = this->_params[paramInd];
             }
             // finish computing the y coefficients
             for (int startYCoeffInd = maxYCoeffInd - 1, yCoeffInd = startYCoeffInd;
                 paramInd >= 0; --paramInd) {
-                yCoeffs[yCoeffInd] = (yCoeffs[yCoeffInd] * x) + this->_params[paramInd];
+                _yCoeffs[yCoeffInd] = (_yCoeffs[yCoeffInd] * x) + this->_params[paramInd];
                 if (yCoeffInd == 0) {
                     --startYCoeffInd;
                     yCoeffInd = startYCoeffInd;
@@ -559,9 +588,9 @@ using boost::serialization::make_nvp;
                 }
             }
             // compute y polynomial
-            double retVal = yCoeffs[maxYCoeffInd];
+            double retVal = _yCoeffs[maxYCoeffInd];
             for (int yCoeffInd = maxYCoeffInd - 1; yCoeffInd >= 0; --yCoeffInd) {
-                retVal = (retVal * y) + yCoeffs[yCoeffInd];
+                retVal = (retVal * y) + _yCoeffs[yCoeffInd];
             }
             return static_cast<ReturnT>(retVal);
         }
@@ -577,6 +606,7 @@ using boost::serialization::make_nvp;
 
     private:
         unsigned int _order; ///< order of polynomial
+        mutable std::vector<double> _yCoeffs; ///< working vector
 
     private:
         friend class boost::serialization::access;
@@ -651,6 +681,8 @@ using boost::serialization::make_nvp;
         virtual Function1Ptr clone() const {
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
+
+        virtual bool isLinearCombination() const { return true; };
         
         virtual ReturnT operator() (double x) const {
             double xPrime = (x + _offset) * _scale;
@@ -745,7 +777,8 @@ using boost::serialization::make_nvp;
             double xOffset = 0.0)    ///< x offset
         :
             Function1<ReturnT>(1),
-            _invN(1.0 / static_cast<double>(n))
+            _n(n),
+            _invN(1.0/static_cast<double>(n))
         {
             this->_params[0] = xOffset;
         }
@@ -753,8 +786,7 @@ using boost::serialization::make_nvp;
         virtual ~LanczosFunction1() {}
        
         virtual Function1Ptr clone() const {
-            unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
-            return Function1Ptr(new LanczosFunction1(n, this->_params[0]));
+            return Function1Ptr(new LanczosFunction1(_n, this->_params[0]));
         }
         
         virtual ReturnT operator() (double x) const {
@@ -775,7 +807,8 @@ using boost::serialization::make_nvp;
         }
 
     private:
-        double _invN;   ///< 1/n
+        int _n;
+        double _invN;                   // == 1/n
 
     private:
         friend class boost::serialization::access;

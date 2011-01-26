@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 //
 //##====----------------                                ----------------====##/
 //
@@ -18,6 +41,7 @@
 #include "lsst/afw/formatters/DiaSourceFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/detection/DiaSource.h"
+#include "lsst/utils/ieee.h"
 
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
@@ -63,12 +87,17 @@ inline static int64_t generateDiaSourceId(unsigned short seqNum, int64_t ampExpo
 
 template <typename T, typename F>
 inline static void insertFp(T & db, F const & val, char const * const col, bool isNull=false) {
-    if (isNull || isnan(val)) {
+    if (isNull || lsst::utils::isnan(val)) {
         db.setColumnToNull(col);
+    } else if (lsst::utils::isinf(val)) {
+        F replacement = (val > 0.0) ? std::numeric_limits<F>::max() :
+                                     -std::numeric_limits<F>::max();
+        db.template setColumn<F>(col, replacement);
     } else {
         db.template setColumn<F>(col, val);
     }
 }
+
 
 /*!
     Inserts a single DiaSource into a database table using \a db

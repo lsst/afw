@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #include <typeinfo>
 
 #include "lsst/daf/base.h"
@@ -63,13 +86,13 @@ int test(int argc, char**argv) {
 
     // test of subImage
 
-    image::BBox region(image::PointI(100, 600), 200, 300);
+    image::BBox region(image::Point2I(100, 600), 200, 300);
     MaskedImage subMaskedImage1 = MaskedImage(*testMaskedImage1, region);
     subMaskedImage1 *= 0.5;
     subMaskedImage1.writeFits(argv[4]);
 
     // Check whether offsets have been correctly saved
-    image::BBox region2(image::PointI(80, 110), 20, 30);
+    image::BBox region2(image::Point2I(80, 110), 20, 30);
     MaskedImage subMaskedImage2 = MaskedImage(subMaskedImage1, region2);
 
     cout << "Offsets: " << subMaskedImage2.getX0() << " " << subMaskedImage2.getY0() << endl;

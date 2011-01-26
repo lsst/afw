@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_MATH_LOCAL_KERNEL_H
 #define LSST_AFW_MATH_LOCAL_KERNEL_H
 
@@ -122,7 +144,14 @@ public:
         }
         validateDerivatives(); 
     }
-        
+    
+    explicit ImageLocalKernel(ImageLocalKernel const & other) 
+      : _center(other.getCenter()),
+        _parameters(other.getParameters()),
+        _image(other.getImage()),
+        _derivatives(other.getDerivatives())
+    { }
+
     virtual ~ImageLocalKernel() { }
 
     virtual int getNParameters() const {return _parameters.size();}
@@ -272,12 +301,13 @@ public:
         std::vector<double> const & parameters, 
         Image::Ptr const & image, 
         ImagePtrList const & derivatives = ImagePtrList()
-    ) : _imageKernel(center, parameters, image, derivatives) 
+    ) : _imageKernel(center, parameters, image, derivatives),
+        _fourierStack(new FourierCutoutStack())
     {}
     
     explicit FftLocalKernel(
         ImageLocalKernel const & imageKernel
-    ) : _imageKernel(imageKernel) 
+    ) : _imageKernel(imageKernel), _fourierStack(new FourierCutoutStack()) 
     {}
 
     /**
@@ -313,14 +343,11 @@ public:
 
 protected:
     ImageLocalKernel _imageKernel;
-    FourierCutoutStack _fourierStack;  
+    FourierCutoutStack::Ptr _fourierStack;  
 
 private:
-    void copyImage(Pixel * dest, Image::Ptr image, int const & destWidth);
-    void fillImageStack(
-        Pixel * imageStack, 
-        int const & imageSize, int const & imageWidth
-    );    
+    void copyImage(Image::Ptr const & , Pixel * , int const & , int const & );
+    void fillImageStack(Pixel *, int const &, int const &, int const &);    
 };
 
 #if 0

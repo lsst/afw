@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /*****************************************************************************/
 /** \file
  *
@@ -14,6 +36,8 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/geom/Point.h"
+#include "lsst/utils/ieee.h"
 
 namespace afwMath = lsst::afw::math;
 namespace afwDetect = lsst::afw::detection;
@@ -21,7 +45,7 @@ namespace afwImage = lsst::afw::image;
 
 /******************************************************************************/
 /**
- * \Factory method for creating Threshold objects
+ * \brief Factory method for creating Threshold objects
  *
  * \return desired Threshold
  */
@@ -93,9 +117,7 @@ afwDetect::Footprint::Footprint(int nspan,         //!< initial number of Span%s
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new afwDetect::Footprint::SpanList),
       _bbox(afwImage::BBox()),
-      _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
     if (nspan < 0) {
@@ -108,14 +130,12 @@ afwDetect::Footprint::Footprint(int nspan,         //!< initial number of Span%s
 /**
  * Create a rectangular Footprint
  */
-afwDetect::Footprint::Footprint(afwImage::BBox const &bbox, //!< The bounding box defining the rectangle
+afwDetect::Footprint::Footprint(afwImage::BBox const& bbox, //!< The bounding box defining the rectangle
                                 afwImage::BBox const region) //!< Bounding box of MaskedImage footprint
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new afwDetect::Footprint::SpanList),
       _bbox(afwImage::BBox()),
-      _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
     int const x0 = bbox.getX0();
@@ -136,9 +156,7 @@ afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new afwDetect::Footprint::SpanList),
       _bbox(afwImage::BBox()),
-      _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
     int const xc = circle.getCenter().getX(); // x-centre
@@ -156,8 +174,25 @@ afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center
  * Destroy a Footprint
  */
 afwDetect::Footprint::~Footprint() {
-    delete &_spans;
-    delete &_peaks;
+}
+
+/**
+ * Does this Footprint contain this pixel?
+ */
+bool afwDetect::Footprint::contains(lsst::afw::geom::Point2I const& pix ///< Pixel to check
+                        ) const
+{
+    if (_bbox.contains(afwImage::Point2I(pix[0], pix[1]))) {
+        for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
+            afwDetect::Span::ConstPtr span = *siter;
+            
+            if (span->_y == pix[1] && pix[0] >= span->_x0 && pix[0] <= span->_x1) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -176,21 +211,26 @@ void afwDetect::Footprint::normalize() {
         afwDetect::Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
         
         afwDetect::Span *lspan = ptr->get();  // Left span
-        int y = (*ptr)->_y;
-        int x1 = (*ptr)->_x1;
+        int y = lspan->_y;
+        int x1 = lspan->_x1;
         ++ptr;
 
-        for (; ptr < end; ++ptr) {
+        for (; ptr != end; ++ptr) {
             afwDetect::Span *rspan = ptr->get(); // Right span
             if (rspan->_y == y) {
                 if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
                     if (rspan->_x1 > x1) {  // right span extends left span
-                        lspan->_x1 = rspan->_x1;
+                        x1 = lspan->_x1 = rspan->_x1;
+                    }
+
+                    ptr = _spans.erase(ptr);
+                    end = _spans.end();   // delete the right span
+                    if (ptr == end) {
+                        break;
                     }
                     
-                    ptr = _spans.erase(ptr);
-                    --end; // delete the right span
-                    x1 = lspan->_x1;
+                    --ptr;
+                    continue;
                 }
             }
 
@@ -201,6 +241,7 @@ void afwDetect::Footprint::normalize() {
         }
 
         //_peaks = psArraySort(fp->peaks, pmPeakSortBySN);
+        setNpix();
         setBBox();
         _normalized = true;
     }
@@ -221,9 +262,10 @@ afwDetect::Span const& afwDetect::Footprint::addSpan(int const y, //!< row value
     _spans.push_back(sp);
 
     _npix += x1 - x0 + 1;
+    _normalized = false;
 
-    _bbox.grow(afwImage::PointI(x0, y));
-    _bbox.grow(afwImage::PointI(x1, y));
+    _bbox.grow(afwImage::Point2I(x0, y));
+    _bbox.grow(afwImage::Point2I(x1, y));
 
     return *sp.get();
 }
@@ -237,9 +279,10 @@ const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span
     _spans.push_back(sp);
 
     _npix += span._x1 - span._x0 + 1;
+    _normalized = false;
 
-    _bbox.grow(afwImage::PointI(span._x0, span._y));
-    _bbox.grow(afwImage::PointI(span._x1, span._y));
+    _bbox.grow(afwImage::Point2I(span._x0, span._y));
+    _bbox.grow(afwImage::Point2I(span._x1, span._y));
 
     return *sp;
 }
@@ -294,7 +337,7 @@ void afwDetect::Footprint::setBBox() {
         if (span->_y > y1) y1 = span->_y;
     }
 
-    _bbox = afwImage::BBox(afwImage::PointI(x0, y0), afwImage::PointI(x1, y1));
+    _bbox = afwImage::BBox(afwImage::Point2I(x0, y0), afwImage::Point2I(x1, y1));
 }
 
 /**
@@ -511,7 +554,7 @@ static void set_footprint_id(typename afwImage::Image<IDPixelT>::Ptr idImage,   
 template <typename IDPixelT>
 static void
 set_footprint_array_ids(typename afwImage::Image<IDPixelT>::Ptr idImage, // the image to set
-                        std::vector<afwDetect::Footprint::Ptr> const &footprints, // the footprints to insert
+                        std::vector<afwDetect::Footprint::Ptr> const& footprints, // the footprints to insert
                         bool const relativeIDs) { // show IDs starting at 0, not Footprint->id
     int id = 0;                         // first index will be 1
 
@@ -530,7 +573,7 @@ set_footprint_array_ids(typename afwImage::Image<IDPixelT>::Ptr idImage, // the 
 }
 
 template void set_footprint_array_ids<int>(afwImage::Image<int>::Ptr idImage,
-                                           std::vector<afwDetect::Footprint::Ptr> const &footprints,
+                                           std::vector<afwDetect::Footprint::Ptr> const& footprints,
                                            bool const relativeIDs);
 
 /************************************************************************************************************/
@@ -608,16 +651,21 @@ afwDetect::Footprint::Ptr growFootprintSlow(
     if (ngrow < 0) {
         ngrow = 0;                      // ngrow == 0 => no grow
     }
+
+    if (foot.getNpix() == 0) {          // an empty Footprint
+        return afwDetect::Footprint::Ptr(new afwDetect::Footprint);
+    }
+
     /*
      * We'll insert the footprints into an image, then convolve with a disk,
      * then extract a footprint from the result --- this is magically what we want.
      */
     afwImage::BBox bbox = foot.getBBox();
-    bbox.grow(afwImage::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
-    bbox.grow(afwImage::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
+    bbox.grow(afwImage::Point2I(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
+    bbox.grow(afwImage::Point2I(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
     afwImage::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
     *idImage = 0;
-    idImage->setXY0(afwImage::PointI(0, 0));
+    idImage->setXY0(afwImage::Point2I(0, 0));
 
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0());
 
@@ -657,7 +705,7 @@ afwDetect::Footprint::Ptr growFootprintSlow(
  * Grow a Footprint by r pixels, returning a new Footprint
  */
 afwDetect::Footprint::Ptr afwDetect::growFootprint(
-        afwDetect::Footprint const &foot,      //!< The Footprint to grow
+        afwDetect::Footprint const& foot,      //!< The Footprint to grow
         int ngrow,                             //!< how much to grow foot
         bool isotropic                         //!< Grow isotropically (as opposed to a Manhattan metric)
                                                //!< @note Isotropic grows are significantly slower
@@ -677,11 +725,11 @@ afwDetect::Footprint::Ptr afwDetect::growFootprint(
      * Cf. http://ostermiller.org/dilate_and_erode.html
      */
     afwImage::BBox bbox = foot.getBBox();
-    bbox.grow(afwImage::PointI(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
-    bbox.grow(afwImage::PointI(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
+    bbox.grow(afwImage::Point2I(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
+    bbox.grow(afwImage::Point2I(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
     afwImage::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
     *idImage = 0;
-    idImage->setXY0(afwImage::PointI(0, 0));
+    idImage->setXY0(afwImage::Point2I(0, 0));
     
     // Set all the pixels in the footprint to 1
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0()); 
@@ -745,7 +793,7 @@ afwDetect::Footprint::Ptr afwDetect::growFootprint(
     return grown;
 }
 
-afwDetect::Footprint::Ptr afwDetect::growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic) {
+afwDetect::Footprint::Ptr afwDetect::growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic) {
     return growFootprint(*foot, ngrow, isotropic);
 }
 
@@ -793,8 +841,8 @@ std::vector<afwImage::BBox> afwDetect::footprintToBBoxList(afwDetect::Footprint 
 
                 std::fill(first, last + 1, 0);       // clear pixels; we don't want to see them again
 
-                bbox.grow(afwImage::PointI(x0, y));     // the LLC
-                bbox.grow(afwImage::PointI(x1, y));     // the LRC; initial guess for URC
+                bbox.grow(afwImage::Point2I(x0, y));     // the LLC
+                bbox.grow(afwImage::Point2I(x1, y));     // the LRC; initial guess for URC
                 
                 // we found at least one pixel so extend the BBox upwards
                 for (++y; y != height; ++y) {
@@ -803,7 +851,7 @@ std::vector<afwImage::BBox> afwDetect::footprintToBBoxList(afwDetect::Footprint 
                     }
                     std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
                     
-                    bbox.grow(afwImage::PointI(x1, y)); // the new URC
+                    bbox.grow(afwImage::Point2I(x1, y)); // the new URC
                 }
 
                 bbox.shift(foot.getBBox().getX0(), foot.getBBox().getY0());
@@ -1066,7 +1114,7 @@ psErrorCode pmFootprintCullPeaks(psImage const *img, // the image wherein lives 
         assert (x >= 0 && x < subImg->numCols && y >= 0 && y < subImg->numRows);
         float const stdev = std::sqrt(subWt->data.F32[y][x]);
         float threshold = subImg->data.F32[y][x] - nsigma_delta*stdev;
-        if (isnan(threshold) || threshold < min_threshold) {
+        if (lsst::utils::isnan(threshold) || threshold < min_threshold) {
 #if 1                                   // min_threshold is assumed to be below the detection threshold,
                                         // so all the peaks are pmFootprint, and this isn't the brightest
             (void)psArrayRemoveIndex(fp->peaks, i);
@@ -1171,8 +1219,8 @@ psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
 // \cond
 //
 template
-afwDetect::Footprint::Ptr afwDetect::footprintAndMask(afwDetect::Footprint::Ptr const & foot,
-                                                      afwImage::Mask<afwImage::MaskPixel>::Ptr const & mask,
+afwDetect::Footprint::Ptr afwDetect::footprintAndMask(afwDetect::Footprint::Ptr const& foot,
+                                                      afwImage::Mask<afwImage::MaskPixel>::Ptr const& mask,
                                                       afwImage::MaskPixel bitMask);
 
 template

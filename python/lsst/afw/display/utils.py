@@ -1,3 +1,25 @@
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 ## \file
 ## \brief Utilities to use with displaying images
 
@@ -191,11 +213,13 @@ class Mosaic(object):
                 if not label:
                     continue
                     
-                ds9.dot(label, self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
+                ds9.dot(str(label), self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
 
-def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None):
+def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
 If origin is present, it's Added to the BBox
+
+All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
     x0, y0 = bbox.getX0(), bbox.getY0()
     x1, y1 = bbox.getX1(), bbox.getY1()
@@ -204,6 +228,10 @@ If origin is present, it's Added to the BBox
         x0 += origin[0]; x1 += origin[0]
         y0 += origin[1]; y1 += origin[1]
 
+    x0 /= bin; y0 /= bin
+    x1 /= bin; y1 /= bin
+    borderWidth /= bin
+    
     ds9.line([(x0 - borderWidth, y0 - borderWidth),
               (x0 - borderWidth, y1 + borderWidth),
               (x1 + borderWidth, y1 + borderWidth),

@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  * 
@@ -79,7 +102,7 @@ void affineTransformExample() {
     cout << "rotation AffineTransform parameters: " << r.getVector() << endl;
   
     //copy construct a translation transform
-    afwGeom::AffineTransform t = afwGeom::AffineTransform::makeTranslation(afwGeom::makeExtentD(15.0, 10.3));
+    afwGeom::AffineTransform t = afwGeom::AffineTransform::makeTranslation(afwGeom::Extent2D(15.0, 10.3));
     cout << "translation AffineTransform matrix: "<< t.getMatrix() << endl;
     cout << "translation AffineTransform parameters: " << t.getVector() << endl;
 
@@ -118,8 +141,8 @@ void affineTransformExample() {
 void wcsExample() {
     //initialize a trivial WCS for examples
     lsst::afw::image::Wcs wcs(
-        lsst::afw::image::PointD(35, 45), 
-        lsst::afw::image::PointD(0.0,0.0),
+        lsst::afw::image::Point2D(35, 45), 
+        lsst::afw::image::Point2D(0.0,0.0),
         Eigen::Matrix2d::Identity()
     );
     afwGeom::Point2D point(35, 45);

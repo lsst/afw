@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Test cases to test image I/O
 """
@@ -66,7 +89,11 @@ class ReadFitsTestCase(unittest.TestCase):
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
 
-        imPath = os.path.join("tests", "data", "smallD.fits")
+        imPath = "data"
+        if os.path.exists("tests"):
+            imPath = os.path.join("tests", imPath)
+        imPath = os.path.join(imPath, "smallD.fits")
+        
         im = afwImage.ImageD(100, 100)
         im.set(666)
         im.writeFits(imPath)
@@ -92,7 +119,11 @@ class ReadFitsTestCase(unittest.TestCase):
     def testMEF(self):
         """Test writing a set of images to an MEF fits file, and then reading them back"""
         
-        imPath = os.path.join("tests", "data", "MEF.fits")
+        imPath = "data"
+        if os.path.exists("tests"):
+            imPath = os.path.join("tests", imPath)
+        imPath = os.path.join(imPath, "MEF.fits")
+
         im = afwImage.ImageF(20, 20)
 
         for hdu in range(1, 5):

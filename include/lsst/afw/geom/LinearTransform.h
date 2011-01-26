@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 #ifndef LSST_AFW_GEOM_LINEAR_TRANSFORM_H 
 #define LSST_AFW_GEOM_LINEAR_TRANSFORM_H
 
@@ -117,17 +139,17 @@ public:
     Point2D operator()(Point2D const & p) const { return Point2D(getMatrix() * p.asVector()); }
 
     /**
-     *  \brief Transform a ExtentD object. 
+     *  \brief Transform a Extent2D object. 
      *
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Point
      */
-    ExtentD operator()(ExtentD const & p) const { return ExtentD(getMatrix() * p.asVector()); }
+    Extent2D operator()(Extent2D const & p) const { return Extent2D(getMatrix() * p.asVector()); }
 
     TransformDerivativeMatrix dTransform(Point2D const & input) const;
 
     /// Derivative of (*this)(input) with respect to the transform elements (for Extent);
-    TransformDerivativeMatrix dTransform(ExtentD const & input) const {
+    TransformDerivativeMatrix dTransform(Extent2D const & input) const {
         return dTransform(Point2D(input));
     }
 

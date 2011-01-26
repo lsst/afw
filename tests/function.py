@@ -1,7 +1,29 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 import itertools
 import math
-
 import unittest
 
 import numpy
@@ -69,6 +91,8 @@ class FunctionTestCase(unittest.TestCase):
             xMean = (xMin + xMax) / 2.0
             xDelta = (xMax - xMin) / float(nPoints - 1)
             f = afwMath.Chebyshev1Function1D(coeffs, xMin, xMax)
+            g = afwMath.Chebyshev1Function1D(order, xMin, xMax)
+            g.setParameters(coeffs)
             for x in numpy.arange(xMin, xMax + xDelta/2.0, xDelta):
                 xNorm = 2.0 * (x - xMean) / float(xMax - xMin)
                 if minXNorm == None or xNorm < minXNorm:
@@ -77,12 +101,16 @@ class FunctionTestCase(unittest.TestCase):
                     maxXNorm = xNorm
                 predVal = basicChebyPoly(xNorm, coeffs)
                 if not numpy.allclose(predVal, f(x)):
-                    self.fail("%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s" % \
+                    self.fail("%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; coeffs constructor" % \
                         (f.__class__.__name__, f(x), predVal, x, xMin, xMax, xNorm, coeffs))
+                if not numpy.allclose(predVal, g(x)):
+                    self.fail("%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; order constructor" % \
+                        (f.__class__.__name__, g(x), predVal, x, xMin, xMax, xNorm, coeffs))
             if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
                 raise RuntimeError("Invalid x normalization: xMin=%s, xMax=%s, " +
                                    "min/max xNorm=(%s, %s) != (-1, 1)" %
                                    (xMin, xMax, minXNorm, maxXNorm))
+
         
     def testGaussianFunction1D(self):
         """A test for GaussianFunction1D"""
@@ -238,15 +266,21 @@ class FunctionTestCase(unittest.TestCase):
         maxOrder = 4
         deltaCoeff = 0.3
         allCoeffs = numpy.arange(deltaCoeff, deltaCoeff * (maxOrder + 1) + (deltaCoeff / 2.0), deltaCoeff)
-        
+
+        # test value using order constructor
         for order in range(maxOrder):
             coeffs = allCoeffs[0: order + 1]
             f = afwMath.PolynomialFunction1D(coeffs)
+            g = afwMath.PolynomialFunction1D(order)
+            g.setParameters(coeffs)
             for x in numpy.arange(-10.0, 10.1, 1.0):
                 predVal = basic1DPoly(x, coeffs)
                 if not numpy.allclose(predVal, f(x)):
-                    self.fail("%s = %s != %s for x=%s, coeffs=%s" % \
+                    self.fail("%s = %s != %s for x=%s, coeffs=%s; coeffs constructor" % \
                         (f.__class__.__name__, f(x), predVal, x, coeffs))
+                if not numpy.allclose(predVal, g(x)):
+                    self.fail("%s = %s != %s for x=%s, coeffs=%s; order constructor" % \
+                        (f.__class__.__name__, g(x), predVal, x, coeffs))
 
     def testPolynomialFunction2D(self):
         """A test for PolynomialFunction2D
@@ -273,15 +307,21 @@ class FunctionTestCase(unittest.TestCase):
         deltaCoeff = 0.3
         allCoeffs = numpy.arange(deltaCoeff, deltaCoeff * (maxCoeffs + 1) + (deltaCoeff / 2.0), deltaCoeff)
         
-        for numCoeffs in numCoeffsList:
+        # test function values
+        for order, numCoeffs in enumerate(numCoeffsList):
             coeffs = allCoeffs[0: numCoeffs]
             f = afwMath.PolynomialFunction2D(coeffs)
+            g = afwMath.PolynomialFunction2D(order)
+            g.setParameters(coeffs)
             for x in numpy.arange(-10.0, 10.1, 2.5):
                 for y in numpy.arange(-10.0, 10.1, 2.5):
                     predVal = basic2DPoly(x, y, coeffs)
                     if not numpy.allclose(predVal, f(x, y)):
-                        self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s" % \
+                        self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s; coeffs constructor" % \
                             (f.__class__.__name__, f(x, y), predVal, x, y, coeffs))
+                    if not numpy.allclose(predVal, g(x, y)):
+                        self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s; order constructor" % \
+                            (f.__class__.__name__, g(x, y), predVal, x, y, coeffs))
         
         # test that the number of parameters is correct for the given order
         def numParamsFromOrder(order):
@@ -306,18 +346,16 @@ class FunctionTestCase(unittest.TestCase):
         """Test that we can differentiate the Function2 with respect to its parameters"""
         
         nOrder = 3
-        coeffs = [1]*((nOrder + 1)*(nOrder + 2)//2)
+        coeffs = []
+        for i in range((nOrder + 1)*(nOrder + 2)//2):
+            coeffs.append(math.sin(1 + i)) # deterministic pretty-random numbers
+
         f = afwMath.PolynomialFunction2D(coeffs)
 
         for (x, y) in [(2, 1), (1, 2), (2, 2)]:
             dFdC = f.getDFuncDParameters(x, y)
 
-            o0 = 0
-            for o in range(nOrder + 1):
-                coeffs = dFdC[o0: o0 + o+1]
-                self.assertEqual(coeffs, [x**(o - r)*y**r for r in range(0, o+1)])
-
-                o0 += o + 1
+            self.assertAlmostEqual(f(x, y), sum([coeffs[i]*dFdC[i] for i in range(len(coeffs))]))
                 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

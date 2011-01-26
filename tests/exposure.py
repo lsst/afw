@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Test lsst.afw.image.Exposure
 
@@ -12,6 +35,8 @@ import os
 import unittest
 
 import eups
+import lsst.daf.base as dafBase
+import lsst.afw.detection as afwDetection
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
@@ -21,7 +46,10 @@ import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 
-VERBOSITY = 0 # increase to see trace
+try:
+    type(VERBOSITY)
+except:
+    VERBOSITY = 0                       # increase to see trace
 
 pexLog.Debug("lsst.afw.image", VERBOSITY)
 
@@ -170,7 +198,24 @@ class ExposureTestCase(unittest.TestCase):
         except pexExcept.LsstCppException, e:
             print "caught expected exception (getWcs): %s" % e   
             pass
-               
+        #
+        # Test the Calib member.  The Calib tests are in color.py, here we just check that it's in Exposure
+        #
+        calib = exposure.getCalib()
+        dt = 10
+        calib.setExptime(dt)
+        self.assertEqual(exposure.getCalib().getExptime(), dt)
+        #
+        # Psfs next
+        #
+        w, h = 11, 11
+        self.assertFalse(exposure.hasPsf())
+        exposure.setPsf(afwDetection.createPsf("DoubleGaussian", w, h, 3))
+        self.assertTrue(exposure.hasPsf())
+        self.assertEqual(exposure.getPsf().getKernel().getDimensions(), (w, h))
+
+        exposure.setPsf(afwDetection.createPsf("DoubleGaussian", w, h, 1)) # we can reset the Psf
+         
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
         self.exposureMiWcs.setMaskedImage(maskedImage)
@@ -262,9 +307,25 @@ class ExposureTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
         
         # Make sure we can write without an exception
+        mainExposure.getCalib().setExptime(10)
+        mainExposure.getCalib().setMidTime(dafBase.DateTime())
+        midMjd = mainExposure.getCalib().getMidTime().get()
+        fluxMag0, fluxMag0Err = 1e12, 1e10
+        mainExposure.getCalib().setFluxMag0(fluxMag0, fluxMag0Err)
+
         mainExposure.writeFits(outFile)
 
+        readExposure = type(mainExposure)(outFile)
+
         os.remove(outFile)
+        #
+        # Check the round-tripping
+        #
+        self.assertEqual(mainExposure.getFilter().getName(), readExposure.getFilter().getName())
+
+        self.assertEqual(mainExposure.getCalib().getExptime(), readExposure.getCalib().getExptime())
+        self.assertEqual(midMjd, readExposure.getCalib().getMidTime().get())
+        self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
@@ -298,13 +359,15 @@ class ExposureTestCase(unittest.TestCase):
         exposureU.setWcs(self.wcs)
         exposureU.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         exposureU.setFilter(afwImage.Filter("g"))
+        exposureU.getCalib().setExptime(666)
 
         exposureF = exposureU.convertF()
 
         self.assertEqual(exposureU.getDetector(), exposureF.getDetector())
         self.assertEqual(exposureU.getFilter().getName(), exposureF.getFilter().getName())
-        xy = afwGeom.makePointD(0, 0)
+        xy = afwGeom.PointD(0, 0)
         self.assertEqual(exposureU.getWcs().pixelToSky(xy)[0], exposureF.getWcs().pixelToSky(xy)[0])
+        self.assertEqual(exposureU.getCalib().getExptime(), exposureF.getCalib().getExptime())
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""

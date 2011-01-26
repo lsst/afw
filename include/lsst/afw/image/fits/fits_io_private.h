@@ -1,3 +1,25 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  * \brief  Internal support for reading and writing FITS files
@@ -47,7 +69,7 @@ LSST_EXCEPTION_TYPE(FitsWrongTypeException,
 namespace cfitsio {
 #if !defined(DOXYGEN)
     extern "C" {
-#       include "fitsio.h"
+#       include "fitsio2.h"
     }
 #endif
 
@@ -108,6 +130,11 @@ template <>
 struct fits_read_support_private<boost::gil::gray32s_view_t> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int , BITPIX=LONG_IMG); // value is from fitsio.h
+};
+template <>
+struct fits_read_support_private<boost::gil::gray32_view_t> {
+    BOOST_STATIC_CONSTANT(bool,is_supported=true);
+    BOOST_STATIC_CONSTANT(int , BITPIX=ULONG_IMG); // value is from fitsio.h
 };
 template <>
 struct fits_read_support_private<boost::gil::gray32f_noscale_view_t> {
@@ -342,18 +369,46 @@ public:
                 
             }
         }
-        for (int y = 0; y != view.height(); ++y) {
-            long fpixel[2];                     // tell cfitsio which pixels to read
-            fpixel[0] = x0 + 1;                 // 1 indexed.
-            fpixel[1] = y0 + y + 1;             //            grrrrrr
-            int anynull = 0;
-            int status = 0;                     // cfitsio function return status
+        /*
+         * Cfitsio 3.006 is able to read some, but not all, data types from top to bottom;  floats are OK,
+         * but unsigned short isn't.
+         *
+         * When cfitsio cooperates it saves us from having to flip the rows ourselves
+         */
+        long blc[2] = {x0, y0 + view.height() - 1}; // 'bottom left corner' of the subsection
+        long trc[2] = {x0 + view.width() - 1, y0};  // 'top right corner' of the subsection
+        long inc[2] = {1, 1};                       // increment to be applied in each dimension (of file)
 
-            if (fits_read_pix(_fd.get(), _ttype, fpixel, view.width(), NULL,
-                              view.row_begin(view.height() - y - 1), &anynull, &status) != 0) {
-                throw LSST_EXCEPT(FitsException,
-                                  cfitsio::err_msg(_fd.get(), status, boost::format("Reading row %d") % y));
-            }
+        blc[0]++; blc[1]++;             // 1-indexed.
+        trc[0]++; trc[1]++;             //            Grrrrrrrr
+
+        int status = 0;                 // cfitsio function return status
+#if 0                                   // this generates slower code (more seeks) than the read-and-swap
+        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, view.row_begin(0), NULL, &status) == 0) {
+            return;                     // The simple case; the read succeeded
+        }
+        
+        if (status != BAD_PIX_NUM) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+        }
+        /*
+         * cfitsio returned a BAD_PIX_NUM errror, which (usually?) means that this type can't be read
+         * in the desired order;  so we'll do it ourselves --- i.e. do the read and flip the rows
+         */
+#endif
+        std::swap(blc[1], trc[1]);
+
+        status = 0;
+        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, view.row_begin(0), NULL, &status) != 0) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+        }
+        // Here's the row flip
+        std::vector<typename View::value_type> tmp(view.width());
+        for (int y = 0; y != view.height()/2; ++y) {
+            int const yp = view.height() - y - 1;
+            std::copy(view.row_begin(y),  view.row_end(y),  tmp.begin());
+            std::copy(view.row_begin(yp), view.row_end(yp), view.row_begin(y));
+            std::copy(tmp.begin(),        tmp.end(),        view.row_begin(yp));
         }
     }
     
@@ -410,7 +465,16 @@ public:
 #if 1
         if (metadata != NULL) {
             typedef std::vector<std::string> NameList;
-            NameList paramNames = metadata->paramNames(false);
+            NameList paramNames;
+
+            boost::shared_ptr<lsst::daf::base::PropertyList const> pl =
+                boost::dynamic_pointer_cast<lsst::daf::base::PropertyList const,
+                lsst::daf::base::PropertySet const>(metadata);
+            if (pl) {
+                paramNames = pl->getOrderedNames();
+            } else {
+                paramNames = metadata->paramNames(false);
+            }
             for (NameList::const_iterator i = paramNames.begin(), e = paramNames.end(); i != e; ++i) {
                 if (*i != "SIMPLE" && *i != "BITPIX" &&
                     *i != "NAXIS" && *i != "NAXIS1" && *i != "NAXIS2" && *i != "EXTEND") {
@@ -424,16 +488,36 @@ public:
         }
         
         /*
-         * Write the data itself
+         * Write the data itself.  Our underlying boost::gil image has the lowest-address row at the top so we
+         * have to flip rows to write it correctly even if the image is contiguous (which it may not be if
+         * it's a subimage)
+         *
+         * An alternative is write it row-by-row
          */
-        const int ttype = cfitsio::ttypeFromBitpix(BITPIX);
+        int const ttype = cfitsio::ttypeFromBitpix(BITPIX);
+        status = 0;                     // cfitsio function return status
+#if 1                                   // Write in one go via a copy
+        std::vector<typename View::value_type> tmp(view.size());
+        typename std::vector<typename View::value_type>::iterator tptr = tmp.begin();
+        for (int y = 0; y != view.height(); ++y, tptr += view.width()) {
+            std::copy(view.row_begin(y), view.row_end(y), tptr);
+        }
+
+        if (fits_write_img(_fd.get(), ttype, 1, tmp.size(), &tmp[0], &status) != 0) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+        }
+#else
+        /*
+         * Write row-by-row; less efficient as cfitsio isn't very smart, but economical on memory
+         */
         for (int y = 0; y != view.height(); ++y) {
-            status = 0;                 // cfitsio function return status
-            if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(), view.row_begin(y), &status) != 0) {
+            if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(),
+                               view.row_begin(y), &status) != 0) {
                 throw LSST_EXCEPT(FitsException,
                                   cfitsio::err_msg(_fd.get(), status, boost::format("Writing row %d") % y));
             }
         }
+#endif
     }
 };
 

@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
@@ -14,6 +37,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
+#include "lsst/utils/ieee.h"
 
 using namespace std;
 namespace afwImage = lsst::afw::image;
@@ -73,7 +97,7 @@ class CheckFinite {
 public:
     template<typename T>
     bool operator()(T val) const {
-        return !std::isnan(static_cast<float>(val));
+        return !lsst::utils::isnan(static_cast<float>(val));
     }
 };
 
@@ -123,6 +147,32 @@ typedef AlwaysFalse     AlwaysF;
 
 
 /**
+ * @brief Conversion function to switch a string to a Property (see Statistics.h)
+ */
+math::Property math::stringToStatisticsProperty(std::string const property) {
+    static std::map<std::string, Property> statisticsProperty;
+    if (statisticsProperty.size() == 0) {
+        statisticsProperty["NOTHING"]      = NOTHING;
+        statisticsProperty["ERRORS"]       = ERRORS;
+        statisticsProperty["NPOINT"]       = NPOINT;
+        statisticsProperty["MEAN"]         = MEAN;
+        statisticsProperty["STDEV"]        = STDEV;
+        statisticsProperty["VARIANCE"]     = VARIANCE;
+        statisticsProperty["MEDIAN"]       = MEDIAN;
+        statisticsProperty["IQRANGE"]      = IQRANGE;
+        statisticsProperty["MEANCLIP"]     = MEANCLIP;
+        statisticsProperty["STDEVCLIP"]    = STDEVCLIP;
+        statisticsProperty["VARIANCECLIP"] = VARIANCECLIP;
+        statisticsProperty["MIN"]          = MIN;
+        statisticsProperty["MAX"]          = MAX;
+        statisticsProperty["SUM"]          = SUM;
+        statisticsProperty["MEANSQUARE"]   = MEANSQUARE;
+        statisticsProperty["ORMASK"]       = ORMASK;
+    }
+    return statisticsProperty[property];
+}
+
+/**
  * @brief A private function to copy an image into a vector
  *
  * This is used for percentile and iq_range as these must reorder the values.
@@ -138,10 +188,12 @@ boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_ma
                                                                                          )
 {
 
+    // Note to self: I'm not going to keep track of allPixelOrMask here ... sumImage() does that
+    // and it always gets called
     boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
         typename MaskT::x_iterator mptr = msk.row_begin(i_y);
-        for (typename ImageT::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+        for (typename ImageT::x_iterator ptr = img.row_begin(i_y), end = img.row_end(i_y); ptr != end; ++ptr) {
             if ( IsFinite()(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
                 imgcp->push_back(*ptr);
             }
@@ -188,6 +240,7 @@ afwMath::Statistics::Statistics(
     _min = standard.get<2>();
     _max = standard.get<3>();
     _sum = standard.get<4>();
+    _allPixelOrMask = standard.get<5>();
 
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
@@ -203,18 +256,21 @@ afwMath::Statistics::Statistics(
             imgcp = _makeVectorCopy<AlwaysT>(img, msk, var, flags);
         }
 
-        if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
+        // if we *only* want the median, just use _percentile(), otherwise use _medianAndQuartiles()
+        if ( (flags & (MEDIAN)) && !(flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) ) {
             _median = _percentile(*imgcp, 0.5);
+        } else {
+            MedianQuartileReturn mq = _medianAndQuartiles(*imgcp);
+            _median = mq.get<0>();
+            _iqrange = mq.get<2>() - mq.get<1>();
         }
-        if (flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
-            _iqrange = std::fabs(_percentile(*imgcp, 0.75) - _percentile(*imgcp, 0.25));
-        }
+        
         
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
                 
                 double const center = (i_i > 0) ? _meanclip : _median;
-                double const hwidth = (i_i > 0) ?
+                double const hwidth = (i_i > 0 && _n > 1) ?
                     _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) :
                     _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
                 std::pair<double, double> const clipinfo(center, hwidth);
@@ -260,6 +316,8 @@ afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
     double min = (nCrude) ? meanCrude : MAX_DOUBLE;
     double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
 
+    afwImage::MaskPixel allPixelOrMask = 0x0;
+    
     for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
         typename MaskT::x_iterator mptr = msk.row_begin(iY);
@@ -292,6 +350,8 @@ afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
                     sumx2 += delta*delta;
                 }
 
+                allPixelOrMask |= *mptr;
+                
                 if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
                 if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
                 n++;
@@ -304,7 +364,7 @@ afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
         max = NaN;
     }
 
-    return afwMath::Statistics::SumReturn(n, sum, sumx2, min, max, wsum);
+    return afwMath::Statistics::SumReturn(n, sum, sumx2, min, max, wsum, allPixelOrMask);
 }
 
 /* =========================================================================
@@ -405,19 +465,22 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT con
     double min   = loopValues.get<3>();
     double max   = loopValues.get<4>();
     double wsum  = loopValues.get<5>();
-
+    afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
+    
     // estimate of population mean and variance
     double mean, variance;
     if (_sctrl.getWeighted()) {
         mean = (wsum > 0) ? meanCrude + sum/wsum : NaN;
-        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN; 
+        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
+        sum += meanCrude*wsum;
     } else {
         mean = (n) ? meanCrude + sum/n : NaN;
-        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN; 
+        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
+        sum += n*meanCrude;
     }
     _n = n;
     
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + n*meanCrude);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum, allPixelOrMask);
 }
 
 
@@ -443,9 +506,9 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
 
-    if (isnan(center) || isnan(cliplimit)) {
+    if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
         //return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
-        return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN);
+        return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN, ~0x0);
     }
     
     // =======================================================
@@ -499,19 +562,22 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     double min   = loopValues.get<3>();
     double max   = loopValues.get<4>();
     double wsum  = loopValues.get<5>();
+    afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
     
     // estimate of population variance
     double mean, variance;
     if (_sctrl.getWeighted()) {
         mean = (wsum > 0) ? center + sum/wsum : NaN;
         variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*n) : NaN;
+        sum += center*wsum;
     } else {
         mean = (n) ? center + sum/n : NaN;
         variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
+        sum += n*center;
     }
     _n = n;
     
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum, allPixelOrMask);
 }
 
 
@@ -530,29 +596,117 @@ double afwMath::Statistics::_percentile(std::vector<Pixel> &img,
     int const n = img.size();
 
     if (n > 1) {
+        
         double const idx = percentile*(n - 1);
         
         // interpolate linearly between the adjacent values
+        // For efficiency:
+        // - if we're asked for a percentile > 0.5,
+        //    we'll do the second partial sort on shorter (upper) portion
+        // - otherwise, the shorter portion will be the lower one, we'll partial-sort that.
         
         int const q1 = static_cast<int>(idx);
-        typename std::vector<Pixel>::iterator midMinus1 = img.begin() + q1;
-        std::nth_element(img.begin(), midMinus1, img.end());
-        double val1 = static_cast<double>(*midMinus1);
-        
         int const q2 = q1 + 1;
-        typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
-        std::nth_element(img.begin(), midPlus1, img.end());
-        double val2 = static_cast<double>(*midPlus1);
-        
+
+        typename std::vector<Pixel>::iterator mid1 = img.begin() + q1;
+        typename std::vector<Pixel>::iterator mid2 = img.begin() + q2;
+        if ( percentile > 0.5 ) {
+            std::nth_element(img.begin(), mid1, img.end());
+            std::nth_element(mid1, mid2, img.end());
+        } else {
+            std::nth_element(img.begin(), mid2, img.end());
+            std::nth_element(img.begin(), mid1, mid2);
+        }
+    
+        double val1 = static_cast<double>(*mid1);
+        double val2 = static_cast<double>(*mid2);
         double w1 = (static_cast<double>(q2) - idx);
         double w2 = (idx - static_cast<double>(q1));
-        
         return w1*val1 + w2*val2;
         
     } else if (n == 1) {
         return img[0];
     } else {
         return NaN;
+    }
+            
+
+}
+
+
+
+/* _medianAndQuartiles()
+ *
+ * @brief A wrapper using the nth_element() built-in to compute median and Quartiles for an image
+ *
+ * @param img       an afw::Image
+ * @param quartile  the desired percentile.
+ *
+ */
+template<typename Pixel>
+afwMath::Statistics::MedianQuartileReturn afwMath::Statistics::_medianAndQuartiles(std::vector<Pixel> &img) {
+    
+    int const n = img.size();
+
+    if (n > 1) {
+        
+        double const idx50 = 0.50*(n - 1);
+        double const idx25 = 0.25*(n - 1);
+        double const idx75 = 0.75*(n - 1);
+        
+        // For efficiency:
+        // - partition at 50th, then partition the two half further to get 25th and 75th
+        // - to get the adjacent points (for interpolation), partition between 25/50, 50/75, 75/end
+        //   these should be much smaller partitions
+        
+        int const q50a = static_cast<int>(idx50);
+        int const q50b = q50a + 1;
+        int const q25a = static_cast<int>(idx25);
+        int const q25b = q25a + 1;
+        int const q75a = static_cast<int>(idx75);
+        int const q75b = q75a + 1;
+        
+        typename std::vector<Pixel>::iterator mid50a = img.begin() + q50a;
+        typename std::vector<Pixel>::iterator mid50b = img.begin() + q50b;
+        typename std::vector<Pixel>::iterator mid25a = img.begin() + q25a;
+        typename std::vector<Pixel>::iterator mid25b = img.begin() + q25b;
+        typename std::vector<Pixel>::iterator mid75a = img.begin() + q75a;
+        typename std::vector<Pixel>::iterator mid75b = img.begin() + q75b;
+
+        // get the 50th percentile, then get the 25th and 75th on the smaller partitions
+        std::nth_element(img.begin(), mid50a, img.end());
+        std::nth_element(mid50a, mid75a, img.end());
+        std::nth_element(img.begin(), mid25a, mid50a);
+
+        // and the adjacent points for each ... use the smallest segments available.
+        std::nth_element(mid50a, mid50b, mid75a);
+        std::nth_element(mid25a, mid25b, mid50a);
+        std::nth_element(mid75a, mid75b, img.end());
+
+        // interpolate linearly between the adjacent values
+        double val50a = static_cast<double>(*mid50a);
+        double val50b = static_cast<double>(*mid50b);
+        double w50a = (static_cast<double>(q50b) - idx50);
+        double w50b = (idx50 - static_cast<double>(q50a));
+        double median = w50a*val50a + w50b*val50b;
+
+        double val25a = static_cast<double>(*mid25a);
+        double val25b = static_cast<double>(*mid25b);
+        double w25a = (static_cast<double>(q25b) - idx25);
+        double w25b = (idx25 - static_cast<double>(q25a));
+        double q1 = w25a*val25a + w25b*val25b;
+        
+        double val75a = static_cast<double>(*mid75a);
+        double val75b = static_cast<double>(*mid75b);
+        double w75a = (static_cast<double>(q75b) - idx75);
+        double w75b = (idx75 - static_cast<double>(q75a));
+        double q3 = w75a*val75a + w75b*val75b;
+
+        return MedianQuartileReturn(median, q1, q3);
+    } else if (n == 1) {
+        return MedianQuartileReturn(img[0], img[0], img[0]);
+    } else {
+        return MedianQuartileReturn(NaN, NaN, NaN);
     }
             
 
@@ -579,7 +733,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
     
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
     afwMath::Property const prop =
-        (iProp == NOTHING) ? static_cast<afwMath::Property>(_flags & ~ERRORS) : iProp;
+        static_cast<afwMath::Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
     
     if (!(prop & _flags)) {             // we didn't calculate it
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -667,7 +821,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case MEDIAN:
         ret.first = _median;
         if ( _flags & ERRORS ) {
-            ret.second = 0;
+            ret.second = sqrt(M_PI/2*_variance/_n); // assumes Gaussian
         }
         break;
       case IQRANGE:
@@ -676,7 +830,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
             ret.second = 0;
         }
         break;
-        
+
         // no-op to satisfy the compiler
       case ERRORS:
         break;
@@ -706,6 +860,7 @@ double afwMath::Statistics::getError(afwMath::Property const prop ///< Desired p
                                      ) const {
     return getResult(prop).second;
 }
+
 
 /************************************************************************************************/
 /**
@@ -794,8 +949,7 @@ typedef afwImage::VariancePixel VPixel;
     template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
                                                      afwImage::Mask<afwImage::MaskPixel> const &msk, \
                                                      afwImage::Image<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo); \
-    template double STAT::_percentile(std::vector<TYPE> &img, double const percentile)
+                                                     int const flags, std::pair<double, double> clipinfo);
 
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
@@ -870,4 +1024,5 @@ typedef afwImage::VariancePixel VPixel;
 INSTANTIATE_IMAGE_STATISTICS(double);
 INSTANTIATE_IMAGE_STATISTICS(float);
 INSTANTIATE_IMAGE_STATISTICS(int);
-INSTANTIATE_IMAGE_STATISTICS(unsigned short);
+INSTANTIATE_IMAGE_STATISTICS(boost::uint16_t);
+

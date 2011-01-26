@@ -1,8 +1,29 @@
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * \file
  */
 #include <algorithm>
-#include "lsst/afw/math.h"
 #include "lsst/afw/cameraGeom/Ccd.h"
 
 namespace afwGeom = lsst::afw::geom;
@@ -42,7 +63,7 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
     _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
     amp->setParent(getThisPtr());
 
-    setCenterPixel(afwGeom::makePointI(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
+    setCenterPixel(afwGeom::Point2I(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
 }
 
 /**
@@ -72,12 +93,12 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
     double pixelSize = getPixelSize();
 
     afwGeom::Point2I const& centerPixel = getCenterPixel();
-    cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::makePointI(pix[0] + centerPixel[0],
+    cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::Point2I(pix[0] + centerPixel[0],
                                                                 pix[1] + centerPixel[1]));
-    afwImage::PointI const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
-    afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::makePointI(off[0], off[1]));
+    afwImage::Point2I const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
+    afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::Point2I(off[0], off[1]));
 
-    return afwGeom::makePointD(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
+    return afwGeom::Point2D(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
 }    
 
 namespace {
@@ -95,7 +116,7 @@ namespace {
                   afwGeom::Point2I point,
                   bool isTrimmed
                  ) :
-            _point(afwImage::PointI(point[0], point[1])),
+            _point(afwImage::Point2I(point[0], point[1])),
             _isTrimmed(isTrimmed)
         { }
 
@@ -103,7 +124,7 @@ namespace {
             return amp->getAllPixels(_isTrimmed).contains(_point);
         }
     private:
-        afwImage::PointI _point;
+        afwImage::Point2I _point;
         bool _isTrimmed;
     };
 }
@@ -178,7 +199,7 @@ void cameraGeom::Ccd::setOrientation(
     int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
 
     afwGeom::Extent2I const dimensions =
-        afwGeom::makeExtentI(getAllPixels(false).getWidth(), getAllPixels(false).getHeight());
+        afwGeom::Extent2I(getAllPixels(false).getWidth(), getAllPixels(false).getHeight());
 
 
     cameraGeom::Detector::setOrientation(orientation);

@@ -1,4 +1,27 @@
 // -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file
  *
@@ -33,6 +56,13 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
                                 ) {
     SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
 
+    if (offsetKernel->getWidth() > inImage.getWidth() || offsetKernel->getHeight() > inImage.getHeight()) {
+        throw LSST_EXCEPT(pexExcept::LengthErrorException,
+                          (boost::format("Image of size %dx%d is too small to offset using a %s kernel (minimum %dx%d)") %
+                           inImage.getWidth() %  inImage.getHeight() % algorithmName %
+                           offsetKernel->getWidth() % offsetKernel->getHeight()).str());
+    }
+
     typename ImageT::Ptr outImage(new ImageT(inImage, true)); // output image, a deep copy
 
     std::pair<int, double> deltaX = afwImage::positionToIndex(dx, true); // true => return the std::pair
@@ -51,9 +81,8 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
         }
     }
     //
-    // We won't do the integral part of the shift, but we will set [XY]0 correctly
-    //
-    outImage->setXY0(afwImage::PointI(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
+    // We won't do the integral part of the shift, but we will set [XY]0 correctly (but only after
+    // we've done the convolution as convolve also sets [XY]0)
     //
     // And now the fractional part.  N.b. the fraction parts
     //
@@ -76,6 +105,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
     offsetKernel->setKernelParameters(std::make_pair(dx, dy));
 
     convolve(*outImage, inImage, *offsetKernel, true, true);
+    outImage->setXY0(afwImage::Point2I(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
 
     return outImage;
 }

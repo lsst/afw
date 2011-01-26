@@ -1,4 +1,27 @@
 // -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+ 
 /**
  * @file Background.cc
  * @ingroup afw
@@ -90,14 +113,14 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         for (int iY = 0; iY < _nySample; ++iY) {
             
             ImageT subimg =
-                ImageT(img, image::BBox(image::PointI(_xorig[iX], _yorig[iY]),
+                ImageT(img, image::BBox(image::Point2I(_xorig[iX], _yorig[iY]),
                                         _subimgWidth, _subimgHeight));
             
             math::Statistics stats =
-                math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
-                                     math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
+                math::makeStatistics(subimg, _bctrl.getStatisticsProperty(),
+                                     *(_bctrl.getStatisticsControl()));
             
-            _grid[iX][iY] = stats.getValue(math::MEANCLIP);
+            _grid[iX][iY] = stats.getValue(_bctrl.getStatisticsProperty());
         }
 
         _gridcolumns[iX].resize(_imgHeight);
@@ -194,7 +217,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
             int iX = 0;
             for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
                      end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgHeight : _nxSample;
+                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgWidth : _nxSample - 1;
                 *ptr = static_cast<PixelT>(_gridcolumns[iGridX][iY]);
             }
         }
@@ -215,7 +238,10 @@ math::UndersampleStyle math::stringToUndersampleStyle(std::string const style) {
         undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
         undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
     }
-    
+
+    if (undersampleStrings.find(style) == undersampleStrings.end()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Understample style not defined: "+style);
+    }
     return undersampleStrings[style];
 }
 
@@ -264,16 +290,15 @@ void math::Background::_checkSampling() {
     
 }
 
-
-
-
-
-/**
- * @brief Explicit instantiations
+/*
+ * Explicit instantiations
  *
+ * \cond
  */
 #define INSTANTIATE_BACKGROUND(TYPE)                                    \
     template math::Background::Background(image::Image<TYPE> const& img, \
+                                          math::BackgroundControl const& bgCtrl); \
+    template math::Background::Background(image::MaskedImage<TYPE> const& img, \
                                           math::BackgroundControl const& bgCtrl); \
     template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;
 
@@ -281,3 +306,4 @@ INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)
 INSTANTIATE_BACKGROUND(int)
 
+// \endcond

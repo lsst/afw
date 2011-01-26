@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 """
 Tests for Background
 
@@ -56,8 +79,8 @@ class BackgroundTestCase(unittest.TestCase):
         bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
         bgCtrl.setNxSample(5)
         bgCtrl.setNySample(5)
-        bgCtrl.sctrl.setNumIter(3)
-        bgCtrl.sctrl.setNumSigmaClip(3)
+        bgCtrl.getStatisticsControl().setNumIter(3)
+        bgCtrl.getStatisticsControl().setNumSigmaClip(3)
         back = afwMath.makeBackground(self.image, bgCtrl)
         
         self.assertEqual(back.getPixel(xcen, ycen), self.val)
@@ -109,7 +132,7 @@ class BackgroundTestCase(unittest.TestCase):
             
             # test getPixel()
             testval = backobj.getPixel(naxis1/2, naxis2/2)
-            self.assertEqual( testval, centerValue )
+            self.assertAlmostEqual( testval, centerValue, places=12 )
             self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
             # test getImage() by checking the center pixel
@@ -135,8 +158,8 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(6)
         bctrl.setNySample(6)
-        bctrl.sctrl.setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
-        bctrl.sctrl.setNumIter(1)
+        bctrl.getStatisticsControl().setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
+        bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.makeBackground(rampimg, bctrl)
 
         xpixels = [0, nx/2, nx - 1]
@@ -163,8 +186,8 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(24)
         bctrl.setNySample(24)
-        bctrl.sctrl.setNumSigmaClip(10.0)  
-        bctrl.sctrl.setNumIter(1)
+        bctrl.getStatisticsControl().setNumSigmaClip(10.0)  
+        bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.makeBackground(parabimg, bctrl)
 
         # debug
@@ -198,8 +221,8 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
         bctrl.setNxSample(16)
         bctrl.setNySample(16)
-        bctrl.sctrl.setNumSigmaClip(3.0)  
-        bctrl.sctrl.setNumIter(2)
+        bctrl.getStatisticsControl().setNumSigmaClip(3.0)  
+        bctrl.getStatisticsControl().setNumIter(2)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
 
         if display:

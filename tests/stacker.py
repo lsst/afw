@@ -1,4 +1,27 @@
 #!/usr/bin/env python
+
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
 # -*- python -*-
 """
 Tests for Stack
@@ -45,7 +68,8 @@ class StackTestCase(unittest.TestCase):
         for iImg in range(self.nImg):
             imgList.push_back(afwImage.ImageF(self.nX, self.nY, iImg))
             knownMean += iImg
-            imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
+
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         knownMean /= self.nImg
         
         self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)
@@ -136,6 +160,97 @@ class StackTestCase(unittest.TestCase):
 
         self.assertEqual(img.get(0, 0)[0], imgStack.get(0, 0)[0])
 
+    def testStackBadPixels(self):
+        """Check that we properly ignore masked pixels, and set noGoodPixelsMask where there are
+        no good pixels"""
+        mimgVec = afwImage.vectorMaskedImageF()
+
+        DETECTED = afwImage.MaskU_getPlaneBitMask("DETECTED")
+        EDGE =  afwImage.MaskU_getPlaneBitMask("EDGE")
+        INTRP = afwImage.MaskU_getPlaneBitMask("INTRP")
+        SAT = afwImage.MaskU_getPlaneBitMask("SAT")
+
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setNanSafe(False)
+        sctrl.setAndMask(INTRP | SAT)
+        sctrl.setNoGoodPixelsMask(EDGE)
+
+        edgeBBox = afwImage.BBox(afwImage.PointI(0, 0), 20, 20) # set these pixels to EDGE
+        width, height = 512, 512
+        val, maskVal = 10, DETECTED
+        for i in range(4):
+            mimg = afwImage.MaskedImageF(width, height)
+            mimg.set(val, maskVal, 1)
+            #
+            # Set part of the image to NaN (with the INTRP bit set)
+            #
+            llc = afwImage.PointI(width//2*(i//2), height//2*(i%2))
+            bbox = afwImage.BBox(llc, width//2, height//2)
+
+            smimg = mimg.Factory(mimg, bbox)
+            #smimg.set(numpy.nan, INTRP, numpy.nan)
+            del smimg
+            #
+            # And the bottom corner to SAT
+            #
+            smask = mimg.getMask().Factory(mimg.getMask(), edgeBBox)
+            smask |= SAT
+            del smask
+
+            mimgVec.push_back(mimg)
+
+            if display > 1:
+                ds9.mtv(mimg, frame=i, title=str(i))
+
+        mimgStack = afwMath.statisticsStack(mimgVec, afwMath.MEAN, sctrl)
+
+        if display:
+            i += 1
+            ds9.mtv(mimgStack, frame=i, title="Stack")
+            i += 1
+            ds9.mtv(mimgStack.getVariance(), frame=i, title="var(Stack)")
+        #
+        # Check the output, ignoring EDGE pixels
+        #
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setAndMask(afwImage.MaskU_getPlaneBitMask("EDGE"))
+
+        stats = afwMath.makeStatistics(mimgStack, afwMath.MIN | afwMath.MAX, sctrl)
+        self.assertEqual(stats.getValue(afwMath.MIN), val)
+        self.assertEqual(stats.getValue(afwMath.MAX), val)
+        #
+        # We have to clear EDGE in the known bad corner to check the mask
+        #
+        smask = mimgStack.getMask().Factory(mimgStack.getMask(), edgeBBox)
+        self.assertEqual(smask.get(edgeBBox.getX0(), edgeBBox.getY0()), EDGE)
+        smask &= ~EDGE
+        del smask
+
+        self.assertEqual(afwMath.makeStatistics(mimgStack.getMask(), afwMath.SUM, sctrl).getValue(), maskVal)
+
+    def testTicket1412(self):
+        """Ticket 1412: ignored mask bits are propegated to output stack."""
+
+        mimg1 = afwImage.MaskedImageF(1, 1)
+        mimg1.set(0, 0, (1, 0x4, 1)) # set 0100
+        mimg2 = afwImage.MaskedImageF(1, 1)
+        mimg2.set(0, 0, (2, 0x3, 1)) # set 0010 and 0001
+        
+        imgList = afwImage.vectorMaskedImageF()
+        imgList.push_back(mimg1)
+        imgList.push_back(mimg2)
+        
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setAndMask(0x1) # andmask only 0001
+
+        # try first with no sctrl (no andmask set), should see 0x0111 for all output mask pixels
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
+        self.assertEqual(imgStack.get(0, 0)[1], 0x7)
+
+        # now try with sctrl (andmask = 0x0001), should see 0x0100 for all output mask pixels
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl)
+        self.assertEqual(imgStack.get(0, 0)[1], 0x4)
+        
 #################################################################
 # Test suite boiler plate
 #################################################################
