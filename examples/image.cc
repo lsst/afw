@@ -169,14 +169,14 @@ int main() {
     printf("sub images\n");
 #if 0
     // img will be modified
-    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::Point2I(1, 1), 5, 2));
+    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2));
 #elif 0
     // img will not be modified
-    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::Point2I(1, 1), 5, 2), true);
+    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2), true);
 #else
     // img will be modified
-    afwImage::Image<float> simg1(img, afwImage::BBox(afwImage::Point2I(1, 1), 7, 3));
-    afwImage::Image<float> simg(simg1, afwImage::BBox(afwImage::Point2I(0, 0), 5, 2));
+    afwImage::Image<float> simg1(img, afwImage::BBox(afwImage::PointI(1, 1), 7, 3));
+    afwImage::Image<float> simg(simg1, afwImage::BBox(afwImage::PointI(0, 0), 5, 2));
 #endif
 
 #if 0

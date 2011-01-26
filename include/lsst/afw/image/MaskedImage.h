@@ -784,7 +784,7 @@ namespace image {
          * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        Point2I getXY0() const { return _image->getXY0(); }
+        PointI getXY0() const { return _image->getXY0(); }
 
         /**
          * @brief Convert image index to image position (see Image::indexToPosition)
@@ -880,7 +880,7 @@ namespace image {
          * \note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
-        void setXY0(Point2I const origin) {
+        void setXY0(PointI const origin) {
             if (_image) {
                 _image->setXY0(origin);
             }

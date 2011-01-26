@@ -50,11 +50,11 @@ cameraGeom::Amp::Ptr makeAmp(int const i // which amp? (i == 0 ? left : right)
     // Note that all the offsets are relative to the origin of this amp, not to its eventual
     // position in the CCD
     //
-    afwImage::BBox allPixels(afwImage::Point2I(0,                                   0),
+    afwImage::BBox allPixels(afwImage::PointI(0,                                   0),
                              width + nExtended + nOverclock, height);
-    afwImage::BBox biasSec(  afwImage::Point2I(i == 0 ? nExtended : width,          0),
+    afwImage::BBox biasSec(  afwImage::PointI(i == 0 ? nExtended : width,          0),
                              nOverclock,                     height);
-    afwImage::BBox dataSec(  afwImage::Point2I(i == 0 ? nExtended + nOverclock : 0, 0),
+    afwImage::BBox dataSec(  afwImage::PointI(i == 0 ? nExtended + nOverclock : 0, 0),
                              width,                          height);
     //
     // Electronic properties of amplifier

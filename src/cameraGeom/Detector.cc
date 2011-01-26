@@ -264,8 +264,8 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
         }
     }
         
-    afwImage::Point2I LLC(centerPixel[0] + x0, centerPixel[1] + y0);
-    afwImage::Point2I URC(centerPixel[0] + x1, centerPixel[1] + y1);
+    afwImage::PointI LLC(centerPixel[0] + x0, centerPixel[1] + y0);
+    afwImage::PointI URC(centerPixel[0] + x1, centerPixel[1] + y1);
         
     afwImage::BBox newBbox(LLC, URC);
         

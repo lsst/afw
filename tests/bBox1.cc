@@ -32,7 +32,7 @@ namespace image = lsst::afw::image;
 
 BOOST_AUTO_TEST_CASE(bbox) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     image::BBox bb;
-    image::Point2I point(1, 1);
+    image::PointI point(1, 1);
     
     bb.grow(point);
     

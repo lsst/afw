@@ -623,10 +623,10 @@ GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const 
     CONST_PTR(afwCoord::Coord) convertedCoord = coord->convert(_coordSystem);
 
     if (_skyCoordsReversed) {
-        return geom::Point2D(convertedCoord->getLatitude(afwCoord::DEGREES),
+        return GeomPoint(convertedCoord->getLatitude(afwCoord::DEGREES),
                                 convertedCoord->getLongitude(afwCoord::DEGREES));
     } else {    
-        return geom::Point2D(convertedCoord->getLongitude(afwCoord::DEGREES),
+        return GeomPoint(convertedCoord->getLongitude(afwCoord::DEGREES),
                                 convertedCoord->getLatitude(afwCoord::DEGREES));
     }
 }
@@ -668,7 +668,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
     }
 
     // wcslib assumes 1-indexed coords
-    return geom::Point2D(imgcrd[0], imgcrd[1]); 
+    return GeomPoint(imgcrd[0], imgcrd[1]); 
 }
 
 /*
@@ -830,7 +830,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
-    lsst::afw::geom::Point2D const & pix,
+    GeomPoint const & pix,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {
     return linearizePixelToSkyInternal(pix, pixelToSky(pix), skyUnit);
@@ -841,7 +841,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  * and the corresponding sky coordinate.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
-    lsst::afw::geom::Point2D const & pix00,
+    GeomPoint const & pix00,
     lsst::afw::coord::Coord::ConstPtr const & coord,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {
@@ -911,7 +911,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
-    lsst::afw::geom::Point2D const & pix,
+    GeomPoint const & pix,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {
     return linearizeSkyToPixelInternal(pix, pixelToSky(pix), skyUnit);
@@ -922,7 +922,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  * and the corresponding sky coordinate.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
-    lsst::afw::geom::Point2D const & pix00,
+    GeomPoint const & pix00,
     lsst::afw::coord::Coord::ConstPtr const & coord,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {
@@ -1011,12 +1011,12 @@ createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired W
     return wcsMetaData;
 }
 /**
- * Return a Point2I(x0, y0) given a PropertySet containing a suitable WCS (e.g. "A")
+ * Return a PointI(x0, y0) given a PropertySet containing a suitable WCS (e.g. "A")
  *
  * The WCS must have CRPIX[12] == 1 and CRVAL[12] must be present.  If this is true, the WCS
  * cards are removed from the metadata
  */
-image::Point2I getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
+image::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
                                       lsst::daf::base::PropertySet *metadata ///< the metadata, maybe containing the WCS
                                      ) {
         
@@ -1048,7 +1048,7 @@ image::Point2I getImageXY0FromMetadata(std::string const& wcsName,            //
         ;                               // OK, not present
     }
 
-    return image::Point2I(x0, y0);
+    return image::PointI(x0, y0);
 }
 
 /**

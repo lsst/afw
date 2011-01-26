@@ -99,42 +99,42 @@ namespace lsst { namespace afw { namespace image {
     private:
         T _x, _y;
     };
-    typedef Point<double> Point2D;
-    typedef Point<int> Point2I;
+    typedef Point<double> PointD;
+    typedef Point<int> PointI;
 
     /**
      * @brief A bounding box, i.e. a rectangular region defined by its corners, or origin and dimensions
      *
      * Note that the corners are interpreted as being included in the box, so
-     * <tt>BBox(Point2I(1, 1), Point2I(2, 3))</tt> has width 2 and height 3
+     * <tt>BBox(PointI(1, 1), PointI(2, 3))</tt> has width 2 and height 3
      */
-    class BBox : private std::pair<Point2I, std::pair<int, int> > {
+    class BBox : private std::pair<PointI, std::pair<int, int> > {
     public:
         //! Create a BBox with origin llc and the specified dimensions
         BBox() :
-            std::pair<Point2I, std::pair<int, int> >(Point2I(0,0), std::pair<int, int>(0, 0)) {} 
+            std::pair<PointI, std::pair<int, int> >(PointI(0,0), std::pair<int, int>(0, 0)) {} 
 
-        BBox(Point2I llc,                ///< Desired lower left corner
+        BBox(PointI llc,                ///< Desired lower left corner
              int width=1,               ///< Width of BBox (pixels)
              int height=1               ///< Height of BBox (pixels)
             ) :
-            std::pair<Point2I, std::pair<int, int> >(llc, std::pair<int, int>(width, height)) {} 
+            std::pair<PointI, std::pair<int, int> >(llc, std::pair<int, int>(width, height)) {} 
         //! Create a BBox given two corners
-        BBox(Point2I llc,                ///< Desired lower left corner
-             Point2I urc                 ///< Desired upper right corner
+        BBox(PointI llc,                ///< Desired lower left corner
+             PointI urc                 ///< Desired upper right corner
             ) :
-            std::pair<Point2I, std::pair<int, int> >(llc,
+            std::pair<PointI, std::pair<int, int> >(llc,
                                                     std::pair<int, int>(urc.getX() - llc.getX() + 1,
                                                                         urc.getY() - llc.getY() + 1)) {}
 
         //! Return true iff the point lies in the BBox
-        bool contains(Point2I p          ///< The point to check
+        bool contains(PointI p          ///< The point to check
                      ) const {
             return p.getX() >= getX0() && p.getX() <= getX1() && p.getY() >= getY0() && p.getY() <= getY1();
         }
 
-        //! Grow the BBox to include the specified Point2I
-        void grow(Point2I p              ///< The point to include
+        //! Grow the BBox to include the specified PointI
+        void grow(PointI p              ///< The point to include
                  ) {
             if (getWidth() == 0 && getHeight() == 0) {
                 first.setX(p.getX());
@@ -184,8 +184,8 @@ namespace lsst { namespace afw { namespace image {
         void setX1(int x1) { second.first = x1 - getX0() + 1; } ///< Set x coordinate of lower-left corner
         int getY1() const { return first.getY() + second.second - 1; } ///< Return y coordinate of upper-right corner
         void setY1(int y1) { second.second = y1 - getY0() + 1; } ///< Set y coordinate of lower-left corner
-        Point2I getLLC() const { return first; } ///< Return lower-left corner
-        Point2I getURC() const { return Point2I(getX1(), getY1()); } ///< Return upper-right corner
+        PointI getLLC() const { return first; } ///< Return lower-left corner
+        PointI getURC() const { return PointI(getX1(), getY1()); } ///< Return upper-right corner
         int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
         int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
         /// Set BBox's width
@@ -231,19 +231,19 @@ namespace lsst { namespace afw { namespace image {
      * types, but as BCircle is designed by analogy to BBox (i.e. to define sets of pixels),
      * I haven't done so.
      */
-    class BCircle : private std::pair<Point2I, float > {
+    class BCircle : private std::pair<PointI, float > {
     public:
         /// Create a BCircle given centre and radius
-        BCircle(Point2I center,               //!< Centre of circle
+        BCircle(PointI center,               //!< Centre of circle
                 float r                      //!< Radius of circle
-               ) : std::pair<Point2I, float>(center, fabs(r)) {}
+               ) : std::pair<PointI, float>(center, fabs(r)) {}
 
-        Point2I const& getCenter() const { return first; } ///< Return the circle's centre
+        PointI const& getCenter() const { return first; } ///< Return the circle's centre
         float getRadius() const { return second; }        ///< Return the circle's radius
         BBox getBBox() const {                           ///< Return the circle's bounding box
             int const iradius = static_cast<int>(second + 0.5);
-            Point2I llc(first[0] - iradius, first[1] - iradius);
-            Point2I urc(first[0] + iradius, first[1] + iradius);
+            PointI llc(first[0] - iradius, first[1] - iradius);
+            PointI urc(first[0] + iradius, first[1] + iradius);
             return BBox(llc, urc);
         }
     };

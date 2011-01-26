@@ -193,7 +193,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // the original Exposure's MaskedImage BBox. 
     int subWidth = width - 5;
     int subHeight = height - 5;
-    afwImage::BBox subRegion = afwImage::BBox(afwImage::Point2I(orx, ory), subWidth, subHeight);
+    afwImage::BBox subRegion = afwImage::BBox(afwImage::PointI(orx, ory), subWidth, subHeight);
         
     try {
         afwImage::Exposure<ImagePixel> subExpImage(miWcsExpImage, subRegion);
@@ -208,7 +208,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // original Exposure's MaskedImage BBox.  
     int subWidth2 = width + 5;
     int subHeight2 = height + 5;
-    const afwImage::BBox subRegion2 = afwImage::BBox(afwImage::Point2I(orx, ory), subWidth2, subHeight2); 
+    const afwImage::BBox subRegion2 = afwImage::BBox(afwImage::PointI(orx, ory), subWidth2, subHeight2); 
      
     try {
         afwImage::Exposure<ImagePixel> subExpImage2(miWcsExpImage, subRegion2);

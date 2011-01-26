@@ -182,7 +182,7 @@ afwDetect::Footprint::~Footprint() {
 bool afwDetect::Footprint::contains(lsst::afw::geom::Point2I const& pix ///< Pixel to check
                         ) const
 {
-    if (_bbox.contains(afwImage::Point2I(pix[0], pix[1]))) {
+    if (_bbox.contains(afwImage::PointI(pix[0], pix[1]))) {
         for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
             afwDetect::Span::ConstPtr span = *siter;
             
@@ -264,8 +264,8 @@ afwDetect::Span const& afwDetect::Footprint::addSpan(int const y, //!< row value
     _npix += x1 - x0 + 1;
     _normalized = false;
 
-    _bbox.grow(afwImage::Point2I(x0, y));
-    _bbox.grow(afwImage::Point2I(x1, y));
+    _bbox.grow(afwImage::PointI(x0, y));
+    _bbox.grow(afwImage::PointI(x1, y));
 
     return *sp.get();
 }
@@ -281,8 +281,8 @@ const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span
     _npix += span._x1 - span._x0 + 1;
     _normalized = false;
 
-    _bbox.grow(afwImage::Point2I(span._x0, span._y));
-    _bbox.grow(afwImage::Point2I(span._x1, span._y));
+    _bbox.grow(afwImage::PointI(span._x0, span._y));
+    _bbox.grow(afwImage::PointI(span._x1, span._y));
 
     return *sp;
 }
@@ -337,7 +337,7 @@ void afwDetect::Footprint::setBBox() {
         if (span->_y > y1) y1 = span->_y;
     }
 
-    _bbox = afwImage::BBox(afwImage::Point2I(x0, y0), afwImage::Point2I(x1, y1));
+    _bbox = afwImage::BBox(afwImage::PointI(x0, y0), afwImage::PointI(x1, y1));
 }
 
 /**
@@ -661,11 +661,11 @@ afwDetect::Footprint::Ptr growFootprintSlow(
      * then extract a footprint from the result --- this is magically what we want.
      */
     afwImage::BBox bbox = foot.getBBox();
-    bbox.grow(afwImage::Point2I(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
-    bbox.grow(afwImage::Point2I(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
+    bbox.grow(afwImage::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
+    bbox.grow(afwImage::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
     afwImage::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
     *idImage = 0;
-    idImage->setXY0(afwImage::Point2I(0, 0));
+    idImage->setXY0(afwImage::PointI(0, 0));
 
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0());
 
@@ -725,11 +725,11 @@ afwDetect::Footprint::Ptr afwDetect::growFootprint(
      * Cf. http://ostermiller.org/dilate_and_erode.html
      */
     afwImage::BBox bbox = foot.getBBox();
-    bbox.grow(afwImage::Point2I(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
-    bbox.grow(afwImage::Point2I(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
+    bbox.grow(afwImage::PointI(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
+    bbox.grow(afwImage::PointI(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
     afwImage::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
     *idImage = 0;
-    idImage->setXY0(afwImage::Point2I(0, 0));
+    idImage->setXY0(afwImage::PointI(0, 0));
     
     // Set all the pixels in the footprint to 1
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0()); 
@@ -841,8 +841,8 @@ std::vector<afwImage::BBox> afwDetect::footprintToBBoxList(afwDetect::Footprint 
 
                 std::fill(first, last + 1, 0);       // clear pixels; we don't want to see them again
 
-                bbox.grow(afwImage::Point2I(x0, y));     // the LLC
-                bbox.grow(afwImage::Point2I(x1, y));     // the LRC; initial guess for URC
+                bbox.grow(afwImage::PointI(x0, y));     // the LLC
+                bbox.grow(afwImage::PointI(x1, y));     // the LRC; initial guess for URC
                 
                 // we found at least one pixel so extend the BBox upwards
                 for (++y; y != height; ++y) {
@@ -851,7 +851,7 @@ std::vector<afwImage::BBox> afwDetect::footprintToBBoxList(afwDetect::Footprint 
                     }
                     std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
                     
-                    bbox.grow(afwImage::Point2I(x1, y)); // the new URC
+                    bbox.grow(afwImage::PointI(x1, y)); // the new URC
                 }
 
                 bbox.shift(foot.getBBox().getX0(), foot.getBBox().getY0());

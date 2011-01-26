@@ -432,7 +432,7 @@ SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for 
         int x0 = region.getX0();
         for (int x = 0; x < nx; ++x) {
             int const x1 = (x == nx - 1) ? region.getX1() : x0 + xSize - 1; // nx may not be a factor of width
-            image::BBox bbox(image::Point2I(x0, y0), image::Point2I(x1, y1));
+            image::BBox bbox(image::PointI(x0, y0), image::PointI(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
             _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));        
@@ -451,7 +451,7 @@ namespace {
         CellContains(SpatialCellCandidate::Ptr candidate) : _candidate(candidate) {}
 
         bool operator()(SpatialCell::Ptr cell) {
-            return cell->getBBox().contains(image::Point2I(image::positionToIndex(_candidate->getXCenter()),
+            return cell->getBBox().contains(image::PointI(image::positionToIndex(_candidate->getXCenter()),
                                                           image::positionToIndex(_candidate->getYCenter())));
         }
     private:

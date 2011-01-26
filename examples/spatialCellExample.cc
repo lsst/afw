@@ -53,7 +53,7 @@ void SpatialCellSetDemo() {
     /*
      * Create an (empty) SpatialCellSet
      */
-    afwMath::SpatialCellSet cellSet(afwImage::BBox(afwImage::Point2I(0, 0), im->getWidth(), im->getHeight()),
+    afwMath::SpatialCellSet cellSet(afwImage::BBox(afwImage::PointI(0, 0), im->getWidth(), im->getHeight()),
                                     260, 200);
     /*
      * Populate the cellSet using the detected object in the FootprintSet
@@ -123,11 +123,11 @@ readImage() {
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1";
         
-        afwImage::BBox bbox = afwImage::BBox(afwImage::Point2I(270, 2530), 512, 512);
+        afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(270, 2530), 512, 512);
         
         lsst::daf::base::PropertySet::Ptr md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, 0, md, bbox));
-        mi->setXY0(afwImage::Point2I(0, 0));
+        mi->setXY0(afwImage::PointI(0, 0));
     } catch (lsst::pex::exceptions::NotFoundException &e) {
         std::cerr << e << std::endl;
         exit(1);

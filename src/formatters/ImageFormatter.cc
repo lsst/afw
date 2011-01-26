@@ -186,7 +186,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = afwImg::BBox(afwImg::Point2I(llcX, llcY), width, height);
+            box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
         }
         lsst::daf::base::PropertySet::Ptr metadata;
 

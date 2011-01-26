@@ -310,7 +310,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = afwImg::BBox(afwImg::Point2I(llcX, llcY), width, height);
+            box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
         }
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(

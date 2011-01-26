@@ -447,7 +447,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         int y = y0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::Point2I(x0, y), image.getWidth(), 1);
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
             afwImage::Image<PixelT> subImage(image, bbox);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
@@ -459,7 +459,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         int x = x0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::Point2I(x, y0), 1, image.getHeight());
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
             afwImage::Image<PixelT> subImage(image, bbox);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
@@ -500,7 +500,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         int y = 0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::Point2I(x0, y), image.getWidth(), 1);
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
             afwImage::MaskedImage<PixelT> subImage(image, bbox);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
@@ -512,7 +512,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         int x = 0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::Point2I(x, y0), 1, image.getHeight());
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
             afwImage::MaskedImage<PixelT> subImage(image, bbox);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 

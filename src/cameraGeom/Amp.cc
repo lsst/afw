@@ -90,7 +90,7 @@ void cameraGeom::Amp::setTrimmedGeom() {
     int const dataHeight = _dataSec.getHeight();
     int const dataWidth = _dataSec.getWidth();
 
-    _trimmedDataSec = afwImage::BBox(afwImage::Point2I(iX*dataWidth, iY*dataHeight), dataWidth, dataHeight);
+    _trimmedDataSec = afwImage::BBox(afwImage::PointI(iX*dataWidth, iY*dataHeight), dataWidth, dataHeight);
     getAllTrimmedPixels() = _trimmedDataSec;
 }
 

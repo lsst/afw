@@ -113,7 +113,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         for (int iY = 0; iY < _nySample; ++iY) {
             
             ImageT subimg =
-                ImageT(img, image::BBox(image::Point2I(_xorig[iX], _yorig[iY]),
+                ImageT(img, image::BBox(image::PointI(_xorig[iX], _yorig[iY]),
                                         _subimgWidth, _subimgHeight));
             
             math::Statistics stats =

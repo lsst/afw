@@ -93,10 +93,10 @@ namespace {
         // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
         int const numHeight = kHeight - (1 + kCtrY);
         int const numWidth = kWidth - (1 + kCtrX);
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(0, 0), imWidth, kCtrY));
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(0, imHeight - numHeight), imWidth, numHeight));
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(0, kCtrY), kCtrX, imHeight + 1 - kHeight));
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(imWidth - numWidth, kCtrY),
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, 0), imWidth, kCtrY));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, imHeight - numHeight), imWidth, numHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(imWidth - numWidth, kCtrY),
             numWidth, imHeight + 1 - kHeight));
 
         for (std::vector<afwImage::BBox>::const_iterator bboxIter = bboxList.begin();
@@ -147,10 +147,10 @@ namespace {
         // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
         int const numHeight = kHeight - (1 + kCtrY);
         int const numWidth = kWidth - (1 + kCtrX);
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(0, 0), imWidth, kCtrY));
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(0, imHeight - numHeight), imWidth, numHeight));
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(0, kCtrY), kCtrX, imHeight + 1 - kHeight));
-        bboxList.push_back(afwImage::BBox(afwImage::Point2I(imWidth - numWidth, kCtrY),
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, 0), imWidth, kCtrY));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, imHeight - numHeight), imWidth, numHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(imWidth - numWidth, kCtrY),
             numWidth, imHeight + 1 - kHeight));
 
         afwImage::MaskPixel const edgeMask = afwImage::Mask<afwImage::MaskPixel>::getPlaneBitMask("EDGE");

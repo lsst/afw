@@ -95,7 +95,7 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
     afwGeom::Point2I const& centerPixel = getCenterPixel();
     cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::Point2I(pix[0] + centerPixel[0],
                                                                 pix[1] + centerPixel[1]));
-    afwImage::Point2I const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
+    afwImage::PointI const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
     afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::Point2I(off[0], off[1]));
 
     return afwGeom::Point2D(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
@@ -116,7 +116,7 @@ namespace {
                   afwGeom::Point2I point,
                   bool isTrimmed
                  ) :
-            _point(afwImage::Point2I(point[0], point[1])),
+            _point(afwImage::PointI(point[0], point[1])),
             _isTrimmed(isTrimmed)
         { }
 
@@ -124,7 +124,7 @@ namespace {
             return amp->getAllPixels(_isTrimmed).contains(_point);
         }
     private:
-        afwImage::Point2I _point;
+        afwImage::PointI _point;
         bool _isTrimmed;
     };
 }

@@ -230,7 +230,7 @@ namespace image {
          * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        Point2I getXY0() const { return Point2I(_x0, _y0); }
+        PointI getXY0() const { return PointI(_x0, _y0); }
         
         /**
          * @brief Convert image position to index (nearest integer and fractional parts)
@@ -325,7 +325,7 @@ namespace image {
          * \note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
-        void setXY0(Point2I const origin) {
+        void setXY0(PointI const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
         }

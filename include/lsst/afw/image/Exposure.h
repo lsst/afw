@@ -145,7 +145,7 @@ namespace image {
          * <tt>Exposure(fileName, hdu, BBox, mode)</tt> ctor or <tt>Exposure(Exposure, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        Point2I getXY0() const { return _maskedImage.getXY0(); }
+        PointI getXY0() const { return _maskedImage.getXY0(); }
 
         /**
          * Set the Exposure's origin (including correcting the Wcs)
@@ -156,7 +156,7 @@ namespace image {
          * don't do so unless you are an Expert.
          */
         void setXY0(int const x0, int const y0) {
-            Point2I const old = _maskedImage.getXY0();
+            PointI const old = _maskedImage.getXY0();
             _maskedImage.setXY0(x0, y0);
             _wcs->shiftReferencePixel(x0 - old[0], y0 - old[1]);
         }
@@ -168,7 +168,7 @@ namespace image {
          * \note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
-        void setXY0(Point2I const origin) {
+        void setXY0(PointI const origin) {
             setXY0(origin[0], origin[1]);
         }
         // Set Members

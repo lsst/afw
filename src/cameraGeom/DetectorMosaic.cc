@@ -175,10 +175,10 @@ namespace {
 
     struct findByPixel {
         findByPixel(afwGeom::Point2I point) :
-            _point(afwImage::Point2I(point[0], point[1])) {}
+            _point(afwImage::PointI(point[0], point[1])) {}
         
         bool operator()(cameraGeom::Detector::Ptr det) const {
-            afwImage::Point2I relPoint = _point;
+            afwImage::PointI relPoint = _point;
             // Position wrt center of detector
             relPoint.shift(-det->getCenterPixel()[0],
                            -det->getCenterPixel()[1]);
@@ -189,7 +189,7 @@ namespace {
             return det->getAllPixels().contains(relPoint);
         }
     private:
-        afwImage::Point2I _point;
+        afwImage::PointI _point;
     };
 
     struct findByPos {

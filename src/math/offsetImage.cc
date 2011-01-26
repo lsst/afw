@@ -105,7 +105,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
     offsetKernel->setKernelParameters(std::make_pair(dx, dy));
 
     convolve(*outImage, inImage, *offsetKernel, true, true);
-    outImage->setXY0(afwImage::Point2I(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
+    outImage->setXY0(afwImage::PointI(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
 
     return outImage;
 }

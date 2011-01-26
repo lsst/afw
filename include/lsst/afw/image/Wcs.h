@@ -225,7 +225,7 @@ namespace detail {
     PTR(lsst::daf::base::PropertyList)
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
     
-    image::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+    image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
 Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);

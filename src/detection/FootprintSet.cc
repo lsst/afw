@@ -299,7 +299,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         int const npixMin)              //!< minimum number of pixels in an object
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(new FootprintList()),
-      _region(image::Point2I(img.getX0(), img.getY0()),
+      _region(image::PointI(img.getX0(), img.getY0()),
               img.getWidth(), img.getHeight()) {
           findFootprints<ImagePixelT, MaskPixelT>(_footprints.get(), _region, img, threshold, npixMin);
       }
@@ -324,7 +324,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         int const npixMin)              //!< minimum number of pixels in an object
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(new FootprintList()),
-      _region(image::Point2I(maskedImg.getX0(), maskedImg.getY0()),
+      _region(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
               maskedImg.getWidth(), maskedImg.getHeight()) {
 /*
  * Find the Footprints
@@ -386,7 +386,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(new FootprintList()),
-      _region(image::Point2I(img.getX0(), img.getY0()),
+      _region(image::PointI(img.getX0(), img.getY0()),
               img.getWidth(), img.getHeight()) 
 {
 }

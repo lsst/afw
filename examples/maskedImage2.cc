@@ -107,7 +107,7 @@ int main() {
     //
     {
         ImageT center = ImageT(*out2,
-                               image::BBox(image::Point2I(1, 1), in.getWidth() - 2, in.getHeight() - 2));
+                               image::BBox(image::PointI(1, 1), in.getWidth() - 2, in.getHeight() - 2));
         center /= 16;
     }
     //

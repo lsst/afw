@@ -521,7 +521,7 @@ class FourierLocalKernel;
         explicit DeltaFunctionKernel(
             int width,
             int height,
-            lsst::afw::image::Point2I const &point
+            lsst::afw::image::PointI const &point
         );
 
         virtual ~DeltaFunctionKernel() {}
@@ -535,12 +535,12 @@ class FourierLocalKernel;
             double y = 0.0
         ) const;
 
-        lsst::afw::image::Point2I getPixel() const { return _pixel; }
+        lsst::afw::image::PointI getPixel() const { return _pixel; }
 
         virtual std::string toString(std::string const& prefix="") const;
 
     private:
-        lsst::afw::image::Point2I _pixel;
+        lsst::afw::image::PointI _pixel;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -807,7 +807,7 @@ inline void load_construct_data(
     ar >> make_nvp("pixX", x);
     ar >> make_nvp("pixY", y);
     ::new(k) lsst::afw::math::DeltaFunctionKernel(
-        width, height, lsst::afw::image::Point2I(x, y));
+        width, height, lsst::afw::image::PointI(x, y));
 }
 
 }}
