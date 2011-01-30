@@ -365,7 +365,7 @@ class ExposureTestCase(unittest.TestCase):
 
         self.assertEqual(exposureU.getDetector(), exposureF.getDetector())
         self.assertEqual(exposureU.getFilter().getName(), exposureF.getFilter().getName())
-        xy = afwGeom.makePointD(0, 0)
+        xy = afwGeom.PointD(0, 0)
         self.assertEqual(exposureU.getWcs().pixelToSky(xy)[0], exposureF.getWcs().pixelToSky(xy)[0])
         self.assertEqual(exposureU.getCalib().getExptime(), exposureF.getCalib().getExptime())
 

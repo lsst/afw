@@ -68,7 +68,7 @@ class EllipseTestCase(unittest.TestCase):
                 v += numpy.random.randn() * 1E-3
                 core[n] = v
                 self.assertEqual(core[n], v)
-            center = geom.makePointD(*numpy.random.randn(2))
+            center = geom.PointD(*numpy.random.randn(2))
             ellipse = core.makeEllipse(center)
             for n in range(3):
                 self.assertEqual(core[n], ellipse[n+2])
@@ -91,10 +91,10 @@ class EllipseTestCase(unittest.TestCase):
             t1 = core.getGenerator()
             unit_circle_core = core.__class__(geom.ellipses.Axes(1, 1, 0))
             self.assertClose(tuple(unit_circle_core.transform(t1)), core)
-            center = geom.makePointD(*numpy.random.randn(2))
+            center = geom.PointD(*numpy.random.randn(2))
             ellipse = core.makeEllipse(center)
             t2 = ellipse.getGenerator()
-            unit_circle_ellipse = ellipse.__class__(unit_circle_core, geom.makePointD(0, 0))
+            unit_circle_ellipse = ellipse.__class__(unit_circle_core, geom.PointD(0, 0))
             self.assertClose(tuple(unit_circle_ellipse.transform(t2)), ellipse)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

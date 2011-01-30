@@ -308,8 +308,8 @@ void mathDetail::basicConvolve(
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
     
-    afwGeom::BoxI const fullBBox(afwGeom::makePointI(0, 0),
-        afwGeom::makeExtentI(inImage.getWidth(), inImage.getHeight()));
+    afwGeom::BoxI const fullBBox(afwGeom::Point2I(0, 0),
+        afwGeom::Extent2I(inImage.getWidth(), inImage.getHeight()));
     afwGeom::BoxI const goodBBox = kernel.shrinkBBox(fullBBox);
 
     KernelVector kernelXVec(kernel.getWidth());

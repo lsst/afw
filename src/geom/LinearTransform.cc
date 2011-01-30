@@ -81,7 +81,7 @@ double afwGeom::LinearTransform::computeDeterminant() const {
  * Derivative of (*this)(input) with respect to the transform elements (for Point).
  */
 afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dTransform(
-    PointD const & input
+    Point2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r(0,XX) = input.getX();

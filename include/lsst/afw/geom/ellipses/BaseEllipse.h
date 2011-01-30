@@ -101,9 +101,9 @@ public:
     /// \brief Deep copy the BaseEllipse.
     boost::shared_ptr<BaseEllipse> clone() const { return boost::shared_ptr<BaseEllipse>(_clone()); }
 
-    PointD const & getCenter() const { return _center; } ///< \brief Return the center point.
-    PointD & getCenter() { return _center; }             ///< \brief Return the center point.
-    void setCenter(PointD const & center) { _center = center; } ///< \brief Set the center point.
+    Point2D const & getCenter() const { return _center; } ///< \brief Return the center point.
+    Point2D & getCenter() { return _center; }             ///< \brief Return the center point.
+    void setCenter(Point2D const & center) { _center = center; } ///< \brief Set the center point.
 
     BaseCore const & getCore() const; ///< \brief Return the core object.
     BaseCore & getCore();             ///< \brief Return the core object.
@@ -122,7 +122,7 @@ public:
     void scale(double factor);
 
     /// \brief Move the ellipse center by the given offset.
-    void shift(ExtentD const & offset);
+    void shift(Extent2D const & offset);
 
     Transformer transform(AffineTransform const & transform);
     Transformer const transform(AffineTransform const & transform) const; 
@@ -141,11 +141,11 @@ protected:
 
     virtual BaseEllipse * _clone() const = 0;
 
-    explicit BaseEllipse(BaseCore const & core, PointD const & center);
+    explicit BaseEllipse(BaseCore const & core, Point2D const & center);
 
-    explicit BaseEllipse(BaseCore * core, PointD const & center);
+    explicit BaseEllipse(BaseCore * core, Point2D const & center);
 
-    PointD _center;
+    Point2D _center;
     boost::scoped_ptr<BaseCore> _core;
 };
 
@@ -181,7 +181,7 @@ public:
     boost::shared_ptr<BaseCore> clone() const { return boost::shared_ptr<BaseCore>(_clone()); }
 
     /// \brief Construct an ellipse of the appropriate subclass from this and the given center.
-    boost::shared_ptr<BaseEllipse> makeEllipse(PointD const & center = PointD()) const {
+    boost::shared_ptr<BaseEllipse> makeEllipse(Point2D const & center = Point2D()) const {
         return boost::shared_ptr<BaseEllipse>(_makeEllipse(center));
     }
 
@@ -209,7 +209,7 @@ public:
     virtual LinearTransform getGenerator() const;
 
     /// \brief Return the size of the bounding box for the ellipse core.
-    ExtentD computeDimensions() const;
+    Extent2D computeDimensions() const;
 
     /// \brief Return the core parameters as a vector.
     ParameterVector const & getVector() const { return _vector; }
@@ -234,7 +234,7 @@ protected:
     friend class BaseEllipse;
 
     virtual BaseCore * _clone() const = 0;
-    virtual BaseEllipse * _makeEllipse(PointD const & center) const = 0;
+    virtual BaseEllipse * _makeEllipse(Point2D const & center) const = 0;
 
     explicit BaseCore(ParameterVector const & vector) : _vector(vector) {}
 
@@ -264,15 +264,15 @@ inline void BaseEllipse::setCore(BaseCore const & core) { *_core = core; }
 inline bool BaseEllipse::normalize() { return _core->normalize(); }
 inline void BaseEllipse::grow(double buffer) { getCore().grow(buffer); }
 inline void BaseEllipse::scale(double factor) { getCore().scale(factor); }
-inline void BaseEllipse::shift(ExtentD const & offset) { _center += offset; }
+inline void BaseEllipse::shift(Extent2D const & offset) { _center += offset; }
 
 inline double & BaseEllipse::operator[](int i) { return (i<2) ? _center[i] : (*_core)[i-2]; }
 inline double BaseEllipse::operator[](int i) const { return (i<2) ? _center[i] : (*_core)[i-2]; }
 
-inline BaseEllipse::BaseEllipse(Core const & core, PointD const & center) : 
+inline BaseEllipse::BaseEllipse(Core const & core, Point2D const & center) : 
     _center(center), _core(core._clone()) {}
 
-inline BaseEllipse::BaseEllipse(Core * core, PointD const & center) :
+inline BaseEllipse::BaseEllipse(Core * core, Point2D const & center) :
     _center(center), _core(core) {}
 
 } // namespace lsst::afw::geom::ellipses

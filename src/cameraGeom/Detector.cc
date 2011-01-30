@@ -69,7 +69,7 @@ bool cameraGeom::Id::operator<(Id const& rhs) const {
 afwGeom::Extent2D cameraGeom::Detector::getSize() const {
     bool const isTrimmed = true;
 
-    return afwGeom::makeExtentD(getAllPixels(isTrimmed).getWidth()*_pixelSize,
+    return afwGeom::Extent2D(getAllPixels(isTrimmed).getWidth()*_pixelSize,
                                      getAllPixels(isTrimmed).getHeight()*_pixelSize);
 }
 
@@ -105,7 +105,7 @@ afwGeom::Point2I cameraGeom::Detector::getIndexFromPosition(
         afwGeom::Point2D const& pos     ///< Offset from chip centre, mm
                                                            ) const
 {
-    return afwGeom::makePointI(pos[0]/_pixelSize, pos[1]/_pixelSize);
+    return afwGeom::Point2I(pos[0]/_pixelSize, pos[1]/_pixelSize);
 }
 
 /**
@@ -141,14 +141,14 @@ afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
         bool const                      ///< Unused
                                                            ) const
 {
-    return afwGeom::makePointD(_center[0] + pix[0]*_pixelSize, _center[1] + pix[1]*_pixelSize);
+    return afwGeom::Point2D(_center[0] + pix[0]*_pixelSize, _center[1] + pix[1]*_pixelSize);
 }    
 
 /// Offset a Detector by the specified amount
 void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
                                  int dy  ///< How much to offset in y (pixels)
                                 ) {
-    afwGeom::Extent2I offset(afwGeom::makePointI(dx, dy));
+    afwGeom::Extent2I offset(afwGeom::Point2I(dx, dy));
     _centerPixel.shift(offset);
     
     _allPixels.shift(dx, dy);
@@ -197,7 +197,7 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
     //
     // To work
     //
-    afwGeom::Point2I const centerPixel = afwGeom::makePointI(dimensions[0]/2, dimensions[1]/2);
+    afwGeom::Point2I const centerPixel = afwGeom::Point2I(dimensions[0]/2, dimensions[1]/2);
 
     int x0, y0;                                          // minimum x/y
     int x1, y1;                                          // maximum x/y
@@ -291,14 +291,14 @@ void cameraGeom::Detector::setOrientation(
     //
     _allPixels =
         cameraGeom::detail::rotateBBoxBy90(_allPixels, n90,
-                                           afwGeom::makeExtentI(getAllPixels(false).getWidth(),
+                                           afwGeom::Extent2I(getAllPixels(false).getWidth(),
                                                                 getAllPixels(false).getHeight()));
     _trimmedAllPixels =
         cameraGeom::detail::rotateBBoxBy90(_trimmedAllPixels, n90,
-                                           afwGeom::makeExtentI(getAllPixels(true).getWidth(),
+                                           afwGeom::Extent2I(getAllPixels(true).getWidth(),
                                                                 getAllPixels(true).getHeight()));
         
     if (n90 == 1 || n90 == 3) {
-        _size = afwGeom::makeExtentD(_size[1], _size[0]);
+        _size = afwGeom::Extent2D(_size[1], _size[0]);
     }
 }

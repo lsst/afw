@@ -77,11 +77,11 @@ public:
         return static_cast<LogShearEllipse &>(BaseEllipse::operator=(other)); 
     }
 
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit inline LogShearEllipse(PointD const & center = PointD());
+    /// \brief Construct from a Point2D and zero-size Core.
+    explicit inline LogShearEllipse(Point2D const & center = Point2D());
 
     /// \brief Construct from a copy of an LogShear core.
-    explicit inline LogShearEllipse(LogShear const & core, PointD const & center = PointD());
+    explicit inline LogShearEllipse(LogShear const & core, Point2D const & center = Point2D());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit LogShearEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
@@ -126,7 +126,7 @@ public:
     Ptr clone() const { return Ptr(_clone()); }
 
     /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
-    LogShearEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
+    LogShearEllipse::Ptr makeEllipse(Point2D const & center = Point2D()) const {
         return LogShearEllipse::Ptr(_makeEllipse(center));
     }
 
@@ -196,7 +196,7 @@ protected:
     
     virtual LogShear * _clone() const { return new LogShear(*this); }
     
-    virtual LogShearEllipse * _makeEllipse(PointD const & center) const {
+    virtual LogShearEllipse * _makeEllipse(Point2D const & center) const {
         return new LogShearEllipse(*this, center);
     }
 
@@ -215,9 +215,9 @@ protected:
 inline LogShear const & LogShearEllipse::getCore() const { return static_cast<LogShear const &>(*_core); }
 inline LogShear & LogShearEllipse::getCore() { return static_cast<LogShear &>(*_core); }
 
-inline LogShearEllipse::LogShearEllipse(PointD const & center) :
+inline LogShearEllipse::LogShearEllipse(Point2D const & center) :
     BaseEllipse(new LogShear(),center) {}
-inline LogShearEllipse::LogShearEllipse(LogShear const & core, PointD const & center) : 
+inline LogShearEllipse::LogShearEllipse(LogShear const & core, Point2D const & center) : 
     BaseEllipse(core,center) {}
 inline LogShearEllipse::LogShearEllipse(BaseEllipse const & other) : 
     BaseEllipse(new LogShear(other.getCore()),other.getCenter()) {}

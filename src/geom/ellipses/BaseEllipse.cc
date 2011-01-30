@@ -51,7 +51,7 @@ ellipses::BaseEllipse::ParameterVector const ellipses::BaseEllipse::getVector() 
  * Set the ellipse parameters from a vector.
  */
 void ellipses::BaseEllipse::setVector(BaseEllipse::ParameterVector const & vector) {
-    _center = PointD(vector.segment<2>(0));
+    _center = Point2D(vector.segment<2>(0));
     _core->setVector(vector.segment<3>(2));
 }
 
@@ -71,11 +71,11 @@ lsst::afw::geom::AffineTransform ellipses::BaseEllipse::getGenerator() const {
  * Return the bounding box of the ellipse.
  */
 ellipses::BaseEllipse::Envelope ellipses::BaseEllipse::computeEnvelope() const {
-    ExtentD size(getCore().computeDimensions());
+    Extent2D size(getCore().computeDimensions());
     return Envelope(_center - size * 0.5, size);
 }
 
-lsst::afw::geom::ExtentD ellipses::BaseCore::computeDimensions() const {
+lsst::afw::geom::Extent2D ellipses::BaseCore::computeDimensions() const {
     Axes axes(*this);
     double c = std::cos(axes[Axes::THETA]);
     double s = std::sin(axes[Axes::THETA]);
@@ -85,7 +85,7 @@ lsst::afw::geom::ExtentD ellipses::BaseCore::computeDimensions() const {
     double a2 = axes[Axes::A] * axes[Axes::A];
     double as2 = a2*s;
     double bc2 = b2*c;
-    ExtentD dimensions = ExtentD::make(std::sqrt(b2*s+a2*c),std::sqrt(as2+bc2));
+    Extent2D dimensions = Extent2D(std::sqrt(b2*s+a2*c),std::sqrt(as2+bc2));
     dimensions *= 2;
     return dimensions;
 }

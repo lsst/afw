@@ -131,26 +131,26 @@ public:
     bool isIdentity() const { return getMatrix().isIdentity(); }
 
     /**
-     *  \brief Transform a PointD object. 
+     *  \brief Transform a Point2D object. 
      *
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Extent
      */
-    PointD operator()(PointD const & p) const { return PointD(getMatrix() * p.asVector()); }
+    Point2D operator()(Point2D const & p) const { return Point2D(getMatrix() * p.asVector()); }
 
     /**
-     *  \brief Transform a ExtentD object. 
+     *  \brief Transform a Extent2D object. 
      *
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Point
      */
-    ExtentD operator()(ExtentD const & p) const { return ExtentD(getMatrix() * p.asVector()); }
+    Extent2D operator()(Extent2D const & p) const { return Extent2D(getMatrix() * p.asVector()); }
 
-    TransformDerivativeMatrix dTransform(PointD const & input) const;
+    TransformDerivativeMatrix dTransform(Point2D const & input) const;
 
     /// Derivative of (*this)(input) with respect to the transform elements (for Extent);
-    TransformDerivativeMatrix dTransform(ExtentD const & input) const {
-        return dTransform(PointD(input));
+    TransformDerivativeMatrix dTransform(Extent2D const & input) const {
+        return dTransform(Point2D(input));
     }
 
     friend std::ostream & operator<<(std::ostream & os, LinearTransform const & t);

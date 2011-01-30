@@ -30,7 +30,7 @@
 namespace ellipses = lsst::afw::geom::ellipses;
 
 ellipses::AxesEllipse::AxesEllipse(ParameterVector const & vector, bool doNormalize) :
-    BaseEllipse(new Axes(vector.segment<3>(0)), PointD(vector.segment<2>(2))) 
+    BaseEllipse(new Axes(vector.segment<3>(0)), Point2D(vector.segment<2>(2))) 
 { 
     if (doNormalize) normalize(); 
 }

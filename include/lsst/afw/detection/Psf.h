@@ -56,13 +56,13 @@ public:
 
     Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
-                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0),
+    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
 
     Image::Ptr computeImage(lsst::afw::image::Color const& color,
-                            lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
-                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0),
+                            lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
     
     lsst::afw::math::Kernel::Ptr getKernel(lsst::afw::image::Color const&
@@ -74,12 +74,12 @@ public:
         return doGetKernel(color);
     }
     lsst::afw::math::Kernel::Ptr getLocalKernel(
-        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
         lsst::afw::image::Color const& color=lsst::afw::image::Color()) {
         return doGetLocalKernel(ccdXY, color);
     }
     lsst::afw::math::Kernel::ConstPtr getLocalKernel(
-        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
         lsst::afw::image::Color const& color=lsst::afw::image::Color()) const {
         return doGetLocalKernel(ccdXY, color);
     }

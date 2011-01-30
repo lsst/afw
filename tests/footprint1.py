@@ -465,12 +465,12 @@ class FootprintTestCase(unittest.TestCase):
         #
         # Check Footprint.contains() while we are about it
         #
-        self.assertTrue(objects[0].contains(afwGeom.makePointI(7, 5)))
-        self.assertFalse(objects[0].contains(afwGeom.makePointI(10, 6)))
-        self.assertFalse(objects[0].contains(afwGeom.makePointI(7, 6)))
-        self.assertFalse(objects[0].contains(afwGeom.makePointI(4, 2)))
+        self.assertTrue(objects[0].contains(afwGeom.PointI(7, 5)))
+        self.assertFalse(objects[0].contains(afwGeom.PointI(10, 6)))
+        self.assertFalse(objects[0].contains(afwGeom.PointI(7, 6)))
+        self.assertFalse(objects[0].contains(afwGeom.PointI(4, 2)))
 
-        self.assertTrue(objects[1].contains(afwGeom.makePointI(3, 6)))
+        self.assertTrue(objects[1].contains(afwGeom.PointI(3, 6)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

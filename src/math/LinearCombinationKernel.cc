@@ -385,7 +385,7 @@ afwMath::ImageLocalKernel::Ptr afwMath::LinearCombinationKernel::computeImageLoc
     ImageLocalKernel::Image::Ptr imagePtr( 
         new ImageLocalKernel::Image(getWidth(), getHeight())
     );
-    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(
+    lsst::afw::geom::Point2I center = lsst::afw::geom::Point2I(
         getCtrX(), getCtrY()
     );
     computeImage(*imagePtr, true, location.getX(), location.getY());

@@ -61,7 +61,7 @@ public:
     typedef Eigen::RowVector2d DerivativeVector;
     typedef Eigen::RowVector3d CoreDerivativeVector;
 
-    typedef PointD argument_type;
+    typedef Point2D argument_type;
     typedef double result_type;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -70,15 +70,15 @@ public:
     explicit RadialFraction(BaseCore const & core);
 
     /// \brief Evaluate the RadialFraction at the given point.
-    double operator()(PointD const & p) const {
+    double operator()(Point2D const & p) const {
         return std::sqrt(p.asVector().dot(_inv_matrix * p.asVector()));
     }
 
     /// \brief Evaluate the gradient (derivative with respect to p).
-    DerivativeVector d(PointD const & p) const;
+    DerivativeVector d(Point2D const & p) const;
 
     /// \brief Evaluate the derivative with respect to the Core parameters.
-    CoreDerivativeVector dCore(PointD const & p) const;
+    CoreDerivativeVector dCore(Point2D const & p) const;
 
 };
 
@@ -95,7 +95,7 @@ public:
  */
 class BaseEllipse::RadialFraction {
     BaseCore::RadialFraction _coreRF;
-    ExtentD _offset;
+    Extent2D _offset;
 public:
     
     typedef boost::shared_ptr<RadialFraction> Ptr;
@@ -104,21 +104,21 @@ public:
     typedef Eigen::RowVector2d DerivativeVector;
     typedef Eigen::Matrix<double,1,5> EllipseDerivativeVector;
 
-    typedef PointD argument_type;
+    typedef Point2D argument_type;
     typedef double result_type;
 
     /// \brief Standard constructor.
     explicit RadialFraction(BaseEllipse const & ellipse) :
-        _coreRF(ellipse.getCore()), _offset(PointD()-ellipse.getCenter()) {}
+        _coreRF(ellipse.getCore()), _offset(Point2D()-ellipse.getCenter()) {}
 
     /// \brief Evaluate the RadialFraction at the given point.
-    double operator()(PointD const & p) const { return _coreRF(p + _offset); }
+    double operator()(Point2D const & p) const { return _coreRF(p + _offset); }
 
     /// \brief Evaluate the gradient (derivative with respect to p).
-    DerivativeVector d(PointD const & p) const { return _coreRF.d(p + _offset); }
+    DerivativeVector d(Point2D const & p) const { return _coreRF.d(p + _offset); }
 
     /// \brief Evaluate the derivative with respect to the Ellipse parameters.
-    EllipseDerivativeVector dEllipse(PointD const & p) const;
+    EllipseDerivativeVector dEllipse(Point2D const & p) const;
 
 };
 

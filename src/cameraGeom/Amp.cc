@@ -69,7 +69,7 @@ cameraGeom::Amp::Amp(
 
     getAllPixels() = allPixels;
 
-    _originOnDisk = afwGeom::makePointI(0, 0);
+    _originOnDisk = afwGeom::Point2I(0, 0);
     _nQuarter = 0;
     _flipLR = _flipTB = false;
     
@@ -144,7 +144,7 @@ lsst::afw::image::BBox cameraGeom::Amp::_mapToDisk(lsst::afw::image::BBox bbox) 
     int const y0 = _originOnDisk.getY();
     bbox.shift(-x0, -y0);
     // Rotate the BBox to reflect the on-disk orientation
-    afwGeom::Extent2I dimensions = afwGeom::makeExtentI(getAllPixels(false).getWidth(),
+    afwGeom::Extent2I dimensions = afwGeom::Extent2I(getAllPixels(false).getWidth(),
                                                         getAllPixels(false).getHeight());
     return cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
 }

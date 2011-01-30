@@ -32,17 +32,16 @@ from .geomLib import (
     Extent3I,
     Extent2D,
     Extent3D,
-    makeExtentI,
-    makeExtentD,
     Point2I,
     Point3I,
     Point2D,
     Point3D,
-    makePointI,
-    makePointD,
-    BoxI,
-    BoxD,
+    Box2I,
+    Box2D,
 )
+
+BoxI = Box2I
+BoxD = Box2D
 
 PointI = Point2I
 PointD = Point2D

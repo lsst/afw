@@ -63,12 +63,12 @@ class SavingSubImagesTest(unittest.TestCase):
         
         #A list of pixel positions to test
         self.testPositions = []
-        self.testPositions.append(afwGeom.makePointD(128, 128))
-        self.testPositions.append(afwGeom.makePointD(0,0))        
-        self.testPositions.append(afwGeom.makePointD(20,30))        
-        self.testPositions.append(afwGeom.makePointD(60,50))        
-        self.testPositions.append(afwGeom.makePointD(80, 80))        
-        self.testPositions.append(afwGeom.makePointD(255,255))
+        self.testPositions.append(afwGeom.PointD(128, 128))
+        self.testPositions.append(afwGeom.PointD(0,0))        
+        self.testPositions.append(afwGeom.PointD(20,30))        
+        self.testPositions.append(afwGeom.PointD(60,50))        
+        self.testPositions.append(afwGeom.PointD(80, 80))        
+        self.testPositions.append(afwGeom.PointD(255,255))
 
         self.parent.getMaskedImage().set(0)
         for p in self.testPositions:
@@ -142,7 +142,7 @@ class SavingSubImagesTest(unittest.TestCase):
                 ds9.mtv(subImg, frame=1)
 
             for p in self.testPositions:
-                subP = p - afwGeom.makeExtentD(llc[0], llc[1]) # pixel in subImg
+                subP = p - afwGeom.ExtentD(llc[0], llc[1]) # pixel in subImg
 
                 if \
                        subP[0] < 0 or subP[0] >= bbox.getWidth() or \
@@ -150,7 +150,7 @@ class SavingSubImagesTest(unittest.TestCase):
                     continue
 
                 adParent = self.parent.getWcs().pixelToSky(p)
-                adSub = subImg.getWcs().pixelToSky(subP + afwGeom.makeExtentD(xy0[0], xy0[1]))
+                adSub = subImg.getWcs().pixelToSky(subP + afwGeom.ExtentD(xy0[0], xy0[1]))
                 #
                 # Check that we're talking about the same pixel
                 #            

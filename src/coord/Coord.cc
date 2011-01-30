@@ -153,21 +153,6 @@ double meanSiderealTimeGreenwich(
     
 double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
 
-
-/*
- * Utility function to put point3D objects in to Eigen vector3d
- */
-Eigen::Vector3d point3dToVector(afwGeom::Point3D p3d) {
-    Eigen::Vector3d v;
-    v << p3d[0], p3d[1], p3d[2];
-    return v;
-}
-
-afwGeom::Point3D vectorToPoint3d(Eigen::Vector3d v) {
-    return afwGeom::makePointD(v[0], v[1], v[2]);
-}
-    
-
 /**
  * @brief Adjust a large angle or negative angle to be in range [0, 360) degrees
  *
@@ -435,9 +420,9 @@ void afwCoord::Coord::reset(
 afwGeom::Point2D afwCoord::Coord::getPosition(CoordUnit unit) const {
     // treat HOURS specially, they must mean hours for RA, degrees for Dec
     if (unit == HOURS) {
-        return afwGeom::makePointD(getLongitude(unit), getLatitude(DEGREES));
+        return afwGeom::Point2D(getLongitude(unit), getLatitude(DEGREES));
     } else {
-        return afwGeom::makePointD(getLongitude(unit), getLatitude(unit));
+        return afwGeom::Point2D(getLongitude(unit), getLatitude(unit));
     }
 }
 
@@ -450,7 +435,7 @@ afwGeom::Point3D afwCoord::Coord::getVector() const {
     double const x = cos(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const y = sin(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const z = sin(getLatitude(RADIANS));
-    return afwGeom::makePointD(x, y, z);
+    return afwGeom::Point3D(x, y, z);
 }
 
 
@@ -533,9 +518,7 @@ double afwCoord::Coord::offset(
     // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
     // get the vector r
-    //afwGeom::Point3D const rP3d = getVector();
-    Eigen::Vector3d r = point3dToVector(getVector());
-    //r << rP3d[0], rP3d[1], rP3d[2];
+    Eigen::Vector3d r = getVector().asVector();
 
 
     // Get the vector v:
@@ -562,7 +545,7 @@ double afwCoord::Coord::offset(
     // take r x v to get the axis
     Eigen::Vector3d axisVector = r.cross(v);
     axisVector.normalize();
-    Coord axisCoord = Coord(vectorToPoint3d(axisVector), getEpoch());
+    Coord axisCoord = Coord(afwGeom::Point3D(axisVector), getEpoch());
     
     rotate(axisCoord, arcLen);
 
@@ -574,16 +557,16 @@ double afwCoord::Coord::offset(
     // phi2 = atan2(w2.v2, u2.v2)
     //
     // we need to compute u2, and then rotate v (exactly as we rotated r) to get v2
-    Eigen::Vector3d r2 = point3dToVector(getVector());
+    Eigen::Vector3d r2 = getVector().asVector();
     Eigen::Vector3d u2;
     u2 << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
     Eigen::Vector3d w2 = r2.cross(u2);
 
     // make v a unit vector and rotate v exactly as we rotated r
     v.normalize();
-    Coord v2Coord = Coord(vectorToPoint3d(v), getEpoch());
+    Coord v2Coord = Coord(afwGeom::Point3D(v), getEpoch());
     v2Coord.rotate(axisCoord, arcLen);
-    Eigen::Vector3d v2 = point3dToVector(v2Coord.getVector());
+    Eigen::Vector3d v2 = v2Coord.getVector().asVector();
 
     double phi2 = atan2(w2.dot(v2), u2.dot(v2));
 

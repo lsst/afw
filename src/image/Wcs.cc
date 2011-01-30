@@ -56,7 +56,7 @@ using namespace std;
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::daf::base::PropertyList PropertyList;
 typedef lsst::afw::image::Wcs Wcs;
-typedef lsst::afw::geom::PointD GeomPoint;
+typedef lsst::afw::geom::Point2D GeomPoint;
 typedef lsst::afw::coord::Coord::Ptr CoordPtr;
 
 //The amount of space allocated to strings in wcslib
@@ -464,7 +464,7 @@ GeomPoint Wcs::getPixelOrigin() const {
         //Convert from fits units back to lsst units
         double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
         double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
-        return geom::makePointD(p1, p2);
+        return geom::Point2D(p1, p2);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -553,8 +553,8 @@ double Wcs::pixArea(GeomPoint pix00     ///< The pixel point where the area is d
     // Step by "side" in x and y pixel directions...
     GeomPoint px(pix00);
     GeomPoint py(pix00);
-    px.shift(geom::makeExtentD(side, 0));
-    py.shift(geom::makeExtentD(0, side));
+    px.shift(geom::Extent2D(side, 0));
+    py.shift(geom::Extent2D(0, side));
     // Push the points through the WCS, and find difference in 3-space.
     afwGeom::Extent3D dx = pixelToSky(px)->getVector() - v0;
     afwGeom::Extent3D dy = pixelToSky(py)->getVector() - v0;
@@ -601,7 +601,7 @@ GeomPoint Wcs::skyToPixelImpl(double sky1, ///< Longitude coordinate; DEGREES
     }
 
     // wcslib assumes 1-indexed coords
-    return geom::makePointD(pixTmp[0] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels,
+    return geom::Point2D(pixTmp[0] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels,
                                     pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels); 
 }
 
@@ -623,10 +623,10 @@ GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const 
     CONST_PTR(afwCoord::Coord) convertedCoord = coord->convert(_coordSystem);
 
     if (_skyCoordsReversed) {
-        return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
+        return GeomPoint(convertedCoord->getLatitude(afwCoord::DEGREES),
                                 convertedCoord->getLongitude(afwCoord::DEGREES));
     } else {    
-        return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
+        return GeomPoint(convertedCoord->getLongitude(afwCoord::DEGREES),
                                 convertedCoord->getLatitude(afwCoord::DEGREES));
     }
 }
@@ -668,7 +668,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
     }
 
     // wcslib assumes 1-indexed coords
-    return geom::makePointD(imgcrd[0], imgcrd[1]); 
+    return GeomPoint(imgcrd[0], imgcrd[1]); 
 }
 
 /*
@@ -732,7 +732,7 @@ afwGeom::Point2D Wcs::pixelToSky(double pixel1, double pixel2, bool) const {
     double skyTmp[2];
     pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
-    return afwGeom::makePointD(skyTmp[0], skyTmp[1]);
+    return afwGeom::Point2D(skyTmp[0], skyTmp[1]);
 }
 
 ///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
@@ -830,7 +830,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
-    lsst::afw::geom::Point2D const & pix,
+    GeomPoint const & pix,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {
     return linearizePixelToSkyInternal(pix, pixelToSky(pix), skyUnit);
@@ -841,7 +841,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  * and the corresponding sky coordinate.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
-    lsst::afw::geom::Point2D const & pix00,
+    GeomPoint const & pix00,
     lsst::afw::coord::Coord::ConstPtr const & coord,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {
@@ -853,9 +853,9 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     const double side = 10;             // length of the square's sides in pixels
     GeomPoint const sky00 = coord->getPosition(skyUnit);
 
-    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getPosition(skyUnit) -
+    GeomPoint const dsky10 = pixelToSky(pix00 + geom::Extent2D(side, 0))->getPosition(skyUnit) -
         geom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side))->getPosition(skyUnit) -
+    GeomPoint const dsky01 = pixelToSky(pix00 + geom::Extent2D(0, side))->getPosition(skyUnit) -
         geom::Extent<double>(sky00);
     
     Eigen::Matrix2d m;
@@ -868,7 +868,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     sky00v << sky00.getX(), sky00.getY();
     Eigen::Vector2d pix00v;
     pix00v << pix00.getX(), pix00.getY();
-    //return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
+    //return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::Extent2D(sky00v - m * pix00v));
     return lsst::afw::geom::AffineTransform(m, (sky00v - m * pix00v));
 }
 
@@ -911,7 +911,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
-    lsst::afw::geom::Point2D const & pix,
+    GeomPoint const & pix,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {
     return linearizeSkyToPixelInternal(pix, pixelToSky(pix), skyUnit);
@@ -922,7 +922,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  * and the corresponding sky coordinate.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
-    lsst::afw::geom::Point2D const & pix00,
+    GeomPoint const & pix00,
     lsst::afw::coord::Coord::ConstPtr const & coord,
     lsst::afw::coord::CoordUnit skyUnit
 ) const {

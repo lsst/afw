@@ -362,7 +362,7 @@ void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) co
 afwMath::ImageLocalKernel::Ptr afwMath::Kernel::computeImageLocalKernel(
     lsst::afw::geom::Point2D const & location
 ) const{
-    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(
+    lsst::afw::geom::Point2I center = lsst::afw::geom::Point2I(
         getCtrX(), getCtrY()
     );
     ImageLocalKernel::Image::Ptr imagePtr(

@@ -115,7 +115,7 @@ class dgPsfTestCase(unittest.TestCase):
             if fy >= 0.5:
                 fy -= 1.0
 
-            im = self.psf.computeImage(afwGeom.makePointD(x, y)).convertFloat()
+            im = self.psf.computeImage(afwGeom.PointD(x, y)).convertFloat()
 
             stamps.append(im.Factory(im, True))
             trueCenters.append([xcen + fx, ycen + fy])

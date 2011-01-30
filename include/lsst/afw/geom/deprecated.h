@@ -78,12 +78,12 @@ namespace lsst { namespace afw { namespace geom {
     <tr>
       <th rowspan=2>Construction</th> 
       <td>@code image::Point<T>(x,y) @endcode</td>
-      <td>@code geom::Point<T>::make(x,y) @endcode</td> 
+      <td>@code geom::Point<T>(x,y) @endcode</td> 
       <td>&nbsp;</td>
     </tr>
     <tr>
       <td>@code image::Point<T>(v) @endcode</td>
-      <td>@code geom::Point<T>::make(v) @endcode</td> 
+      <td>@code geom::Point<T>(v) @endcode</td> 
       <td>&nbsp;</td>
     </tr>
     <tr>
@@ -172,8 +172,8 @@ image::BBox::BBox(image::PointI llc,
      </td>
       <td>
 @code
-geom::BoxI::BoxI(geom::PointI min, 
-                 geom::PointI max, 
+geom::BoxI::BoxI(geom::Point2I min, 
+                 geom::Point2I max, 
                  bool invert=true)
 @endcode
     </td> 
@@ -230,21 +230,21 @@ geom::BoxI::BoxI(geom::PointI min,
     <tr>
       <td>@code image::BBox::getDimensions() @endcode</td>
       <td>@code geom::BoxI::getDimensions() @endcode</td> 
-      <td>geom::BoxI returns geom::ExtentI, while image::BBox return std::pair<int,int></td>
+      <td>geom::Box2I returns geom::Extent2I, while image::BBox return std::pair<int,int></td>
     </tr>
     <tr>
       <th rowspan=3>Comparison</th> 
       <td>@code image::BBox::operator==(image::BBox) @endcode</td>
-      <td>@code geom::BoxI::operator==(geom::BoxI) @endcode</td> 
+      <td>@code geom::Box2I::operator==(geom::BoxI) @endcode</td> 
       <td rowspan=2>Comparison operators are the same, but in geom all empty boxes are considered equal.</td>
     </tr>
     <tr>
       <td>@code image::BBox::operator!=(image::BBox) @endcode</td>
-      <td>@code geom::BoxI::operator!=(geom::BoxI) @endcode</td> 
+      <td>@code geom::Box2I::operator!=(geom::BoxI) @endcode</td> 
     </tr>
     <tr>
       <td>@code image::BBox::operator bool() @endcode</td>
-      <td>@code geom::BoxI::isEmpty() @endcode</td> 
+      <td>@code geom::Box2I::isEmpty() @endcode</td> 
       <td>
         geom::BoxI is not implicitly converible to bool.  Note that an image::BBox that is
         empty in only one dimension evaluates to true.

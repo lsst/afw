@@ -49,7 +49,7 @@ class dgPsfTestCase(unittest.TestCase):
     def testComputeImage(self):
         """Test the computation of the PSF's image at a point"""
 
-        ccdXY = afwGeom.makePointD(0, 0)
+        ccdXY = afwGeom.PointD(0, 0)
         kIm = self.psf.computeImage(ccdXY)
 
         if False:
@@ -78,8 +78,8 @@ class dgPsfTestCase(unittest.TestCase):
         """Test the computation of the PSF's image at a point"""
 
         color = afwImage.Color(1.0)
-        ccdXY = afwGeom.makePointD(0, 0)
-        dimen = afwGeom.makeExtentI(self.ksize, self.ksize)
+        ccdXY = afwGeom.PointD(0, 0)
+        dimen = afwGeom.ExtentI(self.ksize, self.ksize)
 
         kIm = self.psf.computeImage(ccdXY)
         self.assertTrue(kIm.getWidth() == self.ksize)
@@ -149,7 +149,7 @@ class dgPsfTestCase(unittest.TestCase):
             if fy >= 0.5:
                 fy -= 1.0
 
-            im = self.psf.computeImage(afwGeom.makePointD(x, y)).convertF()
+            im = self.psf.computeImage(afwGeom.PointD(x, y)).convertF()
 
             stamps.append(im.Factory(im, True))
             trueCenters.append([xcen + fx, ycen + fy])
@@ -182,12 +182,12 @@ class dgPsfTestCase(unittest.TestCase):
                                    afwMath.AnalyticKernel(ksize, ksize,
                                                           afwMath.GaussianFunction2D(sigma1, sigma1)))
 
-        kIm = kPsf.computeImage(afwGeom.makePointD(x, y))
+        kIm = kPsf.computeImage(afwGeom.PointD(x, y))
         #
         # And now via the dgPsf model
         #
         dgPsf = afwDetect.createPsf("DoubleGaussian", ksize, ksize, sigma1)
-        dgIm = dgPsf.computeImage(afwGeom.makePointD(x, y))
+        dgIm = dgPsf.computeImage(afwGeom.PointD(x, y))
         #
         # Check that they're the same
         #

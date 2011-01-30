@@ -30,7 +30,7 @@
 namespace ellipses = lsst::afw::geom::ellipses;
 
 ellipses::LogShearEllipse::LogShearEllipse(ParameterVector const & vector, bool doNormalize) :
-    BaseEllipse(new LogShear(vector.segment<3>(0)), PointD(vector.segment<2>(2))) 
+    BaseEllipse(new LogShear(vector.segment<3>(0)), Point2D(vector.segment<2>(2))) 
 { 
     if (doNormalize) normalize(); 
 }

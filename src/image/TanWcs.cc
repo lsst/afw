@@ -47,7 +47,7 @@ using namespace std;
 
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::afw::image::TanWcs TanWcs;
-typedef lsst::afw::geom::PointD GeomPoint;
+typedef lsst::afw::geom::Point2D GeomPoint;
 typedef lsst::afw::coord::Coord Coord;
 
 const int lsstToFitsPixels = +1;
@@ -328,7 +328,7 @@ GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
     //Correct for distortion. We follow the notation of Shupe et al. here, including
     //capitalisation
     if( _hasDistortion) {
-        GeomPoint pix = geom::makePointD(pixTmp[0], pixTmp[1]);
+        GeomPoint pix = geom::Point2D(pixTmp[0], pixTmp[1]);
         GeomPoint dpix = distortPixel(pix);
         pixTmp[0] = dpix[0];
         pixTmp[1] = dpix[1];
@@ -336,7 +336,7 @@ GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
 
     // wcslib assumes 1-indexed coords
     double offset = lsst::afw::image::PixelZeroPos + fitsToLsstPixels;
-    return geom::makePointD(pixTmp[0]+offset, pixTmp[1]+offset);
+    return geom::Point2D(pixTmp[0]+offset, pixTmp[1]+offset);
 
 }
 
@@ -370,7 +370,7 @@ GeomPoint TanWcs::undistortPixel(const GeomPoint pix) const {
         }
     }
 
-    return geom::makePointD(pix[0] + f, pix[1] + g);
+    return geom::Point2D(pix[0] + f, pix[1] + g);
 }
 
 GeomPoint TanWcs::distortPixel(const GeomPoint pix) const {
@@ -398,7 +398,7 @@ GeomPoint TanWcs::distortPixel(const GeomPoint pix) const {
             G += _sipBp(i,j)* pow(U, i) * pow(V, j);
         }
     }
-    return geom::makePointD(U + F + _wcsInfo->crpix[0],
+    return geom::Point2D(U + F + _wcsInfo->crpix[0],
                             V + G + _wcsInfo->crpix[1]);
 }
 
@@ -421,7 +421,7 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
     
     //Correct pixel positions for distortion if necessary
     if( _hasDistortion) {
-        GeomPoint pix = geom::makePointD(pixTmp[0], pixTmp[1]);
+        GeomPoint pix = geom::Point2D(pixTmp[0], pixTmp[1]);
         GeomPoint dpix = undistortPixel(pix);
         pixTmp[0] = dpix[0];
         pixTmp[1] = dpix[1];
@@ -471,7 +471,7 @@ lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) cons
     sky00v << sky.getX(), sky.getY();
     Eigen::Vector2d pix00v;
     pix00v << pix00.getX(), pix00.getY();
-    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
+    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::Extent2D(sky00v - m * pix00v));
 }
 #endif
 

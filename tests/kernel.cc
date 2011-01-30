@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_CASE(LocalKernelTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm
     ImageLocalKernel::Ptr imgKernel;
 
     BOOST_CHECK_NO_THROW(imgKernel = fixedKernel.computeImageLocalKernel(
-            lsst::afw::geom::makePointD(3.4, 0.8886))
+            lsst::afw::geom::Point2D(3.4, 0.8886))
     );
     BOOST_CHECK(imgKernel.get() != 0);
     BOOST_CHECK_NO_THROW(fourierKernel = fixedKernel.computeFourierLocalKernel(
-            lsst::afw::geom::makePointD(0, 1))
+            lsst::afw::geom::Point2D(0, 1))
     );
     BOOST_CHECK(fourierKernel.get() != 0);
 

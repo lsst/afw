@@ -384,8 +384,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
 
-        raft.addDetector(afwGeom.makePointI(Col, Row),
-                         afwGeom.makePointD(xc, yc),
+        raft.addDetector(afwGeom.PointI(Col, Row),
+                         afwGeom.PointD(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
 
         #
@@ -394,7 +394,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         if hduPerAmp:
             for amp in ccd:
                 hdu, flipLR, flipTB = ampDiskLayout[amp.getId().getSerial()]
-                amp.setDiskLayout(afwGeom.makePointI(amp.getAllPixels().getX0(), amp.getAllPixels().getY0()),
+                amp.setDiskLayout(afwGeom.PointI(amp.getAllPixels().getX0(), amp.getAllPixels().getY0()),
                                   nQuarter, flipLR, flipTB)
 
         if raftInfo is not None:
@@ -453,8 +453,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         xc, yc = raftPol.getArray("offset")
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         raft = makeRaft(geomPolicy, raftId, raftInfo, defectDict=defDict)
-        camera.addDetector(afwGeom.makePointI(Col, Row),
-                           afwGeom.makePointD(xc, yc), cameraGeom.Orientation(), raft)
+        camera.addDetector(afwGeom.PointI(Col, Row),
+                           afwGeom.PointD(xc, yc), cameraGeom.Orientation(), raft)
 
         if cameraInfo is not None:
             # Guess the gutter between detectors
@@ -568,7 +568,7 @@ of the detectors"""
         # Label each Amp
         ap = a.getAllPixels(isTrimmed)
         xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
-        cen = afwGeom.makePointI(xc, yc)
+        cen = afwGeom.PointI(xc, yc)
         if ccdOrigin:
             xc += ccdOrigin[0]
             yc += ccdOrigin[1]
@@ -583,7 +583,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
     """Make an Image of a Raft"""
 
     if raftCenter is None:
-        raftCenter = afwGeom.makePointI(raft.getAllPixels().getWidth()//2,
+        raftCenter = afwGeom.PointI(raft.getAllPixels().getWidth()//2,
                                         raft.getAllPixels().getHeight()//2)
 
     raftImage = imageFactory(raft.getAllPixels().getWidth()//bin, raft.getAllPixels().getHeight()//bin)
@@ -592,7 +592,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
         ccd = cameraGeom.cast_Ccd(det)
         
         bbox = ccd.getAllPixels(True)
-        origin = ccd.getCenterPixel() - afwGeom.makeExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + \
+        origin = ccd.getCenterPixel() - afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + \
                  afwGeom.Extent2I(raftCenter)
 
         bbox = afwImage.BBox(afwImage.PointI((origin[0] + bbox.getLLC()[0])//bin,
@@ -609,7 +609,7 @@ def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None
 
 If imageSource isn't None, create an image using the images specified by imageSource"""
 
-    raftCenter = afwGeom.makePointI(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
+    raftCenter = afwGeom.PointI(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
     if raftOrigin:
         raftCenter += afwGeom.Extent2I(raftOrigin)
 
@@ -631,7 +631,7 @@ If imageSource isn't None, create an image using the images specified by imageSo
         
         bbox = ccd.getAllPixels(True)
         origin = ccd.getCenterPixel() - \
-                 afwGeom.makeExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + afwGeom.Extent2I(raftCenter)
+                 afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + afwGeom.Extent2I(raftCenter)
             
         if True:
             name = ccd.getId().getName()
@@ -650,7 +650,7 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
         raft = cameraGeom.cast_Raft(det);
         bbox = raft.getAllPixels()
         origin = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel()) - \
-                 afwGeom.makeExtentI(bbox.getWidth()/2, bbox.getHeight()/2) 
+                 afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) 
         bbox = afwImage.BBox(afwImage.PointI((origin[0] + bbox.getLLC()[0])//bin,
                                              (origin[1] + bbox.getLLC()[1])//bin),
                              bbox.getWidth()//bin, bbox.getHeight()//bin)
@@ -658,7 +658,7 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
         im = cameraImage.Factory(cameraImage, bbox)
 
         im <<= makeImageFromRaft(raft, imageSource,
-                                 raftCenter=None, # afwGeom.makePointI(bbox.getWidth()//2, bbox.getHeight()//2),
+                                 raftCenter=None, # afwGeom.PointI(bbox.getWidth()//2, bbox.getHeight()//2),
                                  imageFactory=imageFactory, bin=bin)
         serial = raft.getId().getSerial()
         im += serial if serial > 0 else 0
@@ -692,7 +692,7 @@ of the detectors"""
             ds9.dot(raft.getId().getName(), center[0]/bin, center[1]/bin, frame=frame)
 
         showRaft(raft, None, frame=frame, overlay=overlay,
-                 raftOrigin=center - afwGeom.makeExtentI(raft.getAllPixels().getWidth()/2,
+                 raftOrigin=center - afwGeom.ExtentI(raft.getAllPixels().getWidth()/2,
                                                          raft.getAllPixels().getHeight()/2), bin=bin)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

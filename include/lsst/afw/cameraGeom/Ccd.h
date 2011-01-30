@@ -68,7 +68,7 @@ public:
     //
     void addAmp(afwGeom::Point2I const pos, Amp const& amp);
     void addAmp(int const iX, int const iY, Amp const& amp) {
-        addAmp(afwGeom::makePointI(iX, iY), amp);
+        addAmp(afwGeom::Point2I(iX, iY), amp);
     }
 
     virtual void setTrimmed(bool isTrimmed);

@@ -77,11 +77,11 @@ public:
         return static_cast<QuadrupoleEllipse &>(BaseEllipse::operator=(other)); 
     }
 
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit inline QuadrupoleEllipse(PointD const & center = PointD());
+    /// \brief Construct from a Point2D and zero-size Core.
+    explicit inline QuadrupoleEllipse(Point2D const & center = Point2D());
 
     /// \brief Construct from a copy of an Quadrupole core.
-    explicit inline QuadrupoleEllipse(Quadrupole const & core, PointD const & center = PointD());
+    explicit inline QuadrupoleEllipse(Quadrupole const & core, Point2D const & center = Point2D());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit QuadrupoleEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
@@ -119,7 +119,7 @@ public:
     Ptr clone() const { return Ptr(_clone()); }
 
     /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
-    QuadrupoleEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
+    QuadrupoleEllipse::Ptr makeEllipse(Point2D const & center = Point2D()) const {
         return QuadrupoleEllipse::Ptr(_makeEllipse(center));
     }
 
@@ -170,7 +170,7 @@ protected:
     
     virtual Quadrupole * _clone() const { return new Quadrupole(*this); }
     
-    virtual QuadrupoleEllipse * _makeEllipse(PointD const & center) const {
+    virtual QuadrupoleEllipse * _makeEllipse(Point2D const & center) const {
         return new QuadrupoleEllipse(*this, center);
     }
 
@@ -191,9 +191,9 @@ QuadrupoleEllipse::getCore() const { return static_cast<Quadrupole const &>(*_co
 
 inline Quadrupole & QuadrupoleEllipse::getCore() { return static_cast<Quadrupole &>(*_core); }
 
-inline QuadrupoleEllipse::QuadrupoleEllipse(PointD const & center) :
+inline QuadrupoleEllipse::QuadrupoleEllipse(Point2D const & center) :
     BaseEllipse(new Quadrupole(),center) {}
-inline QuadrupoleEllipse::QuadrupoleEllipse(Quadrupole const & core, PointD const & center) : 
+inline QuadrupoleEllipse::QuadrupoleEllipse(Quadrupole const & core, Point2D const & center) : 
     BaseEllipse(core,center) {}
 inline QuadrupoleEllipse::QuadrupoleEllipse(BaseEllipse const & other) : 
     BaseEllipse(new Quadrupole(other.getCore()),other.getCenter()) {}

@@ -103,7 +103,7 @@ public:
     friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
                             bool stripMetadata);
 
-    Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
+    Wcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, const Eigen::Matrix2d &CD, 
         const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
         double equinox=2000, std::string raDecSys="ICRS",
         const std::string cunits1="deg", const std::string cunits2="deg"
@@ -114,7 +114,7 @@ public:
     
     //Accessors
     lsst::afw::coord::Coord::Ptr getSkyOrigin() const;      //Return crval
-    lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
+    lsst::afw::geom::Point2D getPixelOrigin() const;    //Return crpix
     Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
     
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
@@ -125,7 +125,7 @@ public:
     bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
     
     ///Sky area covered by a pixel at position \c pix00 in units of square degrees.
-    double pixArea(lsst::afw::geom::PointD pix00) const;
+    double pixArea(lsst::afw::geom::Point2D pix00) const;
     
     // Returns the pixel scale, in arcsec/pixel.
     double pixelScale() const;
@@ -134,12 +134,12 @@ public:
     //xyToRaDec(), but the name now reflects their increased generality. They may be
     //used, e.g. to convert xy to Galactic coordinates
     lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-    lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
-    lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
+    lsst::afw::geom::Point2D pixelToSky(double pix1, double pix2, bool) const;
+    lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::Point2D pixel) const;
     
-    lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-    lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
-    lsst::afw::geom::PointD skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::Point2D skyToPixel(double sky1, double sky2) const;
+    lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
     
     virtual bool hasDistortion() const {    return false;};
     
@@ -173,7 +173,7 @@ private:
     //Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
     
-    void initWcsLib(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix,
+    void initWcsLib(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix,
                     const  Eigen::Matrix2d CD, 
                     const std::string ctype1, const std::string ctype2,
                     double equinox, std::string raDecSys,
@@ -181,7 +181,7 @@ private:
                    );
 
     virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
-        virtual lsst::afw::geom::PointD skyToPixelImpl(double sky1, double sky2) const;
+        virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
 
 protected:
 
@@ -193,7 +193,7 @@ protected:
     Wcs& operator= (const Wcs &);        
     
     lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
-    lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::Point2D convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
     
     virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
                                                  lsst::afw::geom::Point2D const & pix,
@@ -230,7 +230,7 @@ namespace detail {
 
 Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
     
-Wcs::Ptr makeWcs(lsst::afw::geom::PointD crval, lsst::afw::geom::PointD crpix,
+Wcs::Ptr makeWcs(lsst::afw::geom::Point2D crval, lsst::afw::geom::Point2D crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {

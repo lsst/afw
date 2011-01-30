@@ -46,7 +46,7 @@ class LocalKernelTestCase(unittest.TestCase):
         self.width = 19
         self.height = 19
         self.fourierWidth = self.width/2 + 1
-        self.center = afwGeom.makePointI(9, 9)
+        self.center = afwGeom.PointI(9, 9)
         self.image = afwImage.ImageD(self.width, self.height, 3)
         self.imageList = []
         self.imageList.append(afwImage.ImageD(self.width, self.height, 1))

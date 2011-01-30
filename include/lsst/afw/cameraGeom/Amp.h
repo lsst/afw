@@ -148,13 +148,13 @@ public:
     afwGeom::Point2I getFirstPixelRead() const {
         switch (_readoutCorner) {
           case LLC:
-            return afwGeom::makePointI(0,                             0);
+            return afwGeom::Point2I(0,                             0);
           case LRC:
-            return afwGeom::makePointI(getAllPixels().getWidth() - 1, 0);
+            return afwGeom::Point2I(getAllPixels().getWidth() - 1, 0);
           case URC:
-            return afwGeom::makePointI(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
+            return afwGeom::Point2I(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
           case ULC:
-            return afwGeom::makePointI(0,                             getAllPixels().getHeight() - 1);
+            return afwGeom::Point2I(0,                             getAllPixels().getHeight() - 1);
         }
         abort();                        // NOTREACHED
     }

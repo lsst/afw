@@ -314,8 +314,8 @@ class ConvolveTestCase(unittest.TestCase):
         """Verify that basicConvolve does not write to edge pixels for this kind of kernel
         """
         fullBox = afwGeom.BoxI(
-            afwGeom.makePointI(0, 0),
-            afwGeom.makeExtentI(ShiftedBBox.getWidth(), ShiftedBBox.getHeight()),
+            afwGeom.PointI(0, 0),
+            afwGeom.ExtentI(ShiftedBBox.getWidth(), ShiftedBBox.getHeight()),
         )
         fullBBox = afwImage.BBox(afwImage.PointI(fullBox.getMinX(), fullBox.getMinY()),
             fullBox.getWidth(), fullBox.getHeight())

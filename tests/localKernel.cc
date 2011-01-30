@@ -120,7 +120,7 @@ Complex FOURIER_STACK[] = {
 BOOST_AUTO_TEST_CASE(ImageConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     Image::Ptr imgA = boost::make_shared<Image>(19,19, 1.0); 
     Image::Ptr imgB = boost::make_shared<Image>(19,19, 0.0);
-    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(9,9);
+    lsst::afw::geom::Point2I center = lsst::afw::geom::Point2I(9,9);
     ImagePtrList derivativeA;       
     ImagePtrList derivativeB(3);
     for(int i = 0; i < 3; ++i) {    
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
     int height = IMG_HEIGHT;
     int fourierWidth = FOURIER_WIDTH;
 
-    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(IMG_WIDTH/2, IMG_HEIGHT/2);
+    lsst::afw::geom::Point2I center = lsst::afw::geom::Point2I(IMG_WIDTH/2, IMG_HEIGHT/2);
 
     FourierCutout::Real * testRealItr = IMG_STACK;
     Image::Ptr img = boost::make_shared<Image>(width, height); 

@@ -90,7 +90,7 @@ class CoordTestCase(unittest.TestCase):
             factories = []
             factories.append(afwCoord.makeCoord(enum, self.l, self.b))
             factories.append(afwCoord.makeCoord(afwCoord.makeCoordEnum(stringName), self.l, self.b))
-            factories.append(afwCoord.makeCoord(enum, afwGeom.makePointD(self.l, self.b), afwCoord.DEGREES))
+            factories.append(afwCoord.makeCoord(enum, afwGeom.PointD(self.l, self.b), afwCoord.DEGREES))
 
             print "Factory: "
             for fac in factories:
@@ -425,7 +425,7 @@ class CoordTestCase(unittest.TestCase):
         # the problem was that the coordinate is < epsilon close to RA==0
         # and bounds checking was getting a -ve RA.
         c = afwCoord.makeCoord(afwCoord.ICRS,
-                               afwGeom.makePointD(0.6070619982, -1.264309928e-16, 0.7946544723))
+                               afwGeom.Point3D(0.6070619982, -1.264309928e-16, 0.7946544723))
 
         self.assertEqual(c[0], 0.0)
 

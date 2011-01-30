@@ -114,7 +114,7 @@ class KernelTestCase(unittest.TestCase):
     def testShrinkGrowBBox(self):
         """Test Kernel methods shrinkBBox and growBBox
         """
-        boxStart = afwGeom.makePointI(3, -3)
+        boxStart = afwGeom.PointI(3, -3)
         for kWidth in (1, 2, 6):
             for kHeight in (1, 2, 5):
                 for deltaWidth in (-1, 0, 1, 20):
@@ -122,7 +122,7 @@ class KernelTestCase(unittest.TestCase):
                     for deltaHeight in (-1, 0, 1, 20):
                         fullHeight = kHeight + deltaHeight
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(0, 0))
-                        fullBBox = afwGeom.BoxI(boxStart, afwGeom.makeExtentI(fullWidth, fullHeight))
+                        fullBBox = afwGeom.BoxI(boxStart, afwGeom.ExtentI(fullWidth, fullHeight))
                         if (fullWidth < kWidth) or (fullHeight < kHeight):
                             self.assertRaises(Exception, kernel.shrinkBBox, fullBBox)
                             continue

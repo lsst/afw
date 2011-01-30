@@ -78,7 +78,7 @@ geom::AffineTransform const geom::AffineTransform::invert() const {
  * @brief Take the derivative of (*this)(input) w.r.t the transform elements
  */
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
-    PointD const & input
+    Point2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r.block<2,4>(0,0) = getLinear().dTransform(input);
@@ -91,7 +91,7 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
  * @brief Take the derivative of (*this)(input) w.r.t the transform elements
  */
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
-    ExtentD const & input
+    Extent2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r.block<2,4>(0,0) = getLinear().dTransform(input);

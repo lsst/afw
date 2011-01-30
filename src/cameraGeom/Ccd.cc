@@ -63,7 +63,7 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
     _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
     amp->setParent(getThisPtr());
 
-    setCenterPixel(afwGeom::makePointI(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
+    setCenterPixel(afwGeom::Point2I(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
 }
 
 /**
@@ -93,12 +93,12 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
     double pixelSize = getPixelSize();
 
     afwGeom::Point2I const& centerPixel = getCenterPixel();
-    cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::makePointI(pix[0] + centerPixel[0],
+    cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::Point2I(pix[0] + centerPixel[0],
                                                                 pix[1] + centerPixel[1]));
     afwImage::PointI const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
-    afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::makePointI(off[0], off[1]));
+    afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::Point2I(off[0], off[1]));
 
-    return afwGeom::makePointD(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
+    return afwGeom::Point2D(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
 }    
 
 namespace {
@@ -199,7 +199,7 @@ void cameraGeom::Ccd::setOrientation(
     int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
 
     afwGeom::Extent2I const dimensions =
-        afwGeom::makeExtentI(getAllPixels(false).getWidth(), getAllPixels(false).getHeight());
+        afwGeom::Extent2I(getAllPixels(false).getWidth(), getAllPixels(false).getHeight());
 
 
     cameraGeom::Detector::setOrientation(orientation);

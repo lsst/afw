@@ -135,7 +135,7 @@ void cameraGeom::DetectorMosaic::addDetector(
     // we didn't know the detector size
     //
     if (_detectors.size() == 0) {
-        setCenterPixel(afwGeom::makePointI(0.5*_nDetector.first*det->getAllPixels(isTrimmed).getWidth(),
+        setCenterPixel(afwGeom::Point2I(0.5*_nDetector.first*det->getAllPixels(isTrimmed).getWidth(),
                                                0.5*_nDetector.second*det->getAllPixels(isTrimmed).getHeight())
                       );
     }
@@ -149,7 +149,7 @@ void cameraGeom::DetectorMosaic::addDetector(
     getAllPixels().grow(detPixels.getURC());
     
     afwGeom::Point2I centerPixel =
-        afwGeom::makePointI(iX*detPixels.getWidth() + detPixels.getWidth()/2,
+        afwGeom::Point2I(iX*detPixels.getWidth() + detPixels.getWidth()/2,
                                  iY*detPixels.getHeight() + detPixels.getHeight()/2) -
         afwGeom::Extent2I(getCenterPixel());
     det->setCenter(center);
@@ -249,7 +249,7 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
         bool const fromCenter            ///< pixel is measured wrt the detector center, not LL corner
                                                                         ) const {
     if (!fromCenter) {
-        return findDetector(pixel - afwGeom::makeExtentI(getAllPixels().getWidth()/2,
+        return findDetector(pixel - afwGeom::Extent2I(getAllPixels().getWidth()/2,
                                                               getAllPixels().getHeight()/2), true);
     }
 

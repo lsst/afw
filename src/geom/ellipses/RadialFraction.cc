@@ -35,13 +35,13 @@ ellipses::BaseCore::RadialFraction::RadialFraction(BaseCore const & core)
 }
 
 ellipses::BaseCore::RadialFraction::DerivativeVector
-ellipses::BaseCore::RadialFraction::d(PointD const & p) const {
+ellipses::BaseCore::RadialFraction::d(Point2D const & p) const {
     DerivativeVector v(_inv_matrix*p.asVector());
     return v /= sqrt(p.asVector().dot(v));
 }
 
 ellipses::BaseCore::RadialFraction::CoreDerivativeVector
-ellipses::BaseCore::RadialFraction::dCore(PointD const & p) const {
+ellipses::BaseCore::RadialFraction::dCore(Point2D const & p) const {
     CoreDerivativeVector vec;
     Eigen::Vector2d tmp1 = _inv_matrix * p.asVector();
     Quadrupole::Matrix tmp2;
@@ -54,7 +54,7 @@ ellipses::BaseCore::RadialFraction::dCore(PointD const & p) const {
 }
 
 ellipses::BaseEllipse::RadialFraction::EllipseDerivativeVector 
-ellipses::BaseEllipse::RadialFraction::dEllipse(PointD const & p) const {
+ellipses::BaseEllipse::RadialFraction::dEllipse(Point2D const & p) const {
     EllipseDerivativeVector vec;
     vec.segment<2>(0) = - d(p);
     vec.segment<3>(2) = _coreRF.dCore(p - _offset);

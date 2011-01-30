@@ -77,11 +77,11 @@ public:
         return static_cast<DistortionEllipse &>(BaseEllipse::operator=(other));
     }
 
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit inline DistortionEllipse(PointD const & center = PointD());
+    /// \brief Construct from a Point2D and zero-size Core.
+    explicit inline DistortionEllipse(Point2D const & center = Point2D());
 
     /// \brief Construct from a copy of an Distortion core.
-    explicit inline DistortionEllipse(Distortion const & core, PointD const & center = PointD());
+    explicit inline DistortionEllipse(Distortion const & core, Point2D const & center = Point2D());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit DistortionEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
@@ -127,7 +127,7 @@ public:
     Ptr clone() const { return Ptr(_clone()); }
 
     /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
-    DistortionEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
+    DistortionEllipse::Ptr makeEllipse(Point2D const & center = Point2D()) const {
         return DistortionEllipse::Ptr(_makeEllipse(center));
     }
 
@@ -186,7 +186,7 @@ protected:
     
     virtual Distortion * _clone() const { return new Distortion(*this); }
     
-    virtual DistortionEllipse * _makeEllipse(PointD const & center) const {
+    virtual DistortionEllipse * _makeEllipse(Point2D const & center) const {
         return new DistortionEllipse(*this, center);
     }
 
@@ -207,9 +207,9 @@ DistortionEllipse::getCore() const { return static_cast<Distortion const &>(*_co
 
 inline Distortion & DistortionEllipse::getCore() { return static_cast<Distortion &>(*_core); }
 
-inline DistortionEllipse::DistortionEllipse(PointD const & center) :
+inline DistortionEllipse::DistortionEllipse(Point2D const & center) :
     BaseEllipse(new Distortion(),center) {}
-inline DistortionEllipse::DistortionEllipse(Distortion const & core, PointD const & center) : 
+inline DistortionEllipse::DistortionEllipse(Distortion const & core, Point2D const & center) : 
     BaseEllipse(core,center) {}
 inline DistortionEllipse::DistortionEllipse(BaseEllipse const & other) : 
     BaseEllipse(new Distortion(other.getCore()),other.getCenter()) {}

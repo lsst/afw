@@ -209,7 +209,7 @@ const {
         ImagePtr tlImagePtr;
         ImagePtr const trImageNullPtr;
 
-        afwGeom::Point2I blCorner = afwGeom::makePointI(this->_bbox.getMinX(), startY);
+        afwGeom::Point2I blCorner = afwGeom::Point2I(this->_bbox.getMinX(), startY);
 
         int remWidth = this->_bbox.getWidth();
         int remXDiv = regionRow.getNX();
@@ -312,8 +312,8 @@ void mathDetail::KernelImagesForRegion::_moveUp(
 {
     // move bbox up (this must be done before recomputing the top kernel images)
     _bbox = afwGeom::BoxI(
-        afwGeom::makePointI(_bbox.getMinX(), _bbox.getMaxY() + 1),
-        afwGeom::makeExtentI(_bbox.getWidth(), newHeight));
+        afwGeom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
+        afwGeom::Extent2I(_bbox.getWidth(), newHeight));
 
     // swap top and bottom image pointers
     _imagePtrList[BOTTOM_RIGHT].swap(_imagePtrList[TOP_RIGHT]);

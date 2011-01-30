@@ -97,25 +97,37 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "Extent.i"
 %include "Point.i"
 
+%Extent_PREINCLUDE(int,2);
+%Extent_PREINCLUDE(int,3);
+%Extent_PREINCLUDE(double,2);
+%Extent_PREINCLUDE(double,3);
+
+%Point_PREINCLUDE(int,2);
+%Point_PREINCLUDE(int,3);
+%Point_PREINCLUDE(double,2);
+%Point_PREINCLUDE(double,3);
+
 %include "lsst/afw/geom/CoordinateBase.h"
 %include "lsst/afw/geom/CoordinateExpr.h"
 %include "lsst/afw/geom/Extent.h"
 %include "lsst/afw/geom/Point.h"
 
-%CoordinateBase_POSTINCLUDE_2(bool, CoordinateExpr2, lsst::afw::geom::CoordinateExpr<2>);
-%CoordinateBase_POSTINCLUDE_3(bool, CoordinateExpr3, lsst::afw::geom::CoordinateExpr<3>);
+ //%template(CoordinateBaseE2I) lsst::afw::geom::CoordinateBase<lsst::afw::geom::Extent<int,2>,int,2>;
+ //%template(ExtentBase2I) lsst::afw::geom::ExtentBase<int,2>;
+ //%template(Extent2I) lsst::afw::geom::Extent<int,2>;
 
-%CoordinateBase_POSTINCLUDE_2(int, Extent2I, lsst::afw::geom::Extent<int,2>);
-%CoordinateBase_POSTINCLUDE_3(int, Extent3I, lsst::afw::geom::Extent<int,3>);
+%Extent_POSTINCLUDE(int,2,I);
+%Extent_POSTINCLUDE(int,3,I);
+%Extent_POSTINCLUDE(double,2,D);
+%Extent_POSTINCLUDE(double,3,D);
 
-%CoordinateBase_POSTINCLUDE_2(double, Extent2D, lsst::afw::geom::Extent<double,2>);
-%CoordinateBase_POSTINCLUDE_3(double, Extent3D, lsst::afw::geom::Extent<double,3>);
+%Point_POSTINCLUDE(int,2,I);
+%Point_POSTINCLUDE(int,3,I);
+%Point_POSTINCLUDE(double,2,D);
+%Point_POSTINCLUDE(double,3,D);
 
-%CoordinateBase_POSTINCLUDE_2(int, Point2I, lsst::afw::geom::Point<int,2>);
-%CoordinateBase_POSTINCLUDE_3(int, Point3I, lsst::afw::geom::Point<int,3>);
-
-%CoordinateBase_POSTINCLUDE_2(double, Point2D, lsst::afw::geom::Point<double,2>);
-%CoordinateBase_POSTINCLUDE_3(double, Point3D, lsst::afw::geom::Point<double,3>);
+%CoordinateExpr_POSTINCLUDE(2);
+%CoordinateExpr_POSTINCLUDE(3);
 
 %include "LinearTransform.i"
 %include "AffineTransform.i"
