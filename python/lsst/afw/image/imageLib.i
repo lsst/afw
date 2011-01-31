@@ -55,7 +55,8 @@ Basic routines to talk to lsst::afw::image classes
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/afw/numpyTypemaps.h"
+#include "lsst/ndarray/python.hpp"
+#include "lsst/ndarray/python/eigen.hpp"
 %}
 
 %init %{
@@ -111,14 +112,14 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
-%include "lsst/afw/eigen.i"
+%include "lsst/ndarray/ndarray.i"
 
-%declareEigenMatrix(Eigen::MatrixXd);
-%declareEigenMatrix(Eigen::VectorXd);
-%declareEigenMatrix(Eigen::Matrix2d);
-%declareEigenMatrix(Eigen::Vector2d);
-%declareEigenMatrix(Eigen::Matrix3d);
-%declareEigenMatrix(Eigen::Vector3d);
+%declareNumPyConverters(Eigen::MatrixXd);
+%declareNumPyConverters(Eigen::VectorXd);
+%declareNumPyConverters(Eigen::Matrix2d);
+%declareNumPyConverters(Eigen::Vector2d);
+%declareNumPyConverters(Eigen::Matrix3d);
+%declareNumPyConverters(Eigen::Vector3d);
 
 %lsst_exceptions();
 

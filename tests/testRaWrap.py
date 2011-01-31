@@ -46,9 +46,14 @@ class WCSTestRaWrap(unittest.TestCase):
         wcs1 = afwImage.makeWcs(hdr)
 
         crval = wcs1.getSkyOrigin()
-        wcs2 = afwImage.Wcs(afwGeom.PointD(crval.getLongitude(afwCoord.DEGREES), crval.getLatitude(afwCoord.DEGREES)),
-                            wcs1.getPixelOrigin(),
-                            wcs1.getCDMatrix())
+        cd = wcs1.getCDMatrix()
+        print cd
+        crval_p = afwGeom.PointD(crval.getLongitude(afwCoord.DEGREES), 
+                                 crval.getLatitude(afwCoord.DEGREES))
+        origin = wcs1.getPixelOrigin()
+        print crval_p
+        print origin
+        wcs2 = afwImage.Wcs(crval_p, origin, cd)
 
         for wcs in [wcs1,wcs2]:
             print wcs

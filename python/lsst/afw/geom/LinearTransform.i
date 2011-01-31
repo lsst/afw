@@ -25,14 +25,17 @@
 #include "lsst/afw/geom/LinearTransform.h"
 %}
 
+%declareNumPyConverters(lsst::afw::geom::LinearTransform::ParameterVector);
+%declareNumPyConverters(lsst::afw::geom::LinearTransform::Matrix);
+%declareNumPyConverters(Eigen::Vector2d);
+%declareNumPyConverters(Eigen::Matrix2d);
+%declareNumPyConverters(Eigen::Matrix3d);
+
 SWIG_SHARED_PTR(LinearTransformPtr, lsst::afw::geom::LinearTransform);
 
 %rename(__mul__) lsst::afw::geom::LinearTransform::operator*;
 %ignore lsst::afw::geom::LinearTransform::operator[];
-%ignore lsst::afw::geom::LinearTransform::getMatrix;
 %ignore lsst::afw::geom::LinearTransform::dTransform;
-%ignore lsst::afw::geom::LinearTransform::getVector;
-%ignore lsst::afw::geom::LinearTransform::setVector;
 %ignore lsst::afw::geom::LinearTransform::operator=;
 
 %copyctor lsst::afw::geom::LinearTransform;
@@ -62,9 +65,6 @@ SWIG_SHARED_PTR(LinearTransformPtr, lsst::afw::geom::LinearTransform);
     }   
          
     %pythoncode {
-    def getMatrix(self):
-        import numpy
-        return numpy.matrix(((self[0,0], self[0,1]), (self[1,0], self[1,1])))
     def __getitem__(self, k):
         try:
             i,j = k

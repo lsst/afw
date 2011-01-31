@@ -25,14 +25,14 @@
 #include "lsst/afw/geom/AffineTransform.h"
 %}
 
+%declareNumPyConverters(lsst::afw::geom::AffineTransform::ParameterVector);
+%declareNumPyConverters(lsst::afw::geom::AffineTransform::Matrix);
+
 SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
 
 %rename(__mul__) lsst::afw::geom::AffineTransform::operator*;
 %ignore lsst::afw::geom::AffineTransform::operator[];
-%ignore lsst::afw::geom::AffineTransform::getMatrix;
 %ignore lsst::afw::geom::AffineTransform::dTransform;
-%ignore lsst::afw::geom::AffineTransform::getVector;
-%ignore lsst::afw::geom::AffineTransform::setVector;
 %ignore lsst::afw::geom::AffineTransform::operator=;
 
 %copyctor lsst::afw::geom::AffineTransform;
@@ -65,11 +65,6 @@ SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
     }   
          
     %pythoncode {
-    def getMatrix(self):
-        import numpy
-        return numpy.matrix(((self[0,0], self[0,1], self[0,2]),
-                             (self[1,0], self[1,1], self[1,2]),
-                             (      0.0,       0.0,       1.0)))
     def __getitem__(self, k):
         try:
             i,j = k

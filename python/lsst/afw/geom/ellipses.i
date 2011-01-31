@@ -22,6 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+%include "boost_shared_ptr.i"
+%include "lsst/ndarray/ndarray.i"
 
 %ignore lsst::afw::geom::ellipses::BaseEllipse::operator[];
 %ignore lsst::afw::geom::ellipses::BaseEllipse::getVector;
@@ -35,13 +37,10 @@
 %ignore lsst::afw::geom::ellipses::BaseCore::transform;
 //%ignore lsst::afw::geom::ellipses::BaseCore::dAssign;
 
-%declareEigenMatrix(lsst::afw::geom::ellipses::BaseCore::Jacobian)
+%declareNumPyConverters(lsst::afw::geom::ellipses::BaseCore::Jacobian)
 
 %rename(set) lsst::afw::geom::ellipses::BaseEllipse::operator=;
 %rename(set) lsst::afw::geom::ellipses::BaseCore::operator=;
-
-%include "boost_shared_ptr.i"
-%include "lsst/afw/eigen.i"
 
 SWIG_SHARED_PTR(BaseEllipsePtr, lsst::afw::geom::ellipses::BaseEllipse);
 SWIG_SHARED_PTR(BaseCorePtr, lsst::afw::geom::ellipses::BaseCore);

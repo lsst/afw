@@ -22,6 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+
 %define geomLib_DOCSTRING
 "
 Python interface to lsst::afw::geom classes
@@ -40,9 +41,9 @@ Python interface to lsst::afw::geom classes
 #include "lsst/afw/geom.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/afw/numpyTypemaps.h"
+#include "lsst/ndarray/python.hpp"
+#include "lsst/ndarray/python/eigen.hpp"
 %}
-
 
 %init %{
     import_array();
@@ -77,20 +78,12 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
-%import "lsst/afw/eigen.i"
+%include "lsst/ndarray/ndarray.i"
 
-%declareEigenMatrix(Eigen::Matrix<bool,2,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<int,2,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<double,2,1,Eigen::DontAlign>);
-
-%declareEigenMatrix(Eigen::Matrix<bool,3,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<int,3,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<double,3,1,Eigen::DontAlign>);
-
-%declareEigenMatrix(Eigen::Matrix2d);
-%declareEigenMatrix(Eigen::Matrix3d);
-%declareEigenMatrix(lsst::afw::geom::AffineTransform::Matrix);
-%declareEigenMatrix(lsst::afw::geom::LinearTransform::Matrix);
+%declareNumPyConverters(Eigen::Matrix<double,2,1,Eigen::DontAlign>);
+%declareNumPyConverters(Eigen::Matrix<double,3,1,Eigen::DontAlign>);
+%declareNumPyConverters(Eigen::Matrix<int,2,1,Eigen::DontAlign>);
+%declareNumPyConverters(Eigen::Matrix<int,3,1,Eigen::DontAlign>);
 
 %include "CoordinateBase.i"
 %include "CoordinateExpr.i"
@@ -111,10 +104,6 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "lsst/afw/geom/CoordinateExpr.h"
 %include "lsst/afw/geom/Extent.h"
 %include "lsst/afw/geom/Point.h"
-
- //%template(CoordinateBaseE2I) lsst::afw::geom::CoordinateBase<lsst::afw::geom::Extent<int,2>,int,2>;
- //%template(ExtentBase2I) lsst::afw::geom::ExtentBase<int,2>;
- //%template(Extent2I) lsst::afw::geom::Extent<int,2>;
 
 %Extent_POSTINCLUDE(int,2,I);
 %Extent_POSTINCLUDE(int,3,I);

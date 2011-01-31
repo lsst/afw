@@ -17,11 +17,8 @@ for fileName in glob.glob("*.cc"):
     env.Program(fileName, LIBS=env.getlibs("afw"))
 
 env.CheckSwig("python", ilang="c++",
-              includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
+              includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security ndarray")
 
-testEigenLib = env.LoadableModuleIncomplete("_testEigenLib", ["testEigenLib.i"],
-                                            CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
-                                            LIBS=env.getlibs("afw"))
 testLib = env.LoadableModuleIncomplete("_testLib", ["testLib.i"],
                                        CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
                                        LIBS=env.getlibs("afw"))
@@ -48,9 +45,7 @@ else:
         maskIo1 =         "%s_msk.fits" % inFile,
     )
     
-    ignoreList=["testLib.py", "testEigenLib.py",
-                "numpyEigen.py" # broken, but kept until a better fix is available
-                ]
+    ignoreList=["testLib.py"]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
     
     tests.run("*.cc")
@@ -64,6 +59,3 @@ else:
         if target.endswith("spatialCell.py"):
             env.Depends(target, "_testLib%s" % (env["LDMODULESUFFIX"]))
             env.Depends(target, "testLib.py")
-        elif target.endswith("numpyEigen.py"):
-            env.Depends(target, "_testEigenLib%s" % (env["LDMODULESUFFIX"]))
-            env.Depends(target, "testEigenLib.py")
