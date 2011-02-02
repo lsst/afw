@@ -91,23 +91,23 @@ public:
         return Extent<T,N>(this->_vector - other._vector);
     }
     Point<T,N> operator+(Extent<T,N> const & other) const {
-        return Point<T,N>(this->_vector + other.asVector());
+        return Point<T,N>(this->_vector + other.asEigen());
     }
     Point<T,N> operator-(Extent<T,N> const & other) const {
-        return Point<T,N>(this->_vector - other.asVector());
+        return Point<T,N>(this->_vector - other.asEigen());
     }
     Point<T,N> & operator+=(Extent<T,N> const & other) {
-        this->_vector += other.asVector();
+        this->_vector += other.asEigen();
         return static_cast<Point<T,N> &>(*this); 
     }
     Point<T,N> & operator-=(Extent<T,N> const & other) {
-        this->_vector -= other.asVector();
+        this->_vector -= other.asEigen();
         return static_cast<Point<T,N> &>(*this); 
     }
     //@}
 
     /// @brief Shift the point by the given offset.
-    void shift(Extent<T,N> const & offset) { this->_vector += offset.asVector(); }
+    void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
     
 protected:
 
@@ -134,7 +134,7 @@ public:
     explicit Point(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
 
     /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,N> const & other) : Super(other.asVector()) {}          
+    explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}          
 
     /**
      *  @brief Explicit converting constructor.
@@ -164,7 +164,7 @@ public:
     explicit Point(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
 
     /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,2> const & other) : Super(other.asVector()) {}          
+    explicit Point(Extent<T,2> const & other) : Super(other.asEigen()) {}          
 
     /// @brief Explicit constructor from a pair of doubles.
     explicit Point(T x, T y) : Super(typename Super::EigenVector(x,y)) {}
@@ -232,7 +232,7 @@ public:
     explicit Point(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
 
     /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,3> const & other) : Super(other.asVector()) {}          
+    explicit Point(Extent<T,3> const & other) : Super(other.asEigen()) {}          
 
     /// @brief Explicit constructor from a sequence of doubles.
     explicit Point(T x, T y, T z) : Super(typename Super::EigenVector(x,y,z)) {}

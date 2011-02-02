@@ -30,17 +30,12 @@
 #include "lsst/afw/geom/Point.h"
 
 namespace lsst {
-namespace pex {
-namespace exceptions {
-
-#ifndef SWIG
-LSST_EXCEPTION_TYPE(SingularTransformException, RuntimeErrorException, lsst::pex::exceptions::SingularTransformException)
-#endif
-
-}} //namespace pex::exceptions
-
 namespace afw {
 namespace geom {
+
+#ifndef SWIG
+    LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::geom::SingularTransformException)
+#endif
 
 /**
  *  \brief A 2D linear coordinate transformation.
@@ -111,8 +106,8 @@ public:
         return *this;
     }
     
-    ParameterVector const getVector() const;
-    void setVector(ParameterVector const & vector);
+    ParameterVector const getParameterVector() const;
+    void setParameterVector(ParameterVector const & vector);
     
     Matrix const & getMatrix() const { return _matrix; }
     Matrix & getMatrix() { return _matrix; }
@@ -136,7 +131,7 @@ public:
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Extent
      */
-    Point2D operator()(Point2D const & p) const { return Point2D(getMatrix() * p.asVector()); }
+    Point2D operator()(Point2D const & p) const { return Point2D(getMatrix() * p.asEigen()); }
 
     /**
      *  \brief Transform a Extent2D object. 
@@ -144,7 +139,7 @@ public:
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Point
      */
-    Extent2D operator()(Extent2D const & p) const { return Extent2D(getMatrix() * p.asVector()); }
+    Extent2D operator()(Extent2D const & p) const { return Extent2D(getMatrix() * p.asEigen()); }
 
     TransformDerivativeMatrix dTransform(Point2D const & input) const;
 

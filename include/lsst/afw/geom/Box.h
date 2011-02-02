@@ -224,7 +224,7 @@ public:
      *  \brief Return the center coordinate of the box.
      */
     //@{
-    Point2D const getCenter() const { return Point2D((_minimum.asVector() + _maximum.asVector())*0.5); }
+    Point2D const getCenter() const { return Point2D((_minimum.asEigen() + _maximum.asEigen())*0.5); }
     double getCenterX() const { return (_minimum.getX() + _maximum.getX())*0.5; }
     double getCenterY() const { return (_minimum.getY() + _maximum.getY())*0.5; }
     //@}

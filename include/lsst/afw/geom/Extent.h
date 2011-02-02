@@ -39,10 +39,10 @@ class ExtentBase : public CoordinateBase<Extent<T,N>,T,N> {
 public:
 
     /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
-    T computeSquaredNorm() const { return this->asVector().squaredNorm(); }
+    T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
     /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
-    T computeNorm() const { return this->asVector().norm(); }
+    T computeNorm() const { return this->asEigen().norm(); }
 
     /**
      *  @brief Standard equality comparison.
@@ -158,10 +158,10 @@ public:
     explicit Extent(Point<T,N> const & other);
 
     /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
-    T computeSquaredNorm() const { return this->asVector().squaredNorm(); }
+    T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
     /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
-    T computeNorm() const { return this->asVector().norm(); }
+    T computeNorm() const { return this->asEigen().norm(); }
 
 };
 

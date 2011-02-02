@@ -28,17 +28,17 @@ namespace geom = lsst::afw::geom;
 
 template <typename T, int N>
 geom::Extent<T,N>::Extent(Point<T,N> const & other) :
-    Super(other.asVector())
+    Super(other.asEigen())
 {}
 
 template <typename T>
 geom::Extent<T,2>::Extent(Point<T,2> const & other) :
-    Super(other.asVector())
+    Super(other.asEigen())
 {}
 
 template <typename T>
 geom::Extent<T,3>::Extent(Point<T,3> const & other) :
-    Super(other.asVector())
+    Super(other.asEigen())
 {}
 
 template <typename T, int N>
@@ -85,7 +85,7 @@ geom::CoordinateExpr<N> geom::ExtentBase<T,N>::ge(Extent<T,N> const & other) con
 
 template <typename T, int N>
 geom::Point<T,N> geom::ExtentBase<T,N>::operator+(Point<T,N> const & other) const {
-    return Point<T,N>(this->_vector + other.asVector());
+    return Point<T,N>(this->_vector + other.asEigen());
 }
 
 template class geom::ExtentBase<int,2>;

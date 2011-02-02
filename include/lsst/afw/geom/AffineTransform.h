@@ -153,8 +153,8 @@ public:
 
     Matrix const getMatrix() const;
     
-    ParameterVector const getVector() const;
-    void setVector(ParameterVector const & vector);
+    ParameterVector const getParameterVector() const;
+    void setParameterVector(ParameterVector const & vector);
 
     double & operator[](int i) { 
         return (i < 4) ? _linear[i] : _translation[i - 4]; 

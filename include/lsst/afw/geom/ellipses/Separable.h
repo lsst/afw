@@ -22,12 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED
-#define LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED
+#ifndef LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED
+#define LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED
 
 /**
  *  \file
- *  @brief Definitions and inlines for Quadrupole.
+ *  @brief Definitions and inlines for Separable.
  *
  *  \note Do not include directly; use the main ellipse header file.
  */
@@ -40,30 +40,38 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief An ellipse core with quadrupole moments as parameters.
+ *  @brief An ellipse core with a complex ellipticity and radius parameterization.
+ *
+ *  
  */
-class Quadrupole : public BaseCore {
+template <typename Ellipticity_, typename Radius_>
+class Separable : public BaseCore {
 public:
 
-    typedef boost::shared_ptr<Quadrupole> Ptr;
-    typedef boost::shared_ptr<Quadrupole const> ConstPtr;
+    typedef boost::shared_ptr<Separable> Ptr;
+    typedef boost::shared_ptr<Separable const> ConstPtr;
 
-    enum ParameterEnum { IXX=0, IYY=1, IXY=2 }; ///< Definitions for elements of a core vector.
+    enum ParameterEnum { E1=0, E2=1, RADIUS=2 }; ///< Definitions for elements of a core vector.
 
-    /// Matrix type for the matrix representation of Quadrupole parameters.
-    typedef Eigen::Matrix<double,2,2,Eigen::DontAlign> Matrix;
+    typedef Ellipticity_ Ellipticity;
+    typedef Radius_ Radius;
 
-    double const getIXX() const { return _matrix(0, 0); }
-    void setIXX(double ixx) { _matrix(0, 0) = ixx; }
+    double const getE1() const { return _ellipticity.getE1(); }
+    void setE1(double e1) { _ellipticity.setE1(e1); }
 
-    double const getIYY() const { return _matrix(1, 1); }
-    void setIYY(double iyy) { _matrix(1, 1) = iyy; }
+    double const getE2() const { return _ellipticity.getE2(); }
+    void setE2(double e2) { _ellipticity.setE2(e2); }
 
-    double const getIXY() const { return _matrix(1, 0); }
-    void setIXY(double ixy) { _matrix(0, 1) = _matrix(1, 0) = ixy; }
+    Radius const & getRadius() const { return _radius; }
+    Radius & getRadius() { return _radius; }
+    void setRadius(double radius) { _radius = radius; }
+    void setRadius(Radius const & radius) { _radius = radius; }
+
+    Ellipticity const & getEllipticity() const { return _ellipticity; }
+    Ellipticity & getEllipticity() { return _ellipticity; }
 
     /// @brief Deep copy the ellipse core.
-    Ptr clone() const { return boost::static_pointer_cast<Quadrupole>(_clone()); }
+    Ptr clone() const { return boost::static_pointer_cast<Separable>(_clone()); }
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const;
@@ -78,46 +86,44 @@ public:
 
     virtual void writeParameters(double * iter) const;
 
-    /// @brief Return a 2x2 symmetric matrix of the parameters.
-    Matrix const & getMatrix() const { return _matrix; }
-
-    /// @brief Return the determinant of the matrix representation.
-    double getDeterminant() const { return getIXX() * getIYY() - getIXY() * getIXY(); }
-
     /// @brief Standard assignment.
-    Quadrupole & operator=(Quadrupole const & other) { _matrix = other._matrix; return *this; }
+    Separable & operator=(Separable const & other);
 
     /// @brief Converting assignment.
-    Quadrupole & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
+    Separable & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
 
     /// @brief Construct from parameter values.
-    explicit Quadrupole(double ixx=1.0, double iyy=1.0, double ixy=0.0, bool normalize=false);
+    explicit Separable(double e1=0.0, double e2=0.0, double radius=Radius(), bool normalize=true);
+
+    /// @brief Construct from parameter values.
+    explicit Separable(std::complex<double> const & complex, 
+                       double radius=Radius(), bool normalize=true);
+
+    /// @brief Construct from parameter values.
+    explicit Separable(Ellipticity const & ellipticity, double radius=Radius(), bool normalize=true);
 
     /// @brief Construct from a parameter vector.
-    explicit Quadrupole(BaseCore::ParameterVector const & vector, bool normalize=false);
-
-    /// @brief Construct from parameter values.
-    explicit Quadrupole(Matrix const & matrix, bool normalize=true);
+    explicit Separable(BaseCore::ParameterVector const & vector, bool normalize=false);
 
     /// @brief Copy constructor.
-    Quadrupole(Quadrupole const & other) : _matrix(other._matrix) {}
+    Separable(Separable const & other) : _ellipticity(other._ellipticity), _radius(other._radius) {}
 
     /// @brief Converting copy constructor.
-    Quadrupole(BaseCore const & other) { *this = other; }
+    Separable(BaseCore const & other) { *this = other; }
 
     /// @brief Converting copy constructor.
-    Quadrupole(BaseCore::Transformer const & transformer) {
+    Separable(BaseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
     /// @brief Converting copy constructor.
-    Quadrupole(BaseCore::Convolution const & convolution) {
+    Separable(BaseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
 
 protected:
 
-    virtual BaseCore::Ptr _clone() const { return boost::make_shared<Quadrupole>(*this); }
+    virtual BaseCore::Ptr _clone() const { return boost::make_shared<Separable>(*this); }
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);
@@ -132,11 +138,13 @@ protected:
     virtual Jacobian _dAssignFromAxes(double a, double b, double theta);
 
 private:
-    static Registrar<Quadrupole> registrar;
 
-    Matrix _matrix;
+    static BaseCore::Registrar<Separable> registrar;
+
+    Ellipticity _ellipticity;
+    Radius _radius;
 };
 
 }}}} // namespace lsst::afw::geom::ellipses
 
-#endif // !LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED
+#endif // !LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED

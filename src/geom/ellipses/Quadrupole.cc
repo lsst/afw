@@ -21,83 +21,97 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
-#include "lsst/afw/geom/ellipses/Distortion.h"
-#include "lsst/afw/geom/ellipses/LogShear.h"
 
-namespace ellipses = lsst::afw::geom::ellipses;
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-ellipses::QuadrupoleEllipse::QuadrupoleEllipse(ParameterVector const & vector, bool doNormalize) :
-    BaseEllipse(new Quadrupole(vector.segment<3>(0)), Point2D(vector.segment<2>(2))) 
-{ 
-    if (doNormalize) normalize(); 
+BaseCore::Registrar<Quadrupole> Quadrupole::registrar;
+
+std::string Quadrupole::getName() const { return "Quadrupole"; }
+
+void Quadrupole::normalize() {
+    if (_matrix(0, 1) != _matrix(1, 0))
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix must be symmetric.");
+    if (getIXX() < 0 || getIYY() < 0)
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix cannot have negative diagonal elements.");
+    if (getDeterminant() < 0) 
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix cannot have negative determinant.");
 }
 
-void ellipses::Quadrupole::_assignTo(Quadrupole & other) const {
-    other._vector = this->_vector;
+void Quadrupole::readParameters(double const * iter) {
+    setIXX(*iter++);
+    setIYY(*iter++);
+    setIXY(*iter++);
 }
 
-void ellipses::Quadrupole::_assignTo(Axes & other) const {
-    double xx_p_yy = _vector[IXX] + _vector[IYY];
-    double xx_m_yy = _vector[IXX] - _vector[IYY];
-    double t = std::sqrt(xx_m_yy*xx_m_yy + 4*_vector[IXY]*_vector[IXY]);
-    other[Axes::A] = std::sqrt(0.5*(xx_p_yy+t));
-    other[Axes::B] = std::sqrt(0.5*(xx_p_yy-t));
-    other[Axes::THETA] = 0.5*std::atan2(2.0*_vector[IXY],xx_m_yy);
+void Quadrupole::writeParameters(double * iter) const {
+    *iter++ = getIXX();
+    *iter++ = getIYY();
+    *iter++ = getIXY();
 }
 
-void ellipses::Quadrupole::_assignTo(Distortion & other) const {
-    double t = _vector[IXX] + _vector[IYY];
-    if (t < 1E-12) {
-        other[Distortion::E1] = other[Distortion::E2] = other[Distortion::R] = 0.0;
-    } else {
-        other[Distortion::E1] = (_vector[IXX]-_vector[IYY])/t;
-        other[Distortion::E2] = 2*_vector[IXY]/t;
-        other[Distortion::R] = std::pow(getDeterminant(),0.25);
-    }
+Quadrupole::Quadrupole(double ixx, double iyy, double ixy, bool normalize) {
+    setIXX(ixx);
+    setIYY(iyy);
+    setIXY(ixy);
+    if (normalize) this->normalize();
 }
 
-void ellipses::Quadrupole::_assignTo(LogShear & other) const {
-    Distortion tmp;
-    this->_assignTo(tmp);
-    static_cast<BaseCore &>(tmp)._assignTo(other);
+Quadrupole::Quadrupole(BaseCore::ParameterVector const & vector, bool normalize) {
+    setIXX(vector[IXX]);
+    setIYY(vector[IYY]);
+    setIXY(vector[IXY]);
+    if (normalize) this->normalize();
 }
 
-ellipses::BaseCore::Jacobian ellipses::Quadrupole::_dAssignTo(Quadrupole & other) const {
-    other._vector = this->_vector;
-    return BaseCore::Jacobian::Identity();
+Quadrupole::Quadrupole(Matrix const & matrix, bool normalize) : _matrix(matrix) {
+    if (normalize) this->normalize();
 }
 
-ellipses::BaseCore::Jacobian ellipses::Quadrupole::_dAssignTo(Axes & other) const {
-    Distortion tmp;
-    BaseCore::Jacobian a = this->_dAssignTo(tmp);
-    BaseCore::Jacobian b = static_cast<BaseCore&>(tmp)._dAssignTo(other);
-    return b*a;
+void Quadrupole::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+    ixx = getIXX();
+    iyy = getIYY();
+    ixy = getIXY();
 }
 
-ellipses::BaseCore::Jacobian ellipses::Quadrupole::_dAssignTo(Distortion & other) const {
-    _assignTo(other);
-    BaseCore::Jacobian m;
-    double d = 1.0 / (_vector[IXX] + _vector[IYY]);
-    m(0,2) = 0.0;
-    m(1,2) = 2.0 * d;
-    m.corner<2,2>(Eigen::TopLeft).setConstant(2.0*d*d);
-    m.row(2).setConstant(std::pow(getDeterminant(),-0.75));
-    m(0,0) *= _vector[IYY];
-    m(0,1) *= -_vector[IXX];
-    m(1,0) *= -_vector[IXY];
-    m(1,1) *= -_vector[IXY];
-    m(2,0) *= _vector[IYY]/4;
-    m(2,1) *= _vector[IXX]/4;
-    m(2,2) *= -_vector[IXY]/2;
-    return m;
+BaseCore::Jacobian Quadrupole::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+    ixx = getIXX();
+    iyy = getIYY();
+    ixy = getIXY();
+    return Jacobian::Identity();
 }
 
-ellipses::BaseCore::Jacobian ellipses::Quadrupole::_dAssignTo(LogShear & other) const {
-    Distortion tmp;
-    BaseCore::Jacobian a = this->_dAssignTo(tmp);
-    BaseCore::Jacobian b = static_cast<BaseCore&>(tmp)._dAssignTo(other);
-    return b*a;
+void Quadrupole::_assignToAxes(double & a, double & b, double & theta) const {
+    BaseCore::_assignQuadrupoleToAxes(getIXX(), getIYY(), getIXY(), a, b, theta);
 }
+
+BaseCore::Jacobian Quadrupole::_dAssignToAxes(double & a, double & b, double & theta) const {
+    return BaseCore::_dAssignQuadrupoleToAxes(getIXX(), getIYY(), getIXY(), a, b, theta);
+}
+
+void Quadrupole::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
+    setIXX(ixx);
+    setIYY(iyy);
+    setIXY(ixy);
+}
+
+BaseCore::Jacobian Quadrupole::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
+    setIXX(ixx);
+    setIYY(iyy);
+    setIXY(ixy);
+    return Jacobian::Identity();
+}
+
+void Quadrupole::_assignFromAxes(double a, double b, double theta) {
+    BaseCore::_assignAxesToQuadrupole(a, b, theta, _matrix(0,0), _matrix(1,1), _matrix(0,1));
+    _matrix(1,0) = _matrix(0,1);
+}
+
+BaseCore::Jacobian Quadrupole::_dAssignFromAxes(double a, double b, double theta) {
+    Jacobian r = BaseCore::_dAssignAxesToQuadrupole(a, b, theta, _matrix(0,0), _matrix(1,1), _matrix(0,1));
+    _matrix(1,0) = _matrix(0,1);
+    return r;
+}
+
+}}}} // namespace lsst::afw::geom::ellipses

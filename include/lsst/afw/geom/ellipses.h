@@ -30,14 +30,35 @@
  *  \brief Public header class for ellipse library.
  */
 
-/// \defgroup EllipseGroup Ellipses
-
-#include "lsst/afw/geom/ellipses/BaseEllipse.h"
-#include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/afw/geom/ellipses/Axes.h"
+#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/Ellipse.h"
+#include "lsst/afw/geom/ellipses/Transformer.h"
+#include "lsst/afw/geom/ellipses/Convolution.h"
+#include "lsst/afw/geom/ellipses/GridTransform.h"
+#include "lsst/afw/geom/ellipses/Parametric.h"
+#include "lsst/afw/geom/ellipses/radii.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
 #include "lsst/afw/geom/ellipses/LogShear.h"
-#include "lsst/afw/geom/ellipses/RadialFraction.h"
-#include "lsst/afw/geom/ellipses/Transformer.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/ellipses/Axes.h"
+#include "lsst/afw/geom/ellipses/Separable.h"
+
+namespace lsst { namespace afw { namespace geom {
+
+using ellipses::Ellipse;
+
+namespace ellipses {
+
+typedef Separable<Distortion,GeometricRadius> DistortionAndGeometricRadius;
+typedef Separable<Distortion,ArithmeticRadius> DistortionAndArithmeticRadius;
+typedef Separable<Distortion,LogGeometricRadius> DistortionAndLogGeometricRadius;
+typedef Separable<Distortion,LogArithmeticRadius> DistortionAndLogArithmeticRadius;
+
+typedef Separable<LogShear,GeometricRadius> LogShearAndGeometricRadius;
+typedef Separable<LogShear,ArithmeticRadius> LogShearAndArithmeticRadius;
+typedef Separable<LogShear,LogGeometricRadius> LogShearAndLogGeometricRadius;
+typedef Separable<LogShear,LogArithmeticRadius> LogShearAndLogArithmeticRadius;
+
+}}}} // namespace lsst::afw::geom::ellipses
 
 #endif // !LSST_AFW_GEOM_ELLIPSES_H

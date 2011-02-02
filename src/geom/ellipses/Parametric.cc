@@ -1,3 +1,5 @@
+// -*- lsst-c++ -*-
+
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -19,22 +21,17 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::geom
- *
- * Does not include lsst/afw/geom/ellipses.h.
- */
-#ifndef LSST_GEOM_H
-#define LSST_GEOM_H
+#include "lsst/afw/geom/ellipses/Parametric.h"
 
-#include "lsst/afw/geom/CoordinateBase.h"
-#include "lsst/afw/geom/CoordinateExpr.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/geom/LinearTransform.h"
-#include "lsst/afw/geom/Box.h"
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-#endif // LSST_GEOM_H
+Parametric::Parametric(Ellipse const & ellipse) : _center(ellipse.getCenter()) {
+    double a, b, theta;
+    ellipse.getCore()._assignToAxes(a, b, theta);
+    double c = std::cos(theta);
+    double s = std::sin(theta);
+    _u = ExtentD(a*c, a*s);
+    _v = ExtentD(-b*s, b*c);
+}
+
+}}}} // namespace lsst::afw::geom::ellipses

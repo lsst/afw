@@ -518,7 +518,7 @@ double afwCoord::Coord::offset(
     // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
     // get the vector r
-    Eigen::Vector3d r = getVector().asVector();
+    Eigen::Vector3d r = getVector().asEigen();
 
 
     // Get the vector v:
@@ -557,7 +557,7 @@ double afwCoord::Coord::offset(
     // phi2 = atan2(w2.v2, u2.v2)
     //
     // we need to compute u2, and then rotate v (exactly as we rotated r) to get v2
-    Eigen::Vector3d r2 = getVector().asVector();
+    Eigen::Vector3d r2 = getVector().asEigen();
     Eigen::Vector3d u2;
     u2 << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
     Eigen::Vector3d w2 = r2.cross(u2);
@@ -566,7 +566,7 @@ double afwCoord::Coord::offset(
     v.normalize();
     Coord v2Coord = Coord(afwGeom::Point3D(v), getEpoch());
     v2Coord.rotate(axisCoord, arcLen);
-    Eigen::Vector3d v2 = v2Coord.getVector().asVector();
+    Eigen::Vector3d v2 = v2Coord.getVector().asEigen();
 
     double phi2 = atan2(w2.dot(v2), u2.dot(v2));
 

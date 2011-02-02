@@ -1,3 +1,5 @@
+// -*- lsst-c++ -*-
+
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -19,22 +21,33 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::geom
- *
- * Does not include lsst/afw/geom/ellipses.h.
+
+#ifndef LSST_AFW_GEOM_ELLIPSES_Parametric_h_INCLUDED
+#define LSST_AFW_GEOM_ELLIPSES_Parametric_h_INCLUDED
+
+#include "lsst/afw/geom/ellipses/Ellipse.h"
+
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
+
+/** 
+ *  @brief A functor that returns points on the boundary of the ellipse as a function
+ *         of a parameter that runs between 0 and 2\pi (but is not angle).
  */
-#ifndef LSST_GEOM_H
-#define LSST_GEOM_H
+class Parametric {
+public:
 
-#include "lsst/afw/geom/CoordinateBase.h"
-#include "lsst/afw/geom/CoordinateExpr.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/geom/LinearTransform.h"
-#include "lsst/afw/geom/Box.h"
+    Parametric(Ellipse const & ellipse);
 
-#endif // LSST_GEOM_H
+    PointD operator()(double t) const {
+        return _center + _u*std::cos(t) + _v*std::sin(t); 
+    }
+
+private:
+    PointD _center;
+    ExtentD _u;
+    ExtentD _v;
+};
+
+}}}} // namespace lsst::afw::geom::ellipses
+
+#endif // !LSST_AFW_GEOM_ELLIPSES_Parametric_h_INCLUDED

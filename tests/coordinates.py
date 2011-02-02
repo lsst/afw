@@ -57,8 +57,6 @@ class CoordinateTestCase(unittest.TestCase):
             self.assertEqual(tuple(p), tuple(vector1))
             self.assertEqual(tuple(p.clone()), tuple(p))
             self.assert_(p.clone() is not p)
-            self.assertEqual(type(p.asVector()), numpy.matrix)
-            self.assert_(numpy.allclose(p.asVector().T, vector1))
             vector2 = rnd()
             for n in range(cls.dimensions):
                 p[n] = vector2[n]

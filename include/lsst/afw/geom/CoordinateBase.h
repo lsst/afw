@@ -58,7 +58,6 @@ public:
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
-#endif
 
     /**
      *  \brief Return a fixed-size Eigen representation of the coordinate object.
@@ -66,7 +65,8 @@ public:
      *  The fact that this returns by const reference rather than by value should not be considered
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
-    EigenVector const & asVector() const { return _vector; }
+    EigenVector const & asEigen() const { return _vector; }
+#endif
 
 protected:
 
@@ -110,12 +110,6 @@ public:
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
-#endif
-
-    T getX() const { return _vector.x(); }
-    T getY() const { return _vector.y(); }
-    void setX(T x) { _vector.x() = x; }
-    void setY(T y) { _vector.y() = y; }
 
     /**
      *  \brief Return a fixed-size Eigen representation of the coordinate object.
@@ -123,7 +117,13 @@ public:
      *  The fact that this returns by const reference rather than by value should not be considered
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
-    EigenVector const & asVector() const { return _vector; }
+    EigenVector const & asEigen() const { return _vector; }
+#endif
+
+    T getX() const { return _vector.x(); }
+    T getY() const { return _vector.y(); }
+    void setX(T x) { _vector.x() = x; }
+    void setY(T y) { _vector.y() = y; }
 
     /// \brief Return a std::pair representation of the coordinate object.
     std::pair<T,T> asPair() const { return std::make_pair(_vector.x(),_vector.y()); }
@@ -156,6 +156,15 @@ public:
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
+
+    /**
+     *  \brief Return a fixed-size Eigen representation of the coordinate object.
+     *
+     *  The fact that this returns by const reference rather than by value should not be considered
+     *  part of the API; this is merely an optimization enabled by the implementation.
+     */
+    EigenVector const & asEigen() const { return _vector; }
+
 #endif
 
     T getX() const { return _vector.x(); }
@@ -164,14 +173,6 @@ public:
     void setX(T x) { _vector.x() = x; }
     void setY(T y) { _vector.y() = y; }
     void setZ(T z) { _vector.z() = z; }
-
-    /**
-     *  \brief Return a fixed-size Eigen representation of the coordinate object.
-     *
-     *  The fact that this returns by const reference rather than by value should not be considered
-     *  part of the API; this is merely an optimization enabled by the implementation.
-     */
-    EigenVector const & asVector() const { return _vector; }
 
     /// \brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T,T> asTuple() const {
