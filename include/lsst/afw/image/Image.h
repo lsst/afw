@@ -359,7 +359,7 @@ namespace image {
         _image_t_Ptr _getRawImagePtr() { return _gilImage; }
         _view_t _getRawView() const { return _gilView; }
         void _setRawView() {
-            _gilView = flipped_up_down_view(view(*_gilImage));
+            _gilView = view(*_gilImage);
         }
 #endif
     };

@@ -187,14 +187,6 @@ class FourierLocalKernel;
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
 
-        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
-            lsst::afw::geom::Point2D const & location
-        ) const;
-
-        virtual boost::shared_ptr<FourierLocalKernel> computeFourierLocalKernel(
-           lsst::afw::geom::Point2D const & location
-        ) const;
-
         /**
         * @brief Return the Kernel's dimensions (width, height)
         */
@@ -598,10 +590,6 @@ class FourierLocalKernel;
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
-        ) const;
-
-        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
-            lsst::afw::geom::Point2D const & location
         ) const;
 
         virtual std::vector<double> getKernelParameters() const;

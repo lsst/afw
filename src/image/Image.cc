@@ -49,7 +49,7 @@ template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(width, height)),
-    _gilView(flipped_up_down_view(view(*_gilImage))),
+    _gilView(view(*_gilImage)),
     _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
@@ -64,7 +64,7 @@ template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(dimensions.first, dimensions.second)),
-    _gilView(flipped_up_down_view(view(*_gilImage))),
+    _gilView(view(*_gilImage)),
     _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
@@ -83,8 +83,7 @@ image::ImageBase<PixelT>::ImageBase(
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // don't copy the pixels
-    _gilView(subimage_view(flipped_up_down_view(view(*_gilImage)),
-                           rhs._ix0, rhs._iy0, rhs.getWidth(), rhs.getHeight())),
+    _gilView(rhs._gilView),
     _ix0(rhs._ix0), _iy0(rhs._iy0), _x0(rhs._x0), _y0(rhs._y0)
 {
     if (deep) {

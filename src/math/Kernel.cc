@@ -44,7 +44,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/LocalKernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
@@ -351,53 +350,4 @@ void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) co
     for (int ii = 0; funcIter != _spatialFunctionList.end(); ++funcIter, ++ii) {
         this->setKernelParameter(ii, (*(*funcIter))(x,y));
     }
-}
-
-/**
- *  @brief Construct an ImageLocalKernel
- *
- *  This default implementation does not include derivatives 
- *  Subclasses should override to provide versions with derivatives.
- */
-afwMath::ImageLocalKernel::Ptr afwMath::Kernel::computeImageLocalKernel(
-    lsst::afw::geom::Point2D const & location
-) const{
-    lsst::afw::geom::Point2I center = lsst::afw::geom::Point2I(
-        getCtrX(), getCtrY()
-    );
-    ImageLocalKernel::Image::Ptr imagePtr(
-        new ImageLocalKernel::Image(getWidth(), getHeight())
-    );
-
-    computeImage(*imagePtr, true, location.getX(), location.getY());
-    std::vector<double> kernelParameters(getNKernelParameters());
-    computeKernelParametersFromSpatialModel(
-        kernelParameters, 
-        location.getX(), location.getY()
-    );
-    return boost::make_shared<ImageLocalKernel>(
-        center,
-        kernelParameters, 
-        imagePtr
-    );
-}
-
-/**
- *  @brief Construct a FourierLocalKernel
- *
- *  This default implementation does not include derivatives. And returns an
- *  FftLocalKernel, which is a concrete subclass of FourierLocalKernel which is 
- *  computed by taking the fourier transform of the kernel image.
- *  Subclasses should override to provide versions with derivatives.
- *
- *  @note Because a FourierLocalKernel can be constructed from an 
- *  ImageLocalKernel, overriding computeImageLocalKernel
- *  will modify the output of computeFourierLocalKernel as well.
- */
-afwMath::FourierLocalKernel::Ptr afwMath::Kernel::computeFourierLocalKernel(
-        lsst::afw::geom::Point2D const & location
-) const{
-    return boost::make_shared<FftLocalKernel>(
-        *computeImageLocalKernel(location)
-    );
 }
