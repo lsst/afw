@@ -62,14 +62,12 @@ public:
         }
     }
 
-    template<typename U> void operator()(U) { // read and convert into the desired type
+    template<typename OtherImage> void operator()(OtherImage) { // read and convert into the desired type
         try {
-            U img;
-            lsst::afw::image::fits_read_image(_file, img, _metadata, _hdu, _bbox);
-
-            _img.recreate(img.dimensions());
-            boost::gil::copy_and_convert_pixels(const_view(img), view(_img));
-
+            OtherImage tmp;
+            lsst::afw::image::fits_read_image(_file, tmp, _metadata, _hdu, _bbox);
+            //copy and convert
+            _img = ImageT(tmp, true);
             throw ExceptionT();         // signal that we've succeeded
         } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // pass
@@ -86,14 +84,14 @@ private:
 }
 
 namespace lsst { namespace afw { namespace image {
-template<typename fits_img_types, typename ImageT>
+template<typename supported_fits_types, typename ImageT>
 bool fits_read_image(std::string const& file, ImageT& img,
                      lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
                      int hdu=0,
                      BBox const& bbox=BBox()
                     ) {
     try {
-        boost::mpl::for_each<fits_img_types>(try_fits_read_image<ImageT, found_type>(file, img, metadata, hdu, bbox));
+        boost::mpl::for_each<supported_fits_types>(try_fits_read_image<ImageT, found_type>(file, img, metadata, hdu, bbox));
     } catch (found_type &) {
         return true;                    // success
     }

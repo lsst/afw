@@ -104,7 +104,7 @@ public:
 
     /// @brief Converting copy constructor.
     Quadrupole(BaseCore const & other) { *this = other; }
-
+#ifndef SWIG
     /// @brief Converting copy constructor.
     Quadrupole(BaseCore::Transformer const & transformer) {
         transformer.apply(*this);
@@ -114,7 +114,7 @@ public:
     Quadrupole(BaseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
-
+#endif
 protected:
 
     virtual BaseCore::Ptr _clone() const { return boost::make_shared<Quadrupole>(*this); }

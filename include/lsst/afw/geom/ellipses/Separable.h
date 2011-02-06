@@ -111,6 +111,7 @@ public:
     /// @brief Converting copy constructor.
     Separable(BaseCore const & other) { *this = other; }
 
+#ifndef SWIG
     /// @brief Converting copy constructor.
     Separable(BaseCore::Transformer const & transformer) {
         transformer.apply(*this);
@@ -120,7 +121,7 @@ public:
     Separable(BaseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
-
+#endif
 protected:
 
     virtual BaseCore::Ptr _clone() const { return boost::make_shared<Separable>(*this); }

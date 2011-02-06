@@ -32,7 +32,7 @@
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
-
+#include "boost/checked_delete.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
@@ -42,14 +42,60 @@
 
 namespace image = lsst::afw::image;
 
+
 /************************************************************************************************************/
+template <typename PixelT>
+typename image::ImageBase<PixelT>::RawDataPtr image::ImageBase<PixelT>::_allocate(
+    int width, int height
+) {    
+    RawDataPtr mem(new PixelT[width*height], boost::checked_array_deleter<PixelT>());
+    return mem;
+}
+template <typename PixelT>
+typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeView(
+    int width, int height, RawDataPtr data
+) {
+    return boost::gil::interleaved_view(
+        width, height, 
+        (typename _view_t::value_type* )data.get(), 
+        width*sizeof(PixelT)
+    );
+}     
+template <typename PixelT>
+typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubView(
+    BBox const & bbox, const _view_t & view
+) {
+    if (bbox.getX0() < 0 || bbox.getY0() < 0 ||
+        bbox.getX1() >= view.width() || bbox.getY1() >= view.height()
+    ) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+            bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight() %
+            view.width() % view.height()).str());
+    }
+
+    if(!bbox) {
+        return boost::gil::subimage_view(
+            view, 
+            bbox.getX0(), bbox.getY0(), 
+            view.width() - bbox.getX0(),
+            view.height() - bbox.getY0()
+        );
+    } else {
+        return boost::gil::subimage_view(
+            view, 
+            bbox.getX0(), bbox.getY0(), 
+            bbox.getWidth(), bbox.getHeight()
+        );
+    }
+}
 
 /// Create an uninitialised ImageBase of the specified size
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _gilImage(new _image_t(width, height)),
-    _gilView(view(*_gilImage)),
+    _rawData(_allocate(width, height)),
+    _gilView(_makeView(width, height, _rawData)),
     _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
@@ -63,8 +109,8 @@ image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _gilImage(new _image_t(dimensions.first, dimensions.second)),
-    _gilView(view(*_gilImage)),
+    _rawData(_allocate(dimensions.first, dimensions.second)),
+    _gilView(_makeView(dimensions.first, dimensions.second, _rawData)),
     _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
@@ -82,7 +128,7 @@ image::ImageBase<PixelT>::ImageBase(
                           ///< if true make a new, standalone, ImageBase
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _gilImage(rhs._gilImage), // don't copy the pixels
+    _rawData(rhs._rawData),
     _gilView(rhs._gilView),
     _ix0(rhs._ix0), _iy0(rhs._iy0), _x0(rhs._x0), _y0(rhs._y0)
 {
@@ -110,25 +156,11 @@ image::ImageBase<PixelT>::ImageBase(
                           ///< if true make a new, standalone, ImageBase
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
-    _gilView(subimage_view(rhs._gilView,
-                           bbox.getX0(), bbox.getY0(),
-                           ((bbox.getWidth() + bbox.getHeight() == 0) ?
-                            (rhs.getWidth()  - bbox.getX0()) : bbox.getWidth()),
-                           ((bbox.getWidth() + bbox.getHeight() == 0) ?
-                            (rhs.getHeight() - bbox.getY0()) : bbox.getHeight())
-                          )),
+    _rawData(rhs._rawData), // boost::shared_ptr, so don't copy the pixels
+    _gilView(_makeSubView(bbox, rhs._gilView)),
     _ix0(rhs._ix0 + bbox.getX0()), _iy0(rhs._iy0 + bbox.getY0()),
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
-    if (_ix0 < 0 || _iy0 < 0 ||
-        _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                          (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
-                           bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight() %
-                           _gilImage->width() % _gilImage->height()).str());
-    }
-
     if (deep) {
         ImageBase tmp(getDimensions());
         tmp.setXY0(getXY0());
@@ -182,7 +214,7 @@ typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::oper
     if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
-                           x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
+                           x % y % (getWidth() - 1) % (getHeight() - 1)).str());
     }
                                           
     return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
@@ -214,7 +246,7 @@ template<typename PixelT>
 void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     
-    swap(_gilImage, rhs._gilImage);   // just swapping the pointers
+    swap(_rawData, rhs._rawData);   // just swapping the pointers
     swap(_gilView, rhs._gilView);
     swap(_ix0, rhs._ix0);
     swap(_iy0, rhs._iy0);
@@ -275,12 +307,12 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Only contiguous == true makes sense");
     }
-    if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
+    if (!this->isContiguous()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Image's pixels are not contiguous");
     }
 
-    return row_begin(getHeight() - 1);
+    return row_begin(0);
 }
 
 /// Return a fast STL compliant iterator to the end of the %image which must be contiguous
@@ -296,11 +328,12 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Only contiguous == true makes sense"); 
     }
-    if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Image's pixels are not contiguous");
+    if (!this->isContiguous()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, 
+                          "Image's pixels are not contiguous");
     }
 
-    return row_end(0);
+    return row_end(getHeight()-1);
 }
 
 /************************************************************************************************************/
@@ -409,14 +442,14 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     image::ImageBase<PixelT>() {
 
     typedef boost::mpl::vector<
-        lsst::afw::image::detail::types_traits<unsigned char>::image_t,
-        lsst::afw::image::detail::types_traits<unsigned short>::image_t,
-        lsst::afw::image::detail::types_traits<short>::image_t,
-        lsst::afw::image::detail::types_traits<int>::image_t,
-        lsst::afw::image::detail::types_traits<unsigned int>::image_t,
-        lsst::afw::image::detail::types_traits<float>::image_t,
-        lsst::afw::image::detail::types_traits<double>::image_t
-    > fits_img_types;
+        lsst::afw::image::Image<unsigned char>, 
+        lsst::afw::image::Image<unsigned short>, 
+        lsst::afw::image::Image<short>, 
+        lsst::afw::image::Image<int>,
+        lsst::afw::image::Image<unsigned int>,
+        lsst::afw::image::Image<float>,
+        lsst::afw::image::Image<double>
+    > fits_image_types;
 
     if (!boost::filesystem::exists(fileName)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
@@ -427,11 +460,10 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
 
-    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata, hdu, bbox)) {
+    if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
-    this->_setRawView();
 
     if (bbox) {
         this->setXY0(bbox.getLLC());
@@ -439,8 +471,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     /*
      * We will interpret one of the header WCSs as providing the (X0, Y0) values
      */
-    this->setXY0(this->getXY0() +
-                 image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
+    this->setXY0(this->getXY0() + detail::getImageXY0FromMetadata(detail::wcsNameForXY0, metadata.get()));
 }
 
 /**
@@ -455,7 +486,7 @@ void image::Image<PixelT>::writeFits(
     using lsst::daf::base::PropertySet;
 
     if (mode == "pdu") {
-        image::fits_write_view(fileName, _getRawView(), metadata_i, mode);
+        image::fits_write_image(fileName, *this, metadata_i, mode);
         return;
     }
 
@@ -471,7 +502,7 @@ void image::Image<PixelT>::writeFits(
         metadata = wcsAMetadata;
     }
 
-    image::fits_write_view(fileName, _getRawView(), metadata, mode);
+    image::fits_write_image(fileName, *this, metadata, mode);
 }
 
 /************************************************************************************************************/

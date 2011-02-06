@@ -227,20 +227,19 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     std::size_t nbytes = width * height * sizeof(ImagePixelT);
     if (Archive::is_loading::value) {
         boost::scoped_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(width, height));
-        ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ni->_getRawImagePtr()));
+        ImagePixelT * raw = ni->_getRawDataPtr().get();
         ar & make_nvp("bytes",
                       boost::serialization::make_binary_object(raw, nbytes));
         ip->swap(*ni);
-    } else if (width == ip->_getRawImagePtr()->width() && height == ip->_getRawImagePtr()->height()) {
-        ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ip->_getRawImagePtr()));
-        ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(raw, nbytes));
     } else {
-        typename Image<ImagePixelT>::_image_t img(width, height);
-        boost::gil::copy_pixels(ip->_getRawView(), flipped_up_down_view(view(img)));
-        ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(
-                                       boost::gil::interleaved_view_get_raw_data(view(img)), nbytes));
+        ImagePixelT * raw = ip->_getRawDataPtr().get();
+        //check if image is not contiguous:        
+        if(!ip->isContiguous()){
+            //image is not contiguous, make a deep copy
+            Image<ImagePixelT> deepCopy(*ip, true);
+            raw = deepCopy._getRawDataPtr().get();
+        }
+        ar & make_nvp("bytes", boost::serialization::make_binary_object(raw, nbytes));
     }
 }
 

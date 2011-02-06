@@ -85,7 +85,12 @@ namespace image {
         explicit Mask(std::string const& fileName, int const hdu=0,
                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                       BBox const& bbox=BBox(), bool const conformMasks=false
-                     );                      
+                     );           
+
+        // generalised copy constructor
+        template<typename OtherPixelT>
+        Mask(Mask<OtherPixelT> const& rhs, const bool deep) :
+            image::ImageBase<MaskPixelT>(rhs, deep) {}
 
         Mask(const Mask& src, const bool deep=false);
         Mask(const Mask& src, const BBox& bbox, const bool deep=false);
@@ -183,8 +188,6 @@ private:
         // Make names in templatized base class visible (Meyers, Effective C++, Item 43)
         //
         using ImageBase<MaskPixelT>::_getRawView;
-        using ImageBase<MaskPixelT>::_getRawImagePtr;
-        using ImageBase<MaskPixelT>::_setRawView;
         using ImageBase<MaskPixelT>::swap;
     };
 

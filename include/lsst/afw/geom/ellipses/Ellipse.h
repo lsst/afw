@@ -49,9 +49,10 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  */
 class Ellipse {
 public:
+#ifndef SWIG
     class Transformer; ///< Proxy return type for Ellipse::transform().
     class GridTransform; ///< Proxy return type for Ellipse::getGridTransform().
-    class Convolution; ///< Proxy return type for Ellipse::convolve().
+#endif
 
     typedef BoxD Envelope; ///< Bounding box type.
     typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
@@ -161,7 +162,9 @@ public:
     explicit Ellipse(BaseCore::Ptr const & core, PointD const & center = PointD()) :
         _core(core), _center(center) {}
 
+#ifndef SWIG
     Ellipse(Transformer const & other);
+#endif
 
     Ellipse(Ellipse const & other) :
         _core(other.getCore().clone()), _center(other.getCenter()) {}

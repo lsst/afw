@@ -112,37 +112,37 @@ struct fits_read_support_private<const T> {
 // Here are our types
 //
 template <>
-struct fits_read_support_private<boost::gil::gray8_view_t> {
+struct fits_read_support_private<unsigned char> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int,BITPIX=BYTE_IMG); // value is from fitsio.h
 };
 template <>
-struct fits_read_support_private<boost::gil::gray16s_view_t> {
+struct fits_read_support_private<short> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int,BITPIX=SHORT_IMG); // value is from fitsio.h
 };
 template <>
-struct fits_read_support_private<boost::gil::gray16_view_t> {
+struct fits_read_support_private<unsigned short> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int,BITPIX=USHORT_IMG); // value is from fitsio.h
 };
 template <>
-struct fits_read_support_private<boost::gil::gray32s_view_t> {
+struct fits_read_support_private<int> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int , BITPIX=LONG_IMG); // value is from fitsio.h
 };
 template <>
-struct fits_read_support_private<boost::gil::gray32_view_t> {
+struct fits_read_support_private<unsigned int> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int , BITPIX=ULONG_IMG); // value is from fitsio.h
 };
 template <>
-struct fits_read_support_private<boost::gil::gray32f_noscale_view_t> {
+struct fits_read_support_private<float> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int,BITPIX=FLOAT_IMG); // value is from fitsio.h
 };
 template <>
-struct fits_read_support_private<boost::gil::gray64f_noscale_view_t> {
+struct fits_read_support_private<double> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int , BITPIX=DOUBLE_IMG); // value is from fitsio.h
 };
@@ -163,7 +163,7 @@ struct fits_write_support_private<const T> {
 };
 
 template <>
-struct fits_write_support_private<boost::gil::gray8_view_t> {
+struct fits_write_support_private<unsigned char> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
 };
     
@@ -327,6 +327,20 @@ protected:
 
         _naxis1 = nAxes[0];
         _naxis2 = nAxes[1];
+        
+        
+        if (_bbox) {
+            if (_bbox.getX0() < 0 || _bbox.getY0() < 0 ||
+                _bbox.getX1() >= _naxis1 || _bbox.getY1() >= _naxis2
+            ) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::LengthErrorException,
+                    (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+                    _bbox.getX0() % _bbox.getY0() % _bbox.getWidth() % _bbox.getHeight() %
+                    _naxis1 % _naxis2).str()
+                ); 
+            }
+        }
         _bitpix = bitpix;
         //
         // Don't read the rest of the metadata here -- we don't yet know if the view is the right type
@@ -336,21 +350,28 @@ protected:
 public:
     fits_reader(cfitsio::fitsfile *file,
                 lsst::daf::base::PropertySet::Ptr  metadata,
-                int hdu=0, BBox const& bbox=BBox()) :
-        fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
+                int hdu=0, BBox const& bbox=BBox()
+    ) : fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox) { 
+        init(); 
+    }
     fits_reader(const std::string& filename,
                 lsst::daf::base::PropertySet::Ptr  metadata,
-                int hdu=0, BBox const& bbox=BBox()) :
-        fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
+                int hdu=0, BBox const& bbox=BBox()
+    ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { 
+        init(); 
+    }
 
     ~fits_reader() { }
+    
+    template <typename ImageT>
+    void apply(ImageT & image) {
+        const int BITPIX = detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
 
-    template <typename View>
-    void apply(View& view) {
-        const int BITPIX = detail::fits_read_support_private<View>::BITPIX;
-        if (BITPIX != _bitpix) {
-            const std::string msg = (boost::format("Incorrect value of BITPIX; saw %d expected %d") % _bitpix % BITPIX).str();
-            throw LSST_EXCEPT(FitsWrongTypeException, msg);
+        if (BITPIX != _bitpix) {            
+            throw LSST_EXCEPT(
+                FitsWrongTypeException, 
+                (boost::format("Incorrect value of BITPIX; saw %d expected %d") % _bitpix % BITPIX).str()
+            );
         }
 
         /*
@@ -358,58 +379,42 @@ public:
          */
         cfitsio::getMetadata(_fd.get(), _metadata);
 
-        int x0 = 0, y0 = 0;             // Origin of part of image to read
-        if (_bbox) {
+        // Origin of part of image to read
+        int x0 = 0, y0 = 0;                     if (_bbox) {
             x0 = _bbox.getX0(); y0 = _bbox.getY0();
-
-            if (x0 + view.width() > _naxis1 || y0 + view.height() > _naxis2) {
-                throw LSST_EXCEPT(pexExcept::LengthErrorException,
-                                  (boost::format("BBox (%d,%d) -- (%d,%d) doesn't fit in image of size %dx%d")
-                                   % x0 % y0 % _bbox.getX1() % _bbox.getY1() % _naxis1 % _naxis2).str());
-                
-            }
         }
-        /*
-         * Cfitsio 3.006 is able to read some, but not all, data types from top to bottom;  floats are OK,
-         * but unsigned short isn't.
-         *
-         * When cfitsio cooperates it saves us from having to flip the rows ourselves
-         */
+        std::pair<int, int> dimensions = get_Dimensions();
+        if (image.getWidth() != dimensions.first || image.getHeight() != dimensions.second) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                (boost::format("Image dimensions (%d,%d) do not match requested read dimensions %dx%d") %
+                image.getWidth() % image.getHeight() % dimensions.first % dimensions.second).str()
+            );
+        }
 
         long blc[2] = {x0 + 1, y0 + 1}; // 'bottom left corner' of the subsection
-        long trc[2] = {x0 + view.width(), y0 + view.height()};  // 'top right corner' of the subsection
+        long trc[2] = {x0 + dimensions.first, y0 + dimensions.second};  // 'top right corner' of the subsection
         long inc[2] = {1, 1};                       // increment to be applied in each dimension (of file)
 
         int status = 0;                 // cfitsio function return status
-#if 0                                   // this generates slower code (more seeks) than the read-and-swap
-        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, view.row_begin(0), NULL, &status) == 0) {
-            return;                     // The simple case; the read succeeded
-        }
-        
-        if (status != BAD_PIX_NUM) {
-            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
-        }
-        /*
-         * cfitsio returned a BAD_PIX_NUM errror, which (usually?) means that this type can't be read
-         * in the desired order;  so we'll do it ourselves --- i.e. do the read and flip the rows
-         */
-#endif
-        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, view.row_begin(0), NULL, &status) != 0) {
+
+        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, &(*image.begin()), NULL, &status) != 0) {
             throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
     }
-    
-    template <typename Image>
-    void read_image(Image& im) {
-        im.recreate(get_Dimensions());
-        apply(view(im));
+   
+    template <typename ImageT>
+    void read_image(ImageT & image) {
+        ImageT tmp(get_Dimensions());
+        apply(tmp);
+        image=tmp;
     }
 
-    boost::gil::point2<std::ptrdiff_t> get_Dimensions() const {
+    std::pair<int,int> get_Dimensions() const {
         if (_bbox) {
-            return boost::gil::point2<std::ptrdiff_t>(_bbox.getWidth(), _bbox.getHeight());
+            return _bbox.getDimensions();
         } else {
-            return boost::gil::point2<std::ptrdiff_t>(_naxis1, _naxis2);
+            return std::pair<int, int>(_naxis1, _naxis2);
         }
     }
 };
@@ -423,16 +428,18 @@ public:
     fits_writer(std::string const& filename, std::string const&mode) : fits_file_mgr(filename, mode) { init(); }
     ~fits_writer() { }
     
-    template <typename View>
-    void apply(const View& view,
-               boost::shared_ptr<const lsst::daf::base::PropertySet> metadata
-              ) {
+    template <typename ImageT>
+    void apply(
+        ImageT const & image,
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata
+    ) {
         const int nAxis = 2;
         long nAxes[nAxis];
-        nAxes[0] = view.width();
-        nAxes[1] = view.height();
+        nAxes[0] = image.getWidth();
+        nAxes[1] = image.getHeight();
+        long imageSize = nAxes[0]*nAxes[1];
 
-        const int BITPIX = detail::fits_read_support_private<View>::BITPIX;
+        const int BITPIX = detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
 
         int status = 0;
         if (_flags == "pdu") {
@@ -475,16 +482,12 @@ public:
         }
         
         /*
-         * Write the data itself.  Our underlying boost::gil image has the lowest-address row at the top so we
-         * have to flip rows to write it correctly even if the image is contiguous (which it may not be if
-         * it's a subimage)
-         *
-         * An alternative is write it row-by-row
+         * Write the data itself.
          */
         int const ttype = cfitsio::ttypeFromBitpix(BITPIX);
         status = 0;                     // cfitsio function return status
 
-        if (fits_write_img(_fd.get(), ttype, 1, view.size(), view.row_begin(0), &status) != 0) {
+        if (fits_write_img(_fd.get(), ttype, 1, imageSize, &(*image.begin()), &status) != 0) {
             throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
     }

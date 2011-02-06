@@ -206,14 +206,15 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
         //TODOsmm createPropertyNode("FitsMetadata");
         metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList()); 
     }
+
     //
     // These are the permitted input file types
     //
     typedef boost::mpl::vector<
-        lsst::afw::image::detail::types_traits<unsigned char>::image_t,
-        lsst::afw::image::detail::types_traits<unsigned short>::image_t,
-        lsst::afw::image::detail::types_traits<short>::image_t
-    > fits_mask_types;
+        lsst::afw::image::Mask<unsigned char>, 
+        lsst::afw::image::Mask<unsigned short>,
+        lsst::afw::image::Mask<short>
+    >fits_mask_types;
 
     if (!boost::filesystem::exists(fileName)) {
         throw LSST_EXCEPT(pexExcept::NotFoundException,
@@ -224,11 +225,10 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
         metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList);
     }
 
-    if (!afwImage::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata, hdu, bbox)) {
+    if (!fits_read_image<fits_mask_types>(fileName, *this, metadata, hdu, bbox)) {
         throw LSST_EXCEPT(afwImage::FitsException,
             (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
-    _setRawView();
 
     if (bbox) {
         this->setXY0(bbox.getLLC());
@@ -236,8 +236,7 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     /*
      * We will interpret one of the header WCSs as providing the (X0, Y0) values
      */
-    this->setXY0(this->getXY0() + afwImage::detail::getImageXY0FromMetadata(afwImage::detail::wcsNameForXY0,
-                                                                            metadata.get()));
+    this->setXY0(this->getXY0() + detail::getImageXY0FromMetadata(detail::wcsNameForXY0, metadata.get()));
     //
     // OK, we've read it.  Now make sense of its mask planes
     //
@@ -255,7 +254,7 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     }
 
     conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
-    ;                                   // defined by Mask::_maskPlaneDict
+                                        // defined by Mask::_maskPlaneDict
 }
 
 /**
@@ -279,11 +278,12 @@ void afwImage::Mask<MaskPixelT>::writeFits(
     //
     // Add WCS with (X0, Y0) information
     //
-    dafBase::PropertySet::Ptr wcsAMetadata = afwImage::detail::createTrivialWcsAsPropertySet(
-        afwImage::detail::wcsNameForXY0, this->getX0(), this->getY0());
+    dafBase::PropertySet::Ptr wcsAMetadata = detail::createTrivialWcsAsPropertySet(
+        detail::wcsNameForXY0, this->getX0(), this->getY0()
+    );
     metadata->combine(wcsAMetadata);
 
-    afwImage::fits_write_view(fileName, _getRawView(), metadata, mode);
+    afwImage::fits_write_image(fileName, *this, metadata, mode);
 }
 
 template<typename MaskPixelT>

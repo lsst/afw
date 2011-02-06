@@ -368,8 +368,7 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * What sort if image is it?
      */
-    int bitpix = image::detail::fits_read_support_private<
-    typename image::detail::types_traits<typename ImageT::Pixel>::view_t>::BITPIX;
+    int bitpix = image::detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
     if (bitpix == 20) {                 // cfitsio for "Unsigned short"
         cards.push_back(Card("BZERO",  32768.0, ""));
         cards.push_back(Card("BSCALE", 1.0,     ""));

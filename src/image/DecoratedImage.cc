@@ -166,7 +166,7 @@ void image::DecoratedImage<PixelT>::writeFits(
         metadata = getMetadata();
     }
 
-    image::fits_write_view(fileName, _image->_getRawView(), metadata, mode);
+    image::fits_write_image(fileName, *_image, metadata, mode);
 }
 
 /************************************************************************************************************/

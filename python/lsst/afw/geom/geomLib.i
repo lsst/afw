@@ -121,4 +121,3 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "LinearTransform.i"
 %include "AffineTransform.i"
 %include "Box.i"
-%include "ellipses.i"

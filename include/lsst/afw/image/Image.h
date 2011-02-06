@@ -103,12 +103,14 @@ namespace image {
     class ImageBase : public lsst::daf::base::Persistable,
                       public lsst::daf::data::LsstBase {
     private:
-        typedef typename lsst::afw::image::detail::types_traits<PixelT>::image_t _image_t;
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
 
-        typedef typename boost::shared_ptr<_image_t> _image_t_Ptr;
+
+        typedef typename boost::shared_ptr<PixelT> RawDataPtr;
     public:
+
+
         typedef boost::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase
         typedef boost::shared_ptr<const ImageBase<PixelT> > ConstPtr; ///< A shared_ptr to a const ImageBase
 
@@ -343,7 +345,7 @@ namespace image {
         }
 
     private:
-        _image_t_Ptr _gilImage;
+        RawDataPtr _rawData;
         _view_t _gilView;
         //
         int _ix0;                       // origin of ImageBase in some larger image (0 if not a subImageBase)
@@ -354,14 +356,23 @@ namespace image {
         //
         // Provide functions that minimise the temptation to get at the variables directly
         //
+
+
+
+
     protected:
 #if !defined(SWIG)
-        _image_t_Ptr _getRawImagePtr() { return _gilImage; }
+        static RawDataPtr _allocate(int width, int height);
+        static _view_t _makeView(int width, int height, RawDataPtr data);
+        static _view_t _makeSubView(BBox const & bbox, const _view_t & view);
+
+        RawDataPtr _getRawDataPtr() {return _rawData;}
         _view_t _getRawView() const { return _gilView; }
-        void _setRawView() {
-            _gilView = view(*_gilImage);
-        }
+
 #endif
+        inline bool isContiguous() const {
+            return begin()+getWidth()*getHeight() == end();
+        }    
     };
 
     template<typename PixelT>
@@ -371,12 +382,6 @@ namespace image {
     /// A class to represent a 2-dimensional array of pixels
     template<typename PixelT>
     class Image : public ImageBase<PixelT> {
-    private:
-        typedef typename lsst::afw::image::detail::types_traits<PixelT>::image_t _image_t;
-        typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
-        typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
-
-        typedef typename boost::shared_ptr<_image_t> _image_t_Ptr;
     public:
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
