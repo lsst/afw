@@ -42,7 +42,8 @@ else:
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
     testArgs = dict(
-        maskedImage1 =   "%s %s file:maskedImage1_output_1 file:maskedImage1_output_2" % (inFile, inFile),
+        maskedImage1 =   "%s %s file:maskedImage1_output_1.fits file:maskedImage1_output_2.fits" % \
+            (inFile, inFile),
         maskedImageIo1 = inFile,
         maskedImageIo2 = inFile,
         maskIo1 =         "%s_msk.fits" % inFile,
