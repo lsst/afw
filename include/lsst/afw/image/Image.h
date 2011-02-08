@@ -47,6 +47,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/ndarray.hpp"
 
 namespace lsst { namespace afw {
 
@@ -151,6 +152,10 @@ namespace image {
         typedef typename _view_t::y_iterator xy_y_iterator;
         /// A const iterator for traversing the pixels in a column
         typedef typename _const_view_t::y_iterator const_y_iterator;
+        /// An mutable ndarray representation of the image
+        typedef typename lsst::ndarray::Array<PixelT, 2, 1> Array;
+        /// A n immutable ndarray representation of the image
+        typedef typename lsst::ndarray::Array<PixelT const, 2, 1> ConstArray;
 
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
         //
@@ -269,6 +274,9 @@ namespace image {
         std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
+
+        Array getArray();
+        ConstArray getArray() const;
         //
         // Iterators and Locators
         //

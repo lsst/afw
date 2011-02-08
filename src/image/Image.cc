@@ -258,6 +258,29 @@ template<typename PixelT>
 void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
     a.swap(b);
 }
+
+template <typename PixelT>
+typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
+    int rowStride = row_begin(1) - row_begin(0);
+    return lsst::ndarray::external(
+        (PixelT*)this->row_begin(0),
+        lsst::ndarray::makeVector(getHeight(), getWidth()),
+        lsst::ndarray::makeVector(rowStride, 1),
+        this->_rawData
+    );
+}
+
+
+template <typename PixelT>
+typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray() const {
+    int rowStride = row_begin(1) - row_begin(0);
+    return lsst::ndarray::external(
+        (PixelT*)this->row_begin(0),
+        lsst::ndarray::makeVector(getHeight(), getWidth()),
+        lsst::ndarray::makeVector(rowStride, 1),
+        this->_rawData
+    );
+}
 //
 // Iterators
 //
