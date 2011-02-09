@@ -38,10 +38,8 @@ void Axes::normalize() {
         std::swap(_vector[A], _vector[B]);
         _vector[THETA] += M_PI_2;
     }
-    if (_vector[THETA] > M_PI_2) {
-        _vector[THETA] -= M_PI * std::ceil(_vector[THETA] / M_PI);
-    } else if (_vector[THETA] < -M_PI_2) {
-        _vector[THETA] += M_PI * std::ceil(-_vector[THETA] / M_PI);
+    if (_vector[THETA] > M_PI_2 || _vector[THETA] <= -M_PI_2) {
+        _vector[THETA] -= M_PI * std::ceil(_vector[THETA] / M_PI - 0.5);
     }
 }
 
@@ -80,10 +78,12 @@ BaseCore::Jacobian Axes::_dAssignToAxes(double & a, double & b, double & theta) 
 
 void Axes::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
     BaseCore::_assignQuadrupoleToAxes(ixx, iyy, ixy, _vector[A], _vector[B], _vector[THETA]);
+    normalize();
 }
 
 BaseCore::Jacobian Axes::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
     return BaseCore::_dAssignQuadrupoleToAxes(ixx, iyy, ixy, _vector[A], _vector[B], _vector[THETA]);
+    normalize();
 }
 
 void Axes::_assignFromAxes(double a, double b, double theta) {

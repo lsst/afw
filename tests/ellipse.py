@@ -54,7 +54,7 @@ class EllipseTestCase(unittest.TestCase):
 
     def assertClose(self, a, b):
         if not numpy.allclose(a, b):
-            return self.assertEqual(a, b)
+            return self.assertEqual(a,b)
         else:
             return self.assert_(True)
 
@@ -65,16 +65,22 @@ class EllipseTestCase(unittest.TestCase):
             self.assert_((core.getParameterVector()==vec).all())
             center = geom.PointD(*numpy.random.randn(2))
             ellipse = geomEllipse.Ellipse(core, center)
-            self.assert_((core.getParameterVector()==ellipse.getParameterVector()[:-2]).all())
+            self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
             self.assertEqual(geom.Point2D, type(ellipse.getCenter()))
-            newcore = core.__class__(*numpy.random.randn(3))
-            ellipse.setCore(newcore)
-            self.assert_((newcore.getParameterVector()==(ellipse.getCore().getParameterVector())).all())
+            core.setParameterVector(numpy.random.randn(3))
+            try:
+                core.normalize()
+            except:
+                #tried to normalize a non-normalizable core
+                pass
+
+            ellipse.setCore(core)
+            self.assertClose(core.getParameterVector(), ellipse.getCore().getParameterVector())
             self.assert_((core.clone().getParameterVector()==core.getParameterVector()).all())
             self.assert_(core is not core.clone())
-            self.assert_((ellipse.clone().getParameterVector()==ellipse.getParameterVector()).all())
-            self.assert_(ellipse is not ellipse.clone())
+            self.assert_((geomEllipse.Ellipse(ellipse).getParameterVector()==ellipse.getParameterVector()).all())
+            self.assert_(ellipse is not geomEllipse.Ellipse(ellipse))
 
     def testTransform(self):
         for core in self.cores:
@@ -82,7 +88,7 @@ class EllipseTestCase(unittest.TestCase):
             t1 = core.transform(transform)
             core.transformInPlace(transform)
             self.assert_(t1 is not core)
-            self.assert_((t1.getParameterVector()==core.getParameterVector()).all())
+            self.assertClose(t1.getParameterVector(), core.getParameterVector())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
