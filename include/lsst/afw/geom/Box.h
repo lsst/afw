@@ -31,6 +31,7 @@
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
+#include "lsst/ndarray.hpp"
 
 namespace lsst { namespace afw { namespace geom {
 
@@ -116,6 +117,11 @@ public:
     int getHeight() const { return _dimensions.getY(); }
     int getArea() const { return getWidth() * getHeight(); }
     //@}
+
+    lsst::ndarray::View< 
+        boost::fusion::vector< lsst::ndarray::detail::RangeDim, lsst::ndarray::detail::RangeDim > 
+        >
+    getSlices() const;
 
     /// \brief Return true if the box contains no points.
     bool isEmpty() const { return _dimensions.getX() == 0; }

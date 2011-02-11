@@ -113,6 +113,12 @@ geom::Box2I::Box2I(Box2D const & other, EdgeHandlingEnum edgeHandling) : _minimu
     }
 }
 
+/// @brief Return slices to extract the box's region from an ndarray::Array.
+lsst::ndarray::View< boost::fusion::vector<lsst::ndarray::detail::RangeDim,lsst::ndarray::detail::RangeDim> >
+geom::Box2I::getSlices() const {
+    return lsst::ndarray::view(getBeginY(), getEndY())(getBeginX(), getEndX());
+}
+
 /// \brief Return true if the box contains the point.
 bool geom::Box2I::contains(Point2I const & point) const {
     return all(point.ge(this->getMin())) && all(point.le(this->getMax()));

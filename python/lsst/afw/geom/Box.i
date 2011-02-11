@@ -25,6 +25,7 @@
 #include "lsst/afw/geom/Box.h"
 %}
 
+%ignore lsst::afw::geom::Box2I::getSlices;
 %rename(set) lsst::afw::geom::Box2I::operator=;
 %rename(__eq__) lsst::afw::geom::Box2I::operator==;
 %rename(__ne__) lsst::afw::geom::Box2I::operator!=;
@@ -43,6 +44,9 @@
              
     def __str__(self):
         return "Box2I(%s, %s)" % (self.getMin(), self.getMax())
+
+    def getSlices(self):
+         return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
     }
 }
 
