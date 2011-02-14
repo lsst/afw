@@ -42,7 +42,7 @@ namespace det = lsst::afw::detection;
 /**
  * Default Contructor
  */
-det::Source::Source(int id, CONST_PTR(Footprint) footprint)
+det::Source::Source(int id, PTR(Footprint) footprint)
     : BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>(id),
       _footprint(footprint),
       _raObject(0.0),

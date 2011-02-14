@@ -95,7 +95,7 @@ class Source
 public :
     typedef boost::shared_ptr<Source> Ptr;
 
-    Source(int id=0, CONST_PTR(Footprint)=PTR(Footprint)());
+    Source(int id=0, PTR(Footprint)=PTR(Footprint)());
     Source(Source const & other);  
     virtual ~Source(){};
 
@@ -111,6 +111,8 @@ public :
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
+    // We have two setFootprint functions for swig 1.43's sake (it can't convert PTR(Foo) to CONST_PTR(Foo))
+    void setFootprint(PTR(Footprint) footprint) { _footprint = footprint; }
     void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
 
     void setPetroFlux(double const petroFlux) { 
