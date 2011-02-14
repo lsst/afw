@@ -42,8 +42,10 @@ namespace det = lsst::afw::detection;
 /**
  * Default Contructor
  */
-det::Source::Source()
-    : _raObject(0.0),
+det::Source::Source(int id, CONST_PTR(Footprint) footprint)
+    : BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>(id),
+      _footprint(footprint),
+      _raObject(0.0),
       _decObject(0.0), 
       _petroFlux(0.0),
       _petroFluxErr(0.0),
@@ -52,13 +54,15 @@ det::Source::Source()
       _astrom(new Astrometry),
       _photom(new Photometry),
       _shape(new Shape)
-{ }
+{
+}
 
 /**
  * Copy Constructor
  */
 det::Source::Source(Source const & other)
     : BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>(other),
+      _footprint(other._footprint),
       _raObject(other._raObject),
       _decObject(other._decObject),
       _petroFlux(other._petroFlux),

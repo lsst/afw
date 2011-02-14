@@ -64,6 +64,7 @@ namespace afw {
     }
     
 namespace detection {
+    class Footprint;
     template<typename T> class Measurement;
     class Astrometry;
     class Photometry;
@@ -94,7 +95,7 @@ class Source
 public :
     typedef boost::shared_ptr<Source> Ptr;
 
-    Source();
+    Source(int id=0, CONST_PTR(Footprint)=PTR(Footprint)());
     Source(Source const & other);  
     virtual ~Source(){};
 
@@ -106,9 +107,11 @@ public :
     float  getSkyErr() const { return _skyErr; }
     double getRaObject() const { return _raObject; }
     double getDecObject() const { return _decObject; }
+    CONST_PTR(Footprint) getFootprint() const { return _footprint; }
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
+    void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
 
     void setPetroFlux(double const petroFlux) { 
         set(_petroFlux, petroFlux, PETRO_FLUX);         
@@ -166,6 +169,8 @@ public :
     bool operator==(Source const & d) const;
 
 private :
+    CONST_PTR(Footprint) _footprint;
+
     double _raObject;
     double _decObject;
     double _petroFlux;  

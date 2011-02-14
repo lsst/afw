@@ -375,8 +375,8 @@ protected:
     /**
      * Default Constructor
      */
-    BaseSourceAttributes(): 
-        _id(0), _ampExposureId(0), 
+    BaseSourceAttributes(boost::int64_t id=0): 
+        _id(id), _ampExposureId(0), 
         _objectId(0), _movingObjectId(0),                 
         _flagForDetection(0), 
         _ra(0.0), _dec(0.0), 
