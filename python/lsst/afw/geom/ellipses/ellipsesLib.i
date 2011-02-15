@@ -29,7 +29,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %enddef
 
 %feature("autodoc", "1");
-%module(package="lsst.afw.geom.ellipeses", docstring=ellipsesLib_DOCSTRING) ellipsesLib
+%module(package="lsst.afw.geom.ellipses", docstring=ellipsesLib_DOCSTRING) ellipsesLib
 
 %{
 #include "lsst/afw/geom/ellipses.h"

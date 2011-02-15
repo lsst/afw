@@ -30,7 +30,7 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection.h"
 
 namespace image = lsst::afw::image;
 namespace detection = lsst::afw::detection;

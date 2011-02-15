@@ -53,10 +53,7 @@ class EllipseTestCase(unittest.TestCase):
             self.cores.append(s(0.5, 0.3, 2.1))
 
     def assertClose(self, a, b):
-        if not numpy.allclose(a, b):
-            return self.assertEqual(a,b)
-        else:
-            return self.assert_(True)
+        self.assert_(numpy.allclose(a, b))
 
     def testAccessors(self):
         for core in self.cores:
@@ -68,13 +65,9 @@ class EllipseTestCase(unittest.TestCase):
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
             self.assertEqual(geom.Point2D, type(ellipse.getCenter()))
-            core.setParameterVector(numpy.random.randn(3))
-            try:
-                core.normalize()
-            except:
-                #tried to normalize a non-normalizable core
-                pass
-
+            newcore = geomEllipse.Axes(1,2,3);            
+            newcore.normalize()
+            core.assign(newcore)
             ellipse.setCore(core)
             self.assertClose(core.getParameterVector(), ellipse.getCore().getParameterVector())
             self.assert_((core.clone().getParameterVector()==core.getParameterVector()).all())

@@ -5,7 +5,8 @@
 #include "boost/shared_ptr.hpp"
 #include "lsst/base.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/geom/geom.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/ellipses.h"
 #include "lsst/ndarray.hpp"
 
 namespace lsst {
@@ -39,3 +40,5 @@ public:
 };
 
 }}}
+
+#endif

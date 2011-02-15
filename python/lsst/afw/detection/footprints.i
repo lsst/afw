@@ -25,8 +25,13 @@
 %ignore lsst::afw::detection::FootprintFunctor::operator();
 
 %{
+#include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/FootprintSet.h"
+#include "lsst/afw/detection/FootprintFunctor.h"
 %}
+
+%template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
 SWIG_SHARED_PTR(Peak,      lsst::afw::detection::Peak);
 SWIG_SHARED_PTR(Footprint, lsst::afw::detection::Footprint);
@@ -36,8 +41,11 @@ SWIG_SHARED_PTR(FootprintSetI, lsst::afw::detection::FootprintSet<int, lsst::afw
 SWIG_SHARED_PTR(FootprintSetF, lsst::afw::detection::FootprintSet<float, lsst::afw::image::MaskPixel>);
 SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
 
+%include "lsst/afw/detection/Threshold.h"
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
+%include "lsst/afw/detection/FootprintSet.h"
+%include "lsst/afw/detection/FootprintFunctor.h"
 
 %template(PeakContainerT)      std::vector<lsst::afw::detection::Peak::Ptr>;
 %template(SpanContainerT)      std::vector<lsst::afw::detection::Span::Ptr>;
@@ -78,3 +86,6 @@ SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::
         return self.toString()
     }
 }
+
+
+

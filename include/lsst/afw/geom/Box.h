@@ -124,7 +124,9 @@ public:
     getSlices() const;
 
     /// \brief Return true if the box contains no points.
-    bool isEmpty() const { return _dimensions.getX() == 0; }
+    bool isEmpty() const { 
+        return _dimensions.getX() == 0 && _dimensions.getY() == 0; 
+    }
 
     bool contains(Point2I const & point) const;
     bool contains(Box2I const & other) const;

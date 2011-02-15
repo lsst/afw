@@ -33,7 +33,7 @@ Defects: {
     width:  %4d                         # number of columns
     y0:     %4d                         # Starting row
     height: %4d                         # number of rows
-}""" % (bbox.getX0(), bbox.getWidth(), bbox.getY0(), bbox.getHeight())
+}""" % (bbox.getMinX(), bbox.getWidth(), bbox.getMinY(), bbox.getHeight())
 
 def makeDiaSourceFromSource(source):
     diaSource = afwDetect.DiaSource()

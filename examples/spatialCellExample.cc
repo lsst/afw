@@ -31,13 +31,15 @@
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/deprecated.h"
 
 #include "testSpatialCell.h"
 
 namespace afwDetect = lsst::afw::detection;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
-
+namespace afwGeom = lsst::afw::geom;
 typedef float PixelT;
 
 std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetect::FootprintSet<PixelT>::Ptr> readImage();
@@ -60,10 +62,15 @@ void SpatialCellSetDemo() {
      */
     for (afwDetect::FootprintSet<PixelT>::FootprintList::iterator ptr = fs->getFootprints().begin(),
              end = fs->getFootprints().end(); ptr != end; ++ptr) {
-        afwImage::BBox const bbox = (*ptr)->getBBox();
-        float const xc = (bbox.getX0() + bbox.getX1())/2.0;
-        float const yc = (bbox.getY0() + bbox.getY1())/2.0;
-        ExampleCandidate::Ptr tc(new ExampleCandidate(xc, yc, im->getImage(), bbox));
+        afwGeom::BoxI const bbox = (*ptr)->getBBox();
+        float const xc = (bbox.getMinX() + bbox.getMaxX())/2.0;
+        float const yc = (bbox.getMinY() + bbox.getMaxY())/2.0;
+        ExampleCandidate::Ptr tc(
+            new ExampleCandidate(xc, yc, 
+                im->getImage(), 
+                afwGeom::convertToImage(bbox)
+            )
+        );
         cellSet.insertCandidate(tc);
     }
     /*
