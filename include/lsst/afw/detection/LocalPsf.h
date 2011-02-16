@@ -4,6 +4,7 @@
 
 #include "boost/shared_ptr.hpp"
 #include "lsst/base.h"
+#include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
@@ -12,6 +13,7 @@
 namespace lsst {
 namespace afw {
 namespace detection {
+
 
 struct Shapelet {
     enum Definition {LAGUERRE_PQ, HERMITE_XY};
@@ -31,10 +33,25 @@ public:
     typedef Psf::Pixel Pixel;
     typedef Psf::Image Image;
 
-    virtual CONST_PTR(Image) asImage(lsst::afw::geom::Extent2I const & size, bool normalize=true) const =0 ;
-    virtual CONST_PTR(lsst::afw::geom::ellipses::BaseCore) asGaussian() const = 0;
+    virtual CONST_PTR(Image) asImage(geom::Extent2I const & size, bool normalize=true) const =0 ;
+    virtual CONST_PTR(geom::ellipses::BaseCore) asGaussian() const = 0;
     virtual CONST_PTR(Shapelet) asShapelet(Shapelet::Definition definition) const = 0;
     virtual CONST_PTR(MultiShapelet) asMultiShapelet(Shapelet::Definition definition) const = 0;
+    
+    virtual void evaluatePointSource(
+        Footprint const & fp, 
+        geom::Point2D const & point, 
+        ndarray::Array<Pixel, 1, 0> const & array
+    ) const = 0;
+    
+    ndarray::Array<Pixel, 1,1> evaluatePointSource(
+        Footprint const & fp, 
+        geom::Point2D const & point
+    ) const {
+        ndarray::Array<Pixel, 1, 1> array = ndarray::allocate(ndarray::makeVector(fp.getArea()));
+        evaluatePointSource(fp, point, array);
+        return array;
+    }
 
     virtual ~LocalPsf(){}
 };

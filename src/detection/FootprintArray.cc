@@ -23,6 +23,8 @@
  */
 
 #include "lsst/afw/detection/FootprintArray.h"
+#include <boost/static_assert.hpp>
+#include <boost/type_traits.hpp>
 
 namespace lsst{
 namespace afw{
@@ -44,12 +46,11 @@ template <typename T, typename U, int N, int C, int D>
 void flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    ndarray::Array<typename boost::remove_const<U>::type, N-1, D> const & dest
-) {
-    typedef T ConstT;
-    typedef typename boost::remove_const<U>::type MutableT;
-    typedef ndarray::Array<ConstT, N, C> SourceT; 
-    typedef ndarray::Array<MutableT, N-1, D> DestT; 
+    ndarray::Array<U, N-1, D> const & dest
+) {    
+    typedef ndarray::Array<T, N, C> SourceT; 
+    typedef ndarray::Array<U, N-1, D> DestT; 
+    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
 
     geom::BoxI box = fp.getBBox();
     if (src.template getSize<0>() != box.getHeight() || 
@@ -128,12 +129,11 @@ template <typename T, typename U, int N, int C, int D>
 void expandArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    ndarray::Array<typename boost::remove_const<U>::type, N+1, D> const & dest
+    ndarray::Array<U, N+1, D> const & dest
 ) {
-    typedef T ConstT;
-    typedef typename boost::remove_const<U>::type MutableT;
-    typedef ndarray::Array<ConstT, N, C> SourceT; 
-    typedef ndarray::Array<MutableT, N+1, D> DestT; 
+    typedef ndarray::Array<T, N, C> SourceT; 
+    typedef ndarray::Array<U, N+1, D> DestT; 
+    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
 
     geom::BoxI box(fp.getBBox());
     if(dest.template getSize<0>() != box.getHeight() || 

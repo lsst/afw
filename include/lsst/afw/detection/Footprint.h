@@ -117,7 +117,7 @@ public:
     /// Return the Footprint's bounding box
     geom::BoxI getBBox() const { return _bbox; }     
     /// Return the corners of the MaskedImage the footprints live in
-    geom::BoxI const  & getRegion() const { return _region; }
+    geom::BoxI const & getRegion() const { return _region; }
 
     /// Set the corners of the MaskedImage wherein the footprints dwell
     void setRegion(lsst::afw::image::BBox const& region) { 

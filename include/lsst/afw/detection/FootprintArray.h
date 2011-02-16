@@ -35,7 +35,7 @@ template <typename T, typename U, int N, int C, int D>
 void flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    ndarray::Array<typename boost::remove_const<U>::type, N-1, D> const & dest
+    ndarray::Array<U, N-1, D> const & dest
 );
 
 template <typename T, int N, int C>
@@ -49,7 +49,7 @@ template <typename T, typename U, int N, int C, int D>
 void expandArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    ndarray::Array<typename boost::remove_const<U>::type, N+1, D> const & dest
+    ndarray::Array<U, N+1, D> const & dest
 );
 
 template <typename T, int N, int C>
