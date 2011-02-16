@@ -8,7 +8,7 @@
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/ndarray.hpp"
+#include "lsst/ndarray.h"
 
 namespace lsst {
 namespace afw {

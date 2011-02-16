@@ -33,7 +33,7 @@
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
-#include "lsst/ndarray.hpp"
+#include "lsst/ndarray.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"

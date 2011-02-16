@@ -31,7 +31,7 @@
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/ndarray.hpp"
+#include "lsst/ndarray.h"
 
 namespace lsst { namespace afw { namespace geom {
 

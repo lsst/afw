@@ -47,7 +47,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/ndarray.hpp"
+#include "lsst/ndarray.h"
 
 namespace lsst { namespace afw {
 

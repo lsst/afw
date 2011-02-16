@@ -21,7 +21,7 @@
  */
 
 #include <boost/type_traits.hpp>
-#include "lsst/ndarray.hpp"
+#include "lsst/ndarray.h"
 #include "lsst/afw/detection/Footprint.h"
 
 #if !defined(LSST_DETECTION_FOOTPRINT_ARRAY_H)
