@@ -79,6 +79,24 @@ enum SharedNullableField {
     IYY_ERR,
     IXY,
     IXY_ERR,
+    PSF_IXX,
+    PSF_IXX_ERR,
+    PSF_IYY,
+    PSF_IYY_ERR,
+    PSF_IXY,
+    PSF_IXY_ERR,
+    E1,
+    E1_ERR,
+    E2,
+    E2_ERR,
+    RESOLUTION,
+    SHEAR1,
+    SHEAR1_ERR,
+    SHEAR2,
+    SHEAR2_ERR,
+    SIGMA,
+    SIGMA_ERR,
+    SHAPE_STATUS,
     FLAG_FOR_ASSOCIATION,
     FLAG_FOR_DETECTION,
     FLAG_FOR_WCS,
@@ -151,6 +169,29 @@ public:
     float  getIyyErr() const { return _iyyErr; }
     float  getIxy() const { return _ixy; }
     float  getIxyErr() const { return _ixyErr; }
+
+    float  getPsfIxx() const { return _psfIxx; }
+    float  getPsfIxxErr() const { return _psfIxxErr; }
+    float  getPsfIyy() const { return _psfIyy; }
+    float  getPsfIyyErr() const { return _psfIyyErr; }
+    float  getPsfIxy() const { return _psfIxy; }
+    float  getPsfIxyErr() const { return _psfIxyErr; }
+
+    float  getResolution() const { return _resolution; }
+
+    float  getE1() const { return _e1; }
+    float  getE1Err() const { return _e1Err; }
+    float  getE2() const { return _e2; }
+    float  getE2Err() const { return _e2Err; }
+    float  getShear1() const { return _shear1; }
+    float  getShear1Err() const { return _shear1Err; }
+    float  getShear2() const { return _shear2; }
+    float  getShear2Err() const { return _shear2Err; }
+
+    float  getSigma() const { return _sigma; }
+    float  getSigmaErr() const { return _sigmaErr; }
+    boost::int16_t getShapeStatus() const { return _shapeStatus; }
+    
     float  getSnr() const { return _snr; }
     float  getChi2() const { return _chi2; }
     boost::int16_t getFlagForAssociation() const { return _flagForAssociation; }
@@ -314,7 +355,66 @@ public:
     }      
     void setIxyErr(float const ixyErr) { 
         set(_ixyErr, ixyErr, IXY_ERR); 
+    }
+
+    void setPsfIxx(float const psfIxx) { 
+        set(_psfIxx, psfIxx, PSF_IXX);    
+    }
+    void setPsfIxxErr(float const psfIxxErr) {
+        set(_psfIxxErr, psfIxxErr, PSF_IXX_ERR); 
     }         
+    void setPsfIyy(float const psfIyy) { 
+        set(_psfIyy, psfIyy, PSF_IYY);    
+    }     
+    void setPsfIyyErr(float const psfIyyErr) { 
+        set(_psfIyyErr, psfIyyErr, PSF_IYY_ERR); 
+    }         
+    void setPsfIxy(float const psfIxy) { 
+        set(_psfIxy, psfIxy, PSF_IXY);    
+    }      
+    void setPsfIxyErr(float const psfIxyErr) { 
+        set(_psfIxyErr, psfIxyErr, PSF_IXY_ERR); 
+    }         
+
+    void setE1(float const e1) {
+        set(_e1, e1, E1);    
+    }      
+    void setE1Err(float const e1Err) {
+        set(_e1Err, e1Err, E1_ERR);    
+    }      
+    void setE2(float const e2) {
+        set(_e2, e2, E2);    
+    }      
+    void setE2Err(float const e2Err) {
+        set(_e2Err, e2Err, E2_ERR);    
+    }      
+    void setShear1(float const shear1) {
+        set(_shear1, shear1, SHEAR1);    
+    }      
+    void setShear1Err(float const shear1Err) {
+        set(_shear1Err, shear1Err, SHEAR1_ERR);    
+    }      
+    void setShear2(float const shear2) {
+        set(_shear2, shear2, SHEAR2);    
+    }      
+    void setShear2Err(float const shear2Err) {
+        set(_shear2Err, shear2Err, SHEAR2_ERR);    
+    }      
+
+    void setResolution(float const resolution) {
+        set(_resolution, resolution, RESOLUTION);
+    }
+
+    void setSigma(float const sigma) {
+        set(_sigma, sigma, SIGMA);
+    }
+    void setSigmaErr(float const sigmaErr) {
+        set(_sigmaErr, sigmaErr, SIGMA_ERR);
+    }
+    void setShapeStatus(boost::int16_t const status) {
+        set(_shapeStatus, status, SHAPE_STATUS);
+    }
+    
     void setApDia(float const apDia) {
         set(_apDia, apDia, AP_DIA);
     }
@@ -406,6 +506,16 @@ protected:
         _ixx(0.0), _ixxErr(0.0),
         _iyy(0.0), _iyyErr(0.0),
         _ixy(0.0), _ixyErr(0.0),    
+        _psfIxx(0.0), _psfIxxErr(0.0),
+        _psfIyy(0.0), _psfIyyErr(0.0),
+        _psfIxy(0.0), _psfIxyErr(0.0),
+        _resolution(0.0),
+        _e1(0.0), _e1Err(0.0),
+        _e2(0.0), _e2Err(0.0),
+        _shear1(0.0), _shear1Err(0.0),
+        _shear2(0.0), _shear2Err(0.0),
+        _sigma(0.0), _sigmaErr(0.0),
+        _shapeStatus(-1),
         _snr(0.0), _chi2(0.0),
         _procHistoryId(0),
         _flagForAssociation(0), _flagForWcs(0),
@@ -523,6 +633,24 @@ protected:
         fpSerialize(ar, _iyyErr);
         fpSerialize(ar, _ixy);
         fpSerialize(ar, _ixyErr);
+        fpSerialize(ar, _psfIxx);
+        fpSerialize(ar, _psfIxxErr);
+        fpSerialize(ar, _psfIyy);
+        fpSerialize(ar, _psfIyyErr);
+        fpSerialize(ar, _psfIxy);
+        fpSerialize(ar, _psfIxyErr);
+        fpSerialize(ar, _resolution);
+        fpSerialize(ar, _sigma);
+        fpSerialize(ar, _sigmaErr);
+        fpSerialize(ar, _shapeStatus);
+        fpSerialize(ar, _e1);
+        fpSerialize(ar, _e1Err);
+        fpSerialize(ar, _e2);
+        fpSerialize(ar, _e2Err);
+        fpSerialize(ar, _shear1);
+        fpSerialize(ar, _shear1Err);
+        fpSerialize(ar, _shear2);
+        fpSerialize(ar, _shear2Err);
         fpSerialize(ar, _snr);
         fpSerialize(ar, _chi2);
         ar & _flagForAssociation;
@@ -596,11 +724,29 @@ protected:
     float _iyyErr;
     float _ixy;
     float _ixyErr;
+    float _psfIxx;
+    float _psfIxxErr;
+    float _psfIyy;
+    float _psfIyyErr;
+    float _psfIxy;
+    float _psfIxyErr;
+    float _resolution;
+    float _sigma;
+    float _sigmaErr;
+    float _e1;
+    float _e1Err;
+    float _e2;
+    float _e2Err;
+    float _shear1;
+    float _shear1Err;
+    float _shear2;
+    float _shear2Err;
     float _snr;
     float _chi2;
     boost::int32_t _procHistoryId;
     boost::int16_t _flagForAssociation;
     boost::int16_t _flagForWcs;
+    boost::int16_t _shapeStatus;
     boost::int8_t _filterId;
     
     friend class boost::serialization::access;
