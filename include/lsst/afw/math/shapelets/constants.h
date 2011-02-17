@@ -46,8 +46,6 @@ namespace shapelets {
 
 typedef double Pixel;
 
-extern double const normalization;
-
 /**
  *  @brief An enum that sets whether to use real-valued polar shapelets or Cartesian shapelets.
  *
@@ -59,7 +57,7 @@ enum BasisTypeEnum {
               *   Cartesian shapelets or Gauss-Hermite functions, as defined in 
               *   Refregier, 2003.  That is,
               *   @f$ \psi(x, y)_{n_x, n_y} 
-              *          = \frac{H_{n_x}(x) H_{n_y}(y) e^{-\frac{x^2 + y^2}{2}}
+              *          = \frac{H_{n_x}(x) H_{n_y}(y) e^{-\frac{x^2 + y^2}{2}}}
               *                 {\sigma 2^{n_x + n_y} \sqrt{\pi n_x! n_y!}}
               *   @f$
               *   where @f$H_n(x)@f$ is a Hermite polynomial.

@@ -74,11 +74,7 @@ public:
     UnitShapeletEvaluator evaluate() const;
 
     /// @brief Construct a function and set all coefficients to zero.
-    UnitShapeletFunction(int order, BasisTypeEnum basisType) :
-        _order(order), _basisType(basisType), _coefficients(ndarray::allocate(computeSize(_order)))
-    {
-        _coefficients.deep() = 0.0;
-    }
+    UnitShapeletFunction(int order, BasisTypeEnum basisType);
 
     /// @brief Construct a function with a shallow-copied coefficient vector.
     UnitShapeletFunction(
@@ -112,7 +108,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1,1> const & result,
+        ndarray::Array<Pixel,1> const & result,
         double x, double y
     ) const;
 
@@ -121,7 +117,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1,1> const & result,
+        ndarray::Array<Pixel,1> const & result,
         geom::Point2D const & point
     ) const {
         fillEvaluationVector(result, point.getX(), point.getY());
@@ -132,7 +128,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1,1> const & result,
+        ndarray::Array<Pixel,1> const & result,
         geom::Extent2D const & point
     ) const {
         fillEvaluationVector(result, point.getX(), point.getY());
@@ -143,7 +139,7 @@ public:
      *         evaluating their unweighted integral moments.
      */
     void fillIntegrationVector(
-        ndarray::Array<Pixel,1,1> const & result,
+        ndarray::Array<Pixel,1> const & result,
         int momentX=0, int momentY=0
     ) const;
 
@@ -151,7 +147,7 @@ public:
     UnitShapeletBasis(int order, BasisTypeEnum basisType) :
         _order(order), _basisType(basisType),
         _workspaceX(ndarray::allocate(_order + 1)),
-        _workspaceY(ndarray::allocate(_order + 1)),
+        _workspaceY(ndarray::allocate(_order + 1))
     {}
 
 private:
@@ -184,7 +180,7 @@ public:
     }
 
     /// @brief Compute the definite integral or integral moments.
-    double integrate(int momentX=0, int momentY()=0) const;
+    double integrate(int momentX=0, int momentY=0) const;
 
     /// @brief Update the evaluator from using the given function.
     void update(UnitShapeletFunction const & function);
@@ -193,8 +189,9 @@ public:
     explicit UnitShapeletEvaluator(UnitShapeletFunction const & function);
 
 private:
-    UnitShapeletBasis _basis;
     ndarray::Array<Pixel,1,1> _coefficients;
+    mutable ndarray::Array<Pixel,1,1> _workspaceX;
+    mutable ndarray::Array<Pixel,1,1> _workspaceY;
 };
 
 inline UnitShapeletEvaluator UnitShapeletFunction::evaluate() const {
