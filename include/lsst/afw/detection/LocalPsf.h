@@ -7,6 +7,7 @@
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/math/shapelets.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/ndarray.h"
 
@@ -14,15 +15,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-
-struct Shapelet {
-    enum Definition {LAGUERRE_PQ, HERMITE_XY};
-
-    typedef double Coefficient;
-    ndarray::Array<Coefficient, 1, 1> coefficients;    
-    lsst::afw::geom::ellipses::BaseCore::Ptr ellipse;
-};
-
+typedef lsst::afw::math::shapelets::EllipticalShapeletFunction Shapelet;
 typedef std::list<Shapelet> MultiShapelet;
 
 class LocalPsf {
@@ -35,8 +28,8 @@ public:
 
     virtual CONST_PTR(Image) asImage(geom::Extent2I const & size, bool normalize=true) const =0 ;
     virtual CONST_PTR(geom::ellipses::BaseCore) asGaussian() const = 0;
-    virtual CONST_PTR(Shapelet) asShapelet(Shapelet::Definition definition) const = 0;
-    virtual CONST_PTR(MultiShapelet) asMultiShapelet(Shapelet::Definition definition) const = 0;
+    virtual CONST_PTR(Shapelet) asShapelet(Shapelet::BasisType basisType) const = 0;
+    virtual CONST_PTR(MultiShapelet) asMultiShapelet(Shapelet::BasisType basisType) const = 0;
     
     virtual void evaluatePointSource(
         Footprint const & fp, 
