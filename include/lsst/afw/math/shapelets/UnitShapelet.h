@@ -37,6 +37,7 @@
 
 #include "lsst/ndarray.h"
 #include "lsst/afw/math/shapelets/constants.h"
+#include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/afw/geom.h"
 
 namespace lsst {
@@ -60,7 +61,7 @@ public:
     
     /// @brief Change the basis type and convert coefficients correspondingly.
     void changeBasisType(BasisTypeEnum basisType) {
-        convertCoefficientVector(_coefficients, _basisType, basisType, _order);
+        ConversionMatrix::convertCoefficientVector(_coefficients, _basisType, basisType, _order);
         _basisType = basisType;
     }
 

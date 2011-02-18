@@ -91,7 +91,7 @@ private:
     friend class EllipticalShapeletEvaluator;
 
     UnitShapeletFunction _unit;
-    geom::elipses::Quadrupole _ellipse;
+    geom::ellipses::Quadrupole _ellipse;
 };
 
 /**

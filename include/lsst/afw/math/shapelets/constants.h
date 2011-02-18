@@ -80,7 +80,7 @@ enum BasisTypeEnum {
                *   @f$
                *   where @f$L^{(m)}_n(r)@f$ is an associated Laguerre polynomial.
                *
-               *   The ordering of coefficients [n_x, n_y] is (row-major packed):
+               *   The ordering of coefficients [p, q] is (row-major packed):
                *   [0,0],
                *   Re([1,0]), Im([1,0]),
                *   Re([2,0]), Im([2,0]), [1,1],
@@ -95,18 +95,6 @@ enum BasisTypeEnum {
 
 /// @brief Return the size of the coefficient vector for the given order.
 inline int computeSize(int order) { return (order + 1) * (order + 2) / 2; }
-
-/// @brief Convert a coefficient vector between basis types in-place.
-void convertCoefficientVector(
-    ndarray::Array<Pixel,1> const & array,
-    BasisTypeEnum input, BasisTypeEnum output, int order
-);
-
-/// @brief Convert an operation (evaluation, integration) vector between basis types in-place.
-void convertOperationVector(
-    ndarray::Array<Pixel,1> const & array,
-    BasisTypeEnum input, BasisTypeEnum output, int order
-);
 
 }}}}   // lsst::afw::math::shapelets
 

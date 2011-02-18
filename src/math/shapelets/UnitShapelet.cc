@@ -23,6 +23,7 @@
  */
 
 #include "lsst/afw/math/shapelets/UnitShapelet.h"
+#include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/ndarray/eigen.h"
 #include <boost/format.hpp>
@@ -205,7 +206,7 @@ void shapelets::UnitShapeletBasis::fillEvaluationVector(
     fillEvaluationVector1d(_workspaceY, y);
     weaveFill(result, _workspaceX, _workspaceY);
     if (_basisType == shapelets::LAGUERRE) {
-        convertOperationVector(result, shapelets::HERMITE, shapelets::LAGUERRE, _order);
+        ConversionMatrix::convertOperationVector(result, shapelets::HERMITE, shapelets::LAGUERRE, _order);
     }
 }
 
@@ -217,7 +218,7 @@ void shapelets::UnitShapeletBasis::fillIntegrationVector(
     fillIntegrationVector1d(_workspaceY, momentY);
     weaveFill(result, _workspaceX, _workspaceY);
     if (_basisType == shapelets::LAGUERRE) {
-        convertOperationVector(result, shapelets::HERMITE, shapelets::LAGUERRE, _order);
+        ConversionMatrix::convertOperationVector(result, shapelets::HERMITE, shapelets::LAGUERRE, _order);
     }
 }
 
@@ -237,7 +238,7 @@ void shapelets::UnitShapeletEvaluator::update(shapelets::UnitShapeletFunction co
     _coefficients = function.getCoefficients();
     if (function.getBasisType() == shapelets::LAGUERRE) {
         _coefficients = nd::copy(_coefficients);
-        convertCoefficientVector(
+        ConversionMatrix::convertCoefficientVector(
             _coefficients, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
         );
     }
@@ -254,7 +255,7 @@ shapelets::UnitShapeletEvaluator::UnitShapeletEvaluator(shapelets::UnitShapeletF
 {
     if (function.getBasisType() == shapelets::LAGUERRE) {
         _coefficients = nd::copy(_coefficients);
-        convertCoefficientVector(
+        ConversionMatrix::convertCoefficientVector(
             _coefficients, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
         );
     }
