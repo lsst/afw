@@ -30,6 +30,7 @@
  * @brief An include file to include the header files for lsst::afw::math::shapelets
  */
 #include "lsst/afw/math/shapelets/constants.h"
+#include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/afw/math/shapelets/UnitShapelet.h"
 #include "lsst/afw/math/shapelets/EllipticalShapelet.h"
 

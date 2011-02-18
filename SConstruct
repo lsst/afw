@@ -44,6 +44,7 @@ for d in (
     "python/lsst/afw/geom/ellipses",
     "python/lsst/afw/math",
     "python/lsst/afw/math/detail",
+    "python/lsst/afw/math/shapelets",
     "python/lsst/afw/coord", 
     "tests",
 ):

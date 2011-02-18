@@ -51,21 +51,21 @@ public:
 
     Eigen::MatrixXd buildDenseMatrix() const;
 
-    void multiplyOnLeft(ndarray::Array<Pixel,1> const & array) const;
+    void multiplyOnLeft(lsst::ndarray::Array<Pixel,1> const & array) const;
     
-    void multiplyOnRight(ndarray::Array<Pixel,1> const & array) const;
+    void multiplyOnRight(lsst::ndarray::Array<Pixel,1> const & array) const;
 
     explicit ConversionMatrix(BasisTypeEnum input, BasisTypeEnum output, int order);
 
     /// @brief Convert a coefficient vector between basis types in-place.
     static void convertCoefficientVector(
-        ndarray::Array<Pixel,1> const & array,
+        lsst::ndarray::Array<Pixel,1> const & array,
         BasisTypeEnum input, BasisTypeEnum output, int order
     );
 
     /// @brief Convert an operation (evaluation, integration) vector between basis types in-place.
     static void convertOperationVector(
-        ndarray::Array<Pixel,1> const & array,
+        lsst::ndarray::Array<Pixel,1> const & array,
         BasisTypeEnum input, BasisTypeEnum output, int order
     );
     

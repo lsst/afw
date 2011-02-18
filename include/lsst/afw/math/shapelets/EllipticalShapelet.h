@@ -65,7 +65,7 @@ public:
     geom::ellipses::Quadrupole const & getEllipse() const { return _ellipse; }
 
     /// @brief Set the basis ellipse.
-    void setEllipse(geom::ellipses::Quadrupole const & ellipse) const { _ellipse = ellipse; }
+    void setEllipse(geom::ellipses::Quadrupole const & ellipse) { _ellipse = ellipse; }
 
     /// @brief Return the coefficient vector.
     ndarray::Array<Pixel,1,1> const getCoefficients() { return _unit.getCoefficients(); }
@@ -77,13 +77,15 @@ public:
     EllipticalShapeletEvaluator evaluate() const;
 
     /// @brief Construct a function and set all coefficients to zero.
-    UnitShapeletFunction(int order, BasisTypeEnum basisType, geom::ellipses::Quadrupole const & ellipse) :
+    EllipticalShapeletFunction(
+        int order, BasisTypeEnum basisType, geom::ellipses::Quadrupole const & ellipse
+    ) :
         _unit(order, basisType), _ellipse(ellipse)
     {}
 
     /// @brief Construct a function with a shallow-copied coefficient vector.
-    UnitShapeletFunction(
-        int order, BasisTypeEnum basisType,
+    EllipticalShapeletFunction(
+        int order, BasisTypeEnum basisType, geom::ellipses::Quadrupole const & ellipse,
         ndarray::Array<double,1,1> const & coefficients
     ) : _unit(order, basisType, coefficients), _ellipse(ellipse) {}
 
@@ -113,7 +115,7 @@ public:
     geom::ellipses::Quadrupole const & getEllipse() const { return _ellipse; }
 
     /// @brief Set the basis ellipse.
-    void setEllipse(geom::ellipses::Quadrupole const & ellipse) const {
+    void setEllipse(geom::ellipses::Quadrupole const & ellipse) {
         _ellipse = ellipse;
         _transform = _ellipse.getGridTransform();
     }
@@ -155,7 +157,7 @@ public:
      *  @brief Fill the given array with the result of integrating the basis functions.
      */
     void fillIntegrationVector(ndarray::Array<Pixel,1,1> const & result) const {
-        _unit.fillEvaluationVector(result);
+        _unit.fillIntegrationVector(result);
         result.deep() *= _ellipse.getArea();
     }
 
@@ -166,7 +168,7 @@ public:
 
 private:
     UnitShapeletBasis _unit;
-    geom::elipses::Quadrupole _ellipse;
+    geom::ellipses::Quadrupole _ellipse;
     geom::LinearTransform _transform;
 };
 
@@ -196,7 +198,7 @@ public:
 
     /// @brief Compute the definite integral or integral moments.
     double integrate() const {
-        return _unit.integrate() / std::sqrt(_transform.getDeterminant());
+        return _unit.integrate() / std::sqrt(_transform.computeDeterminant());
     }
 
     /// @brief Update the evaluator from using the given function.

@@ -29,6 +29,9 @@
 #include <boost/format.hpp>
 #include <boost/math/special_functions/binomial.hpp>
 #include <boost/math/special_functions/factorials.hpp>
+#include <boost/noncopyable.hpp>
+
+#include <Eigen/LU>
 
 #include <complex>
 #include <vector>
@@ -51,16 +54,21 @@ inline std::complex<Pixel> iPow(int z) {
     case 3:
         return std::complex<Pixel>(0.0, -1.0);
     };
+    return 0.0;
 }
 
-class ConversionSingleton {
+class ConversionSingleton : private boost::noncopyable {
 public:
 
     typedef std::vector<Eigen::MatrixXd> BlockVec;
 
-    Eigen::MatrixXd const & getBlockH2L(int n) const { return _h2l[n]; }
+    Eigen::MatrixXd const & getBlockH2L(int n) const {
+        return _h2l[n];
+    }
 
-    Eigen::MatrixXd const & getBlockL2H(int n) const { return _l2h[n]; }
+    Eigen::MatrixXd const & getBlockL2H(int n) const {
+        return _l2h[n];
+    }
 
     BlockVec const & getH2L() const { return _h2l; }
 
@@ -72,16 +80,42 @@ public:
             _l2h.reserve(order + 1);
             for (int i = _max_order + 1; i <= order; ++i) {
                 _h2l.push_back(makeBlockH2L(i));
-                _h2l.push_back(makeBlockL2H(i, _h2l.back()));
+                _l2h.push_back(makeBlockL2H(i, _h2l.back()));
+                ++_max_order;
             }
         }
     }
 
     static Eigen::MatrixXd makeBlockH2L(int n) {
-        Eigen::MatrixXd block = Eigen::MatrixXd::Zero(n + 1, n + 1);
+        Eigen::MatrixXcd c = Eigen::MatrixXcd::Zero(n + 1, n + 1);
+        for (int m = -n, i = 0; m <= n; m += 2, ++i) {
+            int const p = (n + m) / 2;
+            int const q = (n - m) / 2;
+            double const p_factorial = boost::math::unchecked_factorial<double>(p);
+            double const q_factorial = boost::math::unchecked_factorial<double>(q);
+            std::complex<double> const v1 = std::pow(std::complex<double>(0.0, -1.0), m) * std::pow(2.0, -0.5 * n)
+                / std::sqrt(p_factorial * q_factorial);
+            for (int x = 0, y = n; x <= n; ++x, --y) {
+                double const x_factorial = boost::math::unchecked_factorial<double>(x);
+                double const y_factorial = boost::math::unchecked_factorial<double>(y);
+                std::complex<double> const v2 = v1 * std::sqrt(x_factorial * y_factorial);
+                for (int r = 0; r <= p; ++r) {
+                    for (int s = 0; s <= q; ++s) {
+                        if (r + s == x) {
+                            int const m_p = r - s;
+                            c(i, x) += v2 * std::pow(std::complex<double>(0.0, 1.0), m_p)
+                                * boost::math::binomial_coefficient<double>(p, r)
+                                * boost::math::binomial_coefficient<double>(q, s);
+                        }
+                    }
+                }
+            }
+        }
+
+#if 0
         for (int x = 0, y = n; x <= n; ++x, --y) {
             Pixel v_xy = std::sqrt(boost::math::factorial<Pixel>(x) * boost::math::factorial<Pixel>(y));
-            for (int p = n, q = 0; q <= p; --p, ++q) {
+            for (int p = n, q = 0; q <= n; --p, ++q) {
                 std::complex<Pixel> v_rs(0.0, 0.0);
                 for (int r = 0; r <= p; ++r) {
                     for (int s = 0; s <= q; ++s) {
@@ -91,24 +125,42 @@ public:
                         }
                     }
                 }
-                std::complex<Pixel> v = v_xy * v_rs * iPow(p - q) * std::pow(2.0, -0.5 * (p + q)) 
+                c(q, x) = v_xy * v_rs * iPow(p - q) * std::pow(2.0, -0.5 * (p + q)) 
                     / std::sqrt(boost::math::factorial<Pixel>(p) * boost::math::factorial<Pixel>(q));
-                if (q != p) {
-                    block(2*q, x) = v.real();
-                    block(2*q+1, x) = v.imag();
-                } else {
-                    block(2*q, x) = v.real();
+            }
+        }
+#endif
+        Eigen::MatrixXd b = Eigen::MatrixXd::Zero(n + 1, n + 1);
+        for (int x = 0, y = n; x <= n; ++x, --y) {
+            for (int p = n, q = 0; q <= p; --p, ++q) {
+                b(2 * q, x) = c(q, x).real();
+                if (q < p) {
+                    b(2 * q + 1, x) = c(q, x).imag();
                 }
             }
         }
-        return block;
+        return b;
     }
 
     static Eigen::MatrixXd makeBlockL2H(int n, Eigen::MatrixXd const & h2l) {
-        Eigen::MatrixXd l2h = h2l.transpose();
-        for (int p = n, q = 0; q < p; --p, ++q) {
-            l2h.col(2*q + 1) *= -1;
+        Eigen::MatrixXd l2h = h2l.inverse();
+#if 0
+        Eigen::MatrixXcd h2l_c = Eigen::MatrixXcd::Zero(n + 1, n + 1);
+        for (int x = 0, y = n; x <= n; ++x, --y) {
+            for (int p = n, q = 0; q <= p; --p, ++q) {
+                h2l_c(q, x) = std::complex<Pixel>(h2l(2 * q, x), h2l(2 * q + 1, x));
+                h2l_c(p, x) = std::complex<Pixel>(h2l(2 * q, x), -h2l(2 * q + 1, x));
+            }
         }
+        Eigen::MatrixXcd l2h_c = h2l_c.inverse();
+        Eigen::MatrixXd l2h = Eigen::MatrixXd::Zero(n + 1, n + 1);
+        for (int x = 0, y = n; x <= n; ++x, --y) {
+            for (int p = n, q = 0; q <= p; --p, ++q) {
+                l2h(x, 2 * q) = l2h_c(x, q).real();
+                l2h(x, 2 * q + 1) = l2h_c(x, q).imag();
+            }
+        }
+#endif
         return l2h;
     }
 
@@ -118,6 +170,8 @@ public:
     }
 
 private:
+    ConversionSingleton() : _max_order(-1) {}
+
     int _max_order;
     BlockVec _h2l;
     BlockVec _l2h;
