@@ -28,7 +28,7 @@
 /**
  * @file
  *
- * @brief Constants and typedefs for shapelets library.
+ * @brief Shapelets based on an ellipse-transformed basis.
  *
  * @todo
  *
@@ -86,7 +86,7 @@ public:
     /// @brief Construct a function with a shallow-copied coefficient vector.
     EllipticalShapeletFunction(
         int order, BasisTypeEnum basisType, geom::ellipses::Quadrupole const & ellipse,
-        lsst::ndarray::Array<double,1,1> const & coefficients
+        lsst::ndarray::Array<Pixel,1,1> const & coefficients
     ) : _unit(order, basisType, coefficients), _ellipse(ellipse) {}
 
 private:
@@ -158,7 +158,7 @@ public:
      */
     void fillIntegrationVector(lsst::ndarray::Array<Pixel,1,1> const & result) const {
         _unit.fillIntegrationVector(result);
-        result.deep() *= _ellipse.getArea();
+        result.deep() /= std::sqrt(_transform.computeDeterminant());
     }
 
     /// @brief Construct a basis
@@ -182,22 +182,22 @@ class EllipticalShapeletEvaluator {
 public:
 
     /// @brief Evaluate at the given point.
-    double operator()(double x, double y) const {
+    Pixel operator()(double x, double y) const {
         return this->operator()(geom::Point2D(x, y));
     }
 
     /// @brief Evaluate at the given point.
-    double operator()(geom::Point2D const & point) const {
+    Pixel operator()(geom::Point2D const & point) const {
         return _unit(_transform(point)); 
     }
 
     /// @brief Evaluate at the given point.
-    double operator()(geom::Extent2D const & point) const {
+    Pixel operator()(geom::Extent2D const & point) const {
         return _unit(_transform(point)); 
     }
 
     /// @brief Compute the definite integral or integral moments.
-    double integrate() const {
+    Pixel integrate() const {
         return _unit.integrate() / std::sqrt(_transform.computeDeterminant());
     }
 

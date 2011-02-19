@@ -28,7 +28,7 @@
 /**
  * @file
  *
- * @brief Constants and typedefs for shapelets library.
+ * @brief Shapelets with basis defined on the unit circle.
  *
  * @todo
  *
@@ -80,7 +80,7 @@ public:
     /// @brief Construct a function with a shallow-copied coefficient vector.
     UnitShapeletFunction(
         int order, BasisTypeEnum basisType,
-        lsst::ndarray::Array<double,1,1> const & coefficients
+        lsst::ndarray::Array<Pixel,1,1> const & coefficients
     );
 
 private:
@@ -168,20 +168,20 @@ class UnitShapeletEvaluator {
 public:
 
     /// @brief Evaluate at the given point.
-    double operator()(double x, double y) const;
+    Pixel operator()(double x, double y) const;
 
     /// @brief Evaluate at the given point.
-    double operator()(geom::Point2D const & point) const {
+    Pixel operator()(geom::Point2D const & point) const {
         return this->operator()(point.getX(), point.getY()); 
     }
 
     /// @brief Evaluate at the given point.
-    double operator()(geom::Extent2D const & point) const {
+    Pixel operator()(geom::Extent2D const & point) const {
         return this->operator()(point.getX(), point.getY()); 
     }
 
     /// @brief Compute the definite integral or integral moments.
-    double integrate(int momentX=0, int momentY=0) const;
+    Pixel integrate(int momentX=0, int momentY=0) const;
 
     /// @brief Update the evaluator from using the given function.
     void update(UnitShapeletFunction const & function);
