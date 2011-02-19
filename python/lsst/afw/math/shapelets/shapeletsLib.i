@@ -53,7 +53,7 @@ Python interface to lsst::afw::math::shapelets classes and functions
 %include "lsst/ndarray/ndarray.i"
 
 %declareNumPyConverters(Eigen::MatrixXd);
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,0>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1>);
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1>);
 
 %pythoncode %{
@@ -82,10 +82,11 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %}
 
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 %lsst_exceptions();
 
 %include "lsst/afw/math/shapelets/constants.h"
 %include "lsst/afw/math/shapelets/ConversionMatrix.h"
- //%include "lsst/afw/math/shapelets/UnitShapelet.h"
- //%include "lsst/afw/math/shapelets/EllipticalShapelet.h"
+%include "lsst/afw/math/shapelets/UnitShapelet.h"
+%include "lsst/afw/math/shapelets/EllipticalShapelet.h"

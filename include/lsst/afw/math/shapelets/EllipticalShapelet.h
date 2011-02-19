@@ -68,10 +68,10 @@ public:
     void setEllipse(geom::ellipses::Quadrupole const & ellipse) { _ellipse = ellipse; }
 
     /// @brief Return the coefficient vector.
-    ndarray::Array<Pixel,1,1> const getCoefficients() { return _unit.getCoefficients(); }
+    lsst::ndarray::Array<Pixel,1,1> const getCoefficients() { return _unit.getCoefficients(); }
 
     /// @brief Return the coefficient vector (const).
-    ndarray::Array<Pixel,1,1> const getCoefficients() const { return _unit.getCoefficients(); }
+    lsst::ndarray::Array<Pixel,1,1> const getCoefficients() const { return _unit.getCoefficients(); }
 
     /// @brief Construct a helper object that can efficiently evaluate the function.
     EllipticalShapeletEvaluator evaluate() const;
@@ -86,7 +86,7 @@ public:
     /// @brief Construct a function with a shallow-copied coefficient vector.
     EllipticalShapeletFunction(
         int order, BasisTypeEnum basisType, geom::ellipses::Quadrupole const & ellipse,
-        ndarray::Array<double,1,1> const & coefficients
+        lsst::ndarray::Array<double,1,1> const & coefficients
     ) : _unit(order, basisType, coefficients), _ellipse(ellipse) {}
 
 private:
@@ -125,7 +125,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1,1> const & result,
+        lsst::ndarray::Array<Pixel,1,1> const & result,
         double x, double y
     ) const {
         fillEvaluationVector(result, geom::Point2D(x, y));
@@ -136,7 +136,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1,1> const & result,
+        lsst::ndarray::Array<Pixel,1,1> const & result,
         geom::Point2D const & point
     ) const {
         _unit.fillEvaluationVector(result, _transform(point));
@@ -147,7 +147,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1,1> const & result,
+        lsst::ndarray::Array<Pixel,1,1> const & result,
         geom::Extent2D const & point
     ) const {
         _unit.fillEvaluationVector(result, _transform(point));
@@ -156,7 +156,7 @@ public:
     /**
      *  @brief Fill the given array with the result of integrating the basis functions.
      */
-    void fillIntegrationVector(ndarray::Array<Pixel,1,1> const & result) const {
+    void fillIntegrationVector(lsst::ndarray::Array<Pixel,1,1> const & result) const {
         _unit.fillIntegrationVector(result);
         result.deep() *= _ellipse.getArea();
     }

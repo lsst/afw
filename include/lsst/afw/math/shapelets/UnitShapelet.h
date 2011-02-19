@@ -66,10 +66,10 @@ public:
     }
 
     /// @brief Return the coefficient vector.
-    ndarray::Array<Pixel,1,1> const getCoefficients() { return _coefficients; }
+    lsst::ndarray::Array<Pixel,1,1> const getCoefficients() { return _coefficients; }
 
     /// @brief Return the coefficient vector (const).
-    ndarray::Array<Pixel,1,1> const getCoefficients() const { return _coefficients; }
+    lsst::ndarray::Array<Pixel,1,1> const getCoefficients() const { return _coefficients; }
 
     /// @brief Construct a helper object that can efficiently evaluate the function.
     UnitShapeletEvaluator evaluate() const;
@@ -80,13 +80,13 @@ public:
     /// @brief Construct a function with a shallow-copied coefficient vector.
     UnitShapeletFunction(
         int order, BasisTypeEnum basisType,
-        ndarray::Array<double,1,1> const & coefficients
+        lsst::ndarray::Array<double,1,1> const & coefficients
     );
 
 private:
     int _order;
     BasisTypeEnum _basisType;
-    ndarray::Array<Pixel,1,1> _coefficients;
+    lsst::ndarray::Array<Pixel,1,1> _coefficients;
 };
 
 /**
@@ -109,7 +109,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1> const & result,
+        lsst::ndarray::Array<Pixel,1> const & result,
         double x, double y
     ) const;
 
@@ -118,7 +118,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1> const & result,
+        lsst::ndarray::Array<Pixel,1> const & result,
         geom::Point2D const & point
     ) const {
         fillEvaluationVector(result, point.getX(), point.getY());
@@ -129,7 +129,7 @@ public:
      *         at the given point.
      */
     void fillEvaluationVector(
-        ndarray::Array<Pixel,1> const & result,
+        lsst::ndarray::Array<Pixel,1> const & result,
         geom::Extent2D const & point
     ) const {
         fillEvaluationVector(result, point.getX(), point.getY());
@@ -140,22 +140,22 @@ public:
      *         evaluating their unweighted integral moments.
      */
     void fillIntegrationVector(
-        ndarray::Array<Pixel,1> const & result,
+        lsst::ndarray::Array<Pixel,1> const & result,
         int momentX=0, int momentY=0
     ) const;
 
     /// @brief Construct a basis
     UnitShapeletBasis(int order, BasisTypeEnum basisType) :
         _order(order), _basisType(basisType),
-        _workspaceX(ndarray::allocate(_order + 1)),
-        _workspaceY(ndarray::allocate(_order + 1))
+        _workspaceX(lsst::ndarray::allocate(_order + 1)),
+        _workspaceY(lsst::ndarray::allocate(_order + 1))
     {}
 
 private:
     int _order;
     BasisTypeEnum _basisType;
-    mutable ndarray::Array<Pixel,1,1> _workspaceX;
-    mutable ndarray::Array<Pixel,1,1> _workspaceY;
+    mutable lsst::ndarray::Array<Pixel,1,1> _workspaceX;
+    mutable lsst::ndarray::Array<Pixel,1,1> _workspaceY;
 };
 
 /**
@@ -190,9 +190,9 @@ public:
     explicit UnitShapeletEvaluator(UnitShapeletFunction const & function);
 
 private:
-    ndarray::Array<Pixel,1,1> _coefficients;
-    mutable ndarray::Array<Pixel,1,1> _workspaceX;
-    mutable ndarray::Array<Pixel,1,1> _workspaceY;
+    lsst::ndarray::Array<Pixel,1,1> _coefficients;
+    mutable lsst::ndarray::Array<Pixel,1,1> _workspaceX;
+    mutable lsst::ndarray::Array<Pixel,1,1> _workspaceY;
 };
 
 inline UnitShapeletEvaluator UnitShapeletFunction::evaluate() const {

@@ -220,8 +220,9 @@ void shapelets::ConversionMatrix::multiplyOnLeft(nd::Array<Pixel,1> const & arra
         i = ConversionSingleton::get().getL2H().begin();
     }
     nd::EigenView<Pixel,1,0> vector(array);
-    for (int offset = 0; offset < vector.size(); ++i, offset += i->rows()) {
-        vector.segment(offset, offset + i->rows()) *= i->transpose();
+    for (int offset = 0; offset < vector.size(); ++i) {
+        vector.segment(offset, i->rows()).transpose() *= i->transpose();
+        offset += i->rows();
     }
 }
 
@@ -242,8 +243,9 @@ void shapelets::ConversionMatrix::multiplyOnRight(nd::Array<Pixel,1> const & arr
         i = ConversionSingleton::get().getL2H().begin();
     }
     nd::EigenView<Pixel,1,0> vector(array);
-    for (int offset = 0; offset < vector.size(); ++i, offset += i->rows()) {
-        vector.segment(offset, offset + i->rows()) *= (*i);
+    for (int offset = 0; offset < vector.size(); ++i) {
+        vector.segment(offset, i->rows()).transpose() *= (*i);
+        offset += i->rows();
     }
 }
 

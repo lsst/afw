@@ -804,8 +804,8 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param (in) coord   Position in sky coordinates where transform is desired.
- * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+ * @param[in] coord   Position in sky coordinates where transform is desired.
+ * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     lsst::afw::coord::Coord::ConstPtr const & coord,
@@ -826,8 +826,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param (in) pix     Position in pixel coordinates where transform is desired.
- * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+ * @param[in] pix     Position in pixel coordinates where transform is desired.
+ * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     GeomPoint const & pix,
@@ -885,8 +885,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param (in) coord   Position in sky coordinates where transform is desired.
- * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ * @param[in] coord   Position in sky coordinates where transform is desired.
+ * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     lsst::afw::coord::Coord::ConstPtr const & coord,
@@ -907,8 +907,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param (in) pix     Position in pixel coordinates where transform is desired.
- * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ * @param[in] pix     Position in pixel coordinates where transform is desired.
+ * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     GeomPoint const & pix,
