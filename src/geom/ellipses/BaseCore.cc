@@ -114,13 +114,13 @@ double BaseCore::getArea() const {
     return std::sqrt(ixx * iyy - ixy * ixy) * M_PI;
 }
 
-double BaseCore::getGeometricRadius() const {
+double BaseCore::getDeterminantRadius() const {
     double ixx, iyy, ixy;
     _assignToQuadrupole(ixx, iyy, ixy);
     return std::pow(ixx * iyy - ixy * ixy, 0.25);
 }
 
-double BaseCore::getArithmeticRadius() const {
+double BaseCore::getTraceRadius() const {
     double ixx, iyy, ixy;
     _assignToQuadrupole(ixx, iyy, ixy);
     return std::sqrt(0.5 * (ixx + iyy));

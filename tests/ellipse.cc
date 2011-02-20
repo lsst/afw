@@ -42,25 +42,25 @@ template <typename TestCase>
 void invokeTest(bool no_circles) {
     TestCase::apply(Quadrupole(1.5,2.0,-0.75));
     TestCase::apply(Axes(2.5,1.3,-0.75));
-    TestCase::apply(DistortionAndGeometricRadius(0.4,-0.25,2.3));
-    TestCase::apply(DistortionAndArithmeticRadius(0.4,-0.25,2.3));
-    TestCase::apply(DistortionAndLogGeometricRadius(0.4,-0.25,2.3));
-    TestCase::apply(DistortionAndLogArithmeticRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndGeometricRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndArithmeticRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndLogGeometricRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndLogArithmeticRadius(0.4,-0.25,2.3));
+    TestCase::apply(DistortionAndDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(DistortionAndTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(DistortionAndLogDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(DistortionAndLogTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(LogShearAndDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(LogShearAndTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(LogShearAndLogDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(LogShearAndLogTraceRadius(0.4,-0.25,2.3));
     if (no_circles) return;
     TestCase::apply(Quadrupole(200.0,200.0,0.0));
     TestCase::apply(Axes(40,40,0.0));
-    TestCase::apply(DistortionAndGeometricRadius(0.0, 0.0, 2.3));
-    TestCase::apply(DistortionAndArithmeticRadius(0.0, 0.0, 2.3));
-    TestCase::apply(DistortionAndLogGeometricRadius(0.0, 0.0, 2.3));
-    TestCase::apply(DistortionAndLogArithmeticRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndGeometricRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndArithmeticRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndLogGeometricRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndLogArithmeticRadius(0.0, 0.0, 2.3));
+    TestCase::apply(DistortionAndDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(DistortionAndTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(DistortionAndLogDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(DistortionAndLogTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(LogShearAndDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(LogShearAndTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(LogShearAndLogDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(LogShearAndLogTraceRadius(0.0, 0.0, 2.3));
 }
 
 template <typename T1, typename T2>
@@ -131,14 +131,14 @@ struct CoreConversionTest {
     static void apply(T1 const & core) {
         testCoreConversion<Axes>(core);
         testCoreConversion<Quadrupole>(core);
-        testCoreConversion<DistortionAndGeometricRadius>(core);
-        testCoreConversion<DistortionAndArithmeticRadius>(core);
-        testCoreConversion<DistortionAndLogGeometricRadius>(core);
-        testCoreConversion<DistortionAndLogArithmeticRadius>(core);
-        testCoreConversion<LogShearAndGeometricRadius>(core);
-        testCoreConversion<LogShearAndArithmeticRadius>(core);
-        testCoreConversion<LogShearAndLogGeometricRadius>(core);
-        testCoreConversion<LogShearAndLogArithmeticRadius>(core);
+        testCoreConversion<DistortionAndDeterminantRadius>(core);
+        testCoreConversion<DistortionAndTraceRadius>(core);
+        testCoreConversion<DistortionAndLogDeterminantRadius>(core);
+        testCoreConversion<DistortionAndLogTraceRadius>(core);
+        testCoreConversion<LogShearAndDeterminantRadius>(core);
+        testCoreConversion<LogShearAndTraceRadius>(core);
+        testCoreConversion<LogShearAndLogDeterminantRadius>(core);
+        testCoreConversion<LogShearAndLogTraceRadius>(core);
     }
 
 };
@@ -353,9 +353,9 @@ BOOST_AUTO_TEST_CASE(Convolution) {
 }
 
 BOOST_AUTO_TEST_CASE(Radii) {
-    afwEllipses::GeometricRadius gr;
-    afwEllipses::LogGeometricRadius lgr;
+    afwEllipses::DeterminantRadius gr;
+    afwEllipses::LogDeterminantRadius lgr;
     lgr = gr;
-    afwEllipses::ArithmeticRadius ar;
+    afwEllipses::TraceRadius ar;
     //ar = gr; // this line should fail to compile
 }

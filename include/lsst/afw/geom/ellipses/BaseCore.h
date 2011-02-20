@@ -102,24 +102,19 @@ public:
     double getArea() const;
 
     /**
-     *  @brief Return the geometric mean radius.
+     *  @brief Return the radius defined as the 4th root of the determinant of the quadrupole matrix.
      *
-     *  This is the 4th root of the determinant of the quadrupole matrix,
-     *  and is equal to the geometric mean of the semi-major and semi-minor axes.
-     *
-     *  The geometric radius is equal to the standard radius for a circle,
+     *  The determinant radius is equal to the standard radius for a circle,
      *  and its square times pi is the area of the ellipse. 
      */
-    double getGeometricRadius() const;
+    double getDeterminantRadius() const;
     
     /**
-     *  @brief Return the arithmetic mean radius.
+     *  @brief Return the radius defined as the square root of one half the trace of the quadrupole matrix.
      *
-     *  This is the square root of one half the trace of the quadrupole matrix.
-     *
-     *  The arithmetic radius is equal to the standard radius for a circle.
+     *  The trace radius is equal to the standard radius for a circle.
      */
-    double getArithmeticRadius() const;
+    double getTraceRadius() const;
 
     /**
      *  @name Coordinate transforms

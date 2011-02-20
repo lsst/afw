@@ -32,9 +32,9 @@
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipticityBase::Jacobian);
 
 
-%rename(assign) lsst::afw::geom::ellipses::GeometricRadius::operator=;
-%rename(assign) lsst::afw::geom::ellipses::ArithmeticRadius::operator=;
-%rename(assign) lsst::afw::geom::ellipses::LogGeometricRadius::operator=;
+%rename(assign) lsst::afw::geom::ellipses::DeterminantRadius::operator=;
+%rename(assign) lsst::afw::geom::ellipses::TraceRadius::operator=;
+%rename(assign) lsst::afw::geom::ellipses::LogDeterminantRadius::operator=;
 
 %rename(assign) lsst::afw::geom::ellipses::Distortion::operator=;
 %rename(assign) lsst::afw::geom::ellipses::LogShear::operator=;
@@ -73,15 +73,15 @@ SWIG_SHARED_PTR_DERIVED(
 %enddef
 
 
-%Separable_PREINCLUDE(Distortion, GeometricRadius);
-%Separable_PREINCLUDE(Distortion, ArithmeticRadius);
-%Separable_PREINCLUDE(Distortion, LogGeometricRadius);
-%Separable_PREINCLUDE(Distortion, LogArithmeticRadius);
+%Separable_PREINCLUDE(Distortion, DeterminantRadius);
+%Separable_PREINCLUDE(Distortion, TraceRadius);
+%Separable_PREINCLUDE(Distortion, LogDeterminantRadius);
+%Separable_PREINCLUDE(Distortion, LogTraceRadius);
 
-%Separable_PREINCLUDE(LogShear, GeometricRadius);
-%Separable_PREINCLUDE(LogShear, ArithmeticRadius);
-%Separable_PREINCLUDE(LogShear, LogGeometricRadius);
-%Separable_PREINCLUDE(LogShear, LogArithmeticRadius);
+%Separable_PREINCLUDE(LogShear, DeterminantRadius);
+%Separable_PREINCLUDE(LogShear, TraceRadius);
+%Separable_PREINCLUDE(LogShear, LogDeterminantRadius);
+%Separable_PREINCLUDE(LogShear, LogTraceRadius);
 
 %include "lsst/afw/geom/ellipses/Separable.h"
 
@@ -115,12 +115,12 @@ SWIG_SHARED_PTR_DERIVED(
     }
 }
 
-%Separable_POSTINCLUDE(Distortion, GeometricRadius);
-%Separable_POSTINCLUDE(Distortion, ArithmeticRadius);
-%Separable_POSTINCLUDE(Distortion, LogGeometricRadius);
-%Separable_POSTINCLUDE(Distortion, LogArithmeticRadius);
+%Separable_POSTINCLUDE(Distortion, DeterminantRadius);
+%Separable_POSTINCLUDE(Distortion, TraceRadius);
+%Separable_POSTINCLUDE(Distortion, LogDeterminantRadius);
+%Separable_POSTINCLUDE(Distortion, LogTraceRadius);
 
-%Separable_POSTINCLUDE(LogShear, GeometricRadius);
-%Separable_POSTINCLUDE(LogShear, ArithmeticRadius);
-%Separable_POSTINCLUDE(LogShear, LogGeometricRadius);
-%Separable_POSTINCLUDE(LogShear, LogArithmeticRadius);
+%Separable_POSTINCLUDE(LogShear, DeterminantRadius);
+%Separable_POSTINCLUDE(LogShear, TraceRadius);
+%Separable_POSTINCLUDE(LogShear, LogDeterminantRadius);
+%Separable_POSTINCLUDE(LogShear, LogTraceRadius);

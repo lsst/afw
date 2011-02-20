@@ -31,7 +31,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /** 
  *  @brief A functor that returns points on the boundary of the ellipse as a function
- *         of a parameter that runs between 0 and 2\pi (but is not angle).
+ *         of a parameter that runs between 0 and 2 pi (but is not angle).
  */
 class Parametric {
 public:

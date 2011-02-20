@@ -27,7 +27,7 @@
 namespace lsst { namespace afw { namespace geom {
 namespace ellipses {
 
-void GeometricRadius::assignFromQuadrupole(
+void DeterminantRadius::assignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -36,7 +36,7 @@ void GeometricRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian GeometricRadius::dAssignFromQuadrupole(
+BaseCore::Jacobian DeterminantRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -58,7 +58,7 @@ BaseCore::Jacobian GeometricRadius::dAssignFromQuadrupole(
     return result;
 }
 
-void GeometricRadius::assignToQuadrupole(
+void DeterminantRadius::assignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
@@ -70,7 +70,7 @@ void GeometricRadius::assignToQuadrupole(
 }
 
 
-BaseCore::Jacobian GeometricRadius::dAssignToQuadrupole(
+BaseCore::Jacobian DeterminantRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
@@ -94,7 +94,7 @@ BaseCore::Jacobian GeometricRadius::dAssignToQuadrupole(
     return result;
 }
 
-void ArithmeticRadius::assignFromQuadrupole(
+void TraceRadius::assignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -103,7 +103,7 @@ void ArithmeticRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian ArithmeticRadius::dAssignFromQuadrupole(
+BaseCore::Jacobian TraceRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -123,7 +123,7 @@ BaseCore::Jacobian ArithmeticRadius::dAssignFromQuadrupole(
     return result;
 }
 
-void ArithmeticRadius::assignToQuadrupole(
+void TraceRadius::assignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
@@ -133,7 +133,7 @@ void ArithmeticRadius::assignToQuadrupole(
     ixy = r2 * distortion.getE2();
 }
 
-BaseCore::Jacobian ArithmeticRadius::dAssignToQuadrupole(
+BaseCore::Jacobian TraceRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
@@ -152,7 +152,7 @@ BaseCore::Jacobian ArithmeticRadius::dAssignToQuadrupole(
     return result;
 }
 
-void LogGeometricRadius::assignFromQuadrupole(
+void LogDeterminantRadius::assignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -161,7 +161,7 @@ void LogGeometricRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian LogGeometricRadius::dAssignFromQuadrupole(
+BaseCore::Jacobian LogDeterminantRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -183,7 +183,7 @@ BaseCore::Jacobian LogGeometricRadius::dAssignFromQuadrupole(
     return result;
 }
 
-void LogGeometricRadius::assignToQuadrupole(
+void LogDeterminantRadius::assignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
@@ -194,7 +194,7 @@ void LogGeometricRadius::assignToQuadrupole(
     ixy = r2 * distortion.getE2() / den;
 }
 
-BaseCore::Jacobian LogGeometricRadius::dAssignToQuadrupole(
+BaseCore::Jacobian LogDeterminantRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
@@ -218,7 +218,7 @@ BaseCore::Jacobian LogGeometricRadius::dAssignToQuadrupole(
     return result;
 }
 
-void LogArithmeticRadius::assignFromQuadrupole(
+void LogTraceRadius::assignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -227,7 +227,7 @@ void LogArithmeticRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian LogArithmeticRadius::dAssignFromQuadrupole(
+BaseCore::Jacobian LogTraceRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
@@ -247,7 +247,7 @@ BaseCore::Jacobian LogArithmeticRadius::dAssignFromQuadrupole(
     return result;
 }
 
-void LogArithmeticRadius::assignToQuadrupole(
+void LogTraceRadius::assignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
@@ -257,7 +257,7 @@ void LogArithmeticRadius::assignToQuadrupole(
     ixy = r2 * distortion.getE2();
 }
 
-BaseCore::Jacobian LogArithmeticRadius::dAssignToQuadrupole(
+BaseCore::Jacobian LogTraceRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {

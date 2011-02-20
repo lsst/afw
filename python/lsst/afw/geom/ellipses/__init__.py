@@ -25,33 +25,33 @@
 from ellipsesLib import (
     LogShear,
     Distortion,
-    GeometricRadius,
-    ArithmeticRadius,
-    LogGeometricRadius,
-    LogArithmeticRadius,
+    DeterminantRadius,
+    TraceRadius,
+    LogDeterminantRadius,
+    LogTraceRadius,
     BaseCore,
     Axes,
     Quadrupole,
-    SeparableDistortionGeometricRadius,
-    SeparableDistortionArithmeticRadius,
-    SeparableDistortionLogGeometricRadius,
-    SeparableDistortionLogArithmeticRadius,
-    SeparableLogShearGeometricRadius,
-    SeparableLogShearArithmeticRadius,
-    SeparableLogShearLogGeometricRadius,
-    SeparableLogShearLogArithmeticRadius,
+    SeparableDistortionDeterminantRadius,
+    SeparableDistortionTraceRadius,
+    SeparableDistortionLogDeterminantRadius,
+    SeparableDistortionLogTraceRadius,
+    SeparableLogShearDeterminantRadius,
+    SeparableLogShearTraceRadius,
+    SeparableLogShearLogDeterminantRadius,
+    SeparableLogShearLogTraceRadius,
     Ellipse,
     Parametric
 )
 
 Separable = {
-    (Distortion, GeometricRadius):SeparableDistortionGeometricRadius,
-    (Distortion, ArithmeticRadius):SeparableDistortionArithmeticRadius,
-    (Distortion, LogGeometricRadius):SeparableDistortionLogGeometricRadius,
-    (Distortion, LogArithmeticRadius):SeparableDistortionLogArithmeticRadius,
-    (LogShear, GeometricRadius):SeparableLogShearGeometricRadius,
-    (LogShear, ArithmeticRadius):SeparableLogShearArithmeticRadius,
-    (LogShear, LogGeometricRadius):SeparableLogShearLogGeometricRadius,
-    (LogShear, LogArithmeticRadius):SeparableLogShearLogArithmeticRadius
+    (Distortion, DeterminantRadius):SeparableDistortionDeterminantRadius,
+    (Distortion, TraceRadius):SeparableDistortionTraceRadius,
+    (Distortion, LogDeterminantRadius):SeparableDistortionLogDeterminantRadius,
+    (Distortion, LogTraceRadius):SeparableDistortionLogTraceRadius,
+    (LogShear, DeterminantRadius):SeparableLogShearDeterminantRadius,
+    (LogShear, TraceRadius):SeparableLogShearTraceRadius,
+    (LogShear, LogDeterminantRadius):SeparableLogShearLogDeterminantRadius,
+    (LogShear, LogTraceRadius):SeparableLogShearLogTraceRadius
 }
 

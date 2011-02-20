@@ -49,15 +49,15 @@ using ellipses::Ellipse;
 
 namespace ellipses {
 
-typedef Separable<Distortion,GeometricRadius> DistortionAndGeometricRadius;
-typedef Separable<Distortion,ArithmeticRadius> DistortionAndArithmeticRadius;
-typedef Separable<Distortion,LogGeometricRadius> DistortionAndLogGeometricRadius;
-typedef Separable<Distortion,LogArithmeticRadius> DistortionAndLogArithmeticRadius;
+typedef Separable<Distortion,DeterminantRadius> DistortionAndDeterminantRadius;
+typedef Separable<Distortion,TraceRadius> DistortionAndTraceRadius;
+typedef Separable<Distortion,LogDeterminantRadius> DistortionAndLogDeterminantRadius;
+typedef Separable<Distortion,LogTraceRadius> DistortionAndLogTraceRadius;
 
-typedef Separable<LogShear,GeometricRadius> LogShearAndGeometricRadius;
-typedef Separable<LogShear,ArithmeticRadius> LogShearAndArithmeticRadius;
-typedef Separable<LogShear,LogGeometricRadius> LogShearAndLogGeometricRadius;
-typedef Separable<LogShear,LogArithmeticRadius> LogShearAndLogArithmeticRadius;
+typedef Separable<LogShear,DeterminantRadius> LogShearAndDeterminantRadius;
+typedef Separable<LogShear,TraceRadius> LogShearAndTraceRadius;
+typedef Separable<LogShear,LogDeterminantRadius> LogShearAndLogDeterminantRadius;
+typedef Separable<LogShear,LogTraceRadius> LogShearAndLogTraceRadius;
 
 }}}} // namespace lsst::afw::geom::ellipses
 

@@ -42,12 +42,6 @@ namespace lsst { namespace afw { namespace geom {
     The convertToGeom() and convertToImage() functions declared in deprecated.h provide conversions
     between geometry objects defined in image and their counterparts in geom.
 
-    In cases where std::pair was used in place of Extent in the past,
-    @link CoordinateBase<Derived,T,2>::asPair Extent::asPair @endlink 
-    and 
-    @link CoordinateBase<Derived,T,2>::make Extent::make @endlink 
-    may be useful.
-
     \section point image::Point to geom::Point
     
     In the table below,

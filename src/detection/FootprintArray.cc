@@ -37,6 +37,7 @@ namespace detection{
  * the destination. This forces a deep copy of the relevant parts of the 
  * source.
  *
+ * @param fp  footprint to operate on
  * @param src array to copy from. Size of outer dimensions must be match 
  *            the height and width of the bounds of this footprint.
  * @param dest array to copy to. The dimensions of the dest must be area of
@@ -96,7 +97,8 @@ void flattenArray(
  * the destination. This forces a deep copy of some of the relevant parts of
  * source.
  *
-* @param src array to copy from. Size of outer dimensions must be match 
+ * @param fp  footprint to operate on
+ * @param src array to copy from. Size of outer dimensions must be match 
  *            the height and width of the bounds of this footprint.
  * @param dest array to copy to. The dimensions of the dest will be area of
  *            the footprint, N-1 dimensions of the source
@@ -120,6 +122,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
  * the destination. This forces a deep copy of the relevant parts of the
  * source.
  *
+ * @param fp  footprint to operate on
  * @param src array to copy from. The size of the outer dimension must match
  *            the area of the footprint
  * @param dest array to copy to. The dimensions of the array must be height,
@@ -178,6 +181,7 @@ void expandArray(
  * bounds of this footprint, and whose remaming dimensions are determined by
  * the inner N-1 dimensions of the source. the forces a deep copy of the source
  *
+ * @param fp  footprint to operate on
  * @param src array to copy from. The size of the outer dimension must match
  *            the area of the footprint
  * @return a deep copy of the source. The dimensions of the array will

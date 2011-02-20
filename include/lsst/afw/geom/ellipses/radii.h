@@ -43,12 +43,12 @@ namespace ellipses {
 template <typename Ellipticity_, typename Radius_> class Separable;
 #endif
 
-class GeometricRadius;
-class ArithmeticRadius;
-class LogGeometricRadius;
-class LogArithmeticRadius;
+class DeterminantRadius;
+class TraceRadius;
+class LogDeterminantRadius;
+class LogTraceRadius;
 
-class GeometricRadius {
+class DeterminantRadius {
 public:
 
     void normalize() {
@@ -57,28 +57,28 @@ public:
                               "Ellipse radius cannot be negative.");
     }
 
-    static std::string getName() { return "GeometricRadius"; }
+    static std::string getName() { return "DeterminantRadius"; }
 
-    explicit GeometricRadius(double value=1.0) : _value(value) {}
+    explicit DeterminantRadius(double value=1.0) : _value(value) {}
 
-    explicit GeometricRadius(LogGeometricRadius const & other);
+    explicit DeterminantRadius(LogDeterminantRadius const & other);
 
     operator double const & () const { return _value; }
 
     operator double & () { return _value; }
 
-    GeometricRadius & operator=(double value) { _value = value; return *this; }
+    DeterminantRadius & operator=(double value) { _value = value; return *this; }
 
-    GeometricRadius & operator=(LogGeometricRadius const & other);
+    DeterminantRadius & operator=(LogDeterminantRadius const & other);
 
 private:
     
     template <typename T1, typename T2> friend class Separable;
 
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(ArithmeticRadius const &);
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(LogArithmeticRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(TraceRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(LogTraceRadius const &);
 
     void assignFromQuadrupole(
         double ixx, double iyy, double ixy,
@@ -103,7 +103,7 @@ private:
     double _value;
 };
 
-class ArithmeticRadius {
+class TraceRadius {
 public:
 
     void normalize() {
@@ -112,28 +112,28 @@ public:
                               "Ellipse radius cannot be negative.");
     }
 
-    static std::string getName() { return "ArithmeticRadius"; }
+    static std::string getName() { return "TraceRadius"; }
 
-    explicit ArithmeticRadius(double value=1.0) : _value(value) {}
+    explicit TraceRadius(double value=1.0) : _value(value) {}
 
-    explicit ArithmeticRadius(LogArithmeticRadius const & other);
+    explicit TraceRadius(LogTraceRadius const & other);
 
     operator double const & () const { return _value; }
 
     operator double & () { return _value; }
 
-    ArithmeticRadius & operator=(double value) { _value = value; return *this; }
+    TraceRadius & operator=(double value) { _value = value; return *this; }
 
-    ArithmeticRadius & operator=(LogArithmeticRadius const & other);
+    TraceRadius & operator=(LogTraceRadius const & other);
 
 private:
     
     template <typename T1, typename T2> friend class Separable;
 
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(GeometricRadius const &);
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(LogGeometricRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(DeterminantRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(LogDeterminantRadius const &);
 
     void assignFromQuadrupole(
         double ixx, double iyy, double ixy,
@@ -158,33 +158,33 @@ private:
     double _value;
 };
 
-class LogGeometricRadius {
+class LogDeterminantRadius {
 public:
 
     void normalize() {}
 
-    static std::string getName() { return "LogGeometricRadius"; }
+    static std::string getName() { return "LogDeterminantRadius"; }
 
-    explicit LogGeometricRadius(double value=0.0) : _value(value) {}
+    explicit LogDeterminantRadius(double value=0.0) : _value(value) {}
 
-    explicit LogGeometricRadius(GeometricRadius const & other);
+    explicit LogDeterminantRadius(DeterminantRadius const & other);
 
     operator double const & () const { return _value; }
 
     operator double & () { return _value; }
 
-    LogGeometricRadius & operator=(double value) { _value = value; return *this; }
+    LogDeterminantRadius & operator=(double value) { _value = value; return *this; }
 
-    LogGeometricRadius & operator=(GeometricRadius const & other);
+    LogDeterminantRadius & operator=(DeterminantRadius const & other);
 
 private:
     
     template <typename T1, typename T2> friend class Separable;
 
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(ArithmeticRadius const &);
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(LogArithmeticRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(TraceRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(LogTraceRadius const &);
 
     void assignFromQuadrupole(
         double ixx, double iyy, double ixy,
@@ -209,33 +209,33 @@ private:
     double _value;
 };
 
-class LogArithmeticRadius {
+class LogTraceRadius {
 public:
     
     void normalize() {}
 
-    static std::string getName() { return "LogArithmeticRadius"; }
+    static std::string getName() { return "LogTraceRadius"; }
 
-    explicit LogArithmeticRadius(double value=0.0) : _value(value) {}
+    explicit LogTraceRadius(double value=0.0) : _value(value) {}
 
-    explicit LogArithmeticRadius(ArithmeticRadius const & other);
+    explicit LogTraceRadius(TraceRadius const & other);
 
     operator double const & () const { return _value; }
 
     operator double & () { return _value; }
 
-    LogArithmeticRadius & operator=(double value) { _value = value; return *this; }
+    LogTraceRadius & operator=(double value) { _value = value; return *this; }
 
-    LogArithmeticRadius & operator=(ArithmeticRadius const & value);
+    LogTraceRadius & operator=(TraceRadius const & value);
 
 private:
     
     template <typename T1, typename T2> friend class Separable;
 
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(GeometricRadius const &);
-    /// Undefined and disabled; conversion between arithmetic and geometric radii requires ellipticity.
-    void operator=(LogGeometricRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(DeterminantRadius const &);
+    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
+    void operator=(LogDeterminantRadius const &);
 
     void assignFromQuadrupole(
         double ixx, double iyy, double ixy,
@@ -260,27 +260,27 @@ private:
     double _value;
 };
 
-inline GeometricRadius::GeometricRadius(LogGeometricRadius const & other) : _value(std::exp(other)) {}
-inline ArithmeticRadius::ArithmeticRadius(LogArithmeticRadius const & other) : _value(std::exp(other)) {}
-inline LogGeometricRadius::LogGeometricRadius(GeometricRadius const & other) : _value(std::log(other)) {}
-inline LogArithmeticRadius::LogArithmeticRadius(ArithmeticRadius const & other) : _value(std::log(other)) {}
+inline DeterminantRadius::DeterminantRadius(LogDeterminantRadius const & other) : _value(std::exp(other)) {}
+inline TraceRadius::TraceRadius(LogTraceRadius const & other) : _value(std::exp(other)) {}
+inline LogDeterminantRadius::LogDeterminantRadius(DeterminantRadius const & other) : _value(std::log(other)) {}
+inline LogTraceRadius::LogTraceRadius(TraceRadius const & other) : _value(std::log(other)) {}
 
-inline GeometricRadius & GeometricRadius::operator=(LogGeometricRadius const & other) {
+inline DeterminantRadius & DeterminantRadius::operator=(LogDeterminantRadius const & other) {
     _value = std::exp(other);
     return *this;
 }
 
-inline ArithmeticRadius & ArithmeticRadius::operator=(LogArithmeticRadius const & other) {
+inline TraceRadius & TraceRadius::operator=(LogTraceRadius const & other) {
     _value = std::exp(other);
     return *this;
 }
 
-inline LogGeometricRadius & LogGeometricRadius::operator=(GeometricRadius const & other) {
+inline LogDeterminantRadius & LogDeterminantRadius::operator=(DeterminantRadius const & other) {
     _value = std::log(other);
     return *this;
 }
 
-inline LogArithmeticRadius & LogArithmeticRadius::operator=(ArithmeticRadius const & other) {
+inline LogTraceRadius & LogTraceRadius::operator=(TraceRadius const & other) {
     _value = std::log(other);
     return *this;
 }

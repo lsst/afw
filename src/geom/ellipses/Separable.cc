@@ -156,14 +156,14 @@ BaseCore::Jacobian Separable<Ellipticity_,Radius_>::_dAssignFromAxes(double a, d
     return lhs * rhs;
 }
 
-template class Separable<Distortion,GeometricRadius>;
-template class Separable<Distortion,ArithmeticRadius>;
-template class Separable<Distortion,LogGeometricRadius>;
-template class Separable<Distortion,LogArithmeticRadius>;
+template class Separable<Distortion,DeterminantRadius>;
+template class Separable<Distortion,TraceRadius>;
+template class Separable<Distortion,LogDeterminantRadius>;
+template class Separable<Distortion,LogTraceRadius>;
 
-template class Separable<LogShear,GeometricRadius>;
-template class Separable<LogShear,ArithmeticRadius>;
-template class Separable<LogShear,LogGeometricRadius>;
-template class Separable<LogShear,LogArithmeticRadius>;
+template class Separable<LogShear,DeterminantRadius>;
+template class Separable<LogShear,TraceRadius>;
+template class Separable<LogShear,LogDeterminantRadius>;
+template class Separable<LogShear,LogTraceRadius>;
 
 }}}} // namespace lsst::afw::geom::ellipses
