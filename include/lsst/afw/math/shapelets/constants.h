@@ -93,8 +93,11 @@ enum BasisTypeEnum {
                */
 };
 
+/// @brief Return the offset of the given order in a coefficient vector.
+inline int computeOffset(int order) { return order * (order + 1) / 2; }
+
 /// @brief Return the size of the coefficient vector for the given order.
-inline int computeSize(int order) { return (order + 1) * (order + 2) / 2; }
+inline int computeSize(int order) { return computeOffset(order + 1); }
 
 }}}}   // lsst::afw::math::shapelets
 

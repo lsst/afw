@@ -53,6 +53,9 @@ class UnitShapeletEvaluator;
 class UnitShapeletFunction {
 public:
 
+    typedef boost::shared_ptr<UnitShapeletFunction> Ptr;
+    typedef boost::shared_ptr<UnitShapeletFunction const> ConstPtr;
+
     /// @brief Return the maximum order (inclusive), either @f$n_x + n_y@f$ or @f$p + q@f$.
     int getOrder() const { return _order; }
 
@@ -94,6 +97,9 @@ private:
  */
 class UnitShapeletBasis {
 public:
+
+    typedef boost::shared_ptr<UnitShapeletBasis> Ptr;
+    typedef boost::shared_ptr<UnitShapeletBasis const> ConstPtr;
 
     /// @brief Return the maximum order (inclusive), either @f$n_x + n_y@f$ or @f$p + q@f$.
     int getOrder() const { return _order; }
@@ -166,6 +172,9 @@ private:
  */
 class UnitShapeletEvaluator {
 public:
+
+    typedef boost::shared_ptr<UnitShapeletEvaluator> Ptr;
+    typedef boost::shared_ptr<UnitShapeletEvaluator const> ConstPtr;
 
     /// @brief Evaluate at the given point.
     Pixel operator()(double x, double y) const;

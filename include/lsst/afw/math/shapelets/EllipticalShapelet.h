@@ -52,6 +52,9 @@ class EllipticalShapeletEvaluator;
 class EllipticalShapeletFunction {
 public:
 
+    typedef boost::shared_ptr<EllipticalShapeletFunction> Ptr;
+    typedef boost::shared_ptr<EllipticalShapeletFunction const> ConstPtr;
+
     /// @brief Return the maximum order (inclusive), either @f$n_x + n_y@f$ or @f$p + q@f$.
     int getOrder() const { return _unit.getOrder(); }
 
@@ -101,6 +104,9 @@ private:
  */
 class EllipticalShapeletBasis {
 public:
+
+    typedef boost::shared_ptr<EllipticalShapeletBasis> Ptr;
+    typedef boost::shared_ptr<EllipticalShapeletBasis const> ConstPtr;
 
     /// @brief Return the maximum order (inclusive), either @f$n_x + n_y@f$ or @f$p + q@f$.
     int getOrder() const { return _unit.getOrder(); }
@@ -180,6 +186,9 @@ private:
  */
 class EllipticalShapeletEvaluator {
 public:
+
+    typedef boost::shared_ptr<EllipticalShapeletEvaluator> Ptr;
+    typedef boost::shared_ptr<EllipticalShapeletEvaluator const> ConstPtr;
 
     /// @brief Evaluate at the given point.
     Pixel operator()(double x, double y) const {
