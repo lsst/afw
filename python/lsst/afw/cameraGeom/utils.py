@@ -521,7 +521,8 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
 
     return ccdImage
 
-def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1):
+def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1,
+            showAmps=True):
     """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
 of the detectors"""
     
@@ -556,24 +557,25 @@ of the detectors"""
 
         return
 
-    for a in ccd:
-        displayUtils.drawBBox(a.getAllPixels(isTrimmed), origin=ccdOrigin, borderWidth=0.49,
-                              frame=frame, bin=bin)
-        
-        if not isTrimmed:
-            displayUtils.drawBBox(a.getBiasSec(), origin=ccdOrigin,
-                                  borderWidth=0.49, ctype=ds9.RED, frame=frame, bin=bin)
-            displayUtils.drawBBox(a.getDataSec(), origin=ccdOrigin,
-                                  borderWidth=0.49, ctype=ds9.BLUE, frame=frame, bin=bin)
-        # Label each Amp
-        ap = a.getAllPixels(isTrimmed)
-        xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
-        cen = afwGeom.makePointI(xc, yc)
-        if ccdOrigin:
-            xc += ccdOrigin[0]
-            yc += ccdOrigin[1]
+    if showAmps:
+        for a in ccd:
+            displayUtils.drawBBox(a.getAllPixels(isTrimmed), origin=ccdOrigin, borderWidth=0.49,
+                                  frame=frame, bin=bin)
 
-        ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc/bin, yc/bin, frame=frame)
+            if not isTrimmed:
+                displayUtils.drawBBox(a.getBiasSec(), origin=ccdOrigin,
+                                      borderWidth=0.49, ctype=ds9.RED, frame=frame, bin=bin)
+                displayUtils.drawBBox(a.getDataSec(), origin=ccdOrigin,
+                                      borderWidth=0.49, ctype=ds9.BLUE, frame=frame, bin=bin)
+            # Label each Amp
+            ap = a.getAllPixels(isTrimmed)
+            xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
+            cen = afwGeom.makePointI(xc, yc)
+            if ccdOrigin:
+                xc += ccdOrigin[0]
+                yc += ccdOrigin[1]
+
+            ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc/bin, yc/bin, frame=frame)
 
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                           borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
@@ -633,19 +635,17 @@ If imageSource isn't None, create an image using the images specified by imageSo
         origin = ccd.getCenterPixel() - \
                  afwGeom.makeExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + afwGeom.Extent2I(raftCenter)
             
-        if True:
-            name = ccd.getId().getName()
-        else:
-            name = str(ccd.getCenter())
-        ds9.dot(name, (origin[0] + 0.5*bbox.getWidth())/bin,
+        ds9.dot(ccd.getId().getName(), (origin[0] + 0.5*bbox.getWidth())/bin,
                 (origin[1] + 0.4*bbox.getHeight())/bin, frame=frame)
 
-        showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay, bin=bin)
+        showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin,
+                showAmps=False, overlay=overlay, bin=bin)
 
 def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Camera"""
 
     cameraImage = imageFactory(camera.getAllPixels().getWidth()/bin, camera.getAllPixels().getHeight()/bin)
+
     for det in camera:
         raft = cameraGeom.cast_Raft(det);
         bbox = raft.getAllPixels()
@@ -693,7 +693,7 @@ of the detectors"""
         showRaft(raft, None, frame=frame, overlay=overlay,
                  raftOrigin=center - afwGeom.makeExtentI(raft.getAllPixels().getWidth()/2,
                                                          raft.getAllPixels().getHeight()/2), bin=bin)
-
+    
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def showMosaic(fileName, geomPolicy=None, camera=None,
@@ -721,6 +721,8 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
     
     if not camera:
         camera = makeCamera(geomPolicy)
+
+    ds9.cmdBuffer.pushSize()
 
     if what == cameraGeom.Amp:
         if id is None:
@@ -774,6 +776,8 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
             print describeCamera(camera)
     else:
         raise RuntimeError, ("I don't know how to display %s" % what)
+
+    ds9.cmdBuffer.popSize()
 
     return outImage
 
