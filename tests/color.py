@@ -98,6 +98,40 @@ class CalibTestCase(unittest.TestCase):
         self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
         self.assertAlmostEqual(self.calib.getMagnitude(flux, 0)[1], 2.5/math.log(10)*flux0Err/flux0)
 
+    def testWcs(self):
+        """Test building a Calib from a Wcs"""
+        
+        isoDate = "1995-01-26T07:32:00.000000000Z" 
+        exptime = 123.4
+        flux0, flux0Err = 1e12, 1e10
+        flux, fluxErr = 1000.0, 10.0
+
+        metadata = dafBase.PropertySet()
+        metadata.add("TIME-MID", isoDate)
+        metadata.add("EXPTIME", exptime)
+        metadata.add("FLUXMAG0", flux0)
+        metadata.add("FLUXMAG0ERR", flux0Err)
+
+        self.calib = afwImage.Calib(metadata)
+
+        self.assertEqual(isoDate, self.calib.getMidTime().toString())
+        self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
+        self.assertEqual(self.calib.getExptime(), exptime)
+        
+        self.assertEqual(flux0, self.calib.getFluxMag0()[0])
+        self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
+        self.assertEqual(22.5, self.calib.getMagnitude(flux))
+        # Error just in flux
+        self.calib.setFluxMag0(flux0, 0)
+        
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1], 2.5/math.log(10)*fluxErr/flux)
+
+        #
+        # Check that we can clean up metadata
+        #
+        afwImage.stripCalibKeywords(metadata)
+        self.assertEqual(len(metadata.names()), 0)
+
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):

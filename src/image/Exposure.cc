@@ -219,38 +219,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     /*
      * Calib
      */
-    _calib = afwImage::Calib::Ptr(new afwImage::Calib);
-
-    key = "TIME-MID";
-    if (metadata->exists(key)) {
-        lsst::daf::base::DateTime const
-            time_mid(boost::algorithm::trim_right_copy(metadata->getAsString(key)));
-        
-        _calib->setMidTime(time_mid);
-        metadata->remove(key);
-    }
-
-    key = "EXPTIME";
-    if (metadata->exists(key)) {
-        _calib->setExptime(metadata->getAsDouble(key));
-        metadata->remove(key);
-    }
-
-    key = "FLUXMAG0";
-    if (metadata->exists(key)) {
-        double const fluxMag0 = metadata->getAsDouble(key);
-        metadata->remove(key);
-        
-        key = "FLUXMAG0ERR";
-        if (metadata->exists(key)) {
-            double const fluxMag0Err = metadata->getAsDouble(key);
-            metadata->remove(key);
-
-            _calib->setFluxMag0(fluxMag0, fluxMag0Err);
-        } else {
-            _calib->setFluxMag0(fluxMag0);
-        }
-    }
+    _calib = PTR(afwImage::Calib)(new afwImage::Calib(metadata));
+    afwImage::detail::stripCalibKeywords(metadata);
     
     setMetadata(metadata);
 }
