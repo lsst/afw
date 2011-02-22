@@ -46,6 +46,8 @@ namespace shapelets {
 
 typedef double Pixel;
 
+typedef geom::ellipses::Separable< geom::ellipses::Distortion, geom::ellipses::TraceRadius > EllipseCore;
+
 /**
  *  @brief An enum that sets whether to use real-valued polar shapelets or Cartesian shapelets.
  *

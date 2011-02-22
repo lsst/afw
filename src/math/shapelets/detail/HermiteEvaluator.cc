@@ -22,11 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "lsst/afw/math/shapelets/UnitShapelet.h"
-#include "lsst/afw/math/shapelets/ConversionMatrix.h"
-#include "lsst/pex/exceptions.h"
-#include "lsst/ndarray/eigen.h"
-#include <boost/format.hpp>
+#include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
 
 namespace shapelets = lsst::afw::math::shapelets;
 namespace nd = lsst::ndarray;
@@ -119,7 +115,7 @@ private:
     double _previous;
 };
 
-void fillEvaluationVector1d(nd::Array<shapelets::Pixel,1,1> const & result, double x) {
+void fillEvaluation1d(nd::Array<shapelets::Pixel,1,1> const & result, double x) {
     HermiteRecurrenceRelation r(x, NORMALIZATION * std::exp(-0.5*x*x));
     nd::Array<shapelets::Pixel,1,1>::Iterator const end = result.end();
     for (nd::Array<shapelets::Pixel,1,1>::Iterator i = result.begin(); i != end; ++i, ++r) {
@@ -127,7 +123,7 @@ void fillEvaluationVector1d(nd::Array<shapelets::Pixel,1,1> const & result, doub
     }
 }
 
-void fillIntegrationVector1d(nd::Array<shapelets::Pixel,1,1> const & result, int moment) {
+void fillIntegration1d(nd::Array<shapelets::Pixel,1,1> const & result, int moment) {
     int const order = result.getSize<0>() - 1;
     result.deep() = 0.0;
     result[0] = std::pow(4.0*M_PI, 0.25);
@@ -150,114 +146,49 @@ void fillIntegrationVector1d(nd::Array<shapelets::Pixel,1,1> const & result, int
     }
 }
 
-void weaveFill(
-    nd::Array<shapelets::Pixel,1> const & result,
-    nd::Array<shapelets::Pixel,1,1> const & x,
-    nd::Array<shapelets::Pixel,1,1> const & y
-) {
-    int const order = x.getSize<0>() - 1;
+} // anonymous    
+
+void shapelets::detail::HermiteEvaluator::weaveFill() const {
+    int const order = getOrder();
     for (PackedIndex i; i.getOrder() <= order; ++i) {
-        result[i.getIndex()] = x[i.getX()] * y[i.getY()];
+        target[i.getIndex()] = _xWorkspace[i.getX()] * _yWorkspace[i.getY()];
     }
 }
 
-double weaveInnerProduct(
-    nd::Array<shapelets::Pixel,1> const & coefficients,
-    nd::Array<shapelets::Pixel,1,1> const & x,
-    nd::Array<shapelets::Pixel,1,1> const & y
-) {
+double shapelets::detail::HermiteEvaluator::weaveSum() const {
     double r = 0.0;
-    int const order = x.getSize<0>() - 1;
+    int const order = getOrder();
     for (PackedIndex i; i.getOrder() <= order; ++i) {
-        r += coefficients[i.getIndex()] * x[i.getX()] * y[i.getY()];
+        r += target[i.getIndex()] * _xWorkspace[i.getX()] * _yWorkspace[i.getY()];
     }
     return r;
 }
 
-} // anonymous    
-
-shapelets::UnitShapeletFunction::UnitShapeletFunction(int order, BasisTypeEnum basisType) :
-    _order(order), _basisType(basisType), _coefficients(nd::allocate(computeSize(_order)))
-{
-    _coefficients.deep() = 0.0;
+void shapelets::detail::HermiteEvaluator::fillEvaluation(double x, double y) const {
+    fillEvaluation1d(_xWorkspace, x);
+    fillEvaluation1d(_yWorkspace, y);
+    weaveFill();
 }
 
-shapelets::UnitShapeletFunction::UnitShapeletFunction(
-    int order, BasisTypeEnum basisType,
-    nd::Array<shapelets::Pixel,1,1> const & coefficients
-) :
-    _order(order), _basisType(basisType), _coefficients(coefficients)
-{
-    if (computeSize(order) != _coefficients.getSize<0>()) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
-            (boost::format(
-                "Coefficient vector for UnitShapeletFunction has incorrect size (%n, should be %n)."
-            ) % _coefficients.getSize<0>() % computeSize(order)).str()
-        );
-    }
+void shapelets::detail::HermiteEvaluator::fillIntegration(int xMoment, int yMoment) const {
+    fillIntegration1d(_xWorkspace, xMoment);
+    fillIntegration1d(_yWorkspace, yMoment);
+    return weaveFill();
 }
 
-void shapelets::UnitShapeletBasis::fillEvaluationVector(
-    nd::Array<shapelets::Pixel,1> const & result,
-    double x, double y
-) const {
-    fillEvaluationVector1d(_workspaceX, x);
-    fillEvaluationVector1d(_workspaceY, y);
-    weaveFill(result, _workspaceX, _workspaceY);
-    if (_basisType == shapelets::LAGUERRE) {
-        ConversionMatrix::convertOperationVector(result, shapelets::HERMITE, shapelets::LAGUERRE, _order);
-    }
+double shapelets::detail::HermiteEvaluator::sumEvaluation(double x, double y) const {
+    fillEvaluation1d(_xWorkspace, x);
+    fillEvaluation1d(_yWorkspace, y);
+    return weaveSum();
 }
 
-void shapelets::UnitShapeletBasis::fillIntegrationVector(
-    nd::Array<Pixel,1> const & result,
-    int momentX, int momentY
-) const {
-    fillIntegrationVector1d(_workspaceX, momentY);
-    fillIntegrationVector1d(_workspaceY, momentY);
-    weaveFill(result, _workspaceX, _workspaceY);
-    if (_basisType == shapelets::LAGUERRE) {
-        ConversionMatrix::convertOperationVector(result, shapelets::HERMITE, shapelets::LAGUERRE, _order);
-    }
+double shapelets::detail::HermiteEvaluator::sumIntegration(int xMoment, int yMoment) const {
+    fillIntegration1d(_xWorkspace, xMoment);
+    fillIntegration1d(_yWorkspace, yMoment);
+    return weaveSum();
 }
 
-double shapelets::UnitShapeletEvaluator::operator()(double x, double y) const {
-    fillEvaluationVector1d(_workspaceX, x);
-    fillEvaluationVector1d(_workspaceY, y);
-    return weaveInnerProduct(_coefficients, _workspaceX, _workspaceY);
-}
-
-double shapelets::UnitShapeletEvaluator::integrate(int momentX, int momentY) const {
-    fillIntegrationVector1d(_workspaceX, momentY);
-    fillIntegrationVector1d(_workspaceY, momentY);
-    return weaveInnerProduct(_coefficients, _workspaceX, _workspaceY);
-}
-
-void shapelets::UnitShapeletEvaluator::update(shapelets::UnitShapeletFunction const & function) {
-    _coefficients = function.getCoefficients();
-    if (function.getBasisType() == shapelets::LAGUERRE) {
-        _coefficients = nd::copy(_coefficients);
-        ConversionMatrix::convertCoefficientVector(
-            _coefficients, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
-        );
-    }
-    if (function.getOrder() + 1 != _workspaceX.getSize<0>()) {
-        _workspaceX = nd::allocate(function.getOrder() + 1);
-        _workspaceY = nd::allocate(function.getOrder() + 1);
-    }
-}
-
-shapelets::UnitShapeletEvaluator::UnitShapeletEvaluator(shapelets::UnitShapeletFunction const & function) :
-    _coefficients(function.getCoefficients()),
-    _workspaceX(nd::allocate(function.getOrder() + 1)),
-    _workspaceY(nd::allocate(function.getOrder() + 1))
-{
-    if (function.getBasisType() == shapelets::LAGUERRE) {
-        _coefficients = nd::copy(_coefficients);
-        ConversionMatrix::convertCoefficientVector(
-            _coefficients, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
-        );
-    }
-}
-
+shapelets::detail::HermiteEvaluator::HermiteEvaluator(int order) :
+    _xWorkspace(ndarray::allocate(order + 1)),
+    _yWorkspace(ndarray::allocate(order + 1))
+{}

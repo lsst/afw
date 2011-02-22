@@ -31,7 +31,6 @@
  */
 #include "lsst/afw/math/shapelets/constants.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
-#include "lsst/afw/math/shapelets/UnitShapelet.h"
-#include "lsst/afw/math/shapelets/EllipticalShapelet.h"
+#include "lsst/afw/math/shapelets/ShapeletFunction.h"
 
 #endif // !defined(LSST_AFW_MATH_SHAPELETS_H)
