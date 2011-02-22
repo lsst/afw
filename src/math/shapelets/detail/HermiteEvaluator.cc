@@ -148,14 +148,14 @@ void fillIntegration1d(nd::Array<shapelets::Pixel,1,1> const & result, int momen
 
 } // anonymous    
 
-void shapelets::detail::HermiteEvaluator::weaveFill() const {
+void shapelets::detail::HermiteEvaluator::weaveFill(ndarray::Array<Pixel,1> const & target) const {
     int const order = getOrder();
     for (PackedIndex i; i.getOrder() <= order; ++i) {
         target[i.getIndex()] = _xWorkspace[i.getX()] * _yWorkspace[i.getY()];
     }
 }
 
-double shapelets::detail::HermiteEvaluator::weaveSum() const {
+double shapelets::detail::HermiteEvaluator::weaveSum(ndarray::Array<Pixel const,1> const & target) const {
     double r = 0.0;
     int const order = getOrder();
     for (PackedIndex i; i.getOrder() <= order; ++i) {
@@ -164,28 +164,36 @@ double shapelets::detail::HermiteEvaluator::weaveSum() const {
     return r;
 }
 
-void shapelets::detail::HermiteEvaluator::fillEvaluation(double x, double y) const {
+void shapelets::detail::HermiteEvaluator::fillEvaluation(
+    ndarray::Array<Pixel,1> const & target, double x, double y
+) const {
     fillEvaluation1d(_xWorkspace, x);
     fillEvaluation1d(_yWorkspace, y);
-    weaveFill();
+    weaveFill(target);
 }
 
-void shapelets::detail::HermiteEvaluator::fillIntegration(int xMoment, int yMoment) const {
+void shapelets::detail::HermiteEvaluator::fillIntegration(
+    ndarray::Array<Pixel,1> const & target, int xMoment, int yMoment
+) const {
     fillIntegration1d(_xWorkspace, xMoment);
     fillIntegration1d(_yWorkspace, yMoment);
-    return weaveFill();
+    return weaveFill(target);
 }
 
-double shapelets::detail::HermiteEvaluator::sumEvaluation(double x, double y) const {
+double shapelets::detail::HermiteEvaluator::sumEvaluation(
+    ndarray::Array<Pixel const,1> const & target, double x, double y
+) const {
     fillEvaluation1d(_xWorkspace, x);
     fillEvaluation1d(_yWorkspace, y);
-    return weaveSum();
+    return weaveSum(target);
 }
 
-double shapelets::detail::HermiteEvaluator::sumIntegration(int xMoment, int yMoment) const {
+double shapelets::detail::HermiteEvaluator::sumIntegration(
+    ndarray::Array<Pixel const,1> const & target, int xMoment, int yMoment
+) const {
     fillIntegration1d(_xWorkspace, xMoment);
     fillIntegration1d(_yWorkspace, yMoment);
-    return weaveSum();
+    return weaveSum(target);
 }
 
 shapelets::detail::HermiteEvaluator::HermiteEvaluator(int order) :

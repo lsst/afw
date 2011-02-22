@@ -24,6 +24,7 @@
 
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
+#include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/ndarray/eigen.h"
 #include <boost/format.hpp>
@@ -92,6 +93,13 @@ shapelets::ShapeletFunction::ShapeletFunction(
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
 
+shapelets::ShapeletFunction::ShapeletFunction(ShapeletFunction const & other, bool deep) :
+    _order(other._order), _basisType(other._basisType), _ellipse(other._ellipse),
+    _coefficients(other._coefficients)
+{
+    if (deep) _coefficients = ndarray::copy(_coefficients);
+}
+
 void shapelets::ShapeletFunctionEvaluator::update(shapelets::ShapeletFunction const & function) {
     validateSize(_h.getOrder(), function.getOrder());
     _transform = function.getEllipse().getGridTransform();
@@ -107,14 +115,25 @@ shapelets::ShapeletFunctionEvaluator::ShapeletFunctionEvaluator(
 void shapelets::ShapeletFunctionEvaluator::_initialize(shapelets::ShapeletFunction const & function) {
     switch (function.getBasisType()) {
     case HERMITE:
-        _h.target = function.getCoefficients();
+        _coefficients = function.getCoefficients();
         break;
     case LAGUERRE:
-        _h.target = nd::copy(function.getCoefficients());
+        _coefficients = nd::copy(function.getCoefficients());
         ConversionMatrix::convertCoefficientVector(
-            _h.target, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
+            _coefficients, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
         );
         break;
     }
 }
 
+void shapelets::ShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
+    detail::HermiteConvolution convolution(other.getOrder(), *this);
+    ndarray::EigenView<Pixel const,2,2> matrix(convolution.evaluate(_ellipse));
+    if (_basisType == LAGUERRE) {
+        ConversionMatrix::convertCoefficientVector(_coefficients, LAGUERRE, HERMITE, getOrder());
+    }
+    ndarray::viewAsEigen(_coefficients) = matrix * ndarray::viewAsEigen(_coefficients);
+    if (_basisType == LAGUERRE) {
+        ConversionMatrix::convertCoefficientVector(_coefficients, HERMITE, LAGUERRE, getOrder());
+    }
+}

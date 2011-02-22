@@ -149,17 +149,17 @@ public:
 
     /// @brief Evaluate at the given point.
     Pixel operator()(geom::Point2D const & point) const {
-        return _h.sumEvaluation(_transform(point));
+        return _h.sumEvaluation(_coefficients, _transform(point));
     }
 
     /// @brief Evaluate at the given point.
     Pixel operator()(geom::Extent2D const & point) const {
-        return _h.sumEvaluation(_transform(point));
+        return _h.sumEvaluation(_coefficients, _transform(point));
     }
 
     /// @brief Compute the definite integral or integral moments.
     Pixel integrate() const {
-        return _h.sumIntegration() / std::sqrt(_transform.computeDeterminant());
+        return _h.sumIntegration(_coefficients) / std::sqrt(_transform.computeDeterminant());
     }
 
     /// @brief Update the evaluator from the given function.
@@ -171,8 +171,9 @@ public:
 private:
     
     void _initialize(ShapeletFunction const & function);
+    ndarray::Array<Pixel,1,1> _coefficients;
     geom::LinearTransform _transform;
-    mutable detail::HermiteEvaluator _h;
+    detail::HermiteEvaluator _h;
 };
 
 inline ShapeletFunctionEvaluator ShapeletFunction::evaluate() const {

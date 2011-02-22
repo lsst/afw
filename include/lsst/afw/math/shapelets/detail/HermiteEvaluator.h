@@ -70,62 +70,60 @@ public:
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector evaluates a
      *         simple unscaled shapelet expansion at the given point.
      */
-    void fillEvaluation(double x, double y) const;
+    void fillEvaluation(ndarray::Array<Pixel,1> const & target, double x, double y) const;
 
     /**
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector evaluates a
      *         simple unscaled shapelet expansion at the given point.
      */
-    void fillEvaluation(geom::Point2D const & point) const {
-        fillEvaluation(point.getX(), point.getY());
+    void fillEvaluation(ndarray::Array<Pixel,1> const & target, geom::Point2D const & point) const {
+        fillEvaluation(target, point.getX(), point.getY());
     }
 
     /**
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector evaluates a
      *         simple unscaled shapelet expansion at the given point.
      */
-    void fillEvaluation(geom::Extent2D const & point) const {
-        fillEvaluation(point.getX(), point.getY());
+    void fillEvaluation(ndarray::Array<Pixel,1> const & target, geom::Extent2D const & point) const {
+        fillEvaluation(target, point.getX(), point.getY());
     }
 
     /**
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector integrates
      *         a simple unscaled shapelet expansion.
      */
-    void fillIntegration(int xMoment=0, int yMoment=0) const;
+    void fillIntegration(ndarray::Array<Pixel,1> const & target, int xMoment=0, int yMoment=0) const;
 
     /**
      *  @brief Evaluate a simple unscaled shapelet expansion at the given point.
      */
-    double sumEvaluation(double x, double y) const;
+    double sumEvaluation(ndarray::Array<Pixel const,1> const & target, double x, double y) const;
 
     /**
      *  @brief Evaluate a simple unscaled shapelet expansion at the given point.
      */
-    double sumEvaluation(geom::Point2D const & point) const {
-        return sumEvaluation(point.getX(), point.getY());
+    double sumEvaluation(ndarray::Array<Pixel const,1> const & target, geom::Point2D const & point) const {
+        return sumEvaluation(target, point.getX(), point.getY());
     }
 
     /**
      *  @brief Evaluate a simple unscaled shapelet expansion at the given point.
      */
-    double sumEvaluation(geom::Extent2D const & point) const {
-        return sumEvaluation(point.getX(), point.getY());
+    double sumEvaluation(ndarray::Array<Pixel const,1> const & target, geom::Extent2D const & point) const {
+        return sumEvaluation(target, point.getX(), point.getY());
     }
 
     /**
      *  @brief Integrate a simple unscale shapelet expansion at the given point.
      */
-    double sumIntegration(int xMoment=0, int yMoment=0) const;
+    double sumIntegration(ndarray::Array<Pixel const,1> const & target, int xMoment=0, int yMoment=0) const;
 
-    ndarray::Array<Pixel,1> target;
-
-    HermiteEvaluator(int order);
+    explicit HermiteEvaluator(int order);
 
 private:
 
-    double weaveSum() const;
-    void weaveFill() const;
+    double weaveSum(ndarray::Array<Pixel const,1> const & target) const;
+    void weaveFill(ndarray::Array<Pixel,1> const & target) const;
 
     ndarray::Array<Pixel,1,1> _xWorkspace;
     ndarray::Array<Pixel,1,1> _yWorkspace;
