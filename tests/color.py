@@ -98,8 +98,8 @@ class CalibTestCase(unittest.TestCase):
         self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
         self.assertAlmostEqual(self.calib.getMagnitude(flux, 0)[1], 2.5/math.log(10)*flux0Err/flux0)
 
-    def testWcs(self):
-        """Test building a Calib from a Wcs"""
+    def testCtorFromMetadata(self):
+        """Test building a Calib from metadata"""
         
         isoDate = "1995-01-26T07:32:00.000000000Z" 
         exptime = 123.4
@@ -135,7 +135,11 @@ class CalibTestCase(unittest.TestCase):
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):
-        pass
+        # Initialise our filters
+        filterPolicy = pexPolicy.Policy.createPolicy(
+            os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
+
+        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
 
     def tearDown(self):
         pass
@@ -145,7 +149,7 @@ class ColorTestCase(unittest.TestCase):
         c = afwImage.Color(1.2)
 
     def testLambdaEff(self):
-        f = afwImage.Filter(afwImage.Filter.G)
+        f = afwImage.Filter("g")
         g_r = 1.2
         c = afwImage.Color(g_r)
 
@@ -186,6 +190,29 @@ class FilterTestCase(unittest.TestCase):
         """Test that we can construct a Filter"""
         # A filter of type 
         f = afwImage.Filter("g")
+
+    def testCtorFromMetadata(self):
+        """Test building a Filter from metadata"""
+        
+        metadata = dafBase.PropertySet()
+        metadata.add("FILTER", "g")
+
+        f = afwImage.Filter(metadata)
+        self.assertEqual(f.getName(), "g")
+        #
+        # Check that we can clean up metadata
+        #
+        afwImage.stripFilterKeywords(metadata)
+        self.assertEqual(len(metadata.names()), 0)
+
+        badFilter = "rhl"               # an undefined filter
+        metadata.add("FILTER", badFilter)
+        # Not defined
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+                                  lambda : afwImage.Filter(metadata))
+        # Force definition
+        f = afwImage.Filter(metadata, True)
+        self.assertEqual(f.getName(), badFilter) # name is correctly defined
 
     def testFilterProperty(self):
         # a "g" filter
@@ -267,7 +294,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(CalibTestCase)
-    if False:
+    if not False:
         suites += unittest.makeSuite(ColorTestCase)
     else:
         print >> sys.stderr, "Skipping Color tests (wait until #1196 is merged)"
