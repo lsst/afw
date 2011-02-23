@@ -82,15 +82,15 @@ public:
     // Find a Detector given an Id or pixel position
     //
     Detector::Ptr findDetector(Id const id) const;
-    Detector::Ptr findDetector(afwGeom::Point2I const& pixel, bool const fromCenter=false) const;
-    Detector::Ptr findDetector(afwGeom::Point2D const& posMm) const;
+    Detector::Ptr findDetectorPixel(afwGeom::Point2D const& pixel, bool const fromCenter=false) const;
+    Detector::Ptr findDetectorMm(afwGeom::Point2D const& posMm) const;
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D const& pos) const;
-    virtual afwGeom::Point2I getPixelFromPosition(afwGeom::Point2D const& pos) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix, bool const) const {
+    virtual afwGeom::Point2D getIndexFromPosition(afwGeom::Point2D const& pos) const;
+    virtual afwGeom::Point2D getPixelFromPosition(afwGeom::Point2D const& pos) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2D const& pix) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2D const& pix, bool const) const {
         return getPositionFromIndex(pix);
     }
 private:

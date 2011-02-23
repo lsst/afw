@@ -63,7 +63,8 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
     _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
     amp->setParent(getThisPtr());
 
-    setCenterPixel(afwGeom::makePointI(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
+    setCenterPixel(afwGeom::makePointD(0.5*(getAllPixels(true).getWidth() - 1),
+                                       0.5*(getAllPixels(true).getHeight() - 1)));
 }
 
 /**
@@ -71,7 +72,7 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
-        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt centre of Ccd
+        afwGeom::Point2D const& pix     ///< Pixel coordinates wrt centre of Ccd
                                      ) const
 {
     return getPositionFromIndex(pix, isTrimmed());
@@ -82,7 +83,7 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
-        afwGeom::Point2I const& pix,    ///< Pixel coordinates wrt Ccd's centre
+        afwGeom::Point2D const& pix,    ///< Pixel coordinates wrt Ccd's centre
         bool const isTrimmed            ///< Is this detector trimmed?
                                                       ) const
 {
@@ -92,11 +93,11 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
 
     double pixelSize = getPixelSize();
 
-    afwGeom::Point2I const& centerPixel = getCenterPixel();
+    afwGeom::Point2D const& centerPixel = getCenterPixel();
     cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::makePointI(pix[0] + centerPixel[0],
                                                                 pix[1] + centerPixel[1]));
     afwImage::PointI const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
-    afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::makePointI(off[0], off[1]));
+    afwGeom::Point2D const offsetPix = pix - afwGeom::Extent2D(afwGeom::makePointD(off[0], off[1]));
 
     return afwGeom::makePointD(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
 }    
@@ -196,16 +197,19 @@ void cameraGeom::Ccd::setOrientation(
         cameraGeom::Orientation const& orientation // the detector's new Orientation
                                     )
 {
+#if 0    
     int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
-
+#endif
     afwGeom::Extent2I const dimensions =
         afwGeom::makeExtentI(getAllPixels(false).getWidth(), getAllPixels(false).getHeight());
 
 
     cameraGeom::Detector::setOrientation(orientation);
 
+#if 0    
     std::for_each(_amps.begin(), _amps.end(),
                   boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
+#endif
 }
 
 /************************************************************************************************************/
