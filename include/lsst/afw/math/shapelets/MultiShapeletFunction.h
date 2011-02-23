@@ -36,7 +36,7 @@
  */
 
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
-#include <vector>
+#include <list>
 
 namespace lsst {
 namespace afw {
@@ -56,11 +56,11 @@ public:
 
     typedef ShapeletFunction Element;
 
-    typedef std::vector<Element> ElementVector;
+    typedef std::list<Element> ElementList;
 
-    ElementVector & getElements() { return _elements; }
+    ElementList & getElements() { return _elements; }
 
-    ElementVector const & getElements() const { return _elements; }
+    ElementList const & getElements() const { return _elements; }
 
     /// @brief Convolve the multi-scale shapelet function in-place.
     void convolve(ShapeletFunction const & other);
@@ -71,10 +71,10 @@ public:
     /// @brief Construct a helper object that can efficiently evaluate the function.
     MultiShapeletFunctionEvaluator evaluate() const;
 
-    explicit MultiShapeletFunction(ElementVector const & elements) : _elements(elements) {}
+    explicit MultiShapeletFunction(ElementList const & elements) : _elements(elements) {}
 
 private:
-    ElementVector _elements;
+    ElementList _elements;
 };
 
 /**
@@ -111,8 +111,8 @@ public:
 
 private:
     typedef ShapeletFunctionEvaluator Element;
-    typedef std::vector<Element> ElementVector;
-    ElementVector _elements;
+    typedef std::list<Element> ElementList;
+    ElementList _elements;
 };
 
 inline MultiShapeletFunctionEvaluator MultiShapeletFunction::evaluate() const {

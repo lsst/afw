@@ -84,8 +84,11 @@ public:
         _basisType = basisType;
     }
 
-    /// @brief Return the coefficient vector (always mutable; sharing destroys const-protection).
-    lsst::ndarray::Array<Pixel,1,1> const getCoefficients() const { return _coefficients; }
+    /// @brief Return the coefficient vector.
+    lsst::ndarray::Array<Pixel,1,1> const getCoefficients() { return _coefficients; }
+
+    /// @brief Return the coefficient vector (const).
+    lsst::ndarray::Array<Pixel const,1,1> const getCoefficients() const { return _coefficients; }
 
     /// @brief Convolve the shapelet function in-place.
     void convolve(ShapeletFunction const & other);
@@ -96,7 +99,7 @@ public:
     /// @brief Construct a function with a unit-circle ellipse and set all coefficients to zero.
     ShapeletFunction(int order, BasisTypeEnum basisType);
 
-    /// @brief Construct a function with a unit-circle ellipse and a shallow-copied coefficient vector.
+    /// @brief Construct a function with a unit-circle ellipse and a deep-copied coefficient vector.
     ShapeletFunction(
         int order, BasisTypeEnum basisType,
         lsst::ndarray::Array<Pixel,1,1> const & coefficients
@@ -105,7 +108,7 @@ public:
     /// @brief Construct a function with a circular ellipse and set all coefficients to zero.
     ShapeletFunction(int order, BasisTypeEnum basisType, double radius);
 
-    /// @brief Construct a function with a circular ellipse and a shallow-copied coefficient vector.
+    /// @brief Construct a function with a circular ellipse and a deep-copied coefficient vector.
     ShapeletFunction(
         int order, BasisTypeEnum basisType, double radius,
         lsst::ndarray::Array<Pixel,1,1> const & coefficients
@@ -114,20 +117,23 @@ public:
     /// @brief Construct a function and set all coefficients to zero.
     ShapeletFunction(int order, BasisTypeEnum basisType, EllipseCore const & ellipse);
 
-    /// @brief Construct a function with a shallow-copied coefficient vector.
+    /// @brief Construct a function with a deep-copied coefficient vector.
     ShapeletFunction(
         int order, BasisTypeEnum basisType, EllipseCore const & ellipse,
         lsst::ndarray::Array<Pixel,1,1> const & coefficients
     );
 
-    /// @brief Copy constructor.
-    ShapeletFunction(ShapeletFunction const & other, bool deep = false);
+    /// @brief Copy constructor (deep).
+    ShapeletFunction(ShapeletFunction const & other);
+
+    /// @brief Assignment (deep).
+    ShapeletFunction & operator=(ShapeletFunction const & other);
 
 private:
     int _order;
     BasisTypeEnum _basisType;
     EllipseCore _ellipse;
-    lsst::ndarray::Array<Pixel,1,1> _coefficients;
+    ndarray::Array<Pixel,1,1> _coefficients;
 };
 
 /**
@@ -171,7 +177,7 @@ public:
 private:
     
     void _initialize(ShapeletFunction const & function);
-    ndarray::Array<Pixel,1,1> _coefficients;
+    ndarray::Array<Pixel const,1,1> _coefficients;
     geom::LinearTransform _transform;
     detail::HermiteEvaluator _h;
 };

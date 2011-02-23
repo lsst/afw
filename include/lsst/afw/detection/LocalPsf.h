@@ -21,15 +21,15 @@ public:
     typedef boost::shared_ptr<LocalPsf const> ConstPtr;
 
     typedef lsst::afw::math::shapelets::ShapeletFunction Shapelet;
-    typedef std::list<Shapelet> MultiShapelet;
+    typedef lsst::afw::math::shapelets::MultiShapeletFunction MultiShapelet;
 
     typedef Psf::Pixel Pixel;
     typedef Psf::Image Image;
 
     virtual CONST_PTR(Image) asImage(geom::Extent2I const & size, bool normalize=true) const =0 ;
     virtual CONST_PTR(geom::ellipses::BaseCore) asGaussian() const = 0;
-    virtual Shapelet asShapelet(math::shapelets::BasisTypeEnum basisType) const = 0;
-    virtual MultiShapelet asMultiShapelet(math::shapelets::BasisTypeEnum basisType) const = 0;
+    virtual CONST_PTR(Shapelet) asShapelet(math::shapelets::BasisTypeEnum basisType) const = 0;
+    virtual CONST_PTR(MultiShapelet) asMultiShapelet(math::shapelets::BasisTypeEnum basisType) const = 0;
     
     virtual void evaluatePointSource(
         Footprint const & fp, 

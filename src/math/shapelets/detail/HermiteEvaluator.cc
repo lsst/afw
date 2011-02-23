@@ -146,6 +146,42 @@ void fillIntegration1d(nd::Array<shapelets::Pixel,1,1> const & result, int momen
     }
 }
 
+Eigen::MatrixXd computeInnerProductMatrix1d(int rowOrder, int colOrder, double a, double b) {
+    Eigen::MatrixXd result = Eigen::MatrixXd::Zero(rowOrder + 1, colOrder + 1);
+    double v = 1.0 / (a*a + b*b);
+    double f1 = 2.0 * a * b * v;
+    double f2 = (a*a - b*b) * v;
+    result(0, 0) = std::sqrt(2.0 * v);
+    for (int j = 2; j <= rowOrder; j += 2) {
+        result(j, 0) = f2 * std::sqrt(double(j-1) / j) * result(j-2, 0);
+    }
+    for (int k = 2; k <= colOrder; k += 2) {
+        result(0, k) = -f2 * std::sqrt(double(k-1) / k) * result(0, k-2);
+    }
+    if (rowOrder > 0 && colOrder > 0) result(1, 1) = f1 * result(0,0);
+    if (colOrder > 0) {
+        for (int j = 3; j <= rowOrder; j += 2) {
+            result(j, 1) = f1 * std::sqrt(j) * result(j-1, 0);
+        }
+    }
+    if (rowOrder > 0) {
+        for (int k = 3; k <= colOrder; k += 2) {
+            result(1, k) = f1 * std::sqrt(k) * result(0, k-1);
+        }
+    }
+    for (int j = 2; j <= rowOrder; ++j) {
+        double q2 = std::sqrt(double(j-1)/j);
+        if (j <= colOrder) {
+            result(j, j) = f1 * result(j-1, j-1) + f2 * q2 * result(j-2, j);
+        }
+        for (int k = (j%2) + 2; k <= colOrder; k += 2) {
+            double q1 = std::sqrt(double(k) / j);
+            result(j, k) = f1 * q1 * result(j-1, k-1) + f2 * q2 * result(j-2, k);
+        }
+    }
+    return result;
+}
+
 } // anonymous    
 
 void shapelets::detail::HermiteEvaluator::weaveFill(ndarray::Array<Pixel,1> const & target) const {
@@ -200,3 +236,16 @@ shapelets::detail::HermiteEvaluator::HermiteEvaluator(int order) :
     _xWorkspace(ndarray::allocate(order + 1)),
     _yWorkspace(ndarray::allocate(order + 1))
 {}
+
+Eigen::MatrixXd shapelets::detail::HermiteEvaluator::computeInnerProductMatrix(
+    int rowOrder, int colOrder, double a, double b
+) {
+    Eigen::MatrixXd result = Eigen::MatrixXd::Zero(computeSize(rowOrder), computeSize(colOrder));
+    Eigen::MatrixXd m = computeInnerProductMatrix1d(rowOrder, colOrder, a, b);
+    for (PackedIndex i; i.getOrder() <= rowOrder; ++i) {
+        for (PackedIndex j; j.getOrder() <= colOrder; ++j) {
+            result(i.getIndex(), j.getIndex()) = m(i.getX(), j.getX()) * m(i.getY(), j.getY());
+        }
+    }
+    return result;
+}

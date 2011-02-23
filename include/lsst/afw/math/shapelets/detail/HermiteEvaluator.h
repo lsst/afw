@@ -60,7 +60,7 @@ public:
      *      \int d^2 \mathbf{x} \psi_\mathbf{i}(a\mathbf{x})\phi_\mathbf{j}(b\mathbf{x})
      *  @f$
      */
-    static Eigen::MatrixXd computeHermiteInnerProductMatrix(
+    static Eigen::MatrixXd computeInnerProductMatrix(
         int rowOrder, int colOrder, double a, double b
     );
 

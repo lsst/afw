@@ -54,7 +54,8 @@ shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType,
     nd::Array<shapelets::Pixel,1,1> const & coefficients
 ) :
-    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, 1.0), _coefficients(coefficients)
+    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, 1.0),
+    _coefficients(nd::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
@@ -70,7 +71,8 @@ shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, double radius,
     nd::Array<shapelets::Pixel,1,1> const & coefficients
 ) :
-    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, radius), _coefficients(coefficients)
+    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, radius),
+    _coefficients(nd::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
@@ -88,19 +90,32 @@ shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, EllipseCore const & ellipse,
     nd::Array<shapelets::Pixel,1,1> const & coefficients
 ) :
-    _order(order), _basisType(basisType), _ellipse(ellipse), _coefficients(coefficients)
+    _order(order), _basisType(basisType), _ellipse(ellipse),
+    _coefficients(nd::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
 
-shapelets::ShapeletFunction::ShapeletFunction(ShapeletFunction const & other, bool deep) :
+shapelets::ShapeletFunction::ShapeletFunction(ShapeletFunction const & other) :
     _order(other._order), _basisType(other._basisType), _ellipse(other._ellipse),
-    _coefficients(other._coefficients)
-{
-    if (deep) _coefficients = ndarray::copy(_coefficients);
+    _coefficients(nd::copy(other._coefficients))
+{}
+
+shapelets::ShapeletFunction & shapelets::ShapeletFunction::operator=(ShapeletFunction const & other) {
+    if (&other != this) {
+        if (other.getOrder() != this->getOrder()) {
+            _order = other.getOrder();
+            _coefficients = ndarray::copy(other.getCoefficients());
+        } else {
+            _coefficients.deep() = other.getCoefficients();
+        }
+        _basisType = other.getBasisType();
+        _ellipse = other.getEllipse();
+    }
+    return *this;
 }
 
-void shapelets::ShapeletFunctionEvaluator::update(shapelets::ShapeletFunction const & function) {
+void shapelets::ShapeletFunctionEvaluator::update(ShapeletFunction const & function) {
     validateSize(_h.getOrder(), function.getOrder());
     _transform = function.getEllipse().getGridTransform();
     _initialize(function);
@@ -112,16 +127,17 @@ shapelets::ShapeletFunctionEvaluator::ShapeletFunctionEvaluator(
     _initialize(function);
 }
 
-void shapelets::ShapeletFunctionEvaluator::_initialize(shapelets::ShapeletFunction const & function) {
+void shapelets::ShapeletFunctionEvaluator::_initialize(ShapeletFunction const & function) {
     switch (function.getBasisType()) {
     case HERMITE:
         _coefficients = function.getCoefficients();
         break;
     case LAGUERRE:
-        _coefficients = nd::copy(function.getCoefficients());
+        nd::Array<Pixel,1,1> tmp(nd::copy(function.getCoefficients()));
         ConversionMatrix::convertCoefficientVector(
-            _coefficients, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
+            tmp, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
         );
+        _coefficients = tmp;
         break;
     }
 }

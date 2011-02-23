@@ -32,19 +32,18 @@ namespace shapelets = lsst::afw::math::shapelets;
 namespace nd = lsst::ndarray;
 
 void shapelets::MultiShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
-    for (ElementVector::iterator i = _elements.begin(); i != _elements.end(); ++i) {
+    for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
         i->convolve(other);
     }
 }
 
 void shapelets::MultiShapeletFunction::convolve(shapelets::MultiShapeletFunction const & other) {
-    ElementVector newElements;
-    newElements.reserve(_elements.size() * other.getElements().size());
-    for (ElementVector::const_iterator j = other.getElements().begin(); j != other.getElements().end(); ++j) {
-        for (ElementVector::iterator i = _elements.begin(); i != _elements.end(); ++i) {
-            Element newElement(*i, true);
-            newElement.convolve(*j);
-            newElements.push_back(newElement);
+    ElementList newElements;
+    for (ElementList::const_iterator j = other.getElements().begin(); j != other.getElements().end(); ++j) {
+        for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
+            newElements.push_back(*i);
+            newElements.back().convolve(*j);
+            
         }
     }
     newElements.swap(_elements);
@@ -52,9 +51,8 @@ void shapelets::MultiShapeletFunction::convolve(shapelets::MultiShapeletFunction
 
 void shapelets::MultiShapeletFunctionEvaluator::update(shapelets::MultiShapeletFunction const & function) {
     _elements.clear();
-    _elements.reserve(function.getElements().size());
     for (
-        MultiShapeletFunction::ElementVector::const_iterator i = function.getElements().begin(); 
+        MultiShapeletFunction::ElementList::const_iterator i = function.getElements().begin(); 
         i != function.getElements().end();
         ++i
     ) {
@@ -64,7 +62,7 @@ void shapelets::MultiShapeletFunctionEvaluator::update(shapelets::MultiShapeletF
 
 shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Point2D const & point) const {
     Pixel r = 0.0;
-    for (ElementVector::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
+    for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
         r += (*i)(point);
     }
     return r;
@@ -72,7 +70,7 @@ shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Poi
 
 shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Extent2D const & point) const {
     Pixel r = 0.0;
-    for (ElementVector::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
+    for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
         r += (*i)(point);
     }
     return r;
@@ -81,7 +79,7 @@ shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Ext
 
 shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::integrate() const {
     Pixel r = 0.0;
-    for (ElementVector::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
+    for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
         r += i->integrate();
     }
     return r;
