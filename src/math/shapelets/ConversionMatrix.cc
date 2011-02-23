@@ -93,7 +93,8 @@ public:
             int const q = (n - m) / 2;
             double const p_factorial = boost::math::unchecked_factorial<double>(p);
             double const q_factorial = boost::math::unchecked_factorial<double>(q);
-            std::complex<double> const v1 = std::pow(std::complex<double>(0.0, -1.0), m) * std::pow(2.0, -0.5 * n)
+            std::complex<double> const v1 = std::pow(std::complex<double>(0.0, -1.0), m) 
+                * std::pow(2.0, -0.5 * n)
                 / std::sqrt(p_factorial * q_factorial);
             for (int x = 0, y = n; x <= n; ++x, --y) {
                 double const x_factorial = boost::math::unchecked_factorial<double>(x);
@@ -112,24 +113,6 @@ public:
             }
         }
 
-#if 0
-        for (int x = 0, y = n; x <= n; ++x, --y) {
-            Pixel v_xy = std::sqrt(boost::math::factorial<Pixel>(x) * boost::math::factorial<Pixel>(y));
-            for (int p = n, q = 0; q <= n; --p, ++q) {
-                std::complex<Pixel> v_rs(0.0, 0.0);
-                for (int r = 0; r <= p; ++r) {
-                    for (int s = 0; s <= q; ++s) {
-                        if (r + s == x) {
-                            v_rs += iPow(r - s) * boost::math::binomial_coefficient<Pixel>(p, r) 
-                                * boost::math::binomial_coefficient<Pixel>(q, s);
-                        }
-                    }
-                }
-                c(q, x) = v_xy * v_rs * iPow(p - q) * std::pow(2.0, -0.5 * (p + q)) 
-                    / std::sqrt(boost::math::factorial<Pixel>(p) * boost::math::factorial<Pixel>(q));
-            }
-        }
-#endif
         Eigen::MatrixXd b = Eigen::MatrixXd::Zero(n + 1, n + 1);
         for (int x = 0, y = n; x <= n; ++x, --y) {
             for (int p = n, q = 0; q <= p; --p, ++q) {
@@ -144,23 +127,6 @@ public:
 
     static Eigen::MatrixXd makeBlockL2H(int n, Eigen::MatrixXd const & h2l) {
         Eigen::MatrixXd l2h = h2l.inverse();
-#if 0
-        Eigen::MatrixXcd h2l_c = Eigen::MatrixXcd::Zero(n + 1, n + 1);
-        for (int x = 0, y = n; x <= n; ++x, --y) {
-            for (int p = n, q = 0; q <= p; --p, ++q) {
-                h2l_c(q, x) = std::complex<Pixel>(h2l(2 * q, x), h2l(2 * q + 1, x));
-                h2l_c(p, x) = std::complex<Pixel>(h2l(2 * q, x), -h2l(2 * q + 1, x));
-            }
-        }
-        Eigen::MatrixXcd l2h_c = h2l_c.inverse();
-        Eigen::MatrixXd l2h = Eigen::MatrixXd::Zero(n + 1, n + 1);
-        for (int x = 0, y = n; x <= n; ++x, --y) {
-            for (int p = n, q = 0; q <= p; --p, ++q) {
-                l2h(x, 2 * q) = l2h_c(x, q).real();
-                l2h(x, 2 * q + 1) = l2h_c(x, q).imag();
-            }
-        }
-#endif
         return l2h;
     }
 

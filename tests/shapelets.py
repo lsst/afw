@@ -52,16 +52,12 @@ class ShapeletsTestCase(unittest.TestCase):
         self.x = numpy.random.randn(25)
         self.y = numpy.random.randn(25)
         self.bases = [
-            shapelets.UnitShapeletBasis(order, shapelets.HERMITE),
-            shapelets.UnitShapeletBasis(order, shapelets.LAGUERRE),
-            shapelets.EllipticalShapeletBasis(order, shapelets.HERMITE, self.ellipse),
-            shapelets.EllipticalShapeletBasis(order, shapelets.LAGUERRE, self.ellipse),
+            shapelets.BasisEvaluator(order, shapelets.HERMITE),
+            shapelets.BasisEvaluator(order, shapelets.LAGUERRE),
             ]
         self.functions = [
-            shapelets.UnitShapeletFunction(order, shapelets.HERMITE, self.coefficients),
-            shapelets.UnitShapeletFunction(order, shapelets.LAGUERRE, self.coefficients),
-            shapelets.EllipticalShapeletFunction(order, shapelets.HERMITE, self.ellipse, self.coefficients),
-            shapelets.EllipticalShapeletFunction(order, shapelets.LAGUERRE, self.ellipse, self.coefficients),
+            shapelets.ShapeletFunction(order, shapelets.HERMITE, self.coefficients),
+            shapelets.ShapeletFunction(order, shapelets.LAGUERRE, self.coefficients),
             ]
 
     def testEvaluation(self):
@@ -69,7 +65,7 @@ class ShapeletsTestCase(unittest.TestCase):
             evaluator = function.evaluate()
             v = numpy.zeros(self.coefficients.shape, dtype=float)
             for x, y in zip(self.x, self.y):
-                basis.fillEvaluationVector(v, x, y)
+                basis.fillEvaluation(v, x, y)
                 p1 = evaluator(x, y)
                 p2 = numpy.dot(v, self.coefficients)
                 self.assertClose(p1, p2)
@@ -78,7 +74,7 @@ class ShapeletsTestCase(unittest.TestCase):
         for basis, function in zip(self.bases, self.functions):
             evaluator = function.evaluate()
             v = numpy.zeros(self.coefficients.shape, dtype=float)
-            basis.fillIntegrationVector(v)
+            basis.fillIntegration(v)
             p1 = evaluator.integrate()
             p2 = numpy.dot(v, self.coefficients)
             self.assertClose(p1, p2)

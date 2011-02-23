@@ -9,7 +9,7 @@ def makeBasisImages(basis, x, y):
     z = numpy.zeros((y.size, x.size, shapelets.computeSize(basis.getOrder())), dtype=float)
     for i, py in enumerate(y):
         for j, px in enumerate(x):
-            basis.fillEvaluationVector(z[i,j,:], float(px), float(py))
+            basis.fillEvaluation(z[i,j,:], float(px), float(py))
     return z
 
 def plotBasisImages(basis, x, y):
@@ -35,14 +35,10 @@ def main():
     x = numpy.linspace(-5, 5, 101)
     y = numpy.linspace(-5, 5, 101)
     ellipse = ellipses.Quadrupole(ellipses.Axes(1.2, 0.8, 0.3))
-    unitHermiteBasis = shapelets.UnitShapeletBasis(4, shapelets.HERMITE)
-    unitLaguerreBasis = shapelets.UnitShapeletBasis(4, shapelets.LAGUERRE)
-    ellipticalHermiteBasis = shapelets.EllipticalShapeletBasis(4, shapelets.HERMITE, ellipse)
-    ellipticalLaguerreBasis = shapelets.EllipticalShapeletBasis(4, shapelets.LAGUERRE, ellipse)
-    plotBasisImages(unitHermiteBasis, x, y)
-    plotBasisImages(unitLaguerreBasis, x, y)
-    plotBasisImages(ellipticalHermiteBasis, x, y)
-    plotBasisImages(ellipticalLaguerreBasis, x, y)
+    hermiteBasis = shapelets.BasisEvaluator(4, shapelets.HERMITE)
+    laguerreBasis = shapelets.BasisEvaluator(4, shapelets.LAGUERRE)
+    plotBasisImages(hermiteBasis, x, y)
+    plotBasisImages(laguerreBasis, x, y)
     pyplot.show()
 
 if __name__ == "__main__":
