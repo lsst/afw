@@ -36,6 +36,8 @@ namespace lsst { namespace afw { namespace detection {
 using boost::serialization::make_nvp;
 #endif
 
+class Source;
+
 /************************************************************************************************************/
 /*
  * This is a base class for measurements of a set of quantities.  For example, we'll inherit from this
@@ -402,7 +404,8 @@ template<typename T, typename ImageT, typename PeakT>
 class MeasureQuantity {
 public:
     typedef Measurement<T> Values;
-    typedef boost::shared_ptr<T> (*makeMeasureQuantityFunc)(typename ImageT::ConstPtr, PeakT const*);
+    typedef boost::shared_ptr<T> (*makeMeasureQuantityFunc)(typename ImageT::ConstPtr,
+                                                            CONST_PTR(PeakT), CONST_PTR(Source));
     typedef bool (*configureMeasureQuantityFunc)(lsst::pex::policy::Policy const&);
     typedef std::pair<makeMeasureQuantityFunc, configureMeasureQuantityFunc> measureQuantityFuncs;
 private:
@@ -453,7 +456,8 @@ public:
         _algorithms[name] = _lookupAlgorithm(name);
     }
     /// Actually measure im using all requested algorithms, returning the result
-    PTR(Values) measure(PeakT const* peak     ///< approximate position of object's centre
+    PTR(Values) measure(CONST_PTR(PeakT) peak=PTR(PeakT)(), ///< approximate position of object's centre
+                        CONST_PTR(Source) src=PTR(Source)() ///< Source with Footprint and some measured params
                        ) {
         PTR(Values) values = boost::make_shared<Values>();
 
@@ -463,7 +467,7 @@ public:
         }
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
-            boost::shared_ptr<T> val = ptr->second.first(_im, peak);
+            boost::shared_ptr<T> val = ptr->second.first(_im, peak, src);
             val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
             values->add(val);
         }
@@ -509,7 +513,7 @@ private:
                                                       );
     static measureQuantityFuncs _lookupAlgorithm(std::string const& name);
     /// The unknown algorithm; used to allow _lookupAlgorithm use _registryWorker
-    static boost::shared_ptr<T> _iefbr14(typename ImageT::ConstPtr, PeakT const*) {
+    static boost::shared_ptr<T> _iefbr14(typename ImageT::ConstPtr, CONST_PTR(PeakT), CONST_PTR(Source)) {
         return boost::shared_ptr<T>();
     }
     static bool _iefbr15(lsst::pex::policy::Policy const &) {
@@ -520,7 +524,10 @@ private:
     //
     // Can't be pure virtual as we create a do-nothing MeasureQuantity which we then add to
     //
-    virtual boost::shared_ptr<T> doMeasure(typename ImageT::ConstPtr, PeakT const*) {
+    virtual boost::shared_ptr<T> doMeasure(CONST_PTR(ImageT),
+                                           CONST_PTR(PeakT),
+                                           CONST_PTR(Source) src=PTR(Source)()
+                                          ) {
         return boost::shared_ptr<T>();
     }
 };
