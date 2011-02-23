@@ -33,10 +33,17 @@
 
 #include <utility>
 #include "boost/shared_ptr.hpp"
+#include "lsst/base.h"
 #include "lsst/daf/base/DateTime.h"
 #include "lsst/afw/geom/Point.h"
 
 namespace lsst {
+namespace daf {
+    namespace base {
+        class PropertySet;
+    }
+}
+
 namespace afw {
 namespace cameraGeom {
     class Detector;
@@ -53,6 +60,7 @@ public :
     typedef boost::shared_ptr<Calib const> ConstPtr;
 
     explicit Calib();
+    explicit Calib(CONST_PTR(lsst::daf::base::PropertySet));
 
     void setMidTime(lsst::daf::base::DateTime const& midTime);
     lsst::daf::base::DateTime getMidTime () const;
@@ -73,6 +81,10 @@ private :
     double _fluxMag0;
     double _fluxMag0Sigma;
 };
+
+namespace detail {
+    int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata);
+}
 
 }}}  // lsst::afw::image
 
