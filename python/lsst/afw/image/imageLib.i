@@ -56,7 +56,14 @@ Basic routines to talk to lsst::afw::image classes
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "lsst/afw/numpyTypemaps.h"
+
+#include "lsst/afw/formatters/WcsFormatter.h"
+#include "lsst/afw/formatters/TanWcsFormatter.h"
+#include "lsst/afw/formatters/ExposureFormatter.h"
+#include "lsst/afw/formatters/DecoratedImageFormatter.h"
 %}
+
+%include "../boost_picklable.i"
 
 %init %{
     import_array();
@@ -125,7 +132,6 @@ def version(HeadURL = r"$HeadURL$"):
 /******************************************************************************/
 
 %template(pairIntInt)       std::pair<int, int>;
-%template(pairIntDouble)    std::pair<int, double>;
 %template(pairDoubleDouble) std::pair<double, double>;
 %template(mapStringInt)     std::map<std::string, int>;
 
@@ -243,6 +249,9 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs)
 %lsst_persistable(lsst::afw::image::Wcs);
 %lsst_persistable(lsst::afw::image::TanWcs);
 
+%boost_picklable(lsst::afw::image::Wcs);
+%boost_picklable(lsst::afw::image::TanWcs);
+
 %newobject makeWcs;
 
 %inline %{
@@ -298,6 +307,7 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
 %template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 %lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+%boost_picklable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 
 %extend lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %pythoncode {

@@ -49,6 +49,8 @@ static char const* SVNid __attribute__((unused)) =
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/serialization/nvp.hpp>
@@ -237,6 +239,12 @@ void afwForm::KernelFormatter::delegateSerialize(
                   
     execTrace("KernelFormatter delegateSerialize end");
 }
+
+template void afwForm::KernelFormatter::delegateSerialize(
+    boost::archive::binary_oarchive& ar, unsigned int const, dafBase::Persistable*);
+template void afwForm::KernelFormatter::delegateSerialize(
+    boost::archive::binary_iarchive& ar, unsigned int const, dafBase::Persistable*);
+
 
 /** Factory method for KernelFormatter.
  * \param[in] policy Policy for configuring the KernelFormatter

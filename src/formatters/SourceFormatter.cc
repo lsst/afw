@@ -33,6 +33,8 @@
 #include <memory>
 
 #include "boost/format.hpp"
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -377,7 +379,12 @@ template void form::SourceVectorFormatter::delegateSerialize<boost::archive::tex
 template void form::SourceVectorFormatter::delegateSerialize<boost::archive::text_iarchive>(
     boost::archive::text_iarchive &, unsigned int const, Persistable *
 );
-
+template void form::SourceVectorFormatter::delegateSerialize<boost::archive::binary_oarchive>(
+    boost::archive::binary_oarchive &, unsigned int const, Persistable *
+);
+template void form::SourceVectorFormatter::delegateSerialize<boost::archive::binary_iarchive>(
+    boost::archive::binary_iarchive &, unsigned int const, Persistable *
+);
 /** 
  * Persist a collection of Source to BoostStorage, DbStorage or DbTsvStorage
  */
