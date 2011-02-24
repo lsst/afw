@@ -51,10 +51,10 @@ class StatisticsTestCase(unittest.TestCase):
         self.nRow, self.nCol = 100, 200
         self.n = self.nRow*self.nCol
 
-        self.bboxL = afwImage.BBox(afwImage.PointI(0, 0),
-                                   afwImage.PointI(self.nRow/2 - 1, self.nCol - 1))
-        self.bboxR = afwImage.BBox(afwImage.PointI(self.nRow/2, 0),
-                                   afwImage.PointI(self.nRow - 1, self.nCol - 1))
+        self.bboxL = afwGeom.BoxI(afwGeom.PointI(0, 0),
+                                   afwGeom.PointI(self.nRow/2 - 1, self.nCol - 1))
+        self.bboxR = afwGeom.BoxI(afwGeom.PointI(self.nRow/2, 0),
+                                   afwGeom.PointI(self.nRow - 1, self.nCol - 1))
 
         # create masked images and set the left side to valL, and right to valR
         self.mimg = afwImage.MaskedImageF(self.nRow, self.nCol)

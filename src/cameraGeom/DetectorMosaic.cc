@@ -142,22 +142,30 @@ void cameraGeom::DetectorMosaic::addDetector(
     //
     // Correct Detector's coordinate system to be absolute within DetectorMosaic
     //
-    afwImage::BBox detPixels = det->getAllPixels(isTrimmed);
-    detPixels.shift(iX*detPixels.getWidth(), iY*detPixels.getHeight());
-
-    getAllPixels().grow(detPixels.getLLC());
-    getAllPixels().grow(detPixels.getURC());
+    afwGeom::BoxI detPixels = det->getAllPixels(isTrimmed);
+    detPixels.shift(
+        geom::ExtentI(iX*detPixels.getWidth(), iY*detPixels.getHeight())
+    );
+    getAllPixels().include(detPixels);
     
-    afwGeom::Point2I centerPixel =
-        afwGeom::Point2I(iX*detPixels.getWidth() + detPixels.getWidth()/2,
-                                 iY*detPixels.getHeight() + detPixels.getHeight()/2) -
-        afwGeom::Extent2I(getCenterPixel());
+    afwGeom::Point2I centerPixel(
+        iX*detPixels.getWidth() + detPixels.getWidth()/2,
+        iY*detPixels.getHeight() + detPixels.getHeight()/2
+    );
+    centerPixel -= afwGeom::Extent2I(getCenterPixel());
     det->setCenter(center);
     det->setCenterPixel(centerPixel);
 
     // insert new Detector, keeping the Detectors sorted
-    _detectors.insert(std::lower_bound(_detectors.begin(), _detectors.end(), det,
-                                       cameraGeom::detail::sortPtr<Detector>()), det);
+    _detectors.insert(
+        std::lower_bound(
+            _detectors.begin(), 
+            _detectors.end(), 
+            det, 
+            cameraGeom::detail::sortPtr<Detector>()
+        ), 
+        det
+    );
     det->setParent(getThisPtr());
 }
 
@@ -175,30 +183,23 @@ namespace {
 
     struct findByPixel {
         findByPixel(afwGeom::Point2I point) :
-            _point(afwImage::PointI(point[0], point[1])) {}
+            _point(point) {}
         
         bool operator()(cameraGeom::Detector::Ptr det) const {
-            afwImage::PointI relPoint = _point;
+            afwGeom::PointI relPoint = _point;
             // Position wrt center of detector
-            relPoint.shift(-det->getCenterPixel()[0],
-                           -det->getCenterPixel()[1]);
+            relPoint -= afwGeom::ExtentI(det->getCenterPixel());
             // Position wrt LLC of detector
-            relPoint.shift(det->getAllPixels(true).getWidth()/2,
-                           det->getAllPixels(true).getHeight()/2);
-
+            relPoint += det->getAllPixels(true).getDimensions()/2;                           
             return det->getAllPixels().contains(relPoint);
         }
     private:
-        afwImage::PointI _point;
+        afwGeom::PointI _point;
     };
 
     struct findByPos {
-        findByPos(
-                  afwGeom::Point2D point
-                 )
-            :
-            _point(point)
-        { }
+        findByPos(afwGeom::Point2D point)
+          : _point(point) { }
 
         /*
          * Does point lie with square footprint of detector, once we allow for its rotation?

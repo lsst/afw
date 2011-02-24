@@ -62,6 +62,7 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Wcs.h"
 
+namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace pexLog = lsst::pex::logging;
 namespace dafBase = lsst::daf::base;
@@ -133,13 +134,18 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
 
     int miWidth = 5;
     int miHeight = 5;
-    afwImage::Exposure<ImagePixel> regWcsExpImage(miWidth, miHeight, *myWcsPtr);
+    afwImage::Exposure<ImagePixel> regWcsExpImage(
+        afwGeom::ExtentI(miWidth, miHeight), 
+        *myWcsPtr
+    );
        
     // (5) Construct an Exposure from a given region (col, row) with no Wcs.
 
     int mi2Width = 5;
     int mi2Height = 5;
-    afwImage::Exposure<ImagePixel> regExpImage(mi2Width, mi2Height);
+    afwImage::Exposure<ImagePixel> regExpImage(
+        afwGeom::ExtentI(mi2Width, mi2Height)
+    );
        
     // try to get the Wcs when there isn't one
     try {
@@ -193,10 +199,17 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // the original Exposure's MaskedImage BBox. 
     int subWidth = width - 5;
     int subHeight = height - 5;
-    afwImage::BBox subRegion = afwImage::BBox(afwImage::PointI(orx, ory), subWidth, subHeight);
+    afwGeom::BoxI subRegion = afwGeom::BoxI(
+        afwGeom::PointI(orx, ory), 
+        afwGeom::ExtentI(subWidth, subHeight)
+    );
         
     try {
-        afwImage::Exposure<ImagePixel> subExpImage(miWcsExpImage, subRegion);
+        afwImage::Exposure<ImagePixel> subExpImage(
+            miWcsExpImage, 
+            subRegion,
+            afwImage::LOCAL
+        );
            
         afwImage::MaskedImage<ImagePixel> subExpMI = subExpImage.getMaskedImage();
         subExpMI.writeFits(expMIOutFile1);
@@ -208,10 +221,17 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // original Exposure's MaskedImage BBox.  
     int subWidth2 = width + 5;
     int subHeight2 = height + 5;
-    const afwImage::BBox subRegion2 = afwImage::BBox(afwImage::PointI(orx, ory), subWidth2, subHeight2); 
+    const afwGeom::BoxI subRegion2 = afwGeom::BoxI(
+        afwGeom::PointI(orx, ory), 
+        afwGeom::ExtentI(subWidth2, subHeight2)
+    ); 
      
     try {
-        afwImage::Exposure<ImagePixel> subExpImage2(miWcsExpImage, subRegion2);
+        afwImage::Exposure<ImagePixel> subExpImage2(
+            miWcsExpImage, 
+            subRegion2,
+            afwImage::LOCAL
+        );
             
         afwImage::MaskedImage<ImagePixel> subExpMI2 = subExpImage2.getMaskedImage();
         subExpMI2.writeFits(expMIOutFile2);

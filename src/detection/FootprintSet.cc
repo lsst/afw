@@ -871,7 +871,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     typedef unsigned short ImageT;
     geom::BoxI region = rhs.getRegion();
     image::Image<ImageT>::Ptr idImage(
-        new image::Image<ImageT>(region.getWidth(), region.getHeight())
+        new image::Image<ImageT>(region)
     );
     idImage->setXY0(region.getMinX(), region.getMinY());
     *idImage = 0;
@@ -918,12 +918,15 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(
         bool const relativeIDs          ///< Use IDs starting at 0 (rather than the ones in the Footprint%s)
                                                                  )
 {
-    typename image::Image<boost::uint16_t>::Ptr
-        im(new image::Image<boost::uint16_t>(_region.getWidth(), _region.getHeight()));
+    typename image::Image<boost::uint16_t>::Ptr im(
+        new image::Image<boost::uint16_t>(_region)
+    );
     *im = 0;
 
     int id = 0;
-    for (FootprintList::const_iterator fiter = _footprints->begin(); fiter != _footprints->end(); fiter++) {
+    for (FootprintList::const_iterator fiter = _footprints->begin(); 
+         fiter != _footprints->end(); fiter++
+    ) {
         Footprint::Ptr const foot = *fiter;
         
         if (relativeIDs) {

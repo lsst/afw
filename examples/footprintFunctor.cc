@@ -27,6 +27,7 @@
 
 namespace afwDetect = lsst::afw::detection;
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 
 namespace {
     template <typename MaskT>
@@ -66,7 +67,7 @@ void printBits(afwImage::Mask<afwImage::MaskPixel> mask,
 }
 
 int main() {
-    afwImage::MaskedImage<float> mimage(20, 30);
+    afwImage::MaskedImage<float> mimage(afwGeom::ExtentI(20, 30));
 
     (*mimage.getImage())(5, 6) = 100;
     (*mimage.getImage())(5, 7) = 110;

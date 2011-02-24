@@ -68,7 +68,7 @@ def trimCcd(ccd, ccdImage=""):
     ccd.setTrimmed(True)
 
     if ccdImage is not None:
-        trimmedImage = ccdImage.Factory(ccd.getAllPixels().getDimensions())
+        trimmedImage = ccdImage.Factory(ccd.getAllPixels())
         for a in ccd:
             data =      ccdImage.Factory(ccdImage, a.getDataSec(False))
             tdata = trimmedImage.Factory(trimmedImage, a.getDataSec())
@@ -139,9 +139,9 @@ class CameraGeomTestCase(unittest.TestCase):
             gain, readNoise, saturationLevel = 0, 0, 0
             width, height = 10, 10
 
-            allPixels = afwImage.BBox(afwImage.PointI(0, 0), width, height)
-            biasSec = afwImage.BBox(afwImage.PointI(0, 0), 0, height)
-            dataSec = afwImage.BBox(afwImage.PointI(0, 0), width, height)
+            allPixels = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(width, height))
+            biasSec = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(0, height))
+            dataSec = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(width, height))
 
             eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
             amp = cameraGeom.Amp(cameraGeom.Id(serial, "", Col, 0), allPixels, biasSec, dataSec,
@@ -183,10 +183,10 @@ class CameraGeomTestCase(unittest.TestCase):
 
         self.assertEqual(ccd.findAmp(afwGeom.PointI(10, 10)).getId().getSerial(), ccdInfo["ampIdMin"])
 
-        self.assertEqual(ccd.getAllPixels().getLLC(),
+        self.assertEqual(ccd.getAllPixels().getMin(),
                          ccd.findAmp(afwGeom.PointI(10, 10)).getAllPixels().getLLC())
 
-        self.assertEqual(ccd.getAllPixels().getURC(),
+        self.assertEqual(ccd.getAllPixels().getMax(),
                          ccd.findAmp(afwGeom.PointI(ccdInfo["width"] - 1,
                                                             ccdInfo["height"] - 1)).getAllPixels().getURC())
         ps = ccd.getPixelSize()
@@ -200,7 +200,7 @@ class CameraGeomTestCase(unittest.TestCase):
         # Map pix into untrimmed coordinates
         #
         amp = ccd.findAmp(pix)
-        corr = amp.getDataSec(False).getLLC() - amp.getDataSec(True).getLLC()
+        corr = amp.getDataSec(False).getMin() - amp.getDataSec(True).getMin()
         corr = afwGeom.Extent2I(afwGeom.PointI(corr[0], corr[1]))
         pix += corr
         
@@ -217,8 +217,8 @@ class CameraGeomTestCase(unittest.TestCase):
             ds9.incrDefaultFrame()
 
         a = ccd.findAmp(cameraGeom.Id("ID%d" % ccdInfo["ampIdMin"]))
-        self.assertEqual(a.getDataSec(), afwImage.BBox(afwImage.PointI(0, 0),
-                                                       ccdInfo["ampWidth"], ccdInfo["ampHeight"]))
+        self.assertEqual(a.getDataSec(), afwGeom.BoxI(afwGeom.PointI(0, 0),
+                                                       afwGeom.ExtentI(ccdInfo["ampWidth"], ccdInfo["ampHeight"])))
 
         self.assertEqual(ccd.getSize()[0], ccdInfo["pixelSize"]*ccdInfo["trimmedWidth"])
         self.assertEqual(ccd.getSize()[1], ccdInfo["pixelSize"]*ccdInfo["trimmedHeight"])
@@ -403,8 +403,8 @@ class CameraGeomTestCase(unittest.TestCase):
                     (34,  81,  34,  100),
                     (180, 100, 182, 130),
                     ]:
-                    bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
-                    bad = ccdImage.Factory(ccdImage, bbox)
+                    bbox = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.PointI(x1, y1))
+                    bad = ccdImage.Factory(ccdImage, bbox, afwImage.LOCAL)
                     bad.set(100)
 
                 if display:

@@ -37,7 +37,6 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/deprecated.h"
 #include "lsst/afw/geom/ellipses.h"
 
 namespace lsst {
@@ -90,10 +89,6 @@ public:
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
 
-    //TODO remove image point, bbox, constructors, 
-    explicit Footprint(image::BBox const& bbox, image::BBox const & region=image::BBox());
-    explicit Footprint(image::BCircle const& circle, image::BBox const & region=image::BBox());
-
     explicit Footprint(int nspan = 0, geom::BoxI const & region=geom::BoxI());
     explicit Footprint(geom::BoxI const & bbox, geom::BoxI const & region=geom::BoxI());
     explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::BoxI const & region=geom::BoxI());
@@ -120,9 +115,6 @@ public:
     geom::BoxI const & getRegion() const { return _region; }
 
     /// Set the corners of the MaskedImage wherein the footprints dwell
-    void setRegion(lsst::afw::image::BBox const& region) { 
-        _region = geom::convertToGeom(region); 
-    }
     void setRegion(geom::BoxI const & region) { _region = region; }
 
     bool contains(geom::Point2I const& pix) const;

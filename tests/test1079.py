@@ -83,8 +83,8 @@ class SavingSubImagesTest(unittest.TestCase):
         """Test that crpix is the same for parent and sub-image. Also tests that llc of sub-image
         saved correctly"""
         
-        llc = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc, 60, 50)
+        llc = afwGeom.PointI(20, 30)
+        bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
         subImg = afwImg.ExposureF(self.parent, bbox)
 
         subImgLlc = subImg.getMaskedImage().getXY0()
@@ -108,8 +108,8 @@ class SavingSubImagesTest(unittest.TestCase):
         Also tests that llc of sub-image saved correctly"""
         
         #Load sub-image directly off of disk
-        llc = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc, 60, 50)
+        llc = afwGeom.PointI(20, 30)
+        bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
         hdu=0
         subImg = afwImg.ExposureF(self.parentFile, hdu, bbox)
         oSubImage = subImg.getWcs().getPixelOrigin()
@@ -131,8 +131,8 @@ class SavingSubImagesTest(unittest.TestCase):
     def testInvarianceOfPixelToSky(self):
 
         for deep in (True, False):
-            llc = afwImg.PointI(20, 30)
-            bbox = afwImg.BBox(llc, 60, 50)
+            llc = afwGeom.PointI(20, 30)
+            bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
             subImg = afwImg.ExposureF(self.parent, bbox, deep)
 
             xy0 = subImg.getMaskedImage().getXY0()
@@ -164,20 +164,20 @@ class SavingSubImagesTest(unittest.TestCase):
         """Check that a sub-image of a sub-image is equivalent to a sub image, i.e
         that the parent is an invarient"""                
         
-        llc1 = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc1, 60, 50)
+        llc1 = afwGeom.PointI(20, 30)
+        bbox = afwGeom.BoxI(llc1, afwGeom.ExtentI(60, 50))
         hdu=0
         subImg = afwImg.ExposureF(self.parentFile, hdu, bbox)
 
 
-        llc2 = afwImg.PointI(22, 23)
+        llc2 = afwGeom.PointI(22, 23)
 
         #This subsub image should fail. Although it's big enough to fit in the parent image
         #it's too small for the sub-image
-        bbox = afwImg.BBox(llc2, 100, 110)
+        bbox = afwGeom.BoxI(llc2, afwGeom.ExtentI(100, 110))
         self.assertRaises(exceptions.LsstCppException, afwImg.ExposureF, subImg, bbox)
         
-        bbox = afwImg.BBox(llc2, 10, 11)
+        bbox = afwGeom.BoxI(llc2, afwGeom.ExtentI(10, 11))
         subSubImg = afwImg.ExposureF(subImg, bbox)
         
         sub0 = subImg.getMaskedImage().getXY0()
@@ -202,8 +202,8 @@ class SavingSubImagesTest(unittest.TestCase):
      
     def testRoundTrip(self):
         """Test that saving and retrieving an image doesn't alter the metadata"""
-        llc = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc, 60, 50)
+        llc = afwGeom.PointI(20, 30)
+        bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
         for deep in (False, True):
             subImg = afwImg.ExposureF(self.parent, bbox, deep)
 
@@ -238,8 +238,8 @@ class SavingSubImagesTest(unittest.TestCase):
         
         #Make a sub-image
         x0, y0 = 20, 30
-        llc = afwImg.PointI(x0, y0)
-        bbox = afwImg.BBox(llc, 60, 50)
+        llc = afwGeom.PointI(x0, y0)
+        bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
         deep = False
         subImg = afwImg.ExposureF(self.parent, bbox, deep)
         

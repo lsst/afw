@@ -39,6 +39,7 @@ import eups
 import lsst.afw.detection as afwDetect
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math.mathLib as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 import testSpatialCellLib
@@ -59,12 +60,12 @@ def readImage(filename=None):
 
         filename = os.path.join(eups.productDir("afwdata"), "CFHT", "D4", "cal-53535-i-797722_1")
         
-        bbox = afwImage.BBox(afwImage.PointI(270, 2530), 512, 512)
+        bbox = afwGeom.BoxI(afwGeom.PointI(270, 2530), afwGeom.ExtentI(512, 512))
     else:
         bbox = None
         
     mi = afwImage.MaskedImageF(filename, 0, None, bbox)
-    mi.setXY0(afwImage.PointI(0, 0))
+    mi.setXY0(afwGeom.PointI(0, 0))
     #
     # Subtract the background.  We'd use a canned procedure, but that's in meas/utils/sourceDetection.py. We
     # can't fix those pesky cosmic rays either, as that's in a dependent product (meas/algorithms) too
@@ -110,28 +111,28 @@ def SpatialCellSetDemo(filename=None):
     #
     # Create an (empty) SpatialCellSet
     #
-    cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), im.getWidth(), im.getHeight()),
+    cellSet = afwMath.SpatialCellSet(afwGeom.BoxI(afwGeom.PointI(0, 0), im.getDimensions()),
                                      260, 200)
 
     if display:
         for i in range(len(cellSet.getCellList())):
             cell = cellSet.getCellList()[i]
-            ds9.line([(cell.getBBox().getX0(), cell.getBBox().getY0()),
-                      (cell.getBBox().getX0(), cell.getBBox().getY1()),
-                      (cell.getBBox().getX1(), cell.getBBox().getY1()),
-                      (cell.getBBox().getX1(), cell.getBBox().getY0()),
-                      (cell.getBBox().getX0(), cell.getBBox().getY0()),
+            ds9.line([(cell.getBBox().getMinX(), cell.getBBox().getMinY()),
+                      (cell.getBBox().getMinX(), cell.getBBox().getMaxY()),
+                      (cell.getBBox().getMaxX(), cell.getBBox().getMaxY()),
+                      (cell.getBBox().getMaxX(), cell.getBBox().getMinY()),
+                      (cell.getBBox().getMinX(), cell.getBBox().getMinY()),
                       ], frame=0)
             ds9.dot(cell.getLabel(),
-                    (cell.getBBox().getX0() + cell.getBBox().getX1())/2,
-                    (cell.getBBox().getY0() + cell.getBBox().getY1())/2)
+                    (cell.getBBox().getMinX() + cell.getBBox().getMaxX())/2,
+                    (cell.getBBox().getMinY() + cell.getBBox().getMaxY())/2)
     #
     # Populate cellSet
     #
     for foot in fs.getFootprints():
         bbox = foot.getBBox()
-        xc = (bbox.getX0() + bbox.getX1())/2.0
-        yc = (bbox.getY0() + bbox.getY1())/2.0
+        xc = (bbox.getMinX() + bbox.getMaxX())/2.0
+        yc = (bbox.getMinY() + bbox.getMaxY())/2.0
 
         cellSet.insertCandidate(testSpatialCellLib.ExampleCandidate(xc, yc, im.getImage(), bbox))
     #

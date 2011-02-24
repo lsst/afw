@@ -147,7 +147,7 @@ class StackTestCase(unittest.TestCase):
         
         img = afwImage.MaskedImageF(10, 20)
         for y in range(img.getHeight()):
-            simg = img.Factory(img, afwImage.BBox(afwImage.PointI(0, y), img.getWidth(), 1))
+            simg = img.Factory(img, afwGeom.BoxI(afwGeom.PointI(0, y), afwGeom.ExtentI(img.getWidth(), 1)))
             simg.set(y)
 
         imgList.push_back(img)
@@ -175,17 +175,18 @@ class StackTestCase(unittest.TestCase):
         sctrl.setAndMask(INTRP | SAT)
         sctrl.setNoGoodPixelsMask(EDGE)
 
-        edgeBBox = afwImage.BBox(afwImage.PointI(0, 0), 20, 20) # set these pixels to EDGE
+        edgeBBox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(20, 20)) # set these pixels to EDGE
         width, height = 512, 512
+	dim=afwGeom.ExtentI(width, height)
         val, maskVal = 10, DETECTED
         for i in range(4):
-            mimg = afwImage.MaskedImageF(width, height)
+            mimg = afwImage.MaskedImageF(dim)
             mimg.set(val, maskVal, 1)
             #
             # Set part of the image to NaN (with the INTRP bit set)
             #
-            llc = afwImage.PointI(width//2*(i//2), height//2*(i%2))
-            bbox = afwImage.BBox(llc, width//2, height//2)
+            llc = afwGeom.PointI(width//2*(i//2), height//2*(i%2))
+            bbox = afwGeom.BoxI(llc, dim/2)
 
             smimg = mimg.Factory(mimg, bbox)
             #smimg.set(numpy.nan, INTRP, numpy.nan)
@@ -222,7 +223,7 @@ class StackTestCase(unittest.TestCase):
         # We have to clear EDGE in the known bad corner to check the mask
         #
         smask = mimgStack.getMask().Factory(mimgStack.getMask(), edgeBBox)
-        self.assertEqual(smask.get(edgeBBox.getX0(), edgeBBox.getY0()), EDGE)
+        self.assertEqual(smask.get(edgeBBox.getMinX(), edgeBBox.getMinY()), EDGE)
         smask &= ~EDGE
         del smask
 

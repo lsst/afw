@@ -50,12 +50,13 @@ public:
     try_fits_read_image(const std::string& file, ImageT& img,
                         lsst::daf::base::PropertySet::Ptr metadata,
                         int hdu,
-                        lsst::afw::image::BBox const& bbox
-                       ) : _file(file), _img(img), _metadata(metadata), _hdu(hdu), _bbox(bbox) { }
+                        lsst::afw::geom::BoxI const& bbox,
+                        lsst::afw::image::ImageOrigin const origin
+                       ) : _file(file), _img(img), _metadata(metadata), _hdu(hdu), _bbox(bbox), _origin(origin) { }
 
     void operator()(ImageT) {           // read directly into the desired type if the file's the same type
         try {
-            lsst::afw::image::fits_read_image(_file, _img, _metadata, _hdu, _bbox);
+            lsst::afw::image::fits_read_image(_file, _img, _metadata, _hdu, _bbox, _origin);
             throw ExceptionT();         // signal that we've succeeded
         } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // ah well.  We'll try another image type
@@ -65,7 +66,7 @@ public:
     template<typename OtherImage> void operator()(OtherImage) { // read and convert into the desired type
         try {
             OtherImage tmp;
-            lsst::afw::image::fits_read_image(_file, tmp, _metadata, _hdu, _bbox);
+            lsst::afw::image::fits_read_image(_file, tmp, _metadata, _hdu, _bbox, _origin);
             //copy and convert
             _img = ImageT(tmp, true);
             throw ExceptionT();         // signal that we've succeeded
@@ -78,20 +79,27 @@ private:
     ImageT& _img;
     lsst::daf::base::PropertySet::Ptr _metadata;
     int _hdu;
-    lsst::afw::image::BBox const& _bbox;
+    lsst::afw::geom::BoxI const& _bbox;
+    lsst::afw::image::ImageOrigin _origin;
 };
 
 }
 
 namespace lsst { namespace afw { namespace image {
 template<typename supported_fits_types, typename ImageT>
-bool fits_read_image(std::string const& file, ImageT& img,
-                     lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-                     int hdu=0,
-                     BBox const& bbox=BBox()
-                    ) {
+bool fits_read_image(
+    std::string const& file, ImageT& img,
+    lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+    int hdu=0,
+    geom::BoxI const& bbox = geom::BoxI(),
+    ImageOrigin const origin = LOCAL
+) {
     try {
-        boost::mpl::for_each<supported_fits_types>(try_fits_read_image<ImageT, found_type>(file, img, metadata, hdu, bbox));
+        boost::mpl::for_each<supported_fits_types>(
+            try_fits_read_image<ImageT, found_type>(
+                file, img, metadata, hdu, bbox, origin
+            )
+        );
     } catch (found_type &) {
         return true;                    // success
     }

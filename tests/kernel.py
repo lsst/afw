@@ -63,7 +63,7 @@ def makeDeltaFunctionKernelList(kWidth, kHeight):
     kVec = afwMath.KernelList()
     for activeCol in range(kWidth):
         for activeRow in range(kHeight):
-            kVec.append(afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(activeCol, activeRow)))
+            kVec.append(afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.PointI(activeCol, activeRow)))
     return kVec
 
 class KernelTestCase(unittest.TestCase):
@@ -121,7 +121,7 @@ class KernelTestCase(unittest.TestCase):
                     fullWidth = kWidth + deltaWidth
                     for deltaHeight in (-1, 0, 1, 20):
                         fullHeight = kHeight + deltaHeight
-                        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(0, 0))
+                        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.PointI(0, 0))
                         fullBBox = afwGeom.BoxI(boxStart, afwGeom.ExtentI(fullWidth, fullHeight))
                         if (fullWidth < kWidth) or (fullHeight < kHeight):
                             self.assertRaises(Exception, kernel.shrinkBBox, fullBBox)
@@ -145,7 +145,7 @@ class KernelTestCase(unittest.TestCase):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
-                                                             afwImage.PointI(activeCol, activeRow))
+                                                             afwGeom.PointI(activeCol, activeRow))
                         kImage = afwImage.ImageD(kernel.getDimensions())
                         kSum = kernel.computeImage(kImage, False)
                         self.assertEqual(kSum, 1.0)
@@ -159,11 +159,11 @@ class KernelTestCase(unittest.TestCase):
                             self.fail(errStr)
 
                 utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
-                    afwMath.DeltaFunctionKernel, 0, kHeight, afwImage.PointI(kWidth, kHeight))
+                    afwMath.DeltaFunctionKernel, 0, kHeight, afwGeom.PointI(kWidth, kHeight))
                 utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
-                    afwMath.DeltaFunctionKernel, kWidth, 0, afwImage.PointI(kWidth, kHeight))
+                    afwMath.DeltaFunctionKernel, kWidth, 0, afwGeom.PointI(kWidth, kHeight))
                             
-        kernel = afwMath.DeltaFunctionKernel(5, 6, afwImage.PointI(1, 1))
+        kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.PointI(1, 1))
         self.basicTests(kernel, 0)
 
         self.checkComputeImage(kernel)
@@ -419,7 +419,7 @@ class KernelTestCase(unittest.TestCase):
                 if (0 <= pointX < kWidth) and (0 <= pointY < kHeight):
                     continue
                 try:
-                    afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(pointX, pointY))
+                    afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.PointI(pointX, pointY))
                     self.fail("Should have failed with point not on kernel")
                 except pexExcept.LsstCppException, e:
                     pass
@@ -594,7 +594,7 @@ class KernelTestCase(unittest.TestCase):
         emptyImage = afwImage.ImageF(0, 0)
         gaussFunc2D = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         gaussFunc1D = afwMath.GaussianFunction1D(1.0)
-        zeroPoint = afwImage.PointI(0, 0)
+        zeroPoint = afwGeom.PointI(0, 0)
         for kWidth in (-1, 0, 1):
             for kHeight in (-1, 0, 1):
                 if (kHeight > 0) and (kWidth > 0):

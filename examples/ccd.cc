@@ -50,12 +50,18 @@ cameraGeom::Amp::Ptr makeAmp(int const i // which amp? (i == 0 ? left : right)
     // Note that all the offsets are relative to the origin of this amp, not to its eventual
     // position in the CCD
     //
-    afwImage::BBox allPixels(afwImage::PointI(0,                                   0),
-                             width + nExtended + nOverclock, height);
-    afwImage::BBox biasSec(  afwImage::PointI(i == 0 ? nExtended : width,          0),
-                             nOverclock,                     height);
-    afwImage::BBox dataSec(  afwImage::PointI(i == 0 ? nExtended + nOverclock : 0, 0),
-                             width,                          height);
+    afwGeom::BoxI allPixels(
+        afwGeom::PointI(0, 0),
+        afwGeom::ExtentI(width + nExtended + nOverclock, height)
+    );
+    afwGeom::BoxI biasSec(  
+        afwGeom::PointI(i == 0 ? nExtended : width, 0),
+        afwGeom::ExtentI(nOverclock, height)
+    );
+    afwGeom::BoxI dataSec(  
+        afwGeom::PointI(i == 0 ? nExtended + nOverclock : 0, 0),
+        afwGeom::ExtentI(width, height)
+    );
     //
     // Electronic properties of amplifier
     //
@@ -132,24 +138,24 @@ void printCcd(std::string const& title,
              )
 {
     cout << indent <<title << "CCD: " << ccd->getId().getName() << endl;
-    afwImage::BBox const allPixels = ccd->getAllPixels();
+    afwGeom::BoxI const allPixels = ccd->getAllPixels();
     cout << indent <<"Total size: " << allPixels.getWidth() << " " << allPixels.getHeight() << endl;
     for (cameraGeom::Ccd::const_iterator ptr = ccd->begin(); ptr != ccd->end(); ++ptr) {
         cameraGeom::Amp::ConstPtr amp = *ptr;
 
-        afwImage::BBox const biasSec = amp->getBiasSec();
-        afwImage::BBox const dataSec = amp->getDataSec();
+        afwGeom::BoxI const biasSec = amp->getBiasSec();
+        afwGeom::BoxI const dataSec = amp->getDataSec();
 
         cout << indent <<"   Amp: " << amp->getId().getSerial() <<
             " gain: " << amp->getElectronicParams()->getGain() << endl;
 
         cout << indent <<"   bias sec: " <<
             biasSec.getWidth() << "x" << biasSec.getHeight() << "+" <<
-            biasSec.getX0() << "+" << biasSec.getY0() << endl;
+            biasSec.getMinX() << "+" << biasSec.getMinY() << endl;
 
         cout << indent <<"   data sec: " <<
             dataSec.getWidth() << "x" << dataSec.getHeight() << "+" <<
-            dataSec.getX0() << "+" << dataSec.getY0() << endl;
+            dataSec.getMinX() << "+" << dataSec.getMinY() << endl;
 
         if (ptr == ccd->begin()) {
             cout << endl;

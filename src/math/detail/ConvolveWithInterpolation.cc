@@ -44,7 +44,6 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/deprecated.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -90,7 +89,7 @@ void mathDetail::convolveWithInterpolation(
     KernelImagesForRegion goodRegion(KernelImagesForRegion(
         kernel.clone(),
         goodBBox,
-        afwGeom::convertToGeom(inImage.getXY0()),
+        inImage.getXY0(),
         convolutionControl.getDoNormalize()));
     pexLog::TTrace<6>("lsst.afw.math.convolve",
         "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)",
@@ -107,7 +106,7 @@ void mathDetail::convolveWithInterpolation(
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
-    ConvolveWithInterpolationWorkingImages workingImages(kernel.getWidth(), kernel.getHeight());
+    ConvolveWithInterpolationWorkingImages workingImages(kernel.getDimensions());
     RowOfKernelImagesForRegion regionRow(nx, ny);
     while (goodRegion.computeNextRow(regionRow)) {
         for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
@@ -141,7 +140,7 @@ void mathDetail::convolveRegionWithInterpolation(
     typedef KernelImage::const_xy_locator KernelConstLocator;
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
-    std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
+    geom::ExtentI const kernelDimensions(kernelPtr->getDimensions());
     workingImages.leftImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_LEFT);
     workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);
     workingImages.kernelImage <<= workingImages.leftImage;
@@ -173,7 +172,7 @@ void mathDetail::convolveRegionWithInterpolation(
             workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
         for (int i = 0; ; ) {
             *outLocator = afwMath::convolveAtAPoint<OutImageT, InImageT>(
-                inLocator, kernelLocator, kernelDimensions.first, kernelDimensions.second);
+                inLocator, kernelLocator, kernelDimensions.getX(), kernelDimensions.getY());
             ++outLocator.x();
             ++inLocator.x();
             ++i;

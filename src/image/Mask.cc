@@ -51,6 +51,7 @@
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
@@ -74,11 +75,10 @@ void afwImage::Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDef
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    int width, ///< Number of columns
-    int height, ///< Number of rows
+    afwGeom::ExtentI const & dimensions, ///< Number of columns, rows
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
-    afwImage::ImageBase<MaskPixelT>(width, height),
+    afwImage::ImageBase<MaskPixelT>(dimensions),
     _myMaskDictVersion(_maskDictVersion) {
     _initializePlanes(planeDefs);
     *this = 0x0;
@@ -89,12 +89,11 @@ afwImage::Mask<MaskPixelT>::Mask(
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    int width, ///< Number of columns
-    int height, ///< Number of rows
+    afwGeom::ExtentI const & dimensions, ///< Number of columns, rows
     MaskPixelT initialValue, ///< Initial value
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
-    afwImage::ImageBase<MaskPixelT>(width, height),
+    afwImage::ImageBase<MaskPixelT>(dimensions),
     _myMaskDictVersion(_maskDictVersion) {
     _initializePlanes(planeDefs);
     *this = initialValue;
@@ -105,10 +104,10 @@ afwImage::Mask<MaskPixelT>::Mask(
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    const std::pair<int, int> dimensions, ///< Desired number of columns/rows
+    afwGeom::BoxI const & bbox, ///< Desired number of columns/rows and origin
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
-    afwImage::ImageBase<MaskPixelT>(dimensions),
+    afwImage::ImageBase<MaskPixelT>(bbox),
     _myMaskDictVersion(_maskDictVersion) {
     _initializePlanes(planeDefs);
     *this = 0x0;
@@ -119,11 +118,11 @@ afwImage::Mask<MaskPixelT>::Mask(
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    const std::pair<int, int> dimensions, ///< Desired number of columns/rows
+    afwGeom::BoxI const & bbox, ///< Desired number of columns/rows and origin
     MaskPixelT initialValue, ///< Initial value
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
-    afwImage::ImageBase<MaskPixelT>(dimensions),
+    afwImage::ImageBase<MaskPixelT>(bbox),
     _myMaskDictVersion(_maskDictVersion) {
     _initializePlanes(planeDefs);
     *this = initialValue;
@@ -135,10 +134,11 @@ afwImage::Mask<MaskPixelT>::Mask(
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
     Mask const &rhs,    ///< mask to copy
-    BBox const &bbox,   ///< subregion to copy
+    afwGeom::BoxI const &bbox,   ///< subregion to copy
+    ImageOrigin const origin,
     bool const deep     ///< deep copy? (construct a view with shared pixels if false)
 ) :
-    afwImage::ImageBase<MaskPixelT>(rhs, bbox, deep),
+    afwImage::ImageBase<MaskPixelT>(rhs, bbox, origin, deep),
     _myMaskDictVersion(rhs._myMaskDictVersion) {
 }
 
@@ -196,17 +196,13 @@ template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
         int const hdu,                                     ///< HDU to read 
         lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
-        BBox const& bbox,                                  ///< Only read these pixels
+        afwGeom::BoxI const& bbox,                                  ///< Only read these pixels
+        ImageOrigin const origin,
         bool const conformMasks                            ///< Make Mask conform to mask layout in file?
 ) :
     afwImage::ImageBase<MaskPixelT>(),
-    _myMaskDictVersion(_maskDictVersion) {
-    
-    if (!metadata) {
-        //TODOsmm createPropertyNode("FitsMetadata");
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList()); 
-    }
-
+    _myMaskDictVersion(_maskDictVersion) 
+{
     //
     // These are the permitted input file types
     //
@@ -222,25 +218,15 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     }
 
     if (!metadata) {
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList);
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
 
-    if (!fits_read_image<fits_mask_types>(fileName, *this, metadata, hdu, bbox)) {
+    if (!fits_read_image<fits_mask_types>(fileName, *this, metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(afwImage::FitsException,
             (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
-
-    if (bbox) {
-        this->setXY0(bbox.getLLC());
-    }
-    /*
-     * We will interpret one of the header WCSs as providing the (X0, Y0) values
-     */
-    this->setXY0(this->getXY0() + detail::getImageXY0FromMetadata(detail::wcsNameForXY0, metadata.get()));
-    //
-    // OK, we've read it.  Now make sense of its mask planes
-    //
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); // look for mask planes in the file
+    // look for mask planes in the file
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
 
     if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
         return;

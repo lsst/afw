@@ -27,12 +27,13 @@
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
+namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
 /************************************************************************************************************/
 
 int main() {
-    afwImage::Mask<afwImage::MaskPixel> img(10, 6);
+    afwImage::Mask<afwImage::MaskPixel> img(afwGeom::ExtentI(10, 6));
     // This is equivalent to mask = 100:
     for (afwImage::Mask<afwImage::MaskPixel>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
         (*ptr)[0] = 100;
@@ -55,27 +56,24 @@ int main() {
     img(img.getWidth() - 1, img.getHeight() - 1) = 100;
 
     printf("sub Mask<afwImage::MaskPixel>s\n");
-#if 0
-    // img will be modified
-    afwImage::Mask<afwImage::MaskPixel> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2));
-#elif 0
-    // img will not be modified
-    afwImage::Mask<afwImage::MaskPixel> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2), true);
-#else
-    // img will be modified
-    afwImage::Mask<afwImage::MaskPixel> simg1(img, afwImage::BBox(afwImage::PointI(1, 1), 7, 3));
-    afwImage::Mask<afwImage::MaskPixel> simg(simg1, afwImage::BBox(afwImage::PointI(0, 0), 5, 2));
-#endif
 
-#if 0
-    simg = 0;
-#elif 1
+    // img will be modified
+    afwImage::Mask<afwImage::MaskPixel> simg1(
+        img, 
+        afwGeom::BoxI(afwGeom::PointI(1, 1), afwGeom::ExtentI(7, 3)),
+        afwImage::LOCAL
+    );
+    afwImage::Mask<afwImage::MaskPixel> simg(
+        simg1, 
+        afwGeom::BoxI(afwGeom::PointI(0, 0), afwGeom::ExtentI(5, 2)),
+        afwImage::LOCAL
+    );
+
     {
-        afwImage::Mask<afwImage::MaskPixel> nimg(5, 2);
+        afwImage::Mask<afwImage::MaskPixel> nimg(simg.getDimensions());
         nimg = 1;
         simg <<= nimg;
     }
-#endif    
 
     for (int r = 0; r != img.getHeight(); ++r) {
         std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));

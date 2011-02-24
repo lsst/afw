@@ -264,13 +264,13 @@ namespace detail {
     struct ConvolveWithInterpolationWorkingImages {
     public:
         typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
-        ConvolveWithInterpolationWorkingImages(int width, int height) :
-            leftImage(width, height),
-            rightImage(width, height),
-            leftDeltaImage(width, height),
-            rightDeltaImage(width, height),
-            deltaImage(width, height),
-            kernelImage(width, height)
+        ConvolveWithInterpolationWorkingImages(geom::ExtentI const & dimensions) :
+            leftImage(dimensions),
+            rightImage(dimensions),
+            leftDeltaImage(dimensions),
+            rightDeltaImage(dimensions),
+            deltaImage(dimensions),
+            kernelImage(dimensions)
         { }
         Image leftImage;
         Image rightImage;

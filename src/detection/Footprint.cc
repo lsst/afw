@@ -108,28 +108,6 @@ Footprint::Footprint(
  * Create a rectangular Footprint
  */
 Footprint::Footprint(
-    image::BBox const& bbox, //!< The bounding box defining the rectangle
-    image::BBox const& region //!< Bounding box of MaskedImage footprint
-) : lsst::daf::data::LsstBase(typeid(this)),
-    _fid(++id),
-    _area(0),
-    _bbox(geom::convertToGeom(bbox)),
-    _region(geom::convertToGeom(region))
-{
-    int const x0 = bbox.getX0();
-    int const y0 = bbox.getY0();
-    int const x1 = bbox.getX1();
-    int const y1 = bbox.getY1();
-
-    for (int i = y0; i <= y1; i++) {
-        addSpan(i, x0, x1);
-    }
-    _normalized=true;
-}
-/**
- * Create a rectangular Footprint
- */
-Footprint::Footprint(
     geom::BoxI const& bbox, //!< The bounding box defining the rectangle
     geom::BoxI const& region //!< Bounding box of MaskedImage footprint
 ) : lsst::daf::data::LsstBase(typeid(this)),
@@ -145,30 +123,6 @@ Footprint::Footprint(
 
     for (int i = y0; i <= y1; i++) {
         addSpan(i, x0, x1);
-    }
-    _normalized=true;
-}
-
-/**
- * Create a circular Footprint
- */
-Footprint::Footprint(
-    image::BCircle const& circle, //!< The center and radius of the circle
-    image::BBox const &region  //!< Bounding box of MaskedImage footprint
-) : lsst::daf::data::LsstBase(typeid(this)),
-    _fid(++id),
-    _area(0),
-    _bbox(geom::BoxI()),
-    _region(geom::convertToGeom(region))
-{
-    int const xc = circle.getCenter().getX(); // x-centre
-    int const yc = circle.getCenter().getY(); // y-centre
-    int const r2 = static_cast<int>(circle.getRadius()*circle.getRadius() + 0.5); // rounded radius^2
-    int const r = static_cast<int>(std::sqrt(static_cast<double>(r2))); // truncated radius; r*r <= r2
-
-    for (int i = -r; i <= r; i++) {
-        int hlen = static_cast<int>(std::sqrt(static_cast<double>(r2 - i*i)));
-        addSpan(yc + i, xc - hlen, xc + hlen);
     }
     _normalized=true;
 }
@@ -649,22 +603,6 @@ template void set_footprint_array_ids<int>(
 
 /******************************************************************************/
 /*
- * Create an image from a Footprint's bounding box
- */
-template <typename IDImageT>
-static typename image::Image<IDImageT>::Ptr makeImageFromBBox(
-    geom::BoxI const bbox
-) {
-    typename image::Image<IDImageT>::Ptr idImage(
-        new image::Image<IDImageT>(bbox.getWidth(), bbox.getHeight())
-    );
-    idImage->setXY0(bbox.getMinX(), bbox.getMinY());
-
-    return idImage;
-}
-
-/******************************************************************************/
-/*
  * Set an image to the value of footprint's ID wherever they may fall
  *
  * @param footprints the footprints to insert
@@ -684,8 +622,8 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
     }
     Footprint::Ptr const foot = *fiter;
 
-    typename image::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(
-        foot->getRegion()
+    typename image::Image<IDImageT>::Ptr idImage(
+        new image::Image<IDImageT>(foot->getRegion())
     );
     *idImage = 0;
     /*
@@ -707,7 +645,7 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(
                                           Footprint::Ptr const& foot, // the Footprint to insert
                                           int const id // the desired ID
                                                                      ) {
-    typename image::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(foot->getBBox());
+    typename image::Image<IDImageT>::Ptr idImage(new image::Image<IDImageT>(foot->getBBox()));
     *idImage = 0;
     /*
      * do the work
@@ -744,7 +682,7 @@ Footprint::Ptr growFootprintSlow(
      */
     geom::BoxI bbox = foot.getBBox();
     bbox.grow(2*ngrow);
-    image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
+    image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
     *idImage = 0;
     idImage->setXY0(0, 0);
 
@@ -752,7 +690,7 @@ Footprint::Ptr growFootprintSlow(
 
 
     image::Image<double>::Ptr circle_im(
-        new image::Image<double>(2*ngrow + 1, 2*ngrow + 1)
+        new image::Image<double>(geom::ExtentI(2*ngrow + 1, 2*ngrow + 1))
     );
     *circle_im = 0;
     for (int r = -ngrow; r <= ngrow; ++r) {
@@ -810,7 +748,7 @@ Footprint::Ptr growFootprint(
      */
     geom::BoxI bbox = foot.getBBox();
     bbox.grow(ngrow);
-    image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
+    image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
     *idImage = 0;
     idImage->setXY0(0, 0);
     
@@ -890,7 +828,7 @@ std::vector<geom::BoxI> footprintToBBoxList(Footprint const& foot) {
     typedef boost::uint16_t ImageT;
     geom::BoxI fpBBox = foot.getBBox();
     image::Image<ImageT>::Ptr idImage(
-        new image::Image<ImageT>(fpBBox.getWidth(), fpBBox.getHeight())
+        new image::Image<ImageT>(fpBBox.getDimensions())
     );
     *idImage = 0;
     int const height = fpBBox.getHeight();

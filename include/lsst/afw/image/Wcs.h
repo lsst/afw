@@ -36,7 +36,6 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/deprecated.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -166,7 +165,8 @@ public:
                                                         ) const;
 
     //Mutators
-    void shiftReferencePixel(double dx, double dy); 
+    void shiftReferencePixel(geom::ExtentD const & d) {shiftReferencePixel(d.getX(), d.getY());}
+    void shiftReferencePixel(double dx, double dy);
 
         
 private:
@@ -225,7 +225,7 @@ namespace detail {
     PTR(lsst::daf::base::PropertyList)
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
     
-    image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+    geom::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
 Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);

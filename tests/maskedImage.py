@@ -67,8 +67,7 @@ class MaskedImageTestCase(unittest.TestCase):
         
         self.mimage.getMask().set(self.EDGE)
         centre = afwImage.MaskU(self.mimage.getMask(),
-                                afwImage.BBox(afwImage.PointI(2, 2), self.mimage.getWidth() - 4,
-                                              self.mimage.getHeight() - 4))
+                      afwGeom.BoxI(afwGeom.PointI(2, 2), self.mimage.getDimensions() - 4))
         centre.set(0x0)
         #
         self.mimage.getVariance().set(self.varVal1)
@@ -404,24 +403,24 @@ class MaskedImageTestCase(unittest.TestCase):
         
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
 
         x0, y0 = 3, 5
         im.setXY0(x0, y0)
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
 
         x0, y0 = 30, 50
-        im.setXY0(afwImage.PointI(x0, y0))
+        im.setXY0(afwGeom.PointI(x0, y0))
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
 
     def testSubimages1(self):
-        smimage = afwImage.MaskedImageF(self.mimage, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
+        smimage = afwImage.MaskedImageF(self.mimage, afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(10, 5)))
         
-        simage = afwImage.MaskedImageF(smimage, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
+        simage = afwImage.MaskedImageF(smimage, afwGeom.BoxI(afwGeom.PointI(1, 1), (3, 2)))
         self.assertEqual(simage.getX0(), 2)
         self.assertEqual(simage.getY0(), 2) # i.e. wrt self.mimage
 
@@ -440,12 +439,12 @@ class MaskedImageTestCase(unittest.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.mimage.set(9, 4, (888, 0x0, 0))
-        #printImg(afwImage.ImageF(self.mimage, afwImage.BBox(afwImage.PointI(0, 0), 10, 5))); print
+        #printImg(afwImage.ImageF(self.mimage, afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(10, 5)))); print
 
-        smimage = afwImage.MaskedImageF(self.mimage, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
-        smimage.setXY0(afwImage.PointI(0, 0)) # reset origin; doesn't affect pixel coordinate systems
+        smimage = afwImage.MaskedImageF(self.mimage, afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(10, 5)))
+        smimage.setXY0(afwGeom.PointI(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
-        simage = afwImage.MaskedImageF(smimage, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
+        simage = afwImage.MaskedImageF(smimage, afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(3, 2)))
         self.assertEqual(simage.getX0(), 1)
         self.assertEqual(simage.getY0(), 1)
 
@@ -473,8 +472,8 @@ class MaskedImageTestCase(unittest.TestCase):
         self.mimage.getMask().set(20, 20, 0xf)
 
         for deep in (True, False):
-            mimage = self.mimage.Factory(self.mimage, afwImage.BBox(afwImage.PointI(10, 10), 64, 64), deep)
-            mimage.setXY0(afwImage.PointI(0, 0))
+            mimage = self.mimage.Factory(self.mimage, afwGeom.BoxI(afwGeom.PointI(10, 10), afwGeom.ExtentI(64, 64)), deep)
+            mimage.setXY0(afwGeom.PointI(0, 0))
             mimage2 = mimage.Factory(mimage)
             
             if display:

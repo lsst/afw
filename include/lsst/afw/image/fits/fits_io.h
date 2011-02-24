@@ -56,16 +56,16 @@ struct fits_read_support {
 /// \ingroup FITS_IO
 /// \brief Returns the width and height of the FITS file at the specified location.
 /// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
-inline std::pair<int, int> fits_read_dimensions(const char* filename) {
-    lsst::daf::base::PropertyList::Ptr metadata(new lsst::daf::base::PropertyList());
+inline geom::ExtentI fits_read_dimensions(const char* filename) {
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
     detail::fits_reader m(filename, metadata);
-    return m.get_Dimensions();
+    return m.getDimensions();
 }
 
 /// \ingroup FITS_IO
 /// \brief Returns the width and height of the FITS file at the specified location.
 /// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
-inline std::pair<int, int> fits_read_dimensions(const std::string& filename) {
+inline geom::ExtentI fits_read_dimensions(const std::string& filename) {
     return fits_read_dimensions(filename.c_str());
 }
 
@@ -98,11 +98,12 @@ template <typename ImageT>
 inline void fits_read_image(const std::string& filename, ImageT & im,
                             lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
                             int hdu=1,
-                            BBox const& bbox=BBox()
+                            geom::BoxI const& bbox=geom::BoxI(),
+                            ImageOrigin const origin = LOCAL
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
 
-    detail::fits_reader m(filename, metadata, hdu, bbox);
+    detail::fits_reader m(filename, metadata, hdu, bbox, origin);
     m.read_image(im);
 }
 

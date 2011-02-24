@@ -29,6 +29,7 @@
 #include "lsst/afw/image.h"
 
 namespace afwImage = lsst::afw::image;
+namespace geom = lsst::afw::geom;
 
 template<class ImageT>
 void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix, int nIter) {
@@ -94,14 +95,14 @@ int main(int argc, char **argv) {
 
     std::cout << "Image(" << nCols << ", " << nRows << ")" << std::endl;
     {
-        afwImage::Image<ImagePixel> image(nCols, nRows);
+        afwImage::Image<ImagePixel> image(geom::ExtentI(nCols, nRows));
         afwImage::Image<ImagePixel>::SinglePixel pix(1.0);
         timePixelAccess(image, pix, nIter);
     }
     
     std::cout << "MaskedImage(" << nCols << ", " << nRows << ")" << std::endl;
     {
-        afwImage::MaskedImage<ImagePixel> maskedImage(nCols, nRows);
+        afwImage::MaskedImage<ImagePixel> maskedImage(geom::ExtentI(nCols, nRows));
         afwImage::MaskedImage<ImagePixel>::SinglePixel pix(1.0, 0x10, 100);
         timePixelAccess(maskedImage, pix, nIter);
     }

@@ -33,7 +33,7 @@
 
 import numpy
 import lsst.afw.image as afwImage
-
+import lsst.afw.geam as afwGeom
 def arrayFromImage(im, dtype=float):
     """Return a numpy array representation of an image.
     Return None if mask is None.
@@ -81,7 +81,7 @@ def imageFromArray(arr, retType=afwImage.ImageF):
     """Return an Image representation of a numpy array.
     The data is presently copied but do not rely on that.
     """
-    im = retType(arr.shape[0], arr.shape[1])
+    im = retType(afwGeom.ExtentI(arr.shape[0], arr.shape[1]))
     setImageFromArray(im, arr)
     return im
 
@@ -89,7 +89,7 @@ def maskFromArray(arr):
     """Return a mask representation of a numpy array
     The data is presently copied but do not rely on that.
     """
-    mask = afwImage.MaskU(arr.shape[0], arr.shape[1])
+    mask = afwImage.MaskU(afwGeom.ExtentI(arr.shape[0], arr.shape[1]))
     setMaskFromArray(mask, arr)
     return mask
 
@@ -98,7 +98,7 @@ def maskedImageFromArrays(imMaskVarArrays, retType=afwImage.MaskedImageF):
     The data is presently copied but do not rely on that.
     """
     imArr = imMaskVarArrays[0]
-    maskedImage = retType(imArr.shape[0], imArr.shape[1])
+    maskedImage = retType(afwGeom.ExtentI((imArr.shape[0], imArr.shape[1]))
     setMaskedImageFromArrays(maskedImage, imMaskVarArrays)
     return maskedImage
 
@@ -274,7 +274,7 @@ def maskedImagesDiffer(maskedImageArrSet1, maskedImageArrSet2,
 
 if __name__ == "__main__":
     maskedImage = afwImage.MaskedImageD("data/small")
-    bb = afwImage.BBox(afwImage.PointI(200, 100), 50, 50)
+    bb = afwGeom.BoxI(afwGeom.PointI(200, 100), afwGeom.ExtentI(50, 50))
     siPtr = maskedImage.Factory(maskedImage, bb)
 
     siArrays = arraysFromMaskedImage(siPtr)

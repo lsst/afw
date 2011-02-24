@@ -236,27 +236,14 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getMinX(), x0 + dx)
         self.assertEqual(foot.getBBox().getMinX(), x0)
 
-    def testBCircle2i(self):
-        """Test the BCircle2i constructors"""
-        
-        x = 100
-        y = 200
-        r = 1.5
-        
-        bc = afwImage.BCircle(afwImage.PointI(x, y), r)
-        for i in range(2):
-            c = bc.getCenter()
-            self.assertEqual(c.getX(), x)
-            self.assertEqual(c.getY(), y)
-            self.assertAlmostEqual(bc.getRadius(), r)
-
-            bc = afwImage.BCircle(afwImage.PointI(x, y), r)
-
-    def testFootprintFromBCircle(self):
+    def testFootprintFromEllipse(self):
         """Create a circular Footprint"""
 
-        foot = afwDetect.Footprint(afwImage.BCircle(afwImage.PointI(9, 15), 6),
-                                      afwImage.BBox(afwImage.PointI(0, 0), 20, 30))
+	ellipse = geomEllipses.Ellipse(afwGeom.PointI(9,15), 
+		                       geomEllipses.DistortionAndGeomatricRadius(6))
+        foot = afwDetect.Footprint(
+                ellipse, 
+                afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(20, 30)))
 
         idImage = afwImage.ImageU(foot.getRegion().getWidth(), foot.getRegion().getHeight())
         idImage.set(0)
@@ -270,8 +257,8 @@ class FootprintTestCase(unittest.TestCase):
         """Test growing a footprint"""
         x0, y0 = 20, 20
         width, height = 20, 30
-        foot1 = afwDetect.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), width, height),
-                                       afwImage.BBox(afwImage.PointI(0, 0), 100, 100))
+        foot1 = afwDetect.Footprint(afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(width, height)),
+                                       afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(100, 100))
         bbox1 = foot1.getBBox()
 
         self.assertEqual(bbox1.getMinX(), x0)
@@ -320,7 +307,7 @@ class FootprintTestCase(unittest.TestCase):
                           ]:
             foot.addSpan(y, x0, x1)
         
-        idImage = afwImage.ImageU(region.getWidth(), region.getHeight())
+        idImage = afwImage.ImageU(region.getDimensions())
         idImage.set(0)
 
         foot.insertIntoImage(idImage, 1)
@@ -637,7 +624,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
     def testGrowEmpty(self):
         """Check that growing an empty Footprint doesn't fail an assertion; #1186"""
         fp = afwDetect.Footprint()
-        fp.setRegion(afwImage.BBox(afwImage.PointI(0, 0), 10, 10))
+        fp.setRegion(afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(10, 10)))
         afwDetect.growFootprint(fp, 5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

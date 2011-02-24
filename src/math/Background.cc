@@ -39,6 +39,7 @@
 #include "lsst/afw/math/Statistics.h"
 
 using namespace std;
+namespace geom = lsst::afw::geom;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
@@ -112,9 +113,12 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         _grid[iX].resize(_nySample);
         for (int iY = 0; iY < _nySample; ++iY) {
             
-            ImageT subimg =
-                ImageT(img, image::BBox(image::PointI(_xorig[iX], _yorig[iY]),
-                                        _subimgWidth, _subimgHeight));
+            ImageT subimg = ImageT(img, geom::BoxI(
+                    geom::PointI(_xorig[iX], _yorig[iY]),
+                    geom::ExtentI(_subimgWidth, _subimgHeight)
+                ),
+                image::LOCAL
+            );
             
             math::Statistics stats =
                 math::makeStatistics(subimg, _bctrl.getStatisticsProperty(),
@@ -186,8 +190,11 @@ template<typename PixelT>
 typename image::Image<PixelT>::Ptr math::Background::getImage() const {
 
     // create a shared_ptr to put the background image in and return to caller
-    typename image::Image<PixelT>::Ptr bg =
-        typename image::Image<PixelT>::Ptr(new typename image::Image<PixelT>(_imgWidth, _imgHeight));
+    typename image::Image<PixelT>::Ptr bg = typename image::Image<PixelT>::Ptr(
+        new typename image::Image<PixelT>(
+            geom::ExtentI(_imgWidth, _imgHeight)
+        )
+    );
 
     // need a vector of all x pixel coords to spline over
     vector<int> xpix(bg->getWidth());

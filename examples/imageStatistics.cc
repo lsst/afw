@@ -35,6 +35,7 @@
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
+namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MaskedImageF;
@@ -101,8 +102,8 @@ int main() {
 
     // declare an image and a masked image
     int const wid = 1024;
-    ImageF img(wid, wid);
-    MaskedImageF mimg(wid, wid);
+    ImageF img(geom::ExtentI(wid, wid));
+    MaskedImageF mimg(img.getDimensions());
     std::vector<double> v(0);
     MaskedVectorF mv(wid*wid);
     

@@ -113,7 +113,9 @@ Psf::Image::Ptr Psf::doComputeImage(
     int const width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
     int const height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
 
-    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(width, height);
+    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
+        geom::ExtentI(width, height)
+    );
     kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?

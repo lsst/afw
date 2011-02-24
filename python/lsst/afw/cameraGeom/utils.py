@@ -100,7 +100,7 @@ class SynthesizeCcdImage(GetCcdImage):
         
         bbox = amp.getAllPixels(self.isTrimmed)
         im = imageFactory(bbox.getDimensions())
-        x0, y0 = bbox.getX0(), bbox.getY0()
+        x0, y0 = bbox.getMinX(), bbox.getMinY()
 
         im += int(amp.getElectronicParams().getReadNoise())
         bbox = amp.getDataSec(self.isTrimmed).clone()
@@ -120,7 +120,7 @@ class SynthesizeCcdImage(GetCcdImage):
         else:
             assert(not "Possible readoutCorner")
 
-        imageFactory(im, afwImage.BBox(afwImage.PointI(x - x0, y - y0), 3, 3)).set(0)
+        imageFactory(im, afwGeom.BoxI(afwGeom.PointI(x - x0, y - y0), afwGeom.ExtentI(3, 3)).set(0)
 
         return im
 
@@ -264,7 +264,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
         eWidth = extended + width + overclockH
         eHeight = preRows + height + overclockV
 
-        allPixels = afwImage.BBox(afwImage.PointI(0, 0), eWidth, eHeight)
+        allPixels = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(eWidth, eHeight))
 
         try:
             c = readoutCorners[c]
@@ -272,11 +272,11 @@ in particular that it has an entry ampSerial which is a single-element list, the
             raise RuntimeError, ("Unknown readoutCorner %s" % c)
         
         if c in (cameraGeom.Amp.LLC, cameraGeom.Amp.ULC):
-            biasSec = afwImage.BBox(afwImage.PointI(extended + width, preRows), overclockH, height)
-            dataSec = afwImage.BBox(afwImage.PointI(extended, preRows), width, height)
+            biasSec = afwGeom.BoxI(afwGeom.PointI(extended + width, preRows), afwGeom.ExtentI(overclockH, height))
+            dataSec = afwGeom.BoxI(afwGeom.PointI(extended, preRows), afwGeom.ExtentI(width, height))
         elif c in (cameraGeom.Amp.LRC, cameraGeom.Amp.URC):
-            biasSec = afwImage.BBox(afwImage.PointI(0, preRows), overclockH, height)
-            dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
+            biasSec = afwGeom.BoxI(afwGeom.PointI(0, preRows), afwGeom.ExtentI(overclockH, height))
+            dataSec = afwGeom.BoxI(afwGeom.PointI(overclockH, preRows), afwGeom.ExtentI(width, height))
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial, Col, Row),
@@ -583,21 +583,19 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
     """Make an Image of a Raft"""
 
     if raftCenter is None:
-        raftCenter = afwGeom.PointI(raft.getAllPixels().getWidth()//2,
-                                        raft.getAllPixels().getHeight()//2)
+        raftCenter = afwGeom.PointI(raft.getAllPixels().getDimensions()/2))
 
-    raftImage = imageFactory(raft.getAllPixels().getWidth()//bin, raft.getAllPixels().getHeight()//bin)
+    raftImage = imageFactory(raft.getAllPixels().Dimensions()/bin)
 
     for det in raft:
         ccd = cameraGeom.cast_Ccd(det)
         
         bbox = ccd.getAllPixels(True)
-        origin = ccd.getCenterPixel() - afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + \
-                 afwGeom.Extent2I(raftCenter)
+        origin = ccd.getCenterPixel() - bbox.getDimensions()/2 + afwGeom.Extent2I(raftCenter)
 
-        bbox = afwImage.BBox(afwImage.PointI((origin[0] + bbox.getLLC()[0])//bin,
-                                             (origin[1] + bbox.getLLC()[1])//bin),
-                             bbox.getWidth()//bin, bbox.getHeight()//bin)
+        bbox = afwGeom.BoxI(afwGeom.PointI((origin.getX() + bbox.getMinX())//bin,
+                                             (origin.getY() + bbox.getMinY())//bin),
+                             bbox.getDimensions()/bin)
 
         ccdImage = raftImage.Factory(raftImage, bbox)
         ccdImage <<= makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
@@ -609,7 +607,7 @@ def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None
 
 If imageSource isn't None, create an image using the images specified by imageSource"""
 
-    raftCenter = afwGeom.PointI(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
+    raftCenter = afwGeom.PointI(raft.getAllPixels().getDimensions()/2)
     if raftOrigin:
         raftCenter += afwGeom.Extent2I(raftOrigin)
 
@@ -630,14 +628,13 @@ If imageSource isn't None, create an image using the images specified by imageSo
         ccd = cameraGeom.cast_Ccd(det)
         
         bbox = ccd.getAllPixels(True)
-        origin = ccd.getCenterPixel() - \
-                 afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) + afwGeom.Extent2I(raftCenter)
+        origin = ccd.getCenterPixel() - bbox.getDimensions()/2 + afwGeom.Extent2I(raftCenter)
             
         if True:
             name = ccd.getId().getName()
         else:
             name = str(ccd.getCenter())
-        ds9.dot(name, (origin[0] + 0.5*bbox.getWidth())/bin,
+        ds9.dot(name, (origin.getX() + 0.5*bbox.getWidth())/bin,
                 (origin[1] + 0.4*bbox.getHeight())/bin, frame=frame)
 
         showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay, bin=bin)
@@ -649,16 +646,15 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
     for det in camera:
         raft = cameraGeom.cast_Raft(det);
         bbox = raft.getAllPixels()
-        origin = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel()) - \
-                 afwGeom.ExtentI(bbox.getWidth()/2, bbox.getHeight()/2) 
-        bbox = afwImage.BBox(afwImage.PointI((origin[0] + bbox.getLLC()[0])//bin,
-                                             (origin[1] + bbox.getLLC()[1])//bin),
-                             bbox.getWidth()//bin, bbox.getHeight()//bin)
+        origin = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel()) - bbox.getDimensions()/2                 
+        bbox = afwGeom.BoxI(afwGeom.PointI((origin.getX() + bbox.getMinX())//bin,
+                                           (origin.getY() + bbox.getMinY())//bin),
+                             bbox.getDimensions()/bin)
 
         im = cameraImage.Factory(cameraImage, bbox)
 
         im <<= makeImageFromRaft(raft, imageSource,
-                                 raftCenter=None, # afwGeom.PointI(bbox.getWidth()//2, bbox.getHeight()//2),
+                                 raftCenter=None, # afwGeom.PointI(bbox.getDimensions()2),
                                  imageFactory=imageFactory, bin=bin)
         serial = raft.getId().getSerial()
         im += serial if serial > 0 else 0
@@ -871,9 +867,9 @@ def makeDefectsFromFits(filename):
         data = hdu.data
         defectList = []
         for i in range(len(data)):
-            bbox = afwImage.BBox(afwImage.PointI(int(data[i]['x0']),\
-                int(data[i]['y0'])), int(data[i]['width']),\
-                int(data[i]['height']))
+            bbox = afwGeom.BoxI(
+                        afwGeom.PointI(int(data[i]['x0']), int(data[i]['y0'])),\
+		        afwGeom.ExtentI(int(data[i]['width']), int(data[i]['height'])))
             defectList.append(afwImage.DefectBase(bbox))
         defects[id] = defectList
     return defects
@@ -932,7 +928,7 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
                                   ("Defect at (%d,%d) for CCD (%s) has inconsistent y1/height = %d,%d" % \
                                    (x0, y0, ccdId, y1, height))
 
-                bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
+                bbox = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.PointI(x1, y1))
                 defects.push_back(afwImage.DefectBase(bbox))
 
     return defectsDict

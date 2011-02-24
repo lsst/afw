@@ -35,6 +35,7 @@
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
+namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MImageF;
@@ -65,7 +66,7 @@ int main(int argc, char **argv) {
     // regular image
     std::vector<ImageF::Ptr> imgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        ImageF::Ptr img = ImageF::Ptr (new ImageF(nX, nY, iImg));
+        ImageF::Ptr img = ImageF::Ptr (new ImageF(geom::ExtentI(nX, nY), iImg));
         imgList.push_back(img);
     }
     ImageF::Ptr imgStack = math::statisticsStack<float>(imgList, math::MEAN);
@@ -77,7 +78,7 @@ int main(int argc, char **argv) {
     // masked image
     std::vector<MImageF::Ptr> mimgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        MImageF::Ptr mimg = MImageF::Ptr(new MImageF(nX, nY));
+        MImageF::Ptr mimg = MImageF::Ptr(new MImageF(geom::ExtentI(nX, nY)));
         *mimg->getImage()    = iImg;
         *mimg->getMask()     = 0x0;
         *mimg->getVariance() = iImg;

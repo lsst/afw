@@ -24,10 +24,11 @@
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
+namespace geom = lsst::afw::geom;
 typedef image::MaskedImage<int> ImageT;
 
 int main() {
-    ImageT in(10, 6);
+    ImageT in(geom::ExtentI(10, 6));
 
     // Set data to a ramp
     for (int y = 0; y != in.getHeight(); ++y) {
@@ -106,8 +107,14 @@ int main() {
     // Normalise the kernel.  I.e. divide the smoothed parts of image2 by 16
     //
     {
-        ImageT center = ImageT(*out2,
-                               image::BBox(image::PointI(1, 1), in.getWidth() - 2, in.getHeight() - 2));
+        ImageT center = ImageT(
+            *out2,
+            geom::BoxI(
+                geom::PointI(1, 1), 
+                in.getDimensions() - geom::ExtentI(-2)
+            ),
+            image::LOCAL
+        );
         center /= 16;
     }
     //

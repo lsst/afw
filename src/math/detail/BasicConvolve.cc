@@ -43,7 +43,6 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/deprecated.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -114,7 +113,7 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
                 << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
         }
-        if (inImage.getDimensions() < kernel.getDimensions()) {
+        if (afwGeom::any(inImage.getDimensions().lt(kernel.getDimensions()))) {
             std::ostringstream os;
             os << "inImage dimensions = ( "
                 << inImage.getWidth() << ", " << inImage.getHeight()
@@ -308,8 +307,7 @@ void mathDetail::basicConvolve(
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
     
-    afwGeom::BoxI const fullBBox(afwGeom::Point2I(0, 0),
-        afwGeom::Extent2I(inImage.getWidth(), inImage.getHeight()));
+    afwGeom::BoxI const fullBBox = inImage.getBBox(image::LOCAL);
     afwGeom::BoxI const goodBBox = kernel.shrinkBBox(fullBBox);
 
     KernelVector kernelXVec(kernel.getWidth());
@@ -356,7 +354,7 @@ void mathDetail::basicConvolve(
         KernelIterator const kernelYVecBegin = kernelYVec.begin();
 
         // buffer for x-convolved data
-        OutImageT buffer(goodBBox.getWidth(), kernel.getHeight());
+        OutImageT buffer(goodBBox);
         
         // pre-fill x-convolved data buffer with all but one row of data
         int yInd = 0; // during initial fill bufY = inImageY

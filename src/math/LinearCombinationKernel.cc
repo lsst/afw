@@ -279,10 +279,10 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
     KernelImageList newKernelImagePtrList;
     newKernelImagePtrList.reserve(nSpatialParameters);
     for (int i = 0; i < nSpatialParameters; ++i) {
-        KernelImagePtr kernelImagePtr(new KernelImage(this->getWidth(), this->getHeight()));
+        KernelImagePtr kernelImagePtr(new KernelImage(this->getDimensions()));
         newKernelImagePtrList.push_back(kernelImagePtr);
     }
-    KernelImage kernelImage(this->getWidth(), this->getHeight());
+    KernelImage kernelImage(this->getDimensions());
     std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncPtrIter = 
         this->_spatialFunctionList.begin();
     afwMath::KernelList::const_iterator kIter = _kernelList.begin();

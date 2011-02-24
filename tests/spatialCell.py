@@ -57,7 +57,7 @@ class SpatialCellTestCase(unittest.TestCase):
             x, y = i, 5*i
             candidateList.append(testLib.TestCandidate(x, y, getFlux(x)))
     
-        self.cell = afwMath.SpatialCell("Test", afwImage.BBox(), candidateList)
+        self.cell = afwMath.SpatialCell("Test", afwGeom.BoxI(), candidateList)
         self.assertEqual(self.cell.getLabel(), "Test")
 
     def tearDown(self):
@@ -72,7 +72,7 @@ class SpatialCellTestCase(unittest.TestCase):
     def testBuildCandidateListByInsertion(self):
         """Build a candidate list by inserting candidates"""
 
-        self.cell = afwMath.SpatialCell("Test", afwImage.BBox())
+        self.cell = afwMath.SpatialCell("Test", afwGeom.BoxI())
 
         for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]):
             self.cell.insertCandidate(testLib.TestCandidate(x, y, getFlux(x)))
@@ -149,7 +149,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
     """A test case for SpatialCellSet"""
 
     def setUp(self):
-        self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 260, 200)
+        self.cellSet = afwMath.SpatialCellSet(afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(501, 501)), 260, 200)
 
     def makeTestCandidateCellSet(self):
         """Populate a SpatialCellSet"""
@@ -158,8 +158,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
             print
             for i in range(len(self.cellSet.getCellList())):
                 cell = self.cellSet.getCellList()[i]
-                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
-                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), \
+                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getMinX(), cell.getBBox().getMinY(),
+                                                 cell.getBBox().getMaxX(), cell.getBBox().getMaxY()), \
                                                  cell.getLabel()
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 
@@ -179,7 +179,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
     def testNoCells(self):
         """Test that we check for a request to make a SpatialCellSet with no cells"""
         def tst():
-            afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 500, 500), 0, 3)
+            afwMath.SpatialCellSet(afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(500, 500)), 0, 3)
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, tst)
 
@@ -248,7 +248,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
             assert(dx//sx == float(dx)/float(sx))
             assert(dy//sy == float(dy)/float(sy))
             
-            bbox = afwImage.BBox(afwImage.PointI(x0, y0), dx, dy)
+            bbox = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(dx, dy))
             cset = afwMath.SpatialCellSet(bbox, sx, sy)
             for cell in cset.getCellList():
                 label  = cell.getLabel()
@@ -256,10 +256,10 @@ class SpatialCellSetTestCase(unittest.TestCase):
                 
                 cbbox  = cell.getBBox()
 
-                self.assertEqual(cbbox.getX0(), nx*sx + x0)
-                self.assertEqual(cbbox.getY0(), ny*sy + y0)
-                self.assertEqual(cbbox.getX1(), (nx+1)*sx + x0 - 1)
-                self.assertEqual(cbbox.getY1(), (ny+1)*sy + y0 - 1)
+                self.assertEqual(cbbox.getMinX(), nx*sx + x0)
+                self.assertEqual(cbbox.getMinY(), ny*sy + y0)
+                self.assertEqual(cbbox.getMaxX(), (nx+1)*sx + x0 - 1)
+                self.assertEqual(cbbox.getMaxY(), (ny+1)*sy + y0 - 1)
 
     def testSortCandidates(self):
         """Check that we can update ratings and maintain order"""
@@ -290,7 +290,7 @@ class TestImageCandidateCase(unittest.TestCase):
     """A test case for TestImageCandidate"""
 
     def setUp(self):
-        self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 2, 3)
+        self.cellSet = afwMath.SpatialCellSet(afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(501, 501)), 2, 3)
 
     def tearDown(self):
         del self.cellSet

@@ -39,7 +39,7 @@
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
-
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/ImageUtils.h"
@@ -95,6 +95,9 @@ namespace image {
     struct ConstReference {
         typedef typename boost::gil::channel_traits<PixelT>::const_reference type; ///< const reference type
     };
+    
+    enum ImageOrigin {PARENT, LOCAL};
+
     /// \brief The base class for all %image classed (Image, Mask, MaskedImage, ...)
     //
     // You are not expected to use this class directly in your own code; use one of the
@@ -109,8 +112,7 @@ namespace image {
 
 
         typedef typename boost::shared_ptr<PixelT> RawDataPtr;
-    public:
-
+    public:        
 
         typedef boost::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase
         typedef boost::shared_ptr<const ImageBase<PixelT> > ConstPtr; ///< A shared_ptr to a const ImageBase
@@ -170,10 +172,10 @@ namespace image {
         //
         template<typename> friend class DecoratedImage;
         template<typename, typename, typename> friend class MaskedImage;
-        explicit ImageBase(const int width=0, const int height=0);
-        explicit ImageBase(const std::pair<int, int> dimensions);
+        explicit ImageBase(const geom::Extent2I  & dimensions=geom::ExtentI());
+        explicit ImageBase(const geom::BoxI &bbox);
         ImageBase(const ImageBase& src, const bool deep=false);
-        explicit ImageBase(const ImageBase& src, const BBox& bbox, const bool deep=false);
+        explicit ImageBase(const ImageBase& src, const geom::BoxI& bbox, const ImageOrigin origin, const bool deep=false);
         /// generalised copy constructor
         ///
         /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
@@ -186,12 +188,8 @@ namespace image {
                     "Only deep copies are permitted for ImageBases with different pixel types");
             }
 
-            ImageBase<PixelT> tmp(rhs.getDimensions());
+            ImageBase<PixelT> tmp(rhs.getBBox(PARENT));
             copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
-            tmp._ix0 = 0;                                        // we made a deep copy, so _i[xy]0 == 0
-            tmp._iy0 = 0;
-            tmp._x0 = rhs._x0;
-            tmp._y0 = rhs._y0;
 
             using std::swap;                           // See Meyers, Effective C++, Item 25
             ImageBase<PixelT>::swap(tmp);                  // See Meyers, Effective C++, Items 11 and 43
@@ -220,7 +218,7 @@ namespace image {
          * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        int getX0() const { return _x0; }
+        int getX0() const { return _origin.getX(); }
         /**
          * Return the %image's row-origin
          *
@@ -228,7 +226,7 @@ namespace image {
          * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        int getY0() const { return _y0; }
+        int getY0() const { return _origin.getY(); }
 
         /**
          * Return the %image's origin
@@ -237,7 +235,7 @@ namespace image {
          * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        PointI getXY0() const { return PointI(_x0, _y0); }
+        geom::PointI getXY0() const { return _origin; }
         
         /**
          * @brief Convert image position to index (nearest integer and fractional parts)
@@ -271,7 +269,7 @@ namespace image {
         }
         
         /// Return the %image's size;  useful for passing to constructors
-        std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        geom::ExtentI getDimensions() const { return geom::ExtentI(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
 
@@ -335,9 +333,8 @@ namespace image {
          * \note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
-        void setXY0(PointI const origin) {
-            _x0 = origin.getX();
-            _y0 = origin.getY();
+        void setXY0(geom::PointI const origin) {
+            _origin=origin;
         }
         /**
          * Set the ImageBase's origin
@@ -348,31 +345,32 @@ namespace image {
          * don't do so unless you are an Expert.
          */
         void setXY0(int const x0, int const y0) {
-            _x0 = x0;
-            _y0 = y0;
+            setXY0(geom::PointI(x0,y0));
         }
 
+        geom::BoxI getBBox(ImageOrigin origin) const {
+            if(origin==PARENT) 
+                return geom::BoxI(_origin, getDimensions());
+            else return geom::BoxI(geom::PointI(0,0), getDimensions());
+        }
     private:
+        geom::PointI _origin;
         RawDataPtr _rawData;
         _view_t _gilView;
-        //
-        int _ix0;                       // origin of ImageBase in some larger image (0 if not a subImageBase)
-        int _iy0;                       // do not lie about this!  You may lie about _[xy]0, but be careful
 
-        int _x0;                        // origin of ImageBase in some larger image (0 if not a subImageBase)
-        int _y0;                        // as returned to and manipulated by the user
-        //
-        // Provide functions that minimise the temptation to get at the variables directly
-        //
-
-
+        //oring of ImageBase in some larger image as returned to and manipulated
+        //by the user
 
 
     protected:
 #if !defined(SWIG)
-        static RawDataPtr _allocate(int width, int height);
-        static _view_t _makeView(int width, int height, RawDataPtr data);
-        static _view_t _makeSubView(BBox const & bbox, const _view_t & view);
+        static RawDataPtr _allocate(geom::ExtentI const & dimensions);
+        static _view_t _makeView(geom::ExtentI const & dimensions, RawDataPtr data);
+        static _view_t _makeSubView(
+            geom::ExtentI const & dimensions, 
+            geom::ExtentI const & offset, 
+            const _view_t & view
+        );
 
         RawDataPtr _getRawDataPtr() {return _rawData;}
         _view_t _getRawView() const { return _gilView; }
@@ -406,13 +404,15 @@ namespace image {
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
         
-        explicit Image(const int width=0, int const height=0, PixelT initialValue=0);
-        explicit Image(const std::pair<int, int> dimensions, PixelT initialValue=0);
+        explicit Image(geom::ExtentI const & dimensions=geom::ExtentI(), PixelT initialValue=0);
+        explicit Image(geom::BoxI const & dimensions, PixelT initialValue=0);
+
         Image(const Image& rhs, const bool deep=false);
-        explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
+        explicit Image(Image const & rhs,geom::BoxI const & bbox, ImageOrigin const origin, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                       BBox const& bbox=BBox());
+                       geom::BoxI const& bbox=geom::BoxI(), 
+                       ImageOrigin const origin = LOCAL);
 
         // generalised copy constructor
         template<typename OtherPixelT>
@@ -427,10 +427,11 @@ namespace image {
         Image& operator=(const Image& rhs);
 
         //void readFits(std::string const& fileName, ...); // replaced by constructor
-        void writeFits(std::string const& fileName,
-                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
-                       std::string const& mode="w"
-                      ) const;
+        void writeFits(
+            std::string const& fileName,
+            boost::shared_ptr<daf::base::PropertySet const> metadata = daf::base::PropertySet::Ptr(),
+            std::string const& mode="w"
+        ) const;
 
         void swap(Image &rhs);
         //
@@ -485,11 +486,16 @@ namespace image {
         /// shared_ptr to the Image as const
         typedef typename Image<PixelT>::ConstPtr ImageConstPtr;
 
-        explicit DecoratedImage(const int width=0, const int height=0);
-        explicit DecoratedImage(const std::pair<int, int> dimensions);
+        explicit DecoratedImage(const geom::ExtentI & dimensions=geom::ExtentI());
+        explicit DecoratedImage(const geom::BoxI & bbox);
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
-        explicit DecoratedImage(std::string const& fileName, const int hdu=0, BBox const& bbox=BBox());
+        explicit DecoratedImage(
+            std::string const& fileName, 
+            const int hdu=0, 
+            geom::BoxI const& bbox=geom::BoxI(), 
+            ImageOrigin const origin = LOCAL
+        );
 
         DecoratedImage& operator=(const DecoratedImage& image);
 
@@ -504,16 +510,16 @@ namespace image {
         int getY0() const { return _image->getY0(); }
 
         /// Return the %image's size;  useful for passing to constructors
-        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        const geom::ExtentI getDimensions() const { return _image->getDimensions(); }
 
         void swap(DecoratedImage &rhs);
         
         //void readFits(std::string const& fileName, ...); // replaced by constructor
-        void writeFits(std::string const& fileName,
-                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata =
-                            lsst::daf::base::PropertySet::Ptr(),
-                       std::string const& mode="w"
-                      ) const;
+        void writeFits(
+            std::string const& fileName,
+            boost::shared_ptr<daf::base::PropertySet const> metadata = daf::base::PropertySet::Ptr(),
+            std::string const& mode="w"
+        ) const;
         
         /// Return a shared_ptr to the DecoratedImage's Image
         ImagePtr      getImage()       { return _image; }

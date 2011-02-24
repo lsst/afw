@@ -168,7 +168,7 @@ class KernelIOTestCase(unittest.TestCase):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
-                                                             afwImage.PointI(activeCol, activeRow))
+                                                             afwGeom.PointI(activeCol, activeRow))
 
                         storageList = dafPersist.StorageList()
                         storage = persistence.getPersistStorage("XmlStorage", loc)
@@ -260,7 +260,7 @@ class KernelIOTestCase(unittest.TestCase):
         kVec = afwMath.KernelList()
         for row in range(kHeight):
             for col in range(kWidth):
-                kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
+                kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.PointI(col, row))
                 basisImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(basisImage, True)
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))

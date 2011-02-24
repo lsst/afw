@@ -31,6 +31,7 @@
 using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
+namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 typedef math::Background Back;
@@ -48,7 +49,7 @@ int main() {
     int const nStar = 100;
     
     // declare an image.
-    ImageF img(wid, wid);
+    ImageF img(geom::ExtentI(wid, wid));
     img = sky;
     
     // put sky and some fake stars in the image, and add uniform noise

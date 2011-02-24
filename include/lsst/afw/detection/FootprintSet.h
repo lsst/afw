@@ -87,7 +87,6 @@ public:
      */
     FootprintList const& getFootprints() const { return *_footprints; }
     
-    void setRegion(image::BBox const& region) {setRegion(geom::convertToGeom(region));}
     void setRegion(geom::BoxI const& region);
     /**
      * Return the corners of the MaskedImage

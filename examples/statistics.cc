@@ -32,13 +32,14 @@
 using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
+namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 
 int main() {
 
     // First we'll try a regular image
-    ImageF img(10, 40);
+    ImageF img(geom::ExtentI(10, 40));
     img = 100000.0;
     
     {

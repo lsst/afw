@@ -61,10 +61,10 @@ if not dataDir:
 
 # input image contains a saturated star, a bad column, and a faint star
 InputMaskedImagePath = os.path.join(dataDir, "med")
-InputBBox = afwImage.BBox(afwImage.PointI(52, 574), 76, 80)
+InputBBox = afwGeom.BoxI(afwGeom.PointI(52, 574), afwGeom.ExtentI(76, 80))
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve fully overwrites it
-ShiftedBBox = afwImage.BBox(afwImage.PointI(0, 460), 76, 80)
+ShiftedBBox = afwGeom.BoxI(afwGeom.PointI(0, 460), afwGeom.ExtentI(76, 80))
 FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
@@ -190,7 +190,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         self.width = self.maskedImage.getWidth()
         self.height = self.maskedImage.getHeight()
-#         smask = afwImage.MaskU(self.maskedImage.getMask(), afwImage.BBox(afwImage.PointI(15, 17), 10, 5))
+#         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.BoxI(afwGeom.PointI(15, 17), afwGeom.ExtentI(10, 5)))
 #         smask.set(0x8)
 
     def tearDown(self):
@@ -315,13 +315,9 @@ class ConvolveTestCase(unittest.TestCase):
         """
         fullBox = afwGeom.BoxI(
             afwGeom.PointI(0, 0),
-            afwGeom.ExtentI(ShiftedBBox.getWidth(), ShiftedBBox.getHeight()),
+            ShiftedBBox.getDimensions(),
         )
-        fullBBox = afwImage.BBox(afwImage.PointI(fullBox.getMinX(), fullBox.getMinY()),
-            fullBox.getWidth(), fullBox.getHeight())
         goodBox = kernel.shrinkBBox(fullBox)
-        goodBBox = afwImage.BBox(afwImage.PointI(goodBox.getMinX(), goodBox.getMinY()),
-            goodBox.getWidth(), goodBox.getHeight())
         cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, True)
         cnvMaskedImageCopy = afwImage.MaskedImageF(cnvMaskedImage, fullBBox, True)
         cnvMaskedImageCopyViewOfGoodRegion = afwImage.MaskedImageF(cnvMaskedImageCopy, goodBBox, False)
@@ -512,7 +508,7 @@ class ConvolveTestCase(unittest.TestCase):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
-                            afwImage.PointI(activeCol, activeRow))
+                            afwGeom.PointI(activeCol, activeRow))
                         if display and False:
                             kim = afwImage.ImageD(kWidth, kHeight); kernel.computeImage(kim, False)
                             ds9.mtv(kim, frame=1)

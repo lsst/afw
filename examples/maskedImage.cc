@@ -28,6 +28,7 @@
 #include "boost/iterator/zip_iterator.hpp"
 #include "lsst/afw/image/MaskedImage.h"
 
+namespace geom = lsst::afw::geom;
 namespace image = lsst::afw::image;
 using namespace std;
 
@@ -108,7 +109,7 @@ namespace {
 /************************************************************************************************************/
 
 int main() {
-    image::MaskedImage<ImagePixelT> img(3, 5);
+    image::MaskedImage<ImagePixelT> img(geom::ExtentI(3, 5));
     *img.getImage() = 100;
     *img.getMask() = 0x10;
     *img.getVariance() = 10;

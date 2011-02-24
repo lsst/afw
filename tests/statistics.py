@@ -114,7 +114,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(image2.getHeight()%2, 0)
         width = image2.getWidth()
         for y in range(1, image2.getHeight(), 2):
-            sim = image2.Factory(image2, afwImage.BBox(afwImage.PointI(0, y), width, 1))
+            sim = image2.Factory(image2, afwGeom.BoxI(afwGeom.PointI(0, y), afwGeom.ExtentI(width, 1)))
             sim += 1
 
         if display:

@@ -36,6 +36,7 @@
 #include "lsst/afw/math/Stack.h"
 #include "lsst/afw/math/MaskedVector.h"
 
+namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath  = lsst::afw::math;
 namespace ex    = lsst::pex::exceptions;
@@ -443,24 +444,33 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = typename MImage::Ptr(new MImage(1, image.getHeight()));
+        imgOut = typename MImage::Ptr(
+            new MImage(geom::ExtentI(1, image.getHeight()))
+        );
         int y = y0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
-            afwImage::Image<PixelT> subImage(image, bbox);
-            afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
-            *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
-                                                                  stat.getError()*stat.getError());
+            geom::BoxI bbox = afwGeom::BoxI(
+                geom::PointI(x0, y), 
+                geom::ExtentI(image.getWidth(), 1)
+            );
+            image::Image<PixelT> subImage(image, bbox, image::PARENT);
+            Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
+            *oPtr = typename image::MaskedImage<PixelT>::Pixel(
+                stat.getValue(), 0x0, 
+                stat.getError()*stat.getError()
+            );
         }
 
     } else if (dimension == 'y') {
-        imgOut = typename MImage::Ptr(new MImage(image.getWidth(), 1));
+        imgOut = typename MImage::Ptr(new MImage(geom::ExtentI(image.getWidth(), 1)));
         int x = x0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
-            afwImage::Image<PixelT> subImage(image, bbox);
+            geom::BoxI bbox = geom::BoxI(
+                geom::PointI(x, y0), geom::ExtentI(1, image.getHeight())
+            );
+            afwImage::Image<PixelT> subImage(image, bbox, image::PARENT);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());
@@ -496,24 +506,24 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = typename MImage::Ptr(new MImage(1, image.getHeight()));
+        imgOut = typename MImage::Ptr(new MImage(geom::ExtentI(1, image.getHeight())));
         int y = 0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
-            afwImage::MaskedImage<PixelT> subImage(image, bbox);
+            afwGeom::BoxI bbox = afwGeom::BoxI(afwGeom::PointI(x0, y), geom::ExtentI(image.getWidth(), 1));
+            afwImage::MaskedImage<PixelT> subImage(image, bbox, image::PARENT);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());
         }
 
     } else if (dimension == 'y') {
-        imgOut = typename MImage::Ptr(new MImage(image.getWidth(), 1));
+        imgOut = typename MImage::Ptr(new MImage(geom::ExtentI(image.getWidth(), 1)));
         int x = 0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
-            afwImage::MaskedImage<PixelT> subImage(image, bbox);
+            afwGeom::BoxI bbox = afwGeom::BoxI(afwGeom::PointI(x, y0), geom::ExtentI(1, image.getHeight()));
+            afwImage::MaskedImage<PixelT> subImage(image, bbox, image::PARENT);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());

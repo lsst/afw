@@ -41,79 +41,88 @@
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
 namespace image = lsst::afw::image;
-
+namespace geom = lsst::afw::geom;
 
 /************************************************************************************************************/
 template <typename PixelT>
 typename image::ImageBase<PixelT>::RawDataPtr image::ImageBase<PixelT>::_allocate(
-    int width, int height
+    geom::ExtentI const & dimensions
 ) {    
-    RawDataPtr mem(new PixelT[width*height], boost::checked_array_deleter<PixelT>());
+    RawDataPtr mem(new PixelT[dimensions.getX()*dimensions.getY()], boost::checked_array_deleter<PixelT>());
     return mem;
 }
 template <typename PixelT>
 typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeView(
-    int width, int height, RawDataPtr data
+    geom::ExtentI const & dimensions, RawDataPtr data
 ) {
     return boost::gil::interleaved_view(
-        width, height, 
+        dimensions.getX(), dimensions.getY(), 
         (typename _view_t::value_type* )data.get(), 
-        width*sizeof(PixelT)
+        dimensions.getX()*sizeof(PixelT)
     );
 }     
 template <typename PixelT>
 typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubView(
-    BBox const & bbox, const _view_t & view
+    geom::ExtentI const & dimensions, geom::ExtentI const & offset, const _view_t & view
 ) {
-    if (bbox.getX0() < 0 || bbox.getY0() < 0 ||
-        bbox.getX1() >= view.width() || bbox.getY1() >= view.height()
+    if (offset.getX() < 0 || offset.getY() < 0 ||
+        offset.getX() + dimensions.getX() >= view.width() || 
+        offset.getY() + dimensions.getY() >= view.height()
     ) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LengthErrorException,
             (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
-            bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight() %
-            view.width() % view.height()).str());
+                offset.getX() % offset.getY() % 
+                dimensions.getX() % dimensions.getY() %
+                view.width() % view.height()
+            ).str()
+        );
     }
 
-    if(!bbox) {
+    if(dimensions.getX() == 0 || dimensions.getY() == 0) {
         return boost::gil::subimage_view(
             view, 
-            bbox.getX0(), bbox.getY0(), 
-            view.width() - bbox.getX0(),
-            view.height() - bbox.getY0()
+            offset.getX(), offset.getY(), 
+            view.width() - offset.getX(),
+            view.height() - offset.getY()
         );
     } else {
         return boost::gil::subimage_view(
             view, 
-            bbox.getX0(), bbox.getY0(), 
-            bbox.getWidth(), bbox.getHeight()
+            offset.getX(), offset.getY(),
+            dimensions.getX(), dimensions.getY()
         );
     }
 }
 
-/// Create an uninitialised ImageBase of the specified size
-template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
-    lsst::daf::data::LsstBase(typeid(this)),
-    _rawData(_allocate(width, height)),
-    _gilView(_makeView(width, height, _rawData)),
-    _ix0(0), _iy0(0), _x0(0), _y0(0)
-{
-}
+/**
+ * Allocator Constructor
+ *
+ * allocate a new image with the specified dimensions.
+ * Sets origin at (0,0)
+ */
+template <typename PixelT>
+image::ImageBase<PixelT>::ImageBase(
+    geom::ExtentI const & dimensions
+) : lsst::daf::data::LsstBase(typeid(this)),
+    _origin(0,0),
+    _rawData(_allocate(dimensions)),
+    _gilView(_makeView(dimensions, _rawData))
+{}
 
 /**
- * Create an uninitialised ImageBase of the specified size
+ * Allocator Constructor
  *
- * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
- * which may be conveniently used to make objects of an appropriate size
+ * allocate a new image with the specified dimensions and origin
  */
-template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
-    lsst::daf::data::LsstBase(typeid(this)),
-    _rawData(_allocate(dimensions.first, dimensions.second)),
-    _gilView(_makeView(dimensions.first, dimensions.second, _rawData)),
-    _ix0(0), _iy0(0), _x0(0), _y0(0)
-{
-}
+template <typename PixelT>
+image::ImageBase<PixelT>::ImageBase(
+    geom::BoxI const & bbox
+) : lsst::daf::data::LsstBase(typeid(this)),
+    _origin(bbox.getMin()),
+    _rawData(_allocate(bbox.getDimensions())),
+    _gilView(_makeView(bbox.getDimensions(), _rawData))
+{}
 
 /**
  * Copy constructor.
@@ -128,13 +137,12 @@ image::ImageBase<PixelT>::ImageBase(
                           ///< if true make a new, standalone, ImageBase
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
+    _origin(rhs._origin),
     _rawData(rhs._rawData),
-    _gilView(rhs._gilView),
-    _ix0(rhs._ix0), _iy0(rhs._iy0), _x0(rhs._x0), _y0(rhs._y0)
+    _gilView(rhs._gilView)
 {
     if (deep) {
-        ImageBase tmp(getDimensions());
-        tmp.setXY0(getXY0());
+        ImageBase tmp(getBBox(PARENT));
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -151,19 +159,19 @@ image::ImageBase<PixelT>::ImageBase(
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     ImageBase const& rhs, ///< Right-hand-side %image
-    BBox const& bbox,     ///< Specify desired region
+    geom::BoxI const& bbox,     ///< Specify desired region
+    ImageOrigin const origin,   ///< Specify the coordinate system of the bbox
     bool const deep       ///< If false, new ImageBase shares storage with rhs;
                           ///< if true make a new, standalone, ImageBase
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
+    _origin((origin==PARENT) ? bbox.getMin(): rhs._origin + geom::ExtentI(bbox.getMin())),
     _rawData(rhs._rawData), // boost::shared_ptr, so don't copy the pixels
-    _gilView(_makeSubView(bbox, rhs._gilView)),
-    _ix0(rhs._ix0 + bbox.getX0()), _iy0(rhs._iy0 + bbox.getY0()),
-    _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
+    _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
 {
+    
     if (deep) {
-        ImageBase tmp(getDimensions());
-        tmp.setXY0(getXY0());
+        ImageBase tmp(getBBox(PARENT));        
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -248,10 +256,7 @@ void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     
     swap(_rawData, rhs._rawData);   // just swapping the pointers
     swap(_gilView, rhs._gilView);
-    swap(_ix0, rhs._ix0);
-    swap(_iy0, rhs._iy0);
-    swap(_x0, rhs._x0);
-    swap(_y0, rhs._y0);
+    swap(_origin, rhs._origin);
 }
 
 template<typename PixelT>
@@ -379,11 +384,11 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(int const width, ///< Number of columns
-                            int const height, ///< Number of rows
+image::Image<PixelT>::Image(geom::ExtentI const & dimensions, ///< Number of columns, rows
                             PixelT initialValue ///< Initial value
                            ) :
-    image::ImageBase<PixelT>(width, height) {
+    image::ImageBase<PixelT>(dimensions) 
+{
     *this = initialValue;
 }
 
@@ -391,10 +396,10 @@ image::Image<PixelT>::Image(int const width, ///< Number of columns
  * Create an initialized Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::pair<int, int> const dimensions, ///< (width, height) of the desired Image
+image::Image<PixelT>::Image(geom::BoxI const & bbox, //< (width, height) and origin of desired Image
                             PixelT initialValue ///< Initial value
                            ) :
-    image::ImageBase<PixelT>(dimensions) {
+    image::ImageBase<PixelT>(bbox) {
     *this = initialValue;
 }
 
@@ -421,11 +426,12 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
  */
 template<typename PixelT>
 image::Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
-                            BBox const& bbox,  ///< Specify desired region
+                            geom::BoxI const& bbox,  ///< Specify desired region
+                            ImageOrigin const origin,
                             bool const deep    ///< If false, new ImageBase shares storage with rhs; if true
                                                    ///< make a new, standalone, ImageBase
                            ) :
-    image::ImageBase<PixelT>(rhs, bbox, deep) {}
+    image::ImageBase<PixelT>(rhs, bbox, origin, deep) {}
 
 /// Set the %image's pixels to rhs
 template<typename PixelT>
@@ -460,7 +466,8 @@ template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
                             lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
-                            BBox const& bbox                            ///< Only read these pixels
+                            geom::BoxI const& bbox,                           ///< Only read these pixels
+                            ImageOrigin const origin    ///< specify the coordinate system of the bbox
                            ) :
     image::ImageBase<PixelT>() {
 
@@ -478,23 +485,13 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
-
     if (!metadata) {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
-
-    if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox)) {
+    if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
-
-    if (bbox) {
-        this->setXY0(bbox.getLLC());
-    }
-    /*
-     * We will interpret one of the header WCSs as providing the (X0, Y0) values
-     */
-    this->setXY0(this->getXY0() + detail::getImageXY0FromMetadata(detail::wcsNameForXY0, metadata.get()));
 }
 
 /**

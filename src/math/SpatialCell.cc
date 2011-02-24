@@ -78,7 +78,7 @@ void SpatialCellCandidate::setStatus(Status status) {
  * Ctor
  */
 SpatialCell::SpatialCell(std::string const& label, ///< string representing "name" of cell
-                         image::BBox const& bbox,  ///< Bounding box of cell in overall image
+                         geom::BoxI const& bbox,  ///< Bounding box of cell in overall image
                          CandidateList const& candidateList  ///< list of candidates to represent this cell
                         ) :
     _label(label),
@@ -399,7 +399,7 @@ SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
  *
  * @throw lsst::pex::exceptions::LengthErrorException if nx or ny is non-positive
  */
-SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for %image
+SpatialCellSet::SpatialCellSet(geom::BoxI const& region, ///< Bounding box for %image
                                int xSize,              ///< size of cells in the column direction
                                int ySize               ///< size of cells in the row direction (0: == xSize)
                               ) :
@@ -426,13 +426,15 @@ SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for 
     //
     // N.b. the SpatialCells will be sorted in y at the end of this
     //
-    int y0 = region.getY0();
+    int y0 = region.getMinY();
     for (int y = 0; y < ny; ++y) {
-        int const y1 = (y == ny - 1) ? region.getY1() : y0 + ySize - 1; // ny may not be a factor of height
-        int x0 = region.getX0();
+        // ny may not be a factor of height
+        int const y1 = (y == ny - 1) ? region.getMaxY() : y0 + ySize - 1; 
+        int x0 = region.getMinX();
         for (int x = 0; x < nx; ++x) {
-            int const x1 = (x == nx - 1) ? region.getX1() : x0 + xSize - 1; // nx may not be a factor of width
-            image::BBox bbox(image::PointI(x0, y0), image::PointI(x1, y1));
+            // nx may not be a factor of width
+            int const x1 = (x == nx - 1) ? region.getMaxX() : x0 + xSize - 1; 
+            geom::BoxI bbox(geom::PointI(x0, y0), geom::PointI(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
             _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));        
@@ -451,7 +453,7 @@ namespace {
         CellContains(SpatialCellCandidate::Ptr candidate) : _candidate(candidate) {}
 
         bool operator()(SpatialCell::Ptr cell) {
-            return cell->getBBox().contains(image::PointI(image::positionToIndex(_candidate->getXCenter()),
+            return cell->getBBox().contains(geom::PointI(image::positionToIndex(_candidate->getXCenter()),
                                                           image::positionToIndex(_candidate->getYCenter())));
         }
     private:

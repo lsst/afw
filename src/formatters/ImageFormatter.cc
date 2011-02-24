@@ -66,6 +66,7 @@ using lsst::daf::persistence::Storage;
 using lsst::afw::image::Image;
 
 namespace afwImg = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
 namespace afw {
@@ -179,19 +180,41 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
 
         execTrace("ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-        
-        afwImg::BBox box;
+               afwImg::ImageOrigin origin = afwImg::LOCAL;
+        if(additionalData->exists("imageOrigin")){
+            std::string originStr = additionalData->get<std::string>("imageOrigin");
+            if(originStr == "LOCAL") {
+                origin = afwImg::LOCAL;
+            } else if (originStr == "PARENT") {
+                origin = afwImg::PARENT;
+            } else {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::RuntimeErrorException, 
+                    (boost::format("Unknown ImageOrigin type  %s specified in additional"
+                                   "data for retrieving Image from fits")%originStr
+                        
+                    ).str()
+                );
+            }
+        } 
+        geom::BoxI box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
+            box = geom::BoxI(
+                geom::PointI(llcX, llcY), 
+                geom::ExtentI(width, height)
+            );
         }
         lsst::daf::base::PropertySet::Ptr metadata;
 
-        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu(),
-                                                        lsst::daf::base::PropertySet::Ptr(), box);
+        Image<ImagePixelT>* ip = new Image<ImagePixelT>(
+            fits->getPath(), fits->getHdu(),
+            lsst::daf::base::PropertySet::Ptr(), 
+            box, origin
+        );
         // \note We're throwing away the metadata
         // \todo Do something with these fields?
         // int _X0;
@@ -226,7 +249,9 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     ar & make_nvp("width", width) & make_nvp("height", height);
     std::size_t nbytes = width * height * sizeof(ImagePixelT);
     if (Archive::is_loading::value) {
-        boost::scoped_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(width, height));
+        boost::scoped_ptr<Image<ImagePixelT> > ni(
+            new Image<ImagePixelT>(geom::ExtentI(width, height))
+        );
         ImagePixelT * raw = ni->_getRawDataPtr().get();
         ar & make_nvp("bytes",
                       boost::serialization::make_binary_object(raw, nbytes));

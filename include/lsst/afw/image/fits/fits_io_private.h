@@ -39,8 +39,10 @@
 
 #include "boost/gil/gil_all.hpp"
 #include "boost/gil/extension/io/io_error.hpp"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
+#include "lsst/afw/image/Wcs.h"
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
@@ -269,19 +271,24 @@ class fits_reader : public fits_file_mgr {
 protected:
     int _hdu;                                            //!< desired HDU
     PropertySet::Ptr _metadata;                          //!< header metadata
-    int _naxis1, _naxis2;                                //!< dimension of image
+    int _naxis1, _naxis2;                                //!< dimension of image    
     int _ttype;                                          //!< cfitsio's name for data type
     int _bitpix;                                         //!< FITS' BITPIX keyword
-    BBox const& _bbox;                                   //!< Bounding Box of desired part of data
+    geom::BoxI _bbox;                             //!< Bounding Box of desired part of data
+    ImageOrigin _origin;
 
     void init() {
+
         move_to_hdu(_fd.get(), _hdu, false);
 
         /* get image data type */
         int bitpix = 0;     // BITPIX from FITS header
         int status = 0;
         if (fits_get_img_equivtype(_fd.get(), &bitpix, &status) != 0) {
-            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+            throw LSST_EXCEPT(
+                FitsException, 
+                cfitsio::err_msg(_fd.get(), status)
+            );
         }
         /*
          * Lookip cfitsio data type
@@ -291,8 +298,14 @@ protected:
         /* get image number of dimensions */
         int nAxis = 0;  // number of axes in file
         if (fits_get_img_dim(_fd.get(), &nAxis, &status) != 0) {
-            throw LSST_EXCEPT(FitsException,
-                              cfitsio::err_msg(_fd.get(), status, boost::format("Getting NAXIS from %s") % _filename));
+            throw LSST_EXCEPT(
+                FitsException,
+                cfitsio::err_msg(
+                    _fd.get(), 
+                    status, 
+                    boost::format("Getting NAXIS from %s") % _filename
+                )
+            );
         }
 
         /* validate the number of axes */
@@ -318,29 +331,21 @@ protected:
                 nAxes[2] = 1;
             }
             if (nAxes[2] != 1) {
-                throw LSST_EXCEPT(FitsException,
-                                  cfitsio::err_msg(_fd.get(), 0,
-                                                   boost::format("3rd dimension %d of %s is not 1") % nAxes[2] %
-                                                   _filename));
+                throw LSST_EXCEPT(
+                    FitsException,
+                    cfitsio::err_msg(
+                        _fd.get(), 0,
+                        boost::format("3rd dimension %d of %s is not 1") % 
+                        nAxes[2] % _filename
+                    )
+                );
             }
         }
 
         _naxis1 = nAxes[0];
         _naxis2 = nAxes[1];
         
-        
-        if (_bbox) {
-            if (_bbox.getX0() < 0 || _bbox.getY0() < 0 ||
-                _bbox.getX1() >= _naxis1 || _bbox.getY1() >= _naxis2
-            ) {
-                throw LSST_EXCEPT(
-                    lsst::pex::exceptions::LengthErrorException,
-                    (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
-                    _bbox.getX0() % _bbox.getY0() % _bbox.getWidth() % _bbox.getHeight() %
-                    _naxis1 % _naxis2).str()
-                ); 
-            }
-        }
+
         _bitpix = bitpix;
         //
         // Don't read the rest of the metadata here -- we don't yet know if the view is the right type
@@ -349,15 +354,18 @@ protected:
     
 public:
     fits_reader(cfitsio::fitsfile *file,
-                lsst::daf::base::PropertySet::Ptr  metadata,
-                int hdu=0, BBox const& bbox=BBox()
-    ) : fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox) { 
+                lsst::daf::base::PropertySet::Ptr metadata,
+                int hdu=0, geom::BoxI const& bbox=geom::BoxI(), 
+                ImageOrigin const origin = LOCAL
+    ) : fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) {         
         init(); 
     }
+
     fits_reader(const std::string& filename,
-                lsst::daf::base::PropertySet::Ptr  metadata,
-                int hdu=0, BBox const& bbox=BBox()
-    ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { 
+                lsst::daf::base::PropertySet::Ptr metadata,
+                int hdu=0, geom::BoxI const& bbox=geom::BoxI(),
+                ImageOrigin const origin = LOCAL
+    ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) { 
         init(); 
     }
 
@@ -380,42 +388,64 @@ public:
         cfitsio::getMetadata(_fd.get(), _metadata);
 
         // Origin of part of image to read
-        int x0 = 0, y0 = 0;                     if (_bbox) {
-            x0 = _bbox.getX0(); y0 = _bbox.getY0();
+        geom::PointI xy0(0,0);
+
+        geom::ExtentI xyOffset(getImageXY0FromMetadata(wcsNameForXY0, _metadata.get()));
+        if (!_bbox.isEmpty()) {
+            if(_origin == PARENT) {
+                _bbox.shift(-xyOffset);
+            }
+            
+            xy0 = _bbox.getMin();
+
+            if (_bbox.getMinX() < 0 || _bbox.getMinY() < 0 ||
+                _bbox.getWidth() > _naxis1 || _bbox.getHeight() > _naxis2
+            ) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::LengthErrorException,
+                    (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+                    _bbox.getMinX() % _bbox.getMinY() % _bbox.getWidth() % _bbox.getHeight() %
+                    _naxis1 % _naxis2).str()
+                ); 
+            } 
         }
-        std::pair<int, int> dimensions = get_Dimensions();
-        if (image.getWidth() != dimensions.first || image.getHeight() != dimensions.second) {
+        geom::ExtentI dimensions = getDimensions();
+        if (image.getWidth() != dimensions.getX() || image.getHeight() != dimensions.getY()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthErrorException,
                 (boost::format("Image dimensions (%d,%d) do not match requested read dimensions %dx%d") %
-                image.getWidth() % image.getHeight() % dimensions.first % dimensions.second).str()
+                image.getWidth() % image.getHeight() % dimensions.getX() % dimensions.getY()).str()
             );
         }
-
-        long blc[2] = {x0 + 1, y0 + 1}; // 'bottom left corner' of the subsection
-        long trc[2] = {x0 + dimensions.first, y0 + dimensions.second};  // 'top right corner' of the subsection
-        long inc[2] = {1, 1};                       // increment to be applied in each dimension (of file)
+        // 'bottom left corner' of the subsection (1-indexed)
+        long blc[2] = {xy0.getX() + 1, xy0.getY() + 1};
+        // 'top right corner' of the subsection
+        long trc[2] = {xy0.getX() + dimensions.getX(), xy0.getY() + dimensions.getY()}; 
+        // increment to be applied in each dimension (of file)
+        long inc[2] = {1, 1};                       
 
         int status = 0;                 // cfitsio function return status
 
         if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, &(*image.begin()), NULL, &status) != 0) {
             throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
+
+        image.setXY0(xy0 + xyOffset);
     }
    
     template <typename ImageT>
     void read_image(ImageT & image) {
-        ImageT tmp(get_Dimensions());
+        ImageT tmp(getDimensions());
         apply(tmp);
         image=tmp;
     }
 
-    std::pair<int,int> get_Dimensions() const {
-        if (_bbox) {
-            return _bbox.getDimensions();
+    geom::ExtentI getDimensions() const {
+        if (_bbox.isEmpty()) {
+            return geom::ExtentI(_naxis1, _naxis2);
         } else {
-            return std::pair<int, int>(_naxis1, _naxis2);
-        }
+            return _bbox.getDimensions();
+        }    
     }
 };
     

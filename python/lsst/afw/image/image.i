@@ -166,7 +166,7 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %mimage(MaskedImage, F, float);
 %mimage(MaskedImage, D, double);
 
-%template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
+%template(vectorBBox) std::vector<lsst::afw::geom::BoxI>;         
 
 %extend lsst::afw::image::Image<boost::uint16_t> {
     %newobject convertF;

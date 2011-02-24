@@ -51,7 +51,7 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         outImage.reset(new ImageT(inImage, true)); // a deep copy of inImage
         break;
       case 1:
-        outImage.reset(new ImageT(inImage.getHeight(), inImage.getWidth()));
+        outImage.reset(new ImageT(inImage.getBBox(image::PARENT)));
 
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::y_iterator optr = outImage->col_begin(inImage.getHeight() - y - 1);
@@ -63,7 +63,7 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         
         break;
       case 2:
-        outImage.reset(new ImageT(inImage.getDimensions()));
+        outImage.reset(new ImageT(inImage.getBBox(image::PARENT)));
         
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::x_iterator optr = outImage->row_begin(inImage.getHeight() - y - 1);
@@ -75,7 +75,7 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         }
         break;
       case 3:
-        outImage.reset(new ImageT(inImage.getHeight(), inImage.getWidth()));
+        outImage.reset(new ImageT(inImage.getBBox(image::PARENT)));
 
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::y_iterator optr = outImage->col_begin(y);

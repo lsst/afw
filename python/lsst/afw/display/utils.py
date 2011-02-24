@@ -143,9 +143,9 @@ class Mosaic(object):
             im = images[i]
 
             if smosaic.getDimensions() != im.getDimensions(): # im is smaller than smosaic
-                llc = afwImage.PointI((smosaic.getWidth() - im.getWidth())//2,
+                llc = afwGeom.PointI((smosaic.getWidth() - im.getWidth())//2,
                                       (smosaic.getHeight() - im.getHeight())//2)
-                smosaic = smosaic.Factory(smosaic, afwImage.BBox(llc, im.getWidth(), im.getHeight()))
+                smosaic = smosaic.Factory(smosaic, afwGeom.BoxI(llc, im.getDimensions()))
 
             smosaic <<= im
 
@@ -183,8 +183,8 @@ class Mosaic(object):
         if iy is None:
             ix, iy = ix % self.nx, ix/self.nx
 
-        return afwImage.BBox(afwImage.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
-                             self.xsize, self.ysize)
+        return afwGeom.BoxI(afwGeom.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
+                            afwGeom.ExtentI(self.xsize, self.ysize))
 
     def drawLabels(self, labels=None, frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
@@ -213,7 +213,7 @@ class Mosaic(object):
                 if not label:
                     continue
                     
-                ds9.dot(str(label), self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
+                ds9.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(), frame=frame, ctype=ctype)
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
@@ -221,8 +221,8 @@ If origin is present, it's Added to the BBox
 
 All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
-    x0, y0 = bbox.getX0(), bbox.getY0()
-    x1, y1 = bbox.getX1(), bbox.getY1()
+    x0, y0 = bbox.getMinX(), bbox.getMinY()
+    x1, y1 = bbox.getMaxX(), bbox.getMaxY()
 
     if origin:
         x0 += origin[0]; x1 += origin[0]

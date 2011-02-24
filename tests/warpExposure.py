@@ -246,7 +246,7 @@ class WarpExposureTestCase(unittest.TestCase):
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
-            bbox = afwImage.BBox(afwImage.PointI(40, 150), 145, 200)
+            bbox = afwGeom.BoxI(afwGeom.PointI(40, 150), afwGeom.ExtentI(145, 200))
             originalExposure = afwImage.ExposureF(originalFullExposure, bbox, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
         else:

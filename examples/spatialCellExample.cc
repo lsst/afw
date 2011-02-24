@@ -32,7 +32,7 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/deprecated.h"
+
 
 #include "testSpatialCell.h"
 
@@ -55,8 +55,10 @@ void SpatialCellSetDemo() {
     /*
      * Create an (empty) SpatialCellSet
      */
-    afwMath::SpatialCellSet cellSet(afwImage::BBox(afwImage::PointI(0, 0), im->getWidth(), im->getHeight()),
-                                    260, 200);
+    afwMath::SpatialCellSet cellSet(
+        im->getBBox(afwImage::LOCAL),
+        260, 200
+    );
     /*
      * Populate the cellSet using the detected object in the FootprintSet
      */
@@ -68,7 +70,7 @@ void SpatialCellSetDemo() {
         ExampleCandidate::Ptr tc(
             new ExampleCandidate(xc, yc, 
                 im->getImage(), 
-                afwGeom::convertToImage(bbox)
+                bbox
             )
         );
         cellSet.insertCandidate(tc);
@@ -88,15 +90,14 @@ void SpatialCellSetDemo() {
 
         for (afwMath::SpatialCell::iterator candidate = cell->begin(), candidateEnd = cell->end();
              candidate != candidateEnd; ++candidate) {
-            int w, h;
-            boost::tie(w, h) =
-                dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox().getDimensions();
+            afwGeom::BoxI box =
+                dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
             
 #if 0
             std::cout << boost::format("%d %5.2f %5.2f %d\n")
                 % i % (*candidate)->getXCenter() % (*candidate)->getYCenter() % (w*h);
 #endif
-            if (w*h < 75) {
+            if (box.getArea() < 75) {
                 (*candidate)->setStatus(afwMath::SpatialCellCandidate::BAD);
             }
         }
@@ -130,11 +131,14 @@ readImage() {
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1";
         
-        afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(270, 2530), 512, 512);
+        afwGeom::BoxI bbox = afwGeom::BoxI(
+            afwGeom::PointI(270, 2530), 
+            afwGeom::ExtentI(512, 512)
+        );
         
         lsst::daf::base::PropertySet::Ptr md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, 0, md, bbox));
-        mi->setXY0(afwImage::PointI(0, 0));
+        
     } catch (lsst::pex::exceptions::NotFoundException &e) {
         std::cerr << e << std::endl;
         exit(1);
