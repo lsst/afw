@@ -533,6 +533,22 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
 
     return ccdImage
 
+def trimExposure(ccdImage, ccd=None):
+    """Trim a raw CCD Exposure"""
+
+    if not ccd:
+        ccd = cameraGeom.cast_Ccd(ccdImage.getDetector())
+    
+    w, h = ccd.getAllPixelsNoRotation(True).getDimensions()
+    trimmedImage = ccdImage.Factory(w, h)
+    for a in ccd:
+        data =      ccdImage.Factory(ccdImage, a.getDataSec(False)).getMaskedImage()
+        tdata = trimmedImage.Factory(trimmedImage, a.getDataSec(True)).getMaskedImage()
+        tdata <<= data
+
+    ccd.setTrimmed(True)
+    return trimmedImage
+
 def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1):
     """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
 of the detectors"""
