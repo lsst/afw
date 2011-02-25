@@ -149,7 +149,7 @@ typedef AlwaysFalse     AlwaysF;
 /**
  * @brief Conversion function to switch a string to a Property (see Statistics.h)
  */
-math::Property math::stringToStatisticsProperty(std::string const property) {
+afwMath::Property afwMath::stringToStatisticsProperty(std::string const property) {
     static std::map<std::string, Property> statisticsProperty;
     if (statisticsProperty.size() == 0) {
         statisticsProperty["NOTHING"]      = NOTHING;
