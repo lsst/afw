@@ -510,16 +510,16 @@ protected:
         _psfIyy(0.0), _psfIyyErr(0.0),
         _psfIxy(0.0), _psfIxyErr(0.0),
         _resolution(0.0),
+        _sigma(0.0), _sigmaErr(0.0),
         _e1(0.0), _e1Err(0.0),
         _e2(0.0), _e2Err(0.0),
         _shear1(0.0), _shear1Err(0.0),
         _shear2(0.0), _shear2Err(0.0),
-        _sigma(0.0), _sigmaErr(0.0),
-        _shapeStatus(-1),
         _snr(0.0), _chi2(0.0),
         _procHistoryId(0),
         _flagForAssociation(0), _flagForWcs(0),
-        _filterId(lsst::afw::image::Filter::UNKNOWN)
+        _filterId(lsst::afw::image::Filter::UNKNOWN),
+        _shapeStatus(-1)
     {
         setNull();
     }    
@@ -746,8 +746,8 @@ protected:
     boost::int32_t _procHistoryId;
     boost::int16_t _flagForAssociation;
     boost::int16_t _flagForWcs;
-    boost::int16_t _shapeStatus;
     boost::int8_t _filterId;
+    boost::int16_t _shapeStatus;
     
     friend class boost::serialization::access;
 };
