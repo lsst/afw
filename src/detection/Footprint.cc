@@ -465,7 +465,7 @@ template<typename MaskT>
 MaskT afwDetect::setMaskFromFootprintList(
         afwImage::Mask<MaskT> *mask,                        ///< Mask to set
         std::vector<Footprint::Ptr> const& footprints,  ///< Footprint list specifying desired pixels
-        MaskT const bitmask                             ///< Bitmask to OR into mask
+        MaskT const bitmask                                 ///< Bitmask to OR into mask
                                                ) {
     for (std::vector<afwDetect::Footprint::Ptr>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
@@ -473,6 +473,21 @@ MaskT afwDetect::setMaskFromFootprintList(
     }
 
     return bitmask;
+}
+
+/************************************************************************************************************/
+/**
+ * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
+ *
+ * \return bitmask
+ */
+template<typename MaskT>
+MaskT afwDetect::setMaskFromFootprintList(
+        afwImage::Mask<MaskT> *mask,                        ///< Mask to set
+        CONST_PTR(std::vector<Footprint::Ptr>) footprints,  ///< Footprint list specifying desired pixels
+        MaskT const bitmask                                 ///< Bitmask to OR into mask
+                                         ) {
+    return afwDetect::setMaskFromFootprintList(mask, *footprints, bitmask);
 }
 
 /************************************************************************************************************/
@@ -508,6 +523,20 @@ typename ImageT::Pixel afwDetect::setImageFromFootprint(
     setit.apply(foot);
 
     return value;
+}
+
+/**
+ * \brief Set all image pixels in a set of Footprint%s to a given value
+ *
+ * \return value
+ */
+template<typename ImageT>
+typename ImageT::Pixel afwDetect::setImageFromFootprintList(
+        ImageT *image,                                  ///< image to set
+        CONST_PTR(std::vector<Footprint::Ptr>) footprints,  ///< Footprint list specifying desired pixels
+        typename ImageT::Pixel const value              ///< value to set Image to
+                                                           ) {
+    return afwDetect::setImageFromFootprintList(image, *footprints, value);
 }
 
 /**
@@ -688,8 +717,8 @@ afwDetect::Footprint::Ptr growFootprintSlow(
     afwDetect::FootprintSet<int>::Ptr
         grownList(new afwDetect::FootprintSet<int>(*convolvedImage, 0.5, "", 1));
 
-    assert (grownList->getFootprints().size() > 0);
-    afwDetect::Footprint::Ptr grown = *grownList->getFootprints().begin();
+    assert (grownList->getFootprints()->size() > 0);
+    afwDetect::Footprint::Ptr grown = *grownList->getFootprints()->begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -782,8 +811,8 @@ afwDetect::Footprint::Ptr afwDetect::growFootprint(
     FootprintSet<int>::Ptr grownList(new FootprintSet<int>(*midImage,
                                                            Threshold(-ngrow, afwDetect::Threshold::VALUE,
                                                                      false)));
-    assert (grownList->getFootprints().size() > 0);
-    afwDetect::Footprint::Ptr grown = *grownList->getFootprints().begin();
+    assert (grownList->getFootprints()->size() > 0);
+    afwDetect::Footprint::Ptr grown = *grownList->getFootprints()->begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -1224,9 +1253,15 @@ afwDetect::Footprint::Ptr afwDetect::footprintAndMask(afwDetect::Footprint::Ptr 
                                                       afwImage::MaskPixel bitMask);
 
 template
-afwImage::MaskPixel afwDetect::setMaskFromFootprintList(afwImage::Mask<afwImage::MaskPixel> *mask,
-                                                     std::vector<afwDetect::Footprint::Ptr> const& footprints,
-                                                     afwImage::MaskPixel const bitmask);
+afwImage::MaskPixel afwDetect::setMaskFromFootprintList(
+        afwImage::Mask<afwImage::MaskPixel> *mask,
+        CONST_PTR(std::vector<afwDetect::Footprint::Ptr>) footprints,
+        afwImage::MaskPixel const bitmask);
+template
+afwImage::MaskPixel afwDetect::setMaskFromFootprintList(
+        afwImage::Mask<afwImage::MaskPixel> *mask,
+        std::vector<afwDetect::Footprint::Ptr> const& footprints,
+        afwImage::MaskPixel const bitmask);
 template
 afwImage::MaskPixel afwDetect::setMaskFromFootprint(afwImage::Mask<afwImage::MaskPixel> *mask,
                                                     Footprint const& foot, afwImage::MaskPixel const bitmask);
@@ -1238,9 +1273,13 @@ TYPE afwDetect::setImageFromFootprint(afwImage::Image<TYPE> *image,        \
                                       TYPE const value);                \
 template \
 TYPE afwDetect::setImageFromFootprintList(afwImage::Image<TYPE> *image, \
-                                          std::vector<afwDetect::Footprint::Ptr> const& footprints, \
+                                          CONST_PTR(std::vector<afwDetect::Footprint::Ptr>) footprints, \
                                           TYPE const value); \
+template \
+TYPE afwDetect::setImageFromFootprintList(afwImage::Image<TYPE> *image, \
+                                          std::vector<afwDetect::Footprint::Ptr> const& footprints, \
+                                          TYPE const value)
 
-INSTANTIATE(float)
+INSTANTIATE(float);
 
 // \endcond

@@ -39,7 +39,7 @@
     *img.getImage() = 100;
 
     detection::FootprintSet<float> sources(img, 10);
-    cout << "Found " << sources.getFootprints().size() << " sources" << std::endl;
+    cout << "Found " << sources.getFootprints()->size() << " sources" << std::endl;
  * \endcode
  */
 #include <algorithm>
@@ -824,10 +824,10 @@ template<typename ImagePixelT, typename MaskPixelT>
 void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // desired region
                                                                 ) {
     _region = region;
-    typename FootprintSet::FootprintList footprintList = getFootprints();
+    typename PTR(FootprintSet::FootprintList) footprintList = getFootprints();
 
-    for (typename FootprintSet::FootprintList::iterator ptr = getFootprints().begin(),
-             end = getFootprints().end();
+    for (typename FootprintSet::FootprintList::iterator ptr = getFootprints()->begin(),
+             end = getFootprints()->end();
          ptr != end; ++ptr) {
         (*ptr)->setRegion(region);
     }
@@ -861,8 +861,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     idImage->setXY0(rhs.getRegion().getLLC());
     *idImage = 0;
 
-    FootprintList rhsFootprints = rhs.getFootprints();
-    for (FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end();
+    CONST_PTR(FootprintList) rhsFootprints = rhs.getFootprints();
+    for (FootprintList::const_iterator ptr = rhsFootprints->begin(), end = rhsFootprints->end();
          ptr != end; ++ptr) {
         Footprint::Ptr gfoot = growFootprint(**ptr, r, isotropic);
         gfoot->insertIntoImage(*idImage, 10); // The value 10 is random; more than 1 anyway
