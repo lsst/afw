@@ -202,6 +202,8 @@ class Mosaic(object):
         if len(labels) != self.nImage:
             raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
 
+        ds9.cmdBuffer.pushSize()
+
         for i in range(len(labels)):
             if labels[i]:
                 label, ctype = labels[i], None
@@ -214,6 +216,8 @@ class Mosaic(object):
                     continue
                     
                 ds9.dot(str(label), self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
+
+        ds9.cmdBuffer.popSize()
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
