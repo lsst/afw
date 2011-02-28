@@ -377,7 +377,11 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     }
     Eigen::VectorXd x(nEigen);
 
-    A.svd().solve(b, &x);
+    if (nEigen == 1) {
+        x(0) = b(0)/A(0, 0);
+    } else {
+        A.svd().solve(b, &x);
+    }
     //
     // Accumulate the best-fit-image in bestFitImage
     //
