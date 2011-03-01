@@ -167,8 +167,7 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
                 fits_write_key(fd, TLOGICAL, keyWordChars, &tmp_i, keyCommentChars, &status);
             }
         } else {
-            bool tmp = metadata->get<bool>(keyWord);
-
+            int tmp = metadata->get<bool>(keyWord); // cfitsio can't handle tmp being a bool
             fits_write_key(fd, TLOGICAL, keyWordChars, &tmp, keyCommentChars, &status);
         }
     } else if (valueType == typeid(int)) {
