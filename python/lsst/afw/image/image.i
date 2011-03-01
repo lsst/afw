@@ -38,6 +38,10 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lss
 SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
 %enddef
 
+%define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+%enddef
+
 //
 // Must go After the %include
 //
@@ -52,6 +56,7 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 
 %template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> > >;
 %template(NAME##Pca##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::Image<PIXEL_TYPE> >;
+%template(NAME##PcaM##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
 
 %template(innerProduct) lsst::afw::image::innerProduct<lsst::afw::image::Image<PIXEL_TYPE>,
                                                        lsst::afw::image::Image<PIXEL_TYPE>  >;
@@ -126,9 +131,8 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 }
 %enddef
 
-
-%define %mimage(NAME, TYPE, PIXEL_TYPE...)
-%template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::MaskedImage<PIXEL_TYPE> > >;
+%define %mimage(NAME, TYPE, PIXEL_TYPES...)
+%template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::MaskedImage<PIXEL_TYPES> > >;
 %enddef
 
 /************************************************************************************************************/
@@ -152,6 +156,9 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %imagePtr(Image, F, float);
 %imagePtr(Image, D, double);
 
+%maskedImagePtr(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+
 %include "lsst/afw/image/Utils.h"
 %include "lsst/afw/image/Image.h"
 %include "lsst/afw/image/ImagePca.h"
@@ -161,10 +168,10 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %image(Image, F, float);
 %image(Image, D, double);
 
-%mimage(MaskedImage, U, boost::uint16_t);
-%mimage(MaskedImage, I, int);
-%mimage(MaskedImage, F, float);
-%mimage(MaskedImage, D, double);
+%mimage(MaskedImage, U, boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%mimage(MaskedImage, I, int, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%mimage(MaskedImage, F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%mimage(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
 
