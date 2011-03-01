@@ -440,7 +440,7 @@ double do_updateBadPixels(
                      mptr != end; ++mptr, ++iptr, ++wptr) {
                     if (!(iptr.mask() & mask)) {
                         typename ImageT::Image::Pixel value = iptr.image()/flux_i;
-                        float const var = iptr.image()/(flux_i*flux_i);
+                        float const var = iptr.variance()/(flux_i*flux_i);
                         float const ivar = 1.0/var;
                         if (!lsst::utils::isfinite(ivar)) {
                             continue;
@@ -606,7 +606,8 @@ double innerProduct(Image1T const& lhs, ///< first image
 //
 #define INSTANTIATE(T) \
     template class ImagePca<Image<T> >; \
-    template double innerProduct(Image<T> const&, Image<T> const&, int);
+    template double innerProduct(Image<T> const&, Image<T> const&, int); \
+    template class ImagePca<MaskedImage<T> >;
 
 #define INSTANTIATE2(T, U)                \
     template double innerProduct(Image<T> const&, Image<U> const&, int);    \
@@ -615,7 +616,6 @@ double innerProduct(Image1T const& lhs, ///< first image
 INSTANTIATE(boost::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
-template class ImagePca<MaskedImage<float> >;
 INSTANTIATE(double)
 
 INSTANTIATE2(float, double)             // the two types must be different
