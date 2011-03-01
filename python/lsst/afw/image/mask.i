@@ -69,6 +69,21 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lss
     bool get(int x, int y, int plane) const {
         return self->operator()(x, y, plane, lsst::afw::image::CheckIndices(true));
     }
+
+    %newobject convert##TYPE;
+    lsst::afw::image::Image<PIXEL_TYPE> convert##TYPE() {
+        lsst::afw::image::Image<PIXEL_TYPE> out(self->getDimensions());
+        for (int y = 0; y != self->getHeight(); ++y) {
+            lsst::afw::image::Image<PIXEL_TYPE>::x_iterator optr = out.row_begin(y);
+            for (lsst::afw::image::Mask<PIXEL_TYPE>::x_iterator ptr = self->row_begin(y), end = self->row_end(y);
+                 ptr != end; ++ptr, ++optr) {
+                *optr = *ptr;
+            }
+        }
+
+        return out;
+    }
+    
     %pythoncode {
     def Factory(self, *args):
         """Return a Mask of this type"""
