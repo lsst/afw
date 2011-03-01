@@ -39,6 +39,7 @@
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/shared_array.hpp"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
@@ -111,7 +112,7 @@ namespace image {
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
 
 
-        typedef typename boost::shared_ptr<PixelT> RawDataPtr;
+        typedef typename boost::shared_array<PixelT> RawDataPtr;
     public:        
 
         typedef boost::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase

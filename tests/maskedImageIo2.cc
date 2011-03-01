@@ -35,7 +35,7 @@ using lsst::daf::base::PropertySet;
 
 namespace pexEx = lsst::pex::exceptions;
 namespace image = lsst::afw::image;
-
+namespace geom = lsst::afw::geom;
 /*
  * Make this a subroutine so that locals go out of scope as part of test
  * of memory management
@@ -49,8 +49,8 @@ void test(char *name) {
     geom::BoxI bbox;
     PropertySet::Ptr metadata;
     bool const conformMask = true;      // use mask definitions from the file
-    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(string(name), hdu,
-                                                                 metadata, bbox, conformMask);
+    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(
+        string(name), hdu, metadata, bbox, image::LOCAL, conformMask);
 
     testMasked.writeFits("testout");
     ::unlink("testout_img.fits");

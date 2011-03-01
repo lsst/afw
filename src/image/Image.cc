@@ -48,7 +48,7 @@ template <typename PixelT>
 typename image::ImageBase<PixelT>::RawDataPtr image::ImageBase<PixelT>::_allocate(
     geom::ExtentI const & dimensions
 ) {    
-    RawDataPtr mem(new PixelT[dimensions.getX()*dimensions.getY()], boost::checked_array_deleter<PixelT>());
+    RawDataPtr mem(new PixelT[dimensions.getX()*dimensions.getY()]);
     return mem;
 }
 template <typename PixelT>
@@ -79,7 +79,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
         );
     }
 
-    if(dimensions.getX() == 0 || dimensions.getY() == 0) {
+    if(dimensions.getX() == 0 && dimensions.getY() == 0) {
         return boost::gil::subimage_view(
             view, 
             offset.getX(), offset.getY(), 

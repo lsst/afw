@@ -33,6 +33,7 @@ using namespace std;
 using lsst::pex::logging::Trace;
 namespace pexEx = lsst::pex::exceptions;
 namespace image = lsst::afw::image;
+namespace geom = lsst::afw::geom;
 
 int test(int argc, char**argv) {
     if (argc < 5) {
@@ -60,7 +61,7 @@ int test(int argc, char**argv) {
     testMaskedImage1->getMask()->addMaskPlane("CR");
     
     // verify that copy constructor and operator= build and do not leak
-    MaskedImage::Image testImage(100, 100);
+    MaskedImage::Image testImage(geom::ExtentI(100, 100));
     MaskedImage::Image imageCopy(testImage);
     imageCopy = testImage;
 
@@ -86,14 +87,18 @@ int test(int argc, char**argv) {
 
     // test of subImage
 
-    geom::BoxI region(geom::PointI(100, 600), 200, 300);
-    MaskedImage subMaskedImage1 = MaskedImage(*testMaskedImage1, region);
+    geom::BoxI region(geom::PointI(100, 600), geom::ExtentI(200, 300));
+    MaskedImage subMaskedImage1 = MaskedImage(
+        *testMaskedImage1, 
+        region,
+        image::LOCAL
+    );
     subMaskedImage1 *= 0.5;
     subMaskedImage1.writeFits(argv[4]);
 
     // Check whether offsets have been correctly saved
-    geom::BoxI region2(geom::PointI(80, 110), 20, 30);
-    MaskedImage subMaskedImage2 = MaskedImage(subMaskedImage1, region2);
+    geom::BoxI region2(geom::PointI(80, 110), geom::ExtentI(20, 30));
+    MaskedImage subMaskedImage2 = MaskedImage(subMaskedImage1, region2, image::LOCAL);
 
     cout << "Offsets: " << subMaskedImage2.getX0() << " " << subMaskedImage2.getY0() << endl;
 

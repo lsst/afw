@@ -129,7 +129,7 @@ class WarpExposureTestCase(unittest.TestCase):
         """
         exposureWithWcs = afwImage.ExposureF(originalExposurePath)
         mi = exposureWithWcs.getMaskedImage()
-        exposureWithoutWcs = afwImage.ExposureF(mi.getWidth(), mi.getHeight())
+        exposureWithoutWcs = afwImage.ExposureF(mi.getDimensions())
         warpingKernel = afwMath.BilinearWarpingKernel()
         try:
             afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingKernel, interpLength)
@@ -145,7 +145,7 @@ class WarpExposureTestCase(unittest.TestCase):
     def testWarpIntoSelf(self, interpLength=10):
         """Cannot warp in-place
         """
-        originalExposure = afwImage.ExposureF(100, 100)
+        originalExposure = afwImage.ExposureF(afwGeom.ExtentI(100, 100))
         warpingKernel = afwMath.BilinearWarpingKernel()
         try:
             afwMath.warpExposure(originalExposure, originalExposure, warpingKernel, interpLength)
@@ -247,7 +247,7 @@ class WarpExposureTestCase(unittest.TestCase):
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
             bbox = afwGeom.BoxI(afwGeom.PointI(40, 150), afwGeom.ExtentI(145, 200))
-            originalExposure = afwImage.ExposureF(originalFullExposure, bbox, useDeepCopy)
+            originalExposure = afwImage.ExposureF(originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
         else:
             originalExposure = afwImage.ExposureF(originalExposurePath)
@@ -258,14 +258,12 @@ class WarpExposureTestCase(unittest.TestCase):
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
         warpedWcs = afwImage.makeWcs(swarpedMetadata)
-        destWidth = swarpedImage.getWidth()
-        destHeight = swarpedImage.getHeight()
         
         if useWarpExposure:
             # path for saved afw-warped image
             afwWarpedImagePath = "afwWarpedExposure1%s" % (kernelName,)
     
-            afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
+            afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
             afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
             if SAVE_FITS_FILES:
@@ -298,7 +296,7 @@ class WarpExposureTestCase(unittest.TestCase):
             # path for saved afw-warped image
             afwWarpedImagePath = "afwWarpedImage1%s.fits" % (kernelName,)
     
-            afwWarpedImage = afwImage.ImageF(destWidth, destHeight)
+            afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
             afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,

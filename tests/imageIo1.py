@@ -30,6 +30,7 @@ import os
 import unittest
 
 import eups
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
@@ -94,7 +95,7 @@ class ReadFitsTestCase(unittest.TestCase):
             imPath = os.path.join("tests", imPath)
         imPath = os.path.join(imPath, "smallD.fits")
         
-        im = afwImage.ImageD(100, 100)
+        im = afwImage.ImageD(afwGeom.ExtentI(100, 100))
         im.set(666)
         im.writeFits(imPath)
         newIm = afwImage.ImageD(imPath)
@@ -106,9 +107,9 @@ class ReadFitsTestCase(unittest.TestCase):
         im = afwImage.ImageF(fileName)
 
         bbox = afwGeom.BoxI(afwGeom.PointI(110, 120), afwGeom.ExtentI(20, 15))
-        sim = im.Factory(im, bbox) 
+        sim = im.Factory(im, bbox, afwImage.LOCAL) 
 
-        im2 = afwImage.ImageF(fileName, hdu, None, bbox)
+        im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
 
         self.assertEqual(im2.getDimensions(), sim.getDimensions())
         self.assertEqual(im2.get(1, 1), sim.get(1, 1))
@@ -124,7 +125,7 @@ class ReadFitsTestCase(unittest.TestCase):
             imPath = os.path.join("tests", imPath)
         imPath = os.path.join(imPath, "MEF.fits")
 
-        im = afwImage.ImageF(20, 20)
+        im = afwImage.ImageF(afwGeom.ExtetnI(20, 20))
 
         for hdu in range(1, 5):
             im.set(100*hdu)
