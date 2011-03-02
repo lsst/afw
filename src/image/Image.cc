@@ -66,8 +66,8 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
     geom::ExtentI const & dimensions, geom::ExtentI const & offset, const _view_t & view
 ) {
     if (offset.getX() < 0 || offset.getY() < 0 ||
-        offset.getX() + dimensions.getX() >= view.width() || 
-        offset.getY() + dimensions.getY() >= view.height()
+        offset.getX() + dimensions.getX() > view.width() || 
+        offset.getY() + dimensions.getY() > view.height()
     ) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,

@@ -354,7 +354,7 @@ void mathDetail::basicConvolve(
         KernelIterator const kernelYVecBegin = kernelYVec.begin();
 
         // buffer for x-convolved data
-        OutImageT buffer(goodBBox);
+        OutImageT buffer(afwGeom::Extent2I(goodBBox.getWidth(), kernel.getHeight()));
         
         // pre-fill x-convolved data buffer with all but one row of data
         int yInd = 0; // during initial fill bufY = inImageY
