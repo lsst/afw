@@ -256,10 +256,10 @@ std::vector<double> afwMath::Kernel::getKernelParameters() const {
  */
 afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
     return afwGeom::BoxI(
-        afwGeom::Point2I::make(
+        afwGeom::Point2I(
             bbox.getMinX() - getCtrX(),
             bbox.getMinY() - getCtrY()),
-        afwGeom::Extent2I::make(
+        afwGeom::Extent2I(
             bbox.getWidth()  + getWidth() - 1,
             bbox.getHeight() + getHeight() - 1));
 }
@@ -282,10 +282,10 @@ afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     return afwGeom::BoxI(
-        afwGeom::Point2I::make(
+        afwGeom::Point2I(
             bbox.getMinX() + getCtrX(),
             bbox.getMinY() + getCtrY()),
-        afwGeom::Extent2I::make(
+        afwGeom::Extent2I(
             bbox.getWidth()  + 1 - getWidth(),
             bbox.getHeight() + 1 - getHeight()));
 }

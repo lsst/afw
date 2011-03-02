@@ -200,20 +200,6 @@ public:
     /// @brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T> asTuple() const { return boost::make_tuple(this->_vector.x(),this->_vector.y()); }
 
-    /**
-     *  @name Named constructors
-     *
-     *  For historical reasons.  May become deprecated.
-     */
-    //@{
-    static Point make(T x, T y) { return Point(typename Super::EigenVector(x, y)); }
-    static Point make(T const xy[2]) { return Point(typename Super::EigenVector(xy[0], xy[1])); }
-    static Point make(std::pair<T,T> const & xy) { return Point(typename Super::EigenVector(xy.first, xy.second)); }
-    static Point make(boost::tuple<T,T> const & xy) {
-        return Point(typename Super::EigenVector(xy.template get<0>(), xy.template get<1>()));
-    }
-    //@}
-
 };
 
 /**

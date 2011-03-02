@@ -211,7 +211,7 @@ class FourierLocalKernel;
          * @brief Return index of kernel's center
          */
         inline lsst::afw::geom::Point2I getCtr() const {
-            return lsst::afw::geom::Point2I::make(_ctrX, _ctrY);
+            return lsst::afw::geom::Point2I(_ctrX, _ctrY);
         }
 
         /**

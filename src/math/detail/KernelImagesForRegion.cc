@@ -150,13 +150,13 @@ const {
             return _bbox.getMin();
             break; // paranoia
         case BOTTOM_RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX() + 1, _bbox.getMinY());
+            return afwGeom::Point2I(_bbox.getMaxX() + 1, _bbox.getMinY());
             break; // paranoia
         case TOP_LEFT:
-            return afwGeom::Point2I::make(_bbox.getMinX(), _bbox.getMaxY() + 1);
+            return afwGeom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1);
             break; // paranoia
         case TOP_RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
+            return afwGeom::Point2I(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
             break; // paranoia
         default: {
             std::ostringstream os;
@@ -221,7 +221,7 @@ const {
             
             KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
                 _kernelPtr,
-                afwGeom::BoxI(blCorner, afwGeom::Extent2I::make(width, height)),
+                afwGeom::BoxI(blCorner, afwGeom::Extent2I(width, height)),
                 _xy0,
                 _doNormalize,
                 blImagePtr,
@@ -234,7 +234,7 @@ const {
                 regionPtr->getImage(TOP_LEFT);
             }
             
-            blCorner += afwGeom::Extent2I::make(width, 0);
+            blCorner += afwGeom::Extent2I(width, 0);
             blImagePtr = regionPtr->getImage(BOTTOM_RIGHT);
             tlImagePtr = regionPtr->getImage(TOP_RIGHT);
         }

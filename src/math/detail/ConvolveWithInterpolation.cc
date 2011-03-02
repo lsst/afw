@@ -83,8 +83,9 @@ void mathDetail::convolveWithInterpolation(
     }
 
     // compute region covering good area of output image
-    afwGeom::BoxI fullBBox = afwGeom::BoxI(afwGeom::Point2I::make(0, 0), 
-        afwGeom::Extent2I::make(outImage.getWidth(), outImage.getHeight()));
+    afwGeom::BoxI fullBBox = afwGeom::BoxI(
+        afwGeom::Point2I(0, 0), 
+        afwGeom::Extent2I(outImage.getWidth(), outImage.getHeight()));
     afwGeom::BoxI goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(
         kernel.clone(),
