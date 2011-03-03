@@ -163,6 +163,27 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     insertFp(db, d._ixy, "Ixy", d.isNull(det::IXY));
     insertFp(db, d._ixyErr, "IxyErr", d.isNull(det::IXY_ERR));
 
+    insertFp(db, d._psfIxx, "PsfIxx", d.isNull(det::PSF_IXX));
+    insertFp(db, d._psfIxxErr, "PsfIxxErr", d.isNull(det::PSF_IXX_ERR));
+    insertFp(db, d._psfIyy, "PsfIyy", d.isNull(det::PSF_IYY));
+    insertFp(db, d._psfIyyErr, "PsfIyyErr", d.isNull(det::PSF_IYY_ERR));
+    insertFp(db, d._psfIxy, "PsfIxy", d.isNull(det::PSF_IXY));
+    insertFp(db, d._psfIxyErr, "PsfIxyErr", d.isNull(det::PSF_IXY_ERR));
+
+    insertFp(db, d._e1, "E1", d.isNull(det::E1));
+    insertFp(db, d._e1Err, "E1Err", d.isNull(det::E1_ERR));
+    insertFp(db, d._e2, "E2", d.isNull(det::E2));
+    insertFp(db, d._e2Err, "E2Err", d.isNull(det::E2_ERR));
+    insertFp(db, d._shear1, "Shear1", d.isNull(det::SHEAR1));
+    insertFp(db, d._shear1Err, "Shear1Err", d.isNull(det::SHEAR1_ERR));
+    insertFp(db, d._shear2, "Shear2", d.isNull(det::SHEAR2));
+    insertFp(db, d._shear2Err, "Shear2Err", d.isNull(det::SHEAR2_ERR));
+
+    insertFp(db, d._resolution, "Resolution", d.isNull(det::RESOLUTION));
+    insertFp(db, d._sigma, "Sigma", d.isNull(det::SIGMA));
+    insertFp(db, d._sigmaErr, "SigmaErr", d.isNull(det::SIGMA_ERR));
+    insertFp(db, d._shapeStatus, "ShapeStatus", d.isNull(det::SHAPE_STATUS));
+    
     insertFp(db, d._snr, "snr");
     insertFp(db, d._chi2, "chi2");
 
@@ -338,8 +359,26 @@ void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("IyyErr",               &(d._iyyErr));
     db.outParam("Ixy",                  &(d._ixy));
     db.outParam("IxyErr",               &(d._ixyErr)); 
+    db.outParam("PsfIxx",               &(d._psfIxx));
+    db.outParam("PsfIxxErr",            &(d._psfIxxErr));
+    db.outParam("PsfIyy",               &(d._psfIyy));
+    db.outParam("PsfIyyErr",            &(d._psfIyyErr));
+    db.outParam("PsfIxy",               &(d._psfIxy));
+    db.outParam("PsfIxyErr",            &(d._psfIxyErr));
     db.outParam("psfFlux",              &(d._psfFlux));
     db.outParam("psfFluxErr",           &(d._psfFluxErr));
+    db.outParam("e1",                   &(d._e1));
+    db.outParam("e1Err",                &(d._e1Err));
+    db.outParam("e2",                   &(d._e2));
+    db.outParam("e2Err",                &(d._e2Err));
+    db.outParam("shear1",               &(d._shear1));
+    db.outParam("shear1Err",            &(d._shear1Err));
+    db.outParam("shear2",               &(d._shear2));
+    db.outParam("shear2Err",            &(d._shear2Err));
+    db.outParam("resolution",           &(d._resolution));
+    db.outParam("sigma",                &(d._sigma));
+    db.outParam("sigmaErr",             &(d._sigmaErr));
+    db.outParam("shapeStatus",          &(d._shapeStatus));
     db.outParam("apFlux",               &(d._apFlux));
     db.outParam("apFluxErr",            &(d._apFluxErr));
     db.outParam("modelFlux",            &(d._modelFlux));
@@ -639,6 +678,24 @@ Persistable* form::DiaSourceVectorFormatter::read(
                 handleNullFp(db, data, IXY, data._ixy, det::IXY);
                 handleNullFp(db, data, IXY_ERR, data._ixyErr, det::IXY_ERR);
 
+                handleNullFp(db, data, PSF_IXX, data._psfIxx, det::PSF_IXX);
+                handleNullFp(db, data, PSF_IXX_ERR, data._psfIxxErr, det::PSF_IXX_ERR);
+                handleNullFp(db, data, PSF_IYY, data._psfIyy, det::PSF_IYY);
+                handleNullFp(db, data, PSF_IYY_ERR, data._psfIyyErr, det::PSF_IYY_ERR);
+                handleNullFp(db, data, PSF_IXY, data._psfIxy, det::PSF_IXY);
+                handleNullFp(db, data, PSF_IXY_ERR, data._psfIxyErr, det::PSF_IXY_ERR);
+                handleNullFp(db, data, E1, data._e1, det::E1);
+                handleNullFp(db, data, E1_ERR, data._e1Err, det::E1_ERR);
+                handleNullFp(db, data, E2, data._e2, det::E2);
+                handleNullFp(db, data, E2_ERR, data._e2Err, det::E2_ERR);
+                handleNullFp(db, data, SHEAR1, data._shear1, det::SHEAR1);
+                handleNullFp(db, data, SHEAR1_ERR, data._shear1Err, det::SHEAR1_ERR);
+                handleNullFp(db, data, SHEAR2, data._shear2, det::SHEAR2);
+                handleNullFp(db, data, SHEAR2_ERR, data._shear2Err, det::SHEAR2_ERR);
+                handleNullFp(db, data, RESOLUTION, data._resolution, det::RESOLUTION);
+                handleNullFp(db, data, SIGMA, data._sigma, det::SIGMA);
+                handleNullFp(db, data, SIGMA_ERR, data._sigmaErr, det::SIGMA_ERR);
+                handleNullFp(db, data, SHAPE_STATUS, data._shapeStatus, det::SHAPE_STATUS);
                 handleNullFp(db, PSF_FLUX, data._psfFlux);
                 handleNullFp(db, data, PSF_FLUX_ERR, data._psfFluxErr, det::PSF_FLUX_ERR);
                 handleNullFp(db, AP_FLUX, data._apFlux);

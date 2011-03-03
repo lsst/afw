@@ -42,10 +42,29 @@ import lsst.afw.detection as afwDet
 class SourceToDiaSourceTestCase(unittest.TestCase):
     """A test case for converting Sources to DiaSources"""
     def setUp(self):
-        self.source = afwDet.Source()
 
-        self.source.setRa(4)
-        self.source.setId(3)
+        self.methods = {
+            "Id" : 3,
+            "Ra": 4, "Dec" : 2,
+            "XFlux" : 1.0, "YFlux" : 1.0,
+            "RaFlux" : 1.0, "DecFlux" : 1.0,
+            "XPeak" : 1.0, "YPeak" : 1.0,
+            "RaPeak" : 1.0, "DecPeak" : 1.0,
+            "XAstrom" : 1.0, "YAstrom" : 1.0,
+            "RaAstrom" : 1.0, "DecAstrom" : 1.0,
+            "PsfFlux" : 1.0, "ApFlux" : 2.0,
+            "Ixx" : 0.3, "Iyy" : 0.4, "Ixy" : 0.5,
+            "PsfIxx" : 0.3, "PsfIyy" : 0.3, "PsfIxy" : 0.3,
+            "E1" : 0.3, "E1Err" : 0.3, "E2" : 0.4, "E2Err" : 0.5,
+            "Shear1" : 0.3, "Shear1Err" : 0.3, "Shear2" : 0.4, "Shear2Err" : 0.5,
+            "Sigma" : 0.5, "SigmaErr" : 0.6,
+            "Resolution" : 0.5,
+            }
+        
+        self.source = afwDet.Source()
+        for k, v in self.methods.items():
+            method = getattr(self.source, "set"+k)
+            method(v)
 
     def tearDown(self):
         del self.source
@@ -53,8 +72,12 @@ class SourceToDiaSourceTestCase(unittest.TestCase):
    
     def testMake(self):
         diaSource = afwDet.makeDiaSourceFromSource(self.source)
-        assert(diaSource.getId() == self.source.getId())
-        assert(diaSource.getRa() == self.source.getRa())
+
+        for k in self.methods.keys():
+            diaSrcVal = getattr(diaSource, "get"+k)()
+            srcVal = getattr(self.source, "get"+k)()
+            print k, diaSrcVal, srcVal
+            assert(diaSrcVal == srcVal)
      
 def suite():
     utilsTests.init()

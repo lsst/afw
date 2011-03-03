@@ -308,6 +308,14 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     insertFp(db, d._ixy, "Ixy", d.isNull(det::IXY));
     insertFp(db, d._ixyErr, "IxyErr", d.isNull(det::IXY_ERR));
 
+
+    insertFp(db, d._psfIxx, "PsfIxx", d.isNull(det::PSF_IXX));
+    insertFp(db, d._psfIxxErr, "PsfIxxErr", d.isNull(det::PSF_IXX_ERR));
+    insertFp(db, d._psfIyy, "PsfIyy", d.isNull(det::PSF_IYY));
+    insertFp(db, d._psfIyyErr, "PsfIyyErr", d.isNull(det::PSF_IYY_ERR));
+    insertFp(db, d._psfIxy, "PsfIxy", d.isNull(det::PSF_IXY));
+    insertFp(db, d._psfIxyErr, "PsfIxyErr", d.isNull(det::PSF_IXY_ERR));
+    
     insertFp(db, d._snr, "snr");
     insertFp(db, d._chi2, "chi2");
 
@@ -597,6 +605,24 @@ Persistable* form::SourceVectorFormatter::read(
             db->outParam("IyyErr",             &(s._iyyErr));
             db->outParam("Ixy",                &(s._ixy));
             db->outParam("IxyErr",             &(s._ixyErr));
+            db->outParam("PsfIxx",             &(s._psfIxx));
+            db->outParam("PsfIxxErr",          &(s._psfIxxErr));
+            db->outParam("PsfIyy",             &(s._psfIyy));
+            db->outParam("PsfIyyErr",          &(s._psfIyyErr));
+            db->outParam("PsfIxy",             &(s._psfIxy));
+            db->outParam("PsfIxyErr",          &(s._psfIxyErr));
+            db->outParam("e1",                   &(s._e1));
+            db->outParam("e1Err",                &(s._e1Err));
+            db->outParam("e2",                   &(s._e2));
+            db->outParam("e2Err",                &(s._e2Err));
+            db->outParam("shear1",               &(s._shear1));
+            db->outParam("shear1Err",            &(s._shear1Err));
+            db->outParam("shear2",               &(s._shear2));
+            db->outParam("shear2Err",            &(s._shear2Err));
+            db->outParam("resolution",           &(s._resolution));
+            db->outParam("sigma",                &(s._sigma));
+            db->outParam("sigmaErr",             &(s._sigmaErr));
+            db->outParam("shapeStatus",          &(s._shapeStatus));
             db->outParam("snr",                &(s._snr));
             db->outParam("chi2",               &(s._chi2));
             db->outParam("sky",                &(s._sky));
@@ -702,6 +728,26 @@ Persistable* form::SourceVectorFormatter::read(
                 handleNullFp(db, s, IXY, s._ixy, det::IXY);
                 handleNullFp(db, s, IXY_ERR, s._ixyErr, det::IXY_ERR);
 
+                handleNullFp(db, s, PSF_IXX, s._psfIxx, det::PSF_IXX);
+                handleNullFp(db, s, PSF_IXX_ERR, s._psfIxxErr, det::PSF_IXX_ERR);
+                handleNullFp(db, s, PSF_IYY, s._psfIyy, det::PSF_IYY);
+                handleNullFp(db, s, PSF_IYY_ERR, s._psfIyyErr, det::PSF_IYY_ERR);
+                handleNullFp(db, s, PSF_IXY, s._psfIxy, det::PSF_IXY);
+                handleNullFp(db, s, PSF_IXY_ERR, s._psfIxyErr, det::PSF_IXY_ERR);
+                handleNullFp(db, s, E1, s._e1, det::E1);
+                handleNullFp(db, s, E1_ERR, s._e1Err, det::E1_ERR);
+                handleNullFp(db, s, E2, s._e2, det::E2);
+                handleNullFp(db, s, E2_ERR, s._e2Err, det::E2_ERR);
+                handleNullFp(db, s, SHEAR1, s._shear1, det::SHEAR1);
+                handleNullFp(db, s, SHEAR1_ERR, s._shear1Err, det::SHEAR1_ERR);
+                handleNullFp(db, s, SHEAR2, s._shear2, det::SHEAR2);
+                handleNullFp(db, s, SHEAR2_ERR, s._shear2Err, det::SHEAR2_ERR);
+                handleNullFp(db, s, RESOLUTION, s._resolution, det::RESOLUTION);
+                handleNullFp(db, s, SIGMA, s._sigma, det::SIGMA);
+                handleNullFp(db, s, SIGMA_ERR, s._sigmaErr, det::SIGMA_ERR);
+                handleNullFp(db, s, SHAPE_STATUS, s._shapeStatus, det::SHAPE_STATUS);
+
+                
                 handleNullFp(db, SNR, s._snr);
                 handleNullFp(db, CHI2, s._chi2);
                 handleNullFp(db, s, SKY, s._sky, det::SKY);
