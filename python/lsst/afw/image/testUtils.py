@@ -33,7 +33,8 @@
 
 import numpy
 import lsst.afw.image as afwImage
-import lsst.afw.geam as afwGeom
+import lsst.afw.geom as afwGeom
+
 def arrayFromImage(im, dtype=float):
     """Return a numpy array representation of an image.
     Return None if mask is None.
@@ -98,7 +99,7 @@ def maskedImageFromArrays(imMaskVarArrays, retType=afwImage.MaskedImageF):
     The data is presently copied but do not rely on that.
     """
     imArr = imMaskVarArrays[0]
-    maskedImage = retType(afwGeom.ExtentI((imArr.shape[0], imArr.shape[1]))
+    maskedImage = retType(afwGeom.ExtentI(imArr.shape[0], imArr.shape[1]))
     setMaskedImageFromArrays(maskedImage, imMaskVarArrays)
     return maskedImage
 

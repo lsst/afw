@@ -177,7 +177,7 @@ class KernelTestCase(unittest.TestCase):
         inArr = numpy.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
-        inImage = afwImage.ImageD(kWidth, kHeight)
+        inImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         for row in range(inImage.getHeight()):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
@@ -380,8 +380,8 @@ class KernelTestCase(unittest.TestCase):
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         spFunc = afwMath.PolynomialFunction2D(1)
         kernelList = afwMath.KernelList()
-        kernelList.append(afwMath.FixedKernel(afwImage.ImageD(kWidth, kHeight, 0.1)))
-        kernelList.append(afwMath.FixedKernel(afwImage.ImageD(kWidth, kHeight, 0.2)))
+        kernelList.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.1)))
+        kernelList.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.2)))
 
         for numKernelParams in (2, 4):
             spFuncList = afwMath.Function2DList()
@@ -501,7 +501,7 @@ class KernelTestCase(unittest.TestCase):
         self.assert_(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, 2, 3)
         kernel.setSpatialParameters(sParams)
-        kImage = afwImage.ImageD(kWidth, kHeight)
+        kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),
             (1.0, 0.0, 1.0, 0.0),
@@ -591,7 +591,7 @@ class KernelTestCase(unittest.TestCase):
         Note: this ignores the default constructors, which produce kernels with height = width = 0.
         The default constructors are only intended to support persistence, not to produce useful kernels.
         """
-        emptyImage = afwImage.ImageF(0, 0)
+        emptyImage = afwImage.ImageF(afwGeom.Extent2I(0, 0))
         gaussFunc2D = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         gaussFunc1D = afwMath.GaussianFunction1D(1.0)
         zeroPoint = afwGeom.PointI(0, 0)
@@ -601,7 +601,7 @@ class KernelTestCase(unittest.TestCase):
                     continue
                 if (kHeight >= 0) and (kWidth >= 0):
                     # don't try to create an image with negative dimensions
-                    blankImage = afwImage.ImageF(kWidth, kHeight)
+                    blankImage = afwImage.ImageF(afwGeom.Extent2I(kWidth, kHeight))
                     self.assertRaises(Exception, afwMath.FixedKernel, blankImage)
                 self.assertRaises(Exception, afwMath.AnalyticKernel, kWidth, kHeight, gaussFunc2D)
                 self.assertRaises(Exception, afwMath.SeparableKernel, kWidth, kHeight, gaussFunc1D, gaussFunc1D)
@@ -710,7 +710,7 @@ class KernelTestCase(unittest.TestCase):
                 for height in (0, 1, kHeight-1, kHeight, kHeight+1):
                     if (width, height) == (kWidth, kHeight):
                         continue
-                    outImage = afwImage.ImageD(width, height)
+                    outImage = afwImage.ImageD(afwGeom.Extent2I(width, height))
                     try:
                         kernel.computeImage(outImage, doNormalize)
                         self.fail("computeImage accepted wrong-sized image; kernel=%s; image size=(%s, %s)" %
@@ -760,8 +760,8 @@ class KernelTestCase(unittest.TestCase):
 
         for doNormalize in (False, True):
             for pos in posList:
-                kernel1.computeImage(im1, pos[0], pos[1], doNormalize)
-                kernel2.computeImage(im2, pos[0], pos[1], doNormalize)
+                kernel1.computeImage(im1, doNormalize, pos[0], pos[1])
+                kernel2.computeImage(im2, doNormalize, pos[0], pos[1])
                 im1Arr = imTestUtils.arrayFromImage(im1)
                 im2Arr = imTestUtils.arrayFromImage(im2)
                 if not numpy.allclose(im1Arr, im2Arr):

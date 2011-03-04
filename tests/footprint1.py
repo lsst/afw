@@ -38,6 +38,7 @@ import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.geom as afwGeom
+import lsst.afw.geom.ellipses as afwGeomEllipses
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
@@ -239,13 +240,13 @@ class FootprintTestCase(unittest.TestCase):
     def testFootprintFromEllipse(self):
         """Create a circular Footprint"""
 
-	ellipse = geomEllipses.Ellipse(afwGeom.PointI(9,15), 
-		                       geomEllipses.DistortionAndGeomatricRadius(6))
+	ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
+                                          afwGeom.Point2D(9,15))
         foot = afwDetect.Footprint(
                 ellipse, 
                 afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(20, 30)))
 
-        idImage = afwImage.ImageU(foot.getRegion().getWidth(), foot.getRegion().getHeight())
+        idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
         
         foot.insertIntoImage(idImage, foot.getId())
@@ -258,7 +259,7 @@ class FootprintTestCase(unittest.TestCase):
         x0, y0 = 20, 20
         width, height = 20, 30
         foot1 = afwDetect.Footprint(afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(width, height)),
-                                       afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(100, 100))
+                                    afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(100, 100)))
         bbox1 = foot1.getBBox()
 
         self.assertEqual(bbox1.getMinX(), x0)
@@ -362,7 +363,7 @@ class FootprintTestCase(unittest.TestCase):
 
         w, h = 12, 10
         region = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(w,h))
-        im = afwImage.ImageU(w, h)
+        im = afwImage.ImageU(afwGeom.Extent2I(w, h))
         im.set(0)
         #
         # Create a footprint;  note that these Spans overlap
@@ -382,7 +383,7 @@ class FootprintTestCase(unittest.TestCase):
                 for x in range(x0, x1 + 1): # also insert into im
                     im.set(x, y, 1)
 
-            idImage = afwImage.ImageU(w, h)
+            idImage = afwImage.ImageU(afwGeom.Extent2I(w, h))
             idImage.set(0)
 
             foot.insertIntoImage(idImage, 1)
@@ -405,7 +406,7 @@ class FootprintTestCase(unittest.TestCase):
     def testSetFromFootprint(self):
         """Test setting mask/image pixels from a Footprint list"""
         
-        mi = afwImage.MaskedImageF(12, 8)
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(12, 8))
         im = mi.getImage()
         #
         # Objects that we should detect
@@ -453,7 +454,7 @@ class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
 
     def setUp(self):
-        self.ms = afwImage.MaskedImageF(12, 8)
+        self.ms = afwImage.MaskedImageF(afwGeom.Extent2I(12, 8))
         im = self.ms.getImage()
         #
         # Objects that we should detect
@@ -476,7 +477,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetect.FootprintSetF(afwImage.MaskedImageF(10, 20), afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSetF(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
@@ -580,7 +581,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet when the image contains NaNs"""
 
     def setUp(self):
-        self.ms = afwImage.MaskedImageF(12, 8)
+        self.ms = afwImage.MaskedImageF(afwGeom.Extent2I(12, 8))
         im = self.ms.getImage()
         #
         # Objects that we should detect

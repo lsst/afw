@@ -117,7 +117,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
     colRange = range(numCols)
 
 
-    kImage = afwImage.ImageD(kWidth, kHeight)
+    kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
     isSpatiallyVarying = kernel.isSpatiallyVarying()
     if not isSpatiallyVarying:
         kernel.computeImage(kImage, doNormalize)
@@ -177,7 +177,7 @@ class ConvolveTestCase(unittest.TestCase):
             
         del tmp
         
-        self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, True)
+        self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, afwImage.LOCAL, True)
         # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
         self.maskedImage.setXY0(300, 200)
         self.xy0 = self.maskedImage.getXY0()
@@ -185,8 +185,8 @@ class ConvolveTestCase(unittest.TestCase):
         # provide destinations for the convolved MaskedImage and Image that contain junk
         # to verify that convolve overwrites all pixels;
         # make them deep copies so we can mess with them without affecting self.inImage
-        self.cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, True)
-        self.cnvImage = afwImage.ImageF(FullMaskedImage.getImage(), ShiftedBBox, True)
+        self.cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)
+        self.cnvImage = afwImage.ImageF(FullMaskedImage.getImage(), ShiftedBBox, afwImage.LOCAL, True)
 
         self.width = self.maskedImage.getWidth()
         self.height = self.maskedImage.getHeight()
@@ -297,7 +297,7 @@ class ConvolveTestCase(unittest.TestCase):
             for inHeight in (kernel.getHeight() - 1, self.width-1, self.width, self.width + 1):
                 if (inWidth == self.width) and (inHeight == self.height):
                     continue
-                inMaskedImage = afwImage.MaskedImageF(inWidth, inHeight)
+                inMaskedImage = afwImage.MaskedImageF(afwGeom.Extent2I(inWidth, inHeight))
                 self.assertRaises(Exception, afwMath.convolve, self.cnvMaskedImage, inMaskedImage, kernel)
 
         for doNormalize in (True,): # (False, True):
@@ -318,9 +318,9 @@ class ConvolveTestCase(unittest.TestCase):
             ShiftedBBox.getDimensions(),
         )
         goodBox = kernel.shrinkBBox(fullBox)
-        cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, True)
-        cnvMaskedImageCopy = afwImage.MaskedImageF(cnvMaskedImage, fullBBox, True)
-        cnvMaskedImageCopyViewOfGoodRegion = afwImage.MaskedImageF(cnvMaskedImageCopy, goodBBox, False)
+        cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)
+        cnvMaskedImageCopy = afwImage.MaskedImageF(cnvMaskedImage, fullBox, afwImage.LOCAL, True)
+        cnvMaskedImageCopyViewOfGoodRegion = afwImage.MaskedImageF(cnvMaskedImageCopy, goodBox, afwImage.LOCAL, False)
 
         # convolve with basicConvolve, which should leave the edge pixels alone
         convControl = afwMath.ConvolutionControl()
@@ -328,7 +328,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         # reset the good region to the original convolved image;
         # this should reset the entire convolved image to its original self
-        cnvMaskedImageGoodView = afwImage.MaskedImageF(cnvMaskedImage, goodBBox, False)
+        cnvMaskedImageGoodView = afwImage.MaskedImageF(cnvMaskedImage, goodBox, afwImage.LOCAL, False)
         cnvMaskedImageGoodView <<= cnvMaskedImageCopyViewOfGoodRegion
 
         # assert that these two are equal
@@ -403,7 +403,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
         analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc)
-        kernelImage = afwImage.ImageD(kWidth, kHeight)
+        kernelImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         analyticKernel.computeImage(kernelImage, False)
         fixedKernel = afwMath.FixedKernel(kernelImage)
         

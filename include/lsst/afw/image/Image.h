@@ -408,8 +408,8 @@ namespace image {
         explicit Image(geom::ExtentI const & dimensions=geom::ExtentI(), PixelT initialValue=0);
         explicit Image(geom::BoxI const & dimensions, PixelT initialValue=0);
 
-        Image(const Image& rhs, const bool deep=false);
         explicit Image(Image const & rhs,geom::BoxI const & bbox, ImageOrigin const origin, const bool deep=false);
+        Image(const Image& rhs, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        geom::BoxI const& bbox=geom::BoxI(), 

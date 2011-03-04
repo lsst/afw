@@ -32,7 +32,7 @@ import math, os
 import unittest
 
 import eups
-import lsst.afw.image as afwImg
+import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions.exceptionsLib as exceptions
@@ -57,7 +57,7 @@ class SavingSubImagesTest(unittest.TestCase):
         path = eups.productDir("afw")
         self.parentFile = os.path.join(path, "tests", "data", "parent.fits")
         
-        self.parent = afwImg.ExposureF(self.parentFile)
+        self.parent = afwImage.ExposureF(self.parentFile)
         self.llcParent = self.parent.getMaskedImage().getXY0()
         self.oParent = self.parent.getWcs().getPixelOrigin()
         
@@ -85,7 +85,7 @@ class SavingSubImagesTest(unittest.TestCase):
         
         llc = afwGeom.PointI(20, 30)
         bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
-        subImg = afwImg.ExposureF(self.parent, bbox)
+        subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL)
 
         subImgLlc = subImg.getMaskedImage().getXY0()
         oSubImage = subImg.getWcs().getPixelOrigin()
@@ -111,7 +111,7 @@ class SavingSubImagesTest(unittest.TestCase):
         llc = afwGeom.PointI(20, 30)
         bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
         hdu=0
-        subImg = afwImg.ExposureF(self.parentFile, hdu, bbox)
+        subImg = afwImage.ExposureF(self.parentFile, hdu, bbox, afwImage.LOCAL)
         oSubImage = subImg.getWcs().getPixelOrigin()
         subImgLlc = subImg.getMaskedImage().getXY0()
        
@@ -133,7 +133,7 @@ class SavingSubImagesTest(unittest.TestCase):
         for deep in (True, False):
             llc = afwGeom.PointI(20, 30)
             bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
-            subImg = afwImg.ExposureF(self.parent, bbox, deep)
+            subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
             xy0 = subImg.getMaskedImage().getXY0()
 
@@ -167,7 +167,7 @@ class SavingSubImagesTest(unittest.TestCase):
         llc1 = afwGeom.PointI(20, 30)
         bbox = afwGeom.BoxI(llc1, afwGeom.ExtentI(60, 50))
         hdu=0
-        subImg = afwImg.ExposureF(self.parentFile, hdu, bbox)
+        subImg = afwImage.ExposureF(self.parentFile, hdu, bbox, afwImage.LOCAL)
 
 
         llc2 = afwGeom.PointI(22, 23)
@@ -175,10 +175,10 @@ class SavingSubImagesTest(unittest.TestCase):
         #This subsub image should fail. Although it's big enough to fit in the parent image
         #it's too small for the sub-image
         bbox = afwGeom.BoxI(llc2, afwGeom.ExtentI(100, 110))
-        self.assertRaises(exceptions.LsstCppException, afwImg.ExposureF, subImg, bbox)
+        self.assertRaises(exceptions.LsstCppException, afwImage.ExposureF, subImg, bbox, afwImage.LOCAL)
         
         bbox = afwGeom.BoxI(llc2, afwGeom.ExtentI(10, 11))
-        subSubImg = afwImg.ExposureF(subImg, bbox)
+        subSubImg = afwImage.ExposureF(subImg, bbox, afwImage.LOCAL)
         
         sub0 = subImg.getMaskedImage().getXY0()
         subsub0= subSubImg.getMaskedImage().getXY0()
@@ -205,11 +205,11 @@ class SavingSubImagesTest(unittest.TestCase):
         llc = afwGeom.PointI(20, 30)
         bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
         for deep in (False, True):
-            subImg = afwImg.ExposureF(self.parent, bbox, deep)
+            subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
             outFile = "tmp2.fits"
             subImg.writeFits(outFile)
-            newImg = afwImg.ExposureF(outFile)
+            newImg = afwImage.ExposureF(outFile)
             os.system("cp %s tmp-%s.fits" % (outFile, deep))
             os.remove(outFile)
 
@@ -241,11 +241,11 @@ class SavingSubImagesTest(unittest.TestCase):
         llc = afwGeom.PointI(x0, y0)
         bbox = afwGeom.BoxI(llc, afwGeom.ExtentI(60, 50))
         deep = False
-        subImg = afwImg.ExposureF(self.parent, bbox, deep)
+        subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
         
         outFile = "tmp.fits"
         subImg.writeFits(outFile)
-        hdr = afwImg.readMetadata(outFile)
+        hdr = afwImage.readMetadata(outFile)
         os.remove(outFile)
         
         self.assertTrue( hdr.exists("LTV1"), "LTV1 not saved to fits header")

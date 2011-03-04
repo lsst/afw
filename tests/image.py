@@ -57,7 +57,7 @@ class ImageTestCase(unittest.TestCase):
     """A test case for Image"""
     def setUp(self):
         self.val1, self.val2 = 10, 100
-        self.image1 = afwImage.ImageF(afwGeom.ExtentI(100, 200))
+        self.image1 = afwImage.ImageF(afwGeom.Extent2I(100, 200))
         self.image1.set(self.val1)
         self.image2 = afwImage.ImageF(self.image1.getDimensions())
         self.image2.set(self.val2)
@@ -72,10 +72,10 @@ class ImageTestCase(unittest.TestCase):
     def testInitializeImages(self):
         val = 666
         for ctor in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
-            im = ctor(afwGeom.ExtentI(10, 10), val)
+            im = ctor(afwGeom.Extent2I(10, 10), val)
             self.assertEqual(im.get(0, 0), val)
 
-            im2 = ctor(afwGeom.BoxI(afwGeom.PointI(0,0), ExtentI(10, 10)), val)
+            im2 = ctor(afwGeom.BoxI(afwGeom.Point2I(0,0), afwGeom.Extent2I(10, 10)), val)
             self.assertEqual(im2.get(0, 0), val)
 
     def testSetGetImages(self):
@@ -139,9 +139,9 @@ class ImageTestCase(unittest.TestCase):
     
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on Images of different sizes"
-        i1 = afwImage.ImageF(afwGeom.ExtentI(100, 100))
+        i1 = afwImage.ImageF(afwGeom.Extent2I(100, 100))
         i1.set(100)
-        i2 = afwImage.ImageF(afwGeom.ExtentI(10, 10))
+        i2 = afwImage.ImageF(afwGeom.Extent2I(10, 10))
         i2.set(10)
         
         def tst1(i1, i2):
@@ -230,35 +230,35 @@ class ImageTestCase(unittest.TestCase):
     def testOrigin(self):
         """Check that we can set and read the origin"""
 
-        im = afwImage.ImageF(10, 20)
+        im = afwImage.ImageF(afwGeom.Extent2I(10, 20))
         x0 = y0 = 0
         
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
 
         x0, y0 = 3, 5
         im.setXY0(x0, y0)
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
 
         x0, y0 = 30, 50
-        im.setXY0(afwGeom.PointI(x0, y0))
+        im.setXY0(afwGeom.Point2I(x0, y0))
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
 
     def testSubimages(self):
         simage1 = afwImage.ImageF(
             self.image1, 
-            afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(10, 5)),
+            afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL)
-        )
+        
         
         simage = afwImage.ImageF(
                 simage1, 
-                afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(3, 2)),
+                afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
                 afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 2)
@@ -277,19 +277,19 @@ class ImageTestCase(unittest.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.image1.set(9, 4, 888)
-        #printImg(afwImage.ImageF(self.image1, afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(10, 5)))); print
+        #printImg(afwImage.ImageF(self.image1, afwGeom.BoxI(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         simage1 = afwImage.ImageF(
             self.image1, 
-            afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(10, 5)),
+            afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
         )
-        simage1.setXY0(afwGeom.PointI(0, 0)) # reset origin; doesn't affect pixel coordinate systems
+        simage1.setXY0(afwGeom.Point2I(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
         simage = afwImage.ImageF(
             simage1, 
-            afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(3, 2)),
-            afwImaeg.LOCAL
+            afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+            afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 1)
         self.assertEqual(simage.getY0(), 1)
@@ -307,7 +307,7 @@ class ImageTestCase(unittest.TestCase):
         def tst():
             simage1 = afwImage.ImageF(
                 self.image1, 
-                afwGeom.BoxI(afwGeom.PointI(1, -1), afwGeom.ExtentI(10, 5)),
+                afwGeom.BoxI(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
                 afwImage.LOCAL
             )
 
@@ -333,7 +333,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.val1, self.val2 = 10, 100
         self.width, self.height = 200, 100
         self.dimage1 = afwImage.DecoratedImageF(
-                afwGeom.ExtentI(self.width, self.height)
+                afwGeom.Extent2I(self.width, self.height)
             )
         self.dimage1.getImage().set(self.val1)
 
@@ -353,7 +353,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertEqual(self.dimage1.getImage().get(0, 0), self.val1)
 
     def testCreateDecoratedImageFromImage(self):
-        image = afwImage.ImageF(afwGeom.ExtentI(self.width, self.height))
+        image = afwImage.ImageF(afwGeom.Extent2I(self.width, self.height))
         image <<= self.dimage1.getImage()
 
         dimage = afwImage.DecoratedImageF(image)
@@ -456,7 +456,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        im = afwImage.ImageF(afwGeom.ExtentI(10, 20))
+        im = afwImage.ImageF(afwGeom.Extent2I(10, 20))
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
@@ -483,10 +483,10 @@ class DecoratedImageTestCase(unittest.TestCase):
 
     def testTicket1040(self):
         """ How to repeat from #1040"""
-        image        = afwImage.ImageD(afwGeom.ExtentI(6, 6))
+        image        = afwImage.ImageD(afwGeom.Extent2I(6, 6))
         image.set(2, 2, 100)
 
-        bbox    = afwGeom.BoxI(afwGeom.PointI(1, 1), afwGeom.ExtentI(5, 5))
+        bbox    = afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
         subImage = image.Factory(image, bbox, afwImage.LOCAL)
         subImageF = subImage.convertFloat()
         

@@ -73,6 +73,10 @@ namespace boost {
 
 /************************************************************************************************************/
 
+%typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
+    $1 = PyBool_Check($input) ? 1 : 0;
+}
+
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
 

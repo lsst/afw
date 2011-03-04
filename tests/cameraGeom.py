@@ -70,8 +70,8 @@ def trimCcd(ccd, ccdImage=""):
     if ccdImage is not None:
         trimmedImage = ccdImage.Factory(ccd.getAllPixels())
         for a in ccd:
-            data =      ccdImage.Factory(ccdImage, a.getDataSec(False))
-            tdata = trimmedImage.Factory(trimmedImage, a.getDataSec())
+            data =      ccdImage.Factory(ccdImage, a.getDataSec(False), afwImage.LOCAL)
+            tdata = trimmedImage.Factory(trimmedImage, a.getDataSec(), afwImage.LOCAL)
             tdata <<= data
     else:
         trimmedImage = None
@@ -184,11 +184,11 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(ccd.findAmp(afwGeom.PointI(10, 10)).getId().getSerial(), ccdInfo["ampIdMin"])
 
         self.assertEqual(ccd.getAllPixels().getMin(),
-                         ccd.findAmp(afwGeom.PointI(10, 10)).getAllPixels().getLLC())
+                         ccd.findAmp(afwGeom.PointI(10, 10)).getAllPixels().getMin())
 
         self.assertEqual(ccd.getAllPixels().getMax(),
                          ccd.findAmp(afwGeom.PointI(ccdInfo["width"] - 1,
-                                                            ccdInfo["height"] - 1)).getAllPixels().getURC())
+                                                            ccdInfo["height"] - 1)).getAllPixels().getMax())
         ps = ccd.getPixelSize()
         #
         # Test mapping pixel <--> mm

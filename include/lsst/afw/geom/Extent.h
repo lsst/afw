@@ -146,13 +146,13 @@ template<typename T, int N>
 class Extent : public ExtentBase<T,N> {
     typedef ExtentBase<T,N> Super;
 public:
+    typedef typename Super::EigenVector EigenVector;
 
     /// \brief Construct an Extent with all elements set to the same scalar value.
     explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
     /// \brief Construct an Extent from an Eigen vector.
-    template <typename Vector>
-    explicit Extent(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
+    explicit Extent(EigenVector const & vector) : Super(vector) {}
 
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,N> const & other);
@@ -172,29 +172,29 @@ template<typename T>
 class Extent<T,2> : public ExtentBase<T,2> {
     typedef ExtentBase<T,2> Super;
 public:
+    typedef typename Super::EigenVector EigenVector;
 
     /// \brief Construct an Extent with all elements set to the same scalar value.
     explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
     /// \brief Construct an Extent from an Eigen vector.
-    template <typename Vector>
-    explicit Extent(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
+    explicit Extent(EigenVector const & vector) : Super(vector) {}
 
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,2> const & other);
 
     /// @brief Construct from two scalars.
-    explicit Extent(T x, T y) : Super(typename Super::EigenVector(x, y)) {}
+    explicit Extent(T x, T y) : Super(EigenVector(x, y)) {}
 
     /// @brief Construct from a two-element array.
-    explicit Extent(T const xy[2]) : Super(typename Super::EigenVector(xy[0], xy[1])) {}
+    explicit Extent(T const xy[2]) : Super(EigenVector(xy[0], xy[1])) {}
 
     /// @brief Construct from a std::pair.
-    explicit Extent(std::pair<T,T> const & xy) : Super(typename Super::EigenVector(xy.first, xy.second)) {}
+    explicit Extent(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
     /// @brief Construct from boost::tuple.
     explicit Extent(boost::tuple<T,T> const & xy) : 
-        Super(typename Super::EigenVector(xy.template get<0>(), xy.template get<1>())) {}
+        Super(EigenVector(xy.template get<0>(), xy.template get<1>())) {}
 
     T getX() const { return this->_vector.x(); }
     T getY() const { return this->_vector.y(); }
@@ -216,26 +216,26 @@ template<typename T>
 class Extent<T,3> : public ExtentBase<T,3> {
     typedef ExtentBase<T,3> Super;
 public:
+    typedef typename Super::EigenVector EigenVector;
 
     /// \brief Construct an Extent with all elements set to the same scalar value.
     explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
     /// \brief Construct an Extent from an Eigen vector.
-    template <typename Vector>
-    explicit Extent(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
+    explicit Extent(EigenVector const & vector) : Super(vector) {}
 
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,3> const & other);
 
     /// @brief Construct from three scalars.
-    explicit Extent(T x, T y, T z) : Super(typename Super::EigenVector(x, y, z)) {}
+    explicit Extent(T x, T y, T z) : Super(EigenVector(x, y, z)) {}
 
     /// @brief Construct from a two-element array.
-    explicit Extent(T const xyz[3]) : Super(typename Super::EigenVector(xyz[0], xyz[1], xyz[2])) {}
+    explicit Extent(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
     /// @brief Construct from boost::tuple.
     explicit Extent(boost::tuple<T,T,T> const & xyz) : 
-        Super(typename Super::EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
+        Super(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
 
     T getX() const { return this->_vector.x(); }
     T getY() const { return this->_vector.y(); }
@@ -245,7 +245,9 @@ public:
     void setZ(T z) { this->_vector.z() = z; }
 
     /// @brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T,T> asTuple() const { return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z()); }
+    boost::tuple<T,T,T> asTuple() const {
+        return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z());
+    }
 
 };
 

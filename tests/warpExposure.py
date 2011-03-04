@@ -33,6 +33,7 @@ import numpy
 import eups
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.image.testUtils as imageTestUtils
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as logging

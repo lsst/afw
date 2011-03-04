@@ -95,7 +95,7 @@ class ReadFitsTestCase(unittest.TestCase):
             imPath = os.path.join("tests", imPath)
         imPath = os.path.join(imPath, "smallD.fits")
         
-        im = afwImage.ImageD(afwGeom.ExtentI(100, 100))
+        im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
         im.set(666)
         im.writeFits(imPath)
         newIm = afwImage.ImageD(imPath)
@@ -106,7 +106,7 @@ class ReadFitsTestCase(unittest.TestCase):
         fileName, hdu = os.path.join(dataDir, "871034p_1_MI_var.fits"), 0
         im = afwImage.ImageF(fileName)
 
-        bbox = afwGeom.BoxI(afwGeom.PointI(110, 120), afwGeom.ExtentI(20, 15))
+        bbox = afwGeom.BoxI(afwGeom.PointI(110, 120), afwGeom.Extent2I(20, 15))
         sim = im.Factory(im, bbox, afwImage.LOCAL) 
 
         im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
@@ -125,7 +125,7 @@ class ReadFitsTestCase(unittest.TestCase):
             imPath = os.path.join("tests", imPath)
         imPath = os.path.join(imPath, "MEF.fits")
 
-        im = afwImage.ImageF(afwGeom.ExtetnI(20, 20))
+        im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
 
         for hdu in range(1, 5):
             im.set(100*hdu)

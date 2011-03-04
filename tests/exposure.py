@@ -87,8 +87,8 @@ class ExposureTestCase(unittest.TestCase):
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
         self.exposureMiWcs = afwImage.makeExposure(maskedImage, self.wcs)
-        self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
-        self.exposureCrOnly = afwImage.ExposureF(100, 100)
+        self.exposureCrWcs = afwImage.ExposureF(afwGeom.Extent2I(100, 100), self.wcs)
+        self.exposureCrOnly = afwImage.ExposureF(afwGeom.Extent2I(100, 100))
 
         afwImage.Filter.reset()
         afwImage.FilterProperty.reset()
@@ -210,7 +210,10 @@ class ExposureTestCase(unittest.TestCase):
         #
         w, h = 11, 11
         self.assertFalse(exposure.hasPsf())
-        exposure.setPsf(afwDetection.createPsf("DoubleGaussian", w, h, 3))
+        psf = afwDetection.createPsf("DoubleGaussian", w, h, 3)
+        print psf
+        exposure.setPsf(psf)
+        print exposure.getPsf()
         self.assertTrue(exposure.hasPsf())
         self.assertEqual(exposure.getPsf().getKernel().getDimensions(), (w, h))
 
@@ -246,7 +249,7 @@ class ExposureTestCase(unittest.TestCase):
         # This subExposure is valid
         #
         subBBox = afwGeom.BoxI(afwGeom.PointI(40, 50), afwGeom.ExtentI(10, 10))
-        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
         
         self.checkWcs(self.exposureCrWcs, subExposure)
 
@@ -256,7 +259,7 @@ class ExposureTestCase(unittest.TestCase):
         
         subRegion3 = afwGeom.BoxI(afwGeom.PointI(100, 100), afwGeom.ExtentI(10, 10))
         def getSubRegion():
-            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3)
+            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3, afwImage.LOCAL)
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
@@ -266,13 +269,13 @@ class ExposureTestCase(unittest.TestCase):
 
         subRegion4 = afwGeom.BoxI(afwGeom.PointI(250, 250), afwGeom.ExtentI(10, 10))
         def getSubRegion():
-            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4)
+            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4, afwImage.LOCAL)
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
         #check the sub- and parent- exposures are using the same Wcs transformation
         subBBox = afwGeom.BoxI(afwGeom.PointI(40, 50), afwGeom.ExtentI(10, 10))
-        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
         parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
         
         parentPos = parentPos.getPosition()
@@ -290,7 +293,7 @@ class ExposureTestCase(unittest.TestCase):
         mainExposure.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         
         subBBox = afwGeom.BoxI(afwGeom.PointI(10, 10), afwGeom.ExtentI(40, 50))
-        subExposure = mainExposure.Factory(mainExposure, subBBox)
+        subExposure = mainExposure.Factory(mainExposure, subBBox, afwImage.LOCAL)
         self.checkWcs(mainExposure, subExposure)
         det = subExposure.getDetector()
         self.assertTrue(det)
@@ -371,8 +374,8 @@ class ExposureTestCase(unittest.TestCase):
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
-        m = afwImage.makeMaskedImage(afwImage.ImageU(10, 20))
-        e = afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(10, 20)))
+        m = afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
+        e = afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20))))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

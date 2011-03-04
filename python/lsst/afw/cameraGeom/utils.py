@@ -100,27 +100,27 @@ class SynthesizeCcdImage(GetCcdImage):
         
         bbox = amp.getAllPixels(self.isTrimmed)
         im = imageFactory(bbox.getDimensions())
-        x0, y0 = bbox.getMinX(), bbox.getMinY()
+        xy0 = afwGeom.Extent2I(bbox.getMin())
 
         im += int(amp.getElectronicParams().getReadNoise())
-        bbox = amp.getDataSec(self.isTrimmed).clone()
-        bbox.shift(-x0, -y0)
-        sim = imageFactory(im, bbox)
+        bbox = afwGeom.Box2I(amp.getDataSec(self.isTrimmed))
+        bbox.shift(-xy0)
+        sim = imageFactory(im, bbox, afwImage.LOCAL)
         sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
         # Mark the amplifier
         dataSec = amp.getDataSec(self.isTrimmed)
         if amp.getReadoutCorner() == cameraGeom.Amp.LLC:
-            x, y = dataSec.getX0(),     dataSec.getY0()
+            xy = dataSec.getMin()
         elif amp.getReadoutCorner() == cameraGeom.Amp.LRC:
-            x, y = dataSec.getX1() - 2, dataSec.getY0()
+            xy = afwGeom.Point2I(dataSec.getMaxX() - 2, dataSec.getMinY())
         elif amp.getReadoutCorner() == cameraGeom.Amp.ULC:
-            x, y = dataSec.getX0()    , dataSec.getY1() - 2
+            xy = afwGeom.Point2I(dataSec.getMinX()    , dataSec.getMaxY() - 2)
         elif amp.getReadoutCorner() == cameraGeom.Amp.URC:
-            x, y = dataSec.getX1() - 2, dataSec.getY1() - 2
+            xy = afwGeom.Point2I(dataSec.getMaxX() - 2, dataSec.getMaxY() - 2)
         else:
             assert(not "Possible readoutCorner")
 
-        imageFactory(im, afwGeom.BoxI(afwGeom.PointI(x - x0, y - y0), afwGeom.ExtentI(3, 3)).set(0)
+        imageFactory(im, afwGeom.BoxI(xy - xy0, afwGeom.ExtentI(3, 3)), afwImage.LOCAL).set(0)
 
         return im
 
@@ -394,7 +394,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         if hduPerAmp:
             for amp in ccd:
                 hdu, flipLR, flipTB = ampDiskLayout[amp.getId().getSerial()]
-                amp.setDiskLayout(afwGeom.PointI(amp.getAllPixels().getX0(), amp.getAllPixels().getY0()),
+                amp.setDiskLayout(afwGeom.PointI(amp.getAllPixels().getMinX(), amp.getAllPixels().getMinY()),
                                   nQuarter, flipLR, flipTB)
 
         if raftInfo is not None:
@@ -511,8 +511,9 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
         ccdImage = imageFactory(ccd.getAllPixels(isTrimmed).getDimensions())
         
         for a in ccd:
-            im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
-            im <<= a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
+            im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
+            im2 = a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
+            im <<= im2
     else:
         ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
 
@@ -567,7 +568,7 @@ of the detectors"""
                                   borderWidth=0.49, ctype=ds9.BLUE, frame=frame, bin=bin)
         # Label each Amp
         ap = a.getAllPixels(isTrimmed)
-        xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
+        xc, yc = (ap.getMinX() + ap.getMaxX())//2, (ap.getMinY() + ap.getMaxY())//2
         cen = afwGeom.PointI(xc, yc)
         if ccdOrigin:
             xc += ccdOrigin[0]
@@ -583,7 +584,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
     """Make an Image of a Raft"""
 
     if raftCenter is None:
-        raftCenter = afwGeom.PointI(raft.getAllPixels().getDimensions()/2))
+        raftCenter = afwGeom.PointI(raft.getAllPixels().getDimensions()/2)
 
     raftImage = imageFactory(raft.getAllPixels().Dimensions()/bin)
 
@@ -654,7 +655,7 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
         im = cameraImage.Factory(cameraImage, bbox)
 
         im <<= makeImageFromRaft(raft, imageSource,
-                                 raftCenter=None, # afwGeom.PointI(bbox.getDimensions()2),
+                                 raftCenter=None, # afwGeom.PointI(bbox.getDimensions()/2),
                                  imageFactory=imageFactory, bin=bin)
         serial = raft.getId().getSerial()
         im += serial if serial > 0 else 0

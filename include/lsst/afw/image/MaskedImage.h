@@ -795,6 +795,18 @@ public:
      * \note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
+    void setXY0(int const x0, int const y0) {
+        setXY0(geom::PointI(x0,y0));
+    }
+
+    /**
+     * Set the MaskedImage's origin
+     *
+     * The origin is usually set by the constructor, so you shouldn't need this function
+     *
+     * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+     * don't do so unless you are an Expert.
+     */
     void setXY0(geom::PointI const origin) {
         if (_image) {
             _image->setXY0(origin);

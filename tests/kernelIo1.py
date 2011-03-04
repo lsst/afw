@@ -34,6 +34,7 @@ import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPersist
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.image.testUtils as imTestUtils
 
 Verbosity = 0 # increase to see trace
@@ -66,7 +67,7 @@ class KernelIOTestCase(unittest.TestCase):
         inArr = numpy.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
-        inImage = afwImage.ImageD(kWidth, kHeight)
+        inImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         for row in range(inImage.getHeight()):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
@@ -350,7 +351,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         self.kernelCheck(k, k2)
 
-        kImage = afwImage.ImageD(kWidth, kHeight)
+        kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),
             (1.0, 0.0, 1.0, 0.0),

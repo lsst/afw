@@ -204,7 +204,7 @@ class KernelImagesForRegion(unittest.TestCase):
     def testExactImages(self):
         """Confirm that kernel image at each location is correct
         """
-        desImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
+        desImage = afwImage.ImageD(afwGeom.Extent2I(self.kernel.getWidth(), self.kernel.getHeight()))
         
         for doNormalize in (False, True):
             region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)

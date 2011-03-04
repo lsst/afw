@@ -37,8 +37,9 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.math.mathLib as afwMath
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 
 import testLib
 

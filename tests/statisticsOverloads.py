@@ -37,7 +37,8 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 #import lsst.afw.display.ds9 as ds9
 
@@ -57,21 +58,21 @@ class StatisticsTestCase(unittest.TestCase):
         self.sctrl = afwMath.StatisticsControl()
 
         # Integers
-        self.mimgI = afwImage.MaskedImageI(self.nRow, self.nCol)
+        self.mimgI = afwImage.MaskedImageI(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgI.set(self.val, 0x0, self.val)
-        self.imgI = afwImage.ImageI(self.nRow, self.nCol, self.val)
+        self.imgI = afwImage.ImageI(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
         self.vecI = afwMath.vectorI(self.nRow*self.nCol, self.val)
 
         # floats
-        self.mimgF = afwImage.MaskedImageF(self.nRow, self.nCol)
+        self.mimgF = afwImage.MaskedImageF(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgF.set(self.val, 0x0, self.val)
-        self.imgF = afwImage.ImageF(self.nRow, self.nCol, self.val)
+        self.imgF = afwImage.ImageF(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
         self.vecF = afwMath.vectorF(self.nRow*self.nCol, self.val)
 
         # doubles
-        self.mimgD = afwImage.MaskedImageD(self.nRow, self.nCol)
+        self.mimgD = afwImage.MaskedImageD(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgD.set(self.val, 0x0, self.val)
-        self.imgD = afwImage.ImageD(self.nRow, self.nCol, self.val)
+        self.imgD = afwImage.ImageD(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
         self.vecD = afwMath.vectorD(self.nRow*self.nCol, self.val)
 
         self.imgList  = [self.imgI,  self.imgF,  self.imgD]
@@ -142,7 +143,7 @@ class StatisticsTestCase(unittest.TestCase):
             
     # Test the Mask specialization
     def testMask(self):
-        mask = afwImage.MaskU(10, 10)
+        mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)

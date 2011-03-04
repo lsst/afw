@@ -37,9 +37,10 @@ import sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.math.mathLib as afwMath
-import lsst.afw.detection.detectionLib as afwDetect
+import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
+import lsst.afw.math as afwMath
+import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
 
@@ -89,7 +90,7 @@ class FootprintSetUTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
 
     def setUp(self):
-        self.im = afwImage.ImageU(12, 8)
+        self.im = afwImage.ImageU(afwGeom.Extent2I(12, 8))
         #
         # Objects that we should detect
         #
@@ -111,7 +112,7 @@ class FootprintSetUTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetect.FootprintSetU(afwImage.ImageU(10, 20), afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSetU(afwImage.ImageU(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
@@ -199,7 +200,7 @@ class FootprintSetUTestCase(unittest.TestCase):
     def testInf(self):
         """Test detection for images with Infs"""
 
-        im = afwImage.MaskedImageF(10, 20)
+        im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
         im.set(0)
         
         import numpy

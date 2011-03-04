@@ -118,6 +118,22 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %CoordinateExpr_POSTINCLUDE(2);
 %CoordinateExpr_POSTINCLUDE(3);
 
+%extend lsst::afw::geom::Point<int,2> {
+    %template(Point2I) Point<double>;
+};
+
+%extend lsst::afw::geom::Point<int,3> {
+    %template(Point3I) Point<double>;
+};
+
+%extend lsst::afw::geom::Point<double,2> {
+    %template(Point2D) Point<int>;
+};
+
+%extend lsst::afw::geom::Point<double,3> {
+    %template(Point3D) Point<int>;
+};
+
 %include "LinearTransform.i"
 %include "AffineTransform.i"
 %include "Box.i"

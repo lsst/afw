@@ -125,16 +125,10 @@ template<typename T, int N>
 class Point : public PointBase<T,N> {
     typedef PointBase<T,N> Super;
 public:
+    typedef typename Super::EigenVector EigenVector;
 
     /// @brief Construct a Point with all elements set to the same scalar value.
     explicit Point(T val=static_cast<T>(0)) : Super(val) {}
-
-    /// @brief Construct a Point from an Eigen vector.
-    template <typename Vector>
-    explicit Point(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-
-    /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}          
 
     /**
      *  @brief Explicit converting constructor.
@@ -146,6 +140,12 @@ public:
     template <typename U>
     explicit Point(Point<U,N> const & other);
 
+    /// @brief Construct a Point from an Eigen vector.
+    explicit Point(EigenVector const & vector) : Super(vector) {}
+
+    /// @brief Explicit constructor from Extent.
+    explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}          
+
 };
 
 /**
@@ -155,19 +155,10 @@ template<typename T>
 class Point<T,2> : public PointBase<T,2> {
     typedef PointBase<T,2> Super;
 public:
+    typedef typename Super::EigenVector EigenVector;
 
     /// @brief Construct a Point with all elements set to the same scalar value.
     explicit Point(T val=static_cast<T>(0)) : Super(val) {}
-
-    /// @brief Construct a Point from an Eigen vector.
-    template <typename Vector>
-    explicit Point(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-
-    /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,2> const & other) : Super(other.asEigen()) {}          
-
-    /// @brief Explicit constructor from a pair of doubles.
-    explicit Point(T x, T y) : Super(typename Super::EigenVector(x,y)) {}
 
     /**
      *  @brief Explicit converting constructor.
@@ -179,15 +170,24 @@ public:
     template <typename U>
     explicit Point(Point<U,2> const & other);
 
+    /// @brief Construct a Point from an Eigen vector.
+    explicit Point(EigenVector const & vector) : Super(vector) {}
+
+    /// @brief Explicit constructor from Extent.
+    explicit Point(Extent<T,2> const & other) : Super(other.asEigen()) {}          
+
+    /// @brief Explicit constructor from a pair of doubles.
+    explicit Point(T x, T y) : Super(EigenVector(x,y)) {}
+
     /// @brief Construct from a two-element array.
-    explicit Point(T const xy[2]) : Super(typename Super::EigenVector(xy[0], xy[1])) {}
+    explicit Point(T const xy[2]) : Super(EigenVector(xy[0], xy[1])) {}
 
     /// @brief Construct from a std::pair.
-    explicit Point(std::pair<T,T> const & xy) : Super(typename Super::EigenVector(xy.first, xy.second)) {}
+    explicit Point(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
     /// @brief Construct from boost::tuple.
     explicit Point(boost::tuple<T,T> const & xy) : 
-        Super(typename Super::EigenVector(xy.template get<0>(), xy.template get<1>())) {}
+        Super(EigenVector(xy.template get<0>(), xy.template get<1>())) {}
 
     T getX() const { return this->_vector.x(); }
     T getY() const { return this->_vector.y(); }
@@ -209,19 +209,10 @@ template<typename T>
 class Point<T,3> : public PointBase<T,3> {
     typedef PointBase<T,3> Super;
 public:
+    typedef typename Super::EigenVector EigenVector;
 
     /// @brief Construct a Point with all elements set to the same scalar value.
     explicit Point(T val=static_cast<T>(0)) : Super(val) {}
-
-    /// @brief Construct a Point from an Eigen vector.
-    template <typename Vector>
-    explicit Point(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-
-    /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,3> const & other) : Super(other.asEigen()) {}          
-
-    /// @brief Explicit constructor from a sequence of doubles.
-    explicit Point(T x, T y, T z) : Super(typename Super::EigenVector(x,y,z)) {}
 
     /**
      *  @brief Explicit converting constructor.
@@ -233,12 +224,21 @@ public:
     template <typename U>
     explicit Point(Point<U,3> const & other);
 
+    /// @brief Construct a Point from an Eigen vector.
+    explicit Point(EigenVector const & vector) : Super(vector) {}
+
+    /// @brief Explicit constructor from Extent.
+    explicit Point(Extent<T,3> const & other) : Super(other.asEigen()) {}          
+
+    /// @brief Explicit constructor from a sequence of doubles.
+    explicit Point(T x, T y, T z) : Super(EigenVector(x,y,z)) {}
+
     /// @brief Construct from a two-element array.
-    explicit Point(T const xyz[3]) : Super(typename Super::EigenVector(xyz[0], xyz[1], xyz[2])) {}
+    explicit Point(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
     /// @brief Construct from boost::tuple.
     explicit Point(boost::tuple<T,T,T> const & xyz) : 
-        Super(typename Super::EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
+        Super(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
 
     T getX() const { return this->_vector.x(); }
     T getY() const { return this->_vector.y(); }
@@ -248,7 +248,9 @@ public:
     void setZ(T z) { this->_vector.z() = z; }
 
     /// @brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T,T> asTuple() const { return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z()); }
+    boost::tuple<T,T,T> asTuple() const {
+        return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z());
+    }
 
 };
 
