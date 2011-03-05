@@ -76,21 +76,11 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
             ).str()
         );
     }
-
-    if(dimensions.getX() == 0 && dimensions.getY() == 0) {
-        return boost::gil::subimage_view(
-            view, 
-            offset.getX(), offset.getY(), 
-            view.width() - offset.getX(),
-            view.height() - offset.getY()
-        );
-    } else {
-        return boost::gil::subimage_view(
-            view, 
-            offset.getX(), offset.getY(),
-            dimensions.getX(), dimensions.getY()
-        );
-    }
+    return boost::gil::subimage_view(
+        view, 
+        offset.getX(), offset.getY(),
+        dimensions.getX(), dimensions.getY()
+    );
 }
 
 /**

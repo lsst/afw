@@ -25,6 +25,7 @@
 
 import math
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -135,17 +136,19 @@ class Mosaic(object):
 
         self.nx, self.ny = nx, ny
 
-        mosaic = images[0].Factory(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
+        mosaic = images[0].Factory(
+            afwGeom.Extent2I(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
+            )
         mosaic.set(self.background)
 
         for i in range(len(images)):
-            smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx))
+            smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx), afwImage.LOCAL)
             im = images[i]
 
             if smosaic.getDimensions() != im.getDimensions(): # im is smaller than smosaic
                 llc = afwGeom.PointI((smosaic.getWidth() - im.getWidth())//2,
                                       (smosaic.getHeight() - im.getHeight())//2)
-                smosaic = smosaic.Factory(smosaic, afwGeom.BoxI(llc, im.getDimensions()))
+                smosaic = smosaic.Factory(smosaic, afwGeom.BoxI(llc, im.getDimensions()), afwImage.LOCAL)
 
             smosaic <<= im
 
