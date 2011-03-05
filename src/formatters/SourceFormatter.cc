@@ -164,6 +164,33 @@ struct FieldsToConvert {
     }
 };
 
+class Binder {
+public:
+    Binder(DbStorage* db) : _db(db), _fieldCount(0) { };
+    template <typename T> void bind(char const* fieldName, T* ptr,
+              int nullLocation = -1) {
+        _db->outParam(fieldName, ptr);
+        if (nullLocation >= 0) {
+            _nullMap.insert(std::pair<int, int>(_fieldCount, nullLocation));
+        }
+        ++_fieldCount;
+    };
+    void setNulls(Source& s) {
+        for (std::map<int, int>::const_iterator it = _nullMap.begin();
+             it != _nullMap.end(); ++it) {
+            if (_db->columnIsNull((*it).first)) {
+                s.setNull((*it).second);
+            }
+        }
+    };
+
+private:
+    DbStorage* _db;
+    int _fieldCount;
+    std::map<int, int> _nullMap;
+};
+
+
 }}}} // namespace lsst::afw::formatters::<anonymous>
 
 
@@ -225,9 +252,9 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     db.template setColumn<boost::int64_t>("sourceId", d._id);
 
     if (!d.isNull(det::AMP_EXPOSURE_ID)) {
-        db.template setColumn<boost::int64_t>("ampExposureId", d._ampExposureId);    
+        db.template setColumn<boost::int64_t>("scienceCcdExposureId", d._ampExposureId);    
     } else {
-        db.setColumnToNull("ampExposureId");
+        db.setColumnToNull("scienceCcdExposureId");
     }
    
     db.template setColumn<char>("filterId", static_cast<char>(d._filterId));
@@ -247,20 +274,20 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     db.template setColumn<boost::int32_t>("procHistoryID", d._procHistoryId);
 
     insertFp(db, *&cnv.ra, "ra");
-    insertFp(db, *&cnv.raErrForDetection, "raErrForDetection", d.isNull(det::RA_ERR_FOR_DETECTION));
-    insertFp(db, *&cnv.raErrForWcs, "raErrForWcs");
+    insertFp(db, *&cnv.raErrForDetection, "raSigmaForDetection", d.isNull(det::RA_ERR_FOR_DETECTION));
+    insertFp(db, *&cnv.raErrForWcs, "raSigmaForWcs");
     insertFp(db, *&cnv.dec, "decl");
-    insertFp(db, *&cnv.decErrForDetection, "declErrForDetection", d.isNull(det::DEC_ERR_FOR_DETECTION));
-    insertFp(db, *&cnv.decErrForWcs, "declErrForWcs");
+    insertFp(db, *&cnv.decErrForDetection, "declSigmaForDetection", d.isNull(det::DEC_ERR_FOR_DETECTION));
+    insertFp(db, *&cnv.decErrForWcs, "declSigmaForWcs");
 
     insertFp(db, d._xFlux, "xFlux", d.isNull(det::X_FLUX));
-    insertFp(db, d._xFluxErr, "xFluxErr", d.isNull(det::X_FLUX_ERR));
+    insertFp(db, d._xFluxErr, "xFluxSigma", d.isNull(det::X_FLUX_ERR));
     insertFp(db, d._yFlux, "yFlux", d.isNull(det::Y_FLUX));
-    insertFp(db, d._yFluxErr, "yFluxErr", d.isNull(det::Y_FLUX_ERR));
+    insertFp(db, d._yFluxErr, "yFluxSigma", d.isNull(det::Y_FLUX_ERR));
     insertFp(db, *&cnv.raFlux, "raFlux", d.isNull(det::RA_FLUX));
-    insertFp(db, *&cnv.raFluxErr, "raFluxErr", d.isNull(det::RA_FLUX_ERR));
+    insertFp(db, *&cnv.raFluxErr, "raFluxSigma", d.isNull(det::RA_FLUX_ERR));
     insertFp(db, *&cnv.decFlux, "declFlux", d.isNull(det::DEC_FLUX));
-    insertFp(db, *&cnv.decFluxErr, "declFluxErr", d.isNull(det::DEC_FLUX_ERR));
+    insertFp(db, *&cnv.decFluxErr, "declFluxSigma", d.isNull(det::DEC_FLUX_ERR));
 
     insertFp(db, d._xPeak, "xPeak", d.isNull(det::X_PEAK));
     insertFp(db, d._yPeak, "yPeak", d.isNull(det::Y_PEAK));
@@ -268,13 +295,13 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     insertFp(db, *&cnv.decPeak, "declPeak", d.isNull(det::DEC_PEAK));
 
     insertFp(db, d._xAstrom, "xAstrom", d.isNull(det::X_ASTROM));
-    insertFp(db, d._xAstromErr, "xAstromErr", d.isNull(det::X_ASTROM_ERR));
+    insertFp(db, d._xAstromErr, "xAstromSigma", d.isNull(det::X_ASTROM_ERR));
     insertFp(db, d._yAstrom, "yAstrom", d.isNull(det::Y_ASTROM));
-    insertFp(db, d._yAstromErr, "yAstromErr", d.isNull(det::Y_ASTROM_ERR));
+    insertFp(db, d._yAstromErr, "yAstromSigma", d.isNull(det::Y_ASTROM_ERR));
     insertFp(db, *&cnv.raAstrom, "raAstrom", d.isNull(det::RA_ASTROM));
-    insertFp(db, *&cnv.raAstromErr, "raAstromErr", d.isNull(det::RA_ASTROM_ERR));
+    insertFp(db, *&cnv.raAstromErr, "raAstromSigma", d.isNull(det::RA_ASTROM_ERR));
     insertFp(db, *&cnv.decAstrom, "declAstrom", d.isNull(det::DEC_ASTROM));
-    insertFp(db, *&cnv.decAstromErr, "declAstromErr", d.isNull(det::DEC_ASTROM_ERR));
+    insertFp(db, *&cnv.decAstromErr, "declAstromSigma", d.isNull(det::DEC_ASTROM_ERR));
 
     insertFp(db, *&cnv.raObject, "raObject", d.isNull(det::RA_OBJECT));
     insertFp(db, *&cnv.decObject, "declObject", d.isNull(det::DEC_OBJECT));
@@ -283,43 +310,60 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     insertFp(db, d._taiRange, "taiRange", d.isNull(det::TAI_RANGE));
  
     insertFp(db, d._psfFlux, "psfFlux");
-    insertFp(db, d._psfFluxErr, "psfFluxErr");
+    insertFp(db, d._psfFluxErr, "psfFluxSigma");
     insertFp(db, d._apFlux, "apFlux");
-    insertFp(db, d._apFluxErr, "apFluxErr");
+    insertFp(db, d._apFluxErr, "apFluxSigma");
     insertFp(db, d._modelFlux, "modelFlux");
-    insertFp(db, d._modelFluxErr, "modelFluxErr");
+    insertFp(db, d._modelFluxErr, "modelFluxSigma");
     insertFp(db, d._petroFlux, "petroFlux", d.isNull(det::PETRO_FLUX));
-    insertFp(db, d._petroFluxErr, "petroFluxErr", d.isNull(det::PETRO_FLUX_ERR));
+    insertFp(db, d._petroFluxErr, "petroFluxSigma", d.isNull(det::PETRO_FLUX_ERR));
     insertFp(db, d._instFlux, "instFlux");
-    insertFp(db, d._instFluxErr, "instFluxErr");
+    insertFp(db, d._instFluxErr, "instFluxSigma");
     insertFp(db, d._nonGrayCorrFlux, "nonGrayCorrFlux", d.isNull(det::NON_GRAY_CORR_FLUX));
-    insertFp(db, d._nonGrayCorrFluxErr, "nonGrayCorrFluxErr", d.isNull(det::NON_GRAY_CORR_FLUX_ERR));
+    insertFp(db, d._nonGrayCorrFluxErr, "nonGrayCorrFluxSigma", d.isNull(det::NON_GRAY_CORR_FLUX_ERR));
     insertFp(db, d._atmCorrFlux, "atmCorrFlux", d.isNull(det::ATM_CORR_FLUX));
-    insertFp(db, d._atmCorrFluxErr, "atmCorrFluxErr", d.isNull(det::ATM_CORR_FLUX_ERR));
+    insertFp(db, d._atmCorrFluxErr, "atmCorrFluxSigma", d.isNull(det::ATM_CORR_FLUX_ERR));
 
     insertFp(db, d._apDia, "apDia", d.isNull(det::AP_DIA));
 
     insertFp(db, d._ixx, "Ixx", d.isNull(det::IXX));
-    insertFp(db, d._ixxErr, "IxxErr", d.isNull(det::IXX_ERR));
+    insertFp(db, d._ixxErr, "IxxSigma", d.isNull(det::IXX_ERR));
     insertFp(db, d._iyy, "Iyy", d.isNull(det::IYY));
-    insertFp(db, d._iyyErr, "IyyErr", d.isNull(det::IYY_ERR));
+    insertFp(db, d._iyyErr, "IyySigma", d.isNull(det::IYY_ERR));
     insertFp(db, d._ixy, "Ixy", d.isNull(det::IXY));
-    insertFp(db, d._ixyErr, "IxyErr", d.isNull(det::IXY_ERR));
+    insertFp(db, d._ixyErr, "IxySigma", d.isNull(det::IXY_ERR));
 
 
-    insertFp(db, d._psfIxx, "PsfIxx", d.isNull(det::PSF_IXX));
-    insertFp(db, d._psfIxxErr, "PsfIxxErr", d.isNull(det::PSF_IXX_ERR));
-    insertFp(db, d._psfIyy, "PsfIyy", d.isNull(det::PSF_IYY));
-    insertFp(db, d._psfIyyErr, "PsfIyyErr", d.isNull(det::PSF_IYY_ERR));
-    insertFp(db, d._psfIxy, "PsfIxy", d.isNull(det::PSF_IXY));
-    insertFp(db, d._psfIxyErr, "PsfIxyErr", d.isNull(det::PSF_IXY_ERR));
+    insertFp(db, d._psfIxx, "psfIxx", d.isNull(det::PSF_IXX));
+    insertFp(db, d._psfIxxErr, "psfIxxSigma", d.isNull(det::PSF_IXX_ERR));
+    insertFp(db, d._psfIyy, "psfIyy", d.isNull(det::PSF_IYY));
+    insertFp(db, d._psfIyyErr, "psfIyySigma", d.isNull(det::PSF_IYY_ERR));
+    insertFp(db, d._psfIxy, "psfIxy", d.isNull(det::PSF_IXY));
+    insertFp(db, d._psfIxyErr, "psfIxySigma", d.isNull(det::PSF_IXY_ERR));
     
     insertFp(db, d._snr, "snr");
     insertFp(db, d._chi2, "chi2");
-
     insertFp(db, d._sky, "sky", d.isNull(det::SKY));
-    insertFp(db, d._skyErr, "skyErr", d.isNull(det::SKY_ERR));
- 
+    insertFp(db, d._skyErr, "skySigma", d.isNull(det::SKY_ERR));
+
+    insertFp(db, d._e1, "e1_SG", d.isNull(det::E1));
+    insertFp(db, d._e1Err, "e1_SG_Sigma", d.isNull(det::E1_ERR));
+    insertFp(db, d._e2, "e2_SG", d.isNull(det::E2));
+    insertFp(db, d._e2Err, "e2_SG_Sigma", d.isNull(det::E2_ERR));
+    insertFp(db, d._shear1, "shear1_SG", d.isNull(det::SHEAR1));
+    insertFp(db, d._shear1Err, "shear1_SG_Sigma", d.isNull(det::SHEAR1_ERR));
+    insertFp(db, d._shear2, "shear2_SG", d.isNull(det::SHEAR2));
+    insertFp(db, d._shear2Err, "shear2_SG_Sigma", d.isNull(det::SHEAR2_ERR));
+    insertFp(db, d._resolution, "resolution_SG", d.isNull(det::RESOLUTION));
+    insertFp(db, d._sigma, "sourceWidth_SG", d.isNull(det::SIGMA));
+    insertFp(db, d._sigmaErr, "sourceWidth_SG_Sigma", d.isNull(det::SIGMA_ERR));
+
+    if (!d.isNull(det::SHAPE_STATUS)) {
+        db.template setColumn<boost::int16_t>("shapeFlag_SG", d._shapeStatus);
+    } else {
+        db.setColumnToNull("shapeFlag_SG");
+    } 
+
     if (!d.isNull(det::FLAG_FOR_ASSOCIATION)) {
         db.template setColumn<boost::int16_t>("flagForAssociation", d._flagForAssociation);
     } else {
@@ -539,90 +583,91 @@ Persistable* form::SourceVectorFormatter::read(
             db->setTableForQuery(*i);
             Source s;
             FieldsToConvert cnv;
+            Binder b(db);
 
             //set target for query output
-            db->outParam("sourceId",           &(s._id));
-            db->outParam("ampExposureId",      &(s._ampExposureId));
-            db->outParam("filterId",           reinterpret_cast<char *>(&(s._filterId)));
-            db->outParam("objectId",           &(s._objectId));
-            db->outParam("movingObjectId",     &(s._movingObjectId));
-            db->outParam("procHistoryId",      &(s._procHistoryId));
-            db->outParam("ra",                 &(cnv.ra));
-            db->outParam("raErrForDetection",  &(cnv.raErrForDetection));
-            db->outParam("raErrForWcs",        &(cnv.raErrForWcs));
-            db->outParam("decl",               &(cnv.dec));
-            db->outParam("declErrForDetection",&(cnv.decErrForDetection));
-            db->outParam("declErrForWcs",      &(cnv.decErrForWcs));
-            db->outParam("xFlux",              &(s._xFlux));
-            db->outParam("xFluxErr",           &(s._xFluxErr));
-            db->outParam("yFlux",              &(s._yFlux));
-            db->outParam("yFluxErr",           &(s._yFluxErr));
-            db->outParam("raFlux",             &(cnv.raFlux));
-            db->outParam("raFluxErr",          &(cnv.raFluxErr));
-            db->outParam("declFlux",           &(cnv.decFlux));
-            db->outParam("declFluxErr",        &(cnv.decFluxErr));
-            db->outParam("xPeak",              &(s._xPeak));
-            db->outParam("yPeak",              &(s._yPeak));
-            db->outParam("raPeak",             &(cnv.raPeak));
-            db->outParam("declPeak",           &(cnv.decPeak));
-            db->outParam("xAstrom",            &(s._xAstrom));
-            db->outParam("xAstromErr",         &(s._xAstromErr));
-            db->outParam("yAstrom",            &(s._yAstrom));
-            db->outParam("yAstromErr",         &(s._yAstromErr));
-            db->outParam("raAstrom",           &(cnv.raAstrom));
-            db->outParam("raAstromErr",        &(cnv.raAstromErr));
-            db->outParam("declAstrom",         &(cnv.decAstrom));
-            db->outParam("declAstromErr",      &(cnv.decAstromErr));
-            db->outParam("raObject",           &(cnv.raObject));
-            db->outParam("declObject",         &(cnv.decObject));
-            db->outParam("taiMidPoint",        &(s._taiMidPoint));
-            db->outParam("taiRange",           &(s._taiRange));
-            db->outParam("psfFlux",            &(s._psfFlux));
-            db->outParam("psfFluxErr",         &(s._psfFluxErr));
-            db->outParam("apFlux",             &(s._apFlux));
-            db->outParam("apFluxErr",          &(s._apFluxErr));
-            db->outParam("modelFlux",          &(s._modelFlux));
-            db->outParam("modelFluxErr",       &(s._modelFluxErr));
-            db->outParam("petroFlux",          &(s._petroFlux));
-            db->outParam("petroFluxErr",       &(s._petroFluxErr));
-            db->outParam("instFlux",           &(s._instFlux));
-            db->outParam("instFluxErr",        &(s._instFluxErr));
-            db->outParam("nonGrayCorrFlux",    &(s._nonGrayCorrFlux));
-            db->outParam("nonGrayCorrFluxErr", &(s._nonGrayCorrFluxErr));
-            db->outParam("atmCorrFlux",        &(s._atmCorrFlux));
-            db->outParam("atmCorrFluxErr",     &(s._atmCorrFluxErr));
-            db->outParam("apDia",              &(s._apDia));
-            db->outParam("Ixx",                &(s._ixx));
-            db->outParam("IxxErr",             &(s._ixxErr));
-            db->outParam("Iyy",                &(s._iyy));
-            db->outParam("IyyErr",             &(s._iyyErr));
-            db->outParam("Ixy",                &(s._ixy));
-            db->outParam("IxyErr",             &(s._ixyErr));
-            db->outParam("PsfIxx",             &(s._psfIxx));
-            db->outParam("PsfIxxErr",          &(s._psfIxxErr));
-            db->outParam("PsfIyy",             &(s._psfIyy));
-            db->outParam("PsfIyyErr",          &(s._psfIyyErr));
-            db->outParam("PsfIxy",             &(s._psfIxy));
-            db->outParam("PsfIxyErr",          &(s._psfIxyErr));
-            db->outParam("e1",                   &(s._e1));
-            db->outParam("e1Err",                &(s._e1Err));
-            db->outParam("e2",                   &(s._e2));
-            db->outParam("e2Err",                &(s._e2Err));
-            db->outParam("shear1",               &(s._shear1));
-            db->outParam("shear1Err",            &(s._shear1Err));
-            db->outParam("shear2",               &(s._shear2));
-            db->outParam("shear2Err",            &(s._shear2Err));
-            db->outParam("resolution",           &(s._resolution));
-            db->outParam("sigma",                &(s._sigma));
-            db->outParam("sigmaErr",             &(s._sigmaErr));
-            db->outParam("shapeStatus",          &(s._shapeStatus));
-            db->outParam("snr",                &(s._snr));
-            db->outParam("chi2",               &(s._chi2));
-            db->outParam("sky",                &(s._sky));
-            db->outParam("skyErr",             &(s._skyErr));
-            db->outParam("flagForAssociation", &(s._flagForAssociation));
-            db->outParam("flagForDetection",   &(s._flagForDetection));
-            db->outParam("flagForWcs",         &(s._flagForWcs));
+            b.bind("sourceId",             &(s._id));
+            b.bind("scienceCcdExposureId", &(s._ampExposureId), det::AMP_EXPOSURE_ID);
+            b.bind("filterId",             reinterpret_cast<char *>(&(s._filterId)));
+            b.bind("objectId",             &(s._objectId), det::OBJECT_ID);
+            b.bind("movingObjectId",       &(s._movingObjectId), det::MOVING_OBJECT_ID);
+            b.bind("procHistoryId",        &(s._procHistoryId));
+            b.bind("ra",                   &(cnv.ra));
+            b.bind("raSigmaForDetection",  &(cnv.raErrForDetection), det::RA_ERR_FOR_DETECTION);
+            b.bind("raSigmaForWcs",        &(cnv.raErrForWcs));
+            b.bind("decl",                 &(cnv.dec));
+            b.bind("declSigmaForDetection",&(cnv.decErrForDetection), det::DEC_ERR_FOR_DETECTION);
+            b.bind("declSigmaForWcs",      &(cnv.decErrForWcs));
+            b.bind("xFlux",                &(s._xFlux), det::X_FLUX);
+            b.bind("xFluxSigma",           &(s._xFluxErr), det::X_FLUX_ERR);
+            b.bind("yFlux",                &(s._yFlux), det::Y_FLUX);
+            b.bind("yFluxSigma",           &(s._yFluxErr), det::Y_FLUX_ERR);
+            b.bind("raFlux",               &(cnv.raFlux), det::RA_FLUX);
+            b.bind("raFluxSigma",          &(cnv.raFluxErr), det::RA_FLUX_ERR);
+            b.bind("declFlux",             &(cnv.decFlux), det::DEC_FLUX);
+            b.bind("declFluxSigma",        &(cnv.decFluxErr), det::DEC_FLUX_ERR);
+            b.bind("xPeak",                &(s._xPeak), det::X_PEAK);
+            b.bind("yPeak",                &(s._yPeak), det::Y_PEAK);
+            b.bind("raPeak",               &(cnv.raPeak), det::RA_PEAK);
+            b.bind("declPeak",             &(cnv.decPeak), det::DEC_PEAK);
+            b.bind("xAstrom",              &(s._xAstrom), det::X_ASTROM);
+            b.bind("xAstromSigma",         &(s._xAstromErr), det::X_ASTROM_ERR);
+            b.bind("yAstrom",              &(s._yAstrom), det::Y_ASTROM);
+            b.bind("yAstromSigma",         &(s._yAstromErr), det::Y_ASTROM_ERR);
+            b.bind("raAstrom",             &(cnv.raAstrom), det::RA_ASTROM);
+            b.bind("raAstromSigma",        &(cnv.raAstromErr), det::RA_ASTROM_ERR);
+            b.bind("declAstrom",           &(cnv.decAstrom), det::DEC_ASTROM);
+            b.bind("declAstromSigma",      &(cnv.decAstromErr), det::DEC_ASTROM_ERR);
+            b.bind("raObject",             &(cnv.raObject), det::RA_OBJECT);
+            b.bind("declObject",           &(cnv.decObject), det::DEC_OBJECT);
+            b.bind("taiMidPoint",          &(s._taiMidPoint));
+            b.bind("taiRange",             &(s._taiRange), det::TAI_RANGE);
+            b.bind("psfFlux",              &(s._psfFlux));
+            b.bind("psfFluxSigma",         &(s._psfFluxErr));
+            b.bind("apFlux",               &(s._apFlux));
+            b.bind("apFluxSigma",          &(s._apFluxErr));
+            b.bind("modelFlux",            &(s._modelFlux));
+            b.bind("modelFluxSigma",       &(s._modelFluxErr));
+            b.bind("petroFlux",            &(s._petroFlux), det::PETRO_FLUX);
+            b.bind("petroFluxSigma",       &(s._petroFluxErr), det::PETRO_FLUX_ERR);
+            b.bind("instFlux",             &(s._instFlux));
+            b.bind("instFluxSigma",        &(s._instFluxErr));
+            b.bind("nonGrayCorrFlux",      &(s._nonGrayCorrFlux), det::NON_GRAY_CORR_FLUX);
+            b.bind("nonGrayCorrFluxSigma", &(s._nonGrayCorrFluxErr), det::NON_GRAY_CORR_FLUX_ERR);
+            b.bind("atmCorrFlux",          &(s._atmCorrFlux), det::ATM_CORR_FLUX);
+            b.bind("atmCorrFluxSigma",     &(s._atmCorrFluxErr), det::ATM_CORR_FLUX_ERR);
+            b.bind("apDia",                &(s._apDia), det::AP_DIA);
+            b.bind("Ixx",                  &(s._ixx), det::IXX);
+            b.bind("IxxSigma",             &(s._ixxErr), det::IXX_ERR);
+            b.bind("Iyy",                  &(s._iyy), det::IYY);
+            b.bind("IyySigma",             &(s._iyyErr), det::IYY_ERR);
+            b.bind("Ixy",                  &(s._ixy), det::IXY);
+            b.bind("IxySigma",             &(s._ixyErr), det::IXY_ERR);
+            b.bind("psfIxx",               &(s._psfIxx), det::PSF_IXX);
+            b.bind("psfIxxSigma",          &(s._psfIxxErr), det::PSF_IXX_ERR);
+            b.bind("psfIyy",               &(s._psfIyy), det::PSF_IYY);
+            b.bind("psfIyySigma",          &(s._psfIyyErr), det::PSF_IYY_ERR);
+            b.bind("psfIxy",               &(s._psfIxy), det::PSF_IXY);
+            b.bind("psfIxySigma",          &(s._psfIxyErr), det::PSF_IXY_ERR);
+            b.bind("e1_SG",                &(s._e1), det::E1);
+            b.bind("e1_SG_Sigma",          &(s._e1Err), det::E1_ERR);
+            b.bind("e2_SG",                &(s._e2), det::E2);
+            b.bind("e2_SG_Sigma",          &(s._e2Err), det::E2_ERR);
+            b.bind("shear1_SG",            &(s._shear1), det::SHEAR1);
+            b.bind("shear1_SG_Sigma",      &(s._shear1Err), det::SHEAR1_ERR);
+            b.bind("shear2_SG",            &(s._shear2), det::SHEAR2);
+            b.bind("shear2_SG_Sigma",      &(s._shear2Err), det::SHEAR2_ERR);
+            b.bind("resolution_SG",        &(s._resolution), det::RESOLUTION);
+            b.bind("sourceWidth_SG",       &(s._sigma), det::SIGMA);
+            b.bind("sourceWidth_SG_Sigma", &(s._sigmaErr), det::SIGMA_ERR);
+            b.bind("shapeFlag_SG",         &(s._shapeStatus), det::SHAPE_STATUS);
+            b.bind("snr",                  &(s._snr));
+            b.bind("chi2",                 &(s._chi2));
+            b.bind("sky",                  &(s._sky), det::SKY);
+            b.bind("skySigma",             &(s._skyErr), det::SKY_ERR);
+            b.bind("flagForAssociation",   &(s._flagForAssociation), det::FLAG_FOR_ASSOCIATION);
+            b.bind("flagForDetection",     &(s._flagForDetection), det::FLAG_FOR_DETECTION);
+            b.bind("flagForWcs",           &(s._flagForWcs), det::FLAG_FOR_WCS);
 
             //perform query
             db->query();
@@ -634,127 +679,7 @@ Persistable* form::SourceVectorFormatter::read(
                 // convert from degrees to radians for sky coords
                 cnv.fill(s);
                 //Handle/validate NULL values from the db. 
-                if (db->columnIsNull(SOURCE_ID)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
-                            "null column \"sourceId\""); 
-                }
-                if (db->columnIsNull(AMP_EXPOSURE_ID)) { 
-                    s.setNull(det::AMP_EXPOSURE_ID); 
-                }
-                if (db->columnIsNull(FILTER_ID)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
-                            "null column \"filterId\""); 
-                }
-                if (db->columnIsNull(OBJECT_ID)) { 
-                    s.setNull(det::OBJECT_ID); 
-                }
-                if (db->columnIsNull(MOVING_OBJECT_ID)) { 
-                    s.setNull(det::MOVING_OBJECT_ID); 
-                }
-                if (db->columnIsNull(PROC_HISTORY_ID)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
-                            "null column \"procHistoryId\""); 
-                }
-                handleNullFp(db, RA, s._ra);
-                handleNullFp(db, DECL, s._dec);
-                handleNullFp(db, RA_ERR_FOR_WCS, s._raErrForWcs);
-                handleNullFp(db, DEC_ERR_FOR_WCS, s._decErrForWcs);
-                handleNullFp(db, s, RA_ERR_FOR_DETECTION,
-                             s._raErrForDetection, det::RA_ERR_FOR_DETECTION);
-                handleNullFp(db, s, DEC_ERR_FOR_DETECTION,
-                             s._decErrForDetection, det::DEC_ERR_FOR_DETECTION);
-
-                handleNullFp(db, s, X_FLUX, s._xFlux, det::X_FLUX);
-                handleNullFp(db, s, X_FLUX_ERR, s._xFluxErr, det::X_FLUX_ERR);
-                handleNullFp(db, s, Y_FLUX, s._yFlux, det::Y_FLUX);
-                handleNullFp(db, s, Y_FLUX_ERR, s._yFluxErr, det::Y_FLUX_ERR);
-                handleNullFp(db, s, RA_FLUX, s._raFlux, det::RA_FLUX);
-                handleNullFp(db, s, RA_FLUX_ERR, s._raFluxErr, det::RA_FLUX_ERR);
-                handleNullFp(db, s, DEC_FLUX, s._decFlux, det::DEC_FLUX);
-                handleNullFp(db, s, DEC_FLUX_ERR, s._decFluxErr, det::DEC_FLUX_ERR);
-
-                handleNullFp(db, s, X_PEAK, s._xPeak, det::X_PEAK);
-                handleNullFp(db, s, Y_PEAK, s._yPeak, det::Y_PEAK);
-                handleNullFp(db, s, RA_PEAK, s._raPeak, det::RA_PEAK);
-                handleNullFp(db, s, DEC_PEAK, s._decPeak, det::DEC_PEAK);
-
-                handleNullFp(db, s, X_ASTROM, s._xAstrom, det::X_ASTROM);
-                handleNullFp(db, s, X_ASTROM_ERR, s._xAstromErr, det::X_ASTROM_ERR);
-                handleNullFp(db, s, Y_ASTROM, s._yAstrom, det::Y_ASTROM);
-                handleNullFp(db, s, Y_ASTROM_ERR, s._yAstromErr, det::Y_ASTROM_ERR);
-                handleNullFp(db, s, RA_ASTROM, s._raAstrom, det::RA_ASTROM);
-                handleNullFp(db, s, RA_ASTROM_ERR, s._raAstromErr, det::RA_ASTROM_ERR);
-                handleNullFp(db, s, DEC_ASTROM, s._decAstrom, det::DEC_ASTROM);
-                handleNullFp(db, s, DEC_ASTROM_ERR, s._decAstromErr, det::DEC_ASTROM_ERR);
-
-                handleNullFp(db, s, RA_OBJECT, s._raObject, det::RA_OBJECT);
-                handleNullFp(db, s, DEC_OBJECT, s._decObject, det::DEC_OBJECT);
-
-                handleNullFp(db, TAI_MID_POINT, s._taiMidPoint);
-                handleNullFp(db, s, TAI_RANGE, s._taiRange, det::TAI_RANGE);
-
-                handleNullFp(db, PSF_FLUX, s._psfFlux);
-                handleNullFp(db, PSF_FLUX_ERR, s._psfFluxErr);
-                handleNullFp(db, AP_FLUX, s._apFlux);
-                handleNullFp(db, AP_FLUX_ERR, s._apFluxErr);
-                handleNullFp(db, MODEL_FLUX, s._modelFlux);
-                handleNullFp(db, MODEL_FLUX_ERR, s._modelFluxErr);
-                handleNullFp(db, s, PETRO_FLUX, s._petroFlux, det::PETRO_FLUX);
-                handleNullFp(db, s, PETRO_FLUX_ERR, s._petroFluxErr, det::PETRO_FLUX_ERR);
-                handleNullFp(db, INST_FLUX, s._instFlux);
-                handleNullFp(db, INST_FLUX_ERR, s._instFluxErr);
-                handleNullFp(db, s, NON_GRAY_CORR_FLUX,
-                             s._nonGrayCorrFlux, det::NON_GRAY_CORR_FLUX);
-                handleNullFp(db, s, NON_GRAY_CORR_FLUX_ERR,
-                             s._nonGrayCorrFluxErr, det::NON_GRAY_CORR_FLUX_ERR);
-                handleNullFp(db, s, ATM_CORR_FLUX,
-                             s._atmCorrFlux, det::ATM_CORR_FLUX);
-                handleNullFp(db, s, ATM_CORR_FLUX_ERR,
-                             s._atmCorrFluxErr, det::ATM_CORR_FLUX_ERR);
-
-                handleNullFp(db, s, AP_DIA, s._apDia, det::AP_DIA);
-
-                handleNullFp(db, s, IXX, s._ixx, det::IXX);
-                handleNullFp(db, s, IXX_ERR, s._ixxErr, det::IXX_ERR);
-                handleNullFp(db, s, IYY, s._iyy, det::IYY);
-                handleNullFp(db, s, IYY_ERR, s._iyyErr, det::IYY_ERR);
-                handleNullFp(db, s, IXY, s._ixy, det::IXY);
-                handleNullFp(db, s, IXY_ERR, s._ixyErr, det::IXY_ERR);
-
-                handleNullFp(db, s, PSF_IXX, s._psfIxx, det::PSF_IXX);
-                handleNullFp(db, s, PSF_IXX_ERR, s._psfIxxErr, det::PSF_IXX_ERR);
-                handleNullFp(db, s, PSF_IYY, s._psfIyy, det::PSF_IYY);
-                handleNullFp(db, s, PSF_IYY_ERR, s._psfIyyErr, det::PSF_IYY_ERR);
-                handleNullFp(db, s, PSF_IXY, s._psfIxy, det::PSF_IXY);
-                handleNullFp(db, s, PSF_IXY_ERR, s._psfIxyErr, det::PSF_IXY_ERR);
-                handleNullFp(db, s, E1, s._e1, det::E1);
-                handleNullFp(db, s, E1_ERR, s._e1Err, det::E1_ERR);
-                handleNullFp(db, s, E2, s._e2, det::E2);
-                handleNullFp(db, s, E2_ERR, s._e2Err, det::E2_ERR);
-                handleNullFp(db, s, SHEAR1, s._shear1, det::SHEAR1);
-                handleNullFp(db, s, SHEAR1_ERR, s._shear1Err, det::SHEAR1_ERR);
-                handleNullFp(db, s, SHEAR2, s._shear2, det::SHEAR2);
-                handleNullFp(db, s, SHEAR2_ERR, s._shear2Err, det::SHEAR2_ERR);
-                handleNullFp(db, s, RESOLUTION, s._resolution, det::RESOLUTION);
-                handleNullFp(db, s, SIGMA, s._sigma, det::SIGMA);
-                handleNullFp(db, s, SIGMA_ERR, s._sigmaErr, det::SIGMA_ERR);
-                handleNullFp(db, s, SHAPE_STATUS, s._shapeStatus, det::SHAPE_STATUS);
-
-                
-                handleNullFp(db, SNR, s._snr);
-                handleNullFp(db, CHI2, s._chi2);
-                handleNullFp(db, s, SKY, s._sky, det::SKY);
-                handleNullFp(db, s, SKY_ERR, s._skyErr, det::SKY_ERR);
-
-                if (db->columnIsNull(FLAG_FOR_ASSOCIATION)) { 
-                    s.setNull(det::FLAG_FOR_ASSOCIATION);
-                }
-                if (db->columnIsNull(FLAG_FOR_DETECTION)) { 
-                    s.setNull(det::FLAG_FOR_DETECTION); 
-                }
-                if (db->columnIsNull(FLAG_FOR_WCS)) { 
-                    s.setNull(det::FLAG_FOR_WCS); 
-                }
+                b.setNulls(s);
 
                 //add source to vector
                 Source::Ptr sourcePtr(new Source(s));

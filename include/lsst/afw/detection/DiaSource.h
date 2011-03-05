@@ -40,11 +40,13 @@
 
 #include "boost/cstdint.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/serialization/shared_ptr.hpp"
 
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
 
 #include "lsst/afw/detection/BaseSourceAttributes.h"
+
 
 namespace boost {
 namespace serialization {
@@ -259,6 +261,10 @@ private:
 
 
 }}}  // namespace lsst::afw::detection
+
+#ifndef SWIG
+BOOST_CLASS_VERSION(lsst::afw::detection::DiaSource, 2)
+#endif
 
 #endif // LSST_AFW_DETECTION_DIASOURCE_H
 

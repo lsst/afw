@@ -148,7 +148,7 @@ class SourceTestCase(unittest.TestCase):
             pol.set("Formatter.PersistableSourceVector.Source.templateTableName", "Source")
             pol.set("Formatter.PersistableSourceVector.Source.tableNamePattern", "_tmp_v%(visitId)_Source")
             pers = dafPers.Persistence.getPersistence(pol)
-            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1")
+            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_v2")
             dp = dafBase.PropertySet()
             dp.setInt("visitId", int(time.clock())*16384 + random.randint(0, 16383))
             dp.setInt("sliceId", 0)

@@ -147,7 +147,7 @@ class DiaSourceTestCase(unittest.TestCase):
             pol.set("Formatter.PersistableDiaSourceVector.DiaSource.tableNamePattern",
                     "_tmp_v%(visitId)_DiaSource")
             pers = dafPers.Persistence.getPersistence(pol)
-            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_diasource")
+            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_diasource_v2")
             dp = dafBase.PropertySet()
             dp.setInt("visitId", int(time.clock())*16384 + random.randint(0, 16383))
             dp.setInt("sliceId", 0)

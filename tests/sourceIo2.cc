@@ -296,7 +296,7 @@ static void testDb(std::string const & storageType) {
     PropertySet::Ptr props = createDbTestProps(0, 1, "DIASource");
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_diasource");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_diasource_v2");
 
     // 1. Test on a single DiaSource
     DiaSource::Ptr ds(new DiaSource);

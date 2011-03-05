@@ -248,7 +248,7 @@ private:
 }}}  // namespace lsst::afw::detection
 
 #ifndef SWIG
-BOOST_CLASS_VERSION(lsst::afw::detection::Source, 1)
+BOOST_CLASS_VERSION(lsst::afw::detection::Source, 2)
 #endif
 
 #endif // LSST_AFW_DETECTION_SOURCE_H

@@ -579,7 +579,7 @@ protected:
      * \internal Serialize field values, and null statuses
      */
     template <class Archive> 
-    void serialize(Archive & ar, unsigned int const) {
+    void serialize(Archive & ar, unsigned int const version) {
         ar & _id;
         ar & _ampExposureId;
         ar & _filterId;
@@ -633,24 +633,26 @@ protected:
         fpSerialize(ar, _iyyErr);
         fpSerialize(ar, _ixy);
         fpSerialize(ar, _ixyErr);
-        fpSerialize(ar, _psfIxx);
-        fpSerialize(ar, _psfIxxErr);
-        fpSerialize(ar, _psfIyy);
-        fpSerialize(ar, _psfIyyErr);
-        fpSerialize(ar, _psfIxy);
-        fpSerialize(ar, _psfIxyErr);
-        fpSerialize(ar, _resolution);
-        fpSerialize(ar, _sigma);
-        fpSerialize(ar, _sigmaErr);
-        fpSerialize(ar, _shapeStatus);
-        fpSerialize(ar, _e1);
-        fpSerialize(ar, _e1Err);
-        fpSerialize(ar, _e2);
-        fpSerialize(ar, _e2Err);
-        fpSerialize(ar, _shear1);
-        fpSerialize(ar, _shear1Err);
-        fpSerialize(ar, _shear2);
-        fpSerialize(ar, _shear2Err);
+        if (version >= 2) {
+            fpSerialize(ar, _psfIxx);
+            fpSerialize(ar, _psfIxxErr);
+            fpSerialize(ar, _psfIyy);
+            fpSerialize(ar, _psfIyyErr);
+            fpSerialize(ar, _psfIxy);
+            fpSerialize(ar, _psfIxyErr);
+            fpSerialize(ar, _resolution);
+            fpSerialize(ar, _sigma);
+            fpSerialize(ar, _sigmaErr);
+            fpSerialize(ar, _e1);
+            fpSerialize(ar, _e1Err);
+            fpSerialize(ar, _e2);
+            fpSerialize(ar, _e2Err);
+            fpSerialize(ar, _shear1);
+            fpSerialize(ar, _shear1Err);
+            fpSerialize(ar, _shear2);
+            fpSerialize(ar, _shear2Err);
+            ar & _shapeStatus;
+        }
         fpSerialize(ar, _snr);
         fpSerialize(ar, _chi2);
         ar & _flagForAssociation;
