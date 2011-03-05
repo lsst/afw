@@ -76,9 +76,9 @@ class KernelImagesForRegion(unittest.TestCase):
             region.TOP_RIGHT,
         ):
             actImage = region.getImage(location)
-            actImArr = imTestUtils.arrayFromImage(actImage)
+            actImArr = actImage.getArray().transpose().copy()
             desImage = regionCopy.getImage(location)
-            desImArr = imTestUtils.arrayFromImage(desImage)
+            desImArr = desImage.getArray().transpose().copy()
             actImArr -= desImArr
             if not numpy.allclose(actImArr, 0):
                 actImage.writeFits("actImage%s.fits" % (location,))
@@ -218,10 +218,10 @@ class KernelImagesForRegion(unittest.TestCase):
                 xPos = afwImage.indexToPosition(pixelIndex[0] + self.xy0[0])
                 yPos = afwImage.indexToPosition(pixelIndex[1] + self.xy0[1])
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
-                desImArr = imTestUtils.arrayFromImage(desImage)
+                desImArr = desImage.getArray().transpose().copy()
                 
                 actImage = region.getImage(location)
-                actImArr = imTestUtils.arrayFromImage(actImage)
+                actImArr = actImage.getArray().transpose().copy()
                 errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
                 if errStr:
                     self.fail("exact image(%s) incorrect:\n%s" % (LocNameDict[location], errStr))

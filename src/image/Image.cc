@@ -45,22 +45,20 @@ namespace geom = lsst::afw::geom;
 
 /************************************************************************************************************/
 template <typename PixelT>
-typename image::ImageBase<PixelT>::RawDataPtr image::ImageBase<PixelT>::_allocate(
-    geom::ExtentI const & dimensions
+typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateView(
+    geom::ExtentI const & dimensions,
+    Manager::Ptr & manager
 ) {    
-    RawDataPtr mem(new PixelT[dimensions.getX()*dimensions.getY()]);
-    return mem;
-}
-template <typename PixelT>
-typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeView(
-    geom::ExtentI const & dimensions, RawDataPtr data
-) {
+    std::pair<Manager::Ptr,PixelT*> r = ndarray::SimpleManager<PixelT>::allocate(
+        dimensions.getX() * dimensions.getY()
+    );
+    manager = r.first;
     return boost::gil::interleaved_view(
         dimensions.getX(), dimensions.getY(), 
-        (typename _view_t::value_type* )data.get(), 
+        (typename _view_t::value_type* )r.second, 
         dimensions.getX()*sizeof(PixelT)
     );
-}     
+}
 template <typename PixelT>
 typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubView(
     geom::ExtentI const & dimensions, geom::ExtentI const & offset, const _view_t & view
@@ -71,7 +69,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
     ) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
-            (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+            (boost::format("Box2I(Point2I(%d,%d),Extent2I(%d,%d)) doesn't fit in image %dx%d") %
                 offset.getX() % offset.getY() % 
                 dimensions.getX() % dimensions.getY() %
                 view.width() % view.height()
@@ -105,9 +103,8 @@ template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     geom::ExtentI const & dimensions
 ) : lsst::daf::data::LsstBase(typeid(this)),
-    _origin(0,0),
-    _rawData(_allocate(dimensions)),
-    _gilView(_makeView(dimensions, _rawData))
+    _origin(0,0), _manager(),
+    _gilView(_allocateView(dimensions, _manager))
 {}
 
 /**
@@ -119,9 +116,8 @@ template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     geom::BoxI const & bbox
 ) : lsst::daf::data::LsstBase(typeid(this)),
-    _origin(bbox.getMin()),
-    _rawData(_allocate(bbox.getDimensions())),
-    _gilView(_makeView(bbox.getDimensions(), _rawData))
+    _origin(bbox.getMin()), _manager(),
+    _gilView(_allocateView(bbox.getDimensions(), _manager))
 {}
 
 /**
@@ -138,7 +134,7 @@ image::ImageBase<PixelT>::ImageBase(
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _origin(rhs._origin),
-    _rawData(rhs._rawData),
+    _manager(rhs._manager),
     _gilView(rhs._gilView)
 {
     if (deep) {
@@ -151,7 +147,7 @@ image::ImageBase<PixelT>::ImageBase(
 /**
  * Copy constructor to make a copy of part of an %image.
  *
- * The BBox is in the @em pixel coordinate system, that is, it ignores X0/Y0
+ * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
  *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
  * this is probably what you want 
@@ -166,7 +162,7 @@ image::ImageBase<PixelT>::ImageBase(
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _origin((origin==PARENT) ? bbox.getMin(): rhs._origin + geom::ExtentI(bbox.getMin())),
-    _rawData(rhs._rawData), // boost::shared_ptr, so don't copy the pixels
+    _manager(rhs._manager), // reference counted pointer, don't copy pixels
     _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
 {
     
@@ -177,7 +173,35 @@ image::ImageBase<PixelT>::ImageBase(
     }
 }
 
-/// Assignment operator.
+/**
+ *  Construction from ndarray::Array and NumPy.
+ *
+ *  \note ndarray and NumPy indexes are ordered (y,x), but Image indices are ordered (x,y).
+ *
+ *  Unless deep is true, the new image will share memory with the array if the the
+ *  dimension is contiguous in memory.  If the last dimension is not contiguous, the array
+ *  will be deep-copied in Python, but the constructor will fail to compile in pure C++.
+ */
+template<typename PixelT>
+image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2I const & xy0) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _origin(xy0),
+    _manager(array.getManager()),
+    _gilView(
+        boost::gil::interleaved_view(
+            array.template getSize<1>(), array.template getSize<0>(), 
+            (typename _view_t::value_type* )array.getData(), 
+            array.template getStride<0>() * sizeof(PixelT)
+        )
+    )
+{
+    if (deep) {
+        ImageBase tmp(*this, true);
+        swap(tmp);
+    }
+}
+
+/// Shallow assignment operator.
 ///
 /// \note that this has the effect of making the lhs share pixels with the rhs which may
 /// not be what you intended;  to copy the pixels, use operator<<=()
@@ -254,7 +278,7 @@ template<typename PixelT>
 void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     
-    swap(_rawData, rhs._rawData);   // just swapping the pointers
+    swap(_manager, rhs._manager);   // just swapping the pointers
     swap(_gilView, rhs._gilView);
     swap(_origin, rhs._origin);
 }
@@ -266,24 +290,32 @@ void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
 
 template <typename PixelT>
 typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
-    int rowStride = row_begin(1) - row_begin(0);
-    return lsst::ndarray::external(
-        (PixelT*)this->row_begin(0),
-        lsst::ndarray::makeVector(getHeight(), getWidth()),
-        lsst::ndarray::makeVector(rowStride, 1),
-        this->_rawData
+    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    typedef lsst::ndarray::detail::ArrayAccess<Array> ArrayAccess;
+    typedef typename ArrayAccess::Core ArrayCore;
+    return ArrayAccess::construct(
+        reinterpret_cast<PixelT*>(row_begin(0)),
+        ArrayCore::create(
+            lsst::ndarray::makeVector(getHeight(), getWidth()),
+            lsst::ndarray::makeVector(rowStride, 1),
+            this->_manager
+        )
     );
 }
 
 
 template <typename PixelT>
 typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray() const {
-    int rowStride = row_begin(1) - row_begin(0);
-    return lsst::ndarray::external(
-        (PixelT*)this->row_begin(0),
-        lsst::ndarray::makeVector(getHeight(), getWidth()),
-        lsst::ndarray::makeVector(rowStride, 1),
-        this->_rawData
+    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    typedef lsst::ndarray::detail::ArrayAccess<Array> ArrayAccess;
+    typedef typename ArrayAccess::Core ArrayCore;
+    return ArrayAccess::construct(
+        reinterpret_cast<PixelT*>(row_begin(0)),
+        ArrayCore::create(
+            lsst::ndarray::makeVector(getHeight(), getWidth()),
+            lsst::ndarray::makeVector(rowStride, 1),
+            this->_manager
+        )
     );
 }
 //
@@ -323,7 +355,6 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
 }
 
 /// Return a fast STL compliant iterator to the start of the %image which must be contiguous
-/// Note that this goes through the image backwards (hence rbegin/rend)
 ///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
@@ -344,7 +375,6 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
 }
 
 /// Return a fast STL compliant iterator to the end of the %image which must be contiguous
-/// Note that this goes through the image backwards (hence rbegin/rend)
 ///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
@@ -419,7 +449,7 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
 /**
  * Copy constructor to make a copy of part of an Image.
  *
- * The BBox is in the @em pixel coordinate system, that is, it ignores X0/Y0
+ * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
  *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
  * this is probably what you want 

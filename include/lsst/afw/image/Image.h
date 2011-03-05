@@ -112,7 +112,7 @@ namespace image {
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
 
 
-        typedef typename boost::shared_array<PixelT> RawDataPtr;
+        typedef ndarray::Manager Manager;
     public:        
 
         typedef boost::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase
@@ -195,6 +195,10 @@ namespace image {
             using std::swap;                           // See Meyers, Effective C++, Item 25
             ImageBase<PixelT>::swap(tmp);                  // See Meyers, Effective C++, Items 11 and 43
         }
+
+        explicit ImageBase(
+            Array const & array, bool deep = false, geom::Point2I const & xy0 = geom::Point2I()
+        );
 
         virtual ~ImageBase() { }
         ImageBase& operator=(const ImageBase& rhs);
@@ -356,7 +360,7 @@ namespace image {
         }
     private:
         geom::PointI _origin;
-        RawDataPtr _rawData;
+        Manager::Ptr _manager;
         _view_t _gilView;
 
         //oring of ImageBase in some larger image as returned to and manipulated
@@ -365,15 +369,13 @@ namespace image {
 
     protected:
 #if !defined(SWIG)
-        static RawDataPtr _allocate(geom::ExtentI const & dimensions);
-        static _view_t _makeView(geom::ExtentI const & dimensions, RawDataPtr data);
+        static _view_t _allocateView(geom::ExtentI const & dimensions, Manager::Ptr & manager);
         static _view_t _makeSubView(
             geom::ExtentI const & dimensions, 
             geom::ExtentI const & offset, 
             const _view_t & view
         );
 
-        RawDataPtr _getRawDataPtr() {return _rawData;}
         _view_t _getRawView() const { return _gilView; }
 
 #endif
@@ -419,6 +421,10 @@ namespace image {
         template<typename OtherPixelT>
         Image(Image<OtherPixelT> const& rhs, const bool deep) :
             image::ImageBase<PixelT>(rhs, deep) {}
+
+        explicit Image(lsst::ndarray::Array<PixelT,2,1> const & array, bool deep = false,
+                       geom::Point2I const & xy0 = geom::Point2I()) :
+            image::ImageBase<PixelT>(array, deep, xy0) {}
 
         virtual ~Image() { }
         //

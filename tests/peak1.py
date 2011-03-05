@@ -36,7 +36,7 @@ or
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
-import lsst.afw.detection.detectionLib as afwDetect
+import lsst.afw.detection as afwDetect
 
 try:
     type(verbose)

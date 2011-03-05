@@ -138,7 +138,7 @@ class offsetImageTestCase(unittest.TestCase):
         if display:
             ds9.mtv(im, frame=1)
 
-        imArr = imTestUtils.arrayFromImage(im)
+        imArr = im.getArray()
         imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
         imMean = imGoodVals.mean()
         imMax = imGoodVals.max()

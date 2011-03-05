@@ -63,7 +63,6 @@ Basic routines to talk to lsst::afw::image classes
     import_array();
 %}
 
-
 namespace boost {
     namespace mpl { }
     typedef signed char  int8_t;
@@ -124,6 +123,18 @@ def version(HeadURL = r"$HeadURL$"):
 %declareNumPyConverters(Eigen::Vector2d);
 %declareNumPyConverters(Eigen::Matrix3d);
 %declareNumPyConverters(Eigen::Vector3d);
+
+%declareNumPyConverters(lsst::ndarray::Array<unsigned short,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<unsigned short const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<int,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<int const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<float,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<float const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<double,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<double const,2,1>);
 
 %lsst_exceptions();
 

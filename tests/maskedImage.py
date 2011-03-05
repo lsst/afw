@@ -91,6 +91,14 @@ class MaskedImageTestCase(unittest.TestCase):
         del self.mimage2
         del self.function
 
+    def testArrays(self):
+        image, mask, variance = self.mimage.getArrays()
+        self.assert_((self.mimage.getImage().getArray() == image).all())
+        self.assert_((self.mimage.getMask().getArray() == mask).all())
+        self.assert_((self.mimage.getVariance().getArray() == variance).all())
+        mimage2 = afwImage.makeMaskedImageFromArrays(image, mask, variance)
+        self.assertEqual(type(mimage2), type(self.mimage))
+
     def testSetGetValues(self):
         self.assertEqual(self.mimage.get(0, 0), (self.imgVal1, self.EDGE, self.varVal1))
 

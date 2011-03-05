@@ -95,14 +95,14 @@ class KernelIOTestCase(unittest.TestCase):
         outImage = afwImage.ImageD(k2.getDimensions())
         k2.computeImage(outImage, False)
 
-        outArr = imTestUtils.arrayFromImage(outImage)
+        outArr = outImage.getArray().transpose()
         if not numpy.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" % \
                     (k2.__class__.__name__, inArr, outArr))
         normInArr = inArr / inArr.sum()
         normOutImage = afwImage.ImageD(k2.getDimensions())
         k2.computeImage(normOutImage, True)
-        normOutArr = imTestUtils.arrayFromImage(normOutImage)
+        normOutArr = normOutImage.getArray().transpose()
         if not numpy.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" % \
                     (k2.__class__.__name__, normInArr, normOutArr))
@@ -151,7 +151,7 @@ class KernelIOTestCase(unittest.TestCase):
     
                     kImage = afwImage.ImageD(k2.getDimensions())
                     k2.computeImage(kImage, True)
-                    kArr = imTestUtils.arrayFromImage(kImage)
+                    kArr = kImage.getArray().transpose()
                     if not numpy.allclose(fArr, kArr):
                         self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                                 (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
@@ -189,7 +189,7 @@ class KernelIOTestCase(unittest.TestCase):
                         kImage = afwImage.ImageD(k2.getDimensions())
                         kSum = k2.computeImage(kImage, False)
                         self.assertEqual(kSum, 1.0)
-                        kArr = imTestUtils.arrayFromImage(kImage)
+                        kArr = kImage.getArray().transpose()
                         self.assertEqual(kArr[activeCol, activeRow], 1.0)
                         kArr[activeCol, activeRow] = 0.0
                         self.assertEqual(kArr.sum(), 0.0)
@@ -240,7 +240,7 @@ class KernelIOTestCase(unittest.TestCase):
 
                 kImage = afwImage.ImageD(k2.getDimensions())
                 k2.computeImage(kImage, True)
-                kArr = imTestUtils.arrayFromImage(kImage)
+                kArr = kImage.getArray().transpose()
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
@@ -264,7 +264,7 @@ class KernelIOTestCase(unittest.TestCase):
                 kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.PointI(col, row))
                 basisImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(basisImage, True)
-                basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
+                basisImArrList.append(basisImage.getArray().transpose())
                 kVec.append(kernel)
         
         kParams = [0.0]*len(kVec)
@@ -290,7 +290,7 @@ class KernelIOTestCase(unittest.TestCase):
 
             kIm = afwImage.ImageD(k2.getDimensions())
             k2.computeImage(kIm, True)
-            kImArr = imTestUtils.arrayFromImage(kIm)
+            kImArr = kIm.getArray().transpose()
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (k2.__class__.__name__, kImArr, basisImArrList[ii], ii))
@@ -320,7 +320,7 @@ class KernelIOTestCase(unittest.TestCase):
         # create a list of basis kernels from the images
         kVec = afwMath.KernelList()
         for basisImArr in basisImArrList:
-            basisImage = imTestUtils.imageFromArray(basisImArr, retType=afwImage.ImageD)
+            basisImage = afwImage.makeImageFromArray(basisImArr.transpose())
             kernel = afwMath.FixedKernel(basisImage)
             kVec.append(kernel)
 
@@ -360,7 +360,7 @@ class KernelIOTestCase(unittest.TestCase):
             (0.5, 0.5, 0.5, 0.5),
         ]:
             k2.computeImage(kImage, False, colPos, rowPos)
-            kImArr = imTestUtils.arrayFromImage(kImage)
+            kImArr = kImage.getArray().transpose()
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
             if not numpy.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" % \

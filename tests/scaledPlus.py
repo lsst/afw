@@ -67,26 +67,26 @@ class ScaledPlus(unittest.TestCase):
         - coeff0: coefficient of image 0
         - coeff1: coefficient of image 1
         """
-        im0ArrSet = imTestUtils.arraysFromMaskedImage(self.maskedImage0)
-        im1ArrSet = imTestUtils.arraysFromMaskedImage(self.maskedImage1)
+        im0ArrSet = self.maskedImage0.getArrays()
+        im1ArrSet = self.maskedImage1.getArrays()
         
         desMaskedImage = afwImage.MaskedImageF(self.maskedImage0.getDimensions())
         desMaskedImage <<= self.maskedImage0
         desMaskedImage *= coeff0
         desMaskedImage.scaledPlus(coeff1, self.maskedImage1)
-        desImArrSet = imTestUtils.arraysFromMaskedImage(desMaskedImage)
+        desImArrSet = desMaskedImage.getArrays()
         
         actMaskedImage = afwImage.MaskedImageF(afwGeom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actMaskedImage.getImage(), self.random)
         afwMath.randomUniformImage(actMaskedImage.getVariance(), self.random)
 
         afwMath.scaledPlus(actMaskedImage, coeff0, self.maskedImage0, coeff1, self.maskedImage1)
-        actImArrSet = imTestUtils.arraysFromMaskedImage(actMaskedImage)
+        actImArrSet = actMaskedImage.getArrays()
         
         actImage = afwImage.ImageF(afwGeom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actImage, self.random)
         afwMath.scaledPlus(actImage, coeff0, self.maskedImage0.getImage(), coeff1, self.maskedImage1.getImage())
-        actImArr = imTestUtils.arrayFromImage(actImage)
+        actImArr = actImage.getArray()
         
         errStr = imTestUtils.imagesDiffer(actImArr, desImArrSet[0])
         if errStr:

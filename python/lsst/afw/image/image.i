@@ -76,6 +76,7 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
     }
 
     %pythoncode {
+
     def Factory(self, *args):
         """Return an Image class of this type
         

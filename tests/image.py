@@ -46,6 +46,8 @@ import lsst.afw.geom as afwGeom
 import eups
 import lsst.afw.display.ds9 as ds9
 
+import numpy
+
 try:
     type(display)
 except NameError:
@@ -68,6 +70,25 @@ class ImageTestCase(unittest.TestCase):
         del self.image1
         del self.image2
         del self.function
+
+    def testArrays(self):
+        for cls in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
+            image1 = cls(afwGeom.Extent2I(5,6))
+            array1 = image1.getArray()
+            self.assertEqual(array1.shape[0], image1.getHeight())
+            self.assertEqual(array1.shape[1], image1.getWidth())
+            image2 = cls(array1, False)
+            self.assertEqual(array1.shape[0], image2.getHeight())
+            self.assertEqual(array1.shape[1], image2.getWidth())
+            image3 = afwImage.makeImageFromArray(array1)
+            self.assertEqual(array1.shape[0], image2.getHeight())
+            self.assertEqual(array1.shape[1], image2.getWidth())
+            self.assertEqual(type(image3), cls)
+            array1[:,:] = numpy.random.uniform(low=0, high=10, size=array1.shape)
+            for j in range(image1.getHeight()):
+                for i in range(image1.getWidth()):
+                    self.assertEqual(image1.get(i, j), array1[j, i])
+                    self.assertEqual(image2.get(i, j), array1[j, i])
 
     def testInitializeImages(self):
         val = 666

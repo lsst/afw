@@ -93,7 +93,7 @@ class KernelTestCase(unittest.TestCase):
                 kImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(kImage, True)
                 
-                kArr = imTestUtils.arrayFromImage(kImage)
+                kArr = kImage.getArray().transpose()
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
@@ -149,7 +149,7 @@ class KernelTestCase(unittest.TestCase):
                         kImage = afwImage.ImageD(kernel.getDimensions())
                         kSum = kernel.computeImage(kImage, False)
                         self.assertEqual(kSum, 1.0)
-                        kArr = imTestUtils.arrayFromImage(kImage)
+                        kArr = kImage.getArray().transpose()
                         self.assertEqual(kArr[activeCol, activeRow], 1.0)
                         kArr[activeCol, activeRow] = 0.0
                         self.assertEqual(kArr.sum(), 0.0)
@@ -187,7 +187,7 @@ class KernelTestCase(unittest.TestCase):
         outImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(outImage, False)
         
-        outArr = imTestUtils.arrayFromImage(outImage)
+        outArr = outImage.getArray().transpose()
         if not numpy.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" % \
                 (kernel.__class__.__name__, inArr, outArr))
@@ -195,7 +195,7 @@ class KernelTestCase(unittest.TestCase):
         normInArr = inArr / inArr.sum()
         normOutImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(normOutImage, True)
-        normOutArr = imTestUtils.arrayFromImage(normOutImage)
+        normOutArr = normOutImage.getArray().transpose()
         if not numpy.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" % \
                 (kernel.__class__.__name__, normInArr, normOutArr))
@@ -218,7 +218,7 @@ class KernelTestCase(unittest.TestCase):
         for basisKernel in basisKernelList:
             basisImage = afwImage.ImageD(basisKernel.getDimensions())
             basisKernel.computeImage(basisImage, True)
-            basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
+            basisImArrList.append(basisImage.getArray())
 
         kParams = [0.0]*len(basisKernelList)
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
@@ -230,7 +230,7 @@ class KernelTestCase(unittest.TestCase):
             kernel.setKernelParameters(kParams)
             kIm = afwImage.ImageD(kernel.getDimensions())
             kernel.computeImage(kIm, True)
-            kImArr = imTestUtils.arrayFromImage(kIm)
+            kImArr = kIm.getArray()
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
@@ -292,7 +292,7 @@ class KernelTestCase(unittest.TestCase):
             basisKernel = afwMath.AnalyticKernel(kWidth, kHeight, basisKernelFunction)
             basisImage = afwImage.ImageD(basisKernel.getDimensions())
             basisKernel.computeImage(basisImage, True)
-            basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
+            basisImArrList.append(basisImage.getArray())
             basisKernelList.append(basisKernel)
 
         kParams = [0.0]*len(basisKernelList)
@@ -307,7 +307,7 @@ class KernelTestCase(unittest.TestCase):
             basisKernel.setKernelParameters((0.4, 0.5, 0.6))
             modBasisImage = afwImage.ImageD(basisKernel.getDimensions())
             basisKernel.computeImage(modBasisImage, True)
-            modBasisImArrList.append(imTestUtils.arrayFromImage(modBasisImage))
+            modBasisImArrList.append(modBasisImage.getArray())
         
         for ii in range(len(basisKernelList)):
             kParams = [0.0]*len(basisKernelList)
@@ -315,7 +315,7 @@ class KernelTestCase(unittest.TestCase):
             kernel.setKernelParameters(kParams)
             kIm = afwImage.ImageD(kernel.getDimensions())
             kernel.computeImage(kIm, True)
-            kImArr = imTestUtils.arrayFromImage(kIm)
+            kImArr = kIm.getArray()
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
@@ -354,7 +354,7 @@ class KernelTestCase(unittest.TestCase):
                 kernel.setKernelParameters((xsigma, ysigma))
                 kImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(kImage, True)
-                kArr = imTestUtils.arrayFromImage(kImage)
+                kArr = kImage.getArray().transpose()
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
@@ -483,7 +483,7 @@ class KernelTestCase(unittest.TestCase):
         # create a list of basis kernels from the images
         basisKernelList = afwMath.KernelList()
         for basisImArr in basisImArrList:
-            basisImage = imTestUtils.imageFromArray(basisImArr, retType=afwImage.ImageD)
+            basisImage = afwImage.makeImageFromArray(basisImArr.transpose())
             kernel = afwMath.FixedKernel(basisImage)
             basisKernelList.append(kernel)
 
@@ -510,7 +510,7 @@ class KernelTestCase(unittest.TestCase):
             (0.5, 0.5, 0.5, 0.5),
         ]:
             kernel.computeImage(kImage, False, colPos, rowPos)
-            kImArr = imTestUtils.arrayFromImage(kImage)
+            kImArr = kImage.getArray().transpose()
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
             if not numpy.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" % \
@@ -762,8 +762,8 @@ class KernelTestCase(unittest.TestCase):
             for pos in posList:
                 kernel1.computeImage(im1, doNormalize, pos[0], pos[1])
                 kernel2.computeImage(im2, doNormalize, pos[0], pos[1])
-                im1Arr = imTestUtils.arrayFromImage(im1)
-                im2Arr = imTestUtils.arrayFromImage(im2)
+                im1Arr = im1.getArray()
+                im2Arr = im2.getArray()
                 if not numpy.allclose(im1Arr, im2Arr):
                     print "im1Arr =", im1Arr
                     print "im2Arr =", im2Arr

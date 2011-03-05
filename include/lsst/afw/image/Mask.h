@@ -112,6 +112,11 @@ public:
         const bool deep=false
     );
     
+    explicit Mask(lsst::ndarray::Array<MaskPixelT,2,1> const & array, bool deep = false,
+                   geom::Point2I const & xy0 = geom::Point2I()) :
+        image::ImageBase<MaskPixelT>(array, deep, xy0) {}
+
+
     void swap(Mask& rhs);
     // Operators
 

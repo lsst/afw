@@ -36,6 +36,7 @@ import os
 
 import sys
 import unittest
+import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -86,6 +87,24 @@ class MaskTestCase(unittest.TestCase):
     def tearDown(self):
         del self.mask1
         del self.mask2
+
+    def testArrays(self):
+        image1 = afwImage.MaskU(afwGeom.Extent2I(5,6))
+        array1 = image1.getArray()
+        self.assertEqual(array1.shape[0], image1.getHeight())
+        self.assertEqual(array1.shape[1], image1.getWidth())
+        image2 = afwImage.MaskU(array1, False)
+        self.assertEqual(array1.shape[0], image2.getHeight())
+        self.assertEqual(array1.shape[1], image2.getWidth())
+        image3 = afwImage.makeMaskFromArray(array1)
+        self.assertEqual(array1.shape[0], image2.getHeight())
+        self.assertEqual(array1.shape[1], image2.getWidth())
+        self.assertEqual(type(image3), afwImage.MaskU)
+        array1[:,:] = numpy.random.uniform(low=0, high=10, size=array1.shape)
+        for j in range(image1.getHeight()):
+            for i in range(image1.getWidth()):
+                self.assertEqual(image1.get(i, j), array1[j, i])
+                self.assertEqual(image2.get(i, j), array1[j, i])
 
     def testInitializeMasks(self):
         val = 0x1234

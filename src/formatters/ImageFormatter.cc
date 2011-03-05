@@ -252,19 +252,18 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
         boost::scoped_ptr<Image<ImagePixelT> > ni(
             new Image<ImagePixelT>(geom::ExtentI(width, height))
         );
-        ImagePixelT * raw = ni->_getRawDataPtr().get();
+        typename Image<ImagePixelT>::Array array = ni->getArray();
         ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(raw, nbytes));
+                      boost::serialization::make_binary_object(array.getData(), nbytes));
         ip->swap(*ni);
     } else {
-        ImagePixelT * raw = ip->_getRawDataPtr().get();
-        //check if image is not contiguous:        
+        typename Image<ImagePixelT>::Array array = ip->getArray();
+        //check if image is not contiguous:
         if(!ip->isContiguous()){
             //image is not contiguous, make a deep copy
-            Image<ImagePixelT> deepCopy(*ip, true);
-            raw = deepCopy._getRawDataPtr().get();
+            array = ndarray::copy(array);
         }
-        ar & make_nvp("bytes", boost::serialization::make_binary_object(raw, nbytes));
+        ar & make_nvp("bytes", boost::serialization::make_binary_object(array.getData(), nbytes));
     }
 }
 
