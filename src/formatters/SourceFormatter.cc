@@ -340,21 +340,16 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     insertFp(db, d._psfIyyErr, "psfIyySigma", d.isNull(det::PSF_IYY_ERR));
     insertFp(db, d._psfIxy, "psfIxy", d.isNull(det::PSF_IXY));
     insertFp(db, d._psfIxyErr, "psfIxySigma", d.isNull(det::PSF_IXY_ERR));
-    
-    insertFp(db, d._snr, "snr");
-    insertFp(db, d._chi2, "chi2");
-    insertFp(db, d._sky, "sky", d.isNull(det::SKY));
-    insertFp(db, d._skyErr, "skySigma", d.isNull(det::SKY_ERR));
 
     insertFp(db, d._e1, "e1_SG", d.isNull(det::E1));
     insertFp(db, d._e1Err, "e1_SG_Sigma", d.isNull(det::E1_ERR));
     insertFp(db, d._e2, "e2_SG", d.isNull(det::E2));
     insertFp(db, d._e2Err, "e2_SG_Sigma", d.isNull(det::E2_ERR));
+    insertFp(db, d._resolution, "resolution_SG", d.isNull(det::RESOLUTION));
     insertFp(db, d._shear1, "shear1_SG", d.isNull(det::SHEAR1));
     insertFp(db, d._shear1Err, "shear1_SG_Sigma", d.isNull(det::SHEAR1_ERR));
     insertFp(db, d._shear2, "shear2_SG", d.isNull(det::SHEAR2));
     insertFp(db, d._shear2Err, "shear2_SG_Sigma", d.isNull(det::SHEAR2_ERR));
-    insertFp(db, d._resolution, "resolution_SG", d.isNull(det::RESOLUTION));
     insertFp(db, d._sigma, "sourceWidth_SG", d.isNull(det::SIGMA));
     insertFp(db, d._sigmaErr, "sourceWidth_SG_Sigma", d.isNull(det::SIGMA_ERR));
 
@@ -363,6 +358,13 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     } else {
         db.setColumnToNull("shapeFlag_SG");
     } 
+    
+    insertFp(db, d._snr, "snr");
+    insertFp(db, d._chi2, "chi2");
+    insertFp(db, d._sky, "sky", d.isNull(det::SKY));
+    insertFp(db, d._skyErr, "skySigma", d.isNull(det::SKY_ERR));
+
+
 
     if (!d.isNull(det::FLAG_FOR_ASSOCIATION)) {
         db.template setColumn<boost::int16_t>("flagForAssociation", d._flagForAssociation);
