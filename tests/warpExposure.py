@@ -84,13 +84,13 @@ class WarpExposureTestCase(unittest.TestCase):
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
         if edgeBitMask == 0:
             self.fail("warped mask has no EDGE bit")
-        afwWarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(afwWarpedMaskedImage)
+        afwWarpedMaskedImageArrSet = afwWarpedMaskedImage.getArrays()
         afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
         
         # compare all non-edge pixels of image and variance, but relax specs a bit
         # because of minor noise introduced by bad pixels
         edgeMaskArr = afwWarpedMaskArr & edgeBitMask
-        originalMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(originalExposure.getMaskedImage())
+        originalMaskedImageArrSet = originalExposure.getMaskedImage().getArrays()
         errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, originalMaskedImageArrSet,
             doMask=False, skipMaskArr=edgeMaskArr, atol=1e-5)
         if errStr:
@@ -116,9 +116,9 @@ class WarpExposureTestCase(unittest.TestCase):
                           originalWcs, warpingKernel, interpLength)
         if SAVE_FITS_FILES:
             afwWarpedImage.writeFits("afwWarpedImageNull.fits")
-        afwWarpedImageArr = imageTestUtils.arrayFromImage(afwWarpedImage)
+        afwWarpedImageArr = afwWarpedImage.getArray()
         edgeMaskArr = numpy.isnan(afwWarpedImageArr)
-        originalImageArr = imageTestUtils.arrayFromImage(originalImage)
+        originalImageArr = originalImage.getArray()
         # relax specs a bit because of minor noise introduced by bad pixels
         errStr = imageTestUtils.imagesDiffer(originalImageArr, originalImageArr,
             skipMaskArr=edgeMaskArr)
@@ -276,11 +276,11 @@ class WarpExposureTestCase(unittest.TestCase):
             edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
             if edgeBitMask == 0:
                 self.fail("warped mask has no EDGE bit")
-            afwWarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(afwWarpedMaskedImage)
+            afwWarpedMaskedImageArrSet = afwWarpedMaskedImage.getArrays()
             afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
     
             swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
-            swarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(swarpedMaskedImage)
+            swarpedMaskedImageArrSet = swarpedMaskedImage.getArrays()
 
             if display:
                 ds9.mtv(swarpedMaskedImage, frame=2, title="SWarped")
@@ -311,8 +311,8 @@ class WarpExposureTestCase(unittest.TestCase):
             if SAVE_FITS_FILES:
                 afwWarpedImage.writeFits(afwWarpedImagePath)
             
-            afwWarpedImageArr = imageTestUtils.arrayFromImage(afwWarpedImage)
-            swarpedImageArr = imageTestUtils.arrayFromImage(swarpedImage)
+            afwWarpedImageArr = afwWarpedImage.getArray()
+            swarpedImageArr = swarpedImage.getArray()
             edgeMaskArr = numpy.isnan(afwWarpedImageArr)
             errStr = imageTestUtils.imagesDiffer(afwWarpedImageArr, swarpedImageArr,
                 skipMaskArr=edgeMaskArr, rtol=rtol, atol=atol)
@@ -363,8 +363,8 @@ class WarpExposureTestCase(unittest.TestCase):
     def compareImages(self, image1, image2, descr="", skipMaskArr=None, rtol=1.0e-05, atol=1e-08):
         """Return True if two images are nearly equal, False otherwise
         """
-        arr1 = imageTestUtils.arrayFromImage(image1)
-        arr2 = imageTestUtils.arrayFromImage(image2)
+        arr1 = image1.getArray()
+        arr2 = image2.getArray()
 
         if skipMaskArr != None:
             maskedArr1 = numpy.ma.array(arr1, copy=False, mask = skipMaskArr)

@@ -28,6 +28,7 @@
 #include "lsst/afw/math/offsetImage.h"
 
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
 namespace afw {
@@ -47,12 +48,12 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
     }
 
     switch (nQuarter%4) {
-      case 0:
+    case 0:
         outImage.reset(new ImageT(inImage, true)); // a deep copy of inImage
         break;
-      case 1:
-        outImage.reset(new ImageT(inImage.getBBox(image::PARENT)));
-
+    case 1:
+        outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
+                       
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::y_iterator optr = outImage->col_begin(inImage.getHeight() - y - 1);
             for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
@@ -62,8 +63,8 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         }
         
         break;
-      case 2:
-        outImage.reset(new ImageT(inImage.getBBox(image::PARENT)));
+    case 2:
+        outImage.reset(new ImageT(inImage.getDimensions()));
         
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::x_iterator optr = outImage->row_begin(inImage.getHeight() - y - 1);
@@ -74,8 +75,8 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
             }
         }
         break;
-      case 3:
-        outImage.reset(new ImageT(inImage.getBBox(image::PARENT)));
+    case 3:
+        outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
 
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::y_iterator optr = outImage->col_begin(y);
