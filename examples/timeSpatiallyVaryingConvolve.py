@@ -32,6 +32,7 @@ import eups
 import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.math.detail as mathDetail
 
 pexLog.Debug("lsst.afw", 0)
@@ -201,7 +202,7 @@ def run():
         # to get original behavior change True to False:
         if (False):
             bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(256, 256))
-            inImage = afwImage.MaskedImageF(inImage, bbox, False)
+            inImage = afwImage.MaskedImageF(inImage, bbox, afwImage.LOCAL, False)
     else:
         inImage = afwImage.MaskedImageF(sys.argv[1])
     outImage = afwImage.MaskedImageF(inImage.getDimensions())

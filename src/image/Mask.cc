@@ -63,7 +63,6 @@ template<typename MaskPixelT>
 void afwImage::Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     pexLog::Trace("afw.Mask", 5,
                    boost::format("Number of mask planes: %d") % getNumPlanesMax());
-    std::cerr << "in initializePlanes: " << planeDefs.size() << "\n";
     if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
         _maskPlaneDict = planeDefs;
         _myMaskDictVersion = ++_maskDictVersion;
@@ -228,22 +227,12 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     // look for mask planes in the file
     MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
 
-    std::cerr << "fileMaskDict:\n";
-    for (MaskPlaneDict::const_iterator i = fileMaskDict.begin(); i != fileMaskDict.end() ; i++) {
-        std::cerr << i->first << ", " << i->second << "\n";
-    }
-
-    std::cerr << "conformMasks: " << conformMasks << "\n";
-
     if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
-        std::cerr << "file is consistent with Mask\n";
         return;
     }
     
     if (conformMasks) {                 // adopt the definitions in the file
-        std::cerr << "conformMasks == true\n";
         if (_maskPlaneDict != fileMaskDict) {
-            std::cerr << "setting _maskPlaneDict from fileMaskDict\n";
             _maskPlaneDict = fileMaskDict;
             _maskDictVersion++;
         }
@@ -454,14 +443,6 @@ template<typename MaskPixelT>
 void afwImage::Mask<MaskPixelT>::conformMaskPlanes(
     MaskPlaneDict const &currentPlaneDict   ///< mask plane dictionary for this mask
 ) {
-    std::cerr << "currentPlaneDict:\n";
-    for (MaskPlaneDict::const_iterator i = currentPlaneDict.begin(); i != currentPlaneDict.end() ; i++) {
-        std::cerr << i->first << ", " << i->second << "\n";
-    }
-    std::cerr << "_maskPlaneDict:\n";
-    for (MaskPlaneDict::const_iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end() ; i++) {
-        std::cerr << i->first << ", " << i->second << "\n";
-    }
     if (_maskPlaneDict == currentPlaneDict) {
         _myMaskDictVersion = _maskDictVersion;
         return;   // nothing to do
@@ -776,7 +757,6 @@ template<typename MaskPixelT>
 static typename afwImage::Mask<MaskPixelT>::MaskPlaneDict initMaskPlanes() {
     typename afwImage::Mask<MaskPixelT>::MaskPlaneDict planeDict =
         typename afwImage::Mask<MaskPixelT>::MaskPlaneDict();
-    std::cerr << "in initMaskPlanes: " << typeid(MaskPixelT).name() << "\n";
     int i = -1;
     planeDict["BAD"] = ++i;
     planeDict["SAT"] = ++i;             // should be SATURATED

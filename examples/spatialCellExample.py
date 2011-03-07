@@ -64,7 +64,7 @@ def readImage(filename=None):
     else:
         bbox = None
         
-    mi = afwImage.MaskedImageF(filename, 0, None, bbox)
+    mi = afwImage.MaskedImageF(filename, 0, None, bbox, afwImage.LOCAL)
     mi.setXY0(afwGeom.PointI(0, 0))
     #
     # Subtract the background.  We'd use a canned procedure, but that's in meas/utils/sourceDetection.py. We
