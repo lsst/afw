@@ -492,13 +492,13 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     image::ImageBase<PixelT>() {
 
     typedef boost::mpl::vector<
-        lsst::afw::image::Image<unsigned char>, 
-        lsst::afw::image::Image<unsigned short>, 
-        lsst::afw::image::Image<short>, 
-        lsst::afw::image::Image<int>,
-        lsst::afw::image::Image<unsigned int>,
-        lsst::afw::image::Image<float>,
-        lsst::afw::image::Image<double>
+        unsigned char, 
+        unsigned short, 
+        short, 
+        int,
+        unsigned int,
+        float,
+        double
     > fits_image_types;
 
     if (!boost::filesystem::exists(fileName)) {

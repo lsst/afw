@@ -371,9 +371,9 @@ public:
 
     ~fits_reader() { }
     
-    template <typename ImageT>
-    void apply(ImageT & image) {
-        const int BITPIX = detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
+    template <typename PixelT>
+    geom::Point2I apply(lsst::ndarray::Array<PixelT,2,1> const & array) {
+        const int BITPIX = detail::fits_read_support_private<PixelT>::BITPIX;
 
         if (BITPIX != _bitpix) {            
             throw LSST_EXCEPT(
@@ -410,11 +410,13 @@ public:
             } 
         }
         geom::ExtentI dimensions = getDimensions();
-        if (image.getWidth() != dimensions.getX() || image.getHeight() != dimensions.getY()) {
+        if (array.template getSize<1>() != dimensions.getX() 
+            || array.template getSize<0>() != dimensions.getY()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthErrorException,
                 (boost::format("Image dimensions (%d,%d) do not match requested read dimensions %dx%d") %
-                image.getWidth() % image.getHeight() % dimensions.getX() % dimensions.getY()).str()
+                 array.template getSize<1>() % array.template getSize<0>() %
+                 dimensions.getX() % dimensions.getY()).str()
             );
         }
         // 'bottom left corner' of the subsection (1-indexed)
@@ -426,18 +428,19 @@ public:
 
         int status = 0;                 // cfitsio function return status
 
-        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, &(*image.begin()), NULL, &status) != 0) {
+        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, array.getData(), NULL, &status) != 0) {
             throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
 
-        image.setXY0(xy0 + xyOffset);
+        return xy0 + xyOffset;
     }
    
-    template <typename ImageT>
-    void read_image(ImageT & image) {
-        ImageT tmp(getDimensions());
-        apply(tmp);
-        image=tmp;
+    template <typename PixelT>
+    void read_image(lsst::ndarray::Array<PixelT,2,1> & array, geom::Point2I & xy0) {
+        lsst::ndarray::Array<PixelT,2,1> tmp 
+            = lsst::ndarray::allocate(getDimensions().getY(), getDimensions().getX());
+        xy0 = apply(tmp);
+        array = tmp;
     }
 
     geom::ExtentI getDimensions() const {

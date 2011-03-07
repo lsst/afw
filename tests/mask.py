@@ -205,7 +205,9 @@ class MaskTestCase(unittest.TestCase):
             return
         
         hdu = 0
-        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.BoxI(), True)
+        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.BoxI(), afwImage.LOCAL, True)
+
+        print mask.getArray().transpose()
 
         if False:
             import lsst.afw.display.ds9 as ds9

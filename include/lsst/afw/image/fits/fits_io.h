@@ -42,6 +42,8 @@
 #include "lsst/pex/exceptions.h"
 #include "fits_io_private.h"
 
+#include "lsst/ndarray.h"
+
 namespace lsst { namespace afw { namespace image {
 
 /// \ingroup FITS_IO
@@ -94,17 +96,19 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// Triggers a compile assert if the image channel depth is not supported by the FITS library or by the I/O
 /// extension.  Throws lsst::afw::image::FitsException if the file is not a valid FITS file, or
 /// if its color space or channel depth are not compatible with the ones specified by Image
-template <typename ImageT>
-inline void fits_read_image(const std::string& filename, ImageT & im,
-                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-                            int hdu=1,
-                            geom::BoxI const& bbox=geom::BoxI(),
-                            ImageOrigin const origin = LOCAL
-                           ) {
-    BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
+ template <typename PixelT>
+ inline void fits_read_image(const std::string& filename,
+                             lsst::ndarray::Array<PixelT,2,1> & array,
+                             geom::Point2I & xy0,
+                             lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+                             int hdu=1,
+                             geom::BoxI const& bbox=geom::BoxI(),
+                             ImageOrigin const origin = LOCAL
+ ) {
+    BOOST_STATIC_ASSERT(fits_read_support<PixelT>::is_supported);
 
     detail::fits_reader m(filename, metadata, hdu, bbox, origin);
-    m.read_image(im);
+    m.read_image(array, xy0);
 }
 
 /// \ingroup FITS_IO
