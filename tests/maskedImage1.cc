@@ -23,6 +23,7 @@
  */
  
 #include <typeinfo>
+#include <cstdio>
 
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
@@ -103,6 +104,9 @@ int test(int argc, char**argv) {
     cout << "Offsets: " << subMaskedImage2.getX0() << " " << subMaskedImage2.getY0() << endl;
 
     testMaskedImage1->writeFits(argv[3]);
+    
+    std::remove(argv[3]);
+    std::remove(argv[4]);
     
     return EXIT_SUCCESS;
 }

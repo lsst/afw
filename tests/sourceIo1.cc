@@ -247,7 +247,7 @@ static void testDb(std::string const & storageType) {
 
     PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_v2");
     
     // 1. Test on a single Source
     Source::Ptr ds(new Source());
@@ -330,7 +330,7 @@ static void testDb2(std::string const & storageType) {
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_v2");
 
     SourceSet all;
     int const numSlices = 3;

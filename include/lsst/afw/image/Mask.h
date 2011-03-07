@@ -128,6 +128,7 @@ public:
 
     void operator&=(Mask const& rhs);
     void operator&=(MaskPixelT const rhs);
+        static MaskPixelT getPlaneBitMask(const std::vector<std::string> &names);
 
     void operator^=(Mask const& rhs);
     void operator^=(MaskPixelT const rhs);

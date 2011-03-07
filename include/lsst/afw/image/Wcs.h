@@ -128,6 +128,8 @@ public:
     
     // Returns the pixel scale, in arcsec/pixel.
     double pixelScale() const;
+
+    bool isInitialized() const;
     
     //Convert from raDec to pixel space. Formerly called raDecToXY() and
     //xyToRaDec(), but the name now reflects their increased generality. They may be

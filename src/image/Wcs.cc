@@ -443,6 +443,10 @@ Wcs::Ptr Wcs::clone(void) const {
 }
 
 
+bool Wcs::isInitialized() const {
+    return (_wcsInfo != NULL);
+}
+
 //
 // Accessors
 //
@@ -450,7 +454,7 @@ Wcs::Ptr Wcs::clone(void) const {
 ///Return crval. Note that this need not be the centre of the image
 CoordPtr Wcs::getSkyOrigin() const {
 
-    if(_wcsInfo != NULL) {
+    if(isInitialized()) {
         return makeCorrectCoord(_wcsInfo->crval[0], _wcsInfo->crval[1]);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
@@ -460,7 +464,7 @@ CoordPtr Wcs::getSkyOrigin() const {
 ///Return crpix in the lsst convention. Note that this need not be the centre of the image
 GeomPoint Wcs::getPixelOrigin() const {
 
-    if(_wcsInfo != NULL) {
+    if(isInitialized()) {
         //Convert from fits units back to lsst units
         double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
         double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
@@ -473,7 +477,7 @@ GeomPoint Wcs::getPixelOrigin() const {
 
 ///Return the CD matrix
 Eigen::Matrix2d Wcs::getCDMatrix() const {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
     
@@ -515,7 +519,7 @@ PropertyList::Ptr Wcs::getFitsMetadata() const {
 /// and declination increases the horizontal and vertical pixel position. In this case the image is flipped.
 bool Wcs::isFlipped()  const{
 
-    if(_wcsInfo == NULL) {
+    if(! isInitialized() ) {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
     }
 
@@ -581,7 +585,7 @@ double Wcs::pixelScale() const {
 GeomPoint Wcs::skyToPixelImpl(double sky1, ///< Longitude coordinate; DEGREES
                               double sky2  ///< latitude  coordinate; DEGREES
                              ) const {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
@@ -646,7 +650,7 @@ GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
 ///\brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
 ///
 GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
@@ -677,7 +681,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
 void
 Wcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
 {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
     
@@ -711,7 +715,7 @@ CoordPtr Wcs::pixelToSky(const GeomPoint pixel) const {
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
 CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
@@ -958,7 +962,7 @@ lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
 ///to other fits viewers, we change to the fits convention when writing out images.
 void Wcs::shiftReferencePixel(double dx, double dy) {
     //If the _wcsInfo structure hasn't been initialised yet, then there's nothing to do
-    if(_wcsInfo != NULL) {
+    if(isInitialized()) {
         _wcsInfo->crpix[0] += dx;
         _wcsInfo->crpix[1] += dy;
     }

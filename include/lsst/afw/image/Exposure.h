@@ -60,7 +60,6 @@
 
 namespace lsst {
 namespace afw {
-
 namespace detection {
     class Psf;
 }
@@ -85,20 +84,17 @@ public:
     
     // Class Constructors and Destructor
     explicit Exposure(
-        geom::ExtentI const & dimensions=geom::ExtentI(), 
-        Wcs const& wcs=NoWcs,
-        boost::shared_ptr<const detection::Psf> psf=boost::shared_ptr<detection::Psf>()
+        lsst::afw::geom::Extent2I const & dimensions=lsst::afw::geom::Extent2I(),
+        Wcs const& wcs=NoWcs
     );
+
     explicit Exposure(
-        geom::BoxI const & bbox, 
-        Wcs const & wcs=NoWcs, 
-        boost::shared_ptr<const detection::Psf> psf=boost::shared_ptr<detection::Psf>()
+        lsst::afw::geom::Box2I const & bbox,
+        Wcs const & wcs=NoWcs
     );
-    explicit Exposure(
-        MaskedImageT & maskedImage, 
-        Wcs const& wcs=NoWcs,
-        boost::shared_ptr<const detection::Psf> psf=boost::shared_ptr<detection::Psf>()
-    );
+
+    explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=NoWcs);
+
     explicit Exposure(
         std::string const &baseName, 
         int const hdu=0, 
@@ -107,7 +103,12 @@ public:
         bool const conformMasks=false
     );
 
-    explicit Exposure(Exposure const &src, geom::BoxI const& bbox, ImageOrigin const origin, bool const deep=false);
+    Exposure(
+        Exposure const &src, 
+        lsst::afw::geom::Box2I const& bbox, 
+        ImageOrigin const origin = LOCAL, 
+        bool const deep=false
+    );
 
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
     /// N(N-1)/2 conversions between N ImageBase types.
@@ -120,14 +121,19 @@ public:
         lsst::daf::data::LsstBase(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
         _wcs(rhs.getWcs()->clone()),
-        _psf(_clonePsf(rhs.getPsf())),
         _detector(rhs.getDetector()),
         _filter(rhs.getFilter()),
-        _calib(new Calib(*rhs.getCalib()))
+        _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
     {
-        setMetadata(rhs.getMetadata()->deepCopy());
+        _clonePsf(rhs.getPsf());    // a separate function so it can go in Exposure.cc
+
+        // Make sure that we create a PropertyList even if the incoming
+        // metadata is a PropertySet.
+        PTR(lsst::daf::base::PropertyList) pl(new lsst::daf::base::PropertyList);
+        pl->combine(rhs.getMetadata());
+        setMetadata(pl);
     }
-        
+
     virtual ~Exposure(); 
 
     // Get Members
@@ -198,18 +204,18 @@ public:
     boost::shared_ptr<Calib> getCalib() { return _calib; }
     boost::shared_ptr<const Calib> getCalib() const { return _calib; }
     /// Set the Exposure's Psf
-    void setPsf(CONST_PTR(detection::Psf) psf) { _clonePsf(psf); }
+    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _clonePsf(psf); }
 
     /// Return the Exposure's Psf object
-    PTR(detection::Psf) getPsf() { return _psf; }
+    PTR(lsst::afw::detection::Psf) getPsf() { return _psf; }
     /// Return the Exposure's Psf object
-    CONST_PTR(detection::Psf) getPsf() const { return _psf; }
+    CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _psf; }
     
     /// Does this Exposure have a Psf?
     bool hasPsf() const { return static_cast<bool>(_psf); }
 
     /// Does this Exposure have a Wcs?
-    bool hasWcs() const { return static_cast<bool>(_wcs) && static_cast<bool>(*_wcs); }
+    bool hasWcs() const { return *_wcs ? true : false; }
     
     // FITS
     void writeFits(std::string const &expOutFile) const;
@@ -222,24 +228,21 @@ private:
     cameraGeom::Detector::Ptr _detector;
     Filter _filter;
     PTR(Calib) _calib;
-    PTR(detection::Psf) _psf;
+    PTR(lsst::afw::detection::Psf) _psf;
 
-    static PTR(detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
+    void _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
 };
 
 /**
  * A function to return an Exposure of the correct type (cf. std::make_pair)
  */
-template<typename MaskedImageT>
-typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr makeExposure(
-    MaskedImageT & mimage, ///< the Exposure's image
-    Wcs const& wcs=NoWcs, ///< the Exposure's WCS
-    boost::shared_ptr<const detection::Psf> psf=boost::shared_ptr<detection::Psf>()
-) {
-    return typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr(
-        new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs, psf)
-    );
-}
+    template<typename MaskedImageT>
+    typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr makeExposure(MaskedImageT & mimage, ///< the Exposure's image
+                                                                             Wcs const& wcs=NoWcs ///< the Exposure's WCS
+                                                                            ) {
+        return typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr(
+                                                            new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs));
+    }
 
 }}} // lsst::afw::image
 

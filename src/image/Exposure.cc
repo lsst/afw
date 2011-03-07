@@ -97,55 +97,50 @@ namespace afwDetection = lsst::afw::detection;
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    afwGeom::ExtentI const & dimensions, ///< desired image width/height
-    afwImage::Wcs const & wcs,
-    afwDetection::Psf::ConstPtr psf
+    afwGeom::Extent2I const & dimensions, ///< desired image width/height
+    afwImage::Wcs const & wcs   ///< the Wcs
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(dimensions),
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib()),
-    _psf(_clonePsf(psf))
+    _calib(new afwImage::Calib())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
 }
+
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::BoxI const & bbox, ///< desired image width/height, and origin
-    afwImage::Wcs const & wcs,
-    afwDetection::Psf::ConstPtr psf
+    afwImage::Wcs const & wcs   ///< the Wcs
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(bbox),
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib()),
-    _psf(_clonePsf(psf))
+    _calib(new afwImage::Calib())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
 }
+
 /** @brief Construct an Exposure from a MaskedImage
   */               
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage, ///< the MaskedImage
-    afwImage::Wcs const& wcs,  ///< the Wcs
-    afwDetection::Psf::ConstPtr psf
-
+    afwImage::Wcs const& wcs   ///< the Wcs
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib()),
-    _psf(_clonePsf(psf))
+    _calib(new afwImage::Calib())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
 }
@@ -158,7 +153,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     Exposure const &src, ///< Parent Exposure
-    afwGeom::BoxI const& bbox,    ///< Desired region in Exposure 
+    afwGeom::Box2I const& bbox,    ///< Desired region in Exposure 
     ImageOrigin const origin,
     bool const deep      ///< Should we copy the pixels?
 ) :
@@ -167,13 +162,13 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _wcs(src._wcs->clone()),
     _detector(src._detector),
     _filter(src._filter),
-    _calib(new lsst::afw::image::Calib(*src.getCalib())),
-    _psf(_clonePsf(src.getPsf()))
+    _calib(new lsst::afw::image::Calib(*src.getCalib()))
 {
 /*
   * N.b. You'll need to update the generalised copy constructor in Exposure.h when you add new data members
   * --- this note is here as you'll be making the same changes here!
   */
+    _clonePsf(src.getPsf());
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 
@@ -214,6 +209,16 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     // Strip keywords from the input metadata that are related to the generated Wcs
     //
     detail::stripWcsKeywords(metadata, _wcs);
+    /*
+     * Filter
+     */
+    _filter = Filter(metadata, true);
+    afwImage::detail::stripFilterKeywords(metadata);
+    /*
+     * Calib
+     */
+    _calib = PTR(afwImage::Calib)(new afwImage::Calib(metadata));
+    afwImage::detail::stripCalibKeywords(metadata);
 
     //If keywords LTV[1,2] are present, the image on disk is already a subimage, so
     //we should note this fact. Also, shift the wcs so the crpix values refer to 
@@ -229,54 +234,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
         _wcs->shiftReferencePixel(0, -1*metadata->getAsDouble(key));
         metadata->remove(key);
     }
-
-    key = "FILTER";
-    if( metadata->exists(key) ) {
-        std::string filterName = boost::algorithm::trim_right_copy(metadata->getAsString(key));
-        try {
-            _filter = Filter(filterName);
-        } catch(lsst::pex::exceptions::NotFoundException &) {
-            lsst::pex::logging::TTrace<1>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
-            _filter = Filter(filterName, true); // force the filter to be defined
-        }
-        metadata->remove(key);
-    }
     /*
-     * Calib
+     * Set the remaining parts of the metadata
      */
-    _calib = afwImage::Calib::Ptr(new afwImage::Calib);
-
-    key = "TIME-MID";
-    if (metadata->exists(key)) {
-        lsst::daf::base::DateTime const
-            time_mid(boost::algorithm::trim_right_copy(metadata->getAsString(key)));
-        
-        _calib->setMidTime(time_mid);
-        metadata->remove(key);
-    }
-
-    key = "EXPTIME";
-    if (metadata->exists(key)) {
-        _calib->setExptime(metadata->getAsDouble(key));
-        metadata->remove(key);
-    }
-
-    key = "FLUXMAG0";
-    if (metadata->exists(key)) {
-        double const fluxMag0 = metadata->getAsDouble(key);
-        metadata->remove(key);
-        
-        key = "FLUXMAG0ERR";
-        if (metadata->exists(key)) {
-            double const fluxMag0Err = metadata->getAsDouble(key);
-            metadata->remove(key);
-
-            _calib->setFluxMag0(fluxMag0, fluxMag0Err);
-        } else {
-            _calib->setFluxMag0(fluxMag0);
-        }
-    }
-    
     setMetadata(metadata);
 }
 
@@ -289,10 +249,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
  * Clone a Psf; defined here so that we don't have to expose the insides of Psf in Exposure.h
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
-    CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
-) {
-    return psf ? psf->clone() : PTR(afwDetection::Psf)();
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
+        CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
+                                                            )
+{
+    _psf = psf ? psf->clone() : PTR(afwDetection::Psf)();
 }
 
 /** @brief Get the Wcs of an Exposure.

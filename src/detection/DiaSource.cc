@@ -115,6 +115,24 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         areEqual(_iyyErr, d._iyyErr, det::IYY_ERR) &&
         areEqual(_ixy, d._ixy, det::IXY) &&
         areEqual(_ixyErr, d._ixyErr, det::IXY_ERR) &&
+        areEqual(_psfIxx, d._psfIxx, det::PSF_IXX) &&
+        areEqual(_psfIxxErr, d._psfIxxErr, det::PSF_IXX_ERR) &&
+        areEqual(_psfIyy, d._psfIyy, det::PSF_IYY) &&
+        areEqual(_psfIyyErr, d._psfIyyErr, det::PSF_IYY_ERR) &&
+        areEqual(_psfIxy, d._psfIxy, det::PSF_IXY) &&
+        areEqual(_psfIxyErr, d._psfIxyErr, det::PSF_IXY_ERR) &&
+        areEqual(_e1, d._e1, det::E1) &&
+        areEqual(_e1Err, d._e1Err, det::E1_ERR) &&
+        areEqual(_e2, d._e2, det::E2) &&
+        areEqual(_e2Err, d._e2Err, det::E2_ERR) &&
+        areEqual(_shear1, d._shear1, det::SHEAR1) &&
+        areEqual(_shear1Err, d._shear1Err, det::SHEAR1_ERR) &&
+        areEqual(_shear2, d._shear2, det::SHEAR2) &&
+        areEqual(_shear2Err, d._shear2Err, det::SHEAR2_ERR) &&
+        areEqual(_resolution, d._resolution, det::RESOLUTION) &&
+        areEqual(_sigma, d._sigma, det::SIGMA) &&
+        areEqual(_sigmaErr, d._sigmaErr, det::SIGMA_ERR) &&
+        areEqual(_shapeStatus, d._shapeStatus, det::SHAPE_STATUS) &&
         areEqual(_snr, d._snr) &&
         areEqual(_chi2, d._chi2) &&
         areEqual(_flagForDetection, d._flagForDetection, det::FLAG_FOR_DETECTION) &&
