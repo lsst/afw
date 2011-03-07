@@ -264,7 +264,7 @@ class KernelIOTestCase(unittest.TestCase):
                 kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.PointI(col, row))
                 basisImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(basisImage, True)
-                basisImArrList.append(basisImage.getArray().transpose())
+                basisImArrList.append(basisImage.getArray().transpose().copy())
                 kVec.append(kernel)
         
         kParams = [0.0]*len(kVec)
@@ -320,7 +320,7 @@ class KernelIOTestCase(unittest.TestCase):
         # create a list of basis kernels from the images
         kVec = afwMath.KernelList()
         for basisImArr in basisImArrList:
-            basisImage = afwImage.makeImageFromArray(basisImArr.transpose())
+            basisImage = afwImage.makeImageFromArray(basisImArr.transpose().copy())
             kernel = afwMath.FixedKernel(basisImage)
             kVec.append(kernel)
 

@@ -483,7 +483,7 @@ class KernelTestCase(unittest.TestCase):
         # create a list of basis kernels from the images
         basisKernelList = afwMath.KernelList()
         for basisImArr in basisImArrList:
-            basisImage = afwImage.makeImageFromArray(basisImArr.transpose())
+            basisImage = afwImage.makeImageFromArray(basisImArr.transpose().copy())
             kernel = afwMath.FixedKernel(basisImage)
             basisKernelList.append(kernel)
 
