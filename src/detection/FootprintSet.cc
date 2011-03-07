@@ -824,7 +824,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // desired region
                                                                 ) {
     _region = region;
-    typename PTR(FootprintSet::FootprintList) footprintList = getFootprints();
+    PTR(typename FootprintSet::FootprintList) footprintList = getFootprints();
 
     for (typename FootprintSet::FootprintList::iterator ptr = getFootprints()->begin(),
              end = getFootprints()->end();
