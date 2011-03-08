@@ -46,7 +46,7 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
     // Correct Amp's coordinate system to be absolute within CCD
     //
     {
-        afwGeom::BoxI ampPixels = amp->getAllPixels();
+        afwGeom::Box2I ampPixels = amp->getAllPixels();
         amp->shift(
             pos.getX()*ampPixels.getWidth(), 
             pos.getY()*ampPixels.getHeight()
@@ -92,9 +92,9 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
 
     double pixelSize = getPixelSize();
 
-    afwGeom::ExtentI const centerPixel(getCenterPixel());
+    afwGeom::Extent2I const centerPixel(getCenterPixel());
     cameraGeom::Amp::ConstPtr amp = findAmp(pix + centerPixel);
-    afwGeom::ExtentI const off = amp->getDataSec(false).getMin() - amp->getDataSec(true).getMin();
+    afwGeom::Extent2I const off = amp->getDataSec(false).getMin() - amp->getDataSec(true).getMin();
     afwGeom::Point2I const offsetPix = pix - off;
 
     return afwGeom::Point2D(offsetPix.getX()*pixelSize, offsetPix.getY()*pixelSize);
@@ -123,7 +123,7 @@ namespace {
             return amp->getAllPixels(_isTrimmed).contains(_point);
         }
     private:
-        afwGeom::PointI _point;
+        afwGeom::Point2I _point;
         bool _isTrimmed;
     };
 }
@@ -220,7 +220,7 @@ static void clipDefectsToAmplifier(
          ptr != end; ++ptr) {
         afwImage::DefectBase::Ptr defect = *ptr;
 
-        afwGeom::BoxI bbox = defect->getBBox();
+        afwGeom::Box2I bbox = defect->getBBox();
         bbox.clip(amp->getAllPixels(false));
 
         if (!bbox.isEmpty()) {

@@ -114,7 +114,7 @@ Psf::Image::Ptr Psf::doComputeImage(
     int const height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
 
     Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
-        geom::ExtentI(width, height)
+        geom::Extent2I(width, height)
     );
     kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
     //

@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         std::istringstream(argv[3]) >> nRows;
     }
     
-    image::Image<imageType> image1(geom::ExtentI(nCols, nRows));
+    image::Image<imageType> image1(geom::Extent2I(nCols, nRows));
     image::Image<imageType> image2(image1.getDimensions());
     
     std::cout << "Cols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;

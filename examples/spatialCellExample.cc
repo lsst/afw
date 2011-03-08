@@ -64,7 +64,7 @@ void SpatialCellSetDemo() {
      */
     for (afwDetect::FootprintSet<PixelT>::FootprintList::iterator ptr = fs->getFootprints().begin(),
              end = fs->getFootprints().end(); ptr != end; ++ptr) {
-        afwGeom::BoxI const bbox = (*ptr)->getBBox();
+        afwGeom::Box2I const bbox = (*ptr)->getBBox();
         float const xc = (bbox.getMinX() + bbox.getMaxX())/2.0;
         float const yc = (bbox.getMinY() + bbox.getMaxY())/2.0;
         ExampleCandidate::Ptr tc(
@@ -90,7 +90,7 @@ void SpatialCellSetDemo() {
 
         for (afwMath::SpatialCell::iterator candidate = cell->begin(), candidateEnd = cell->end();
              candidate != candidateEnd; ++candidate) {
-            afwGeom::BoxI box =
+            afwGeom::Box2I box =
                 dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
             
 #if 0
@@ -131,9 +131,9 @@ readImage() {
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1";
         
-        afwGeom::BoxI bbox = afwGeom::BoxI(
-            afwGeom::PointI(270, 2530), 
-            afwGeom::ExtentI(512, 512)
+        afwGeom::Box2I bbox = afwGeom::Box2I(
+            afwGeom::Point2I(270, 2530), 
+            afwGeom::Extent2I(512, 512)
         );
         
         lsst::daf::base::PropertySet::Ptr md;

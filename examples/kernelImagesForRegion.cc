@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     polyParams[1][2] = (maxSigma - minSigma) / static_cast<double>(100);
     gaussSpVarKernelPtr->setSpatialParameters(polyParams);
 
-    afwGeom::BoxI bbox(afwGeom::PointI(10, 20), afwGeom::ExtentI(50, 75));
+    afwGeom::Box2I bbox(afwGeom::Point2I(10, 20), afwGeom::Extent2I(50, 75));
     
     afwMath::detail::KernelImagesForRegion kernelImageSet(gaussSpVarKernelPtr, bbox, false);
 

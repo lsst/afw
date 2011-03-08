@@ -165,8 +165,8 @@ void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
  *
  * If dimensions is 0, rotate the bbox about its LLC
  */
-afwGeom::BoxI cameraGeom::detail::rotateBBoxBy90(
-        afwGeom::BoxI const& bbox,          ///< The BBox to rotate
+afwGeom::Box2I cameraGeom::detail::rotateBBoxBy90(
+        afwGeom::Box2I const& bbox,          ///< The BBox to rotate
         int n90,                             ///< number of anti-clockwise 90degree turns
         afwGeom::Extent2I const& dimensions  ///< The size of the parent 
                                              )
@@ -264,14 +264,14 @@ afwGeom::BoxI cameraGeom::detail::rotateBBoxBy90(
         }
     }
         
-    afwGeom::PointI LLC(centerPixel[0] + x0, centerPixel[1] + y0);
-    afwGeom::PointI URC(centerPixel[0] + x1, centerPixel[1] + y1);
+    afwGeom::Point2I LLC(centerPixel[0] + x0, centerPixel[1] + y0);
+    afwGeom::Point2I URC(centerPixel[0] + x1, centerPixel[1] + y1);
         
-    afwGeom::BoxI newBbox(LLC, URC);
+    afwGeom::Box2I newBbox(LLC, URC);
         
     int const dxy0 = (dimensions[1] - dimensions[0])/2; // how far the origin moved
     if (n90%2 == 1 && dxy0 != 0) {
-        newBbox.shift(geom::ExtentI(dxy0, -dxy0));
+        newBbox.shift(geom::Extent2I(dxy0, -dxy0));
     }
         
     return newBbox;

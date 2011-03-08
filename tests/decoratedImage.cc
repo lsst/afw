@@ -47,7 +47,7 @@ typedef image::DecoratedImage<PixelT> DecoratedImageT;
 /************************************************************************************************************/
 
 DecoratedImageT make_image(int const width=5, int const height=6) {
-    DecoratedImageT dimg(geom::ExtentI(width, height));
+    DecoratedImageT dimg(geom::Extent2I(width, height));
     ImageT::Ptr img = dimg.getImage();
 
     int i = 0;

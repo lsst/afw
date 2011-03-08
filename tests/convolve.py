@@ -61,10 +61,10 @@ if not dataDir:
 
 # input image contains a saturated star, a bad column, and a faint star
 InputMaskedImagePath = os.path.join(dataDir, "med")
-InputBBox = afwGeom.BoxI(afwGeom.PointI(52, 574), afwGeom.ExtentI(76, 80))
+InputBBox = afwGeom.Box2I(afwGeom.Point2I(52, 574), afwGeom.Extent2I(76, 80))
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve fully overwrites it
-ShiftedBBox = afwGeom.BoxI(afwGeom.PointI(0, 460), afwGeom.ExtentI(76, 80))
+ShiftedBBox = afwGeom.Box2I(afwGeom.Point2I(0, 460), afwGeom.Extent2I(76, 80))
 FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
@@ -194,7 +194,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         self.width = self.maskedImage.getWidth()
         self.height = self.maskedImage.getHeight()
-#         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.BoxI(afwGeom.PointI(15, 17), afwGeom.ExtentI(10, 5)))
+#         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.Box2I(afwGeom.Point2I(15, 17), afwGeom.Extent2I(10, 5)))
 #         smask.set(0x8)
 
     def tearDown(self):
@@ -317,8 +317,8 @@ class ConvolveTestCase(unittest.TestCase):
     def runBasicConvolveEdgeTest(self, kernel, kernelDescr):
         """Verify that basicConvolve does not write to edge pixels for this kind of kernel
         """
-        fullBox = afwGeom.BoxI(
-            afwGeom.PointI(0, 0),
+        fullBox = afwGeom.Box2I(
+            afwGeom.Point2I(0, 0),
             ShiftedBBox.getDimensions(),
         )
         goodBox = kernel.shrinkBBox(fullBox)
@@ -512,7 +512,7 @@ class ConvolveTestCase(unittest.TestCase):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
-                            afwGeom.PointI(activeCol, activeRow))
+                            afwGeom.Point2I(activeCol, activeRow))
                         if display and False:
                             kim = afwImage.ImageD(kWidth, kHeight); kernel.computeImage(kim, False)
                             ds9.mtv(kim, frame=1)

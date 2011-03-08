@@ -254,8 +254,8 @@ std::vector<double> afwMath::Kernel::getKernelParameters() const {
  *
  * @return the bbox expanded by the kernel. 
  */
-afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
-    return afwGeom::BoxI(
+afwGeom::Box2I afwMath::Kernel::growBBox(afwGeom::Box2I const &bbox) const {
+    return afwGeom::Box2I(
         afwGeom::Point2I(
             bbox.getMinX() - getCtrX(),
             bbox.getMinY() - getCtrY()),
@@ -274,14 +274,14 @@ afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
  * @throw lsst::pex::exceptions::InvalidParameterException if the resulting box would have
  * dimension < 1 in either axis
  */
-afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
+afwGeom::Box2I afwMath::Kernel::shrinkBBox(afwGeom::Box2I const &bbox) const {
     if ((bbox.getWidth() < getWidth()) || ((bbox.getHeight() < getHeight()))) {
         std::ostringstream os;
         os << "bbox dimensions = " << bbox.getDimensions() << " < ("
            << getWidth() << ", " << getHeight() << ") in one or both dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
-    return afwGeom::BoxI(
+    return afwGeom::Box2I(
         afwGeom::Point2I(
             bbox.getMinX() + getCtrX(),
             bbox.getMinY() + getCtrY()),

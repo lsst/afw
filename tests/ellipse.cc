@@ -186,7 +186,7 @@ struct TransformerTest {
 
     template <typename Core>
     static void apply(Core const & core) {
-        Ellipse input(core, PointD(Eigen::Vector2d::Random()));
+        Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
         Eigen::Matrix2d tm;
         tm << 
             -0.2704311, 0.9044595,
@@ -238,7 +238,7 @@ struct GridTransformTest {
 
     template <typename T>
     static void apply(T const & core) {
-        Ellipse input(core, PointD(Eigen::Vector2d::Random()));
+        Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
         AffineTransform output = input.getGridTransform();
         Ellipse unit_circle = input.transform(output);
         Axes unit_circle_axes(unit_circle.getCore());
@@ -329,10 +329,10 @@ BOOST_AUTO_TEST_CASE(EllipticityTest) {
 BOOST_AUTO_TEST_CASE(ParametricTest) {
     afwEllipses::Parametric p(afwEllipses::Ellipse(afwEllipses::Quadrupole(3,2,-0.65)));
     BOOST_CHECK(
-        p(1.45).asEigen().isApprox(afwGeom::PointD::EigenVector(0.76537615289287353, 1.0573336496088439))
+        p(1.45).asEigen().isApprox(afwGeom::Point2D::EigenVector(0.76537615289287353, 1.0573336496088439))
     );
     BOOST_CHECK(
-        p(-2.56).asEigen().isApprox(afwGeom::PointD::EigenVector(-1.6804596457433354, 0.03378847788858419))
+        p(-2.56).asEigen().isApprox(afwGeom::Point2D::EigenVector(-1.6804596457433354, 0.03378847788858419))
     );
 }
 

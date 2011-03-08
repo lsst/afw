@@ -83,10 +83,10 @@ void mathDetail::convolveWithInterpolation(
     }
 
     // compute region covering good area of output image
-    afwGeom::BoxI fullBBox = afwGeom::BoxI(
+    afwGeom::Box2I fullBBox = afwGeom::Box2I(
         afwGeom::Point2I(0, 0), 
         afwGeom::Extent2I(outImage.getWidth(), outImage.getHeight()));
-    afwGeom::BoxI goodBBox = kernel.shrinkBBox(fullBBox);
+    afwGeom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(
         kernel.clone(),
         goodBBox,
@@ -141,13 +141,13 @@ void mathDetail::convolveRegionWithInterpolation(
     typedef KernelImage::const_xy_locator KernelConstLocator;
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
-    geom::ExtentI const kernelDimensions(kernelPtr->getDimensions());
+    geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
     workingImages.leftImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_LEFT);
     workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);
     workingImages.kernelImage <<= workingImages.leftImage;
 
-    afwGeom::BoxI const goodBBox = region.getBBox();
-    afwGeom::BoxI const fullBBox = kernelPtr->growBBox(goodBBox);
+    afwGeom::Box2I const goodBBox = region.getBBox();
+    afwGeom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
     
     // top and right images are computed one beyond bbox boundary,
     // so the distance between edge images is bbox width/height pixels

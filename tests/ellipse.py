@@ -60,7 +60,7 @@ class EllipseTestCase(unittest.TestCase):
             vec = numpy.random.randn(3,1) * 1E-3 + core.getParameterVector()
             core.setParameterVector(vec)
             self.assert_((core.getParameterVector()==vec).all())
-            center = geom.PointD(*numpy.random.randn(2))
+            center = geom.Point2D(*numpy.random.randn(2))
             ellipse = geomEllipse.Ellipse(core, center)
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))

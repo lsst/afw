@@ -89,9 +89,9 @@ public:
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
 
-    explicit Footprint(int nspan = 0, geom::BoxI const & region=geom::BoxI());
-    explicit Footprint(geom::BoxI const & bbox, geom::BoxI const & region=geom::BoxI());
-    explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::BoxI const & region=geom::BoxI());
+    explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
+    explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
+    explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
 
     ~Footprint();
 
@@ -110,12 +110,12 @@ public:
     void shift(int dx, int dy);
 
     /// Return the Footprint's bounding box
-    geom::BoxI getBBox() const { return _bbox; }     
+    geom::Box2I getBBox() const { return _bbox; }     
     /// Return the corners of the MaskedImage the footprints live in
-    geom::BoxI const & getRegion() const { return _region; }
+    geom::Box2I const & getRegion() const { return _region; }
 
     /// Set the corners of the MaskedImage wherein the footprints dwell
-    void setRegion(geom::BoxI const & region) { _region = region; }
+    void setRegion(geom::Box2I const & region) { _region = region; }
 
     bool contains(geom::Point2I const& pix) const;
     
@@ -123,7 +123,7 @@ public:
 
     void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
                          int const id,
-                         geom::BoxI const& region=geom::BoxI()
+                         geom::Box2I const& region=geom::Box2I()
     ) const;
 private:
     Footprint(const Footprint&);                   //!< No copy constructor
@@ -133,16 +133,16 @@ private:
     int _area;                           //!< number of pixels in this Footprint
      
     SpanList _spans;                     //!< the Spans contained in this Footprint
-    geom::BoxI _bbox;                   //!< the Footprint's bounding box
+    geom::Box2I _bbox;                   //!< the Footprint's bounding box
     std::vector<Peak::Ptr> _peaks;       //!< the Peaks lying in this footprint
-    mutable geom::BoxI _region;         //!< The corners of the MaskedImage the footprints live in
+    mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
     bool _normalized;                    //!< Are the spans sorted? 
 };
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
 
-std::vector<lsst::afw::geom::BoxI> footprintToBBoxList(Footprint const& foot);
+std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
 
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprint(ImageT *image,

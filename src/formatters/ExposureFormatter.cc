@@ -305,13 +305,13 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         execTrace("ExposureFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", 0);
-        afwGeom::BoxI box;
+        afwGeom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = afwGeom::BoxI(afwGeom::PointI(llcX, llcY), afwGeom::ExtentI(width, height));
+            box = afwGeom::Box2I(afwGeom::Point2I(llcX, llcY), afwGeom::Extent2I(width, height));
         }
         afwImg::ImageOrigin origin = afwImg::LOCAL;
         if(additionalData->exists("imageOrigin")){

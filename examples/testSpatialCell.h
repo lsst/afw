@@ -38,16 +38,16 @@ public:
     typedef lsst::afw::image::Image<float> ImageT;
 
     ExampleCandidate(float const xCenter, float const yCenter,
-                       ImageT::ConstPtr parent, lsst::afw::geom::BoxI bbox);
+                       ImageT::ConstPtr parent, lsst::afw::geom::Box2I bbox);
 
-    lsst::afw::geom::BoxI getBBox() const { return _bbox; }
+    lsst::afw::geom::Box2I getBBox() const { return _bbox; }
 
     double getCandidateRating() const;
 
     ImageT::ConstPtr getImage() const;
 private:
     ExampleCandidate::ImageT::ConstPtr _parent;
-    lsst::afw::geom::BoxI _bbox;
+    lsst::afw::geom::Box2I _bbox;
 };
 
 /************************************************************************************************************/
@@ -65,7 +65,7 @@ public:
     void processCandidate(lsst::afw::math::SpatialCellCandidate *candidate) {
         ++_n;
 
-        lsst::afw::geom::BoxI box = dynamic_cast<ExampleCandidate *>(candidate)->getBBox();
+        lsst::afw::geom::Box2I box = dynamic_cast<ExampleCandidate *>(candidate)->getBBox();
         _npix += box.getArea();
     }
 

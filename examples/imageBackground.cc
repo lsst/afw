@@ -49,7 +49,7 @@ int main() {
     int const nStar = 100;
     
     // declare an image.
-    ImageF img(geom::ExtentI(wid, wid));
+    ImageF img(geom::Extent2I(wid, wid));
     img = sky;
     
     // put sky and some fake stars in the image, and add uniform noise

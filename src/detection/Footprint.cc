@@ -90,11 +90,11 @@ int Footprint::id = 0;
  */
 Footprint::Footprint(
     int nspan,         //!< initial number of Span%s in this Footprint
-    geom::BoxI const & region //!< Bounding box of MaskedImage footprint
+    geom::Box2I const & region //!< Bounding box of MaskedImage footprint
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _fid(++id),
     _area(0),
-    _bbox(geom::BoxI()),
+    _bbox(geom::Box2I()),
     _region(region),
     _normalized(true) 
 {
@@ -108,8 +108,8 @@ Footprint::Footprint(
  * Create a rectangular Footprint
  */
 Footprint::Footprint(
-    geom::BoxI const& bbox, //!< The bounding box defining the rectangle
-    geom::BoxI const& region //!< Bounding box of MaskedImage footprint
+    geom::Box2I const& bbox, //!< The bounding box defining the rectangle
+    geom::Box2I const& region //!< Bounding box of MaskedImage footprint
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _fid(++id),
     _area(0),
@@ -129,15 +129,15 @@ Footprint::Footprint(
 
 Footprint::Footprint(
     geom::ellipses::Ellipse const & ellipse, 
-    geom::BoxI const & region
+    geom::Box2I const & region
 ) :  lsst::daf::data::LsstBase(typeid(this)),
     _fid(++id),
     _area(0),
-    _bbox(geom::BoxI()),
+    _bbox(geom::Box2I()),
     _region(region)
 {    
     geom::AffineTransform egt(ellipse.getGridTransform());    
-    geom::BoxI envelope(ellipse.computeEnvelope());
+    geom::Box2I envelope(ellipse.computeEnvelope());
 
     int const maxX = envelope.getMaxX();
     int const minX = envelope.getMinX();
@@ -146,7 +146,7 @@ Footprint::Footprint(
 
     for (int y = minY; y< maxY; ++y) {
         int x = minX;
-        while (egt(geom::PointD(x,y)).asEigen().squaredNorm() > 1.0) {
+        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() > 1.0) {
             if (x >= maxX) {
                 if (++y >= maxY) 
                     return;
@@ -156,7 +156,7 @@ Footprint::Footprint(
             }
         }
         int start = x;
-        while (egt(geom::PointD(x,y)).asEigen().squaredNorm() <= 1.0 && x < maxX) 
+        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() <= 1.0 && x < maxX) 
             ++x;
         addSpan(y, start, x-1);
     }
@@ -246,7 +246,7 @@ void Footprint::normalize() {
             if(lspan->_x0 < minX) minX = lspan->_x0;
             if(x1 > maxX) maxX = x1;
         }
-        _bbox = geom::BoxI(geom::PointI(minX, minY), geom::PointI(maxX, y));
+        _bbox = geom::Box2I(geom::Point2I(minX, minY), geom::Point2I(maxX, y));
 
         _normalized = true;
     }
@@ -270,8 +270,8 @@ Span const& Footprint::addSpan(
     _area += x1 - x0 + 1;
     _normalized = false;
 
-    _bbox.include(geom::PointI(x0, y));
-    _bbox.include(geom::PointI(x1, y));
+    _bbox.include(geom::Point2I(x0, y));
+    _bbox.include(geom::Point2I(x1, y));
 
     return *sp.get();
 }
@@ -309,7 +309,7 @@ void Footprint::shift(
         span->_x1 += dx;
     }
 
-    _bbox.shift(geom::ExtentI(dx, dy));
+    _bbox.shift(geom::Extent2I(dx, dy));
 }
 
 /**
@@ -318,7 +318,7 @@ void Footprint::shift(
 void Footprint::insertIntoImage(
     image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
     int const id, //!< Add id to idImage for pixels in the Footprint
-    geom::BoxI const& region //!< Footprint's region (default: getRegion())
+    geom::Box2I const& region //!< Footprint's region (default: getRegion())
 ) const {    
     int width, height, x0, y0;
     if(!region.isEmpty()) {
@@ -386,9 +386,9 @@ Footprint::Ptr footprintAndMask(
     int maskY0 = mask->getY0();
     int maskX1 = maskX0 + mask->getWidth() - 1;
     int maskY1 = maskY0 + mask->getHeight() -1;
-    geom::BoxI region = geom::BoxI(
-        geom::PointI(maskX0, maskY0), 
-        geom::PointI(maskX1, maskY1)
+    geom::Box2I region = geom::Box2I(
+        geom::Point2I(maskX0, maskY0), 
+        geom::Point2I(maskX1, maskY1)
     );
     Footprint::Ptr out(new Footprint());
     out->setRegion(region);
@@ -680,7 +680,7 @@ Footprint::Ptr growFootprintSlow(
      * We'll insert the footprints into an image, then convolve with a disk,
      * then extract a footprint from the result --- this is magically what we want.
      */
-    geom::BoxI bbox = foot.getBBox();
+    geom::Box2I bbox = foot.getBBox();
     bbox.grow(2*ngrow);
     image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
     *idImage = 0;
@@ -690,7 +690,7 @@ Footprint::Ptr growFootprintSlow(
 
 
     image::Image<double>::Ptr circle_im(
-        new image::Image<double>(geom::ExtentI(2*ngrow + 1, 2*ngrow + 1))
+        new image::Image<double>(geom::Extent2I(2*ngrow + 1, 2*ngrow + 1))
     );
     *circle_im = 0;
     for (int r = -ngrow; r <= ngrow; ++r) {
@@ -746,7 +746,7 @@ Footprint::Ptr growFootprint(
      *
      * Cf. http://ostermiller.org/dilate_and_erode.html
      */
-    geom::BoxI bbox = foot.getBBox();
+    geom::Box2I bbox = foot.getBBox();
     bbox.grow(ngrow);
     image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
     *idImage = 0;
@@ -824,18 +824,18 @@ Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotrop
  *
  * Useful in generating sets of meas::algorithms::Defects for the ISR
  */
-std::vector<geom::BoxI> footprintToBBoxList(Footprint const& foot) {
+std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
     typedef boost::uint16_t ImageT;
-    geom::BoxI fpBBox = foot.getBBox();
+    geom::Box2I fpBBox = foot.getBBox();
     image::Image<ImageT>::Ptr idImage(
         new image::Image<ImageT>(fpBBox.getDimensions())
     );
     *idImage = 0;
     int const height = fpBBox.getHeight();
-    geom::ExtentI shift(fpBBox.getMinX(), fpBBox.getMinY());
+    geom::Extent2I shift(fpBBox.getMinX(), fpBBox.getMinY());
     foot.insertIntoImage(*idImage, 1, fpBBox);
 
-    std::vector<geom::BoxI> bboxes;
+    std::vector<geom::Box2I> bboxes;
     /*
      * Our strategy is to find a row of pixels in the Footprint and interpret it as the first
      * row of a rectangular set of pixels.  We then extend this rectangle upwards as far as it
@@ -851,7 +851,7 @@ std::vector<geom::BoxI> footprintToBBoxList(Footprint const& foot) {
 
     int y0 = 0;                         // the first row with non-zero pixels in it
     while (y0 < height) {
-        geom::BoxI bbox;            // our next BBox
+        geom::Box2I bbox;            // our next BBox
         for (int y = y0; y != height; ++y) {
             // Look for a set pixel in this row
             image::Image<ImageT>::x_iterator begin = idImage->row_begin(y), end = idImage->row_end(y);
@@ -864,8 +864,8 @@ std::vector<geom::BoxI> footprintToBBoxList(Footprint const& foot) {
 
                 std::fill(first, last + 1, 0);       // clear pixels; we don't want to see them again
 
-                bbox.include(geom::PointI(x0, y));     // the LLC
-                bbox.include(geom::PointI(x1, y));     // the LRC; initial guess for URC
+                bbox.include(geom::Point2I(x0, y));     // the LLC
+                bbox.include(geom::Point2I(x1, y));     // the LRC; initial guess for URC
                 
                 // we found at least one pixel so extend the BBox upwards
                 for (++y; y != height; ++y) {
@@ -874,7 +874,7 @@ std::vector<geom::BoxI> footprintToBBoxList(Footprint const& foot) {
                     }
                     std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
                     
-                    bbox.include(geom::PointI(x1, y)); // the new URC
+                    bbox.include(geom::Point2I(x1, y)); // the new URC
                 }
 
                 bbox.shift(shift);

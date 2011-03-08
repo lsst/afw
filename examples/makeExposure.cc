@@ -135,7 +135,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     int miWidth = 5;
     int miHeight = 5;
     afwImage::Exposure<ImagePixel> regWcsExpImage(
-        afwGeom::ExtentI(miWidth, miHeight), 
+        afwGeom::Extent2I(miWidth, miHeight), 
         *myWcsPtr
     );
        
@@ -144,7 +144,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     int mi2Width = 5;
     int mi2Height = 5;
     afwImage::Exposure<ImagePixel> regExpImage(
-        afwGeom::ExtentI(mi2Width, mi2Height)
+        afwGeom::Extent2I(mi2Width, mi2Height)
     );
        
     // try to get the Wcs when there isn't one
@@ -199,9 +199,9 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // the original Exposure's MaskedImage BBox. 
     int subWidth = width - 5;
     int subHeight = height - 5;
-    afwGeom::BoxI subRegion = afwGeom::BoxI(
-        afwGeom::PointI(orx, ory), 
-        afwGeom::ExtentI(subWidth, subHeight)
+    afwGeom::Box2I subRegion = afwGeom::Box2I(
+        afwGeom::Point2I(orx, ory), 
+        afwGeom::Extent2I(subWidth, subHeight)
     );
         
     try {
@@ -221,9 +221,9 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // original Exposure's MaskedImage BBox.  
     int subWidth2 = width + 5;
     int subHeight2 = height + 5;
-    const afwGeom::BoxI subRegion2 = afwGeom::BoxI(
-        afwGeom::PointI(orx, ory), 
-        afwGeom::ExtentI(subWidth2, subHeight2)
+    const afwGeom::Box2I subRegion2 = afwGeom::Box2I(
+        afwGeom::Point2I(orx, ory), 
+        afwGeom::Extent2I(subWidth2, subHeight2)
     ); 
      
     try {

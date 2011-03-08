@@ -47,7 +47,7 @@ namespace afwGeom = lsst::afw::geom;
 afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
     int width,              ///< kernel size (columns)
     int height,             ///< kernel size (rows)
-    afwGeom::PointI const &point   ///< index of active pixel (where 0,0 is the lower left corner)
+    afwGeom::Point2I const &point   ///< index of active pixel (where 0,0 is the lower left corner)
 ) :
     Kernel(width, height, 0),
     _pixel(point)

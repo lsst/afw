@@ -53,7 +53,7 @@ void flattenArray(
     typedef ndarray::Array<U, N-1, D> DestT; 
     BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
 
-    geom::BoxI box = fp.getBBox();
+    geom::Box2I box = fp.getBBox();
     if (src.template getSize<0>() != box.getHeight() || 
         src.template getSize<1>() != box.getWidth()
     ) {
@@ -138,7 +138,7 @@ void expandArray(
     typedef ndarray::Array<U, N+1, D> DestT; 
     BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
 
-    geom::BoxI box(fp.getBBox());
+    geom::Box2I box(fp.getBBox());
     if(dest.template getSize<0>() != box.getHeight() || 
        dest.template getSize<1>() != box.getWidth()) {
         throw LSST_EXCEPT(
@@ -192,7 +192,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     Footprint const & fp,
     ndarray::Array<T, N, C> const & src
 ) {    
-    geom::BoxI box(fp.getBBox());
+    geom::Box2I box(fp.getBBox());
     ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
             ndarray::makeVector(box.getHeight(), box.getWidth()), 

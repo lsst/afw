@@ -173,10 +173,10 @@ namespace image {
         //
         template<typename> friend class DecoratedImage;
         template<typename, typename, typename> friend class MaskedImage;
-        explicit ImageBase(const geom::Extent2I  & dimensions=geom::ExtentI());
-        explicit ImageBase(const geom::BoxI &bbox);
+        explicit ImageBase(const geom::Extent2I  & dimensions=geom::Extent2I());
+        explicit ImageBase(const geom::Box2I &bbox);
         ImageBase(const ImageBase& src, const bool deep=false);
-        explicit ImageBase(const ImageBase& src, const geom::BoxI& bbox, const ImageOrigin origin, const bool deep=false);
+        explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox, const ImageOrigin origin, const bool deep=false);
         /// generalised copy constructor
         ///
         /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
@@ -240,7 +240,7 @@ namespace image {
          * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
-        geom::PointI getXY0() const { return _origin; }
+        geom::Point2I getXY0() const { return _origin; }
         
         /**
          * @brief Convert image position to index (nearest integer and fractional parts)
@@ -274,7 +274,7 @@ namespace image {
         }
         
         /// Return the %image's size;  useful for passing to constructors
-        geom::ExtentI getDimensions() const { return geom::ExtentI(getWidth(), getHeight()); }
+        geom::Extent2I getDimensions() const { return geom::Extent2I(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
 
@@ -338,7 +338,7 @@ namespace image {
          * \note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
-        void setXY0(geom::PointI const origin) {
+        void setXY0(geom::Point2I const origin) {
             _origin=origin;
         }
         /**
@@ -350,16 +350,16 @@ namespace image {
          * don't do so unless you are an Expert.
          */
         void setXY0(int const x0, int const y0) {
-            setXY0(geom::PointI(x0,y0));
+            setXY0(geom::Point2I(x0,y0));
         }
 
-        geom::BoxI getBBox(ImageOrigin origin) const {
+        geom::Box2I getBBox(ImageOrigin origin) const {
             if(origin==PARENT) 
-                return geom::BoxI(_origin, getDimensions());
-            else return geom::BoxI(geom::PointI(0,0), getDimensions());
+                return geom::Box2I(_origin, getDimensions());
+            else return geom::Box2I(geom::Point2I(0,0), getDimensions());
         }
     private:
-        geom::PointI _origin;
+        geom::Point2I _origin;
         Manager::Ptr _manager;
         _view_t _gilView;
 
@@ -369,10 +369,10 @@ namespace image {
 
     protected:
 #if !defined(SWIG)
-        static _view_t _allocateView(geom::ExtentI const & dimensions, Manager::Ptr & manager);
+        static _view_t _allocateView(geom::Extent2I const & dimensions, Manager::Ptr & manager);
         static _view_t _makeSubView(
-            geom::ExtentI const & dimensions, 
-            geom::ExtentI const & offset, 
+            geom::Extent2I const & dimensions, 
+            geom::Extent2I const & offset, 
             const _view_t & view
         );
 
@@ -407,14 +407,15 @@ namespace image {
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
         
-        explicit Image(geom::ExtentI const & dimensions=geom::ExtentI(), PixelT initialValue=0);
-        explicit Image(geom::BoxI const & dimensions, PixelT initialValue=0);
+        explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
+        explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
-        explicit Image(Image const & rhs,geom::BoxI const & bbox, ImageOrigin const origin, const bool deep=false);
+        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin, 
+                       const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                       geom::BoxI const& bbox=geom::BoxI(), 
+                       geom::Box2I const& bbox=geom::Box2I(), 
                        ImageOrigin const origin = LOCAL);
 
         // generalised copy constructor
@@ -493,14 +494,14 @@ namespace image {
         /// shared_ptr to the Image as const
         typedef typename Image<PixelT>::ConstPtr ImageConstPtr;
 
-        explicit DecoratedImage(const geom::ExtentI & dimensions=geom::ExtentI());
-        explicit DecoratedImage(const geom::BoxI & bbox);
+        explicit DecoratedImage(const geom::Extent2I & dimensions=geom::Extent2I());
+        explicit DecoratedImage(const geom::Box2I & bbox);
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(
             std::string const& fileName, 
             const int hdu=0, 
-            geom::BoxI const& bbox=geom::BoxI(), 
+            geom::Box2I const& bbox=geom::Box2I(), 
             ImageOrigin const origin = LOCAL
         );
 
@@ -517,7 +518,7 @@ namespace image {
         int getY0() const { return _image->getY0(); }
 
         /// Return the %image's size;  useful for passing to constructors
-        const geom::ExtentI getDimensions() const { return _image->getDimensions(); }
+        const geom::Extent2I getDimensions() const { return _image->getDimensions(); }
 
         void swap(DecoratedImage &rhs);
         

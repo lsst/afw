@@ -109,7 +109,7 @@ namespace {
 /************************************************************************************************************/
 
 int main() {
-    image::MaskedImage<ImagePixelT> img(geom::ExtentI(3, 5));
+    image::MaskedImage<ImagePixelT> img(geom::Extent2I(3, 5));
     *img.getImage() = 100;
     *img.getMask() = 0x10;
     *img.getVariance() = 10;

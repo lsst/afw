@@ -42,7 +42,7 @@ public:
     typedef typename image::MaskedImage<EntryT>::Pixel Pixel;
     
     explicit MaskedVector(int width=0) : //, MaskPlaneDict const& planeDict=MaskPlaneDict()) :
-        image::MaskedImage<EntryT>(geom::ExtentI(width, 1)) {} //, planeDict) {}
+        image::MaskedImage<EntryT>(geom::Extent2I(width, 1)) {} //, planeDict) {}
 
     // Getters
     /// Return a (Ptr to) the MaskedImage's %image

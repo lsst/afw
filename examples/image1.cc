@@ -40,7 +40,7 @@ typedef afwImage::Image<int> ImageT;
 int main() {
 
     // Declare an Image; its pixels are not yet initialized.
-    ImageT img(afwGeom::ExtentI(10, 6));
+    ImageT img(afwGeom::Extent2I(10, 6));
 
     // Initialize all pixels to a given value.
     img = 100;

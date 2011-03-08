@@ -46,7 +46,7 @@ namespace geom = lsst::afw::geom;
 /************************************************************************************************************/
 template <typename PixelT>
 typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateView(
-    geom::ExtentI const & dimensions,
+    geom::Extent2I const & dimensions,
     Manager::Ptr & manager
 ) {    
     std::pair<Manager::Ptr,PixelT*> r = ndarray::SimpleManager<PixelT>::allocate(
@@ -61,7 +61,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateVi
 }
 template <typename PixelT>
 typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubView(
-    geom::ExtentI const & dimensions, geom::ExtentI const & offset, const _view_t & view
+    geom::Extent2I const & dimensions, geom::Extent2I const & offset, const _view_t & view
 ) {
     if (offset.getX() < 0 || offset.getY() < 0 ||
         offset.getX() + dimensions.getX() > view.width() || 
@@ -91,7 +91,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
  */
 template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
-    geom::ExtentI const & dimensions
+    geom::Extent2I const & dimensions
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _origin(0,0), _manager(),
     _gilView(_allocateView(dimensions, _manager))
@@ -104,7 +104,7 @@ image::ImageBase<PixelT>::ImageBase(
  */
 template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
-    geom::BoxI const & bbox
+    geom::Box2I const & bbox
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _origin(bbox.getMin()), _manager(),
     _gilView(_allocateView(bbox.getDimensions(), _manager))
@@ -145,13 +145,13 @@ image::ImageBase<PixelT>::ImageBase(
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     ImageBase const& rhs, ///< Right-hand-side %image
-    geom::BoxI const& bbox,     ///< Specify desired region
+    geom::Box2I const& bbox,     ///< Specify desired region
     ImageOrigin const origin,   ///< Specify the coordinate system of the bbox
     bool const deep       ///< If false, new ImageBase shares storage with rhs;
                           ///< if true make a new, standalone, ImageBase
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _origin((origin==PARENT) ? bbox.getMin(): rhs._origin + geom::ExtentI(bbox.getMin())),
+    _origin((origin==PARENT) ? bbox.getMin(): rhs._origin + geom::Extent2I(bbox.getMin())),
     _manager(rhs._manager), // reference counted pointer, don't copy pixels
     _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
 {
@@ -404,7 +404,7 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(geom::ExtentI const & dimensions, ///< Number of columns, rows
+image::Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of columns, rows
                             PixelT initialValue ///< Initial value
                            ) :
     image::ImageBase<PixelT>(dimensions) 
@@ -416,7 +416,7 @@ image::Image<PixelT>::Image(geom::ExtentI const & dimensions, ///< Number of col
  * Create an initialized Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(geom::BoxI const & bbox, //< (width, height) and origin of desired Image
+image::Image<PixelT>::Image(geom::Box2I const & bbox, //< (width, height) and origin of desired Image
                             PixelT initialValue ///< Initial value
                            ) :
     image::ImageBase<PixelT>(bbox) {
@@ -446,7 +446,7 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
  */
 template<typename PixelT>
 image::Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
-                            geom::BoxI const& bbox,  ///< Specify desired region
+                            geom::Box2I const& bbox,  ///< Specify desired region
                             ImageOrigin const origin,
                             bool const deep    ///< If false, new ImageBase shares storage with rhs; if true
                                                    ///< make a new, standalone, ImageBase
@@ -486,7 +486,7 @@ template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
                             lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
-                            geom::BoxI const& bbox,                           ///< Only read these pixels
+                            geom::Box2I const& bbox,                           ///< Only read these pixels
                             ImageOrigin const origin    ///< specify the coordinate system of the bbox
                            ) :
     image::ImageBase<PixelT>() {

@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(RowColumnStats) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     // fill an image with a gradient
     std::vector<float> column(n, 0.0);
     std::vector<float> row(n, 0.0);
-    ImageF::Ptr img = ImageF::Ptr (new ImageF(geom::ExtentI(n, n), 0));
+    ImageF::Ptr img = ImageF::Ptr (new ImageF(geom::Extent2I(n, n), 0));
     for (int y = 0; y < img->getHeight(); ++y) {
         int x = 0;
         for (ImageF::x_iterator ptr = img->row_begin(y), end = img->row_end(y); ptr != end; ++ptr, ++x) {

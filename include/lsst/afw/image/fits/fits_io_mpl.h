@@ -54,7 +54,7 @@ public:
                         lsst::afw::geom::Point2I & xy0,
                         lsst::daf::base::PropertySet::Ptr metadata,
                         int hdu,
-                        lsst::afw::geom::BoxI const& bbox,
+                        lsst::afw::geom::Box2I const& bbox,
                         lsst::afw::image::ImageOrigin const origin
     ) : _file(file), _array(array), _xy0(xy0), 
         _metadata(metadata), _hdu(hdu), _bbox(bbox), _origin(origin) { }
@@ -88,7 +88,7 @@ private:
     lsst::afw::geom::Point2I & _xy0;
     lsst::daf::base::PropertySet::Ptr _metadata;
     int _hdu;
-    lsst::afw::geom::BoxI const& _bbox;
+    lsst::afw::geom::Box2I const& _bbox;
     lsst::afw::image::ImageOrigin _origin;
 };
 
@@ -100,7 +100,7 @@ bool fits_read_image(
     std::string const& file, ImageT& img,
     lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
     int hdu=0,
-    geom::BoxI const& bbox = geom::BoxI(),
+    geom::Box2I const& bbox = geom::Box2I(),
     ImageOrigin const origin = LOCAL
 ) {
     lsst::ndarray::Array<typename ImageT::Pixel,2,1> array;

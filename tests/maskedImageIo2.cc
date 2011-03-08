@@ -46,7 +46,7 @@ void test(char *name) {
     typedef float ImagePixelType;
 
     int const hdu = 0;
-    geom::BoxI bbox;
+    geom::Box2I bbox;
     PropertySet::Ptr metadata;
     bool const conformMask = true;      // use mask definitions from the file
     image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(

@@ -228,7 +228,7 @@ namespace math {
          * Constructor
          */
         SpatialCell(std::string const& label,
-                    lsst::afw::geom::BoxI const& bbox=lsst::afw::geom::BoxI(),
+                    lsst::afw::geom::Box2I const& bbox=lsst::afw::geom::Box2I(),
                     CandidateList const& candidateList=CandidateList());
         
         /**
@@ -275,7 +275,7 @@ namespace math {
         /**
          * Get SpatialCell's BBox
          */
-        lsst::afw::geom::BoxI const& getBBox() const { return _bbox; }
+        lsst::afw::geom::Box2I const& getBBox() const { return _bbox; }
         /*
          * Visit our candidates
          */
@@ -290,7 +290,7 @@ namespace math {
 
     private:
         std::string _label;             // Name of cell for logging/trace
-        lsst::afw::geom::BoxI _bbox;   // Bounding box of cell in overall image
+        lsst::afw::geom::Box2I _bbox;   // Bounding box of cell in overall image
         CandidateList _candidateList;   // List of all candidates in the cell
         bool _ignoreBad;                // Don't include BAD candidates when traversing the list
     };
@@ -305,7 +305,7 @@ namespace math {
         
         typedef std::vector<SpatialCell::Ptr> CellList;
 
-        SpatialCellSet(lsst::afw::geom::BoxI const& region, int xSize, int ySize=0);
+        SpatialCellSet(lsst::afw::geom::Box2I const& region, int xSize, int ySize=0);
         
         /**
          * Destructor
@@ -333,7 +333,7 @@ namespace math {
         void setIgnoreBad(bool ignoreBad);
 
     private:
-        lsst::afw::geom::BoxI _region;   // Dimensions of overall image
+        lsst::afw::geom::Box2I _region;   // Dimensions of overall image
         CellList _cellList;               // List of SpatialCells
     };
 }}}

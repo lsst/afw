@@ -63,8 +63,8 @@ public:
             return;
         }
 
-        geom::BoxI const bbox = foot.getBBox();
-        geom::BoxI region = foot.getRegion();
+        geom::Box2I const bbox = foot.getBBox();
+        geom::Box2I region = foot.getRegion();
         if (!region.isEmpty() &&
             (!region.contains(bbox.getMin()) || !region.contains(bbox.getMax()))) {
             throw LSST_EXCEPT(

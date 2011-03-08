@@ -47,7 +47,7 @@ namespace image = lsst::afw::image;
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    geom::ExtentI const & dimensions, //!< Number of columns, rows in image
+    geom::Extent2I const & dimensions, //!< Number of columns, rows in image
     MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -69,7 +69,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    geom::BoxI const & bbox, //!< dimensions of image: width x height
+    geom::Box2I const & bbox, //!< dimensions of image: width x height
     MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -96,7 +96,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     std::string const& baseName,    //!< The file's baseName (e.g. foo reads foo_{img.msk.var}.fits)
     const int hdu,                  //!< The HDU in the file (default: 1)
     lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
-    geom::BoxI const& bbox,                           //!< Only read these pixels
+    geom::Box2I const& bbox,                           //!< Only read these pixels
     ImageOrigin const origin,
     bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
     bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
@@ -268,7 +268,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     MaskedImage const& rhs,
-    const geom::BoxI& bbox,
+    const geom::Box2I& bbox,
     ImageOrigin const origin,
     bool deep
 ) :

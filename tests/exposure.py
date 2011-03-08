@@ -246,7 +246,7 @@ class ExposureTestCase(unittest.TestCase):
         #
         # This subExposure is valid
         #
-        subBBox = afwGeom.BoxI(afwGeom.PointI(40, 50), afwGeom.ExtentI(10, 10))
+        subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
         
         self.checkWcs(self.exposureCrWcs, subExposure)
@@ -255,7 +255,7 @@ class ExposureTestCase(unittest.TestCase):
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
         
-        subRegion3 = afwGeom.BoxI(afwGeom.PointI(100, 100), afwGeom.ExtentI(10, 10))
+        subRegion3 = afwGeom.Box2I(afwGeom.Point2I(100, 100), afwGeom.Extent2I(10, 10))
         def getSubRegion():
             self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3, afwImage.LOCAL)
 
@@ -265,14 +265,14 @@ class ExposureTestCase(unittest.TestCase):
         # from the MaskedImage class only for the MaskedImage small_MI.
         # small_MI (cols, rows) = (256, 256) 
 
-        subRegion4 = afwGeom.BoxI(afwGeom.PointI(250, 250), afwGeom.ExtentI(10, 10))
+        subRegion4 = afwGeom.Box2I(afwGeom.Point2I(250, 250), afwGeom.Extent2I(10, 10))
         def getSubRegion():
             self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4, afwImage.LOCAL)
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
         #check the sub- and parent- exposures are using the same Wcs transformation
-        subBBox = afwGeom.BoxI(afwGeom.PointI(40, 50), afwGeom.ExtentI(10, 10))
+        subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
         parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
         
@@ -290,7 +290,7 @@ class ExposureTestCase(unittest.TestCase):
         mainExposure = afwImage.ExposureF(inFilePathSmall)
         mainExposure.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         
-        subBBox = afwGeom.BoxI(afwGeom.PointI(10, 10), afwGeom.ExtentI(40, 50))
+        subBBox = afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.Extent2I(40, 50))
         subExposure = mainExposure.Factory(mainExposure, subBBox, afwImage.LOCAL)
         self.checkWcs(mainExposure, subExposure)
         det = subExposure.getDetector()
@@ -366,7 +366,7 @@ class ExposureTestCase(unittest.TestCase):
 
         self.assertEqual(exposureU.getDetector(), exposureF.getDetector())
         self.assertEqual(exposureU.getFilter().getName(), exposureF.getFilter().getName())
-        xy = afwGeom.PointD(0, 0)
+        xy = afwGeom.Point2D(0, 0)
         self.assertEqual(exposureU.getWcs().pixelToSky(xy)[0], exposureF.getWcs().pixelToSky(xy)[0])
         self.assertEqual(exposureU.getCalib().getExptime(), exposureF.getCalib().getExptime())
 

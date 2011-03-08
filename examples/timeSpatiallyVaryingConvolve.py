@@ -107,7 +107,7 @@ def getDeltaLinearCombinationKernel(kSize, imSize, spOrder):
     kernelList = afwMath.KernelList()
     for ctrX in range(kSize):
         for ctrY in range(kSize):
-            kernelList.append(afwMath.DeltaFunctionKernel(kSize, kSize, afwGeom.PointI(ctrX, ctrY)))
+            kernelList.append(afwMath.DeltaFunctionKernel(kSize, kSize, afwGeom.Point2I(ctrX, ctrY)))
             
     polyFunc = afwMath.PolynomialFunction2D(spOrder)
     kernel = afwMath.LinearCombinationKernel(kernelList, polyFunc)
@@ -201,7 +201,7 @@ def run():
         inImage = afwImage.MaskedImageF(InputMaskedImagePath)
         # to get original behavior change True to False:
         if (False):
-            bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(256, 256))
+            bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(256, 256))
             inImage = afwImage.MaskedImageF(inImage, bbox, afwImage.LOCAL, False)
     else:
         inImage = afwImage.MaskedImageF(sys.argv[1])

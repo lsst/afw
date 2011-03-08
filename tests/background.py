@@ -63,7 +63,7 @@ class BackgroundTestCase(unittest.TestCase):
     """A test case for Background"""
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(afwGeom.ExtentI(100, 200))
+        self.image = afwImage.ImageF(afwGeom.Extent2I(100, 200))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -147,7 +147,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make a ramping image (spline should be exact for linear increasing image
         nx = 512
         ny = 512
-        rampimg = afwImage.ImageD(afwGeom.ExtentI(nx, ny))
+        rampimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
 
         for x in range(nx):
@@ -176,7 +176,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         nx = 512
         ny = 512
-        parabimg = afwImage.ImageD(afwGeom.ExtentI(nx, ny))
+        parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
 
         for x in range(nx):
@@ -216,7 +216,7 @@ class BackgroundTestCase(unittest.TestCase):
 
         mi = afwImage.MaskedImageF(os.path.join(eups.productDir("afwdata"),
                                                 "CFHT", "D4", "cal-53535-i-797722_1"))
-        mi = mi.Factory(mi, afwGeom.BoxI(afwGeom.PointI(32, 2), afwGeom.PointI(2079, 4609)), afwImage.LOCAL)
+        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
         bctrl.setNxSample(16)
@@ -241,7 +241,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make an image
         nx = 64
         ny = 64
-        img = afwImage.ImageD(afwGeom.ExtentI(nx, ny))
+        img = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         
         # make a background control object
         bctrl = afwMath.BackgroundControl()
@@ -277,7 +277,7 @@ class BackgroundTestCase(unittest.TestCase):
         # try a ramping image ... has an easy analytic solution
         nx = 64
         ny = 64
-        img = afwImage.ImageD(afwGeom.ExtentI(nx, ny), 10)
+        img = afwImage.ImageD(afwGeom.Extent2I(nx, ny), 10)
         
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
         mean = z0 + dzdx*(nx - 1)/2 + dzdy*(ny - 1)/2  # the analytic solution

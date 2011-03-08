@@ -69,7 +69,7 @@ void linearTransformExample(){
     cout << "rotation+scaling LinearTransform parameters: " << c.getVector() << endl;
     
     //create a point, and duplicate it as an extent
-    afwGeom::Point2D point = afwGeom::PointD(3.0, 4.5);
+    afwGeom::Point2D point = afwGeom::Point2D(3.0, 4.5);
     afwGeom::Extent2D extent(point);
 
     //apply the LinearTransforms to points and extents. Because there is no 
@@ -102,7 +102,7 @@ void affineTransformExample() {
     cout << "rotation AffineTransform parameters: " << r.getVector() << endl;
   
     //copy construct a translation transform
-    afwGeom::AffineTransform t = afwGeom::AffineTransform::makeTranslation(afwGeom::ExtentD(15.0, 10.3));
+    afwGeom::AffineTransform t = afwGeom::AffineTransform::makeTranslation(afwGeom::Extent2D(15.0, 10.3));
     cout << "translation AffineTransform matrix: "<< t.getMatrix() << endl;
     cout << "translation AffineTransform parameters: " << t.getVector() << endl;
 
@@ -119,7 +119,7 @@ void affineTransformExample() {
 
 
     //create a point, and duplicate it as an extent
-    afwGeom::Point2D point = afwGeom::PointD(3.0, 4.5);
+    afwGeom::Point2D point = afwGeom::Point2D(3.0, 4.5);
     afwGeom::Extent2D extent(point);
 
     //apply the LinearTransforms to points and extents. Because there a
@@ -141,11 +141,11 @@ void affineTransformExample() {
 void wcsExample() {
     //initialize a trivial WCS for examples
     lsst::afw::image::Wcs wcs(
-        lsst::afw::image::PointD(35, 45), 
-        lsst::afw::image::PointD(0.0,0.0),
+        lsst::afw::image::Point2D(35, 45), 
+        lsst::afw::image::Point2D(0.0,0.0),
         Eigen::Matrix2d::Identity()
     );
-    afwGeom::PointD point = afwGeom::PointD(35, 45);
+    afwGeom::Point2D point = afwGeom::Point2D(35, 45);
 
     //We can obtain the linear approximation of a WCS at a point as an
     //AffineTransform

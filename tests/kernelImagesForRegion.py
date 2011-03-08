@@ -52,10 +52,10 @@ NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.iteritems())
 
 class KernelImagesForRegion(unittest.TestCase):
     def setUp(self):
-        boxCorner = afwGeom.PointI(11, 50)
-        boxExtent = afwGeom.ExtentI(100, 99)
-        self.bbox = afwGeom.BoxI(boxCorner, boxExtent)
-        self.xy0 = afwGeom.PointI(100, 251)
+        boxCorner = afwGeom.Point2I(11, 50)
+        boxExtent = afwGeom.Extent2I(100, 99)
+        self.bbox = afwGeom.Box2I(boxCorner, boxExtent)
+        self.xy0 = afwGeom.Point2I(100, 251)
         self.kernel = self.makeKernel()
 
     def tearDown(self):
@@ -137,7 +137,7 @@ class KernelImagesForRegion(unittest.TestCase):
             (region.TOP_LEFT,     (leftInd,  topInd)),
             (region.TOP_RIGHT,    (rightInd, topInd)),
         ):
-            desPixIndex = afwGeom.PointI(desIndex[0], desIndex[1])
+            desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
             self.assert_(region.getPixelIndex(location) == desPixIndex,
                 "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
                     desPixIndex)

@@ -42,7 +42,7 @@ void image::DecoratedImage<PixelT>::init() {
 /// Create an %image of the specified size
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    geom::ExtentI const & dimensions ///< desired number of columns. rows
+    geom::Extent2I const & dimensions ///< desired number of columns. rows
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image<PixelT>(dimensions))
@@ -56,7 +56,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    geom::BoxI const & bbox // (width, height) and origin of the desired Image
+    geom::Box2I const & bbox // (width, height) and origin of the desired Image
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image<PixelT>(bbox))
@@ -136,7 +136,7 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
                                               const int hdu,               ///< The HDU to read
-                                              geom::BoxI const& bbox,      ///< Only read these pixels
+                                              geom::Box2I const& bbox,      ///< Only read these pixels
                                               ImageOrigin const origin
                                              ) :
     lsst::daf::data::LsstBase(typeid(this))

@@ -39,7 +39,7 @@ typedef image::Image<float> ImageF;
 int main() {
 
     // First we'll try a regular image
-    ImageF img(geom::ExtentI(10, 40));
+    ImageF img(geom::Extent2I(10, 40));
     img = 100000.0;
     
     {

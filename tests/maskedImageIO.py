@@ -93,7 +93,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform(self):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
-        hdu, metadata, bbox, conformMasks = 0, None, afwGeom.BoxI(), True
+        hdu, metadata, bbox, conformMasks = 0, None, afwGeom.Box2I(), True
         self.mi = afwImage.MaskedImageF(self.baseName, hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         image = self.mi.getImage()
@@ -115,7 +115,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform2(self):
         """Check that conforming a mask invalidates the plane dictionary"""
 
-        hdu, metadata, bbox, conformMasks = 0, None, afwGeom.BoxI(), True
+        hdu, metadata, bbox, conformMasks = 0, None, afwGeom.Box2I(), True
         testMask = afwImage.MaskU(afwImage.MaskedImageF_maskFileName(self.baseName),
                                   hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 

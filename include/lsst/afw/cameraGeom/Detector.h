@@ -123,15 +123,15 @@ public:
     virtual afwGeom::Extent2D getSize() const;
 
     /// Return Detector's total footprint
-    virtual afwGeom::BoxI& getAllPixels() {
+    virtual afwGeom::Box2I& getAllPixels() {
         return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     /// Return Detector's total footprint
-    virtual afwGeom::BoxI const& getAllPixels() const {
+    virtual afwGeom::Box2I const& getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
     /// Return Detector's total footprint
-    virtual afwGeom::BoxI const& getAllPixels(bool isTrimmed ///< Has the bias/overclock have been removed?
+    virtual afwGeom::Box2I const& getAllPixels(bool isTrimmed ///< Has the bias/overclock have been removed?
                                               ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
@@ -183,20 +183,20 @@ protected:
         return shared_from_this();
     }
 
-    afwGeom::BoxI& getAllTrimmedPixels() {
+    afwGeom::Box2I& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
 private:
     Id _id;
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?
-    afwGeom::BoxI _allPixels;          // Bounding box of all the Detector's pixels
+    afwGeom::Box2I _allPixels;          // Bounding box of all the Detector's pixels
     bool _hasTrimmablePixels;           // true iff Detector has pixels that can be trimmed (e.g. a CCD)
     double _pixelSize;                  // Size of a pixel in mm
     afwGeom::Point2I _centerPixel;      // the pixel defined to be the centre of the Detector
     Orientation _orientation;           // orientation of this Detector
     afwGeom::Point2D _center;           // position of _centerPixel (mm)
     afwGeom::Extent2D _size;            // Size in mm of this Detector
-    afwGeom::BoxI _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
+    afwGeom::Box2I _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
     boost::weak_ptr<Detector> _parent;  // Parent Detector in the hierarchy
 
     std::vector<afwImage::DefectBase::Ptr> _defects; // Defects in this detector
@@ -213,8 +213,8 @@ namespace detail {
     /**
      * Rotate a BBox about the center of some larger region by a multiple of 90 degrees 
      */
-    afwGeom::BoxI rotateBBoxBy90(
-            afwGeom::BoxI const& bbox,         ///< the BBox to rotate
+    afwGeom::Box2I rotateBBoxBy90(
+            afwGeom::Box2I const& bbox,         ///< the BBox to rotate
             int n90,                            ///< number of 90-degree anti-clockwise turns to make
             afwGeom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
                                  );

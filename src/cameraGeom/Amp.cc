@@ -46,9 +46,9 @@ cameraGeom::ElectronicParams::ElectronicParams(
 
 cameraGeom::Amp::Amp(
     cameraGeom::Id id,                            ///< The amplifier's ID
-    afwGeom::BoxI const& allPixels,           ///< Bounding box of the pixels read off this amplifier
-    afwGeom::BoxI const& biasSec,             ///< Bounding box of amplifier's bias section
-    afwGeom::BoxI const& dataSec,             ///< Bounding box of amplifier's data section
+    afwGeom::Box2I const& allPixels,           ///< Bounding box of the pixels read off this amplifier
+    afwGeom::Box2I const& biasSec,             ///< Bounding box of amplifier's bias section
+    afwGeom::Box2I const& dataSec,             ///< Bounding box of amplifier's data section
     cameraGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
     ElectronicParams::Ptr eParams              ///< electronic properties of Amp
 ) : Detector(id, true),
@@ -102,9 +102,9 @@ void cameraGeom::Amp::setTrimmedGeom() {
     int const dataHeight = _dataSec.getHeight();
     int const dataWidth = _dataSec.getWidth();
 
-    _trimmedDataSec = afwGeom::BoxI(
-        afwGeom::PointI(iX*dataWidth, iY*dataHeight), 
-        afwGeom::ExtentI(dataWidth, dataHeight)
+    _trimmedDataSec = afwGeom::Box2I(
+        afwGeom::Point2I(iX*dataWidth, iY*dataHeight), 
+        afwGeom::Extent2I(dataWidth, dataHeight)
     );
     getAllTrimmedPixels() = _trimmedDataSec;
 }
@@ -113,7 +113,7 @@ void cameraGeom::Amp::setTrimmedGeom() {
 void cameraGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
                             int dy         ///< How much to offset in y (pixels)
                         ) {
-    geom::ExtentI d(dx,dy);
+    geom::Extent2I d(dx,dy);
     getAllPixels().shift(d);
     _biasSec.shift(d);
     _dataSec.shift(d);
@@ -154,10 +154,10 @@ void cameraGeom::Amp::rotateBy90(
  *
  * This is intended to be used when each amp is in its separate file (or HDU) on disk
  */
-lsst::afw::geom::BoxI cameraGeom::Amp::_mapToDisk(lsst::afw::geom::BoxI bbox) const {
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) const {
     // Reset the BBox's origin within the Detector to reflect the on-disk value
 
-    bbox.shift(-geom::ExtentI(_originOnDisk));
+    bbox.shift(-geom::Extent2I(_originOnDisk));
     // Rotate the BBox to reflect the on-disk orientation
     afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
     return cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);

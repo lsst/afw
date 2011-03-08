@@ -79,22 +79,22 @@ public:
 
     // Constructors        
     explicit Mask(
-        geom::ExtentI const & dimensions=geom::ExtentI(),
+        geom::Extent2I const & dimensions=geom::Extent2I(),
         MaskPlaneDict const& planeDefs = MaskPlaneDict()
     );
     explicit Mask(
-        geom::ExtentI const & dimensions, 
+        geom::Extent2I const & dimensions, 
         MaskPixelT initialValue, 
         MaskPlaneDict const& planeDefs = MaskPlaneDict()
     );
-    explicit Mask(geom::BoxI const & bbox,
+    explicit Mask(geom::Box2I const & bbox,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
-    explicit Mask(geom::BoxI const & bbox, MaskPixelT initialValue,
+    explicit Mask(geom::Box2I const & bbox, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     explicit Mask(
         std::string const& fileName, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::BoxI const& bbox=geom::BoxI(), 
+        geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const = LOCAL, 
         bool const conformMasks=false
     );           
@@ -107,7 +107,7 @@ public:
     Mask(const Mask& src, const bool deep=false);
     Mask(
         const Mask& src, 
-        const geom::BoxI & bbox,  
+        const geom::Box2I & bbox,  
         ImageOrigin const origin, 
         const bool deep=false
     );

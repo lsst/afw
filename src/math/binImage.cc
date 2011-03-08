@@ -54,7 +54,7 @@ typename ImageT::Ptr binImage(ImageT const& in,  ///< The %image to bin
     int const outHeight = in.getHeight()/binsize;
 
     typename ImageT::Ptr out = typename ImageT::Ptr(
-        new ImageT(geom::ExtentI(outWidth, outHeight))
+        new ImageT(geom::Extent2I(outWidth, outHeight))
     );
     *out = typename ImageT::SinglePixel(0);
 

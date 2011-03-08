@@ -135,7 +135,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
 template<typename ImagePixelT, typename MaskPixelT>
 static void findFootprints(
         typename detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintList *_footprints, // Footprints
-        geom::BoxI const& _region,            // BBox of pixels that are being searched
+        geom::Box2I const& _region,            // BBox of pixels that are being searched
         image::Image<ImagePixelT> const &img,  // Image to search for objects
         detection::Threshold const &threshold, // threshold to find objects
         int const npixMin                      // minimum number of pixels in an object
@@ -301,7 +301,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         int const npixMin              //!< minimum number of pixels in an object
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
-    _region(geom::PointI(img.getX0(), img.getY0()), geom::ExtentI(img.getWidth(), img.getHeight()))
+    _region(geom::Point2I(img.getX0(), img.getY0()), geom::Extent2I(img.getWidth(), img.getHeight()))
 {
     findFootprints<ImagePixelT, MaskPixelT>(
         _footprints.get(), 
@@ -333,8 +333,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
     _region(
-        geom::PointI(maskedImg.getX0(), maskedImg.getY0()),
-        geom::ExtentI(maskedImg.getWidth(), maskedImg.getHeight())
+        geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
+        geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())
     )
 {
     // Find the Footprints    
@@ -398,8 +398,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     std::vector<Peak> const *       //!< Footprint should include at most one of these peaks
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
-    _region(geom::PointI(img.getX0(), img.getY0()),
-            geom::ExtentI(img.getWidth(), img.getHeight())) 
+    _region(geom::Point2I(img.getX0(), img.getY0()),
+            geom::Extent2I(img.getWidth(), img.getHeight())) 
 {}
 
 
@@ -833,7 +833,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::operator=(FootprintSet const& 
 //
 template<typename ImagePixelT, typename MaskPixelT>
 void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(
-    geom::BoxI const& region // desired region
+    geom::Box2I const& region // desired region
 ) {
     _region = region;
     typename FootprintSet::FootprintList footprintList = getFootprints();
@@ -869,7 +869,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     }
 
     typedef unsigned short ImageT;
-    geom::BoxI region = rhs.getRegion();
+    geom::Box2I region = rhs.getRegion();
     image::Image<ImageT>::Ptr idImage(
         new image::Image<ImageT>(region)
     );

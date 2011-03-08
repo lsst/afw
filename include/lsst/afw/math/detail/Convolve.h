@@ -137,12 +137,12 @@ namespace detail {
     
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
-                lsst::afw::geom::BoxI const &bbox,
+                lsst::afw::geom::Box2I const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize);
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
-                lsst::afw::geom::BoxI const &bbox,
+                lsst::afw::geom::Box2I const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize,
                 ImagePtr bottomLeftImagePtr,
@@ -153,7 +153,7 @@ namespace detail {
         /** 
          * Get the bounding box for the region
          */
-        lsst::afw::geom::BoxI getBBox() const { return _bbox; };
+        lsst::afw::geom::Box2I getBBox() const { return _bbox; };
         /**
          * Get xy0 of the image
          */
@@ -187,7 +187,7 @@ namespace detail {
 
         // member variables
         KernelConstPtr _kernelPtr;
-        lsst::afw::geom::BoxI _bbox;
+        lsst::afw::geom::Box2I _bbox;
         lsst::afw::geom::Point2I _xy0;
         bool _doNormalize;
         mutable std::vector<ImagePtr> _imagePtrList;
@@ -264,7 +264,7 @@ namespace detail {
     struct ConvolveWithInterpolationWorkingImages {
     public:
         typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
-        ConvolveWithInterpolationWorkingImages(geom::ExtentI const & dimensions) :
+        ConvolveWithInterpolationWorkingImages(geom::Extent2I const & dimensions) :
             leftImage(dimensions),
             rightImage(dimensions),
             leftDeltaImage(dimensions),

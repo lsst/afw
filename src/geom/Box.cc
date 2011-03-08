@@ -459,3 +459,13 @@ bool geom::Box2D::operator!=(Box2D const & other) const {
     return !(other.isEmpty() && other.isEmpty()) &&
         (other._minimum != this->_minimum || other._maximum != this->_maximum);
 }
+
+std::ostream & geom::operator<<(std::ostream & os, geom::Box2I const & box) {
+    if (box.isEmpty()) return os << "Box2I()";
+    return os << "Box2I(Point2I" << box.getMin() << ", Extent2I" << box.getDimensions() << ")";
+}
+
+std::ostream & geom::operator<<(std::ostream & os, geom::Box2D const & box) {
+    if (box.isEmpty()) return os << "Box2D()";
+    return os << "Box2D(Point2D" << box.getMin() << ", Extent2D" << box.getDimensions() << ")";
+}

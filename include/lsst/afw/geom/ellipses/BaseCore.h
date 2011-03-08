@@ -145,7 +145,7 @@ public:
     //@}
 
     /// @brief Return the size of the bounding box for the ellipse core.
-    ExtentD computeDimensions() const;
+    Extent2D computeDimensions() const;
 
     virtual void readParameters(double const * iter) = 0;
 

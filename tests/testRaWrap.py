@@ -48,7 +48,7 @@ class WCSTestRaWrap(unittest.TestCase):
         crval = wcs1.getSkyOrigin()
         cd = wcs1.getCDMatrix()
         print cd
-        crval_p = afwGeom.PointD(crval.getLongitude(afwCoord.DEGREES), 
+        crval_p = afwGeom.Point2D(crval.getLongitude(afwCoord.DEGREES), 
                                  crval.getLatitude(afwCoord.DEGREES))
         origin = wcs1.getPixelOrigin()
         print crval_p
@@ -62,7 +62,7 @@ class WCSTestRaWrap(unittest.TestCase):
                 radec = wcs.pixelToSky(x,y)
                 ra  = radec.getLongitude(afwCoord.DEGREES)
                 dec = radec.getLatitude (afwCoord.DEGREES)
-                pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.PointD(x,y)))
+                pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.Point2D(x,y)))
                 ps2 = wcs.pixelScale()
                 print x,y,ra,dec,pixscale,ps2
                 self.assertTrue(abs(pixscale - 0.2) < 1e-3)

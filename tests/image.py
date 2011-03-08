@@ -96,7 +96,7 @@ class ImageTestCase(unittest.TestCase):
             im = ctor(afwGeom.Extent2I(10, 10), val)
             self.assertEqual(im.get(0, 0), val)
 
-            im2 = ctor(afwGeom.BoxI(afwGeom.Point2I(0,0), afwGeom.Extent2I(10, 10)), val)
+            im2 = ctor(afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(10, 10)), val)
             self.assertEqual(im2.get(0, 0), val)
 
     def testSetGetImages(self):
@@ -273,13 +273,13 @@ class ImageTestCase(unittest.TestCase):
     def testSubimages(self):
         simage1 = afwImage.ImageF(
             self.image1, 
-            afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL)
         
         
         simage = afwImage.ImageF(
                 simage1, 
-                afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+                afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
                 afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 2)
@@ -298,18 +298,18 @@ class ImageTestCase(unittest.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.image1.set(9, 4, 888)
-        #printImg(afwImage.ImageF(self.image1, afwGeom.BoxI(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
+        #printImg(afwImage.ImageF(self.image1, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         simage1 = afwImage.ImageF(
             self.image1, 
-            afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
         )
         simage1.setXY0(afwGeom.Point2I(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
         simage = afwImage.ImageF(
             simage1, 
-            afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 1)
@@ -328,7 +328,7 @@ class ImageTestCase(unittest.TestCase):
         def tst():
             simage1 = afwImage.ImageF(
                 self.image1, 
-                afwGeom.BoxI(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
+                afwGeom.Box2I(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
                 afwImage.LOCAL
             )
 
@@ -507,7 +507,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         image        = afwImage.ImageD(afwGeom.Extent2I(6, 6))
         image.set(2, 2, 100)
 
-        bbox    = afwGeom.BoxI(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
+        bbox    = afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
         subImage = image.Factory(image, bbox, afwImage.LOCAL)
         subImageF = subImage.convertFloat()
         

@@ -84,7 +84,7 @@ Ellipse::GridTransform::d() const {
 
 Ellipse::GridTransform::operator AffineTransform () const {
     LinearTransform linear = _input.getCore().getGridTransform();
-    return AffineTransform(linear, linear(PointD() - _input.getCenter()));
+    return AffineTransform(linear, linear(Point2D() - _input.getCenter()));
 }
 
 }}}} // namespace lsst::afw::geom::ellipses

@@ -205,7 +205,7 @@ class FootprintTestCase(unittest.TestCase):
     def testFootprintFromBBox1(self):
         """Create a rectangular Footprint"""
         x0, y0, w, h = 9, 10, 7, 4
-        foot = afwDetect.Footprint(afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(w, h)))
+        foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(w, h)))
 
         bbox = foot.getBBox()
 
@@ -228,11 +228,11 @@ class FootprintTestCase(unittest.TestCase):
         """Check that Footprint.getBBox() returns a copy"""
         
         x0, y0, w, h = 9, 10, 7, 4
-        foot = afwDetect.Footprint(afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(w, h)))
+        foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(w, h)))
         bbox = foot.getBBox()
 
         dx, dy = 10, 20
-        bbox.shift(afwGeom.ExtentI(dx, dy))
+        bbox.shift(afwGeom.Extent2I(dx, dy))
 
         self.assertEqual(bbox.getMinX(), x0 + dx)
         self.assertEqual(foot.getBBox().getMinX(), x0)
@@ -244,7 +244,7 @@ class FootprintTestCase(unittest.TestCase):
                                           afwGeom.Point2D(9,15))
         foot = afwDetect.Footprint(
                 ellipse, 
-                afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(20, 30)))
+                afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30)))
 
         idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
@@ -258,8 +258,8 @@ class FootprintTestCase(unittest.TestCase):
         """Test growing a footprint"""
         x0, y0 = 20, 20
         width, height = 20, 30
-        foot1 = afwDetect.Footprint(afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(width, height)),
-                                    afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(100, 100)))
+        foot1 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(width, height)),
+                                    afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(100, 100)))
         bbox1 = foot1.getBBox()
 
         self.assertEqual(bbox1.getMinX(), x0)
@@ -299,7 +299,7 @@ class FootprintTestCase(unittest.TestCase):
 
     def testFootprintToBBoxList(self):
         """Test footprintToBBoxList"""
-        region = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(12,10))
+        region = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(12,10))
         foot = afwDetect.Footprint(0, region)
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
@@ -340,7 +340,7 @@ class FootprintTestCase(unittest.TestCase):
 
     def testWriteDefect(self):
         """Write a Footprint as a set of Defects"""
-        region = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(12,10))
+        region = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(12,10))
         foot = afwDetect.Footprint(0, region)
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
@@ -362,7 +362,7 @@ class FootprintTestCase(unittest.TestCase):
 
 
         w, h = 12, 10
-        region = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(w,h))
+        region = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(w,h))
         im = afwImage.ImageU(afwGeom.Extent2I(w, h))
         im.set(0)
         #
@@ -441,12 +441,12 @@ class FootprintTestCase(unittest.TestCase):
         #
         # Check Footprint.contains() while we are about it
         #
-        self.assertTrue(objects[0].contains(afwGeom.PointI(7, 5)))
-        self.assertFalse(objects[0].contains(afwGeom.PointI(10, 6)))
-        self.assertFalse(objects[0].contains(afwGeom.PointI(7, 6)))
-        self.assertFalse(objects[0].contains(afwGeom.PointI(4, 2)))
+        self.assertTrue(objects[0].contains(afwGeom.Point2I(7, 5)))
+        self.assertFalse(objects[0].contains(afwGeom.Point2I(10, 6)))
+        self.assertFalse(objects[0].contains(afwGeom.Point2I(7, 6)))
+        self.assertFalse(objects[0].contains(afwGeom.Point2I(4, 2)))
 
-        self.assertTrue(objects[1].contains(afwGeom.PointI(3, 6)))
+        self.assertTrue(objects[1].contains(afwGeom.Point2I(3, 6)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -625,7 +625,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
     def testGrowEmpty(self):
         """Check that growing an empty Footprint doesn't fail an assertion; #1186"""
         fp = afwDetect.Footprint()
-        fp.setRegion(afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(10, 10)))
+        fp.setRegion(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 10)))
         afwDetect.growFootprint(fp, 5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -58,7 +58,7 @@ namespace mathDetail = lsst::afw::math::detail;
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr kernelPtr,               ///< kernel
-        lsst::afw::geom::BoxI const &bbox,      ///< bounding box of region of an image
+        lsst::afw::geom::Box2I const &bbox,      ///< bounding box of region of an image
                                                 ///< for which we want to compute kernel images
                                                 ///< (inclusive and relative to parent image)
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image for which we want to compute kernel images
@@ -91,7 +91,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr const kernelPtr,         ///< kernel
-        lsst::afw::geom::BoxI const &bbox,      ///< bounding box of region of an image
+        lsst::afw::geom::Box2I const &bbox,      ///< bounding box of region of an image
                                                 ///< for which we want to compute kernel images
                                                 ///< (inclusive and relative to parent image)
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image
@@ -221,7 +221,7 @@ const {
             
             KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
                 _kernelPtr,
-                afwGeom::BoxI(blCorner, afwGeom::Extent2I(width, height)),
+                afwGeom::Box2I(blCorner, afwGeom::Extent2I(width, height)),
                 _xy0,
                 _doNormalize,
                 blImagePtr,
@@ -311,7 +311,7 @@ void mathDetail::KernelImagesForRegion::_moveUp(
         int newHeight)  ///< new height of region
 {
     // move bbox up (this must be done before recomputing the top kernel images)
-    _bbox = afwGeom::BoxI(
+    _bbox = afwGeom::Box2I(
         afwGeom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
         afwGeom::Extent2I(_bbox.getWidth(), newHeight));
 

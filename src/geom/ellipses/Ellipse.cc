@@ -34,7 +34,7 @@ Ellipse::ParameterVector const Ellipse::getParameterVector() const {
 
 void Ellipse::setParameterVector(Ellipse::ParameterVector const & vector) {
     _core->setParameterVector(vector.start<3>());
-    _center = PointD(vector.end<2>());
+    _center = Point2D(vector.end<2>());
 }
 
 void Ellipse::readParameters(double const * iter) {
@@ -50,7 +50,7 @@ void Ellipse::writeParameters(double * iter) const {
 }
 
 Ellipse::Envelope Ellipse::computeEnvelope() const {
-    ExtentD dimensions = getCore().computeDimensions();
+    Extent2D dimensions = getCore().computeDimensions();
     return Envelope(getCenter() - dimensions * 0.5, dimensions);
 }
 

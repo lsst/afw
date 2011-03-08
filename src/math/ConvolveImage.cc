@@ -86,7 +86,7 @@ namespace {
         const typename OutImageT::SinglePixel edgePixel = afwMath::edgePixel<OutImageT>(
             typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
         );
-        std::vector<afwGeom::BoxI> bboxList;
+        std::vector<afwGeom::Box2I> bboxList;
     
         // create a list of bounding boxes describing edge regions, in this order:
         // bottom edge, top edge (both edge to edge),
@@ -94,19 +94,19 @@ namespace {
         int const numHeight = kHeight - (1 + kCtrY);
         int const numWidth = kWidth - (1 + kCtrX);
         bboxList.push_back(
-            afwGeom::BoxI(afwGeom::PointI(0, 0), afwGeom::ExtentI(imWidth, kCtrY))
+            afwGeom::Box2I(afwGeom::Point2I(0, 0), afwGeom::Extent2I(imWidth, kCtrY))
         );
         bboxList.push_back(
-            afwGeom::BoxI(afwGeom::PointI(0, imHeight - numHeight), afwGeom::ExtentI(imWidth, numHeight))
+            afwGeom::Box2I(afwGeom::Point2I(0, imHeight - numHeight), afwGeom::Extent2I(imWidth, numHeight))
         );
         bboxList.push_back(
-            afwGeom::BoxI(afwGeom::PointI(0, kCtrY), afwGeom::ExtentI(kCtrX, imHeight + 1 - kHeight))
+            afwGeom::Box2I(afwGeom::Point2I(0, kCtrY), afwGeom::Extent2I(kCtrX, imHeight + 1 - kHeight))
         );
         bboxList.push_back(
-            afwGeom::BoxI(afwGeom::PointI(imWidth - numWidth, kCtrY), afwGeom::ExtentI(numWidth, imHeight + 1 - kHeight))
+            afwGeom::Box2I(afwGeom::Point2I(imWidth - numWidth, kCtrY), afwGeom::Extent2I(numWidth, imHeight + 1 - kHeight))
         );
 
-        for (std::vector<afwGeom::BoxI>::const_iterator bboxIter = bboxList.begin();
+        for (std::vector<afwGeom::Box2I>::const_iterator bboxIter = bboxList.begin();
             bboxIter != bboxList.end(); ++bboxIter
         ) {
             OutImageT outView(outImage, *bboxIter, afwImage::LOCAL);
@@ -148,7 +148,7 @@ namespace {
         const typename OutImageT::SinglePixel edgePixel = afwMath::edgePixel<OutImageT>(
             typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
         );
-        std::vector<afwGeom::BoxI> bboxList;
+        std::vector<afwGeom::Box2I> bboxList;
     
         // create a list of bounding boxes describing edge regions, in this order:
         // bottom edge, top edge (both edge to edge),
@@ -156,32 +156,32 @@ namespace {
         int const numHeight = kHeight - (1 + kCtrY);
         int const numWidth = kWidth - (1 + kCtrX);
         bboxList.push_back(
-            afwGeom::BoxI(
-                afwGeom::PointI(0, 0), 
-                afwGeom::ExtentI(imWidth, kCtrY)
+            afwGeom::Box2I(
+                afwGeom::Point2I(0, 0), 
+                afwGeom::Extent2I(imWidth, kCtrY)
             )
         );
         bboxList.push_back(
-            afwGeom::BoxI(
-                afwGeom::PointI(0, imHeight - numHeight), 
-                afwGeom::ExtentI(imWidth, numHeight)
+            afwGeom::Box2I(
+                afwGeom::Point2I(0, imHeight - numHeight), 
+                afwGeom::Extent2I(imWidth, numHeight)
             )
         );
         bboxList.push_back(
-            afwGeom::BoxI(
-                afwGeom::PointI(0, kCtrY), 
-                afwGeom::ExtentI(kCtrX, imHeight + 1 - kHeight)
+            afwGeom::Box2I(
+                afwGeom::Point2I(0, kCtrY), 
+                afwGeom::Extent2I(kCtrX, imHeight + 1 - kHeight)
             )
         );
         bboxList.push_back(
-            afwGeom::BoxI(
-                afwGeom::PointI(imWidth - numWidth, kCtrY), 
-                afwGeom::ExtentI(numWidth, imHeight + 1 - kHeight)
+            afwGeom::Box2I(
+                afwGeom::Point2I(imWidth - numWidth, kCtrY), 
+                afwGeom::Extent2I(numWidth, imHeight + 1 - kHeight)
             )
         );
 
         afwImage::MaskPixel const edgeMask = afwImage::Mask<afwImage::MaskPixel>::getPlaneBitMask("EDGE");
-        for (std::vector<afwGeom::BoxI>::const_iterator bboxIter = bboxList.begin();
+        for (std::vector<afwGeom::Box2I>::const_iterator bboxIter = bboxList.begin();
             bboxIter != bboxList.end(); ++bboxIter) {
             OutImageT outView(outImage, *bboxIter, afwImage::LOCAL);
             if (doCopyEdge) {

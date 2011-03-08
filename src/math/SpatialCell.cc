@@ -78,7 +78,7 @@ void SpatialCellCandidate::setStatus(Status status) {
  * Ctor
  */
 SpatialCell::SpatialCell(std::string const& label, ///< string representing "name" of cell
-                         geom::BoxI const& bbox,  ///< Bounding box of cell in overall image
+                         geom::Box2I const& bbox,  ///< Bounding box of cell in overall image
                          CandidateList const& candidateList  ///< list of candidates to represent this cell
                         ) :
     _label(label),
@@ -399,7 +399,7 @@ SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
  *
  * @throw lsst::pex::exceptions::LengthErrorException if nx or ny is non-positive
  */
-SpatialCellSet::SpatialCellSet(geom::BoxI const& region, ///< Bounding box for %image
+SpatialCellSet::SpatialCellSet(geom::Box2I const& region, ///< Bounding box for %image
                                int xSize,              ///< size of cells in the column direction
                                int ySize               ///< size of cells in the row direction (0: == xSize)
                               ) :
@@ -434,7 +434,7 @@ SpatialCellSet::SpatialCellSet(geom::BoxI const& region, ///< Bounding box for %
         for (int x = 0; x < nx; ++x) {
             // nx may not be a factor of width
             int const x1 = (x == nx - 1) ? region.getMaxX() : x0 + xSize - 1; 
-            geom::BoxI bbox(geom::PointI(x0, y0), geom::PointI(x1, y1));
+            geom::Box2I bbox(geom::Point2I(x0, y0), geom::Point2I(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
             _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));        
@@ -453,7 +453,7 @@ namespace {
         CellContains(SpatialCellCandidate::Ptr candidate) : _candidate(candidate) {}
 
         bool operator()(SpatialCell::Ptr cell) {
-            return cell->getBBox().contains(geom::PointI(image::positionToIndex(_candidate->getXCenter()),
+            return cell->getBBox().contains(geom::Point2I(image::positionToIndex(_candidate->getXCenter()),
                                                           image::positionToIndex(_candidate->getYCenter())));
         }
     private:

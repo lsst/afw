@@ -104,8 +104,8 @@ public:
     // N.b. must be in the order that a rotation by 90 shift right by one;  LLC -> ULC 
     enum ReadoutCorner { LLC, LRC, URC, ULC };
 
-    explicit Amp(Id id, lsst::afw::geom::BoxI const& allPixels,
-                 lsst::afw::geom::BoxI const& biasSec, lsst::afw::geom::BoxI const& dataSec,
+    explicit Amp(Id id, lsst::afw::geom::Box2I const& allPixels,
+                 lsst::afw::geom::Box2I const& biasSec, lsst::afw::geom::Box2I const& dataSec,
                  ReadoutCorner readoutCorner, ElectronicParams::Ptr eparams);
 
     ~Amp() {}
@@ -117,27 +117,27 @@ public:
     ElectronicParams::Ptr getElectronicParams() const { return _eParams; }
 
     /// Return amplifier's bias section
-    lsst::afw::geom::BoxI getBiasSec() const {
+    lsst::afw::geom::Box2I getBiasSec() const {
         return getBiasSec(isTrimmed());
     }
 
     /// Return amplifier's bias section
-    lsst::afw::geom::BoxI getBiasSec(bool isTrimmed // has the bias/overclock been removed?
+    lsst::afw::geom::Box2I getBiasSec(bool isTrimmed // has the bias/overclock been removed?
                                      ) const {
-        return isTrimmed ? lsst::afw::geom::BoxI() : _biasSec;
+        return isTrimmed ? lsst::afw::geom::Box2I() : _biasSec;
     }
 
     /// Return amplifier's data section
-    lsst::afw::geom::BoxI getDataSec() const {
+    lsst::afw::geom::Box2I getDataSec() const {
         return getDataSec(isTrimmed());
     }
 
-    lsst::afw::geom::BoxI getDataSec(bool getTrimmed) const {
+    lsst::afw::geom::Box2I getDataSec(bool getTrimmed) const {
         return getTrimmed ? _trimmedDataSec : _dataSec;
     }
 
     /// Return amplifier's data section
-    lsst::afw::geom::BoxI& getDataSec(bool getTrimmed=false) {
+    lsst::afw::geom::Box2I& getDataSec(bool getTrimmed=false) {
         return getTrimmed ? _trimmedDataSec : _dataSec;
     }
 
@@ -175,17 +175,17 @@ public:
     }
 
     /// Return the biasSec as read from disk
-    lsst::afw::geom::BoxI getDiskBiasSec() const {
+    lsst::afw::geom::Box2I getDiskBiasSec() const {
         return _mapToDisk(getBiasSec(false));
     }
 
     /// Return the dataSec as read from disk
-    lsst::afw::geom::BoxI getDiskDataSec() const {
+    lsst::afw::geom::Box2I getDiskDataSec() const {
         return _mapToDisk(getDataSec(false));
     }
 
     /// Return the biasSec as read from disk
-    lsst::afw::geom::BoxI getDiskAllPixels() const {
+    lsst::afw::geom::Box2I getDiskAllPixels() const {
         return _mapToDisk(getAllPixels(false));
     }
 
@@ -193,11 +193,11 @@ public:
     typename ImageT::Ptr prepareAmpData(ImageT const& im);
     
 private:
-    lsst::afw::geom::BoxI _biasSec;    // Bounding box of amplifier's bias section
-    lsst::afw::geom::BoxI _dataSec;    // Bounding box of amplifier's data section
+    lsst::afw::geom::Box2I _biasSec;    // Bounding box of amplifier's bias section
+    lsst::afw::geom::Box2I _dataSec;    // Bounding box of amplifier's data section
     ReadoutCorner _readoutCorner;       // location of first pixel read
     ElectronicParams::Ptr _eParams;     // electronic properties of Amp
-    lsst::afw::geom::BoxI _trimmedDataSec; // Bounding box of all the Detector's pixels after bias trimming
+    lsst::afw::geom::Box2I _trimmedDataSec; // Bounding box of all the Detector's pixels after bias trimming
     //
     // These values refer to the way that the Amplifier data is laid out on disk.  If the Amps have
     // been assembled into a single Ccd image _originOnDisk == (0, 0) and _nQuarter == 0
@@ -207,7 +207,7 @@ private:
     bool _flipLR;                       // flip the data left <--> right before rotation
     bool _flipTB;                       // Flip the data top <--> bottom before rotation
 
-    lsst::afw::geom::BoxI _mapToDisk(lsst::afw::geom::BoxI bbox) const;
+    lsst::afw::geom::Box2I _mapToDisk(lsst::afw::geom::Box2I bbox) const;
 };
     
 }}}

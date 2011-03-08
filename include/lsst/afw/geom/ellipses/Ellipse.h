@@ -54,7 +54,7 @@ public:
     class GridTransform; ///< Proxy return type for Ellipse::getGridTransform().
 #endif
 
-    typedef BoxD Envelope; ///< Bounding box type.
+    typedef Box2D Envelope; ///< Bounding box type.
     typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
 
     typedef boost::shared_ptr<Ellipse> Ptr;
@@ -63,13 +63,13 @@ public:
     enum ParameterEnum { X=3, Y=4 }; ///< Definitions for elements of an ellipse vector.
 
     /// @brief Return the center point.
-    PointD const & getCenter() const { return _center; }
+    Point2D const & getCenter() const { return _center; }
 
     /// @brief Return the center point.
-    PointD & getCenter() { return _center; }
+    Point2D & getCenter() { return _center; }
 
     /// @brief Set the center point.
-    void setCenter(PointD const & center) { _center = center; }
+    void setCenter(Point2D const & center) { _center = center; }
 
     /// @brief Return the ellipse core.
     BaseCore const & getCore() const { return *_core; }
@@ -96,7 +96,7 @@ public:
     void scale(double factor) { _core->scale(factor); }
 
     /// @brief Move the ellipse center by the given offset.
-    void shift(ExtentD const & offset) { _center += offset; }
+    void shift(Extent2D const & offset) { _center += offset; }
 
      /// @brief Return the ellipse parameters as a vector.
     ParameterVector const getParameterVector() const;
@@ -156,10 +156,10 @@ public:
 
     virtual ~Ellipse() {}
 
-    explicit Ellipse(BaseCore const & core, PointD const & center = PointD()) :
+    explicit Ellipse(BaseCore const & core, Point2D const & center = Point2D()) :
         _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(BaseCore::Ptr const & core, PointD const & center = PointD()) :
+    explicit Ellipse(BaseCore::Ptr const & core, Point2D const & center = Point2D()) :
         _core(core), _center(center) {}
 
 #ifndef SWIG
@@ -171,7 +171,7 @@ public:
 
 private:
     BaseCore::Ptr _core;
-    PointD _center;
+    Point2D _center;
 };
 
 }}}} // namespace lsst::afw::geom::ellipses

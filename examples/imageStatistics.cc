@@ -102,7 +102,7 @@ int main() {
 
     // declare an image and a masked image
     int const wid = 1024;
-    ImageF img(geom::ExtentI(wid, wid));
+    ImageF img(geom::Extent2I(wid, wid));
     MaskedImageF mimg(img.getDimensions());
     std::vector<double> v(0);
     MaskedVectorF mv(wid*wid);

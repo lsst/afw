@@ -74,7 +74,7 @@ void afwImage::Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDef
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    afwGeom::ExtentI const & dimensions, ///< Number of columns, rows
+    afwGeom::Extent2I const & dimensions, ///< Number of columns, rows
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
     afwImage::ImageBase<MaskPixelT>(dimensions),
@@ -88,7 +88,7 @@ afwImage::Mask<MaskPixelT>::Mask(
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    afwGeom::ExtentI const & dimensions, ///< Number of columns, rows
+    afwGeom::Extent2I const & dimensions, ///< Number of columns, rows
     MaskPixelT initialValue, ///< Initial value
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
@@ -103,7 +103,7 @@ afwImage::Mask<MaskPixelT>::Mask(
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    afwGeom::BoxI const & bbox, ///< Desired number of columns/rows and origin
+    afwGeom::Box2I const & bbox, ///< Desired number of columns/rows and origin
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
     afwImage::ImageBase<MaskPixelT>(bbox),
@@ -117,7 +117,7 @@ afwImage::Mask<MaskPixelT>::Mask(
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-    afwGeom::BoxI const & bbox, ///< Desired number of columns/rows and origin
+    afwGeom::Box2I const & bbox, ///< Desired number of columns/rows and origin
     MaskPixelT initialValue, ///< Initial value
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
@@ -133,7 +133,7 @@ afwImage::Mask<MaskPixelT>::Mask(
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
     Mask const &rhs,    ///< mask to copy
-    afwGeom::BoxI const &bbox,   ///< subregion to copy
+    afwGeom::Box2I const &bbox,   ///< subregion to copy
     ImageOrigin const origin,
     bool const deep     ///< deep copy? (construct a view with shared pixels if false)
 ) :
@@ -195,7 +195,7 @@ template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
         int const hdu,                                     ///< HDU to read 
         lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
-        afwGeom::BoxI const& bbox,                                  ///< Only read these pixels
+        afwGeom::Box2I const& bbox,                                  ///< Only read these pixels
         ImageOrigin const origin,
         bool const conformMasks                            ///< Make Mask conform to mask layout in file?
 ) :

@@ -35,11 +35,6 @@ import numpy
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 
-def maskedImageFromArrays(imMaskVarArrays, retType=afwImage.MaskedImageF):
-    """Return a MaskedImage representation of a tuple of (image, mask, variance) numpy arrays."""
-    pass
-    
-
 def imagesDiffer(imageArr1, imageArr2, skipMaskArr=None, rtol=1.0e-05, atol=1e-08):
     """Compare the pixels of two image arrays; return True if close, False otherwise
     

@@ -126,7 +126,7 @@ double BaseCore::getTraceRadius() const {
     return std::sqrt(0.5 * (ixx + iyy));
 }
 
-ExtentD BaseCore::computeDimensions() const {
+Extent2D BaseCore::computeDimensions() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
     double c = std::cos(theta);
@@ -135,7 +135,7 @@ ExtentD BaseCore::computeDimensions() const {
     s *= s;
     b *= b;
     a *= a;
-    ExtentD dimensions(std::sqrt(b * s + a * c),std::sqrt(a * s + b * c));
+    Extent2D dimensions(std::sqrt(b * s + a * c),std::sqrt(a * s + b * c));
     dimensions *= 2;
     return dimensions;
 }

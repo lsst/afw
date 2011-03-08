@@ -146,7 +146,7 @@ class WarpExposureTestCase(unittest.TestCase):
     def testWarpIntoSelf(self, interpLength=10):
         """Cannot warp in-place
         """
-        originalExposure = afwImage.ExposureF(afwGeom.ExtentI(100, 100))
+        originalExposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100))
         warpingKernel = afwMath.BilinearWarpingKernel()
         try:
             afwMath.warpExposure(originalExposure, originalExposure, warpingKernel, interpLength)
@@ -247,7 +247,7 @@ class WarpExposureTestCase(unittest.TestCase):
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
-            bbox = afwGeom.BoxI(afwGeom.PointI(40, 150), afwGeom.ExtentI(145, 200))
+            bbox = afwGeom.Box2I(afwGeom.Point2I(40, 150), afwGeom.Extent2I(145, 200))
             originalExposure = afwImage.ExposureF(originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
         else:

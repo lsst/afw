@@ -129,7 +129,7 @@ namespace {
 #endif
 
 ImageT make_image(int const width=5, int const height=6) {
-    ImageT img(geom::ExtentI(width, height));
+    ImageT img(geom::Extent2I(width, height));
 
     int i = 0;
     for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {

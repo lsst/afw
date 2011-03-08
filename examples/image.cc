@@ -117,7 +117,7 @@ void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT
 /************************************************************************************************************/
 
 int main() {
-    afwImage::Image<float> img(afwGeom::ExtentI(10, 6));
+    afwImage::Image<float> img(afwGeom::Extent2I(10, 6));
     // This is equivalent to img = 100:
     for (afwImage::Image<float>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
         (*ptr)[0] = 100;
@@ -167,23 +167,23 @@ int main() {
 
     // img will be modified
     afwImage::Image<float> simg1(
-        img, afwGeom::BoxI(
-            afwGeom::PointI(1, 1), 
-            afwGeom::ExtentI(7, 3)
+        img, afwGeom::Box2I(
+            afwGeom::Point2I(1, 1), 
+            afwGeom::Extent2I(7, 3)
         ),
         afwImage::LOCAL
     );
     afwImage::Image<float> simg(
-        simg1, afwGeom::BoxI(
-            afwGeom::PointI(0, 0), 
-            afwGeom::ExtentI(5, 2)
+        simg1, afwGeom::Box2I(
+            afwGeom::Point2I(0, 0), 
+            afwGeom::Extent2I(5, 2)
         ),
         afwImage::LOCAL
     );
 
 
     {
-        afwImage::Image<float> nimg(afwGeom::ExtentI(5, 2));
+        afwImage::Image<float> nimg(afwGeom::Extent2I(5, 2));
         nimg = 1;
         simg <<= nimg;
     }

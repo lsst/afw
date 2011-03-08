@@ -73,7 +73,7 @@ public:
         using std::swap;                    // See Meyers, Effective C++, Item 25
         
         swap(*_footprints, rhs.getFootprints());
-        geom::BoxI rhsRegion = rhs.getRegion();
+        geom::Box2I rhsRegion = rhs.getRegion();
         rhs.setRegion(getRegion());
         setRegion(rhsRegion);
     }
@@ -87,11 +87,11 @@ public:
      */
     FootprintList const& getFootprints() const { return *_footprints; }
     
-    void setRegion(geom::BoxI const& region);
+    void setRegion(geom::Box2I const& region);
     /**
      * Return the corners of the MaskedImage
      */
-    geom::BoxI const getRegion() const { return _region; } 
+    geom::Box2I const getRegion() const { return _region; } 
 
     typename image::Image<boost::uint16_t>::Ptr insertIntoImage(
         const bool relativeIDs
@@ -115,7 +115,7 @@ public:
     }
 private:
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
-    geom::BoxI _region;                //!< The corners of the MaskedImage that the detections live in
+    geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in
 };
 
 template<typename ImagePixelT, typename MaskPixelT>

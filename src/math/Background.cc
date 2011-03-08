@@ -113,9 +113,9 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         _grid[iX].resize(_nySample);
         for (int iY = 0; iY < _nySample; ++iY) {
             
-            ImageT subimg = ImageT(img, geom::BoxI(
-                    geom::PointI(_xorig[iX], _yorig[iY]),
-                    geom::ExtentI(_subimgWidth, _subimgHeight)
+            ImageT subimg = ImageT(img, geom::Box2I(
+                    geom::Point2I(_xorig[iX], _yorig[iY]),
+                    geom::Extent2I(_subimgWidth, _subimgHeight)
                 ),
                 image::LOCAL
             );
@@ -192,7 +192,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
     // create a shared_ptr to put the background image in and return to caller
     typename image::Image<PixelT>::Ptr bg = typename image::Image<PixelT>::Ptr(
         new typename image::Image<PixelT>(
-            geom::ExtentI(_imgWidth, _imgHeight)
+            geom::Extent2I(_imgWidth, _imgHeight)
         )
     );
 

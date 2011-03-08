@@ -274,7 +274,7 @@ protected:
     int _naxis1, _naxis2;                                //!< dimension of image    
     int _ttype;                                          //!< cfitsio's name for data type
     int _bitpix;                                         //!< FITS' BITPIX keyword
-    geom::BoxI _bbox;                             //!< Bounding Box of desired part of data
+    geom::Box2I _bbox;                             //!< Bounding Box of desired part of data
     ImageOrigin _origin;
 
     void init() {
@@ -355,7 +355,7 @@ protected:
 public:
     fits_reader(cfitsio::fitsfile *file,
                 lsst::daf::base::PropertySet::Ptr metadata,
-                int hdu=0, geom::BoxI const& bbox=geom::BoxI(), 
+                int hdu=0, geom::Box2I const& bbox=geom::Box2I(), 
                 ImageOrigin const origin = LOCAL
     ) : fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) {         
         init(); 
@@ -363,7 +363,7 @@ public:
 
     fits_reader(const std::string& filename,
                 lsst::daf::base::PropertySet::Ptr metadata,
-                int hdu=0, geom::BoxI const& bbox=geom::BoxI(),
+                int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
                 ImageOrigin const origin = LOCAL
     ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) { 
         init(); 
@@ -388,9 +388,9 @@ public:
         cfitsio::getMetadata(_fd.get(), _metadata);
 
         // Origin of part of image to read
-        geom::PointI xy0(0,0);
+        geom::Point2I xy0(0,0);
 
-        geom::ExtentI xyOffset(getImageXY0FromMetadata(wcsNameForXY0, _metadata.get()));
+        geom::Extent2I xyOffset(getImageXY0FromMetadata(wcsNameForXY0, _metadata.get()));
         if (!_bbox.isEmpty()) {
             if(_origin == PARENT) {
                 _bbox.shift(-xyOffset);
@@ -409,7 +409,7 @@ public:
                 ); 
             } 
         }
-        geom::ExtentI dimensions = getDimensions();
+        geom::Extent2I dimensions = getDimensions();
         if (array.template getSize<1>() != dimensions.getX() 
             || array.template getSize<0>() != dimensions.getY()) {
             throw LSST_EXCEPT(
@@ -443,9 +443,9 @@ public:
         array = tmp;
     }
 
-    geom::ExtentI getDimensions() const {
+    geom::Extent2I getDimensions() const {
         if (_bbox.isEmpty()) {
-            return geom::ExtentI(_naxis1, _naxis2);
+            return geom::Extent2I(_naxis1, _naxis2);
         } else {
             return _bbox.getDimensions();
         }    

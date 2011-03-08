@@ -31,7 +31,7 @@ ExampleCandidate::ExampleCandidate(
         float const xCenter,            ///< The object's column-centre
         float const yCenter,            ///< The object's row-centre
         ExampleCandidate::ImageT::ConstPtr parent, ///< the parent image
-        lsst::afw::geom::BoxI bbox     ///< The object's bounding box
+        lsst::afw::geom::Box2I bbox     ///< The object's bounding box
                                       ) :
     lsst::afw::math::SpatialCellImageCandidate<ImageT>(xCenter, yCenter), _parent(parent), _bbox(bbox) {
 }

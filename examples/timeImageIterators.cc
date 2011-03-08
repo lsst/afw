@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         std::istringstream(argv[3]) >> nRows;
     }
     
-    ImageT image(geom::ExtentI(nCols, nRows));
+    ImageT image(geom::Extent2I(nCols, nRows));
     
     std::cout << "\tCols\tRows\tMPix\tSecPerIter\tMPix/sec" << std::endl;
     //

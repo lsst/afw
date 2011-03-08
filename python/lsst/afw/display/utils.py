@@ -146,9 +146,9 @@ class Mosaic(object):
             im = images[i]
 
             if smosaic.getDimensions() != im.getDimensions(): # im is smaller than smosaic
-                llc = afwGeom.PointI((smosaic.getWidth() - im.getWidth())//2,
+                llc = afwGeom.Point2I((smosaic.getWidth() - im.getWidth())//2,
                                       (smosaic.getHeight() - im.getHeight())//2)
-                smosaic = smosaic.Factory(smosaic, afwGeom.BoxI(llc, im.getDimensions()), afwImage.LOCAL)
+                smosaic = smosaic.Factory(smosaic, afwGeom.Box2I(llc, im.getDimensions()), afwImage.LOCAL)
 
             smosaic <<= im
 
@@ -186,8 +186,8 @@ class Mosaic(object):
         if iy is None:
             ix, iy = ix % self.nx, ix/self.nx
 
-        return afwGeom.BoxI(afwGeom.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
-                            afwGeom.ExtentI(self.xsize, self.ysize))
+        return afwGeom.Box2I(afwGeom.Point2I(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
+                            afwGeom.Extent2I(self.xsize, self.ysize))
 
     def drawLabels(self, labels=None, frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones

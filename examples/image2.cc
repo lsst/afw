@@ -29,7 +29,7 @@ namespace image = lsst::afw::image;
 typedef image::Image<int> ImageT;
 
 int main() {
-    ImageT in(geom::ExtentI(10, 6));
+    ImageT in(geom::Extent2I(10, 6));
 
     // Set data to a ramp
     for (int y = 0; y != in.getHeight(); ++y) {
@@ -111,8 +111,8 @@ int main() {
     {
         ImageT center = ImageT(
             *out2, 
-            geom::BoxI(
-                geom::PointI(1, 1), in.getDimensions() - geom::ExtentI(2)
+            geom::Box2I(
+                geom::Point2I(1, 1), in.getDimensions() - geom::Extent2I(2)
             ), 
             image::LOCAL
         );

@@ -1015,12 +1015,12 @@ createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired W
     return wcsMetaData;
 }
 /**
- * Return a PointI(x0, y0) given a PropertySet containing a suitable WCS (e.g. "A")
+ * Return a Point2I(x0, y0) given a PropertySet containing a suitable WCS (e.g. "A")
  *
  * The WCS must have CRPIX[12] == 1 and CRVAL[12] must be present.  If this is true, the WCS
  * cards are removed from the metadata
  */
-geom::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
+geom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
                                       lsst::daf::base::PropertySet *metadata ///< the metadata, maybe containing the WCS
                                      ) {
         
@@ -1052,7 +1052,7 @@ geom::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///<
         ;                               // OK, not present
     }
 
-    return geom::PointI(x0, y0);
+    return geom::Point2I(x0, y0);
 }
 
 /**

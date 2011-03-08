@@ -40,7 +40,7 @@ typedef afwImage::MaskedImage<int> ImageT;
 int main() {
 
     // Declare a MaskedImage; its pixels are not yet initialized.
-    ImageT img(afwGeom::ExtentI(10, 6));
+    ImageT img(afwGeom::Extent2I(10, 6));
 
     // Initialize all pixels to a given value.
     img = ImageT::Pixel(100, 0x1, 10);

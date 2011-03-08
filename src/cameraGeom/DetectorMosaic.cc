@@ -142,9 +142,9 @@ void cameraGeom::DetectorMosaic::addDetector(
     //
     // Correct Detector's coordinate system to be absolute within DetectorMosaic
     //
-    afwGeom::BoxI detPixels = det->getAllPixels(isTrimmed);
+    afwGeom::Box2I detPixels = det->getAllPixels(isTrimmed);
     detPixels.shift(
-        geom::ExtentI(iX*detPixels.getWidth(), iY*detPixels.getHeight())
+        geom::Extent2I(iX*detPixels.getWidth(), iY*detPixels.getHeight())
     );
     getAllPixels().include(detPixels);
     
@@ -186,15 +186,15 @@ namespace {
             _point(point) {}
         
         bool operator()(cameraGeom::Detector::Ptr det) const {
-            afwGeom::PointI relPoint = _point;
+            afwGeom::Point2I relPoint = _point;
             // Position wrt center of detector
-            relPoint -= afwGeom::ExtentI(det->getCenterPixel());
+            relPoint -= afwGeom::Extent2I(det->getCenterPixel());
             // Position wrt LLC of detector
             relPoint += det->getAllPixels(true).getDimensions()/2;                           
             return det->getAllPixels().contains(relPoint);
         }
     private:
-        afwGeom::PointI _point;
+        afwGeom::Point2I _point;
     };
 
     struct findByPos {

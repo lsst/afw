@@ -271,6 +271,10 @@ private:
 typedef Box2D BoxD;
 typedef Box2I BoxI;
 
+std::ostream & operator<<(std::ostream & os, Box2I const & box);
+
+std::ostream & operator<<(std::ostream & os, Box2D const & box);
+
 }}}
 
 #endif

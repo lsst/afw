@@ -197,15 +197,15 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
                 );
             }
         } 
-        geom::BoxI box;
+        geom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = geom::BoxI(
-                geom::PointI(llcX, llcY), 
-                geom::ExtentI(width, height)
+            box = geom::Box2I(
+                geom::Point2I(llcX, llcY), 
+                geom::Extent2I(width, height)
             );
         }
         lsst::daf::base::PropertySet::Ptr metadata;
@@ -250,7 +250,7 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     std::size_t nbytes = width * height * sizeof(ImagePixelT);
     if (Archive::is_loading::value) {
         boost::scoped_ptr<Image<ImagePixelT> > ni(
-            new Image<ImagePixelT>(geom::ExtentI(width, height))
+            new Image<ImagePixelT>(geom::Extent2I(width, height))
         );
         typename Image<ImagePixelT>::Array array = ni->getArray();
         ar & make_nvp("bytes",

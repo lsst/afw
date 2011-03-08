@@ -38,14 +38,14 @@ public:
 
     Parametric(Ellipse const & ellipse);
 
-    PointD operator()(double t) const {
+    Point2D operator()(double t) const {
         return _center + _u*std::cos(t) + _v*std::sin(t); 
     }
 
 private:
-    PointD _center;
-    ExtentD _u;
-    ExtentD _v;
+    Point2D _center;
+    Extent2D _u;
+    Extent2D _v;
 };
 
 }}}} // namespace lsst::afw::geom::ellipses

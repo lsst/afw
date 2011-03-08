@@ -167,7 +167,7 @@ public:
                                                         ) const;
 
     //Mutators
-    void shiftReferencePixel(geom::ExtentD const & d) {shiftReferencePixel(d.getX(), d.getY());}
+    void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
     void shiftReferencePixel(double dx, double dy);
 
         
@@ -227,7 +227,7 @@ namespace detail {
     PTR(lsst::daf::base::PropertyList)
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
     
-    geom::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+    geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
 Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);

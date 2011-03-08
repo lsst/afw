@@ -85,8 +85,8 @@ int main(int argc, char **argv) {
     
     // Testing input col, row values 
 
-    afwGeom::PointD minCoord = afwGeom::PointD(1.0, 1.0);
-    afwGeom::PointD xy = afwGeom::PointD(mskdImage.getWidth(), mskdImage.getHeight());
+    afwGeom::Point2D minCoord = afwGeom::Point2D(1.0, 1.0);
+    afwGeom::Point2D xy = afwGeom::Point2D(mskdImage.getWidth(), mskdImage.getHeight());
 
     afwCoord::Coord::ConstPtr sky1 = wcsPtr->pixelToSky(minCoord);
     afwCoord::Coord::ConstPtr sky2 = wcsPtr->pixelToSky(xy);

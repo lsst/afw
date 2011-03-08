@@ -46,7 +46,7 @@ typedef image::Image<float> Image;
 typedef image::DecoratedImage<float> DecoratedImage;
 
 BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    Image img(geom::ExtentI(10, 40));
+    Image img(geom::Extent2I(10, 40));
     Image::Pixel const pixval = 10000;
     img = pixval;
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
 
     int nx = 101;
     int ny = 64;
-    Image img(geom::ExtentI(nx, ny));
+    Image img(geom::Extent2I(nx, ny));
     
     double z0 = 10.0;
     double dzdx = 1.0;
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
 
     int nx = 101;
     int ny = 64;
-    Image img(geom::ExtentI(nx, ny));
+    Image img(geom::Extent2I(nx, ny));
     img = NaN;
     double z0 = 10.0;
 

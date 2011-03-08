@@ -150,7 +150,7 @@ class StackTestCase(unittest.TestCase):
         for y in range(img.getHeight()):
             simg = img.Factory(
                 img,
-                afwGeom.BoxI(afwGeom.Point2I(0, y), afwGeom.Extent2I(img.getWidth(), 1)),
+                afwGeom.Box2I(afwGeom.Point2I(0, y), afwGeom.Extent2I(img.getWidth(), 1)),
                 afwImage.LOCAL)
             simg.set(y)
 
@@ -179,9 +179,9 @@ class StackTestCase(unittest.TestCase):
         sctrl.setAndMask(INTRP | SAT)
         sctrl.setNoGoodPixelsMask(EDGE)
 
-        edgeBBox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(20, 20)) # set these pixels to EDGE
+        edgeBBox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 20)) # set these pixels to EDGE
         width, height = 512, 512
-	dim=afwGeom.ExtentI(width, height)
+	dim=afwGeom.Extent2I(width, height)
         val, maskVal = 10, DETECTED
         for i in range(4):
             mimg = afwImage.MaskedImageF(dim)
@@ -189,8 +189,8 @@ class StackTestCase(unittest.TestCase):
             #
             # Set part of the image to NaN (with the INTRP bit set)
             #
-            llc = afwGeom.PointI(width//2*(i//2), height//2*(i%2))
-            bbox = afwGeom.BoxI(llc, dim/2)
+            llc = afwGeom.Point2I(width//2*(i//2), height//2*(i%2))
+            bbox = afwGeom.Box2I(llc, dim/2)
 
             smimg = mimg.Factory(mimg, bbox, afwImage.LOCAL)
             #smimg.set(numpy.nan, INTRP, numpy.nan)

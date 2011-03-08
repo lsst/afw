@@ -90,7 +90,7 @@ class CoordTestCase(unittest.TestCase):
             factories = []
             factories.append(afwCoord.makeCoord(enum, self.l, self.b))
             factories.append(afwCoord.makeCoord(afwCoord.makeCoordEnum(stringName), self.l, self.b))
-            factories.append(afwCoord.makeCoord(enum, afwGeom.PointD(self.l, self.b), afwCoord.DEGREES))
+            factories.append(afwCoord.makeCoord(enum, afwGeom.Point2D(self.l, self.b), afwCoord.DEGREES))
 
             print "Factory: "
             for fac in factories:

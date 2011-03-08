@@ -205,7 +205,7 @@ class MaskTestCase(unittest.TestCase):
             return
         
         hdu = 0
-        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.BoxI(), afwImage.LOCAL, True)
+        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
 
         print mask.getArray().transpose()
 

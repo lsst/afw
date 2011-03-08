@@ -608,7 +608,7 @@ public:
 
     // Constructors
     explicit MaskedImage(
-        geom::ExtentI const & dimensions=geom::ExtentI(), 
+        geom::Extent2I const & dimensions=geom::Extent2I(), 
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
     explicit MaskedImage(
@@ -617,13 +617,13 @@ public:
         VariancePtr variance = VariancePtr()
     );
     explicit MaskedImage(
-        geom::BoxI const & bbox, 
+        geom::Box2I const & bbox, 
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
     explicit MaskedImage(
         std::string const& baseName, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::BoxI const& bbox=geom::BoxI(), ImageOrigin const origin = LOCAL,
+        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin = LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     );
 
@@ -634,7 +634,7 @@ public:
     );
     MaskedImage(
         MaskedImage const & rhs, 
-        geom::BoxI const & bbox, 
+        geom::Box2I const & bbox, 
         ImageOrigin const origin, 
         bool const deep=false
     );
@@ -760,8 +760,8 @@ public:
     int getWidth() const { return _image->getWidth(); }
     /// Return the number of rows in the %image
     int getHeight() const { return _image->getHeight(); }
-    geom::ExtentI getDimensions() const {return _image->getDimensions();}
-    geom::BoxI getBBox(ImageOrigin const origin) const {return _image->getBBox(origin);}
+    geom::Extent2I getDimensions() const {return _image->getDimensions();}
+    geom::Box2I getBBox(ImageOrigin const origin) const {return _image->getBBox(origin);}
     /**
      * Return the %image's row-origin
      *
@@ -785,7 +785,7 @@ public:
      * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
      * The origin can be reset with \c setXY0
      */
-    geom::PointI getXY0() const { return _image->getXY0(); }
+    geom::Point2I getXY0() const { return _image->getXY0(); }
 
     /**
      * Set the MaskedImage's origin
@@ -796,7 +796,7 @@ public:
      * don't do so unless you are an Expert.
      */
     void setXY0(int const x0, int const y0) {
-        setXY0(geom::PointI(x0,y0));
+        setXY0(geom::Point2I(x0,y0));
     }
 
     /**
@@ -807,7 +807,7 @@ public:
      * \note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::PointI const origin) {
+    void setXY0(geom::Point2I const origin) {
         if (_image) {
             _image->setXY0(origin);
         }

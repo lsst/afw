@@ -115,7 +115,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    afwGeom::BoxI const & bbox, ///< desired image width/height, and origin
+    afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
     afwImage::Wcs const & wcs   ///< the Wcs
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -194,7 +194,7 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     std::string const& baseName,    ///< Exposure's base input file name
     int const hdu,                  ///< Desired HDU
-    afwGeom::BoxI const& bbox,               //!< Only read these pixels
+    afwGeom::Box2I const& bbox,               //!< Only read these pixels
     ImageOrigin const origin,
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :

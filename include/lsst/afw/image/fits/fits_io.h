@@ -58,7 +58,7 @@ struct fits_read_support {
 /// \ingroup FITS_IO
 /// \brief Returns the width and height of the FITS file at the specified location.
 /// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
-inline geom::ExtentI fits_read_dimensions(const char* filename) {
+inline geom::Extent2I fits_read_dimensions(const char* filename) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
     detail::fits_reader m(filename, metadata);
     return m.getDimensions();
@@ -67,7 +67,7 @@ inline geom::ExtentI fits_read_dimensions(const char* filename) {
 /// \ingroup FITS_IO
 /// \brief Returns the width and height of the FITS file at the specified location.
 /// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
-inline geom::ExtentI fits_read_dimensions(const std::string& filename) {
+inline geom::Extent2I fits_read_dimensions(const std::string& filename) {
     return fits_read_dimensions(filename.c_str());
 }
 
@@ -102,7 +102,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
                              geom::Point2I & xy0,
                              lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
                              int hdu=1,
-                             geom::BoxI const& bbox=geom::BoxI(),
+                             geom::Box2I const& bbox=geom::Box2I(),
                              ImageOrigin const origin = LOCAL
  ) {
     BOOST_STATIC_ASSERT(fits_read_support<PixelT>::is_supported);

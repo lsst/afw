@@ -432,7 +432,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testSubimages1(self):
         smimage = afwImage.MaskedImageF(
             self.mimage,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(10, 5)),
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
             )
         
@@ -459,17 +459,17 @@ class MaskedImageTestCase(unittest.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.mimage.set(9, 4, (888, 0x0, 0))
-        #printImg(afwImage.ImageF(self.mimage, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.ExtentI(10, 5)))); print
+        #printImg(afwImage.ImageF(self.mimage, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         smimage = afwImage.MaskedImageF(
             self.mimage, 
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(10, 5)),
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
             )
         smimage.setXY0(afwGeom.Point2I(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
         simage = afwImage.MaskedImageF(
-            smimage, afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(3, 2)),
+            smimage, afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
             afwImage.LOCAL
             )
         self.assertEqual(simage.getX0(), 1)
@@ -501,7 +501,7 @@ class MaskedImageTestCase(unittest.TestCase):
         for deep in (True, False):
             mimage = self.mimage.Factory(
                 self.mimage,
-                afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.ExtentI(64, 64)), 
+                afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.Extent2I(64, 64)), 
                 afwImage.LOCAL,
                 deep)
             mimage.setXY0(afwGeom.Point2I(0, 0))

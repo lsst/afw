@@ -98,7 +98,7 @@ public:
     explicit Exposure(
         std::string const &baseName, 
         int const hdu=0, 
-        geom::BoxI const& bbox=geom::BoxI(), 
+        geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const origin = LOCAL, 
         bool const conformMasks=false
     );
@@ -152,7 +152,7 @@ public:
     /// Return the Exposure's height
     int getHeight() const { return _maskedImage.getHeight(); }
     /// Return the Exposure's size
-    geom::ExtentI getDimensions() const { return _maskedImage.getDimensions(); }
+    geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
     
     /**
      * Return the Exposure's row-origin
@@ -174,9 +174,9 @@ public:
      * <tt>Exposure(fileName, hdu, BBox, mode)</tt> ctor or <tt>Exposure(Exposure, BBox)</tt> cctor
      * The origin can be reset with \c setXY0
      */
-    geom::PointI getXY0() const { return _maskedImage.getXY0(); }
+    geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::BoxI getBBox(ImageOrigin const origin) const {
+    geom::Box2I getBBox(ImageOrigin const origin) const {
         return _maskedImage.getBBox(origin);
     }
     /**
@@ -187,8 +187,8 @@ public:
      * \note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::PointI const & origin) {
-        geom::PointI old(_maskedImage.getXY0());
+    void setXY0(geom::Point2I const & origin) {
+        geom::Point2I old(_maskedImage.getXY0());
         _wcs->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
         _maskedImage.setXY0(origin);
     }
