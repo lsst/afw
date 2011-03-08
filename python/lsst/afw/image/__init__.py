@@ -25,25 +25,25 @@
 from imageLib import *
 import numpy
 
-suffixes = {numpy.uint16: "U", numpy.int32: "I", numpy.float32: "F", numpy.float64: "D"}
+suffixes = {str(numpy.uint16): "U", str(numpy.int32): "I", str(numpy.float32): "F", str(numpy.float64): "D"}
 
 def makeImageFromArray(array):
     """Construct an Image from a NumPy array, inferring the Image type from the NumPy type.
     Return None if input is None.
     """
     if array is None: return None
-    cls = globals()["Image%s" % suffixes[array.dtype.type]]
+    cls = globals()["Image%s" % suffixes[str(array.dtype.type)]]
     return cls(array)
 
 def makeMaskFromArray(array):
     """Construct an Mask from a NumPy array, inferring the Mask type from the NumPy type.
     """
     if array is None: return None
-    cls = globals()["Mask%s" % suffixes[array.dtype.type]]
+    cls = globals()["Mask%s" % suffixes[str(array.dtype.type)]]
     return cls(array)
 
 def makeMaskedImageFromArrays(image, mask=None, variance=None):
     """Construct a MaskedImage from three NumPy arrays, inferring the MaskedImage types from the NumPy types.
     """
-    cls = globals()["MaskedImage%s" % suffixes[image.dtype.type]]
+    cls = globals()["MaskedImage%s" % suffixes[str(image.dtype.type)]]
     return cls(makeImageFromArray(image), makeMaskFromArray(mask), makeImageFromArray(variance))
