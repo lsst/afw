@@ -35,6 +35,21 @@ import numpy
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 
+def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
+    """Make a gaussian noise MaskedImageF
+    
+    Inputs:
+    - dimensions: dimensions of output array (cols, rows)
+    - sigma; sigma of image plane's noise distribution
+    - variance: constant value for variance plane
+    """
+    npSize = (dimensions[1], dimensions[0])
+    image = numpy.random.normal(loc=0.0, scale=sigma, size=npSize).astype(numpy.float32)
+    mask = numpy.zeros(npSize, dtype=numpy.uint16)
+    variance = numpy.zeros(npSize, dtype=numpy.float32) + variance
+    
+    return afwImage.makeMaskedImageFromArrays(image, mask, variance)
+
 def imagesDiffer(imageArr1, imageArr2, skipMaskArr=None, rtol=1.0e-05, atol=1e-08):
     """Compare the pixels of two image arrays; return True if close, False otherwise
     
