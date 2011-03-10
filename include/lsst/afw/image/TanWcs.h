@@ -32,7 +32,6 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
-
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
@@ -89,13 +88,14 @@ namespace image {
         
         virtual lsst::afw::image::Wcs::Ptr clone(void) const;
 
-        // Working routines;  note that pixelToSky is inherited (pixelToSkyImpl is virtual)
-        virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
-
         // Returns the pixel scale, in arcsec/pixel.
         double pixelScale() const;
         
+        // Applies the SIP AP and BP distortion (used in the skyToPixel direction)
+        lsst::afw::geom::PointD distortPixel(const lsst::afw::geom::PointD pixel) const;
+        // Applies the SIP A and B un-distortion (used in the pixelToSky direction)
+        lsst::afw::geom::PointD undistortPixel(const lsst::afw::geom::PointD pixel) const;
+
         bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertyList::Ptr getFitsMetadata() const;        
 #if 0
@@ -122,6 +122,7 @@ namespace image {
         TanWcs & operator = (const TanWcs &);        
 
         virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
+        virtual lsst::afw::geom::PointD skyToPixelImpl(double sky1, double sky2) const;
 
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)

@@ -103,7 +103,12 @@ namespace image {
             _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
         {
             _clonePsf(rhs.getPsf());    // a separate function so it can go in Exposure.cc
-            setMetadata(rhs.getMetadata()->deepCopy());
+
+            // Make sure that we create a PropertyList even if the incoming
+            // metadata is a PropertySet.
+            PTR(lsst::daf::base::PropertyList) pl(new lsst::daf::base::PropertyList);
+            pl->combine(rhs.getMetadata());
+            setMetadata(pl);
         }
         
         virtual ~Exposure(); 

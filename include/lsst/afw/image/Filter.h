@@ -35,10 +35,17 @@
 
 #include <string>
 #include "boost/shared_ptr.hpp"
+#include "lsst/base.h"
 #include "lsst/tr1/unordered_map.h"
 #include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
+namespace daf {
+    namespace base {
+        class PropertySet;
+    }
+}
+
 namespace afw {
 namespace image {
 
@@ -97,6 +104,11 @@ public :
     explicit Filter(int id=UNKNOWN      ///< Id number of desired filter
                    ) : _id(id), _name(_lookup(id)) {}
     /**
+     * Create a Filter from a PropertySet (e.g. a FITS header)
+     */
+    explicit Filter(CONST_PTR(lsst::daf::base::PropertySet), bool const force=false);
+
+    /**
      * Return a Filter's integral id
      */
     int getId() const { return _id; }
@@ -137,6 +149,10 @@ private :
     static IdMap *_idMap;               // mapping from id -> name
     static NameMap *_nameMap;           // mapping from name -> id
 };
+
+namespace detail {
+    int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata);
+}
 
 }}}  // lsst::afw::image
 

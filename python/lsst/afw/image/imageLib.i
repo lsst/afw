@@ -125,6 +125,7 @@ def version(HeadURL = r"$HeadURL$"):
 /******************************************************************************/
 
 %template(pairIntInt)       std::pair<int, int>;
+%template(pairIntDouble)    std::pair<int, double>;
 %template(pairDoubleDouble) std::pair<double, double>;
 %template(mapStringInt)     std::map<std::string, int>;
 
@@ -227,6 +228,8 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs);
+
+%ignore lsst::afw::image::NoWcs;
 
 %{
 #include "lsst/afw/image/Wcs.h"

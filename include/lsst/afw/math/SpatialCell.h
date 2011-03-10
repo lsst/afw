@@ -38,7 +38,9 @@
 #include <string>
 
 #include "boost/shared_ptr.hpp"
+
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/image.h"
 
 namespace lsst {
 namespace afw {

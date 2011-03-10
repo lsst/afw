@@ -261,6 +261,14 @@ namespace lsst { namespace afw { namespace image { namespace detail {
         typedef boost::gil::channel_traits<int>::const_reference const_reference;
     };
 
+    template<> struct types_traits<unsigned int, false> {
+        typedef boost::gil::gray32_image_t image_t;
+        typedef boost::gil::gray32_view_t view_t;
+        typedef boost::gil::gray32c_view_t const_view_t;
+        typedef boost::gil::channel_traits<int>::reference reference;
+        typedef boost::gil::channel_traits<int>::const_reference const_reference;
+    };
+
     template<> struct types_traits<float, false> {
         typedef boost::gil::gray32f_noscale_image_t image_t;
         typedef boost::gil::gray32f_noscale_view_t view_t;

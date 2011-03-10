@@ -85,6 +85,8 @@ int ttypeFromBitpix(const int bitpix) {
         return TUSHORT;                 // n.b. cfitsio does magic things with bzero/bscale to make Uint16
       case LONG_IMG:                    // int32
         return TINT;
+      case ULONG_IMG:                   // uint32
+        return TUINT;                   // n.b. cfitsio does magic things with bzero/bscale to make Uint32
       case FLOAT_IMG:                   // float
         return TFLOAT;
       case DOUBLE_IMG:                  // double
@@ -267,12 +269,33 @@ void getKey(fitsfile* fd,
 
      int status = 0;
      if (fits_read_keyn(fd, n, keyWordChars, keyValueChars, keyCommentChars, &status) != 0) {
-          throw LSST_EXCEPT(FitsException, err_msg(fd, status));
+         throw LSST_EXCEPT(FitsException, err_msg(fd, status));
      }
-         
+
+     // There's no long-string equivalent to fits_read_keyn, so hack it...
+
      keyWord = keyWordChars;
      keyValue = keyValueChars;
      keyComment = keyCommentChars;
+
+     // FIXME -- what about multi-line CONTINUEs?
+     status = 0;
+     char cval[80];
+     cval[0] = '\0';
+     if (ffgcnt(fd, cval, &status)) {
+         throw LSST_EXCEPT(FitsException, err_msg(fd, status));
+     }
+     if (cval[0]) {
+         //printf("got CONTINUE: \"%s\"\n", cval);
+         std::string more = cval;
+         //printf("  key \"%s\"; value \"%s\"; continued value \"%s\"\n",
+         //keyWord.c_str(), keyValue.c_str(), more.c_str());
+         // value "'/home/dalang/lsst/astrometry_net_data/imsim-2010-11-09-0/index-1011&'"; continued value "09003.fits"
+         // the last characters in a CONTINUE'd line are  &'  -- trim
+         keyValue = keyValue.substr(0, keyValue.size()-2) + more + "'";
+         //printf("Returning: key \"%s\", vale \"%s\"\n", keyWord.c_str(), keyValue.c_str());
+     }
+
 }
 
 void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, std::string const& value, std::string const& comment) {

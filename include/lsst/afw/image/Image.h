@@ -257,10 +257,10 @@ namespace image {
          * @return image position
          */
         inline double indexToPosition(
-                int ind, ///< image index
+                double ind, ///< image index
                 lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
         ) const {
-            return static_cast<double>(ind) + PixelZeroPos + (xy == X ? getX0() : getY0());
+            return ind + PixelZeroPos + (xy == X ? getX0() : getY0());
         }
         
         /// Return the %image's size;  useful for passing to constructors

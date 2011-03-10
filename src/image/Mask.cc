@@ -516,6 +516,21 @@ MaskPixelT afwImage::Mask<MaskPixelT>::getPlaneBitMask(const std::string& name) 
 }
 
 /**
+ * \brief Return the bitmask corresponding to a vector of plane names OR'd together
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if plane is invalid
+ */
+template<typename MaskPixelT>
+MaskPixelT afwImage::Mask<MaskPixelT>::getPlaneBitMask(const std::vector<std::string> &name) {
+    MaskPixelT mpix = 0x0;
+    for (std::vector<std::string>::const_iterator it = name.begin(); it != name.end(); ++it) {
+        mpix |= getBitMask(getMaskPlane(*it));
+    }
+    return mpix;
+}
+
+
+/**
  * \brief Reset the maskPlane dictionary
  */
 template<typename MaskPixelT>

@@ -31,6 +31,7 @@
 //##====----------------                                ----------------====##/
 
 #include "boost/format.hpp"
+#include "boost/algorithm/string/trim.hpp"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/image/Filter.h"
@@ -105,6 +106,41 @@ namespace {
     std::string const unknownFilter = "_unknown_";
 }
 
+/**
+ * Create a Filter from a PropertySet (e.g. a FITS header)
+ */
+Filter::Filter(CONST_PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to process (e.g. a IFITS header)
+               bool const force                         ///< Allow us to construct an unknown Filter
+              )
+{
+    std::string const key = "FILTER";
+    if( metadata->exists(key) ) {
+        std::string filterName = boost::algorithm::trim_right_copy(metadata->getAsString(key));
+        _id = _lookup(filterName, force);
+        _name = filterName;
+    }
+}
+            
+namespace detail {
+/**
+ * Remove Filter-related keywords from the metadata
+ *
+ * \return Number of keywords stripped
+ */
+int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata to be stripped
+                      )
+{
+    int nstripped = 0;
+
+    std::string key = "FILTER";
+    if (metadata->exists(key)) {
+        metadata->remove(key);
+        nstripped++;
+    }
+
+    return nstripped;
+}
+}
 /**
  * Return a list of known filters
  */

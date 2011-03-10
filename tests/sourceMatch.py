@@ -69,7 +69,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
             self.ss2.append(s)
 
-        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0)
+        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0, False)
 
         self.assertEqual(len(mat), nobj)
 
@@ -96,7 +96,7 @@ class SourceMatchTestCase(unittest.TestCase):
             s.setRa(float('nan'))
             s.setDec(float('nan'))
             ss.append(s)
-        mat = afwDetect.matchRaDec(ss1, ss2, 1.0)
+        mat = afwDetect.matchRaDec(ss1, ss2, 1.0, False)
         self.assertEqual(len(mat), 1)
 
     def testPhotometricCalib(self):
@@ -178,7 +178,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Actually do the match
         #
-        matches = afwDetect.matchRaDec(sdss, template, 1.0)
+        matches = afwDetect.matchRaDec(sdss, template, 1.0, False)
 
         self.assertEqual(len(matches), 901)
 

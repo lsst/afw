@@ -73,8 +73,9 @@ const int fitsToLsstPixels = -1;
 ///@brief Construct an invalid Wcs given no arguments
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
-    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
-    
+    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1)), _skyCoordsReversed(false) {
+    _initWcs();    
 }
 
 
@@ -87,16 +88,36 @@ Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
                 _relax(0), 
                 _wcsfixCtrl(0), 
                 _wcshdrCtrl(2),
-                _nReject(0) {
-
+                _nReject(0),
+                _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
+                _skyCoordsReversed(false)
+{
     //Internal params for wcslib. These should be set via policy - but for the moment...
     _relax = 1;
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
     initWcsLibFromFits(fitsMetadata);
+    _initWcs();
 }
 
+/*
+ * Set some internal variables that we need to refer to
+ */
+void Wcs::_initWcs()
+{
+    if (_wcsInfo) {
+        _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+        //Check for strange images where the ctypes as swapped.
+        char const *type = _wcsInfo->ctype[0];
+        int const ncompare = 4;                       // we only care about type's first 4 chars
+        _skyCoordsReversed = (strncmp(type, "DEC-", ncompare) == 0 ||
+                              strncmp(type, "ELON", ncompare) == 0 ||
+                              strncmp(type, "ELAT", ncompare) == 0 ||
+                              strncmp(type, "GLON", ncompare) == 0 ||
+                              strncmp(type, "GLAT", ncompare) == 0) ? true : false;
+    }
+}
 
 ///\brief Create a Wcs object with some known information.
 ///
@@ -123,17 +144,29 @@ Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD
                  _relax(1), 
                  _wcsfixCtrl(2), 
                  _wcshdrCtrl(2),
-                 _nReject(0) {
-    
+                 _nReject(0),
+                 _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
+                 _skyCoordsReversed(false)
+{
     initWcsLib(crval, crpix, CD, 
                ctype1, ctype2,
                equinox, raDecSys,
                cunits1, cunits2);
+    _initWcs();
 }
                
     
 ///Parse a fits header, extract the relevant metadata and create a Wcs object
 void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
+    // Some headers (e.g. SDSS ones from FNAL) have EQUINOX as a string.  Fix this,
+    // as wcslib 4.4.4 refuses to handle it
+    {
+        std::string const& key = "EQUINOX";
+        if (fitsMetadata->exists(key) && fitsMetadata->typeOf(key) == typeid(std::string)) {
+            double equinox = ::atof(fitsMetadata->getAsString(key).c_str());
+            fitsMetadata->set(key, equinox);
+        }
+    }
 
     //Check header isn't empty
     std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
@@ -144,7 +177,7 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     }
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
-    //is almost certain their abscence indicates a problem.   
+    //is almost certain their absence indicates a problem.   
     //Check for CRPIX
     if( !fitsMetadata->exists("CRPIX1") && !fitsMetadata->exists("CRPIX1a")) {
         string msg = "Neither CRPIX1 not CRPIX1a found";
@@ -201,17 +234,12 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     //The Wcs standard requires a default value for RADESYS if the keyword
     //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code 
     //conforms to Calbretta & Greisen 2002 \S 3.1
-    if( ! (fitsMetadata->exists("RADESYS") || fitsMetadata->exists("RADESYSa")) ) {
+    if (!(fitsMetadata->exists("RADESYS") || fitsMetadata->exists("RADESYSa"))) {
 
         //If equinox exist and < 1984, use FK5. If >= 1984, use FK5
-        if( (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) ) {
-            double equinox;
-            try {
-                equinox = fitsMetadata->getAsDouble("EQUINOX");
-            } catch(...) {
-                equinox = fitsMetadata->getAsDouble("EQUINOXa");
-            }
-            
+        if (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) {
+            std::string const EQUINOX = fitsMetadata->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
+            double const equinox = fitsMetadata->getAsDouble(EQUINOX);
             if(equinox < 1984) {
                 snprintf(_wcsInfo->radesys, STRLEN, "FK4");
             } else {
@@ -222,8 +250,6 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
             snprintf(_wcsInfo->radesys, STRLEN, "ICRS");
         }
     }
-                
-        
 }
 
 
@@ -341,7 +367,10 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _relax(rhs._relax), 
     _wcsfixCtrl(rhs._wcsfixCtrl), 
     _wcshdrCtrl(rhs._wcshdrCtrl),
-    _nReject(rhs._nReject) {
+    _nReject(rhs._nReject),
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
+    _skyCoordsReversed(false)
+{
     
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
@@ -361,6 +390,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
             }
         }
     }
+    _initWcs();
 }
        
 
@@ -413,6 +443,10 @@ Wcs::Ptr Wcs::clone(void) const {
 }
 
 
+bool Wcs::isInitialized() const {
+    return (_wcsInfo != NULL);
+}
+
 //
 // Accessors
 //
@@ -420,7 +454,7 @@ Wcs::Ptr Wcs::clone(void) const {
 ///Return crval. Note that this need not be the centre of the image
 CoordPtr Wcs::getSkyOrigin() const {
 
-    if(_wcsInfo != NULL) {
+    if(isInitialized()) {
         return makeCorrectCoord(_wcsInfo->crval[0], _wcsInfo->crval[1]);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
@@ -430,7 +464,7 @@ CoordPtr Wcs::getSkyOrigin() const {
 ///Return crpix in the lsst convention. Note that this need not be the centre of the image
 GeomPoint Wcs::getPixelOrigin() const {
 
-    if(_wcsInfo != NULL) {
+    if(isInitialized()) {
         //Convert from fits units back to lsst units
         double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
         double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
@@ -443,7 +477,7 @@ GeomPoint Wcs::getPixelOrigin() const {
 
 ///Return the CD matrix
 Eigen::Matrix2d Wcs::getCDMatrix() const {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
     
@@ -485,7 +519,7 @@ PropertyList::Ptr Wcs::getFitsMetadata() const {
 /// and declination increases the horizontal and vertical pixel position. In this case the image is flipped.
 bool Wcs::isFlipped()  const{
 
-    if(_wcsInfo == NULL) {
+    if(! isInitialized() ) {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
     }
 
@@ -545,85 +579,13 @@ double Wcs::pixelScale() const {
     return 3600. * sqrt(pixArea(getPixelOrigin()));
 }
 
-///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
-///
-GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
-                         ) const {
-
-    GeomPoint const sky = convertCoordToSky(coord);
-    return skyToPixel(sky[0], sky[1]);
-}
-
-
-///Given a Coord (as a shared pointer), return the sky position in the correct coordinate system
-///for this Wcs. The first element of the pair is the coordinate value corresponding to ctype1
-///and the second element corresponds to ctype2.
-GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
-    //Construct a coord object of the correct type
-    int const ncompare = 4;                       // we only care about type's first 4 chars
-    char const *type = _wcsInfo->ctype[0];
-    char const *radesys = _wcsInfo->radesys;
-    CoordPtr convertedCoord;
-
-    bool reversed = false;
-    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
-        ;                                       // using an tr1::unordered_strcmp(map
-        if(strcmp(radesys, "ICRS") == 0) {
-            convertedCoord = coord->convert(afwCoord::ICRS);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            convertedCoord = coord->convert(afwCoord::FK5);
-        }
-    } else if(strncmp(type, "GLON", ncompare) == 0) {
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELON", ncompare) == 0) {
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else if(strncmp(type, "DEC-", ncompare) == 0) {
-        //Check for strange images where the ctypes as swapped.
-        reversed=true;
-        if(strcmp(radesys, "ICRS") == 0) {
-            convertedCoord = coord->convert(afwCoord::ICRS);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            convertedCoord = coord->convert(afwCoord::FK5);
-        } else {   
-            throw LSST_EXCEPT(except::RuntimeErrorException,
-                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
-                               radesys).str());
-        }
-    } else if(strncmp(type, "GLON", ncompare) == 0) {  
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELON", ncompare) == 0) {   
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else if(strncmp(type, "GLAT", ncompare) == 0) {
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::GALACTIC);
-    } else if(strncmp(type, "ELAT", ncompare) == 0) {
-        reversed=true;
-        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
-    } else {   
-        throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Coord object doesn't support type %s") % type).str());
-    }
-
-    if (reversed) {
-        return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
-                                convertedCoord->getLongitude(afwCoord::DEGREES));
-    } else {    
-        return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
-                                convertedCoord->getLatitude(afwCoord::DEGREES));
-    }
-}
-
-///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
-///
-///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
-///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
-///CTYPE2), but the inputs are usually ra/dec. The outputs are x and y pixel position.
-GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
-    if(_wcsInfo == NULL) {
+/*
+ * Worker routine for skyToPixel
+ */
+GeomPoint Wcs::skyToPixelImpl(double sky1, ///< Longitude coordinate; DEGREES
+                              double sky2  ///< latitude  coordinate; DEGREES
+                             ) const {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
@@ -647,12 +609,48 @@ GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
                                     pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels); 
 }
 
+///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+///
+GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
+                         ) const {
 
+    GeomPoint const sky = convertCoordToSky(coord);
+    return skyToPixelImpl(sky[0], sky[1]);
+}
+
+
+///Given a Coord (as a shared pointer), return the sky position in the correct coordinate system
+///for this Wcs. The first element of the pair is the coordinate value corresponding to ctype1
+///and the second element corresponds to ctype2.
+GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
+    //Construct a coord object of the correct type
+    CONST_PTR(afwCoord::Coord) convertedCoord = coord->convert(_coordSystem);
+
+    if (_skyCoordsReversed) {
+        return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
+                                convertedCoord->getLongitude(afwCoord::DEGREES));
+    } else {    
+        return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
+                                convertedCoord->getLatitude(afwCoord::DEGREES));
+    }
+}
+
+///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+///
+///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
+///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
+///CTYPE2), but the inputs are usually ra/dec. The outputs are x and y pixel position.
+
+GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
+    return _skyCoordsReversed ?
+        skyToPixelImpl(sky2, sky1) :
+        skyToPixelImpl(sky1, sky2);
+}
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
 ///
 GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
@@ -683,7 +681,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
 void
 Wcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
 {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
     
@@ -717,7 +715,7 @@ CoordPtr Wcs::pixelToSky(const GeomPoint pixel) const {
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
 CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
-    if(_wcsInfo == NULL) {
+    if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
@@ -810,8 +808,8 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) coord   Position in sky coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+ * @param (in) coord   Position in sky coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     lsst::afw::coord::Coord::ConstPtr const & coord,
@@ -832,8 +830,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) pix     Position in pixel coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+ * @param (in) pix     Position in pixel coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     lsst::afw::geom::Point2D const & pix,
@@ -891,8 +889,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) coord   Position in sky coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ * @param (in) coord   Position in sky coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     lsst::afw::coord::Coord::ConstPtr const & coord,
@@ -913,8 +911,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) pix     Position in pixel coordinates where transform is desired.
- * @param(in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+ * @param (in) pix     Position in pixel coordinates where transform is desired.
+ * @param (in) skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     lsst::afw::geom::Point2D const & pix,
@@ -964,7 +962,7 @@ lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
 ///to other fits viewers, we change to the fits convention when writing out images.
 void Wcs::shiftReferencePixel(double dx, double dy) {
     //If the _wcsInfo structure hasn't been initialised yet, then there's nothing to do
-    if(_wcsInfo != NULL) {
+    if(isInitialized()) {
         _wcsInfo->crpix[0] += dx;
         _wcsInfo->crpix[1] += dy;
     }

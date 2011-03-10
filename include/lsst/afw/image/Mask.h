@@ -146,6 +146,7 @@ namespace image {
         
         static int getMaskPlane(const std::string& name);
         static MaskPixelT getPlaneBitMask(const std::string& name);
+        static MaskPixelT getPlaneBitMask(const std::vector<std::string> &names);
 
         static int getNumPlanesMax()  { return 8*sizeof(MaskPixelT); }
         static int getNumPlanesUsed() { return _maskPlaneDict.size(); }

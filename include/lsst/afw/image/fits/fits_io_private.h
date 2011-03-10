@@ -69,7 +69,7 @@ LSST_EXCEPTION_TYPE(FitsWrongTypeException,
 namespace cfitsio {
 #if !defined(DOXYGEN)
     extern "C" {
-#       include "fitsio.h"
+#       include "fitsio2.h"
     }
 #endif
 
@@ -130,6 +130,11 @@ template <>
 struct fits_read_support_private<boost::gil::gray32s_view_t> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int , BITPIX=LONG_IMG); // value is from fitsio.h
+};
+template <>
+struct fits_read_support_private<boost::gil::gray32_view_t> {
+    BOOST_STATIC_CONSTANT(bool,is_supported=true);
+    BOOST_STATIC_CONSTANT(int , BITPIX=ULONG_IMG); // value is from fitsio.h
 };
 template <>
 struct fits_read_support_private<boost::gil::gray32f_noscale_view_t> {

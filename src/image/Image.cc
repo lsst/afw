@@ -414,6 +414,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         lsst::afw::image::detail::types_traits<unsigned short>::image_t,
         lsst::afw::image::detail::types_traits<short>::image_t,
         lsst::afw::image::detail::types_traits<int>::image_t,
+        lsst::afw::image::detail::types_traits<unsigned int>::image_t,
         lsst::afw::image::detail::types_traits<float>::image_t,
         lsst::afw::image::detail::types_traits<double>::image_t
     > fits_img_types;

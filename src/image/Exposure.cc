@@ -226,6 +226,16 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
     // Strip keywords from the input metadata that are related to the generated Wcs
     //
     detail::stripWcsKeywords(metadata, _wcs);
+    /*
+     * Filter
+     */
+    _filter = Filter(metadata, true);
+    afwImage::detail::stripFilterKeywords(metadata);
+    /*
+     * Calib
+     */
+    _calib = PTR(afwImage::Calib)(new afwImage::Calib(metadata));
+    afwImage::detail::stripCalibKeywords(metadata);
 
     //If keywords LTV[1,2] are present, the image on disk is already a subimage, so
     //we should note this fact. Also, shift the wcs so the crpix values refer to 
@@ -241,64 +251,30 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
         _wcs->shiftReferencePixel(0, -1*metadata->getAsDouble(key));
         metadata->remove(key);
     }
-
-    key = "FILTER";
-    if( metadata->exists(key) ) {
-        std::string filterName = boost::algorithm::trim_right_copy(metadata->getAsString(key));
-        try {
-            _filter = Filter(filterName);
-        } catch(lsst::pex::exceptions::NotFoundException &) {
-            lsst::pex::logging::TTrace<1>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
-            _filter = Filter(filterName, true); // force the filter to be defined
-        }
-        metadata->remove(key);
-    }
-    /*
-     * Calib
-     */
-    _calib = afwImage::Calib::Ptr(new afwImage::Calib);
-
-    key = "TIME-MID";
-    if (metadata->exists(key)) {
-        lsst::daf::base::DateTime const
-            time_mid(boost::algorithm::trim_right_copy(metadata->getAsString(key)));
-        
-        _calib->setMidTime(time_mid);
-        metadata->remove(key);
-    }
-
+	
+	//In some SDSS images, EXPTIME is a string, not a double.
     key = "EXPTIME";
     if (metadata->exists(key)) {
 	    try {
 			_calib->setExptime(metadata->getAsDouble(key));
 		} catch(lsst::daf::base::TypeMismatchException &) {
-			//In some SDSS images, EXPTIME is a string, not a double
-			std::string expTimeS = metadata->getAsString(key);
-			std::stringstream ss;
-			ss << expTimeS;
-			double expTime = 0.;
-			ss >> expTime;
-			_calib->setExptime(expTime);
+			//EXPTIME wasn't a double, presumably it's a string.
+			//Try to read it as a string and convert it to a double using stringstream.
+			try {
+				std::string expTimeS = metadata->getAsString(key);
+				std::stringstream ss;
+				ss << expTimeS;
+				double expTime = 0.;
+				ss >> expTime;
+				_calib->setExptime(expTime);
+			}
+			catch (...) {
+				//Oh well, we tried our best (something's wrong with the FITS file).
+			}
 		}
         metadata->remove(key);
     }
-
-    key = "FLUXMAG0";
-    if (metadata->exists(key)) {
-        double const fluxMag0 = metadata->getAsDouble(key);
-        metadata->remove(key);
-        
-        key = "FLUXMAG0ERR";
-        if (metadata->exists(key)) {
-            double const fluxMag0Err = metadata->getAsDouble(key);
-            metadata->remove(key);
-
-            _calib->setFluxMag0(fluxMag0, fluxMag0Err);
-        } else {
-            _calib->setFluxMag0(fluxMag0);
-        }
-    }
-    
+	
     setMetadata(metadata);
 }
 

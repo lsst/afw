@@ -43,7 +43,14 @@ class Ds9Error(IOError):
 try:
     type(_frame0)
 except NameError:
+    _currentFrame = None
+
     def selectFrame(frame):
+        global _currentFrame
+        if frame != _currentFrame:
+            ds9Cmd(flush=True)
+            _currentFrame = frame
+
         return "frame %d" % (frame + _frame0)
 
     def setFrame0(frame0):
@@ -167,6 +174,9 @@ def setMaskTransparency(transparency=None):
 
     _maskTransparency = transparency
 
+    if transparency is not None:
+        ds9Cmd("mask transparency %d" % transparency)
+
 setMaskTransparency()
 
 def getMaskTransparency():
@@ -201,10 +211,94 @@ def ds9Version():
         print >> sys.stderr, "Error reading version: %s (%s)" % (v, e)
         return "0.0.0"
 
-def ds9Cmd(cmd, trap=True):
+try:
+    cmdBuffer
+except NameError:
+    XPA_SZ_LINE = 4096                  # internal buffersize in xpa.  Sigh
+
+    class Buffer(object):
+        """Control buffering the sending of commands to ds9;
+annoying but necessary for anything resembling performance
+
+The usual usage pattern is probably:
+   ds9.cmdBuffer.pushSize()
+   # bunches of ds9.{dot,line} commands
+   ds9.cmdBuffer.flush()
+   # bunches more ds9.{dot,line} commands
+   ds9.cmdBuffer.popSize()
+        """
+
+        def __init__(self, size=0):
+            """Create a command buffer, with a maximum depth of size"""
+            self._commands = ""         # list of pending commands
+            self._lenCommands = len(self._commands)
+            self._bufsize = []          # stack of bufsizes
+
+            self._bufsize.append(size)  # don't call self.size() as ds9Cmd isn't defined yet
+
+        def set(self, size):
+            """Set the ds9 buffer size to size"""
+            if size < 0:
+                size = XPA_SZ_LINE - 5
+
+            if size > XPA_SZ_LINE:
+                print >> sys.stderr, \
+                      "xpa silently hardcodes a limit of %d for buffer sizes (you asked for %d) " % \
+                      (XPA_SZ_LINE, size)
+                self.set(-1)            # use max buffersize
+                return
+
+            if self._bufsize:
+                self._bufsize[-1] = size # change current value
+            else:
+                self._bufsize.append(size) # there is no current value; set one
+
+            self.flush()
+
+        def _getSize(self):
+            """Get the current ds9 buffer size"""
+            return self._bufsize[-1]
+
+        def pushSize(self, size=-1):
+            """Replace current ds9 command buffer size with size (see also popSize)
+            @param:  Size of buffer (-1: largest possible given bugs in xpa)"""
+            self._bufsize.append(0)
+            self.set(size)
+
+        def popSize(self):
+            """Switch back to the previous command buffer size (see also pushSize)"""
+            if len(self._bufsize) > 1:
+                self._bufsize.pop()
+
+            self.flush()
+
+        def flush(self):
+            """Flush the pending commands"""
+            ds9Cmd(flush=True)
+
+    cmdBuffer = Buffer(0)
+
+
+def ds9Cmd(cmd=None, trap=True, flush=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
+        return
+
+    global cmdBuffer
+    if cmd:
+        # Work around xpa's habit of silently truncating long lines
+        if cmdBuffer._lenCommands + len(cmd) > XPA_SZ_LINE - 5: # 5 to handle newlines and such like
+            ds9Cmd(flush=True)
+
+        cmdBuffer._commands += ";" + cmd
+        cmdBuffer._lenCommands += 1 + len(cmd)
+
+    if flush or cmdBuffer._lenCommands >= cmdBuffer._getSize():
+        cmd = cmdBuffer._commands + "\n"
+        cmdBuffer._commands = ""
+        cmdBuffer._lenCommands = 0
+    else:
         return
 
     try:
@@ -297,6 +391,7 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 break
 
     ds9Cmd(selectFrame(frame))
+    erase(frame)
 
     if settings:
         for setting in settings:
@@ -365,6 +460,11 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
     else:
         raise RuntimeError, "Unsupported type %s" % data.__repr__()
 
+try:
+    haveGzip
+except NameError:
+    haveGzip = not os.system("gzip < /dev/null > /dev/null 2>&1") # does gzip work?
+
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
@@ -375,6 +475,9 @@ def _mtv(data, wcs, title, isMask):
                 data |= 0x8000  # Hack. ds9 mis-handles BZERO/BSCALE in masks. This is a copy we're modifying
         else:
             xpa_cmd = "xpaset %s fits" % getXpaAccessPoint()
+
+        if haveGzip:
+            xpa_cmd = "gzip | " + xpa_cmd
 
         pfd = os.popen(xpa_cmd, "w")
     else:
@@ -406,7 +509,7 @@ def erase(frame=None):
     if frame is None:
         return
 
-    ds9Cmd(selectFrame(frame) + "; regions delete all")
+    ds9Cmd(selectFrame(frame) + "; regions delete all", flush=True)
 
 def dot(symb, c, r, frame=None, size=2, ctype=None):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]

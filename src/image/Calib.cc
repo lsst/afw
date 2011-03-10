@@ -29,7 +29,9 @@
  */
 #include <cmath>
 #include "boost/format.hpp"
+#include "boost/algorithm/string/trim.hpp"
 #include "lsst/pex/exceptions.h"
+#include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 
@@ -38,7 +40,78 @@ namespace lsst { namespace afw { namespace image {
  * ctor
  */
 Calib::Calib() : _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
+/**
+ * ctor
+ */
+Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
+    lsst::daf::base::DateTime midTime;
+    double exptime = 0.0;
+    double fluxMag0 = 0.0, fluxMag0Sigma = 0.0;
 
+    std::string key = "TIME-MID";
+    if (metadata->exists(key)) {
+        midTime  = lsst::daf::base::DateTime(boost::algorithm::trim_right_copy(metadata->getAsString(key)));
+    }
+
+    key = "EXPTIME";
+    if (metadata->exists(key)) {
+        exptime = metadata->getAsDouble(key);
+    }
+
+    key = "FLUXMAG0";
+    if (metadata->exists(key)) {
+        fluxMag0 = metadata->getAsDouble(key);
+        
+        key = "FLUXMAG0ERR";
+        if (metadata->exists(key)) {
+            fluxMag0Sigma = metadata->getAsDouble(key);
+        }
+    }
+        
+    _midTime = midTime;
+    _exptime = exptime;
+    _fluxMag0 = fluxMag0;
+    _fluxMag0Sigma = fluxMag0Sigma;
+}
+
+namespace detail {
+/**
+ * Remove Calib-related keywords from the metadata
+ *
+ * \return Number of keywords stripped
+ */
+int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata to be stripped
+                      )
+{
+    int nstripped = 0;
+
+    std::string key = "TIME-MID";
+    if (metadata->exists(key)) {
+        metadata->remove(key);
+        nstripped++;
+    }
+
+    key = "EXPTIME";
+    if (metadata->exists(key)) {
+        metadata->remove(key);
+        nstripped++;
+    }
+
+    key = "FLUXMAG0";
+    if (metadata->exists(key)) {
+        metadata->remove(key);
+        nstripped++;
+    }
+        
+    key = "FLUXMAG0ERR";
+    if (metadata->exists(key)) {
+        metadata->remove(key);
+        nstripped++;
+    }
+
+    return nstripped;
+}
+}
 /**
  * Set the time of the middle of an exposure
  *

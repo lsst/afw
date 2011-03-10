@@ -79,10 +79,9 @@ BOOST_AUTO_TEST_CASE(persistUnpersistMatchList) {
 	std::cout << "Persisted size: " << smv.size() << ", unpersisted size: " << smv2.size() << std::endl;
 	BOOST_CHECK_MESSAGE(smv2.size() == smv.size(), "unpersisted SourceMatchVector has the wrong size.");
 
-	for (int i=0; i<smv.size(); i++) {
-		BOOST_CHECK_MESSAGE(smv2[i].first->getSourceId() == refids[i], "Reference id is wrong");
-		BOOST_CHECK_MESSAGE(smv2[i].second->getSourceId() == srcids[i], "Source id is wrong");
+	for (unsigned int i = 0; i != smv.size(); i++) {
+            BOOST_CHECK_MESSAGE(smv2[i].first->getSourceId() == refids[i], "Reference id is wrong");
+            BOOST_CHECK_MESSAGE(smv2[i].second->getSourceId() == srcids[i], "Source id is wrong");
 	}
-
 }
 
