@@ -159,8 +159,8 @@ public:
     explicit Ellipse(BaseCore const & core, Point2D const & center = Point2D()) :
         _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(BaseCore::Ptr const & core, Point2D const & center = Point2D()) :
-        _core(core), _center(center) {}
+    explicit Ellipse(BaseCore::ConstPtr const & core, Point2D const & center = Point2D()) :
+        _core(core->clone()), _center(center) {}
 
 #ifndef SWIG
     Ellipse(Transformer const & other);

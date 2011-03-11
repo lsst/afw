@@ -237,6 +237,8 @@ void Footprint::normalize() {
                     _area += rspan->getWidth();
                     if(rspan->_x1 > maxX) maxX = rspan->_x1;
                 }
+            } else {
+                _area += rspan->getWidth();
             }
 
             y = rspan->_y;            

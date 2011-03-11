@@ -73,6 +73,8 @@ public:
 
     explicit MultiShapeletFunction(ElementList const & elements) : _elements(elements) {}
 
+    explicit MultiShapeletFunction(ShapeletFunction const & element) : _elements(1, element) {}
+
 private:
     ElementList _elements;
 };

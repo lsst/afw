@@ -35,13 +35,15 @@ template <typename T, typename U, int N, int C, int D>
 void flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    ndarray::Array<U, N-1, D> const & dest
+    ndarray::Array<U, N-1, D> const & dest,
+    geom::Point2I const & origin = geom::Point2I()
 );
 
 template <typename T, int N, int C>
 ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
-    ndarray::Array<T,N,C> const & src
+    ndarray::Array<T,N,C> const & src,
+    geom::Point2I const & origin = geom::Point2I()
 );
 
 
@@ -49,13 +51,15 @@ template <typename T, typename U, int N, int C, int D>
 void expandArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    ndarray::Array<U, N+1, D> const & dest
+    ndarray::Array<U, N+1, D> const & dest,
+    geom::Point2I const & origin = geom::Point2I()
 );
 
 template <typename T, int N, int C>
 ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     Footprint const & fp,
-    ndarray::Array<T, N, C> const & src
+    ndarray::Array<T, N, C> const & src,
+    geom::Point2I const & origin = geom::Point2I()
 );
 
 }}}
