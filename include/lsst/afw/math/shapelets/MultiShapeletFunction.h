@@ -105,6 +105,9 @@ public:
     /// @brief Compute the definite integral or integral moments.
     Pixel integrate() const;
 
+    /// @brief Return the unweighted dipole and quadrupole moments of the function as an ellipse.
+    geom::ellipses::Ellipse computeMoments() const;
+
     /// @brief Update the evaluator from the given function.
     void update(MultiShapeletFunction const & function);
 

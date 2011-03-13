@@ -137,7 +137,7 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
                                               const int hdu,               ///< The HDU to read
                                               geom::Box2I const& bbox,      ///< Only read these pixels
-                                              ImageOrigin const origin
+                                              ImageOrigin const origin     ///< Coordinate system of the bbox
                                              ) :
     lsst::daf::data::LsstBase(typeid(this))
 {             ///< HDU within the file

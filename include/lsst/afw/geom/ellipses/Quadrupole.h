@@ -96,7 +96,7 @@ public:
     /// @brief Construct from a parameter vector.
     explicit Quadrupole(BaseCore::ParameterVector const & vector, bool normalize=false);
 
-    /// @brief Construct from parameter values.
+    /// @brief Construct from a 2x2 matrix.
     explicit Quadrupole(Matrix const & matrix, bool normalize=true);
 
     /// @brief Copy constructor.

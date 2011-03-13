@@ -95,6 +95,7 @@ SWIG_SHARED_PTR(BaseCorePtr, lsst::afw::geom::ellipses::BaseCore);
 
 %define %EllipseCore_PREINCLUDE(NAME)
 %feature(notabstract) lsst::afw::geom::ellipses::NAME;
+%implicitconv lsst::afw::geom::ellipses::NAME;
 SWIG_SHARED_PTR_DERIVED(
     NAME##Ptr,
     lsst::afw::geom::ellipses::BaseCore,
@@ -113,6 +114,9 @@ SWIG_SHARED_PTR_DERIVED(
     void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
        self->transform(t).inPlace();
     }
+    lsst::afw::geom::LinearTransform _getGridTransform() {
+        return self->getGridTransform();
+    }
     lsst::afw::geom::ellipses::NAME::Ptr _convolve(lsst::afw::geom::ellipses::BaseCore const & other) {
        return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(self->convolve(other).copy());
     }
@@ -123,6 +127,7 @@ SWIG_SHARED_PTR_DERIVED(
     def transform(self, t): return self._transform(t)
     def transformInPlace(self, t): self._transformInPlace(t)
     def convolve(self, t): return self._convolve(t)
+    def getGridTransform(self): return self._getGridTransform()
     }
 }
 %enddef
@@ -136,8 +141,27 @@ SWIG_SHARED_PTR_DERIVED(
 %EllipseCore_POSTINCLUDE(Axes);
 %EllipseCore_POSTINCLUDE(Quadrupole);
 
+%extend lsst::afw::geom::ellipses::Axes {
+    %pythoncode {
+    def __repr__(self):
+        return "Axes(a=%r, b=%r, theta=%r)" % (self.getA(), self.getB(), self.getTheta())
+    def __str__(self):
+        return "(a=%s, b=%s, theta=%s)" % (self.getA(), self.getB(), self.getTheta())
+    }
+}
+
+%extend lsst::afw::geom::ellipses::Quadrupole {
+    %pythoncode {
+    def __repr__(self):
+        return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIXX(), self.getIYY(), self.getIXY())
+    def __str__(self):
+        return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIXX(), self.getIYY(), self.getIXY())
+    }
+}
+
 %include "Separable.i"
 
+%feature("valuewrapper") lsst::afw::geom::ellipses::Ellipse;
 %ignore lsst::afw::geom::ellipses::Ellipse::getCore;
 %ignore lsst::afw::geom::ellipses::Ellipse::transform;
 %ignore lsst::afw::geom::ellipses::Ellipse::getGridTransform;
@@ -166,7 +190,7 @@ SWIG_SHARED_PTR(EllipsePtr, lsst::afw::geom::ellipses::Ellipse);
     def transform(self, t): return self._transform(t)
     def transformInPlace(self, t): self._transformInPlace(t)
     def getGridTransform(self, t): return self._getGridTransform(t)
-    def getCore(self): return self._getCorePtr()
+    def getCore(self): return self._getCorePtr().cast()
     def __repr__(self):
         return "Ellipse(%r, %r)" % (self.getCore(), self.getCenter())
     def __str__(self):

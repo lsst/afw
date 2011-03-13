@@ -40,6 +40,9 @@
 #include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/geom/ellipses.h"
+
+#include <list>
 
 namespace lsst {
 namespace afw {
@@ -67,7 +70,7 @@ public:
     EllipseCore & getEllipse() { return _ellipse; }
 
     /// @brief Set the ellipse.
-    void setEllipse(EllipseCore const & ellipse) { _ellipse = ellipse; }
+    void setEllipse(lsst::afw::geom::ellipses::BaseCore const & ellipse) { _ellipse = ellipse; }
     
     /// @brief Return the radius of the ellipse.
     double getRadius() const { return _ellipse.getRadius(); }
@@ -115,11 +118,11 @@ public:
     );
 
     /// @brief Construct a function and set all coefficients to zero.
-    ShapeletFunction(int order, BasisTypeEnum basisType, EllipseCore const & ellipse);
+    ShapeletFunction(int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::BaseCore const & ellipse);
 
     /// @brief Construct a function with a deep-copied coefficient vector.
     ShapeletFunction(
-        int order, BasisTypeEnum basisType, EllipseCore const & ellipse,
+        int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::BaseCore const & ellipse,
         lsst::ndarray::Array<Pixel,1,1> const & coefficients
     );
 
@@ -130,6 +133,14 @@ public:
     ShapeletFunction & operator=(ShapeletFunction const & other);
 
 private:
+
+    friend class std::list<ShapeletFunction>;
+
+    /// @brief Default constructor to appease SWIG (used by std::list).
+    ShapeletFunction() : _order(0), _basisType(HERMITE), _ellipse(), _coefficients(ndarray::allocate(1)) {
+        _coefficients[0] = 0.0;
+    }
+
     int _order;
     BasisTypeEnum _basisType;
     EllipseCore _ellipse;
@@ -154,19 +165,22 @@ public:
     }
 
     /// @brief Evaluate at the given point.
-    Pixel operator()(geom::Point2D const & point) const {
+    Pixel operator()(lsst::afw::geom::Point2D const & point) const {
         return _h.sumEvaluation(_coefficients, _transform(point));
     }
 
     /// @brief Evaluate at the given point.
-    Pixel operator()(geom::Extent2D const & point) const {
+    Pixel operator()(lsst::afw::geom::Extent2D const & point) const {
         return _h.sumEvaluation(_coefficients, _transform(point));
     }
 
     /// @brief Compute the definite integral or integral moments.
     Pixel integrate() const {
-        return _h.sumIntegration(_coefficients) / std::sqrt(_transform.computeDeterminant());
+        return _h.sumIntegration(_coefficients) / _transform.computeDeterminant();
     }
+
+    /// @brief Return the unweighted dipole and quadrupole moments of the function as an ellipse.
+    lsst::afw::geom::ellipses::Ellipse computeMoments() const;
 
     /// @brief Update the evaluator from the given function.
     void update(ShapeletFunction const & function);
@@ -176,7 +190,10 @@ public:
 
 private:
     
+    friend class MultiShapeletFunctionEvaluator;
+
     void _initialize(ShapeletFunction const & function);
+
     ndarray::Array<Pixel const,1,1> _coefficients;
     geom::LinearTransform _transform;
     detail::HermiteEvaluator _h;

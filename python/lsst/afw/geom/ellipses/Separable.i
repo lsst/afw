@@ -112,6 +112,10 @@ SWIG_SHARED_PTR_DERIVED(
     def transform(self, t): return self._transform(t)
     def transformInPlace(self, t): self._transformInPlace(t)
     def convolve(self, t): return self._convolve(t)
+    def __repr__(self):
+        return "Separable(%r, %r)" % (self.getEllipticity(), self.getRadius())
+    def __str__(self):
+        return "(%s, %s)" % (self.getEllipticity(), self.getRadius())
     }
 }
 

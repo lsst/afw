@@ -154,7 +154,7 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     Exposure const &src, ///< Parent Exposure
     afwGeom::Box2I const& bbox,    ///< Desired region in Exposure 
-    ImageOrigin const origin,
+    ImageOrigin const origin,   ///< Coordinate system for bbox
     bool const deep      ///< Should we copy the pixels?
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -195,7 +195,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     std::string const& baseName,    ///< Exposure's base input file name
     int const hdu,                  ///< Desired HDU
     afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,
+    ImageOrigin const origin,       ///< Coordinate system for bbox
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :
     lsst::daf::data::LsstBase(typeid(this))

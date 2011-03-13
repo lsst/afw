@@ -37,6 +37,7 @@ Python interface to lsst::afw::math::shapelets classes and functions
 %}
 
 %include "lsst/p_lsstSwig.i"
+%include "std_list.i"
 
 %{
 #include "lsst/afw/geom.h"
@@ -80,6 +81,10 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
         return "%s (setup: %s)" % (version_svn, version_eups)
 
 %}
+
+%feature(valuewrapper) lsst::afw::math::shapelets::ShapeletFunction;
+%feature(valuewrapper) lsst::afw::math::shapelets::MultiShapeletFunction;
+%template(MultiShapeletElementList) std::list<lsst::afw::math::shapelets::ShapeletFunction>;
 
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"

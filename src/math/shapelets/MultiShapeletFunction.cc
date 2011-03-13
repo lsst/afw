@@ -29,6 +29,7 @@
 #include <boost/format.hpp>
 
 namespace shapelets = lsst::afw::math::shapelets;
+namespace geom = lsst::afw::geom;
 namespace nd = lsst::ndarray;
 
 void shapelets::MultiShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
@@ -89,4 +90,31 @@ shapelets::MultiShapeletFunctionEvaluator::MultiShapeletFunctionEvaluator(
     shapelets::MultiShapeletFunction const & function
 ) {
     update(function);
+}
+
+geom::Ellipse shapelets::MultiShapeletFunctionEvaluator::computeMoments() const {
+    double monopole = 0.0;
+    Eigen::Vector2d dipole = Eigen::Vector2d::Zero();
+    Eigen::Matrix2d quadrupole = Eigen::Matrix2d::Zero();
+    for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
+        double determinant = i->_transform.computeDeterminant();
+        monopole += i->_h.sumIntegration(i->_coefficients, 0, 0) / determinant;
+        Eigen::Matrix2d a = i->_transform.invert().getMatrix();
+        dipole += a * Eigen::Vector2d(
+            i->_h.sumIntegration(i->_coefficients, 1, 0) / determinant,
+            i->_h.sumIntegration(i->_coefficients, 0, 1) / determinant
+        );
+        Eigen::Matrix2d q;
+        q(0,0) = i->_h.sumIntegration(i->_coefficients, 2, 0) / determinant;
+        q(1,1) = i->_h.sumIntegration(i->_coefficients, 0, 2) / determinant;
+        q(0,1) = q(1,0) = i->_h.sumIntegration(i->_coefficients, 1, 1) / determinant;
+        quadrupole += a * q * a.transpose();
+    }
+    dipole /= monopole;
+    quadrupole /= monopole;
+    quadrupole -= dipole * dipole.transpose();
+    return geom::Ellipse(
+        geom::ellipses::Quadrupole(geom::ellipses::Quadrupole::Matrix(quadrupole), false), 
+        geom::Point2D(dipole)
+    );
 }

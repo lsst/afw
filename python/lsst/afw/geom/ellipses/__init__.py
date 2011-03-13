@@ -55,3 +55,5 @@ Separable = {
     (LogShear, LogTraceRadius):SeparableLogShearLogTraceRadius
 }
 
+BaseCore.cast = lambda self: globals()[self.getName()].cast(self)
+    

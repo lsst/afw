@@ -49,7 +49,7 @@ public:
     /**
      *  @brief Evaluate a shapelet convolution matrix in the given array.
      *
-     *  @param[in/out] ellipse   On input, the ellipse core of the unconvolved shapelet expansion.
+     *  @param[in,out] ellipse   On input, the ellipse core of the unconvolved shapelet expansion.
      *                           On output, the ellipse core of the convolved shapelet expansion.
      */
     ndarray::Array<Pixel const,2,2> evaluate(geom::ellipses::BaseCore & ellipse) const;

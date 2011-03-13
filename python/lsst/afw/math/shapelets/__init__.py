@@ -21,3 +21,6 @@
 #
 
 from shapeletsLib import *
+from lsst.afw.geom import ellipses
+
+EllipseCore = lsst.afw.geom.ellipses.Separable[ellipses.Distortion, ellipses.TraceRadius]

@@ -134,7 +134,7 @@ template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
     Mask const &rhs,    ///< mask to copy
     afwGeom::Box2I const &bbox,   ///< subregion to copy
-    ImageOrigin const origin,
+    ImageOrigin const origin,  ///< coordinate system of the bbox
     bool const deep     ///< deep copy? (construct a view with shared pixels if false)
 ) :
     afwImage::ImageBase<MaskPixelT>(rhs, bbox, origin, deep),
@@ -196,7 +196,7 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
         int const hdu,                                     ///< HDU to read 
         lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
         afwGeom::Box2I const& bbox,                                  ///< Only read these pixels
-        ImageOrigin const origin,
+        ImageOrigin const origin,                          ///< coordinate system of the bbox
         bool const conformMasks                            ///< Make Mask conform to mask layout in file?
 ) :
     afwImage::ImageBase<MaskPixelT>(),

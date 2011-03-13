@@ -447,7 +447,7 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
 template<typename PixelT>
 image::Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
                             geom::Box2I const& bbox,  ///< Specify desired region
-                            ImageOrigin const origin,
+                            ImageOrigin const origin, ///< Coordinate system of the bbox
                             bool const deep    ///< If false, new ImageBase shares storage with rhs; if true
                                                    ///< make a new, standalone, ImageBase
                            ) :

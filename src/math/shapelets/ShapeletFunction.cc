@@ -30,6 +30,7 @@
 #include <boost/format.hpp>
 
 namespace shapelets = lsst::afw::math::shapelets;
+namespace geom = lsst::afw::geom;
 namespace nd = lsst::ndarray;
 
 static inline void validateSize(int expected, int actual) {
@@ -78,7 +79,7 @@ shapelets::ShapeletFunction::ShapeletFunction(
 }
  
 shapelets::ShapeletFunction::ShapeletFunction(
-    int order, BasisTypeEnum basisType, EllipseCore const & ellipse
+    int order, BasisTypeEnum basisType, geom::ellipses::BaseCore const & ellipse
 ) :
     _order(order), _basisType(basisType), _ellipse(ellipse),
     _coefficients(nd::allocate(computeSize(_order)))
@@ -87,7 +88,7 @@ shapelets::ShapeletFunction::ShapeletFunction(
 }
 
 shapelets::ShapeletFunction::ShapeletFunction(
-    int order, BasisTypeEnum basisType, EllipseCore const & ellipse,
+    int order, BasisTypeEnum basisType, geom::ellipses::BaseCore const & ellipse,
     nd::Array<shapelets::Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(ellipse),
@@ -152,4 +153,26 @@ void shapelets::ShapeletFunction::convolve(shapelets::ShapeletFunction const & o
     if (_basisType == LAGUERRE) {
         ConversionMatrix::convertCoefficientVector(_coefficients, HERMITE, LAGUERRE, getOrder());
     }
+}
+
+geom::Ellipse shapelets::ShapeletFunctionEvaluator::computeMoments() const {
+    double monopole = _h.sumIntegration(_coefficients, 0, 0);
+    Eigen::Matrix2d a = _transform.invert().getMatrix();
+    Eigen::Vector2d dipole(
+        _h.sumIntegration(_coefficients, 1, 0),
+        _h.sumIntegration(_coefficients, 0, 1)
+    );
+    dipole /= monopole;
+    Eigen::Matrix2d quadrupole;
+    quadrupole(0, 0) = _h.sumIntegration(_coefficients, 2, 0);
+    quadrupole(1, 1) = _h.sumIntegration(_coefficients, 0, 2);
+    quadrupole(0, 1) = quadrupole(1, 0) = _h.sumIntegration(_coefficients, 1, 1);
+    quadrupole /= monopole;
+    dipole = a * dipole;
+    quadrupole = a * quadrupole * a.transpose() - dipole * dipole.transpose();
+    quadrupole(0, 1) = quadrupole(1, 0);
+    return geom::Ellipse(
+        geom::ellipses::Quadrupole(geom::ellipses::Quadrupole::Matrix(quadrupole), false),
+        geom::Point2D(dipole)
+    );
 }

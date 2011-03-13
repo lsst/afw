@@ -12,9 +12,22 @@ def makeBasisImages(basis, x, y):
             basis.fillEvaluation(z[i,j,:], float(px), float(py))
     return z
 
-def plotBasisImages(basis, x, y):
+def compareMoments(basis, x, y, z):
+    e = basis.evaluate()
+    monopole = z.sum()
+    dipole = geom.Point2D((x * z).sum() / monopole, (y * z).sum() / monopole)
+    dx = x - dipole.getX()
+    dy = y - dipole.getY()
+    quadrupole = ellipses.Quadrupole(
+        (dx**2 * z).sum() / monopole,
+        (dy**1 * z).sum() / monopole,
+        (dx * dy * z).sum() / monopole
+        )
+    print ellipses.Ellipse(quadrupole, monopole)
+    print e.computeMoments()
+
+def plotBasisImages(basis, z):
     n = basis.getOrder()
-    z = makeBasisImages(basis, x, y)
     k = 0
     vmin = z.min()
     vmax = z.max()
@@ -31,14 +44,19 @@ def plotBasisImages(basis, x, y):
                 pyplot.xlabel("p=%d, q=%d (%s)" % (i-j/2, j/2, "Im" if j % 2 else "Re"))
             k += 1
 
+def processBasis(basis, x, y):
+    z = makeBasisImages(basis, x, y)
+    plotBasisImages(basis, z)
+    
+
 def main():
     x = numpy.linspace(-5, 5, 101)
     y = numpy.linspace(-5, 5, 101)
     ellipse = ellipses.Quadrupole(ellipses.Axes(1.2, 0.8, 0.3))
     hermiteBasis = shapelets.BasisEvaluator(4, shapelets.HERMITE)
     laguerreBasis = shapelets.BasisEvaluator(4, shapelets.LAGUERRE)
-    plotBasisImages(hermiteBasis, x, y)
-    plotBasisImages(laguerreBasis, x, y)
+    processBasis(hermiteBasis, x, y)
+    processBasis(laguerreBasis, x, y)
     pyplot.show()
 
 if __name__ == "__main__":

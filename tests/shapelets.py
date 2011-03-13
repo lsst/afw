@@ -43,11 +43,50 @@ import lsst.afw.math.shapelets as shapelets
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class ShapeletsTestCase(unittest.TestCase):
-    
+class ShapeletTestMixin(object):
+
+    def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
+        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%f != %f" % (a, b))
+
+    def makeImage(self, function, x, y):
+        z = numpy.zeros((y.size, x.size), dtype=float)
+        e = function.evaluate()
+        for i, py in enumerate(y):
+            for j, px in enumerate(x):
+                z[i,j] = e(float(px), float(py))
+        return z
+
+    def measureMoments(self, function, x, y, z):
+        gx, gy = numpy.meshgrid(x, y)
+        m = z.sum()
+        dipole = geom.Point2D((gx * z).sum() / m, (gy * z).sum() / m)
+        gx -= dipole.getX()
+        gy -= dipole.getY()
+        quadrupole = ellipses.Quadrupole(
+            (gx**2 * z).sum() / m,
+            (gy**2 * z).sum() / m,
+            (gx * gy * z).sum() / m
+            )
+        imageMoments = ellipses.Ellipse(quadrupole, dipole)
+        shapeletMoments = function.evaluate().computeMoments()
+        self.assertClose(imageMoments.getCenter().getX(), shapeletMoments.getCenter().getX(),
+                         rtol=1E-4, atol=1E-3)
+        self.assertClose(imageMoments.getCenter().getY(), shapeletMoments.getCenter().getY(),
+                         rtol=1E-4, atol=1E-3)
+        self.assertClose(imageMoments.getCore().getIXX(), shapeletMoments.getCore().getIXX(),
+                         rtol=1E-4, atol=1E-3)
+        self.assertClose(imageMoments.getCore().getIYY(), shapeletMoments.getCore().getIYY(),
+                         rtol=1E-4, atol=1E-3)
+        self.assertClose(imageMoments.getCore().getIXY(), shapeletMoments.getCore().getIXY(),
+                         rtol=1E-4, atol=1E-3)
+        integral = numpy.trapz(numpy.trapz(z, gx, axis=1), y, axis=0)
+        self.assertClose(integral, function.evaluate().integrate(), rtol=1E-3, atol=1E-2)
+
+class ShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
+
     def setUp(self):
         order = 4
-        self.ellipse = ellipses.Quadrupole(ellipses.Axes(1.2, 0.8, 0.3))
+        self.ellipse = ellipses.Axes(1.2, 0.8, 0.3)
         self.coefficients = numpy.random.randn(shapelets.computeSize(order))
         self.x = numpy.random.randn(25)
         self.y = numpy.random.randn(25)
@@ -59,29 +98,57 @@ class ShapeletsTestCase(unittest.TestCase):
             shapelets.ShapeletFunction(order, shapelets.HERMITE, self.coefficients),
             shapelets.ShapeletFunction(order, shapelets.LAGUERRE, self.coefficients),
             ]
+        for function in self.functions:
+            function.setEllipse(self.ellipse)
 
-    def testEvaluation(self):
+    def testConversion(self):
         for basis, function in zip(self.bases, self.functions):
             evaluator = function.evaluate()
             v = numpy.zeros(self.coefficients.shape, dtype=float)
+            t = self.ellipse.getGridTransform()
             for x, y in zip(self.x, self.y):
-                basis.fillEvaluation(v, x, y)
+                basis.fillEvaluation(v, t(geom.Point2D(x, y)))
                 p1 = evaluator(x, y)
                 p2 = numpy.dot(v, self.coefficients)
                 self.assertClose(p1, p2)
-
-    def testIntegration(self):
-        for basis, function in zip(self.bases, self.functions):
-            evaluator = function.evaluate()
             v = numpy.zeros(self.coefficients.shape, dtype=float)
             basis.fillIntegration(v)
+            v /= t.computeDeterminant()
             p1 = evaluator.integrate()
             p2 = numpy.dot(v, self.coefficients)
             self.assertClose(p1, p2)
-        
 
-    def assertClose(self, a, b):
-        self.assert_(numpy.allclose(a, b), "%f != %f" % (a, b))
+    def testMoments(self):
+        x = numpy.linspace(-10, 10, 101)
+        y = x
+        for function in self.functions:
+            z = self.makeImage(function, x, y)
+            self.measureMoments(function, x, y, z)
+
+class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
+
+    def testMoments(self):
+        x = numpy.linspace(-50, 50, 1001)
+        y = x
+        elements = []
+        for n in range(3):
+            ellipse = shapelets.EllipseCore(
+                ellipses.Axes(
+                    float(numpy.random.uniform(low=1, high=2)),
+                    float(numpy.random.uniform(low=1, high=2)),
+                    float(numpy.random.uniform(low=0, high=numpy.pi))
+                    )
+                )
+            coefficients = numpy.random.randn(shapelets.computeSize(n))
+            element = shapelets.ShapeletFunction(n, shapelets.HERMITE, coefficients)
+            element.setEllipse(ellipse)
+            elements.append(element)
+        function = shapelets.MultiShapeletFunction(elements)
+        x = numpy.linspace(-10, 10, 101)
+        y = x
+        z = self.makeImage(function, x, y)
+        self.measureMoments(function, x, y, z)
+    
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -91,7 +158,8 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(ShapeletsTestCase)
+    suites += unittest.makeSuite(ShapeletTestCase)
+    suites += unittest.makeSuite(MultiShapeletTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

@@ -97,7 +97,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     const int hdu,                  //!< The HDU in the file (default: 1)
     lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
     geom::Box2I const& bbox,                           //!< Only read these pixels
-    ImageOrigin const origin,
+    ImageOrigin const origin,                   //!< Coordinate system for bbox
     bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
     bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
 ) : lsst::daf::data::LsstBase(typeid(this)),
