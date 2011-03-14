@@ -86,7 +86,7 @@ class ShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
 
     def setUp(self):
         order = 4
-        self.ellipse = ellipses.Axes(1.2, 0.8, 0.3)
+        self.ellipse = ellipses.Ellipse(ellipses.Axes(1.2, 0.8, 0.3), geom.Point2D(0.12, -0.08))
         self.coefficients = numpy.random.randn(shapelets.computeSize(order))
         self.x = numpy.random.randn(25)
         self.y = numpy.random.randn(25)
@@ -113,13 +113,13 @@ class ShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
                 self.assertClose(p1, p2)
             v = numpy.zeros(self.coefficients.shape, dtype=float)
             basis.fillIntegration(v)
-            v /= t.computeDeterminant()
+            v /= t.getLinear().computeDeterminant()
             p1 = evaluator.integrate()
             p2 = numpy.dot(v, self.coefficients)
             self.assertClose(p1, p2)
 
     def testMoments(self):
-        x = numpy.linspace(-10, 10, 101)
+        x = numpy.linspace(-15, 15, 151)
         y = x
         for function in self.functions:
             z = self.makeImage(function, x, y)
@@ -132,12 +132,13 @@ class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
         y = x
         elements = []
         for n in range(3):
-            ellipse = shapelets.EllipseCore(
+            ellipse = ellipses.Ellipse(
                 ellipses.Axes(
                     float(numpy.random.uniform(low=1, high=2)),
                     float(numpy.random.uniform(low=1, high=2)),
                     float(numpy.random.uniform(low=0, high=numpy.pi))
-                    )
+                    ),
+                geom.Point2D(0.23, -0.15)
                 )
             coefficients = numpy.random.randn(shapelets.computeSize(n))
             element = shapelets.ShapeletFunction(n, shapelets.HERMITE, coefficients)

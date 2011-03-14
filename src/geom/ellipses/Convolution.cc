@@ -27,22 +27,22 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 BaseCore::Ptr BaseCore::Convolution::copy() const {
-    BaseCore::Ptr r(_self.clone());
+    BaseCore::Ptr r(self.clone());
     apply(*r);
     return r;
 }
 
 void BaseCore::Convolution::inPlace() {
-    apply(_self);
+    apply(self);
 }
 
 BaseCore::Convolution::DerivativeMatrix
 BaseCore::Convolution::d() const {
     double ixx1, iyy1, ixy1;
     double ixx2, iyy2, ixy2;
-    Jacobian rhs = _self._dAssignToQuadrupole(ixx1, iyy1, ixy1);
-    _other._assignToQuadrupole(ixx2, iyy2, ixy2);
-    BaseCore::Ptr convolved(_self.clone());
+    Jacobian rhs = self._dAssignToQuadrupole(ixx1, iyy1, ixy1);
+    other._assignToQuadrupole(ixx2, iyy2, ixy2);
+    BaseCore::Ptr convolved(self.clone());
     Jacobian lhs = convolved->_dAssignFromQuadrupole(ixx1 + ixx2, iyy1 + iyy2, ixy1 + ixy2);
     return lhs * rhs;
 }
@@ -50,9 +50,33 @@ BaseCore::Convolution::d() const {
 void BaseCore::Convolution::apply(BaseCore & result) const {
     double ixx1, iyy1, ixy1;
     double ixx2, iyy2, ixy2;
-    _self._assignToQuadrupole(ixx1, iyy1, ixy1);
-    _other._assignToQuadrupole(ixx2, iyy2, ixy2);
+    self._assignToQuadrupole(ixx1, iyy1, ixy1);
+    other._assignToQuadrupole(ixx2, iyy2, ixy2);
     result._assignFromQuadrupole(ixx1 + ixx2, iyy1 + iyy2, ixy1 + ixy2);
 }
+
+Ellipse::Ptr Ellipse::Convolution::copy() const {
+    return boost::make_shared<Ellipse>(
+        self.getCore().convolve(other.getCore()).copy(),
+        PointD(self.getCenter() + Extent2D(other.getCenter()))
+    );
+}
+
+void Ellipse::Convolution::inPlace() {
+    self.getCore().convolve(other.getCore()).inPlace();
+    self.setCenter(self.getCenter() + Extent2D(other.getCenter()));
+}
+
+Ellipse::Convolution::DerivativeMatrix
+Ellipse::Convolution::d() const {
+    Ellipse::Convolution::DerivativeMatrix result = Ellipse::Convolution::DerivativeMatrix::Identity();
+    result.block<3,3>(0, 0) = self.getCore().convolve(other.getCore()).d();
+    return result;
+}
+
+Ellipse::Ellipse(Convolution const & convolution) :
+    _core(convolution.self.getCore().convolve(convolution.other.getCore()).copy()),
+    _center(convolution.self.getCenter() + Extent2D(convolution.other.getCenter()))
+{}
 
 }}}} // namespace lsst::afw::geom::ellipses

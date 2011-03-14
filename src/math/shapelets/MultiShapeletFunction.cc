@@ -93,28 +93,17 @@ shapelets::MultiShapeletFunctionEvaluator::MultiShapeletFunctionEvaluator(
 }
 
 geom::Ellipse shapelets::MultiShapeletFunctionEvaluator::computeMoments() const {
-    double monopole = 0.0;
-    Eigen::Vector2d dipole = Eigen::Vector2d::Zero();
-    Eigen::Matrix2d quadrupole = Eigen::Matrix2d::Zero();
+    double q0 = 0.0;
+    Eigen::Vector2d q1 = Eigen::Vector2d::Zero();
+    Eigen::Matrix2d q2 = Eigen::Matrix2d::Zero();
     for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
-        double determinant = i->_transform.computeDeterminant();
-        monopole += i->_h.sumIntegration(i->_coefficients, 0, 0) / determinant;
-        Eigen::Matrix2d a = i->_transform.invert().getMatrix();
-        dipole += a * Eigen::Vector2d(
-            i->_h.sumIntegration(i->_coefficients, 1, 0) / determinant,
-            i->_h.sumIntegration(i->_coefficients, 0, 1) / determinant
-        );
-        Eigen::Matrix2d q;
-        q(0,0) = i->_h.sumIntegration(i->_coefficients, 2, 0) / determinant;
-        q(1,1) = i->_h.sumIntegration(i->_coefficients, 0, 2) / determinant;
-        q(0,1) = q(1,0) = i->_h.sumIntegration(i->_coefficients, 1, 1) / determinant;
-        quadrupole += a * q * a.transpose();
+        i->_computeRawMoments(q0, q1, q2);
     }
-    dipole /= monopole;
-    quadrupole /= monopole;
-    quadrupole -= dipole * dipole.transpose();
+    q1 /= q0;
+    q2 /= q0;
+    q2 -= q1 * q1.transpose();
     return geom::Ellipse(
-        geom::ellipses::Quadrupole(geom::ellipses::Quadrupole::Matrix(quadrupole), false), 
-        geom::Point2D(dipole)
+        geom::ellipses::Quadrupole(geom::ellipses::Quadrupole::Matrix(q2), false),
+        geom::Point2D(q1)
     );
 }

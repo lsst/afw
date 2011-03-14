@@ -44,8 +44,16 @@ static inline void validateSize(int expected, int actual) {
     }
 }
 
+shapelets::ShapeletFunction::ShapeletFunction() : 
+    _order(0), _basisType(HERMITE),
+    _ellipse(EllipseCore(0.0, 0.0, 1.0), geom::Point2D()), 
+    _coefficients(ndarray::allocate(1))
+{
+    _coefficients[0] = 0.0;
+}
+
 shapelets::ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType) :
-    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, 1.0),
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, 1.0)),
     _coefficients(nd::allocate(computeSize(_order)))
 {
     _coefficients.deep() = 0.0;
@@ -55,14 +63,14 @@ shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType,
     nd::Array<shapelets::Pixel,1,1> const & coefficients
 ) :
-    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, 1.0),
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, 1.0)),
     _coefficients(nd::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
  
 shapelets::ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType, double radius) :
-    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, radius),
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius)),
     _coefficients(nd::allocate(computeSize(_order)))
 {
     _coefficients.deep() = 0.0;
@@ -72,26 +80,26 @@ shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, double radius,
     nd::Array<shapelets::Pixel,1,1> const & coefficients
 ) :
-    _order(order), _basisType(basisType), _ellipse(0.0, 0.0, radius),
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius)),
     _coefficients(nd::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
  
 shapelets::ShapeletFunction::ShapeletFunction(
-    int order, BasisTypeEnum basisType, geom::ellipses::BaseCore const & ellipse
+    int order, BasisTypeEnum basisType, geom::ellipses::Ellipse const & ellipse
 ) :
-    _order(order), _basisType(basisType), _ellipse(ellipse),
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(ellipse.getCore()), ellipse.getCenter()),
     _coefficients(nd::allocate(computeSize(_order)))
 {
     _coefficients.deep() = 0.0;
 }
 
 shapelets::ShapeletFunction::ShapeletFunction(
-    int order, BasisTypeEnum basisType, geom::ellipses::BaseCore const & ellipse,
+    int order, BasisTypeEnum basisType, geom::ellipses::Ellipse const & ellipse,
     nd::Array<shapelets::Pixel,1,1> const & coefficients
 ) :
-    _order(order), _basisType(basisType), _ellipse(ellipse),
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(ellipse.getCore()), ellipse.getCenter()),
     _coefficients(nd::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
@@ -155,24 +163,40 @@ void shapelets::ShapeletFunction::convolve(shapelets::ShapeletFunction const & o
     }
 }
 
-geom::Ellipse shapelets::ShapeletFunctionEvaluator::computeMoments() const {
-    double monopole = _h.sumIntegration(_coefficients, 0, 0);
-    Eigen::Matrix2d a = _transform.invert().getMatrix();
-    Eigen::Vector2d dipole(
+void shapelets::ShapeletFunctionEvaluator::_computeRawMoments(
+    double & q0, Eigen::Vector2d & q1, Eigen::Matrix2d & q2
+) const {
+    double determinant = _transform.getLinear().computeDeterminant();
+    Eigen::Matrix2d a = _transform.getLinear().invert().getMatrix();
+    Eigen::Vector2d b = _transform.getTranslation().asEigen();
+
+    double m0 = _h.sumIntegration(_coefficients, 0, 0);
+    q0 += m0 / determinant;
+
+    Eigen::Vector2d m1(
         _h.sumIntegration(_coefficients, 1, 0),
         _h.sumIntegration(_coefficients, 0, 1)
     );
-    dipole /= monopole;
-    Eigen::Matrix2d quadrupole;
-    quadrupole(0, 0) = _h.sumIntegration(_coefficients, 2, 0);
-    quadrupole(1, 1) = _h.sumIntegration(_coefficients, 0, 2);
-    quadrupole(0, 1) = quadrupole(1, 0) = _h.sumIntegration(_coefficients, 1, 1);
-    quadrupole /= monopole;
-    dipole = a * dipole;
-    quadrupole = a * quadrupole * a.transpose() - dipole * dipole.transpose();
-    quadrupole(0, 1) = quadrupole(1, 0);
+    q1 += a * (m1 - b * m0) / determinant;
+
+    Eigen::Matrix2d m2;
+    m2(0, 0) = _h.sumIntegration(_coefficients, 2, 0);
+    m2(1, 1) = _h.sumIntegration(_coefficients, 0, 2);
+    m2(0, 1) = m2(1, 0) = _h.sumIntegration(_coefficients, 1, 1);
+    q2 += a * (m2 + b * b.transpose() * m0 - m1 * b.transpose() - b * m1.transpose()) * a.transpose() 
+        / determinant;
+}
+
+geom::Ellipse shapelets::ShapeletFunctionEvaluator::computeMoments() const {
+    double q0 = 0.0;
+    Eigen::Vector2d q1 = Eigen::Vector2d::Zero();
+    Eigen::Matrix2d q2 = Eigen::Matrix2d::Zero();
+    _computeRawMoments(q0, q1, q2);
+    q1 /= q0;
+    q2 /= q0;
+    q2 -= q1 * q1.transpose();
     return geom::Ellipse(
-        geom::ellipses::Quadrupole(geom::ellipses::Quadrupole::Matrix(quadrupole), false),
-        geom::Point2D(dipole)
+        geom::ellipses::Quadrupole(geom::ellipses::Quadrupole::Matrix(q2), false),
+        geom::Point2D(q1)
     );
 }

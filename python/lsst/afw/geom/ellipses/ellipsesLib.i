@@ -164,6 +164,7 @@ SWIG_SHARED_PTR_DERIVED(
 %feature("valuewrapper") lsst::afw::geom::ellipses::Ellipse;
 %ignore lsst::afw::geom::ellipses::Ellipse::getCore;
 %ignore lsst::afw::geom::ellipses::Ellipse::transform;
+%ignore lsst::afw::geom::ellipses::Ellipse::convolve;
 %ignore lsst::afw::geom::ellipses::Ellipse::getGridTransform;
 %ignore lsst::afw::geom::ellipses::Ellipse::readParameters;
 %ignore lsst::afw::geom::ellipses::Ellipse::writeParameters;
@@ -183,13 +184,17 @@ SWIG_SHARED_PTR(EllipsePtr, lsst::afw::geom::ellipses::Ellipse);
     void _transformInPlace(lsst::afw::geom::AffineTransform const & t) {
         self->transform(t).inPlace();
     }
+    lsst::afw::geom::ellipses::Ellipse _convolve(lsst::afw::geom::ellipses::Ellipse const & other) {
+        return self->convolve(other);
+    }
     lsst::afw::geom::AffineTransform _getGridTransform() {
         return self->getGridTransform();
     }
     %pythoncode {
     def transform(self, t): return self._transform(t)
+    def convolve(self, other): return self._convolve(other)
     def transformInPlace(self, t): self._transformInPlace(t)
-    def getGridTransform(self, t): return self._getGridTransform(t)
+    def getGridTransform(self): return self._getGridTransform()
     def getCore(self): return self._getCorePtr().cast()
     def __repr__(self):
         return "Ellipse(%r, %r)" % (self.getCore(), self.getCenter())

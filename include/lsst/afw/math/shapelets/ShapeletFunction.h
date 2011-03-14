@@ -64,20 +64,14 @@ public:
     int getOrder() const { return _order; }
 
     /// @brief Get the ellipse (const).
-    EllipseCore const & getEllipse() const { return _ellipse; }
+    lsst::afw::geom::ellipses::Ellipse const & getEllipse() const { return _ellipse; }
 
     /// @brief Get the ellipse (non-const).
-    EllipseCore & getEllipse() { return _ellipse; }
+    lsst::afw::geom::ellipses::Ellipse & getEllipse() { return _ellipse; }
 
     /// @brief Set the ellipse.
-    void setEllipse(lsst::afw::geom::ellipses::BaseCore const & ellipse) { _ellipse = ellipse; }
+    void setEllipse(lsst::afw::geom::ellipses::Ellipse const & ellipse) { _ellipse = ellipse; }
     
-    /// @brief Return the radius of the ellipse.
-    double getRadius() const { return _ellipse.getRadius(); }
-    
-    /// @brief Set the radius of the ellipse.
-    void setRadius(double radius) { _ellipse.setRadius(radius); }
-
     /// @brief Return the basis type (HERMITE or LAGUERRE).
     BasisTypeEnum getBasisType() const { return _basisType; }
 
@@ -118,11 +112,11 @@ public:
     );
 
     /// @brief Construct a function and set all coefficients to zero.
-    ShapeletFunction(int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::BaseCore const & ellipse);
+    ShapeletFunction(int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::Ellipse const & ellipse);
 
     /// @brief Construct a function with a deep-copied coefficient vector.
     ShapeletFunction(
-        int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::BaseCore const & ellipse,
+        int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::Ellipse const & ellipse,
         lsst::ndarray::Array<Pixel,1,1> const & coefficients
     );
 
@@ -137,13 +131,11 @@ private:
     friend class std::list<ShapeletFunction>;
 
     /// @brief Default constructor to appease SWIG (used by std::list).
-    ShapeletFunction() : _order(0), _basisType(HERMITE), _ellipse(), _coefficients(ndarray::allocate(1)) {
-        _coefficients[0] = 0.0;
-    }
+    ShapeletFunction();
 
     int _order;
     BasisTypeEnum _basisType;
-    EllipseCore _ellipse;
+    lsst::afw::geom::ellipses::Ellipse _ellipse;
     ndarray::Array<Pixel,1,1> _coefficients;
 };
 
@@ -176,7 +168,7 @@ public:
 
     /// @brief Compute the definite integral or integral moments.
     Pixel integrate() const {
-        return _h.sumIntegration(_coefficients) / _transform.computeDeterminant();
+        return _h.sumIntegration(_coefficients) / _transform.getLinear().computeDeterminant();
     }
 
     /// @brief Return the unweighted dipole and quadrupole moments of the function as an ellipse.
@@ -194,8 +186,10 @@ private:
 
     void _initialize(ShapeletFunction const & function);
 
+    void _computeRawMoments(double & q0, Eigen::Vector2d & q1, Eigen::Matrix2d & q2) const;
+
     ndarray::Array<Pixel const,1,1> _coefficients;
-    geom::LinearTransform _transform;
+    geom::AffineTransform _transform;
     detail::HermiteEvaluator _h;
 };
 

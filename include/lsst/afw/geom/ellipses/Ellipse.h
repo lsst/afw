@@ -52,6 +52,7 @@ public:
 #ifndef SWIG
     class Transformer; ///< Proxy return type for Ellipse::transform().
     class GridTransform; ///< Proxy return type for Ellipse::getGridTransform().
+    class Convolution; ///< Proxy return type for Ellipse::convolve().
 #endif
 
     typedef Box2D Envelope; ///< Bounding box type.
@@ -121,6 +122,14 @@ public:
     //@}
 
     /**
+     *  @name Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
+     */
+    //@{
+    Convolution convolve(Ellipse const & other);
+    Convolution const convolve(Ellipse const & other) const;
+    //@}
+
+    /**
      *  @brief Return the transform that maps the ellipse to the unit circle.
      *
      *  The returned proxy object is implicitly convertible to AffineTransform
@@ -164,6 +173,7 @@ public:
 
 #ifndef SWIG
     Ellipse(Transformer const & other);
+    Ellipse(Convolution const & other);
 #endif
 
     Ellipse(Ellipse const & other) :

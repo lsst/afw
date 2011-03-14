@@ -52,7 +52,7 @@ public:
      *  @param[in,out] ellipse   On input, the ellipse core of the unconvolved shapelet expansion.
      *                           On output, the ellipse core of the convolved shapelet expansion.
      */
-    ndarray::Array<Pixel const,2,2> evaluate(geom::ellipses::BaseCore & ellipse) const;
+    ndarray::Array<Pixel const,2,2> evaluate(geom::ellipses::Ellipse & ellipse) const;
 
     int getColOrder() const;
 

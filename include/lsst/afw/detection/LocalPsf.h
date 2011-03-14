@@ -65,7 +65,7 @@ public:
      *  The given extent must by odd in both x and y, and the image will be centered on the
      *  center of the middle pixel.
      *
-     *  May or may not throw if hasNativeImage() is true.
+     *  May throw if hasNativeImage() is true.
      */
     virtual ndarray::Array<Pixel,2,2> computeImage(geom::Extent2I const & dimensions) const = 0;
 
@@ -87,14 +87,16 @@ public:
      *
      *  @param[in] basisType  Shapelet basis to use (HERMITE or LAGUERRE).
      *  @param[in] order      Shapelet order.
-     *  @param[in] ellipse    Ellipse to set the radius and ellipticity of the shapelet function.
+     *  @param[in] ellipse    Ellipse to set the radius, ellipticity, and center of the shapelet function.
+     *                        Note that the standard center is (0,0), not the point the LocalPsf was
+     *                        evaluated at; a nonzero center implies an asymmetric PSF.
      *
      *  Should throw if hasNativeShapelet() is true.
      */
     virtual Shapelet computeShapelet(
         math::shapelets::BasisTypeEnum basisType, 
         int order,
-        geom::ellipses::BaseCore const & ellipse
+        geom::ellipses::Ellipse const & ellipse
     ) const = 0;
 
     /**
@@ -119,14 +121,20 @@ public:
      *  to compute a multi-scale shapelet, it should have hasNativeShapelet()==true and
      *  implement this member function, even if it isn't natively stored in shapelet form.
      *
+     *  The standard center for the returned shapelet function is (0,0), not the point the
+     *  LocalPsf was evaluated at; a nonzero center implies an asymmtric PSF.
+     *
      *  Should throw if hasNativeShapelet() is false.
      */
     virtual MultiShapelet getNativeShapelet(math::shapelets::BasisTypeEnum basisType) const = 0;
 
     /**
      *  @brief Compute the 2nd-order moments of the Psf.
+     *
+     *  The standard center for the returned ellipse is (0,0), not the point the
+     *  LocalPsf was evaluated at; a nonzero center implies an asymmtric PSF.
      */
-    virtual geom::ellipses::Quadrupole computeMoments() const = 0;
+    virtual geom::ellipses::Ellipse computeMoments() const = 0;
 
     /**
      *  @brief Fill the pixels of the footprint with a point source model in the given flattened array.
@@ -158,6 +166,8 @@ public:
 
     virtual ~LocalPsf() {}
 
+private:
+    void operator=(LocalPsf const &); // disabled
 };
 
 }}}

@@ -227,7 +227,7 @@ public:
 
     Impl(int colOrder, shapelets::ShapeletFunction const & psf);
 
-    ndarray::Array<Pixel const,2,2> evaluate(afw::geom::ellipses::BaseCore & ellipse) const;
+    ndarray::Array<Pixel const,2,2> evaluate(afw::geom::ellipses::Ellipse & ellipse) const;
 
     int getColOrder() const { return _colOrder; }
 
@@ -281,15 +281,15 @@ shapelets::detail::HermiteConvolution::Impl::Impl(
 }
 
 lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution::Impl::evaluate(
-    afw::geom::ellipses::BaseCore & ellipse
+    afw::geom::ellipses::Ellipse & ellipse
 ) const {
     ndarray::EigenView<double,2,2> result(_result);
     ndarray::EigenView<double const,1,1> psf_coeff(_psf.getCoefficients());
 
-    afw::geom::LinearTransform psf_gt = _psf.getEllipse().getGridTransform().invert();
-    afw::geom::LinearTransform model_gt = ellipse.getGridTransform().invert();
+    afw::geom::LinearTransform psf_gt = _psf.getEllipse().getCore().getGridTransform().invert();
+    afw::geom::LinearTransform model_gt = ellipse.getCore().getGridTransform().invert();
     ellipse.convolve(_psf.getEllipse()).inPlace();
-    afw::geom::LinearTransform convolved_gt_inv = ellipse.getGridTransform();
+    afw::geom::LinearTransform convolved_gt_inv = ellipse.getCore().getGridTransform();
     afw::geom::LinearTransform psf_htm_arg(
         Eigen::Matrix2d(M_SQRT2 * (convolved_gt_inv.getMatrix() * psf_gt.getMatrix()).transpose())
     );
@@ -410,7 +410,7 @@ int shapelets::detail::HermiteConvolution::getColOrder() const { return _impl->g
 
 lsst::ndarray::Array<shapelets::Pixel const,2,2>
 shapelets::detail::HermiteConvolution::evaluate(
-    lsst::afw::geom::ellipses::BaseCore & ellipse
+    lsst::afw::geom::ellipses::Ellipse & ellipse
 ) const {
     return _impl->evaluate(ellipse);
 }

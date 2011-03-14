@@ -416,7 +416,7 @@ image::Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of co
  * Create an initialized Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(geom::Box2I const & bbox, //< (width, height) and origin of desired Image
+image::Image<PixelT>::Image(geom::Box2I const & bbox, ///< dimensions and origin of desired Image
                             PixelT initialValue ///< Initial value
                            ) :
     image::ImageBase<PixelT>(bbox) {

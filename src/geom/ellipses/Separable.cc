@@ -32,7 +32,7 @@ BaseCore::Registrar< Separable<Ellipticity_,Radius_> > Separable<Ellipticity_,Ra
 
 template <typename Ellipticity_, typename Radius_>
 std::string Separable<Ellipticity_,Radius_>::getName() const {
-    return Ellipticity_::getName() + "And" + Radius_::getName();
+    return "Separable" + Ellipticity_::getName() + Radius_::getName();
 }
 
 template <typename Ellipticity_, typename Radius_>

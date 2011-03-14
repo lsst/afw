@@ -49,7 +49,7 @@ public:
 
     /// @brief Standard constructor.
     Convolution(BaseCore & self, BaseCore const & other) :
-        _self(self), _other(other) {}
+        self(self), other(other) {}
 
     /// @brief Return a new convolved ellipse core.
     BaseCore::Ptr copy() const;
@@ -61,11 +61,36 @@ public:
     DerivativeMatrix d() const;
     
     void apply(BaseCore & result) const;
+ 
+    BaseCore & self;
+    BaseCore const & other;
 
-private:
+};
 
-    BaseCore & _self;
-    BaseCore const & _other;
+/**
+ *  @brief A temporary-only expression object for ellipse convolution.
+ */
+class Ellipse::Convolution {
+public:
+
+    /// Matrix type for derivative with respect to input ellipse parameters.
+    typedef Eigen::Matrix<double,5,5> DerivativeMatrix; 
+
+    /// @brief Standard constructor.
+    Convolution(Ellipse & self, Ellipse const & other) :
+        self(self), other(other) {}
+
+    /// @brief Return a new convolved ellipse.
+    Ellipse::Ptr copy() const;
+
+    /// @brief Convolve the ellipse in-place.
+    void inPlace();
+
+    /// @brief Return the derivative of convolved ellipse with respect to self.
+    DerivativeMatrix d() const;
+
+    Ellipse & self;
+    Ellipse const & other;
 
 };
 
@@ -75,6 +100,14 @@ inline BaseCore::Convolution BaseCore::convolve(BaseCore const & other) {
 
 inline BaseCore::Convolution const BaseCore::convolve(BaseCore const & other) const {
     return BaseCore::Convolution(const_cast<BaseCore &>(*this), other);
+}
+
+inline Ellipse::Convolution Ellipse::convolve(Ellipse const & other) {
+    return Ellipse::Convolution(*this, other);
+}
+
+inline Ellipse::Convolution const Ellipse::convolve(Ellipse const & other) const {
+    return Ellipse::Convolution(const_cast<Ellipse &>(*this), other);
 }
 
 }}}} // namespace lsst::afw::geom::ellipses
