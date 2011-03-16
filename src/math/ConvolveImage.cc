@@ -396,6 +396,7 @@ void afwMath::convolve(
 //
 // Instantiate all functions defined in this file for one specific output and input pixel type
 //
+/// \cond
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
@@ -411,3 +412,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+/// \endcond

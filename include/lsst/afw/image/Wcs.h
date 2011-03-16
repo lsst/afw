@@ -99,7 +99,7 @@ public:
     //Constructors
     Wcs();
     //Create a Wcs of the correct class using a fits header.
-    friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
+    friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             bool stripMetadata);
 
     Wcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, const Eigen::Matrix2d &CD, 
@@ -189,7 +189,7 @@ protected:
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.
-    Wcs(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
     
     Wcs(lsst::afw::image::Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
@@ -210,7 +210,7 @@ protected:
                                                                         ) const;
 
     
-    void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
     void _initWcs();
     
     struct wcsprm* _wcsInfo;
@@ -230,7 +230,7 @@ namespace detail {
     geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
-Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
+Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata, bool stripMetadata=false);
     
 Wcs::Ptr makeWcs(lsst::afw::geom::Point2D crval, lsst::afw::geom::Point2D crpix,
                  double CD11, double CD12, double CD21, double CD22);

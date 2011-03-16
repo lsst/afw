@@ -243,13 +243,13 @@ public:
     TransformDerivativeMatrix dTransform(Point2D const & input) const;
     TransformDerivativeMatrix dTransform(Extent2D const & input) const;
 
-    friend std::ostream & operator<<(std::ostream & os, AffineTransform const & transform);
-
 private:
 
     LinearTransform _linear;
     Extent2D _translation;
 };
+
+std::ostream & operator<<(std::ostream & os, lsst::afw::geom::AffineTransform const & transform);
 
 }}}
 

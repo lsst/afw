@@ -113,6 +113,7 @@ namespace lsst { namespace afw { namespace detection { namespace {
   * @param[in] set1     first set of sources
   * @param[in] set2     second set of sources
   * @param[in] radius   match radius (arcsec)
+  * @param[in] closest  if true then just return the closest match
   */
 std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set1,
                                               lsst::afw::detection::SourceSet const &set2,
@@ -232,6 +233,7 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
   * @param[in] set1     first set of sources
   * @param[in] set2     second set of sources
   * @param[in] radius   match radius (pixels)
+  * @param[in] closest  if true then just return the closest match
   */
 std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const &set1,
                                            lsst::afw::detection::SourceSet const &set2,

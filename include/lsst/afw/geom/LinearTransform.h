@@ -148,11 +148,11 @@ public:
         return dTransform(Point2D(input));
     }
 
-    friend std::ostream & operator<<(std::ostream & os, LinearTransform const & t);
-
 private:
     Matrix _matrix;
 };
+
+std::ostream & operator<<(std::ostream & os, lsst::afw::geom::LinearTransform const & t);
 
 }}} // namespace lsst::afw::geom
 

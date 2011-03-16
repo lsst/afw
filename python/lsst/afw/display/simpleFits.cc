@@ -503,6 +503,7 @@ void writeBasicFits(std::string const& filename,                 // file to writ
     (void)close(fd);
 }
 
+/// \cond
 #define INSTANTIATE(IMAGET)                                            \
     template void writeBasicFits(int,                IMAGET const&, image::Wcs const *, char const *); \
     template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *, char const *)
@@ -516,5 +517,6 @@ INSTANTIATE_IMAGE(float);
 INSTANTIATE_IMAGE(double);
 
 INSTANTIATE_MASK(boost::uint16_t);
+/// \endcond
             
 }}}

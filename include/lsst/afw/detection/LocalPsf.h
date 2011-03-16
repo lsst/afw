@@ -57,7 +57,7 @@ public:
      *
      *  The returned extent will always be odd in both x and y.
      */
-    virtual geom::Extent2I getNativeImageDimensions() const = 0;
+    virtual lsst::afw::geom::Extent2I getNativeImageDimensions() const = 0;
     
     /**
      *  @brief Compute an image of the LocalPsf with the given dimensions, or throw if hasNativeImage().
@@ -67,7 +67,7 @@ public:
      *
      *  May throw if hasNativeImage() is true.
      */
-    virtual ndarray::Array<Pixel,2,2> computeImage(geom::Extent2I const & dimensions) const = 0;
+    virtual ndarray::Array<Pixel,2,2> computeImage(lsst::afw::geom::Extent2I const & dimensions) const = 0;
 
     /**
      *  @brief Return an image representation of the LocalPsf, or throw if !hasNativeImage().
@@ -94,9 +94,9 @@ public:
      *  Should throw if hasNativeShapelet() is true.
      */
     virtual Shapelet computeShapelet(
-        math::shapelets::BasisTypeEnum basisType, 
+        lsst::afw::math::shapelets::BasisTypeEnum basisType, 
         int order,
-        geom::ellipses::Ellipse const & ellipse
+        lsst::afw::geom::ellipses::Ellipse const & ellipse
     ) const = 0;
 
     /**
@@ -108,7 +108,7 @@ public:
      *  Equivalent to computeShapelet(basisType, order, computeMoments());
      *  May throw if hasNativeShapelet() is true.
      */
-    Shapelet computeShapelet(math::shapelets::BasisTypeEnum basisType, int order) const {
+    Shapelet computeShapelet(lsst::afw::math::shapelets::BasisTypeEnum basisType, int order) const {
         return computeShapelet(basisType, order, computeMoments());
     }
 
@@ -126,7 +126,7 @@ public:
      *
      *  Should throw if hasNativeShapelet() is false.
      */
-    virtual MultiShapelet getNativeShapelet(math::shapelets::BasisTypeEnum basisType) const = 0;
+    virtual MultiShapelet getNativeShapelet(lsst::afw::math::shapelets::BasisTypeEnum basisType) const = 0;
 
     /**
      *  @brief Compute the 2nd-order moments of the Psf.
@@ -134,7 +134,7 @@ public:
      *  The standard center for the returned ellipse is (0,0), not the point the
      *  LocalPsf was evaluated at; a nonzero center implies an asymmtric PSF.
      */
-    virtual geom::ellipses::Ellipse computeMoments() const = 0;
+    virtual lsst::afw::geom::ellipses::Ellipse computeMoments() const = 0;
 
     /**
      *  @brief Fill the pixels of the footprint with a point source model in the given flattened array.
@@ -145,7 +145,7 @@ public:
      */
     virtual void evaluatePointSource(
         Footprint const & fp, 
-        geom::Point2D const & point, 
+        lsst::afw::geom::Point2D const & point, 
         ndarray::Array<Pixel, 1, 0> const & array
     ) const = 0;
     
@@ -157,7 +157,7 @@ public:
      */
     ndarray::Array<Pixel, 1,1> evaluatePointSource(
         Footprint const & fp, 
-        geom::Point2D const & point
+        lsst::afw::geom::Point2D const & point
     ) const {
         ndarray::Array<Pixel, 1, 1> array = ndarray::allocate(ndarray::makeVector(fp.getArea()));
         evaluatePointSource(fp, point, array);

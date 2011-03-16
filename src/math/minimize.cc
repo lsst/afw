@@ -114,10 +114,10 @@ namespace {
         double _errorDef;
     };
 }
-
+/// \cond
 template<typename ReturnT>
 MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    afwMath::Function1<ReturnT> const &function,
+    lsst::afw::math::Function1<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList, 
@@ -133,7 +133,7 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
 
 template<typename ReturnT>
 MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    afwMath::Function2<ReturnT> const &function,
+    lsst::afw::math::Function2<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList,
@@ -181,6 +181,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
     
     return chi2;
 }
+/// \endcond
 
 /**
  * Find the minimum of a function(x)
@@ -199,7 +200,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
  */
 template<typename ReturnT>
 afwMath::FitResults afwMath::minimize(
-    afwMath::Function1<ReturnT> const &function, ///< function(x) to be minimized
+    lsst::afw::math::Function1<ReturnT> const &function, ///< function(x) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList, ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -283,7 +284,7 @@ afwMath::FitResults afwMath::minimize(
  */
 template<typename ReturnT>
 afwMath::FitResults afwMath::minimize(
-    afwMath::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
+    lsst::afw::math::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList,    ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -356,6 +357,7 @@ afwMath::FitResults afwMath::minimize(
 }
 
 // Explicit instantiation
+/// \cond
 #define NL /* */
 #define minimizeFuncs(ReturnT) \
     template afwMath::FitResults afwMath::minimize( \
@@ -380,3 +382,4 @@ afwMath::FitResults afwMath::minimize(
 
 minimizeFuncs(float)
 minimizeFuncs(double)
+/// \endcond

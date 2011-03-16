@@ -186,6 +186,7 @@ lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT,
         new MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
+/// \cond
 #define INSTANTIATE(I, M, V) \
     template class MaskedImageFormatter<I, M, V>; \
     template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
@@ -197,5 +198,6 @@ INSTANTIATE(uint16_t, MaskPixel, VariancePixel)
 INSTANTIATE(int, MaskPixel, VariancePixel)
 INSTANTIATE(float, MaskPixel, VariancePixel)
 INSTANTIATE(double, MaskPixel, VariancePixel)
+/// \endcond
 
 }}} // namespace lsst::afw::formatters

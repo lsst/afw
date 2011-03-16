@@ -86,7 +86,7 @@ BaseCore::Ptr BaseCore::make(std::string const & name, Convolution const & other
     return result;
 }
 
-void BaseCore::registerSubclass(boost::shared_ptr<BaseCore> const & example) {
+void BaseCore::registerSubclass(BaseCore::Ptr const & example) {
     getRegistry()[example->getName()] = example;
 }
 

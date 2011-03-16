@@ -45,9 +45,6 @@ namespace cameraGeom {
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/Defect.h"
 
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
-    
 /**
  * Describe a detector (e.g. a CCD)
  */
@@ -120,18 +117,18 @@ public:
     /// Return the pixel size, mm/pixel
     double getPixelSize() const { return _pixelSize; }
 
-    virtual afwGeom::Extent2D getSize() const;
+    virtual lsst::afw::geom::Extent2D getSize() const;
 
     /// Return Detector's total footprint
-    virtual afwGeom::Box2I& getAllPixels() {
+    virtual lsst::afw::geom::Box2I& getAllPixels() {
         return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     /// Return Detector's total footprint
-    virtual afwGeom::Box2I const& getAllPixels() const {
+    virtual lsst::afw::geom::Box2I const& getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
     /// Return Detector's total footprint
-    virtual afwGeom::Box2I const& getAllPixels(bool isTrimmed ///< Has the bias/overclock have been removed?
+    virtual lsst::afw::geom::Box2I const& getAllPixels(bool isTrimmed ///< Has the bias/overclock have been removed?
                                               ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
@@ -140,29 +137,29 @@ public:
     //
     /// Set the central pixel
     void setCenterPixel(
-            afwGeom::Point2I const& centerPixel ///< the pixel \e defined to be the detector's centre
+            lsst::afw::geom::Point2I const& centerPixel ///< the pixel \e defined to be the detector's centre
                        ) { _centerPixel = centerPixel; }
     /// Return the central pixel
-    afwGeom::Point2I getCenterPixel() const { return _centerPixel; }
+    lsst::afw::geom::Point2I getCenterPixel() const { return _centerPixel; }
 
     virtual void setOrientation(Orientation const& orientation);
     /// Return the Detector's Orientation
     Orientation const& getOrientation() const { return _orientation;}
 
     /// Set the Detector's center
-    virtual void setCenter(afwGeom::Point2D const& center) { _center = center; }
+    virtual void setCenter(lsst::afw::geom::Point2D const& center) { _center = center; }
     /// Return the Detector's center
-    afwGeom::Point2D getCenter() const { return _center; }
+    lsst::afw::geom::Point2D getCenter() const { return _center; }
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual afwGeom::Point2I getPixelFromPosition(afwGeom::Point2D const& pos) const;
-    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D const& pos) const;
+    virtual lsst::afw::geom::Point2I getPixelFromPosition(lsst::afw::geom::Point2D const& pos) const;
+    virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
 
-    afwGeom::Point2D getPositionFromPixel(afwGeom::Point2I const& pix) const;
-    afwGeom::Point2D getPositionFromPixel(afwGeom::Point2I const& pix, bool const isTrimmed) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix, bool const isTrimmed) const;
+    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2I const& pix) const;
+    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2I const& pix, bool const isTrimmed) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pix) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pix, bool const isTrimmed) const;
     
     virtual void shift(int dx, int dy);
     //
@@ -170,36 +167,36 @@ public:
     //
     /// Set the Detector's Defect list
     virtual void setDefects(
-            std::vector<boost::shared_ptr<afwImage::DefectBase> > const& defects ///< Defects in this detector
+            std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> > const& defects ///< Defects in this detector
                            ) {
         _defects = defects;
     }
     /// Get the Detector's Defect list
-    std::vector<boost::shared_ptr<afwImage::DefectBase> > const& getDefects() const { return _defects; }
-    std::vector<boost::shared_ptr<afwImage::DefectBase> >& getDefects() { return _defects; }
+    std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> > const& getDefects() const { return _defects; }
+    std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >& getDefects() { return _defects; }
 protected:
     /// Return a shared pointer to this
     Ptr getThisPtr() {
         return shared_from_this();
     }
 
-    afwGeom::Box2I& getAllTrimmedPixels() {
+    lsst::afw::geom::Box2I& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
 private:
     Id _id;
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?
-    afwGeom::Box2I _allPixels;          // Bounding box of all the Detector's pixels
+    lsst::afw::geom::Box2I _allPixels;          // Bounding box of all the Detector's pixels
     bool _hasTrimmablePixels;           // true iff Detector has pixels that can be trimmed (e.g. a CCD)
     double _pixelSize;                  // Size of a pixel in mm
-    afwGeom::Point2I _centerPixel;      // the pixel defined to be the centre of the Detector
+    lsst::afw::geom::Point2I _centerPixel;      // the pixel defined to be the centre of the Detector
     Orientation _orientation;           // orientation of this Detector
-    afwGeom::Point2D _center;           // position of _centerPixel (mm)
-    afwGeom::Extent2D _size;            // Size in mm of this Detector
-    afwGeom::Box2I _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
+    lsst::afw::geom::Point2D _center;           // position of _centerPixel (mm)
+    lsst::afw::geom::Extent2D _size;            // Size in mm of this Detector
+    lsst::afw::geom::Box2I _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
     boost::weak_ptr<Detector> _parent;  // Parent Detector in the hierarchy
 
-    std::vector<afwImage::DefectBase::Ptr> _defects; // Defects in this detector
+    std::vector<lsst::afw::image::DefectBase::Ptr> _defects; // Defects in this detector
 };
 
 namespace detail {
@@ -213,10 +210,10 @@ namespace detail {
     /**
      * Rotate a BBox about the center of some larger region by a multiple of 90 degrees 
      */
-    afwGeom::Box2I rotateBBoxBy90(
-            afwGeom::Box2I const& bbox,         ///< the BBox to rotate
+    lsst::afw::geom::Box2I rotateBBoxBy90(
+            lsst::afw::geom::Box2I const& bbox,         ///< the BBox to rotate
             int n90,                            ///< number of 90-degree anti-clockwise turns to make
-            afwGeom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
+            lsst::afw::geom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
                                  );
 }
     

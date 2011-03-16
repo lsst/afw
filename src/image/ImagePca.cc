@@ -604,6 +604,7 @@ double innerProduct(Image1T const& lhs, ///< first image
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(T) \
     template class ImagePca<Image<T> >; \
     template double innerProduct(Image<T> const&, Image<T> const&, int);
@@ -619,5 +620,6 @@ template class ImagePca<MaskedImage<float> >;
 INSTANTIATE(double)
 
 INSTANTIATE2(float, double)             // the two types must be different
+/// \endcond
     
 }}}

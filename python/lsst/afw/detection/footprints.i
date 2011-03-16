@@ -31,7 +31,8 @@
 #include "lsst/afw/detection/FootprintFunctor.h"
 %}
 
-%template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
+// already in image.i.
+// %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
 SWIG_SHARED_PTR(Peak,      lsst::afw::detection::Peak);
 SWIG_SHARED_PTR(Footprint, lsst::afw::detection::Footprint);

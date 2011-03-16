@@ -134,10 +134,12 @@ lsst::daf::base::DateTime Calib::getMidTime () const
 /**
  * Return the time at the middle of an exposure at the specified position in the focal plane (as
  * described by a cameraGeom::Detector)
+ *
+ * @warning This implementation ignores its arguments!
  */
 lsst::daf::base::DateTime Calib::getMidTime(
-        lsst::afw::cameraGeom::Detector::ConstPtr, ///< description of focal plane
-        lsst::afw::geom::Point2I const&            ///< position in focal plane
+        boost::shared_ptr<const lsst::afw::cameraGeom::Detector>, ///< description of focal plane (ignored)
+        lsst::afw::geom::Point2I const&            ///< position in focal plane (ignored)
                                            ) const
 {
     return _midTime;

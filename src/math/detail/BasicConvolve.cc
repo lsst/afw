@@ -502,9 +502,8 @@ void mathDetail::convolveWithBruteForce(
 
 /*
  * Explicit instantiation
- *
- * Modelled on ConvolveImage.cc
  */
+/// \cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
@@ -538,3 +537,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+/// \endcond

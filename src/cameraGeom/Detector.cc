@@ -78,7 +78,7 @@ afwGeom::Extent2D cameraGeom::Detector::getSize() const {
  * \sa getPositionFromIndex
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
-        afwGeom::Point2I const& pix,    ///< Pixel coordinates wrt bottom left of Detector
+        lsst::afw::geom::Point2I const& pix,    ///< Pixel coordinates wrt bottom left of Detector
         bool const isTrimmed            ///< Is this detector trimmed?
                                                            ) const
 {
@@ -90,7 +90,7 @@ afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
  * \sa getPositionFromIndex
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
-        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt bottom left of Detector
+        lsst::afw::geom::Point2I const& pix     ///< Pixel coordinates wrt bottom left of Detector
                                                            ) const
 {
     return getPositionFromPixel(pix, isTrimmed());
@@ -102,7 +102,7 @@ afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
  * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
  */
 afwGeom::Point2I cameraGeom::Detector::getIndexFromPosition(
-        afwGeom::Point2D const& pos     ///< Offset from chip centre, mm
+        lsst::afw::geom::Point2D const& pos     ///< Offset from chip centre, mm
                                                            ) const
 {
     return afwGeom::Point2I(pos[0]/_pixelSize, pos[1]/_pixelSize);
@@ -113,7 +113,7 @@ afwGeom::Point2I cameraGeom::Detector::getIndexFromPosition(
  * \sa getIndexFromPosition
  */
 afwGeom::Point2I cameraGeom::Detector::getPixelFromPosition(
-        afwGeom::Point2D const& pos     ///< Offset from mosaic centre, mm
+        lsst::afw::geom::Point2D const& pos     ///< Offset from mosaic centre, mm
                                                                  ) const
 {
     return afwGeom::Extent2I(getCenterPixel()) + getIndexFromPosition(pos - afwGeom::Extent2D(getCenter()));
@@ -124,7 +124,7 @@ afwGeom::Point2I cameraGeom::Detector::getPixelFromPosition(
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt centre of Detector
+        lsst::afw::geom::Point2I const& pix     ///< Pixel coordinates wrt centre of Detector
                                      ) const
 {
     return getPositionFromIndex(pix, isTrimmed());
@@ -137,7 +137,7 @@ afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-        afwGeom::Point2I const& pix,    ///< Pixel coordinates wrt centre of Detector
+        lsst::afw::geom::Point2I const& pix,    ///< Pixel coordinates wrt centre of Detector
         bool const                      ///< Unused
                                                            ) const
 {
@@ -165,10 +165,10 @@ void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
  *
  * If dimensions is 0, rotate the bbox about its LLC
  */
-afwGeom::Box2I cameraGeom::detail::rotateBBoxBy90(
-        afwGeom::Box2I const& bbox,          ///< The BBox to rotate
+afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
+        lsst::afw::geom::Box2I const& bbox,          ///< The BBox to rotate
         int n90,                             ///< number of anti-clockwise 90degree turns
-        afwGeom::Extent2I const& dimensions  ///< The size of the parent 
+        lsst::afw::geom::Extent2I const& dimensions  ///< The size of the parent 
                                              )
 {
     while (n90 < 0) {
@@ -281,7 +281,7 @@ afwGeom::Box2I cameraGeom::detail::rotateBBoxBy90(
 /// Set the Detector's Orientation
 ///
 void cameraGeom::Detector::setOrientation(
-        cameraGeom::Orientation const& orientation // the detector's new Orientation
+        lsst::afw::cameraGeom::Orientation const& orientation // the detector's new Orientation
                                          )
 {
     int const n90 = orientation.getNQuarter() - _orientation.getNQuarter();

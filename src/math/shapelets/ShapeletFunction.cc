@@ -61,7 +61,7 @@ shapelets::ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType
 
 shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType,
-    nd::Array<shapelets::Pixel,1,1> const & coefficients
+    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, 1.0)),
     _coefficients(nd::copy(coefficients))
@@ -78,7 +78,7 @@ shapelets::ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType
 
 shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, double radius,
-    nd::Array<shapelets::Pixel,1,1> const & coefficients
+    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius)),
     _coefficients(nd::copy(coefficients))
@@ -97,7 +97,7 @@ shapelets::ShapeletFunction::ShapeletFunction(
 
 shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, geom::ellipses::Ellipse const & ellipse,
-    nd::Array<shapelets::Pixel,1,1> const & coefficients
+    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(ellipse.getCore()), ellipse.getCenter()),
     _coefficients(nd::copy(coefficients))
@@ -131,7 +131,7 @@ void shapelets::ShapeletFunctionEvaluator::update(ShapeletFunction const & funct
 }
 
 shapelets::ShapeletFunctionEvaluator::ShapeletFunctionEvaluator(
-    shapelets::ShapeletFunction const & function
+    lsst::afw::math::shapelets::ShapeletFunction const & function
 ) : _transform(function.getEllipse().getGridTransform()), _h(function.getOrder()) {
     _initialize(function);
 }
@@ -151,7 +151,7 @@ void shapelets::ShapeletFunctionEvaluator::_initialize(ShapeletFunction const & 
     }
 }
 
-void shapelets::ShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
+void shapelets::ShapeletFunction::convolve(lsst::afw::math::shapelets::ShapeletFunction const & other) {
     detail::HermiteConvolution convolution(other.getOrder(), *this);
     ndarray::EigenView<Pixel const,2,2> matrix(convolution.evaluate(_ellipse));
     if (_basisType == LAGUERRE) {

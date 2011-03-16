@@ -253,7 +253,7 @@ void afwImage::operator/=(
  * Explicit Instantiations
  *
  */
-
+/// \cond
 #define INSTANTIATE_SLICE_OP_SYM(TYPE, OP) \
     template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> const &img, \
                                                               afwImage::ImageSlice<TYPE> const &slc); \
@@ -286,4 +286,4 @@ void afwImage::operator/=(
 
 INSTANTIATE_SLICES(double);
 INSTANTIATE_SLICES(float);
-
+/// \endcond

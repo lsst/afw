@@ -804,6 +804,7 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE_OPERATOR(OP_EQ, T) \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint16_t> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
@@ -822,3 +823,4 @@ INSTANTIATE(boost::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
+/// \endcond

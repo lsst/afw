@@ -347,7 +347,7 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
 
     afwMath::StatisticsControl sctrlTmp(sctrl);
     // set the mask to be an infinite iterator
-    afwMath::MaskImposter<image::MaskPixel> msk;
+    afwMath::MaskImposter<afwImage::MaskPixel> msk;
     
     // Use constant weights for each layer
     if ( UseVariance ) {
@@ -454,9 +454,9 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
                 geom::Point2I(x0, y), 
                 geom::Extent2I(image.getWidth(), 1)
             );
-            image::Image<PixelT> subImage(image, bbox, image::PARENT);
+            afwImage::Image<PixelT> subImage(image, bbox, afwImage::PARENT);
             Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
-            *oPtr = typename image::MaskedImage<PixelT>::Pixel(
+            *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(
                 stat.getValue(), 0x0, 
                 stat.getError()*stat.getError()
             );
@@ -470,7 +470,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
             geom::Box2I bbox = geom::Box2I(
                 geom::Point2I(x, y0), geom::Extent2I(1, image.getHeight())
             );
-            afwImage::Image<PixelT> subImage(image, bbox, image::PARENT);
+            afwImage::Image<PixelT> subImage(image, bbox, afwImage::PARENT);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());
@@ -511,7 +511,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
             afwGeom::Box2I bbox = afwGeom::Box2I(afwGeom::Point2I(x0, y), geom::Extent2I(image.getWidth(), 1));
-            afwImage::MaskedImage<PixelT> subImage(image, bbox, image::PARENT);
+            afwImage::MaskedImage<PixelT> subImage(image, bbox, afwImage::PARENT);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());
@@ -523,7 +523,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
             afwGeom::Box2I bbox = afwGeom::Box2I(afwGeom::Point2I(x, y0), geom::Extent2I(1, image.getHeight()));
-            afwImage::MaskedImage<PixelT> subImage(image, bbox, image::PARENT);
+            afwImage::MaskedImage<PixelT> subImage(image, bbox, afwImage::PARENT);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());
@@ -545,6 +545,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
  * Explicit Instantiations
  *
  */
+/// \cond
 #define INSTANTIATE_STACKS(TYPE) \
     template afwImage::Image<TYPE>::Ptr afwMath::statisticsStack<TYPE>( \
             std::vector<afwImage::Image<TYPE>::Ptr > &images, \
@@ -574,3 +575,4 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
 
 INSTANTIATE_STACKS(double)
 INSTANTIATE_STACKS(float)
+/// \endcond

@@ -21,10 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-
-
-
 
 #include <iostream>
 #include <sstream>
@@ -48,7 +44,7 @@
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
 namespace afwCoord = lsst::afw::coord;
-namespace geom = lsst::afw::geom;
+namespace afwGeom = lsst::afw::geom;
 
 
 using namespace std;
@@ -81,7 +77,7 @@ lsst::afw::image::Wcs::Wcs() :
 
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
 ///out which (if any) sub-class of Wcs is appropriate
-Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
+Wcs::Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata):
                 LsstBase(typeid(this)),
                 _wcsInfo(NULL), 
                 _nWcsInfo(0), 
@@ -157,7 +153,7 @@ Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD
                
     
 ///Parse a fits header, extract the relevant metadata and create a Wcs object
-void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
+void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata){
     // Some headers (e.g. SDSS ones from FNAL) have EQUINOX as a string.  Fix this,
     // as wcslib 4.4.4 refuses to handle it
     {
@@ -468,7 +464,7 @@ GeomPoint Wcs::getPixelOrigin() const {
         //Convert from fits units back to lsst units
         double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
         double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
-        return geom::Point2D(p1, p2);
+        return afwGeom::Point2D(p1, p2);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -557,8 +553,8 @@ double Wcs::pixArea(GeomPoint pix00     ///< The pixel point where the area is d
     // Step by "side" in x and y pixel directions...
     GeomPoint px(pix00);
     GeomPoint py(pix00);
-    px.shift(geom::Extent2D(side, 0));
-    py.shift(geom::Extent2D(0, side));
+    px.shift(afwGeom::Extent2D(side, 0));
+    py.shift(afwGeom::Extent2D(0, side));
     // Push the points through the WCS, and find difference in 3-space.
     afwGeom::Extent3D dx = pixelToSky(px)->getVector() - v0;
     afwGeom::Extent3D dy = pixelToSky(py)->getVector() - v0;
@@ -605,13 +601,13 @@ GeomPoint Wcs::skyToPixelImpl(double sky1, ///< Longitude coordinate; DEGREES
     }
 
     // wcslib assumes 1-indexed coords
-    return geom::Point2D(pixTmp[0] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels,
+    return afwGeom::Point2D(pixTmp[0] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels,
                                     pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels); 
 }
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
 ///
-GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
+GeomPoint Wcs::skyToPixel(lsst::afw::coord::Coord::ConstPtr coord ///< The sky position
                          ) const {
 
     GeomPoint const sky = convertCoordToSky(coord);
@@ -857,10 +853,10 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     const double side = 10;             // length of the square's sides in pixels
     GeomPoint const sky00 = coord->getPosition(skyUnit);
 
-    GeomPoint const dsky10 = pixelToSky(pix00 + geom::Extent2D(side, 0))->getPosition(skyUnit) -
-        geom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + geom::Extent2D(0, side))->getPosition(skyUnit) -
-        geom::Extent<double>(sky00);
+    GeomPoint const dsky10 = pixelToSky(pix00 + afwGeom::Extent2D(side, 0))->getPosition(skyUnit) -
+        afwGeom::Extent<double>(sky00);
+    GeomPoint const dsky01 = pixelToSky(pix00 + afwGeom::Extent2D(0, side))->getPosition(skyUnit) -
+        afwGeom::Extent<double>(sky00);
     
     Eigen::Matrix2d m;
     m(0, 0) = dsky10.getX()/side;
@@ -1020,7 +1016,7 @@ createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired W
  * The WCS must have CRPIX[12] == 1 and CRVAL[12] must be present.  If this is true, the WCS
  * cards are removed from the metadata
  */
-geom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
+afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
                                       lsst::daf::base::PropertySet *metadata ///< the metadata, maybe containing the WCS
                                      ) {
         
@@ -1052,7 +1048,7 @@ geom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            ///
         ;                               // OK, not present
     }
 
-    return geom::Point2I(x0, y0);
+    return afwGeom::Point2I(x0, y0);
 }
 
 /**

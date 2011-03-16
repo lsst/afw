@@ -267,10 +267,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    MaskedImage const& rhs,
-    const geom::Box2I& bbox,
-    ImageOrigin const origin,
-    bool deep
+    MaskedImage const& rhs,     ///< MaskedImage to copy
+    const geom::Box2I& bbox,    ///< Specify desired region
+    ImageOrigin const origin,   ///< Specify the coordinate system of the bbox
+    bool deep                   ///< If false, new ImageBase shares storage with rhs;
+                                ///< if true make a new, standalone, MaskedImage
 ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(*rhs.getImage(), bbox, origin, deep)),
@@ -776,3 +777,4 @@ template class image::MaskedImage<boost::uint16_t>;
 template class image::MaskedImage<int>;
 template class image::MaskedImage<float>;
 template class image::MaskedImage<double>;
+

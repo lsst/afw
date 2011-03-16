@@ -82,6 +82,7 @@ typename ImageT::Ptr binImage(ImageT const& in,  ///< The %image to bin
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr \
              binImage(afwImage::Image<TYPE> const&, int, lsst::afw::math::Property const); \
@@ -92,5 +93,6 @@ INSTANTIATE(boost::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
+/// \endcond
 
 }}}

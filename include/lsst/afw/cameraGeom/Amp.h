@@ -38,8 +38,6 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
 /**
  * The electronic behaviour of an Amp
  */
@@ -53,8 +51,9 @@ public:
 #if 0
     /// Set the bad pixels in the provided Mask
     template<typename MaskPixelT>
-    lsst::afw::image::Mask::Ptr setBadPixelMask(typename lsst::afw::image::Mask<MaskPixelT>::Ptr mask ///< Mask to set
-                                       ) const;
+    lsst::afw::image::Mask::Ptr setBadPixelMask(
+        typename lsst::afw::image::Mask<MaskPixelT>::Ptr mask ///< Mask to set
+                                                ) const;
 #endif
 
     /// Set amplifier's gain
@@ -111,7 +110,7 @@ public:
     ~Amp() {}
 
     void shift(int dx, int dy);
-    void rotateBy90(afwGeom::Extent2I const& dimensions, int n90);
+    void rotateBy90(lsst::afw::geom::Extent2I const& dimensions, int n90);
 
     /// Return Amp's electronic properties
     ElectronicParams::Ptr getElectronicParams() const { return _eParams; }
@@ -145,16 +144,16 @@ public:
     ReadoutCorner getReadoutCorner() const { return _readoutCorner; }
 
     /// Return the first pixel read
-    afwGeom::Point2I getFirstPixelRead() const {
+    lsst::afw::geom::Point2I getFirstPixelRead() const {
         switch (_readoutCorner) {
           case LLC:
-            return afwGeom::Point2I(0,                             0);
+            return lsst::afw::geom::Point2I(0,                             0);
           case LRC:
-            return afwGeom::Point2I(getAllPixels().getWidth() - 1, 0);
+            return lsst::afw::geom::Point2I(getAllPixels().getWidth() - 1, 0);
           case URC:
-            return afwGeom::Point2I(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
+            return lsst::afw::geom::Point2I(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
           case ULC:
-            return afwGeom::Point2I(0,                             getAllPixels().getHeight() - 1);
+            return lsst::afw::geom::Point2I(0,                             getAllPixels().getHeight() - 1);
         }
         abort();                        // NOTREACHED
     }
@@ -163,7 +162,7 @@ public:
 
     /// Set the origin of Amplifier data when on disk (in Detector coordinates)
     void setDiskLayout(
-            afwGeom::Point2I const& originOnDisk, // Origin of Amp data on disk (in Detector coordinates)
+            lsst::afw::geom::Point2I const& originOnDisk, // Origin of Amp data on disk (in Detector coords)
             int nQuarter,                         // number of quarter-turns in +ve direction
             bool flipLR,                          // Flip the Amp data left <--> right before rotation
             bool flipTB                           // Flip the Amp data top <--> bottom before rotation
@@ -202,7 +201,7 @@ private:
     // These values refer to the way that the Amplifier data is laid out on disk.  If the Amps have
     // been assembled into a single Ccd image _originOnDisk == (0, 0) and _nQuarter == 0
     //
-    afwGeom::Point2I _originOnDisk;     // Origin of Amplifier data on disk (in Detector coordinates)
+    lsst::afw::geom::Point2I _originOnDisk;     // Origin of Amplifier data on disk (in Detector coordinates)
     int _nQuarter;                      // number of quarter-turns to apply in +ve direction
     bool _flipLR;                       // flip the data left <--> right before rotation
     bool _flipTB;                       // Flip the data top <--> bottom before rotation

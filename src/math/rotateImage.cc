@@ -145,6 +145,7 @@ typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr rotateImageBy90(afwImage::Image<TYPE> const&, int); \
     /*template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int);*/ \
@@ -158,5 +159,6 @@ INSTANTIATE(float)
 INSTANTIATE(double)
 template afwImage::Mask<boost::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<boost::uint16_t> const&, int); 
 template afwImage::Mask<boost::uint16_t>::Ptr flipImage(afwImage::Mask<boost::uint16_t> const&, bool flipLR, bool flipTB); 
+/// \endcond
 
 }}}

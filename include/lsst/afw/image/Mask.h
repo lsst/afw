@@ -146,7 +146,7 @@ public:
     //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
     void writeFits(
         std::string const& fileName,
-        boost::shared_ptr<const daf::base::PropertySet> metadata=daf::base::PropertySet::Ptr(),
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
         std::string const& mode="w"
     ) const;
     

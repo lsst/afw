@@ -437,7 +437,7 @@ namespace image {
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(
             std::string const& fileName,
-            boost::shared_ptr<daf::base::PropertySet const> metadata = daf::base::PropertySet::Ptr(),
+            boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
         ) const;
 
@@ -525,7 +525,7 @@ namespace image {
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(
             std::string const& fileName,
-            boost::shared_ptr<daf::base::PropertySet const> metadata = daf::base::PropertySet::Ptr(),
+            lsst::daf::base::PropertySet::ConstPtr metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
         ) const;
         

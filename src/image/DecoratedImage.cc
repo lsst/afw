@@ -151,8 +151,8 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
  */
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
-    const std::string& fileName,                        //!< the file to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
+    std::string const& fileName,                        ///< the file to write
+    lsst::daf::base::PropertySet::ConstPtr metadata_i, ///< metadata to write to header; or NULL
     std::string const& mode                              ///< "w" to write a new file; "a" to append
 ) const {
     lsst::daf::base::PropertySet::Ptr metadata;
@@ -175,3 +175,4 @@ template class image::DecoratedImage<boost::uint16_t>;
 template class image::DecoratedImage<int>;
 template class image::DecoratedImage<float>;
 template class image::DecoratedImage<double>;
+

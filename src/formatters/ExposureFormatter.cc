@@ -458,6 +458,7 @@ lsst::daf::persistence::Formatter::Ptr afwForm::ExposureFormatter<ImagePixelT,
     return FormPtr(new afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
+/// \cond
 #define INSTANTIATE(I, M, V) \
     template class afwForm::ExposureFormatter<I, M, V>; \
     template void afwForm::ExposureFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
@@ -469,3 +470,4 @@ INSTANTIATE(uint16_t, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(int, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(float, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(double, afwImg::MaskPixel, afwImg::VariancePixel)
+/// \endcond

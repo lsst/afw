@@ -99,7 +99,7 @@ public:
     /// @brief Construct a function with a unit-circle ellipse and a deep-copied coefficient vector.
     ShapeletFunction(
         int order, BasisTypeEnum basisType,
-        lsst::ndarray::Array<Pixel,1,1> const & coefficients
+        lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
     );
 
     /// @brief Construct a function with a circular ellipse and set all coefficients to zero.
@@ -108,16 +108,18 @@ public:
     /// @brief Construct a function with a circular ellipse and a deep-copied coefficient vector.
     ShapeletFunction(
         int order, BasisTypeEnum basisType, double radius,
-        lsst::ndarray::Array<Pixel,1,1> const & coefficients
+        lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
     );
 
     /// @brief Construct a function and set all coefficients to zero.
-    ShapeletFunction(int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::Ellipse const & ellipse);
+    ShapeletFunction(int order, BasisTypeEnum basisType,
+        lsst::afw::geom::ellipses::Ellipse const & ellipse);
 
     /// @brief Construct a function with a deep-copied coefficient vector.
     ShapeletFunction(
-        int order, BasisTypeEnum basisType, lsst::afw::geom::ellipses::Ellipse const & ellipse,
-        lsst::ndarray::Array<Pixel,1,1> const & coefficients
+        int order, BasisTypeEnum basisType,
+        lsst::afw::geom::ellipses::Ellipse const & ellipse,
+        lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
     );
 
     /// @brief Copy constructor (deep).

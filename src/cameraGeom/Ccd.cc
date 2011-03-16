@@ -232,7 +232,7 @@ static void clipDefectsToAmplifier(
 
 /// Set the Detector's Defect list
 void cameraGeom::Ccd::setDefects(
-        std::vector<afwImage::DefectBase::Ptr> const& defects ///< Defects in this detector
+        std::vector<lsst::afw::image::DefectBase::Ptr> const& defects ///< Defects in this detector
                                 ) {
     cameraGeom::Detector::setDefects(defects);
     // And the Amps too

@@ -53,8 +53,6 @@
 
 #include "lsst/pex/exceptions/Exception.h"
 
-namespace pexExcept = lsst::pex::exceptions;
-
 /************************************************************************************************************/
 
 namespace lsst { namespace afw { namespace image {

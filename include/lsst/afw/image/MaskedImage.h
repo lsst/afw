@@ -70,7 +70,6 @@ namespace afw {
     }
 
 namespace image {
-namespace mpl = boost::mpl;
 
 /// A class to manipulate images, masks, and variance as a single object
 template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
@@ -434,20 +433,20 @@ public:
         // as we can't say int_<N> within a template<int N>.  So define a set of functions apply_IMV
         // to do the dirty work
         //
-        typedef typename mpl::vector<ImagePixelT, MaskPixelT, VariancePixelT> PixelTVec;
+        typedef typename boost::mpl::vector<ImagePixelT, MaskPixelT, VariancePixelT> PixelTVec;
 
         template<typename N>
-        typename Ref<typename mpl::at<PixelTVec, N>::type>::type apply_IMV(cached_location_t const& cached_loc) {
+        typename Ref<typename boost::mpl::at<PixelTVec, N>::type>::type apply_IMV(cached_location_t const& cached_loc) {
             return _loc.template get<N::value>()[cached_loc._imv.template get<N::value>()][0];
         }
 
         template<typename N>
-        typename Ref<typename mpl::at<PixelTVec, N>::type>::type apply_IMV() {
+        typename Ref<typename boost::mpl::at<PixelTVec, N>::type>::type apply_IMV() {
             return _loc.template get<N::value>()[0][0];
         }
 
         template<typename N>
-        typename Ref<typename mpl::at<PixelTVec, N>::type>::type apply_IMV(int x, int y) {
+        typename Ref<typename boost::mpl::at<PixelTVec, N>::type>::type apply_IMV(int x, int y) {
             return _loc.template get<N::value>()(x, y)[0];
         }
         //
@@ -455,41 +454,41 @@ public:
         //
         /// Return a reference to the %image at the offset set when we created the \c cached_location_t
         typename Ref<typename Image::Pixel>::type image(cached_location_t const& cached_loc) {
-            return apply_IMV<mpl::int_<0> >(cached_loc);
+            return apply_IMV<boost::mpl::int_<0> >(cached_loc);
         }
         /// Return a reference to the %image at the current position of the locator
         typename Ref<typename Image::Pixel>::type image() {
-            return apply_IMV<mpl::int_<0> >();
+            return apply_IMV<boost::mpl::int_<0> >();
         }
         /// Return a reference to the %image offset by <tt>(x, y)</tt> from the current position of the locator
         typename Ref<typename Image::Pixel>::type image(int x, int y) {
-            return apply_IMV<mpl::int_<0> >(x, y);
+            return apply_IMV<boost::mpl::int_<0> >(x, y);
         }
 
         /// Return a reference to the mask at the offset set when we created the \c cached_location_t
         typename Ref<typename Mask::Pixel>::type mask(cached_location_t const& cached_loc) {
-            return apply_IMV<mpl::int_<1> >(cached_loc);
+            return apply_IMV<boost::mpl::int_<1> >(cached_loc);
         }
         /// Return a reference to the mask at the current position of the locator
         typename Ref<typename Mask::Pixel>::type mask() {
-            return apply_IMV<mpl::int_<1> >();
+            return apply_IMV<boost::mpl::int_<1> >();
         }
         /// Return a reference to the mask offset by <tt>(x, y)</tt> from the current position of the locator
         typename Ref<typename Mask::Pixel>::type mask(int x, int y) {
-            return apply_IMV<mpl::int_<1> >(x, y);
+            return apply_IMV<boost::mpl::int_<1> >(x, y);
         }
 
         /// Return a reference to the variance at the offset set when we created the \c cached_location_t
         typename Ref<typename Variance::Pixel>::type variance(cached_location_t const& cached_loc) {
-            return apply_IMV<mpl::int_<2> >(cached_loc);
+            return apply_IMV<boost::mpl::int_<2> >(cached_loc);
         }
         /// Return a reference to the variance at the current position of the locator
         typename Ref<typename Variance::Pixel>::type variance() {
-            return apply_IMV<mpl::int_<2> >();
+            return apply_IMV<boost::mpl::int_<2> >();
         }
         /// Return a reference to the variance offset by <tt>(x, y)</tt> from the current position of the locator
         typename Ref<typename Variance::Pixel>::type variance(int x, int y) {
-            return apply_IMV<mpl::int_<2> >(x, y);
+            return apply_IMV<boost::mpl::int_<2> >(x, y);
         }
 
         /// Return true iff two locators are equal
@@ -718,7 +717,7 @@ public:
 
     void writeFits(
         std::string const& baseName,
-        boost::shared_ptr<const daf::base::PropertySet> metadata = daf::base::PropertySet::Ptr(),
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
         std::string const& mode="w",
         bool const writeMef=false
     ) const;

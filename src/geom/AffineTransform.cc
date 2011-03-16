@@ -98,7 +98,7 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
     return r;
 }
 
-std::ostream& geom::operator<<(std::ostream& os, geom::AffineTransform const & transform) {
+std::ostream& geom::operator<<(std::ostream& os, lsst::afw::geom::AffineTransform const & transform) {
     std::ios::fmtflags flags = os.flags();
     geom::AffineTransform::Matrix const & matrix = transform.getMatrix();
     int prec = os.precision(7);

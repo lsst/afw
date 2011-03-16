@@ -250,7 +250,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
-        CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
+        CONST_PTR(lsst::afw::detection::Psf) psf      // the Psf to clone
                                                             )
 {
     _psf = psf ? psf->clone() : PTR(afwDetection::Psf)();
@@ -372,7 +372,9 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
 }
 
 // Explicit instantiations
+/// \cond
 template class afwImage::Exposure<boost::uint16_t>;
 template class afwImage::Exposure<int>;
 template class afwImage::Exposure<float>;
 template class afwImage::Exposure<double>;
+/// \endcond

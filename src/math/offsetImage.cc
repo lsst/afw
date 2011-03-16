@@ -114,6 +114,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
                                                     std::string const&); \
@@ -122,5 +123,6 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 
 INSTANTIATE(double)
 INSTANTIATE(float)
+/// \endcond
 
 }}}
