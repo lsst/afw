@@ -32,6 +32,14 @@ namespace shapelets = lsst::afw::math::shapelets;
 namespace geom = lsst::afw::geom;
 namespace nd = lsst::ndarray;
 
+
+void shapelets::MultiShapeletFunction::normalize() {
+    double integral = evaluate().integrate();
+    for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
+        i->getCoefficients().deep() /= integral;
+    }
+}
+
 void shapelets::MultiShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
     for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
         i->convolve(other);

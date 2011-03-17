@@ -149,7 +149,7 @@ protected:
     ) const {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
-            "Functionatlity not implemented"
+            "Functionality not implemented"
         );
     };
 

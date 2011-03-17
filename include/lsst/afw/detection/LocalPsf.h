@@ -35,6 +35,14 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+/**
+ *  @brief A spatially-invariant representation of a Psf evaluated at a point and color.
+ *
+ *  LocalPsf is intended to be ultimately be useful as a place to put all local evaluations of
+ *  a Psf, including images.  Right now it's just a way to get shapelets out of an arbitrary
+ *  Psf - only meas/multifit uses LocalPsf right now, and that only needs shapelets and
+ *  evaluatePointSource().
+ */
 class LocalPsf {
 public: 
     typedef boost::shared_ptr<LocalPsf> Ptr;
@@ -47,40 +55,14 @@ public:
     typedef Psf::Image Image;
 
     /**
-     *  @brief Return true if the LocalPsf has a "native" representation of an image with
-     *         predetermined dimensions.
+     *  @brief Return the point the LocalPsf was evaluated at.
      */
-    virtual bool hasNativeImage() const = 0;
-
-    /**
-     *  @brief Return the native dimensions of the image, or throw if !hasNativeImage().
-     *
-     *  The returned extent will always be odd in both x and y.
-     */
-    virtual lsst::afw::geom::Extent2I getNativeImageDimensions() const = 0;
-    
-    /**
-     *  @brief Compute an image of the LocalPsf with the given dimensions, or throw if hasNativeImage().
-     *
-     *  The given extent must by odd in both x and y, and the image will be centered on the
-     *  center of the middle pixel.
-     *
-     *  May throw if hasNativeImage() is true.
-     */
-    virtual ndarray::Array<Pixel,2,2> computeImage(lsst::afw::geom::Extent2I const & dimensions) const = 0;
-
-    /**
-     *  @brief Return an image representation of the LocalPsf, or throw if !hasNativeImage().
-     *
-     *  The image will be centered on the center of the middle pixel, with dimensions given
-     *  by getNativeImageDimensions().
-     */
-    virtual ndarray::Array<Pixel const,2,1> getNativeImage() const = 0;
+    lsst::afw::geom::Point2D const & getPoint() const { return _point; }
 
     /**
      *  @brief Return true if the LocalPsf has a "native" shapelet or multi-shapelet representation.
      */
-    virtual bool hasNativeShapelet() const = 0;
+    virtual bool hasNativeShapelet() const { return false; }
 
     /**
      *  @brief Return a shapelet representation of the LocalPsf with the given order and ellipse.
@@ -88,10 +70,9 @@ public:
      *  @param[in] basisType  Shapelet basis to use (HERMITE or LAGUERRE).
      *  @param[in] order      Shapelet order.
      *  @param[in] ellipse    Ellipse to set the radius, ellipticity, and center of the shapelet function.
-     *                        Note that the standard center is (0,0), not the point the LocalPsf was
-     *                        evaluated at; a nonzero center implies an asymmetric PSF.
      *
-     *  Should throw if hasNativeShapelet() is true.
+     *  The shapelet representation is guaranteed to be normalized such that it integrates to one.
+     *  May throw if hasNativeShapelet() is true.
      */
     virtual Shapelet computeShapelet(
         lsst::afw::math::shapelets::BasisTypeEnum basisType, 
@@ -106,6 +87,7 @@ public:
      *  @param[in] order      Shapelet order.
      *
      *  Equivalent to computeShapelet(basisType, order, computeMoments());
+     *  The shapelet representation is guaranteed to be normalized such that it integrates to one.
      *  May throw if hasNativeShapelet() is true.
      */
     Shapelet computeShapelet(lsst::afw::math::shapelets::BasisTypeEnum basisType, int order) const {
@@ -121,18 +103,16 @@ public:
      *  to compute a multi-scale shapelet, it should have hasNativeShapelet()==true and
      *  implement this member function, even if it isn't natively stored in shapelet form.
      *
-     *  The standard center for the returned shapelet function is (0,0), not the point the
-     *  LocalPsf was evaluated at; a nonzero center implies an asymmtric PSF.
-     *
+     *  The shapelet representation is guaranteed to be normalized such that it integrates to one.
      *  Should throw if hasNativeShapelet() is false.
      */
-    virtual MultiShapelet getNativeShapelet(lsst::afw::math::shapelets::BasisTypeEnum basisType) const = 0;
+    virtual MultiShapelet getNativeShapelet(lsst::afw::math::shapelets::BasisTypeEnum basisType) const {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
+                          "LocalPsf has no native shapelet representation.");
+    }
 
     /**
-     *  @brief Compute the 2nd-order moments of the Psf.
-     *
-     *  The standard center for the returned ellipse is (0,0), not the point the
-     *  LocalPsf was evaluated at; a nonzero center implies an asymmtric PSF.
+     *  @brief Compute the 1st and 2nd-order moments of the Psf.
      */
     virtual lsst::afw::geom::ellipses::Ellipse computeMoments() const = 0;
 
@@ -140,13 +120,13 @@ public:
      *  @brief Fill the pixels of the footprint with a point source model in the given flattened array.
      *
      *  @param[in]  fp     Footprint that defines the nonzero pixels of the model.
-     *  @param[in]  point  Center of the point source in the same coordinate system as the footprint.
      *  @param[out] array  Flattened output array with size equal to footprint area.
+     *  @param[in]  offset Offset of the point source from the point the LocalPsf was evaluated at.
      */
     virtual void evaluatePointSource(
         Footprint const & fp, 
-        lsst::afw::geom::Point2D const & point, 
-        ndarray::Array<Pixel, 1, 0> const & array
+        lsst::ndarray::Array<Pixel,1,0> const & array,
+        lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
     ) const = 0;
     
     /**
@@ -155,19 +135,145 @@ public:
      *  @param[in]  fp     Footprint that defines the nonzero pixels of the model.
      *  @param[in]  point  Center of the point source in the same coordinate system as the footprint.
      */
-    ndarray::Array<Pixel, 1,1> evaluatePointSource(
+    lsst::ndarray::Array<Pixel,1,1> evaluatePointSource(
         Footprint const & fp, 
-        lsst::afw::geom::Point2D const & point
+        lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
     ) const {
-        ndarray::Array<Pixel, 1, 1> array = ndarray::allocate(ndarray::makeVector(fp.getArea()));
-        evaluatePointSource(fp, point, array);
+        ndarray::Array<Pixel,1,1> array = ndarray::allocate(ndarray::makeVector(fp.getArea()));
+        evaluatePointSource(fp, array, offset);
         return array;
     }
 
     virtual ~LocalPsf() {}
 
+protected:
+    explicit LocalPsf(geom::Point2D const & point) : _point(point) {}
+
 private:
     void operator=(LocalPsf const &); // disabled
+    geom::Point2D _point;
+};
+
+
+/**
+ *  @brief A LocalPsf for multi-shapelet and multi-Gaussian PSFs.
+ */
+class ShapeletLocalPsf : public LocalPsf {
+public: 
+    typedef boost::shared_ptr<ShapeletLocalPsf> Ptr;
+    typedef boost::shared_ptr<ShapeletLocalPsf const> ConstPtr;
+
+    /**
+     *  @brief Return true if the LocalPsf has a "native" shapelet or multi-shapelet representation.
+     */
+    virtual bool hasNativeShapelet() const { return true; }
+
+    /**
+     *  @brief Return a shapelet representation of the LocalPsf with the given order and ellipse.
+     *
+     *  Not implemented by ShapeletLocalPsf; use getNativeShapelet().
+     */
+    virtual Shapelet computeShapelet(
+        lsst::afw::math::shapelets::BasisTypeEnum basisType, 
+        int order,
+        lsst::afw::geom::ellipses::Ellipse const & ellipse
+    ) const {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
+                          "LocalPsf does not support computeShapelet(); use getNativeShapelet().");        
+    }
+
+    /**
+     *  @brief Return a native (multi)shapelet representation of the LocalPsf.
+     *
+     *  @param[in] basisType  Shapelet basis to use (HERMITE or LAGUERRE).
+     *
+     *  The shapelet representation is guaranteed to be normalized such that it integrates to one.
+     */
+    virtual MultiShapelet getNativeShapelet(lsst::afw::math::shapelets::BasisTypeEnum basisType) const {
+        return _shapelet;
+    }
+
+    /**
+     *  @brief Compute the 1st and 2nd-order moments of the Psf.
+     */
+    virtual lsst::afw::geom::ellipses::Ellipse computeMoments() const {
+        return _shapelet.evaluate().computeMoments();
+    }
+
+    /**
+     *  @brief Fill the pixels of the footprint with a point source model in the given flattened array.
+     *
+     *  @param[in]  fp     Footprint that defines the nonzero pixels of the model.
+     *  @param[out] array  Flattened output array with size equal to footprint area.
+     *  @param[in]  offset Offset of the point source from the point the LocalPsf was evaluated at.
+     */
+    virtual void evaluatePointSource(
+        Footprint const & fp, 
+        lsst::ndarray::Array<Pixel,1,0> const & array,
+        lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
+    ) const;
+
+    explicit ShapeletLocalPsf(lsst::afw::geom::Point2D const & center, MultiShapelet const & shapelet) :
+        LocalPsf(center), _shapelet(shapelet) {}
+
+private:
+    MultiShapelet _shapelet;
+};
+
+/**
+ *  @brief An image-based LocalPsf.
+ */
+class ImageLocalPsf : public LocalPsf {
+public: 
+    typedef boost::shared_ptr<ImageLocalPsf> Ptr;
+    typedef boost::shared_ptr<ImageLocalPsf const> ConstPtr;
+
+    /**
+     *  @brief Return a shapelet representation of the LocalPsf with the given order and ellipse.
+     *
+     *  @param[in] basisType  Shapelet basis to use (HERMITE or LAGUERRE).
+     *  @param[in] order      Shapelet order.
+     *  @param[in] ellipse    Ellipse to set the radius, ellipticity, and center of the shapelet function.
+     *
+     *  The shapelet representation is guaranteed to be normalized such that it integrates to one.
+     */
+    virtual Shapelet computeShapelet(
+        lsst::afw::math::shapelets::BasisTypeEnum basisType, 
+        int order,
+        lsst::afw::geom::ellipses::Ellipse const & ellipse
+    ) const;
+
+    /**
+     *  @brief Compute the 1st and 2nd-order moments of the Psf.
+     */
+    virtual lsst::afw::geom::ellipses::Ellipse computeMoments() const;
+
+    /**
+     *  @brief Fill the pixels of the footprint with a point source model in the given flattened array.
+     *
+     *  @param[in]  fp     Footprint that defines the nonzero pixels of the model.
+     *  @param[out] array  Flattened output array with size equal to footprint area.
+     *  @param[in]  offset Offset of the point source from the point the LocalPsf was evaluated at.
+     */
+    virtual void evaluatePointSource(
+        Footprint const & fp, 
+        lsst::ndarray::Array<Pixel,1,0> const & array,
+        lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
+    ) const;
+
+    /**
+     *  @brief Construct a new ImageLocalPsf with the given center and image.
+     *
+     *  The image will be shallow-copied and must already be normalized to sum to one, and it
+     *  must be centered at the given center point on the image with xy0 taken into account
+     *  (i.e., like the output of Psf::computeImage, but normalized).
+     */
+    explicit ImageLocalPsf(lsst::afw::geom::Point2D const & center, Image const & image) :
+        LocalPsf(center), _image(image)
+    {}
+
+protected:
+    Image _image;
 };
 
 }}}

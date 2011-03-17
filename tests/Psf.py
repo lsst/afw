@@ -154,6 +154,9 @@ class dgPsfTestCase(unittest.TestCase):
             stamps.append(im.Factory(im, True))
             trueCenters.append([xcen + fx, ycen + fy])
             
+            localPsf = self.psf.getLocalPsf(afwGeom.Point2D(x, y))
+            localPsfImage = localPsf.computeImage(afwGeom.Extent2I(im.getWidth(), im.getHeight()))
+
         if display:
             mos = displayUtils.Mosaic()     # control mosaics
             ds9.mtv(mos.makeMosaic(stamps))

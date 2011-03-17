@@ -78,6 +78,7 @@ namespace boost {
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 %import "lsst/afw/math/mathLib.i"
+%import "lsst/afw/math/shapelets/shapeletsLib.i"
 %include "lsst/ndarray/ndarray.i"
 
 %lsst_exceptions()

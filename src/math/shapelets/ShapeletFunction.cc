@@ -69,18 +69,21 @@ shapelets::ShapeletFunction::ShapeletFunction(
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
  
-shapelets::ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType, double radius) :
-    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius)),
+shapelets::ShapeletFunction::ShapeletFunction(
+    int order, BasisTypeEnum basisType, double radius,
+    geom::Point2D const & center
+) :
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius), center),
     _coefficients(nd::allocate(computeSize(_order)))
 {
     _coefficients.deep() = 0.0;
 }
 
 shapelets::ShapeletFunction::ShapeletFunction(
-    int order, BasisTypeEnum basisType, double radius,
+    int order, BasisTypeEnum basisType, double radius, geom::Point2D const & center,
     lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
 ) :
-    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius)),
+    _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius), center),
     _coefficients(nd::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
@@ -122,6 +125,10 @@ shapelets::ShapeletFunction & shapelets::ShapeletFunction::operator=(ShapeletFun
         _ellipse = other.getEllipse();
     }
     return *this;
+}
+
+void shapelets::ShapeletFunction::normalize() {
+    _coefficients.deep() /= evaluate().integrate();
 }
 
 void shapelets::ShapeletFunctionEvaluator::update(ShapeletFunction const & function) {

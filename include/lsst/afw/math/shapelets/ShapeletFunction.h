@@ -60,6 +60,8 @@ public:
     typedef boost::shared_ptr<ShapeletFunction> Ptr;
     typedef boost::shared_ptr<ShapeletFunction const> ConstPtr;
 
+    typedef ShapeletFunctionEvaluator Evaluator;
+
     /// @brief Return the maximum order (inclusive), either @f$n_x + n_y@f$ or @f$p + q@f$.
     int getOrder() const { return _order; }
 
@@ -81,6 +83,9 @@ public:
         _basisType = basisType;
     }
 
+    /// @brief Normalize the integral of the shapelet function to 1.
+    void normalize();
+
     /// @brief Return the coefficient vector.
     lsst::ndarray::Array<Pixel,1,1> const getCoefficients() { return _coefficients; }
 
@@ -91,7 +96,7 @@ public:
     void convolve(ShapeletFunction const & other);
 
     /// @brief Construct a helper object that can efficiently evaluate the function.
-    ShapeletFunctionEvaluator evaluate() const;
+    Evaluator evaluate() const;
 
     /// @brief Construct a function with a unit-circle ellipse and set all coefficients to zero.
     ShapeletFunction(int order, BasisTypeEnum basisType);
@@ -103,11 +108,12 @@ public:
     );
 
     /// @brief Construct a function with a circular ellipse and set all coefficients to zero.
-    ShapeletFunction(int order, BasisTypeEnum basisType, double radius);
+    ShapeletFunction(int order, BasisTypeEnum basisType, double radius,
+                     lsst::afw::geom::Point2D const & center);
 
     /// @brief Construct a function with a circular ellipse and a deep-copied coefficient vector.
     ShapeletFunction(
-        int order, BasisTypeEnum basisType, double radius,
+        int order, BasisTypeEnum basisType, double radius, lsst::afw::geom::Point2D const & center,
         lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
     );
 
@@ -143,6 +149,9 @@ private:
 
 /**
  *  @brief Evaluates a ShapeletFunction.
+ *
+ *  This is distinct from ShapeletFunction to allow the evaluator to construct temporaries
+ *  and allocate workspace that will be reused when evaluating at multiple points.
  *
  *  A ShapeletFunctionEvaluator is invalidated whenever the ShapeletFunction it
  *  was constructed from is modified.

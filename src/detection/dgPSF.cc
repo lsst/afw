@@ -9,6 +9,7 @@
 #include <cmath>
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/detail/dgPsf.h"
+#include "lsst/afw/detection/LocalPsf.h"
 #include "lsst/afw/image/ImageUtils.h"
 
 namespace afwMath = lsst::afw::math;
@@ -42,6 +43,22 @@ dgPsf::dgPsf(int width,                         ///< Number of columns in realis
         afwMath::DoubleGaussianFunction2<double> dg(sigma1, sigma2, b);
         setKernel(afwMath::Kernel::Ptr(new afwMath::AnalyticKernel(width, height, dg)));
     }
+}
+
+PTR(LocalPsf) dgPsf::doGetLocalPsf(
+    lsst::afw::geom::Point2D const & center,
+    lsst::afw::image::Color const &
+) const {
+    afwMath::shapelets::MultiShapeletFunction multiShapelet;
+    multiShapelet.getElements().push_back(
+        afwMath::shapelets::ShapeletFunction(0, afwMath::shapelets::HERMITE, _sigma1, center)
+    );
+    multiShapelet.getElements().push_back(
+        afwMath::shapelets::ShapeletFunction(0, afwMath::shapelets::HERMITE, _sigma2, center)
+    );
+    multiShapelet.getElements().front().getCoefficients()[0] = 1.0;
+    multiShapelet.getElements().back().getCoefficients()[0] = _b;
+    return boost::make_shared<ShapeletLocalPsf>(center, multiShapelet);
 }
 
 //

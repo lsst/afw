@@ -54,6 +54,8 @@ public:
     typedef boost::shared_ptr<MultiShapeletFunction> Ptr;
     typedef boost::shared_ptr<MultiShapeletFunction const> ConstPtr;
 
+    typedef MultiShapeletFunctionEvaluator Evaluator;
+
     typedef ShapeletFunction Element;
 
     typedef std::list<Element> ElementList;
@@ -62,6 +64,9 @@ public:
 
     ElementList const & getElements() const { return _elements; }
 
+    /// @brief Normalize the integral of the shapelet function to 1.
+    void normalize();
+
     /// @brief Convolve the multi-scale shapelet function in-place.
     void convolve(ShapeletFunction const & other);
 
@@ -69,7 +74,9 @@ public:
     void convolve(MultiShapeletFunction const & other);
 
     /// @brief Construct a helper object that can efficiently evaluate the function.
-    MultiShapeletFunctionEvaluator evaluate() const;
+    Evaluator evaluate() const;
+
+    MultiShapeletFunction() : _elements() {}
 
     explicit MultiShapeletFunction(ElementList const & elements) : _elements(elements) {}
 
@@ -81,6 +88,9 @@ private:
 
 /**
  *  @brief Evaluates a MultiShapeletFunction.
+ *
+ *  This is distinct from MultiShapeletFunction to allow the evaluator to construct temporaries
+ *  and allocate workspace that will be reused when evaluating at multiple points.
  *
  *  A MultiShapeletFunctionEvaluator is invalidated whenever the MultiShapeletFunction it
  *  was constructed from is modified.
