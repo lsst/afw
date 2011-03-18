@@ -48,7 +48,7 @@ public:
     Psf() : lsst::daf::data::LsstBase(typeid(this)) {}
     virtual ~Psf() {}
 
-    virtual Ptr clone() const { return boost::make_shared<Psf>(*this); }
+    virtual Ptr clone() const = 0;
 
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }

@@ -249,11 +249,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
  * Clone a Psf; defined here so that we don't have to expose the insides of Psf in Exposure.h
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
-        CONST_PTR(lsst::afw::detection::Psf) psf      // the Psf to clone
-                                                            )
-{
-    _psf = psf ? psf->clone() : PTR(afwDetection::Psf)();
+PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
+    CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
+) {
+    return (psf) ? psf->clone() : PTR(afwDetection::Psf)();
 }
 
 /** @brief Get the Wcs of an Exposure.

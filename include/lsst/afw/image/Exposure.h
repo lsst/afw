@@ -121,12 +121,11 @@ public:
         lsst::daf::data::LsstBase(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
         _wcs(rhs.getWcs()->clone()),
+        _psf(_clonePsf(rhs.getPsf())),
         _detector(rhs.getDetector()),
         _filter(rhs.getFilter()),
         _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
     {
-        _clonePsf(rhs.getPsf());    // a separate function so it can go in Exposure.cc
-
         // Make sure that we create a PropertyList even if the incoming
         // metadata is a PropertySet.
         PTR(lsst::daf::base::PropertyList) pl(new lsst::daf::base::PropertyList);
@@ -204,7 +203,7 @@ public:
     boost::shared_ptr<Calib> getCalib() { return _calib; }
     boost::shared_ptr<const Calib> getCalib() const { return _calib; }
     /// Set the Exposure's Psf
-    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _clonePsf(psf); }
+    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _psf = _clonePsf(psf); }
 
     /// Return the Exposure's Psf object
     PTR(lsst::afw::detection::Psf) getPsf() { return _psf; }
@@ -230,7 +229,7 @@ private:
     PTR(Calib) _calib;
     PTR(lsst::afw::detection::Psf) _psf;
 
-    void _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
+    static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
 };
 
 /**

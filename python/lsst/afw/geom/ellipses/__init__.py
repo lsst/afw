@@ -22,27 +22,7 @@
 
 """lsst.afw.geom.ellipses
 """
-from ellipsesLib import (
-    LogShear,
-    Distortion,
-    DeterminantRadius,
-    TraceRadius,
-    LogDeterminantRadius,
-    LogTraceRadius,
-    BaseCore,
-    Axes,
-    Quadrupole,
-    SeparableDistortionDeterminantRadius,
-    SeparableDistortionTraceRadius,
-    SeparableDistortionLogDeterminantRadius,
-    SeparableDistortionLogTraceRadius,
-    SeparableLogShearDeterminantRadius,
-    SeparableLogShearTraceRadius,
-    SeparableLogShearLogDeterminantRadius,
-    SeparableLogShearLogTraceRadius,
-    Ellipse,
-    Parametric
-)
+from ellipsesLib import *
 
 Separable = {
     (Distortion, DeterminantRadius):SeparableDistortionDeterminantRadius,
