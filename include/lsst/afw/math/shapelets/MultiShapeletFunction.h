@@ -67,6 +67,12 @@ public:
     /// @brief Normalize the integral of the shapelet function to 1.
     void normalize();
 
+    /// @brief Shift the shapelet function by shifting the ellipse of each element.
+    void shiftInPlace(lsst::afw::geom::Extent2D const & offset);
+
+    /// @brief Transform the shapelet function by transforming the ellipse of each elements.
+    void transformInPlace(lsst::afw::geom::AffineTransform const & transform);
+
     /// @brief Convolve the multi-scale shapelet function in-place.
     void convolve(ShapeletFunction const & other);
 

@@ -98,6 +98,16 @@ public:
     /// @brief Construct a helper object that can efficiently evaluate the function.
     Evaluator evaluate() const;
 
+    /// @brief Shift the shapelet function by shifting the ellipse of each element.
+    void shiftInPlace(lsst::afw::geom::Extent2D const & offset) {
+        _ellipse.getCenter() += offset;
+    }
+
+    /// @brief Transform the shapelet function by transforming the ellipse of each elements.
+    void transformInPlace(lsst::afw::geom::AffineTransform const & transform) {
+        _ellipse.transform(transform).inPlace();
+    }
+
     /// @brief Construct a function with a unit-circle ellipse and set all coefficients to zero.
     ShapeletFunction(int order, BasisTypeEnum basisType);
 

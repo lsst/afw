@@ -40,6 +40,18 @@ void shapelets::MultiShapeletFunction::normalize() {
     }
 }
 
+void shapelets::MultiShapeletFunction::shiftInPlace(geom::Extent2D const & offset) {
+    for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
+        i->shiftInPlace(offset);
+    }    
+}
+
+void shapelets::MultiShapeletFunction::transformInPlace(geom::AffineTransform const & transform) {
+    for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
+        i->transformInPlace(transform);
+    }    
+}
+
 void shapelets::MultiShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
     for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
         i->convolve(other);
