@@ -73,6 +73,10 @@ class Warper(object):
             interpLength = policy.getInt("interpLength"),
             cacheSize = policy.getInt("cacheSize"),
         )
+    
+    def getWarpingKernel(self):
+        """Get the warping kernel"""
+        return self._warpingKernel
 
     def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None):
         """Warp an exposure

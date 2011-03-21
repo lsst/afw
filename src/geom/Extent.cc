@@ -33,7 +33,7 @@ geom::Extent<T,N>::Extent(Point<T,N> const & other) :
 
 // The following two template specializations raise Doxygen warnings and produce no documenation.
 // This is a known Doxygen bug: <https://bugzilla.gnome.org/show_bug.cgi?id=406027>
-/// \cond BUG406027
+/// \cond DOXYGEN_BUG
 template <typename T>
 geom::Extent<T,2>::Extent(Point<T,2> const & other) :
     Super(other.asEigen())
