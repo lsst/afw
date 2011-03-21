@@ -62,7 +62,7 @@ void flattenArray(
     ndarray::Array<T,N,C> const & src,
     ndarray::Array<U, N-1, D> const & dest,
     geom::Point2I const & origin
-) {    
+) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N-1, D> DestT; 
     BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
@@ -123,6 +123,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
 ) {
     ndarray::Vector<int,N-1> shape 
         = ndarray::concatenate(fp.getArea(), src.template getShape().template last<N-2>());
+    std::cerr << "shape: " << shape << "\n";
     ndarray::Array<typename boost::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
     flattenArray(fp, src, dest, origin);
     return dest;
@@ -203,7 +204,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     Footprint const & fp,
     ndarray::Array<T, N, C> const & src,
     geom::Box2I const & bbox
-) {    
+) {
     ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
             ndarray::makeVector(bbox.getHeight(), bbox.getWidth()), 

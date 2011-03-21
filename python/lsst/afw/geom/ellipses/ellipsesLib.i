@@ -77,6 +77,7 @@ def version(HeadURL = r"$HeadURL$"):
 %include "lsst/ndarray/ndarray.i"
 %import "lsst/afw/geom/geomLib.i"
 
+%pythondynamic lsst::afw::geom::ellipses::Ellipse;
 
 %ignore lsst::afw::geom::ellipses::BaseCore::transform;
 %ignore lsst::afw::geom::ellipses::BaseCore::convolve;
