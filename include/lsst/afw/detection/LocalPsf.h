@@ -214,7 +214,10 @@ public:
     ) const;
 
     explicit ShapeletLocalPsf(lsst::afw::geom::Point2D const & center, MultiShapelet const & shapelet) :
-        LocalPsf(center), _shapelet(shapelet) {}
+        LocalPsf(center), _shapelet(shapelet)
+    {
+        _shapelet.normalize();
+    }
 
 private:
     MultiShapelet _shapelet;

@@ -8,8 +8,8 @@
 SWIG_SHARED_PTR_DERIVED(PSFPtrT, lsst::daf::data::LsstBase, lsst::afw::detection::Psf);
 SWIG_SHARED_PTR_DERIVED(PSFPtrT, lsst::afw::detection::Psf, lsst::afw::detection::KernelPsf);
 
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::detection::Psf::Pixel,1,0>);
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::detection::Psf::Pixel const,1,0>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::detection::LocalPsf::Pixel,1,0>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::detection::LocalPsf::Pixel const,1,0>);
 
 %ignore PsfFactoryBase;
 %include "lsst/afw/detection/Psf.h"
