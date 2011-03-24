@@ -67,6 +67,15 @@ public:
      * Return the filter's effective wavelength (nm)
      */
     double getLambdaEff() const { return _lambdaEff; }
+    /*
+     * Compare two FilterProperties
+     */
+    bool operator==(FilterProperty const& rhs) const;
+    /**
+     * Return true iff rhs != this
+     */
+    bool operator!=(FilterProperty const& rhs ///< Object to compare with this
+                   ) const { return !(*this == rhs); }
     /**
      * Clear all definitions
      */
