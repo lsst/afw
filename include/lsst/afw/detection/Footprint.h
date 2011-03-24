@@ -162,6 +162,8 @@ public:
     Footprint(int nspan = 0, const image::BBox region=image::BBox());
     Footprint(const image::BBox& bbox, const image::BBox region=image::BBox());
     Footprint(const image::BCircle& circle, const image::BBox region=image::BBox());
+    Footprint(lsst::afw::geom::Point2I const& center, double a, double b, double theta,
+              lsst::afw::image::BBox const& region=lsst::afw::image::BBox());
 
     ~Footprint();
 

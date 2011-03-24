@@ -41,6 +41,7 @@
 
 namespace afwMath = lsst::afw::math;
 namespace afwDetect = lsst::afw::detection;
+namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
 /******************************************************************************/
@@ -148,6 +149,66 @@ afwDetect::Footprint::Footprint(afwImage::BBox const& bbox, //!< The bounding bo
     }
 }
 
+/************************************************************************************************************/
+/**
+ * Create an elliptical Footprint.
+ */
+afwDetect::Footprint::Footprint(afwGeom::Point2I const& center, //!< The center of the circle
+                     double a,                       //!< Major axis (pixels)
+                     double b,                       //!< Minor axis (pixels)
+                     double theta,                   //!< angle of major axis from x-axis; (radians)
+                     afwImage::BBox const& region    //!< Bounding box of MaskedImage footprint
+                    )
+    : lsst::daf::data::LsstBase(typeid(this)),
+      _fid(++id),
+      _npix(0),
+      _bbox(afwImage::BBox()),
+      _region(region),
+      _normalized(false)
+{
+    int const xc = center[0];           // x-centre
+    int const yc = center[1];           // y-centre
+
+    double const c = ::cos(theta);
+    double const s = ::sin(theta);
+
+    double const c0 = a*a*s*s + b*b*c*c;
+    double const c1 = c*s*(a*a - b*b)/c0;
+    double const c2 = a*b/c0;
+
+    double const ymax = ::sqrt(c0) + 1; // max extent of ellipse in y-direction
+    //
+    // We go to quite a lot of annoying trouble to ensure that all pixels that are within or intercept
+    // the ellipse are included in the Footprint
+    //
+    double x1, x2, y;
+    for (int i = -ymax; i <= ymax; ++i) {
+        double const dy = (i > 0) ? -0.5 : 0.5;
+        y = i + dy;              // chord at top of pixel (above centre)
+        if (c0 > y*y) {
+            x1 = y*c1 - c2*std::sqrt(c0 - y*y);
+            x2 = y*c1 + c2*std::sqrt(c0 - y*y);
+        } else {
+            x1 = x2 = y*c1;
+        }
+
+        y = i - dy;                     // chord at bottom of pixel (above centre)
+        if (c0 > y*y) {
+            double tmp = y*c1 - c2*std::sqrt(c0 - y*y);
+            if (tmp < x1) {
+                x1 = tmp;
+            }
+
+            tmp = y*c1 + c2*std::sqrt(c0 - y*y);
+            if (tmp > x2) {
+                x2 = tmp;
+            }
+        }
+
+        addSpan(yc + i, xc + x1 + 0.5, xc + x2 + 0.5);
+    }
+}
+
 /**
  * Create a circular Footprint
  */
@@ -179,7 +240,7 @@ afwDetect::Footprint::~Footprint() {
 /**
  * Does this Footprint contain this pixel?
  */
-bool afwDetect::Footprint::contains(lsst::afw::geom::Point2I const& pix ///< Pixel to check
+bool afwDetect::Footprint::contains(afwGeom::Point2I const& pix ///< Pixel to check
                         ) const
 {
     if (_bbox.contains(afwImage::PointI(pix[0], pix[1]))) {
