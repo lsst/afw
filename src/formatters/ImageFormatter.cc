@@ -257,12 +257,9 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
                       boost::serialization::make_binary_object(array.getData(), nbytes));
         ip->swap(*ni);
     } else {
-        typename Image<ImagePixelT>::Array array = ip->getArray();
-        //check if image is not contiguous:
-        if(!ip->isContiguous()){
-            //image is not contiguous, make a deep copy
-            array = ndarray::copy(array);
-        }
+        ndarray::Array<ImagePixelT, 2, 2> array = ndarray::dynamic_dimension_cast<2>(ip->getArray());
+        if(array.empty())
+            array = ndarray::copy(ip->getArray());
         ar & make_nvp("bytes", boost::serialization::make_binary_object(array.getData(), nbytes));
     }
 }

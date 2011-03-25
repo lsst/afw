@@ -370,7 +370,7 @@ public:
     ~fits_reader() { }
     
     template <typename PixelT>
-    geom::Point2I apply(lsst::ndarray::Array<PixelT,2,1> const & array) {
+    geom::Point2I apply(lsst::ndarray::Array<PixelT,2,2> const & array) {
         const int BITPIX = detail::fits_read_support_private<PixelT>::BITPIX;
 
         if (BITPIX != _bitpix) {            
@@ -434,11 +434,9 @@ public:
     }
    
     template <typename PixelT>
-    void read_image(lsst::ndarray::Array<PixelT,2,1> & array, geom::Point2I & xy0) {
-        lsst::ndarray::Array<PixelT,2,1> tmp 
-            = lsst::ndarray::allocate(getDimensions().getY(), getDimensions().getX());
-        xy0 = apply(tmp);
-        array = tmp;
+    void read_image(lsst::ndarray::Array<PixelT,2,2> & array, geom::Point2I & xy0) {
+        array = lsst::ndarray::allocate(getDimensions().getY(), getDimensions().getX());
+        xy0 = apply(array);        
     }
 
     geom::Extent2I getDimensions() const {
@@ -518,7 +516,11 @@ public:
         int const ttype = cfitsio::ttypeFromBitpix(BITPIX);
         status = 0;                     // cfitsio function return status
 
-        if (fits_write_img(_fd.get(), ttype, 1, imageSize, &(*image.begin()), &status) != 0) {
+        ndarray::Array<const typename ImageT::Pixel, 2, 2> array = ndarray::dynamic_dimension_cast<2>(image.getArray());
+        if(array.empty())
+            array = ndarray::copy(image.getArray());
+        typename ImageT::Pixel * data = const_cast<typename ImageT::Pixel *>(array.getData());
+        if (fits_write_img(_fd.get(), ttype, 1, imageSize, data, &status) != 0) {
             throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
     }

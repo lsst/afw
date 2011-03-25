@@ -50,7 +50,7 @@ template<typename ImageT, typename ExceptionT>
 class try_fits_read_image {
 public:
     try_fits_read_image(const std::string& file,
-                        lsst::ndarray::Array<typename ImageT::Pixel,2,1> & array,
+                        lsst::ndarray::Array<typename ImageT::Pixel,2,2> & array,
                         lsst::afw::geom::Point2I & xy0,
                         lsst::daf::base::PropertySet::Ptr metadata,
                         int hdu,
@@ -72,7 +72,7 @@ public:
     template <typename OtherPixel> 
         void operator()(OtherPixel) { // read and convert into the desired type
         try {
-            lsst::ndarray::Array<OtherPixel,2,1> array;
+            lsst::ndarray::Array<OtherPixel,2,2> array;
             lsst::afw::image::fits_read_image(_file, array, _xy0, _metadata, _hdu, _bbox, _origin);
             //copy and convert
             _array = lsst::ndarray::allocate(array.getShape());
@@ -84,7 +84,7 @@ public:
     }
 private:
     std::string _file;
-    lsst::ndarray::Array<typename ImageT::Pixel,2,1> & _array;
+    lsst::ndarray::Array<typename ImageT::Pixel,2,2> & _array;
     lsst::afw::geom::Point2I & _xy0;
     lsst::daf::base::PropertySet::Ptr _metadata;
     int _hdu;
@@ -103,7 +103,7 @@ bool fits_read_image(
     geom::Box2I const& bbox = geom::Box2I(),
     ImageOrigin const origin = LOCAL
 ) {
-    lsst::ndarray::Array<typename ImageT::Pixel,2,1> array;
+    lsst::ndarray::Array<typename ImageT::Pixel,2,2> array;
     geom::Point2I xy0;
     try {
         boost::mpl::for_each<supported_fits_types>(

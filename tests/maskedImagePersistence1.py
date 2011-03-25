@@ -92,7 +92,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
 
         miPath = os.path.join("tests", "data", "Dest")
         logicalLocation = dafPers.LogicalLocation(miPath)
-        storage = self.persistence.getPersistStorage("FitsStorage", logicalLocation)
+        storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
         try:
             self.persistence.persist(self.maskedImage, storageList, self.additionalData)
