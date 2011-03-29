@@ -87,6 +87,11 @@ SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
     def clone(self):
         return self.__class__(self.first, self.second, self.distance)
 
+    def __getstate__(self):
+        return self.first, self.second, self.distance
+
+    def __setstate__(self, state):
+        self.__init__(*state)
     }
 }
 

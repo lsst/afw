@@ -41,6 +41,10 @@
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
 // not used? #include <stdlib.h>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 //#include "boost/serialization/shared_ptr.hpp"
 #include "wcslib/wcs.h"
@@ -217,6 +221,15 @@ void afwForm::WcsFormatter::delegateSerialize(
     }
     execTrace("WcsFormatter delegateSerialize end");
 }
+
+template void afwForm::WcsFormatter::delegateSerialize(
+    boost::archive::text_oarchive & , int, dafBase::Persistable*);
+template void afwForm::WcsFormatter::delegateSerialize(
+    boost::archive::text_iarchive & , int, dafBase::Persistable*);
+template void afwForm::WcsFormatter::delegateSerialize(
+    boost::archive::binary_oarchive & , int, dafBase::Persistable*);
+template void afwForm::WcsFormatter::delegateSerialize(
+    boost::archive::binary_iarchive & , int, dafBase::Persistable*);
 
 dafPersist::Formatter::Ptr afwForm::WcsFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {

@@ -33,6 +33,7 @@
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
+#include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
@@ -161,6 +162,8 @@ public:
     Footprint(int nspan = 0, const image::BBox region=image::BBox());
     Footprint(const image::BBox& bbox, const image::BBox region=image::BBox());
     Footprint(const image::BCircle& circle, const image::BBox region=image::BBox());
+    Footprint(lsst::afw::geom::Point2I const& center, double a, double b, double theta,
+              lsst::afw::image::BBox const& region=lsst::afw::image::BBox());
 
     ~Footprint();
 
@@ -216,15 +219,30 @@ typename ImageT::Pixel setImageFromFootprint(ImageT *image,
                                              typename ImageT::Pixel const value);
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
+                                                 CONST_PTR(std::vector<Footprint::Ptr>) footprints,
+                                                 typename ImageT::Pixel  const value);
+template<typename ImageT>
+typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
                                                  std::vector<Footprint::Ptr> const& footprints,
                                                  typename ImageT::Pixel  const value);
 template<typename MaskT>
 MaskT setMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                            Footprint const& footprint,
                            MaskT const bitmask);
+
+/************************************************************************************************************/
+/**
+ * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
+ *
+ * \return bitmask
+ */
 template<typename MaskT>
 MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
                                std::vector<Footprint::Ptr> const& footprints,
+                               MaskT const bitmask);
+template<typename MaskT>
+MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
+                               CONST_PTR(std::vector<Footprint::Ptr>) footprints,
                                MaskT const bitmask);
 template<typename MaskT>
 Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
@@ -267,15 +285,15 @@ public:
     void swap(FootprintSet<RhsImagePixelT, RhsMaskPixelT>& rhs) {
         using std::swap;                    // See Meyers, Effective C++, Item 25
         
-        swap(*_footprints, rhs.getFootprints());
+        swap(*_footprints, *rhs.getFootprints());
         image::BBox rhsRegion = rhs.getRegion();
         swap(_region, rhsRegion);
     }
     
-    FootprintList& getFootprints() { return *_footprints; } //!< Retun the Footprint%s of detected objects
-    FootprintList const& getFootprints() const { return *_footprints; } //!< Retun the Footprint%s of detected objects
+    PTR(FootprintList) getFootprints() { return _footprints; } //!< Retun the Footprint%s of detected objects
+    CONST_PTR(FootprintList) getFootprints() const { return _footprints; } //!< Retun the Footprint%s of detected objects
     void setRegion(lsst::afw::image::BBox const& region);
-    image::BBox const& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
+    image::BBox getRegion() const { return _region; } //!< Return the corners of the MaskedImage
 
 #if 0                                   // these are equivalent, but the former confuses swig
     typename image::Image<boost::uint16_t>::Ptr insertIntoImage(const bool relativeIDs);

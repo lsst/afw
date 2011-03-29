@@ -227,6 +227,8 @@ class FilterTestCase(unittest.TestCase):
         self.assertEqual(f.getName(), "g")
         self.assertEqual(f.getId(), 1)
         self.assertEqual(f.getFilterProperty().getLambdaEff(), self.g_lambdaEff)
+        self.assertTrue(f.getFilterProperty() ==
+                        self.defineFilterProperty("gX", self.g_lambdaEff, True))
 
         self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
 
@@ -253,14 +255,23 @@ class FilterTestCase(unittest.TestCase):
         gprime = self.defineFilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
         gprime = self.defineFilterProperty("g", self.g_lambdaEff, True)
         #
-        # Now Filter
+        # Can redefine
         #
         def tst():
-            afwImage.Filter.define(g, afwImage.Filter.AUTO)
-
-        afwImage.Filter.define(g, afwImage.Filter("g").getId()) # OK if Id's the same
+            self.defineFilterProperty("g", self.g_lambdaEff + 10) # changing definition is not allowed
         tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
-        afwImage.Filter.define(g, afwImage.Filter.AUTO, True)
+
+        self.defineFilterProperty("g", self.g_lambdaEff) # identical redefinition is allowed
+        #
+        # Now Filter
+        #
+        afwImage.Filter.define(g, afwImage.Filter("g").getId()) # OK if Id's the same
+        afwImage.Filter.define(g, afwImage.Filter.AUTO)         # AUTO will assign the same ID
+
+        def tst():
+            afwImage.Filter.define(g, afwImage.Filter("g").getId() + 10) # different ID
+            
+        tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
 
     def testUnknownFilter(self):
         """Test that we can define, but not use, an unknown filter"""

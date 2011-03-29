@@ -81,9 +81,9 @@ public:
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pos,
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pos,
                                                           bool const isTrimmed) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2D const& pix) const;
 
     virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);

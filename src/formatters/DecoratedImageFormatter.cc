@@ -45,6 +45,8 @@ static char const* SVNid __attribute__((unused)) =
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
 #include "boost/serialization/nvp.hpp"
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -212,9 +214,19 @@ lsst::daf::persistence::Formatter::Ptr DecoratedImageFormatter<ImagePixelT>::cre
     return lsst::daf::persistence::Formatter::Ptr(new DecoratedImageFormatter<ImagePixelT>(policy));
 }
 
-template class DecoratedImageFormatter<boost::uint16_t>;
-template class DecoratedImageFormatter<int>;
-template class DecoratedImageFormatter<float>;
-template class DecoratedImageFormatter<double>;
+#define InstantiateFormatter(ImagePixelT) \
+    template class DecoratedImageFormatter<ImagePixelT >; \
+    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_oarchive&, int const, Persistable*); \
+    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_iarchive&, int const, Persistable*); \
+    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_oarchive&, int const, Persistable*); \
+    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_iarchive&, int const, Persistable*);
+
+InstantiateFormatter(boost::uint16_t);
+InstantiateFormatter(int);
+InstantiateFormatter(float);
+InstantiateFormatter(double);
+
+#undef InstantiateFormatter
+
 
 }}} // namespace lsst::afw::formatters

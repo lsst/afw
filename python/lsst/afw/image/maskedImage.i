@@ -42,6 +42,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %template(makeMaskedImage) lsst::afw::image::makeMaskedImage<PIXEL_TYPES>;
 %newobject makeMaskedImage;
 %lsst_persistable(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+%boost_picklable(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {

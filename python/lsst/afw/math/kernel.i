@@ -27,9 +27,11 @@
 #include "lsst/afw/math/LocalKernel.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
+#include "lsst/afw/formatters/KernelFormatter.h"
 %}
 
 %include "std_complex.i"
+%include "../boost_picklable.i"
 
 %ignore lsst::afw::math::FourierCutout::operator();
 %ignore lsst::afw::math::FourierCutout::swap;
@@ -68,10 +70,12 @@ SWIG_SHARED_PTR(FourierCutoutStackPtr, lsst::afw::math::FourierCutoutStack);
 %define %kernelPtr(TYPE...)
 SWIG_SHARED_PTR_DERIVED(TYPE, lsst::afw::math::Kernel, lsst::afw::math::TYPE);
 %lsst_persistable(lsst::afw::math::TYPE)
+%boost_picklable(lsst::afw::math::TYPE)
 %enddef
 
 SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kernel); // the base class
 %lsst_persistable(lsst::afw::math::Kernel)
+%boost_picklable(lsst::afw::math::Kernel)
 
 %kernelPtr(AnalyticKernel);
 %kernelPtr(DeltaFunctionKernel);
