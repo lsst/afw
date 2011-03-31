@@ -135,9 +135,12 @@ void cameraGeom::DetectorMosaic::addDetector(
     // we didn't know the detector size
     //
     if (_detectors.size() == 0) {
-        setCenterPixel(afwGeom::Point2I(0.5*_nDetector.first*det->getAllPixels(isTrimmed).getWidth(),
-                                               0.5*_nDetector.second*det->getAllPixels(isTrimmed).getHeight())
-                      );
+        setCenterPixel(
+            geom::Point2D(
+                0.5*_nDetector.first*det->getAllPixels(isTrimmed).getWidth(),
+                0.5*_nDetector.second*det->getAllPixels(isTrimmed).getHeight()
+            )
+        );
     }
     //
     // Correct Detector's coordinate system to be absolute within DetectorMosaic
@@ -148,11 +151,11 @@ void cameraGeom::DetectorMosaic::addDetector(
     );
     getAllPixels().include(detPixels);
     
-    afwGeom::Point2I centerPixel(
+    afwGeom::Point2D centerPixel(
         iX*detPixels.getWidth() + detPixels.getWidth()/2,
         iY*detPixels.getHeight() + detPixels.getHeight()/2
     );
-    centerPixel -= afwGeom::Extent2I(getCenterPixel());
+    centerPixel -= afwGeom::Extent2D(getCenterPixel());
     det->setCenter(center);
     det->setCenterPixel(centerPixel);
 
@@ -182,24 +185,29 @@ namespace {
     };
 
     struct findByPixel {
-        findByPixel(afwGeom::Point2I point) :
+        findByPixel(afwGeom::Point2D point) :
             _point(point) {}
         
         bool operator()(cameraGeom::Detector::Ptr det) const {
-            afwGeom::Point2I relPoint = _point;
             // Position wrt center of detector
-            relPoint -= afwGeom::Extent2I(det->getCenterPixel());
+            afwGeom::Extent2D centerPixel(det->getCenterPixel());
+            afwGeom::Point2D relPoint = _point - centerPixel;
             // Position wrt LLC of detector
-            relPoint += det->getAllPixels(true).getDimensions()/2;                           
-            return det->getAllPixels().contains(relPoint);
+            afwGeom::PointI relPointPix(relPoint);
+            relPointPix += det->getAllPixels(true).getDimensions()/2;
+            return det->getAllPixels(true).contains(relPointPix);
         }
     private:
-        afwGeom::Point2I _point;
+        afwGeom::Point2D _point;
     };
 
-    struct findByPos {
-        findByPos(afwGeom::Point2D point)
-          : _point(point) { }
+    struct findByMm {
+        findByMm(
+                  afwGeom::Point2D point
+                 )
+            :
+            _point(point)
+        { }
 
         /*
          * Does point lie with square footprint of detector, once we allow for its rotation?
@@ -233,8 +241,9 @@ namespace {
  */
 cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
         cameraGeom::Id const id         ///< The desired ID
-                                                                        ) const {
-    DetectorSet::const_iterator result = std::find_if(_detectors.begin(), _detectors.end(), findById(id));
+) const {
+    DetectorSet::const_iterator result = 
+        std::find_if(_detectors.begin(), _detectors.end(), findById(id));
     if (result == _detectors.end()) {
         throw LSST_EXCEPT(pexExcept::OutOfRangeException,
                           (boost::format("Unable to find Detector with serial %||") % id).str());
@@ -245,13 +254,14 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
 /**
  * Find an Detector given a pixel position
  */
-cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
-        afwGeom::Point2I const& pixel,   ///< the desired pixel
+cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetectorPixel(
+        afwGeom::Point2D const& pixel,   ///< the desired pixel
         bool const fromCenter            ///< pixel is measured wrt the detector center, not LL corner
-                                                                        ) const {
+) const {
     if (!fromCenter) {
-        return findDetector(pixel - afwGeom::Extent2I(getAllPixels().getWidth()/2,
-                                                              getAllPixels().getHeight()/2), true);
+        afwGeom::Extent2I dim = getAllPixels().getDimensions();
+        return findDetectorPixel(pixel - afwGeom::Extent2D(dim[0]/2, dim[1]/2),
+                                 true);
     }
 
     DetectorSet::const_iterator result =
@@ -268,10 +278,11 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
 /**
  * Find an Detector given a physical position in mm
  */
-cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
+cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetectorMm(
         afwGeom::Point2D const& pos     ///< the desired position; mm from the centre
-                                                                        ) const {
-    DetectorSet::const_iterator result = std::find_if(_detectors.begin(), _detectors.end(), findByPos(pos));
+) const {
+    DetectorSet::const_iterator result = 
+        std::find_if(_detectors.begin(), _detectors.end(), findByMm(pos));
     if (result == _detectors.end()) {
         throw LSST_EXCEPT(pexExcept::OutOfRangeException,
                           (boost::format("Unable to find Detector containing pixel (%g, %g)") %
@@ -284,37 +295,39 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
  * Return the pixel position given an offset from the mosaic centre, in mm
  * \sa getIndexFromPosition
  */
-afwGeom::Point2I cameraGeom::DetectorMosaic::getPixelFromPosition(
+afwGeom::Point2D cameraGeom::DetectorMosaic::getPixelFromPosition(
         afwGeom::Point2D const& pos     ///< Offset from mosaic centre, mm
                                                                  ) const
 {
-    cameraGeom::Detector::ConstPtr det = findDetector(pos);
+    cameraGeom::Detector::ConstPtr det = findDetectorMm(pos);
 
-    return afwGeom::Extent2I(getCenterPixel()) + det->getPixelFromPosition(pos);
+    afwGeom::Extent2D cen(getCenterPixel());
+    return det->getPixelFromPosition(pos) + cen;
 }
 
 /**
  * Return the pixel position given an offset from the detector centre, in mm
  * \sa getPixelFromPosition
  */
-afwGeom::Point2I cameraGeom::DetectorMosaic::getIndexFromPosition(
+afwGeom::Point2D cameraGeom::DetectorMosaic::getIndexFromPosition(
         afwGeom::Point2D const& pos     ///< Offset from mosaic centre, mm
                                                                  ) const
 {
-    cameraGeom::Detector::ConstPtr det = findDetector(pos);
-
-    return afwGeom::Point2I(det->getIndexFromPosition(pos - afwGeom::Extent2D(det->getCenter())));
+    cameraGeom::Detector::ConstPtr det = findDetectorMm(pos);
+    afwGeom::Extent2D cen(det->getCenter());
+    return det->getIndexFromPosition(pos - cen);
 }
 
 /**
  * Return the offset from the mosaic centre, in mm, given a pixel position
  */
 afwGeom::Point2D cameraGeom::DetectorMosaic::getPositionFromIndex(
-        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt centre of mosaic
+        afwGeom::Point2D const& pix     ///< Pixel coordinates wrt centre of mosaic
                                                                  ) const
 {
-    cameraGeom::Detector::ConstPtr det = findDetector(pix, true);
+    cameraGeom::Detector::ConstPtr det = findDetectorPixel(pix, true);
 
     bool const isTrimmed = true;        ///< Detectors in Mosaics are always trimmed
-    return det->getPositionFromIndex(pix - afwGeom::Extent2I(det->getCenterPixel()), isTrimmed);
+    afwGeom::Extent2D cen(det->getCenterPixel());
+    return det->getPositionFromIndex(pix - cen, isTrimmed);
 }    

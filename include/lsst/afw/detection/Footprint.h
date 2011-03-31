@@ -34,10 +34,17 @@
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 #include "lsst/ndarray.h"
+#include "lsst/base.h"
+#include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
+
+namespace boost {
+namespace serialization {
+    class access;
+}}
 
 namespace lsst {
 namespace afw { 
@@ -126,6 +133,10 @@ public:
                          geom::Box2I const& region=geom::Box2I()
     ) const;
 private:
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize(Archive & ar, unsigned int version){};
+
     Footprint(const Footprint&);                   //!< No copy constructor
     Footprint operator = (Footprint const&) const; //!< no assignment
     static int id;
@@ -150,15 +161,30 @@ typename ImageT::Pixel setImageFromFootprint(ImageT *image,
                                              typename ImageT::Pixel const value);
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
+                                                 CONST_PTR(std::vector<Footprint::Ptr>) footprints,
+                                                 typename ImageT::Pixel  const value);
+template<typename ImageT>
+typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
                                                  std::vector<Footprint::Ptr> const& footprints,
                                                  typename ImageT::Pixel  const value);
 template<typename MaskT>
 MaskT setMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                            Footprint const& footprint,
                            MaskT const bitmask);
+
+/************************************************************************************************************/
+/**
+ * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
+ *
+ * \return bitmask
+ */
 template<typename MaskT>
 MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
                                std::vector<Footprint::Ptr> const& footprints,
+                               MaskT const bitmask);
+template<typename MaskT>
+MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
+                               CONST_PTR(std::vector<Footprint::Ptr>) const & footprints,
                                MaskT const bitmask);
 template<typename MaskT>
 Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,

@@ -68,7 +68,8 @@ namespace {
             return false;
         }
     };
-}
+} //end namespace
+
 /******************************************************************************/
 /**
  * Return a string-representation of a Span
@@ -79,7 +80,7 @@ std::string Span::toString() const {
 
 
 
-/************************************************************************************************************/
+/*****************************************************************************/
 /// Counter for Footprint IDs
 int Footprint::id = 0;
 
@@ -172,8 +173,9 @@ Footprint::~Footprint() {
 /**
  * Does this Footprint contain this pixel?
  */
-bool Footprint::contains(lsst::afw::geom::Point2I const& pix ///< Pixel to check
-                        ) const
+bool Footprint::contains(
+    lsst::afw::geom::Point2I const& pix ///< Pixel to check
+) const
 {
     if (_bbox.contains(pix)) {
         for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
@@ -488,7 +490,7 @@ template<typename MaskT>
 MaskT setMaskFromFootprintList(
         image::Mask<MaskT> *mask,                        ///< Mask to set
         std::vector<Footprint::Ptr> const& footprints,  ///< Footprint list specifying desired pixels
-        MaskT const bitmask                             ///< Bitmask to OR into mask
+        MaskT const bitmask                                 ///< Bitmask to OR into mask
 ) {
     for (std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
@@ -496,6 +498,21 @@ MaskT setMaskFromFootprintList(
     }
 
     return bitmask;
+}
+
+/************************************************************************************************************/
+/**
+ * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
+ *
+ * \return bitmask
+ */
+template<typename MaskT>
+MaskT setMaskFromFootprintList(
+        image::Mask<MaskT> *mask,                        ///< Mask to set
+        CONST_PTR(std::vector<Footprint::Ptr>) const & footprints,  ///< Footprint list specifying desired pixels
+        MaskT const bitmask                                 ///< Bitmask to OR into mask
+                                         ) {
+    return setMaskFromFootprintList(mask, *footprints, bitmask);
 }
 
 /************************************************************************************************************/
@@ -531,6 +548,20 @@ typename ImageT::Pixel setImageFromFootprint(
     setit.apply(foot);
 
     return value;
+}
+
+/**
+ * \brief Set all image pixels in a set of Footprint%s to a given value
+ *
+ * \return value
+ */
+template<typename ImageT>
+typename ImageT::Pixel setImageFromFootprintList(
+        ImageT *image,                                  ///< image to set
+        CONST_PTR(std::vector<Footprint::Ptr>) footprints,  ///< Footprint list specifying desired pixels
+        typename ImageT::Pixel const value              ///< value to set Image to
+                                                           ) {
+    return setImageFromFootprintList(image, *footprints, value);
 }
 
 /**
@@ -712,8 +743,8 @@ Footprint::Ptr growFootprintSlow(
     FootprintSet<int>::Ptr
         grownList(new FootprintSet<int>(*convolvedImage, 0.5, "", 1));
 
-    assert (grownList->getFootprints().size() > 0);
-    Footprint::Ptr grown = *grownList->getFootprints().begin();
+    assert (grownList->getFootprints()->size() > 0);
+    Footprint::Ptr grown = *grownList->getFootprints()->begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -805,8 +836,8 @@ Footprint::Ptr growFootprint(
     FootprintSet<int>::Ptr grownList(
         new FootprintSet<int>(*midImage, Threshold(-ngrow, Threshold::VALUE, false))
     );
-    assert (grownList->getFootprints().size() > 0);
-    Footprint::Ptr grown = *grownList->getFootprints().begin();
+    assert (grownList->getFootprints()->size() > 0);
+    Footprint::Ptr grown = *grownList->getFootprints()->begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -1249,13 +1280,17 @@ Footprint::Ptr footprintAndMask(
     image::Mask<image::MaskPixel>::Ptr const& mask,
     image::MaskPixel bitMask);
 
-template
+template 
+image::MaskPixel setMaskFromFootprintList(
+    image::Mask<image::MaskPixel> *mask,
+    CONST_PTR(std::vector<Footprint::Ptr>) const& footprints,
+    image::MaskPixel const bitmask);
+template 
 image::MaskPixel setMaskFromFootprintList(
     image::Mask<image::MaskPixel> *mask,
     std::vector<Footprint::Ptr> const& footprints,
     image::MaskPixel const bitmask);
-template
-image::MaskPixel setMaskFromFootprint(
+template image::MaskPixel setMaskFromFootprint(
     image::Mask<image::MaskPixel> *mask,
     Footprint const& foot, image::MaskPixel const bitmask);
 
@@ -1268,8 +1303,13 @@ template \
 TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
                                           std::vector<Footprint::Ptr> const& footprints, \
                                           TYPE const value); \
+template \
+TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
+                                          CONST_PTR(std::vector<Footprint::Ptr>) footprints, \
+                                          TYPE const value); \
 
-INSTANTIATE(float)
+INSTANTIATE(float);
+INSTANTIATE(double);
 
 }}}
 // \endcond

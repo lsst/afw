@@ -148,20 +148,21 @@ private:
  * enum Properties in Statistics.h.
  *
  * @code
-        include "lsst/afw/math.h"
-        namespace afwMath = lsst::afw::math;
-        afwMath::StatisticsControl sctrl(3.0, 3); // sets NumSigclip (3.0), and NumIter (3) for clipping
+        // sets NumSigclip (3.0), and NumIter (3) for clipping
+        lsst::afw::math::StatisticsControl sctrl(3.0, 3); 
+
         sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
         sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
         sctrl.setAndMask(0x1);                 // ignore pixels with these mask bits set
         sctrl.setNanSafe(true);                // check for NaNs, a bit slower (default=true)
         
-        afwMath::Statistics statobj =
-              afwMath::makeStatistics(*img, afwMath::NPOINT | afwMath::MEAN | afwMath::MEANCLIP, sctrl);
-        
-        double const n = statobj.getValue(afwMath::NPOINT);
-        std::pair<double, double> const mean = statobj.getResult(afwMath::MEAN); // Returns (value, error)
-        double const meanError = statobj.getError(afwMath::MEAN);                // just the error
+        lsst::afw::math::Statistics statobj =
+            lsst::afw::math::makeStatistics(*img, afwMath::NPOINT | 
+                                                  afwMath::MEAN | afwMath::MEANCLIP, sctrl);
+        double const n = statobj.getValue(lsst::afw::math::NPOINT);
+        std::pair<double, double> const mean =
+                                         statobj.getResult(lsst::afw::math::MEAN); // Returns (value, error)
+        double const meanError = statobj.getError(lsst::afw::math::MEAN);                // just the error
  * @endcode
  *
  * @note Factory function: We used a helper function, \c makeStatistics, rather that the constructor
@@ -298,7 +299,7 @@ private:
  */
 template<typename Pixel>
 Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img,
-                          lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &msk, 
+                          lsst::afw::image::Mask<image::MaskPixel> const &msk, 
                           int const flags,  
                           StatisticsControl const& sctrl = StatisticsControl() 
                          ) {
@@ -327,10 +328,11 @@ Statistics makeStatistics(ImageT const &img,
  * @relates Statistics
  */
 template<typename Pixel>
-Statistics makeStatistics(lsst::afw::image::MaskedImage<Pixel, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> const &mimg, 
-                          int const flags,  
-                          StatisticsControl const& sctrl = StatisticsControl() 
-                         ) {
+Statistics makeStatistics(
+        lsst::afw::image::MaskedImage<Pixel> const &mimg, 
+        int const flags,  
+        StatisticsControl const& sctrl = StatisticsControl() 
+) {
     if (sctrl.getWeighted()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
     } else {
@@ -355,10 +357,11 @@ Statistics makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> co
  * @relates Statistics
  */
 template<typename Pixel>
-Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img, ///< Image (or Image) whose properties we want
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-                         ) {
+Statistics makeStatistics(
+        lsst::afw::image::Image<Pixel> const &img, ///< Image (or Image) whose properties we want
+        int const flags,   ///< Describe what we want to calculate
+        StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
+) {
     // make a phony mask that will be compiled out
     MaskImposter<lsst::afw::image::MaskPixel> const msk;
     MaskImposter<lsst::afw::image::VariancePixel> const var;

@@ -141,6 +141,32 @@ class ReadFitsTestCase(unittest.TestCase):
 
         os.remove(imPath)
 
+    def testWriteBool(self):
+        """Test that we can read and write bools"""
+        import lsst.afw.image as afwImage
+        import lsst.daf.base as dafBase
+
+        imPath = "data"
+        if os.path.exists("tests"):
+            imPath = os.path.join("tests", imPath)
+        imPath = os.path.join(imPath, "tmp.fits")
+
+        im = afwImage.ImageF(afwGeom.ExtentI(10,20))
+        md = dafBase.PropertySet()
+        keys = {"BAD" : False,
+                "GOOD" : True,
+                }
+        for k, v in keys.items():
+            md.add(k, v)
+        
+        im.writeFits(imPath, md)
+
+        jim = afwImage.DecoratedImageF(imPath)
+        os.remove(imPath)
+
+        for k, v in keys.items():
+            self.assertEqual(jim.getMetadata().get(k), v)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

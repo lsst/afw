@@ -42,6 +42,8 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 
 #include "lsst/afw/formatters/MaskFormatter.h"
 
@@ -189,5 +191,12 @@ lsst::daf::persistence::Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance
 }
 
 template class MaskFormatter<MaskPixel>;
+//// The followings fails
+//// because the function template `delegateSerialize' is obsolete(?)
+//template void MaskFormatter<MaskPixel>::delegateSerialize(
+//    boost::archive::binary_oarchive&, int const, Persistable*);
+//template void MaskFormatter<MaskPixel>::delegateSerialize(
+//    boost::archive::binary_iarchive&, int const, Persistable*);
+
 
 }}} // namespace lsst::afw::formatters

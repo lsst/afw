@@ -62,8 +62,8 @@ void SpatialCellSetDemo() {
     /*
      * Populate the cellSet using the detected object in the FootprintSet
      */
-    for (afwDetect::FootprintSet<PixelT>::FootprintList::iterator ptr = fs->getFootprints().begin(),
-             end = fs->getFootprints().end(); ptr != end; ++ptr) {
+    for (afwDetect::FootprintSet<PixelT>::FootprintList::iterator ptr = fs->getFootprints()->begin(),
+             end = fs->getFootprints()->end(); ptr != end; ++ptr) {
         afwGeom::Box2I const bbox = (*ptr)->getBBox();
         float const xc = (bbox.getMinX() + bbox.getMaxX())/2.0;
         float const yc = (bbox.getMinY() + bbox.getMaxY())/2.0;

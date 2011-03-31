@@ -132,15 +132,18 @@ public:
                                               ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
+    /// Return the Detector's footprint without applying any rotations that were used when inserting
+    /// it into its parent (e.g. Raft)
+    virtual lsst::afw::geom::BoxI getAllPixelsNoRotation(bool isTrimmed=true) const;
     //
     // Geometry of Detector --- i.e. mm not pixels
     //
     /// Set the central pixel
     void setCenterPixel(
-            lsst::afw::geom::Point2I const& centerPixel ///< the pixel \e defined to be the detector's centre
+            lsst::afw::geom::Point2D const& centerPixel ///< the pixel \e defined to be the detector's centre
                        ) { _centerPixel = centerPixel; }
     /// Return the central pixel
-    lsst::afw::geom::Point2I getCenterPixel() const { return _centerPixel; }
+    lsst::afw::geom::Point2D getCenterPixel() const { return _centerPixel; }
 
     virtual void setOrientation(Orientation const& orientation);
     /// Return the Detector's Orientation
@@ -153,13 +156,13 @@ public:
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2I getPixelFromPosition(lsst::afw::geom::Point2D const& pos) const;
-    virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
+    virtual lsst::afw::geom::Point2D getPixelFromPosition(lsst::afw::geom::Point2D const& pos) const;
+    virtual lsst::afw::geom::Point2D getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
 
-    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2I const& pix) const;
-    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2I const& pix, bool const isTrimmed) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pix) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pix, bool const isTrimmed) const;
+    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
+    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
     
     virtual void shift(int dx, int dy);
     //
@@ -189,7 +192,7 @@ private:
     lsst::afw::geom::Box2I _allPixels;          // Bounding box of all the Detector's pixels
     bool _hasTrimmablePixels;           // true iff Detector has pixels that can be trimmed (e.g. a CCD)
     double _pixelSize;                  // Size of a pixel in mm
-    lsst::afw::geom::Point2I _centerPixel;      // the pixel defined to be the centre of the Detector
+    lsst::afw::geom::Point2D _centerPixel;      // the pixel defined to be the centre of the Detector
     Orientation _orientation;           // orientation of this Detector
     lsst::afw::geom::Point2D _center;           // position of _centerPixel (mm)
     lsst::afw::geom::Extent2D _size;            // Size in mm of this Detector
@@ -214,7 +217,7 @@ namespace detail {
             lsst::afw::geom::Box2I const& bbox,         ///< the BBox to rotate
             int n90,                            ///< number of 90-degree anti-clockwise turns to make
             lsst::afw::geom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
-                                 );
+    );
 }
     
 }}}

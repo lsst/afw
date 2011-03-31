@@ -32,7 +32,12 @@
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
 #include "lsst/afw/detection/Shape.h"
+
+#include "lsst/afw/formatters/SourceFormatter.h"
+#include "lsst/afw/formatters/DiaSourceFormatter.h"
 %}
+
+%include "../boost_picklable.i"
 
 //shared_ptr declarations
 SWIG_SHARED_PTR(SourceBase, lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>);
@@ -112,6 +117,9 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %include "lsst/afw/detection/Source.h"
 %include "lsst/afw/detection/DiaSource.h"
 
+%boost_picklable(lsst::afw::detection::Source)
+%boost_picklable(lsst::afw::detection::DiaSource)
+
 //Explicit STL container instantiation
 %template(SourceSet) std::vector<lsst::afw::detection::Source::Ptr>;
 %template(DiaSourceSet)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
@@ -149,5 +157,7 @@ DiaSource.__str__ = DiaSource.toString
 
 %lsst_persistable(lsst::afw::detection::PersistableSourceVector);
 %lsst_persistable(lsst::afw::detection::PersistableDiaSourceVector);
+%boost_picklable(lsst::afw::detection::PersistableSourceVector);
+%boost_picklable(lsst::afw::detection::PersistableDiaSourceVector);
 
 %template(PersistableSourceVectorVector) std::vector<lsst::afw::detection::PersistableSourceVector::Ptr>;

@@ -72,20 +72,20 @@ public:
     void swap(FootprintSet<RhsImagePixelT, RhsMaskPixelT>& rhs) {
         using std::swap;                    // See Meyers, Effective C++, Item 25
         
-        swap(*_footprints, rhs.getFootprints());
+        swap(*_footprints, *rhs.getFootprints());
         geom::Box2I rhsRegion = rhs.getRegion();
         rhs.setRegion(getRegion());
         setRegion(rhsRegion);
     }
     
+    /**:
+     * Retun the Footprint%s of detected objects
+     */
+    PTR(FootprintList) getFootprints() { return _footprints; } 
     /**
      * Retun the Footprint%s of detected objects
      */
-    FootprintList& getFootprints() { return *_footprints; } 
-    /**
-     * Retun the Footprint%s of detected objects
-     */
-    FootprintList const& getFootprints() const { return *_footprints; }
+    CONST_PTR(FootprintList) const getFootprints() const { return _footprints; }
     
     void setRegion(geom::Box2I const& region);
     /**

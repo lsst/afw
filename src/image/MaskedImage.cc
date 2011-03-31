@@ -104,8 +104,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     _image(), _mask(), _variance() 
 {
     // Does it looks like an MEF file?
-    static boost::regex const fitsFileRE_compiled(image::detail::fitsFileRE);
-    bool isMef = boost::regex_search(baseName, fitsFileRE_compiled);
+    static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
+    bool isMef = boost::regex_search(baseName, fitsFile_RE_compiled);
     //
     // If foo.fits doesn't exist, revert to old behaviour and read foo.fits_{img,msk,var}.fits;
     // contrariwise, if foo_img.fits doesn't exist but foo does, read it as an MEF file
@@ -549,13 +549,13 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
     }
 
-    static boost::regex const fitsFileRE_compiled(image::detail::fitsFileRE);
+    static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
     if (writeMef ||
         // write an MEF if they call it *.fits"
-        boost::regex_search(baseName, fitsFileRE_compiled)) {
+        boost::regex_search(baseName, fitsFile_RE_compiled)) {
 
-        static boost::regex const compressedFileRE_compiled(image::detail::compressedFileRE);
-        bool const isCompressed = boost::regex_search(baseName, compressedFileRE_compiled);
+        static boost::regex const compressedFileNoMEF_RE_compiled(image::detail::compressedFileNoMEF_RE);
+        bool const isCompressed = boost::regex_search(baseName, compressedFileNoMEF_RE_compiled);
 
         if (isCompressed) {
             // cfitsio refuses to write the 2nd HDU of the compressed MEF

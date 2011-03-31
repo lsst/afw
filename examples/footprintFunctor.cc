@@ -55,10 +55,10 @@ namespace {
 }
 
 void printBits(afwImage::Mask<afwImage::MaskPixel> mask,
-    afwDetect::FootprintSet<float>::FootprintList& feet) {
+    afwDetect::FootprintSet<float>::FootprintList const& feet) {
     FindSetBits<afwImage::Mask<afwImage::MaskPixel> > count(mask);
 
-    for (afwDetect::FootprintSet<float>::FootprintList::iterator fiter = feet.begin();
+    for (afwDetect::FootprintSet<float>::FootprintList::const_iterator fiter = feet.begin();
         fiter != feet.end(); ++fiter) {
         count.apply(**fiter);
 
@@ -78,5 +78,5 @@ int main() {
 
     afwDetect::FootprintSet<float> ds(mimage, 10);
 
-    printBits(*mimage.getMask(), ds.getFootprints());
+    printBits(*mimage.getMask(), *ds.getFootprints());
 }

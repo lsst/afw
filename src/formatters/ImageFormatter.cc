@@ -45,6 +45,11 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "boost/serialization/binary_object.hpp"
 #include "boost/serialization/nvp.hpp"
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/logging/Trace.h"
@@ -264,15 +269,24 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     }
 }
 
+#define InstantiateFormatter(ImagePixelT) \
+    template class ImageFormatter<ImagePixelT >; \
+    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_oarchive&, int const, Persistable*); \
+    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_iarchive&, int const, Persistable*); \
+    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_oarchive&, int const, Persistable*); \
+    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_iarchive&, int const, Persistable*);
+
+InstantiateFormatter(boost::uint16_t);
+InstantiateFormatter(int);
+InstantiateFormatter(float);
+InstantiateFormatter(double);
+
+#undef InstantiateSerializer
+
 template <typename ImagePixelT>
 lsst::daf::persistence::Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
     return lsst::daf::persistence::Formatter::Ptr(new ImageFormatter<ImagePixelT>(policy));
 }
-
-template class ImageFormatter<boost::uint16_t>;
-template class ImageFormatter<int>;
-template class ImageFormatter<float>;
-template class ImageFormatter<double>;
 
 }}} // namespace lsst::afw::formatters

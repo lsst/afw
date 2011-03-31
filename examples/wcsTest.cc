@@ -28,9 +28,6 @@
 *        Created on:    23-Jul-2007 12:28:00 PM PDT (by NMS)
 * @author Nicole M. Silvestri
 *         Last modified: 20-Aug-2007 (by NMS)
-*
-* LSST Legalese here...
-*
 */
 
 #include <iostream>
@@ -40,6 +37,7 @@
 #include "boost/format.hpp"
 #include "boost/shared_ptr.hpp"
 
+/************************************************************************************************************/
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h" // turn off by recompiling with 'LSST_NO_TRACE 0'
 #include "lsst/afw/image.h"
@@ -81,15 +79,15 @@ int main(int argc, char **argv) {
     PropertySet::Ptr miMetadata(new PropertySet);
     int const hdu = 0;
     afwImage::MaskedImage<Pixel> mskdImage(inFilename, hdu, miMetadata);
-    afwImage::Wcs::Ptr wcsPtr = afwImage::makeWcs(miMetadata);
+    afwImage::Wcs::Ptr wcs = afwImage::makeWcs(miMetadata);
     
     // Testing input col, row values 
 
     afwGeom::Point2D minCoord = afwGeom::Point2D(1.0, 1.0);
     afwGeom::Point2D xy = afwGeom::Point2D(mskdImage.getWidth(), mskdImage.getHeight());
 
-    afwCoord::Coord::ConstPtr sky1 = wcsPtr->pixelToSky(minCoord);
-    afwCoord::Coord::ConstPtr sky2 = wcsPtr->pixelToSky(xy);
+    afwCoord::Coord::ConstPtr sky1 = wcs->pixelToSky(minCoord);
+    afwCoord::Coord::ConstPtr sky2 = wcs->pixelToSky(xy);
 
     double miRa1 = sky1->getLongitude(afwCoord::DEGREES);
     double miDecl1 = sky1->getLatitude(afwCoord::DEGREES);
@@ -102,15 +100,15 @@ int main(int argc, char **argv) {
     std::cout << "ra, decl of " << inFilename << " at ("<< xy[0] << " " << xy[1]<<") = "
         << "ra: " << miRa2 << " decl: " << miDecl2 << std::endl << std::endl;
 
-    double pixArea0 = wcsPtr->pixArea(minCoord);
-    double pixArea1 = wcsPtr->pixArea(xy);
+    double pixArea0 = wcs->pixArea(minCoord);
+    double pixArea1 = wcs->pixArea(xy);
 
     std::cout << "pixel areas: " << pixArea0 << " " << pixArea1 << std::endl;
 
     // Testing input ra, dec values using output from above for now
 
-    afwGeom::Point2D pix1 = wcsPtr->skyToPixel(miRa1, miDecl1);
-    afwGeom::Point2D pix2 = wcsPtr->skyToPixel(miRa2, miDecl2);
+    afwGeom::Point2D pix1 = wcs->skyToPixel(miRa1, miDecl1);
+    afwGeom::Point2D pix2 = wcs->skyToPixel(miRa2, miDecl2);
 
     std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = "
         << "col: " << pix1[0] << " row: " << pix1[1] << std::endl << std::endl;
@@ -121,12 +119,22 @@ int main(int argc, char **argv) {
     afwCoord::Coord::ConstPtr raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
     afwCoord::Coord::ConstPtr raDecl2 = makeCoord(afwCoord::FK5, miRa2, miDecl2);
 
-    afwGeom::Point2D pix3 = wcsPtr->skyToPixel(raDecl1);
-    afwGeom::Point2D pix4 = wcsPtr->skyToPixel(raDecl2);
+    afwGeom::Point2D pix3 = wcs->skyToPixel(raDecl1);
+    afwGeom::Point2D pix4 = wcs->skyToPixel(raDecl2);
 
     std::cout << "col, row of " << inFilename << " at ("<< (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
         << "col: " << pix3[0] << " row: " << pix3[1] << std::endl << std::endl;
 
     std::cout << "col, row of " << inFilename << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
-              << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;    
+              << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;
+    /*
+     * Set some metadata in the Wcs
+     */
+    PTR(lsst::daf::base::PropertySet) md(new lsst::daf::base::PropertySet);
+    wcs->setMetadata(md);
+    wcs->getMetadata()->add("Hello", 1);
+    wcs->getMetadata()->add("Hello", 2);
+    wcs->getMetadata()->add("Hello", 3);
+
+    std::cout << md->toString() << std::endl;
 }

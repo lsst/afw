@@ -80,15 +80,15 @@ public:
     // Find a Detector given an Id or pixel position
     //
     Detector::Ptr findDetector(Id const id) const;
-    Detector::Ptr findDetector(lsst::afw::geom::Point2I const& pixel, bool const fromCenter=false) const;
-    Detector::Ptr findDetector(lsst::afw::geom::Point2D const& posMm) const;
+    Detector::Ptr findDetectorPixel(lsst::afw::geom::Point2D const& pixel, bool const fromCenter=false) const;
+    Detector::Ptr findDetectorMm(lsst::afw::geom::Point2D const& posMm) const;
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
-    virtual lsst::afw::geom::Point2I getPixelFromPosition(lsst::afw::geom::Point2D const& pos) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pix) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pix, bool const) const {
+    virtual lsst::afw::geom::Point2D getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
+    virtual lsst::afw::geom::Point2D getPixelFromPosition(lsst::afw::geom::Point2D const& pos) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix, bool const) const {
         return getPositionFromIndex(pix);
     }
 private:

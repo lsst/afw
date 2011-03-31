@@ -60,6 +60,10 @@ FilterProperty::FilterProperty(std::string const& name, ///< name of filter
     PropertyMap::iterator keyVal = _propertyMap->find(name);
 
     if (keyVal != _propertyMap->end()) {
+        if (keyVal->second == *this) {
+            return;                     // OK, a redefinition with identical values
+        }
+
         if (!force) {
             throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + name + " is already defined");
         }
@@ -68,6 +72,16 @@ FilterProperty::FilterProperty(std::string const& name, ///< name of filter
     
     _propertyMap->insert(std::make_pair(name, *this));
 }
+
+/**
+ * Return true iff two FilterProperties are identical
+ */
+bool FilterProperty::operator==(FilterProperty const& rhs ///< Object to compare with this
+                               ) const
+{
+    return (_lambdaEff == rhs._lambdaEff);
+}
+            
             
 /**
  * Initialise the Filter registry
@@ -207,16 +221,11 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
     std::string const& name = fp.getName();
     NameMap::iterator keyVal = _nameMap->find(name);
 
-    if (id == AUTO) {
-        id = _id0;
-        ++_id0;
-    }
-    
     if (keyVal != _nameMap->end()) {
         int oid = keyVal->second;
 
-        if (oid == id) {
-            return id;                  // OK, same value as before
+        if (id == oid || id == AUTO) {
+            return oid;                 // OK, same value as before
         }
 
         if (!force) {
@@ -224,6 +233,11 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
         }
         _nameMap->erase(keyVal);
         _idMap->erase(oid);
+    }
+
+    if (id == AUTO) {
+        id = _id0;
+        ++_id0;
     }
     
     _nameMap->insert(std::make_pair(name, id));

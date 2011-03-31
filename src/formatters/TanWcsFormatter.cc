@@ -41,6 +41,11 @@
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
 //#include "boost/serialization/shared_ptr.hpp"
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
 #include "wcslib/wcs.h"
 
 #include "lsst/daf/base.h"
@@ -278,6 +283,15 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     }
     execTrace("TanWcsFormatter delegateSerialize end");
 }
+
+template void afwForm::TanWcsFormatter::delegateSerialize(
+    boost::archive::text_oarchive & , int, dafBase::Persistable*);
+template void afwForm::TanWcsFormatter::delegateSerialize(
+    boost::archive::text_iarchive & , int, dafBase::Persistable*);
+template void afwForm::TanWcsFormatter::delegateSerialize(
+    boost::archive::binary_oarchive & , int, dafBase::Persistable*);
+template void afwForm::TanWcsFormatter::delegateSerialize(
+    boost::archive::binary_iarchive & , int, dafBase::Persistable*);
 
 dafPersist::Formatter::Ptr afwForm::TanWcsFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {

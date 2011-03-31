@@ -42,6 +42,10 @@ static char const* SVNid __attribute__((unused)) =
     "$Id$";
 
 #include "boost/serialization/shared_ptr.hpp"
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -192,7 +196,11 @@ lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT,
     template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
         boost::archive::text_oarchive &, unsigned int const, Persistable *); \
     template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::text_iarchive>( \
-        boost::archive::text_iarchive &, unsigned int const, Persistable *);
+        boost::archive::text_iarchive &, unsigned int const, Persistable *); \
+    template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::binary_oarchive>( \
+        boost::archive::binary_oarchive &, unsigned int const, Persistable *); \
+    template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::binary_iarchive>( \
+        boost::archive::binary_iarchive &, unsigned int const, Persistable *);
 
 INSTANTIATE(uint16_t, MaskPixel, VariancePixel)
 INSTANTIATE(int, MaskPixel, VariancePixel)

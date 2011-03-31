@@ -39,7 +39,7 @@
     *img.getImage() = 100;
 
     detection::FootprintSet<float> sources(img, 10);
-    cout << "Found " << sources.getFootprints().size() << " sources" << std::endl;
+    cout << "Found " << sources.getFootprints()->size() << " sources" << std::endl;
  * \endcode
  */
 #include <algorithm>
@@ -301,7 +301,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         int const npixMin              //!< minimum number of pixels in an object
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
-    _region(geom::Point2I(img.getX0(), img.getY0()), geom::Extent2I(img.getWidth(), img.getHeight()))
+    _region(img.getBBox(image::PARENT))
 {
     findFootprints<ImagePixelT, MaskPixelT>(
         _footprints.get(), 
@@ -836,10 +836,9 @@ void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(
     geom::Box2I const& region // desired region
 ) {
     _region = region;
-    typename FootprintSet::FootprintList footprintList = getFootprints();
 
-    for (typename FootprintSet::FootprintList::iterator ptr = getFootprints().begin(),
-             end = getFootprints().end(); ptr != end; ++ptr
+    for (typename FootprintSet::FootprintList::iterator ptr = _footprints->begin(),
+             end = _footprints->end(); ptr != end; ++ptr
     ) {
         (*ptr)->setRegion(region);
     }
@@ -876,8 +875,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     idImage->setXY0(region.getMinX(), region.getMinY());
     *idImage = 0;
 
-    FootprintList rhsFootprints = rhs.getFootprints();
-    for (FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end();
+    CONST_PTR(FootprintList) rhsFootprints = rhs.getFootprints();
+    for (FootprintList::const_iterator ptr = rhsFootprints->begin(), end = rhsFootprints->end();
          ptr != end; ++ptr) {
         Footprint::Ptr gfoot = growFootprint(**ptr, r, isotropic);
         gfoot->insertIntoImage(*idImage, 10); // The value 10 is random; more than 1 anyway
