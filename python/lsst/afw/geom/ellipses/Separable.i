@@ -44,6 +44,26 @@
 %rename(assign) lsst::afw::geom::ellipses::ReducedShear::operator=;
 %ignore lsst::afw::geom::ellipses::detail::EllipticityBase::getComplex;
 
+%define %Radius_POSTINCLUDE(RADIUS)
+%extend lsst::afw::geom::ellipses::RADIUS {
+    double __float__() const {
+        return static_cast<double const &>(*self);
+    }
+    double getValue() const {
+        return static_cast<double const &>(*self);
+    }
+    void setValue(double value) {
+        static_cast<double &>(*self) = value;
+    }
+    %pythoncode {
+    def __str__(self):
+        return float(self)
+    def __repr__(self):
+        return "%s(%d)" % (self.getName(), float(self))
+    }
+}
+%enddef
+
 %define %Ellipticity_POSTINCLUDE(ELLIPTICITY)
 %extend lsst::afw::geom::ellipses::ELLIPTICITY {
     std::complex<double> _getComplex() const {
@@ -72,6 +92,11 @@
 %Ellipticity_POSTINCLUDE(Distortion);
 %Ellipticity_POSTINCLUDE(ConformalShear);
 %Ellipticity_POSTINCLUDE(ReducedShear);
+
+%Radius_POSTINCLUDE(TraceRadius);
+%Radius_POSTINCLUDE(DeterminantRadius);
+%Radius_POSTINCLUDE(LogTraceRadius);
+%Radius_POSTINCLUDE(LogDeterminantRadius);
 
 %ignore lsst::afw::geom::ellipses::Separable::writeParameters;
 %ignore lsst::afw::geom::ellipses::Separable::readParameters;
