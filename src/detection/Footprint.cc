@@ -41,6 +41,13 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/utils/ieee.h"
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+
 namespace lsst {
 namespace afw {
 namespace detection {
@@ -316,6 +323,7 @@ void Footprint::shift(
     _bbox.shift(geom::Extent2I(dx, dy));
 }
 
+
 /**
  * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
  */
@@ -366,7 +374,35 @@ void Footprint::insertIntoImage(
     }
 }
 
+template <typename Archive>
+void Footprint::serialize(Archive & ar, const unsigned int version) {
+    ar & _spans;
+    ar & _peaks;
+    ar & _area;
+    ar & _normalized;
 
+    int x0, y0, width, height;
+
+    if(Archive::is_saving::value) {
+        geom::Box2I const & region = getRegion();
+        x0 = region.getMinX();
+        y0 = region.getMinY();
+        width = region.getWidth();
+        height = region.getHeight();
+    }
+
+    ar & x0 & y0 & width & height;
+    
+    if(Archive::is_loading::value) {
+        geom::BoxI region(geom::Point2I(x0, y0), geom::Extent2I(width, height));
+        setRegion(region);
+    }
+}
+
+template void Footprint::serialize(boost::archive::text_oarchive &, unsigned int const);
+template void Footprint::serialize(boost::archive::text_iarchive &, unsigned int const);
+template void Footprint::serialize(boost::archive::binary_oarchive &, unsigned int const);
+template void Footprint::serialize(boost::archive::binary_iarchive &, unsigned int const);
 
 
 /************************************************************************************************************/
@@ -1268,7 +1304,6 @@ psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
 }
 #endif
 
-
 /************************************************************************************************************/
 //
 // Explicit instantiations
@@ -1313,3 +1348,10 @@ INSTANTIATE(double);
 
 }}}
 // \endcond
+
+
+
+
+
+
+

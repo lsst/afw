@@ -41,8 +41,8 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 
-namespace boost {
-namespace serialization {
+namespace boost{
+namespace serialization{
     class access;
 }}
 
@@ -61,7 +61,7 @@ public:
     Span(int y,                         //!< Row that Span's in
          int x0,                        //!< Starting column (inclusive)
          int x1)                        //!< Ending column (inclusive)
-        : _y(y), _x0(x0), _x1(x1) {}
+        : _y(y), _x0(x0), _x1(x1) {}    
     ~Span() {}
 
     int getX0() const { return _x0; }         ///< Return the starting x-value
@@ -75,10 +75,18 @@ public:
 
     friend class Footprint;
 private:
+    Span() {}
+
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+        ar & _y & _x0 & _x1;
+    }
     int _y;                             //!< Row that Span's in
     int _x0;                            //!< Starting column (inclusive)
     int _x1;                            //!< Ending column (inclusive)
 };
+
 
 
 /************************************************************************************************************/
@@ -95,6 +103,7 @@ public:
     typedef boost::shared_ptr<Footprint> Ptr;
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
+    typedef std::vector<Peak::Ptr> PeakList;
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
@@ -105,8 +114,8 @@ public:
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
     const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
-    std::vector<Peak::Ptr>& getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
-    const std::vector<Peak::Ptr>& getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    PeakList & getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
     int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint
     int getArea() const { return _area; }
 
@@ -134,8 +143,8 @@ public:
     ) const;
 private:
     friend class boost::serialization::access;
-    template<typename Archive>
-    void serialize(Archive & ar, unsigned int version){};
+    template <typename Archive>
+    void serialize(Archive & ar, const unsigned int version);
 
     Footprint(const Footprint&);                   //!< No copy constructor
     Footprint operator = (Footprint const&) const; //!< no assignment
@@ -145,7 +154,7 @@ private:
      
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
-    std::vector<Peak::Ptr> _peaks;       //!< the Peaks lying in this footprint
+    PeakList _peaks;                     //!< the Peaks lying in this footprint
     mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
     bool _normalized;                    //!< Are the spans sorted? 
 };
@@ -193,4 +202,5 @@ Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
     
 
 }}}
+
 #endif

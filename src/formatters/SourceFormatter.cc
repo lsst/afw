@@ -31,10 +31,13 @@
 //##====----------------                                ----------------====##/
 
 #include <memory>
+#include <vector>
 
 #include "boost/format.hpp"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -43,6 +46,7 @@
 #include "lsst/afw/formatters/SourceFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/detection/Source.h"
+#include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Measurement.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
@@ -496,6 +500,20 @@ void form::SourceVectorFormatter::write(
                     "Didn't get BoostStorage");
         }
         bs->getOArchive() & *p;
+        if(additionalData && additionalData->exists("doFootprints")){
+            bool doFootprint = additionalData->getAsBool("doFootprints");
+            if(doFootprint) {
+                int n = p->getSources().size();
+                std::vector<boost::shared_ptr<const det::Footprint> > footprints;
+                footprints.reserve(n);
+
+                for(int i = 0; i<n; ++i) {
+                    footprints.push_back(p->getSources()[i]->getFootprint());
+                }
+                bs->getOArchive() & footprints;
+            }
+        }
+
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
 
@@ -573,6 +591,19 @@ Persistable* form::SourceVectorFormatter::read(
         }
         //calls serializeDelegate
         bs->getIArchive() & *p;
+
+        if(additionalData && additionalData->exists("doFootprints")){
+            bool doFootprint = additionalData->getAsBool("doFootprints");
+            if(doFootprint) {
+                int n = p->getSources().size();
+                std::vector<det::Footprint::Ptr> footprints;
+                bs->getIArchive() & footprints;
+
+                for(int i = 0; i<n; ++i) {
+                    (p->getSources()[i])->setFootprint((footprints[i]));
+                }
+            }
+        }
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
         //handle retrieval from DbStorage, DbTsvStorage    
