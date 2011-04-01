@@ -24,25 +24,54 @@
 
 %{
 #include "lsst/afw/geom/ellipses/radii.h"
-#include "lsst/afw/geom/ellipses/LogShear.h"
+#include "lsst/afw/geom/ellipses/ConformalShear.h"
+#include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
 #include "lsst/afw/geom/ellipses/Separable.h"
 %}
 
-%declareNumPyConverters(lsst::afw::geom::ellipses::EllipticityBase::Jacobian);
+%include "std_complex.i"
 
+%declareNumPyConverters(lsst::afw::geom::ellipses::EllipticityBase::Jacobian);
 
 %rename(assign) lsst::afw::geom::ellipses::DeterminantRadius::operator=;
 %rename(assign) lsst::afw::geom::ellipses::TraceRadius::operator=;
 %rename(assign) lsst::afw::geom::ellipses::LogDeterminantRadius::operator=;
+%rename(assign) lsst::afw::geom::ellipses::LogTraceRadius::operator=;
 
 %rename(assign) lsst::afw::geom::ellipses::Distortion::operator=;
-%rename(assign) lsst::afw::geom::ellipses::LogShear::operator=;
+%rename(assign) lsst::afw::geom::ellipses::ConformalShear::operator=;
+%rename(assign) lsst::afw::geom::ellipses::ReducedShear::operator=;
+%ignore lsst::afw::geom::ellipses::detail::EllipticityBase::getComplex;
+
+%define %Ellipticity_POSTINCLUDE(ELLIPTICITY)
+%extend lsst::afw::geom::ellipses::ELLIPTICITY {
+    std::complex<double> _getComplex() const {
+        return self->getComplex();
+    }
+    void setComplex(std::complex<double> other) {
+        self->getComplex() = other;
+    }
+    %pythoncode {
+    def getComplex(self):
+        return self._getComplex();
+    def __str__(self):
+        return "(%d, %d)" % (self.getE1(), self.getE2())
+    def __repr__(self):
+        return "%s(%d, %d)" % (self.getName(), self.getE1(), self.getE2())
+    }
+}
+%enddef
 
 %include "lsst/afw/geom/ellipses/radii.h"
 %include "lsst/afw/geom/ellipses/EllipticityBase.h"
 %include "lsst/afw/geom/ellipses/Distortion.h"
-%include "lsst/afw/geom/ellipses/LogShear.h"
+%include "lsst/afw/geom/ellipses/ConformalShear.h"
+%include "lsst/afw/geom/ellipses/ReducedShear.h"
+
+%Ellipticity_POSTINCLUDE(Distortion);
+%Ellipticity_POSTINCLUDE(ConformalShear);
+%Ellipticity_POSTINCLUDE(ReducedShear);
 
 %ignore lsst::afw::geom::ellipses::Separable::writeParameters;
 %ignore lsst::afw::geom::ellipses::Separable::readParameters;
@@ -78,10 +107,15 @@ SWIG_SHARED_PTR_DERIVED(
 %Separable_PREINCLUDE(Distortion, LogDeterminantRadius);
 %Separable_PREINCLUDE(Distortion, LogTraceRadius);
 
-%Separable_PREINCLUDE(LogShear, DeterminantRadius);
-%Separable_PREINCLUDE(LogShear, TraceRadius);
-%Separable_PREINCLUDE(LogShear, LogDeterminantRadius);
-%Separable_PREINCLUDE(LogShear, LogTraceRadius);
+%Separable_PREINCLUDE(ConformalShear, DeterminantRadius);
+%Separable_PREINCLUDE(ConformalShear, TraceRadius);
+%Separable_PREINCLUDE(ConformalShear, LogDeterminantRadius);
+%Separable_PREINCLUDE(ConformalShear, LogTraceRadius);
+
+%Separable_PREINCLUDE(ReducedShear, DeterminantRadius);
+%Separable_PREINCLUDE(ReducedShear, TraceRadius);
+%Separable_PREINCLUDE(ReducedShear, LogDeterminantRadius);
+%Separable_PREINCLUDE(ReducedShear, LogTraceRadius);
 
 %include "lsst/afw/geom/ellipses/Separable.h"
 
@@ -124,7 +158,12 @@ SWIG_SHARED_PTR_DERIVED(
 %Separable_POSTINCLUDE(Distortion, LogDeterminantRadius);
 %Separable_POSTINCLUDE(Distortion, LogTraceRadius);
 
-%Separable_POSTINCLUDE(LogShear, DeterminantRadius);
-%Separable_POSTINCLUDE(LogShear, TraceRadius);
-%Separable_POSTINCLUDE(LogShear, LogDeterminantRadius);
-%Separable_POSTINCLUDE(LogShear, LogTraceRadius);
+%Separable_POSTINCLUDE(ConformalShear, DeterminantRadius);
+%Separable_POSTINCLUDE(ConformalShear, TraceRadius);
+%Separable_POSTINCLUDE(ConformalShear, LogDeterminantRadius);
+%Separable_POSTINCLUDE(ConformalShear, LogTraceRadius);
+
+%Separable_POSTINCLUDE(ReducedShear, DeterminantRadius);
+%Separable_POSTINCLUDE(ReducedShear, TraceRadius);
+%Separable_POSTINCLUDE(ReducedShear, LogDeterminantRadius);
+%Separable_POSTINCLUDE(ReducedShear, LogTraceRadius);

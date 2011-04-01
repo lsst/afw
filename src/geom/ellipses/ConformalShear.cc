@@ -21,46 +21,52 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include "lsst/afw/geom/ellipses/Distortion.h"
-#include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/ReducedShear.h"
+#include "lsst/afw/geom/ellipses/Distortion.h"
+
+#include <boost/math/special_functions/atanh.hpp>
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-double Distortion::getAxisRatio() const {
+double ConformalShear::getAxisRatio() const {
     double e = getE();
-    return std::sqrt((1.0 - e) / (1.0 + e));
+    return std::exp(-e);
 }
 
-Distortion & Distortion::operator=(ConformalShear const & other) {
-    double eta = other.getE();
-    if (eta < 1E-8) {
-        _complex = other.getComplex() * (1.0 - eta * eta / 3.0);
+ConformalShear & ConformalShear::operator=(Distortion const & other) {
+    double delta = other.getE();
+    if (delta < 1E-8) {
+        _complex = other.getComplex() * (1.0 + delta * delta / 3.0);
     } else {
-        double delta = std::tanh(eta);
-        _complex = other.getComplex() * delta / eta;
+        double eta = boost::math::atanh(delta);
+        _complex = other.getComplex() * eta / delta;
     }
     return *this;
 }
 
-Distortion & Distortion::operator=(ReducedShear const & other) {
+ConformalShear & ConformalShear::operator=(ReducedShear const & other) {
     double g = other.getE();
-    _complex = other.getComplex() * 2.0 / (1 + g * g);
+    if (g < 1E-8) {
+        _complex = other.getComplex() * 2.0 * (1.0 + g * g / 3.0);
+    } else {
+        double eta = 2.0 * boost::math::atanh(g);
+        _complex = other.getComplex() * eta / g;
+    }
     return *this;
 }
 
-detail::EllipticityBase::Jacobian Distortion::dAssign(ConformalShear const & other) {
+detail::EllipticityBase::Jacobian ConformalShear::dAssign(Distortion const & other) {
     Jacobian result = Jacobian::Zero();
-    double eta = other.getE();
+    double delta = other.getE();
     double alpha, beta;
-    if (eta < 1E-8) {
-        alpha = (1.0 - eta * eta / 3.0);
-        beta = -2.0 / 3.0;
+    if (delta < 1E-8) {
+        alpha = 1.0 + delta * delta / 3.0;
+        beta = 2.0 / 3.0;
     } else {
-        double delta = std::tanh(eta);
-        alpha = delta / eta;
-        beta = (1.0 - delta * delta - alpha) / (eta * eta);
+        double eta = boost::math::atanh(delta);
+        alpha = eta / delta;
+        beta = (1.0 / (1.0 - delta * delta) - alpha) / (delta * delta);
     }
     _complex = other.getComplex() * alpha;
     result(0, 0) = alpha + other.getE1() * other.getE1() * beta;
@@ -69,25 +75,23 @@ detail::EllipticityBase::Jacobian Distortion::dAssign(ConformalShear const & oth
     return result;
 }
 
-detail::EllipticityBase::Jacobian Distortion::dAssign(ReducedShear const & other) {
+detail::EllipticityBase::Jacobian ConformalShear::dAssign(ReducedShear const & other) {
     Jacobian result = Jacobian::Zero();
     double g = other.getE();
-    double alpha = 2.0 / (1 + g * g);
-    double beta = -alpha * alpha;
+    double alpha, beta;
+    if (g < 1E-8) {
+        alpha = 2.0 * (1.0 + g * g / 3.0);
+        beta = 4.0 / 3.0;
+    } else {
+        double eta = 2.0 * boost::math::atanh(g);
+        alpha = eta / g;
+        beta = 1.0 * (2.0 / (1.0 - g * g) - alpha) / (g * g);
+    }
     _complex = other.getComplex() * alpha;
     result(0, 0) = alpha + other.getE1() * other.getE1() * beta;
     result(1, 1) = alpha + other.getE2() * other.getE2() * beta;
     result(1, 0) = result(0, 1) = other.getE1() * other.getE2() * beta;
     return result;
-}
-
-void Distortion::normalize() {
-    if (getE() > 1.0) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            "Distortion magnitude cannot be greater than one."
-        );
-    }
 }
 
 }}}} // namespace lsst::afw::geom::ellipses

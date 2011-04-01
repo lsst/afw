@@ -8,7 +8,7 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-const static double eps = std::pow(std::numeric_limits<double>::epsilon(),0.25);
+const static double eps = std::pow(std::numeric_limits<double>::epsilon(),0.5);
 
 inline bool approx(double a, double b, double tol=1E-8) {
     return std::fabs(a - b) <= tol;
@@ -39,42 +39,117 @@ computeJacobian(Function f, Eigen::Matrix<double,Function::N,1> const & initial)
 }
 
 template <typename TestCase>
-void invokeTest(bool no_circles) {
+void invokeCoreTest(bool no_circles) {
     TestCase::apply(Quadrupole(1.5,2.0,-0.75));
     TestCase::apply(Axes(2.5,1.3,-0.75));
-    TestCase::apply(DistortionAndDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(DistortionAndTraceRadius(0.4,-0.25,2.3));
-    TestCase::apply(DistortionAndLogDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(DistortionAndLogTraceRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndTraceRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndLogDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(LogShearAndLogTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableDistortionDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableDistortionTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableDistortionLogDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableDistortionLogTraceRadius(0.4,-0.25,2.3));
+    
+    TestCase::apply(SeparableConformalShearDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableConformalShearTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableConformalShearLogDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableConformalShearLogTraceRadius(0.4,-0.25,2.3));
+
+    TestCase::apply(SeparableReducedShearDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableReducedShearTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableReducedShearLogDeterminantRadius(0.4,-0.25,2.3));
+    TestCase::apply(SeparableReducedShearLogTraceRadius(0.4,-0.25,2.3));
+    
     if (no_circles) return;
     TestCase::apply(Quadrupole(200.0,200.0,0.0));
     TestCase::apply(Axes(40,40,0.0));
-    TestCase::apply(DistortionAndDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(DistortionAndTraceRadius(0.0, 0.0, 2.3));
-    TestCase::apply(DistortionAndLogDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(DistortionAndLogTraceRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndTraceRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndLogDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(LogShearAndLogTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableDistortionDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableDistortionTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableDistortionLogDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableDistortionLogTraceRadius(0.0, 0.0, 2.3));
+    
+    TestCase::apply(SeparableConformalShearDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableConformalShearTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableConformalShearLogDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableConformalShearLogTraceRadius(0.0, 0.0, 2.3));
+
+    TestCase::apply(SeparableReducedShearDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableReducedShearTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableReducedShearLogDeterminantRadius(0.0, 0.0, 2.3));
+    TestCase::apply(SeparableReducedShearLogTraceRadius(0.0, 0.0, 2.3));
+    
 }
 
-template <typename T1, typename T2>
-struct EllipticityConversionFunctor {
-    
-    static int const M = 2;
-    static int const N = 2;
+template <typename TestCase>
+void invokeEllipticityTest() {
+    TestCase::apply(Distortion(0.6, -0.3));
+    TestCase::apply(ReducedShear(0.35, -0.12));
+    TestCase::apply(ConformalShear(0.23, -0.31));
+    TestCase::apply(Distortion(0.0, 0.0));
+    TestCase::apply(ReducedShear(0.0, 0.0));
+    TestCase::apply(ConformalShear(0.0, 0.0));
+}
 
-    Eigen::Vector2d operator()(Eigen::Vector2d const & x) {
-        T1 c1(x[0], x[1]);
-        T2 c2(c1);
-        return Eigen::Vector2d(c2.getE1(), c2.getE2());
+struct EllipticityConversionTest {
+
+    template <typename T1, typename T2>
+    struct Functor {
+        
+        static int const M = 2;
+        static int const N = 2;
+        
+        Eigen::Vector2d operator()(Eigen::Vector2d const & x) {
+            T1 c1(x[0], x[1]);
+            T2 c2(c1);
+            return Eigen::Vector2d(c2.getE1(), c2.getE2());
+        }
+    };
+
+    template <typename T2, typename T1>
+    static void testEllipticityConversion(T1 const & orig) {
+        T1 copy(orig);
+        BOOST_CHECK(approx(orig, copy, 0.0));
+        if (!approx(orig, copy, 0.0)) {
+            std::cerr << copy.getName() << "\n";
+            std::cerr << orig.getComplex() << " ---- " << copy.getComplex() << "\n";
+        }
+        T2 other(orig);
+        copy = other;
+        BOOST_CHECK(approx(orig, copy, 1E-12));
+        typename T1::Jacobian a1 = copy.dAssign(other);
+        typename T1::Jacobian a2 = other.dAssign(copy);
+        Functor<T2,T1> f1;
+        Functor<T1,T2> f2;
+        typename T1::Jacobian b1 = computeJacobian(f1, Eigen::Vector2d(other.getE1(), other.getE2()));
+        typename T1::Jacobian b2 = computeJacobian(f2, Eigen::Vector2d(copy.getE1(), copy.getE2()));
+        if (!(a1 - b1).isMuchSmallerThan(1.0, 1E-4)) {
+            std::cerr << copy.getName() << " <- " << other.getName() << "\n";
+            std::cerr << "Input: " << other.getComplex() << "\n";
+            std::cerr << "Output: " << copy.getComplex() << "\n";
+            std::cerr << "Analytic:\n" << a1 << "\n";
+            std::cerr << "Numeric:\n" << b1 << "\n\n";
+        }
+        if (!(a2 - b2).isMuchSmallerThan(1.0, 1E-4)) {
+            std::cerr << other.getName() << " <- " << copy.getName() << "\n";
+            std::cerr << "Input: " << copy.getComplex() << "\n";
+            std::cerr << "Output: " << other.getComplex() << "\n";
+            std::cerr << "Analytic:\n" << a2 << "\n";
+            std::cerr << "Numeric:\n" << b2 << "\n\n";
+        }
+        BOOST_CHECK(approx(orig, copy, 1E-12));
+        BOOST_CHECK((a1 * a2).isIdentity(1E-5));
+        BOOST_CHECK((a2 * a1).isIdentity(1E-5));
+        BOOST_CHECK((a1 - b1).isMuchSmallerThan(1.0, 1E-4));
+        BOOST_CHECK((a2 - b2).isMuchSmallerThan(1.0, 1E-4));
+        
     }
+
+    template <typename T1>
+    static void apply(T1 const & core) {
+        testEllipticityConversion<Distortion>(core);
+        testEllipticityConversion<ReducedShear>(core);
+        testEllipticityConversion<ConformalShear>(core);
+    }
+
 };
+
 
 struct CoreConversionTest {
 
@@ -131,14 +206,21 @@ struct CoreConversionTest {
     static void apply(T1 const & core) {
         testCoreConversion<Axes>(core);
         testCoreConversion<Quadrupole>(core);
-        testCoreConversion<DistortionAndDeterminantRadius>(core);
-        testCoreConversion<DistortionAndTraceRadius>(core);
-        testCoreConversion<DistortionAndLogDeterminantRadius>(core);
-        testCoreConversion<DistortionAndLogTraceRadius>(core);
-        testCoreConversion<LogShearAndDeterminantRadius>(core);
-        testCoreConversion<LogShearAndTraceRadius>(core);
-        testCoreConversion<LogShearAndLogDeterminantRadius>(core);
-        testCoreConversion<LogShearAndLogTraceRadius>(core);
+        testCoreConversion<SeparableDistortionDeterminantRadius>(core);
+        testCoreConversion<SeparableDistortionTraceRadius>(core);
+        testCoreConversion<SeparableDistortionLogDeterminantRadius>(core);
+        testCoreConversion<SeparableDistortionLogTraceRadius>(core);
+        
+        testCoreConversion<SeparableConformalShearDeterminantRadius>(core);
+        testCoreConversion<SeparableConformalShearTraceRadius>(core);
+        testCoreConversion<SeparableConformalShearLogDeterminantRadius>(core);
+        testCoreConversion<SeparableConformalShearLogTraceRadius>(core);
+
+        testCoreConversion<SeparableReducedShearDeterminantRadius>(core);
+        testCoreConversion<SeparableReducedShearTraceRadius>(core);
+        testCoreConversion<SeparableReducedShearLogDeterminantRadius>(core);
+        testCoreConversion<SeparableReducedShearLogTraceRadius>(core);
+
     }
 
 };
@@ -299,31 +381,14 @@ struct ConvolutionTest {
     
     }
 };
-    
+  
 }}}} // namespace lsst::afw::geom::ellipses
 
 namespace afwEllipses = lsst::afw::geom::ellipses;
 namespace afwGeom = lsst::afw::geom;
 
 BOOST_AUTO_TEST_CASE(EllipticityTest) {
-    afwEllipses::Distortion delta1a(0.6, -0.3);
-    afwEllipses::LogShear gamma1a(delta1a);
-    afwEllipses::Distortion delta2a(gamma1a);
-    afwEllipses::LogShear gamma2a;
-    Eigen::Matrix2d d2g_analytic = gamma2a.dAssign(delta1a);
-    afwEllipses::LogShear gamma1b(-0.25, 0.55);
-    afwEllipses::Distortion delta1b(gamma1b);
-    afwEllipses::LogShear gamma2b(delta1b);
-    afwEllipses::Distortion delta2b;
-    Eigen::Matrix2d g2d_analytic = delta2b.dAssign(gamma1b);
-    BOOST_CHECK(approx(delta1a, delta2a));
-    BOOST_CHECK(approx(gamma1b, gamma2b));
-    afwEllipses::EllipticityConversionFunctor<afwEllipses::Distortion,afwEllipses::LogShear> d2g;
-    afwEllipses::EllipticityConversionFunctor<afwEllipses::LogShear,afwEllipses::Distortion> g2d;
-    Eigen::Matrix2d d2g_numeric = afwEllipses::computeJacobian(d2g, Eigen::Vector2d(0.6, -0.3));
-    Eigen::Matrix2d g2d_numeric = afwEllipses::computeJacobian(g2d, Eigen::Vector2d(-0.25, 0.55));
-    BOOST_CHECK(d2g_numeric.isApprox(d2g_analytic, 1E-5));
-    BOOST_CHECK(g2d_numeric.isApprox(g2d_analytic, 1E-5));
+    afwEllipses::invokeEllipticityTest<afwEllipses::EllipticityConversionTest>();
 }
 
 BOOST_AUTO_TEST_CASE(ParametricTest) {
@@ -337,19 +402,19 @@ BOOST_AUTO_TEST_CASE(ParametricTest) {
 }
 
 BOOST_AUTO_TEST_CASE(CoreConversion) {
-    afwEllipses::invokeTest<afwEllipses::CoreConversionTest>(false);
+    afwEllipses::invokeCoreTest<afwEllipses::CoreConversionTest>(false);
 }
 
 BOOST_AUTO_TEST_CASE(Transformer) {
-    afwEllipses::invokeTest<afwEllipses::TransformerTest>(false);
+    afwEllipses::invokeCoreTest<afwEllipses::TransformerTest>(false);
 }
 
 BOOST_AUTO_TEST_CASE(GridTransform) {
-    afwEllipses::invokeTest<afwEllipses::GridTransformTest>(true);
+    afwEllipses::invokeCoreTest<afwEllipses::GridTransformTest>(true);
 }
 
 BOOST_AUTO_TEST_CASE(Convolution) {
-    afwEllipses::invokeTest<afwEllipses::ConvolutionTest>(false);
+    afwEllipses::invokeCoreTest<afwEllipses::ConvolutionTest>(false);
 }
 
 BOOST_AUTO_TEST_CASE(Radii) {
@@ -359,3 +424,5 @@ BOOST_AUTO_TEST_CASE(Radii) {
     afwEllipses::TraceRadius ar;
     //ar = gr; // this line should fail to compile
 }
+
+

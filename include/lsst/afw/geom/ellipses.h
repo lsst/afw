@@ -38,7 +38,8 @@
 #include "lsst/afw/geom/ellipses/Parametric.h"
 #include "lsst/afw/geom/ellipses/radii.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
-#include "lsst/afw/geom/ellipses/LogShear.h"
+#include "lsst/afw/geom/ellipses/ConformalShear.h"
+#include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/ellipses/Separable.h"
@@ -49,15 +50,20 @@ using ellipses::Ellipse;
 
 namespace ellipses {
 
-typedef Separable<Distortion,DeterminantRadius> DistortionAndDeterminantRadius;
-typedef Separable<Distortion,TraceRadius> DistortionAndTraceRadius;
-typedef Separable<Distortion,LogDeterminantRadius> DistortionAndLogDeterminantRadius;
-typedef Separable<Distortion,LogTraceRadius> DistortionAndLogTraceRadius;
+typedef Separable<Distortion,DeterminantRadius> SeparableDistortionDeterminantRadius;
+typedef Separable<Distortion,TraceRadius> SeparableDistortionTraceRadius;
+typedef Separable<Distortion,LogDeterminantRadius> SeparableDistortionLogDeterminantRadius;
+typedef Separable<Distortion,LogTraceRadius> SeparableDistortionLogTraceRadius;
 
-typedef Separable<LogShear,DeterminantRadius> LogShearAndDeterminantRadius;
-typedef Separable<LogShear,TraceRadius> LogShearAndTraceRadius;
-typedef Separable<LogShear,LogDeterminantRadius> LogShearAndLogDeterminantRadius;
-typedef Separable<LogShear,LogTraceRadius> LogShearAndLogTraceRadius;
+typedef Separable<ConformalShear,DeterminantRadius> SeparableConformalShearDeterminantRadius;
+typedef Separable<ConformalShear,TraceRadius> SeparableConformalShearTraceRadius;
+typedef Separable<ConformalShear,LogDeterminantRadius> SeparableConformalShearLogDeterminantRadius;
+typedef Separable<ConformalShear,LogTraceRadius> SeparableConformalShearLogTraceRadius;
+
+typedef Separable<ReducedShear,DeterminantRadius> SeparableReducedShearDeterminantRadius;
+typedef Separable<ReducedShear,TraceRadius> SeparableReducedShearTraceRadius;
+typedef Separable<ReducedShear,LogDeterminantRadius> SeparableReducedShearLogDeterminantRadius;
+typedef Separable<ReducedShear,LogTraceRadius> SeparableReducedShearLogTraceRadius;
 
 }}}} // namespace lsst::afw::geom::ellipses
 

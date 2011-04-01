@@ -31,10 +31,10 @@ Separable = {
     (Distortion, TraceRadius):SeparableDistortionTraceRadius,
     (Distortion, LogDeterminantRadius):SeparableDistortionLogDeterminantRadius,
     (Distortion, LogTraceRadius):SeparableDistortionLogTraceRadius,
-    (LogShear, DeterminantRadius):SeparableLogShearDeterminantRadius,
-    (LogShear, TraceRadius):SeparableLogShearTraceRadius,
-    (LogShear, LogDeterminantRadius):SeparableLogShearLogDeterminantRadius,
-    (LogShear, LogTraceRadius):SeparableLogShearLogTraceRadius
+    (ConformalShear, DeterminantRadius):SeparableConformalShearDeterminantRadius,
+    (ConformalShear, TraceRadius):SeparableConformalShearTraceRadius,
+    (ConformalShear, LogDeterminantRadius):SeparableConformalShearLogDeterminantRadius,
+    (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius
 }
 
 BaseCore.cast = lambda self: globals()[self.getName()].cast(self)

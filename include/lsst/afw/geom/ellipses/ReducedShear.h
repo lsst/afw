@@ -22,8 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_GEOM_ELLIPSES_LogShear_h_INCLUDED
-#define LSST_AFW_GEOM_ELLIPSES_LogShear_h_INCLUDED
+#ifndef LSST_AFW_GEOM_ELLIPSES_ReducedShear_h_INCLUDED
+#define LSST_AFW_GEOM_ELLIPSES_ReducedShear_h_INCLUDED
 
 #include "lsst/afw/geom/ellipses/EllipticityBase.h"
 
@@ -31,40 +31,53 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 class Distortion;
 
+class ConformalShear;
+
 /**
- *  @brief A logarithmic complex ellipticity with magnitude \f$|e| = \ln b - \ln a\f$.
+ *  @brief A logarithmic complex ellipticity with magnitude @f$|e| = \ln (a/b) @f$.
+ *
+ *  For a more complete definition, see Bernstein and Jarvis (2002); this the same as their
+ *  reduced shear @f$g@f$ (eq. 2.8).
  */
-class LogShear : public detail::EllipticityBase {
+class ReducedShear : public detail::EllipticityBase {
 public:
 
-    explicit LogShear(std::complex<double> const & complex) : detail::EllipticityBase(complex) {}
+    explicit ReducedShear(std::complex<double> const & complex) : detail::EllipticityBase(complex) {}
 
-    explicit LogShear(double e1=0.0, double e2=0.0) : detail::EllipticityBase(e1, e2) {}
+    explicit ReducedShear(double e1=0.0, double e2=0.0) : detail::EllipticityBase(e1, e2) {}
 
-    explicit LogShear(Distortion const & other) { this->operator=(other); }
+    explicit ReducedShear(ReducedShear const & other) : detail::EllipticityBase(other.getComplex()) {}
 
-    LogShear & operator=(LogShear const & other) {
+    explicit ReducedShear(Distortion const & other) { this->operator=(other); }
+
+    explicit ReducedShear(ConformalShear const & other) { this->operator=(other); }
+
+    ReducedShear & operator=(ReducedShear const & other) {
         _complex = other._complex;
         return *this;
     }
 
-    LogShear & operator=(Distortion const & other);
+    ReducedShear & operator=(Distortion const & other);
 
-    Jacobian dAssign(LogShear const & other) {
+    ReducedShear & operator=(ConformalShear const & other);
+
+    Jacobian dAssign(ReducedShear const & other) {
         _complex = other._complex;
         return Jacobian::Identity();
     }
 
     Jacobian dAssign(Distortion const & other);
 
+    Jacobian dAssign(ConformalShear const & other);
+
     double getAxisRatio() const;
 
     void normalize() {}
 
-    static std::string getName() { return "LogShear"; }
+    static std::string getName() { return "ReducedShear"; }
 
 };
 
 }}}} // namespace lsst::afw::geom::ellipses
 
-#endif // !LSST_AFW_GEOM_ELLIPSES_LogShear_h_INCLUDED
+#endif // !LSST_AFW_GEOM_ELLIPSES_ReducedShear_h_INCLUDED

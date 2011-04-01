@@ -133,7 +133,7 @@ public:
      *  @brief Return a flattened array with a point source model corresponding to a footprint.
      *
      *  @param[in]  fp     Footprint that defines the nonzero pixels of the model.
-     *  @param[in]  point  Center of the point source in the same coordinate system as the footprint.
+     *  @param[in]  offset Offset of the point source from the point the LocalPsf was evaluated at.
      */
     lsst::ndarray::Array<Pixel,1,1> evaluatePointSource(
         Footprint const & fp, 

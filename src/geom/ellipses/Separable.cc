@@ -23,7 +23,9 @@
  */
 #include "lsst/afw/geom/ellipses/Separable.h"
 #include "lsst/afw/geom/ellipses/radii.h"
-#include "lsst/afw/geom/ellipses/LogShear.h"
+#include "lsst/afw/geom/ellipses/Distortion.h"
+#include "lsst/afw/geom/ellipses/ConformalShear.h"
+#include "lsst/afw/geom/ellipses/ReducedShear.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
@@ -161,9 +163,14 @@ template class Separable<Distortion,TraceRadius>;
 template class Separable<Distortion,LogDeterminantRadius>;
 template class Separable<Distortion,LogTraceRadius>;
 
-template class Separable<LogShear,DeterminantRadius>;
-template class Separable<LogShear,TraceRadius>;
-template class Separable<LogShear,LogDeterminantRadius>;
-template class Separable<LogShear,LogTraceRadius>;
+template class Separable<ConformalShear,DeterminantRadius>;
+template class Separable<ConformalShear,TraceRadius>;
+template class Separable<ConformalShear,LogDeterminantRadius>;
+template class Separable<ConformalShear,LogTraceRadius>;
+
+template class Separable<ReducedShear,DeterminantRadius>;
+template class Separable<ReducedShear,TraceRadius>;
+template class Separable<ReducedShear,LogDeterminantRadius>;
+template class Separable<ReducedShear,LogTraceRadius>;
 
 }}}} // namespace lsst::afw::geom::ellipses
