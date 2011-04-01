@@ -59,7 +59,7 @@
     def __str__(self):
         return float(self)
     def __repr__(self):
-        return "%s(%d)" % (self.getName(), float(self))
+        return "%s(%g)" % (self.getName(), float(self))
     }
 }
 %enddef
@@ -76,9 +76,9 @@
     def getComplex(self):
         return self._getComplex();
     def __str__(self):
-        return "(%d, %d)" % (self.getE1(), self.getE2())
+        return "(%g, %g)" % (self.getE1(), self.getE2())
     def __repr__(self):
-        return "%s(%d, %d)" % (self.getName(), self.getE1(), self.getE2())
+        return "%s(%g, %g)" % (self.getName(), self.getE1(), self.getE2())
     }
 }
 %enddef
