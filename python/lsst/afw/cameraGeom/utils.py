@@ -719,7 +719,8 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
 
     return cameraImage
 
-def showCamera(camera, imageSource=SynthesizeCcdImage(), frame=None, overlay=True, bin=1):
+def showCamera(camera, imageSource=SynthesizeCcdImage(), imageFactory=afwImage.ImageU,
+               frame=None, overlay=True, bin=1):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and amplifier boundaries
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
@@ -729,7 +730,7 @@ of the detectors"""
     if imageSource is None:
         cameraImage = None
     elif isinstance(imageSource, GetCcdImage):
-        cameraImage = makeImageFromCamera(camera, imageSource, bin=bin)
+        cameraImage = makeImageFromCamera(camera, imageSource, bin=bin, imageFactory=imageFactory)
     else:
         cameraImage = imageSource
 
