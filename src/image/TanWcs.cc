@@ -249,7 +249,7 @@ TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
 
 
 ///Assignment operator    
-TanWcs::TanWcs & TanWcs::operator = (const TanWcs & rhs){
+TanWcs & TanWcs::operator = (const TanWcs & rhs){
     if (this != &rhs) {
         
         if (_nWcsInfo > 0) {
