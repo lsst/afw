@@ -249,6 +249,12 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     }
 }
 
+template <typename ImagePixelT>
+lsst::daf::persistence::Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
+    lsst::pex::policy::Policy::Ptr policy) {
+    return lsst::daf::persistence::Formatter::Ptr(new ImageFormatter<ImagePixelT>(policy));
+}
+
 #define InstantiateFormatter(ImagePixelT) \
     template class ImageFormatter<ImagePixelT >; \
     template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_oarchive&, int const, Persistable*); \
@@ -262,11 +268,5 @@ InstantiateFormatter(float);
 InstantiateFormatter(double);
 
 #undef InstantiateSerializer
-
-template <typename ImagePixelT>
-lsst::daf::persistence::Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(new ImageFormatter<ImagePixelT>(policy));
-}
 
 }}} // namespace lsst::afw::formatters
