@@ -513,6 +513,7 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
         return ampImage
     #
     # Start by building the image in "Natural" (non-rotated) orientation
+    # (unless it's 'raw', in which case it's just easier to prepareAmpData)
     #
     if imageSource.isRaw:
         ccdImage = imageFactory(ccd.getAllPixelsNoRotation(isTrimmed).getDimensions())
@@ -528,7 +529,7 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     #
     # Now rotate to the as-installed orientation
     #
-    if not natural:
+    if not natural and not imageSource.isRaw:
         ccdImage = afwMath.rotateImageBy90(ccdImage, ccd.getOrientation().getNQuarter())
 
     return ccdImage
