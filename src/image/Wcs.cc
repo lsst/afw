@@ -391,7 +391,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
        
 
 ///Assignment operator    
-Wcs::Wcs & Wcs::operator = (const Wcs & rhs){
+Wcs & Wcs::operator = (const Wcs & rhs){
     if (this != &rhs) {
         if (_nWcsInfo > 0) {
             wcsvfree(&_nWcsInfo, &_wcsInfo);
