@@ -27,7 +27,7 @@ protected:
            E1, E1_ERR, E2, E2_ERR, SIGMA, SIGMA_ERR,
            PSF_IXX, PSF_IXX_ERR, PSF_IXY, PSF_IXY_ERR, PSF_IYY, PSF_IYY_ERR,
            SHEAR1, SHEAR1_ERR, SHEAR2, SHEAR2_ERR, RESOLUTION,
-           STATUS,
+           SHAPE_STATUS,
            NVALUE };
 public:
     typedef boost::shared_ptr<Shape> Ptr;
@@ -76,7 +76,7 @@ public:
             set<PSF_IXY_ERR>(NaN);
             set<PSF_IYY>(NaN);
             set<PSF_IYY_ERR>(NaN);
-            set<STATUS>(-1);
+            set<SHAPE_STATUS>(-1);
             
         }
     
@@ -117,7 +117,7 @@ public:
         schema->add(SchemaEntry("psfIyyErr",  PSF_IYY_ERR,   Schema::DOUBLE, 1, "pixel^2"));
 
         // this should be a boost::int16_t, which was used in BaseSourceAttributes
-        schema->add(SchemaEntry("status",  STATUS,   Schema::INT, 1, "unitless"));
+        schema->add(SchemaEntry("shapeStatus",  SHAPE_STATUS,   Schema::SHORT, 1, "unitless"));
         
     }
     
@@ -242,8 +242,8 @@ public:
     // This should be a boost::int16_t, but Schema doesn't support that.
     // ... thus requires a cast in meas-algorithms Measure.cc where it get passed
     //     through to Source
-    int getStatus() const {
-        return Measurement<Shape>::get<Shape::STATUS, int>();
+    int getShapeStatus() const {
+        return Measurement<Shape>::get<Shape::SHAPE_STATUS, int>();
     }
     
     virtual ::std::ostream &output(std::ostream &os) const {
