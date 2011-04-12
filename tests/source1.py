@@ -43,6 +43,8 @@ import lsst.pex.policy as dafPolicy
 import lsst.daf.persistence as dafPers
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDet
+import lsst.afw.coord as afwCoord
+import lsst.afw.geom as afwGeom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -69,6 +71,41 @@ class SourceTestCase(unittest.TestCase):
     def tearDown(self):
         del self.dsv1
         del self.dsv2
+
+    def testRaDecUnits(self):
+        # LSST decrees radians.
+        # In the setUp() above, the RAs set could reasonably be interpreted as radians.
+
+        # check that getRa() returns in radians
+        # MAGIC 0.349... = math.radians(20.)
+        self.assertAlmostEqual(self.dsv2[1].getRa(), 0.3490658503988659)
+
+        # check that setRaDec() getRaDec() round-trips.
+        ra,dec = 100., 50.
+        # makeCoord takes degrees.
+        c1 = afwCoord.makeCoord(afwCoord.ICRS, ra, dec, 2000.0)
+        # (test that by using degrees explicitly)
+        c2 = afwCoord.makeCoord(afwCoord.ICRS, afwGeom.makePointD(ra, dec),
+                                afwCoord.DEGREES, 2000.0)
+        self.assertAlmostEqual(c1.toIcrs().getRa(), c2.toIcrs().getRa())
+        self.assertAlmostEqual(c1.toIcrs().getDec(), c2.toIcrs().getDec())
+
+        src = afwDet.Source()
+        src.setRaDec(c1)
+        # get it back in ICRS by default
+        c1b = src.getRaDec()
+        self.assertAlmostEqual(c1.toIcrs().getDec(), c1b.toIcrs().getDec())
+        self.assertAlmostEqual(c1.toIcrs().getRa(),  c1b.toIcrs().getRa())
+
+        # check internal rep: radians
+        self.assertAlmostEqual(src.getRa(), math.radians(ra))
+        self.assertAlmostEqual(src.getDec(), math.radians(dec))
+
+        src.setRa(math.pi)
+        src.setDec(math.pi / 4.)
+        c1c = src.getRaDec()
+        self.assertAlmostEqual(c1c.getLongitude(afwCoord.DEGREES), 180.)
+        self.assertAlmostEqual(c1c.getLatitude(afwCoord.DEGREES), 45.)
 
     def testIterable(self):
         """Check that we can iterate over a SourceSet"""

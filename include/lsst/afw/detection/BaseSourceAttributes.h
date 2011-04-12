@@ -31,7 +31,7 @@
 #include "lsst/utils/ieee.h"
 
 #include "lsst/afw/image/Filter.h"
-
+#include "lsst/afw/coord/Coord.h"
 
 namespace boost {
 namespace serialization {
@@ -124,6 +124,18 @@ public:
     boost::int32_t getProcHistoryId() const { return _procHistoryId; }
     double getRa() const { return _ra; }
     double getDec() const { return _dec; }
+	lsst::afw::coord::Coord::Ptr getRaDec(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS
+		) const {
+		// Here we assume (as per LSST decree) that RA,Dec are stored in radians.
+		lsst::afw::coord::Coord::Ptr coord = boost::shared_ptr<lsst::afw::coord::IcrsCoord>(
+			new lsst::afw::coord::IcrsCoord(lsst::afw::coord::radToDeg * _ra,
+											lsst::afw::coord::radToDeg * _dec));
+				
+		if (sys != lsst::afw::coord::ICRS)
+			coord = coord->convert(sys);
+		return coord;
+	}
     float  getRaErrForWcs() const { return _raErrForWcs; }
     float  getDecErrForWcs() const { return _decErrForWcs; }
     float  getRaErrForDetection() const { return _raErrForDetection; }
@@ -223,6 +235,12 @@ public:
     void setDec(double const dec) {
         set(_dec, dec);
     }
+	void setRaDec(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS and radians.
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		_ra  = icrs.getRa(lsst::afw::coord::RADIANS);
+		_dec = icrs.getDec(lsst::afw::coord::RADIANS);
+	}
     void setRaErrForWcs(float const raErrForWcs) {
         set(_raErrForWcs, raErrForWcs);
     }
