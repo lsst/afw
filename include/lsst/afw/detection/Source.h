@@ -112,7 +112,7 @@ public :
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
-    void setFootprint(PTR(Footprint) footprint) { _footprint = footprint; }
+    void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
 
     void setPetroFlux(double const petroFlux) { 
         set(_petroFlux, petroFlux, PETRO_FLUX);         
@@ -170,7 +170,7 @@ public :
     bool operator==(Source const & d) const;
 
 private :
-    PTR(Footprint) _footprint;
+    CONST_PTR(Footprint) _footprint;
 
     double _raObject;
     double _decObject;

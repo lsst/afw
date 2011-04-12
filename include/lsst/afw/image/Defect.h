@@ -53,6 +53,7 @@ public:
     int getX1() const { return _bbox.getMaxX(); }    //!< Return the Defect's right column
     int getY0() const { return _bbox.getMinY(); }    //!< Return the Defect's bottom row
     int getY1() const { return _bbox.getMaxY(); }    //!< Return the Defect's top row    
+    
 
     void clip(geom::Box2I const & bbox) {_bbox.clip(bbox);}
 

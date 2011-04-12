@@ -35,6 +35,8 @@
 
 #include "lsst/afw/formatters/SourceFormatter.h"
 #include "lsst/afw/formatters/DiaSourceFormatter.h"
+#include "boost/pointer_cast.hpp"
+#include "boost/shared_ptr.hpp"
 %}
 
 %include "../boost_picklable.i"
@@ -125,6 +127,7 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %template(DiaSourceSet)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
 
 // Provide semi-useful printing of catalog records
+%ignore lsst::afw::detection::Source::getFootprint;
 %extend lsst::afw::detection::Source {
     std::string toString() {
         std::ostringstream os;
@@ -133,6 +136,20 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
         os << " (" << $self->getRa() << ", " << $self->getDec() << ")";
         return os.str();
     }
+    void _setFootprint(boost::shared_ptr<lsst::afw::detection::Footprint> const & fp) {
+        boost::shared_ptr<lsst::afw::detection::Footprint const> constFp(fp);
+        $self->setFootprint(constFp); 
+    }
+    boost::shared_ptr<lsst::afw::detection::Footprint> _getFootprint() {
+        return boost::const_pointer_cast<lsst::afw::detection::Footprint>($self->getFootprint());
+    }
+    %pythoncode %{
+        def getFootprint(self):
+            return self._getFootprint()
+
+        def setFootprint(self, fp):
+            self._setFootprint(fp)
+    %}
 };
 
 %extend lsst::afw::detection::DiaSource {
