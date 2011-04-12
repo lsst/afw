@@ -198,7 +198,7 @@ bool Footprint::contains(
 }
 
 /**
- * Normalise a Footprint, soring spans and setting the BBox
+ * Normalise a Footprint, sorting spans and setting the BBox
  */
 void Footprint::normalize() {
     if (!_normalized) {
