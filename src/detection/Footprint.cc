@@ -152,7 +152,7 @@ Footprint::Footprint(
     int const maxY = envelope.getMaxY();
     int const minY = envelope.getMinY();
 
-    for (int y = minY; y< maxY; ++y) {
+    for (int y = minY; y <= maxY; ++y) {
         int x = minX;
         while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() > 1.0) {
             if (x >= maxX) {
@@ -164,7 +164,7 @@ Footprint::Footprint(
             }
         }
         int start = x;
-        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() <= 1.0 && x < maxX) 
+        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() <= 1.0 && x <= maxX) 
             ++x;
         addSpan(y, start, x-1);
     }
