@@ -37,10 +37,7 @@ class FootprintTestCase(unittest.TestCase):
         xc, yc = 30, 50
         radius = 10
         
-        axes = afwGeomEllipses.Axes(radius, radius, 0)
-        ellipse = afwGeomEllipses.Ellipse(axes, afwGeom.PointD(xc, yc))
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(100, 200))
-        test = afwDet.Footprint(ellipse, bbox)
+        test = afwDet.Footprint(afwGeom.Point2I(xc, yc), radius)
 
         # Here's how it used to be done using circles, before #1556
         r2 = int(radius**2 + 0.5)

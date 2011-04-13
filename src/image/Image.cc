@@ -32,7 +32,7 @@
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
-#include "boost/checked_delete.hpp"
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"

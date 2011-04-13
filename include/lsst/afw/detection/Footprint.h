@@ -107,6 +107,7 @@ public:
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
+    explicit Footprint(geom::Point2I const & center, double const radius, geom::Box2I const & = geom::Box2I());
     explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
 
     ~Footprint();

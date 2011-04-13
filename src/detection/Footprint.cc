@@ -134,7 +134,25 @@ Footprint::Footprint(
     }
     _normalized=true;
 }
+Footprint::Footprint(
+    geom::Point2I const & center, 
+    double const radius,
+    geom::BoxI const & region
+) : lsst::daf::data::LsstBase(typeid(this)),
+    _fid(++id),
+    _area(0),
+    _bbox(geom::BoxI()),
+    _region(region)    
+{
+    int const r2 = static_cast<int>(radius*radius + 0.5); // rounded radius^2
+    int const r = static_cast<int>(std::sqrt(static_cast<double>(r2))); // truncated radius; r*r <= r2
 
+    for (int i = -r; i <= r; i++) {
+        int hlen = static_cast<int>(std::sqrt(static_cast<double>(r2 - i*i)));
+        addSpan(center.getY() + i, center.getX() - hlen, center.getX() + hlen);
+    }
+    _normalized = true;
+}
 Footprint::Footprint(
     geom::ellipses::Ellipse const & ellipse, 
     geom::Box2I const & region

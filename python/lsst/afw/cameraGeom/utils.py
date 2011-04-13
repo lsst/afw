@@ -579,7 +579,7 @@ of the detectors"""
 
         for bbox, borderWidth, ctype in bboxes:
             bbox = bbox.clone()
-            bbox.shift(-xy0.getX(), -xy0.getY())
+            bbox.shift(-afwGeom.ExtentI(xy0))
             displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame, bin=bin)
 
         return
@@ -635,9 +635,9 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
     """Make an Image of a Raft"""
 
     if raftCenter is None:
-        raftCenter = afwGeom.Point2I(raft.getAllPixels().getDimensions()/2)
+        raftCenter = afwGeom.Point2I(raft.getAllPixels().getDimensions()//2)
 
-    raftImage = imageFactory(raft.getAllPixels().Dimensions()/bin)
+    raftImage = imageFactory(raft.getAllPixels().Dimensions()//bin)
 
     for det in raft:
         ccd = cameraGeom.cast_Ccd(det)
@@ -650,7 +650,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
 
         bbox = afwGeom.Box2I(afwGeom.Point2I((origin.getX() + bbox.getMinX())//bin,
                                              (origin.getY() + bbox.getMinY())//bin),
-                             bbox.getDimensions()/bin)
+                             bbox.getDimensions()//bin)
 
         ccdImage = raftImage.Factory(raftImage, bbox, afwImage.LOCAL)
         ccdImage <<= makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
