@@ -102,7 +102,8 @@ public:
     // generalised copy constructor
     template<typename OtherPixelT>
     Mask(Mask<OtherPixelT> const& rhs, const bool deep) :
-        image::ImageBase<MaskPixelT>(rhs, deep) {}
+        image::ImageBase<MaskPixelT>(rhs, deep),
+        _myMaskDictVersion(rhs._myMaskDictVersion) {}
 
     Mask(const Mask& src, const bool deep=false);
     Mask(
@@ -114,7 +115,8 @@ public:
     
     explicit Mask(lsst::ndarray::Array<MaskPixelT,2,1> const & array, bool deep = false,
                    geom::Point2I const & xy0 = geom::Point2I()) :
-        image::ImageBase<MaskPixelT>(array, deep, xy0) {}
+        image::ImageBase<MaskPixelT>(array, deep, xy0),
+        _myMaskDictVersion(_maskDictVersion) {}
 
 
     void swap(Mask& rhs);
