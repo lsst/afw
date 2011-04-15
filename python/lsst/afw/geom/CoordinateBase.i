@@ -27,24 +27,29 @@
 
 %define %CoordinateBase_POSTINCLUDE(T, N, CLASS...)
 %extend CLASS {
+    %feature("shadow") _getitem_nochecking %{
+        def __getitem__(self, k):
+            if k < 0 or k >= N: raise IndexError(k)
+            return $action(self, k)
+    %}
     T _getitem_nochecking(int i) {
         return (*self)[i];
     }
+
+    %feature("shadow") _setitem_nochecking %{
+        def __setitem__(self, k, v):
+            if k < 0 or k >= N: raise IndexError(k)
+            $action(self, k, v)
+    %}
     void _setitem_nochecking(int i, T value) {
         (*self)[i] = value;
-    }
+    }    
     CLASS clone() {
         return CLASS(static_cast<CLASS const &>(*self));
     }
     %pythoncode {
     def __len__(self):
         return N;
-    def __getitem__(self,i):
-        if i < 0 or i >= N: raise IndexError(i)
-        return self._getitem_nochecking(i)
-    def __setitem__(self,i,value):
-        if i < 0 or i >= N: raise IndexError(i)
-        self._setitem_nochecking(i,value)
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, ", ".join("%0.10g" % v for v in self))
     def __str__(self):

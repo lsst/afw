@@ -109,26 +109,49 @@ SWIG_SHARED_PTR_DERIVED(
 
 %define %EllipseCore_POSTINCLUDE(NAME)
 %extend lsst::afw::geom::ellipses::NAME {
-    lsst::afw::geom::ellipses::NAME::Ptr _transform(lsst::afw::geom::LinearTransform const & t) {
-       return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(self->transform(t).copy());
+    %feature("shadow") _transform %{
+        def transform(self, t):
+            return $action(self, t)
+    %}
+    %feature("shadow") _transformInPlace %{
+        def transformInPlace(self, t):
+            $action(self, t)
+    %}
+    %feature("shadow") _convolve %{
+        def convolve(self, t):
+            return $action(self, t)
+    %}
+
+    %feature("shadow") _getGridTransform %{
+        def getGridTransform(self):
+            return $action(self)
+    %}
+
+    lsst::afw::geom::ellipses::NAME::Ptr _transform(
+        lsst::afw::geom::LinearTransform const & t
+    ) {
+        return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
+            self->transform(t).copy()
+        );
     }
     void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
        self->transform(t).inPlace();
     }
+    lsst::afw::geom::ellipses::NAME::Ptr _convolve(
+        lsst::afw::geom::ellipses::BaseCore const & other
+    ) {
+        return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
+            self->convolve(other).copy()
+        );
+    }
     lsst::afw::geom::LinearTransform _getGridTransform() {
         return self->getGridTransform();
     }
-    lsst::afw::geom::ellipses::NAME::Ptr _convolve(lsst::afw::geom::ellipses::BaseCore const & other) {
-       return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(self->convolve(other).copy());
-    }
-    static lsst::afw::geom::ellipses::NAME::Ptr cast(lsst::afw::geom::ellipses::BaseCore::Ptr const & p) {
+
+    static lsst::afw::geom::ellipses::NAME::Ptr cast(
+        lsst::afw::geom::ellipses::BaseCore::Ptr const & p
+    ) {
        return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::NAME>(p);
-    }
-    %pythoncode {
-    def transform(self, t): return self._transform(t)
-    def transformInPlace(self, t): self._transformInPlace(t)
-    def convolve(self, t): return self._convolve(t)
-    def getGridTransform(self): return self._getGridTransform()
     }
 }
 %enddef
@@ -171,14 +194,33 @@ SWIG_SHARED_PTR_DERIVED(
 %ignore lsst::afw::geom::ellipses::Ellipse::writeParameters;
 
 %rename(assign) lsst::afw::geom::ellipses::Ellipse::operator=;
-%rename(_getCorePtr) lsst::afw::geom::ellipses::Ellipse::getCorePtr;
 
 SWIG_SHARED_PTR(EllipsePtr, lsst::afw::geom::ellipses::Ellipse);
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::ParameterVector);
 
-%include "lsst/afw/geom/ellipses/Ellipse.h"
-
 %extend lsst::afw::geom::ellipses::Ellipse {
+    %feature("shadow") _transform %{
+        def transform(self, t):
+            return $action(self, t)
+    %}
+    %feature("shadow") _transformInPlace %{
+        def transformInPlace(self, t):
+            $action(self, t)
+    %}
+    %feature("shadow") _convolve %{
+        def convolve(self, t):
+            return $action(self, t)
+    %}
+    %feature("shadow") _getGridTransform %{
+        def getGridTransform(self):
+            return $action(self)
+    %}
+    %feature("shadow") getCorePtr %{
+        def getCore(self):
+            return $action(self).cast()
+    %}
+
+
     lsst::afw::geom::ellipses::Ellipse _transform(lsst::afw::geom::AffineTransform const & t) {
         return self->transform(t);
     }
@@ -192,11 +234,6 @@ SWIG_SHARED_PTR(EllipsePtr, lsst::afw::geom::ellipses::Ellipse);
         return self->getGridTransform();
     }
     %pythoncode {
-    def transform(self, t): return self._transform(t)
-    def convolve(self, other): return self._convolve(other)
-    def transformInPlace(self, t): self._transformInPlace(t)
-    def getGridTransform(self): return self._getGridTransform()
-    def getCore(self): return self._getCorePtr().cast()
     def __repr__(self):
         return "Ellipse(%r, %r)" % (self.getCore(), self.getCenter())
     def __str__(self):
@@ -204,4 +241,5 @@ SWIG_SHARED_PTR(EllipsePtr, lsst::afw::geom::ellipses::Ellipse);
     }
 }
 
+%include "lsst/afw/geom/ellipses/Ellipse.h"
 %include "lsst/afw/geom/ellipses/Parametric.h"

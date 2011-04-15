@@ -66,6 +66,10 @@
 
 %define %Ellipticity_POSTINCLUDE(ELLIPTICITY)
 %extend lsst::afw::geom::ellipses::ELLIPTICITY {
+    %feature("shadow") _getComplex %{
+        def getComplex(self):
+            return $action(self)
+    %}
     std::complex<double> _getComplex() const {
         return self->getComplex();
     }
@@ -73,8 +77,6 @@
         self->getComplex() = other;
     }
     %pythoncode {
-    def getComplex(self):
-        return self._getComplex();
     def __str__(self):
         return "(%g, %g)" % (self.getE1(), self.getE2())
     def __repr__(self):
@@ -145,6 +147,23 @@ SWIG_SHARED_PTR_DERIVED(
 %include "lsst/afw/geom/ellipses/Separable.h"
 
 %extend lsst::afw::geom::ellipses::Separable {
+    %feature("shadow") _transform %{
+        def transform(self, t):
+            return $action(self, t)
+    %}
+    %feature("shadow") _transformInPlace %{
+        def transformInPlace(self, t):
+            $action(self, t)
+    %}
+    %feature("shadow") _convolve %{
+        def convolve(self, t):
+            return $action(self, t)
+    %}
+    %feature("shadow") _getGridTransform %{
+        def getGridTransform(self):
+            return $action(self)
+    %}
+
     lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr _transform(
             lsst::afw::geom::LinearTransform const & t
     ) {
@@ -162,15 +181,16 @@ SWIG_SHARED_PTR_DERIVED(
             self->convolve(other).copy()
         );
     }
+    lsst::afw::geom::LinearTransform _getGridTransform() {
+        return self->getGridTransform();
+    }
+
     static lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr cast(
         lsst::afw::geom::ellipses::BaseCore::Ptr const & p
     ) {
         return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
     }
     %pythoncode {
-    def transform(self, t): return self._transform(t)
-    def transformInPlace(self, t): self._transformInPlace(t)
-    def convolve(self, t): return self._convolve(t)
     def __repr__(self):
         return "Separable(%r, %r)" % (self.getEllipticity(), self.getRadius())
     def __str__(self):
