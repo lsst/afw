@@ -38,7 +38,7 @@
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
-
+namespace afwGeom = lsst::afw::geom;
 /**
  * @brief Construct a spatially invariant DeltaFunctionKernel
  *
@@ -47,7 +47,7 @@ namespace afwImage = lsst::afw::image;
 afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
     int width,              ///< kernel size (columns)
     int height,             ///< kernel size (rows)
-    afwImage::PointI const &point   ///< index of active pixel (where 0,0 is the lower left corner)
+    afwGeom::Point2I const &point   ///< index of active pixel (where 0,0 is the lower left corner)
 ) :
     Kernel(width, height, 0),
     _pixel(point)

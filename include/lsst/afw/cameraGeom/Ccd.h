@@ -66,9 +66,9 @@ public:
     //
     // Add an Amp to the Ccd
     //
-    void addAmp(afwGeom::Point2I const pos, Amp const& amp);
+    void addAmp(lsst::afw::geom::Point2I const pos, Amp const& amp);
     void addAmp(int const iX, int const iY, Amp const& amp) {
-        addAmp(afwGeom::makePointI(iX, iY), amp);
+        addAmp(lsst::afw::geom::Point2I(iX, iY), amp);
     }
 
     virtual void setTrimmed(bool isTrimmed);
@@ -83,12 +83,12 @@ public:
     //
     virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pos,
                                                           bool const isTrimmed) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2D const& pix) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
 
     virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);
 
-    virtual void setDefects(std::vector<boost::shared_ptr<afwImage::DefectBase> > const& defects);
+    virtual void setDefects(std::vector<lsst::afw::image::DefectBase::Ptr> const& defects);
 private:
     AmpSet _amps;                       // the Amps that make up this Ccd
 };

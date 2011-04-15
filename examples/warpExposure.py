@@ -29,6 +29,7 @@ import eups
 
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.daf.base as dafBase
 import lsst.pex.logging
 
@@ -90,7 +91,7 @@ def main():
         # user specified an image, not an exposure
         warpedDI = afwImage.DecoratedImageF(warpedWcsImageOrExposurePath)
         warpedWcs = afwImage.makeWcs(warpedDI.getMetadata())
-        warpedMI = afwImage.MaskedImageF(warpedDI.getWidth(), warpedDI.getHeight())
+        warpedMI = afwImage.MaskedImageF(afwGeom.Extent2I(warpedDI.getWidth(), warpedDI.getHeight()))
         warpedExposure = afwImage.ExposureF(warpedMI, warpedWcs)
     else:
         warpedExposure = afwImage.ExposureF(warpedWcsImageOrExposurePath)

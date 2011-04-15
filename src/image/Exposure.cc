@@ -56,6 +56,7 @@
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/Calib.h"
 
+namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwDetection = lsst::afw::detection;
 
@@ -95,17 +96,34 @@ namespace afwDetection = lsst::afw::detection;
   * a Wcs (which may be default constructed)
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
-afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of columns (default: 0)
-                                                       int rows, ///< number of rows (default: 0)
-                                                       afwImage::Wcs const& wcs ///< the Wcs
-                                                      ) :
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    afwGeom::Extent2I const & dimensions, ///< desired image width/height
+    afwImage::Wcs const & wcs   ///< the Wcs
+) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _maskedImage(cols, rows),
+    _maskedImage(dimensions),
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib()),
-    _psf(PTR(afwDetection::Psf)())
+    _calib(new afwImage::Calib())
+{
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
+}
+
+/** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
+  * a Wcs (which may be default constructed)
+  */          
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
+    afwImage::Wcs const & wcs   ///< the Wcs
+) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _maskedImage(bbox),
+    _wcs(wcs.clone()),
+    _detector(),
+    _filter(),
+    _calib(new afwImage::Calib())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
 }
@@ -115,15 +133,14 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage, ///< the MaskedImage
-    afwImage::Wcs const& wcs                                      ///< the Wcs
-                                                              ) :
+    afwImage::Wcs const& wcs   ///< the Wcs
+) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib()),
-    _psf(PTR(afwDetection::Psf)())
+    _calib(new afwImage::Calib())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
 }
@@ -134,12 +151,14 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
   * is not fully contained by the original MaskedImage BBox.
   */        
 template<typename ImageT, typename MaskT, typename VarianceT> 
-afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///< Parent Exposure
-                                                       BBox const& bbox,    ///< Desired region in Exposure 
-                                                       bool const deep      ///< Should we copy the pixels?
-                                                      ) :
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    Exposure const &src, ///< Parent Exposure
+    afwGeom::Box2I const& bbox,    ///< Desired region in Exposure 
+    ImageOrigin const origin,   ///< Coordinate system for bbox
+    bool const deep      ///< Should we copy the pixels?
+) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _maskedImage(src.getMaskedImage(), bbox, deep),
+    _maskedImage(src.getMaskedImage(), bbox, origin, deep),
     _wcs(src._wcs->clone()),
     _detector(src._detector),
     _filter(src._filter),
@@ -175,14 +194,15 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     std::string const& baseName,    ///< Exposure's base input file name
     int const hdu,                  ///< Desired HDU
-    BBox const& bbox,               //!< Only read these pixels
+    afwGeom::Box2I const& bbox,               //!< Only read these pixels
+    ImageOrigin const origin,       ///< Coordinate system for bbox
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :
     lsst::daf::data::LsstBase(typeid(this))
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
 
-    _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, conformMasks);
+    _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, origin, conformMasks);
 
     _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
     //
@@ -229,11 +249,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
  * Clone a Psf; defined here so that we don't have to expose the insides of Psf in Exposure.h
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
-        CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
-                                                            )
-{
-    _psf = psf ? psf->clone() : PTR(afwDetection::Psf)();
+PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
+    CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
+) {
+    return (psf) ? psf->clone() : PTR(afwDetection::Psf)();
 }
 
 /** @brief Get the Wcs of an Exposure.
@@ -352,7 +371,9 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
 }
 
 // Explicit instantiations
+/// \cond
 template class afwImage::Exposure<boost::uint16_t>;
 template class afwImage::Exposure<int>;
 template class afwImage::Exposure<float>;
 template class afwImage::Exposure<double>;
+/// \endcond

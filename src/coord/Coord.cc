@@ -153,21 +153,6 @@ double meanSiderealTimeGreenwich(
     
 double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
 
-
-/*
- * Utility function to put point3D objects in to Eigen vector3d
- */
-Eigen::Vector3d point3dToVector(afwGeom::Point3D p3d) {
-    Eigen::Vector3d v;
-    v << p3d[0], p3d[1], p3d[2];
-    return v;
-}
-
-afwGeom::Point3D vectorToPoint3d(Eigen::Vector3d v) {
-    return afwGeom::makePointD(v[0], v[1], v[2]);
-}
-    
-
 /**
  * @brief Adjust a large angle or negative angle to be in range [0, 360) degrees
  *
@@ -193,7 +178,7 @@ double reduceAngle(
  * A pair of utility functions to go from cartesian to spherical
  */
 double const atPoleEpsilon = 0.0; //std::numeric_limits<double>::epsilon();
-double pointToLongitude(afwGeom::Point3D const &p3d, double const defaultLongitude=0.0) {
+double pointToLongitude(lsst::afw::geom::Point3D const &p3d, double const defaultLongitude=0.0) {
     double lon;
     if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
         lon = 0.0;
@@ -202,7 +187,7 @@ double pointToLongitude(afwGeom::Point3D const &p3d, double const defaultLongitu
     }
     return lon;
 }
-double pointToLatitude(afwGeom::Point3D const &p3d) {
+double pointToLatitude(lsst::afw::geom::Point3D const &p3d) {
     double lat;
     if ( fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
         lat = (p3d.getZ() >= 0) ? M_PI/2.0 : -M_PI/2.0;
@@ -316,8 +301,8 @@ double afwCoord::eclipticPoleInclination(
  *
  */
 afwCoord::Coord::Coord(
-                       afwGeom::Point2D const &p2d,     ///< Point2D
-                       CoordUnit unit,                  ///< Rads, Degs, or Hrs
+                       lsst::afw::geom::Point2D const &p2d,     ///< Point2D
+                       CoordUnit unit,        ///< Rads, Degs, or Hrs
                        double const epoch               ///< epoch of coordinate
                       ) :
     _longitudeRad(NaN), _latitudeRad(NaN), _epoch(epoch) {
@@ -342,7 +327,7 @@ afwCoord::Coord::Coord(
  * @brief Constructor for the Coord base class
  */
 afwCoord::Coord::Coord(
-                       afwGeom::Point3D const &p3d,   ///< Point3D
+                       lsst::afw::geom::Point3D const &p3d,   ///< Point3D
                        double const epoch,            ///< epoch of coordinate
                        double const defaultLongitude  ///< longitude to use if x=y=0
                       ) :
@@ -435,9 +420,9 @@ void afwCoord::Coord::reset(
 afwGeom::Point2D afwCoord::Coord::getPosition(CoordUnit unit) const {
     // treat HOURS specially, they must mean hours for RA, degrees for Dec
     if (unit == HOURS) {
-        return afwGeom::makePointD(getLongitude(unit), getLatitude(DEGREES));
+        return afwGeom::Point2D(getLongitude(unit), getLatitude(DEGREES));
     } else {
-        return afwGeom::makePointD(getLongitude(unit), getLatitude(unit));
+        return afwGeom::Point2D(getLongitude(unit), getLatitude(unit));
     }
 }
 
@@ -450,7 +435,7 @@ afwGeom::Point3D afwCoord::Coord::getVector() const {
     double const x = cos(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const y = sin(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const z = sin(getLatitude(RADIANS));
-    return afwGeom::makePointD(x, y, z);
+    return afwGeom::Point3D(x, y, z);
 }
 
 
@@ -533,9 +518,7 @@ double afwCoord::Coord::offset(
     // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
     // get the vector r
-    //afwGeom::Point3D const rP3d = getVector();
-    Eigen::Vector3d r = point3dToVector(getVector());
-    //r << rP3d[0], rP3d[1], rP3d[2];
+    Eigen::Vector3d r = getVector().asEigen();
 
 
     // Get the vector v:
@@ -562,7 +545,7 @@ double afwCoord::Coord::offset(
     // take r x v to get the axis
     Eigen::Vector3d axisVector = r.cross(v);
     axisVector.normalize();
-    Coord axisCoord = Coord(vectorToPoint3d(axisVector), getEpoch());
+    Coord axisCoord = Coord(afwGeom::Point3D(axisVector), getEpoch());
     
     rotate(axisCoord, arcLen);
 
@@ -574,16 +557,16 @@ double afwCoord::Coord::offset(
     // phi2 = atan2(w2.v2, u2.v2)
     //
     // we need to compute u2, and then rotate v (exactly as we rotated r) to get v2
-    Eigen::Vector3d r2 = point3dToVector(getVector());
+    Eigen::Vector3d r2 = getVector().asEigen();
     Eigen::Vector3d u2;
     u2 << -sin(getLongitude(RADIANS)), cos(getLongitude(RADIANS)), 0.0;
     Eigen::Vector3d w2 = r2.cross(u2);
 
     // make v a unit vector and rotate v exactly as we rotated r
     v.normalize();
-    Coord v2Coord = Coord(vectorToPoint3d(v), getEpoch());
+    Coord v2Coord = Coord(afwGeom::Point3D(v), getEpoch());
     v2Coord.rotate(axisCoord, arcLen);
-    Eigen::Vector3d v2 = point3dToVector(v2Coord.getVector());
+    Eigen::Vector3d v2 = v2Coord.getVector().asEigen();
 
     double phi2 = atan2(w2.dot(v2), u2.dot(v2));
 
@@ -741,7 +724,7 @@ afwCoord::EclipticCoord afwCoord::Coord::toEcliptic() const {
  */
 afwCoord::TopocentricCoord afwCoord::Coord::toTopocentric(
                                         Observatory const &obs,            ///< observatory of observation
-                                        dafBase::DateTime const &obsDate   ///< date of observation
+                                        lsst::daf::base::DateTime const &obsDate   ///< date of observation
                                                          ) const {
     return this->toFk5().toTopocentric(obs, obsDate);
 }
@@ -825,7 +808,7 @@ afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic() const {
  */
 afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     Observatory const &obs,           ///< observatory
-    dafBase::DateTime const &obsDate  ///< date of obs.
+    lsst::daf::base::DateTime const &obsDate  ///< date of obs.
                                                             ) const {
 
     // make sure we precess to the epoch
@@ -1070,8 +1053,8 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5() const {
  * @brief Convert ourself from Topocentric to Topocentric ... a no-op
  */
 afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
-    Observatory const &obs,             ///< observatory of observation
-    dafBase::DateTime const &date        ///< date of observation
+    lsst::afw::coord::Observatory const &obs,             ///< observatory of observation
+    lsst::daf::base::DateTime const &date        ///< date of observation
                                                                     ) const
 {
     if (obs != _obs) {
@@ -1118,11 +1101,11 @@ afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric() const {
  *
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   double const ra,              ///< right ascension
-                                   double const dec,             ///< declination
-                                   double const epoch            ///< epoch of coordinate
-                                  ) {
+        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+        double const ra,              ///< right ascension
+        double const dec,             ///< declination
+        double const epoch            ///< epoch of coordinate
+) {
 
     switch (system) {
       case FK5:
@@ -1162,10 +1145,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note Most of the other factories (which don't accept epoch) call this one.
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   double const ra,              ///< right ascension
-                                   double const dec             ///< declination
-                                  ) {
+        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+        double const ra,              ///< right ascension
+        double const dec             ///< declination
+) {
 
     switch (system) {
       case FK5:
@@ -1203,11 +1186,11 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   afwGeom::Point3D const &p3d,     ///< the coord in Point3D format
-                                   double const epoch,            ///< epoch of coordinate
-                                   double const defaultLongitude ///< longitude to use if x=y=0
-                                  ) {
+        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+        lsst::afw::geom::Point3D const &p3d,     ///< the coord in Point3D format
+        double const epoch,            ///< epoch of coordinate
+        double const defaultLongitude ///< longitude to use if x=y=0
+) {
     Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES), epoch);
 }
@@ -1218,10 +1201,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   afwGeom::Point3D const &p3d,  ///< the coord in Point3D format
-                                   double const defaultLongitude ///< longitude to use if x=y=0
-                                  ) {
+        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+        lsst::afw::geom::Point3D const &p3d,  ///< the coord in Point3D format
+        double const defaultLongitude ///< longitude to use if x=y=0
+) {
     Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES));
 }
@@ -1234,11 +1217,11 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   afwGeom::Point2D const &p2d,     ///< the (eg) ra,dec in a Point2D
-                                   CoordUnit unit,               ///< the units (eg. DEGREES, RADIANS)
-                                   double const epoch            ///< epoch of coordinate
-                                  ) {
+        CoordSystem const system, ///< the system (equ, fk5, galactic ..)
+        lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
+        CoordUnit unit,       ///< the units (eg. DEGREES, RADIANS)
+        double const epoch  ///< epoch of coordinate
+) {
     switch (unit) {
       case DEGREES:
         return makeCoord(system, p2d.getX(), p2d.getY(), epoch);
@@ -1262,10 +1245,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   afwGeom::Point2D const &p2d,     ///< the (eg) ra,dec in a Point2D
-                                   CoordUnit unit               ///< the units (eg. DEGREES, RADIANS)
-                                  ) {
+        CoordSystem const system, ///< the system (equ, fk5, galactic ..)
+        lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
+        CoordUnit unit        ///< the units (eg. DEGREES, RADIANS)
+) {
     switch (unit) {
       case DEGREES:
         return makeCoord(system, p2d.getX(), p2d.getY());

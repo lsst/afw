@@ -37,7 +37,8 @@ import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 
 
@@ -51,17 +52,17 @@ class StatisticsTestCase(unittest.TestCase):
         self.nRow, self.nCol = 100, 200
         self.n = self.nRow*self.nCol
 
-        self.bboxL = afwImage.BBox(afwImage.PointI(0, 0),
-                                   afwImage.PointI(self.nRow/2 - 1, self.nCol - 1))
-        self.bboxR = afwImage.BBox(afwImage.PointI(self.nRow/2, 0),
-                                   afwImage.PointI(self.nRow - 1, self.nCol - 1))
+        self.bboxL = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                                   afwGeom.Point2I(self.nRow/2 - 1, self.nCol - 1))
+        self.bboxR = afwGeom.Box2I(afwGeom.Point2I(self.nRow/2, 0),
+                                   afwGeom.Point2I(self.nRow - 1, self.nCol - 1))
 
         # create masked images and set the left side to valL, and right to valR
-        self.mimg = afwImage.MaskedImageF(self.nRow, self.nCol)
+        self.mimg = afwImage.MaskedImageF(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimg.set(0.0, 0x0, 0.0)
-        self.mimgL = afwImage.MaskedImageF(self.mimg, self.bboxL)
+        self.mimgL = afwImage.MaskedImageF(self.mimg, self.bboxL, afwImage.LOCAL)
         self.mimgL.set(self.valL, 0x0, self.valL)
-        self.mimgR = afwImage.MaskedImageF(self.mimg, self.bboxR)
+        self.mimgR = afwImage.MaskedImageF(self.mimg, self.bboxR, afwImage.LOCAL)
         self.mimgR.set(self.valR, 0x0, self.valR)
         
         
@@ -150,7 +151,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mean, 10)
 
     def testWeightedSimple(self):
-        mimg = afwImage.MaskedImageF(1, 2)
+        mimg = afwImage.MaskedImageF(afwGeom.Extent2I(1, 2))
         mimg.set(0, 0, (self.valR, 0x0, self.valR))
         mimg.set(0, 1, (self.valL, 0x0, self.valL))
 

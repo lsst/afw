@@ -38,8 +38,9 @@ import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.math.mathLib as afwMath
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.image.testUtils as imTestUtils
 
@@ -54,7 +55,7 @@ class offsetImageTestCase(unittest.TestCase):
     """A test case for offsetImage"""
 
     def setUp(self):
-        self.inImage = afwImage.ImageF(200, 100)
+        self.inImage = afwImage.ImageF(afwGeom.Extent2I(200, 100))
         self.background = 200
         self.inImage.set(self.background)
         self.algorithm = "lanczos5"
@@ -111,7 +112,7 @@ class offsetImageTestCase(unittest.TestCase):
     def testOffsetGaussian(self):
         """Insert a Gaussian, offset, and check the residuals"""
         size = 100
-        im = afwImage.ImageF(size, size)
+        im = afwImage.ImageF(afwGeom.Extent2I(size, size))
 
         xc, yc = size/2.0, size/2.0
 
@@ -137,7 +138,7 @@ class offsetImageTestCase(unittest.TestCase):
         if display:
             ds9.mtv(im, frame=1)
 
-        imArr = imTestUtils.arrayFromImage(im)
+        imArr = im.getArray()
         imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
         imMean = imGoodVals.mean()
         imMax = imGoodVals.max()
@@ -167,7 +168,7 @@ class transformImageTestCase(unittest.TestCase):
     """A test case for rotating images"""
 
     def setUp(self):
-        self.inImage = afwImage.ImageF(20, 10)
+        self.inImage = afwImage.ImageF(afwGeom.Extent2I(20, 10))
         self.inImage.set(0, 0, 100)
         self.inImage.set(10, 0, 50)
 
@@ -214,7 +215,7 @@ class binImageTestCase(unittest.TestCase):
     def testBin(self):
         """Test that we can bin images"""
 
-        inImage = afwImage.ImageF(203, 131)
+        inImage = afwImage.ImageF(afwGeom.Extent2I(203, 131))
         inImage.set(1)
         bin = 4
 

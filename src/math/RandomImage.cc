@@ -185,6 +185,7 @@ void randomPoissonImage(ImageT *image,    ///< The image to set
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(T) \
     template void randomUniformImage(lsst::afw::image::Image<T> *image, Random &rand); \
     template void randomUniformPosImage(lsst::afw::image::Image<T> *image, Random &rand); \
@@ -197,5 +198,6 @@ void randomPoissonImage(ImageT *image,    ///< The image to set
     
 INSTANTIATE(double)
 INSTANTIATE(float)
+/// \endcond
 
 }}}

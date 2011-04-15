@@ -67,17 +67,16 @@ bool cameraGeom::Id::operator<(Id const& rhs) const {
  * Return the Detector's footprint without applying any rotations that were used when inserting
  * it into its parent (e.g. Raft)
  */
-afwImage::BBox
+afwGeom::BoxI
 cameraGeom::Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/overclock have been removed?
                                             ) const
 {
-    afwImage::BBox allPixels = (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
+    afwGeom::BoxI allPixels = (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
 
     int const n90 = _orientation.getNQuarter();
     if (n90 != 0) {
         allPixels = cameraGeom::detail::rotateBBoxBy90(allPixels, -n90,
-                                                       afwGeom::makeExtentI(getAllPixels(false).getWidth(),
-                                                                            getAllPixels(false).getHeight()));
+                                                       getAllPixels(false).getDimensions());
     }
 
     return allPixels;
@@ -90,7 +89,7 @@ cameraGeom::Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/ov
 afwGeom::Extent2D cameraGeom::Detector::getSize() const {
     bool const isTrimmed = true;
 
-    return afwGeom::makeExtentD(getAllPixels(isTrimmed).getWidth()*_pixelSize,
+    return afwGeom::Extent2D(getAllPixels(isTrimmed).getWidth()*_pixelSize,
                                 getAllPixels(isTrimmed).getHeight()*_pixelSize);
 }
 
@@ -99,12 +98,12 @@ afwGeom::Extent2D cameraGeom::Detector::getSize() const {
  * \sa getPositionFromIndex
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
-        afwGeom::Point2D const& pix,    ///< Pixel coordinates wrt bottom left of Detector
+        lsst::afw::geom::Point2D const& pix,    ///< Pixel coordinates wrt bottom left of Detector
         bool const isTrimmed            ///< Is this detector trimmed?
                                                            ) const
 {
-    afwGeom::Point2D const& cen = getCenterPixel();
-    return getPositionFromIndex(pix - afwGeom::makeExtentD(cen[0], cen[1]), isTrimmed);
+    afwGeom::Extent2D cen(getCenterPixel());
+    return getPositionFromIndex(pix - cen, isTrimmed);
 }    
 
 /**
@@ -112,7 +111,7 @@ afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
  * \sa getPositionFromIndex
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
-        afwGeom::Point2D const& pix     ///< Pixel coordinates wrt bottom left of Detector
+        lsst::afw::geom::Point2D const& pix     ///< Pixel coordinates wrt bottom left of Detector
                                                            ) const
 {
     return getPositionFromPixel(pix, isTrimmed());
@@ -124,10 +123,10 @@ afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
  * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
  */
 afwGeom::Point2D cameraGeom::Detector::getIndexFromPosition(
-        afwGeom::Point2D const& pos     ///< Offset from chip centre, mm
+        lsst::afw::geom::Point2D const& pos     ///< Offset from chip centre, mm
                                                            ) const
 {
-    return afwGeom::makePointD(pos[0]/_pixelSize, pos[1]/_pixelSize);
+    return afwGeom::Point2D(pos[0]/_pixelSize, pos[1]/_pixelSize);
 }
 
 /**
@@ -135,11 +134,11 @@ afwGeom::Point2D cameraGeom::Detector::getIndexFromPosition(
  * \sa getIndexFromPosition
  */
 afwGeom::Point2D cameraGeom::Detector::getPixelFromPosition(
-        afwGeom::Point2D const& pos     ///< Offset from mosaic centre, mm
+        lsst::afw::geom::Point2D const& pos     ///< Offset from mosaic centre, mm
                                                                  ) const
 {
-    afwGeom::Point2D const& cen = getCenterPixel();
-    return afwGeom::makeExtentD(cen[0], cen[1]) + getIndexFromPosition(pos - afwGeom::Extent2D(getCenter()));
+    afwGeom::Extent2D cen(getCenterPixel());
+    return cen + getIndexFromPosition(pos - afwGeom::Extent2D(getCenter()));
 }
 
 /**
@@ -147,9 +146,8 @@ afwGeom::Point2D cameraGeom::Detector::getPixelFromPosition(
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-        afwGeom::Point2D const& pix     ///< Pixel coordinates wrt centre of Detector
-                                     ) const
-{
+    lsst::afw::geom::Point2D const& pix     ///< Pixel coordinates wrt centre of Detector
+) const {
     return getPositionFromIndex(pix, isTrimmed());
 }
 
@@ -160,22 +158,21 @@ afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-        afwGeom::Point2D const& pix,    ///< Pixel coordinates wrt centre of Detector
-        bool const                      ///< Unused
-                                                           ) const
-{
-    return afwGeom::makePointD(_center[0] + pix[0]*_pixelSize, _center[1] + pix[1]*_pixelSize);
+    lsst::afw::geom::Point2D const& pix,    ///< Pixel coordinates wrt centre of Detector
+    bool const                      ///< Unused
+) const {
+    return _center + afwGeom::Extent2D(pix)*_pixelSize;
 }    
 
 /// Offset a Detector by the specified amount
 void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
                                  int dy  ///< How much to offset in y (pixels)
                                 ) {
-    afwGeom::Extent2I offset(afwGeom::makePointI(dx, dy));
-    _centerPixel.shift(afwGeom::makeExtentD(dx, dy));
+    afwGeom::Extent2I offset(dx, dy);
+    _centerPixel.shift(afwGeom::Extent2D(dx, dy));
     
-    _allPixels.shift(dx, dy);
-    _trimmedAllPixels.shift(dx, dy);
+    _allPixels.shift(offset);
+    _trimmedAllPixels.shift(offset);
 }
 
 /************************************************************************************************************/
@@ -188,10 +185,10 @@ void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
  *
  * If dimensions is 0, rotate the bbox about its LLC
  */
-afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
-        afwImage::BBox const& bbox,          ///< The BBox to rotate
+afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
+        lsst::afw::geom::Box2I const& bbox,          ///< The BBox to rotate
         int n90,                             ///< number of anti-clockwise 90degree turns
-        afwGeom::Extent2I const& dimensions  ///< The size of the parent 
+        lsst::afw::geom::Extent2I const& dimensions  ///< The size of the parent 
                                              )
 {
     while (n90 < 0) {
@@ -220,27 +217,27 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
     //
     // To work
     //
-    afwGeom::Point2I const centerPixel = afwGeom::makePointI(dimensions[0]/2, dimensions[1]/2);
+    afwGeom::Point2I const centerPixel = afwGeom::Point2I(dimensions[0]/2, dimensions[1]/2);
 
     int x0, y0;                                          // minimum x/y
     int x1, y1;                                          // maximum x/y
     int xCorner[4], yCorner[4];                          // corners of Detector, wrt centerPixel
 
     int i = 0;
-    xCorner[i] = bbox.getX0() - centerPixel[0];
-    yCorner[i] = bbox.getY0() - centerPixel[1];
+    xCorner[i] = bbox.getMinX() - centerPixel[0];
+    yCorner[i] = bbox.getMinY() - centerPixel[1];
     ++i;
 
-    xCorner[i] = bbox.getX1() - centerPixel[0];
-    yCorner[i] = bbox.getY0() - centerPixel[1];
+    xCorner[i] = bbox.getMaxX() - centerPixel[0];
+    yCorner[i] = bbox.getMinY() - centerPixel[1];
     ++i;
 
-    xCorner[i] = bbox.getX1() - centerPixel[0];
-    yCorner[i] = bbox.getY1() - centerPixel[1];
+    xCorner[i] = bbox.getMaxX() - centerPixel[0];
+    yCorner[i] = bbox.getMaxY() - centerPixel[1];
     ++i;
 
-    xCorner[i] = bbox.getX0() - centerPixel[0];
-    yCorner[i] = bbox.getY1() - centerPixel[1];
+    xCorner[i] = bbox.getMinX() - centerPixel[0];
+    yCorner[i] = bbox.getMaxY() - centerPixel[1];
     ++i;
     //
     // Now see which is the smallest/largest
@@ -287,14 +284,14 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
         }
     }
         
-    afwImage::PointI LLC(centerPixel[0] + x0, centerPixel[1] + y0);
-    afwImage::PointI URC(centerPixel[0] + x1, centerPixel[1] + y1);
+    afwGeom::Point2I LLC(centerPixel[0] + x0, centerPixel[1] + y0);
+    afwGeom::Point2I URC(centerPixel[0] + x1, centerPixel[1] + y1);
         
-    afwImage::BBox newBbox(LLC, URC);
+    afwGeom::Box2I newBbox(LLC, URC);
         
     int const dxy0 = (dimensions[1] - dimensions[0])/2; // how far the origin moved
     if (n90%2 == 1 && dxy0 != 0) {
-        newBbox.shift(dxy0, -dxy0);
+        newBbox.shift(geom::Extent2I(dxy0, -dxy0));
     }
         
     return newBbox;
@@ -304,7 +301,7 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
 /// Set the Detector's Orientation
 ///
 void cameraGeom::Detector::setOrientation(
-        cameraGeom::Orientation const& orientation // the detector's new Orientation
+        lsst::afw::cameraGeom::Orientation const& orientation // the detector's new Orientation
                                          )
 {
     int const n90 = orientation.getNQuarter() - _orientation.getNQuarter();
@@ -312,16 +309,14 @@ void cameraGeom::Detector::setOrientation(
     //
     // Now update the private members
     //
-    _allPixels =
-        cameraGeom::detail::rotateBBoxBy90(_allPixels, n90,
-                                           afwGeom::makeExtentI(getAllPixels(false).getWidth(),
-                                                                getAllPixels(false).getHeight()));
-    _trimmedAllPixels =
-        cameraGeom::detail::rotateBBoxBy90(_trimmedAllPixels, n90,
-                                           afwGeom::makeExtentI(getAllPixels(true).getWidth(),
-                                                                getAllPixels(true).getHeight()));
+    _allPixels = cameraGeom::detail::rotateBBoxBy90(
+        _allPixels, n90, getAllPixels(false).getDimensions()
+    );
+    _trimmedAllPixels = cameraGeom::detail::rotateBBoxBy90(
+        _trimmedAllPixels, n90, getAllPixels(true).getDimensions()
+    );
         
     if (n90 == 1 || n90 == 3) {
-        _size = afwGeom::makeExtentD(_size[1], _size[0]);
+        _size = afwGeom::Extent2D(_size[1], _size[0]);
     }
 }

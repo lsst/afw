@@ -29,6 +29,7 @@
  */
 #include <limits>
 #include <vector>
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Utils.h"
 
 namespace lsst {
@@ -42,18 +43,19 @@ class DefectBase {
 public:
     typedef boost::shared_ptr<DefectBase> Ptr; //!< shared pointer to DefectBase
     
-    explicit DefectBase(const BBox& bbox    //!< Bad pixels' bounding box
-                   )
-        : _bbox(bbox) { }
+    explicit DefectBase(
+        const geom::Box2I & bbox    //!< Bad pixels' bounding box
+    ) : _bbox(bbox) { }
     virtual ~DefectBase() {}
     
-    BBox const & getBBox() const { return _bbox; } //!< Return the Defect's bounding box
-    int getX0() const { return _bbox.getX0(); }    //!< Return the Defect's left column
-    void setX0(int x0) { _bbox.setX0(x0); }        //!< Set the Defect's left column
-    int getX1() const { return _bbox.getX1(); }    //!< Return the Defect's right column
-    void setX1(int x1) { _bbox.setX1(x1); }        //!< Set the Defect's right column
-    int getY0() const { return _bbox.getY0(); }    //!< Return the Defect's bottom row
-    int getY1() const { return _bbox.getY1(); }    //!< Return the Defect's top row    
+    geom::Box2I const & getBBox() const { return _bbox; } //!< Return the Defect's bounding box
+    int getX0() const { return _bbox.getMinX(); }    //!< Return the Defect's left column
+    int getX1() const { return _bbox.getMaxX(); }    //!< Return the Defect's right column
+    int getY0() const { return _bbox.getMinY(); }    //!< Return the Defect's bottom row
+    int getY1() const { return _bbox.getMaxY(); }    //!< Return the Defect's top row    
+    
+
+    void clip(geom::Box2I const & bbox) {_bbox.clip(bbox);}
 
     /**
      * Offset a Defect by <tt>(dx, dy)</tt>
@@ -61,10 +63,11 @@ public:
     void shift(int dx,                  //!< How much to move defect in column direction
                int dy                   //!< How much to move in row direction
               ) {
-        _bbox.shift(dx, dy);
+        _bbox.shift(geom::Extent2I(dx, dy));
     }
+    void shift(geom::Extent2I const & d) {_bbox.shift(d);}
 private:
-    BBox _bbox;                         //!< Bounding box for bad pixels
+    geom::Box2I _bbox;                         //!< Bounding box for bad pixels
 };
 
 }}}

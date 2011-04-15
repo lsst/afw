@@ -36,6 +36,8 @@
 SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Base, lsst::daf::data::LsstBase, lsst::afw::image::ImageBase<PIXEL_TYPE>);
 SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Image<PIXEL_TYPE>);
 SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
+%declareNumPyConverters(lsst::afw::image::ImageBase<PIXEL_TYPE>::Array);
+%declareNumPyConverters(lsst::afw::image::ImageBase<PIXEL_TYPE>::ConstArray);
 %enddef
 
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
@@ -81,6 +83,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
     }
 
     %pythoncode {
+
     def Factory(self, *args):
         """Return an Image class of this type
         
@@ -173,7 +176,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %mimage(MaskedImage, F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %mimage(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
-%template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
+%template(vectorBBox) std::vector<lsst::afw::geom::BoxI>;         
 
 %extend lsst::afw::image::Image<boost::uint16_t> {
     %newobject convertF;

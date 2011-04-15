@@ -30,17 +30,12 @@
 #include "lsst/afw/geom/Point.h"
 
 namespace lsst {
-namespace pex {
-namespace exceptions {
-
-#ifndef SWIG
-LSST_EXCEPTION_TYPE(SingularTransformException, RuntimeErrorException, lsst::pex::exceptions::SingularTransformException)
-#endif
-
-}} //namespace pex::exceptions
-
 namespace afw {
 namespace geom {
+
+#ifndef SWIG
+    LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::geom::SingularTransformException)
+#endif
 
 /**
  *  \brief A 2D linear coordinate transformation.
@@ -111,8 +106,8 @@ public:
         return *this;
     }
     
-    ParameterVector const getVector() const;
-    void setVector(ParameterVector const & vector);
+    ParameterVector const getParameterVector() const;
+    void setParameterVector(ParameterVector const & vector);
     
     Matrix const & getMatrix() const { return _matrix; }
     Matrix & getMatrix() { return _matrix; }
@@ -131,33 +126,33 @@ public:
     bool isIdentity() const { return getMatrix().isIdentity(); }
 
     /**
-     *  \brief Transform a PointD object. 
+     *  \brief Transform a Point2D object. 
      *
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Extent
      */
-    PointD operator()(PointD const & p) const { return PointD(getMatrix() * p.asVector()); }
+    Point2D operator()(Point2D const & p) const { return Point2D(getMatrix() * p.asEigen()); }
 
     /**
-     *  \brief Transform a ExtentD object. 
+     *  \brief Transform a Extent2D object. 
      *
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Point
      */
-    ExtentD operator()(ExtentD const & p) const { return ExtentD(getMatrix() * p.asVector()); }
+    Extent2D operator()(Extent2D const & p) const { return Extent2D(getMatrix() * p.asEigen()); }
 
-    TransformDerivativeMatrix dTransform(PointD const & input) const;
+    TransformDerivativeMatrix dTransform(Point2D const & input) const;
 
     /// Derivative of (*this)(input) with respect to the transform elements (for Extent);
-    TransformDerivativeMatrix dTransform(ExtentD const & input) const {
-        return dTransform(PointD(input));
+    TransformDerivativeMatrix dTransform(Extent2D const & input) const {
+        return dTransform(Point2D(input));
     }
-
-    friend std::ostream & operator<<(std::ostream & os, LinearTransform const & t);
 
 private:
     Matrix _matrix;
 };
+
+std::ostream & operator<<(std::ostream & os, lsst::afw::geom::LinearTransform const & t);
 
 }}} // namespace lsst::afw::geom
 

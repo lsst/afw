@@ -23,6 +23,8 @@
 /**
  * \file
  * \brief An include file to include the header files for lsst::afw::geom
+ *
+ * Does not include lsst/afw/geom/ellipses.h.
  */
 #ifndef LSST_GEOM_H
 #define LSST_GEOM_H
@@ -33,7 +35,6 @@
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/LinearTransform.h"
-#include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/geom/Box.h"
 
 #endif // LSST_GEOM_H

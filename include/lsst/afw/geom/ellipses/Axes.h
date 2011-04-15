@@ -21,89 +21,26 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#ifndef LSST_AFW_GEOM_ELLIPSES_AXES_H
-#define LSST_AFW_GEOM_ELLIPSES_AXES_H
+
+#ifndef LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
+#define LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
 
 /**
  *  \file
- *  \brief Definitions for Axes and AxesEllipse.
+ *  @brief Definitions and inlines for Axes.
  *
  *  \note Do not include directly; use the main ellipse header file.
  */
 
-#include "lsst/afw/geom/ellipses/BaseEllipse.h"
+#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/Convolution.h"
+#include "lsst/afw/geom/ellipses/Transformer.h"
+#include "lsst/afw/geom/ellipses/GridTransform.h"
 
-namespace lsst {
-namespace afw {
-namespace geom {
-namespace ellipses {
-
-/**
- *  \brief An ellipse with an Axes core.
- *
- *  \ingroup EllipseGroup
- */
-class AxesEllipse : public BaseEllipse {
-public:
-
-    typedef boost::shared_ptr<AxesEllipse> Ptr;
-    typedef boost::shared_ptr<AxesEllipse const> ConstPtr;
-
-    typedef AxesEllipse Ellipse;
-    typedef Axes Core;
-
-    /// Definitions for elements of an ellipse vector.
-    enum Parameters { X=0, Y=1, A=2, B=3, THETA=4 };
-
-    /// \brief Deep-copy the ellipse.
-    Ptr clone() const { return Ptr(static_cast<AxesEllipse*>(_clone()));  }
-
-    /// \brief Return the Core object.
-    inline Axes const & getCore() const;
-
-    /// \brief Return the Core object.
-    inline Axes & getCore();
-
-    /**
-     *  \brief Set the parameters of this ellipse from another.
-     *
-     *  This does not change the parametrization of the ellipse.
-     */
-    AxesEllipse & operator=(BaseEllipse const & other) {
-        return static_cast<AxesEllipse &>(BaseEllipse::operator=(other));
-    }
-    AxesEllipse & operator=(AxesEllipse const & other) {
-        return static_cast<AxesEllipse &>(BaseEllipse::operator=(other));
-    }
-
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit inline AxesEllipse(PointD const & center = PointD());
-
-    /// \brief Construct from a copy of an Axes core.
-    explicit inline AxesEllipse(Axes const & core, PointD const & center = PointD());
-
-    /// \brief Construct from a 5-element parameter vector.
-    explicit AxesEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
-
-    /// \brief Converting copy constructor.
-    inline AxesEllipse(BaseEllipse const & other);
-
-    /// \brief Copy constructor.
-    inline AxesEllipse(AxesEllipse const & other);
-
-protected:
-    virtual AxesEllipse * _clone() const { return new AxesEllipse(*this); }
-};
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  \brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
- *
- *  \warning The conversion Jacobians (result of dAssign) between Axes and other types are not
- *           well-defined for exact circles.  To avoid problems, avoid differentiating expressions
- *           involving Axes ellipse cores.
- *
- *  \ingroup EllipseGroup
+ *  @brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
  */
 class Axes : public BaseCore {
 public:
@@ -111,94 +48,86 @@ public:
     typedef boost::shared_ptr<Axes> Ptr;
     typedef boost::shared_ptr<Axes const> ConstPtr;
 
-    typedef AxesEllipse Ellipse;
-    typedef Axes Core;
+    enum ParameterEnum { A=0, B=1, THETA=2 }; ///< Definitions for elements of a core vector.
 
-    enum Parameters { A=0, B=1, THETA=2 }; ///< Definitions for elements of a core vector.
+    double const getA() const { return _vector[A]; }
+    void setA(double a) { _vector[A] = a; }
 
-    /// \brief Deep copy the ellipse core.
-    Ptr clone() const { return Ptr(_clone()); }
+    double const getB() const { return _vector[B]; }
+    void setB(double b) { _vector[B] = b; }
 
-    /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
-    AxesEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
-        return AxesEllipse::Ptr(_makeEllipse(center));
-    }
+    double const getTheta() const { return _vector[THETA]; }
+    void setTheta(double theta) { _vector[THETA] = theta; }
 
-    /// \brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
-    virtual BaseCore::Jacobian dAssign(BaseCore const & other) {
-        return other._dAssignTo(static_cast<Core &>(*this)); 
-    }
+    /// @brief Deep copy the ellipse core.
+    Ptr clone() const { return boost::static_pointer_cast<Axes>(_clone()); }
 
     /// Return a string that identifies this parametrization.
-    virtual char const * getName() const { return "Axes"; }
+    virtual std::string getName() const;
 
     /**
-     *  \brief Put the parameters into a "standard form", if possible, and return
-     *         false if they are entirely invalid.
+     *  @brief Put the parameters into a "standard form", if possible, and throw InvalidEllipseParameters
+     *         if they cannot be normalized.
      */
-    virtual bool normalize(); // swap a,b and rotate if a<b, ensure theta in [-pi/2,pi/2)
+    virtual void normalize();
 
-    /// \brief Scale the size of the ellipse core by the given factor.
-    virtual void grow(double buffer) { _vector[A] += buffer; _vector[B] += buffer; }
+    virtual void readParameters(double const * iter);
 
-    /// \brief Increase the major and minor radii of the ellipse core by the given buffer.
-    virtual void scale(double factor) { _vector[A] *= factor; _vector[B] *= factor; }
+    virtual void writeParameters(double * iter) const;
 
-    /// \brief Return the AffineTransform that transforms the unit circle into this.
-    virtual LinearTransform getGenerator() const;
-
-    /// \brief Standard assignment.
+    /// @brief Standard assignment.
     Axes & operator=(Axes const & other) { _vector = other._vector; return *this; }
 
-    /// \brief Converting assignment.
-    virtual Axes & operator=(BaseCore const & other) { other._assignTo(*this); return *this; }
+    /// @brief Converting assignment.
+    Axes & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
 
-    /// \brief Construct from a parameter vector.
-    explicit Axes(BaseCore::ParameterVector const & data, bool doNormalize=true) : 
-        BaseCore(data) { if (doNormalize) normalize(); }
+    /// @brief Construct from parameter values
+    explicit Axes(double a=1.0, double b=1.0, double theta=0.0, bool normalize=false) :
+        _vector(a, b, theta) { if (normalize) this->normalize(); }
 
-    /// \brief Construct from parameter values.
-    explicit Axes(double a=0, double b=0, double theta=0, bool doNormalize=true) : 
-        BaseCore(a,b,theta) { if (doNormalize) normalize(); }
+    /// @brief Construct from a parameter vector.
+    explicit Axes(BaseCore::ParameterVector const & vector, bool normalize=false) :
+        _vector(vector) { if (normalize) this->normalize(); }
 
-    /// \brief Converting copy constructor.
+    /// @brief Copy constructor.
+    Axes(Axes const & other) : _vector(other._vector) {}
+
+    /// @brief Converting copy constructor.
     Axes(BaseCore const & other) { *this = other; }
 
-    /// \brief Copy constructor.
-    Axes(Axes const & other) : BaseCore(other.getVector()) {}
-
-protected:
-
-    virtual Axes * _clone() const { return new Axes(*this); }
-    
-    virtual AxesEllipse * _makeEllipse(PointD const & center) const {
-        return new AxesEllipse(*this, center);
+#ifndef SWIG
+    /// @brief Converting copy constructor.
+    Axes(BaseCore::Transformer const & transformer) {
+        transformer.apply(*this);
     }
 
-    virtual void _assignTo(Quadrupole & other) const;
-    virtual void _assignTo(Axes & other) const;
-    virtual void _assignTo(Distortion & other) const;
-    virtual void _assignTo(LogShear & other) const;
+    /// @brief Converting copy constructor.
+    Axes(BaseCore::Convolution const & convolution) {
+        convolution.apply(*this);
+    }
+#endif
+protected:
 
-    virtual Jacobian _dAssignTo(Quadrupole & other) const;
-    virtual Jacobian _dAssignTo(Axes & other) const;
-    virtual Jacobian _dAssignTo(Distortion & other) const;
-    virtual Jacobian _dAssignTo(LogShear & other) const;
+    virtual BaseCore::Ptr _clone() const { return boost::make_shared<Axes>(*this); }
 
+    virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
+    virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);
+
+    virtual void _assignToAxes(double & a, double & b, double & theta) const;
+    virtual void _assignFromAxes(double a, double b, double theta);
+
+    virtual Jacobian _dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
+    virtual Jacobian _dAssignFromQuadrupole(double ixx, double iyy, double ixy);
+
+    virtual Jacobian _dAssignToAxes(double & a, double & b, double & theta) const;
+    virtual Jacobian _dAssignFromAxes(double a, double b, double theta);
+
+private:
+    static Registrar<Axes> registrar;
+
+    ParameterVector _vector;
 };
 
-inline Axes const & AxesEllipse::getCore() const { return static_cast<Axes const &>(*_core); }
-inline Axes & AxesEllipse::getCore() { return static_cast<Axes &>(*_core); }
+}}}} // namespace lsst::afw::geom::ellipses
 
-inline AxesEllipse::AxesEllipse(PointD const & center) :
-    BaseEllipse(new Axes(),center) {}
-inline AxesEllipse::AxesEllipse(Axes const & core, PointD const & center) : 
-    BaseEllipse(core,center) {}
-inline AxesEllipse::AxesEllipse(BaseEllipse const & other) : 
-    BaseEllipse(new Axes(other.getCore()),other.getCenter()) {}
-inline AxesEllipse::AxesEllipse(AxesEllipse const & other) : 
-    BaseEllipse(other.getCore(),other.getCenter()) {}
-
-} // namespace lsst::afw::geom::ellipses
-}}} // namespace lsst::afw::geom
-#endif // !LSST_AFW_GEOM_ELLIPSES_AXES_H
+#endif // !LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED

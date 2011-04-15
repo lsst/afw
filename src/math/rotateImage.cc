@@ -28,6 +28,7 @@
 #include "lsst/afw/math/offsetImage.h"
 
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
 namespace afw {
@@ -47,12 +48,12 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
     }
 
     switch (nQuarter%4) {
-      case 0:
+    case 0:
         outImage.reset(new ImageT(inImage, true)); // a deep copy of inImage
         break;
-      case 1:
-        outImage.reset(new ImageT(inImage.getHeight(), inImage.getWidth()));
-
+    case 1:
+        outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
+                       
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::y_iterator optr = outImage->col_begin(inImage.getHeight() - y - 1);
             for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
@@ -62,7 +63,7 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         }
         
         break;
-      case 2:
+    case 2:
         outImage.reset(new ImageT(inImage.getDimensions()));
         
         for (int y = 0; y != inImage.getHeight(); ++y) {
@@ -74,8 +75,8 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
             }
         }
         break;
-      case 3:
-        outImage.reset(new ImageT(inImage.getHeight(), inImage.getWidth()));
+    case 3:
+        outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
 
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::y_iterator optr = outImage->col_begin(y);
@@ -144,6 +145,7 @@ typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr rotateImageBy90(afwImage::Image<TYPE> const&, int); \
     /*template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int);*/ \
@@ -157,5 +159,6 @@ INSTANTIATE(float)
 INSTANTIATE(double)
 template afwImage::Mask<boost::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<boost::uint16_t> const&, int); 
 template afwImage::Mask<boost::uint16_t>::Ptr flipImage(afwImage::Mask<boost::uint16_t> const&, bool flipLR, bool flipTB); 
+/// \endcond
 
 }}}

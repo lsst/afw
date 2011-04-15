@@ -30,17 +30,18 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection.h"
 
 namespace image = lsst::afw::image;
 namespace detection = lsst::afw::detection;
+namespace geom = lsst::afw::geom;
 
 typedef float ImagePixelT;
 
 BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     lsst::pex::logging::Trace::setVerbosity("afw.detection", 0);
 
-    image::MaskedImage<ImagePixelT> img(10,20);
+    image::MaskedImage<ImagePixelT> img(geom::Extent2I(10,20));
     *img.getImage() = 100;
 
     detection::FootprintSet<ImagePixelT> ds_by_value1(img, 0);
@@ -89,7 +90,7 @@ private:
 };
 
 BOOST_AUTO_TEST_CASE(FootprintFunctor) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    image::MaskedImage<ImagePixelT> mimg(10,20);
+    image::MaskedImage<ImagePixelT> mimg(geom::Extent2I(10,20));
     image::Image<ImagePixelT> img = *mimg.getImage();
 
     img = 0;

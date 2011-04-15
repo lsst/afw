@@ -68,13 +68,13 @@ namespace image {
         //Constructors
         TanWcs();
         friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr metadata, bool);
-        TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
+        TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
                const Eigen::Matrix2d &CD, 
                double equinox=2000, std::string raDecSys="FK5",
                const std::string cunits1="deg", const std::string cunits2="deg"
                );
 
-        TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
+        TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
                const Eigen::Matrix2d &CD, 
                Eigen::MatrixXd const & sipA, 
                Eigen::MatrixXd const & sipB, 
@@ -92,15 +92,15 @@ namespace image {
         double pixelScale() const;
         
         // Applies the SIP AP and BP distortion (used in the skyToPixel direction)
-        lsst::afw::geom::PointD distortPixel(const lsst::afw::geom::PointD pixel) const;
+        lsst::afw::geom::Point2D distortPixel(const lsst::afw::geom::Point2D pixel) const;
         // Applies the SIP A and B un-distortion (used in the pixelToSky direction)
-        lsst::afw::geom::PointD undistortPixel(const lsst::afw::geom::PointD pixel) const;
+        lsst::afw::geom::Point2D undistortPixel(const lsst::afw::geom::Point2D pixel) const;
 
         bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertyList::Ptr getFitsMetadata() const;        
 #if 0
         //Rely on base class implementation for now.
-        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
+        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::Point2D const & pix) const;
 #endif        
         
 
@@ -122,7 +122,7 @@ namespace image {
         TanWcs & operator = (const TanWcs &);        
 
         virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
-        virtual lsst::afw::geom::PointD skyToPixelImpl(double sky1, double sky2) const;
+        virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
 
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)

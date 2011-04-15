@@ -108,13 +108,15 @@ public :
     float  getSkyErr() const { return _skyErr; }
     double getRaObject() const { return _raObject; }
     double getDecObject() const { return _decObject; }
+
+#ifndef SWIG
     CONST_PTR(Footprint) getFootprint() const { return _footprint; }
+    void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
+#endif
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
-    // We have two setFootprint functions for swig 1.43's sake (it can't convert PTR(Foo) to CONST_PTR(Foo))
-    void setFootprint(PTR(Footprint) footprint) { _footprint = footprint; }
-    void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
+
 
     void setPetroFlux(double const petroFlux) { 
         set(_petroFlux, petroFlux, PETRO_FLUX);         

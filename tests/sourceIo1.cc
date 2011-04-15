@@ -46,7 +46,9 @@
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
-
+#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/formatters/Utils.h"
 
@@ -150,8 +152,16 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         } else {
             data.setNull();
         }
-        
-        Source::Ptr sourcePtr(new Source(data));
+        lsst::afw::geom::ellipses::Separable<
+            lsst::afw::geom::ellipses::Distortion, 
+            lsst::afw::geom::ellipses::DeterminantRadius
+        > core(0,0, i);
+        lsst::afw::geom::Point2D point(data.getRa(), data.getDec());
+        lsst::afw::geom::ellipses::Ellipse ellipse(core, point);
+        Footprint::Ptr fp(new Footprint(ellipse));
+        data.setFootprint(fp);
+
+        Source::Ptr sourcePtr(new Source(data));        
         v.push_back(sourcePtr);
     }
 }
@@ -191,7 +201,7 @@ static void testBoost(void) {
     // Create a blank Policy and PropertySet.
     Policy::Ptr      policy(new Policy);
     PropertySet::Ptr props = createDbTestProps(0,1,"Source");
-
+    props->add("doFootprints", true);
     // Setup test location
     LogicalLocation loc(makeTempFile());
 
@@ -221,6 +231,30 @@ static void testBoost(void) {
             "Couldn't cast to PersistableSourceVector");
         BOOST_CHECK_MESSAGE(*persistVec == dsv, 
             "persist()/retrieve() resulted in PersistableSourceVector corruption");
+
+        for(int i =0; i < dsv.size(); ++i) {
+            boost::shared_ptr<const Footprint> dsvFp = dsv[i]->getFootprint();
+            boost::shared_ptr<const Footprint> persistFp = dsv[i]->getFootprint();
+            for(int j = 0; j < dsvFp->getSpans().size(); ++j) {
+                BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getY(), persistFp->getSpans()[j]->getY());
+                BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getX0(), persistFp->getSpans()[j]->getX0());
+                BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getX1(), persistFp->getSpans()[j]->getX1());
+            }
+            BOOST_CHECK_EQUAL(dsvFp->getArea(), persistFp->getArea());
+            BOOST_CHECK_EQUAL(dsvFp->getArea(), persistFp->getArea());
+            lsst::afw::geom::BoxI dsvBBox = dsvFp->getBBox();
+            lsst::afw::geom::BoxI persistBBox = persistFp->getBBox();
+            BOOST_CHECK_EQUAL(dsvBBox.getMinX(),persistBBox.getMinX());
+            BOOST_CHECK_EQUAL(dsvBBox.getMinY(),persistBBox.getMinY());
+            BOOST_CHECK_EQUAL(dsvBBox.getMaxX(),persistBBox.getMaxX());
+            BOOST_CHECK_EQUAL(dsvBBox.getMaxY(),persistBBox.getMaxY());
+            dsvBBox = dsvFp->getRegion();
+            persistBBox = persistFp->getRegion();
+            BOOST_CHECK_EQUAL(dsvBBox.getMinX(),persistBBox.getMinX());
+            BOOST_CHECK_EQUAL(dsvBBox.getMinY(),persistBBox.getMinY());
+            BOOST_CHECK_EQUAL(dsvBBox.getMaxX(),persistBBox.getMaxX());
+            BOOST_CHECK_EQUAL(dsvBBox.getMaxY(),persistBBox.getMaxY());
+        }
     }
     ::unlink(loc.locString().c_str());
 }

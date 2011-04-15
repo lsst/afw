@@ -44,7 +44,6 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/deprecated.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -84,13 +83,14 @@ void mathDetail::convolveWithInterpolation(
     }
 
     // compute region covering good area of output image
-    afwGeom::BoxI fullBBox = afwGeom::BoxI(afwGeom::Point2I::make(0, 0), 
-        afwGeom::Extent2I::make(outImage.getWidth(), outImage.getHeight()));
-    afwGeom::BoxI goodBBox = kernel.shrinkBBox(fullBBox);
+    afwGeom::Box2I fullBBox = afwGeom::Box2I(
+        afwGeom::Point2I(0, 0), 
+        afwGeom::Extent2I(outImage.getWidth(), outImage.getHeight()));
+    afwGeom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(
         kernel.clone(),
         goodBBox,
-        afwGeom::convertToGeom(inImage.getXY0()),
+        inImage.getXY0(),
         convolutionControl.getDoNormalize()));
     pexLog::TTrace<6>("lsst.afw.math.convolve",
         "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)",
@@ -107,7 +107,7 @@ void mathDetail::convolveWithInterpolation(
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
-    ConvolveWithInterpolationWorkingImages workingImages(kernel.getWidth(), kernel.getHeight());
+    ConvolveWithInterpolationWorkingImages workingImages(kernel.getDimensions());
     RowOfKernelImagesForRegion regionRow(nx, ny);
     while (goodRegion.computeNextRow(regionRow)) {
         for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
@@ -141,13 +141,13 @@ void mathDetail::convolveRegionWithInterpolation(
     typedef KernelImage::const_xy_locator KernelConstLocator;
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
-    std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
+    geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
     workingImages.leftImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_LEFT);
     workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);
     workingImages.kernelImage <<= workingImages.leftImage;
 
-    afwGeom::BoxI const goodBBox = region.getBBox();
-    afwGeom::BoxI const fullBBox = kernelPtr->growBBox(goodBBox);
+    afwGeom::Box2I const goodBBox = region.getBBox();
+    afwGeom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
     
     // top and right images are computed one beyond bbox boundary,
     // so the distance between edge images is bbox width/height pixels
@@ -173,7 +173,7 @@ void mathDetail::convolveRegionWithInterpolation(
             workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
         for (int i = 0; ; ) {
             *outLocator = afwMath::convolveAtAPoint<OutImageT, InImageT>(
-                inLocator, kernelLocator, kernelDimensions.first, kernelDimensions.second);
+                inLocator, kernelLocator, kernelDimensions.getX(), kernelDimensions.getY());
             ++outLocator.x();
             ++inLocator.x();
             ++i;
@@ -197,9 +197,8 @@ void mathDetail::convolveRegionWithInterpolation(
 
 /*
  * Explicit instantiation
- *
- * Modelled on ConvolveImage.cc
  */
+/// \cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
@@ -225,3 +224,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+/// \endcond

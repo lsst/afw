@@ -36,9 +36,6 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-
-namespace afwGeom = lsst::afw::geom;
-
     
 /**
  * Describe a detector's orientation with respect to the nominal position

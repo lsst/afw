@@ -39,8 +39,8 @@ bool geom::allclose(
     CoordinateBase<Derived,T,N> const & b, 
     T rtol, T atol
 ) {
-    Eigen::Matrix<T,N,1> diff = (a.asVector() - b.asVector()).cwise().abs();
-    Eigen::Matrix<T,N,1> rhs = (0.5*(a.asVector() + b.asVector())).cwise().abs();
+    Eigen::Matrix<T,N,1> diff = (a.asEigen() - b.asEigen()).cwise().abs();
+    Eigen::Matrix<T,N,1> rhs = (0.5*(a.asEigen() + b.asEigen())).cwise().abs();
     rhs *= rtol;
     rhs.cwise() += atol;
     return (diff.cwise() <= rhs).all();

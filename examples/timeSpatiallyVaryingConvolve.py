@@ -32,6 +32,7 @@ import eups
 import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.math.detail as mathDetail
 
 pexLog.Debug("lsst.afw", 0)
@@ -106,7 +107,7 @@ def getDeltaLinearCombinationKernel(kSize, imSize, spOrder):
     kernelList = afwMath.KernelList()
     for ctrX in range(kSize):
         for ctrY in range(kSize):
-            kernelList.append(afwMath.DeltaFunctionKernel(kSize, kSize, afwImage.PointI(ctrX, ctrY)))
+            kernelList.append(afwMath.DeltaFunctionKernel(kSize, kSize, afwGeom.Point2I(ctrX, ctrY)))
             
     polyFunc = afwMath.PolynomialFunction2D(spOrder)
     kernel = afwMath.LinearCombinationKernel(kernelList, polyFunc)
@@ -200,8 +201,8 @@ def run():
         inImage = afwImage.MaskedImageF(InputMaskedImagePath)
         # to get original behavior change True to False:
         if (False):
-            bbox = afwImage.BBox(afwImage.PointI(0, 0), 256, 256)
-            inImage = afwImage.MaskedImageF(inImage, bbox, False)
+            bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(256, 256))
+            inImage = afwImage.MaskedImageF(inImage, bbox, afwImage.LOCAL, False)
     else:
         inImage = afwImage.MaskedImageF(sys.argv[1])
     outImage = afwImage.MaskedImageF(inImage.getDimensions())

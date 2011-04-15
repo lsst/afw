@@ -26,7 +26,7 @@
 #include "lsst/afw/image/ImageAlgorithm.h"
 
 namespace afwImage = lsst::afw::image;
-
+namespace afwGeom = lsst::afw::geom;
 template<typename T>
 struct erase : public afwImage::pixelOp0<T> {
     T operator()() const {
@@ -73,8 +73,8 @@ private:
 using namespace std;
 
 int main() {
-    afwImage::Image<float> img1(10, 6);
-    afwImage::Image<int> img2(10, 6);
+    afwImage::Image<float> img1(afwGeom::Extent2I(10, 6));
+    afwImage::Image<int> img2(img1.getDimensions());
     // set img1 to 0 (actually, the constructor already did this)
     lsst::afw::image::for_each_pixel(img1, erase<float>());
 

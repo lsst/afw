@@ -21,111 +21,107 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
 
 #include <Eigen/LU>
 
-namespace ellipses = lsst::afw::geom::ellipses;
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-ellipses::Quadrupole
-ellipses::BaseCore::Transformer::transformQuadrupole(Quadrupole const & quadrupole) const {
-    Quadrupole::Matrix matrix = _transform.getMatrix() * 
-        quadrupole.getMatrix() * 
-        _transform.getMatrix().transpose();
-    return Quadrupole(matrix(0,0), matrix(1,1), matrix(0,1));
-}
-
-boost::tuple<ellipses::Quadrupole,ellipses::Quadrupole,
-             ellipses::BaseCore::Jacobian,ellipses::BaseCore::Jacobian>
-ellipses::BaseCore::Transformer::computeConversionJacobian() const {
-    Quadrupole inputQuadrupole;
-    BaseCore::Jacobian jacobian = inputQuadrupole.dAssign(_input);
-    Quadrupole outputQuadrupole = transformQuadrupole(inputQuadrupole);
-    boost::shared_ptr<BaseCore> tmp(_input.clone());
-    BaseCore::Jacobian jacobian_inv = tmp->dAssign(outputQuadrupole);
-    return boost::make_tuple(inputQuadrupole,outputQuadrupole,jacobian,jacobian_inv);
-}
-
-boost::shared_ptr<ellipses::BaseCore> ellipses::BaseCore::Transformer::copy() const {
-    boost::shared_ptr<BaseCore> r(_input.clone());
-    *r = transformQuadrupole(_input);
+BaseCore::Ptr BaseCore::Transformer::copy() const {
+    BaseCore::Ptr r(input.clone());
+    apply(*r);
     return r;
 }
 
-ellipses::BaseCore::Transformer::DerivativeMatrix
-ellipses::BaseCore::Transformer::d() const {
-    DerivativeMatrix r;
-    r(Quadrupole::IXX,Quadrupole::IXX) = _transform[LinearTransform::XX]*_transform[LinearTransform::XX];
-    r(Quadrupole::IXX,Quadrupole::IYY) = _transform[LinearTransform::XY]*_transform[LinearTransform::XY];
-    r(Quadrupole::IXX,Quadrupole::IXY) = 2*_transform[LinearTransform::XY]*_transform[LinearTransform::XX];
-    r(Quadrupole::IYY,Quadrupole::IXX) = _transform[LinearTransform::YX]*_transform[LinearTransform::YX];
-    r(Quadrupole::IYY,Quadrupole::IYY) = _transform[LinearTransform::YY]*_transform[LinearTransform::YY];
-    r(Quadrupole::IYY,Quadrupole::IXY) = 2*_transform[LinearTransform::YY]*_transform[LinearTransform::YX];
-    r(Quadrupole::IXY,Quadrupole::IXX) = _transform[LinearTransform::YX]*_transform[LinearTransform::XX];
-    r(Quadrupole::IXY,Quadrupole::IYY) = _transform[LinearTransform::YY]*_transform[LinearTransform::XY];
-    r(Quadrupole::IXY,Quadrupole::IXY) = _transform[LinearTransform::XX]*_transform[LinearTransform::YY] 
-        + _transform[LinearTransform::XY]*_transform[LinearTransform::YX];
-    BaseCore::Jacobian j;
-    BaseCore::Jacobian j_inv;
-    boost::tie(boost::tuples::ignore,boost::tuples::ignore,j,j_inv) = computeConversionJacobian();
-    return j_inv * r * j;
+void BaseCore::Transformer::inPlace() {
+    apply(input);
 }
 
-ellipses::BaseCore::Transformer::TransformDerivativeMatrix
-ellipses::BaseCore::Transformer::dTransform() const {
-    TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
-    Quadrupole inputQuadrupole;
-    BaseCore::Jacobian j_inv;
-    boost::tie(inputQuadrupole,boost::tuples::ignore,boost::tuples::ignore,j_inv) 
-        = computeConversionJacobian();
-    double xx = inputQuadrupole[Quadrupole::IXX];
-    double yy = inputQuadrupole[Quadrupole::IYY];
-    double xy = inputQuadrupole[Quadrupole::IXY];
-    r(Quadrupole::IXX,LinearTransform::XX) 
-        = 2*(_transform[LinearTransform::XX]*xx + _transform[LinearTransform::XY]*xy);
-    r(Quadrupole::IXX,LinearTransform::XY)
-        = 2*(_transform[LinearTransform::XX]*xy + _transform[LinearTransform::XY]*yy);
-    r(Quadrupole::IYY,LinearTransform::YX)
-        = 2*(_transform[LinearTransform::YX]*xx + _transform[LinearTransform::YY]*xy);
-    r(Quadrupole::IYY,LinearTransform::YY)
-        = 2*(_transform[LinearTransform::YX]*xy + _transform[LinearTransform::YY]*yy);
-    r(Quadrupole::IXY,LinearTransform::XX)
-        = _transform[LinearTransform::YX]*xx + _transform[LinearTransform::YY]*xy;
-    r(Quadrupole::IXY,LinearTransform::XY)
-        = _transform[LinearTransform::YX]*xy + _transform[LinearTransform::YY]*yy;
-    r(Quadrupole::IXY,LinearTransform::YX)
-        = _transform[LinearTransform::XX]*xx + _transform[LinearTransform::XY]*xy;
-    r(Quadrupole::IXY,LinearTransform::YY)
-        = _transform[LinearTransform::XX]*xy + _transform[LinearTransform::XY]*yy;
-    return  j_inv * r;
+void BaseCore::Transformer::apply(BaseCore & result) const {
+    Eigen::Matrix2d m;
+    input._assignToQuadrupole(m(0,0), m(1,1), m(0,1));
+    m(1,0) = m(0,1);
+    m = transform.getMatrix() * m * transform.getMatrix().transpose();
+    result._assignFromQuadrupole(m(0,0), m(1,1), m(0,1));
 }
 
-boost::shared_ptr<ellipses::BaseEllipse> ellipses::BaseEllipse::Transformer::copy() const {
-    boost::shared_ptr<BaseEllipse> r(_input.clone());
-    r->setCenter(_transform(r->getCenter()));
-    r->getCore().transform(_transform.getLinear()).inPlace();
+BaseCore::Transformer::DerivativeMatrix
+BaseCore::Transformer::d() const {
+    BaseCore::Ptr output(input.clone());
+    Eigen::Matrix2d m;
+    Jacobian rhs = input._dAssignToQuadrupole(m(0,0), m(1,1), m(0,1));
+    m(1,0) = m(0,1);
+    m = transform.getMatrix() * m * transform.getMatrix().transpose();
+    Jacobian lhs = output->_dAssignFromQuadrupole(m(0,0), m(1,1), m(0,1));
+    Jacobian mid = Jacobian::Zero();
+    mid(0,0) = transform[LinearTransform::XX]*transform[LinearTransform::XX];
+    mid(0,1) = transform[LinearTransform::XY]*transform[LinearTransform::XY];
+    mid(0,2) = 2*transform[LinearTransform::XY]*transform[LinearTransform::XX];
+    mid(1,0) = transform[LinearTransform::YX]*transform[LinearTransform::YX];
+    mid(1,1) = transform[LinearTransform::YY]*transform[LinearTransform::YY];
+    mid(1,2) = 2*transform[LinearTransform::YY]*transform[LinearTransform::YX];
+    mid(2,0) = transform[LinearTransform::YX]*transform[LinearTransform::XX];
+    mid(2,1) = transform[LinearTransform::YY]*transform[LinearTransform::XY];
+    mid(2,2) = transform[LinearTransform::XX]*transform[LinearTransform::YY] 
+        + transform[LinearTransform::XY]*transform[LinearTransform::YX];
+    return lhs * mid * rhs;
+}
+
+BaseCore::Transformer::TransformDerivativeMatrix
+BaseCore::Transformer::dTransform() const {
+    BaseCore::Ptr output(input.clone());
+    Eigen::Matrix2d m;
+    input._assignToQuadrupole(m(0,0), m(1,1), m(0,1));
+    Eigen::Matrix<double,3,4> mid = Eigen::Matrix<double,3,4>::Zero();
+    m(1,0) = m(0,1);
+    mid(0, LinearTransform::XX) =
+        2.0*(transform[LinearTransform::XX]*m(0,0) + transform[LinearTransform::XY]*m(0,1));
+    mid(0, LinearTransform::XY) =
+        2.0*(transform[LinearTransform::XX]*m(0,1) + transform[LinearTransform::XY]*m(1,1));
+    mid(1, LinearTransform::YX) = 
+        2.0*(transform[LinearTransform::YX]*m(0,0) + transform[LinearTransform::YY]*m(0,1));
+    mid(1, LinearTransform::YY) = 
+        2.0*(transform[LinearTransform::YX]*m(0,1) + transform[LinearTransform::YY]*m(1,1));
+    mid(2, LinearTransform::XX) = 
+        transform[LinearTransform::YX]*m(0,0) + transform[LinearTransform::YY]*m(0,1);
+    mid(2, LinearTransform::XY) = 
+        transform[LinearTransform::YX]*m(0,1) + transform[LinearTransform::YY]*m(1,1);
+    mid(2, LinearTransform::YX) =
+        transform[LinearTransform::XX]*m(0,0) + transform[LinearTransform::XY]*m(0,1);
+    mid(2, LinearTransform::YY) =
+        transform[LinearTransform::XX]*m(0,1) + transform[LinearTransform::XY]*m(1,1);
+    m = transform.getMatrix() * m * transform.getMatrix().transpose();
+    Jacobian lhs = output->_dAssignFromQuadrupole(m(0,0), m(1,1), m(0,1));
+    return lhs * mid;
+}
+
+Ellipse::Ptr Ellipse::Transformer::copy() const {
+    Ellipse::Ptr r = boost::make_shared<Ellipse>(
+        input.getCore().transform(transform.getLinear()).copy(),
+        transform(input.getCenter())
+    );
     return r;
 }
 
-void ellipses::BaseEllipse::Transformer::inPlace() {
-    _input.setCenter(_transform(_input.getCenter()));
-    _input.getCore().transform(_transform.getLinear()).inPlace();
+void Ellipse::Transformer::inPlace() {
+    input.setCenter(transform(input.getCenter()));
+    input.getCore().transform(transform.getLinear()).inPlace();
 }
 
-ellipses::BaseEllipse::Transformer::DerivativeMatrix 
-ellipses::BaseEllipse::Transformer::d() const {
+Ellipse::Transformer::DerivativeMatrix 
+Ellipse::Transformer::d() const {
     DerivativeMatrix r = DerivativeMatrix::Zero();
-    r.block<2,2>(0,0) = _transform.getLinear().getMatrix();
-    r.block<3,3>(2,2) = _input.getCore().transform(_transform.getLinear()).d();
+    r.block<2,2>(3,3) = transform.getLinear().getMatrix();
+    r.block<3,3>(0,0) = input.getCore().transform(transform.getLinear()).d();
     return r;
 }
 
-ellipses::BaseEllipse::Transformer::TransformDerivativeMatrix
-ellipses::BaseEllipse::Transformer::dTransform() const {
+Ellipse::Transformer::TransformDerivativeMatrix
+Ellipse::Transformer::dTransform() const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
-    r.block<2,6>(0,0) = _transform.dTransform(_input.getCenter());
-    r.block<3,4>(2,0) = _input.getCore().transform(_transform.getLinear()).dTransform();
+    r.block<2,6>(3,0) = transform.dTransform(input.getCenter());
+    r.block<3,4>(0,0) = input.getCore().transform(transform.getLinear()).dTransform();
     return r;
 }
+
+}}}} // namespace lsst::afw::geom::ellipses

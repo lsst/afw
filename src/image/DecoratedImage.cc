@@ -31,6 +31,7 @@
 #include "lsst/afw/image/Image.h"
 
 namespace image = lsst::afw::image;
+namespace geom = lsst::afw::geom;
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::init() {
@@ -40,11 +41,11 @@ void image::DecoratedImage<PixelT>::init() {
 
 /// Create an %image of the specified size
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(const int width, ///< desired number of columns
-                                              const int height ///< desired number of rows
-                                             ) :
+image::DecoratedImage<PixelT>::DecoratedImage(
+    geom::Extent2I const & dimensions ///< desired number of columns. rows
+) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image<PixelT>(width, height))
+    _image(new Image<PixelT>(dimensions))
 {
     init();
 }
@@ -55,10 +56,10 @@ image::DecoratedImage<PixelT>::DecoratedImage(const int width, ///< desired numb
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-        const std::pair<int, int> dimensions // (width, height) of the desired Image
-                                             ) :
+    geom::Box2I const & bbox // (width, height) and origin of the desired Image
+) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image<PixelT>(dimensions))
+    _image(new Image<PixelT>(bbox))
 {
     init();
 }
@@ -69,8 +70,8 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-                                 typename Image<PixelT>::Ptr rhs ///< Image to go into DecoratedImage
-                                             ) :
+    typename Image<PixelT>::Ptr rhs ///< Image to go into DecoratedImage
+) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(rhs)
 {
@@ -82,18 +83,14 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  * Note that the lhs will share memory with the rhs unless \p deep is true
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(const DecoratedImage& src, ///< right hand side
-                                              const bool deep            ///< Make deep copy?
-                                             ) :
+image::DecoratedImage<PixelT>::DecoratedImage(
+    const DecoratedImage& src, ///< right hand side
+    const bool deep            ///< Make deep copy?
+) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(src._image), _gain(src._gain) {
-
+    _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain) 
+{
     setMetadata(src.getMetadata());
-    if (deep) {
-        typename Image<PixelT>::Ptr tmp = typename Image<PixelT>::Ptr(new Image<PixelT>(getDimensions()));
-        *tmp <<= *_image;                // now copy the pixels
-        _image.swap(tmp);
-    }
 }
 /**
  * Assignment operator
@@ -139,12 +136,13 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
                                               const int hdu,               ///< The HDU to read
-                                              BBox const& bbox             ///< Only read these pixels
+                                              geom::Box2I const& bbox,      ///< Only read these pixels
+                                              ImageOrigin const origin     ///< Coordinate system of the bbox
                                              ) :
     lsst::daf::data::LsstBase(typeid(this))
 {             ///< HDU within the file
     init();
-    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox));
+    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
 }
 
 /************************************************************************************************************/
@@ -153,8 +151,8 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
  */
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
-    const std::string& fileName,                        //!< the file to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
+    std::string const& fileName,                        ///< the file to write
+    lsst::daf::base::PropertySet::ConstPtr metadata_i, ///< metadata to write to header; or NULL
     std::string const& mode                              ///< "w" to write a new file; "a" to append
 ) const {
     lsst::daf::base::PropertySet::Ptr metadata;
@@ -166,7 +164,7 @@ void image::DecoratedImage<PixelT>::writeFits(
         metadata = getMetadata();
     }
 
-    image::fits_write_view(fileName, _image->_getRawView(), metadata, mode);
+    image::fits_write_image(fileName, *_image, metadata, mode);
 }
 
 /************************************************************************************************************/
@@ -177,3 +175,4 @@ template class image::DecoratedImage<boost::uint16_t>;
 template class image::DecoratedImage<int>;
 template class image::DecoratedImage<float>;
 template class image::DecoratedImage<double>;
+

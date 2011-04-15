@@ -3,7 +3,7 @@ import re
 Import("env")
 
 env.CheckSwig("python", ilang="c++",
-    includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw")
+    includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw ndarray")
 CCFLAGS = re.sub("-Wall", "", " ".join(env['CCFLAGS']))
 
 if re.search(r"_wrap\.cc$", env.get("noOptFiles", "")):
