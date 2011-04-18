@@ -243,6 +243,62 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
 }
 
 /**
+ * \brief Create a Mask from a FITS file in RAM
+ *
+ * See filename ctor for more information.
+ * Admittedly, much of this function is duplicated in the filename ctor.
+ * I couldn't quite decide if there was enough code in question
+ * to pull it out into a tertiary function, but be aware...
+ */
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
+		char **ramFile,										///< RAM buffer to receive RAM FITS file
+		size_t *ramFileLen,									///< RAM buffer length
+        int const hdu,                                     ///< HDU to read 
+        lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
+        afwGeom::Box2I const& bbox,                                  ///< Only read these pixels
+        ImageOrigin const origin,                          ///< coordinate system of the bbox
+        bool const conformMasks                            ///< Make Mask conform to mask layout in file?
+) :
+    afwImage::ImageBase<MaskPixelT>(),
+    _myMaskDictVersion(_maskDictVersion) 
+{
+    //
+    // These are the permitted input file types
+    //
+    typedef boost::mpl::vector<
+        unsigned char, 
+        unsigned short,
+        short
+    >fits_mask_types;
+
+   if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+    }
+
+    if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
+        throw LSST_EXCEPT(afwImage::FitsException,
+            (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
+    }
+    // look for mask planes in the file
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
+
+    if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
+        return;
+    }
+    
+    if (conformMasks) {                 // adopt the definitions in the file
+        if (_maskPlaneDict != fileMaskDict) {
+            _maskPlaneDict = fileMaskDict;
+            _maskDictVersion++;
+        }
+    }
+
+    conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
+                                        // defined by Mask::_maskPlaneDict
+}
+
+/**
  * \brief Write a Mask to the specified file
  */
 template<typename MaskPixelT>
@@ -269,6 +325,36 @@ void afwImage::Mask<MaskPixelT>::writeFits(
     metadata->combine(wcsAMetadata);
 
     afwImage::fits_write_image(fileName, *this, metadata, mode);
+}
+
+/**
+ * \brief Write a Mask to the specified RAM file
+ */
+template<typename MaskPixelT>
+void afwImage::Mask<MaskPixelT>::writeFits(
+    char **ramFile,		///< RAM buffer to receive RAM FITS file
+	size_t *ramFileLen,	///< RAM buffer length
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< metadata to write to header,
+        ///< or a null pointer if none
+    std::string const& mode    ///< "w" to write a new file; "a" to append
+) const {
+
+    dafBase::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+    } else {
+        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList());
+    }
+    addMaskPlanesToMetadata(metadata);
+    //
+    // Add WCS with (X0, Y0) information
+    //
+    dafBase::PropertySet::Ptr wcsAMetadata = detail::createTrivialWcsAsPropertySet(
+        detail::wcsNameForXY0, this->getX0(), this->getY0()
+    );
+    metadata->combine(wcsAMetadata);
+
+    afwImage::fits_write_ramImage(ramFile, ramFileLen, *this, metadata, mode);
 }
 
 template<typename MaskPixelT>
