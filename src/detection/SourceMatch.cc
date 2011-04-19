@@ -77,20 +77,20 @@ namespace lsst { namespace afw { namespace detection { namespace {
         for (SourceSet::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
             double ra = (*i)->getRa();
             double dec = (*i)->getDec();
-            if (ra < 0.0 || ra >= 360.0) {
+            if (ra < 0.0 || ra >= 2.*M_PI) {
                 throw LSST_EXCEPT(ex::RangeErrorException, "right ascension out of range");
             }
-            if (dec < -90.0 || dec > 90.0) {
+            if (dec < -M_PI_2 || dec > M_PI_2) {
                 throw LSST_EXCEPT(ex::RangeErrorException, "declination out of range");
             }
             if (lsst::utils::isnan(ra) || lsst::utils::isnan(dec)) {
                 continue;
             }
-            double cosDec    = std::cos(RADIANS_PER_DEGREE*dec);
-            positions[n].dec = RADIANS_PER_DEGREE*dec;
-            positions[n].x   = std::cos(RADIANS_PER_DEGREE*ra)*cosDec;
-            positions[n].y   = std::sin(RADIANS_PER_DEGREE*ra)*cosDec;
-            positions[n].z   = std::sin(RADIANS_PER_DEGREE*dec);
+            double cosDec    = std::cos(dec);
+            positions[n].dec = dec;
+            positions[n].x   = std::cos(ra)*cosDec;
+            positions[n].y   = std::sin(ra)*cosDec;
+            positions[n].z   = std::sin(dec);
             positions[n].src = &(*i);
             ++n;
         }

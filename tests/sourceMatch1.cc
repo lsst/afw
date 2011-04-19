@@ -61,8 +61,8 @@ void makeSources(det::SourceSet &set, int n) {
         src->setXAstrom(rng().uniform());
         src->setYAstrom(rng().uniform());
         double z = rng().flat(-1.0, 1.0);
-        src->setRa(rng().flat(0.0, 360.0));
-        src->setDec(std::asin(z)*(180.0/PI));
+        src->setRa(rng().flat(0.0, 2.*M_PI));
+        src->setDec(std::asin(z));
         set.push_back(src);
     }
 }
@@ -79,9 +79,9 @@ struct CmpSourceMatch {
 struct DistRaDec {
     double operator()(det::Source::Ptr const &s1, det::Source::Ptr const &s2) const {
         // halversine distance formula
-        double sinDeltaRa = std::sin((PI/180.0)*0.5*(s2->getRa() - s1->getRa()));
-        double sinDeltaDec = std::sin((PI/180.0)*0.5*(s2->getDec() - s1->getDec()));
-        double cosDec1CosDec2 = std::cos((PI/180.0)*s1->getDec())*std::cos((PI/180.0)*s2->getDec());
+        double sinDeltaRa = std::sin(0.5*(s2->getRa() - s1->getRa()));
+        double sinDeltaDec = std::sin(0.5*(s2->getDec() - s1->getDec()));
+        double cosDec1CosDec2 = std::cos(s1->getDec())*std::cos(s2->getDec());
         double a = sinDeltaDec*sinDeltaDec + cosDec1CosDec2*sinDeltaRa*sinDeltaRa;
         double b = std::sqrt(a);
         double c = b > 1 ? 1 : b;
@@ -230,19 +230,19 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
 
 
 static void normalizeRaDec(det::SourceSet ss) {
-    for (int i=0; i<ss.size(); i++) {
+    for (size_t i=0; i<ss.size(); i++) {
         double r,d;
         r = ss[i]->getRa();
         d = ss[i]->getDec();
-        if (r < 0)
-            r += 2.*M_PI;
-        if (r >= 2.*M_PI)
-            r -= 2.*M_PI;
         // wrap Dec over the (north) pole
         if (d > M_PI_2) {
             d = M_PI - d;
             r = r + M_PI;
         }
+        while (r < 0)
+            r += 2.*M_PI;
+        while (r >= 2.*M_PI)
+            r -= 2.*M_PI;
         ss[i]->setRa(r);
         ss[i]->setDec(d);
     }
