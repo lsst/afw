@@ -117,7 +117,7 @@ public:
             for (int p = n, q = 0; q <= p; --p, ++q) {
                 b(2 * q, x) = c(q, x).real();
                 if (q < p) {
-                    b(2 * q + 1, x) = c(q, x).imag();
+                    b(2 * q + 1, x) = -c(q, x).imag();
                 }
             }
         }

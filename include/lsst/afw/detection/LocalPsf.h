@@ -213,10 +213,11 @@ public:
         lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
     ) const;
 
-    explicit ShapeletLocalPsf(lsst::afw::geom::Point2D const & center, MultiShapelet const & shapelet) :
+    explicit ShapeletLocalPsf(lsst::afw::geom::Point2D const & center, MultiShapelet const & shapelet, bool normalize=true) :
         LocalPsf(center), _shapelet(shapelet)
     {
-        _shapelet.normalize();
+        if(normalize)
+            _shapelet.normalize();
     }
 
 private:
