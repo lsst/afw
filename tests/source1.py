@@ -78,26 +78,28 @@ class SourceTestCase(unittest.TestCase):
         # LSST decrees radians.
         # In the setUp() above, the RAs set could reasonably be interpreted as radians.
 
+        sources = self.dsv2.getSources()
+
         # check that getRa() returns in radians
         # MAGIC 0.349... = math.radians(20.)
-        self.assertAlmostEqual(self.dsv2[1].getRa(), 0.3490658503988659)
+        self.assertAlmostEqual(sources[1].getRa(), 0.3490658503988659)
 
         # check that setRaDec() getRaDec() round-trips.
         ra,dec = 100., 50.
         # makeCoord takes degrees.
-        c1 = afwCoord.makeCoord(afwCoord.ICRS, ra, dec, 2000.0)
+        c1 = afwCoord.makeCoord(afwCoord.ICRS, ra, dec)
         # (test that by using degrees explicitly)
         c2 = afwCoord.makeCoord(afwCoord.ICRS, afwGeom.makePointD(ra, dec),
-                                afwCoord.DEGREES, 2000.0)
-        self.assertAlmostEqual(c1.toIcrs().getRa(), c2.toIcrs().getRa())
-        self.assertAlmostEqual(c1.toIcrs().getDec(), c2.toIcrs().getDec())
+                                afwCoord.DEGREES)
+        self.assertAlmostEqual(c1.toIcrs().getRa(afwCoord.DEGREES), c2.toIcrs().getRa(afwCoord.DEGREES))
+        self.assertAlmostEqual(c1.toIcrs().getDec(afwCoord.DEGREES), c2.toIcrs().getDec(afwCoord.DEGREES))
 
         src = afwDet.Source()
         src.setRaDec(c1)
         # get it back in ICRS by default
         c1b = src.getRaDec()
-        self.assertAlmostEqual(c1.toIcrs().getDec(), c1b.toIcrs().getDec())
-        self.assertAlmostEqual(c1.toIcrs().getRa(),  c1b.toIcrs().getRa())
+        self.assertAlmostEqual(c1.toIcrs().getDec(afwCoord.DEGREES), c1b.toIcrs().getDec(afwCoord.DEGREES))
+        self.assertAlmostEqual(c1.toIcrs().getRa(afwCoord.DEGREES),  c1b.toIcrs().getRa(afwCoord.DEGREES))
 
         # check internal rep: radians
         self.assertAlmostEqual(src.getRa(), math.radians(ra))
@@ -110,28 +112,29 @@ class SourceTestCase(unittest.TestCase):
         self.assertAlmostEqual(c1c.getLatitude(afwCoord.DEGREES), 45.)
 
     def testBoostFilePersistence(self):
-        ctype = "lsst.afw.detection.PersistableSourceVector"
-        pytype = "PersistableSourceVector"
+        pytype = "lsst.afw.detection.PersistableSourceVector"
+        ctype = "PersistableSourceVector"
 
         # This is copied from Mapper, ButlerFactory, et al.
-        # Is it just me, or is this just wack.
-        from lsst.daf.persistence import Persistence
+        # Is it just me, or is this just wack?
+        from lsst.daf.persistence import Persistence, LogicalLocation, StorageList
         perPol = pexPolicy.Policy()
         per = Persistence.getPersistence(perPol)
         additionalData = dafBase.PropertySet()
         storageName = 'BoostStorage'
         f,loc = tempfile.mkstemp(suffix='.boost')
         os.close(f)
+        print 'Writing to temp file', loc
         logLoc = LogicalLocation(loc, additionalData)
         storageList = StorageList()
         storage = per.getPersistStorage(storageName, logLoc)
         storageList.append(storage)
 
         obj = self.dsv2
-
         if hasattr(obj, '__deref__'):
             # We have a smart pointer, so dereference it.
             obj = obj.__deref__()
+        # persist
         per.persist(obj, storageList, additionalData)
 
         # import this pythonType dynamically 
@@ -152,7 +155,17 @@ class SourceTestCase(unittest.TestCase):
         finalItem = pythonType.swigConvert(itemData)
         sources = finalItem
 
-        print 'unpersisted sources:', sources
+        #print 'unpersisted sources:', sources
+        obj1 = obj.getSources()
+        obj2 = sources.getSources()
+
+        self.assertEqual(len(obj1), len(obj2))
+        self.assertEqual(len(obj2), 16)
+        s1 = obj2[1]
+        # check that RA came out in radians
+        self.assertAlmostEqual(s1.getRa(), 0.3490658503988659)
+        # check that we can get it out in degrees
+        self.assertAlmostEqual(s1.getRaDec().toIcrs().getRa(afwCoord.DEGREES), 20.)
 
 
     def testIterable(self):
