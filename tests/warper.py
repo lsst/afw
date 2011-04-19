@@ -79,6 +79,7 @@ class WarpExposureTestCase(unittest.TestCase):
         # a bit of excess border is allowed, but surely not as much as 10 (in fact it is approx. 5)
         warpedExposure3 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
         # assert that warpedExposure and warpedExposure2 have the same number of non-edge pixels
+        # and that warpedExposure3 has fewer
         edgeMask = 1 << afwImage.MaskU.getMaskPlane("EDGE")
         mask1Arr = warpedExposure1.getMaskedImage().getMask().getArray()
         mask2Arr = warpedExposure2.getMaskedImage().getMask().getArray()
@@ -88,6 +89,24 @@ class WarpExposureTestCase(unittest.TestCase):
         nGood3 = (mask3Arr & edgeMask == 0).sum()
         self.assertTrue(nGood1 == nGood2)
         self.assertTrue(nGood3 < nGood1)
+        
+    def testDestBBox(self):
+        """Test that the destBBox argument works
+        """
+        kernelName = "lanczos2"
+        warper = afwMath.Warper(kernelName)
+        originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
+            kernelName=kernelName, useSubregion=True, useDeepCopy=False)
+        
+        bbox = afwGeom.Box2I(afwGeom.Point2I(100, 25), afwGeom.Extent2I(3, 7))
+        warpedExposure = warper.warpExposure(
+            destWcs = swarpedWcs,
+            srcExposure = originalExposure,
+            destBBox = bbox,
+            border = -2, # should be ignored
+            maxBBox = afwGeom.Box2I(afwGeom.Point2I(1, 2), afwGeom.Extent2I(8, 9)), # should be ignored
+        )
+        self.assertTrue(bbox == warpedExposure.getBBox(afwImage.PARENT))
     
     def getSwarpedImage(self, kernelName, useSubregion=False, useDeepCopy=False):
         """

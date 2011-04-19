@@ -78,17 +78,22 @@ class Warper(object):
         """Get the warping kernel"""
         return self._warpingKernel
 
-    def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None):
+    def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
         """Warp an exposure
         
         @param destWcs: WCS of warped exposure
         @param srcExposure: exposure to warp
-        @param border: grow bbox of warped exposure by this amount in all directions (pixels);
+        @param border: grow bbox of warped exposure by this amount in all directions (int pixels);
             if negative then the bbox is shrunk;
-            border is applied before maxBBox
-        @param maxBBox: maximum allowed bbox of warped exposure (an afwGeom.Box2I);
+            border is applied before maxBBox;
+            ignored if destBBox is not None
+        @param maxBBox: maximum allowed parent bbox of warped exposure (an afwGeom.Box2I or None);
             if None then the warped exposure will be just big enough to contain all warped pixels;
-            if provided then the warped exposure may be smaller, and so missing some warped pixels
+            if provided then the warped exposure may be smaller, and so missing some warped pixels;
+            ignored if destBBox is not None
+        @param destBBox: exact parent bbox of warped exposure (an afwGeom.Box2I or None);
+            if None then border and maxBBox are used to determine the bbox,
+            otherwise border and maxBBox are ignored
 
         @return warpedExposure: warped exposure (of same type as srcExposure)
         """
@@ -96,30 +101,38 @@ class Warper(object):
             destWcs = destWcs,
             srcImage = srcExposure.getMaskedImage(),
             srcWcs = srcExposure.getWcs(),
-            border = border, maxBBox = maxBBox,
+            border = border,
+            maxBBox = maxBBox,
+            destBBox = destBBox
         )
         return srcExposure.Factory(warpedMaskedImage, destWcs)
 
-    def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None):
+    def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
         """Warp an image or masked image
         
         @param destWcs: WCS of warped image
         @param srcImage: image or masked image to warp
         @param srcWcs: WCS of image
-        @param border grow bbox of warped exposure by this amount in all directions (pixels);
+        @param border: grow bbox of warped image by this amount in all directions (int pixels);
             if negative then the bbox is shrunk;
-            border is applied before maxBBox
-        @param maxBBox: maximum allowed bbox of warped exposure (an afwGeom.Box2I);
-            if None then the warped exposure will be just big enough to contain all warped pixels;
-            if provided then the warped exposure may be smaller, and so missing some warped pixels
+            border is applied before maxBBox;
+            ignored if destBBox is not None
+        @param maxBBox: maximum allowed parent bbox of warped image (an afwGeom.Box2I or None);
+            if None then the warped image will be just big enough to contain all warped pixels;
+            if provided then the warped image may be smaller, and so missing some warped pixels;
+            ignored if destBBox is not None
+        @param destBBox: exact parent bbox of warped image (an afwGeom.Box2I or None);
+            if None then border and maxBBox are used to determine the bbox,
+            otherwise border and maxBBox are ignored
 
         @return warpedImage: warped image or masked image (of same type as srcImage)
         """
-        destBBox = computeWarpedBBox(destWcs, srcImage.getBBox(afwImage.PARENT), srcWcs)
-        if border:
-            destBBox.grow(border)
-        if maxBBox:
-            destBBox.clip(maxBBox)
+        if destBBox is None: # warning: == None fails due to Box2I.__eq__
+            destBBox = computeWarpedBBox(destWcs, srcImage.getBBox(afwImage.PARENT), srcWcs)
+            if border:
+                destBBox.grow(border)
+            if maxBBox:
+                destBBox.clip(maxBBox)
         warpedImage = srcImage.Factory(destBBox)
         mathLib.warpImage(warpedImage, destWcs, srcImage, srcWcs, self._warpingKernel, self._interpLength)
         return warpedImage
