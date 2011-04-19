@@ -22,6 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+
 %define geomLib_DOCSTRING
 "
 Python interface to lsst::afw::geom classes
@@ -40,9 +41,9 @@ Python interface to lsst::afw::geom classes
 #include "lsst/afw/geom.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/afw/numpyTypemaps.h"
+#include "lsst/ndarray/python.h"
+#include "lsst/ndarray/python/eigen.h"
 %}
-
 
 %init %{
     import_array();
@@ -77,47 +78,62 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
-%import "lsst/afw/eigen.i"
+%include "lsst/ndarray/ndarray.i"
 
-%declareEigenMatrix(Eigen::Matrix<bool,2,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<int,2,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<double,2,1,Eigen::DontAlign>);
-
-%declareEigenMatrix(Eigen::Matrix<bool,3,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<int,3,1,Eigen::DontAlign>);
-%declareEigenMatrix(Eigen::Matrix<double,3,1,Eigen::DontAlign>);
-
-%declareEigenMatrix(Eigen::Matrix2d);
-%declareEigenMatrix(Eigen::Matrix3d);
-%declareEigenMatrix(lsst::afw::geom::AffineTransform::Matrix);
-%declareEigenMatrix(lsst::afw::geom::LinearTransform::Matrix);
+%declareNumPyConverters(Eigen::Matrix<double,2,1,Eigen::DontAlign>);
+%declareNumPyConverters(Eigen::Matrix<double,3,1,Eigen::DontAlign>);
+%declareNumPyConverters(Eigen::Matrix<int,2,1,Eigen::DontAlign>);
+%declareNumPyConverters(Eigen::Matrix<int,3,1,Eigen::DontAlign>);
 
 %include "CoordinateBase.i"
 %include "CoordinateExpr.i"
 %include "Extent.i"
 %include "Point.i"
 
+%Extent_PREINCLUDE(int,2);
+%Extent_PREINCLUDE(int,3);
+%Extent_PREINCLUDE(double,2);
+%Extent_PREINCLUDE(double,3);
+
+%Point_PREINCLUDE(int,2);
+%Point_PREINCLUDE(int,3);
+%Point_PREINCLUDE(double,2);
+%Point_PREINCLUDE(double,3);
+
 %include "lsst/afw/geom/CoordinateBase.h"
 %include "lsst/afw/geom/CoordinateExpr.h"
 %include "lsst/afw/geom/Extent.h"
 %include "lsst/afw/geom/Point.h"
 
-%CoordinateBase_POSTINCLUDE_2(bool, CoordinateExpr2, lsst::afw::geom::CoordinateExpr<2>);
-%CoordinateBase_POSTINCLUDE_3(bool, CoordinateExpr3, lsst::afw::geom::CoordinateExpr<3>);
+%Extent_POSTINCLUDE(int,2,I);
+%Extent_POSTINCLUDE(int,3,I);
+%Extent_POSTINCLUDE(double,2,D);
+%Extent_POSTINCLUDE(double,3,D);
 
-%CoordinateBase_POSTINCLUDE_2(int, Extent2I, lsst::afw::geom::Extent<int,2>);
-%CoordinateBase_POSTINCLUDE_3(int, Extent3I, lsst::afw::geom::Extent<int,3>);
+%Point_POSTINCLUDE(int,2,I);
+%Point_POSTINCLUDE(int,3,I);
+%Point_POSTINCLUDE(double,2,D);
+%Point_POSTINCLUDE(double,3,D);
 
-%CoordinateBase_POSTINCLUDE_2(double, Extent2D, lsst::afw::geom::Extent<double,2>);
-%CoordinateBase_POSTINCLUDE_3(double, Extent3D, lsst::afw::geom::Extent<double,3>);
+%CoordinateExpr_POSTINCLUDE(2);
+%CoordinateExpr_POSTINCLUDE(3);
 
-%CoordinateBase_POSTINCLUDE_2(int, Point2I, lsst::afw::geom::Point<int,2>);
-%CoordinateBase_POSTINCLUDE_3(int, Point3I, lsst::afw::geom::Point<int,3>);
+%extend lsst::afw::geom::Point<int,2> {
+    %template(Point2I) Point<double>;
+};
 
-%CoordinateBase_POSTINCLUDE_2(double, Point2D, lsst::afw::geom::Point<double,2>);
-%CoordinateBase_POSTINCLUDE_3(double, Point3D, lsst::afw::geom::Point<double,3>);
+%extend lsst::afw::geom::Point<int,3> {
+    %template(Point3I) Point<double>;
+};
+
+%extend lsst::afw::geom::Point<double,2> {
+    %template(Point2D) Point<int>;
+};
+
+%extend lsst::afw::geom::Point<double,3> {
+    %template(Point3D) Point<int>;
+};
 
 %include "LinearTransform.i"
 %include "AffineTransform.i"
 %include "Box.i"
-%include "ellipses.i"

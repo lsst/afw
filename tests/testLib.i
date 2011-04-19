@@ -116,7 +116,7 @@ SWIG_SHARED_PTR_DERIVED(TestImageCandidate,
         /// Return the %image
         ImageT::ConstPtr getImage() const {
             if (_image.get() == NULL) {
-                _image = ImageT::Ptr(new ImageT(getWidth(), getHeight()));
+                _image = ImageT::Ptr(new ImageT(lsst::afw::geom::ExtentI(getWidth(), getHeight())));
                 *_image = _flux;
             }
 

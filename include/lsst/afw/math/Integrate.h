@@ -49,8 +49,6 @@
 
 #include "lsst/afw/math/IntGKPData10.h"
 
-namespace ex = lsst::pex::exceptions;
-
 // == The following is Mike Jarvis original comment ==
 //
 // Basic Usage:
@@ -580,19 +578,19 @@ inline void intGKP (
         s << ", Type 2 = " << roundoffType2 << std::endl;
         s << "Roundoff error 1 prevents tolerance from being achieved ";
         s << "in intGKP\n";
-        throw LSST_EXCEPT(ex::RuntimeErrorException, s.str());
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, s.str());
     } else if (errorType == 2) {
         std::ostringstream s;
         s << "Type 1 roundoff's = " << roundoffType1;
         s << ", Type 2 = " << roundoffType2 << std::endl;
         s << "Roundoff error 2 prevents tolerance from being achieved ";
         s << "in intGKP\n";
-        throw LSST_EXCEPT(ex::RuntimeErrorException, s.str());
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, s.str());
     } else if (errorType == 3) {
         std::ostringstream s;
         s << "Bad integrand behavior found in the integration interval ";
         s << "in intGKP\n";
-        throw LSST_EXCEPT(ex::RuntimeErrorException, s.str());
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, s.str());
     }
 }
 

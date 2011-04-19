@@ -44,7 +44,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/LocalKernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
@@ -255,12 +254,12 @@ std::vector<double> afwMath::Kernel::getKernelParameters() const {
  *
  * @return the bbox expanded by the kernel. 
  */
-afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
-    return afwGeom::BoxI(
-        afwGeom::Point2I::make(
+afwGeom::Box2I afwMath::Kernel::growBBox(afwGeom::Box2I const &bbox) const {
+    return afwGeom::Box2I(
+        afwGeom::Point2I(
             bbox.getMinX() - getCtrX(),
             bbox.getMinY() - getCtrY()),
-        afwGeom::Extent2I::make(
+        afwGeom::Extent2I(
             bbox.getWidth()  + getWidth() - 1,
             bbox.getHeight() + getHeight() - 1));
 }
@@ -275,18 +274,18 @@ afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
  * @throw lsst::pex::exceptions::InvalidParameterException if the resulting box would have
  * dimension < 1 in either axis
  */
-afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
+afwGeom::Box2I afwMath::Kernel::shrinkBBox(afwGeom::Box2I const &bbox) const {
     if ((bbox.getWidth() < getWidth()) || ((bbox.getHeight() < getHeight()))) {
         std::ostringstream os;
         os << "bbox dimensions = " << bbox.getDimensions() << " < ("
            << getWidth() << ", " << getHeight() << ") in one or both dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
-    return afwGeom::BoxI(
-        afwGeom::Point2I::make(
+    return afwGeom::Box2I(
+        afwGeom::Point2I(
             bbox.getMinX() + getCtrX(),
             bbox.getMinY() + getCtrY()),
-        afwGeom::Extent2I::make(
+        afwGeom::Extent2I(
             bbox.getWidth()  + 1 - getWidth(),
             bbox.getHeight() + 1 - getHeight()));
 }
@@ -351,53 +350,4 @@ void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) co
     for (int ii = 0; funcIter != _spatialFunctionList.end(); ++funcIter, ++ii) {
         this->setKernelParameter(ii, (*(*funcIter))(x,y));
     }
-}
-
-/**
- *  @brief Construct an ImageLocalKernel
- *
- *  This default implementation does not include derivatives 
- *  Subclasses should override to provide versions with derivatives.
- */
-afwMath::ImageLocalKernel::Ptr afwMath::Kernel::computeImageLocalKernel(
-    lsst::afw::geom::Point2D const & location
-) const{
-    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(
-        getCtrX(), getCtrY()
-    );
-    ImageLocalKernel::Image::Ptr imagePtr(
-        new ImageLocalKernel::Image(getWidth(), getHeight())
-    );
-
-    computeImage(*imagePtr, true, location.getX(), location.getY());
-    std::vector<double> kernelParameters(getNKernelParameters());
-    computeKernelParametersFromSpatialModel(
-        kernelParameters, 
-        location.getX(), location.getY()
-    );
-    return boost::make_shared<ImageLocalKernel>(
-        center,
-        kernelParameters, 
-        imagePtr
-    );
-}
-
-/**
- *  @brief Construct a FourierLocalKernel
- *
- *  This default implementation does not include derivatives. And returns an
- *  FftLocalKernel, which is a concrete subclass of FourierLocalKernel which is 
- *  computed by taking the fourier transform of the kernel image.
- *  Subclasses should override to provide versions with derivatives.
- *
- *  @note Because a FourierLocalKernel can be constructed from an 
- *  ImageLocalKernel, overriding computeImageLocalKernel
- *  will modify the output of computeFourierLocalKernel as well.
- */
-afwMath::FourierLocalKernel::Ptr afwMath::Kernel::computeFourierLocalKernel(
-        lsst::afw::geom::Point2D const & location
-) const{
-    return boost::make_shared<FftLocalKernel>(
-        *computeImageLocalKernel(location)
-    );
 }

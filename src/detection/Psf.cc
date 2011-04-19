@@ -34,7 +34,7 @@ Psf::Image::Ptr Psf::computeImage(
         bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
                                     ) const {
     lsst::afw::image::Color color;
-    afwGeom::Point2D const ccdXY = lsst::afw::geom::makePointD(0, 0);
+    afwGeom::Point2D const ccdXY = lsst::afw::geom::Point2D(0, 0);
 
     return doComputeImage(color, ccdXY, size, normalizePeak);
 }
@@ -50,7 +50,7 @@ Psf::Image::Ptr Psf::computeImage(
         bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
                                     ) const {
     lsst::afw::image::Color color;
-    afwGeom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0);
+    afwGeom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0);
 
     return doComputeImage(color, ccdXY, size, normalizePeak);
 }
@@ -113,7 +113,9 @@ Psf::Image::Ptr Psf::doComputeImage(
     int const width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
     int const height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
 
-    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(width, height);
+    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
+        geom::Extent2I(width, height)
+    );
     kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?

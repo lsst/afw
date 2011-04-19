@@ -66,9 +66,11 @@ std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(d
 }
 
 /************************************************************************************************************/
+/// \cond
 #define INSTANTIATE(TYPE) \
     template std::vector<double> \
     afwMath::PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) const
 
 INSTANTIATE(double);
 INSTANTIATE(float);
+/// \endcond

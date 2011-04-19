@@ -36,12 +36,9 @@
 %rename(__isub__) lsst::afw::geom::Point<T,N>::operator-=;
 %enddef
 
-%CoordinateBase_PREINCLUDE_2(int, lsst::afw::geom::Point<int,2>);
-%CoordinateBase_PREINCLUDE_3(int, lsst::afw::geom::Point<int,3>);
-%Point_PREINCLUDE(int,2);
-%Point_PREINCLUDE(int,3);
-
-%CoordinateBase_PREINCLUDE_2(double, lsst::afw::geom::Point<double,2>);
-%CoordinateBase_PREINCLUDE_3(double, lsst::afw::geom::Point<double,3>);
-%Point_PREINCLUDE(double,2);
-%Point_PREINCLUDE(double,3);
+%define %Point_POSTINCLUDE(T,N,SUFFIX)
+%template(PointCoordinateBase ## N ## SUFFIX) lsst::afw::geom::CoordinateBase<lsst::afw::geom::Point<T,N>,T,N>;
+%template(PointBase ## N ## SUFFIX) lsst::afw::geom::PointBase<T,N>;
+%template(Point ## N ## SUFFIX) lsst::afw::geom::Point<T,N>;
+%CoordinateBase_POSTINCLUDE(T, N, lsst::afw::geom::Point<T,N>);
+%enddef

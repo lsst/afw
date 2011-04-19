@@ -36,7 +36,6 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/deprecated.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -100,10 +99,10 @@ public:
     //Constructors
     Wcs();
     //Create a Wcs of the correct class using a fits header.
-    friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
+    friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             bool stripMetadata);
 
-    Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
+    Wcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, const Eigen::Matrix2d &CD, 
         const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
         double equinox=2000, std::string raDecSys="ICRS",
         const std::string cunits1="deg", const std::string cunits2="deg"
@@ -114,7 +113,7 @@ public:
     
     //Accessors
     lsst::afw::coord::Coord::Ptr getSkyOrigin() const;      //Return crval
-    lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
+    lsst::afw::geom::Point2D getPixelOrigin() const;    //Return crpix
     Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
     
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
@@ -125,7 +124,7 @@ public:
     bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
     
     ///Sky area covered by a pixel at position \c pix00 in units of square degrees.
-    double pixArea(lsst::afw::geom::PointD pix00) const;
+    double pixArea(lsst::afw::geom::Point2D pix00) const;
     
     // Returns the pixel scale, in arcsec/pixel.
     double pixelScale() const;
@@ -136,12 +135,12 @@ public:
     //xyToRaDec(), but the name now reflects their increased generality. They may be
     //used, e.g. to convert xy to Galactic coordinates
     lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-    lsst::afw::geom::PointD pixelToSky(double pix1, double pix2, bool) const;
-    lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
+    lsst::afw::geom::Point2D pixelToSky(double pix1, double pix2, bool) const;
+    lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::Point2D pixel) const;
     
-    lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-    lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
-    lsst::afw::geom::PointD skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::Point2D skyToPixel(double sky1, double sky2) const;
+    lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
     
     virtual bool hasDistortion() const {    return false;};
     
@@ -168,14 +167,15 @@ public:
                                                         ) const;
 
     //Mutators
-    void shiftReferencePixel(double dx, double dy); 
+    void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
+    void shiftReferencePixel(double dx, double dy);
 
         
 private:
     //Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
     
-    void initWcsLib(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix,
+    void initWcsLib(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix,
                     const  Eigen::Matrix2d CD, 
                     const std::string ctype1, const std::string ctype2,
                     double equinox, std::string raDecSys,
@@ -183,19 +183,19 @@ private:
                    );
 
     virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
-        virtual lsst::afw::geom::PointD skyToPixelImpl(double sky1, double sky2) const;
+        virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
 
 protected:
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.
-    Wcs(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
     
     Wcs(lsst::afw::image::Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
     
     lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
-    lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
+    lsst::afw::geom::Point2D convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
     
     virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
                                                  lsst::afw::geom::Point2D const & pix,
@@ -210,7 +210,7 @@ protected:
                                                                         ) const;
 
     
-    void initWcsLibFromFits(PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
     void _initWcs();
     
     struct wcsprm* _wcsInfo;
@@ -227,12 +227,12 @@ namespace detail {
     PTR(lsst::daf::base::PropertyList)
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
     
-    image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+    geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
-Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
+Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata, bool stripMetadata=false);
     
-Wcs::Ptr makeWcs(lsst::afw::geom::PointD crval, lsst::afw::geom::PointD crpix,
+Wcs::Ptr makeWcs(lsst::afw::geom::Point2D crval, lsst::afw::geom::Point2D crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {

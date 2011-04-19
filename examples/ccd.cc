@@ -50,12 +50,18 @@ cameraGeom::Amp::Ptr makeAmp(int const i // which amp? (i == 0 ? left : right)
     // Note that all the offsets are relative to the origin of this amp, not to its eventual
     // position in the CCD
     //
-    afwImage::BBox allPixels(afwImage::PointI(0,                                   0),
-                             width + nExtended + nOverclock, height);
-    afwImage::BBox biasSec(  afwImage::PointI(i == 0 ? nExtended : width,          0),
-                             nOverclock,                     height);
-    afwImage::BBox dataSec(  afwImage::PointI(i == 0 ? nExtended + nOverclock : 0, 0),
-                             width,                          height);
+    afwGeom::Box2I allPixels(
+        afwGeom::Point2I(0, 0),
+        afwGeom::Extent2I(width + nExtended + nOverclock, height)
+    );
+    afwGeom::Box2I biasSec(  
+        afwGeom::Point2I(i == 0 ? nExtended : width, 0),
+        afwGeom::Extent2I(nOverclock, height)
+    );
+    afwGeom::Box2I dataSec(  
+        afwGeom::Point2I(i == 0 ? nExtended + nOverclock : 0, 0),
+        afwGeom::Extent2I(width, height)
+    );
     //
     // Electronic properties of amplifier
     //
@@ -96,7 +102,7 @@ cameraGeom::Raft::Ptr makeRaft(std::string const& name)
     for (int i = 0; i != 5; ++i) {
         std::stringstream ccdName;
         ccdName << filters[i] << name;
-        dewar->addDetector(afwGeom::makePointI(0, i), afwGeom::makePointD(0.0, 25.4*2.1*(2.0 - i)),
+        dewar->addDetector(afwGeom::Point2I(0, i), afwGeom::Point2D(0.0, 25.4*2.1*(2.0 - i)),
                            cameraGeom::Orientation(0), makeCcd(ccdName.str()));
     }
 
@@ -113,7 +119,7 @@ cameraGeom::Camera::Ptr makeCamera(std::string const& name)
     for (int i = 0; i != 6; ++i) {
         std::stringstream dewarName;
         dewarName << i + 1;
-        camera->addDetector(afwGeom::makePointI(i, 0), afwGeom::makePointD(25.4*2.5*(2.5 - i), 0.0),
+        camera->addDetector(afwGeom::Point2I(i, 0), afwGeom::Point2D(25.4*2.5*(2.5 - i), 0.0),
                             cameraGeom::Orientation(0), makeRaft(dewarName.str()));
     }
 
@@ -132,24 +138,24 @@ void printCcd(std::string const& title,
              )
 {
     cout << indent <<title << "CCD: " << ccd->getId().getName() << endl;
-    afwImage::BBox const allPixels = ccd->getAllPixels();
+    afwGeom::Box2I const allPixels = ccd->getAllPixels();
     cout << indent <<"Total size: " << allPixels.getWidth() << " " << allPixels.getHeight() << endl;
     for (cameraGeom::Ccd::const_iterator ptr = ccd->begin(); ptr != ccd->end(); ++ptr) {
         cameraGeom::Amp::ConstPtr amp = *ptr;
 
-        afwImage::BBox const biasSec = amp->getBiasSec();
-        afwImage::BBox const dataSec = amp->getDataSec();
+        afwGeom::Box2I const biasSec = amp->getBiasSec();
+        afwGeom::Box2I const dataSec = amp->getDataSec();
 
         cout << indent <<"   Amp: " << amp->getId().getSerial() <<
             " gain: " << amp->getElectronicParams()->getGain() << endl;
 
         cout << indent <<"   bias sec: " <<
             biasSec.getWidth() << "x" << biasSec.getHeight() << "+" <<
-            biasSec.getX0() << "+" << biasSec.getY0() << endl;
+            biasSec.getMinX() << "+" << biasSec.getMinY() << endl;
 
         cout << indent <<"   data sec: " <<
             dataSec.getWidth() << "x" << dataSec.getHeight() << "+" <<
-            dataSec.getX0() << "+" << dataSec.getY0() << endl;
+            dataSec.getMinX() << "+" << dataSec.getMinY() << endl;
 
         if (ptr == ccd->begin()) {
             cout << endl;

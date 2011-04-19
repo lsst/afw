@@ -115,7 +115,7 @@ class dgPsfTestCase(unittest.TestCase):
             if fy >= 0.5:
                 fy -= 1.0
 
-            im = self.psf.computeImage(afwGeom.makePointD(x, y)).convertFloat()
+            im = self.psf.computeImage(afwGeom.Point2D(x, y)).convertFloat()
 
             stamps.append(im.Factory(im, True))
             trueCenters.append([xcen + fx, ycen + fy])
@@ -128,12 +128,12 @@ class dgPsfTestCase(unittest.TestCase):
                 bbox = mos.getBBox(i)
 
                 ds9.dot("+",
-                        bbox.getX0() + xcen, bbox.getY0() + ycen, ctype=ds9.RED, size=1)
+                        bbox.getMinX() + xcen, bbox.getMinY() + ycen, ctype=ds9.RED, size=1)
                 ds9.dot("+",
-                        bbox.getX0() + trueCenters[i][0], bbox.getY0() + trueCenters[i][1])
+                        bbox.getMinX() + trueCenters[i][0], bbox.getMinY() + trueCenters[i][1])
 
                 ds9.dot("%.2f, %.2f" % (trueCenters[i][0], trueCenters[i][1]),
-                        bbox.getX0() + xcen, bbox.getY0() + 2)
+                        bbox.getMinX() + xcen, bbox.getMinY() + 2)
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

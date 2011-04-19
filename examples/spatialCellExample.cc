@@ -31,13 +31,15 @@
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/geom.h"
+
 
 #include "testSpatialCell.h"
 
 namespace afwDetect = lsst::afw::detection;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
-
+namespace afwGeom = lsst::afw::geom;
 typedef float PixelT;
 
 std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetect::FootprintSet<PixelT>::Ptr> readImage();
@@ -53,17 +55,24 @@ void SpatialCellSetDemo() {
     /*
      * Create an (empty) SpatialCellSet
      */
-    afwMath::SpatialCellSet cellSet(afwImage::BBox(afwImage::PointI(0, 0), im->getWidth(), im->getHeight()),
-                                    260, 200);
+    afwMath::SpatialCellSet cellSet(
+        im->getBBox(afwImage::LOCAL),
+        260, 200
+    );
     /*
      * Populate the cellSet using the detected object in the FootprintSet
      */
     for (afwDetect::FootprintSet<PixelT>::FootprintList::iterator ptr = fs->getFootprints()->begin(),
              end = fs->getFootprints()->end(); ptr != end; ++ptr) {
-        afwImage::BBox const bbox = (*ptr)->getBBox();
-        float const xc = (bbox.getX0() + bbox.getX1())/2.0;
-        float const yc = (bbox.getY0() + bbox.getY1())/2.0;
-        ExampleCandidate::Ptr tc(new ExampleCandidate(xc, yc, im->getImage(), bbox));
+        afwGeom::Box2I const bbox = (*ptr)->getBBox();
+        float const xc = (bbox.getMinX() + bbox.getMaxX())/2.0;
+        float const yc = (bbox.getMinY() + bbox.getMaxY())/2.0;
+        ExampleCandidate::Ptr tc(
+            new ExampleCandidate(xc, yc, 
+                im->getImage(), 
+                bbox
+            )
+        );
         cellSet.insertCandidate(tc);
     }
     /*
@@ -81,15 +90,14 @@ void SpatialCellSetDemo() {
 
         for (afwMath::SpatialCell::iterator candidate = cell->begin(), candidateEnd = cell->end();
              candidate != candidateEnd; ++candidate) {
-            int w, h;
-            boost::tie(w, h) =
-                dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox().getDimensions();
+            afwGeom::Box2I box =
+                dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
             
 #if 0
             std::cout << boost::format("%d %5.2f %5.2f %d\n")
                 % i % (*candidate)->getXCenter() % (*candidate)->getYCenter() % (w*h);
 #endif
-            if (w*h < 75) {
+            if (box.getArea() < 75) {
                 (*candidate)->setStatus(afwMath::SpatialCellCandidate::BAD);
             }
         }
@@ -123,11 +131,14 @@ readImage() {
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1";
         
-        afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(270, 2530), 512, 512);
+        afwGeom::Box2I bbox = afwGeom::Box2I(
+            afwGeom::Point2I(270, 2530), 
+            afwGeom::Extent2I(512, 512)
+        );
         
         lsst::daf::base::PropertySet::Ptr md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, 0, md, bbox));
-        mi->setXY0(afwImage::PointI(0, 0));
+        
     } catch (lsst::pex::exceptions::NotFoundException &e) {
         std::cerr << e << std::endl;
         exit(1);

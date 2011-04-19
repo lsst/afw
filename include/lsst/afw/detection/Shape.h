@@ -76,7 +76,7 @@ public:
             set<PSF_IXY_ERR>(NaN);
             set<PSF_IYY>(NaN);
             set<PSF_IYY_ERR>(NaN);
-            set<SHAPE_STATUS>(-1);
+            set<SHAPE_STATUS>(static_cast<short>(-1)); // Cast literal integer to short for right template
             
         }
     
@@ -116,7 +116,6 @@ public:
         schema->add(SchemaEntry("psfIyy",     PSF_IYY,       Schema::DOUBLE, 1, "pixel^2"));
         schema->add(SchemaEntry("psfIyyErr",  PSF_IYY_ERR,   Schema::DOUBLE, 1, "pixel^2"));
 
-        // this should be a boost::int16_t, which was used in BaseSourceAttributes
         schema->add(SchemaEntry("shapeStatus",  SHAPE_STATUS,   Schema::SHORT, 1, "unitless"));
         
     }
@@ -240,10 +239,8 @@ public:
 
     /// Return the status of the routine which performed the calculation
     // This should be a boost::int16_t, but Schema doesn't support that.
-    // ... thus requires a cast in meas-algorithms Measure.cc where it get passed
-    //     through to Source
-    int getShapeStatus() const {
-        return Measurement<Shape>::get<Shape::SHAPE_STATUS, int>();
+    short getShapeStatus() const {
+        return Measurement<Shape>::get<Shape::SHAPE_STATUS, short>();
     }
     
     virtual ::std::ostream &output(std::ostream &os) const {

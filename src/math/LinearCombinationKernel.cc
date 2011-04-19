@@ -41,7 +41,6 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/LocalKernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
@@ -280,10 +279,10 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
     KernelImageList newKernelImagePtrList;
     newKernelImagePtrList.reserve(nSpatialParameters);
     for (int i = 0; i < nSpatialParameters; ++i) {
-        KernelImagePtr kernelImagePtr(new KernelImage(this->getWidth(), this->getHeight()));
+        KernelImagePtr kernelImagePtr(new KernelImage(this->getDimensions()));
         newKernelImagePtrList.push_back(kernelImagePtr);
     }
-    KernelImage kernelImage(this->getWidth(), this->getHeight());
+    KernelImage kernelImage(this->getDimensions());
     std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncPtrIter = 
         this->_spatialFunctionList.begin();
     afwMath::KernelList::const_iterator kIter = _kernelList.begin();
@@ -371,35 +370,3 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
-
-/**
- *  Return a LocalKernel that matches the type requested, at the given location.
- *
- *  The default implementation would support the creation of IMAGE and FOURIER
- *  visitors without derivatives. LinearCombinationKernel (and possibly
- *  AnalyticKernel) can override to provide versions with derivatives.
- */
-afwMath::ImageLocalKernel::Ptr afwMath::LinearCombinationKernel::computeImageLocalKernel(
-    lsst::afw::geom::Point2D const & location
-) const{
-    ImageLocalKernel::Image::Ptr imagePtr( 
-        new ImageLocalKernel::Image(getWidth(), getHeight())
-    );
-    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(
-        getCtrX(), getCtrY()
-    );
-    computeImage(*imagePtr, true, location.getX(), location.getY());
-    std::vector<double> kernelParameters(getNKernelParameters());
-    computeKernelParametersFromSpatialModel(
-        kernelParameters, 
-        location.getX(), location.getY()
-    );
-
-    return boost::make_shared<ImageLocalKernel>(
-        center,
-        kernelParameters,
-        imagePtr,
-        _kernelImagePtrList
-    );
-}
-

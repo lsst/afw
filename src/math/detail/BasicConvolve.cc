@@ -43,7 +43,6 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/deprecated.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -114,7 +113,7 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
                 << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
         }
-        if (inImage.getDimensions() < kernel.getDimensions()) {
+        if (afwGeom::any(inImage.getDimensions().lt(kernel.getDimensions()))) {
             std::ostringstream os;
             os << "inImage dimensions = ( "
                 << inImage.getWidth() << ", " << inImage.getHeight()
@@ -308,9 +307,8 @@ void mathDetail::basicConvolve(
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
     
-    afwGeom::BoxI const fullBBox(afwGeom::makePointI(0, 0),
-        afwGeom::makeExtentI(inImage.getWidth(), inImage.getHeight()));
-    afwGeom::BoxI const goodBBox = kernel.shrinkBBox(fullBBox);
+    afwGeom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
+    afwGeom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
 
     KernelVector kernelXVec(kernel.getWidth());
     KernelVector kernelYVec(kernel.getHeight());
@@ -356,7 +354,7 @@ void mathDetail::basicConvolve(
         KernelIterator const kernelYVecBegin = kernelYVec.begin();
 
         // buffer for x-convolved data
-        OutImageT buffer(goodBBox.getWidth(), kernel.getHeight());
+        OutImageT buffer(afwGeom::Extent2I(goodBBox.getWidth(), kernel.getHeight()));
         
         // pre-fill x-convolved data buffer with all but one row of data
         int yInd = 0; // during initial fill bufY = inImageY
@@ -504,9 +502,8 @@ void mathDetail::convolveWithBruteForce(
 
 /*
  * Explicit instantiation
- *
- * Modelled on ConvolveImage.cc
  */
+/// \cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
@@ -540,3 +537,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+/// \endcond

@@ -41,6 +41,7 @@ or
 import unittest
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
 
 
@@ -50,7 +51,7 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
 
         # fill an image with a gradient
         self.n      = 8
-        self.img    = afwImage.ImageF(self.n, self.n, 0)
+        self.img    = afwImage.ImageF(afwGeom.Extent2I(self.n, self.n), 0)
 
         # these are the known answers for comparison
         def nVector(n, v):

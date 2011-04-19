@@ -85,6 +85,13 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
                 self.getMask().get(x, y),
                 self.getVariance().get(x, y))
 
+
+    def getArrays(self):
+        """Return a tuple (value, mask, variance) numpy arrays."""
+        return (self.getImage().getArray() if self.getImage() else None,
+                self.getMask().getArray() if self.getMask() else None,
+                self.getVariance().getArray() if self.getVariance() else None)
+
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"
     #

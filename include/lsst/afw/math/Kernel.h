@@ -187,19 +187,11 @@ class FourierLocalKernel;
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
 
-        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
-            lsst::afw::geom::Point2D const & location
-        ) const;
-
-        virtual boost::shared_ptr<FourierLocalKernel> computeFourierLocalKernel(
-           lsst::afw::geom::Point2D const & location
-        ) const;
-
         /**
         * @brief Return the Kernel's dimensions (width, height)
         */
-        std::pair<int, int> const getDimensions() const {
-            return std::pair<int, int>(_width, _height); }
+        geom::Extent2I const getDimensions() const {
+            return geom::Extent2I(_width, _height); }
 
         /**
          * @brief Return the Kernel's width
@@ -219,7 +211,7 @@ class FourierLocalKernel;
          * @brief Return index of kernel's center
          */
         inline lsst::afw::geom::Point2I getCtr() const {
-            return lsst::afw::geom::Point2I::make(_ctrX, _ctrY);
+            return lsst::afw::geom::Point2I(_ctrX, _ctrY);
         }
 
         /**
@@ -266,9 +258,9 @@ class FourierLocalKernel;
         
         virtual std::vector<double> getKernelParameters() const;
         
-        lsst::afw::geom::BoxI growBBox(lsst::afw::geom::BoxI const &bbox) const;
+        lsst::afw::geom::Box2I growBBox(lsst::afw::geom::Box2I const &bbox) const;
         
-        lsst::afw::geom::BoxI shrinkBBox(lsst::afw::geom::BoxI const &bbox) const;
+        lsst::afw::geom::Box2I shrinkBBox(lsst::afw::geom::Box2I const &bbox) const;
 
         /**
          * @brief Set index of kernel's center
@@ -521,7 +513,7 @@ class FourierLocalKernel;
         explicit DeltaFunctionKernel(
             int width,
             int height,
-            lsst::afw::image::PointI const &point
+            lsst::afw::geom::Point2I const &point
         );
 
         virtual ~DeltaFunctionKernel() {}
@@ -535,12 +527,12 @@ class FourierLocalKernel;
             double y = 0.0
         ) const;
 
-        lsst::afw::image::PointI getPixel() const { return _pixel; }
+        lsst::afw::geom::Point2I getPixel() const { return _pixel; }
 
         virtual std::string toString(std::string const& prefix="") const;
 
     private:
-        lsst::afw::image::PointI _pixel;
+        lsst::afw::geom::Point2I _pixel;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -598,10 +590,6 @@ class FourierLocalKernel;
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
-        ) const;
-
-        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
-            lsst::afw::geom::Point2D const & location
         ) const;
 
         virtual std::vector<double> getKernelParameters() const;
@@ -807,7 +795,7 @@ inline void load_construct_data(
     ar >> make_nvp("pixX", x);
     ar >> make_nvp("pixY", y);
     ::new(k) lsst::afw::math::DeltaFunctionKernel(
-        width, height, lsst::afw::image::PointI(x, y));
+        width, height, lsst::afw::geom::Point2I(x, y));
 }
 
 }}

@@ -22,8 +22,9 @@
 
 import re
 import lsst.pex.policy as pexPolicy
-import lsst.afw.detection as afwDetect
-import lsst.afw.image as afwImage
+import lsst.afw.detection as detection
+from . import imageLib as afwImage
+import numpy
 
 def clipImage(im, minClip, maxClip):
     """Clip an image to lie between minClip and maxclip (None to ignore)"""

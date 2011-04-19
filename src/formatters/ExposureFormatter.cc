@@ -67,6 +67,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.ExposureFormatter", level, s);
 }
 
+namespace afwGeom = lsst::afw::geom;
 namespace afwForm = lsst::afw::formatters;
 namespace afwImg = lsst::afw::image;
 namespace dafBase = lsst::daf::base;
@@ -308,17 +309,34 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         execTrace("ExposureFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", 0);
-        afwImg::BBox box;
+        afwGeom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
+            box = afwGeom::Box2I(afwGeom::Point2I(llcX, llcY), afwGeom::Extent2I(width, height));
+        }
+        afwImg::ImageOrigin origin = afwImg::LOCAL;
+        if(additionalData->exists("imageOrigin")){
+            std::string originStr = additionalData->get<std::string>("imageOrigin");
+            if(originStr == "LOCAL") {
+                origin = afwImg::LOCAL;
+            } else if (originStr == "PARENT") {
+                origin = afwImg::PARENT;
+            } else {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::RuntimeErrorException, 
+                    (boost::format("Unknown ImageOrigin type  %s specified in additional"
+                                   "data for retrieving Exposure from fits")%originStr
+                        
+                    ).str()
+                );
+            }
         }
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(
-                fits->getPath(), hdu, box);
+                fits->getPath(), hdu, box, origin);
         execTrace("ExposureFormatter read end");
         return ip;
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
@@ -444,6 +462,7 @@ lsst::daf::persistence::Formatter::Ptr afwForm::ExposureFormatter<ImagePixelT,
     return FormPtr(new afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
+/// \cond
 #define INSTANTIATE(I, M, V) \
     template class afwForm::ExposureFormatter<I, M, V>; \
     template void afwForm::ExposureFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
@@ -459,3 +478,4 @@ INSTANTIATE(uint16_t, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(int, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(float, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(double, afwImg::MaskPixel, afwImg::VariancePixel)
+/// \endcond

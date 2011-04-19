@@ -1,6 +1,7 @@
 setupRequired(daf_base >= 4.1.1.2)
-setupRequired(daf_persistence >= 4.1.0.0)
+setupRequired(daf_persistence >= 4.3.1.0)
 setupRequired(daf_data >= 4.1.0.0)
+setupRequired(ndarray)
 setupRequired(cfitsio >= 3006.2)
 setupRequired(wcslib >= 4.4.4)
 setupRequired(xpa >= 2.1.7b2)

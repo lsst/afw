@@ -53,7 +53,9 @@ typename ImageT::Ptr binImage(ImageT const& in,  ///< The %image to bin
     int const outWidth = in.getWidth()/binsize;
     int const outHeight = in.getHeight()/binsize;
 
-    typename ImageT::Ptr out = typename ImageT::Ptr(new ImageT(outWidth, outHeight));
+    typename ImageT::Ptr out = typename ImageT::Ptr(
+        new ImageT(geom::Extent2I(outWidth, outHeight))
+    );
     *out = typename ImageT::SinglePixel(0);
 
     for (int oy = 0, iy = 0; oy < out->getHeight(); ++oy) {
@@ -80,6 +82,7 @@ typename ImageT::Ptr binImage(ImageT const& in,  ///< The %image to bin
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr \
              binImage(afwImage::Image<TYPE> const&, int, lsst::afw::math::Property const); \
@@ -90,5 +93,6 @@ INSTANTIATE(boost::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
+/// \endcond
 
 }}}

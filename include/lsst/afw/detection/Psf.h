@@ -16,6 +16,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+class LocalPsf;
 class PsfFormatter;
 class PsfFactoryBase;
 /**
@@ -47,7 +48,7 @@ public:
     Psf() : lsst::daf::data::LsstBase(typeid(this)) {}
     virtual ~Psf() {}
 
-    virtual Ptr clone() const { return boost::make_shared<Psf>(*this); }
+    virtual Ptr clone() const = 0;
 
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }
@@ -56,15 +57,22 @@ public:
 
     Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
-                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0),
+    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
 
     Image::Ptr computeImage(lsst::afw::image::Color const& color,
-                            lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
-                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0),
+                            lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
-    
+   
+    PTR(LocalPsf) getLocalPsf(
+        lsst::afw::geom::Point2D const & ccdXY,
+        lsst::afw::image::Color const & color=lsst::afw::image::Color()
+    ) const {
+        return doGetLocalPsf(ccdXY, color);
+    }
+
     lsst::afw::math::Kernel::Ptr getKernel(lsst::afw::image::Color const&
                                            color=lsst::afw::image::Color()) {
         return doGetKernel(color);
@@ -74,12 +82,12 @@ public:
         return doGetKernel(color);
     }
     lsst::afw::math::Kernel::Ptr getLocalKernel(
-        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
         lsst::afw::image::Color const& color=lsst::afw::image::Color()) {
         return doGetLocalKernel(ccdXY, color);
     }
     lsst::afw::math::Kernel::ConstPtr getLocalKernel(
-        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
         lsst::afw::image::Color const& color=lsst::afw::image::Color()) const {
         return doGetLocalKernel(ccdXY, color);
     }
@@ -134,6 +142,17 @@ protected:
                                                                lsst::afw::image::Color const&) const {
         return lsst::afw::math::Kernel::Ptr();
     }
+
+    virtual PTR(LocalPsf) doGetLocalPsf(
+        lsst::afw::geom::Point2D const&, 
+        lsst::afw::image::Color const&
+    ) const {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Functionality not implemented"
+        );
+    };
+
         
 private:
     LSST_PERSIST_FORMATTER(PsfFormatter)

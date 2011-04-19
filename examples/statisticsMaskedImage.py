@@ -25,6 +25,7 @@
 #
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 
 # This example demonstrates how to compute statistics on a masked image
 
@@ -34,7 +35,7 @@ def main():
 def showSetAndMask():
 
     nX, nY        = 10, 10
-    mimg          = afwImage.MaskedImageF(nX, nY)
+    mimg          = afwImage.MaskedImageF(afwGeom.Extent2I(nX, nY))
 
     # decide what we believe to be 'bad' mask bits
     mask          = mimg.getMask()

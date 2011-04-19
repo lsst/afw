@@ -32,7 +32,7 @@ import math, os
 import unittest
 
 import eups
-import lsst.afw.image as afwImg
+import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions.exceptionsLib as exceptions
@@ -57,18 +57,18 @@ class SavingSubImagesTest(unittest.TestCase):
         path = eups.productDir("afw")
         self.parentFile = os.path.join(path, "tests", "data", "parent.fits")
         
-        self.parent = afwImg.ExposureF(self.parentFile)
+        self.parent = afwImage.ExposureF(self.parentFile)
         self.llcParent = self.parent.getMaskedImage().getXY0()
         self.oParent = self.parent.getWcs().getPixelOrigin()
         
         #A list of pixel positions to test
         self.testPositions = []
-        self.testPositions.append(afwGeom.makePointD(128, 128))
-        self.testPositions.append(afwGeom.makePointD(0,0))        
-        self.testPositions.append(afwGeom.makePointD(20,30))        
-        self.testPositions.append(afwGeom.makePointD(60,50))        
-        self.testPositions.append(afwGeom.makePointD(80, 80))        
-        self.testPositions.append(afwGeom.makePointD(255,255))
+        self.testPositions.append(afwGeom.Point2D(128, 128))
+        self.testPositions.append(afwGeom.Point2D(0,0))        
+        self.testPositions.append(afwGeom.Point2D(20,30))        
+        self.testPositions.append(afwGeom.Point2D(60,50))        
+        self.testPositions.append(afwGeom.Point2D(80, 80))        
+        self.testPositions.append(afwGeom.Point2D(255,255))
 
         self.parent.getMaskedImage().set(0)
         for p in self.testPositions:
@@ -83,9 +83,9 @@ class SavingSubImagesTest(unittest.TestCase):
         """Test that crpix is the same for parent and sub-image. Also tests that llc of sub-image
         saved correctly"""
         
-        llc = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc, 60, 50)
-        subImg = afwImg.ExposureF(self.parent, bbox)
+        llc = afwGeom.Point2I(20, 30)
+        bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
+        subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL)
 
         subImgLlc = subImg.getMaskedImage().getXY0()
         oSubImage = subImg.getWcs().getPixelOrigin()
@@ -108,10 +108,10 @@ class SavingSubImagesTest(unittest.TestCase):
         Also tests that llc of sub-image saved correctly"""
         
         #Load sub-image directly off of disk
-        llc = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc, 60, 50)
+        llc = afwGeom.Point2I(20, 30)
+        bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
         hdu=0
-        subImg = afwImg.ExposureF(self.parentFile, hdu, bbox)
+        subImg = afwImage.ExposureF(self.parentFile, hdu, bbox, afwImage.LOCAL)
         oSubImage = subImg.getWcs().getPixelOrigin()
         subImgLlc = subImg.getMaskedImage().getXY0()
        
@@ -131,9 +131,9 @@ class SavingSubImagesTest(unittest.TestCase):
     def testInvarianceOfPixelToSky(self):
 
         for deep in (True, False):
-            llc = afwImg.PointI(20, 30)
-            bbox = afwImg.BBox(llc, 60, 50)
-            subImg = afwImg.ExposureF(self.parent, bbox, deep)
+            llc = afwGeom.Point2I(20, 30)
+            bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
+            subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
             xy0 = subImg.getMaskedImage().getXY0()
 
@@ -142,7 +142,7 @@ class SavingSubImagesTest(unittest.TestCase):
                 ds9.mtv(subImg, frame=1)
 
             for p in self.testPositions:
-                subP = p - afwGeom.makeExtentD(llc[0], llc[1]) # pixel in subImg
+                subP = p - afwGeom.Extent2D(llc[0], llc[1]) # pixel in subImg
 
                 if \
                        subP[0] < 0 or subP[0] >= bbox.getWidth() or \
@@ -150,7 +150,7 @@ class SavingSubImagesTest(unittest.TestCase):
                     continue
 
                 adParent = self.parent.getWcs().pixelToSky(p)
-                adSub = subImg.getWcs().pixelToSky(subP + afwGeom.makeExtentD(xy0[0], xy0[1]))
+                adSub = subImg.getWcs().pixelToSky(subP + afwGeom.Extent2D(xy0[0], xy0[1]))
                 #
                 # Check that we're talking about the same pixel
                 #            
@@ -164,21 +164,21 @@ class SavingSubImagesTest(unittest.TestCase):
         """Check that a sub-image of a sub-image is equivalent to a sub image, i.e
         that the parent is an invarient"""                
         
-        llc1 = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc1, 60, 50)
+        llc1 = afwGeom.Point2I(20, 30)
+        bbox = afwGeom.Box2I(llc1, afwGeom.Extent2I(60, 50))
         hdu=0
-        subImg = afwImg.ExposureF(self.parentFile, hdu, bbox)
+        subImg = afwImage.ExposureF(self.parentFile, hdu, bbox, afwImage.LOCAL)
 
 
-        llc2 = afwImg.PointI(22, 23)
+        llc2 = afwGeom.Point2I(22, 23)
 
         #This subsub image should fail. Although it's big enough to fit in the parent image
         #it's too small for the sub-image
-        bbox = afwImg.BBox(llc2, 100, 110)
-        self.assertRaises(exceptions.LsstCppException, afwImg.ExposureF, subImg, bbox)
+        bbox = afwGeom.Box2I(llc2, afwGeom.Extent2I(100, 110))
+        self.assertRaises(exceptions.LsstCppException, afwImage.ExposureF, subImg, bbox, afwImage.LOCAL)
         
-        bbox = afwImg.BBox(llc2, 10, 11)
-        subSubImg = afwImg.ExposureF(subImg, bbox)
+        bbox = afwGeom.Box2I(llc2, afwGeom.Extent2I(10, 11))
+        subSubImg = afwImage.ExposureF(subImg, bbox, afwImage.LOCAL)
         
         sub0 = subImg.getMaskedImage().getXY0()
         subsub0= subSubImg.getMaskedImage().getXY0()
@@ -202,14 +202,14 @@ class SavingSubImagesTest(unittest.TestCase):
      
     def testRoundTrip(self):
         """Test that saving and retrieving an image doesn't alter the metadata"""
-        llc = afwImg.PointI(20, 30)
-        bbox = afwImg.BBox(llc, 60, 50)
+        llc = afwGeom.Point2I(20, 30)
+        bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
         for deep in (False, True):
-            subImg = afwImg.ExposureF(self.parent, bbox, deep)
+            subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
             outFile = "tmp2.fits"
             subImg.writeFits(outFile)
-            newImg = afwImg.ExposureF(outFile)
+            newImg = afwImage.ExposureF(outFile)
             os.system("cp %s tmp-%s.fits" % (outFile, deep))
             os.remove(outFile)
 
@@ -238,14 +238,14 @@ class SavingSubImagesTest(unittest.TestCase):
         
         #Make a sub-image
         x0, y0 = 20, 30
-        llc = afwImg.PointI(x0, y0)
-        bbox = afwImg.BBox(llc, 60, 50)
+        llc = afwGeom.Point2I(x0, y0)
+        bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
         deep = False
-        subImg = afwImg.ExposureF(self.parent, bbox, deep)
+        subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
         
         outFile = "tmp.fits"
         subImg.writeFits(outFile)
-        hdr = afwImg.readMetadata(outFile)
+        hdr = afwImage.readMetadata(outFile)
         os.remove(outFile)
         
         self.assertTrue( hdr.exists("LTV1"), "LTV1 not saved to fits header")

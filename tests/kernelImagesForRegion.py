@@ -52,10 +52,10 @@ NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.iteritems())
 
 class KernelImagesForRegion(unittest.TestCase):
     def setUp(self):
-        boxCorner = afwGeom.makePointI(11, 50)
-        boxExtent = afwGeom.makeExtentI(100, 99)
-        self.bbox = afwGeom.BoxI(boxCorner, boxExtent)
-        self.xy0 = afwGeom.makePointI(100, 251)
+        boxCorner = afwGeom.Point2I(11, 50)
+        boxExtent = afwGeom.Extent2I(100, 99)
+        self.bbox = afwGeom.Box2I(boxCorner, boxExtent)
+        self.xy0 = afwGeom.Point2I(100, 251)
         self.kernel = self.makeKernel()
 
     def tearDown(self):
@@ -76,9 +76,9 @@ class KernelImagesForRegion(unittest.TestCase):
             region.TOP_RIGHT,
         ):
             actImage = region.getImage(location)
-            actImArr = imTestUtils.arrayFromImage(actImage)
+            actImArr = actImage.getArray().transpose().copy()
             desImage = regionCopy.getImage(location)
-            desImArr = imTestUtils.arrayFromImage(desImage)
+            desImArr = desImage.getArray().transpose().copy()
             actImArr -= desImArr
             if not numpy.allclose(actImArr, 0):
                 actImage.writeFits("actImage%s.fits" % (location,))
@@ -137,7 +137,7 @@ class KernelImagesForRegion(unittest.TestCase):
             (region.TOP_LEFT,     (leftInd,  topInd)),
             (region.TOP_RIGHT,    (rightInd, topInd)),
         ):
-            desPixIndex = afwGeom.makePointI(desIndex[0], desIndex[1])
+            desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
             self.assert_(region.getPixelIndex(location) == desPixIndex,
                 "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
                     desPixIndex)
@@ -204,7 +204,7 @@ class KernelImagesForRegion(unittest.TestCase):
     def testExactImages(self):
         """Confirm that kernel image at each location is correct
         """
-        desImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
+        desImage = afwImage.ImageD(afwGeom.Extent2I(self.kernel.getWidth(), self.kernel.getHeight()))
         
         for doNormalize in (False, True):
             region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
@@ -218,10 +218,10 @@ class KernelImagesForRegion(unittest.TestCase):
                 xPos = afwImage.indexToPosition(pixelIndex[0] + self.xy0[0])
                 yPos = afwImage.indexToPosition(pixelIndex[1] + self.xy0[1])
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
-                desImArr = imTestUtils.arrayFromImage(desImage)
+                desImArr = desImage.getArray().transpose().copy()
                 
                 actImage = region.getImage(location)
-                actImArr = imTestUtils.arrayFromImage(actImage)
+                actImArr = actImage.getArray().transpose().copy()
                 errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
                 if errStr:
                     self.fail("exact image(%s) incorrect:\n%s" % (LocNameDict[location], errStr))

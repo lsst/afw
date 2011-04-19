@@ -32,6 +32,10 @@
 #include <boost/shared_ptr.hpp>
 #include "lsst/daf/data/LsstBase.h"
 
+namespace boost {
+namespace serialization {
+    class access;
+}}
 namespace lsst { namespace afw { namespace detection {
 /// A peak in an %image
 class Peak : public lsst::daf::base::Citizen {
@@ -64,6 +68,12 @@ public:
 
     std::string toString();    
 private:
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive & ar, unsigned int const version) {
+        ar & _ix & _iy;
+        ar & _fx & _fy;
+    }
     //Peak(const Peak &) {}             // XXX How do we manage Citizen's copy constructor?
     static int id;
     mutable int _id;                    //!< unique ID for this peak
@@ -74,4 +84,5 @@ private:
 };
 
 }}}
+
 #endif

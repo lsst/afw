@@ -87,7 +87,7 @@ void testSip(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd sip
             double distortX = calculateDistortion(sipA, u, v);
             double distortY = calculateDistortion(sipB, u, v);
 
-            afwGeom::PointD xy = sipWcs.getPixelOrigin();
+            afwGeom::Point2D xy = sipWcs.getPixelOrigin();
             double x0 = xy[0];
             double y0 = xy[1];
             
@@ -124,7 +124,7 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
     double range=.25;
     double step=.0625;
 
-    afwGeom::PointD xy0 = linWcs.getPixelOrigin();
+    afwGeom::Point2D xy0 = linWcs.getPixelOrigin();
     
     afwCoord::Fk5Coord raDec0 = linWcs.getSkyOrigin()->toFk5();
     double ra = raDec0.getRa(afwCoord::DEGREES) - range;
@@ -137,8 +137,8 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
         double decUpr = raDec0.getDec(afwCoord::DEGREES) + range;
         while(dec<= decUpr)
         {
-            afwGeom::PointD xy = linWcs.skyToPixel(ra, dec);
-            afwGeom::PointD xySip = sipWcs.skyToPixel(ra, dec);
+            afwGeom::Point2D xy = linWcs.skyToPixel(ra, dec);
+            afwGeom::Point2D xySip = sipWcs.skyToPixel(ra, dec);
             
             //Get pixel origin returns crpix in fits coords, so we convert to 
             //lsst coords before using (hence the -1)
@@ -171,8 +171,8 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
 
 BOOST_AUTO_TEST_CASE(basic)
 {
-    afwGeom::PointD crval = afwGeom::makePointD(45.,45.);
-    afwGeom::PointD crpix = afwGeom::makePointD(10,10);   
+    afwGeom::Point2D crval = afwGeom::Point2D(45.,45.);
+    afwGeom::Point2D crpix = afwGeom::Point2D(10,10);   
     Eigen::MatrixXd CD(2,2);
     
     double arcsecPerPixel = 0.000277777777777778;
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(basic)
 
 void createSipTests(afwImg::TanWcs &wcs1, afwImg::TanWcs &wcs2)
 {
-    afwGeom::PointD xy = wcs1.getPixelOrigin();
+    afwGeom::Point2D xy = wcs1.getPixelOrigin();
     double x0 = xy[0]-1;
     double y0 = xy[1]-1;
 

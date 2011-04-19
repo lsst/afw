@@ -38,8 +38,6 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
 /**
  * The electronic behaviour of an Amp
  */
@@ -53,8 +51,9 @@ public:
 #if 0
     /// Set the bad pixels in the provided Mask
     template<typename MaskPixelT>
-    lsst::afw::image::Mask::Ptr setBadPixelMask(typename lsst::afw::image::Mask<MaskPixelT>::Ptr mask ///< Mask to set
-                                       ) const;
+    lsst::afw::image::Mask::Ptr setBadPixelMask(
+        typename lsst::afw::image::Mask<MaskPixelT>::Ptr mask ///< Mask to set
+                                                ) const;
 #endif
 
     /// Set amplifier's gain
@@ -104,40 +103,40 @@ public:
     // N.b. must be in the order that a rotation by 90 shift right by one;  LLC -> ULC 
     enum ReadoutCorner { LLC, LRC, URC, ULC };
 
-    explicit Amp(Id id, lsst::afw::image::BBox const& allPixels,
-                 lsst::afw::image::BBox const& biasSec, lsst::afw::image::BBox const& dataSec,
+    explicit Amp(Id id, lsst::afw::geom::Box2I const& allPixels,
+                 lsst::afw::geom::Box2I const& biasSec, lsst::afw::geom::Box2I const& dataSec,
                  ReadoutCorner readoutCorner, ElectronicParams::Ptr eparams);
 
     ~Amp() {}
 
     void shift(int dx, int dy);
-    void rotateBy90(afwGeom::Extent2I const& dimensions, int n90);
+    void rotateBy90(lsst::afw::geom::Extent2I const& dimensions, int n90);
 
     /// Return Amp's electronic properties
     ElectronicParams::Ptr getElectronicParams() const { return _eParams; }
 
     /// Return amplifier's bias section
-    lsst::afw::image::BBox getBiasSec() const {
+    lsst::afw::geom::Box2I getBiasSec() const {
         return getBiasSec(isTrimmed());
     }
 
     /// Return amplifier's bias section
-    lsst::afw::image::BBox getBiasSec(bool isTrimmed // has the bias/overclock been removed?
+    lsst::afw::geom::Box2I getBiasSec(bool isTrimmed // has the bias/overclock been removed?
                                      ) const {
-        return isTrimmed ? lsst::afw::image::BBox() : _biasSec;
+        return isTrimmed ? lsst::afw::geom::Box2I() : _biasSec;
     }
 
     /// Return amplifier's data section
-    lsst::afw::image::BBox getDataSec() const {
+    lsst::afw::geom::Box2I getDataSec() const {
         return getDataSec(isTrimmed());
     }
 
-    lsst::afw::image::BBox getDataSec(bool getTrimmed) const {
+    lsst::afw::geom::Box2I getDataSec(bool getTrimmed) const {
         return getTrimmed ? _trimmedDataSec : _dataSec;
     }
 
     /// Return amplifier's data section
-    lsst::afw::image::BBox& getDataSec(bool getTrimmed=false) {
+    lsst::afw::geom::Box2I& getDataSec(bool getTrimmed=false) {
         return getTrimmed ? _trimmedDataSec : _dataSec;
     }
 
@@ -145,16 +144,16 @@ public:
     ReadoutCorner getReadoutCorner() const { return _readoutCorner; }
 
     /// Return the first pixel read
-    afwGeom::Point2I getFirstPixelRead() const {
+    lsst::afw::geom::Point2I getFirstPixelRead() const {
         switch (_readoutCorner) {
           case LLC:
-            return afwGeom::makePointI(0,                             0);
+            return lsst::afw::geom::Point2I(0,                             0);
           case LRC:
-            return afwGeom::makePointI(getAllPixels().getWidth() - 1, 0);
+            return lsst::afw::geom::Point2I(getAllPixels().getWidth() - 1, 0);
           case URC:
-            return afwGeom::makePointI(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
+            return lsst::afw::geom::Point2I(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
           case ULC:
-            return afwGeom::makePointI(0,                             getAllPixels().getHeight() - 1);
+            return lsst::afw::geom::Point2I(0,                             getAllPixels().getHeight() - 1);
         }
         abort();                        // NOTREACHED
     }
@@ -163,7 +162,7 @@ public:
 
     /// Set the origin of Amplifier data when on disk (in Detector coordinates)
     void setDiskLayout(
-            afwGeom::Point2I const& originOnDisk, // Origin of Amp data on disk (in Detector coordinates)
+            lsst::afw::geom::Point2I const& originOnDisk, // Origin of Amp data on disk (in Detector coords)
             int nQuarter,                         // number of quarter-turns in +ve direction
             bool flipLR,                          // Flip the Amp data left <--> right before rotation
             bool flipTB                           // Flip the Amp data top <--> bottom before rotation
@@ -175,17 +174,17 @@ public:
     }
 
     /// Return the biasSec as read from disk
-    lsst::afw::image::BBox getDiskBiasSec() const {
+    lsst::afw::geom::Box2I getDiskBiasSec() const {
         return _mapToDisk(getBiasSec(false));
     }
 
     /// Return the dataSec as read from disk
-    lsst::afw::image::BBox getDiskDataSec() const {
+    lsst::afw::geom::Box2I getDiskDataSec() const {
         return _mapToDisk(getDataSec(false));
     }
 
     /// Return the biasSec as read from disk
-    lsst::afw::image::BBox getDiskAllPixels() const {
+    lsst::afw::geom::Box2I getDiskAllPixels() const {
         return _mapToDisk(getAllPixels(false));
     }
 
@@ -193,21 +192,21 @@ public:
     typename ImageT::Ptr prepareAmpData(ImageT const& im);
     
 private:
-    lsst::afw::image::BBox _biasSec;    // Bounding box of amplifier's bias section
-    lsst::afw::image::BBox _dataSec;    // Bounding box of amplifier's data section
+    lsst::afw::geom::Box2I _biasSec;    // Bounding box of amplifier's bias section
+    lsst::afw::geom::Box2I _dataSec;    // Bounding box of amplifier's data section
     ReadoutCorner _readoutCorner;       // location of first pixel read
     ElectronicParams::Ptr _eParams;     // electronic properties of Amp
-    lsst::afw::image::BBox _trimmedDataSec; // Bounding box of all the Detector's pixels after bias trimming
+    lsst::afw::geom::Box2I _trimmedDataSec; // Bounding box of all the Detector's pixels after bias trimming
     //
     // These values refer to the way that the Amplifier data is laid out on disk.  If the Amps have
     // been assembled into a single Ccd image _originOnDisk == (0, 0) and _nQuarter == 0
     //
-    afwGeom::Point2I _originOnDisk;     // Origin of Amplifier data on disk (in Detector coordinates)
+    lsst::afw::geom::Point2I _originOnDisk;     // Origin of Amplifier data on disk (in Detector coordinates)
     int _nQuarter;                      // number of quarter-turns to apply in +ve direction
     bool _flipLR;                       // flip the data left <--> right before rotation
     bool _flipTB;                       // Flip the data top <--> bottom before rotation
 
-    lsst::afw::image::BBox _mapToDisk(lsst::afw::image::BBox bbox) const;
+    lsst::afw::geom::Box2I _mapToDisk(lsst::afw::geom::Box2I bbox) const;
 };
     
 }}}

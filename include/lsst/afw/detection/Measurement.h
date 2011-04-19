@@ -489,8 +489,9 @@ public:
         return value;
     }
 
-    static bool declare(std::string const& name, makeMeasureQuantityFunc makeFunc,
-                        configureMeasureQuantityFunc configFunc=_iefbr15);
+    static bool declare(std::string const& name,
+        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc makeFunc,
+        typename MeasureQuantity<T, ImageT, PeakT>::configureMeasureQuantityFunc configFunc=_iefbr15);
 private:
     //
     // The data that we wish to measure
@@ -508,8 +509,8 @@ private:
     typedef std::map<std::string, measureQuantityFuncs> AlgorithmRegistry;
 
     static inline measureQuantityFuncs _registryWorker(std::string const& name,
-                                                       makeMeasureQuantityFunc makeFunc,
-                                                       configureMeasureQuantityFunc configFunc
+        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc makeFunc,
+        typename MeasureQuantity<T, ImageT, PeakT>::configureMeasureQuantityFunc configFunc
                                                       );
     static measureQuantityFuncs _lookupAlgorithm(std::string const& name);
     /// The unknown algorithm; used to allow _lookupAlgorithm use _registryWorker

@@ -50,7 +50,7 @@ ImagePca<ImageT>::ImagePca(bool constantWeight ///< Should all stars be weighted
                           ) :
     _imageList(),
     _fluxList(),
-    _width(0), _height(0),
+    _dimensions(0,0),
     _constantWeight(constantWeight),
     _eigenValues(std::vector<double>()),
     _eigenImages(ImageList()) {
@@ -66,13 +66,16 @@ void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to s
                                 double flux               ///< Image's flux
                                ) {
     if (_imageList.empty()) {
-        _width = img->getWidth();
-        _height = img->getHeight();
+        _dimensions = img->getDimensions();
     } else {
         if (getDimensions() != img->getDimensions()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              (boost::format("Dimension mismatch: saw %dx%d; expected %dx%d") %
-                               img->getWidth() % img->getHeight() % _width % _height).str());
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                (boost::format("Dimension mismatch: saw %dx%d; expected %dx%d") %
+                    img->getWidth() % img->getHeight() %
+                    _dimensions.getX() % _dimensions.getY()
+                ).str()
+            );
         }
     }
 
@@ -245,7 +248,7 @@ void ImagePca<ImageT>::analyze()
 
         int const ii = lambdaAndIndex[i].second; // the index after sorting (backwards) by eigenvalue
 
-        typename ImageT::Ptr eImage(new ImageT(_width, _height));
+        typename ImageT::Ptr eImage(new ImageT(_dimensions));
         *eImage = static_cast<typename ImageT::Pixel>(0);
 
         for (int j = 0; j != nImage; ++j) {
@@ -422,12 +425,13 @@ double do_updateBadPixels(
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                           "Please provide at least one Image for me to update");
     }
-    int const height = imageList[0]->getHeight();
+    geom::Extent2I dimensions = imageList[0]->getDimensions();
+    int const height = dimensions.getY();
         
     double maxChange = 0.0;             // maximum change to the input images
 
     if (ncomp == 0) {                   // use mean of good pixels
-        typename ImageT::Image mean(imageList[0]->getDimensions()); // desired mean image
+        typename ImageT::Image mean(dimensions); // desired mean image
         image::Image<float> weight(mean.getDimensions()); // weight of each pixel
 
         for (int i = 0; i != nImage; ++i) {
@@ -604,6 +608,7 @@ double innerProduct(Image1T const& lhs, ///< first image
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(T) \
     template class ImagePca<Image<T> >; \
     template double innerProduct(Image<T> const&, Image<T> const&, int); \
@@ -619,5 +624,6 @@ INSTANTIATE(float)
 INSTANTIATE(double)
 
 INSTANTIATE2(float, double)             // the two types must be different
+/// \endcond
     
 }}}

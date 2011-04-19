@@ -207,7 +207,7 @@ namespace {
 #else
         double const x = destPosXY[0];
         double const y = destPosXY[1];
-        afwGeom::PointD sky = destWcs.pixelToSky(x, y, true);
+        afwGeom::Point2D sky = destWcs.pixelToSky(x, y, true);
         afwGeom::Point2D srcPosXY = srcWcs.skyToPixel(sky[0], sky[1]);
 #endif
         // Correct intensity due to relative pixel spatial scale and kernel sum.
@@ -321,7 +321,7 @@ int afwMath::warpImage(
     // compute source position X,Y corresponding to row -1 of the destination image;
     // this is used for computing relative pixel scale
     for (int x = -1; x != destWidth; ++x) {
-        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(x, afwImage::X),
+        afwGeom::Point2D destPosXY = afwGeom::Point2D(destImage.indexToPosition(x, afwImage::X),
                                                          destImage.indexToPosition(-1, afwImage::Y));
         srcPosXY[x] = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
     }
@@ -344,7 +344,7 @@ int afwMath::warpImage(
         //
         // Calculate the transformation for the pixel just to the left of this row
         //
-        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(-1, afwImage::X),
+        afwGeom::Point2D destPosXY = afwGeom::Point2D(destImage.indexToPosition(-1, afwImage::X),
                                                          destImage.indexToPosition(y, afwImage::Y));
         {
             std::pair<afwGeom::Point2D, float> res = getSrcPos(destPosXY, destWcs, srcWcs,
@@ -464,6 +464,7 @@ int afwMath::warpImage(
 //
 // Explicit instantiations
 //
+/// \cond
 // may need to omit default params for EXPOSURE -- original code did that and it worked
 #define EXPOSURE(PIXTYPE) afwImage::Exposure<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
@@ -497,3 +498,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+/// \endcond

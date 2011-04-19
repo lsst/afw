@@ -34,7 +34,7 @@ namespace geom = lsst::afw::geom;
  *
  * The elements will be ordered XX, YX, XY, YY, X, Y
  */
-geom::AffineTransform::ParameterVector const geom::AffineTransform::getVector() const {
+geom::AffineTransform::ParameterVector const geom::AffineTransform::getParameterVector() const {
     ParameterVector r;
     r << (*this)[XX], (*this)[YX], (*this)[XY], (*this)[YY], (*this)[X], (*this)[Y];
     return r;
@@ -45,7 +45,7 @@ geom::AffineTransform::ParameterVector const geom::AffineTransform::getVector() 
  *
  * The parameter vector is ordered XX, YX, XY, YY, X, Y
  */
-void geom::AffineTransform::setVector(
+void geom::AffineTransform::setParameterVector(
     AffineTransform::ParameterVector const & vector
 ) {
     (*this)[XX] = vector[XX];  (*this)[XY] = vector[XY];  (*this)[X] = vector[X];
@@ -67,7 +67,7 @@ geom::AffineTransform::Matrix const geom::AffineTransform::getMatrix() const {
 /**
  * @brief Return the inverse transform
  *
- * @throw lsst::pex::exceptions::SingularTransformException is not invertible
+ * @throw lsst::afw::geom::SingularTransformException is not invertible
  */
 geom::AffineTransform const geom::AffineTransform::invert() const {
     LinearTransform inv(getLinear().invert());
@@ -78,7 +78,7 @@ geom::AffineTransform const geom::AffineTransform::invert() const {
  * @brief Take the derivative of (*this)(input) w.r.t the transform elements
  */
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
-    PointD const & input
+    Point2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r.block<2,4>(0,0) = getLinear().dTransform(input);
@@ -91,14 +91,14 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
  * @brief Take the derivative of (*this)(input) w.r.t the transform elements
  */
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
-    ExtentD const & input
+    Extent2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r.block<2,4>(0,0) = getLinear().dTransform(input);
     return r;
 }
 
-std::ostream& geom::operator<<(std::ostream& os, geom::AffineTransform const & transform) {
+std::ostream& geom::operator<<(std::ostream& os, lsst::afw::geom::AffineTransform const & transform) {
     std::ios::fmtflags flags = os.flags();
     geom::AffineTransform::Matrix const & matrix = transform.getMatrix();
     int prec = os.precision(7);

@@ -119,8 +119,8 @@ class MakeWcsTestCase(unittest.TestCase):
         """Verify that we can make a Wcs by providing the CD matrix elements in python."""
         
         m = self.metadata
-        crval = afwGeom.makePointD(m.getDouble("CRVAL1"), m.getDouble("CRVAL2"))
-        crpix = afwGeom.makePointD(m.getDouble("CRPIX1"), m.getDouble("CRPIX2"))
+        crval = afwGeom.Point2D(m.getDouble("CRVAL1"), m.getDouble("CRVAL2"))
+        crpix = afwGeom.Point2D(m.getDouble("CRPIX1"), m.getDouble("CRPIX2"))
         cd11, cd12 = m.getDouble("CD1_1"), m.getDouble("CD1_2")
         cd21, cd22 = m.getDouble("CD2_1"), m.getDouble("CD2_2")
         

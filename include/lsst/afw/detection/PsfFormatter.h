@@ -27,40 +27,36 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-namespace dafBase = lsst::daf::base;
-namespace pexPolicy = lsst::pex::policy;
-namespace dafPersist = lsst::daf::persistence;
-
-class PsfFormatter : public dafPersist::Formatter {
+class PsfFormatter : public lsst::daf::persistence::Formatter {
 public:
     virtual ~PsfFormatter(void);
 
-    virtual void write(dafBase::Persistable const* persistable,
-        dafPersist::Storage::Ptr storage,
-        dafBase::PropertySet::Ptr additionalData);
+    virtual void write(lsst::daf::base::Persistable const* persistable,
+        lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr additionalData);
 
-    virtual dafBase::Persistable* read(dafPersist::Storage::Ptr storage,
-        dafBase::PropertySet::Ptr additionalData);
+    virtual lsst::daf::base::Persistable* read(lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr additionalData);
 
-    virtual void update(dafBase::Persistable* persistable,
-        dafPersist::Storage::Ptr storage,
-        dafBase::PropertySet::Ptr additionalData);
+    virtual void update(lsst::daf::base::Persistable* persistable,
+        lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr additionalData);
 
     template <class Archive>
     static void delegateSerialize(Archive& ar, unsigned int const version,
-        dafBase::Persistable* persistable);
+        lsst::daf::base::Persistable* persistable);
 
 private:
-    explicit PsfFormatter(pexPolicy::Policy::Ptr policy);
+    explicit PsfFormatter(lsst::pex::policy::Policy::Ptr policy);
 
-    pexPolicy::Policy::Ptr _policy;
+    lsst::pex::policy::Policy::Ptr _policy;
 
-    static dafPersist::Formatter::Ptr
-        createInstance(pexPolicy::Policy::Ptr policy);
+    static lsst::daf::persistence::Formatter::Ptr
+        createInstance(lsst::pex::policy::Policy::Ptr policy);
 
-    static dafPersist::FormatterRegistration registration;
-    static dafPersist::FormatterRegistration dgPsfRegistration;
-    static dafPersist::FormatterRegistration pcaPsfRegistration;
+    static lsst::daf::persistence::FormatterRegistration registration;
+    static lsst::daf::persistence::FormatterRegistration dgPsfRegistration;
+    static lsst::daf::persistence::FormatterRegistration pcaPsfRegistration;
 };
 
 }}}

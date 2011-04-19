@@ -5,7 +5,7 @@ Import('env')
 #
 # Here's a way to to build the files in the list noOptFiles without optimisation
 #
-ccFiles = glob.glob("../src/*/*.cc") + glob.glob("../src/*/*/*.cc")
+ccFiles = glob.glob("../src/*/*.cc") + glob.glob("../src/*/*/*.cc") + glob.glob("../src/*/*/*/*.cc")
 try:
     ccFiles = env.SourcesForSharedLibrary(ccFiles)
 except AttributeError:                  # requires sconsUtils > 3.3

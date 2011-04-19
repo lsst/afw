@@ -25,33 +25,37 @@
 #include "lsst/afw/geom/Box.h"
 %}
 
-%rename(set) lsst::afw::geom::BoxI::operator=;
-%rename(__eq__) lsst::afw::geom::BoxI::operator==;
-%rename(__ne__) lsst::afw::geom::BoxI::operator!=;
-%copyctor lsst::afw::geom::BoxI;
-%rename(set) lsst::afw::geom::BoxD::operator=;
-%rename(__eq__) lsst::afw::geom::BoxD::operator==;
-%rename(__ne__) lsst::afw::geom::BoxD::operator!=;
-%copyctor lsst::afw::geom::BoxD;
+%ignore lsst::afw::geom::Box2I::getSlices;
+%rename(set) lsst::afw::geom::Box2I::operator=;
+%rename(__eq__) lsst::afw::geom::Box2I::operator==;
+%rename(__ne__) lsst::afw::geom::Box2I::operator!=;
+%copyctor lsst::afw::geom::Box2I;
+%rename(set) lsst::afw::geom::Box2D::operator=;
+%rename(__eq__) lsst::afw::geom::Box2D::operator==;
+%rename(__ne__) lsst::afw::geom::Box2D::operator!=;
+%copyctor lsst::afw::geom::Box2D;
 
 %include "lsst/afw/geom/Box.h"
 
-%extend lsst::afw::geom::BoxI {             
+%extend lsst::afw::geom::Box2I {             
     %pythoncode {
     def __repr__(self):
-        return "BoxI(%r, %r)" % (self.getMin(), self.getDimensions())
+        return "Box2I(%r, %r)" % (self.getMin(), self.getDimensions())
              
     def __str__(self):
-        return "BoxI(%s, %s)" % (self.getMin(), self.getMax())
+        return "Box2I(%s, %s)" % (self.getMin(), self.getMax())
+
+    def getSlices(self):
+         return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
     }
 }
 
-%extend lsst::afw::geom::BoxD {             
+%extend lsst::afw::geom::Box2D {             
     %pythoncode {
     def __repr__(self):
-        return "BoxD(%r, %r)" % (self.getMin(), self.getDimensions())
+        return "Box2D(%r, %r)" % (self.getMin(), self.getDimensions())
              
     def __str__(self):
-        return "BoxD(%s, %s)" % (self.getMin(), self.getMax())
+        return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
     }
 }

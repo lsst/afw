@@ -57,7 +57,7 @@ namespace image {
         ImageList getImageList() const;
 
         /// Return the dimension of the images being analyzed
-        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(_width, _height); }
+        geom::Extent2I const getDimensions() const { return _dimensions; }
 
         typename ImageT::Ptr getMean() const;
         void analyze();
@@ -73,8 +73,7 @@ namespace image {
 
         ImageList _imageList;           // image to analyze
         std::vector<double> _fluxList;  // fluxes of images
-        int _width;                     // width of images on _imageList
-        int _height;                    // height of images on _imageList
+        geom::Extent2I _dimensions;      // width/height of images on _imageList
 
         //int _border;                  // how many pixels to ignore around regions
         bool _constantWeight;           // should all stars have the same weight?

@@ -55,7 +55,8 @@ Basic routines to talk to lsst::afw::image classes
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/afw/numpyTypemaps.h"
+#include "lsst/ndarray/python.h"
+#include "lsst/ndarray/python/eigen.h"
 
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
@@ -69,7 +70,6 @@ Basic routines to talk to lsst::afw::image classes
     import_array();
 %}
 
-
 namespace boost {
     namespace mpl { }
     typedef signed char  int8_t;
@@ -78,6 +78,10 @@ namespace boost {
 }
 
 /************************************************************************************************************/
+
+%typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
+    $1 = PyBool_Check($input) ? 1 : 0;
+}
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
@@ -118,14 +122,26 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
-%include "lsst/afw/eigen.i"
+%include "lsst/ndarray/ndarray.i"
 
-%declareEigenMatrix(Eigen::MatrixXd);
-%declareEigenMatrix(Eigen::VectorXd);
-%declareEigenMatrix(Eigen::Matrix2d);
-%declareEigenMatrix(Eigen::Vector2d);
-%declareEigenMatrix(Eigen::Matrix3d);
-%declareEigenMatrix(Eigen::Vector3d);
+%declareNumPyConverters(Eigen::MatrixXd);
+%declareNumPyConverters(Eigen::VectorXd);
+%declareNumPyConverters(Eigen::Matrix2d);
+%declareNumPyConverters(Eigen::Vector2d);
+%declareNumPyConverters(Eigen::Matrix3d);
+%declareNumPyConverters(Eigen::Vector3d);
+
+%declareNumPyConverters(lsst::ndarray::Array<unsigned short,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<unsigned short const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<int,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<int const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<float,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<float const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<double,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<double const,2,1>);
 
 %lsst_exceptions();
 
@@ -160,71 +176,6 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 %include "maskedImage.i"
 %include "imageSlice.i"
 
-%define %POINT(NAME, TYPE)
-%template(Point##NAME) lsst::afw::image::Point<TYPE>;
-
-%extend lsst::afw::image::Point<TYPE> {
-    %pythoncode {
-    def __repr__(self):
-        return "Point" + "NAME(%.10g, %.10g)" % (self.getX(), self.getY())
-
-    def __str__(self):
-        return "(%g, %g)" % (self.getX(), self.getY())
-
-    def __getitem__(self, i):
-        """Treat as an array of length 2: [x, y]"""
-        if i == 0:
-            return self.getX()
-        elif i == 1:
-            return self.getY()
-        elif hasattr(i, "indices"):
-            return [self[ind] for ind in range(*i.indices(2))]
-        else:
-            raise IndexError(i)
-
-    def __setitem__(self, i, val):
-        """Treat as an array of length 2: [x, y]"""
-        if i == 0:
-            self.setX(val)
-        elif i == 1:
-            self.setY(val)
-        elif hasattr(i, "indices"):
-            indexList = range(*i.indices(2))
-            if len(val) != len(indexList):
-                raise IndexError("Need %s values but got %s" % (len(indexList), len(val)))
-            for ind in indexList:
-                self[ind] = val[ind]
-        else:
-            raise IndexError(i)
-    
-    def __iter__(self):
-        return iter(self[:])
-
-    def __len__(self):
-        return 2
-                
-    def clone(self):
-        return self.__class__(self.getX(), self.getY())
-    }
-}
-%enddef
-
-%POINT(D, double);
-%POINT(I, int);
-
-%extend lsst::afw::image::BBox {
-    lsst::afw::image::BBox clone() {
-        return lsst::afw::image::BBox(*self);
-    }
-
-    %pythoncode {
-    def __repr__(self):
-        return "BBox(PointI(%d, %d), %d, %d)" % (self.getX0(), self.getY0(), self.getWidth(), self.getHeight())
-
-    def __str__(self):
-        return "(%d, %d) -- (%d, %d)" % (self.getX0(), self.getY0(), self.getX1(), self.getY1())
-    }
-}
 
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);

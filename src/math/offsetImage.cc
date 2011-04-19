@@ -105,7 +105,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
     offsetKernel->setKernelParameters(std::make_pair(dx, dy));
 
     convolve(*outImage, inImage, *offsetKernel, true, true);
-    outImage->setXY0(afwImage::PointI(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
+    outImage->setXY0(geom::Point2I(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
 
     return outImage;
 }
@@ -114,6 +114,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
                                                     std::string const&); \
@@ -122,5 +123,6 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 
 INSTANTIATE(double)
 INSTANTIATE(float)
+/// \endcond
 
 }}}

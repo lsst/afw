@@ -46,25 +46,25 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
     // Correct Amp's coordinate system to be absolute within CCD
     //
     {
-        afwImage::BBox ampPixels = amp->getAllPixels();
-        amp->shift(pos[0]*ampPixels.getWidth(), pos[1]*ampPixels.getHeight());
+        afwGeom::Box2I ampPixels = amp->getAllPixels();
+        amp->shift(
+            pos.getX()*ampPixels.getWidth(), 
+            pos.getY()*ampPixels.getHeight()
+        );
     }
+    getAllPixels().include(amp->getAllPixels());
 
-    getAllPixels().grow(amp->getAllPixels().getLLC());
-    getAllPixels().grow(amp->getAllPixels().getURC());
     //
     // Now deal with the geometry after we trim everything except the dataSec
     //
     amp->setTrimmedGeom();
-
-    getAllTrimmedPixels().grow(amp->getDataSec(true).getLLC());
-    getAllTrimmedPixels().grow(amp->getDataSec(true).getURC());
+    getAllTrimmedPixels().include(amp->getDataSec(true));
     // insert new Amp, keeping the Amps sorted
     _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
     amp->setParent(getThisPtr());
 
-    setCenterPixel(afwGeom::makePointD(0.5*(getAllPixels(true).getWidth() - 1),
-                                       0.5*(getAllPixels(true).getHeight() - 1)));
+    afwGeom::Extent2I dim = getAllPixels(true).getDimensions() - afwGeom::Extent2I(1);
+    setCenterPixel(afwGeom::Point2D(dim[0]*0.5, dim[1]*0.5));
 }
 
 /**
@@ -93,13 +93,11 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
 
     double pixelSize = getPixelSize();
 
-    afwGeom::Point2D const& centerPixel = getCenterPixel();
-    cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::makePointI(pix[0] + centerPixel[0],
-                                                                pix[1] + centerPixel[1]));
-    afwImage::PointI const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
-    afwGeom::Point2D const offsetPix = pix - afwGeom::Extent2D(afwGeom::makePointD(off[0], off[1]));
-
-    return afwGeom::makePointD(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
+    afwGeom::Point2D const & centerPixel= getCenterPixel();
+    afwGeom::PointI pos(pix[0] + centerPixel[0], pix[1] + centerPixel[1]);
+    cameraGeom::Amp::ConstPtr amp = findAmp(pos);
+    afwGeom::Extent2I off(amp->getDataSec(false).getMin() - amp->getDataSec(true).getMin());
+    return afwGeom::Point2D((pix[0]-off[0])*pixelSize, (pix[1]-off[1])*pixelSize);
 }    
 
 namespace {
@@ -114,10 +112,9 @@ namespace {
 
     struct findByPixel {
         findByPixel(
-                  afwGeom::Point2I point,
-                  bool isTrimmed
-                 ) :
-            _point(afwImage::PointI(point[0], point[1])),
+            afwGeom::Point2I point, 
+            bool isTrimmed
+        ) :  _point(point),
             _isTrimmed(isTrimmed)
         { }
 
@@ -125,7 +122,7 @@ namespace {
             return amp->getAllPixels(_isTrimmed).contains(_point);
         }
     private:
-        afwImage::PointI _point;
+        afwGeom::Point2I _point;
         bool _isTrimmed;
     };
 }
@@ -199,13 +196,9 @@ void cameraGeom::Ccd::setOrientation(
 {
 #if 0    
     int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
+    afwGeom::Extent2I const dimensions = getAllPixels(false).getDimensions();
 #endif
-    afwGeom::Extent2I const dimensions =
-        afwGeom::makeExtentI(getAllPixels(false).getWidth(), getAllPixels(false).getHeight());
-
-
     cameraGeom::Detector::setOrientation(orientation);
-
 #if 0    
     std::for_each(_amps.begin(), _amps.end(),
                   boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
@@ -225,10 +218,10 @@ static void clipDefectsToAmplifier(
          ptr != end; ++ptr) {
         afwImage::DefectBase::Ptr defect = *ptr;
 
-        afwImage::BBox bbox = defect->getBBox();
+        afwGeom::Box2I bbox = defect->getBBox();
         bbox.clip(amp->getAllPixels(false));
 
-        if (bbox) {
+        if (!bbox.isEmpty()) {
             afwImage::DefectBase::Ptr ndet(new afwImage::DefectBase(bbox));
             amp->getDefects().push_back(ndet);
         }
@@ -237,7 +230,7 @@ static void clipDefectsToAmplifier(
 
 /// Set the Detector's Defect list
 void cameraGeom::Ccd::setDefects(
-        std::vector<afwImage::DefectBase::Ptr> const& defects ///< Defects in this detector
+        std::vector<lsst::afw::image::DefectBase::Ptr> const& defects ///< Defects in this detector
                                 ) {
     cameraGeom::Detector::setDefects(defects);
     // And the Amps too

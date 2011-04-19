@@ -38,6 +38,8 @@
 
 #include "boost/gil/gil_all.hpp"
 
+#include "lsst/afw/geom.h"
+
 #include "lsst/afw/image/lsstGil.h"
 #include "fits_io.h"
 
@@ -47,29 +49,34 @@ struct found_type : public std::exception { }; // type to throw when we've read 
 template<typename ImageT, typename ExceptionT>
 class try_fits_read_image {
 public:
-    try_fits_read_image(const std::string& file, ImageT& img,
+    try_fits_read_image(const std::string& file,
+                        lsst::ndarray::Array<typename ImageT::Pixel,2,2> & array,
+                        lsst::afw::geom::Point2I & xy0,
                         lsst::daf::base::PropertySet::Ptr metadata,
                         int hdu,
-                        lsst::afw::image::BBox const& bbox
-                       ) : _file(file), _img(img), _metadata(metadata), _hdu(hdu), _bbox(bbox) { }
-
-    void operator()(ImageT) {           // read directly into the desired type if the file's the same type
+                        lsst::afw::geom::Box2I const& bbox,
+                        lsst::afw::image::ImageOrigin const origin
+    ) : _file(file), _array(array), _xy0(xy0), 
+        _metadata(metadata), _hdu(hdu), _bbox(bbox), _origin(origin) { }
+    
+    // read directly into the desired type if the file's the same type
+    void operator()(typename ImageT::Pixel) {
         try {
-            lsst::afw::image::fits_read_image(_file, _img, _metadata, _hdu, _bbox);
+            lsst::afw::image::fits_read_image(_file, _array, _xy0, _metadata, _hdu, _bbox, _origin);
             throw ExceptionT();         // signal that we've succeeded
         } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // ah well.  We'll try another image type
         }
     }
 
-    template<typename U> void operator()(U) { // read and convert into the desired type
+    template <typename OtherPixel> 
+        void operator()(OtherPixel) { // read and convert into the desired type
         try {
-            U img;
-            lsst::afw::image::fits_read_image(_file, img, _metadata, _hdu, _bbox);
-
-            _img.recreate(img.dimensions());
-            boost::gil::copy_and_convert_pixels(const_view(img), view(_img));
-
+            lsst::ndarray::Array<OtherPixel,2,2> array;
+            lsst::afw::image::fits_read_image(_file, array, _xy0, _metadata, _hdu, _bbox, _origin);
+            //copy and convert
+            _array = lsst::ndarray::allocate(array.getShape());
+            _array.deep() = array;
             throw ExceptionT();         // signal that we've succeeded
         } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // pass
@@ -77,24 +84,35 @@ public:
     }
 private:
     std::string _file;
-    ImageT& _img;
+    lsst::ndarray::Array<typename ImageT::Pixel,2,2> & _array;
+    lsst::afw::geom::Point2I & _xy0;
     lsst::daf::base::PropertySet::Ptr _metadata;
     int _hdu;
-    lsst::afw::image::BBox const& _bbox;
+    lsst::afw::geom::Box2I const& _bbox;
+    lsst::afw::image::ImageOrigin _origin;
 };
 
 }
 
 namespace lsst { namespace afw { namespace image {
-template<typename fits_img_types, typename ImageT>
-bool fits_read_image(std::string const& file, ImageT& img,
-                     lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-                     int hdu=0,
-                     BBox const& bbox=BBox()
-                    ) {
+template<typename supported_fits_types, typename ImageT>
+bool fits_read_image(
+    std::string const& file, ImageT& img,
+    lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+    int hdu=0,
+    geom::Box2I const& bbox = geom::Box2I(),
+    ImageOrigin const origin = LOCAL
+) {
+    lsst::ndarray::Array<typename ImageT::Pixel,2,2> array;
+    geom::Point2I xy0;
     try {
-        boost::mpl::for_each<fits_img_types>(try_fits_read_image<ImageT, found_type>(file, img, metadata, hdu, bbox));
+        boost::mpl::for_each<supported_fits_types>(
+            try_fits_read_image<ImageT, found_type>(
+                file, array, xy0, metadata, hdu, bbox, origin
+            )
+        );
     } catch (found_type &) {
+        img = ImageT(array, false, xy0);
         return true;                    // success
     }
 

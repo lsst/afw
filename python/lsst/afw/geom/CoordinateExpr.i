@@ -25,5 +25,8 @@
 #include "lsst/afw/geom/CoordinateExpr.h"
 %}
 
-%CoordinateBase_PREINCLUDE_2(bool, lsst::afw::geom::CoordinateExpr<2>);
-%CoordinateBase_PREINCLUDE_3(bool, lsst::afw::geom::CoordinateExpr<3>);
+%define %CoordinateExpr_POSTINCLUDE(N)
+%template(CoordinateExprBase ## N) lsst::afw::geom::CoordinateBase<lsst::afw::geom::CoordinateExpr<N>,bool,N>;
+%template(CoordinateExpr ## N) lsst::afw::geom::CoordinateExpr<N>;
+%CoordinateBase_POSTINCLUDE(bool, N, lsst::afw::geom::CoordinateExpr<N>);
+%enddef
