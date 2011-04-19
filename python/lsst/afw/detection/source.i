@@ -130,7 +130,7 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
         std::ostringstream os;
         os << "Source " << $self->getId();
         os.precision(9);
-        os << " (" << $self->getRa() << ", " << $self->getDec() << ")";
+        os << " (" << (180./M_PI * $self->getRa()) << ", " << (180./M_PI * $self->getDec()) << " deg)";
         return os.str();
     }
 };
@@ -140,7 +140,7 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
         std::ostringstream os;
         os << "DiaSource " << $self->getId();
         os.precision(9);
-        os << " (" << $self->getRa() << ", " << $self->getDec() << ")";
+        os << " (" << (180./M_PI * $self->getRa()) << ", " << (180./M_PI * $self->getDec()) << " deg)";
         return os.str();
     }
 };

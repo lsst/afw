@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     int id1 = 0;
     int id2 = 1000000;
     for (double  j=0.1; j<1; j+=0.1) {
-        for (int i=0; i<360; i++) {
+        for (int i=0; i<360; i+=45) {
             double ra = i * coord::degToRad;
             double dec = (90 - j) * coord::degToRad;
             double ddec1 = rad;
