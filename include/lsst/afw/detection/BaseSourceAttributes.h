@@ -185,7 +185,7 @@ public:
     double getModelFlux() const { return _modelFlux; }
     float  getModelFluxErr() const { return _modelFluxErr; }
     double getInstFlux() const { return _instFlux; }
-    float  getInstFluxErr() const { return _instFluxErr; }      
+    float  getInstFluxErr() const { return _instFluxErr; }
     double getNonGrayCorrFlux() const { return _nonGrayCorrFlux; }
     float  getNonGrayCorrFluxErr() const { return _nonGrayCorrFluxErr;}
     double getAtmCorrFlux() const { return _atmCorrFlux; }
@@ -244,7 +244,7 @@ public:
     }
     void setProcHistoryId(boost::int32_t const procHistoryId) {
         set(_procHistoryId, procHistoryId);   
-    }   
+    }
 	// "ra" in radians
     void setRa(double const ra) {
         set(_ra, ra);
@@ -256,8 +256,8 @@ public:
 	void setRaDec(lsst::afw::coord::Coord::ConstPtr radec) {
 		// Convert to LSST-decreed ICRS and radians.
 		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
-		_ra  = icrs.getRa(lsst::afw::coord::RADIANS);
-		_dec = icrs.getDec(lsst::afw::coord::RADIANS);
+		setRa(icrs.getRa(lsst::afw::coord::RADIANS));
+		setDec(icrs.getDec(lsst::afw::coord::RADIANS));
 	}
 	// in radians
     void setRaErrForWcs(float const raErrForWcs) {
@@ -280,13 +280,13 @@ public:
     }
     void setXFluxErr(float const xFluxErr) { 
         set(_xFluxErr, xFluxErr, X_FLUX_ERR);            
-    }    
+    }
     void setYFlux(double const yFlux) { 
         set(_yFlux, yFlux, Y_FLUX);            
-    }    
+    }
     void setYFluxErr(float const yFluxErr) { 
         set(_yFluxErr, yFluxErr, Y_FLUX_ERR);            
-    }    
+    }
 	// in radians
     void setRaFlux(double const raFlux) { 
         set(_raFlux, raFlux, RA_FLUX);            
@@ -294,41 +294,53 @@ public:
 	// in radians
     void setRaFluxErr(float const raFluxErr) { 
         set(_raFluxErr, raFluxErr, RA_FLUX_ERR);            
-    }    
+    }
 	// in radians
     void setDecFlux(double const decFlux) { 
         set(_decFlux, decFlux, DEC_FLUX);
-    }    
+    }
 	// in radians
     void setDecFluxErr(float const decFluxErr) { 
         set(_decFluxErr, decFluxErr, DEC_FLUX_ERR);            
-    }    
+    }
+	void setRaDecFlux(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS and radians.
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		setRaFlux(icrs.getRa(lsst::afw::coord::RADIANS));
+		setDecFlux(icrs.getDec(lsst::afw::coord::RADIANS));
+	}
     void setXPeak(double const xPeak) { 
         set(_xPeak, xPeak, X_PEAK);            
     }
     void setYPeak(double const yPeak) { 
         set(_yPeak, yPeak, Y_PEAK);            
-    }    
+    }
 	// in radians
     void setRaPeak(double const raPeak) { 
         set(_raPeak, raPeak, RA_PEAK);            
-    }    
+    }
 	// in radians
     void setDecPeak(double const decPeak) { 
         set(_decPeak, decPeak, DEC_PEAK);            
-    }    
+    }
+	void setRaDecPeak(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS and radians.
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		setRaPeak(icrs.getRa(lsst::afw::coord::RADIANS));
+		setDecPeak(icrs.getDec(lsst::afw::coord::RADIANS));
+	}
     void setXAstrom(double const xAstrom) { 
         set(_xAstrom, xAstrom);            
     }
     void setXAstromErr(float const xAstromErr) { 
         set(_xAstromErr, xAstromErr, X_ASTROM_ERR);            
-    }    
+    }
     void setYAstrom(double const yAstrom) { 
         set(_yAstrom, yAstrom);            
-    }    
+    }
     void setYAstromErr(float const yAstromErr) {     
         set(_yAstromErr, yAstromErr, Y_ASTROM_ERR);            
-    }    
+    }
 	// in radians
     void setRaAstrom(double const raAstrom) { 
         set(_raAstrom, raAstrom, RA_ASTROM);            
@@ -336,15 +348,21 @@ public:
 	// in radians
     void setRaAstromErr(float const raAstromErr) { 
         set(_raAstromErr, raAstromErr, RA_ASTROM_ERR);            
-    }    
+    }
 	// in radians
     void setDecAstrom(double const decAstrom) { 
         set(_decAstrom, decAstrom, DEC_ASTROM);            
-    }    
+    }
 	// in radians
     void setDecAstromErr(float const decAstromErr) { 
         set(_decAstromErr, decAstromErr, DEC_ASTROM_ERR);            
-    }         
+    }
+	void setRaDecAstrom(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS and radians.
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		setRaAstrom(icrs.getRa(lsst::afw::coord::RADIANS));
+		setDecAstrom(icrs.getDec(lsst::afw::coord::RADIANS));
+	}
     void setTaiMidPoint(double const taiMidPoint) {
         set(_taiMidPoint, taiMidPoint);     
     }
@@ -387,22 +405,22 @@ public:
     }
     void setAtmCorrFluxErr(float const atmCorrFluxErr) { 
         set(_atmCorrFluxErr, atmCorrFluxErr, ATM_CORR_FLUX_ERR);      
-    }     
+    }
     void setIxx(float const ixx) { 
         set(_ixx, ixx, IXX);    
     }
     void setIxxErr(float const ixxErr) {
         set(_ixxErr, ixxErr, IXX_ERR); 
-    }         
+    }
     void setIyy(float const iyy) { 
         set(_iyy, iyy, IYY);    
-    }     
+    }
     void setIyyErr(float const iyyErr) { 
         set(_iyyErr, iyyErr, IYY_ERR); 
-    }         
+    }
     void setIxy(float const ixy) { 
         set(_ixy, ixy, IXY);    
-    }      
+    }
     void setIxyErr(float const ixyErr) { 
         set(_ixyErr, ixyErr, IXY_ERR); 
     }
@@ -412,44 +430,44 @@ public:
     }
     void setPsfIxxErr(float const psfIxxErr) {
         set(_psfIxxErr, psfIxxErr, PSF_IXX_ERR); 
-    }         
+    }
     void setPsfIyy(float const psfIyy) { 
         set(_psfIyy, psfIyy, PSF_IYY);    
-    }     
+    }
     void setPsfIyyErr(float const psfIyyErr) { 
         set(_psfIyyErr, psfIyyErr, PSF_IYY_ERR); 
-    }         
+    }
     void setPsfIxy(float const psfIxy) { 
         set(_psfIxy, psfIxy, PSF_IXY);    
-    }      
+    }
     void setPsfIxyErr(float const psfIxyErr) { 
         set(_psfIxyErr, psfIxyErr, PSF_IXY_ERR); 
-    }         
+    }
 
     void setE1(float const e1) {
         set(_e1, e1, E1);    
-    }      
+    }
     void setE1Err(float const e1Err) {
         set(_e1Err, e1Err, E1_ERR);    
-    }      
+    }
     void setE2(float const e2) {
         set(_e2, e2, E2);    
-    }      
+    }
     void setE2Err(float const e2Err) {
         set(_e2Err, e2Err, E2_ERR);    
-    }      
+    }
     void setShear1(float const shear1) {
         set(_shear1, shear1, SHEAR1);    
-    }      
+    }
     void setShear1Err(float const shear1Err) {
         set(_shear1Err, shear1Err, SHEAR1_ERR);    
-    }      
+    }
     void setShear2(float const shear2) {
         set(_shear2, shear2, SHEAR2);    
-    }      
+    }
     void setShear2Err(float const shear2Err) {
         set(_shear2Err, shear2Err, SHEAR2_ERR);    
-    }      
+    }
 
     void setResolution(float const resolution) {
         set(_resolution, resolution, RESOLUTION);
@@ -473,7 +491,7 @@ public:
     }
     void setChi2(float const chi2) {
         set(_chi2, chi2);             
-    }   
+    }
     void setFlagForAssociation(boost::int16_t const flagForAssociation) {
         set(_flagForAssociation, flagForAssociation, FLAG_FOR_ASSOCIATION);
     }
@@ -482,7 +500,7 @@ public:
     }
     void setFlagForWcs(boost::int16_t const flagForWcs) {
         set(_flagForWcs, flagForWcs, FLAG_FOR_WCS);
-    }    
+    }
     
     /**
      * Test if a field is Null
@@ -517,7 +535,7 @@ public:
     /**
      * Set all NULLABLE fields to NOT NULL
      */
-    inline void setNotNull() {_nulls.reset();}   
+    inline void setNotNull() {_nulls.reset();}
 protected:
     
     std::bitset<numNullableFields> _nulls;
@@ -572,7 +590,7 @@ protected:
         _shapeStatus(-1)
     {
         setNull();
-    }    
+    }
     
     /**
      * \internal test field equality
@@ -720,7 +738,7 @@ protected:
                 b = isNull(i);
                 ar & b;
             }
-        }    
+        }
     }
             
     
