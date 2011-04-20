@@ -119,7 +119,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// extension.  Throws lsst::afw::image::FitsException if the RAM-file is not a valid FITS file, or
 /// if its color space or channel depth are not compatible with the ones specified by Image
  template <typename PixelT>
- inline void fits_read_image(char **ramFile, size_t *ramFileLen,
+ inline void fits_read_ramImage(char **ramFile, size_t *ramFileLen,
                              lsst::ndarray::Array<PixelT,2,2> & array,
                              geom::Point2I & xy0,
                              lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
@@ -153,13 +153,13 @@ inline void fits_write_image(const std::string& filename, const ImageT & image,
 /// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
 /// Throws lsst::afw::image::FitsException if it fails to create the RAM-file.
 template <typename ImageT>
-inline void fits_write_image(char **ramFile, size_t *ramFileLen,, const ImageT & image,
+inline void fits_write_ramImage(char **ramFile, size_t *ramFileLen, const ImageT & image,
                             boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
                             std::string const& mode="w"
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
 
-    detail::fits_writer m(ramFile, ramFileLen, filename, mode);
+    detail::fits_writer m(ramFile, ramFileLen, mode);
     m.apply(image, metadata);
 }
 

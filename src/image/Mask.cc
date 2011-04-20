@@ -278,7 +278,7 @@ afwImage::Mask<MaskPixelT>::Mask(
 
     if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(afwImage::FitsException,
-            (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
+            (boost::format("Failed to read RAM FITS HDU %d") % hdu).str());
     }
     // look for mask planes in the file
     MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 

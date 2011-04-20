@@ -259,7 +259,7 @@ protected:
     }
 
     fits_file_mgr(char **ramFile, size_t *ramFileLen, const std::string& flags) :
-        _fd(static_cast<FD *>(NULL)), _ramFile(ramFile), _ramFileLen(ramFileLen), _flags(flags) {
+        _fd(static_cast<FD *>(NULL)), _flags(flags) {
         if (flags == "r" || flags == "rb") {
             int status = 0;
             if (fits_open_memfile(&_fd_s, "UnusedFilenameParameter", READONLY, (void**)ramFile,

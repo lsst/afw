@@ -224,7 +224,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
-    _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, conformMasks);
+    _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, origin, conformMasks);
 	
 	postFitsCtorInit(metadata);
 }

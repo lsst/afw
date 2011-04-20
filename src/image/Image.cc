@@ -515,6 +515,40 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
 }
 
 /**
+ * Construct an Image from a FITS RAM file
+ *
+ * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
+ * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
+ */
+template<typename PixelT>
+image::Image<PixelT>::Image(char **ramFile, size_t *ramFileLen,
+                            int const hdu,               ///< Desired HDU
+                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            geom::Box2I const& bbox,                           ///< Only read these pixels
+                            ImageOrigin const origin    ///< specify the coordinate system of the bbox
+                           ) :
+    image::ImageBase<PixelT>() {
+
+    typedef boost::mpl::vector<
+        unsigned char, 
+        unsigned short, 
+        short, 
+        int,
+        unsigned int,
+        float,
+        double
+    > fits_image_types;
+
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+    }
+    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
+        throw LSST_EXCEPT(image::FitsException,
+						  (boost::format("Failed to read FITS HDU %d") % hdu).str());
+    }
+}
+
+/**
  * Write an Image to the specified file
  */
 template<typename PixelT>
@@ -543,6 +577,37 @@ void image::Image<PixelT>::writeFits(
     }
 
     image::fits_write_image(fileName, *this, metadata, mode);
+}
+
+/**
+ * Write an Image to the specified file
+ */
+template<typename PixelT>
+void image::Image<PixelT>::writeFits(
+    char **ramFile, size_t *ramFileLen,
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
+    std::string const& mode                     //!< "w" to write a new file; "a" to append
+) const {
+    using lsst::daf::base::PropertySet;
+
+    if (mode == "pdu") {
+        image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata_i, mode);
+        return;
+    }
+
+    lsst::daf::base::PropertySet::Ptr metadata;
+    PropertySet::Ptr wcsAMetadata =
+        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+                                                     this->getX0(), this->getY0());
+    
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+        metadata->combine(wcsAMetadata);
+    } else {
+        metadata = wcsAMetadata;
+    }
+
+    image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata, mode);
 }
 
 /************************************************************************************************************/
