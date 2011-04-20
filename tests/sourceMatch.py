@@ -35,6 +35,7 @@ import os, re, sys
 
 import unittest
 import eups
+from math import radians
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDetect
@@ -57,15 +58,15 @@ class SourceMatchTestCase(unittest.TestCase):
         for i in range(nobj):
             s = afwDetect.Source()
             s.setId(i)
-            s.setRa(10 + 0.001*i)
-            s.setDec(10 + 0.001*i)
+            s.setRa(radians(10 + 0.001*i))
+            s.setDec(radians(10 + 0.001*i))
 
             self.ss1.append(s)
 
             s = afwDetect.Source()
             s.setId(2*nobj + i)
-            s.setRa(10 + 0.001*i)
-            s.setDec(10 + 0.001*i)
+            s.setRa(radians(10 + 0.001*i))
+            s.setDec(radians(10 + 0.001*i))
 
             self.ss2.append(s)
 
@@ -132,8 +133,8 @@ class SourceMatchTestCase(unittest.TestCase):
 
             s = afwDetect.Source()
             s.setId(objId)
-            s.setRa(ra)
-            s.setDec(dec)
+            s.setRa(radians(ra))
+            s.setDec(radians(dec))
             s.setPsfFlux(psfMags[band])
 
             if mode == PRIMARY:
@@ -168,8 +169,8 @@ class SourceMatchTestCase(unittest.TestCase):
             s = afwDetect.Source()
             s.setId(id)
             id += 1
-            s.setRa(ra)
-            s.setDec(dec)
+            s.setRa(radians(ra))
+            s.setDec(radians(dec))
             s.setPsfFlux(flux[0])
 
             template.append(s)

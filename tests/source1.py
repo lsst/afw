@@ -89,7 +89,7 @@ class SourceTestCase(unittest.TestCase):
         # makeCoord takes degrees.
         c1 = afwCoord.makeCoord(afwCoord.ICRS, ra, dec)
         # (test that by using degrees explicitly)
-        c2 = afwCoord.makeCoord(afwCoord.ICRS, afwGeom.makePointD(ra, dec),
+        c2 = afwCoord.makeCoord(afwCoord.ICRS, afwGeom.Point2D(ra, dec),
                                 afwCoord.DEGREES)
         self.assertAlmostEqual(c1.toIcrs().getRa(afwCoord.DEGREES), c2.toIcrs().getRa(afwCoord.DEGREES))
         self.assertAlmostEqual(c1.toIcrs().getDec(afwCoord.DEGREES), c2.toIcrs().getDec(afwCoord.DEGREES))
