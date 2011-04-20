@@ -75,7 +75,7 @@ namespace lsst { namespace afw { namespace detection { namespace {
     size_t makeSourcePositions(SourceSet const &set, SourcePos *positions) {
         size_t n = 0;
         for (SourceSet::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
-            // RADIANS
+            // radians
             double ra = (*i)->getRa();
             double dec = (*i)->getDec();
             if (ra < 0.0 || ra >= 2.*M_PI) {
