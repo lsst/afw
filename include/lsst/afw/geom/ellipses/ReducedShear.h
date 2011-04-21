@@ -46,7 +46,7 @@ public:
 
     explicit ReducedShear(double e1=0.0, double e2=0.0) : detail::EllipticityBase(e1, e2) {}
 
-    explicit ReducedShear(ReducedShear const & other) : detail::EllipticityBase(other.getComplex()) {}
+    ReducedShear(ReducedShear const & other) : detail::EllipticityBase(other.getComplex()) {}
 
     explicit ReducedShear(Distortion const & other) { this->operator=(other); }
 

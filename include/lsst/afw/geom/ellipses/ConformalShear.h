@@ -46,7 +46,7 @@ public:
 
     explicit ConformalShear(double e1=0.0, double e2=0.0) : detail::EllipticityBase(e1, e2) {}
 
-    explicit ConformalShear(ConformalShear const & other) : detail::EllipticityBase(other.getComplex()) {}
+    ConformalShear(ConformalShear const & other) : detail::EllipticityBase(other.getComplex()) {}
 
     explicit ConformalShear(Distortion const & other) { this->operator=(other); }
 
