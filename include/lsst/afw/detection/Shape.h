@@ -76,7 +76,7 @@ public:
             set<PSF_IXY_ERR>(NaN);
             set<PSF_IYY>(NaN);
             set<PSF_IYY_ERR>(NaN);
-            set<SHAPE_STATUS>(static_cast<short>(-1)); // Cast literal integer to short for right template
+            set<SHAPE_STATUS, short>(-1); // Make sure we use the right template, since -1 is an int.
             
         }
     

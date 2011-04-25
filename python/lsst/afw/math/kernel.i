@@ -31,11 +31,6 @@
 %include "std_complex.i"
 %include "../boost_picklable.i"
 
-
-// I doubt newobject is needed; the code seems to work just as well without it.
-%newobject lsst::afw::math::convolve;
-%newobject lsst::afw::math::Kernel::getKernelParameters;
-%newobject lsst::afw::math::Kernel::getSpatialParameters;
 //
 // Kernel classes (every template of a class must have a unique name)
 //

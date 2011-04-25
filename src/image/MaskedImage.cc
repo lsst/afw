@@ -228,6 +228,96 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 /**
+ * \brief Construct from an HDU in a FITS RAM file.  Set metadata if it isn't a NULL pointer
+ *
+ * @note The file must be a single MEF MEF file, with data, mask, and variance in three successive HDUs
+ *
+ * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we politely interpret 0 as meaning
+ * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+	char **ramFile,								///< RAM buffer to receive RAM FITS file
+	size_t *ramFileLen,							///< RAM buffer length
+    const int hdu,                              //!< The HDU in the file (default: 1)
+    lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+    geom::Box2I const& bbox,                    //!< Only read these pixels
+    ImageOrigin const origin,                   //!< Coordinate system for bbox
+    bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
+    bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+) : lsst::daf::data::LsstBase(typeid(this)),
+    _image(), _mask(), _variance() 
+{
+    /*
+     * We need to read the metadata so's to check that the EXTTYPEs are correct
+     */
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+    }
+	
+	int real_hdu = (hdu == 0) ? 2 : hdu;
+	
+	if (hdu == 0) {                 // may be an old file with no PDU
+		lsst::daf::base::PropertySet::Ptr hdr = readMetadata(ramFile, ramFileLen, 1);
+		if (hdr->get<int>("NAXIS") != 0) { // yes, an old-style file
+			real_hdu = 1;
+		}
+	}
+
+	_image = typename Image::Ptr(new Image(ramFile, ramFileLen, real_hdu, metadata, bbox, origin));
+	try {
+		std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+		if (exttype != "" && exttype != "IMAGE") {
+			throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+							  (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+							   real_hdu % exttype).str());           
+		}
+	} catch(lsst::pex::exceptions::NotFoundException) {}
+
+	try {
+		_mask = typename Mask::Ptr(new Mask(ramFile, ramFileLen, real_hdu + 1, metadata, bbox, origin, conformMasks));
+	} catch(image::FitsException &e) {
+		if (needAllHdus) {
+			LSST_EXCEPT_ADD(e, "Reading Mask");
+			throw e;
+		}
+
+		_mask = typename Mask::Ptr(new Mask(_image->getBBox(PARENT)));
+	}
+
+	try {
+		std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+		if (exttype != "" && exttype != "MASK") {
+			throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+							  (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+							   (real_hdu + 1) % exttype).str());
+		}
+	} catch(lsst::pex::exceptions::NotFoundException) {
+		;
+	}
+
+	try {
+		_variance = typename Variance::Ptr(new Variance(ramFile, ramFileLen, real_hdu + 2, metadata, bbox, origin));
+	} catch(image::FitsException &e) {
+		if (needAllHdus) {
+			LSST_EXCEPT_ADD(e, "Reading Variance");
+			throw e;
+		}
+		_variance = typename Variance::Ptr(new Variance(_image->getBBox(PARENT)));
+	}
+	try {
+		std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+		if (exttype != "" && exttype != "VARIANCE") {
+			throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+					   (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
+						(real_hdu + 2) % exttype).str());
+		}
+	} catch(lsst::pex::exceptions::NotFoundException) {}
+}
+
+/**
  * \brief Construct from a supplied Image and optional Mask and Variance.
  * The Mask and Variance will be set to zero if omitted
  */
@@ -521,6 +611,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
     *_image /= rhs;
     *_variance /= rhs*rhs;
 }
+
 /**
  * Write \c this to a FITS file
  *
@@ -590,6 +681,66 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
         _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
+    }
+}
+
+/**
+ * Write \c this to a FITS RAM file
+ *
+ * \deprecated Please avoid using the interface that writes three separate files;  it may be
+ * removed in some future release.
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+		char **ramFile,		///< RAM buffer to receive RAM FITS file
+		size_t *ramFileLen,	///< RAM buffer length
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file
+                                                                          ///< or NULL
+        std::string const& mode,                    //!< "w" to write a new file; "a" to append
+        bool const writeMef  ///< write an MEF file,
+                             ///< even if basename doesn't look like a fully qualified FITS file
+    ) const {
+
+    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
+    }
+	
+	if (!writeMef) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
+	}
+
+    lsst::daf::base::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+    } else {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+    }
+
+    static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
+    if (writeMef) {
+        //
+        // Write the PDU
+        //
+        if (mode == "w" || mode == "wb") {
+            _image->writeFits(ramFile, ramFileLen, metadata, "pdu");
+#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
+            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+#endif
+        }
+
+        metadata->set("EXTTYPE", "IMAGE");
+        _image->writeFits(ramFile, ramFileLen, metadata, "w");	//First one can't be 'a', must be 'w'
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata->set("EXTTYPE", "MASK");
+        _mask->writeFits(ramFile, ramFileLen, metadata, "a");
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata->set("EXTTYPE", "VARIANCE");
+        _variance->writeFits(ramFile, ramFileLen, metadata, "a");
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
+
     }
 }
 

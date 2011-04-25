@@ -232,9 +232,12 @@ static void testBoost(void) {
         BOOST_CHECK_MESSAGE(*persistVec == dsv, 
             "persist()/retrieve() resulted in PersistableSourceVector corruption");
 
+
         for(int i =0; i < dsv.size(); ++i) {
             boost::shared_ptr<const Footprint> dsvFp = dsv[i]->getFootprint();
-            boost::shared_ptr<const Footprint> persistFp = dsv[i]->getFootprint();
+            std::cerr<<"Original Area: " << dsvFp->getArea() << std::endl;
+            boost::shared_ptr<const Footprint> persistFp = persistVec->getSources()[i]->getFootprint();
+            std::cerr<<"Original Area: " << persistFp->getArea() << std::endl;
             for(int j = 0; j < dsvFp->getSpans().size(); ++j) {
                 BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getY(), persistFp->getSpans()[j]->getY());
                 BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getX0(), persistFp->getSpans()[j]->getX0());

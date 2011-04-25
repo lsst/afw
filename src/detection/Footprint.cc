@@ -160,15 +160,23 @@ Footprint::Footprint(
     _fid(++id),
     _area(0),
     _bbox(geom::Box2I()),
-    _region(region)
+    _region(region),
+    _normalized(true)
 {    
     geom::AffineTransform egt(ellipse.getGridTransform());    
-    geom::Box2I envelope(ellipse.computeEnvelope());
+    geom::Box2D envelope(ellipse.computeEnvelope());
+    
+    if(ellipse.getCore().getArea() < 1e-4)        
+        return;
 
-    int const maxX = envelope.getMaxX();
-    int const minX = envelope.getMinX();
-    int const maxY = envelope.getMaxY();
-    int const minY = envelope.getMinY();
+    geom::Box2I bbox(envelope);
+
+
+    int const minY = bbox.getMinY();
+    int const minX = bbox.getMinX();
+    int const maxY = bbox.getMaxY();
+    int const maxX = bbox.getMaxX();
+
 
     for (int y = minY; y <= maxY; ++y) {
         int x = minX;
@@ -400,20 +408,27 @@ void Footprint::serialize(Archive & ar, const unsigned int version) {
     ar & _normalized;
 
     int x0, y0, width, height;
-
+    int rx0, ry0, rwidth, rheight;
     if(Archive::is_saving::value) {
+        geom::Box2I const & bbox = getBBox();
+        x0 = bbox.getMinX();
+        y0 = bbox.getMinY();
+        width = bbox.getWidth();
+        height = bbox.getHeight();
+
         geom::Box2I const & region = getRegion();
-        x0 = region.getMinX();
-        y0 = region.getMinY();
-        width = region.getWidth();
-        height = region.getHeight();
+        rx0 = region.getMinX();
+        ry0 = region.getMinY();
+        rwidth = region.getWidth();
+        rheight = region.getHeight();
     }
 
     ar & x0 & y0 & width & height;
+    ar & rx0 & ry0 & rwidth & rheight;
     
     if(Archive::is_loading::value) {
-        geom::BoxI region(geom::Point2I(x0, y0), geom::Extent2I(width, height));
-        setRegion(region);
+        _bbox = geom::BoxI(geom::Point2I(x0, y0), geom::Extent2I(width, height));
+        _region = geom::BoxI(geom::Point2I(rx0, ry0), geom::Extent2I(rwidth, rheight));
     }
 }
 
