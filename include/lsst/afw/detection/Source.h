@@ -106,7 +106,9 @@ public :
     float  getPetroFluxErr() const { return _petroFluxErr; }    
     float  getSky() const { return _sky; }
     float  getSkyErr() const { return _skyErr; }
+    // in radians
     double getRaObject() const { return _raObject; }
+    // in radians
     double getDecObject() const { return _decObject; }
 
 #ifndef SWIG
@@ -130,9 +132,11 @@ public :
     void setSkyErr (float const skyErr) {
         set(_skyErr, skyErr, SKY_ERR);
     }
+    // in radians
     void setRaObject(double const raObject) {
         set(_raObject, raObject, RA_OBJECT);
     }
+    // in radians
     void setDecObject(double const decObject) {
         set(_decObject, decObject, DEC_OBJECT);
     }

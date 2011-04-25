@@ -157,9 +157,11 @@ public :
     //overloaded setters
     //Because these fields are not NULLABLE in all sources, 
     //  special behavior must be defined in the derived class
+    // in radians
     void setRaErrForWcs(float const raErrForWcs) { 
         set(_raErrForWcs, raErrForWcs, RA_ERR_FOR_WCS);  
     }
+    // in radians
     void setDecErrForWcs(float const decErrForWcs) { 
         set(_decErrForWcs, decErrForWcs, DEC_ERR_FOR_WCS); 
     }

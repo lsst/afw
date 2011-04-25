@@ -38,7 +38,7 @@
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/coord/Utils.h"     // this contains the enums CoordSystem CoordType and radToDec
+#include "lsst/afw/coord/Utils.h"     // this contains the enums CoordSystem CoordType and radToDeg
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/daf/base.h"
 
@@ -75,6 +75,7 @@ public:
     Coord(lsst::afw::geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
     Coord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0,
         double const defaultLongitude=0.0);
+    // ra,dec in degrees.
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
@@ -336,7 +337,7 @@ Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p
                      double const defaultLongitude);
 Coord::Ptr makeCoord(CoordSystem const system);
 
-
+// ra,dec in degrees
 Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec);
 Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, CoordUnit unit);

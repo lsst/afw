@@ -91,18 +91,16 @@ void testSip(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd sip
             double x0 = xy[0];
             double y0 = xy[1];
             
-            
             afwCoord::Fk5Coord lin = linWcs.pixelToSky(x0 + u +distortX, y0+v+distortY)->toFk5();
             afwCoord::Fk5Coord sip = sipWcs.pixelToSky(x0+u, y0+v)->toFk5();
 
-            if(1){
+            if(1) {
                 printf("\n%.1f %.1f : %.3f\n", u, v, distortX);
                 printf("%.7f %.7f \n", lin.getRa(afwCoord::DEGREES), lin.getDec(afwCoord::DEGREES));
                 printf("%.7f %.7f \n", sip.getRa(afwCoord::DEGREES), sip.getDec(afwCoord::DEGREES));
                 printf("Diff: %.7f %.7f \n", sip.getRa(afwCoord::DEGREES) - lin.getRa(afwCoord::DEGREES), \
                         sip.getDec(afwCoord::DEGREES) - lin.getDec(afwCoord::DEGREES));
             }
-            
                                 
             BOOST_CHECK_CLOSE(lin.getRa(afwCoord::DEGREES), sip.getRa(afwCoord::DEGREES), 1e-7); 
             BOOST_CHECK_CLOSE(lin.getDec(afwCoord::DEGREES), sip.getDec(afwCoord::DEGREES), 1e-7); 

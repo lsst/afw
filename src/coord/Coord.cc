@@ -1139,7 +1139,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
 
 
 /**
- * @brief Factory function to create a Coord of arbitrary type with decimal RA,Dec
+ * @brief Factory function to create a Coord of arbitrary type with decimal RA,Dec in degrees
  *
  * @note This factory assumes a default epoch
  * @note Most of the other factories (which don't accept epoch) call this one.
