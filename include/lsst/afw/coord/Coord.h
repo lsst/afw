@@ -32,6 +32,7 @@
  *
  * @todo add FK4 ... as needed
  */ 
+#include <iostream>
 #include <limits>
 #include <map>
 
@@ -125,7 +126,6 @@ private:
 
     void _verifyValues() const;
 };
-
 
 /**
  * @class IcrsCoord
@@ -356,7 +356,6 @@ double hmsStringToDegrees(std::string const hms);
 std::string degreesToDmsString(double const deg);
 std::string degreesToHmsString(double const deg);    
     
-    
 }}}
 
 
@@ -465,6 +464,6 @@ inline std::string lsst::afw::coord::Coord::getLatitudeStr() const {
     return degreesToDmsString(getLatitude(DEGREES));
 }
 
-
-
+std::ostream & operator<<(std::ostream & os, lsst::afw::coord::Coord const & coord);
+    
 #endif
