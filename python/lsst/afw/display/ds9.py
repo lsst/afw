@@ -406,7 +406,7 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
         _mtv(data.getImage(), wcs, title, False)
         mask = data.getMask(True)
         if mask:
-            mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title, settings=settings)
+            mtv(mask, frame, False, wcs, True, lowOrderBits=lowOrderBits, title=title, settings=settings)
             if getMaskTransparency() is not None:
                 ds9Cmd("mask transparency %d" % getMaskTransparency())
 
@@ -437,7 +437,9 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
         #
         # ds9 can't display a Mask without an image; so display an Image first
         #
-        im = afwImage.ImageU(data.getDimensions()); mtv(im, frame=frame)
+        if not isMask:
+            im = afwImage.ImageU(data.getDimensions())
+            mtv(im, frame=frame)
         
         for p in planeList:
             if planes[p] or True:
