@@ -676,6 +676,59 @@ double afwCoord::Coord::angularSeparation(
     return dist;
 }
 
+/**
+ * @brief Compute the offset from a coordinate
+ *
+ */
+lsst::afw::geom::Point2D afwCoord::Coord::getOffsetFrom(
+    Coord const &c,       ///< Coordinate from which to compute offset
+    CoordUnit unit                  ///< Units for separation
+    ) const {
+    Fk5Coord fk51 = this->toFk5();
+    Fk5Coord fk5tmp = c.toFk5();
+    
+    // make sure they have the same epoch
+    Fk5Coord fk52;
+    if ( fabs(fk51.getEpoch() - fk5tmp.getEpoch()) > epochTolerance ) {
+        fk52 = fk5tmp.precess(fk51.getEpoch());
+    } else {
+        fk52 = fk5tmp;
+    }
+    // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
+    // we'll put them in the same system.
+    double const alpha1 = fk51.getRa(RADIANS);
+    double const delta1 = fk51.getDec(RADIANS);
+    double const alpha2 = fk52.getRa(RADIANS);
+    double const delta2 = fk52.getDec(RADIANS);
+
+    // This is a projection of coord2 to the tangent plane at coord1
+    double const sinDelta1 = sin(delta1);
+    double const cosDelta1 = cos(delta1);
+    double const sinDelta2 = sin(delta2);
+    double const cosDelta2 = cos(delta2);
+    double const cosAlphaDiff = cos(alpha2 - alpha1);
+    double const sinAlphaDiff = sin(alpha2 - alpha1);
+
+    double const div = cosDelta1 * cosAlphaDiff * cosDelta2 + sinDelta1 * sinDelta2;
+    double xi = cosDelta1 * sinAlphaDiff / div;
+    double eta = (cosDelta1 * cosAlphaDiff * sinDelta2 - sinDelta1 * cosDelta2) / div;
+
+    switch (unit) {
+    case DEGREES:
+        xi *= radToDeg;
+        eta *= radToDeg;
+        break;
+    case RADIANS:
+        // No-op: already in radians
+        break;
+    case HOURS:
+    default:
+        throw LSST_EXCEPT(ex::InvalidParameterException, "CoordUnit must be DEGREES or RADIANS");
+    }
+
+    return lsst::afw::geom::Point2D(xi, eta);
+}
+
 
 
 /**

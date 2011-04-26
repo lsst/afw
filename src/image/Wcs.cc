@@ -852,12 +852,9 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     //
     const double side = 10;             // length of the square's sides in pixels
     GeomPoint const sky00 = coord->getPosition(skyUnit);
+    GeomPoint const dsky10 = coord->getOffsetFrom(*pixelToSky(pix00 + afwGeom::Extent2D(side, 0)), skyUnit);
+    GeomPoint const dsky01 = coord->getOffsetFrom(*pixelToSky(pix00 + afwGeom::Extent2D(0, side)), skyUnit);
 
-    GeomPoint const dsky10 = pixelToSky(pix00 + afwGeom::Extent2D(side, 0))->getPosition(skyUnit) -
-        afwGeom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + afwGeom::Extent2D(0, side))->getPosition(skyUnit) -
-        afwGeom::Extent<double>(sky00);
-    
     Eigen::Matrix2d m;
     m(0, 0) = dsky10.getX()/side;
     m(0, 1) = dsky01.getX()/side;

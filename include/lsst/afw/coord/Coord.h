@@ -104,6 +104,7 @@ public:
     
     Coord transform(Coord const &poleFrom, Coord const &poleTo) const;
     double angularSeparation(Coord const &c, CoordUnit unit) const;
+    lsst::afw::geom::Point2D getOffsetFrom(Coord const &c, CoordUnit unit) const;
     
     void rotate(Coord const &axis, double const theta);
     double offset(double const phi, double const arcLen);
