@@ -26,7 +26,8 @@
  * \file
  * \brief Support for peaks in images
  */
-    
+
+#include <algorithm>
 #include <list>
 #include <cmath>
 #include <boost/shared_ptr.hpp>
@@ -55,6 +56,13 @@ public:
           _ix(fx > 0 ? static_cast<int>(fx) : -static_cast<int>(-fx) - 1),
           _iy(fy > 0 ? static_cast<int>(fy) : -static_cast<int>(-fy) - 1),
           _fx(fx), _fy(fy) {};
+    Peak(Peak const & other) 
+      : lsst::daf::base::Citizen(typeid(this)),
+        _id(++id),
+        _ix(other._ix), _iy(other._iy),
+        _fx(other._fx), _fy(other._fy)
+    { }
+
     ~Peak() {};
 
     int getId() const { return _id; }   //!< Return the Peak's unique ID

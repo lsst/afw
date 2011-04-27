@@ -29,6 +29,7 @@
  * Footprint is fundamental in astronomical image processing, as it defines what
  * is meant by a Source.
  */
+#include <algorithm>
 #include <list>
 #include <cmath>
 #include <boost/cstdint.hpp>
@@ -107,9 +108,11 @@ public:
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
-    explicit Footprint(geom::Point2I const & center, double const radius, geom::Box2I const & = geom::Box2I());
+    Footprint(geom::Point2I const & center, double const radius, geom::Box2I const & = geom::Box2I());
     explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
 
+    explicit Footprint(SpanList const & spans, geom::Box2I const & region=geom::Box2I());
+    Footprint(Footprint const & other);    
     ~Footprint();
 
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
@@ -125,6 +128,7 @@ public:
     const Span& addSpan(Span const& span, int dx, int dy);
 
     void shift(int dx, int dy);
+    void shift(geom::ExtentI d) {shift(d.getX(), d.getY());}
 
     /// Return the Footprint's bounding box
     geom::Box2I getBBox() const { return _bbox; }     
@@ -137,18 +141,20 @@ public:
     bool contains(geom::Point2I const& pix) const;
     
     void normalize();
+    bool isNormalized() const {return _normalized;}
 
     void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
                          int const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
+
+    Footprint & operator=(Footprint & other);
+
 private:
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, const unsigned int version);
 
-    Footprint(const Footprint&);                   //!< No copy constructor
-    Footprint operator = (Footprint const&) const; //!< no assignment
     static int id;
     mutable int _fid;                    //!< unique ID
     int _area;                           //!< number of pixels in this Footprint
