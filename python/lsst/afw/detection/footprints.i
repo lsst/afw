@@ -45,6 +45,8 @@ SWIG_SHARED_PTR(FootprintSetF, lsst::afw::detection::FootprintSet<float, lsst::a
 SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
 SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr >);
 
+%rename(assign) lsst::afw::detection::Footprint::operator=;
+
 %include "lsst/afw/detection/Threshold.h"
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"

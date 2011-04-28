@@ -198,6 +198,49 @@ Footprint::Footprint(
 }
 
 /**
+ * Construct a footprint from a list of spans. Resulting Footprint is not
+ * normalized
+ */
+Footprint::Footprint(
+    Footprint::SpanList const & spans,
+    geom::Box2I const & region
+) : lsst::daf::data::LsstBase(typeid(this)),
+    _fid(++id),
+    _area(0),
+    _bbox(geom::Box2I()),
+    _region(region),
+    _normalized(false)
+{
+    _spans.reserve(spans.size());
+    for(SpanList::const_iterator i(spans.begin()); i != spans.end(); ++i) {
+        addSpan(**i);
+    }
+}
+
+Footprint::Footprint(Footprint const & other) 
+  : lsst::daf::data::LsstBase(typeid(this)),
+    _fid(++id),
+    _bbox(other._bbox),
+    _region(other._region)
+{
+    //deep copy spans
+    _spans.reserve(other._spans.size());
+    for(SpanList::const_iterator i(other._spans.begin()); 
+        i != other._spans.end(); ++i
+    ) {
+        addSpan(**i);
+    }
+    _area = other._area;
+    _normalized = other._normalized;
+
+    //deep copy peaks
+    _peaks.reserve(other._peaks.size());
+    for(PeakList::const_iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
+        _peaks.push_back(Peak::Ptr(new Peak(**i)));
+    }
+}
+
+/**
  * Destroy a Footprint
  */
 Footprint::~Footprint() {
@@ -437,6 +480,32 @@ template void Footprint::serialize(boost::archive::text_iarchive &, unsigned int
 template void Footprint::serialize(boost::archive::binary_oarchive &, unsigned int const);
 template void Footprint::serialize(boost::archive::binary_iarchive &, unsigned int const);
 
+/**
+ * Assignment operator. Will not change the id
+ */
+Footprint & Footprint::operator=(Footprint::Footprint & other) {
+    _region = other._region;
+
+    //deep copy spans
+    _spans = SpanList();
+    _spans.reserve(other._spans.size());
+    for(SpanList::const_iterator i(other._spans.begin()); 
+        i != other._spans.end(); ++i
+    ) {
+        addSpan(**i);
+    }
+    _area = other._area;
+    _normalized = other._normalized;
+    _bbox = other._bbox;
+
+    //deep copy peaks
+    _peaks = PeakList();
+    _peaks.reserve(other._peaks.size());
+    for(PeakList::iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
+        _peaks.push_back(Peak::Ptr(new Peak(**i)));
+    }
+    return *this;
+}
 
 /************************************************************************************************************/
 /**

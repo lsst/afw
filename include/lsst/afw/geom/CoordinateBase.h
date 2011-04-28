@@ -68,6 +68,7 @@ public:
     EigenVector const & asEigen() const { return _vector; }
 #endif
 
+
 protected:
 
     /**
@@ -85,6 +86,7 @@ protected:
     template <typename Vector> 
     explicit CoordinateBase(Eigen::MatrixBase<Vector> const & vector) : _vector(vector) {}
 
+    void _swap(CoordinateBase & other) {_vector.swap(other._vector);}
     EigenVector _vector;
 };
 
@@ -137,7 +139,7 @@ protected:
 
     template <typename Vector>
     explicit CoordinateBase(Eigen::MatrixBase<Vector> const & vector) : _vector(vector) {}
-
+    void _swap(CoordinateBase & other) {_vector.swap(other._vector);}
     EigenVector _vector;
 };
 
@@ -185,7 +187,7 @@ protected:
 
     template <typename Vector>
     explicit CoordinateBase(Eigen::MatrixBase<Vector> const & vector) : _vector(vector) {}
-
+    void _swap(CoordinateBase & other) {_vector.swap(other._vector);}
     EigenVector _vector;
 };
 

@@ -254,6 +254,42 @@ class FootprintTestCase(unittest.TestCase):
         if False:
             ds9.mtv(idImage, frame=2)
 
+    def testCopy(self):
+        bbox = afwGeom.BoxI(afwGeom.PointI(0,2), afwGeom.PointI(5,6))
+
+        fp = afwDetect.Footprint(bbox, bbox)
+
+        #test copy construct
+        fp2 = afwDetect.Footprint(fp)
+
+        self.assertEqual(fp2.getBBox(), bbox)
+        self.assertEqual(fp2.getRegion(), bbox)
+        self.assertEqual(fp2.getArea(), bbox.getArea())
+        self.assertEqual(fp2.isNormalized(), True)
+
+        y = bbox.getMinY()
+        for s in fp2.getSpans():
+            self.assertEqual(s.getY(), y)
+            self.assertEqual(s.getX0(), bbox.getMinX())
+            self.assertEqual(s.getX1(), bbox.getMaxX())
+            y+=1
+        
+        #test assignment
+        fp3 = afwDetect.Footprint()
+        fp3.assign(fp)
+        self.assertEqual(fp3.getBBox(), bbox)
+        self.assertEqual(fp3.getRegion(), bbox)
+        self.assertEqual(fp3.getArea(), bbox.getArea())
+        self.assertEqual(fp3.isNormalized(), True)
+
+        y = bbox.getMinY()
+        for s in fp3.getSpans():
+            self.assertEqual(s.getY(), y)
+            self.assertEqual(s.getX0(), bbox.getMinX())
+            self.assertEqual(s.getX1(), bbox.getMaxX())
+            y+=1
+
+
     def testGrow(self):
         """Test growing a footprint"""
         x0, y0 = 20, 20
