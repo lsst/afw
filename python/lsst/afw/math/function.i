@@ -66,6 +66,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst
     %baseFunctionNPtr(2, NAME, TYPE);
 
     %functionPtr(Chebyshev1Function, 1, NAME, TYPE);
+    %functionPtr(Chebyshev1Function, 2, NAME, TYPE);
     %functionPtr(DoubleGaussianFunction, 2, NAME, TYPE);
     %functionPtr(GaussianFunction, 1, NAME, TYPE);
     %functionPtr(GaussianFunction, 2, NAME, TYPE);
@@ -85,6 +86,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst
     %baseFunctionN(2, NAME, TYPE);
 
     %function(Chebyshev1Function, 1, NAME, TYPE);
+    %function(Chebyshev1Function, 2, NAME, TYPE);
     %function(DoubleGaussianFunction, 2, NAME, TYPE);
     %function(GaussianFunction, 1, NAME, TYPE);
     %function(GaussianFunction, 2, NAME, TYPE);

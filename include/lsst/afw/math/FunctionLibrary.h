@@ -33,6 +33,7 @@
  *
  * @ingroup afw
  */
+#include <algorithm>
 #include <cmath>
 
 #include "lsst/afw/math/Function.h"
@@ -500,7 +501,7 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class PolynomialFunction2: public Function2<ReturnT> {
+    class PolynomialFunction2: public PolynomialBaseFunction2<ReturnT> {
     public:
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
@@ -514,9 +515,8 @@ using boost::serialization::make_nvp;
         explicit PolynomialFunction2(
             unsigned int order) ///< order of polynomial (0 for constant)
         :
-            Function2<ReturnT>((order + 1) * (order + 2) / 2),
-            _order(order),
-            _yCoeffs(_order + 1)
+            PolynomialBaseFunction2<ReturnT>(order),
+            _yCoeffs(this->_order + 1)
         {}
 
         /**
@@ -533,30 +533,15 @@ using boost::serialization::make_nvp;
             std::vector<double> params)  ///< polynomial coefficients (const, x, y, x^2, xy, y^2...);
                                     ///< length must be one of 1, 3, 6, 10, 15...
         :
-            Function2<ReturnT>(params),
-            _order(static_cast<unsigned int>(
-                0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(params.size()))))) / 2.0)
-            )),
-            _yCoeffs(_order + 1)
-        {
-            unsigned int nParams = params.size();
-            if (nParams < 1) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                                  "PolynomialFunction2 created with empty vector");
-            }
-            if (nParams != ((_order + 1) * (_order + 2)) / 2) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                                  "PolynomialFunction2 created with vector of unusable length");
-            }
-        }
+            PolynomialBaseFunction2<ReturnT>(params),
+            _yCoeffs(this->_order + 1)
+        {}
         
         virtual ~PolynomialFunction2() {}
        
         virtual Function2Ptr clone() const {
             return Function2Ptr(new PolynomialFunction2(this->_params));
         }
-
-        virtual bool isLinearCombination() const { return true; };
         
         virtual ReturnT operator() (double x, double y) const {
             /* Solve as follows:
@@ -566,11 +551,12 @@ using boost::serialization::make_nvp;
               Cy1 = P2 + P4 x + P7 x2 + ...
               Cy2 = P5 + P8 x + ...
               Cy3 = P9 + ...
-            First compute the y coefficients: 1-d polynomials in x solved in the usual way.
-            Then compute the return value: a 1-d polynomial in y solved in the usual way.
+              ...
+
+            First compute Cy0, Cy1...Cyn by solving 1-d polynomials in x in the usual way.
+            Then compute f(x,y) by solving the 1-d polynomial in y in the usual way.
             */
             const int maxYCoeffInd = this->_order;
-//            std::vector<double> yCoeffs(maxYCoeffInd + 1);
             int paramInd = static_cast<int>(this->_params.size()) - 1;
             // initialize the y coefficients
             for (int yCoeffInd = maxYCoeffInd; yCoeffInd >= 0; --yCoeffInd, --paramInd) {
@@ -599,23 +585,21 @@ using boost::serialization::make_nvp;
 
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
-            os << "PolynomialFunction2 [" << _order << "]: ";
+            os << "PolynomialFunction2 [" << this->_order << "]: ";
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
 
     private:
-        unsigned int _order; ///< order of polynomial
         mutable std::vector<double> _yCoeffs; ///< working vector
 
-    private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const) {
             ar & make_nvp("fn2",
                           boost::serialization::base_object<
-                          Function2<ReturnT> >(*this));
-            ar & make_nvp("order", _order);
+                          PolynomialBaseFunction2<ReturnT> >(*this));
+            ar & make_nvp("order", this->_order);
         }
     };
     
@@ -624,14 +608,11 @@ using boost::serialization::make_nvp;
      *
      * f(x) = c0 + c1 * T1(x') + c2 * T2(x') + ...
      * where:
-     *   x' ranges over [-1, 1] as x ranges over [xMin, xMax]
      *   Tn(x) is the nth Chebyshev function of the first kind:
      *     Tn(x) = cos(n arccos(x))
+     *   x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
      *
-     * The function argument must be in the range [xMin, xMax].
-     *
-     * Note: solved using the Clenshaw algorithm. This avoids cosines,
-     * but is recursive and so (presumably) cannot be inlined.
+     * The function argument must be in the range [minX, maxX].
      *
      * @ingroup afw
      */
@@ -647,12 +628,12 @@ using boost::serialization::make_nvp;
          */
         explicit Chebyshev1Function1(
             unsigned int order, ///< order of polynomial (0 for constant)
-            double xMin = -1,    ///< minimum allowed x
-            double xMax = 1)     ///< maximum allowed x
+            double minX = -1,    ///< minimum allowed x
+            double maxX = 1)     ///< maximum allowed x
         :
             Function1<ReturnT>(order + 1)
         {
-            _initialize(xMin, xMax);
+            _initialize(minX, maxX);
         }
 
         /**
@@ -664,8 +645,8 @@ using boost::serialization::make_nvp;
          */
         explicit Chebyshev1Function1(
             std::vector<double> params,  ///< polynomial coefficients
-            double xMin = -1,    ///< minimum allowed x
-            double xMax = 1)     ///< maximum allowed x
+            double minX = -1,    ///< minimum allowed x
+            double maxX = 1)     ///< maximum allowed x
         :
             Function1<ReturnT>(params)
         {
@@ -673,7 +654,7 @@ using boost::serialization::make_nvp;
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                                   "Chebyshev1Function1 called with empty vector");
             }
-            _initialize(xMin, xMax);
+            _initialize(minX, maxX);
         }
         
         virtual ~Chebyshev1Function1() {}
@@ -681,6 +662,9 @@ using boost::serialization::make_nvp;
         virtual Function1Ptr clone() const {
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
+
+        int getMinX() const { return _minX; };
+        int getMaxX() const { return _maxX; };
 
         virtual bool isLinearCombination() const { return true; };
         
@@ -692,9 +676,7 @@ using boost::serialization::make_nvp;
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "Chebyshev1Function1 [";
-            os << _minX << ", " << _maxX << ", ";
-            os << _scale << ", " << _offset << ", ";
-            os << _maxInd << "]: ";
+            os << _order << ", " << _minX << ", " << _maxX << "]: ";
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
         }
@@ -727,11 +709,11 @@ using boost::serialization::make_nvp;
         /**
          * @brief initialize private constants
          */
-        void _initialize(double xMin, double xMax) {
-            _minX = xMin;
-            _maxX = xMax;
-            _scale = 2 / (xMax - xMin);
-            _offset = -(xMin + xMax) / 2.0;
+        void _initialize(double minX, double maxX) {
+            _minX = minX;
+            _maxX = maxX;
+            _scale = 2 / (maxX - minX);
+            _offset = -(minX + maxX) / 2.0;
             _maxInd = this->getNParameters() - 1;
         }
 
@@ -751,6 +733,214 @@ using boost::serialization::make_nvp;
             Archive& ar, Chebyshev1Function1<R> const* f, unsigned int const);
     };
 
+    /**
+     * @brief 2-dimensional weighted sum of Chebyshev polynomials of the first kind.
+     *
+     * f(x,y) = c0
+     *        + c1 * T1(x') + c2 * T1(y')
+     *        + c3 * T2(x') + c4 * T1(x') * T1(y') + c5 * T2(y')
+     *        + ...
+     * where:
+     *   Tn(x) is the nth Chebyshev function of the first kind:
+     *     Tn(x) = cos(n arccos(x))
+     *   x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
+     *   y' is y offset and scaled to range [-1, 1] as y ranges over [minY, maxY]
+     *
+     * Return value is incorrect if function arguments are not in the range [minX, maxX], [minY, maxY].
+     *
+     * @ingroup afw
+     */
+    template<typename ReturnT>
+    class Chebyshev1Function2: public PolynomialBaseFunction2<ReturnT> {
+    public:
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
+
+        /**
+         * @brief Construct a Chebyshev polynomial of specified order and range.
+         *
+         * The parameters are initialized to zero.
+         */
+        explicit Chebyshev1Function2(
+            unsigned int order, ///< order of polynomial (0 for constant)
+            double minX = -1,   ///< minimum allowed x
+            double minY = -1,   ///< minimum allowed y
+            double maxX = 1,    ///< maximum allowed x
+            double maxY = 1)    ///< maximum allowed y
+        :
+            PolynomialBaseFunction2<ReturnT>(order),
+            _xCheby(this->_order + 1),
+            _yCoeffs(this->_order + 1)
+        {
+            _initialize(minX, maxX, minY, maxY);
+        }
+
+        /**
+         * @brief Construct a Chebyshev polynomial with specified parameters and range.
+         *
+         * The order of the polynomial is set to the length of the params vector.
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if params is empty
+         */
+        explicit Chebyshev1Function2(
+            std::vector<double> params,
+                ///< polynomial coefficients (const, T1(x), T1(y), T2(x), T1(x) T1(y), T2(y)...)
+                ///< length must be one of 1, 3, 6, 10, 15...
+            double minX = -1,    ///< minimum allowed x
+            double minY = -1,    ///< minimum allowed y
+            double maxX = 1,     ///< maximum allowed x
+            double maxY = 1)     ///< maximum allowed y
+        :
+            PolynomialBaseFunction2<ReturnT>(params),
+            _xCheby(this->_order + 1),
+            _yCoeffs(this->_order + 1)
+        {
+            _initialize(minX, maxX, minY, maxY);
+        }
+        
+        virtual ~Chebyshev1Function2() {}
+       
+        virtual Function2Ptr clone() const {
+            return Function2Ptr(new Chebyshev1Function2(this->_params, _minX, _maxX));
+        }
+        
+        int getMinX() const { return _minX; };
+        int getMinY() const { return _minY; };
+        int getMaxX() const { return _maxX; };
+        int getMaxY() const { return _maxY; };
+        
+        /**
+         * @brief Return a truncated copy of lower (or equal) order
+         *
+         * @throw lsst::pex::exceptions::InvalidParameter if truncated order > original order
+         */
+        virtual Chebyshev1Function2 truncate(
+                int truncOrder ///< order of truncated polynomial
+        ) {
+            if (truncOrder > this->_order) {
+                std::ostringstream os;
+                os << "truncated order=" << truncOrder << " must be <= original order=" << this->_order;
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            }
+            int truncNParams = this->nParamsFromOrder(truncOrder);
+            std::vector<double> truncParams = this->_params(this->_params.begin(),
+                                                            this->_params.begin() + truncNParams);
+            return Chebyshev1Function2(truncParams, _minX, _minY, _maxX, _maxY);
+
+        }
+
+        virtual ReturnT operator() (double x, double y) const {
+            /* Solve as follows:
+            - f(x,y) = Cy0 T0(y') + Cy1 T1(y') + Cy2 T2(y') + Cy3 T3(y') + ...
+            where:
+              Cy0 = P0 T0(x') + P1 T1(x') + P3 T2(x') + P6 T3(x') + ...
+              Cy1 = P2 T0(x') + P4 T1(x') + P7 T2(x') + ...
+              Cy2 = P5 T0(x') + P8 T1(x') + ...
+              Cy3 = P9 T0(x') + ...
+              ...
+            
+            First compute Tn(x') for each n
+            Then use that to compute Cy0, Cy1, ...Cyn
+            Then solve the y Chebyshev polynomial using the Clenshaw algorithm
+            */
+            double const xPrime = (x + _offsetX) * _scaleX;
+            double const yPrime = (y + _offsetY) * _scaleY;
+
+            // Compute _xCheby[i] = Ti(x') using the standard recurrence relationship;
+            // note that _initialize already set _xCheby[0] = 1.
+            if (this->_order > 0) {
+                _xCheby[1] = xPrime;
+            }
+            for (int xInd = 2; xInd <= this->_order; ++xInd) {
+                _xCheby[xInd] = (2 * xPrime * _xCheby[xInd-1]) - _xCheby[xInd-2];
+            }
+            
+            // Initialize _yCoeffs to right-hand terms of equation shown in documentation block
+            int paramInd = static_cast<int>(this->_params.size()) - 1;
+            for (int yCoeffInd = this->_order, xChebyInd = 0; yCoeffInd >= 0;
+                --yCoeffInd, ++xChebyInd, --paramInd) {
+                _yCoeffs[yCoeffInd] = this->_params[paramInd] * _xCheby[xChebyInd];
+            }
+            // Add the remaining terms to _yCoeffs (starting from _order-1 because _yCoeffs[_order] is done)
+            for (int startYCoeffInd = this->_order - 1, yCoeffInd = startYCoeffInd, xChebyInd = 0;
+                paramInd >= 0; --paramInd) {
+                _yCoeffs[yCoeffInd] += this->_params[paramInd] * _xCheby[xChebyInd];
+                if (yCoeffInd == 0) {
+                    --startYCoeffInd;
+                    yCoeffInd = startYCoeffInd;
+                    xChebyInd = 0;
+                } else {
+                    --yCoeffInd;
+                    ++xChebyInd;
+                }
+            }
+            
+            // Compute result using Clenshaw algorithm for the polynomial in y
+            return static_cast<ReturnT>(_clenshaw(yPrime, 0));
+        }
+
+        virtual std::string toString(std::string const& prefix) const {
+            std::ostringstream os;
+            os << "Chebyshev1Function2 [";
+            os << this->_order << ", " << _minX << ", " << _minY << ", " << _maxX << ", "<< _maxY << "]";
+            os << Function2<ReturnT>::toString(prefix);
+            return os.str();
+        }
+
+    private:
+        mutable std::vector<double> _xCheby; ///< working vector: value of T_n(x')
+        mutable std::vector<double> _yCoeffs; ///< working vector: transformed coeffs of Y polynomial
+        double _minX;    ///< minimum allowed x
+        double _minY;    ///< minimum allowed y
+        double _maxX;    ///< maximum allowed x
+        double _maxY;    ///< maximum allowed y
+        double _scaleX;   ///< x' = (x + _offsetX) * _scaleX
+        double _scaleY;   ///< y' = (y + _offsetY) * _scaleY
+        double _offsetX;  ///< x' = (x + _offsetX) * _scaleX
+        double _offsetY;  ///< y' = (y + _offsetY) * _scaleY
+        
+        /**
+         * @brief Clenshaw recursive function for solving the Chebyshev polynomial
+         */
+        double _clenshaw(double y, unsigned int ind) const {
+            if (ind == this->_order) {
+                return _yCoeffs[ind];
+            } else if (ind == 0) {
+                return (y * _clenshaw(y, 1)) + _yCoeffs[0] - _clenshaw(y, 2);
+            } else if (ind == this->_order - 1) {
+                return (2 * y * _clenshaw(y, ind+1)) + _yCoeffs[ind];
+            } else if (ind < this->_order) {
+                return (2 * y * _clenshaw(y, ind+1)) + _yCoeffs[ind] - _clenshaw(y, ind+2);
+            } else {
+                // this case only occurs if _order < 3
+                return 0;
+            }
+        }
+        
+        /**
+         * @brief initialize private constants
+         */
+        void _initialize(double minX, double maxX, double minY, double maxY) {
+            _minX = minX;
+            _minY = minY;
+            _maxX = maxX;
+            _maxY = maxY;
+            _scaleX = 2 / (maxX - minX);
+            _scaleY = 2 / (maxY - minY);
+            _offsetX = -(minX + maxX) / 2.0;
+            _offsetY = -(minY + maxY) / 2.0;
+            _xCheby[0] = 1.0;
+        }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const) {
+            ar & make_nvp("fn2",
+                          boost::serialization::base_object<
+                          PolynomialBaseFunction2<ReturnT> >(*this));
+            ar & make_nvp("order", this->_order);
+        }
+    };
 
     /**
      * @brief 1-dimensional Lanczos function
@@ -1048,6 +1238,34 @@ inline void load_construct_data(Archive& ar,
     ar >> make_nvp("minX", minX);
     ar >> make_nvp("maxX", maxX);
     ::new(f) lsst::afw::math::Chebyshev1Function1<ReturnT>(params, minX, maxX);
+}
+    
+template <typename ReturnT, class Archive>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::Chebyshev1Function2<ReturnT> const* f,
+                                unsigned int const) {
+    ar << make_nvp("params", f->getParameters());
+    ar << make_nvp("minX", f->_minX);
+    ar << make_nvp("minY", f->_minY);
+    ar << make_nvp("maxX", f->_maxX);
+    ar << make_nvp("maxY", f->_maxY);
+}
+
+template <typename ReturnT, class Archive>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::Chebyshev1Function2<ReturnT>* f,
+                                unsigned int const) {
+    std::vector<double> params;
+    double minX;
+    double minY;
+    double maxX;
+    double maxY;
+    ar >> make_nvp("params", params);
+    ar >> make_nvp("minX", minX);
+    ar >> make_nvp("minY", minY);
+    ar >> make_nvp("maxX", maxX);
+    ar >> make_nvp("maxY", maxY);
+    ::new(f) lsst::afw::math::Chebyshev1Function2<ReturnT>(params, minX, minY, maxX, maxY);
 }
 
 template <typename ReturnT, class Archive>

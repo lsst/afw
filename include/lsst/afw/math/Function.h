@@ -241,7 +241,7 @@ using boost::serialization::make_nvp;
          * so one can obtain a copy of an actual function
          * instead of a useless copy of the base class.
          *
-         * Every non-virtual function must override this method.
+         * Every concrete subclass must override this method.
          *
          * @return a pointer to a deep copy of the function
          */
@@ -387,6 +387,115 @@ using boost::serialization::make_nvp;
                           Function<ReturnT> >(*this));
         }
     };
+
+    /**
+     * @brief Base class for 2-dimensional polynomials of the form:
+     *
+     * f(x,y) =   c0                                                    (0th order)
+     *          + c1 f1(x) + c2 f1(y)                                   (1st order)
+     *          + c2 f2(x) + c3 f1(x) f1(y) + c4 f2(y)                  (2nd order)
+     *          + c5 f3(x) + c6 f2(x) f1(y) + c7 f1(x) f2(y) + f3(y)    (3rd order)
+     *          + ...
+     *
+     * @ingroup afw
+     */
+    template<typename ReturnT>
+    class PolynomialBaseFunction2: public Function2<ReturnT> {
+    public:
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
+
+        /**
+         * @brief Construct a polynomial function of specified order.
+         *
+         * The polynomial will have (order + 1) * (order + 2) / 2 coefficients
+         *
+         * The parameters are initialized to zero.
+         */
+        explicit PolynomialBaseFunction2(
+            unsigned int order) ///< order of polynomial (0 for constant)
+        :
+            Function2<ReturnT>(nParametersFromOrder(order),
+            _order(order)
+        {}
+
+        /**
+         * @brief Construct a polynomial function with specified parameters.
+         *
+         * The order of the polynomial is determined from the length of the params vector
+         * (see orderFromNParameters) and only certain lengths are suitable: 1, 3, 6, 10, 15...
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if params length is unsuitable
+         */
+        explicit PolynomialBaseFunction2(
+            std::vector<double> params) ///< polynomial coefficients
+        :
+            Function2<ReturnT>(params),
+            _order(nParametersFromOrder(static_cast<int>(params.size()))
+        {}
+        
+        virtual ~PolynomialBaseFunction2() {}
+        
+        /**
+         * @brief Get the polynomial order
+         */
+        bool getOrder() const { return _order; };
+       
+        virtual bool isLinearCombination() const { return true; };
+        
+        /**
+         * @brief Compute number of parameters from polynomial order.
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if order < 0
+         */
+        static int nParametersFromOrder(int order) const {
+            if (order < 0) {
+                std::ostringstream os;
+                os << "order=" << order << " invalid: must be >= 0";
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            return (order + 1) * (order + 2) / 2;
+        }
+        
+        /**
+         * @brief Compute polynomial order from the number of parameters
+         *
+         * Only certain values of nParameters are acceptable, including:
+         * nParameters order
+         *      1        0
+         *      3        1
+         *      6        2
+         *     10        3
+         *     15        4
+         *    ...
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if nParameters is invalid
+         */
+        static int orderFromNParameters(int nParameters) const {
+            int order = static_cast<int>(
+                0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(nParameters))))) / 2.0));
+            if (nParameters != nParametersFromOrder(order)) {
+                std::ostringstream os;
+                os << "nParameters=" << nParameters << " invalid: order is not an integer";
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            }
+            return order;
+        };
+
+    protected:
+        unsigned int _order; ///< order of polynomial
+
+    private:
+        friend class boost::serialization::access;
+#ifndef SWIG
+        template <class Archive>
+        void serialize(Archive& ar, unsigned const int version) {
+            boost::serialization::void_cast_register<
+                Function2<ReturnT>, Function<ReturnT> >(
+                    static_cast< Function2<ReturnT>* >(0),
+                    static_cast< Function<ReturnT>* >(0));
+        }
+#endif
+    };
+
 
 }}}   // lsst::afw::math
 
