@@ -102,6 +102,8 @@ private:
 class Footprint : public lsst::daf::data::LsstBase {
 public:
     typedef boost::shared_ptr<Footprint> Ptr;
+    typedef boost::shared_ptr<const Footprint> Ptr;
+
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
     typedef std::vector<Peak::Ptr> PeakList;
