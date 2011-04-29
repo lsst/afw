@@ -145,11 +145,12 @@ public:
         _calib(new lsst::afw::image::Calib(*rhs.getCalib())),
         _psf(_clonePsf(rhs.getPsf()))
     {
-        // Make sure that we create a PropertyList even if the incoming
-        // metadata is a PropertySet.
-        PTR(lsst::daf::base::PropertyList) pl(new lsst::daf::base::PropertyList);
-        pl->combine(rhs.getMetadata());
-        setMetadata(pl);
+        if (not deep) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "Exposure's converting copy constructor must make a deep copy");
+        }
+
+        setMetadata(deep ? rhs.getMetadata()->deepCopy() : rhs.getMetadata());
     }
 
     virtual ~Exposure(); 
