@@ -152,6 +152,27 @@ class FootprintTestCase(unittest.TestCase):
         
         self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
 
+    def testIntersectMask(self):
+        bbox = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(10))
+        fp = afwDetect.Footprint(bbox)
+        maskBBox = afwGeom.BoxI(bbox)
+        maskBBox.grow(-2)
+        mask = afwImage.MaskU(maskBBox)
+        innerBBox = afwGeom.BoxI(maskBBox)
+        innerBBox.grow(-2)
+        subMask = mask.Factory(mask, innerBBox, afwImage.PARENT)
+        subMask.set(1)
+
+        fp.intersectMask(mask)
+        fpBBox = fp.getBBox()
+        self.assertEqual(fpBBox.getMinX(), maskBBox.getMinX())
+        self.assertEqual(fpBBox.getMinY(), maskBBox.getMinY())
+        self.assertEqual(fpBBox.getMaxX(), maskBBox.getMaxX())
+        self.assertEqual(fpBBox.getMaxY(), maskBBox.getMaxY())
+
+        self.assertEqual(fp.getArea(), maskBBox.getArea() - innerBBox.getArea())
+
+
     def testAddSpans(self):
         """Add spans to a Footprint"""
         for y, x0, x1 in [(10, 100, 105), (11, 99, 104)]:

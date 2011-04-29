@@ -53,11 +53,15 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %include "lsst/afw/detection/FootprintSet.h"
 %include "lsst/afw/detection/FootprintFunctor.h"
 
+%extend lsst::afw::detection::Footprint {
+    %template(intersectMask) intersectMask<lsst::afw::image::MaskPixel>;
+}
+
 %template(PeakContainerT)      std::vector<lsst::afw::detection::Peak::Ptr>;
 %template(SpanContainerT)      std::vector<lsst::afw::detection::Span::Ptr>;
 %template(FootprintContainerT) std::vector<lsst::afw::detection::Footprint::Ptr>;
 
-%define %footprintOperations(NAME, PIXEL_TYPE)
+%define %imageOperations(NAME, PIXEL_TYPE)
     %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(FootprintFunctorMI ##NAME)
                        lsst::afw::detection::FootprintFunctor<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
@@ -66,24 +70,27 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
                        lsst::afw::detection::setImageFromFootprintList<lsst::afw::image::Image<PIXEL_TYPE> >
 %enddef
 
+%define %maskOperations(PIXEL_TYPE)
+    %template(footprintAndMask) lsst::afw::detection::footprintAndMask<PIXEL_TYPE>;
+    %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<lsst::afw::image::MaskPixel>;
+    %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<lsst::afw::image::MaskPixel>;
+%enddef
+
 %define %FootprintSet(NAME, PIXEL_TYPE)
 %template(FootprintSet##NAME) lsst::afw::detection::FootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
 %template(makeFootprintSet) lsst::afw::detection::makeFootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
 %enddef
 
 
-%footprintOperations(F, float);
+%imageOperations(F, float);
+%imageOperations(D, double);
+%maskOperations(lsst::afw::image::MaskPixel);
 %template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
 
 %FootprintSet(U, boost::uint16_t);
 %FootprintSet(I, int);
 %FootprintSet(D, double);
 %FootprintSet(F, float);
-
-//%template(MaskU) lsst::afw::image::Mask<maskPixelType>;
-%template(footprintAndMask) lsst::afw::detection::footprintAndMask<lsst::afw::image::MaskPixel>;
-%template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<lsst::afw::image::MaskPixel>;
-%template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<lsst::afw::image::MaskPixel>;
 
 %extend lsst::afw::detection::Span {
     %pythoncode {
