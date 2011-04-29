@@ -126,7 +126,12 @@ class ThresholdTestCase(unittest.TestCase):
         try:
             afwDetect.createThreshold(3.4, "value", False)
         except:
-            self.fail("Failed to build Threshold with proper parameters")
+            self.fail("Failed to build Threshold with VALUE, False parameters")
+
+        try:
+            afwDetect.createThreshold(0x4, "bitmask")
+        except:
+            self.fail("Failed to build Threshold with BITMASK parameters")
         
 
 class FootprintTestCase(unittest.TestCase):
@@ -613,6 +618,52 @@ class FootprintSetTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class MaskFootprintSetTestCase(unittest.TestCase):
+    """A test case for generating FootprintSet from Masks"""
+
+    def setUp(self):
+        self.mim = afwImage.MaskedImageF(afwGeom.ExtentI(12, 8))
+        #
+        # Objects that we should detect
+        #
+        self.objects = []
+        self.objects += [Object(0x2, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
+        self.objects += [Object(0x41, [(5, 7, 8), (6, 8, 8)])]
+        self.objects += [Object(0x42, [(5, 10, 10)])]
+        self.objects += [Object(0x82, [(6, 3, 3)])]
+
+        self.mim.set((0, 0, 0))                 # clear image
+        for obj in self.objects:
+            obj.insert(self.mim.getImage())
+            obj.insert(self.mim.getMask())
+
+        if display:
+            ds9.mtv(self.mim, frame=0)
+        
+    def tearDown(self):
+        del self.mim
+
+    def testFootprints(self):
+        """Check that we found the correct number of objects using makeFootprintSet"""
+        level = 0x2
+        ds = afwDetect.makeFootprintSet(self.mim.getMask(), afwDetect.createThreshold(level, "bitmask"))
+
+        objects = ds.getFootprints()
+
+        if 0 and display:
+            ds9.mtv(self.mim, frame=0)
+
+        self.assertEqual(len(objects), len([o for o in self.objects if (o.val & level)]))
+
+        i = 0
+        for o in self.objects:
+            if o.val & level:
+                self.assertEqual(o, objects[i])
+                i += 1
+            
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 class NaNFootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet when the image contains NaNs"""
 
@@ -675,6 +726,7 @@ def suite():
     suites += unittest.makeSuite(FootprintTestCase)
     suites += unittest.makeSuite(FootprintSetTestCase)
     suites += unittest.makeSuite(NaNFootprintSetTestCase)
+    suites += unittest.makeSuite(MaskFootprintSetTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
