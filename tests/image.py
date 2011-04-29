@@ -59,7 +59,7 @@ class ImageTestCase(unittest.TestCase):
     """A test case for Image"""
     def setUp(self):
         self.val1, self.val2 = 10, 100
-        self.image1 = afwImage.ImageF(afwGeom.Extent2I(100, 200))
+        self.image1 = afwImage.ImageF(afwGeom.ExtentI(100, 200))
         self.image1.set(self.val1)
         self.image2 = afwImage.ImageF(self.image1.getDimensions())
         self.image2.set(self.val2)
@@ -93,7 +93,7 @@ class ImageTestCase(unittest.TestCase):
     def testInitializeImages(self):
         val = 666
         for ctor in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
-            im = ctor(afwGeom.Extent2I(10, 10), val)
+            im = ctor(10, 10, val)
             self.assertEqual(im.get(0, 0), val)
 
             im2 = ctor(afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(10, 10)), val)
@@ -160,9 +160,9 @@ class ImageTestCase(unittest.TestCase):
     
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on Images of different sizes"
-        i1 = afwImage.ImageF(afwGeom.Extent2I(100, 100))
+        i1 = afwImage.ImageF(100, 100)
         i1.set(100)
-        i2 = afwImage.ImageF(afwGeom.Extent2I(10, 10))
+        i2 = afwImage.ImageF(10, 10)
         i2.set(10)
         
         def tst1(i1, i2):
@@ -251,7 +251,7 @@ class ImageTestCase(unittest.TestCase):
     def testOrigin(self):
         """Check that we can set and read the origin"""
 
-        im = afwImage.ImageF(afwGeom.Extent2I(10, 20))
+        im = afwImage.ImageF(10, 20)
         x0 = y0 = 0
         
         self.assertEqual(im.getX0(), x0)

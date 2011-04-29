@@ -74,6 +74,37 @@ void afwImage::Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDef
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
+    unsigned int width,                 ///< number of columns
+    unsigned int height,                ///< number of rows
+    MaskPlaneDict const& planeDefs ///< desired mask planes
+) :
+    afwImage::ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = 0x0;
+}
+
+/**
+ * \brief Construct a Mask initialized to a specified value
+ */
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
+    unsigned int width,                 ///< number of columns
+    unsigned int height,                ///< number of rows
+    MaskPixelT initialValue, ///< Initial value
+    MaskPlaneDict const& planeDefs ///< desired mask planes
+) :
+    afwImage::ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = initialValue;
+}
+
+/**
+ * \brief Construct a Mask initialized to 0x0
+ */
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
     afwGeom::Extent2I const & dimensions, ///< Number of columns, rows
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :

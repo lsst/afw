@@ -97,6 +97,25 @@ namespace afwDetection = lsst::afw::detection;
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    unsigned int width,                 ///< number of columns
+    unsigned int height,                ///< number of rows
+    afwImage::Wcs const & wcs           ///< the Wcs
+) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _maskedImage(width, height),
+    _wcs(wcs.clone()),
+    _detector(),
+    _filter(),
+    _calib(new afwImage::Calib())
+{
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
+}
+
+/** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
+  * a Wcs (which may be default constructed)
+  */          
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Extent2I const & dimensions, ///< desired image width/height
     afwImage::Wcs const & wcs   ///< the Wcs
 ) :
@@ -140,9 +159,33 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib())
+    _calib(new afwImage::Calib()),
+    _psf(PTR(lsst::afw::detection::Psf)())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
+}
+
+
+/** @brief Copy an Exposure
+  */        
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    Exposure const &src, ///< Parent Exposure
+    bool const deep      ///< Should we copy the pixels?
+) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _maskedImage(src.getMaskedImage(), deep),
+    _wcs(src._wcs->clone()),
+    _detector(src._detector),
+    _filter(src._filter),
+    _calib(new lsst::afw::image::Calib(*src.getCalib())),
+    _psf(_clonePsf(src.getPsf()))
+{
+/*
+  * N.b. You'll need to update the subExposure cctor and the generalised cctor in Exposure.h
+  * when you add new data members --- this note is here as you'll be making the same changes here!
+  */
+    setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 
 /** @brief Construct a subExposure given an Exposure and a bounding box
@@ -162,13 +205,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _wcs(src._wcs->clone()),
     _detector(src._detector),
     _filter(src._filter),
-    _calib(new lsst::afw::image::Calib(*src.getCalib()))
+    _calib(new lsst::afw::image::Calib(*src.getCalib())),
+    _psf(_clonePsf(src.getPsf()))
 {
-/*
-  * N.b. You'll need to update the generalised copy constructor in Exposure.h when you add new data members
-  * --- this note is here as you'll be making the same changes here!
-  */
-    _clonePsf(src.getPsf());
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 

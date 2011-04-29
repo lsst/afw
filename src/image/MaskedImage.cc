@@ -47,6 +47,25 @@ namespace image = lsst::afw::image;
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+    unsigned int width, ///< number of columns
+    unsigned int height, ///< number of rows
+    MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _image(new Image(width, height)),
+    _mask(new Mask(width, height, planeDict)),
+    _variance(new Variance(width, height)) {
+    *_image = 0;
+    *_mask = 0x0;
+    *_variance = 0;
+}
+
+/** Constructors
+ *
+ * \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     geom::Extent2I const & dimensions, //!< Number of columns, rows in image
     MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
 ) :

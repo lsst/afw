@@ -84,6 +84,11 @@ public:
     
     // Class Constructors and Destructor
     explicit Exposure(
+        unsigned int width, unsigned int height, 
+        Wcs const& wcs=NoWcs
+    );
+
+    explicit Exposure(
         lsst::afw::geom::Extent2I const & dimensions=lsst::afw::geom::Extent2I(),
         Wcs const& wcs=NoWcs
     );
@@ -103,14 +108,20 @@ public:
         bool const conformMasks=false
     );
 	
-	explicit Exposure(
-		char **ramFile, size_t *ramFileLen,
+    explicit Exposure(
+        char **ramFile,
+        size_t *ramFileLen,
         int const hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const origin = LOCAL, 
         bool const conformMasks=false
     );
 	
+    Exposure(
+        Exposure const &src, 
+        bool const deep=false
+    );
+
     Exposure(
         Exposure const &src, 
         lsst::afw::geom::Box2I const& bbox, 
@@ -129,10 +140,10 @@ public:
         lsst::daf::data::LsstBase(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
         _wcs(rhs.getWcs()->clone()),
-        _psf(_clonePsf(rhs.getPsf())),
         _detector(rhs.getDetector()),
         _filter(rhs.getFilter()),
-        _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
+        _calib(new lsst::afw::image::Calib(*rhs.getCalib())),
+        _psf(_clonePsf(rhs.getPsf()))
     {
         // Make sure that we create a PropertyList even if the incoming
         // metadata is a PropertySet.
@@ -145,9 +156,9 @@ public:
 
     // Get Members
     /// Return the MaskedImage
-    MaskedImageT getMaskedImage() { return _maskedImage; };
+    MaskedImageT getMaskedImage() { return _maskedImage; }
     /// Return the MaskedImage
-    MaskedImageT getMaskedImage() const { return _maskedImage; };
+    MaskedImageT getMaskedImage() const { return _maskedImage; }
     Wcs::Ptr getWcs() const;
     /// Return the Exposure's Detector information
     lsst::afw::cameraGeom::Detector::Ptr getDetector() const { return _detector; }

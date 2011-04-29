@@ -79,6 +79,15 @@ public:
 
     // Constructors        
     explicit Mask(
+        unsigned int width, unsigned int height,
+        MaskPlaneDict const& planeDefs = MaskPlaneDict()
+    );
+    explicit Mask(
+        unsigned int width, unsigned int height,
+        MaskPixelT initialValue, 
+        MaskPlaneDict const& planeDefs = MaskPlaneDict()
+    );
+    explicit Mask(
         geom::Extent2I const & dimensions=geom::Extent2I(),
         MaskPlaneDict const& planeDefs = MaskPlaneDict()
     );

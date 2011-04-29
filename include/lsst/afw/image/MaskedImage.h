@@ -607,6 +607,10 @@ public:
 
     // Constructors
     explicit MaskedImage(
+        unsigned int width, unsigned int height, 
+        MaskPlaneDict const& planeDict=MaskPlaneDict()
+    );
+    explicit MaskedImage(
         geom::Extent2I const & dimensions=geom::Extent2I(), 
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );

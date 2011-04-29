@@ -404,6 +404,22 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
+image::Image<PixelT>::Image(unsigned int width, ///< number of columns
+                            unsigned int height, ///< number of rows
+                            PixelT initialValue ///< Initial value
+                           ) :
+    image::ImageBase<PixelT>(geom::ExtentI(width, height))
+{
+    *this = initialValue;
+}
+
+/**
+ * Create an initialised Image of the specified size 
+ *
+ * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
+ * which may be conveniently used to make objects of an appropriate size
+ */
+template<typename PixelT>
 image::Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of columns, rows
                             PixelT initialValue ///< Initial value
                            ) :
