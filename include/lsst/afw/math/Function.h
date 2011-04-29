@@ -488,12 +488,7 @@ using boost::serialization::make_nvp;
         friend class boost::serialization::access;
 #ifndef SWIG
         template <class Archive>
-        void serialize(Archive& ar, unsigned const int version) {
-            boost::serialization::void_cast_register<
-                Function2<ReturnT>, Function<ReturnT> >(
-                    static_cast< Function2<ReturnT>* >(0),
-                    static_cast< Function<ReturnT>* >(0));
-        }
+        void serialize(Archive& ar, unsigned const int version) { }
 #endif
     };
 
@@ -517,6 +512,22 @@ inline void load_construct_data(Archive& ar,
     std::vector<double> params;
     ar >> make_nvp("params", params);
     ::new(f) lsst::afw::math::Function<ReturnT>(params);
+}
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::BasePolynomialFunction2<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("order", f->getOrder());
+}
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::BasePolynomialFunction2<ReturnT>* f,
+                                unsigned int const version) {
+    int order;
+    ar >> make_nvp("order", order);
+    ::new(f) lsst::afw::math::BasePolynomialFunction2<ReturnT>(order);
 }
 
 }}
