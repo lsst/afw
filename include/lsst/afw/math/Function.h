@@ -192,10 +192,14 @@ using boost::serialization::make_nvp;
     protected:
         std::vector<double> _params;
 
-    private:
+        /* Default constructor: intended only for serialization */
+        explicit Function() : lsst::daf::data::LsstBase(typeid(this)), _params(0) {}   
+
+    private: // serialization support
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
+            ar << make_nvp("params", _params);
         }
     };
 
@@ -255,14 +259,15 @@ using boost::serialization::make_nvp;
 
         virtual void computeCache(int const n) {}
 
-    private:
+    protected:
+        /* Default constructor: intended only for serialization */
+        explicit Function1() : Function<ReturnT>() {}    
+    
+    private: // serialization
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
-            boost::serialization::void_cast_register<
-                Function1<ReturnT>, Function<ReturnT> >(
-                    static_cast< Function1<ReturnT>* >(0),
-                    static_cast< Function<ReturnT>* >(0));
+        void serialize(Archive& ar, unsigned const int version) {
+            ar & make_nvp("fn", boost::serialization::base_object<Function<ReturnT> >(*this));
         }
     };    
     
@@ -328,65 +333,18 @@ using boost::serialization::make_nvp;
                               "getDFuncDParameters is not implemented for this class");
         }
 
+    protected:
+        /* Default constructor: intended only for serialization */
+        explicit Function2() : Function<ReturnT>() {}    
+    
     private:
         friend class boost::serialization::access;
-#ifndef SWIG
         template <class Archive>
         void serialize(Archive& ar, unsigned const int version) {
-            boost::serialization::void_cast_register<
-                Function2<ReturnT>, Function<ReturnT> >(
-                    static_cast< Function2<ReturnT>* >(0),
-                    static_cast< Function<ReturnT>* >(0));
-        }
-#endif
-    };
-
-
-    /**
-     * @brief a class used in function calls to indicate that no Function1 is being provided
-     */
-    template<typename ReturnT>
-    class NullFunction1 : public Function1<ReturnT> {
-    public:
-        explicit NullFunction1() : Function1<ReturnT>(0) {}
-        typename Function1<ReturnT>::Ptr clone() const {
-            return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
-
-    private:
-        ReturnT operator() (double) const { return static_cast<ReturnT>(0); }
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
-            ar & make_nvp("fn",
-                          boost::serialization::base_object<
-                          Function<ReturnT> >(*this));
+            ar & make_nvp("fn", boost::serialization::base_object<Function<ReturnT> >(*this));
         }
     };
 
-    /**
-     * @brief a class used in function calls to indicate that no Function2 is being provided
-     */
-    template<typename ReturnT>
-    class NullFunction2 : public Function2<ReturnT> {
-    public:
-        explicit NullFunction2() : Function2<ReturnT>(0) {}
-        typename Function2<ReturnT>::Ptr clone() const {
-            return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
-
-    private:
-        ReturnT operator() (double, double) const { return static_cast<ReturnT>(0); }
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
-            ar & make_nvp("fn",
-                          boost::serialization::base_object<
-                          Function<ReturnT> >(*this));
-        }
-    };
 
     /**
      * @brief Base class for 2-dimensional polynomials of the form:
@@ -484,52 +442,62 @@ using boost::serialization::make_nvp;
     protected:
         int _order; ///< order of polynomial
 
+        /* Default constructor: intended only for serialization */
+        explicit BasePolynomialFunction2() : Function2<ReturnT>(1), _order(0) {}    
+
     private:
         friend class boost::serialization::access;
-#ifndef SWIG
         template <class Archive>
-        void serialize(Archive& ar, unsigned const int version) { }
-#endif
+        void serialize(Archive& ar, unsigned const int version) {
+            ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
+            ar & make_nvp("order", _order);
+        }
+    };
+
+
+    /**
+     * @brief a class used in function calls to indicate that no Function1 is being provided
+     */
+    template<typename ReturnT>
+    class NullFunction1 : public Function1<ReturnT> {
+    public:
+        explicit NullFunction1() : Function1<ReturnT>(0) {}
+        typename Function1<ReturnT>::Ptr clone() const {
+            return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
+
+    private:
+        ReturnT operator() (double) const { return static_cast<ReturnT>(0); }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT> >(*this));
+        }
+    };
+
+    /**
+     * @brief a class used in function calls to indicate that no Function2 is being provided
+     */
+    template<typename ReturnT>
+    class NullFunction2 : public Function2<ReturnT> {
+    public:
+        explicit NullFunction2() : Function2<ReturnT>(0) {}
+        typename Function2<ReturnT>::Ptr clone() const {
+            return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
+
+    private:
+        ReturnT operator() (double, double) const { return static_cast<ReturnT>(0); }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
+        }
     };
 
 
 }}}   // lsst::afw::math
-
-namespace boost {
-namespace serialization {
-
-template <class Archive, typename ReturnT>
-inline void save_construct_data(Archive& ar,
-                                lsst::afw::math::Function<ReturnT> const* f,
-                                unsigned int const version) {
-    ar << make_nvp("params", f->getParameters());
-}
-
-template <class Archive, typename ReturnT>
-inline void load_construct_data(Archive& ar,
-                                lsst::afw::math::Function<ReturnT>* f,
-                                unsigned int const version) {
-    std::vector<double> params;
-    ar >> make_nvp("params", params);
-    ::new(f) lsst::afw::math::Function<ReturnT>(params);
-}
-
-template <class Archive, typename ReturnT>
-inline void save_construct_data(Archive& ar,
-                                lsst::afw::math::BasePolynomialFunction2<ReturnT> const* f,
-                                unsigned int const version) {
-    ar << make_nvp("order", f->getOrder());
-}
-
-template <class Archive, typename ReturnT>
-inline void load_construct_data(Archive& ar,
-                                lsst::afw::math::BasePolynomialFunction2<ReturnT>* f,
-                                unsigned int const version) {
-    int order;
-    ar >> make_nvp("order", order);
-    ::new(f) lsst::afw::math::BasePolynomialFunction2<ReturnT>(order);
-}
-
-}}
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTION_H
