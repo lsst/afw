@@ -34,15 +34,14 @@ namespace afwMath = lsst::afw::math;
  */
 template<typename ReturnT>
 std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, double y) const {
-    int const nOrder = _order;
-    std::vector<double> coeffs((nOrder + 1)*(nOrder + 2)/2);
+    std::vector<double> coeffs(this->getNParameters());
 
     //
     // Go through params order by order, evaluating x^r y^s;  we do this by first evaluating
     // y^s for a complete order, then going through again multiplying by x^r
     //
     int i0 = 0;                         // starting index for this order's coefficients
-    for (int order = 0; order <= nOrder; ++order) {
+    for (int order = 0; order <= this->_order; ++order) {
         coeffs[i0] = 1;
         double zn = y;                  // y^s
         for (int i = 1; i <= order; ++i) {

@@ -675,8 +675,7 @@ using boost::serialization::make_nvp;
 
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
-            os << "Chebyshev1Function1 [";
-            os << _order << ", " << _minX << ", " << _maxX << "]: ";
+            os << "Chebyshev1Function1 [" << _minX << ", " << _maxX << "]: ";
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
         }
@@ -821,9 +820,8 @@ using boost::serialization::make_nvp;
                 os << "truncated order=" << truncOrder << " must be <= original order=" << this->_order;
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
             }
-            int truncNParams = this->nParamsFromOrder(truncOrder);
-            std::vector<double> truncParams = this->_params(this->_params.begin(),
-                                                            this->_params.begin() + truncNParams);
+            int truncNParams = this->nParametersFromOrder(truncOrder);
+            std::vector<double> truncParams(this->_params.begin(), this->_params.begin() + truncNParams);
             return Chebyshev1Function2(truncParams, _minX, _minY, _maxX, _maxY);
 
         }

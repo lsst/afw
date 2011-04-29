@@ -144,7 +144,7 @@ using boost::serialization::make_nvp;
          *
          * @warning: subclasses must override if true.
          */
-        virtual bool isLinearCombination() const { return false; };
+        virtual bool isLinearCombination() const { return false; }
         
         /**
          * @brief Set one function parameter without range checking
@@ -414,7 +414,7 @@ using boost::serialization::make_nvp;
         explicit PolynomialBaseFunction2(
             unsigned int order) ///< order of polynomial (0 for constant)
         :
-            Function2<ReturnT>(nParametersFromOrder(order),
+            Function2<ReturnT>(PolynomialBaseFunction2::nParametersFromOrder(order)),
             _order(order)
         {}
 
@@ -430,7 +430,7 @@ using boost::serialization::make_nvp;
             std::vector<double> params) ///< polynomial coefficients
         :
             Function2<ReturnT>(params),
-            _order(nParametersFromOrder(static_cast<int>(params.size()))
+            _order(PolynomialBaseFunction2::orderFromNParameters(static_cast<int>(params.size())))
         {}
         
         virtual ~PolynomialBaseFunction2() {}
@@ -438,20 +438,21 @@ using boost::serialization::make_nvp;
         /**
          * @brief Get the polynomial order
          */
-        bool getOrder() const { return _order; };
+        int getOrder() const { return _order; }
        
-        virtual bool isLinearCombination() const { return true; };
+        virtual bool isLinearCombination() const { return true; }
         
         /**
          * @brief Compute number of parameters from polynomial order.
          *
          * @throw lsst::pex::exceptions::InvalidParameterException if order < 0
          */
-        static int nParametersFromOrder(int order) const {
+        static int nParametersFromOrder(int order) {
             if (order < 0) {
                 std::ostringstream os;
                 os << "order=" << order << " invalid: must be >= 0";
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            }
             return (order + 1) * (order + 2) / 2;
         }
         
@@ -469,19 +470,19 @@ using boost::serialization::make_nvp;
          *
          * @throw lsst::pex::exceptions::InvalidParameterException if nParameters is invalid
          */
-        static int orderFromNParameters(int nParameters) const {
+        static int orderFromNParameters(int nParameters) {
             int order = static_cast<int>(
                 0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(nParameters))))) / 2.0));
-            if (nParameters != nParametersFromOrder(order)) {
+            if (nParameters != PolynomialBaseFunction2::nParametersFromOrder(order)) {
                 std::ostringstream os;
                 os << "nParameters=" << nParameters << " invalid: order is not an integer";
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
             }
             return order;
-        };
+        }
 
     protected:
-        unsigned int _order; ///< order of polynomial
+        int _order; ///< order of polynomial
 
     private:
         friend class boost::serialization::access;
