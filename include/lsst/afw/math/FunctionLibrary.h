@@ -501,7 +501,7 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class PolynomialFunction2: public PolynomialBaseFunction2<ReturnT> {
+    class PolynomialFunction2: public BasePolynomialFunction2<ReturnT> {
     public:
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
@@ -515,7 +515,7 @@ using boost::serialization::make_nvp;
         explicit PolynomialFunction2(
             unsigned int order) ///< order of polynomial (0 for constant)
         :
-            PolynomialBaseFunction2<ReturnT>(order),
+            BasePolynomialFunction2<ReturnT>(order),
             _yCoeffs(this->_order + 1)
         {}
 
@@ -533,7 +533,7 @@ using boost::serialization::make_nvp;
             std::vector<double> params)  ///< polynomial coefficients (const, x, y, x^2, xy, y^2...);
                                     ///< length must be one of 1, 3, 6, 10, 15...
         :
-            PolynomialBaseFunction2<ReturnT>(params),
+            BasePolynomialFunction2<ReturnT>(params),
             _yCoeffs(this->_order + 1)
         {}
         
@@ -598,7 +598,7 @@ using boost::serialization::make_nvp;
         void serialize(Archive& ar, unsigned int const) {
             ar & make_nvp("fn2",
                           boost::serialization::base_object<
-                          PolynomialBaseFunction2<ReturnT> >(*this));
+                          BasePolynomialFunction2<ReturnT> >(*this));
             ar & make_nvp("order", this->_order);
         }
     };
@@ -750,7 +750,7 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class Chebyshev1Function2: public PolynomialBaseFunction2<ReturnT> {
+    class Chebyshev1Function2: public BasePolynomialFunction2<ReturnT> {
     public:
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
@@ -766,7 +766,7 @@ using boost::serialization::make_nvp;
             double maxX = 1,    ///< maximum allowed x
             double maxY = 1)    ///< maximum allowed y
         :
-            PolynomialBaseFunction2<ReturnT>(order),
+            BasePolynomialFunction2<ReturnT>(order),
             _xCheby(this->_order + 1),
             _yCoeffs(this->_order + 1)
         {
@@ -789,7 +789,7 @@ using boost::serialization::make_nvp;
             double maxX = 1,     ///< maximum allowed x
             double maxY = 1)     ///< maximum allowed y
         :
-            PolynomialBaseFunction2<ReturnT>(params),
+            BasePolynomialFunction2<ReturnT>(params),
             _xCheby(this->_order + 1),
             _yCoeffs(this->_order + 1)
         {
@@ -935,7 +935,7 @@ using boost::serialization::make_nvp;
         void serialize(Archive& ar, unsigned int const) {
             ar & make_nvp("fn2",
                           boost::serialization::base_object<
-                          PolynomialBaseFunction2<ReturnT> >(*this));
+                          BasePolynomialFunction2<ReturnT> >(*this));
             ar & make_nvp("order", this->_order);
         }
     };

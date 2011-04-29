@@ -400,7 +400,7 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class PolynomialBaseFunction2: public Function2<ReturnT> {
+    class BasePolynomialFunction2: public Function2<ReturnT> {
     public:
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
@@ -411,10 +411,10 @@ using boost::serialization::make_nvp;
          *
          * The parameters are initialized to zero.
          */
-        explicit PolynomialBaseFunction2(
+        explicit BasePolynomialFunction2(
             unsigned int order) ///< order of polynomial (0 for constant)
         :
-            Function2<ReturnT>(PolynomialBaseFunction2::nParametersFromOrder(order)),
+            Function2<ReturnT>(BasePolynomialFunction2::nParametersFromOrder(order)),
             _order(order)
         {}
 
@@ -426,14 +426,14 @@ using boost::serialization::make_nvp;
          *
          * @throw lsst::pex::exceptions::InvalidParameterException if params length is unsuitable
          */
-        explicit PolynomialBaseFunction2(
+        explicit BasePolynomialFunction2(
             std::vector<double> params) ///< polynomial coefficients
         :
             Function2<ReturnT>(params),
-            _order(PolynomialBaseFunction2::orderFromNParameters(static_cast<int>(params.size())))
+            _order(BasePolynomialFunction2::orderFromNParameters(static_cast<int>(params.size())))
         {}
         
-        virtual ~PolynomialBaseFunction2() {}
+        virtual ~BasePolynomialFunction2() {}
         
         /**
          * @brief Get the polynomial order
@@ -473,7 +473,7 @@ using boost::serialization::make_nvp;
         static int orderFromNParameters(int nParameters) {
             int order = static_cast<int>(
                 0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(nParameters))))) / 2.0));
-            if (nParameters != PolynomialBaseFunction2::nParametersFromOrder(order)) {
+            if (nParameters != BasePolynomialFunction2::nParametersFromOrder(order)) {
                 std::ostringstream os;
                 os << "nParameters=" << nParameters << " invalid: order is not an integer";
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
