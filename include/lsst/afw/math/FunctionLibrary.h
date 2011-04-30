@@ -216,14 +216,13 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0) {}
+        explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(2.0 * M_PI)) {}
 
     private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
             ar & make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT> >(*this));
-            ar & make_nvp("multFac", this->_multFac);
         }
     };
     
@@ -318,7 +317,7 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit GaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0), _angle(0.0),
+        explicit GaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (2.0 * M_PI)), _angle(0.0),
             _sinAngle(0.0), _cosAngle(1.0) {}
 
     private:
@@ -326,7 +325,6 @@ using boost::serialization::make_nvp;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
             ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
-            ar & make_nvp("multFac", this->_multFac);
             ar & make_nvp("angle", this->_angle);
             ar & make_nvp("sinAngle", this->_sinAngle);
             ar & make_nvp("cosAngle", this->_cosAngle);
@@ -398,14 +396,13 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0) {}
+        explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (2.0 * M_PI)) {}
 
     private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
             ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
-            ar & make_nvp("multFac", this->_multFac);
         }
     };
     
@@ -725,7 +722,7 @@ using boost::serialization::make_nvp;
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const) {
-            ar & make_nvp("fn1", boost::serialization::base_object<BasePolynomialFunction2<ReturnT> >(*this));
+            ar & make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT> >(*this));
             ar & make_nvp("minX", this->_minX);
             ar & make_nvp("minX", this->_minX);
             ar & make_nvp("maxX", this->_maxX);
