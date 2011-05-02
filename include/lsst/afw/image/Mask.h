@@ -107,13 +107,13 @@ public:
         ImageOrigin const = LOCAL, 
         bool const conformMasks=false
     );                      
-	explicit Mask(
-		char **ramFile, size_t *ramFileLen, int const hdu=0,
+    explicit Mask(
+        char **ramFile, size_t *ramFileLen, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
         geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const = LOCAL, 
         bool const conformMasks=false
-	);     
+    );     
 
     // generalised copy constructor
     template<typename OtherPixelT>
@@ -167,11 +167,11 @@ public:
         boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
         std::string const& mode="w"
     ) const;
-	void writeFits(
-		char **ramFile, size_t *ramFileLen,
+    void writeFits(
+        char **ramFile, size_t *ramFileLen,
         boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
         std::string const& mode="w"
-	) const;
+    ) const;
     
     // Mask Plane ops
     

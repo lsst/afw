@@ -242,8 +242,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
 
     _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, origin, conformMasks);
-	
-	postFitsCtorInit(metadata);
+    
+    postFitsCtorInit(metadata);
 }
 
 /**
@@ -252,8 +252,8 @@ except that the FITS file resides in RAM.
 */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-	char **ramFile,					///< RAM buffer to receive RAM FITS file
-	size_t *ramFileLen,				///< RAM buffer length
+    char **ramFile,                    ///< RAM buffer to receive RAM FITS file
+    size_t *ramFileLen,                ///< RAM buffer length
     int const hdu,                  ///< Desired HDU
     afwGeom::Box2I const& bbox,               //!< Only read these pixels
     ImageOrigin const origin,       ///< Coordinate system for bbox
@@ -264,8 +264,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
     _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, origin, conformMasks);
-	
-	postFitsCtorInit(metadata);
+    
+    postFitsCtorInit(metadata);
 }
 
 /** Destructor
@@ -278,7 +278,7 @@ Finish initialization after constructing from a FITS file
 */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
-	lsst::daf::base::PropertySet::Ptr metadata
+    lsst::daf::base::PropertySet::Ptr metadata
 ) {
     _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
     //
@@ -358,7 +358,7 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &w
 template<typename ImageT, typename MaskT, typename VarianceT> 
 lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::generateOutputMetadata() const {
     using lsst::daf::base::PropertySet;
-	
+    
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
     //image coordinates. When saving an image we convert from pixel to index coordinates.
@@ -401,8 +401,8 @@ lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::
     outputMetadata->set("EXPTIME", _calib->getExptime());
     outputMetadata->set("FLUXMAG0", _calib->getFluxMag0().first);
     outputMetadata->set("FLUXMAG0ERR", _calib->getFluxMag0().second);
-	
-	return outputMetadata;
+    
+    return outputMetadata;
 }
 
 /** @brief Write the Exposure's Image files.  Update the fits image header card
@@ -454,8 +454,8 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-	char **ramFile,		///< RAM buffer to receive RAM FITS file
-	size_t *ramFileLen	///< RAM buffer length
+    char **ramFile,        ///< RAM buffer to receive RAM FITS file
+    size_t *ramFileLen    ///< RAM buffer length
 ) const {
     lsst::daf::base::PropertySet::Ptr outputMetadata = generateOutputMetadata();
     _maskedImage.writeFits(ramFile, ramFileLen, outputMetadata, "a", true);

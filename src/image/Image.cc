@@ -560,7 +560,7 @@ image::Image<PixelT>::Image(char **ramFile, size_t *ramFileLen,
     }
     if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
-						  (boost::format("Failed to read FITS HDU %d") % hdu).str());
+                          (boost::format("Failed to read FITS HDU %d") % hdu).str());
     }
 }
 

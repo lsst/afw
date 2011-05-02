@@ -107,7 +107,7 @@ public:
         ImageOrigin const origin = LOCAL, 
         bool const conformMasks=false
     );
-	
+    
     explicit Exposure(
         char **ramFile,
         size_t *ramFileLen,
@@ -116,7 +116,7 @@ public:
         ImageOrigin const origin = LOCAL, 
         bool const conformMasks=false
     );
-	
+    
     Exposure(
         Exposure const &src, 
         bool const deep=false
@@ -238,13 +238,13 @@ public:
     
     // FITS
     void writeFits(std::string const &expOutFile) const;
-	void writeFits(char **ramFile, size_t *ramFileLen) const;
+    void writeFits(char **ramFile, size_t *ramFileLen) const;
     
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
-	
-	/// Finish initialization after constructing from a FITS file
-	void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
+    
+    /// Finish initialization after constructing from a FITS file
+    void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
     MaskedImageT _maskedImage;             
     Wcs::Ptr _wcs;
@@ -252,8 +252,8 @@ private:
     Filter _filter;
     PTR(Calib) _calib;
     PTR(lsst::afw::detection::Psf) _psf;
-	
-	lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;	//Used by writeFits()
+    
+    lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
     static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
 };
 

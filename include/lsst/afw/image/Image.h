@@ -445,10 +445,10 @@ namespace image {
             boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
         ) const;
-		void writeFits(char **ramFile, size_t *ramFileLen,
+        void writeFits(char **ramFile, size_t *ramFileLen,
             boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
-		) const;
+        ) const;
 
         void swap(Image &rhs);
         //
