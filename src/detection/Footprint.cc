@@ -198,6 +198,49 @@ Footprint::Footprint(
 }
 
 /**
+ * Construct a footprint from a list of spans. Resulting Footprint is not
+ * normalized
+ */
+Footprint::Footprint(
+    Footprint::SpanList const & spans,
+    geom::Box2I const & region
+) : lsst::daf::data::LsstBase(typeid(this)),
+    _fid(++id),
+    _area(0),
+    _bbox(geom::Box2I()),
+    _region(region),
+    _normalized(false)
+{
+    _spans.reserve(spans.size());
+    for(SpanList::const_iterator i(spans.begin()); i != spans.end(); ++i) {
+        addSpan(**i);
+    }
+}
+
+Footprint::Footprint(Footprint const & other) 
+  : lsst::daf::data::LsstBase(typeid(this)),
+    _fid(++id),
+    _bbox(other._bbox),
+    _region(other._region)
+{
+    //deep copy spans
+    _spans.reserve(other._spans.size());
+    for(SpanList::const_iterator i(other._spans.begin()); 
+        i != other._spans.end(); ++i
+    ) {
+        addSpan(**i);
+    }
+    _area = other._area;
+    _normalized = other._normalized;
+
+    //deep copy peaks
+    _peaks.reserve(other._peaks.size());
+    for(PeakList::const_iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
+        _peaks.push_back(Peak::Ptr(new Peak(**i)));
+    }
+}
+
+/**
  * Destroy a Footprint
  */
 Footprint::~Footprint() {
@@ -304,7 +347,7 @@ Span const& Footprint::addSpan(
     Span::Ptr sp(new Span(y, x0, x1));
     _spans.push_back(sp);
 
-    _area += x1 - x0 + 1;
+    _area += sp->getWidth();
     _normalized = false;
 
     _bbox.include(geom::Point2I(x0, y));
@@ -437,6 +480,113 @@ template void Footprint::serialize(boost::archive::text_iarchive &, unsigned int
 template void Footprint::serialize(boost::archive::binary_oarchive &, unsigned int const);
 template void Footprint::serialize(boost::archive::binary_iarchive &, unsigned int const);
 
+/**
+ * Assignment operator. Will not change the id
+ */
+Footprint & Footprint::operator=(Footprint::Footprint & other) {
+    _region = other._region;
+
+    //deep copy spans
+    _spans = SpanList();
+    _spans.reserve(other._spans.size());
+    for(SpanList::const_iterator i(other._spans.begin()); 
+        i != other._spans.end(); ++i
+    ) {
+        addSpan(**i);
+    }
+    _area = other._area;
+    _normalized = other._normalized;
+    _bbox = other._bbox;
+
+    //deep copy peaks
+    _peaks = PeakList();
+    _peaks.reserve(other._peaks.size());
+    for(PeakList::iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
+        _peaks.push_back(Peak::Ptr(new Peak(**i)));
+    }
+    return *this;
+}
+
+/**
+ * \brief Intersect the Footprint with a Mask
+ *
+ * The resulting Footprint contains only pixels for which (mask & bitMask) == 0;
+ * it may have disjoint pieces. Any part of the footprint that falls outside the
+ * bounds of the mask will be clipped.
+ *
+ */
+template<typename MaskT>
+void Footprint::intersectMask(
+    lsst::afw::image::Mask<MaskT> const & mask,
+    MaskT const bitmask
+) {
+    geom::Box2I maskBBox = mask.getBBox(image::PARENT);
+
+    //this operation makes no sense on non-normalized footprints.
+    //make sure this is normalized
+    normalize();
+
+    SpanList::iterator s(_spans.begin()); 
+    while((*s)->getY() < maskBBox.getMinY() && s != _spans.end()){
+        ++s;
+    }
+
+
+    int x0, x1, y;
+    SpanList maskedSpans;
+    int maskedArea=0;
+    for( ; s != _spans.end(); ++s) {
+        y = (*s)->getY();
+
+        if (y > maskBBox.getMaxY())
+            break;
+
+        x0 = (*s)->getX0();
+        x1 = (*s)->getX1();
+
+        if(x1 < maskBBox.getMinX() || x0 > maskBBox.getMaxX()) {
+            //span is entirely outside the image mask. cannot be used
+            continue;
+        }
+
+        //clip the span to be within the mask
+        if(x0 < maskBBox.getMinX()) x0 = maskBBox.getMinX();
+        if(x1 > maskBBox.getMaxX()) x1 = maskBBox.getMaxX();
+
+        //Image iterators are always specified with respect to (0,0)
+        //regardless what the image::XY0 is set to.        
+        typename image::Mask<MaskT>::const_x_iterator mIter = mask.x_at(
+            x0 - maskBBox.getMinX(), y - maskBBox.getMinY()
+        );
+
+        //loop over all span locations, slicing the span at maskedPixels
+        for(int x = x0; x <= x1; ++x, ++mIter) {            
+            if((*mIter & bitmask) != 0) {
+                //masked pixel found within span
+                if (x > x0) {                    
+                    //add beginning of span to the output
+                    //the fixed span contains all the unmasked pixels up to,
+                    //but not including this masked pixel
+                    Span::Ptr maskedSpan(new Span(y, x0, x- 1));
+                    maskedSpans.push_back(maskedSpan);                
+                    maskedArea += maskedSpan->getWidth();
+                }
+                //set the next Span to start after this pixel
+                x0 = x + 1;
+            }
+        }
+        
+        //add last section of span
+        if(x0 <= x1) {
+            Span::Ptr maskedSpan(new Span(y, x0, x1));
+            maskedSpans.push_back(maskedSpan);
+            maskedArea += maskedSpan->getWidth();
+        }
+    }
+    _area = maskedArea;
+    _spans = maskedSpans;
+    _bbox.clip(maskBBox);
+}
 
 /************************************************************************************************************/
 /**
@@ -455,61 +605,12 @@ Footprint::Ptr footprintAndMask(
         typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,    ///< The mask to & with foot
         MaskT const bitmask                                       ///< Only consider these bits
 ) {
-    int maskX0 = mask->getX0();
-    int maskY0 = mask->getY0();
-    int maskX1 = maskX0 + mask->getWidth() - 1;
-    int maskY1 = maskY0 + mask->getHeight() -1;
-    geom::Box2I region = geom::Box2I(
-        geom::Point2I(maskX0, maskY0), 
-        geom::Point2I(maskX1, maskY1)
-    );
-    Footprint::Ptr out(new Footprint());
-    out->setRegion(region);
-    
-    int x0, x1, y;
-    for(Footprint::SpanList::const_iterator s(fp->getSpans().begin());
-        s != fp->getSpans().end(); ++s
-    ) {
-        Span const & span(**s);
-        y = span.getY();
-        x0 = span.getX0();
-        x1 = span.getX1();
-        if(y < maskY0 || y > maskY1 || x1 < maskX0 || x0 > maskX1) {
-            //span is entirely outside the image mask. cannot be used
-            continue;
-        }
-
-        //clip the span to be within the mask
-        if(x0 < maskX0) x0 = maskX0;
-        if(x1 > maskX1) x1 = maskX1;
-
-        //Image iterators are always specified with respect to (0,0)
-        //regardless what the image::XY0 is set to.        
-        typename image::Mask<MaskT>::const_x_iterator mIter = mask->x_at(x0 - maskX0, y - maskY0);
-
-        //loop over all span locations, slicing the span at maskedPixels
-        for(int x = x0; x <= x1; ++x, ++mIter) {            
-            if((*mIter & bitmask) != 0) {
-                //masked pixel found within span
-                if (x > x0) {                    
-                    //add beginning of span to the output
-                    //the fixed span contains all the unmasked pixels up to,
-                    //but not including this masked pixel
-                    out->addSpan(y, x0, x - 1);                
-                }
-                //set the next Span to start after this pixel
-                x0 = x + 1;
-            }
-        }
-        
-        //add last section of span
-        if(x0 <= x1) {
-            out->addSpan(y, x0, x1);
-        }
-    }
-    out->normalize(); 
-    return out;
+    Footprint::Ptr newFp(new Footprint());
+    return newFp;
 }
+
+/******************************************************************************/
+
 
 /************************************************************************************************************/
 /**
@@ -1342,6 +1443,12 @@ psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
 // Explicit instantiations
 // \cond
 //
+//
+template
+void Footprint::intersectMask(
+    image::Mask<image::MaskPixel> const& mask,
+    image::MaskPixel bitMask);
+
 template
 Footprint::Ptr footprintAndMask(
     Footprint::Ptr const& foot,

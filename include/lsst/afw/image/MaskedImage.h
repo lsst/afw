@@ -607,6 +607,10 @@ public:
 
     // Constructors
     explicit MaskedImage(
+        unsigned int width, unsigned int height, 
+        MaskPlaneDict const& planeDict=MaskPlaneDict()
+    );
+    explicit MaskedImage(
         geom::Extent2I const & dimensions=geom::Extent2I(), 
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
@@ -625,12 +629,12 @@ public:
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin = LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     );
-	explicit MaskedImage(
-		char **ramFile, size_t *ramFileLen, int const hdu=0,
+    explicit MaskedImage(
+        char **ramFile, size_t *ramFileLen, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin = LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
-	); 
+    ); 
 
 
     MaskedImage(
@@ -727,12 +731,12 @@ public:
         std::string const& mode="w",
         bool const writeMef=false
     ) const;
-	void writeFits(
-		char **ramFile, size_t *ramFileLen,
+    void writeFits(
+        char **ramFile, size_t *ramFileLen,
         boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
         std::string const& mode="w",
-        bool const writeMef=true	//writeMef==false is not supported, it will throw an exception
-	) const;
+        bool const writeMef=true    //writeMef==false is not supported, it will throw an exception
+    ) const;
 
     // Getters
     /// Return a (Ptr to) the MaskedImage's %image

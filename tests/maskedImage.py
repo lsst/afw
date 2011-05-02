@@ -57,7 +57,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def setUp(self):
         self.imgVal1, self.varVal1 = 100.0, 10.0
         self.imgVal2, self.varVal2 = 200.0, 15.0
-        self.mimage = afwImage.MaskedImageF(afwGeom.Extent2I(100, 200))
+        self.mimage = afwImage.MaskedImageF(100, 200)
 
         self.mimage.getImage().set(self.imgVal1)
         #
@@ -410,18 +410,18 @@ class MaskedImageTestCase(unittest.TestCase):
     def testOrigin(self):
         """Check that we can set and read the origin"""
 
-        im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
+        im = afwImage.MaskedImageF(afwGeom.ExtentI(10, 20))
         x0 = y0 = 0
         
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
 
         x0, y0 = 3, 5
         im.setXY0(x0, y0)
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
 
         x0, y0 = 30, 50
         im.setXY0(afwGeom.Point2I(x0, y0))

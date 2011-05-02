@@ -152,6 +152,27 @@ class FootprintTestCase(unittest.TestCase):
         
         self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
 
+    def testIntersectMask(self):
+        bbox = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(10))
+        fp = afwDetect.Footprint(bbox)
+        maskBBox = afwGeom.BoxI(bbox)
+        maskBBox.grow(-2)
+        mask = afwImage.MaskU(maskBBox)
+        innerBBox = afwGeom.BoxI(maskBBox)
+        innerBBox.grow(-2)
+        subMask = mask.Factory(mask, innerBBox, afwImage.PARENT)
+        subMask.set(1)
+
+        fp.intersectMask(mask)
+        fpBBox = fp.getBBox()
+        self.assertEqual(fpBBox.getMinX(), maskBBox.getMinX())
+        self.assertEqual(fpBBox.getMinY(), maskBBox.getMinY())
+        self.assertEqual(fpBBox.getMaxX(), maskBBox.getMaxX())
+        self.assertEqual(fpBBox.getMaxY(), maskBBox.getMaxY())
+
+        self.assertEqual(fp.getArea(), maskBBox.getArea() - innerBBox.getArea())
+
+
     def testAddSpans(self):
         """Add spans to a Footprint"""
         for y, x0, x1 in [(10, 100, 105), (11, 99, 104)]:
@@ -253,6 +274,42 @@ class FootprintTestCase(unittest.TestCase):
 
         if False:
             ds9.mtv(idImage, frame=2)
+
+    def testCopy(self):
+        bbox = afwGeom.BoxI(afwGeom.PointI(0,2), afwGeom.PointI(5,6))
+
+        fp = afwDetect.Footprint(bbox, bbox)
+
+        #test copy construct
+        fp2 = afwDetect.Footprint(fp)
+
+        self.assertEqual(fp2.getBBox(), bbox)
+        self.assertEqual(fp2.getRegion(), bbox)
+        self.assertEqual(fp2.getArea(), bbox.getArea())
+        self.assertEqual(fp2.isNormalized(), True)
+
+        y = bbox.getMinY()
+        for s in fp2.getSpans():
+            self.assertEqual(s.getY(), y)
+            self.assertEqual(s.getX0(), bbox.getMinX())
+            self.assertEqual(s.getX1(), bbox.getMaxX())
+            y+=1
+        
+        #test assignment
+        fp3 = afwDetect.Footprint()
+        fp3.assign(fp)
+        self.assertEqual(fp3.getBBox(), bbox)
+        self.assertEqual(fp3.getRegion(), bbox)
+        self.assertEqual(fp3.getArea(), bbox.getArea())
+        self.assertEqual(fp3.isNormalized(), True)
+
+        y = bbox.getMinY()
+        for s in fp3.getSpans():
+            self.assertEqual(s.getY(), y)
+            self.assertEqual(s.getX0(), bbox.getMinX())
+            self.assertEqual(s.getX1(), bbox.getMaxX())
+            y+=1
+
 
     def testGrow(self):
         """Test growing a footprint"""

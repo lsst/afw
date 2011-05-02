@@ -74,6 +74,37 @@ void afwImage::Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDef
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
+    unsigned int width,                 ///< number of columns
+    unsigned int height,                ///< number of rows
+    MaskPlaneDict const& planeDefs ///< desired mask planes
+) :
+    afwImage::ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = 0x0;
+}
+
+/**
+ * \brief Construct a Mask initialized to a specified value
+ */
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
+    unsigned int width,                 ///< number of columns
+    unsigned int height,                ///< number of rows
+    MaskPixelT initialValue, ///< Initial value
+    MaskPlaneDict const& planeDefs ///< desired mask planes
+) :
+    afwImage::ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = initialValue;
+}
+
+/**
+ * \brief Construct a Mask initialized to 0x0
+ */
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
     afwGeom::Extent2I const & dimensions, ///< Number of columns, rows
     MaskPlaneDict const& planeDefs ///< desired mask planes
 ) :
@@ -252,8 +283,8 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
  */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-		char **ramFile,										///< RAM buffer to receive RAM FITS file
-		size_t *ramFileLen,									///< RAM buffer length
+        char **ramFile,                                        ///< RAM buffer to receive RAM FITS file
+        size_t *ramFileLen,                                    ///< RAM buffer length
         int const hdu,                                     ///< HDU to read 
         lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
         afwGeom::Box2I const& bbox,                                  ///< Only read these pixels
@@ -332,8 +363,8 @@ void afwImage::Mask<MaskPixelT>::writeFits(
  */
 template<typename MaskPixelT>
 void afwImage::Mask<MaskPixelT>::writeFits(
-    char **ramFile,		///< RAM buffer to receive RAM FITS file
-	size_t *ramFileLen,	///< RAM buffer length
+    char **ramFile,        ///< RAM buffer to receive RAM FITS file
+    size_t *ramFileLen,    ///< RAM buffer length
     boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< metadata to write to header,
         ///< or a null pointer if none
     std::string const& mode    ///< "w" to write a new file; "a" to append

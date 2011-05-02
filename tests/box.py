@@ -98,6 +98,23 @@ class Box2ITestCase(unittest.TestCase):
                 self.assertEqual(box.getMin(), pmin + dim + geom.Extent2I(1))
                 self.assertEqual(box.getDimensions(),
                                  geom.Extent2I(abs(dim.getX()),abs(dim.getY())))
+    def testSwap(self):
+        x00, y00, x01, y01 = (0,1,2,3)
+        x10, y10, x11, y11 = (4,5,6,7)
+
+        box0 = geom.Box2I(geom.PointI(x00, y00), geom.PointI(x01, y01))
+        box1 = geom.Box2I(geom.PointI(x10, y10), geom.PointI(x11, y11))
+        box0.swap(box1)
+
+        self.assertEqual(box0.getMinX(), x10);
+        self.assertEqual(box0.getMinY(), y10);
+        self.assertEqual(box0.getMaxX(), x11);
+        self.assertEqual(box0.getMaxY(), y11);
+
+        self.assertEqual(box1.getMinX(), x00);
+        self.assertEqual(box1.getMinY(), y00);
+        self.assertEqual(box1.getMaxX(), x01);
+        self.assertEqual(box1.getMaxY(), y01);
 
     def testConversion(self):
         for n in range(10):
@@ -250,6 +267,24 @@ class Box2DTestCase(unittest.TestCase):
                 self.assertEqual(box.getMin(), pmin + dim)
                 self.assert_(numpy.allclose(box.getDimensions(),
                                             geom.Extent2D(abs(dim.getX()),abs(dim.getY()))))
+
+    def testSwap(self):
+        x00, y00, x01, y01 = (0.,1.,2.,3.)
+        x10, y10, x11, y11 = (4.,5.,6.,7.)
+
+        box0 = geom.Box2D(geom.PointD(x00, y00), geom.PointD(x01, y01))
+        box1 = geom.Box2D(geom.PointD(x10, y10), geom.PointD(x11, y11))
+        box0.swap(box1)
+
+        self.assertEqual(box0.getMinX(), x10);
+        self.assertEqual(box0.getMinY(), y10);
+        self.assertEqual(box0.getMaxX(), x11);
+        self.assertEqual(box0.getMaxY(), y11);
+
+        self.assertEqual(box1.getMinX(), x00);
+        self.assertEqual(box1.getMinY(), y00);
+        self.assertEqual(box1.getMaxX(), x01);
+        self.assertEqual(box1.getMaxY(), y01);
 
     def testAccessors(self):
         xmin, xmax, ymin, ymax = numpy.random.uniform(low=-5, high=5, size=4)

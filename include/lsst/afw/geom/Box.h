@@ -69,6 +69,10 @@ public:
     /// \brief Standard copy constructor.
     Box2I(Box2I const & other) : _minimum(other._minimum), _dimensions(other._dimensions) {}
 
+    void swap(Box2I & other) {
+        _minimum.swap(other._minimum);
+        _dimensions.swap(other._dimensions);
+    }
     /// \brief Standard assignment operator.
     Box2I & operator=(Box2I const & other) {
         _minimum = other._minimum;
@@ -188,7 +192,11 @@ public:
     
     /// \brief Standard copy constructor.
     Box2D(Box2D const & other) : _minimum(other._minimum), _maximum(other._maximum) {}
-
+    
+    void swap(Box2D & other) {
+        _minimum.swap(other._minimum);
+        _maximum.swap(other._maximum);
+    }
     /// \brief Standard assignment operator.
     Box2D & operator=(Box2D const & other) {
         _minimum = other._minimum;

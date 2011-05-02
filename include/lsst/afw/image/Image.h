@@ -407,6 +407,7 @@ namespace image {
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
         
+        explicit Image(unsigned int width, unsigned int height, PixelT initialValue=0);
         explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
         explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
@@ -444,10 +445,10 @@ namespace image {
             boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
         ) const;
-		void writeFits(char **ramFile, size_t *ramFileLen,
+        void writeFits(char **ramFile, size_t *ramFileLen,
             boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
-		) const;
+        ) const;
 
         void swap(Image &rhs);
         //

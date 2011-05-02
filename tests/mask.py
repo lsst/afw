@@ -70,7 +70,7 @@ class MaskTestCase(unittest.TestCase):
         self.val1 = self.BAD | self.CR
         self.val2 = self.val1 | self.EDGE
 
-        self.mask1 = afwImage.MaskU(afwGeom.Extent2I(100, 200))
+        self.mask1 = afwImage.MaskU(100, 200)
         self.mask1.set(self.val1)
         self.mask2 = afwImage.MaskU(self.mask1.getDimensions())
         self.mask2.set(self.val2)
@@ -89,7 +89,7 @@ class MaskTestCase(unittest.TestCase):
         del self.mask2
 
     def testArrays(self):
-        image1 = afwImage.MaskU(afwGeom.Extent2I(5,6))
+        image1 = afwImage.MaskU(afwGeom.ExtentI(5,6)) # could use MaskU(5, 6) but check extent(5, 6) form too
         array1 = image1.getArray()
         self.assertEqual(array1.shape[0], image1.getHeight())
         self.assertEqual(array1.shape[1], image1.getWidth())
@@ -108,7 +108,7 @@ class MaskTestCase(unittest.TestCase):
 
     def testInitializeMasks(self):
         val = 0x1234
-        msk = afwImage.MaskU(afwGeom.Extent2I(10, 10), val)
+        msk = afwImage.MaskU(afwGeom.ExtentI(10, 10), val)
         self.assertEqual(msk.get(0, 0), val)
         
     def testSetGetMasks(self):
@@ -138,9 +138,9 @@ class MaskTestCase(unittest.TestCase):
 
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
-        i1 = afwImage.MaskU(afwGeom.Extent2I(100, 100))
+        i1 = afwImage.MaskU(afwGeom.ExtentI(100, 100))
         i1.set(100)
-        i2 = afwImage.MaskU(afwGeom.Extent2I(10, 10))
+        i2 = afwImage.MaskU(afwGeom.ExtentI(10, 10))
         i2.set(10)
         
         def tst(i1, i2): i1 |= i2
@@ -166,7 +166,7 @@ class MaskTestCase(unittest.TestCase):
 
     def testSubmasks(self):
         smask = afwImage.MaskU(self.mask1, 
-                               afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+                               afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(3, 2)),
                                afwImage.LOCAL)
         mask2 = afwImage.MaskU(smask.getDimensions())
 
@@ -255,7 +255,7 @@ class MaskTestCase(unittest.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        mask = afwImage.MaskU(afwGeom.Extent2I(10, 20))
+        mask = afwImage.MaskU(afwGeom.ExtentI(10, 20))
 
         x0, y0 = 1, 2
         mask.setXY0(x0, y0)
@@ -279,7 +279,7 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(self.mask1.get(10, 10), 0)
 
         del self.mask1
-        self.mask1 = factory(afwGeom.Extent2I(20, 20))
+        self.mask1 = factory(afwGeom.ExtentI(20, 20))
         self.assertEqual(self.mask1.get(10, 10), 0)
 
     def testBoundsChecking(self):
