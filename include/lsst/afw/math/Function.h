@@ -353,11 +353,12 @@ using boost::serialization::make_nvp;
     /**
      * @brief Base class for 2-dimensional polynomials of the form:
      *
-     * f(x,y) =   c0                                                    (0th order)
-     *          + c1 f1(x) + c2 f1(y)                                   (1st order)
-     *          + c2 f2(x) + c3 f1(x) f1(y) + c4 f2(y)                  (2nd order)
-     *          + c5 f3(x) + c6 f2(x) f1(y) + c7 f1(x) f2(y) + f3(y)    (3rd order)
+     * f(x,y) =   c0 f0(x) f0(y)                                        (0th order)
+     *          + c1 f1(x) f0(x) + c2 f0(x) f1(y)                       (1st order)
+     *          + c3 f2(x) f0(y) + c4 f1(x) f1(y) + c5 f0(x) f2(y)      (2nd order)
      *          + ...
+     *
+     * and typically f0(x) = 1
      *
      * @ingroup afw
      */

@@ -603,11 +603,14 @@ using boost::serialization::make_nvp;
     /**
      * @brief 1-dimensional weighted sum of Chebyshev polynomials of the first kind.
      *
-     * f(x) = c0 + c1 * T1(x') + c2 * T2(x') + ...
+     * f(x) = c0 T0(x') + c1 T1(x') + c2 T2(x') + ...
+     *      = c0 + c1 T1(x') + c2 T2(x') + ...
      * where:
-     *   Tn(x) is the nth Chebyshev function of the first kind:
-     *     Tn(x) = cos(n arccos(x))
-     *   x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
+     * * Tn(x) is the nth Chebyshev function of the first kind:
+     *      T0(x) = 1
+     *      T1(x) = 2
+     *      Tn+1(x) = 2xTn(x) + Tn-1(x)
+     * * x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
      *
      * The function argument must be in the range [minX, maxX].
      *
@@ -735,15 +738,23 @@ using boost::serialization::make_nvp;
     /**
      * @brief 2-dimensional weighted sum of Chebyshev polynomials of the first kind.
      *
-     * f(x,y) = c0
-     *        + c1 * T1(x') + c2 * T1(y')
-     *        + c3 * T2(x') + c4 * T1(x') * T1(y') + c5 * T2(y')
+     * f(x,y) = c0 T0(x') T0(y')                                        # order 0
+     *        + c1 T1(x') T0(y') + c2 T0(x') T1(y')                     # order 1
+     *        + c3 T2(x') T0(y') + c4 T1(x') T1(y') + c5 T0(x') T2(y')  # order 2
      *        + ...
+     *
+     *        = c0                                                      # order 0
+     *        + c1 T1(x') + c2 T1(y')                                   # order 1
+     *        + c3 T2(x') + c4 T1(x') T1(y') + c5 T2(y')                # order 2
+     *        + ...
+     *
      * where:
-     *   Tn(x) is the nth Chebyshev function of the first kind:
-     *     Tn(x) = cos(n arccos(x))
-     *   x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
-     *   y' is y offset and scaled to range [-1, 1] as y ranges over [minY, maxY]
+     * * Tn(x) is the nth Chebyshev function of the first kind:
+     *      T0(x) = 1
+     *      T1(x) = 2
+     *      Tn+1(x) = 2xTn(x) + Tn-1(x)
+     * * x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
+     * * y' is y offset and scaled to range [-1, 1] as y ranges over [minY, maxY]
      *
      * Return value is incorrect if function arguments are not in the range [minX, maxX], [minY, maxY].
      *
@@ -885,8 +896,8 @@ using boost::serialization::make_nvp;
         }
 
     private:
-        mutable std::vector<double> _xCheby; ///< working vector: value of T_n(x')
-        mutable std::vector<double> _yCoeffs; ///< working vector: transformed coeffs of Y polynomial
+        mutable std::vector<double> _xCheby;    ///< working vector: value of Tn(x')
+        mutable std::vector<double> _yCoeffs;   ///< working vector: transformed coeffs of Y polynomial
         double _minX;    ///< minimum allowed x
         double _minY;    ///< minimum allowed y
         double _maxX;    ///< maximum allowed x
