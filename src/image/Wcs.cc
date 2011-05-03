@@ -389,6 +389,32 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _initWcs();
 }
        
+bool Wcs::operator==(const Wcs &rhs) const {
+    return _nWcsInfo == rhs._nWcsInfo &&
+        _relax == rhs._relax &&
+        _wcsfixCtrl == rhs._wcsfixCtrl &&
+        _wcshdrCtrl == rhs._wcshdrCtrl &&
+        _nReject == rhs._nReject &&
+        _coordSystem == rhs._coordSystem &&
+        _skyCoordsReversed == rhs._skyCoordsReversed &&
+        _wcsInfo->naxis == rhs._wcsInfo->naxis &&
+        _wcsInfo->equinox == rhs._wcsInfo->equinox &&
+        _wcsInfo->crpix[0] == rhs._wcsInfo->crpix[0] &&
+        _wcsInfo->crpix[1] == rhs._wcsInfo->crpix[1] &&
+        _wcsInfo->cd[0] == rhs._wcsInfo->cd[0] &&
+        _wcsInfo->cd[1] == rhs._wcsInfo->cd[1] &&
+        _wcsInfo->cd[2] == rhs._wcsInfo->cd[2] &&
+        _wcsInfo->cd[3] == rhs._wcsInfo->cd[3] &&
+        _wcsInfo->crval[0] == rhs._wcsInfo->crval[0] &&
+        _wcsInfo->crval[1] == rhs._wcsInfo->crval[1] &&
+        strcmp(_wcsInfo->cunit[0], rhs._wcsInfo->cunit[0]) == 0 &&
+        strcmp(_wcsInfo->cunit[1], rhs._wcsInfo->cunit[1]) == 0 &&
+        strcmp(_wcsInfo->ctype[0], rhs._wcsInfo->ctype[0]) == 0 &&
+        strcmp(_wcsInfo->ctype[1], rhs._wcsInfo->ctype[1]) == 0 &&
+        _wcsInfo->altlin == rhs._wcsInfo->altlin &&
+        skyToPixel(_wcsInfo->crval[0], _wcsInfo->crval[1]) == rhs.skyToPixel(_wcsInfo->crval[0], _wcsInfo->crval[1]) &&
+        *pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]) == *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
+}
 
 ///Assignment operator    
 Wcs & Wcs::operator = (const Wcs & rhs){

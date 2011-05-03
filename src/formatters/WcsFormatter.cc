@@ -180,7 +180,8 @@ void afwForm::WcsFormatter::delegateSerialize(
     // Serialize most fields normally
     ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
-    
+    ar & ip->_coordSystem & ip->_skyCoordsReversed;
+
     
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
@@ -213,6 +214,7 @@ void afwForm::WcsFormatter::delegateSerialize(
     ar & ip->_wcsInfo[0].cunit[1];
     ar & ip->_wcsInfo[0].ctype[0];
     ar & ip->_wcsInfo[0].ctype[1];
+    ar & ip->_wcsInfo[0].altlin;
 
     // If we are loading, compute intermediate values given those above
     if (Archive::is_loading::value) {

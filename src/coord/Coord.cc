@@ -1382,6 +1382,6 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
     }
 }
 
-std::ostream & operator<<(std::ostream & os, afwCoord::Coord const & coord) {
+std::ostream & afwCoord::operator<<(std::ostream & os, afwCoord::Coord const & coord) {
     return os << coord.getPosition() << "@" << coord.getEpoch();
 }
