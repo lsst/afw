@@ -91,6 +91,7 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %FootprintSet(I, int);
 %FootprintSet(D, double);
 %FootprintSet(F, float);
+%template(makeFootprintSet) lsst::afw::detection::makeFootprintSet<lsst::afw::image::MaskPixel>;
 
 %extend lsst::afw::detection::Span {
     %pythoncode {

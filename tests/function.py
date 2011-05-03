@@ -110,6 +110,14 @@ class FunctionTestCase(unittest.TestCase):
             coeffs = numpy.arange(deltaCoeff, deltaCoeff * nCoeffs + (deltaCoeff / 2.0), deltaCoeff)
             f.setParameters(coeffs)
             g = afwMath.Chebyshev1Function1D(coeffs, xMin, xMax)
+            
+            self.assertEqual(f.getNParameters(), g.getNParameters())
+            
+            self.assertEqual(f.getMinX(), xMin)
+            self.assertEqual(f.getMaxX(), xMax)
+
+            self.assertEqual(g.getMinX(), xMin)
+            self.assertEqual(g.getMaxX(), xMax)
 
             minXNorm = None
             maxXNorm = None
@@ -124,11 +132,11 @@ class FunctionTestCase(unittest.TestCase):
                 if not numpy.allclose(predVal, f(x)):
                     self.fail(
                         "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; order constructor" % \
-                        (f.__class__.__name__, f(x), predVal, x, xMin, xMax, xNorm, coeffs))
+                        (type(f).__name__, f(x), predVal, x, xMin, xMax, xNorm, coeffs))
                 if not numpy.allclose(predVal, g(x)):
                     self.fail(
                         "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; coeffs constructor" %\
-                        (f.__class__.__name__, g(x), predVal, x, xMin, xMax, xNorm, coeffs))
+                        (type(f).__name__, g(x), predVal, x, xMin, xMax, xNorm, coeffs))
 
             if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
                 raise RuntimeError(
@@ -159,6 +167,20 @@ class FunctionTestCase(unittest.TestCase):
             coeffs = numpy.arange(deltaCoeff, deltaCoeff * nCoeffs + (deltaCoeff / 2.0), deltaCoeff)
             f.setParameters(coeffs)
             g = afwMath.Chebyshev1Function2D(coeffs, xMin, yMin, xMax, yMax)
+            
+            self.assertEqual(f.getNParameters(), g.getNParameters())
+            
+            self.assertEqual(f.getOrder(), order)
+            self.assertEqual(f.getMinX(), xMin)
+            self.assertEqual(f.getMinY(), yMin)
+            self.assertEqual(f.getMaxX(), xMax)
+            self.assertEqual(f.getMaxY(), yMax)
+
+            self.assertEqual(g.getOrder(), order)
+            self.assertEqual(g.getMinX(), xMin)
+            self.assertEqual(g.getMinY(), yMin)
+            self.assertEqual(g.getMaxX(), xMax)
+            self.assertEqual(g.getMaxY(), yMax)
 
             minXNorm = None
             maxXNorm = None
@@ -182,11 +204,11 @@ class FunctionTestCase(unittest.TestCase):
                         if not numpy.allclose(predVal, f(x, y)):
                             self.fail(
 "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, coeffs=%s; order constructor" % \
-(f.__class__.__name__, f(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
+(type(f).__name__, f(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
                         if not numpy.allclose(predVal, g(x, y)):
                             self.fail(
 "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, coeffs=%s; coeffs constructor" % \
-(f.__class__.__name__, g(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
+(type(f).__name__, g(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
 
                 if not numpy.allclose((minYNorm, maxYNorm), (-1.0, 1.0)):
                     raise RuntimeError(
@@ -216,6 +238,87 @@ class FunctionTestCase(unittest.TestCase):
             if numParams in validNumParams:
                 continue
             self.assertRaises(Exception, afwMath.Chebyshev1Function2D, numpy.zeros(numParams, dtype=float))
+
+    def testChebyshev1Function2DTruncate(self):
+        """A test for Chebyshev1Function2D.truncate"""
+        maxOrder = 6
+        deltaCoeff = 0.3
+        ranges = ((-1, 1), (-17, -2), (-65.3, 2.132))
+        xRangeIter = itertools.cycle(ranges)
+        yRangeIter = itertools.cycle(ranges)
+        yRangeIter.next() # make x and y ranges off from each other
+        nPoints = 7 # number of points in x and y at which to test the functions
+        
+        for order in range(maxOrder + 1):
+            xMin, xMax = xRangeIter.next()
+            xMean = (xMin + xMax) / 2.0
+            xDelta = (xMax - xMin) / float(nPoints - 1)
+
+            yMin, yMax = yRangeIter.next()
+            yMean = (yMin + yMax) / 2.0
+            yDelta = (yMax - yMin) / float(nPoints - 1)
+
+            fullNParams = afwMath.Chebyshev1Function2D.nParametersFromOrder(order)
+            fullCoeffs = numpy.arange(deltaCoeff, deltaCoeff * fullNParams + (deltaCoeff / 2.0), deltaCoeff)
+            fullPoly = afwMath.Chebyshev1Function2D(fullCoeffs, xMin, yMin, xMax, yMax)
+            
+            for tooBigTruncOrder in range(order + 1, order + 3):
+                self.assertRaises(Exception, fullPoly.truncate, tooBigTruncOrder)
+
+            for truncOrder in range(order + 1):
+                truncNParams = fullPoly.nParametersFromOrder(truncOrder)
+
+                f = fullPoly.truncate(truncOrder)
+                self.assertEqual(f.getNParameters(), truncNParams)
+
+                g = afwMath.Chebyshev1Function2D(fullCoeffs[0:truncNParams], xMin, yMin, xMax, yMax)
+                
+                self.assertEqual(f.getNParameters(), g.getNParameters())
+                
+                self.assertEqual(f.getOrder(), truncOrder)
+                self.assertEqual(f.getMinX(), xMin)
+                self.assertEqual(f.getMinY(), yMin)
+                self.assertEqual(f.getMaxX(), xMax)
+                self.assertEqual(f.getMaxY(), yMax)
+    
+                self.assertEqual(g.getOrder(), truncOrder)
+                self.assertEqual(g.getMinX(), xMin)
+                self.assertEqual(g.getMinY(), yMin)
+                self.assertEqual(g.getMaxX(), xMax)
+                self.assertEqual(g.getMaxY(), yMax)
+    
+                minXNorm = None
+                maxXNorm = None
+                for x in numpy.arange(xMin, xMax + xDelta/2.0, xDelta):
+                    xNorm = 2.0 * (x - xMean) / float(xMax - xMin)
+                    if minXNorm == None or xNorm < minXNorm:
+                        minXNorm = xNorm
+                    if maxXNorm == None or xNorm > maxXNorm:
+                        maxXNorm = xNorm
+    
+                    minYNorm = None
+                    maxYNorm = None
+                    for y in numpy.arange(yMin, yMax + yDelta/2.0, yDelta):
+                        yNorm = 2.0 * (y - yMean) / float(yMax - yMin)
+                        if minYNorm == None or yNorm < minYNorm:
+                            minYNorm = yNorm
+                        if maxYNorm == None or yNorm > maxYNorm:
+                            maxYNorm = yNorm
+    
+                            if not numpy.allclose(f(x, y), g(x, y)):
+                                self.fail(
+    "%s = %s != %s = %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, coeffs=%s; order constructor" % \
+    (type(f).__name__, f(x, y), g(x, y), type(g).__name__, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
+    
+                    if not numpy.allclose((minYNorm, maxYNorm), (-1.0, 1.0)):
+                        raise RuntimeError(
+                            "Invalid y normalization: yMin=%s, yMax=%s, min/max yNorm=(%s, %s) != (-1, 1)" %
+                            (yMin, yMax, minYNorm, maxYNorm))
+    
+                if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
+                    raise RuntimeError(
+                        "Invalid x normalization: xMin=%s, xMax=%s, min/max xNorm=(%s, %s) != (-1, 1)" %
+                        (xMin, xMax, minXNorm, maxXNorm))
         
     def testGaussianFunction1D(self):
         """A test for GaussianFunction1D"""
@@ -232,11 +335,11 @@ class FunctionTestCase(unittest.TestCase):
                 fSum += predVal
                 if not numpy.allclose(predVal, f(x)):
                     self.fail("%s = %s != %s for x=%s, xsigma=%s" % \
-                        (f.__class__.__name__, f(x), predVal, x, xsigma))
+                        (type(f).__name__, f(x), predVal, x, xsigma))
             approxArea = fSum * xdelta
             if not numpy.allclose(approxArea, 1.0):
                 self.fail("%s area = %s != 1.0 for xsigma=%s" % \
-                    (f.__class__.__name__, approxArea, xsigma))
+                    (type(f).__name__, approxArea, xsigma))
 
     def testGaussianFunction2D(self):
         """A test for GaussianFunction2D
@@ -265,11 +368,11 @@ class FunctionTestCase(unittest.TestCase):
                             if not numpy.allclose(predVal, f(x, y)):
                                 self.fail(
 "%s = %s != %s for pos1=%s, pos2=%s, x=%s, y=%s, sigma1=%s, sigma2=%s, angle=%s" % \
-(f.__class__.__name__, f(x, y), predVal, pos1, pos2, x, y, sigma1, sigma2, angle))
+(type(f).__name__, f(x, y), predVal, pos1, pos2, x, y, sigma1, sigma2, angle))
                     approxArea = fSum * delta1 * delta2
                     if not numpy.allclose(approxArea, 1.0):
                         self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
-                            (f.__class__.__name__, approxArea, sigma1, sigma2))
+                            (type(f).__name__, approxArea, sigma1, sigma2))
     
     def testDoubleGaussianFunction2D(self):
         """A test for DoubleGaussianFunction2D
@@ -298,11 +401,11 @@ class FunctionTestCase(unittest.TestCase):
                             fSum += predVal
                             if not numpy.allclose(predVal, f(x, y)):
                                 self.fail("%s = %s != %s for x=%s, y=%s, sigma1=%s, sigma2=%s, b=%s" % \
-                                    (f.__class__.__name__, f(x, y), predVal, x, y, sigma1, sigma2, b))
+                                    (type(f).__name__, f(x, y), predVal, x, y, sigma1, sigma2, b))
                     approxArea = fSum * delta**2
                     if not numpy.allclose(approxArea, 1.0):
                         self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
-                            (f.__class__.__name__, approxArea, sigma1, sigma2))
+                            (type(f).__name__, approxArea, sigma1, sigma2))
     
     def testIntegerDeltaFunction2D(self):
         """A test for IntegerDeltaFunction2D"""
@@ -317,7 +420,7 @@ class FunctionTestCase(unittest.TestCase):
                         predVal = basicDelta(x, xo) * basicDelta(y, yo)
                         if predVal != f(x, y):
                             self.fail("%s = %s != %s for x=%s, y=%s, xo=%s, yo=%s" % \
-                                (f.__class__.__name__, f(x, y), predVal, x, y, xo, yo))
+                                (type(f).__name__, f(x, y), predVal, x, y, xo, yo))
     
     def testLanczosFunction1D(self):
         """A test for LanczosFunction1D"""
@@ -333,7 +436,7 @@ class FunctionTestCase(unittest.TestCase):
                     predVal = basicLanczos1(xAdj, n)
                     if not numpy.allclose(predVal, f(x)):
                         self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, xAdj=%s" % \
-                            (f.__class__.__name__, f(x), predVal, n, x, xOffset, xAdj))
+                            (type(f).__name__, f(x), predVal, n, x, xOffset, xAdj))
 
     def testLanczosFunction2D(self):
         """A test for LanczosFunction2D"""
@@ -353,7 +456,7 @@ class FunctionTestCase(unittest.TestCase):
                             if not numpy.allclose(predVal, f(x, y)):
                                 self.fail("%s = %s != %s for n=%s, x=%s, " +
                                           "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % 
-                                          (f.__class__.__name__, f(x, y), predVal, n, x,
+                                          (type(f).__name__, f(x, y), predVal, n, x,
                                            xOffset, yOffset, xAdj, yAdj))
        
     def testPolynomialFunction1D(self):
@@ -382,10 +485,10 @@ class FunctionTestCase(unittest.TestCase):
                 predVal = basic1DPoly(x, coeffs)
                 if not numpy.allclose(predVal, f(x)):
                     self.fail("%s = %s != %s for x=%s, coeffs=%s; coeffs constructor" % \
-                        (f.__class__.__name__, f(x), predVal, x, coeffs))
+                        (type(f).__name__, f(x), predVal, x, coeffs))
                 if not numpy.allclose(predVal, g(x)):
                     self.fail("%s = %s != %s for x=%s, coeffs=%s; order constructor" % \
-                        (f.__class__.__name__, g(x), predVal, x, coeffs))
+                        (type(f).__name__, g(x), predVal, x, coeffs))
 
     def testPolynomialFunction2D(self):
         """A test for PolynomialFunction2D
@@ -423,10 +526,10 @@ class FunctionTestCase(unittest.TestCase):
                     predVal = basic2DPoly(x, y, coeffs)
                     if not numpy.allclose(predVal, f(x, y)):
                         self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s; coeffs constructor" % \
-                            (f.__class__.__name__, f(x, y), predVal, x, y, coeffs))
+                            (type(f).__name__, f(x, y), predVal, x, y, coeffs))
                     if not numpy.allclose(predVal, g(x, y)):
                         self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s; order constructor" % \
-                            (f.__class__.__name__, g(x, y), predVal, x, y, coeffs))
+                            (type(f).__name__, g(x, y), predVal, x, y, coeffs))
         
         # test that the number of parameters is correct for the given order
         def numParamsFromOrder(order):

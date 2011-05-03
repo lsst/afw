@@ -50,6 +50,9 @@ public:
     FootprintSet(image::Image<ImagePixelT> const& img,
                  Threshold const& threshold,
                  int const npixMin=1);
+    FootprintSet(image::Mask<MaskPixelT> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1);
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
@@ -127,6 +130,18 @@ typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
 ) {
     return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
         new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, npixMin)
+    );
+}
+
+template<typename MaskPixelT>
+typename FootprintSet<MaskPixelT, MaskPixelT>::Ptr makeFootprintSet(
+        image::Mask<MaskPixelT> const& msk,
+        Threshold const& threshold,
+        std::string const& = "",
+        int const npixMin=1
+) {
+    return typename FootprintSet<MaskPixelT, MaskPixelT>::Ptr(
+        new FootprintSet<MaskPixelT, MaskPixelT>(msk, threshold, npixMin)
     );
 }
 

@@ -207,6 +207,16 @@ class ExposureTestCase(unittest.TestCase):
         calib.setExptime(dt)
         self.assertEqual(exposure.getCalib().getExptime(), dt)
         #
+        # now check that we can set Calib
+        #
+        calib = afwImage.Calib()
+        dt = 666
+        calib.setExptime(dt)
+
+        exposure.setCalib(calib)
+
+        self.assertEqual(exposure.getCalib().getExptime(), dt)
+        #
         # Psfs next
         #
         w, h = 11, 11
