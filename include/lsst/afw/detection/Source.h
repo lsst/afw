@@ -150,7 +150,7 @@ public :
 
     void setAllRaDecFields(lsst::afw::coord::Coord::ConstPtr radec) {
         setRaDecObject(radec);
-        Source::setAllRaDecFields(radec);
+        BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::setAllRaDecFields(radec);
     }
 
     //overloaded setters
