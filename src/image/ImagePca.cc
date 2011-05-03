@@ -420,13 +420,6 @@ double do_updateBadPixels(
                                                                 )
 {
     int const nImage = imageList.size();
-	
-	std::cout << "TRACE afw::ImagePca.cc:do_updateBadPixels()" << std::endl;
-	std::cout << "imageList:   " << static_cast<int>(imageList.size()) << std::endl;
-	std::cout << "fluxes:      " << fluxes.size() << std::endl;
-	std::cout << "eigenImages: " << static_cast<int>(eigenImages.size()) << std::endl;
-	std::cout << "ncomp:       " << ncomp << std::endl;
-
     if (nImage == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                           "Please provide at least one Image for me to update");
