@@ -259,6 +259,12 @@ public:
 		setRa(icrs.getRa(lsst::afw::coord::RADIANS));
 		setDec(icrs.getDec(lsst::afw::coord::RADIANS));
 	}
+    void setAllRaDecFields(lsst::afw::coord::Coord::ConstPtr radec) {
+		setRaDec(radec);
+		setRaDecFlux(radec);
+		setRaDecPeak(radec);
+		setRaDecAstrom(radec);
+	}
 	// in radians
     void setRaErrForWcs(float const raErrForWcs) {
         set(_raErrForWcs, raErrForWcs);
