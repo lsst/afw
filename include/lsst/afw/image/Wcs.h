@@ -111,6 +111,8 @@ public:
     virtual ~Wcs();
     virtual Ptr clone(void) const;
     
+    bool operator==(const Wcs &) const;
+
     //Accessors
     lsst::afw::coord::Coord::Ptr getSkyOrigin() const;      //Return crval
     lsst::afw::geom::Point2D getPixelOrigin() const;    //Return crpix

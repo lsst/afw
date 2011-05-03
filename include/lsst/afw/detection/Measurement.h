@@ -482,7 +482,9 @@ public:
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
             if (policy.exists(ptr->first)) {
                 lsst::pex::policy::Policy::ConstPtr subPol = policy.getPolicy(ptr->first);
-                value = ptr->second.second(*subPol) && value; // don't short-circuit the call
+                if (!subPol->exists("enabled") || subPol->getBool("enabled")) {
+                    value = ptr->second.second(*subPol) && value; // don't short-circuit the call
+                }
             }
         }
 
@@ -517,9 +519,11 @@ private:
     static boost::shared_ptr<T> _iefbr14(typename ImageT::ConstPtr, CONST_PTR(PeakT), CONST_PTR(Source)) {
         return boost::shared_ptr<T>();
     }
+public:                                 // needed for swig to support keyword arguments
     static bool _iefbr15(lsst::pex::policy::Policy const &) {
         return true;
     }
+private:
     //
     // Do the real work of measuring things
     //

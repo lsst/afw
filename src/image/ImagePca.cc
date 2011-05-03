@@ -420,7 +420,6 @@ double do_updateBadPixels(
                                                                 )
 {
     int const nImage = imageList.size();
-
     if (nImage == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                           "Please provide at least one Image for me to update");

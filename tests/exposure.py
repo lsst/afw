@@ -38,6 +38,7 @@ import eups
 import lsst.daf.base as dafBase
 import lsst.afw.detection as afwDetection
 import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
 import lsst.afw.cameraGeom as cameraGeom
@@ -87,8 +88,8 @@ class ExposureTestCase(unittest.TestCase):
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
         self.exposureMiWcs = afwImage.makeExposure(maskedImage, self.wcs)
-        self.exposureCrWcs = afwImage.ExposureF(afwGeom.Extent2I(100, 100), self.wcs)
-        self.exposureCrOnly = afwImage.ExposureF(afwGeom.Extent2I(100, 100))
+        self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)         # n.b. the (100, 100, ...) form
+        self.exposureCrOnly = afwImage.ExposureF(afwGeom.ExtentI(100, 100)) # test with ExtentI(100, 100) too
 
         afwImage.Filter.reset()
         afwImage.FilterProperty.reset()
@@ -204,6 +205,16 @@ class ExposureTestCase(unittest.TestCase):
         calib = exposure.getCalib()
         dt = 10
         calib.setExptime(dt)
+        self.assertEqual(exposure.getCalib().getExptime(), dt)
+        #
+        # now check that we can set Calib
+        #
+        calib = afwImage.Calib()
+        dt = 666
+        calib.setExptime(dt)
+
+        exposure.setCalib(calib)
+
         self.assertEqual(exposure.getCalib().getExptime(), dt)
         #
         # Psfs next
@@ -353,22 +364,35 @@ class ExposureTestCase(unittest.TestCase):
                     afwImage.indexToPosition(ySubInd),
                 )
 
+    def cmpExposure(self, e1, e2):
+        self.assertEqual(e1.getDetector(), e2.getDetector())
+        self.assertEqual(e1.getFilter().getName(), e2.getFilter().getName())
+        xy = afwGeom.Point2D(0, 0)
+        self.assertEqual(e1.getWcs().pixelToSky(xy)[0], e2.getWcs().pixelToSky(xy)[0])
+        self.assertEqual(e1.getCalib().getExptime(), e2.getCalib().getExptime())
+        # check PSF identity
+        if not e1.getPsf():
+            self.assertFalse(e2.getPsf())
+        else:
+            psfIm = e1.getPsf().computeImage()
+            psfIm -= e2.getPsf().computeImage()
+            self.assertEqual(afwMath.makeStatistics(psfIm, afwMath.STDEV).getValue(), 0.0)
+
     def testCopyExposure(self):
-        """Convert an Exposure from one type to another"""
+        """Copy an Exposure (maybe changing type)"""
 
         exposureU = afwImage.ExposureU(inFilePathSmall)
         exposureU.setWcs(self.wcs)
         exposureU.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         exposureU.setFilter(afwImage.Filter("g"))
         exposureU.getCalib().setExptime(666)
+        exposureU.setPsf(afwDetection.createPsf("DoubleGaussian", 11, 11, 1))
 
         exposureF = exposureU.convertF()
+        self.cmpExposure(exposureF, exposureU)
 
-        self.assertEqual(exposureU.getDetector(), exposureF.getDetector())
-        self.assertEqual(exposureU.getFilter().getName(), exposureF.getFilter().getName())
-        xy = afwGeom.Point2D(0, 0)
-        self.assertEqual(exposureU.getWcs().pixelToSky(xy)[0], exposureF.getWcs().pixelToSky(xy)[0])
-        self.assertEqual(exposureU.getCalib().getExptime(), exposureF.getCalib().getExptime())
+        nexp = exposureF.Factory(exposureF, False)
+        self.cmpExposure(exposureF, nexp)
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""

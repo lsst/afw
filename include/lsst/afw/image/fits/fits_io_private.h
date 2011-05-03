@@ -263,36 +263,36 @@ protected:
         if (flags == "r" || flags == "rb") {
             int status = 0;
             if (fits_open_memfile(&_fd_s, "UnusedFilenameParameter", READONLY, (void**)ramFile,
-					ramFileLen, 0, NULL/*Memory allocator unnecessary for READONLY*/, &status) != 0) {
-				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
+                    ramFileLen, 0, NULL/*Memory allocator unnecessary for READONLY*/, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
             }
         } else if (flags == "w" || flags == "wb" || flags == "pdu") {
            int status = 0;
-			//If ramFile is NULL, we will allocate it here.
-			//Otherwise we will assume that ramFileLen is correct for ramFile.
-			if (ramFile == NULL)
-			{
-				*ramFileLen = 2880;	//Initial buffer size (file length)
-				*ramFile = new char[*ramFileLen];
-			}
-			size_t deltaSize = 0;	//0 is a flag that this parameter will be ignored and the default 2880 used instead
-			if (fits_create_memfile(&_fd_s, (void**)ramFile,
-									ramFileLen, deltaSize, &realloc, &status) != 0) {
-				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_create_memfile", status));
-			}
+            //If ramFile is NULL, we will allocate it here.
+            //Otherwise we will assume that ramFileLen is correct for ramFile.
+            if (ramFile == NULL)
+            {
+                *ramFileLen = 2880;    //Initial buffer size (file length)
+                *ramFile = new char[*ramFileLen];
+            }
+            size_t deltaSize = 0;    //0 is a flag that this parameter will be ignored and the default 2880 used instead
+            if (fits_create_memfile(&_fd_s, (void**)ramFile,
+                                    ramFileLen, deltaSize, &realloc, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_create_memfile", status));
+            }
         } else if (flags == "a" || flags == "ab") {
             int status = 0;
-			size_t deltaSize = 0;	//0 is a flag that this parameter will be ignored and the default 2880 used instead
+            size_t deltaSize = 0;    //0 is a flag that this parameter will be ignored and the default 2880 used instead
             if (fits_open_memfile(&_fd_s, "UnusedFilenameParameter", READWRITE, (void**)ramFile,
-					ramFileLen, deltaSize, &realloc, &status) != 0) {
-				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
+                    ramFileLen, deltaSize, &realloc, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
             }
             //Seek to end of the file
             int nHdu = 0;
             if (fits_get_num_hdus(_fd_s, &nHdu, &status) != 0 ||
                 fits_movabs_hdu(_fd_s, nHdu, NULL, &status) != 0) {
                 (void)cfitsio::fits_close_file(_fd_s, &status);
-				throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_close_file", status));
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_close_file", status));
             }
         } else {
             throw LSST_EXCEPT(FitsException, "Unknown mode " + flags);
@@ -507,7 +507,7 @@ public:
     fits_writer(cfitsio::fitsfile *file) :     fits_file_mgr(file)           { init(); }
     fits_writer(std::string const& filename, std::string const&mode) : fits_file_mgr(filename, mode) { init(); }
     fits_writer(char **ramFile, size_t *ramFileLen, std::string const&mode) :
-		fits_file_mgr(ramFile, ramFileLen, mode) { init(); }
+        fits_file_mgr(ramFile, ramFileLen, mode) { init(); }
     ~fits_writer() { }
     
     template <typename ImageT>

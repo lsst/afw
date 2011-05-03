@@ -126,7 +126,12 @@ class ThresholdTestCase(unittest.TestCase):
         try:
             afwDetect.createThreshold(3.4, "value", False)
         except:
-            self.fail("Failed to build Threshold with proper parameters")
+            self.fail("Failed to build Threshold with VALUE, False parameters")
+
+        try:
+            afwDetect.createThreshold(0x4, "bitmask")
+        except:
+            self.fail("Failed to build Threshold with BITMASK parameters")
         
 
 class FootprintTestCase(unittest.TestCase):
@@ -151,6 +156,27 @@ class FootprintTestCase(unittest.TestCase):
         """Test uniqueness of IDs"""
         
         self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
+
+    def testIntersectMask(self):
+        bbox = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(10))
+        fp = afwDetect.Footprint(bbox)
+        maskBBox = afwGeom.BoxI(bbox)
+        maskBBox.grow(-2)
+        mask = afwImage.MaskU(maskBBox)
+        innerBBox = afwGeom.BoxI(maskBBox)
+        innerBBox.grow(-2)
+        subMask = mask.Factory(mask, innerBBox, afwImage.PARENT)
+        subMask.set(1)
+
+        fp.intersectMask(mask)
+        fpBBox = fp.getBBox()
+        self.assertEqual(fpBBox.getMinX(), maskBBox.getMinX())
+        self.assertEqual(fpBBox.getMinY(), maskBBox.getMinY())
+        self.assertEqual(fpBBox.getMaxX(), maskBBox.getMaxX())
+        self.assertEqual(fpBBox.getMaxY(), maskBBox.getMaxY())
+
+        self.assertEqual(fp.getArea(), maskBBox.getArea() - innerBBox.getArea())
+
 
     def testAddSpans(self):
         """Add spans to a Footprint"""
@@ -253,6 +279,42 @@ class FootprintTestCase(unittest.TestCase):
 
         if False:
             ds9.mtv(idImage, frame=2)
+
+    def testCopy(self):
+        bbox = afwGeom.BoxI(afwGeom.PointI(0,2), afwGeom.PointI(5,6))
+
+        fp = afwDetect.Footprint(bbox, bbox)
+
+        #test copy construct
+        fp2 = afwDetect.Footprint(fp)
+
+        self.assertEqual(fp2.getBBox(), bbox)
+        self.assertEqual(fp2.getRegion(), bbox)
+        self.assertEqual(fp2.getArea(), bbox.getArea())
+        self.assertEqual(fp2.isNormalized(), True)
+
+        y = bbox.getMinY()
+        for s in fp2.getSpans():
+            self.assertEqual(s.getY(), y)
+            self.assertEqual(s.getX0(), bbox.getMinX())
+            self.assertEqual(s.getX1(), bbox.getMaxX())
+            y+=1
+        
+        #test assignment
+        fp3 = afwDetect.Footprint()
+        fp3.assign(fp)
+        self.assertEqual(fp3.getBBox(), bbox)
+        self.assertEqual(fp3.getRegion(), bbox)
+        self.assertEqual(fp3.getArea(), bbox.getArea())
+        self.assertEqual(fp3.isNormalized(), True)
+
+        y = bbox.getMinY()
+        for s in fp3.getSpans():
+            self.assertEqual(s.getY(), y)
+            self.assertEqual(s.getX0(), bbox.getMinX())
+            self.assertEqual(s.getX1(), bbox.getMaxX())
+            y+=1
+
 
     def testGrow(self):
         """Test growing a footprint"""
@@ -577,6 +639,52 @@ class FootprintSetTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class MaskFootprintSetTestCase(unittest.TestCase):
+    """A test case for generating FootprintSet from Masks"""
+
+    def setUp(self):
+        self.mim = afwImage.MaskedImageF(afwGeom.ExtentI(12, 8))
+        #
+        # Objects that we should detect
+        #
+        self.objects = []
+        self.objects += [Object(0x2, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
+        self.objects += [Object(0x41, [(5, 7, 8), (6, 8, 8)])]
+        self.objects += [Object(0x42, [(5, 10, 10)])]
+        self.objects += [Object(0x82, [(6, 3, 3)])]
+
+        self.mim.set((0, 0, 0))                 # clear image
+        for obj in self.objects:
+            obj.insert(self.mim.getImage())
+            obj.insert(self.mim.getMask())
+
+        if display:
+            ds9.mtv(self.mim, frame=0)
+        
+    def tearDown(self):
+        del self.mim
+
+    def testFootprints(self):
+        """Check that we found the correct number of objects using makeFootprintSet"""
+        level = 0x2
+        ds = afwDetect.makeFootprintSet(self.mim.getMask(), afwDetect.createThreshold(level, "bitmask"))
+
+        objects = ds.getFootprints()
+
+        if 0 and display:
+            ds9.mtv(self.mim, frame=0)
+
+        self.assertEqual(len(objects), len([o for o in self.objects if (o.val & level)]))
+
+        i = 0
+        for o in self.objects:
+            if o.val & level:
+                self.assertEqual(o, objects[i])
+                i += 1
+            
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 class NaNFootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet when the image contains NaNs"""
 
@@ -639,6 +747,7 @@ def suite():
     suites += unittest.makeSuite(FootprintTestCase)
     suites += unittest.makeSuite(FootprintSetTestCase)
     suites += unittest.makeSuite(NaNFootprintSetTestCase)
+    suites += unittest.makeSuite(MaskFootprintSetTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

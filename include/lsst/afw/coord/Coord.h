@@ -32,6 +32,7 @@
  *
  * @todo add FK4 ... as needed
  */ 
+#include <iostream>
 #include <limits>
 #include <map>
 
@@ -95,6 +96,7 @@ public:
 
     // These are inline functions and are defined at the end of this header file
     double operator[](int const index) const;
+    bool operator==(Coord const &rhs) const;
     inline double getLongitude(CoordUnit unit) const;
     inline double getLatitude(CoordUnit unit) const;
     inline std::string getLongitudeStr(CoordUnit unit) const;
@@ -103,6 +105,7 @@ public:
     
     Coord transform(Coord const &poleFrom, Coord const &poleTo) const;
     double angularSeparation(Coord const &c, CoordUnit unit) const;
+    lsst::afw::geom::Point2D getOffsetFrom(Coord const &c, CoordUnit unit) const;
     
     void rotate(Coord const &axis, double const theta);
     double offset(double const phi, double const arcLen);
@@ -125,7 +128,6 @@ private:
 
     void _verifyValues() const;
 };
-
 
 /**
  * @class IcrsCoord
@@ -356,7 +358,8 @@ double hmsStringToDegrees(std::string const hms);
 std::string degreesToDmsString(double const deg);
 std::string degreesToHmsString(double const deg);    
     
-    
+std::ostream & operator<<(std::ostream & os, Coord const & coord);
+
 }}}
 
 
@@ -466,5 +469,13 @@ inline std::string lsst::afw::coord::Coord::getLatitudeStr() const {
 }
 
 
+/**
+ * @brief Equality operator, compares each element directly
+ */
+inline bool lsst::afw::coord::Coord::operator==(lsst::afw::coord::Coord const &rhs) const {
+    return _longitudeRad == rhs._longitudeRad &&
+        _latitudeRad == rhs._latitudeRad &&
+        _epoch == rhs._epoch;
+}
 
 #endif

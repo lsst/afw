@@ -129,8 +129,8 @@ public:
         }
     }
 private:
-	char **_ramFile;
-	size_t *_ramFileLen;
+    char **_ramFile;
+    size_t *_ramFileLen;
     lsst::ndarray::Array<typename ImageT::Pixel,2,2> & _array;
     lsst::afw::geom::Point2I & _xy0;
     lsst::daf::base::PropertySet::Ptr _metadata;

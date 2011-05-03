@@ -84,6 +84,11 @@ public:
     
     // Class Constructors and Destructor
     explicit Exposure(
+        unsigned int width, unsigned int height, 
+        Wcs const& wcs=NoWcs
+    );
+
+    explicit Exposure(
         lsst::afw::geom::Extent2I const & dimensions=lsst::afw::geom::Extent2I(),
         Wcs const& wcs=NoWcs
     );
@@ -102,15 +107,21 @@ public:
         ImageOrigin const origin = LOCAL, 
         bool const conformMasks=false
     );
-	
-	explicit Exposure(
-		char **ramFile, size_t *ramFileLen,
+    
+    explicit Exposure(
+        char **ramFile,
+        size_t *ramFileLen,
         int const hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const origin = LOCAL, 
         bool const conformMasks=false
     );
-	
+    
+    Exposure(
+        Exposure const &src, 
+        bool const deep=false
+    );
+
     Exposure(
         Exposure const &src, 
         lsst::afw::geom::Box2I const& bbox, 
@@ -129,25 +140,26 @@ public:
         lsst::daf::data::LsstBase(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
         _wcs(rhs.getWcs()->clone()),
-        _psf(_clonePsf(rhs.getPsf())),
         _detector(rhs.getDetector()),
         _filter(rhs.getFilter()),
-        _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
+        _calib(new lsst::afw::image::Calib(*rhs.getCalib())),
+        _psf(_clonePsf(rhs.getPsf()))
     {
-        // Make sure that we create a PropertyList even if the incoming
-        // metadata is a PropertySet.
-        PTR(lsst::daf::base::PropertyList) pl(new lsst::daf::base::PropertyList);
-        pl->combine(rhs.getMetadata());
-        setMetadata(pl);
+        if (not deep) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "Exposure's converting copy constructor must make a deep copy");
+        }
+
+        setMetadata(deep ? rhs.getMetadata()->deepCopy() : rhs.getMetadata());
     }
 
     virtual ~Exposure(); 
 
     // Get Members
     /// Return the MaskedImage
-    MaskedImageT getMaskedImage() { return _maskedImage; };
+    MaskedImageT getMaskedImage() { return _maskedImage; }
     /// Return the MaskedImage
-    MaskedImageT getMaskedImage() const { return _maskedImage; };
+    MaskedImageT getMaskedImage() const { return _maskedImage; }
     Wcs::Ptr getWcs() const;
     /// Return the Exposure's Detector information
     lsst::afw::cameraGeom::Detector::Ptr getDetector() const { return _detector; }
@@ -207,9 +219,12 @@ public:
     void setDetector(lsst::afw::cameraGeom::Detector::Ptr detector) { _detector = detector; }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _filter = filter; }
+    /// Set the Exposure's Calib object
+    void setCalib(PTR(Calib) calib) { _calib = calib; }
     /// Return the Exposure's Calib object
-    boost::shared_ptr<Calib> getCalib() { return _calib; }
-    boost::shared_ptr<const Calib> getCalib() const { return _calib; }
+    PTR(Calib) getCalib() { return _calib; }
+    /// Return the Exposure's Calib object
+    CONST_PTR(Calib) getCalib() const { return _calib; }
     /// Set the Exposure's Psf
     void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _psf = _clonePsf(psf); }
 
@@ -226,13 +241,13 @@ public:
     
     // FITS
     void writeFits(std::string const &expOutFile) const;
-	void writeFits(char **ramFile, size_t *ramFileLen) const;
+    void writeFits(char **ramFile, size_t *ramFileLen) const;
     
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
-	
-	/// Finish initialization after constructing from a FITS file
-	void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
+    
+    /// Finish initialization after constructing from a FITS file
+    void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
     MaskedImageT _maskedImage;             
     Wcs::Ptr _wcs;
@@ -240,8 +255,8 @@ private:
     Filter _filter;
     PTR(Calib) _calib;
     PTR(lsst::afw::detection::Psf) _psf;
-	
-	lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;	//Used by writeFits()
+    
+    lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
     static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
 };
 

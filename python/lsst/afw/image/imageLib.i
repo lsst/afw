@@ -184,6 +184,12 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 %include "lsst/afw/image/ImageUtils.h"
 
 /************************************************************************************************************/
+%{
+namespace lsst { namespace afw { namespace image {
+    extern Wcs NoWcs;
+}}}
+using lsst::afw::image::NoWcs;
+%}
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs);

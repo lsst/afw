@@ -88,6 +88,8 @@ namespace image {
         
         virtual lsst::afw::image::Wcs::Ptr clone(void) const;
 
+        bool operator==(const TanWcs &) const;
+
         // Returns the pixel scale, in arcsec/pixel.
         double pixelScale() const;
         
@@ -119,6 +121,7 @@ namespace image {
         TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
         
         TanWcs(lsst::afw::image::TanWcs const & rhs);
+
         TanWcs & operator = (const TanWcs &);        
 
         virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;

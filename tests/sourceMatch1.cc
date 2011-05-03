@@ -144,7 +144,7 @@ std::vector<det::SourceMatch> bruteMatch(det::SourceSet const &set1,
 void compareMatches(std::vector<det::SourceMatch> &matches,
                     std::vector<det::SourceMatch> &refMatches,
                     double radius) {
-    double const tolerance = 0.0001; // tolerance in percentage units
+    double const tolerance = 1e-6; // 1 micro arcsecond
     CmpSourceMatch lessThan;
 
     std::sort(matches.begin(), matches.end(), lessThan);
@@ -156,22 +156,22 @@ void compareMatches(std::vector<det::SourceMatch> &matches,
 
     while (i < iend && j < jend) {
         if (lessThan(*i, *j)) {
-            BOOST_CHECK_CLOSE(i->distance, radius, tolerance);
+            BOOST_CHECK(std::fabs(i->distance - radius) <= tolerance);
             ++i;
         } else if (lessThan(*j, *i)) {
-            BOOST_CHECK_CLOSE(j->distance, radius, tolerance);
+            BOOST_CHECK(std::fabs(j->distance - radius) <= tolerance);
             ++j;
         } else {
-            BOOST_CHECK_CLOSE(i->distance, j->distance, tolerance);
+            BOOST_CHECK(std::fabs(i->distance - j->distance) <= tolerance);
             ++i;
             ++j;
         }
     }
     for (; i < iend; ++i) {
-        BOOST_CHECK_CLOSE(i->distance, radius, tolerance);
+        BOOST_CHECK(std::fabs(i->distance - radius) <= tolerance);
     }
     for (; j < jend; ++j) {
-        BOOST_CHECK_CLOSE(j->distance, radius, tolerance);
+        BOOST_CHECK(std::fabs(j->distance - radius) <= tolerance);
     }
 }
 

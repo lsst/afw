@@ -32,6 +32,7 @@ except ImportError, e:
     print >> sys.stderr, "Cannot import xpa: %s" % e
 
 import displayLib
+import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
 needShow = True;                        # Used to avoid a bug in ds9 5.4
@@ -399,24 +400,24 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
         for setting in settings:
             ds9Cmd("%s %s" % (setting, settings[setting]))
 
-    if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
+    if re.search("::DecoratedImage<", repr(data)): # it's a DecorateImage; display it
         _mtv(data.getImage(), wcs, title, False)
-    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display Image and overlay Mask
+    elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
         _mtv(data.getImage(), wcs, title, False)
         mask = data.getMask(True)
         if mask:
-            mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title, settings=settings)
+            mtv(mask, frame, False, wcs, True, lowOrderBits=lowOrderBits, title=title, settings=settings)
             if getMaskTransparency() is not None:
                 ds9Cmd("mask transparency %d" % getMaskTransparency())
 
-    elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
+    elif re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
         if wcs:
             raise RuntimeError, "You may not specify a wcs with an Exposure"
 
         mtv(data.getMaskedImage(), frame, False, data.getWcs(),
             False, lowOrderBits=lowOrderBits, title=title, settings=settings)
 
-    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
+    elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
         nMaskPlanes = data.getNumPlanesUsed()
         maskPlanes = data.getMaskPlaneDict()
 
@@ -433,7 +434,13 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
 
         usedPlanes = long(afwMath.makeStatistics(data, afwMath.SUM).getValue())
         mask = data.Factory(data.getDimensions())
-
+        #
+        # ds9 can't display a Mask without an image; so display an Image first
+        #
+        if not isMask:
+            im = afwImage.ImageU(data.getDimensions())
+            mtv(im, frame=frame)
+        
         for p in planeList:
             if planes[p] or True:
                 if not getMaskPlaneVisibility(planes[p]):
@@ -457,10 +464,10 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 setMaskColor(color)
                 _mtv(mask, wcs, title, True)
         return
-    elif re.search("::Image<", data.__repr__()): # it's an Image; display it
+    elif re.search("::Image<", repr(data)): # it's an Image; display it
         _mtv(data, wcs, title, False)
     else:
-        raise RuntimeError, "Unsupported type %s" % data.__repr__()
+        raise RuntimeError, "Unsupported type %s" % repr(data)
 
 try:
     haveGzip

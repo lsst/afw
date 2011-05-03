@@ -162,7 +162,8 @@ public:
 
     /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
     T computeNorm() const { return this->asEigen().norm(); }
-
+    
+    void swap(Extent & other) {_swap(other);}
 };
 
 /**
@@ -207,6 +208,7 @@ public:
     /// @brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T> asTuple() const { return boost::make_tuple(this->_vector.x(),this->_vector.y()); }
 
+    void swap(Extent & other) {_swap(other);}
 };
 
 /**
@@ -249,6 +251,7 @@ public:
         return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z());
     }
 
+    void swap(Extent & other) {_swap(other);}
 };
 
 typedef Extent<int,2> ExtentI;

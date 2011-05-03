@@ -251,6 +251,14 @@ TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
     
 }
 
+bool TanWcs::operator==(const TanWcs &rhs) const {
+    return Wcs::operator==(rhs) &&
+        _hasDistortion == rhs._hasDistortion &&
+        (!_hasDistortion || (_sipA == rhs._sipA &&
+                             _sipB == rhs._sipB &&
+                             _sipAp == rhs._sipAp &&
+                             _sipBp == rhs._sipBp));
+}
 
 ///Assignment operator    
 TanWcs & TanWcs::operator = (const TanWcs & rhs){

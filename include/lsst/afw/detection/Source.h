@@ -140,7 +140,19 @@ public :
     void setDecObject(double const decObject) {
         set(_decObject, decObject, DEC_OBJECT);
     }
-    
+
+    void setRaDecObject(lsst::afw::coord::Coord::ConstPtr radec) {
+        // Convert to LSST-decreed ICRS and radians.
+        lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+        setRaObject(icrs.getRa(lsst::afw::coord::RADIANS));
+        setDecObject(icrs.getDec(lsst::afw::coord::RADIANS));
+    }
+
+    void setAllRaDecFields(lsst::afw::coord::Coord::ConstPtr radec) {
+        setRaDecObject(radec);
+        BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::setAllRaDecFields(radec);
+    }
+
     //overloaded setters
     //Because these fields are not NULLABLE in all sources, 
     //  special behavior must be defined in the derived class
