@@ -43,74 +43,179 @@ def sincpi(x):
         return 1.0
     return math.sin(math.pi * x) / (math.pi * x)
 
+def referenceChebyshev1(x, n):
+    """Reference implementation of Chebyshev polynomials of the first kind
+    
+    f(x) = T_n(x)
+    """
+    # from Wikipedia
+    if n == 0:
+        return 1.0
+    if n == 1:
+        return x
+    return (2.0 * x * referenceChebyshev1(x, n-1)) - referenceChebyshev1(x, n-2)
+
+def referenceChebyshev1Polynomial1(x, params):
+    """Reference implementation of a 1-D polynomial of Chebyshev polynomials of the first kind
+    
+    f(x) = params[0] T_0(x) + params[1] T_1(x) + params[2] T_2(x)
+    """
+    retVal = 0.0
+    for ii in range(len(params)-1, -1, -1):
+        retVal += params[ii] * referenceChebyshev1(x, ii)
+    return retVal
+
+def referenceChebyshev1Polynomial2(x, y, params):
+    """Reference implementation of a 2-D polynomial of Chebyshev polynomials of the first kind
+    
+    f(x) =   params[0] T_0(x) T_0(y)                                                        # order 0
+           + params[1] T_1(x) T_0(y) + params[2] T_0(x) T_1(y)                              # order 1
+           + params[3] T_2(x) T_0(y) + params[4] T_1(x) T_1(y) + params[5] T_0(x) T_2(y)    # order 2
+           + ...
+
+    Raise RuntimeError if the number of parameters does not match an integer order.
+    """
+    retVal = 0.0
+    order = 0
+    y_order = 0
+    for ii in range(0, len(params)):
+        x_order = order - y_order
+        retVal += params[ii] * referenceChebyshev1(x, x_order) * referenceChebyshev1(y, y_order)
+        if x_order > 0:
+            y_order += 1
+        else:
+            order += 1
+            y_order = 0
+    if y_order != 0:
+        raise RuntimeError("invalid # of parameters=%d" % (len(params),))
+    return retVal
+
 class FunctionTestCase(unittest.TestCase):
     def testChebyshev1Function1D(self):
         """A test for Chebyshev1Function1D"""
-        def basicCheby(x, order):
-            # from Wikipedia
-            if order == 0:
-                return   1.0
-            if order == 1:
-                return   1.0 * x
-            if order == 2:
-                return   2.0 * x**2 -   1.0
-            if order == 3:
-                return   4.0 * x**3 -   3.0 * x
-            if order == 4: 
-                return   8.0 * x**4 -   8.0 * x**2 +   1.0
-            if order == 5:
-                return  16.0 * x**5 -  20.0 * x**3 +   5.0 * x
-            if order == 6:
-                return  32.0 * x**6 -  48.0 * x**4 +  18.0 * x**2 -   1.0
-            if order == 7:
-                return  64.0 * x**7 - 112.0 * x**5 +  56.0 * x**3 -   7.0 * x
-            if order == 8:
-                return 128.0 * x**8 - 256.0 * x**6 + 160.0 * x**4 -  32.0 * x**2 + 1.0
-            if order == 9:
-                return 256.0 * x**9 - 576.0 * x**7 + 432.0 * x**5 - 120.0 * x**3 + 9.0 * x
-            raise ValueError("order %d > 9" % (order,))
-        
-        def basicChebyPoly(x, params):
-            retVal = 0.0
-            for ii in range(len(params)-1, -1, -1):
-                retVal += params[ii] * basicCheby(x, ii)
-            return retVal
-        
-        maxOrder = 9
+        maxOrder = 6
         deltaCoeff = 0.3
         allCoeffs = numpy.arange(deltaCoeff, deltaCoeff * (maxOrder + 1) + (deltaCoeff / 2.0), deltaCoeff)
         ranges = ((-1, 1), (-1, 0), (0, 1), (-17, -2), (-65.3, 2.132))
         rangeIter = itertools.cycle(ranges)
-        nPoints = 10
+        nPoints = 9
         
         for order in range(maxOrder + 1):
-            minXNorm = None
-            maxXNorm = None
-            coeffs = allCoeffs[0: order + 1]
             xMin, xMax = rangeIter.next()
             xMean = (xMin + xMax) / 2.0
             xDelta = (xMax - xMin) / float(nPoints - 1)
-            f = afwMath.Chebyshev1Function1D(coeffs, xMin, xMax)
-            g = afwMath.Chebyshev1Function1D(order, xMin, xMax)
-            g.setParameters(coeffs)
+
+            f = afwMath.Chebyshev1Function1D(order, xMin, xMax)
+            nCoeffs = f.getNParameters()
+            coeffs = numpy.arange(deltaCoeff, deltaCoeff * nCoeffs + (deltaCoeff / 2.0), deltaCoeff)
+            f.setParameters(coeffs)
+            g = afwMath.Chebyshev1Function1D(coeffs, xMin, xMax)
+
+            minXNorm = None
+            maxXNorm = None
             for x in numpy.arange(xMin, xMax + xDelta/2.0, xDelta):
                 xNorm = 2.0 * (x - xMean) / float(xMax - xMin)
                 if minXNorm == None or xNorm < minXNorm:
                     minXNorm = xNorm
                 if maxXNorm == None or xNorm > maxXNorm:
                     maxXNorm = xNorm
-                predVal = basicChebyPoly(xNorm, coeffs)
+
+                predVal = referenceChebyshev1Polynomial1(xNorm, coeffs)
                 if not numpy.allclose(predVal, f(x)):
-                    self.fail("%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; coeffs constructor" % \
+                    self.fail(
+                        "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; order constructor" % \
                         (f.__class__.__name__, f(x), predVal, x, xMin, xMax, xNorm, coeffs))
                 if not numpy.allclose(predVal, g(x)):
-                    self.fail("%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; order constructor" % \
+                    self.fail(
+                        "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; coeffs constructor" %\
                         (f.__class__.__name__, g(x), predVal, x, xMin, xMax, xNorm, coeffs))
-            if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
-                raise RuntimeError("Invalid x normalization: xMin=%s, xMax=%s, " +
-                                   "min/max xNorm=(%s, %s) != (-1, 1)" %
-                                   (xMin, xMax, minXNorm, maxXNorm))
 
+            if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
+                raise RuntimeError(
+                    "Invalid x normalization: xMin=%s, xMax=%s, min/max xNorm=(%s, %s) != (-1, 1)" %
+                    (xMin, xMax, minXNorm, maxXNorm))
+
+    def testChebyshev1Function2D(self):
+        """A test for Chebyshev1Function2D"""
+        maxOrder = 6
+        deltaCoeff = 0.3
+        ranges = ((-1, 1), (-1, 0), (0, 1), (-17, -2), (-65.3, 2.132))
+        xRangeIter = itertools.cycle(ranges)
+        yRangeIter = itertools.cycle(ranges)
+        yRangeIter.next() # make x and y ranges off from each other
+        nPoints = 7 # number of points in x and y at which to test the functions
+        
+        for order in range(maxOrder + 1):
+            xMin, xMax = xRangeIter.next()
+            xMean = (xMin + xMax) / 2.0
+            xDelta = (xMax - xMin) / float(nPoints - 1)
+
+            yMin, yMax = yRangeIter.next()
+            yMean = (yMin + yMax) / 2.0
+            yDelta = (yMax - yMin) / float(nPoints - 1)
+
+            f = afwMath.Chebyshev1Function2D(order, xMin, yMin, xMax, yMax)
+            nCoeffs = f.getNParameters()
+            coeffs = numpy.arange(deltaCoeff, deltaCoeff * nCoeffs + (deltaCoeff / 2.0), deltaCoeff)
+            f.setParameters(coeffs)
+            g = afwMath.Chebyshev1Function2D(coeffs, xMin, yMin, xMax, yMax)
+
+            minXNorm = None
+            maxXNorm = None
+            for x in numpy.arange(xMin, xMax + xDelta/2.0, xDelta):
+                xNorm = 2.0 * (x - xMean) / float(xMax - xMin)
+                if minXNorm == None or xNorm < minXNorm:
+                    minXNorm = xNorm
+                if maxXNorm == None or xNorm > maxXNorm:
+                    maxXNorm = xNorm
+
+                minYNorm = None
+                maxYNorm = None
+                for y in numpy.arange(yMin, yMax + yDelta/2.0, yDelta):
+                    yNorm = 2.0 * (y - yMean) / float(yMax - yMin)
+                    if minYNorm == None or yNorm < minYNorm:
+                        minYNorm = yNorm
+                    if maxYNorm == None or yNorm > maxYNorm:
+                        maxYNorm = yNorm
+
+                        predVal = referenceChebyshev1Polynomial2(xNorm, yNorm, coeffs)
+                        if not numpy.allclose(predVal, f(x, y)):
+                            self.fail(
+"%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, coeffs=%s; order constructor" % \
+(f.__class__.__name__, f(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
+                        if not numpy.allclose(predVal, g(x, y)):
+                            self.fail(
+"%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, coeffs=%s; coeffs constructor" % \
+(f.__class__.__name__, g(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
+
+                if not numpy.allclose((minYNorm, maxYNorm), (-1.0, 1.0)):
+                    raise RuntimeError(
+                        "Invalid y normalization: yMin=%s, yMax=%s, min/max yNorm=(%s, %s) != (-1, 1)" %
+                        (yMin, yMax, minYNorm, maxYNorm))
+
+            if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
+                raise RuntimeError(
+                    "Invalid x normalization: xMin=%s, xMax=%s, min/max xNorm=(%s, %s) != (-1, 1)" %
+                    (xMin, xMax, minXNorm, maxXNorm))
+
+        # test that the number of parameters is correct for the given order
+        def numParamsFromOrder(order):
+            return (order + 1) * (order + 2) / 2
+        MaxOrder = 13
+        for order in range(MaxOrder+1):
+            f = afwMath.Chebyshev1Function2D(order)
+            predNParams = numParamsFromOrder(order)
+            self.assertEqual(f.getNParameters(), predNParams)
+            afwMath.Chebyshev1Function2D(numpy.zeros(predNParams, dtype=float))
+        
+        # test that the wrong number of parameters raises an exception
+        validNumParams = set()
+        for order in range(MaxOrder+1):
+            validNumParams.add(numParamsFromOrder(order))
+        for numParams in range(numParamsFromOrder(MaxOrder)):
+            if numParams in validNumParams:
+                continue
+            self.assertRaises(Exception, afwMath.Chebyshev1Function2D, numpy.zeros(numParams, dtype=float))
         
     def testGaussianFunction1D(self):
         """A test for GaussianFunction1D"""
