@@ -31,7 +31,9 @@ namespace afw {
 namespace detection {
 
 Threshold::ThresholdType Threshold::parseTypeString(std::string const & typeStr) {
-    if (typeStr.compare("value") == 0) {
+    if (typeStr.compare("bitmask") == 0) {
+        return Threshold::BITMASK;           
+    } else if (typeStr.compare("value") == 0) {
         return Threshold::VALUE;           
     } else if (typeStr.compare("stdev") == 0) {
         return Threshold::STDEV;
@@ -40,7 +42,7 @@ Threshold::ThresholdType Threshold::parseTypeString(std::string const & typeStr)
     } else {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Unsopported Threshold type: %s") % typeStr).str()
+            (boost::format("Unsupported Threshold type: %s") % typeStr).str()
         );
     }    
 }
@@ -65,7 +67,7 @@ std::string Threshold::getTypeString(ThresholdType const & type) {
  * @param param value of variance/stdev if needed
  * @return value of threshold
  */
-float Threshold::getValue(const float param) const {
+double Threshold::getValue(const double param) const {
     switch (_type) {
       case STDEV:
         if (param <= 0) {
@@ -76,6 +78,7 @@ float Threshold::getValue(const float param) const {
         }
         return _value*param;
       case VALUE:
+      case BITMASK:
         return _value;
       case VARIANCE:
         if (param <= 0) {
@@ -88,7 +91,7 @@ float Threshold::getValue(const float param) const {
       default:
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Unsopported type: %d") % _type).str()
+            (boost::format("Unsupported type: %d") % _type).str()
         );
     }
 }
@@ -105,7 +108,7 @@ float Threshold::getValue(const float param) const {
  * @return desired Threshold
  */
 Threshold createThreshold(
-    float const value,                  
+    double const value,                  
     std::string const typeStr,
     bool const polarity
 ) {

@@ -219,9 +219,12 @@ public:
     void setDetector(lsst::afw::cameraGeom::Detector::Ptr detector) { _detector = detector; }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _filter = filter; }
+    /// Set the Exposure's Calib object
+    void setCalib(PTR(Calib) calib) { _calib = calib; }
     /// Return the Exposure's Calib object
-    boost::shared_ptr<Calib> getCalib() { return _calib; }
-    boost::shared_ptr<const Calib> getCalib() const { return _calib; }
+    PTR(Calib) getCalib() { return _calib; }
+    /// Return the Exposure's Calib object
+    CONST_PTR(Calib) getCalib() const { return _calib; }
     /// Set the Exposure's Psf
     void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _psf = _clonePsf(psf); }
 

@@ -46,6 +46,7 @@ public:
     /// Types of threshold:
     enum ThresholdType {
         VALUE,               //!< Use pixel value
+        BITMASK,             //!< Use (pixels & (given mask))
         STDEV,               //!< Use number of sigma given s.d.
         VARIANCE             //!< Use number of sigma given variance
     }; 
@@ -58,7 +59,7 @@ public:
      * @param polarity search pixel above threshold? (useful for -ve thresholds)
      */
     Threshold(
-        float const value,
+        double const value,
         ThresholdType const type = VALUE,
         bool const polarity = true
     ) : _value(value), _type(type), _polarity(polarity) {}
@@ -74,17 +75,17 @@ public:
      * @param param value of variance/stdev if needed
      * @return value of threshold
      */
-    float getValue(const float param = -1) const; 
+    double getValue(const double param = -1) const; 
     /// return Threshold's polarity
     bool getPolarity() const { return _polarity; }
 private:
-    float _value;                       //!< value of threshold, to be interpreted via _type
+    double _value;                      //!< value of threshold, to be interpreted via _type
     ThresholdType _type;                //!< type of threshold
     bool _polarity;                     //!< true for positive polarity, false for negative
 };
 
 // brief Factory method for creating Threshold objects
-Threshold createThreshold(const float value,
+Threshold createThreshold(const double value,
                           const std::string type = "value",
                           const bool polarity = true);
 }}}
