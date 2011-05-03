@@ -663,8 +663,8 @@ using boost::serialization::make_nvp;
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
 
-        int getMinX() const { return _minX; };
-        int getMaxX() const { return _maxX; };
+        double getMinX() const { return _minX; };
+        double getMaxX() const { return _maxX; };
 
         virtual bool isLinearCombination() const { return true; };
         
@@ -813,10 +813,10 @@ using boost::serialization::make_nvp;
             return Function2Ptr(new Chebyshev1Function2(this->_params, _minX, _maxX));
         }
         
-        int getMinX() const { return _minX; };
-        int getMinY() const { return _minY; };
-        int getMaxX() const { return _maxX; };
-        int getMaxY() const { return _maxY; };
+        double getMinX() const { return _minX; };
+        double getMinY() const { return _minY; };
+        double getMaxX() const { return _maxX; };
+        double getMaxY() const { return _maxY; };
         
         /**
          * @brief Return a truncated copy of lower (or equal) order
