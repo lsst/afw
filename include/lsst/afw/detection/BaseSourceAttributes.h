@@ -31,6 +31,7 @@
 #include "lsst/utils/ieee.h"
 
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/coord/Coord.h"
 
 namespace boost {
@@ -112,6 +113,18 @@ enum SharedNullableField {
  */
 template<int numNullableFields>
 class BaseSourceAttributes {
+private:
+	static lsst::afw::coord::Coord::Ptr getcoord(lsst::afw::coord::CoordSystem sys, double ra, double dec) {
+		// Here we assume (as per LSST decree) that RA,Dec are stored in radians.
+		lsst::afw::coord::Coord::Ptr coord = boost::shared_ptr<lsst::afw::coord::IcrsCoord>(
+			new lsst::afw::coord::IcrsCoord(lsst::afw::coord::radToDeg * ra,
+											lsst::afw::coord::radToDeg * dec));
+		
+		if (sys != lsst::afw::coord::ICRS)
+			coord = coord->convert(sys);
+		return coord;
+	}
+
 public:    
     virtual ~BaseSourceAttributes(){};
     
@@ -126,18 +139,32 @@ public:
     double getRa() const { return _ra; }
 	// returns radians
     double getDec() const { return _dec; }
+
 	lsst::afw::coord::Coord::Ptr getRaDec(
-		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
 		) const {
-		// Here we assume (as per LSST decree) that RA,Dec are stored in radians.
-		lsst::afw::coord::Coord::Ptr coord = boost::shared_ptr<lsst::afw::coord::IcrsCoord>(
-			new lsst::afw::coord::IcrsCoord(lsst::afw::coord::radToDeg * _ra,
-											lsst::afw::coord::radToDeg * _dec));
-				
-		if (sys != lsst::afw::coord::ICRS)
-			coord = coord->convert(sys);
-		return coord;
+		return getcoord(sys, getRa(), getDec());
 	}
+
+	// isn't copy-n-paste great?
+	lsst::afw::coord::Coord::Ptr getRaDecAstrom(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
+		) const {
+		return getcoord(sys, getRaAstrom(), getDecAstrom());
+	}
+
+	lsst::afw::coord::Coord::Ptr getRaDecPeak(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
+		) const {
+		return getcoord(sys, getRaPeak(), getDecPeak());
+	}
+
+	lsst::afw::coord::Coord::Ptr getRaDecFlux(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
+		) const {
+		return getcoord(sys, getRaFlux(), getDecFlux());
+	}
+
 	// returns radians
     float  getRaErrForWcs() const { return _raErrForWcs; }
 	// returns radians
@@ -259,6 +286,52 @@ public:
 		setRa(icrs.getRa(lsst::afw::coord::RADIANS));
 		setDec(icrs.getDec(lsst::afw::coord::RADIANS));
 	}
+    void setAllRaDecFields(lsst::afw::coord::Coord::ConstPtr radec) {
+		setRaDec(radec);
+		setRaDecFlux(radec);
+		setRaDecPeak(radec);
+		setRaDecAstrom(radec);
+	}
+	void setAllRaDecFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecFromXy(wcs);
+		setRaDecFluxFromXy(wcs);
+		setRaDecPeakFromXy(wcs);
+	}
+	void setRaDecFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDec(wcs->pixelToSky(getXAstrom(), getYAstrom()));
+		setRaDecAstrom(wcs->pixelToSky(getXAstrom(), getYAstrom()));
+	}
+	void setRaDecAstromFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecAstrom(wcs->pixelToSky(getXAstrom(), getYAstrom()));
+	}
+	void setRaDecFluxFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecFlux(wcs->pixelToSky(getXFlux(), getYFlux()));
+	}
+	void setRaDecPeakFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecPeak(wcs->pixelToSky(getXPeak(), getYPeak()));
+	}
+
+	void setAllXyFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setXyAstromFromRaDec(wcs);
+		setXyFluxFromRaDec(wcs);
+		setXyPeakFromRaDec(wcs);
+	}
+	void setXyAstromFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecAstrom());
+		setXAstrom(xy[0]);
+		setYAstrom(xy[1]);
+	}
+	void setXyFluxFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecFlux());
+		setXFlux(xy[0]);
+		setYFlux(xy[1]);
+	}
+	void setXyPeakFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecPeak());
+		setXPeak(xy[0]);
+		setYPeak(xy[1]);
+	}
+
 	// in radians
     void setRaErrForWcs(float const raErrForWcs) {
         set(_raErrForWcs, raErrForWcs);
