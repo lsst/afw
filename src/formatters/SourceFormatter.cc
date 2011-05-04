@@ -72,99 +72,6 @@ namespace afwGeom = lsst::afw::geom;
 
 namespace lsst { namespace afw { namespace formatters { namespace {
 
-/*
-template <typename FloatT>
-class DegreeValue {
-public:
-    DegreeValue() : _value(0.0) { }
-    DegreeValue(FloatT const & radians) : _value(_degrees(radians)) { }
-    DegreeValue & operator=(FloatT const & radians) {
-        _value = _degrees(radians);
-        return *this;
-    }
-    FloatT * operator&() { return &_value; }
-    FloatT const * operator&() const { return &_value; }
-    operator FloatT() const {
-        return _value.asRadians();_radians(_value);
-    }
-    void rangeReduce() {
-        _value.wrap();
-    }
-private:
-    afwGeom::Angle _value
-};
-
-struct FieldsToConvert {
-    DegreeValue<double> ra;
-    DegreeValue<double> raFlux;
-    DegreeValue<double> raPeak;
-    DegreeValue<double> raAstrom;
-    DegreeValue<double> raObject;
-    DegreeValue<double> dec;
-    DegreeValue<double> decFlux;
-    DegreeValue<double> decPeak;
-    DegreeValue<double> decAstrom;
-    DegreeValue<double> decObject;
-    DegreeValue<float> raErrForDetection;
-    DegreeValue<float> raErrForWcs;
-    DegreeValue<float> raFluxErr;
-    DegreeValue<float> raAstromErr;
-    DegreeValue<float> decErrForDetection;
-    DegreeValue<float> decErrForWcs;
-    DegreeValue<float> decFluxErr;
-    DegreeValue<float> decAstromErr;
-
-    FieldsToConvert() { }
-    FieldsToConvert(Source const & s) :
-        ra(s.getRa()),
-        raFlux(s.getRaFlux()),
-        raPeak(s.getRaPeak()),
-        raAstrom(s.getRaAstrom()),
-        raObject(s.getRaObject()),
-        dec(s.getDec()),
-        decFlux(s.getDecFlux()),
-        decPeak(s.getDecPeak()),
-        decAstrom(s.getDecAstrom()),
-        decObject(s.getDecObject()),
-        raErrForDetection(s.getRaErrForDetection()),
-        raErrForWcs(s.getRaErrForWcs()),
-        raFluxErr(s.getRaFluxErr()),
-        raAstromErr(s.getRaAstromErr()),
-        decErrForDetection(s.getDecErrForDetection()),
-        decErrForWcs(s.getDecErrForWcs()),
-        decFluxErr(s.getDecFluxErr()),
-        decAstromErr(s.getDecAstromErr())
-    {
-        ra.rangeReduce();
-        raFlux.rangeReduce();
-        raPeak.rangeReduce();
-        raAstrom.rangeReduce();
-        raObject.rangeReduce();
-    }
-
-    void fill(Source & s) const {
-        s.setRa(ra);
-        s.setRaFlux(raFlux);
-        s.setRaPeak(raPeak);
-        s.setRaAstrom(raAstrom);
-        s.setRaObject(raObject);
-        s.setDec(dec);
-        s.setDecFlux(decFlux);
-        s.setDecPeak(decPeak);
-        s.setDecAstrom(decAstrom);
-        s.setDecObject(decObject);
-        s.setRaErrForDetection(raErrForDetection);
-        s.setRaErrForWcs(raErrForWcs);
-        s.setRaFluxErr(raFluxErr);
-        s.setRaAstromErr(raAstromErr);
-        s.setDecErrForDetection(decErrForDetection);
-        s.setDecErrForWcs(decErrForWcs);
-        s.setDecFluxErr(decFluxErr);
-        s.setDecAstromErr(decAstromErr);
-    }
-};
- */
-
 class Binder {
 public:
     Binder(DbStorage* db) : _db(db), _fieldCount(0) { };
@@ -639,30 +546,9 @@ Persistable* form::SourceVectorFormatter::read(
             b.bind("movingObjectId",       &(s._movingObjectId), det::MOVING_OBJECT_ID);
             b.bind("procHistoryId",        &(s._procHistoryId));
 
-            // temporary values converted to degrees
+            // temporary values in degrees
             double ra, dec, raAstrom, decAstrom, raPeak, decPeak, raFlux, decFlux, raObject, decObject;
             float raErrForDetection, decErrForDetection, raErrForWcs, decErrForWcs, raAstromErr, decAstromErr, raFluxErr, decFluxErr;
-
-            /*
-            ra = s.getRa().asDegrees();
-            dec = s.getDec().asDegrees();
-            raErrForDetection = s.getRaErrForDetection().asDegrees();
-            decErrForDetection = s.getDecErrForDetection().asDegrees();
-            raErrForWcs = s.getRaErrForWcs().asDegrees();
-            decErrForWcs = s.getDecErrForWcs().asDegrees();
-            raFlux = s.getRaFlux().asDegrees();
-            decFlux = s.getDecFlux().asDegrees();
-            raFluxErr = s.getRaFluxErr().asDegrees();
-            decFluxErr = s.getDecFluxErr().asDegrees();
-            raAstrom = s.getRaAstrom().asDegrees();
-            decAstrom = s.getDecAstrom().asDegrees();
-            raAstromErr = s.getRaAstromErr().asDegrees();
-            decAstromErr = s.getDecAstromErr().asDegrees();
-            raPeak = s.getRaPeak().asDegrees();
-            decPeak = s.getDecPeak().asDegrees();
-            raObject = s.getRaObject().asDegrees();
-            decObject = s.getDecObject().asDegrees();
-             */
 
             b.bind("ra", &ra);
             b.bind("decl", &dec);
