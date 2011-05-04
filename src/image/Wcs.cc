@@ -477,7 +477,8 @@ bool Wcs::isInitialized() const {
 CoordPtr Wcs::getSkyOrigin() const {
 
     if(isInitialized()) {
-        return makeCorrectCoord(_wcsInfo->crval[0], _wcsInfo->crval[1]);
+        return makeCorrectCoord(_wcsInfo->crval[0] * afwGeom::degrees,
+                                _wcsInfo->crval[1] * afwGeom::degrees);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
     }
@@ -649,11 +650,11 @@ GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const 
     CONST_PTR(afwCoord::Coord) convertedCoord = coord->convert(_coordSystem);
 
     if (_skyCoordsReversed) {
-        return GeomPoint(convertedCoord->getLatitude(afwCoord::DEGREES),
-                                convertedCoord->getLongitude(afwCoord::DEGREES));
+        return GeomPoint(convertedCoord->getLatitude().asDegrees(),
+                                convertedCoord->getLongitude().asDegrees());
     } else {    
-        return GeomPoint(convertedCoord->getLongitude(afwCoord::DEGREES),
-                                convertedCoord->getLatitude(afwCoord::DEGREES));
+        return GeomPoint(convertedCoord->getLongitude().asDegrees(),
+                                convertedCoord->getLatitude().asDegrees());
     }
 }
 
@@ -701,7 +702,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
  * Worker routine for pixelToSky
  */
 void
-Wcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
+Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) const
 {
     if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
@@ -713,13 +714,16 @@ Wcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
     double imgcrd[2];
     double phi, theta;
     
+    double sky[2];
     int status = 0;
-    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
+    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, sky, &status);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of %d. %s") %
                            status % wcs_errmsg[status]).str());
     }
+    skyTmp[0] = sky[0] * afwGeom::degrees;
+    skyTmp[1] = sky[1] * afwGeom::degrees;
 }
 
 ///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
@@ -741,9 +745,8 @@ CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
-    double skyTmp[2];
+    afwGeom::Angle skyTmp[2];
     pixelToSkyImpl(pixel1, pixel2, skyTmp);
-
     return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
@@ -755,7 +758,7 @@ CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
 /// the version that returns a CoordPtr
 ///
 afwGeom::Point2D Wcs::pixelToSky(double pixel1, double pixel2, bool) const {
-    double skyTmp[2];
+    afwGeom::Angle skyTmp[2];
     pixelToSkyImpl(pixel1, pixel2, skyTmp);
 
     return afwGeom::Point2D(skyTmp[0], skyTmp[1]);
@@ -763,7 +766,7 @@ afwGeom::Point2D Wcs::pixelToSky(double pixel1, double pixel2, bool) const {
 
 ///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
 ///sub-class of Coord
-CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
+CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const {
 
     //Construct a coord object of the correct type
     int const ncompare = 4;                       // we only care about type's first 4 chars
@@ -835,7 +838,7 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     lsst::afw::coord::Coord::ConstPtr const & coord,
-    lsst::afw::coord::CoordUnit skyUnit
+    lsst::afw::geom::AngleUnit skyUnit
 ) const {
     return linearizePixelToSkyInternal(skyToPixel(coord), coord, skyUnit);
 }
@@ -857,7 +860,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
  */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     GeomPoint const & pix,
-    lsst::afw::coord::CoordUnit skyUnit
+    lsst::afw::geom::AngleUnit skyUnit
 ) const {
     return linearizePixelToSkyInternal(pix, pixelToSky(pix), skyUnit);
 }
@@ -869,7 +872,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     GeomPoint const & pix00,
     lsst::afw::coord::Coord::ConstPtr const & coord,
-    lsst::afw::coord::CoordUnit skyUnit
+    lsst::afw::geom::AngleUnit skyUnit
 ) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -913,7 +916,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     lsst::afw::coord::Coord::ConstPtr const & coord,
-    lsst::afw::coord::CoordUnit skyUnit
+    lsst::afw::geom::AngleUnit skyUnit
 ) const {
     return linearizeSkyToPixelInternal(skyToPixel(coord), coord, skyUnit);
 }
@@ -935,7 +938,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
  */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     GeomPoint const & pix,
-    lsst::afw::coord::CoordUnit skyUnit
+    lsst::afw::geom::AngleUnit skyUnit
 ) const {
     return linearizeSkyToPixelInternal(pix, pixelToSky(pix), skyUnit);
 }
@@ -947,7 +950,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
     GeomPoint const & pix00,
     lsst::afw::coord::Coord::ConstPtr const & coord,
-    lsst::afw::coord::CoordUnit skyUnit
+    lsst::afw::geom::AngleUnit skyUnit
 ) const {
     lsst::afw::geom::AffineTransform inverse = linearizePixelToSkyInternal(pix00, coord, skyUnit);
     return inverse.invert();

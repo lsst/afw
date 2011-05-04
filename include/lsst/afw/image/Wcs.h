@@ -150,22 +150,22 @@ public:
     
     lsst::afw::geom::AffineTransform linearizePixelToSky(
         lsst::afw::coord::Coord::ConstPtr const & coord,
-        lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
                                                         ) const;
     
     lsst::afw::geom::AffineTransform linearizePixelToSky(
         lsst::afw::geom::Point2D const & pix,
-        lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
                                                         ) const;
 
     lsst::afw::geom::AffineTransform linearizeSkyToPixel(
         lsst::afw::coord::Coord::ConstPtr const & coord,
-            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+            lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
         ) const;
         
     lsst::afw::geom::AffineTransform linearizeSkyToPixel(
         lsst::afw::geom::Point2D const & pix,
-        lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
                                                         ) const;
 
     //Mutators
@@ -184,8 +184,8 @@ private:
                     const std::string cunits1, const std::string cunits2
                    );
 
-    virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
-        virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
+    virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
+    virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
 
 protected:
 
@@ -196,19 +196,19 @@ protected:
     Wcs(lsst::afw::image::Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
     
-    lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
+    lsst::afw::coord::Coord::Ptr makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const;
     lsst::afw::geom::Point2D convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
     
     virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
                                                  lsst::afw::geom::Point2D const & pix,
                                                  lsst::afw::coord::Coord::ConstPtr const & coord,
-                                                 lsst::afw::coord::CoordUnit skyUnit
+                                                 lsst::afw::geom::AngleUnit skyUnit
                                                                         ) const;
 
     virtual lsst::afw::geom::AffineTransform linearizeSkyToPixelInternal(
                                                  lsst::afw::geom::Point2D const & pix,
                                                  lsst::afw::coord::Coord::ConstPtr const & coord,
-                                                 lsst::afw::coord::CoordUnit skyUnit
+                                                 lsst::afw::geom::AngleUnit skyUnit
                                                                         ) const;
 
     
@@ -247,3 +247,5 @@ extern Wcs NoWcs;
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H
+
+//  LocalWords:  LSST

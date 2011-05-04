@@ -73,6 +73,8 @@ public:
 	Angle() : _val(0) {}
     /** Convert an Angle to a double in radians*/
     operator double() const { return _val; }
+    /** Convert an Angle to a float in radians*/
+    //operator float() const { return _val; }
 
     /** Return an Angle's value as a double in the specified units (i.e. afwGeom::degrees) */
     double asAngularUnits(AngleUnit const& units) const {
@@ -110,6 +112,10 @@ public:
 
 ANGLE_OPUP_TYPE(*=, double)
 ANGLE_OPUP_TYPE(*=, int)
+ANGLE_OPUP_TYPE(+=, double)
+ANGLE_OPUP_TYPE(+=, int)
+ANGLE_OPUP_TYPE(-=, double)
+ANGLE_OPUP_TYPE(-=, int)
 
 private:
     double _val;
@@ -122,9 +128,9 @@ private:
  * N.b. We need both int and double versions to avoid ambiguous overloading due to implicit conversion of
  * Angle to double
  */
-#define ANGLE_OP(OP)                                                \
-    const Angle operator OP(Angle const a, Angle const d) {         \
-        return Angle(static_cast<double>(a) OP d);                  \
+#define ANGLE_OP(OP)													\
+    const Angle operator OP(Angle const a, Angle const d) {				\
+        return Angle(static_cast<double>(a) OP static_cast<double>(d));	\
     }
 
 #define ANGLE_OP_TYPE(OP, TYPE)                             \

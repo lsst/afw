@@ -39,6 +39,9 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
+    // FIXME -- remove this once ticket branch #1642 is done.
+    enum CoordUnit { DEGREES, RADIANS, HOURS };
+
 }}}
 
 #endif
