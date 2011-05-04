@@ -401,8 +401,8 @@ afwGeom::Point2D afwCoord::Coord::getPosition(afwGeom::AngleUnit unit) const {
  *
  */
 afwGeom::Point3D afwCoord::Coord::getVector() const {
-    double lng = getLongitude().asRadians();
-    double lat = getLatitude().asRadians();
+    double lng = getLongitude();
+    double lat = getLatitude();
     double const x = std::cos(lng) * std::cos(lat);
     double const y = std::sin(lng) * std::cos(lat);
     double const z = std::sin(lat);
@@ -420,12 +420,12 @@ afwCoord::Coord afwCoord::Coord::transform(
     Coord const &poleTo,   ///< Pole of the destination system in the current coords
     Coord const &poleFrom  ///< Pole of the current system in the destination coords
                                           ) const {
-    double const alphaGP  = poleFrom[0].asRadians();
-    double const deltaGP  = poleFrom[1].asRadians();
-    double const lCP      = poleTo[0].asRadians();
+    double const alphaGP  = poleFrom[0];
+    double const deltaGP  = poleFrom[1];
+    double const lCP      = poleTo[0];
     
-    double const alpha = getLongitude().asRadians();
-    double const delta = getLatitude().asRadians();
+    double const alpha = getLongitude();
+    double const delta = getLatitude();
     
     afwGeom::Angle const l = (lCP - std::atan2(std::sin(alpha - alphaGP), 
                                                std::tan(delta)*std::cos(deltaGP) - std::cos(alpha - alphaGP)*std::sin(deltaGP))) * afwGeom::radians;
@@ -443,9 +443,9 @@ void afwCoord::Coord::rotate(
                              afwGeom::Angle const theta   ///< angle to offset in radians
                             ) {
 
-    double const c = std::cos(theta.asRadians());
+    double const c = std::cos(theta);
     double const mc = 1.0 - c;
-    double const s = std::sin(theta.asRadians());
+    double const s = std::sin(theta);
     
     // convert to cartesian
     afwGeom::Point3D const x = getVector();
@@ -506,9 +506,9 @@ afwGeom::Angle afwCoord::Coord::offset(
     // - solve w vector (r cross u)
     // - compute v
     Eigen::Vector3d u;
-    u << -std::sin(getLongitude().asRadians()), std::cos(getLongitude().asRadians()), 0.0;
+    u << -std::sin(getLongitude()), std::cos(getLongitude()), 0.0;
     Eigen::Vector3d w = r.cross(u);
-    Eigen::Vector3d v = arcLen.asRadians() * std::cos(phi)*u + arcLen.asRadians() * std::sin(phi)*w;
+    Eigen::Vector3d v = arcLen * std::cos(phi)*u + arcLen * std::sin(phi)*w;
 
     // take r x v to get the axis
     Eigen::Vector3d axisVector = r.cross(v);
@@ -526,7 +526,7 @@ afwGeom::Angle afwCoord::Coord::offset(
     // we need to compute u2, and then rotate v (exactly as we rotated r) to get v2
     Eigen::Vector3d r2 = getVector().asEigen();
     Eigen::Vector3d u2;
-    u2 << -std::sin(getLongitude().asRadians()), std::cos(getLongitude().asRadians()), 0.0;
+    u2 << -std::sin(getLongitude()), std::cos(getLongitude()), 0.0;
     Eigen::Vector3d w2 = r2.cross(u2);
 
     // make v a unit vector and rotate v exactly as we rotated r
@@ -629,9 +629,9 @@ afwGeom::Angle afwCoord::Coord::angularSeparation(
     // use haversine form.  it's stable near 0 and 180.
     afwGeom::Angle const dDelta = delta1 - delta2;
     afwGeom::Angle const dAlpha = alpha1 - alpha2;
-    double const havDDelta = std::sin(dDelta.asRadians()/2.0) * std::sin(dDelta.asRadians()/2.0);
-    double const havDAlpha = std::sin(dAlpha.asRadians()/2.0) * std::sin(dAlpha.asRadians()/2.0);
-    double const havD = havDDelta + std::cos(delta1.asRadians()) * std::cos(delta2.asRadians()) * havDAlpha;
+    double const havDDelta = std::sin(dDelta/2.0) * std::sin(dDelta/2.0);
+    double const havDAlpha = std::sin(dAlpha/2.0) * std::sin(dAlpha/2.0);
+    double const havD = havDDelta + std::cos(delta1) * std::cos(delta2) * havDAlpha;
     double const sinDHalf = std::sqrt(havD);
     afwGeom::Angle dist = (2.0 * std::asin(sinDHalf)) * afwGeom::radians;
     return dist;
@@ -657,10 +657,10 @@ lsst::afw::geom::Point2D afwCoord::Coord::getOffsetFrom(
     }
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
     // we'll put them in the same system.
-    double const alpha1 = fk51.getRa().asRadians();
-    double const delta1 = fk51.getDec().asRadians();
-    double const alpha2 = fk52.getRa().asRadians();
-    double const delta2 = fk52.getDec().asRadians();
+    double const alpha1 = fk51.getRa();
+    double const delta1 = fk51.getDec();
+    double const alpha2 = fk52.getRa();
+    double const delta2 = fk52.getDec();
 
     // This is a projection of coord2 to the tangent plane at coord1
     double const sinDelta1 = std::sin(delta1);
@@ -829,12 +829,12 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     afwGeom::Angle const H               = theta0 + L - alpha;
 
     // compute the altitude, h
-    double const sinh            = std::sin(phi.asRadians())* std::sin(delta.asRadians()) + std::cos(phi.asRadians()) * std::cos(delta.asRadians()) * std::cos(H.asRadians());
+    double const sinh            = std::sin(phi)* std::sin(delta) + std::cos(phi) * std::cos(delta) * std::cos(H);
     afwGeom::Angle const h               = std::asin(sinh) * afwGeom::radians;
 
     // compute the azimuth, A
-    double const tanAnumerator   = std::sin(H.asRadians());
-    double const tanAdenominator = (std::cos(H.asRadians()) * std::sin(phi.asRadians()) - std::tan(delta.asRadians()) * std::cos(phi.asRadians()));
+    double const tanAnumerator   = std::sin(H);
+    double const tanAdenominator = (std::cos(H) * std::sin(phi) - std::tan(delta) * std::cos(phi));
     afwGeom::Angle A = (-90.0 * afwGeom::degrees) - (atan2(tanAdenominator, tanAnumerator) * afwGeom::radians);
     
     return TopocentricCoord(A, h, obsDate.get(dafBase::DateTime::EPOCH), obs);
@@ -876,9 +876,9 @@ afwCoord::Fk5Coord afwCoord::Fk5Coord::precess(
     afwGeom::Angle const alpha0 = fk5.getRa();
     afwGeom::Angle const delta0 = fk5.getDec();
     
-    double const a = std::cos(delta0.asRadians()) * std::sin((alpha0 + xi).asRadians());
-    double const b = std::cos(theta.asRadians())  * std::cos(delta0.asRadians()) * std::cos((alpha0 + xi).asRadians()) - std::sin(theta.asRadians()) * std::sin(delta0.asRadians());
-    double const c = std::sin(theta.asRadians())  * std::cos(delta0.asRadians()) * std::cos((alpha0 + xi).asRadians()) + std::cos(theta.asRadians()) * std::sin(delta0.asRadians());
+    double const a = std::cos(delta0) * std::sin((alpha0 + xi));
+    double const b = std::cos(theta)  * std::cos(delta0) * std::cos((alpha0 + xi)) - std::sin(theta) * std::sin(delta0);
+    double const c = std::sin(theta)  * std::cos(delta0) * std::cos((alpha0 + xi)) + std::cos(theta) * std::sin(delta0);
 
     afwGeom::Angle const alpha = (std::atan2(a,b) + z) * afwGeom::radians;
     afwGeom::Angle const delta = std::asin(c) * afwGeom::radians;
@@ -1027,8 +1027,8 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
      
     afwGeom::Angle const A        = getAzimuth();
     afwGeom::Angle const h        = getAltitude();
-    double const phi      = _obs.getLatitude().asRadians();
-    double const L        = _obs.getLongitude().asRadians();
+    double const phi      = _obs.getLatitude();
+    double const L        = _obs.getLongitude();
 
     double const jd       = dafBase::DateTime(epoch,
                                               dafBase::DateTime::EPOCH,
