@@ -39,12 +39,6 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
-double const degToRad = M_PI/180.0;
-double const radToDeg = 180.0/M_PI;
-
-enum CoordUnit   { DEGREES, RADIANS, HOURS };
-    
-
 }}}
 
 #endif

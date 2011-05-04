@@ -4,6 +4,7 @@
 #include <limits>
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
+#include <cmath>
 
 #if 1
 #   include <boost/static_assert.hpp>
@@ -17,6 +18,8 @@ namespace lsst { namespace afw { namespace geom {
  * None of C99, C++98, and C++0x define M_PI, so we'll do it ourselves
  */
 double const PI = boost::math::constants::pi<double>(); ///< The ratio of a circle's circumference to diameter
+double const TWOPI = boost::math::constants::pi<double>() * 2.0;
+double const HALFPI = boost::math::constants::pi<double>() * 0.5;
 
 #if 0 && !defined(M_PI)                 // a good idea, but with ramifications
 #   define M_PI ::lsst::afw::geom::PI
@@ -36,15 +39,22 @@ class AngleUnit {
     template<typename T> friend const Angle operator *(T lhs, AngleUnit const rhs);
 public:
     explicit AngleUnit(double val) : _val(val) {}
+
+	bool operator==(AngleUnit const &rhs) const;
 private:
     double _val;
-
 };
+
+inline bool lsst::afw::geom::AngleUnit::operator==(lsst::afw::geom::AngleUnit const &rhs) const {
+	return (_val == rhs._val);
+}
+
 
 // swig likes this way of initialising the constant, so don't mess with it;
 // N.b. swig 1.3 doesn't like PI/(60*180)
 AngleUnit const radians =    AngleUnit(1.0); ///< constant with units of radians
 AngleUnit const degrees =    AngleUnit(PI/180.0); // constant with units of degrees
+AngleUnit const hours   =    AngleUnit(PI*15.0/180.0); // constant with units of hours
 AngleUnit const arcminutes = AngleUnit(PI/60/180.0); // constant with units of arcminutes
 AngleUnit const arcseconds = AngleUnit(PI/180.0/3600); // constant with units of arcseconds
 
@@ -60,6 +70,7 @@ class Angle {
 public:
     /** Construct an Angle with the specified value (interpreted in the given units) */
     explicit Angle(double val, AngleUnit units=radians) : _val(val*units._val) {}
+	Angle() : _val(0) {}
     /** Convert an Angle to a double in radians*/
     operator double() const { return _val; }
 
@@ -71,10 +82,34 @@ public:
     double asRadians() const { return asAngularUnits(radians); }
     /** Return an Angle's value as a double in degrees */
     double asDegrees() const { return asAngularUnits(degrees); }
+    /** Return an Angle's value as a double in hours */
+    double asHours() const { return asAngularUnits(hours); }
     /** Return an Angle's value as a double in arcminutes */
     double asArcminutes() const { return asAngularUnits(arcminutes); }
     /** Return an Angle's value as a double in arcseconds */
     double asArcseconds() const { return asAngularUnits(arcseconds); }
+
+	/** Wraps this angle to the range [0, 2 pi) */
+	void wrap() {
+		_val = std::fmod(_val, TWOPI);
+		// now in range [-TWOPI, TWOPI]
+		if (_val < 0.0)
+			_val += TWOPI;
+		// from Coord.cc : reduceAngle():
+		// if _val was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
+		// Thus, a rare equivalence conditional test for a double ...
+		if (_val == 360.0)
+			_val = 0.0;
+	}
+
+#define ANGLE_OPUP_TYPE(OP, TYPE)                             \
+    Angle& operator OP(TYPE const& d) {						  \
+		_val OP d;											  \
+        return *this;										  \
+    }
+
+ANGLE_OPUP_TYPE(*=, double)
+ANGLE_OPUP_TYPE(*=, int)
 
 private:
     double _val;
@@ -124,7 +159,7 @@ double operator /(T const lhs, Angle const rhs) {
             
 #undef ANGLE_OP
 #undef ANGLE_OP_TYPE
-
+#undef ANGLE_OPUP_TYPE
 /************************************************************************************************************/
 /**
  * \brief Allow a user to check if they have an angle (yes; they could do this themselves via trivial TMP)
