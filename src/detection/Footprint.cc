@@ -296,10 +296,10 @@ void Footprint::normalize() {
                     if (rspan->_x1 > x1) {  // right span extends left span
                         //update area
                         _area += rspan->_x1 - x1;
-                        //update bounds
-                        if(x1 > maxX) maxX = x1;
                         //update end of current span
                         x1 = lspan->_x1 = rspan->_x1;
+                        //update bounds
+                        if(x1 > maxX) maxX = x1;
                     }                    
                     
                     ptr = _spans.erase(ptr);
