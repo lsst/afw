@@ -192,6 +192,17 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
 
             fits_write_key(fd, TLONG, keyWordChars, &tmp, keyCommentChars, &status);
         }
+    } else if (valueType == typeid(boost::int64_t)) {
+        if (metadata->isArray(keyWord)) {
+            std::vector<boost::int64_t> tmp = metadata->getArray<boost::int64_t>(keyWord);
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TLONG, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            boost::int64_t tmp = metadata->get<boost::int64_t>(keyWord);
+
+            fits_write_key(fd, TLONG, keyWordChars, &tmp, keyCommentChars, &status);
+        }
     } else if (valueType == typeid(double)) {
         if (metadata->isArray(keyWord)) {
             std::vector<double> tmp = metadata->getArray<double>(keyWord);
@@ -299,8 +310,8 @@ void getKey(fitsfile* fd,
 
 void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, std::string const& value, std::string const& comment) {
     static boost::regex const boolRegex("[tTfF]");
-    static boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
-    static boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
+    static boost::regex const intRegex("[+-]?[0-9]+");
+    static boost::regex const doubleRegex("[+-]?([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)([eE][+-]?[0-9]+)?");
     static boost::regex const fitsStringRegex("'(.*)'");
 
     boost::smatch matchStrings;
@@ -325,12 +336,21 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
         }
     } else if (boost::regex_match(value, intRegex)) {
         // convert the string to an int
-        int val;
+        boost::int64_t val;
         converter >> val;
-        if (pl) {
-            pl->add(key, val, comment);
+        if (val < (1L << 31) && val > -(1L << 31)) {
+            int v = static_cast<int>(val);
+            if (pl) {
+                pl->add(key, v, comment);
+            } else {
+                metadata->add(key, v);
+            }
         } else {
-            metadata->add(key, val);
+            if (pl) {
+                pl->add(key, val, comment);
+            } else {
+                metadata->add(key, val);
+            }
         }
     } else if (boost::regex_match(value, doubleRegex)) {
         // convert the string to a double
