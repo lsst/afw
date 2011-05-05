@@ -49,6 +49,7 @@
 
 #include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/geom/Angle.h"
 
 using lsst::daf::base::PropertySet;
 using lsst::daf::base::Persistable;
@@ -62,6 +63,7 @@ using lsst::afw::detection::PersistableDiaSourceVector;
 
 namespace afwFormatters = lsst::afw::formatters;
 namespace afwDet = lsst::afw::detection;
+namespace afwGeom = lsst::afw::geom;
 
 #define Assert(pred, msg) do { if (!(pred)) { throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, (msg)); } } while (false)
 
@@ -119,12 +121,12 @@ static void initTestData(DiaSourceSet & v, int sliceId = 0) {
         data.setFilterId(-1);
         data.setObjectId(static_cast<int64_t>(j + 4));
         data.setMovingObjectId(static_cast<int64_t>(j + 5));
-        data.setRa(static_cast<double>(j + 8));
-        data.setRaErrForDetection(static_cast<float>(j + 9));
-        data.setRaErrForWcs(static_cast<float>(j + 10));
-        data.setDec(static_cast<double>(j + 11));
-        data.setDecErrForDetection(static_cast<float>(j + 12));
-        data.setDecErrForWcs(static_cast<float>(j + 13));
+        data.setRa(static_cast<double>(j + 8) * afwGeom::radians);
+        data.setRaErrForDetection(static_cast<float>(j + 9) * afwGeom::radians);
+        data.setRaErrForWcs(static_cast<float>(j + 10) * afwGeom::radians);
+        data.setDec(static_cast<double>(j + 11) * afwGeom::radians);
+        data.setDecErrForDetection(static_cast<float>(j + 12) * afwGeom::radians);
+        data.setDecErrForWcs(static_cast<float>(j + 13) * afwGeom::radians);
         data.setXAstrom(static_cast<double>(j + 26));
         data.setXAstromErr(static_cast<float>(j + 27));
         data.setYAstrom(static_cast<double>(j + 28));

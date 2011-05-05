@@ -96,14 +96,14 @@ void testSip(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd sip
 
             if(1) {
                 printf("\n%.1f %.1f : %.3f\n", u, v, distortX);
-                printf("%.7f %.7f \n", lin.getRa(afwCoord::DEGREES), lin.getDec(afwCoord::DEGREES));
-                printf("%.7f %.7f \n", sip.getRa(afwCoord::DEGREES), sip.getDec(afwCoord::DEGREES));
-                printf("Diff: %.7f %.7f \n", sip.getRa(afwCoord::DEGREES) - lin.getRa(afwCoord::DEGREES), \
-                        sip.getDec(afwCoord::DEGREES) - lin.getDec(afwCoord::DEGREES));
+                printf("%.7f %.7f \n", lin.getRa().asDegrees(), lin.getDec().asDegrees());
+                printf("%.7f %.7f \n", sip.getRa().asDegrees(), sip.getDec().asDegrees());
+                printf("Diff: %.7f %.7f \n", sip.getRa().asDegrees() - lin.getRa().asDegrees(), \
+                        sip.getDec().asDegrees() - lin.getDec().asDegrees());
             }
                                 
-            BOOST_CHECK_CLOSE(lin.getRa(afwCoord::DEGREES), sip.getRa(afwCoord::DEGREES), 1e-7); 
-            BOOST_CHECK_CLOSE(lin.getDec(afwCoord::DEGREES), sip.getDec(afwCoord::DEGREES), 1e-7); 
+            BOOST_CHECK_CLOSE(lin.getRa().asDegrees(), sip.getRa().asDegrees(), 1e-7); 
+            BOOST_CHECK_CLOSE(lin.getDec().asDegrees(), sip.getDec().asDegrees(), 1e-7); 
             
             v+=step;
         }
@@ -127,14 +127,14 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
     afwGeom::Point2D xy0 = linWcs.getPixelOrigin();
     
     afwCoord::Fk5Coord raDec0 = linWcs.getSkyOrigin()->toFk5();
-    double ra = raDec0.getRa(afwCoord::DEGREES) - range;
-    double raUpr = raDec0.getRa(afwCoord::DEGREES) + range;
+    double ra = raDec0.getRa().asDegrees() - range;
+    double raUpr = raDec0.getRa().asDegrees() + range;
     
     while(ra<= raUpr)
     {
 
-        double dec = raDec0.getDec(afwCoord::DEGREES) - range;
-        double decUpr = raDec0.getDec(afwCoord::DEGREES) + range;
+        double dec = raDec0.getDec().asDegrees() - range;
+        double decUpr = raDec0.getDec().asDegrees() + range;
         while(dec<= decUpr)
         {
             afwGeom::Point2D xy = linWcs.skyToPixel(ra, dec);
@@ -297,12 +297,12 @@ void createSipTests(afwImg::TanWcs &wcs1, afwImg::TanWcs &wcs2)
             afwCoord::Fk5Coord pos2 = wcs2.pixelToSky(x0+u, y0+v)->toFk5();
 
             printf("\n%.1f %.1f \n", u, v);
-            printf("%.7f %.7f \n", pos1.getRa(afwCoord::DEGREES), pos1.getDec(afwCoord::DEGREES));
-            printf("%.7f %.7f \n", pos2.getRa(afwCoord::DEGREES), pos2.getDec(afwCoord::DEGREES));
+            printf("%.7f %.7f \n", pos1.getRa().asDegrees(), pos1.getDec().asDegrees());
+            printf("%.7f %.7f \n", pos2.getRa().asDegrees(), pos2.getDec().asDegrees());
             
                                 
-            BOOST_CHECK_CLOSE(pos1.getRa(afwCoord::DEGREES), pos2.getRa(afwCoord::DEGREES), 1e-7); 
-            BOOST_CHECK_CLOSE(pos1.getDec(afwCoord::DEGREES), pos2.getDec(afwCoord::DEGREES), 1e-7); 
+            BOOST_CHECK_CLOSE(pos1.getRa().asDegrees(), pos2.getRa().asDegrees(), 1e-7); 
+            BOOST_CHECK_CLOSE(pos1.getDec().asDegrees(), pos2.getDec().asDegrees(), 1e-7); 
             
             v+=step;
         }

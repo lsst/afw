@@ -34,11 +34,13 @@
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/math/Random.h"
 #include "lsst/afw/coord/Utils.h"
+#include "lsst/afw/geom/Angle.h"
 
 
 namespace det = lsst::afw::detection;
 namespace math = lsst::afw::math;
 namespace coord = lsst::afw::coord;
+namespace afwGeom = lsst::afw::geom;
 
 namespace {
 
@@ -61,8 +63,8 @@ void makeSources(det::SourceSet &set, int n) {
         src->setXAstrom(rng().uniform());
         src->setYAstrom(rng().uniform());
         double z = rng().flat(-1.0, 1.0);
-        src->setRa(rng().flat(0.0, 2.*M_PI));
-        src->setDec(std::asin(z));
+        src->setRa(rng().flat(0.0, 2.*M_PI) * afwGeom::radians);
+        src->setDec(std::asin(z) * afwGeom::radians);
         set.push_back(src);
     }
 }
@@ -243,8 +245,8 @@ static void normalizeRaDec(det::SourceSet ss) {
             r += 2.*M_PI;
         while (r >= 2.*M_PI)
             r -= 2.*M_PI;
-        ss[i]->setRa(r);
-        ss[i]->setDec(d);
+        ss[i]->setRa(r * afwGeom::radians);
+        ss[i]->setDec(d * afwGeom::radians);
     }
 }
 
@@ -256,17 +258,17 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     // for each source, add a true match right on top, plus one within range
     // and one outside range in each direction.
 
-    double rad = 0.1 * coord::degToRad;
+    afwGeom::Angle rad = 0.1 * afwGeom::degrees;
     int id1 = 0;
     int id2 = 1000000;
     for (double  j=0.1; j<1; j+=0.1) {
         for (int i=0; i<360; i+=45) {
-            double ra = i * coord::degToRad;
-            double dec = (90 - j) * coord::degToRad;
-            double ddec1 = rad;
-            double dra1 = rad / cos(dec);
-            double ddec2 = 2. * rad;
-            double dra2 = 2. * rad / cos(dec);
+            afwGeom::Angle ra = i * afwGeom::degrees;
+            afwGeom::Angle dec = (90 - j) * afwGeom::degrees;
+            afwGeom::Angle ddec1 = rad;
+            afwGeom::Angle dra1 = rad / cos(dec);
+            afwGeom::Angle ddec2 = 2. * rad;
+            afwGeom::Angle dra2 = 2. * rad / cos(dec);
 
             det::Source::Ptr src1(new det::Source);
             src1->setSourceId(id1);

@@ -49,7 +49,6 @@ inline bool lsst::afw::geom::AngleUnit::operator==(lsst::afw::geom::AngleUnit co
 	return (_val == rhs._val);
 }
 
-
 // swig likes this way of initialising the constant, so don't mess with it;
 // N.b. swig 1.3 doesn't like PI/(60*180)
 AngleUnit const radians =    AngleUnit(1.0); ///< constant with units of radians
@@ -117,6 +116,8 @@ ANGLE_OPUP_TYPE(+=, int)
 ANGLE_OPUP_TYPE(-=, double)
 ANGLE_OPUP_TYPE(-=, int)
 
+#undef ANGLE_OPUP_TYPE
+
 private:
     double _val;
 };
@@ -129,16 +130,16 @@ private:
  * Angle to double
  */
 #define ANGLE_OP(OP)													\
-    const Angle operator OP(Angle const a, Angle const d) {				\
+    inline const Angle operator OP(Angle const a, Angle const d) {		\
         return Angle(static_cast<double>(a) OP static_cast<double>(d));	\
     }
 
 #define ANGLE_OP_TYPE(OP, TYPE)                             \
-    const Angle operator OP(Angle const a, TYPE d) {        \
+    inline const Angle operator OP(Angle const a, TYPE d) {	\
         return Angle(static_cast<double>(a) OP d);          \
     }                                                       \
-                                                            \
-    const Angle operator OP(TYPE d, Angle const a) {        \
+															\
+    inline const Angle operator OP(TYPE d, Angle const a) {	\
         return Angle(d OP static_cast<double>(a));          \
     }
 
@@ -148,34 +149,31 @@ ANGLE_OP(*)
 ANGLE_OP_TYPE(*, double)
 ANGLE_OP_TYPE(*, int)
 
+#undef ANGLE_OP
+#undef ANGLE_OP_TYPE
+
 // Division is different.  Don't allow division by an Angle
-const Angle operator /(Angle const a, int d) {
+inline const Angle operator /(Angle const a, int d) {
     return Angle(static_cast<double>(a)/d);
 }
 
-const Angle operator /(Angle const a, double d) {
+inline const Angle operator /(Angle const a, double d) {
     return Angle(static_cast<double>(a)/d);
 }
 
 template<typename T>
-double operator /(T const lhs, Angle const rhs) {
-    static_assert((sizeof(T) == 0), "You may not divide by an Angle");
-    return 0.0;
-}
+	double operator /(T const lhs, Angle const rhs);
             
-#undef ANGLE_OP
-#undef ANGLE_OP_TYPE
-#undef ANGLE_OPUP_TYPE
 /************************************************************************************************************/
 /**
  * \brief Allow a user to check if they have an angle (yes; they could do this themselves via trivial TMP)
  */
 template<typename T>
-bool isAngle(T) {
+inline bool isAngle(T) {
     return false;
 };
 
-bool isAngle(Angle const&) {
+inline bool isAngle(Angle const&) {
     return true;
 };
 
@@ -184,6 +182,7 @@ bool isAngle(Angle const&) {
  * \brief Use AngleUnit to convert a POD (e.g. int, double) to an Angle; e.g. 180*afwGeom::degrees
  */
 template<typename T>
+inline
 const Angle operator *(T lhs,              ///< the value to convert
                        AngleUnit const rhs ///< the conversion coefficient
                       ) {
@@ -196,10 +195,7 @@ const Angle operator *(T lhs,              ///< the value to convert
  */
 std::ostream& operator<<(std::ostream &s, ///< The output stream
                          Angle const a    ///< The angle
-                        )
-{
-    return s << static_cast<double>(a) << " rad";
-}
+						 );
 
 }}}
 #endif
