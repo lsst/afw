@@ -40,6 +40,8 @@
 #include "lsst/afw/coord.h"
 #include "lsst/afw/geom/Point.h"
 
+#define CHECK_DIFF(x1, x2, d) BOOST_CHECK_SMALL(x1 - x2, d)
+
 using namespace std;
 namespace afwCoord = lsst::afw::coord;
 namespace afwGeom  = lsst::afw::geom;
@@ -51,8 +53,8 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     afwGeom::Angle ra  = afwCoord::hmsStringToAngle(rastr);
     afwGeom::Angle dec = afwCoord::dmsStringToAngle(decstr);
     
-    BOOST_CHECK_EQUAL(ra.asDegrees(), 150.0);
-    BOOST_CHECK_EQUAL(dec.asDegrees(), -2.5);
+    CHECK_DIFF(ra.asDegrees(), 150.0, 1e-8);
+    CHECK_DIFF(dec.asDegrees(), -2.5, 1e-8);
     
     // make sure the rounding issue works (ie. 59.998 rounds to 00, not 60 sec)
     ra -= (0.000001 * afwGeom::degrees);

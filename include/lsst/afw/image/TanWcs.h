@@ -124,8 +124,8 @@ namespace image {
 
         TanWcs & operator = (const TanWcs &);        
 
-        virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
-        virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
+        virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
+        virtual lsst::afw::geom::Point2D skyToPixelImpl(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
 
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)

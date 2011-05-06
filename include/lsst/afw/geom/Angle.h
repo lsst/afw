@@ -21,6 +21,9 @@ double const PI = boost::math::constants::pi<double>(); ///< The ratio of a circ
 double const TWOPI = boost::math::constants::pi<double>() * 2.0;
 double const HALFPI = boost::math::constants::pi<double>() * 0.5;
 
+// NOTE, if you add things here, remember to also add them to
+//    python/lsst/afw/geom/__init__.py
+
 #if 0 && !defined(M_PI)                 // a good idea, but with ramifications
 #   define M_PI ::lsst::afw::geom::PI
 #endif
@@ -48,6 +51,9 @@ private:
 inline bool lsst::afw::geom::AngleUnit::operator==(lsst::afw::geom::AngleUnit const &rhs) const {
 	return (_val == rhs._val);
 }
+
+// NOTE, if you add things here, remember to also add them to
+//    python/lsst/afw/geom/__init__.py
 
 // swig likes this way of initialising the constant, so don't mess with it;
 // N.b. swig 1.3 doesn't like PI/(60*180)
@@ -121,6 +127,9 @@ ANGLE_OPUP_TYPE(-=, int)
 private:
     double _val;
 };
+
+Angle const NullAngle = Angle(-1000000., degrees);
+
 
 /************************************************************************************************************/
 /*

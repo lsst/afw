@@ -26,7 +26,7 @@ from .geomLib import (
     version,
     LinearTransform,
     AffineTransform,
-    Angle, radians, degrees, arcminutes, arcseconds, PI, isAngle,
+    Angle, radians, hours, degrees, arcminutes, arcseconds, PI, HALFPI, TWOPI, isAngle,
     CoordinateExpr2,
     CoordinateExpr3,
     Extent2I,

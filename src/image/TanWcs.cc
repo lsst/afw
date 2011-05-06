@@ -314,14 +314,14 @@ afwImage::Wcs::Ptr TanWcs::clone(void) const {
 //
 // Accessors
 //
-GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
-                                 double sky2  ///< Latitude  coordinate, DEGREES
+GeomPoint TanWcs::skyToPixelImpl(afwGeom::Angle sky1, // RA
+                                 afwGeom::Angle sky2  // Dec
                                 ) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
-    double const skyTmp[2] = { sky1, sky2 };
+    double skyTmp[2];
     double imgcrd[2];
     double phi, theta;
     double pixTmp[2];
@@ -329,6 +329,9 @@ GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
     //Estimate undistorted pixel coordinates
     int stat[1];
     int status = 0;
+
+	skyTmp[0] = sky1.asDegrees();
+	skyTmp[1] = sky2.asDegrees();
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
@@ -419,7 +422,7 @@ GeomPoint TanWcs::distortPixel(const lsst::afw::geom::Point2D pix) const {
  * Worker routine for pixelToSky
  */
 void
-TanWcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
+TanWcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle sky[2]) const
 {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
@@ -440,11 +443,14 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
     }
  
     int status = 0;
+	double skyTmp[2];
     if (wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status) > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of  %d. %s") %
                            status % wcs_errmsg[status]).str());
     }
+	sky[0] = skyTmp[0] * afwGeom::degrees;
+	sky[1] = skyTmp[1] * afwGeom::degrees;
 }
 
 /************************************************************************************************************/
