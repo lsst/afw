@@ -430,12 +430,13 @@ class FootprintTestCase(unittest.TestCase):
         #
         # Create a footprint;  note that these Spans overlap
         #
-        for spans in ([(3, 5, 6), (4, 7, 7), ],
-                      [(3, 3, 5), (3, 5, 7),
-                       (4, 2, 3), (4, 5, 7), (4, 8, 9),
-                       (5, 2, 3), (5, 5, 8), (5, 6, 7),
-                       (6, 3, 5), 
-                       ],
+        for spans, box in (([(3, 5, 6),
+                             (4, 7, 7), ], afwGeom.Box2I(afwGeom.Point2I(5,3), afwGeom.Point2I(7,4))),
+                           ([(3, 3, 5), (3, 6, 9),
+                             (4, 2, 3), (4, 5, 7), (4, 8, 8),
+                             (5, 2, 3), (5, 5, 8), (5, 6, 7),
+                             (6, 3, 5), 
+                             ], afwGeom.Box2I(afwGeom.Point2I(2,3), afwGeom.Point2I(9,6)))
                       ):
 
             foot = afwDetect.Footprint(0, region)
@@ -463,6 +464,7 @@ class FootprintTestCase(unittest.TestCase):
 
             idImage -= im
 
+            self.assertTrue(box == foot.getBBox())
             self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
     def testSetFromFootprint(self):
