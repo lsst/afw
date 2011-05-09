@@ -134,7 +134,7 @@ class MakeWcsTestCase(unittest.TestCase):
 
         # trivial test ... verify that we get back what we put in.
         for wcs in [wcsMade, wcsCreated]:
-            crvalTest = wcs.getSkyOrigin().getPosition(afwCoord.DEGREES)
+            crvalTest = wcs.getSkyOrigin().getPosition(afwGeom.degrees)
             crpixTest = wcs.getPixelOrigin()
             CD = wcs.getCDMatrix()
             

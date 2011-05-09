@@ -137,10 +137,14 @@ public:
     //xyToRaDec(), but the name now reflects their increased generality. They may be
     //used, e.g. to convert xy to Galactic coordinates
     lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-    lsst::afw::geom::Point2D pixelToSky(double pix1, double pix2, bool) const;
     lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::Point2D pixel) const;
+
+    /// \note This routine is designed for the knowledgeable user in need of performance; it's safer to call
+    ///   the version that returns a CoordPtr
+    void pixelToSky(double pixel1, double pixel2, lsst::afw::geom::Angle& sky1, lsst::afw::geom::Angle& sky2) const;
     
-    lsst::afw::geom::Point2D skyToPixel(double sky1, double sky2) const;
+    // ASSUMES the angles are in the appropriate system for this WCS.
+    lsst::afw::geom::Point2D skyToPixel(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
     lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
     lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
     
@@ -185,7 +189,7 @@ private:
                    );
 
     virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
-    virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
+    virtual lsst::afw::geom::Point2D skyToPixelImpl(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
 
 protected:
 
@@ -197,7 +201,8 @@ protected:
     Wcs& operator= (const Wcs &);        
     
     lsst::afw::coord::Coord::Ptr makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const;
-    lsst::afw::geom::Point2D convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
+
+    lsst::afw::coord::Coord::Ptr convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
     
     virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
                                                  lsst::afw::geom::Point2D const & pix,

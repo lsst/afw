@@ -47,11 +47,13 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/coord/Coord.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
+namespace afwCoord = lsst::afw::coord;
 namespace afwMath = lsst::afw::math;
 
 afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
@@ -207,8 +209,9 @@ namespace {
 #else
         double const x = destPosXY[0];
         double const y = destPosXY[1];
-        afwGeom::Point2D sky = destWcs.pixelToSky(x, y, true);
-        afwGeom::Point2D srcPosXY = srcWcs.skyToPixel(sky[0], sky[1]);
+        afwGeom::Angle sky1, sky2;
+        destWcs.pixelToSky(x, y, sky1, sky2);
+        afwGeom::Point2D srcPosXY = srcWcs.skyToPixel(sky1, sky2);
 #endif
         // Correct intensity due to relative pixel spatial scale and kernel sum.
         // The area computation is for a parallellogram.

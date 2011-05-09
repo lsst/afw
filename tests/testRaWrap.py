@@ -48,8 +48,8 @@ class WCSTestRaWrap(unittest.TestCase):
         crval = wcs1.getSkyOrigin()
         cd = wcs1.getCDMatrix()
         print cd
-        crval_p = afwGeom.Point2D(crval.getLongitude(afwCoord.DEGREES), 
-                                 crval.getLatitude(afwCoord.DEGREES))
+        crval_p = afwGeom.Point2D(crval.getLongitude().asDegrees(), 
+                                 crval.getLatitude().asDegrees())
         origin = wcs1.getPixelOrigin()
         print crval_p
         print origin
@@ -60,8 +60,8 @@ class WCSTestRaWrap(unittest.TestCase):
             print 'x, y, RA, Dec, pixscale("/pix), pixscale2'
             for x,y in [(0,0),(300,0),(350,0),(360,0),(370,0),(380,0),(400,0)]:
                 radec = wcs.pixelToSky(x,y)
-                ra  = radec.getLongitude(afwCoord.DEGREES)
-                dec = radec.getLatitude (afwCoord.DEGREES)
+                ra  = radec.getLongitude().asDegrees()
+                dec = radec.getLatitude ().asDegrees()
                 pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.Point2D(x,y)))
                 ps2 = wcs.pixelScale()
                 print x,y,ra,dec,pixscale,ps2

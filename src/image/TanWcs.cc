@@ -330,8 +330,9 @@ GeomPoint TanWcs::skyToPixelImpl(afwGeom::Angle sky1, // RA
     int stat[1];
     int status = 0;
 
-	skyTmp[0] = sky1.asDegrees();
-	skyTmp[1] = sky2.asDegrees();
+    skyTmp[_wcsInfo->lng] = sky1.asDegrees();
+    skyTmp[_wcsInfo->lat] = sky2.asDegrees();
+
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
