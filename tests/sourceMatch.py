@@ -71,7 +71,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
             self.ss2.append(s)
 
-        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0, False)
+        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(mat), nobj)
 
@@ -98,7 +98,7 @@ class SourceMatchTestCase(unittest.TestCase):
             s.setRa(float('nan') * afwGeom.radians)
             s.setDec(float('nan') * afwGeom.radians)
             ss.append(s)
-        mat = afwDetect.matchRaDec(ss1, ss2, 1.0, False)
+        mat = afwDetect.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
         self.assertEqual(len(mat), 1)
 
     def testPhotometricCalib(self):
@@ -180,7 +180,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Actually do the match
         #
-        matches = afwDetect.matchRaDec(sdss, template, 1.0, False)
+        matches = afwDetect.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(matches), 901)
 
@@ -196,7 +196,7 @@ class SourceMatchTestCase(unittest.TestCase):
         for s in sdssSecondary:
             sdss.append(s)
 
-        matches = afwDetect.matchRaDec(sdss, 1.0, False)
+        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         #
@@ -212,7 +212,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 if s.getId() not in matchIds:
                     print "RHL", s.getId()
 
-        matches = afwDetect.matchRaDec(sdss, 1.0, True)
+        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
         
         if False:

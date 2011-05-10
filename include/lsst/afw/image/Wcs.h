@@ -54,15 +54,19 @@ namespace image {
 /// - Greisen & Calabretta, 2002 A&A 395, 1061
 /// - Calabretta & Greisen, 2002, A&A 395, 1077
 ///  
-/// In it's simplest sense, Wcs is used to convert from position in the sky (in right ascension 
-/// and declination) to pixel position on an image (and back again). It is, however, much more general 
-/// than that and can understand a myriad of different coordinate systems.
+/// In its simplest sense, Wcs is used to convert from position in the sky (in
+/// right ascension and declination) to pixel position on an image (and back
+/// again). It is, however, much more general than that and can understand a
+/// myriad of different coordinate systems.
 /// 
-/// A wcs can be constructed from a reference position (crval, crpix) and a translation matrix. Alternatively,
-/// if you have the header from a fits file, you can create a Wcs object with the makeWcs() function. This
-/// function determines whether your Wcs is one the subset of projection systems that is dealt with specially
-/// by Lsst, and creates an object of the correct class. Otherwise, a pointer to a Wcs object is returned.
-/// Most astronomical images use tangent plane projection, so makeWcs() returns a TanWcs object pointer
+/// A wcs can be constructed from a reference position (crval, crpix) and a
+/// translation matrix. Alternatively, if you have the header from a fits file,
+/// you can create a Wcs object with the makeWcs() function. This function
+/// determines whether your Wcs is one the subset of projection systems that is
+/// dealt with specially by Lsst, and creates an object of the correct
+/// class. Otherwise, a pointer to a Wcs object is returned.  Most astronomical
+/// images use tangent plane projection, so makeWcs() returns a TanWcs object
+/// pointer
 ///
 /// \code
 /// import lsst.afw.image as afwImg
@@ -83,11 +87,12 @@ namespace image {
 /// This class is implemented in by calls to the wcslib library
 /// by Mark Calabretta http://www.atnf.csiro.au/people/mcalabre/WCS/
 /// 
-/// Note that we violate the Wcs standard in one minor way. The standard states that none
-/// of the CRPIX or CRVAL keywords are required, for the header to be valid, and the appropriate values
-/// should be set to 0.0 if the keywords are absent. This is a recipe for painful bugs in analysis, so
-/// we violate the standard by insisting that the keywords CRPIX[1,2] and CRVAL[1,2] are present when
-/// reading a header (keywords CRPIX1a etc are also accepted)
+/// Note that we violate the Wcs standard in one minor way. The standard states
+/// that none of the CRPIX or CRVAL keywords are required, for the header to be
+/// valid, and the appropriate values should be set to 0.0 if the keywords are
+/// absent. This is a recipe for painful bugs in analysis, so we violate the
+/// standard by insisting that the keywords CRPIX[1,2] and CRVAL[1,2] are
+/// present when reading a header (keywords CRPIX1a etc are also accepted)
 
 class Wcs : public lsst::daf::base::Persistable,
             public lsst::daf::data::LsstBase
@@ -96,7 +101,6 @@ public:
     typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
     typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
     
-    //Constructors
     Wcs();
     //Create a Wcs of the correct class using a fits header.
     friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata,
@@ -113,38 +117,44 @@ public:
     
     bool operator==(const Wcs &) const;
 
-    //Accessors
-    lsst::afw::coord::Coord::Ptr getSkyOrigin() const;      //Return crval
-    lsst::afw::geom::Point2D getPixelOrigin() const;    //Return crpix
-    Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
+    // Returns CRVAL
+    lsst::afw::coord::Coord::Ptr getSkyOrigin() const;
+    // Returns CRPIX
+    lsst::afw::geom::Point2D getPixelOrigin() const;
+    // Returns CD matrix.  You would never have guessed that from the name.
+    Eigen::Matrix2d getCDMatrix() const;
     
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
     
-    /// Return true iff Wcs is valid
+    // Return true iff Wcs is valid
     operator bool() const { return _nWcsInfo != 0; }
     
-    bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
-    
-    ///Sky area covered by a pixel at position \c pix00 in units of square degrees.
+    // Does the Wcs follow the convention of North=Up, East=Left or not
+    // [This actually just measures the sign of the determinant of the CD matrix
+    //  to determine the "handedness" of the coordinate system.]
+    bool isFlipped() const;
+
+    // Sky area covered by a pixel at position \c pix00 in units of square degrees.
     double pixArea(lsst::afw::geom::Point2D pix00) const;
     
-    // Returns the pixel scale, in arcsec/pixel.
-    double pixelScale() const;
+    // Returns the pixel scale [Angle/pixel]
+    lsst::afw::geom::Angle pixelScale() const;
 
     bool isInitialized() const;
     
-    //Convert from raDec to pixel space. Formerly called raDecToXY() and
-    //xyToRaDec(), but the name now reflects their increased generality. They may be
-    //used, e.g. to convert xy to Galactic coordinates
+    // Convert from raDec to pixel space. Formerly called raDecToXY() and
+    // xyToRaDec(), but the name now reflects their increased generality. They
+    // may be used, e.g. to convert xy to Galactic coordinates
     lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
     lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::Point2D pixel) const;
 
-    /// \note This routine is designed for the knowledgeable user in need of performance; it's safer to call
-    ///   the version that returns a CoordPtr
+    /// \note This routine is designed for the knowledgeable user in need of
+    /// performance; it's safer to call the version that returns a CoordPtr
     void pixelToSky(double pixel1, double pixel2, lsst::afw::geom::Angle& sky1, lsst::afw::geom::Angle& sky2) const;
     
-    // ASSUMES the angles are in the appropriate system for this WCS.
+    // ASSUMES the angles are in the appropriate coordinate system for this WCS.
     lsst::afw::geom::Point2D skyToPixel(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
+
     lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
     lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
     
@@ -227,7 +237,6 @@ protected:
     int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
     int _nReject;
     lsst::afw::coord::CoordSystem _coordSystem;
-    bool _skyCoordsReversed;
 };
 
 namespace detail {
@@ -238,8 +247,11 @@ namespace detail {
 }
 
 Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata, bool stripMetadata=false);
-    
-Wcs::Ptr makeWcs(lsst::afw::geom::Point2D crval, lsst::afw::geom::Point2D crpix,
+
+/*
+ Note, CD matrix elements must be in degrees/pixel.
+ */
+Wcs::Ptr makeWcs(lsst::afw::coord::Coord::ConstPtr crval, lsst::afw::geom::Point2D crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {

@@ -21,8 +21,9 @@ double const PI = boost::math::constants::pi<double>(); ///< The ratio of a circ
 double const TWOPI = boost::math::constants::pi<double>() * 2.0;
 double const HALFPI = boost::math::constants::pi<double>() * 0.5;
 
-// NOTE, if you add things here, remember to also add them to
+// NOTE, if you add things here, you must also add them to
 //    python/lsst/afw/geom/__init__.py
+// (if you want them to accessible from python)
 
 #if 0 && !defined(M_PI)                 // a good idea, but with ramifications
 #   define M_PI ::lsst::afw::geom::PI
@@ -95,6 +96,13 @@ public:
     double asArcminutes() const { return asAngularUnits(arcminutes); }
     /** Return an Angle's value as a double in arcseconds */
     double asArcseconds() const { return asAngularUnits(arcseconds); }
+
+	double toUnitSphereDistanceSquared() const { return 2. * (1. - std::cos(asRadians())); }
+	// == 4.0 * pow(std::sin(0.5 * asRadians()), 2.0)
+	static Angle fromUnitSphereDistanceSquared(double d2) {
+		return (std::acos(1. - d2/2.)) * radians;
+		// == 2.0 * asin(0.5 * sqrt(d2))
+	}
 
 	/** Wraps this angle to the range [0, 2 pi) */
 	void wrap() {

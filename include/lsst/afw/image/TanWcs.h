@@ -90,8 +90,8 @@ namespace image {
 
         bool operator==(const TanWcs &) const;
 
-        // Returns the pixel scale, in arcsec/pixel.
-        double pixelScale() const;
+        // Returns the pixel scale, in Angle/pixel.
+		lsst::afw::geom::Angle pixelScale() const;
         
         // Applies the SIP AP and BP distortion (used in the skyToPixel direction)
         lsst::afw::geom::Point2D distortPixel(const lsst::afw::geom::Point2D pixel) const;

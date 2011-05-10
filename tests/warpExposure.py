@@ -47,7 +47,8 @@ except:
     # set True to save afw-warped images as FITS files
     SAVE_FITS_FILES = False
     # set True to save failed afw-warped images as FITS files even if SAVE_FITS_FILES is False
-    SAVE_FAILED_FITS_FILES = False
+    #SAVE_FAILED_FITS_FILES = False
+    SAVE_FAILED_FITS_FILES = True
 
 logging.Debug("lsst.afw.math", VERBOSITY)
 

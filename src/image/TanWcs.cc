@@ -65,14 +65,11 @@ TanWcs::TanWcs() :
     _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
 }
 
-double TanWcs::pixelScale() const {
-	// deg2arcsec(sqrt(fabs(det(cd))));
-	//return 3600. * sqrt(fabs(CD(0,0)*CD(1,1) - CD(0,1)*CD(1,0)));
-
-	// HACK -- assume "cd" elements are set...
+afwGeom::Angle TanWcs::pixelScale() const {
+	// HACK -- assume "CD" elements are set (and are in degrees)
 	double* cd = _wcsInfo->m_cd;
 	assert(cd);
-	return 3600. * sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2]));
+	return sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])) * afwGeom::degrees;
 }
 
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
