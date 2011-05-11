@@ -105,6 +105,16 @@ void Wcs::_initWcs()
 {
     if (_wcsInfo) {
         _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+
+        // tell WCSlib that values have been updated
+        _wcsInfo->flag = 0;
+        // and then tell it to do its internal magic.
+        int status = wcsset(_wcsInfo);
+        if (status != 0) {
+            throw LSST_EXCEPT(except::RuntimeErrorException,
+                              (boost::format("Failed to setup wcs structure with wcsset. Status %d: %s") %
+                               status % wcs_errmsg[status] ).str());
+        }
     }
 }
 
@@ -187,7 +197,6 @@ void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadat
         string msg = "Neither CRVAL2 not CRVAL2a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
-
 
     //Pass the header into wcslib's formatter to extract setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
@@ -662,18 +671,35 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coo
     double phi, theta;
     double pixTmp[2];
 
+    /*
+     printf("skyToIWC: _coordSystem = %i\n", (int)_coordSystem);
+     printf("coord (%.3f, %.3f)\n", coord->getLongitude().asDegrees(), coord->getLatitude().asDegrees());
+     printf("->sky (%.3f, %.3f)\n", sky->getLongitude().asDegrees(), sky->getLatitude().asDegrees());
+     */
+
     skyTmp[_wcsInfo->lng] = sky->getLongitude().asDegrees();
     skyTmp[_wcsInfo->lat] = sky->getLatitude() .asDegrees();
 
     //Estimate pixel coordinates
     int stat[1];
     int status = 0;
+    imgcrd[0] = imgcrd[1] = -1e6;
+    /*
+     printf("  skyTmp[] = (%.3f, %.3f)\n", skyTmp[0], skyTmp[1]);
+     printf("  _wcsInfo->lng,lat = %i, %i\n", _wcsInfo->lng, _wcsInfo->lat);
+     */
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of %d. %s") %
                            status % wcs_errmsg[status]).str());
     }
+    /*
+     printf("->iwc (%.3f, %.3f)\n", imgcrd[0], imgcrd[1]);
+     printf("-> pix (%.2f, %.2f)\n", pixTmp[0], pixTmp[1]);
+     afwCoord::Coord::Ptr crval = getSkyOrigin();
+     printf("(crval is (%.3f, %.3f))\n", crval->getLongitude().asDegrees(), crval->getLatitude().asDegrees());
+     */
     return GeomPoint(imgcrd[0], imgcrd[1]); 
 }
 
