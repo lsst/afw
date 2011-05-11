@@ -167,12 +167,28 @@ void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadat
     }
 
     //Check header isn't empty
-    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
     int nCards = lsst::afw::formatters::countFitsHeaderCards(fitsMetadata);
     if (nCards <= 0) {
         string msg = "Could not parse FITS WCS: no header cards found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
+
+    //printf("FITS metadata:\n%s\n\n", fitsMetadata->toString().c_str());
+    // Scamp produces PVi_xx header cards that are inconsistent with WCS Paper 2
+    // and cause WCSLib to choke.  Aggressively, rename all PV keywords to X_PV
+    for (int j=1; j<3; j++) {
+        for (int i=0; i<=99; i++) {
+            std::string key = (boost::format("PV%i_%i") % j % i).str();
+            //printf("looking for key: \"%s\"\n", key.c_str());
+            if (!fitsMetadata->exists(key))
+                break;
+            double val = fitsMetadata->getAsDouble(key);
+            //printf("  found with val %g\n", val);
+            fitsMetadata->remove(key);
+            fitsMetadata->add("X_"+key, val);
+        }
+    }
+    //printf("FITS metadata:\n%s\n\n", fitsMetadata->toString().c_str());
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
     //is almost certain their absence indicates a problem.   
@@ -198,11 +214,15 @@ void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadat
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    //Pass the header into wcslib's formatter to extract setup the Wcs. First need
+    //Pass the header into wcslib's formatter to extract & setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
+    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
     int len = metadataStr.size();
     char *hdrString = new char[len + 1];
     strncpy(hdrString, metadataStr.c_str(), len + 1);
+
+    //printf("wcspih string:\n%s\n", hdrString);
+
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
     delete[] hdrString;
 
@@ -233,7 +253,7 @@ void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadat
     //conforms to Calbretta & Greisen 2002 \S 3.1
     if (!(fitsMetadata->exists("RADESYS") || fitsMetadata->exists("RADESYSa"))) {
 
-        //If equinox exist and < 1984, use FK5. If >= 1984, use FK5
+        //If equinox exist and < 1984, use FK4. If >= 1984, use FK5
         if (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) {
             std::string const EQUINOX = fitsMetadata->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
             double const equinox = fitsMetadata->getAsDouble(EQUINOX);
@@ -608,7 +628,6 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
     double imgcrd[2];
     double phi, theta;
     double pixTmp[2];
-
     /*
      printf("_skyCoordsReversed: %c\n", (_skyCoordsReversed ? 'T' : 'F'));
      printf("wcsinfo.lat: %i,  lng: %i\n", _wcsInfo->lat, _wcsInfo->lng);
