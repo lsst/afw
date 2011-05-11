@@ -72,8 +72,8 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 
 %define %maskOperations(PIXEL_TYPE)
     %template(footprintAndMask) lsst::afw::detection::footprintAndMask<PIXEL_TYPE>;
-    %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<lsst::afw::image::MaskPixel>;
-    %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<lsst::afw::image::MaskPixel>;
+    %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<PIXEL_TYPE>;
+    %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<PIXEL_TYPE>;
 %enddef
 
 %define %FootprintSet(NAME, PIXEL_TYPE)
