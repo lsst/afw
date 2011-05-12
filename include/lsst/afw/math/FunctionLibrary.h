@@ -37,6 +37,7 @@
 #include <cmath>
 
 #include "lsst/afw/math/Function.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -188,7 +189,7 @@ using boost::serialization::make_nvp;
             double sigma)    ///< sigma
         :
             Function1<ReturnT>(1),
-            _multFac(1.0 / std::sqrt(2.0 * M_PI))
+            _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI))
         {
             this->_params[0] = sigma;
         }
@@ -216,7 +217,7 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(2.0 * M_PI)) {}
+        explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI)) {}
 
     private:
         friend class boost::serialization::access;
@@ -254,7 +255,7 @@ using boost::serialization::make_nvp;
             double angle = 0.0) ///< angle of pos1 axis, in rad (along x=0, y=pi/2)
         : 
             Function2<ReturnT>(3),
-            _multFac(1.0 / (2.0 * M_PI))
+            _multFac(1.0 / (lsst::afw::geom::TWOPI))
         {
             this->_params[0] = sigma1;
             this->_params[1] = sigma2;
@@ -317,7 +318,7 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit GaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (2.0 * M_PI)), _angle(0.0),
+        explicit GaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::afw::geom::TWOPI)), _angle(0.0),
             _sinAngle(0.0), _cosAngle(1.0) {}
 
     private:
@@ -359,7 +360,7 @@ using boost::serialization::make_nvp;
             double ampl2 = 0)   ///< amplitude of second Gaussian as a fraction of main Gaussian at peak
         : 
             Function2<ReturnT>(3),
-            _multFac(1.0 / (2.0 * M_PI))
+            _multFac(1.0 / (lsst::afw::geom::TWOPI))
         {
             this->_params[0] = sigma1;
             this->_params[1] = sigma2;
@@ -396,7 +397,7 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (2.0 * M_PI)) {}
+        explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::afw::geom::TWOPI)) {}
 
     private:
         friend class boost::serialization::access;
@@ -1000,7 +1001,7 @@ using boost::serialization::make_nvp;
         }
         
         virtual ReturnT operator() (double x) const {
-            double xArg1 = (x - this->_params[0]) * M_PI;
+            double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
             double xArg2 = xArg1 * _invN;
             if (std::fabs(xArg1) > 1.0e-5) {
                 return static_cast<ReturnT>(std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2));
@@ -1072,13 +1073,13 @@ using boost::serialization::make_nvp;
         }
         
         virtual ReturnT operator() (double x, double y) const {
-            double xArg1 = (x - this->_params[0]) * M_PI;
+            double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
             double xArg2 = xArg1 * _invN;
             double xFunc = 1;
             if (std::fabs(xArg1) > 1.0e-5) {
                 xFunc = std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2);
             }
-            double yArg1 = (y - this->_params[1]) * M_PI;
+            double yArg1 = (y - this->_params[1]) * lsst::afw::geom::PI;
             double yArg2 = yArg1 * _invN;
             double yFunc = 1;
             if (std::fabs(yArg1) > 1.0e-5) {

@@ -20,6 +20,19 @@ namespace lsst { namespace afw { namespace geom {
 double const PI = boost::math::constants::pi<double>(); ///< The ratio of a circle's circumference to diameter
 double const TWOPI = boost::math::constants::pi<double>() * 2.0;
 double const HALFPI = boost::math::constants::pi<double>() * 0.5;
+double const ONE_OVER_PI = 1.0 / boost::math::constants::pi<double>();
+double const SQRTPI = sqrt(boost::math::constants::pi<double>());
+double const INVSQRTPI = 1.0/sqrt(boost::math::constants::pi<double>());
+double const ROOT2 = boost::math::constants::root_two<double>(); // sqrt(2)
+
+// These shouldn't be necessary if the Angle class is used, but sometimes you just need
+// them.  Better to define them once here than have *180/PI throughout the code...
+inline double degToRad(double x) {
+	return x * PI / 180.;
+}
+inline double radToDeg(double x) {
+	return x * 180. / PI;
+}
 
 // NOTE, if you add things here, you must also add them to
 //    python/lsst/afw/geom/__init__.py

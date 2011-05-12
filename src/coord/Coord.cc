@@ -348,15 +348,6 @@ afwCoord::Coord::Coord() : _longitude(afwGeom::Angle(NaN)), _latitude(afwGeom::A
  * @brief Make sure the values we've got are in the range 0 <= x < 2PI
  */
 void afwCoord::Coord::_verifyValues() const {
-
-#if 0
-    // no longer verifying longitude.  we now use reduceAngle to map to [0,360)
-    if (_longitudeRad < 0.0 || _longitudeRad >= 2.0*M_PI) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          (boost::format("Azimuthal coord must be: 0 <= long < 2PI (%f).") %
-                           _longitudeRad).str());
-    }
-#endif
     if (_latitude.asRadians() < -afwGeom::HALFPI || _latitude.asRadians() > afwGeom::HALFPI) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           (boost::format("Latitude coord must be: -PI/2 <= lat <= PI/2 (%f).") %
