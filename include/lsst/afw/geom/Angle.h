@@ -33,6 +33,18 @@ inline double degToRad(double x) {
 inline double radToDeg(double x) {
 	return x * 180. / PI;
 }
+inline double radToArcsec(double x) {
+	return x * 3600. * 180. / PI;
+}
+inline double radToMas(double x) {
+	return x * 1000. * 3600. * 180. / PI;
+}
+inline double arcsecToRad(double x) {
+	return (x / 3600.) * PI / 180.;
+}
+inline double masToRad(double x) {
+	return (x / (1000. * 3600.)) * PI / 180.;
+}
 
 // NOTE, if you add things here, you must also add them to
 //    python/lsst/afw/geom/__init__.py
