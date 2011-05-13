@@ -316,6 +316,11 @@ namespace math {
          * Return our SpatialCells
          */
         CellList& getCellList() { return _cellList; }
+        
+        /**
+         * Return the bounding box of the %image
+         */
+        lsst::afw::geom::Box2I getBBox() const { return _region; };
 
         void insertCandidate(SpatialCellCandidate::Ptr candidate);
 
@@ -333,7 +338,7 @@ namespace math {
         void setIgnoreBad(bool ignoreBad);
 
     private:
-        lsst::afw::geom::Box2I _region;   // Dimensions of overall image
+        lsst::afw::geom::Box2I _region;   // Bounding box of overall image
         CellList _cellList;               // List of SpatialCells
     };
 }}}

@@ -134,11 +134,12 @@ void afwDet::ImageLocalPsf::evaluatePointSource(
     image::Image<Pixel>::Ptr shiftedImage = math::offsetImage(_image, offset.getX(), offset.getY());
     geom::Box2I bbox = shiftedImage->getBBox(image::PARENT);
     if (!bbox.contains(fp.getBBox())) {
-        image::Image<Pixel> tmp(fp.getBBox());
+        geom::Box2I tmpBBox = fp.getBBox();
+        tmpBBox.include(bbox);
+        image::Image<Pixel> tmp(tmpBBox);
         image::Image<Pixel> sub(tmp, bbox, image::PARENT, false);
         sub <<= *shiftedImage;
         shiftedImage->swap(tmp);
-        bbox = fp.getBBox();
     }
     detection::flattenArray(fp, shiftedImage->getArray(), array, shiftedImage->getXY0());
 }
