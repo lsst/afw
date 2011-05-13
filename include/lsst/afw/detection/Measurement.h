@@ -14,6 +14,7 @@
 #include "lsst/utils/Demangle.h"
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/pex/policy/Policy.h"
+#include "lsst/pex/logging/Log.h"
 #include "lsst/afw/detection/Schema.h"
 
 #ifndef SWIG
@@ -31,6 +32,8 @@ namespace {
 #endif
 
 namespace lsst { namespace afw { namespace detection {
+
+namespace pexLogging = lsst::pex::logging;
 
 #ifndef SWIG
 using boost::serialization::make_nvp;
@@ -457,7 +460,8 @@ public:
     }
     /// Actually measure im using all requested algorithms, returning the result
     PTR(Values) measure(CONST_PTR(PeakT) peak=PTR(PeakT)(), ///< approximate position of object's centre
-                        CONST_PTR(Source) src=PTR(Source)() ///< Source with Footprint and some measured params
+                        CONST_PTR(Source) src=PTR(Source)(), ///< Source with Footprint and some measured pars
+                        pexLogging::Log &log=pexLogging::Log::getDefaultLog() ///< Log for exceptions
                        ) {
         PTR(Values) values = boost::make_shared<Values>();
 
@@ -467,13 +471,23 @@ public:
         }
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
-            boost::shared_ptr<T> val = ptr->second.first(_im, peak, src);
-            val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
-            values->add(val);
+            try {
+                boost::shared_ptr<T> val = ptr->second.first(_im, peak, src);
+                val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
+                values->add(val);
+            } catch (lsst::pex::exceptions::Exception const& e) {
+                // Swallow all exceptions, because one bad measurement shouldn't affect all others
+                log.log(pexLogging::Log::DEBUG, boost::format("Measuring %s at (%d,%d): %s") %
+                        ptr->first % peak->getIx() % peak->getIy() % e.what());
+            }
         }
 
         return values;
     }
+    PTR(Values) measure(pexLogging::Log &log) {
+        return measure(PTR(PeakT)(), PTR(Source)(), log);
+    }
+
     /// Configure the behaviour of the algorithm
     bool configure(lsst::pex::policy::Policy const& policy ///< The Policy to configure algorithms
                   ) {
