@@ -26,7 +26,7 @@
 #include "lsst/afw/detection/LocalPsf.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 #include "lsst/ndarray/eigen.h"
-#include <Eigen/Cholesky>
+#include <Eigen/LU>
 #include <Eigen/Array>
 
 /************************************************************************************************************/
@@ -71,22 +71,23 @@ afwDet::LocalPsf::Shapelet afwDet::ImageLocalPsf::computeShapelet(
         for (int x = 0; x < _image.getWidth(); ++x) {
             b.fillEvaluation(
                 matrix[x + y * _image.getWidth()],
-                g(geom::Point2D(x - _image.getX0(), y - _image.getY0()))
+                g(geom::Point2D(x + _image.getX0(), y + _image.getY0()))
             );
         }
     }
     Eigen::MatrixXd h(matrix.getSize<1>(), matrix.getSize<1>());
     h.part<Eigen::SelfAdjoint>() = ndarray::viewAsTransposedEigen(matrix) * ndarray::viewAsEigen(matrix);
     Eigen::VectorXd rhs = ndarray::viewAsTransposedEigen(matrix) * ndarray::viewAsEigen(array);
-    Eigen::LDLT<Eigen::MatrixXd> cholesky(h);
+    Eigen::LU<Eigen::MatrixXd> solver(h);
     ndarray::Array<Pixel,1,1> shapeletArray = ndarray::allocate(matrix.getSize<1>());
-    ndarray::EigenView<Pixel,1,1> shapeletVector(shapeletArray);
-    if (!cholesky.solve(rhs, &shapeletVector)) {
+    Eigen::VectorXd shapeletVector;
+    if (!solver.solve(rhs, &shapeletVector)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::RuntimeErrorException,
             "Singular matrix encountered in shapelet conversion."
         );
     }
+    ndarray::viewAsEigen(shapeletArray) = shapeletVector;
     Shapelet result(order, basisType, ellipse, shapeletArray);
     result.getCoefficients().deep() /= result.evaluate().integrate();
     return result;
