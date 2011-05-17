@@ -223,12 +223,19 @@ except NameError:
         """Control buffering the sending of commands to ds9;
 annoying but necessary for anything resembling performance
 
-The usual usage pattern is probably:
+The usual usage pattern (from a module importing this file, ds9.py) is probably:
    ds9.cmdBuffer.pushSize()
    # bunches of ds9.{dot,line} commands
    ds9.cmdBuffer.flush()
    # bunches more ds9.{dot,line} commands
    ds9.cmdBuffer.popSize()
+
+N.b. These are available as:
+   ds9.buffer()
+   # bunches of ds9.{dot,line} commands
+   ds9.flush()
+   # bunches more ds9.{dot,line} commands
+   ds9.buffer(False)
         """
 
         def __init__(self, size=0):
@@ -510,6 +517,14 @@ def _mtv(data, wcs, title, isMask):
 #
 # Graphics commands
 #
+def buffer(enable=True):
+    if enable:
+        cmdBuffer.pushSize()
+    else:
+        ds9.cmdBuffer.popSize()
+
+flush = cmdBuffer.flush()
+
 def erase(frame=None):
     """Erase the specified DS9 frame"""
     if frame is None:
