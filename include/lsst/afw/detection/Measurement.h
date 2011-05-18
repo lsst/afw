@@ -471,15 +471,18 @@ public:
         }
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
+            boost::shared_ptr<T> val;
             try {
-                boost::shared_ptr<T> val = ptr->second.first(_im, peak, src);
-                val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
-                values->add(val);
+                val = ptr->second.first(_im, peak, src);
             } catch (lsst::pex::exceptions::Exception const& e) {
                 // Swallow all exceptions, because one bad measurement shouldn't affect all others
                 log.log(pexLogging::Log::DEBUG, boost::format("Measuring %s at (%d,%d): %s") %
                         ptr->first % peak->getIx() % peak->getIy() % e.what());
+                // Blank measure should set blank values
+                val = ptr->second.first(_im, boost::shared_ptr<PeakT>(), boost::shared_ptr<Source>());
             }
+            val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
+            values->add(val);
         }
 
         return values;
