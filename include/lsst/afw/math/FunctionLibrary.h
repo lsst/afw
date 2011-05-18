@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "lsst/afw/geom.h"
 #include "lsst/afw/math/Function.h"
 
 namespace lsst {
@@ -464,6 +465,11 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(retVal);
         }
 
+        /**
+         * @brief Get the polynomial order
+         */
+        unsigned int getOrder() const { return this->getNParameters() - 1; };
+
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "PolynomialFunction1 []: ";
@@ -628,8 +634,8 @@ using boost::serialization::make_nvp;
          */
         explicit Chebyshev1Function1(
             unsigned int order, ///< order of polynomial (0 for constant)
-            double minX = -1,    ///< minimum allowed x
-            double maxX = 1)     ///< maximum allowed x
+            double minX = -1,   ///< minimum allowed x
+            double maxX = 1)    ///< maximum allowed x
         :
             Function1<ReturnT>(order + 1)
         {
@@ -644,9 +650,9 @@ using boost::serialization::make_nvp;
          * @throw lsst::pex::exceptions::InvalidParameterException if params is empty
          */
         explicit Chebyshev1Function1(
-            std::vector<double> params,  ///< polynomial coefficients
-            double minX = -1,    ///< minimum allowed x
-            double maxX = 1)     ///< maximum allowed x
+            std::vector<double> params, ///< polynomial coefficients
+            double minX = -1,   ///< minimum allowed x
+            double maxX = 1)    ///< maximum allowed x
         :
             Function1<ReturnT>(params)
         {
@@ -663,8 +669,20 @@ using boost::serialization::make_nvp;
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
 
+        /**
+         * @brief Get minimum allowed x
+         */
         double getMinX() const { return _minX; };
+
+        /**
+         * @brief Get maximum allowed x
+         */
         double getMaxX() const { return _maxX; };
+
+        /**
+         * @brief Get the polynomial order
+         */
+        unsigned int getOrder() const { return this->getNParameters() - 1; };
 
         virtual bool isLinearCombination() const { return true; };
         
@@ -711,8 +729,8 @@ using boost::serialization::make_nvp;
         void _initialize(double minX, double maxX) {
             _minX = minX;
             _maxX = maxX;
-            _scale = 2 / (maxX - minX);
-            _offset = -(minX + maxX) / 2.0;
+            _scale = 2.0 / (_maxX - _minX);
+            _offset = -(_minX + _maxX) * 0.5;
             _maxInd = this->getNParameters() - 1;
         }
 
@@ -772,16 +790,15 @@ using boost::serialization::make_nvp;
          */
         explicit Chebyshev1Function2(
             unsigned int order, ///< order of polynomial (0 for constant)
-            double minX = -1,   ///< minimum allowed x
-            double minY = -1,   ///< minimum allowed y
-            double maxX = 1,    ///< maximum allowed x
-            double maxY = 1)    ///< maximum allowed y
+            lsst::afw::geom::Box2D const &xyRange =
+                lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(-1.0, -1.0),
+                                       lsst::afw::geom::Point2D( 1.0,  1.0)))   ///< allowed x,y range
         :
             BasePolynomialFunction2<ReturnT>(order),
             _xCheby(this->_order + 1),
             _yCoeffs(this->_order + 1)
         {
-            _initialize(minX, maxX, minY, maxY);
+            _initialize(xyRange);
         }
 
         /**
@@ -792,31 +809,32 @@ using boost::serialization::make_nvp;
          * @throw lsst::pex::exceptions::InvalidParameterException if params is empty
          */
         explicit Chebyshev1Function2(
-            std::vector<double> params,
-                ///< polynomial coefficients (const, T1(x), T1(y), T2(x), T1(x) T1(y), T2(y)...)
-                ///< length must be one of 1, 3, 6, 10, 15...
-            double minX = -1,    ///< minimum allowed x
-            double minY = -1,    ///< minimum allowed y
-            double maxX = 1,     ///< maximum allowed x
-            double maxY = 1)     ///< maximum allowed y
+            std::vector<double> params, ///< polynomial coefficients
+                                        ///< length must be one of 1, 3, 6, 10, 15...
+            lsst::afw::geom::Box2D const &xyRange =
+                lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(-1.0, -1.0),
+                                       lsst::afw::geom::Point2D( 1.0,  1.0)))   ///< allowed x,y range
         :
             BasePolynomialFunction2<ReturnT>(params),
             _xCheby(this->_order + 1),
             _yCoeffs(this->_order + 1)
         {
-            _initialize(minX, maxX, minY, maxY);
+            _initialize(xyRange);
         }
         
         virtual ~Chebyshev1Function2() {}
        
         virtual Function2Ptr clone() const {
-            return Function2Ptr(new Chebyshev1Function2(this->_params, _minX, _maxX));
+            return Function2Ptr(new Chebyshev1Function2(this->_params, this->getXYRange()));
         }
         
-        double getMinX() const { return _minX; };
-        double getMinY() const { return _minY; };
-        double getMaxX() const { return _maxX; };
-        double getMaxY() const { return _maxY; };
+        /**
+         * @brief Get x,y range
+         */
+        lsst::afw::geom::Box2D getXYRange() const {
+            return lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(_minX, _minY),
+                                          lsst::afw::geom::Point2D(_maxX, _maxY));
+        };
         
         /**
          * @brief Return a truncated copy of lower (or equal) order
@@ -833,8 +851,7 @@ using boost::serialization::make_nvp;
             }
             int truncNParams = this->nParametersFromOrder(truncOrder);
             std::vector<double> truncParams(this->_params.begin(), this->_params.begin() + truncNParams);
-            return Chebyshev1Function2(truncParams, _minX, _minY, _maxX, _maxY);
-
+            return Chebyshev1Function2(truncParams, this->getXYRange());
         }
 
         virtual ReturnT operator() (double x, double y) const {
@@ -890,7 +907,7 @@ using boost::serialization::make_nvp;
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "Chebyshev1Function2 [";
-            os << this->_order << ", " << _minX << ", " << _minY << ", " << _maxX << ", "<< _maxY << "]";
+            os << this->_order << ", " << this->getXYRange() << "]";
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
@@ -928,15 +945,15 @@ using boost::serialization::make_nvp;
         /**
          * @brief initialize private constants
          */
-        void _initialize(double minX, double maxX, double minY, double maxY) {
-            _minX = minX;
-            _minY = minY;
-            _maxX = maxX;
-            _maxY = maxY;
-            _scaleX = 2 / (maxX - minX);
-            _scaleY = 2 / (maxY - minY);
-            _offsetX = -(minX + maxX) / 2.0;
-            _offsetY = -(minY + maxY) / 2.0;
+        void _initialize(lsst::afw::geom::Box2D const &xyRange) {
+            _minX = xyRange.getMinX();
+            _minY = xyRange.getMinY();
+            _maxX = xyRange.getMaxX();
+            _maxY = xyRange.getMaxY();
+            _scaleX = 2.0 / (_maxX - _minX);
+            _scaleY = 2.0 / (_maxY - _minY);
+            _offsetX = -(_minX + _maxX) * 0.5;
+            _offsetY = -(_minY + _maxY) * 0.5;
             _xCheby[0] = 1.0;
         }
 
@@ -995,8 +1012,7 @@ using boost::serialization::make_nvp;
         virtual ~LanczosFunction1() {}
        
         virtual Function1Ptr clone() const {
-            unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
-            return Function1Ptr(new LanczosFunction1(n, this->_params[0]));
+            return Function1Ptr(new LanczosFunction1(this->getOrder(), this->_params[0]));
         }
         
         virtual ReturnT operator() (double x) const {
@@ -1008,10 +1024,15 @@ using boost::serialization::make_nvp;
                 return static_cast<ReturnT>(1);
             }
         }
+        
+        /**
+         * @brief Get the order of the Lanczos function
+         */
+        unsigned int getOrder() const { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
 
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
-            os << "LanczosFunction1 [" << _invN << "]: ";;
+            os << "LanczosFunction1 [" << this->getOrder() << "]: ";;
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
         }
@@ -1067,8 +1088,7 @@ using boost::serialization::make_nvp;
         virtual ~LanczosFunction2() {}
        
         virtual Function2Ptr clone() const {
-            unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
-            return Function2Ptr(new LanczosFunction2(n, this->_params[0], this->_params[1]));
+            return Function2Ptr(new LanczosFunction2(this->getOrder(), this->_params[0], this->_params[1]));
         }
         
         virtual ReturnT operator() (double x, double y) const {
@@ -1086,10 +1106,15 @@ using boost::serialization::make_nvp;
             }
             return static_cast<ReturnT>(xFunc * yFunc);
         }
+        
+        /**
+         * @brief Get the order of Lanczos function
+         */
+        unsigned int getOrder() const { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
 
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
-            os << "LanczosFunction2 [" << _invN << "]: ";;
+            os << "LanczosFunction2 [" << this->getOrder() << "]: ";;
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
