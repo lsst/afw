@@ -282,14 +282,14 @@ N.b. These are available as:
 
             self.flush()
 
-        def flush(self):
+        def flush(self, silent=False):
             """Flush the pending commands"""
-            ds9Cmd(flush=True)
+            ds9Cmd(flush=True, silent=silent)
 
     cmdBuffer = Buffer(0)
 
 
-def ds9Cmd(cmd=None, trap=True, flush=False):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -316,7 +316,7 @@ def ds9Cmd(cmd=None, trap=True, flush=False):
     except IOError, e:
         if not trap:
             raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
-        else:
+        elif not silent:
             print >> sys.stderr, "Caught ds9 exception processing command \"%s\": %s" % (cmd, e)
 
 def initDS9(execDs9=True):
@@ -523,7 +523,7 @@ def buffer(enable=True):
     else:
         ds9.cmdBuffer.popSize()
 
-flush = cmdBuffer.flush()
+flush = cmdBuffer.flush(silent=True)
 
 def erase(frame=None):
     """Erase the specified DS9 frame"""
