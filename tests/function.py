@@ -28,6 +28,7 @@ import unittest
 
 import numpy
 
+import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
@@ -110,14 +111,20 @@ class FunctionTestCase(unittest.TestCase):
             coeffs = numpy.arange(deltaCoeff, deltaCoeff * nCoeffs + (deltaCoeff / 2.0), deltaCoeff)
             f.setParameters(coeffs)
             g = afwMath.Chebyshev1Function1D(coeffs, xMin, xMax)
+            h = f.clone()
             
             self.assertEqual(f.getNParameters(), g.getNParameters())
             
             self.assertEqual(f.getMinX(), xMin)
             self.assertEqual(f.getMaxX(), xMax)
+            self.assertEqual(f.getOrder(), order)
 
             self.assertEqual(g.getMinX(), xMin)
             self.assertEqual(g.getMaxX(), xMax)
+            self.assertEqual(g.getOrder(), order)
+
+#             self.assertEqual(h.getMinX(), xMin)
+#             self.assertEqual(h.getMaxX(), xMax)
 
             minXNorm = None
             maxXNorm = None
@@ -137,6 +144,10 @@ class FunctionTestCase(unittest.TestCase):
                     self.fail(
                         "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; coeffs constructor" %\
                         (type(f).__name__, g(x), predVal, x, xMin, xMax, xNorm, coeffs))
+                if not numpy.allclose(predVal, h(x)):
+                    self.fail(
+                        "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s; clone" %\
+                        (type(f).__name__, h(x), predVal, x, xMin, xMax, xNorm, coeffs))
 
             if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
                 raise RuntimeError(
@@ -162,25 +173,26 @@ class FunctionTestCase(unittest.TestCase):
             yMean = (yMin + yMax) / 2.0
             yDelta = (yMax - yMin) / float(nPoints - 1)
 
-            f = afwMath.Chebyshev1Function2D(order, xMin, yMin, xMax, yMax)
+            xyRange = afwGeom.Box2D(afwGeom.Point2D(xMin, yMin), afwGeom.Point2D(xMax, yMax))
+
+            f = afwMath.Chebyshev1Function2D(order, xyRange)
             nCoeffs = f.getNParameters()
             coeffs = numpy.arange(deltaCoeff, deltaCoeff * nCoeffs + (deltaCoeff / 2.0), deltaCoeff)
             f.setParameters(coeffs)
-            g = afwMath.Chebyshev1Function2D(coeffs, xMin, yMin, xMax, yMax)
+            g = afwMath.Chebyshev1Function2D(coeffs, xyRange)
+            h = f.clone()
             
             self.assertEqual(f.getNParameters(), g.getNParameters())
+            self.assertEqual(f.getNParameters(), h.getNParameters())
             
+            self.assertEqual(f.getXYRange(), xyRange)
             self.assertEqual(f.getOrder(), order)
-            self.assertEqual(f.getMinX(), xMin)
-            self.assertEqual(f.getMinY(), yMin)
-            self.assertEqual(f.getMaxX(), xMax)
-            self.assertEqual(f.getMaxY(), yMax)
 
+            self.assertEqual(g.getXYRange(), xyRange)
             self.assertEqual(g.getOrder(), order)
-            self.assertEqual(g.getMinX(), xMin)
-            self.assertEqual(g.getMinY(), yMin)
-            self.assertEqual(g.getMaxX(), xMax)
-            self.assertEqual(g.getMaxY(), yMax)
+
+#             self.assertEqual(h.getXYRange(), xyRange)
+#             self.assertEqual(h.getOrder(), order)
 
             minXNorm = None
             maxXNorm = None
@@ -208,7 +220,11 @@ class FunctionTestCase(unittest.TestCase):
                         if not numpy.allclose(predVal, g(x, y)):
                             self.fail(
 "%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, coeffs=%s; coeffs constructor" % \
-(type(f).__name__, g(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
+(type(g).__name__, g(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
+                        if not numpy.allclose(predVal, h(x, y)):
+                            self.fail(
+"%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, coeffs=%s; clone" % \
+(type(h).__name__, h(x, y), predVal, x, xMin, xMax, xNorm, yMin, yMax, yNorm, coeffs))
 
                 if not numpy.allclose((minYNorm, maxYNorm), (-1.0, 1.0)):
                     raise RuntimeError(
@@ -257,10 +273,12 @@ class FunctionTestCase(unittest.TestCase):
             yMin, yMax = yRangeIter.next()
             yMean = (yMin + yMax) / 2.0
             yDelta = (yMax - yMin) / float(nPoints - 1)
+            
+            xyRange = afwGeom.Box2D(afwGeom.Point2D(xMin, yMin), afwGeom.Point2D(xMax, yMax))
 
             fullNParams = afwMath.Chebyshev1Function2D.nParametersFromOrder(order)
             fullCoeffs = numpy.arange(deltaCoeff, deltaCoeff * fullNParams + (deltaCoeff / 2.0), deltaCoeff)
-            fullPoly = afwMath.Chebyshev1Function2D(fullCoeffs, xMin, yMin, xMax, yMax)
+            fullPoly = afwMath.Chebyshev1Function2D(fullCoeffs, xyRange)
             
             for tooBigTruncOrder in range(order + 1, order + 3):
                 self.assertRaises(Exception, fullPoly.truncate, tooBigTruncOrder)
@@ -271,21 +289,15 @@ class FunctionTestCase(unittest.TestCase):
                 f = fullPoly.truncate(truncOrder)
                 self.assertEqual(f.getNParameters(), truncNParams)
 
-                g = afwMath.Chebyshev1Function2D(fullCoeffs[0:truncNParams], xMin, yMin, xMax, yMax)
+                g = afwMath.Chebyshev1Function2D(fullCoeffs[0:truncNParams], xyRange)
                 
                 self.assertEqual(f.getNParameters(), g.getNParameters())
                 
                 self.assertEqual(f.getOrder(), truncOrder)
-                self.assertEqual(f.getMinX(), xMin)
-                self.assertEqual(f.getMinY(), yMin)
-                self.assertEqual(f.getMaxX(), xMax)
-                self.assertEqual(f.getMaxY(), yMax)
+                self.assertEqual(f.getXYRange(), xyRange)
     
                 self.assertEqual(g.getOrder(), truncOrder)
-                self.assertEqual(g.getMinX(), xMin)
-                self.assertEqual(g.getMinY(), yMin)
-                self.assertEqual(g.getMaxX(), xMax)
-                self.assertEqual(g.getMaxY(), yMax)
+                self.assertEqual(g.getXYRange(), xyRange)
     
                 minXNorm = None
                 maxXNorm = None
@@ -328,6 +340,7 @@ class FunctionTestCase(unittest.TestCase):
         f = afwMath.GaussianFunction1D(1.0)
         for xsigma in (0.1, 1.0, 3.0):
             f.setParameters((xsigma,))
+            g = f.clone()
             xdelta = xsigma / 10.0
             fSum = 0.0
             for x in numpy.arange(-xsigma * 20, xsigma * 20.01, xdelta):
@@ -335,6 +348,9 @@ class FunctionTestCase(unittest.TestCase):
                 fSum += predVal
                 if not numpy.allclose(predVal, f(x)):
                     self.fail("%s = %s != %s for x=%s, xsigma=%s" % \
+                        (type(f).__name__, f(x), predVal, x, xsigma))
+                if not numpy.allclose(predVal, g(x)):
+                    self.fail("%s = %s != %s for x=%s, xsigma=%s; clone" % \
                         (type(f).__name__, f(x), predVal, x, xsigma))
             approxArea = fSum * xdelta
             if not numpy.allclose(approxArea, 1.0):
@@ -354,6 +370,7 @@ class FunctionTestCase(unittest.TestCase):
                     sinNegAngle = math.sin(-angle)
                     cosNegAngle = math.cos(-angle)
                     f.setParameters((sigma1, sigma2, angle))
+                    g = f.clone()
                     f1.setParameters((sigma1,))
                     f2.setParameters((sigma2,))
                     fSum = 0.0
@@ -369,6 +386,10 @@ class FunctionTestCase(unittest.TestCase):
                                 self.fail(
 "%s = %s != %s for pos1=%s, pos2=%s, x=%s, y=%s, sigma1=%s, sigma2=%s, angle=%s" % \
 (type(f).__name__, f(x, y), predVal, pos1, pos2, x, y, sigma1, sigma2, angle))
+                            if not numpy.allclose(predVal, g(x, y)):
+                                self.fail(
+"%s = %s != %s for pos1=%s, pos2=%s, x=%s, y=%s, sigma1=%s, sigma2=%s, angle=%s; clone" % \
+(type(g).__name__, g(x, y), predVal, pos1, pos2, x, y, sigma1, sigma2, angle))
                     approxArea = fSum * delta1 * delta2
                     if not numpy.allclose(approxArea, 1.0):
                         self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
@@ -385,6 +406,7 @@ class FunctionTestCase(unittest.TestCase):
             for sigma2 in (0.5, 2.0):
                 for b in (0.0, 0.2, 2.0):
                     f.setParameters((sigma1, sigma2, b))
+                    g = f.clone()
                     f1.setParameters((sigma1, sigma1, 0.0))
                     f2.setParameters((sigma2, sigma2, 0.0))
                     sigma1Sq = sigma1**2
@@ -402,6 +424,9 @@ class FunctionTestCase(unittest.TestCase):
                             if not numpy.allclose(predVal, f(x, y)):
                                 self.fail("%s = %s != %s for x=%s, y=%s, sigma1=%s, sigma2=%s, b=%s" % \
                                     (type(f).__name__, f(x, y), predVal, x, y, sigma1, sigma2, b))
+                            if not numpy.allclose(predVal, g(x, y)):
+                                self.fail("%s = %s != %s for x=%s, y=%s, sigma1=%s, sigma2=%s, b=%s; clone" %\
+                                    (type(g).__name__, g(x, y), predVal, x, y, sigma1, sigma2, b))
                     approxArea = fSum * delta**2
                     if not numpy.allclose(approxArea, 1.0):
                         self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
@@ -415,28 +440,40 @@ class FunctionTestCase(unittest.TestCase):
         for xo in numpy.arange(-5.0, 5.0, 1.0):
             for yo in numpy.arange(-5.0, 5.0, 1.0):
                 f = afwMath.IntegerDeltaFunction2D(xo, yo)
+                g = f.clone()
                 for x in numpy.arange(-5.0, 5.0, 1.0):
                     for y in numpy.arange(-5.0, 5.0, 1.0):
                         predVal = basicDelta(x, xo) * basicDelta(y, yo)
                         if predVal != f(x, y):
                             self.fail("%s = %s != %s for x=%s, y=%s, xo=%s, yo=%s" % \
                                 (type(f).__name__, f(x, y), predVal, x, y, xo, yo))
+                        if predVal != g(x, y):
+                            self.fail("%s = %s != %s for x=%s, y=%s, xo=%s, yo=%s; clone" % \
+                                (type(g).__name__, g(x, y), predVal, x, y, xo, yo))
     
     def testLanczosFunction1D(self):
         """A test for LanczosFunction1D"""
         def basicLanczos1(x, n):
             return sincpi(x) * sincpi(x / float(n))
-
+        
         for n in range(1, 5):
             f = afwMath.LanczosFunction1D(n)
+            self.assertEquals(f.getOrder(), n)
+
+            
             for xOffset in (-10.0, 0.0, 0.05):
                 f.setParameters((xOffset,))
+                g = f.clone()
+#                 self.assertEquals(g.getOrder(), n)
                 for x in numpy.arange(-10.0, 10.1, 0.50):
                     xAdj = x - xOffset
                     predVal = basicLanczos1(xAdj, n)
                     if not numpy.allclose(predVal, f(x)):
                         self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, xAdj=%s" % \
                             (type(f).__name__, f(x), predVal, n, x, xOffset, xAdj))
+                    if not numpy.allclose(predVal, g(x)):
+                        self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, xAdj=%s; clone" % \
+                            (type(g).__name__, g(x), predVal, n, x, xOffset, xAdj))
 
     def testLanczosFunction2D(self):
         """A test for LanczosFunction2D"""
@@ -445,9 +482,13 @@ class FunctionTestCase(unittest.TestCase):
 
         for n in range(1, 5):
             f = afwMath.LanczosFunction2D(n)
+            self.assertEquals(f.getOrder(), n)
+
             for xOffset in (-10.0, 0.0, 0.05):
                 for yOffset in (-0.01, 0.0, 7.5):
                     f.setParameters((xOffset, yOffset))
+                    g = f.clone()
+#                    self.assertEquals(g.getOrder(), n)
                     for x in numpy.arange(-10.0, 10.1, 2.0):
                         for y in numpy.arange(-10.0, 10.1, 2.0):
                             xAdj = x - xOffset
@@ -457,6 +498,11 @@ class FunctionTestCase(unittest.TestCase):
                                 self.fail("%s = %s != %s for n=%s, x=%s, " +
                                           "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % 
                                           (type(f).__name__, f(x, y), predVal, n, x,
+                                           xOffset, yOffset, xAdj, yAdj))
+                            if not numpy.allclose(predVal, g(x, y)):
+                                self.fail("%s = %s != %s for n=%s, x=%s, " +
+                                          "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s; clone" % 
+                                          (type(g).__name__, g(x, y), predVal, n, x,
                                            xOffset, yOffset, xAdj, yAdj))
        
     def testPolynomialFunction1D(self):
@@ -481,6 +527,12 @@ class FunctionTestCase(unittest.TestCase):
             f = afwMath.PolynomialFunction1D(coeffs)
             g = afwMath.PolynomialFunction1D(order)
             g.setParameters(coeffs)
+            h = f.clone()
+            
+            self.assertEqual(f.getOrder(), order)
+            self.assertEqual(g.getOrder(), order)
+#             self.assertEqual(h.getOrder(), order)
+            
             for x in numpy.arange(-10.0, 10.1, 1.0):
                 predVal = basic1DPoly(x, coeffs)
                 if not numpy.allclose(predVal, f(x)):
@@ -489,6 +541,9 @@ class FunctionTestCase(unittest.TestCase):
                 if not numpy.allclose(predVal, g(x)):
                     self.fail("%s = %s != %s for x=%s, coeffs=%s; order constructor" % \
                         (type(f).__name__, g(x), predVal, x, coeffs))
+                if not numpy.allclose(predVal, h(x)):
+                    self.fail("%s = %s != %s for x=%s, coeffs=%s; clone" % \
+                        (type(h).__name__, h(x), predVal, x, coeffs))
 
     def testPolynomialFunction2D(self):
         """A test for PolynomialFunction2D
@@ -521,6 +576,12 @@ class FunctionTestCase(unittest.TestCase):
             f = afwMath.PolynomialFunction2D(coeffs)
             g = afwMath.PolynomialFunction2D(order)
             g.setParameters(coeffs)
+            h = f.clone()
+
+            self.assertEqual(f.getOrder(), order)
+            self.assertEqual(g.getOrder(), order)
+#             self.assertEqual(h.getOrder(), order)
+            
             for x in numpy.arange(-10.0, 10.1, 2.5):
                 for y in numpy.arange(-10.0, 10.1, 2.5):
                     predVal = basic2DPoly(x, y, coeffs)
@@ -530,6 +591,9 @@ class FunctionTestCase(unittest.TestCase):
                     if not numpy.allclose(predVal, g(x, y)):
                         self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s; order constructor" % \
                             (type(f).__name__, g(x, y), predVal, x, y, coeffs))
+                    if not numpy.allclose(predVal, h(x, y)):
+                        self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s; clone" % \
+                            (type(h).__name__, h(x, y), predVal, x, y, coeffs))
         
         # test that the number of parameters is correct for the given order
         def numParamsFromOrder(order):
@@ -551,8 +615,8 @@ class FunctionTestCase(unittest.TestCase):
             self.assertRaises(Exception, afwMath.PolynomialFunction2D, numpy.zeros(numParams, dtype=float))
 
     def testDFuncDParameters(self):
-        """Test that we can differentiate the Function2 with respect to its parameters"""
-        
+        """Test that we can differentiate the Function2 with respect to its parameters
+        """
         nOrder = 3
         coeffs = []
         for i in range((nOrder + 1)*(nOrder + 2)//2):
