@@ -30,17 +30,23 @@ import time
 import eups
 
 import lsst.daf.base as dafBase
-import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
 MaxIter = 20
 MaxTime = 1.0 # seconds
-SaveImages = True
+SaveImages = False
 DegPerRad = 180.0 / math.pi
 
-DegreesFlag = afwGeom.degrees # or afwCoord.DEGREES for older afw
+
+DegreesFlag = afwGeom.degrees
+
+def setDegreesFlag(newValue):
+    """Set global DegreesFlag; avoids a syntax warning in makeWcs
+    """
+    global DegreesFlag
+    DegreesFlag = newValue
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -90,7 +96,12 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
     destCtrFitsPix = afwGeom.Point2D([ind + 1.0 for ind in destCtrInd])
     srcCtrFitsPix = afwGeom.Point2D([ind + 1.0 for ind in srcCtrInd])
     srcOffFitsPix = srcCtrFitsPix + afwGeom.Extent2D(1.0, 0.0) # offset 1 pixel in x to compute orient & scale
-    srcCtrSkyPos = srcWcs.pixelToSky(srcCtrFitsPix).getPosition(DegreesFlag)
+    try:
+        srcCtrSkyPos = srcWcs.pixelToSky(srcCtrFitsPix).getPosition(DegreesFlag)
+    except Exception:
+        import lsst.afw.coord as afwCoord
+        setDegreesFlag(afwCoord.DEGREES)
+        srcCtrSkyPos = srcWcs.pixelToSky(srcCtrFitsPix).getPosition(DegreesFlag)
     srcOffSkyPos = srcWcs.pixelToSky(srcOffFitsPix).getPosition(DegreesFlag)
     srcSkyOff = srcOffSkyPos - srcCtrSkyPos
     srcAngleRad = math.atan2(srcSkyOff[1], srcSkyOff[0])
@@ -115,8 +126,8 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
 def run():
     if len(sys.argv) < 2:
         srcExposure = afwImage.ExposureF(InputExposurePath)
-        if False:
-            bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1000, 1000))
+        if True:
+            bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2000, 2000))
             srcExposure = afwImage.ExposureF(srcExposure, bbox, afwImage.LOCAL, False)
     else:
         srcExposure = afwImage.ExposureF(sys.argv[1])
@@ -131,7 +142,7 @@ def run():
     destCtrInd = [int(d / 2) for d in destDim]
     
     print "Warping", InputExposurePath
-    print "Source image size:", srcDim
+    print "Source (sub)image size:", srcDim
     print "Destination image size:", destDim
     print
     
@@ -142,27 +153,31 @@ def run():
         for scaleFac in (1.2,): # (1.0, 1.5):
             for skyOffsetArcSec in ((0.0, 0.0),): #  ((0.0, 0.0), (10.5, -5.5)):
                 skyOffset = [so / 3600.0 for so in skyOffsetArcSec]
-                for rotAng in (0.0, 45.0):
-                    for kernelName in ("bilinear", "lanczos2", "lanczos3"):
-                        destWcs = makeWcs(
-                            projName = "TAN",
-                            destCtrInd = destCtrInd,
-                            skyOffset = skyOffset,
-                            rotAng = rotAng,
-                            scaleFac = scaleFac,
-                            srcWcs = srcWcs,
-                            srcCtrInd = srcCtrInd,
-                        )
-                        destExposure.setWcs(destWcs)
-                        warpingKernel = afwMath.makeWarpingKernel(kernelName)
-                        dTime, nIter, goodPix = timeWarp(destExposure, srcExposure, warpingKernel, interpLength)
-                        print "%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (
-                            testNum, interpLength, scaleFac, skyOffsetArcSec[0], skyOffsetArcSec[1],
-                            rotAng, kernelName, goodPix, dTime/float(nIter))
-                        
-                        if SaveImages:
-                            destExposure.writeFits("warpedExposure%03d.fits" % (testNum,))
-                        testNum += 1
+                for rotAng, kernelName in (
+                    (0.0, "bilinear"),
+                    (0.0, "lanczos2"),
+                    (0.0, "lanczos3"),
+                    (45.0, "lanczos3"),
+                ):
+                    destWcs = makeWcs(
+                        projName = "TAN",
+                        destCtrInd = destCtrInd,
+                        skyOffset = skyOffset,
+                        rotAng = rotAng,
+                        scaleFac = scaleFac,
+                        srcWcs = srcWcs,
+                        srcCtrInd = srcCtrInd,
+                    )
+                    destExposure.setWcs(destWcs)
+                    warpingKernel = afwMath.makeWarpingKernel(kernelName)
+                    dTime, nIter, goodPix = timeWarp(destExposure, srcExposure, warpingKernel, interpLength)
+                    print "%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (
+                        testNum, interpLength, scaleFac, skyOffsetArcSec[0], skyOffsetArcSec[1],
+                        rotAng, kernelName, goodPix, dTime/float(nIter))
+                    
+                    if SaveImages:
+                        destExposure.writeFits("warpedExposure%03d.fits" % (testNum,))
+                    testNum += 1
 
 if __name__ == "__main__":
     run()

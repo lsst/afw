@@ -217,14 +217,6 @@ namespace {
         afwGeom::Extent2D dSrcA = srcPos - leftSrcPos;
         afwGeom::Extent2D dSrcB = srcPos - upSrcPos;
         
-//         if ((std::abs(dSrcA[0]) > 10.0) || (std::abs(dSrcA[1]) > 10.0)
-//             || (std::abs(dSrcB[0]) > 10.0) || (std::abs(dSrcB[1]) > 10.0)) {
-//             std::cout << "srcPos=" << srcPos
-//                 << "; leftSrcPos=" << leftSrcPos
-//                 << "; upSrcPos=" << upSrcPos
-//                 << std::endl;
-//         }
-        
         return std::abs(dSrcA.getX()*dSrcB.getY() - dSrcA.getY()*dSrcB.getX());
     }
 }
@@ -413,21 +405,6 @@ int afwMath::warpImage(
                 int endCol = edgeColList[colBand];
                 afwGeom::Point2D bottomSrcPos = computeSrcPos(endCol, endRow, destXY0, destWcs, srcWcs);
                 yDeltaSrcPosList[colBand] = (bottomSrcPos - srcPosView[endCol]) * interpInvHeight;
-
-
-                if ((std::abs(yDeltaSrcPosList[colBand][0]) > 10.0) || (std::abs(yDeltaSrcPosList[colBand][1]) > 10.0)) {
-                    std::cout << "yDeltaSrcPosList[colBand]=" << yDeltaSrcPosList[colBand]
-                        << "; srcPosView[endCol]=" << srcPosView[endCol]
-                        << "; bottomSrcPos=" << bottomSrcPos
-                        << "; interpInvHeight=" << interpInvHeight
-                        << "; colBand=" << colBand
-                        << "; endCol=" << endCol
-                        << "; prevEndRow=" << prevEndRow
-                        << "; endRow=" << endRow
-                        << std::endl;
-                }
-                    
-
             }
 
             for (int row = prevEndRow + 1; row <= endRow; ++row) {
