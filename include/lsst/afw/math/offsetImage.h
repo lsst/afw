@@ -42,6 +42,9 @@ typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
                                bool flipTB            ///< Flip top <--> bottom?
                               );
 template<typename ImageT>
+typename ImageT::Ptr binImage(ImageT const& inImage, int const binX, int const binY,
+                              lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
+template<typename ImageT>
 typename ImageT::Ptr binImage(ImageT const& inImage, int const binsize,
                               lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
 
