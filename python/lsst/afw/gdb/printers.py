@@ -17,102 +17,100 @@ class CitizenPrinter(object):
     def to_string(self):
         return "0x%x %d %s 0x%x" % (self.val, self.val["_CitizenId"],
                                     self.val["_typeName"], self.val["_sentinel"])
-    def display_hint (self):
-        return 'Citizen'
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # afw
-def getName(val):
-    # Make sure &foo works, too.
-    valType = val.type
-    if valType.code == gdb.TYPE_CODE_REF:
-        valType = valType.target()
 
-    name = str(valType.strip_typedefs())
-    
-    name = name.replace("lsst::afw::image", "afwImage")
-
-    return name
-
-class ImageBasePrinter(object):
-    "Print an ImageBase"
+class BaseSourceAttributesPrinter(object):
+    "Print a BaseSourceAttributes"
 
     def __init__(self, typename, val):
         self.val = val
 
-    def to_string(self, noName=False):
+    def to_string(self):
+        return "id = %d (%.3f, %.3f)" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+
+class SourcePrinter(object):
+    "Print a Source"
+
+    def __init__(self, typename, val):
+        self.val = val
+
+    def to_string(self):
+        return "RHL Source"
+
+class FootprintPrinter(object):
+    "Print a Footprint"
+
+    def __init__(self, typename, val):
+        self.val = val
+
+    def to_string(self):
+        return "RHL Footprint"
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class CoordinateBasePrinter(object):
+    "Print a CoordinateBase"
+
+    def __init__(self, typename, val):
+        self.val = val
+
+    def to_string(self):
         # Make sure &foo works, too.
         type = self.val.type
         if type.code == gdb.TYPE_CODE_REF:
             type = type.target ()
 
-        gilView = self.val["_gilView"]
-        arr = self.val["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
+        return self.val["_vector"]["m_storage"]["m_data"]["array"]
 
-        if noName:
-            name = ""
-        else:
-            name = getName(self.val)
-
-        return "%s%dx%d  XY0: (%d,%d)" % (name,
-                                          #self.val["getWidth"](), self.val["getHeight"](), 
-                                          gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
-                                          arr[0], arr[1])
     def display_hint (self):
-        return 'ImageBase'
+        return "array"
 
-class ImagePrinter(ImageBasePrinter):
-    "Print an Image"
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class ImagePrinter(object):
+    "Print an ImageBase or derived class"
+
+    def dimenStr(self, val=None):
+        if val is None:
+            val = self.val
+            
+        # Make sure &foo works, too.
+        type = val.type
+        if type.code == gdb.TYPE_CODE_REF:
+            type = type.target ()
+
+        gilView = val["_gilView"]
+        arr = val["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
+
+        return "%dx%d+%d+%d" % (
+            #val["getWidth"](), val["getHeight"](), 
+            gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
+            arr[0], arr[1])
+
+    def typeName(self):
+        return self.typename.split(":")[-1]
 
     def __init__(self, typename, val):
+        self.typename = typename
         self.val = val
 
     def to_string(self):
-        if False:
-            # Make sure &foo works, too.
-            type = self.val.type
-            if type.code == gdb.TYPE_CODE_REF:
-                type = type.target()
+        return "%s(%s)" % (self.typeName(), self.dimenStr())
 
-        return "%s  %s" % (getName(self.val), super(ImagePrinter, self).to_string(noName=True))
-
-    def display_hint (self):
-        return 'Image'
-
-class MaskPrinter(ImageBasePrinter):
-    "Print a Mask"
-
-    def __init__(self, typename, val):
-        self.val = val
-
-    def to_string(self):
-        pixelType = self.val.type.template_argument(0)
-        if str(pixelType) == "unsigned short":
-            name = "afwImage::Mask"
-        else:
-            name = getName(self.val)
-
-        return "%s  %s" % (name, super(MaskPrinter, self).to_string(noName=True))
-
-class MaskedImagePrinter(object):
+class MaskedImagePrinter(ImagePrinter):
     "Print a MaskedImage"
 
-    def __init__(self, typename, val):
-        self.val = val
-
     def to_string(self):
-        imageStr = " ".join(str(self.val["_image"]["px"].dereference()).split(" ")[1:])
-        return "%s  %s" % (getName(self.val), imageStr)
+        return "%s(%s)" % (self.typeName(), self.dimenStr(self.val["_image"]["px"].dereference()))
 
-class ExposurePrinter(object):
+class ExposurePrinter(ImagePrinter):
     "Print an Exposure"
 
-    def __init__(self, typename, val):
-        self.val = val
-
     def to_string(self):
-        imageStr = re.sub(r"^[^>]+>\s*", "", str(self.val["_maskedImage"]))
-        return "%s  %s" % (getName(self.val), imageStr)
+        return "%s(%s)" % (self.typeName(),
+                           self.dimenStr(self.val["_maskedImage"]["_image"]["px"].dereference()))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -150,7 +148,7 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
         var = gdb.parse_and_eval(imgName)
 
         if re.search(r"MaskedImage", str(var.type)):
-            print "N.b. %s is an %s; showing image" % (imgName, getName(var))
+            print "N.b. %s is an %s; showing image" % (imgName)
             var = var["_image"]
 
         if re.search(r"shared_ptr<", str(var.type)):
@@ -288,46 +286,47 @@ class Printer(object):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+printers = []
+
 def register(obj):
-    "Register afw pretty-printers with objfile Obj."
+    "Register my pretty-printers with objfile Obj."
 
-    global _use_gdb_pp
-    global afw_printer
+    if obj is None:
+        obj = gdb
 
-    if _use_gdb_pp:
-        gdb.printing.register_pretty_printer(obj, afw_printer)
-    else:
-        if obj is None:
-            obj = gdb
-
-        obj.pretty_printers.insert(0, afw_printer)
+    for p in printers:
+        if _use_gdb_pp:
+            gdb.printing.register_pretty_printer(obj, p)
+        else:
+            obj.pretty_printers.insert(0, p)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-afw_printer = None
-
 def build_afw_dictionary():
-    global afw_printer
+    printer = Printer("afw")
 
-    afw_printer = Printer("afw")
+    printer.add('lsst::afw::detection::Footprint', FootprintPrinter)
+    printer.add('lsst::afw::detection::Source', SourcePrinter)
+    printer.add('lsst::afw::detection::BaseSourceAttributes', BaseSourceAttributesPrinter)
 
-    afw_printer.add('lsst::afw::image::Image', ImagePrinter)
-    afw_printer.add('lsst::afw::image::Mask', MaskPrinter)
-    afw_printer.add('lsst::afw::image::MaskedImage', MaskedImagePrinter)
-    afw_printer.add('lsst::afw::image::Exposure', ExposurePrinter)
+    printer.add('lsst::afw::geom::Point', CoordinateBasePrinter)
+    printer.add('lsst::afw::geom::Extent', CoordinateBasePrinter)
 
-build_afw_dictionary()
+    printer.add('lsst::afw::image::ImageBase', ImagePrinter)
+    printer.add('lsst::afw::image::Image', ImagePrinter)
+    printer.add('lsst::afw::image::Mask', ImagePrinter)
+    printer.add('lsst::afw::image::MaskedImage', MaskedImagePrinter)
+    printer.add('lsst::afw::image::Exposure', ExposurePrinter)
 
-daf_base_printer = None
+    return printer
+
+printers.append(build_afw_dictionary())
 
 def build_daf_base_dictionary():
-    global daf_base_printer
+    printer = Printer("daf::base")
 
-    daf_base_printer = Printer("daf::base")
+    printer.add('lsst::daf::base::Citizen', CitizenPrinter)
 
-    daf_base_printer.add('lsst::daf::base::Citizen', CitizenPrinter)
+    return printer
 
-build_daf_base_dictionary()
-
-
-
+printers.append(build_daf_base_dictionary())
