@@ -1,14 +1,4 @@
 The file printers.py provides some support for inspecting LSST datatypes from gdb
 
 The python pretty printing's in a bit of a state of flux, but this code works with gdb 7.2 if you build it
-with python support (the same python as we're using!) and put:
-
-python
-try:
-    import lsst.afw.gdb.printers
-    lsst.afw.gdb.printers.register(None)
-except ImportError:
-    pass
-end
-
-in some .gdbinit file.  There are better ways of doing this loading coming in future versions of gdb.
+with python support.
