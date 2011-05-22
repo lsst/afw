@@ -15,7 +15,7 @@ class CitizenPrinter(object):
         self.val = val
 
     def to_string(self):
-        return "0x%x %d %s 0x%x" % (self.val, self.val["_CitizenId"],
+        return "{0x%x %d %s 0x%x}" % (self.val, self.val["_CitizenId"],
                                     self.val["_typeName"], self.val["_sentinel"])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -28,7 +28,7 @@ class BaseSourceAttributesPrinter(object):
         self.val = val
 
     def to_string(self):
-        return "id = %d (%.3f, %.3f)" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+        return "Base: {id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
 
 class SourcePrinter(object):
     "Print a Source"
@@ -37,7 +37,7 @@ class SourcePrinter(object):
         self.val = val
 
     def to_string(self):
-        return "RHL Source"
+        return "{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
 
 class FootprintPrinter(object):
     "Print a Footprint"
