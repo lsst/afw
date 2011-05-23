@@ -46,7 +46,7 @@ class FootprintPrinter(object):
         self.val = val
 
     def to_string(self):
-        return "RHL Footprint"
+        return "RHL Footprint (fixme when gdb 7.3 arrives)"
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -148,7 +148,7 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
         var = gdb.parse_and_eval(imgName)
 
         if re.search(r"MaskedImage", str(var.type)):
-            print "N.b. %s is an %s; showing image" % (imgName)
+            print "N.b. %s is a MaskedImage; showing image" % (imgName)
             var = var["_image"]
 
         if re.search(r"shared_ptr<", str(var.type)):
