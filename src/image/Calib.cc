@@ -28,8 +28,10 @@
  * Classes to support calibration (e.g. photometric zero points, exposure times)
  */
 #include <cmath>
+
 #include "boost/format.hpp"
 #include "boost/algorithm/string/trim.hpp"
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/image/Calib.h"
@@ -164,8 +166,8 @@ double Calib::getExptime() const
 /**
  * Set the flux of a zero-magnitude object
  */
-void Calib::setFluxMag0(double fluxMag0,      ///< The flux in question
-                        double fluxMag0Sigma  ///< The error in the flux
+void Calib::setFluxMag0(double fluxMag0,      ///< The flux in question (ADUs)
+                        double fluxMag0Sigma  ///< The error in the flux (ADUs)
                        )
 {
     _fluxMag0 = fluxMag0;
@@ -179,11 +181,56 @@ std::pair<double, double> Calib::getFluxMag0() const
 {
     return std::make_pair(_fluxMag0, _fluxMag0Sigma);
 }
-            
+
+/**
+ * Return a flux (in ADUs) given a magnitude
+ */
+double Calib::getFlux(double const mag ///< the magnitude of the object
+                        ) const {
+    
+    if (_fluxMag0 <= 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                          (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
+    }
+    
+    return _fluxMag0 * ::pow(10.0, -0.4 * mag);
+}
+
+/**
+ * Return a flux and flux error (in ADUs) given a magnitude and magnitude error
+ *
+ * Assumes that magSigma and fluxMag0Sigma are uncorrelated.
+ */
+std::pair<double, double> Calib::getFlux(
+        double const mag,       ///< the magnitude of the object
+        double const magSigma   ///< the error in the magnitude
+                
+                        ) const {
+    
+    if (_fluxMag0 <= 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                          (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
+    }
+    
+    double const flux = getFlux(mag);
+    
+//    double const fluxSigma = flux * hypot(_fluxMag0Sigma / _fluxMag0, 0.4 * std::log(10) * magSigma / mag);
+    // hypot is not standard C++ so use <http://en.wikipedia.org/wiki/Hypot#Implementation>
+    double a = _fluxMag0Sigma / _fluxMag0;
+    double b = 0.4 * std::log(10.0) * magSigma;
+    if (std::abs(a) < std::abs(b)) {
+        double temp = a;
+        a = b;
+        b = temp;
+    }
+    double const fluxSigma = flux * std::abs(a) * std::sqrt(1 + std::pow(b / a, 2));
+    return std::make_pair(flux, fluxSigma);
+}
+
 /**
  * Return a magnitude given a flux
  */
-double Calib::getMagnitude(double const flux ///< the measured flux of the object
+double Calib::getMagnitude(double const flux ///< the measured flux of the object (ADUs)
                          ) const
 {
     if (_fluxMag0 <= 0) {
@@ -203,9 +250,9 @@ double Calib::getMagnitude(double const flux ///< the measured flux of the objec
 /**
  * Return a magnitude and magnitude error given a flux and flux error
  */
-std::pair<double, double> Calib::getMagnitude(double const flux, ///< the measured flux of the object
-                                            double const fluxErr ///< the error in the measured flux
-                                           ) const
+std::pair<double, double> Calib::getMagnitude(double const flux, ///< the measured flux of the object (ADUs)
+                                              double const fluxErr ///< the error in the measured flux (ADUs)
+                                              ) const
 {
     if (_fluxMag0 <= 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,

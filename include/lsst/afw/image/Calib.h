@@ -73,6 +73,8 @@ public :
     void setFluxMag0(double fluxMag0, double fluxMag0Sigma=0.0);
     std::pair<double, double> getFluxMag0() const;
 
+    double getFlux(double const mag) const;
+    std::pair<double, double> getFlux(double const mag, double const magErr) const;
     double getMagnitude(double const flux) const;
     std::pair<double, double> getMagnitude(double const flux, double const fluxErr) const;
 private :

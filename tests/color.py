@@ -98,6 +98,9 @@ class CalibTestCase(unittest.TestCase):
         self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
         self.assertAlmostEqual(self.calib.getMagnitude(flux, 0)[1], 2.5/math.log(10)*flux0Err/flux0)
 
+        self.assertAlmostEqual(flux0, self.calib.getFlux(0))
+        self.assertAlmostEqual(flux, self.calib.getFlux(22.5))
+
     def testCtorFromMetadata(self):
         """Test building a Calib from metadata"""
         

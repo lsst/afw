@@ -169,13 +169,17 @@ boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::stri
 }
 
 /**
- * \brief Convenience wrapper around warpImage()
+ * \brief Warp (remap) one exposure to another.
+ *
+ * This is a convenience wrapper around warpImage(). 
  */
 template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
-    DestExposureT &destExposure,        ///< remapped exposure
-    SrcExposureT const &srcExposure,    ///< source exposure
-    SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
+    DestExposureT &destExposure,        ///< Remapped exposure. Wcs and xy0 are read, MaskedImage is set,
+                                        ///< and Calib and Filter are copied from srcExposure.
+                                        ///< All other attributes are left alone (including Detector and Psf)
+    SrcExposureT const &srcExposure,    ///< Source exposure
+    SeparableKernel &warpingKernel,     ///< Warping kernel; determines warping algorithm
     int const interpLength              ///< Distance over which WCS can be linearily interpolated    
     )
 {
@@ -186,6 +190,9 @@ int afwMath::warpExposure(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "srcExposure has no Wcs");
     }
     typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
+    boost::shared_ptr<afwImage::Calib> calibCopy(new afwImage::Calib(*srcExposure.getCalib()));
+    destExposure.setCalib(calibCopy);
+    destExposure.setFilter(srcExposure.getFilter());
     return warpImage(mi, *destExposure.getWcs(),
                      srcExposure.getMaskedImage(), *srcExposure.getWcs(), warpingKernel, interpLength);
 }
