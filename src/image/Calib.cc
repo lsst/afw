@@ -199,7 +199,7 @@ double Calib::getFlux(double const mag ///< the magnitude of the object
 /**
  * Return a flux and flux error (in ADUs) given a magnitude and magnitude error
  *
- * Assumes that magSigma and fluxMag0Sigma are uncorrelated.
+ * Assumes that the errors are small and uncorrelated.
  */
 std::pair<double, double> Calib::getFlux(
         double const mag,       ///< the magnitude of the object
