@@ -152,12 +152,6 @@ public:
 
     Footprint & operator=(Footprint & other);
 
-    template <typename MaskPixelT>
-    void intersectMask(
-        image::Mask<MaskPixelT> const & mask, 
-        MaskPixelT bitmask=~0x0
-    );
-
 private:
     friend class boost::serialization::access;
     template <typename Archive>
@@ -215,6 +209,10 @@ Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
                                 typename image::Mask<MaskT>::Ptr const&  mask,
                                 MaskT const bitmask);
     
+template<typename MaskT>
+Footprint::Ptr footprintAndNotMask(Footprint::Ptr const&  foot,
+                                typename image::Mask<MaskT>::Ptr const&  mask,
+                                MaskT const bitmask);
 
 }}}
 

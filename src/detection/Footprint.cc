@@ -53,28 +53,105 @@ namespace afw {
 namespace detection {
 
 namespace {
+
 /*
  * Compare two Span%s by y, then x0, then x1
  *
  * A utility functor passed to sort
  */
-    struct compareSpanByYX : 
-        public std::binary_function<Span::ConstPtr, Span::ConstPtr, bool> {
-        int operator()(Span::ConstPtr a, Span::ConstPtr b) {
-            if (a->getY() < b->getY()) {
+struct compareSpanByYX : 
+    public std::binary_function<Span::ConstPtr, Span::ConstPtr, bool> {
+    int operator()(Span::ConstPtr a, Span::ConstPtr b) {
+        if (a->getY() < b->getY()) {
+            return true;
+        } else if (a->getY() == b->getY()) {
+            if (a->getX0() < b->getX0()) {
                 return true;
-            } else if (a->getY() == b->getY()) {
-                if (a->getX0() < b->getX0()) {
+            } else if (a->getX0() == b->getX0()) {
+                if (a->getX1() < b->getX1()) {
                     return true;
-                } else if (a->getX0() == b->getX0()) {
-                    if (a->getX1() < b->getX1()) {
-                        return true;
-                    }
                 }
             }
-            return false;
         }
-    };
+        return false;
+    }
+};
+
+template<typename MaskT>
+Footprint::Ptr applyMask(
+    Footprint const & fp, 
+    lsst::afw::image::Mask<MaskT> const & mask,
+    MaskT const bitmask,
+    bool keepMasked
+) {
+    Footprint::Ptr newFp(new Footprint());
+    geom::Box2I maskBBox = mask.getBBox(image::PARENT);
+
+    Footprint::SpanList::const_iterator s(fp.getSpans().begin()); 
+    while((*s)->getY() < maskBBox.getMinY() && s != fp.getSpans().end()){
+        ++s;
+    }
+
+    int x0, x1, y;
+    for( ; s != fp.getSpans().end(); ++s) {
+        y = (*s)->getY();
+
+        if (y > maskBBox.getMaxY())
+            break;
+
+        x0 = (*s)->getX0();
+        x1 = (*s)->getX1();
+
+        if(x1 < maskBBox.getMinX() || x0 > maskBBox.getMaxX()) {
+            //span is entirely outside the image mask. cannot be used
+            continue;
+        }
+
+        //clip the span to be within the mask
+        if(x0 < maskBBox.getMinX()) x0 = maskBBox.getMinX();
+        if(x1 > maskBBox.getMaxX()) x1 = maskBBox.getMaxX();
+
+        //Image iterators are always specified with respect to (0,0)
+        //regardless what the image::XY0 is set to.        
+        typename image::Mask<MaskT>::const_x_iterator mIter = mask.x_at(
+            x0 - maskBBox.getMinX(), y - maskBBox.getMinY()
+        );
+
+        //loop over all span locations, slicing the span at maskedPixels
+        for(int x = x0; x <= x1; ++x, ++mIter) {          
+            MaskT m = (*mIter & bitmask);
+            if((m != 0 && keepMasked) || (m == 0 && !keepMasked)) {
+                //masked pixel found within span
+                if (x > x0) {                    
+                    //add beginning of span to the output
+                    //the fixed span contains all the unmasked pixels up to,
+                    //but not including this masked pixel
+                    newFp->addSpan(y, x0, x- 1);
+                }
+                //set the next Span to start after this pixel
+                x0 = x + 1;
+            }
+        }
+        
+        //add last section of span
+        if(x0 <= x1) {
+            newFp->addSpan(y, x0, x1);
+        }
+    }
+    newFp->normalize();
+    newFp->setRegion(maskBBox);
+
+    return newFp;
+}
+
+template 
+Footprint::Ptr applyMask(
+    Footprint const&,
+    image::Mask<image::MaskPixel> const&,
+    image::MaskPixel const,
+    bool);
+
+
 } //end namespace
 
 /******************************************************************************/
@@ -516,77 +593,15 @@ Footprint & Footprint::operator=(Footprint::Footprint & other) {
  *
  */
 template<typename MaskT>
-void Footprint::intersectMask(
-    lsst::afw::image::Mask<MaskT> const & mask,
-    MaskT const bitmask
+Footprint::Ptr footprintAndNotMask(
+    Footprint::Ptr const& fp,                                   ///< The initial Footprint
+    typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,    ///< The mask to & with foot
+    MaskT const bitmask                                       ///< Only consider these bits
 ) {
-    geom::Box2I maskBBox = mask.getBBox(image::PARENT);
-
-    //this operation makes no sense on non-normalized footprints.
-    //make sure this is normalized
-    normalize();
-
-    SpanList::iterator s(_spans.begin()); 
-    while((*s)->getY() < maskBBox.getMinY() && s != _spans.end()){
-        ++s;
-    }
-
-
-    int x0, x1, y;
-    SpanList maskedSpans;
-    int maskedArea=0;
-    for( ; s != _spans.end(); ++s) {
-        y = (*s)->getY();
-
-        if (y > maskBBox.getMaxY())
-            break;
-
-        x0 = (*s)->getX0();
-        x1 = (*s)->getX1();
-
-        if(x1 < maskBBox.getMinX() || x0 > maskBBox.getMaxX()) {
-            //span is entirely outside the image mask. cannot be used
-            continue;
-        }
-
-        //clip the span to be within the mask
-        if(x0 < maskBBox.getMinX()) x0 = maskBBox.getMinX();
-        if(x1 > maskBBox.getMaxX()) x1 = maskBBox.getMaxX();
-
-        //Image iterators are always specified with respect to (0,0)
-        //regardless what the image::XY0 is set to.        
-        typename image::Mask<MaskT>::const_x_iterator mIter = mask.x_at(
-            x0 - maskBBox.getMinX(), y - maskBBox.getMinY()
-        );
-
-        //loop over all span locations, slicing the span at maskedPixels
-        for(int x = x0; x <= x1; ++x, ++mIter) {            
-            if((*mIter & bitmask) != 0) {
-                //masked pixel found within span
-                if (x > x0) {                    
-                    //add beginning of span to the output
-                    //the fixed span contains all the unmasked pixels up to,
-                    //but not including this masked pixel
-                    Span::Ptr maskedSpan(new Span(y, x0, x- 1));
-                    maskedSpans.push_back(maskedSpan);                
-                    maskedArea += maskedSpan->getWidth();
-                }
-                //set the next Span to start after this pixel
-                x0 = x + 1;
-            }
-        }
-        
-        //add last section of span
-        if(x0 <= x1) {
-            Span::Ptr maskedSpan(new Span(y, x0, x1));
-            maskedSpans.push_back(maskedSpan);
-            maskedArea += maskedSpan->getWidth();
-        }
-    }
-    _area = maskedArea;
-    _spans = maskedSpans;
-    _bbox.clip(maskBBox);
+    fp->normalize();
+    return applyMask(*fp, *mask, bitmask, false);
 }
+
 
 /************************************************************************************************************/
 /**
@@ -605,8 +620,8 @@ Footprint::Ptr footprintAndMask(
         typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,    ///< The mask to & with foot
         MaskT const bitmask                                       ///< Only consider these bits
 ) {
-    Footprint::Ptr newFp(new Footprint());
-    return newFp;
+    fp->normalize();
+    return applyMask(*fp, *mask, bitmask, true);
 }
 
 /******************************************************************************/
@@ -1443,17 +1458,19 @@ psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
 // Explicit instantiations
 // \cond
 //
-//
-template
-void Footprint::intersectMask(
-    image::Mask<image::MaskPixel> const& mask,
-    image::MaskPixel bitMask);
+
+
+template 
+Footprint::Ptr footprintAndNotMask(
+    Footprint::Ptr const&,
+    image::Mask<image::MaskPixel>::Ptr const&,
+    image::MaskPixel const);
 
 template
 Footprint::Ptr footprintAndMask(
-    Footprint::Ptr const& foot,
-    image::Mask<image::MaskPixel>::Ptr const& mask,
-    image::MaskPixel bitMask);
+    Footprint::Ptr const&,
+    image::Mask<image::MaskPixel>::Ptr const&,
+    image::MaskPixel const);
 
 template 
 image::MaskPixel setMaskFromFootprintList(
