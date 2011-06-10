@@ -42,6 +42,8 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 
+using boost::serialization::make_nvp;
+
 namespace boost{
 namespace serialization{
     class access;
@@ -81,7 +83,7 @@ private:
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, const unsigned int version) {
-        ar & _y & _x0 & _x1;
+        ar & make_nvp("y", _y) & make_nvp("x0", _x0) & make_nvp("x1", _x1);
     }
     int _y;                             //!< Row that Span's in
     int _x0;                            //!< Starting column (inclusive)

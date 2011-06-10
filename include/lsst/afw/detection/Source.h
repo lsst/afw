@@ -199,8 +199,13 @@ private :
     float _sky;
     float _skyErr;
 
+    void serializing(void) {
+        int i = 3;
+    };
+
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {
+        serializing();
         fpSerialize(ar, _raObject);
         fpSerialize(ar, _decObject);
         fpSerialize(ar, _petroFlux);
@@ -210,7 +215,8 @@ private :
 
         BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
         if (version > 0) {
-            ar & _astrom & _photom & _shape;
+            serializing();
+            ar & make_nvp("astrom", _astrom) & make_nvp("photom", _photom) & make_nvp("shape", _shape);
         }
     }
 
