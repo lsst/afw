@@ -3,10 +3,7 @@
 namespace afwDetect = lsst::afw::detection;
 
 #include <boost/serialization/export.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
+
 BOOST_CLASS_EXPORT(afwDetect::SchemaEntry)
 
 /// Return a Schema given its name and component
