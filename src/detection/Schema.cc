@@ -2,6 +2,10 @@
 
 namespace afwDetect = lsst::afw::detection;
 
+#include <boost/serialization/export.hpp>
+
+BOOST_CLASS_EXPORT(afwDetect::SchemaEntry)
+
 /// Return a Schema given its name and component
 afwDetect::Schema const& afwDetect::Schema::find(
         std::string const& name,        ///< The name of the desired Schema
