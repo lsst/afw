@@ -312,27 +312,26 @@ private:
         }
         for (size_t i = 0; i < dataLen; ++i) {
             if (Archive::is_saving::value) {
-                if (_data[i].type() == typeid(char)) {
+                if (_data[i].type() == typeid(void)) {
+                    int which = -1;
+                    ar & make_nvp("which", which);
+                } else if (_data[i].type() == typeid(char)) {
                     int which = 1;
                     char value = boost::any_cast<char>(_data[i]);
                     ar & make_nvp("which", which) & make_nvp("value", value);
-                }
-                else if (_data[i].type() == typeid(short)) {
+                } else if (_data[i].type() == typeid(short)) {
                     int which = 2;
                     short value = boost::any_cast<short>(_data[i]);
                     ar & make_nvp("which", which) & make_nvp("value", value);
-                }
-                else if (_data[i].type() == typeid(int)) {
+                } else if (_data[i].type() == typeid(int)) {
                     int which = 3;
                     int value = boost::any_cast<int>(_data[i]);
                     ar & make_nvp("which", which) & make_nvp("value", value);
-                }
-                else if (_data[i].type() == typeid(long)) {
+                } else if (_data[i].type() == typeid(long)) {
                     int which = 4;
                     long value = boost::any_cast<long>(_data[i]);
                     ar & make_nvp("which", which) & make_nvp("value", value);
-                }
-                else if (_data[i].type() == typeid(float)) {
+                } else if (_data[i].type() == typeid(float)) {
                     int which = 5;
                     float value = boost::any_cast<float>(_data[i]);
                     int fpClass = 0;
@@ -343,8 +342,7 @@ private:
                     }
                     which += fpClass;
                     ar & make_nvp("which", which) & make_nvp("value", value);
-                }
-                else if (_data[i].type() == typeid(double)) {
+                } else if (_data[i].type() == typeid(double)) {
                     int which = 9;
                     double value = boost::any_cast<double>(_data[i]);
                     int fpClass = 0;
@@ -357,8 +355,7 @@ private:
                     }
                     which += fpClass;
                     ar & make_nvp("which", which) & make_nvp("value", value);
-                }
-                else {
+                } else {
                     std::ostringstream msg;
                     msg << "Unable to convert measurement for persistence: type "
                         << _data[i].type().name() << " at position " << i;
@@ -369,6 +366,8 @@ private:
                 int which;
                 ar & make_nvp("which", which);
                 switch (which) {
+                case -1:
+                    break;
                 case 1:
                     {
                         char value;
