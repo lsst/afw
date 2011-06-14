@@ -33,17 +33,10 @@
 #include <boost/shared_ptr.hpp>
 #include "lsst/daf/data/LsstBase.h"
 
-#include <boost/serialization/nvp.hpp>
-
 namespace boost {
 namespace serialization {
     class access;
 }}
-
-#ifndef SWIG
-using boost::serialization::make_nvp;
-#endif
-
 namespace lsst { namespace afw { namespace detection {
 /// A peak in an %image
 class Peak : public lsst::daf::base::Citizen {
@@ -86,8 +79,8 @@ private:
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, unsigned int const version) {
-        ar & make_nvp("ix", _ix) & make_nvp("iy", _iy);
-        ar & make_nvp("fx", _fx) & make_nvp("fy", _fy);
+        ar & _ix & _iy;
+        ar & _fx & _fy;
     }
     //Peak(const Peak &) {}             // XXX How do we manage Citizen's copy constructor?
     static int id;

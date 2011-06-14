@@ -33,12 +33,6 @@
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/coord/Coord.h"
-#include <boost/serialization/nvp.hpp>
-
-#ifndef SWIG
-using boost::serialization::make_nvp;
-#endif
-
 
 namespace boost {
 namespace serialization {
@@ -706,7 +700,7 @@ protected:
         } else if (lsst::utils::isinf(value)) {
             fpClass = value > 0.0 ? 2 : 3;
         }
-        ar & make_nvp("fpClass", fpClass);
+        ar & fpClass;
         switch (fpClass) {
             case 1:
                 value = std::numeric_limits<FloatT>::quiet_NaN();
@@ -718,7 +712,7 @@ protected:
                 value = -std::numeric_limits<FloatT>::infinity();
                 break;
             default:
-                ar & make_nvp("value", value);
+                ar & value;
         }
     }
 
@@ -727,12 +721,12 @@ protected:
      */
     template <class Archive> 
     void serialize(Archive & ar, unsigned int const version) {
-        ar & make_nvp("id", _id);
-        ar & make_nvp("ampExposureId", _ampExposureId);
-        ar & make_nvp("filterId", _filterId);
-        ar & make_nvp("objectId", _objectId);
-        ar & make_nvp("movingObjectId", _movingObjectId);
-        ar & make_nvp("procHistoryId", _procHistoryId);
+        ar & _id;
+        ar & _ampExposureId;
+        ar & _filterId;
+        ar & _objectId;
+        ar & _movingObjectId;
+        ar & _procHistoryId;
         fpSerialize(ar, _ra);
         fpSerialize(ar, _dec);
         fpSerialize(ar, _raErrForDetection);
@@ -798,24 +792,24 @@ protected:
             fpSerialize(ar, _shear1Err);
             fpSerialize(ar, _shear2);
             fpSerialize(ar, _shear2Err);
-            ar & make_nvp("shapeStatus", _shapeStatus);
+            ar & _shapeStatus;
         }
         fpSerialize(ar, _snr);
         fpSerialize(ar, _chi2);
-        ar & make_nvp("flagForAssociation", _flagForAssociation);
-        ar & make_nvp("flagForDetection", _flagForDetection);
-        ar & make_nvp("flagForWcs", _flagForWcs);
+        ar & _flagForAssociation;
+        ar & _flagForDetection;
+        ar & _flagForWcs;
  
         bool b;
         if (Archive::is_loading::value) {
             for (int i = 0; i != numNullableFields; ++i) {
-                ar & make_nvp("null", b);
+                ar & b;
                 _nulls.set(i, b);
             }
         } else {
             for (int i = 0; i != numNullableFields; ++i) {
                 b = isNull(i);
-                ar & make_nvp("null", b);
+                ar & b;
             }
         }
     }

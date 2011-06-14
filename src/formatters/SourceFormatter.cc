@@ -60,7 +60,6 @@ using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::DbStorage;
 using lsst::daf::persistence::DbTsvStorage;
 using lsst::daf::persistence::Storage;
-using lsst::daf::persistence::XmlStorage;
 using lsst::pex::policy::Policy;
 using lsst::afw::detection::Source;
 using lsst::afw::detection::SourceSet;
@@ -406,27 +405,27 @@ void form::SourceVectorFormatter::delegateSerialize(
 ) {  
     PersistableSourceVector * p = dynamic_cast<PersistableSourceVector*>(persistable);
 
-    archive & make_nvp("persistable", boost::serialization::base_object<Persistable>(*p));
+    archive & boost::serialization::base_object<Persistable>(*p);
 
     SourceSet::size_type sz;
 
     if (Archive::is_loading::value) {        
         Source data;        
-        archive & make_nvp("size", sz);
+        archive & sz;
         p->_sources.clear();
         p->_sources.reserve(sz);
         for (; sz > 0; --sz) {
-            archive & make_nvp("data", data);
+            archive & data;
             Source::Ptr sourcePtr(new Source(data));
             p->_sources.push_back(sourcePtr);
         }
     } else {
         sz = p->_sources.size();
-        archive & make_nvp("size", sz);
+        archive & sz;
         SourceSet::iterator i = p->_sources.begin();
         SourceSet::iterator const end(p->_sources.end());
         for ( ; i != end; ++i) {
-            archive & make_nvp("data", **i);
+            archive &  **i;
         }
     }
 }
@@ -515,27 +514,6 @@ void form::SourceVectorFormatter::write(
             }
         }
 
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
-        XmlStorage * bs = dynamic_cast<XmlStorage *>(storage.get());
-        if (bs == 0) {
-            throw LSST_EXCEPT(ex::RuntimeErrorException, 
-                    "Didn't get XmlStorage");
-        }
-        bs->getOArchive() & make_nvp("src", *p);
-        if(additionalData && additionalData->exists("doFootprints")){
-            bool doFootprint = additionalData->getAsBool("doFootprints");
-            if(doFootprint) {
-                int n = p->getSources().size();
-                std::vector<boost::shared_ptr<const det::Footprint> > footprints;
-                footprints.reserve(n);
-
-                for(int i = 0; i<n; ++i) {
-                    footprints.push_back(p->getSources()[i]->getFootprint());
-                }
-                bs->getOArchive() & make_nvp("footprints", footprints);
-            }
-        }
-
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
 
@@ -620,28 +598,6 @@ Persistable* form::SourceVectorFormatter::read(
                 int n = p->getSources().size();
                 std::vector<det::Footprint::Ptr> footprints;
                 bs->getIArchive() & footprints;
-
-                for(int i = 0; i<n; ++i) {
-                    (p->getSources()[i])->setFootprint((footprints[i]));
-                }
-            }
-        }
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
-        //handle retrieval from BoostStorage
-        XmlStorage* bs = dynamic_cast<XmlStorage *>(storage.get());
-        if (bs == 0) { 
-            throw LSST_EXCEPT(ex::RuntimeErrorException, 
-                    "Didn't get XmlStorage");
-        }
-        //calls serializeDelegate
-        bs->getIArchive() & make_nvp("src", *p);
-
-        if(additionalData && additionalData->exists("doFootprints")){
-            bool doFootprint = additionalData->getAsBool("doFootprints");
-            if(doFootprint) {
-                int n = p->getSources().size();
-                std::vector<det::Footprint::Ptr> footprints;
-                bs->getIArchive() & make_nvp("footprints", footprints);
 
                 for(int i = 0; i<n; ++i) {
                     (p->getSources()[i])->setFootprint((footprints[i]));
