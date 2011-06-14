@@ -39,7 +39,11 @@ namespace boost {
 namespace serialization {
     class access;
 }}
+
+#ifndef SWIG
 using boost::serialization::make_nvp;
+#endif
+
 namespace lsst { namespace afw { namespace detection {
 /// A peak in an %image
 class Peak : public lsst::daf::base::Citizen {

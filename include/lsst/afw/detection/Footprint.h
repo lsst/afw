@@ -42,12 +42,14 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 
-using boost::serialization::make_nvp;
-
 namespace boost{
 namespace serialization{
     class access;
 }}
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
 
 namespace lsst {
 namespace afw { 
