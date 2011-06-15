@@ -338,7 +338,7 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
         // convert the string to an int
         boost::int64_t val;
         converter >> val;
-        if (val < (1L << 31) && val > -(1L << 31)) {
+        if (val < (1LL << 31) && val > -(1LL << 31)) {
             int v = static_cast<int>(val);
             if (pl) {
                 pl->add(key, v, comment);

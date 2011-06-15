@@ -4,32 +4,23 @@
 #include <map>
 #include "boost/format.hpp"
 #include "boost/make_shared.hpp"
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/text_iarchive.hpp"
+#include "boost/archive/binary_oarchive.hpp"
+#include "boost/archive/binary_iarchive.hpp"
+#include "boost/archive/xml_oarchive.hpp"
+#include "boost/archive/xml_iarchive.hpp"
 #include "boost/serialization/export.hpp"
 #include "boost/serialization/shared_ptr.hpp"
-#include "boost/serialization/variant.hpp"
 #include "boost/serialization/vector.hpp"
-#include "boost/variant.hpp"
 
 #include "lsst/base.h"
 #include "lsst/utils/Demangle.h"
+#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/pex/logging/Log.h"
 #include "lsst/afw/detection/Schema.h"
-
-#ifndef SWIG
-namespace {
-    class VariantVisitor : public boost::static_visitor<> {
-    public:
-        VariantVisitor(boost::any& a) : _any(a) { }
-        template <typename Variant>
-        void operator()(Variant& var) const {
-            _any = var;
-        }
-        boost::any& _any;
-    };
-}
-#endif
 
 namespace lsst { namespace afw { namespace detection {
 
@@ -325,37 +316,155 @@ private:
         if (Archive::is_loading::value) {
             _data.reserve(dataLen);
         }
-        boost::variant<char, short, int, long, float, double> var;
         for (size_t i = 0; i < dataLen; ++i) {
             if (Archive::is_saving::value) {
-                if (_data[i].type() == typeid(char)) {
-                    var = boost::any_cast<char>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(short)) {
-                    var = boost::any_cast<short>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(int)) {
-                    var = boost::any_cast<int>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(long)) {
-                    var = boost::any_cast<long>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(float)) {
-                    var = boost::any_cast<float>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(double)) {
-                    var = boost::any_cast<double>(_data[i]);
-                }
-                else {
+                if (_data[i].type() == typeid(void)) {
+                    int which = -1;
+                    ar & make_nvp("which", which);
+                } else if (_data[i].type() == typeid(char)) {
+                    int which = 1;
+                    char value = boost::any_cast<char>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(short)) {
+                    int which = 2;
+                    short value = boost::any_cast<short>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(int)) {
+                    int which = 3;
+                    int value = boost::any_cast<int>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(long)) {
+                    int which = 4;
+                    long value = boost::any_cast<long>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(float)) {
+                    int which = 5;
+                    float value = boost::any_cast<float>(_data[i]);
+                    int fpClass = 0;
+                    if (lsst::utils::isnan(value)) {
+                        fpClass = 1;
+                    } else if (lsst::utils::isinf(value)) {
+                        fpClass = value > 0.0 ? 2 : 3;
+                    }
+                    which += fpClass;
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(double)) {
+                    int which = 9;
+                    double value = boost::any_cast<double>(_data[i]);
+                    int fpClass = 0;
+                    if (lsst::utils::isnan(value)) {
+                        fpClass = 1;
+                        value = 0;
+                    } else if (lsst::utils::isinf(value)) {
+                        fpClass = value > 0.0 ? 2 : 3;
+                        value = 0;
+                    }
+                    which += fpClass;
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else {
                     std::ostringstream msg;
                     msg << "Unable to convert measurement for persistence: type "
                         << _data[i].type().name() << " at position " << i;
                     throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, msg.str());
                 }
             }
-            ar & make_nvp("data", var);
             if (Archive::is_loading::value) {
-                boost::apply_visitor(VariantVisitor(_data[i]), var);
+                int which;
+                ar & make_nvp("which", which);
+                switch (which) {
+                case -1:
+                    break;
+                case 1:
+                    {
+                        char value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 2:
+                    {
+                        short value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 3:
+                    {
+                        int value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 4:
+                    {
+                        long value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 5:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 6:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<float>::quiet_NaN();
+                    }
+                    break;
+                case 7:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<float>::infinity();
+                    }
+                    break;
+                case 8:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = -std::numeric_limits<float>::infinity();
+                    }
+                    break;
+                case 9:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 10:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<double>::quiet_NaN();
+                    }
+                    break;
+                case 11:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<double>::infinity();
+                    }
+                    break;
+                case 12:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = -std::numeric_limits<double>::infinity();
+                    }
+                    break;
+                default:
+                    std::ostringstream msg;
+                    msg << "Unable to recognize type for retrieval: type "
+                        << which << " at position " << i;
+                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, msg.str());
+                    break;
+                }
             }
         }
 
@@ -382,7 +491,7 @@ private:
     friend class boost::serialization::access; \
     template <class Archive> \
     void serialize(Archive& ar, unsigned int const version) { \
-        boost::serialization::base_object< c >(*this); \
+        ar & boost::serialization::make_nvp("base", boost::serialization::base_object< c >(*this)); \
     }
 
 #ifdef SWIG

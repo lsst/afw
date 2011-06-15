@@ -210,7 +210,7 @@ private :
 
         BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
         if (version > 0) {
-            ar & _astrom & _photom & _shape;
+            ar & make_nvp("astrom", _astrom) & make_nvp("photom", _photom) & make_nvp("shape", _shape);
         }
     }
 
