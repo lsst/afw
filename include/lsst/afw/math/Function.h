@@ -455,14 +455,17 @@ using boost::serialization::make_nvp;
         virtual std::vector<double> getDFuncDParameters(double x, double y) const {
             unsigned int numParams = this->getNParameters(); // Number of parameters
             std::vector<double> deriv(numParams); // Derivatives, to return
+            deriv.assign(numParams, 0.0);
 
-            BasePolynomialFunction2 dummy(numParams); // Dummy polynomial for evaluation
-            dummy._params.assign(dummy._params.begin, dummy._params.end, 0.0);
-            for (int i = 0; i < numParams; i++) {
-                dummy._params[i] = this._params[i];
-                deriv[i] = dummy(x, y);
-                dummy._params[i] = 0.0;
+            Function2Ptr dummy = this->clone(); // Dummy function to evaluate for derivatives
+            dummy->setParameters(deriv);
+
+            for (unsigned int i = 0; i < numParams; ++i) {
+                dummy->setParameter(i, this->getParameter(i));
+                deriv[i] = (*dummy)(x, y);
+                dummy->setParameter(i, 0.0);
             }
+
             return deriv;
         }
 
