@@ -453,12 +453,13 @@ using boost::serialization::make_nvp;
          * and you can override it if it isn't suitable for your particular subclass.
          */
         virtual std::vector<double> getDFuncDParameters(double x, double y) const {
-            unsigned int numParams = this->getNParameters(); // Number of parameters
+            unsigned int const numParams = this->getNParameters(); // Number of parameters
             std::vector<double> deriv(numParams); // Derivatives, to return
-            deriv.assign(numParams, 0.0);
 
             Function2Ptr dummy = this->clone(); // Dummy function to evaluate for derivatives
-            dummy->setParameters(deriv);
+            for (unsigned int i = 0; i < numParams; ++i) {
+                dummy->setParameter(i, 0.0);
+            }
 
             for (unsigned int i = 0; i < numParams; ++i) {
                 dummy->setParameter(i, this->getParameter(i));
