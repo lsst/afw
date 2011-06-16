@@ -452,7 +452,7 @@ using boost::serialization::make_nvp;
          * This isn't necessarily the most efficient algorithm, but it's general,
          * and you can override it if it isn't suitable for your particular subclass.
          */
-        virtual std::vector<double> getDFuncDParameters(double, double) const {
+        virtual std::vector<double> getDFuncDParameters(double x, double y) const {
             unsigned int numParams = this->getNParameters(); // Number of parameters
             std::vector<double> deriv(numParams); // Derivatives, to return
 
