@@ -314,7 +314,7 @@ private:
         }
         ar & make_nvp("dataLen", dataLen);
         if (Archive::is_loading::value) {
-            _data.reserve(dataLen);
+            _data.resize(dataLen);
         }
         for (size_t i = 0; i < dataLen; ++i) {
             if (Archive::is_saving::value) {
