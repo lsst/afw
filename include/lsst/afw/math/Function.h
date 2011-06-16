@@ -443,8 +443,30 @@ using boost::serialization::make_nvp;
             }
             return order;
         }
+        
+        /**
+         * Return the derivative of the Function with respect to its parameters
+         *
+         * Because this is a polynomial, c0 F0(x,y) + c1 F1(x,y) + c2 F2(x,y) + ...
+         * we can set ci = 0 for all i except the parameter of interest and evaluate.
+         * This isn't necessarily the most efficient algorithm, but it's general,
+         * and you can override it if it isn't suitable for your particular subclass.
+         */
+        virtual std::vector<double> getDFuncDParameters(double, double) const {
+            unsigned int numParams = this->getNParameters(); // Number of parameters
+            std::vector<double> deriv(numParams); // Derivatives, to return
 
-    protected:
+            BasePolynomialFunction2 dummy(numParams); // Dummy polynomial for evaluation
+            dummy._params.assign(dummy._params.begin, dummy._params.end, 0.0);
+            for (int i = 0; i < numParams; i++) {
+                dummy._params[i] = this._params[i];
+                deriv[i] = dummy(x, y);
+                dummy._params[i] = 0.0;
+            }
+            return deriv;
+        }
+
+   protected:
         int _order; ///< order of polynomial
 
         /* Default constructor: intended only for serialization */
