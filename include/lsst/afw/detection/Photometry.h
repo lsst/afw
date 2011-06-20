@@ -15,7 +15,7 @@ protected:
     /// These values will be used as an index into lsst::afw::detection::Measurement::_data
     ///
     /// NVALUE is used by subclasses to add more quantities that they care about
-    enum { FLUX=0, FLUX_ERR, NVALUE };
+    enum { FLUX=0, FLUX_ERR, FLAGS, NVALUE };
 public:
     typedef boost::shared_ptr<Photometry> Ptr;
     typedef boost::shared_ptr<Photometry const> ConstPtr;
@@ -46,6 +46,12 @@ public:
     virtual int getNFlux() const {
         return 1;
     }
+
+    /// Return any flag from the measurement algorithm
+    virtual boost::int64_t getFlag() const {
+        return 0;
+    }
+
     /// Return the flux
     virtual double getFlux() const {
         return lsst::afw::detection::Measurement<Photometry>::get<FLUX, double>();
