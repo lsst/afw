@@ -34,5 +34,7 @@
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
 #include "lsst/afw/math/shapelets/MultiShapeletFunction.h"
 #include "lsst/afw/math/shapelets/BasisEvaluator.h"
+#include "lsst/afw/math/shapelets/HermiteEvaluator.h"
+#include "lsst/afw/math/shapelets/HermiteConvolution.h"
 
 #endif // !defined(LSST_AFW_MATH_SHAPELETS_H)

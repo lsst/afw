@@ -22,7 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
+#include "lsst/afw/math/shapelets/HermiteEvaluator.h"
 
 namespace shapelets = lsst::afw::math::shapelets;
 namespace nd = lsst::ndarray;
@@ -184,14 +184,14 @@ Eigen::MatrixXd computeInnerProductMatrix1d(int rowOrder, int colOrder, double a
 
 } // anonymous    
 
-void shapelets::detail::HermiteEvaluator::weaveFill(ndarray::Array<Pixel,1> const & target) const {
+void shapelets::HermiteEvaluator::weaveFill(lsst::ndarray::Array<Pixel,1> const & target) const {
     int const order = getOrder();
     for (PackedIndex i; i.getOrder() <= order; ++i) {
         target[i.getIndex()] = _xWorkspace[i.getX()] * _yWorkspace[i.getY()];
     }
 }
 
-double shapelets::detail::HermiteEvaluator::weaveSum(ndarray::Array<Pixel const,1> const & target) const {
+double shapelets::HermiteEvaluator::weaveSum(lsst::ndarray::Array<Pixel const,1> const & target) const {
     double r = 0.0;
     int const order = getOrder();
     for (PackedIndex i; i.getOrder() <= order; ++i) {
@@ -200,44 +200,44 @@ double shapelets::detail::HermiteEvaluator::weaveSum(ndarray::Array<Pixel const,
     return r;
 }
 
-void shapelets::detail::HermiteEvaluator::fillEvaluation(
-    ndarray::Array<Pixel,1> const & target, double x, double y
+void shapelets::HermiteEvaluator::fillEvaluation(
+    lsst::ndarray::Array<Pixel,1> const & target, double x, double y
 ) const {
     fillEvaluation1d(_xWorkspace, x);
     fillEvaluation1d(_yWorkspace, y);
     weaveFill(target);
 }
 
-void shapelets::detail::HermiteEvaluator::fillIntegration(
-    ndarray::Array<Pixel,1> const & target, int xMoment, int yMoment
+void shapelets::HermiteEvaluator::fillIntegration(
+    lsst::ndarray::Array<Pixel,1> const & target, int xMoment, int yMoment
 ) const {
     fillIntegration1d(_xWorkspace, xMoment);
     fillIntegration1d(_yWorkspace, yMoment);
     return weaveFill(target);
 }
 
-double shapelets::detail::HermiteEvaluator::sumEvaluation(
-    ndarray::Array<Pixel const,1> const & target, double x, double y
+double shapelets::HermiteEvaluator::sumEvaluation(
+    lsst::ndarray::Array<Pixel const,1> const & target, double x, double y
 ) const {
     fillEvaluation1d(_xWorkspace, x);
     fillEvaluation1d(_yWorkspace, y);
     return weaveSum(target);
 }
 
-double shapelets::detail::HermiteEvaluator::sumIntegration(
-    ndarray::Array<Pixel const,1> const & target, int xMoment, int yMoment
+double shapelets::HermiteEvaluator::sumIntegration(
+    lsst::ndarray::Array<Pixel const,1> const & target, int xMoment, int yMoment
 ) const {
     fillIntegration1d(_xWorkspace, xMoment);
     fillIntegration1d(_yWorkspace, yMoment);
     return weaveSum(target);
 }
 
-shapelets::detail::HermiteEvaluator::HermiteEvaluator(int order) :
+shapelets::HermiteEvaluator::HermiteEvaluator(int order) :
     _xWorkspace(ndarray::allocate(order + 1)),
     _yWorkspace(ndarray::allocate(order + 1))
 {}
 
-Eigen::MatrixXd shapelets::detail::HermiteEvaluator::computeInnerProductMatrix(
+Eigen::MatrixXd shapelets::HermiteEvaluator::computeInnerProductMatrix(
     int rowOrder, int colOrder, double a, double b
 ) {
     Eigen::MatrixXd result = Eigen::MatrixXd::Zero(computeSize(rowOrder), computeSize(colOrder));

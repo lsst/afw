@@ -52,22 +52,26 @@ void shapelets::MultiShapeletFunction::transformInPlace(geom::AffineTransform co
     }    
 }
 
-void shapelets::MultiShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
+shapelets::MultiShapeletFunction shapelets::MultiShapeletFunction::convolve(
+    shapelets::ShapeletFunction const & other
+) {
+    ElementList newElements;
     for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
-        i->convolve(other);
+        newElements.push_back(i->convolve(other));
     }
+    return MultiShapeletFunction(newElements);
 }
 
-void shapelets::MultiShapeletFunction::convolve(shapelets::MultiShapeletFunction const & other) {
+shapelets::MultiShapeletFunction shapelets::MultiShapeletFunction::convolve(
+    shapelets::MultiShapeletFunction const & other
+) {
     ElementList newElements;
     for (ElementList::const_iterator j = other.getElements().begin(); j != other.getElements().end(); ++j) {
         for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
-            newElements.push_back(*i);
-            newElements.back().convolve(*j);
-            
+            newElements.push_back(i->convolve(*j));
         }
     }
-    newElements.swap(_elements);
+    return MultiShapeletFunction(newElements);
 }
 
 void shapelets::MultiShapeletFunctionEvaluator::update(shapelets::MultiShapeletFunction const & function) {

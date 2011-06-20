@@ -125,6 +125,14 @@ class ShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
             z = self.makeImage(function, x, y)
             self.measureMoments(function, x, y, z)
 
+    def testGaussianConvolution(self):
+        s1 = shapelets.ShapeletFunction(2, shapelets.HERMITE)
+        s1.getCoefficients()[0] = 1.0
+        s2 = shapelets.ShapeletFunction(2, shapelets.HERMITE)
+        s2.getCoefficients()[0] = 1.0
+        s3 = s1.convolve(s2)
+        print s3.getCoefficients()
+        
 class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
 
     def testMoments(self):
@@ -145,7 +153,7 @@ class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
             element.setEllipse(ellipse)
             elements.append(element)
         function = shapelets.MultiShapeletFunction(elements)
-        x = numpy.linspace(-10, 10, 101)
+        x = numpy.linspace(-20, 20, 101)
         y = x
         z = self.makeImage(function, x, y)
         self.measureMoments(function, x, y, z)

@@ -37,7 +37,7 @@
 
 #include "lsst/ndarray.h"
 #include "lsst/afw/math/shapelets/constants.h"
-#include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
+#include "lsst/afw/math/shapelets/HermiteEvaluator.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
@@ -92,8 +92,8 @@ public:
     /// @brief Return the coefficient vector (const).
     lsst::ndarray::Array<Pixel const,1,1> const getCoefficients() const { return _coefficients; }
 
-    /// @brief Convolve the shapelet function in-place.
-    void convolve(ShapeletFunction const & other);
+    /// @brief Convolve the shapelet function.
+    ShapeletFunction convolve(ShapeletFunction const & other) const;
 
     /// @brief Construct a helper object that can efficiently evaluate the function.
     Evaluator evaluate() const;
@@ -211,7 +211,7 @@ private:
 
     ndarray::Array<Pixel const,1,1> _coefficients;
     geom::AffineTransform _transform;
-    detail::HermiteEvaluator _h;
+    HermiteEvaluator _h;
 };
 
 inline ShapeletFunctionEvaluator ShapeletFunction::evaluate() const {

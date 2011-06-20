@@ -22,8 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-#ifndef LSST_AFW_MATH_SHAPELETS_DETAIL_HERMITEEVALUATOR_H
-#define LSST_AFW_MATH_SHAPELETS_DETAIL_HERMITEEVALUATOR_H
+#ifndef LSST_AFW_MATH_SHAPELETS_HERMITEEVALUATOR_H
+#define LSST_AFW_MATH_SHAPELETS_HERMITEEVALUATOR_H
 
 /**
  * @file
@@ -44,7 +44,6 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace shapelets {
-namespace detail {
 
 /**
  *  @brief A class to evaluate HERMITE shapelet-related quantities.
@@ -70,13 +69,13 @@ public:
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector evaluates a
      *         simple unscaled shapelet expansion at the given point.
      */
-    void fillEvaluation(ndarray::Array<Pixel,1> const & target, double x, double y) const;
+    void fillEvaluation(lsst::ndarray::Array<Pixel,1> const & target, double x, double y) const;
 
     /**
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector evaluates a
      *         simple unscaled shapelet expansion at the given point.
      */
-    void fillEvaluation(ndarray::Array<Pixel,1> const & target, geom::Point2D const & point) const {
+    void fillEvaluation(lsst::ndarray::Array<Pixel,1> const & target, geom::Point2D const & point) const {
         fillEvaluation(target, point.getX(), point.getY());
     }
 
@@ -84,7 +83,7 @@ public:
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector evaluates a
      *         simple unscaled shapelet expansion at the given point.
      */
-    void fillEvaluation(ndarray::Array<Pixel,1> const & target, geom::Extent2D const & point) const {
+    void fillEvaluation(lsst::ndarray::Array<Pixel,1> const & target, geom::Extent2D const & point) const {
         fillEvaluation(target, point.getX(), point.getY());
     }
 
@@ -92,31 +91,37 @@ public:
      *  @brief Fill a vector whose dot product with a HERMITE coefficient vector integrates
      *         a simple unscaled shapelet expansion.
      */
-    void fillIntegration(ndarray::Array<Pixel,1> const & target, int xMoment=0, int yMoment=0) const;
+    void fillIntegration(lsst::ndarray::Array<Pixel,1> const & target, int xMoment=0, int yMoment=0) const;
 
     /**
      *  @brief Evaluate a simple unscaled shapelet expansion at the given point.
      */
-    double sumEvaluation(ndarray::Array<Pixel const,1> const & target, double x, double y) const;
+    double sumEvaluation(lsst::ndarray::Array<Pixel const,1> const & target, double x, double y) const;
 
     /**
      *  @brief Evaluate a simple unscaled shapelet expansion at the given point.
      */
-    double sumEvaluation(ndarray::Array<Pixel const,1> const & target, geom::Point2D const & point) const {
+    double sumEvaluation(
+        lsst::ndarray::Array<Pixel const,1> const & target, geom::Point2D const & point
+    ) const {
         return sumEvaluation(target, point.getX(), point.getY());
     }
 
     /**
      *  @brief Evaluate a simple unscaled shapelet expansion at the given point.
      */
-    double sumEvaluation(ndarray::Array<Pixel const,1> const & target, geom::Extent2D const & point) const {
+    double sumEvaluation(
+        lsst::ndarray::Array<Pixel const,1> const & target, geom::Extent2D const & point
+    ) const {
         return sumEvaluation(target, point.getX(), point.getY());
     }
 
     /**
      *  @brief Integrate a simple unscale shapelet expansion at the given point.
      */
-    double sumIntegration(ndarray::Array<Pixel const,1> const & target, int xMoment=0, int yMoment=0) const;
+    double sumIntegration(
+        lsst::ndarray::Array<Pixel const,1> const & target, int xMoment=0, int yMoment=0
+    ) const;
 
     explicit HermiteEvaluator(int order);
 
@@ -129,6 +134,6 @@ private:
     ndarray::Array<Pixel,1,1> _yWorkspace;
 };
 
-}}}}}   // lsst::afw::math::shapelets::detail
+}}}}   // lsst::afw::math::shapelets
 
-#endif // !defined(LSST_AFW_MATH_SHAPELETS_DETAIL_HERMITEEVALUATOR_H)
+#endif // !defined(LSST_AFW_MATH_SHAPELETS_HERMITEEVALUATOR_H)

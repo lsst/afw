@@ -22,12 +22,12 @@
  */
 
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
-#include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
+#include "lsst/afw/math/shapelets/HermiteConvolution.h"
 #include "lsst/ndarray/eigen.h"
 
 namespace shapelets = lsst::afw::math::shapelets;
 
-namespace lsst { namespace afw { namespace math { namespace shapelets { namespace detail {
+namespace lsst { namespace afw { namespace math { namespace shapelets {
 
 namespace {
 
@@ -247,10 +247,10 @@ private:
     Eigen::MatrixXd _monomialInv;
 };
 
-}}}}} // namespace lsst::afw::math::shapelets::detail
+}}}} // namespace lsst::afw::math::shapelets
 
 
-shapelets::detail::HermiteConvolution::Impl::Impl(
+shapelets::HermiteConvolution::Impl::Impl(
     int colOrder, shapelets::ShapeletFunction const & psf
 ) : 
     _rowOrder(colOrder + psf.getOrder()), _colOrder(colOrder), _psf(psf),
@@ -280,7 +280,7 @@ shapelets::detail::HermiteConvolution::Impl::Impl(
     _monomialFwd.marked<Eigen::LowerTriangular>().solveTriangularInPlace(_monomialInv);
 }
 
-lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution::Impl::evaluate(
+lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::HermiteConvolution::Impl::evaluate(
     afw::geom::ellipses::Ellipse & ellipse
 ) const {
     ndarray::EigenView<double,2,2> result(_result);
@@ -364,7 +364,7 @@ lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvo
     return _result;
 }
 
-Eigen::MatrixXd shapelets::detail::HermiteConvolution::Impl::computeHermiteTransformMatrix(
+Eigen::MatrixXd shapelets::HermiteConvolution::Impl::computeHermiteTransformMatrix(
     int order, lsst::afw::geom::LinearTransform const & transform
 ) const {
     int const size = shapelets::computeSize(order);
@@ -404,20 +404,20 @@ Eigen::MatrixXd shapelets::detail::HermiteConvolution::Impl::computeHermiteTrans
     return result;
 }
 
-int shapelets::detail::HermiteConvolution::getRowOrder() const { return _impl->getRowOrder(); }
+int shapelets::HermiteConvolution::getRowOrder() const { return _impl->getRowOrder(); }
 
-int shapelets::detail::HermiteConvolution::getColOrder() const { return _impl->getColOrder(); }
+int shapelets::HermiteConvolution::getColOrder() const { return _impl->getColOrder(); }
 
 lsst::ndarray::Array<shapelets::Pixel const,2,2>
-shapelets::detail::HermiteConvolution::evaluate(
+shapelets::HermiteConvolution::evaluate(
     lsst::afw::geom::ellipses::Ellipse & ellipse
 ) const {
     return _impl->evaluate(ellipse);
 }
 
-shapelets::detail::HermiteConvolution::HermiteConvolution(
+shapelets::HermiteConvolution::HermiteConvolution(
     int colOrder, 
     shapelets::ShapeletFunction const & psf
 ) : _impl(new Impl(colOrder, psf)) {}
 
-shapelets::detail::HermiteConvolution::~HermiteConvolution() {}
+shapelets::HermiteConvolution::~HermiteConvolution() {}

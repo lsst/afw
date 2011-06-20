@@ -24,7 +24,7 @@
 
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
-#include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
+#include "lsst/afw/math/shapelets/HermiteConvolution.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/ndarray/eigen.h"
 #include <boost/format.hpp>
@@ -158,16 +158,23 @@ void shapelets::ShapeletFunctionEvaluator::_initialize(ShapeletFunction const & 
     }
 }
 
-void shapelets::ShapeletFunction::convolve(lsst::afw::math::shapelets::ShapeletFunction const & other) {
-    detail::HermiteConvolution convolution(other.getOrder(), *this);
-    ndarray::EigenView<Pixel const,2,2> matrix(convolution.evaluate(_ellipse));
+shapelets::ShapeletFunction shapelets::ShapeletFunction::convolve(
+    lsst::afw::math::shapelets::ShapeletFunction const & other
+) const {
+    HermiteConvolution convolution(other.getOrder(), *this);
+    ShapeletFunction result(convolution.getRowOrder(), getBasisType(), _ellipse);
+    ndarray::EigenView<Pixel const,2,2> matrix(convolution.evaluate(result.getEllipse()));
     if (_basisType == LAGUERRE) {
         ConversionMatrix::convertCoefficientVector(_coefficients, LAGUERRE, HERMITE, getOrder());
     }
-    ndarray::viewAsEigen(_coefficients) = matrix * ndarray::viewAsEigen(_coefficients);
+    ndarray::viewAsEigen(result.getCoefficients()) = matrix * ndarray::viewAsEigen(_coefficients);
     if (_basisType == LAGUERRE) {
         ConversionMatrix::convertCoefficientVector(_coefficients, HERMITE, LAGUERRE, getOrder());
+        ConversionMatrix::convertCoefficientVector(
+            result.getCoefficients(), HERMITE, LAGUERRE, result.getOrder()
+        );
     }
+    return result;
 }
 
 void shapelets::ShapeletFunctionEvaluator::_computeRawMoments(

@@ -56,6 +56,14 @@ Python interface to lsst::afw::math::shapelets classes and functions
 %declareNumPyConverters(Eigen::MatrixXd);
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1>);
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,2,2>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,2,0>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel const,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel const,2,2>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel const,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel const,2,0>);
 
 %pythoncode %{
 import lsst.utils
@@ -91,8 +99,12 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
+SWIG_SHARED_PTR(HermiteConvolutionPtr, lsst::afw::math::shapelets::HermiteConvolution);
+
 %include "lsst/afw/math/shapelets/constants.h"
 %include "lsst/afw/math/shapelets/ConversionMatrix.h"
 %include "lsst/afw/math/shapelets/ShapeletFunction.h"
 %include "lsst/afw/math/shapelets/MultiShapeletFunction.h"
 %include "lsst/afw/math/shapelets/BasisEvaluator.h"
+%include "lsst/afw/math/shapelets/HermiteEvaluator.h"
+%include "lsst/afw/math/shapelets/HermiteConvolution.h"

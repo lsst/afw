@@ -73,11 +73,11 @@ public:
     /// @brief Transform the shapelet function by transforming the ellipse of each elements.
     void transformInPlace(lsst::afw::geom::AffineTransform const & transform);
 
-    /// @brief Convolve the multi-scale shapelet function in-place.
-    void convolve(ShapeletFunction const & other);
+    /// @brief Convolve the multi-scale shapelet function.
+    MultiShapeletFunction convolve(ShapeletFunction const & other);
 
     /// @brief Convolve the multi-shapelet function in-place.
-    void convolve(MultiShapeletFunction const & other);
+    MultiShapeletFunction convolve(MultiShapeletFunction const & other);
 
     /// @brief Construct a helper object that can efficiently evaluate the function.
     Evaluator evaluate() const;
