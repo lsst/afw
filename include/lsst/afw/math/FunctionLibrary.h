@@ -927,7 +927,7 @@ using boost::serialization::make_nvp;
         /**
          * @brief Clenshaw recursive function for solving the Chebyshev polynomial
          */
-        double _clenshaw(double y, unsigned int ind) const {
+        double _clenshaw(double y, int ind) const {
             if (ind == this->_order) {
                 return _yCoeffs[ind];
             } else if (ind == 0) {
