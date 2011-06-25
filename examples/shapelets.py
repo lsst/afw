@@ -12,8 +12,8 @@ def makeBasisImages(basis, x, y):
             basis.fillEvaluation(z[i,j,:], float(px), float(py))
     return z
 
-def compareMoments(basis, x, y, z):
-    e = basis.evaluate()
+def compareMoments(function, x, y, z):
+    e = function.evaluate()
     monopole = z.sum()
     dipole = geom.Point2D((x * z).sum() / monopole, (y * z).sum() / monopole)
     dx = x - dipole.getX()
@@ -25,6 +25,13 @@ def compareMoments(basis, x, y, z):
         )
     print ellipses.Ellipse(quadrupole, monopole)
     print e.computeMoments()
+
+def checkIntegration(basis, x, y, z):
+    d = (x[1:] - x[:-1]).mean() * (y[1:] - x[:-1]).mean()
+    array1 = numpy.zeros(shapelets.computeSize(basis.getOrder()), dtype=float)
+    basis.fillIntegration(array1)
+    array2 = z.sum(axis=0).sum(axis=0) * d
+    print "integration equal:", numpy.abs(array1 - array2).max() < 0.005
 
 def plotBasisImages(basis, z):
     n = basis.getOrder()
@@ -47,7 +54,8 @@ def plotBasisImages(basis, z):
 def processBasis(basis, x, y):
     z = makeBasisImages(basis, x, y)
     plotBasisImages(basis, z)
-    
+    checkIntegration(basis, x, y, z)
+
 
 def main():
     x = numpy.linspace(-5, 5, 101)
@@ -60,4 +68,5 @@ def main():
     pyplot.show()
 
 if __name__ == "__main__":
+    numpy.set_printoptions(suppress=True)
     main()
