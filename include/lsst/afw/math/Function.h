@@ -462,7 +462,7 @@ using boost::serialization::make_nvp;
             }
 
             for (unsigned int i = 0; i < numParams; ++i) {
-                dummy->setParameter(i, this->getParameter(i));
+                dummy->setParameter(i, 1.0);
                 deriv[i] = (*dummy)(x, y);
                 dummy->setParameter(i, 0.0);
             }
