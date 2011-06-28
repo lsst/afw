@@ -278,8 +278,8 @@ try:
             return "%dx%d%s%d%s%d" % (
                 #val["getWidth"](), val["getHeight"](), 
                 gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
-                "+" if x0 >= 0 else "", x0,
-                "+" if y0 >= 0 else "", y0)
+                ["", "+"][x0 >= 0], x0, # i.e. "+" if x0 >= 0 else "" in python >= 2.5
+                ["", "+"][y0 >= 0], y0)
 
         def typeName(self):
             return self.typename.split(":")[-1]
