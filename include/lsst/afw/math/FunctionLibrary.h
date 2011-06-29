@@ -976,6 +976,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("offsetX", this->_offsetX);
             ar & make_nvp("offsetY", this->_offsetY);
             ar & make_nvp("xCheby", this->_xCheby);
+            _yCoeffs.resize(_xCheby.size());
         }
     };
 
