@@ -441,7 +441,7 @@ double do_updateBadPixels(
                 image::Image<float>::x_iterator wptr = weight.row_begin(y);
                 for (typename ImageT::Image::x_iterator mptr = mean.row_begin(y), end = mean.row_end(y);
                      mptr != end; ++mptr, ++iptr, ++wptr) {
-                    if (!(iptr.mask() & mask)) {
+                    if (!(iptr.mask() & mask) && iptr.variance() > 0.0) {
                         typename ImageT::Image::Pixel value = iptr.image()/flux_i;
                         float const var = iptr.variance()/(flux_i*flux_i);
                         float const ivar = 1.0/var;
