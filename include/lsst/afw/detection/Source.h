@@ -34,11 +34,13 @@
 #define LSST_AFW_DETECTION_SOURCE_H
 
 #include <bitset>
+#include <map>
 #include <string>
 #include <vector>
 
 #include "boost/shared_ptr.hpp"
 #include "boost/make_shared.hpp"
+#include "boost/serialization/map.hpp"
 #include "boost/serialization/shared_ptr.hpp"
 
 #include "lsst/base.h"
@@ -57,6 +59,12 @@ namespace boost {
 namespace serialization {
     class access;
 }}
+
+namespace lsst {
+    namespace pex {
+        namespace policy {
+            class Policy;
+}}}
 
 namespace lsst {
 namespace afw {
@@ -212,6 +220,9 @@ private :
         if (version == 1 || version == 2) {
             ar & make_nvp("astrom", _astrom) & make_nvp("photom", _photom) & make_nvp("shape", _shape);
         }
+        if (version == 4) {
+            ar & make_nvp("blob", _valueBlob);
+        }
     }
 
     friend class boost::serialization::access;
@@ -220,6 +231,9 @@ private :
     PTR(Measurement<Astrometry>) _astrom;
     PTR(Measurement<Photometry>) _photom;
     PTR(Measurement<Shape>)      _shape;
+
+    std::map<std::string, double> _valueBlob;
+    static boost::shared_ptr<lsst::pex::policy::Policy> _mapPolicy;
 };
 
 inline bool operator!=(Source const & lhs, Source const & rhs) {
@@ -266,7 +280,7 @@ private:
 }}}  // namespace lsst::afw::detection
 
 #ifndef SWIG
-BOOST_CLASS_VERSION(lsst::afw::detection::Source, 3)
+BOOST_CLASS_VERSION(lsst::afw::detection::Source, 4)
 #endif
 
 #endif // LSST_AFW_DETECTION_SOURCE_H

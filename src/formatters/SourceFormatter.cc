@@ -407,28 +407,7 @@ void form::SourceVectorFormatter::delegateSerialize(
     PersistableSourceVector * p = dynamic_cast<PersistableSourceVector*>(persistable);
 
     archive & make_nvp("persistable", boost::serialization::base_object<Persistable>(*p));
-
-    SourceSet::size_type sz;
-
-    if (Archive::is_loading::value) {        
-        Source data;        
-        archive & make_nvp("size", sz);
-        p->_sources.clear();
-        p->_sources.reserve(sz);
-        for (; sz > 0; --sz) {
-            archive & make_nvp("data", data);
-            Source::Ptr sourcePtr(new Source(data));
-            p->_sources.push_back(sourcePtr);
-        }
-    } else {
-        sz = p->_sources.size();
-        archive & make_nvp("size", sz);
-        SourceSet::iterator i = p->_sources.begin();
-        SourceSet::iterator const end(p->_sources.end());
-        for ( ; i != end; ++i) {
-            archive & make_nvp("data", **i);
-        }
-    }
+    archive & make_nvp("srcs", p->_sources);
 }
 
 
@@ -444,6 +423,32 @@ template void form::SourceVectorFormatter::delegateSerialize<boost::archive::bin
 template void form::SourceVectorFormatter::delegateSerialize<boost::archive::binary_iarchive>(
     boost::archive::binary_iarchive &, unsigned int const, Persistable *
 );
+
+
+void remap(PTR(det::Source) src) {
+    std::vector<std::string> names = det::Source::_mapPolicy->policyNames();
+    for (std::vector<std::string>::const_iterator p = names.begin(); p != names.end(); ++p) {
+        PTR(lsst::pex::policy::Policy) pol =
+            det::Source::_mapPolicy->getPolicy(*p);
+        std::string typeName = pol->get("type");
+        std::string alg = pol->get("algorithm");
+        std::string param = pol->get("parameter");
+        switch (typeName) {
+            case "Astrometry":
+                _valueBlob[*p] = src->getAstrometry()->get(param, alg);
+                break;
+            case "Photometry":
+                _valueBlob[*p] = src->getPhotometry()->get(param, alg);
+                break;
+            case "Shape":
+                _valueBlob[*p] = src->getShape()->get(param, alg);
+                break;
+        }
+    }
+}
+
+
+
 /** 
  * Persist a collection of Source to BoostStorage, DbStorage or DbTsvStorage
  */
@@ -491,6 +496,10 @@ void form::SourceVectorFormatter::write(
                 throw LSST_EXCEPT(ex::RuntimeErrorException, "Too many Sources");
             }
         }
+    }
+
+    for (SourceSet::iterator i = sourceVector.begin(); i != sourceVector.end(); ++i) {
+        remap(*i);
     }
 
     if (typeid(*storage) == typeid(BoostStorage)) {
