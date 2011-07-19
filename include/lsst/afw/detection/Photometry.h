@@ -46,6 +46,12 @@ public:
     virtual int getNFlux() const {
         return 1;
     }
+
+    /// Return any flag from the measurement algorithm
+    virtual boost::int64_t getFlag() const {
+        return 0;
+    }
+
     /// Return the flux
     virtual double getFlux() const {
         return lsst::afw::detection::Measurement<Photometry>::get<FLUX, double>();

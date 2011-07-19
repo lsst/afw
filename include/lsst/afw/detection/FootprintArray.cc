@@ -205,14 +205,18 @@ ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     ndarray::Array<T, N, C> const & src,
     geom::Box2I const & bbox
 ) {
+    geom::Box2I box(bbox);
+    if (box.isEmpty()) {
+        box = fp.getBBox();
+    }
     ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
-            ndarray::makeVector(bbox.getHeight(), bbox.getWidth()), 
+            ndarray::makeVector(box.getHeight(), box.getWidth()), 
             src.template getShape().template last<N-1>()
         )
     );
     dest.deep() = 0.0;
-    expandArray(fp, src, dest, bbox.getMin());
+    expandArray(fp, src, dest, box.getMin());
     return dest;
 }
 

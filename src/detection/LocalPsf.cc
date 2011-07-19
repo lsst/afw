@@ -115,6 +115,12 @@ afwGeom::ellipses::Ellipse afwDet::ImageLocalPsf::computeMoments() const {
     ixx -= ix * ix;
     iyy -= iy * iy;
     ixy -= ix * iy;
+    if (ixx < 0.0 || iyy < 0.0 || ixx*iyy < ixy*ixy) {
+	throw LSST_EXCEPT(
+	    lsst::pex::exceptions::RuntimeErrorException,
+	    "PSF Quadrupole moments do not define a valid ellipse"
+	);
+    }
     return geom::ellipses::Ellipse(
         geom::ellipses::Quadrupole(ixx, iyy, ixy),
         getPoint() + geom::Extent2D(ix, iy)
