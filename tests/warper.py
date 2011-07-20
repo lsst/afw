@@ -31,10 +31,12 @@ import numpy
 import eups
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+import lsst.afw.image.utils as imageUtils
 import lsst.afw.image.testUtils as imageTestUtils
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
+import lsst.pex.policy as pexPolicy
 
 VERBOSITY = 0                       # increase to see trace
 
@@ -73,6 +75,16 @@ class WarpExposureTestCase(unittest.TestCase):
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
+        filterPolicyFile = pexPolicy.DefaultPolicyFile("afw", "SdssFilters.paf", "tests")
+        filterPolicy = pexPolicy.Policy.createPolicy(filterPolicyFile, filterPolicyFile.getRepositoryPath(), True)
+        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
+
+        originalFilter = afwImage.Filter("i")
+        originalCalib = afwImage.Calib()
+        originalCalib.setFluxMag0(1.0e5, 1.0e3)
+        originalExposure.setFilter(originalFilter)
+        originalExposure.setCalib(originalCalib)
+
         warpedExposure1 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure)
         # the default size must include all good pixels, so growing the bbox should not add any
         warpedExposure2 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=1)
@@ -89,6 +101,9 @@ class WarpExposureTestCase(unittest.TestCase):
         nGood3 = (mask3Arr & edgeMask == 0).sum()
         self.assertTrue(nGood1 == nGood2)
         self.assertTrue(nGood3 < nGood1)
+
+        self.assertEquals(warpedExposure1.getFilter().getName(), originalFilter.getName())
+        self.assertEquals(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
         
     def testDestBBox(self):
         """Test that the destBBox argument works

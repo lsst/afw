@@ -43,10 +43,14 @@
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
+
+using boost::serialization::make_nvp;
 
 namespace lsst {
 namespace afw {
@@ -522,10 +526,10 @@ void Footprint::insertIntoImage(
 
 template <typename Archive>
 void Footprint::serialize(Archive & ar, const unsigned int version) {
-    ar & _spans;
-    ar & _peaks;
-    ar & _area;
-    ar & _normalized;
+    ar & make_nvp("spans", _spans);
+    ar & make_nvp("peaks", _peaks);
+    ar & make_nvp("area", _area);
+    ar & make_nvp("normalized", _normalized);
 
     int x0, y0, width, height;
     int rx0, ry0, rwidth, rheight;
@@ -543,8 +547,8 @@ void Footprint::serialize(Archive & ar, const unsigned int version) {
         rheight = region.getHeight();
     }
 
-    ar & x0 & y0 & width & height;
-    ar & rx0 & ry0 & rwidth & rheight;
+    ar & make_nvp("x0", x0) & make_nvp("y0", y0) & make_nvp("width", width) & make_nvp("height", height);
+    ar & make_nvp("rx0", rx0) & make_nvp("ry0", ry0) & make_nvp("rwidth", rwidth) & make_nvp("rheight", rheight);
     
     if(Archive::is_loading::value) {
         _bbox = geom::BoxI(geom::Point2I(x0, y0), geom::Extent2I(width, height));
@@ -554,6 +558,8 @@ void Footprint::serialize(Archive & ar, const unsigned int version) {
 
 template void Footprint::serialize(boost::archive::text_oarchive &, unsigned int const);
 template void Footprint::serialize(boost::archive::text_iarchive &, unsigned int const);
+template void Footprint::serialize(boost::archive::xml_oarchive &, unsigned int const);
+template void Footprint::serialize(boost::archive::xml_iarchive &, unsigned int const);
 template void Footprint::serialize(boost::archive::binary_oarchive &, unsigned int const);
 template void Footprint::serialize(boost::archive::binary_iarchive &, unsigned int const);
 

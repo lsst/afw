@@ -95,17 +95,22 @@ class Warper(object):
             if None then border and maxBBox are used to determine the bbox,
             otherwise border and maxBBox are ignored
 
-        @return warpedExposure: warped exposure (of same type as srcExposure)
+        @return destExposure: warped exposure (of same type as srcExposure)
+        
+        @note: calls mathLib.warpExposure insted of self.warpImage because the former
+        copies attributes such as Calib, and that should be done in one place
         """
-        warpedMaskedImage = self.warpImage(
+        destBBox = self._computeDestBBox(
             destWcs = destWcs,
             srcImage = srcExposure.getMaskedImage(),
             srcWcs = srcExposure.getWcs(),
             border = border,
             maxBBox = maxBBox,
-            destBBox = destBBox
+            destBBox = destBBox,
         )
-        return srcExposure.Factory(warpedMaskedImage, destWcs)
+        destExposure = srcExposure.Factory(destBBox, destWcs)
+        mathLib.warpExposure(destExposure, srcExposure, self._warpingKernel, self._interpLength)
+        return destExposure
 
     def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
         """Warp an image or masked image
@@ -125,7 +130,37 @@ class Warper(object):
             if None then border and maxBBox are used to determine the bbox,
             otherwise border and maxBBox are ignored
 
-        @return warpedImage: warped image or masked image (of same type as srcImage)
+        @return destImage: warped image or masked image (of same type as srcImage)
+        """
+        destBBox = self._computeDestBBox(
+            destWcs = destWcs,
+            srcImage = srcImage,
+            srcWcs = srcWcs,
+            border = border,
+            maxBBox = maxBBox,
+            destBBox = destBBox,
+        )
+        destImage = srcImage.Factory(destBBox)
+        mathLib.warpImage(destImage, destWcs, srcImage, srcWcs, self._warpingKernel, self._interpLength)
+        return destImage
+
+    def _computeDestBBox(self, destWcs, srcImage, srcWcs, border, maxBBox, destBBox):
+        """Process destBBox argument for warpImage and warpExposure
+        
+        @param destWcs: WCS of warped image
+        @param srcImage: image or masked image to warp
+        @param srcWcs: WCS of image
+        @param border: grow bbox of warped image by this amount in all directions (int pixels);
+            if negative then the bbox is shrunk;
+            border is applied before maxBBox;
+            ignored if destBBox is not None
+        @param maxBBox: maximum allowed parent bbox of warped image (an afwGeom.Box2I or None);
+            if None then the warped image will be just big enough to contain all warped pixels;
+            if provided then the warped image may be smaller, and so missing some warped pixels;
+            ignored if destBBox is not None
+        @param destBBox: exact parent bbox of warped image (an afwGeom.Box2I or None);
+            if None then border and maxBBox are used to determine the bbox,
+            otherwise border and maxBBox are ignored
         """
         if destBBox is None: # warning: == None fails due to Box2I.__eq__
             destBBox = computeWarpedBBox(destWcs, srcImage.getBBox(afwImage.PARENT), srcWcs)
@@ -133,7 +168,4 @@ class Warper(object):
                 destBBox.grow(border)
             if maxBBox:
                 destBBox.clip(maxBBox)
-        warpedImage = srcImage.Factory(destBBox)
-        mathLib.warpImage(warpedImage, destWcs, srcImage, srcWcs, self._warpingKernel, self._interpLength)
-        return warpedImage
-
+        return destBBox

@@ -217,7 +217,7 @@ def ds9Version():
 try:
     cmdBuffer
 except NameError:
-    XPA_SZ_LINE = 4096                  # internal buffersize in xpa.  Sigh
+    XPA_SZ_LINE = 4096 - 100            # internal buffersize in xpa. Sigh; esp. as the 100 is some needed slop
 
     class Buffer(object):
         """Control buffering the sending of commands to ds9;
@@ -272,15 +272,16 @@ N.b. These are available as:
         def pushSize(self, size=-1):
             """Replace current ds9 command buffer size with size (see also popSize)
             @param:  Size of buffer (-1: largest possible given bugs in xpa)"""
+            self.flush()
             self._bufsize.append(0)
             self.set(size)
 
         def popSize(self):
             """Switch back to the previous command buffer size (see also pushSize)"""
+            self.flush()
+
             if len(self._bufsize) > 1:
                 self._bufsize.pop()
-
-            self.flush()
 
         def flush(self, silent=False):
             """Flush the pending commands"""

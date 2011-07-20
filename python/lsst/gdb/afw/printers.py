@@ -1,332 +1,505 @@
 import gdb
 import re
 
-# Try to use the new-style pretty-printing if available.
-_use_gdb_pp = True
+try:
+    debug
+except:
+    debug = False
+    
 try:
     import gdb.printing
-except ImportError:
-    _use_gdb_pp = False
 
-class CitizenPrinter(object):
-    "Print a Citizen"
+    class SharedPtrPrinter(object):
+        "Print a shared_ptr"
 
-    def __init__(self, typename, val):
-        self.val = val
+        def __init__(self, val):
+            self.val = val
 
-    def to_string(self):
-        return "{0x%x %d %s 0x%x}" % (self.val, self.val["_CitizenId"],
-                                    self.val["_typeName"], self.val["_sentinel"])
+        def to_string(self):
+            if self.val["px"]:
+                return "shared_ptr(%s)" % self.val["px"].dereference()
+            else:
+                return "NULL"
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# afw
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class BaseSourceAttributesPrinter(object):
-    "Print a BaseSourceAttributes"
+    class EigenMatrixPrinter(object):
+        "Print an Eigen Matrix"
 
-    def __init__(self, typename, val):
-        self.val = val
+        def __init__(self, val):
+            self.val = val
 
-    def to_string(self):
-        return "Base: {id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+        def to_string(self):
+            m_storage = self.val["m_storage"]
+            return "{%dx%d}" % (m_storage["m_cols"], m_storage["m_rows"])
 
-class SourcePrinter(object):
-    "Print a Source"
 
-    def __init__(self, typename, val):
-        self.val = val
+    class EigenVectorPrinter(object):
+        "Print an Eigen Vector"
 
-    def to_string(self):
-        return "{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+        def __init__(self, val):
+            self.val = val
 
-class FootprintPrinter(object):
-    "Print a Footprint"
+        def to_string(self):
+            m_storage = self.val["m_storage"]
+            return "{%d}" % (m_storage["n"])
 
-    def __init__(self, typename, val):
-        self.val = val
+    class PrintEigenCommand(gdb.Command):
+        """Print an eigen Matrix or Vector
+    Usage: show eigen <matrix> [x0 y0 [nx ny]]
+           show eigen <vector> [x0 [nx]]
+    """
 
-    def to_string(self):
-        return "RHL Footprint (fixme when gdb 7.3 arrives)"
+        def __init__ (self):
+            super (PrintEigenCommand, self).__init__ ("show eigen",
+                                                      gdb.COMMAND_DATA,
+                                                      gdb.COMPLETE_SYMBOL)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        def _mget(self, var, x, y=0):
+            m_storage = var["m_storage"]
 
-class CoordinateBasePrinter(object):
-    "Print a CoordinateBase"
+            if re.search(r"Matrix", str(var.type)):
+                if False:
+                    return var["operator()(int, int)"](x, y)
+                else:
+                    if x < 0 or x >= m_storage["m_cols"] or y < 0 or y >= m_storage["m_rows"]:
+                        raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
+                                           (x, y, m_storage["m_cols"] - 1, m_storage["m_rows"] - 1))
 
-    def __init__(self, typename, val):
-        self.val = val
+                    step = m_storage["m_cols"]/var.type.template_argument(0).sizeof
 
-    def to_string(self):
-        # Make sure &foo works, too.
-        type = self.val.type
-        if type.code == gdb.TYPE_CODE_REF:
-            type = type.target ()
+                    m_data = m_storage["m_data"]
+                    return m_data[x + y*step]
+            else:                       # Vector
+                if x < 0 or x >= m_storage["m_cols"]:
+                    raise gdb.GdbError("Element %d is out of range 0:%d" % (x, m_storage["m_cols"] - 1))
 
-        return self.val["_vector"]["m_storage"]["m_data"]["array"]
+                return m_storage["m_data"][x]
 
-    def display_hint (self):
-        return "array"
+        def invoke (self, args, fromTty):
+            self.dont_repeat()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            args = gdb.string_to_argv(args)
+            if len(args) < 1:
+                raise gdb.GdbError("Please specify a matrix or vector")
+            imgName = args.pop(0)
+            var = gdb.parse_and_eval(imgName)
 
-class ImagePrinter(object):
-    "Print an ImageBase or derived class"
+            if re.search(r"shared_ptr<", str(var.type)):
+                var = var["px"].dereference()
 
-    def dimenStr(self, val=None):
-        if val is None:
-            val = self.val
-            
-        # Make sure &foo works, too.
-        type = val.type
-        if type.code == gdb.TYPE_CODE_REF:
-            type = type.target ()
+            if var.type.code == gdb.TYPE_CODE_PTR:
+                var = var.dereference()     # be nice
 
-        gilView = val["_gilView"]
-        arr = val["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
+            isMatrix = re.search(r"Matrix", str(var.type))
+            if isMatrix:
+                x0, y0 = 0, 0
+                NX, NY = var["m_storage"]["m_cols"], var["m_storage"]["m_rows"]
+                nx, ny = NX, NY
 
-        return "%dx%d+%d+%d" % (
-            #val["getWidth"](), val["getHeight"](), 
-            gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
-            arr[0], arr[1])
+                if args:
+                    if len(args) == 1:
+                        raise gdb.GdbError("Please specify an element's x and y indexes")
+                    else:
+                        x0 = eval(args.pop(0), {}, {})
+                        y0 = eval(args.pop(0), {}, {})
 
-    def typeName(self):
-        return self.typename.split(":")[-1]
+                if args:
+                    nx = int(args.pop(0))
+                    if args:
+                        ny = int(args.pop(0))
+                    else:
+                        ny = 1
 
-    def __init__(self, typename, val):
-        self.typename = typename
-        self.val = val
+                if nx == 1 and ny == 1:
+                    print "%g" % self._vget(var, x0, y0)
+                    return
+            else:
+                x0, nx = 0, var["m_storage"]["n"]
 
-    def to_string(self):
-        return "%s(%s)" % (self.typeName(), self.dimenStr())
+                if args:
+                    x0 = eval(args.pop(0), {}, {})
+                if args:
+                    nx = int(args.pop(0))
 
-class MaskedImagePrinter(ImagePrinter):
-    "Print a MaskedImage"
+                if nx == 1:
+                    print "%g" % self._vget(var, x0)
+                    return
 
-    def to_string(self):
-        return "%s(%s)" % (self.typeName(), self.dimenStr(self.val["_image"]["px"].dereference()))
-
-class ExposurePrinter(ImagePrinter):
-    "Print an Exposure"
-
-    def to_string(self):
-        return "%s(%s)" % (self.typeName(),
-                           self.dimenStr(self.val["_maskedImage"]["_image"]["px"].dereference()))
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-class PrintImageCommand(gdb.Command):
-    """Print an Image
-Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
-"""
-
-    def __init__ (self):
-        super (PrintImageCommand, self).__init__ ("show image",
-                                                  gdb.COMMAND_DATA,
-                                                  gdb.COMPLETE_SYMBOL)
-
-    def get(self, var, x, y):
-        if False:
-            return var["operator()(int, int, bool)"](x, y, True)
-        else:
-            dimensions = var["_gilView"]["_dimensions"]
-            if x < 0 or x >= dimensions["x"] or y < 0 or y >= dimensions["y"]:
-                raise gdb.GdbError("Pixel (%d, %d) is out of range 0:%d, 0:%d" %
-                                   (x, y, dimensions["x"] - 1, dimensions["y"] - 1))
-
-            pixels = var["_gilView"]["_pixels"]["_p"]
-            step = pixels["_step_fn"]["_step"]/var.type.template_argument(0).sizeof
-
-            return pixels["m_iterator"][x + y*step]["_v0"]
-
-    def invoke (self, args, fromTty):
-        self.dont_repeat()
-
-        args = gdb.string_to_argv(args)
-        if len(args) < 1:
-            raise gdb.GdbError("Please specify an image")
-        imgName = args.pop(0)
-        var = gdb.parse_and_eval(imgName)
-
-        if re.search(r"MaskedImage", str(var.type)):
-            print "N.b. %s is a MaskedImage; showing image" % (imgName)
-            var = var["_image"]
-
-        if re.search(r"shared_ptr<", str(var.type)):
-            var = var["px"].dereference()
-
-        if var.type.code == gdb.TYPE_CODE_PTR:
-            var = var.dereference()     # be nice
-            
-        pixelTypeName = str(var.type.template_argument(0))
-        
-        if len(args) < 2:
-            raise gdb.GdbError("Please specify a pixel's x and y indexes")
-
-        x0 = eval(args.pop(0), {}, {})
-        y0 = eval(args.pop(0), {}, {})
-
-        if len(args) == 0:
-            print "%g" % self.get(var, x0, y0)
-            return
-
-        nx = int(args.pop(0))
-        if args:
-            ny = int(args.pop(0))
-        else:
-            ny = 1
-
-        if args:
-            centerPatch = eval(args.pop(0), {}, {})
-            if centerPatch:
-                x0 -= nx//2
-                y0 -= ny//2
-
-        if args:
-            obeyXY0 = eval(args.pop(0), {}, {})
-            if obeyXY0:
-                arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
-
-                x0 -= arr[0]
-                y0 -= arr[1]
-
-        if args:
-            raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
-        #
-        # OK, finally time to print
-        #
-        if pixelTypeName in ["short", "unsigned short"]:
-            dataFmt = "0x%x"
-        elif pixelTypeName in ["int", "unsigned int"]:
-            dataFmt = "%d"
-        else:
+            if args:
+                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
+            #
+            # OK, finally time to print
+            #
             dataFmt = "%.2f"
 
-        print "%-4s" % "",
-        for x in range(x0, x0 + nx):
-            print "%8d" % x,
-        print ""
-
-        for y in reversed(range(y0, y0 + ny)):
-            print "%-4d" % y,
-            for x in range(x0, x0 + nx):
-                print "%8s" % (dataFmt % self.get(var, x, y)),
+            print "%-4s" % "",
+            for x in range(x0, min(NX, x0 + nx)):
+                print "%8d" % x,
             print ""
 
+            if isMatrix:
+                for y in range(y0, min(NY, y0 + ny)):
+                    print "%-4d" % y,
+                    for x in range(x0, min(NX, x0 + nx)):
+                        print "%8s" % (dataFmt % self._mget(var, x, y)),
+                    print ""
+            else:
+                for x in range(x0, min(NX, x0 + nx)):
+                    print "%8s" % (dataFmt % self._vget(var, x)),
+                print ""
 
-PrintImageCommand()
+    PrintEigenCommand()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-#
-# These two classes (RxPrinter and Printer) come directly from
-# python/libstdcxx/v6/printers.py and the GPL license therein applies
-#
-# A "regular expression" printer which conforms to the
-# "SubPrettyPrinter" protocol from gdb.printing.
-class RxPrinter(object):
-    def __init__(self, name, function):
-        super(RxPrinter, self).__init__()
-        self.name = name
-        self.function = function
-        self.enabled = True
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-    def invoke(self, value):
-        if not self.enabled:
-            return None
-        return self.function(self.name, value)
+    class CitizenPrinter(object):
+        "Print a Citizen"
 
-# A pretty-printer that conforms to the "PrettyPrinter" protocol from
-# gdb.printing.  It can also be used directly as an old-style printer.
-#
-class Printer(object):
-    def __init__(self, name):
-        super(Printer, self).__init__()
-        self.name = name
-        self.subprinters = []
-        self.lookup = {}
-        self.enabled = True
-        self.compiled_rx = re.compile('^([a-zA-Z0-9_:]+)<.*>$')
+        def __init__(self, val):
+            self.val = val
 
-    def add(self, name, function):
-        # A small sanity check.
-        # FIXME
-        if not self.compiled_rx.match(name + '<>'):
-            raise ValueError, 'libstdc++ programming error: "%s" does not match' % name
-        printer = RxPrinter(name, function)
-        self.subprinters.append(printer)
-        self.lookup[name] = printer
+        def to_string(self):
+            sentinel = long(self.val["_sentinel"].cast(gdb.lookup_type("unsigned int")))
+            return "{%s %d 0x%x}" % (self.val.address, self.val["_CitizenId"], sentinel)
 
-    @staticmethod
-    def get_basic_type(type):
-        # If it points to a reference, get the reference.
-        if type.code == gdb.TYPE_CODE_REF:
-            type = type.target ()
+    class PrintCitizenCommand(gdb.Command):
+        """Print a Citizen
+    Usage: show citizen <obj>
+    """
 
-        # Get the unqualified type, stripped of typedefs.
-        type = type.unqualified ().strip_typedefs ()
+        def __init__ (self):
+            super (PrintCitizenCommand, self).__init__ ("show citizen",
+                                                        gdb.COMMAND_DATA,
+                                                        gdb.COMPLETE_SYMBOL)
 
-        return type.tag
+        def invoke (self, args, fromTty):
+            self.dont_repeat()
 
-    def __call__(self, val):
-        typename = self.get_basic_type(val.type)
-        if not typename:
-            return None
+            args = gdb.string_to_argv(args)
+            if len(args) < 1:
+                raise gdb.GdbError("Please specify an object")
+            objName = args.pop(0)
+            
+            if args:
+                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
 
-        # All the types we match are template types, so we can use a
-        # dictionary.
-        match = self.compiled_rx.match(typename)
-        if not match:
-            return None
+            var = gdb.parse_and_eval(objName)
 
-        basename = match.group(1)
-        if basename in self.lookup:
-            return self.lookup[basename].invoke(val)
+            if var.type.code != gdb.TYPE_CODE_PTR:
+                raise gdb.GdbError("%s it not a pointer" % objName)
 
-        # Cannot find a pretty printer.  Return None.
-        return None
+            try:
+                citizen = var.dynamic_cast(gdb.lookup_type("lsst::daf::base::Citizen").pointer()).dereference()
+            except gdb.error:
+                raise gdb.GdbError("Failed to cast %s to Citizen *" % objName)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            print citizen
 
-printers = []
+    PrintCitizenCommand()
 
-def register(obj):
-    "Register my pretty-printers with objfile Obj."
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # afw
 
-    if obj is None:
-        obj = gdb
+    class BaseSourceAttributesPrinter(object):
+        "Print a BaseSourceAttributes"
 
-    for p in printers:
-        if _use_gdb_pp:
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "Base: {id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+
+    class SourcePrinter(object):
+        "Print a Source"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+
+    class FootprintPrinter(object):
+        "Print a Footprint"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "RHL Footprint (fixme when gdb 7.3 arrives)"
+
+    class PeakPrinter(object):
+        "Print a Peak"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "{%d, (%d, %d), (%.3f, %.3f)}" % (self.val["_id"], self.val["_ix"], self.val["_iy"],
+                                                    self.val["_fx"], self.val["_fy"])
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class CoordinateBasePrinter(object):
+        "Print a CoordinateBase"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            # Make sure &foo works, too.
+            type = self.val.type
+            if type.code == gdb.TYPE_CODE_REF:
+                type = type.target ()
+
+            return self.val["_vector"]["m_storage"]["m_data"]["array"]
+
+        def display_hint (self):
+            return "array"
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class ImagePrinter(object):
+        "Print an ImageBase or derived class"
+
+        def dimenStr(self, val=None):
+            if val is None:
+                val = self.val
+
+            # Make sure &foo works, too.
+            type = val.type
+            if type.code == gdb.TYPE_CODE_REF:
+                type = type.target()
+
+            gilView = val["_gilView"]
+            arr = val["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
+
+            x0, y0 = arr[0], arr[1]
+            return "%dx%d%s%d%s%d" % (
+                #val["getWidth"](), val["getHeight"](), 
+                gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
+                ["", "+"][x0 >= 0], x0, # i.e. "+" if x0 >= 0 else "" in python >= 2.5
+                ["", "+"][y0 >= 0], y0)
+
+        def typeName(self):
+            return self.typename.split(":")[-1]
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "%s(%s)" % (self.typeName(), self.dimenStr())
+
+    class MaskedImagePrinter(ImagePrinter):
+        "Print a MaskedImage"
+
+        def to_string(self):
+            return "%s(%s)" % (self.typeName(), self.dimenStr(self.val["_image"]["px"].dereference()))
+
+    class ExposurePrinter(ImagePrinter):
+        "Print an Exposure"
+
+        def to_string(self):
+            return "%s(%s)" % (self.typeName(),
+                               self.dimenStr(self.val["_maskedImage"]["_image"]["px"].dereference()))
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class PrintImageCommand(gdb.Command):
+        """Print an Image
+    Usage: show image <image> x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
+    If nx or ny is 0, show the entire image
+    """
+
+        def __init__ (self):
+            super (PrintImageCommand, self).__init__ ("show image",
+                                                      gdb.COMMAND_DATA,
+                                                      gdb.COMPLETE_SYMBOL)
+
+        def get(self, var, x, y):
+            if False:
+                return var["operator()(int, int, bool)"](x, y, True)
+            else:
+                dimensions = var["_gilView"]["_dimensions"]
+                if x < 0 or x >= dimensions["x"] or y < 0 or y >= dimensions["y"]:
+                    raise gdb.GdbError("Pixel (%d, %d) is out of range 0:%d, 0:%d" %
+                                       (x, y, dimensions["x"] - 1, dimensions["y"] - 1))
+
+                pixels = var["_gilView"]["_pixels"]["_p"]
+                step = pixels["_step_fn"]["_step"]/var.type.template_argument(0).sizeof
+
+                return pixels["m_iterator"][x + y*step]["_v0"]
+
+        def invoke (self, args, fromTty):
+            self.dont_repeat()
+
+            args = gdb.string_to_argv(args)
+            if len(args) < 1:
+                raise gdb.GdbError("Please specify an image")
+            imgName = args.pop(0)
+            var = gdb.parse_and_eval(imgName)
+
+            if re.search(r"shared_ptr<", str(var.type)):
+                var = var["px"].dereference()
+
+            if re.search(r"MaskedImage", str(var.type)):
+                print "N.b. %s is a MaskedImage; showing image" % (imgName)
+                var = var["_image"]
+
+            if re.search(r"shared_ptr<", str(var.type)):
+                var = var["px"].dereference()
+
+            if var.type.code == gdb.TYPE_CODE_PTR:
+                var = var.dereference()     # be nice
+
+            pixelTypeName = str(var.type.template_argument(0))
+
+            if len(args) < 2:
+                raise gdb.GdbError("Please specify a pixel's x and y indexes")
+
+            x0 = eval(args.pop(0), {}, {})
+            y0 = eval(args.pop(0), {}, {})
+
+            if len(args) == 0:
+                print "%g" % self.get(var, x0, y0)
+                return
+
+            nx = int(args.pop(0))
+            if args:
+                ny = int(args.pop(0))
+            else:
+                ny = 1
+
+            if nx == 0:
+                nx = var["_gilView"]["_dimensions"]["x"]
+            if ny == 0:
+                ny = var["_gilView"]["_dimensions"]["y"]
+
+
+            if args:
+                centerPatch = eval(args.pop(0), {}, {})
+                if centerPatch:
+                    x0 -= nx//2
+                    y0 -= ny//2
+
+            if args:
+                obeyXY0 = eval(args.pop(0), {}, {})
+                if obeyXY0:
+                    arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
+
+                    x0 -= arr[0]
+                    y0 -= arr[1]
+
+            if args:
+                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
+            #
+            # OK, finally time to print
+            #
+            if pixelTypeName in ["short", "unsigned short"]:
+                dataFmt = "0x%x"
+            elif pixelTypeName in ["int", "unsigned int"]:
+                dataFmt = "%d"
+            else:
+                dataFmt = "%.2f"
+
+            print "%-4s" % "",
+            for x in range(x0, x0 + nx):
+                print "%8d" % x,
+            print ""
+
+            for y in reversed(range(y0, y0 + ny)):
+                print "%-4d" % y,
+                for x in range(x0, x0 + nx):
+                    print "%8s" % (dataFmt % self.get(var, x, y)),
+                print ""
+
+
+    PrintImageCommand()
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    printers = []
+
+    def register(obj):
+        "Register my pretty-printers with objfile Obj."
+
+        if obj is None:
+            obj = gdb
+
+        for p in printers:
             gdb.printing.register_pretty_printer(obj, p)
-        else:
-            obj.pretty_printers.insert(0, p)
 
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    def build_boost_dictionary():
+        """Surely this must be somewhere standard?"""
+        
+        printer = gdb.printing.RegexpCollectionPrettyPrinter("rhl-boost")
+
+        printer.add_printer('boost::shared_ptr',
+                            '^(boost|tr1|std)::shared_ptr', SharedPtrPrinter)
+
+        return printer
+
+    printers.append(build_boost_dictionary())
+
+    def build_eigen_dictionary():
+        """Surely this must be somewhere standard?"""
+        
+        printer = gdb.printing.RegexpCollectionPrettyPrinter("rhl-eigen")
+
+        printer.add_printer('eigen::Matrix',
+                            '^Eigen::Matrix', EigenMatrixPrinter)
+        printer.add_printer('eigen::Vector',
+                            '^Eigen::Vector', EigenVectorPrinter)
+
+        return printer
+
+    printers.append(build_eigen_dictionary())
+       
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def build_afw_dictionary():
-    printer = Printer("afw")
+    def build_afw_dictionary():
+        printer = gdb.printing.RegexpCollectionPrettyPrinter("afw")
 
-    printer.add('lsst::afw::detection::Footprint', FootprintPrinter)
-    printer.add('lsst::afw::detection::Source', SourcePrinter)
-    printer.add('lsst::afw::detection::BaseSourceAttributes', BaseSourceAttributesPrinter)
+        printer.add_printer('lsst::afw::detection::Footprint',
+                            '^lsst::afw::detection::Footprint$', FootprintPrinter)
+        printer.add_printer('lsst::afw::detection::Peak',
+                            '^lsst::afw::detection::Peak$', PeakPrinter)
+        printer.add_printer('lsst::afw::detection::Source',
+                            '^lsst::afw::detection::Source$', SourcePrinter)
+        printer.add_printer('lsst::afw::detection::BaseSourceAttributes',
+                            '^lsst::afw::detection::BaseSourceAttributes$', BaseSourceAttributesPrinter)
 
-    printer.add('lsst::afw::geom::Point', CoordinateBasePrinter)
-    printer.add('lsst::afw::geom::Extent', CoordinateBasePrinter)
+        printer.add_printer('lsst::afw::geom::Point',
+                            '^lsst::afw::geom::Point', CoordinateBasePrinter)
+        printer.add_printer('lsst::afw::geom::Extent',
+                            '^lsst::afw::geom::Extent', CoordinateBasePrinter)
 
-    printer.add('lsst::afw::image::ImageBase', ImagePrinter)
-    printer.add('lsst::afw::image::Image', ImagePrinter)
-    printer.add('lsst::afw::image::Mask', ImagePrinter)
-    printer.add('lsst::afw::image::MaskedImage', MaskedImagePrinter)
-    printer.add('lsst::afw::image::Exposure', ExposurePrinter)
+        printer.add_printer('lsst::afw::image::ImageBase',
+                            'lsst::afw::image::ImageBase<[^>]+>$', ImagePrinter)
+        printer.add_printer('lsst::afw::image::Image',
+                            'lsst::afw::image::Image<[^>]+>$', ImagePrinter)
+        printer.add_printer('lsst::afw::image::Mask',
+                            '^lsst::afw::image::Mask<[^>]+>$', ImagePrinter)
+        printer.add_printer('lsst::afw::image::MaskedImage',
+                            '^lsst::afw::image::MaskedImage<[^>]+>$', MaskedImagePrinter)
+        printer.add_printer('lsst::afw::image::Exposure',
+                            '^lsst::afw::image::Exposure', ExposurePrinter)
 
-    return printer
+        return printer
 
-printers.append(build_afw_dictionary())
+    printers.append(build_afw_dictionary())
 
-def build_daf_base_dictionary():
-    printer = Printer("daf::base")
+    def build_daf_base_dictionary():
+        printer = gdb.printing.RegexpCollectionPrettyPrinter("daf::base")
 
-    printer.add('lsst::daf::base::Citizen', CitizenPrinter)
+        printer.add_printer('lsst::daf::base::Citizen',
+                            'lsst::daf::base::Citizen', CitizenPrinter)
 
-    return printer
+        return printer
 
-printers.append(build_daf_base_dictionary())
+    printers.append(build_daf_base_dictionary())
+except ImportError:
+    from printers_oldgdb import *

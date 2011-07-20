@@ -59,7 +59,7 @@ template <typename T, int N, int C>
 lsst::ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     Footprint const & fp,
     lsst::ndarray::Array<T, N, C> const & src,
-    lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
+    lsst::afw::geom::Box2I const & bbox = lsst::afw::geom::Box2I()
 );
 
 }}}

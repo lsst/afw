@@ -68,7 +68,10 @@ det::Source::Source(Source const & other)
       _petroFlux(other._petroFlux),
       _petroFluxErr(other._petroFluxErr),
       _sky(other._sky),
-      _skyErr(other._skyErr)      
+      _skyErr(other._skyErr),
+      _astrom(other._astrom),
+      _photom(other._photom),
+      _shape(other._shape)
 {
     for (int i =0; i != NUM_SOURCE_NULLABLE_FIELDS; ++i) {
         setNull(i, other.isNull(i));

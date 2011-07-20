@@ -49,8 +49,8 @@ SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
     def __str__(self):
         s1, s2 = self.first, self.second
         return "((%d, (%g,%g), (%g,%g))\n (%d, (%g,%g), (%g,%g))\n %g)" % (
-               s1.getId(), s1.getRa(), s1.getDec(), s1.getX(), s1.getY(),
-               s2.getId(), s2.getRa(), s2.getDec(), s2.getX(), s2.getY(),
+               s1.getId(), s1.getRa(), s1.getDec(), s1.getXAstrom(), s1.getYAstrom(),
+               s2.getId(), s2.getRa(), s2.getDec(), s2.getXAstrom(), s2.getYAstrom(),
                self.distance)
 
     def __getitem__(self, i):
