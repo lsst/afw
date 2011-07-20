@@ -23,14 +23,14 @@
  
 #include <iostream>
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE FootprintArray
+#define BOOST_TEST_MODULE FootprintToArray
 
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/detection.h"
-#include "lsst/afw/detection/FootprintArray.cc"
+#include "lsst/afw/detection/footprintToArray.cc"
 
 #include "lsst/ndarray/eigen.h"
 

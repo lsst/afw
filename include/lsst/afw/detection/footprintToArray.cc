@@ -23,19 +23,19 @@
  */
 
 /**
- *  @file FootprintArray.cc
+ *  @file footprintToArray.cc
  *
- *  @brief Templated source for FootprintArray.h functions.
+ *  @brief Templated source for footprintToArray.h functions.
  *
  *  This is an includeable template source file; it should be included whenever
- *  the functions declared in FootprintArray.h are used.  Note that while
- *  FootprintArray.h is included by afw/detection.h, FootprintArray.cc is not.
+ *  the functions declared in footprintToArray.h are used.  Note that while
+ *  FootprintArray.h is included by afw/detection.h, footprintToArray.cc is not.
  *  
  *  The functions here have too many template parameters for explicit instantiation
  *  to be attractive (because the number of instantiations is combinatorial).
  */
 
-#include "lsst/afw/detection/FootprintArray.h"
+#include "lsst/afw/detection/footprintToArray.h"
 #include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
 
@@ -218,6 +218,28 @@ ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     dest.deep() = 0.0;
     expandArray(fp, src, dest, box.getMin());
     return dest;
+}
+
+template <typename MaskPixelT>
+MaskedFlattener::MaskedFlattener(typename lsst::afw::image::Mask<MaskPixelT>::Ptr const & mask, MaskPixelT bitmask) :
+    _footprint()
+{
+    Footprint::Ptr bboxFootprint(new Footprint(mask.getBBox(afw::image::PARENT)));
+    _footprint = footprintAndMask(bboxFootprint, mask, bitmask);
+}
+
+template <typename T>
+void MaskedFlattener::flatten(
+    lsst::afw::image::Image<T> const & input, lsst::ndarray::Array<T,1,1> const & output
+) const {
+    flattenArray(*_footprint, input.getArray(), output, input.getXY0());
+}
+
+template <typename T>
+void MaskedFlattener::expand(
+    lsst::ndarray::Array<T const,1,1> const & input, lsst::afw::image::Image<T> & output
+) const {
+    expandArray(*_footprint, input, output.getArray(), output.getXY0());
 }
 
 }}}

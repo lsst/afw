@@ -62,8 +62,22 @@ lsst::ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArra
     lsst::afw::geom::Box2I const & bbox = lsst::afw::geom::Box2I()
 );
 
+class MaskedFlattener {
+public:
+
+    template <typename MaskPixelT>
+    MaskedFlattener(typename lsst::afw::image::Mask<MaskPixelT>::Ptr const & mask, MaskPixelT bitmask);
+
+    template <typename T>
+    void flatten(lsst::afw::image::Image<T> const & input, lsst::ndarray::Array<T,1,1> const & output) const;
+
+    template <typename T>
+    void expand(lsst::ndarray::Array<T const,1,1> const & input, lsst::afw::image::Image<T> & output) const;
+
+private:
+    Footprint::Ptr _footprint;
+};
+
 }}}
 
 #endif
-
-

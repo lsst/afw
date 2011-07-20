@@ -29,8 +29,8 @@
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
-#include "lsst/afw/detection/FootprintArray.h"
-#include "lsst/afw/detection/FootprintArray.cc"
+#include "lsst/afw/detection/footprintToArray.h"
+#include "lsst/afw/detection/footprintToArray.cc"
 %}
 
 // already in image.i.

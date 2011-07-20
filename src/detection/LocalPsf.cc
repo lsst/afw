@@ -24,7 +24,7 @@
  * \brief Implementation of ShapeletLocalPsf
  */
 #include "lsst/afw/detection/LocalPsf.h"
-#include "lsst/afw/detection/FootprintArray.cc"
+#include "lsst/afw/detection/footprintToArray.cc"
 #include "lsst/ndarray/eigen.h"
 #include <Eigen/LU>
 #include <Eigen/Array>
