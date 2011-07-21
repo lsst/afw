@@ -83,7 +83,7 @@ namespace detail {
             OutImageT &convolvedImage,
             InImageT const& inImage,
             lsst::afw::math::Kernel const& kernel,
-            bool doNormalize);
+            lsst::afw::math::ConvolutionControl const& convolutionControl);
 
     // I would prefer this to be nested in KernelImagesForRegion but SWIG doesn't support that
     class RowOfKernelImagesForRegion;

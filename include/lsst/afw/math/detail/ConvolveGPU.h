@@ -81,14 +81,14 @@ namespace detail {
             lsst::afw::image::MaskedImage<OutPixelT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>& convolvedImage,      ///< convolved %image
             lsst::afw::image::MaskedImage<InPixelT , lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> const& inImage,        ///< %image to convolve
             lsst::afw::math::Kernel const& kernel,  ///< convolution kernel
-            bool doNormalize);               ///< if true, normalize the kernel, else use "as is"
+            lsst::afw::math::ConvolutionControl const& convolutionControl);
 
     template <typename OutPixelT, typename InPixelT>
     bool convolveSpatiallyInvariantGPU(
             lsst::afw::image::Image<OutPixelT>& convolvedImage,      ///< convolved %image
             lsst::afw::image::Image<InPixelT > const& inImage,        ///< %image to convolve
             lsst::afw::math::Kernel const& kernel,  ///< convolution kernel
-            bool doNormalize);               ///< if true, normalize the kernel, else use "as is"
+            lsst::afw::math::ConvolutionControl const& convolutionControl);
 }
 }
 }

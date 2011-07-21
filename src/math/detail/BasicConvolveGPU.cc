@@ -69,9 +69,9 @@ typedef mathDetail::KerPixel KerPixel;
 // copies data from MaskedImage to three image buffers
 template <typename PixelT>
 void CopyFromMaskedImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel> const& image,
-                          ImageBuffer<PixelT>& img,
-                          ImageBuffer<VarPixel>& var,
-                          ImageBuffer<MskPixel>& msk
+                          mathDetail::ImageBuffer<PixelT>& img,
+                          mathDetail::ImageBuffer<VarPixel>& var,
+                          mathDetail::ImageBuffer<MskPixel>& msk
                           )
 {
         int width=image.getWidth();
@@ -103,9 +103,9 @@ void CopyFromMaskedImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel> const
 template <typename PixelT>
 void CopyToImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel>& outImage,
                 int startX, int startY,
-                const ImageBuffer<PixelT>& img,
-                const ImageBuffer<VarPixel>& var,
-                const ImageBuffer<MskPixel>& msk
+                const mathDetail::ImageBuffer<PixelT>& img,
+                const mathDetail::ImageBuffer<VarPixel>& var,
+                const mathDetail::ImageBuffer<MskPixel>& msk
                 )
     {
         assert(img.height == var.height);
@@ -231,7 +231,7 @@ bool mathDetail::basicConvolveGPU(
         afwMath::ConvolutionControl const& convolutionControl)  ///< convolution control parameters
 {
     #ifndef GPU_BUILD
-	return false;
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
     #else
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
@@ -251,8 +251,7 @@ bool mathDetail::basicConvolveGPU(
     // use brute force
     pexLog::TTrace<3>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to convolveSpatiallyInvariantGPU");
-    return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
-            convolutionControl.getDoNormalize());    
+    return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel, convolutionControl);
    #endif //GPU_BUILD
 }
 
@@ -287,7 +286,7 @@ bool mathDetail::convolveLinearCombinationGPU(
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     #ifndef GPU_BUILD
-	return false;
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
     #else
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
@@ -329,7 +328,8 @@ bool mathDetail::convolveLinearCombinationGPU(
             int kernelN=newKernel->getNBasisKernels();
 
             //if kernel is too small, call CPU convolution
-            if (newKernel->getWidth() * newKernel->getHeight() <30 )
+            if (newKernel->getWidth() * newKernel->getHeight() <30 &&
+                convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
                 return false;
 
             //if something is wrong, call CPU convolution
@@ -393,7 +393,7 @@ bool mathDetail::convolveLinearCombinationGPU(
 
             CopyToImage(convolvedImage,cnvStartX,cnvStartY,
                         outBufImg, outBufVar, outBufMsk);
-        }        
+        }
     }
     return true;
     #endif //GPU_BUILD
@@ -429,7 +429,7 @@ bool mathDetail::convolveLinearCombinationGPU(
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     #ifndef GPU_BUILD
-	return false;
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
     #else
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
@@ -470,7 +470,8 @@ bool mathDetail::convolveLinearCombinationGPU(
             int kernelN=newKernel->getNBasisKernels();
 
             //if kernel is too small, call CPU convolution
-            if (newKernel->getWidth() * newKernel->getHeight() <20 )
+            if (newKernel->getWidth() * newKernel->getHeight() <20 &&
+                convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
                 return false;
 
             //if something is wrong, call CPU convolution
@@ -565,17 +566,19 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
         afwImage::Image<OutPixelT>& convolvedImage,      ///< convolved %image
         afwImage::Image<InPixelT > const& inImage,        ///< %image to convolve
         afwMath::Kernel const& kernel,  ///< convolution kernel
-        bool doNormalize)               ///< if true, normalize the kernel, else use "as is"
+    	afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     #ifndef GPU_BUILD
-	return false;
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
     #else
+    bool doNormalize=convolutionControl.getDoNormalize();
+
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
     typedef typename KernelImage::const_x_iterator KernelXIterator;
     typedef typename KernelImage::const_xy_locator KernelXYLocator;
 
-    if (kernel.isSpatiallyVarying()) 
+    if (kernel.isSpatiallyVarying())
         return false;
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
@@ -607,7 +610,8 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
         return false;
         }
     //if kernel is too small, call CPU convolution
-    if (kWidth * kHeight <25 )
+    if (kWidth * kHeight <25 &&
+        convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
         return false;
 
     ImageBuffer<InPixelT>  inBuf(inImage);
@@ -655,11 +659,13 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
         afwImage::MaskedImage<OutPixelT, MskPixel, VarPixel>& convolvedImage,      ///< convolved %image
         afwImage::MaskedImage<InPixelT , MskPixel, VarPixel> const& inImage,        ///< %image to convolve
         afwMath::Kernel const& kernel,  ///< convolution kernel
-        bool doNormalize)               ///< if true, normalize the kernel, else use "as is"
+	afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     #ifndef GPU_BUILD
-	return false;
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
     #else
+    bool doNormalize=convolutionControl.getDoNormalize();
+
     typedef afwImage::MaskedImage<InPixelT  > InImageT;
     typedef afwImage::MaskedImage<OutPixelT > OutImageT;
     typedef typename afwMath::Kernel::Pixel KernelPixel;
@@ -691,7 +697,8 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
         }
 
     //if kernel is too small, call CPU convolution
-    if (kWidth * kHeight <20 )
+    if (kWidth * kHeight <20
+        && convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
         return false;
 
     KernelImage kernelImage(kernel.getDimensions());
@@ -740,7 +747,8 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::LinearCombinationKernel const&, \
             afwMath::ConvolutionControl const&); NL \
     template bool mathDetail::convolveSpatiallyInvariantGPU( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, bool);
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
+            afwMath::ConvolutionControl const&);
 // Instantiate both Image and MaskedImage versions
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \

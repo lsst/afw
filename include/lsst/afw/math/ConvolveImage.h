@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_MATH_CONVOLVEIMAGE_H
 #define LSST_AFW_MATH_CONVOLVEIMAGE_H
 /**
@@ -56,33 +56,41 @@ namespace math {
      */
     class ConvolutionControl {
     public:
+        enum DeviceSelection_t { AUTO_GPU_THROW, AUTO_GPU_SAFE, FORCE_CPU, FORCE_GPU };
+
         ConvolutionControl(
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
-                int maxInterpolationDistance = 10)  ///< maximum width or height of a region
+                int maxInterpolationDistance = 10,  ///< maximum width or height of a region
                     ///< over which to use linear interpolation interpolate
+                DeviceSelection_t deviceSelection = AUTO_GPU_THROW  ///< use Gpu?
+                )
         :
             _doNormalize(doNormalize),
             _doCopyEdge(doCopyEdge),
-            _maxInterpolationDistance(maxInterpolationDistance)
+            _maxInterpolationDistance(maxInterpolationDistance),
+            _deviceSelection(deviceSelection)
         { }
-    
+
         bool getDoNormalize() const { return _doNormalize; }
         bool getDoCopyEdge() const { return _doCopyEdge; }
         int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
-        
+        DeviceSelection_t getDeviceSelection() const { return _deviceSelection; };
+
         void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
         void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
         void setMaxInterpolationDistance(int maxInterpolationDistance) {
             _maxInterpolationDistance = maxInterpolationDistance; }
-    
+        void setDeviceSelection(DeviceSelection_t deviceSelection) { _deviceSelection = deviceSelection; }
+
     private:
         bool _doNormalize;  ///< normalize the kernel to sum=1?
         bool _doCopyEdge;   ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
         int _maxInterpolationDistance;  ///< maximum width or height of a region
                     ///< over which to attempt interpolation
+        DeviceSelection_t _deviceSelection; ///< choose CPU or GPU acceleration
     };
 
     template <typename OutImageT, typename InImageT>
@@ -99,20 +107,20 @@ namespace math {
             typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
             int kWidth,
             int kHeight);
-    
+
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
             typename InImageT::const_xy_locator inImageLocator,
             std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
             std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList);
-    
+
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(
             OutImageT& convolvedImage,
             InImageT const& inImage,
             KernelT const& kernel,
             ConvolutionControl const& convolutionControl = ConvolutionControl());
-    
+
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(
             OutImageT& convolvedImage,
@@ -120,7 +128,7 @@ namespace math {
             KernelT const& kernel,
             bool doNormalize,
             bool doCopyEdge = false);
-    
+
     /**
      * \brief Return an edge pixel appropriate for a given Image type
      *
@@ -136,7 +144,7 @@ namespace math {
             std::numeric_limits<SinglePixelT>::has_quiet_NaN ?
                 std::numeric_limits<SinglePixelT>::quiet_NaN() : 0);
     }
-    
+
     /**
      * \brief Return an edge pixel appropriate for a given MaskedImage type
      *
@@ -152,7 +160,7 @@ namespace math {
     ) {
         typedef typename MaskedImageT::Image::Pixel ImagePixelT;
         typedef typename MaskedImageT::Variance::Pixel VariancePixelT;
-        
+
         return typename MaskedImageT::SinglePixel(
             std::numeric_limits<ImagePixelT>::has_quiet_NaN ?
                 std::numeric_limits<ImagePixelT>::quiet_NaN() : 0,
@@ -185,7 +193,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
 {
     typename OutImageT::SinglePixel outValue = 0;
     for (int kRow = 0; kRow != kHeight; ++kRow) {
-        for (lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kEnd = 
+        for (lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kEnd =
             kernelLocator + lsst::afw::image::detail::difference_type(kWidth, 0);
             kernelLocator != kEnd; ++inImageLocator.x(), ++kernelLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
@@ -232,12 +240,12 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
                 outValueY += *inImageLocator*kValX;
             }
         }
-        
+
         double const kValY = *kernelYIter;
         if (kValY != 0) {
             outValue += outValueY*kValY;
         }
-        
+
         inImageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
     }
 

@@ -38,14 +38,18 @@
 
 #ifndef GPU_BUILD //build this file only if requested
 
+#include <stdio.h>
+
 	namespace lsst {
 	    namespace afw {
 	        namespace math {
 	            namespace detail {
 	                namespace gpu {
 
-	void PrintCudaDeviceInfo() {}
-	void TestGpuKernel(int& ret1, int& ret2) {}
+	void PrintCudaDeviceInfo() {
+        printf("Afw not compiled with GPU support\n");
+        }
+	void TestGpuKernel(int& ret1, int& ret2) { ret1=0; ret2=0;}
 
 }}}}}
 

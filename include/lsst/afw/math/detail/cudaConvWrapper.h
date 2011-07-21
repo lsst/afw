@@ -33,6 +33,7 @@
  * @ingroup afw
  */
 
+#ifdef GPU_BUILD
 
 namespace lsst {
     namespace afw {
@@ -92,4 +93,6 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
         );
 
 }}}} //namespace lsst::afw::math::detail ends
+
+#endif //GPU_BUILD
 

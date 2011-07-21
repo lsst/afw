@@ -34,6 +34,11 @@
 
 #include "convCUDA.h"
 
+namespace lsst {
+    namespace afw {
+        namespace math {
+            namespace detail {
+
 /**
  * @brief Class for representing an image buffer
  *
@@ -171,4 +176,5 @@ public:
 
 };
 
+}}}} //namespace lsst::afw::math::detail ends
 

@@ -47,6 +47,8 @@ namespace lsst {
 
                 namespace gpu {
 
+#ifdef GPU_BUILD
+
 // image block size per GPU block. (The size of the image that one GPU block processes)
 #define blockSizeX 32
 #define blockSizeY 16
@@ -85,6 +87,8 @@ void Call_ConvolutionKernel_LC_Var(
         int blockN,
         int sharedMemorySize
         );
+
+#endif //GPU_BUILD
 
 }}}}}  //namespace lsst::afw::math::detail::gpu ends
 
