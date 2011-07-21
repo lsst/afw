@@ -5,7 +5,12 @@ Import('env')
 #
 # Here's a way to to build the files in the list noOptFiles without optimisation
 #
+
 ccFiles = glob.glob("../src/*/*.cc") + glob.glob("../src/*/*/*.cc") + glob.glob("../src/*/*/*/*.cc")
+
+if env.Detect('nvcc')!= None:
+    ccFiles.append('../src/math/detail/convGPU.os')
+
 try:
     ccFiles = env.SourcesForSharedLibrary(ccFiles)
 except AttributeError:                  # requires sconsUtils > 3.3

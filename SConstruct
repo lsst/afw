@@ -10,11 +10,10 @@ try:
 except AttributeError:
     import lsst.afw.scons.SconsUtils
     scons.ConfigureDependentProducts = lsst.afw.scons.SconsUtils.ConfigureDependentProducts
-
 env = scons.makeEnv(
     "afw",
     r"$HeadURL$",
-    scons.ConfigureDependentProducts("afw"),
+    scons.ConfigureDependentProducts("afw")
 )
 
 #
@@ -22,6 +21,18 @@ env = scons.makeEnv(
 #
 env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base daf_data daf_persistence " +
     "pex_exceptions pex_logging pex_policy security fftw3")
+
+if env.Detect('nvcc')!= None:
+    env.libs["afw"]   += env.getlibs("cudart cuda")
+    env.Tool("cuda", toolpath=['python/lsst/afw'])
+    env.Append(  CCFLAGS = "-DGPU_BUILD")
+    env.Append(NVCCFLAGS = "-DGPU_BUILD")
+    env.Append(NVCCFLAGS = "--ptxas-options=-v")
+    env.Append(NVCCFLAGS = ' -O2 -Iinclude -maxrregcount=58 --compiler-options "-fPIC"')
+    env.Append(NVCCFLAGS = ' -gencode=arch=compute_13,code=\\"sm_13,compute_13\\" ')
+    env.Append(NVCCFLAGS = ' -gencode=arch=compute_20,code=\\"sm_20,compute_20\\" ')
+    env.SharedObject('src/math/detail/convGPU', ['src/math/detail/convGPU.cu'])
+
 if True:
     #
     # Workaround SConsUtils failure to find numpy .h files. Fixed in sconsUtils >= 3.3.2
@@ -76,7 +87,7 @@ scons.CleanTree(r"*~ core *.so *.os *.o")
 #
 # Build TAGS files
 #
-files = scons.filesToTag()
+files = scons.filesToTag(file_regexp=r"^[a-zA-Z0-9_].*\.(cc|h(pp)?|py|cu)$")
 if files:
     env.Command("TAGS", files, "etags -o $TARGET $SOURCES")
 
