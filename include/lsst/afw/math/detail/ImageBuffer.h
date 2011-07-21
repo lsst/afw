@@ -35,9 +35,9 @@
 #include "convCUDA.h"
 
 namespace lsst {
-    namespace afw {
-        namespace math {
-            namespace detail {
+namespace afw {
+namespace math {
+namespace detail {
 
 /**
  * @brief Class for representing an image buffer
@@ -56,7 +56,7 @@ template <typename PixelT>
 class ImageBuffer
 {
 public:
-        typedef lsst::afw::image::Image<PixelT>  ImageT;
+    typedef lsst::afw::image::Image<PixelT>  ImageT;
 
     PixelT*     img;
     int         width;
@@ -68,7 +68,7 @@ public:
     ImageBuffer(const ImageBuffer& x) {
         assert(x.img==NULL);
         img=NULL;
-        };
+    };
 
     void Init(ImageT const& image)
     {
@@ -77,10 +77,10 @@ public:
         this->height=image.getHeight();
         try {
             img = new PixelT [width*height];
-            }
+        }
         catch(...) {
             throw LSST_EXCEPT(pexExcept::MemoryException, "ImageBuffer:Init - not enough memory");
-            }
+        }
 
         //copy input image data to buffer
         for (int i = 0; i < height; ++i) {
@@ -88,10 +88,10 @@ public:
             PixelT*                  imageDataPtr = img + i*width;
 
             for (typename ImageT::x_iterator cnvEnd = inPtr + width; inPtr != cnvEnd;
-                    ++inPtr, ++imageDataPtr){
-                    *imageDataPtr = *inPtr;
-                }
+                    ++inPtr, ++imageDataPtr) {
+                *imageDataPtr = *inPtr;
             }
+        }
     }
 
     void Init(int width, int height) {
@@ -100,50 +100,52 @@ public:
         this->height=height;
         try {
             img = new PixelT [width*height];
-            }
+        }
         catch(...) {
             throw LSST_EXCEPT(pexExcept::MemoryException, "ImageBuffer:Init - not enough memory");
-            }
         }
+    }
 
-    ImageBuffer(ImageT const& image){
+    ImageBuffer(ImageT const& image) {
         img=NULL;
         Init(image);
-        }
+    }
 
-    ImageBuffer(int width, int height){
+    ImageBuffer(int width, int height) {
         img=NULL;
         Init(width,height);
-        }
+    }
 
-    ~ImageBuffer(){
+    ~ImageBuffer() {
         delete[] img;
-        }
+    }
 
-    int Size() const { return width*height; }
+    int Size() const {
+        return width*height;
+    }
 
     PixelT* GetImgLinePtr(int y) {
         assert(img!=NULL);
         assert(y>=0 && y<height);
         return &img[width*y];
-        }
+    }
     const PixelT* GetImgLinePtr(int y) const {
         assert(img!=NULL);
         assert(y>=0 && y<height);
         return &img[width*y];
-        }
-    PixelT& Pixel(int x, int y){
+    }
+    PixelT& Pixel(int x, int y) {
         assert(img!=NULL);
         assert(x>=0 && x<width);
         assert(y>=0 && y<height);
         return img[x+ y*width];
-        }
+    }
     const PixelT& Pixel(int x, int y) const {
         assert(img!=NULL);
         assert(x>=0 && x<width);
         assert(y>=0 && y<height);
         return img[x+ y*width];
-        }
+    }
 
     void CopyFromBuffer(ImageBuffer<PixelT>& buffer, int startX, int startY)
     {
@@ -151,12 +153,12 @@ public:
         for (int i = 0; i < height; ++i) {
             PixelT* inPtr = startX + buffer.GetImgLinePtr(i+startY);
             PixelT* outPtr = buffer.GetImgLinePtr(i);
-            for (int j=0; j<width;j++) {
+            for (int j=0; j<width; j++) {
                 *outPtr = *inPtr;
                 inPtr++;
                 outPtr++;
-                }
             }
+        }
     }
 
     void CopyToImage(ImageT outImage, int startX, int startY)
@@ -167,14 +169,17 @@ public:
 
             for (typename ImageT::x_iterator cnvPtr = outImage.x_at(startX, i + startY),
                     cnvEnd = cnvPtr + width;    cnvPtr != cnvEnd;    ++cnvPtr )
-                {
+            {
                 *cnvPtr = *outPtrImg;
                 ++outPtrImg;
-                }
             }
-       }
+        }
+    }
 
 };
 
-}}}} //namespace lsst::afw::math::detail ends
+}
+}
+}
+} //namespace lsst::afw::math::detail ends
 

@@ -1,4 +1,3 @@
-
 // -*- LSST-C++ -*-
 
 /*
@@ -69,134 +68,134 @@ typedef mathDetail::KerPixel KerPixel;
 // copies data from MaskedImage to three image buffers
 template <typename PixelT>
 void CopyFromMaskedImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel> const& image,
-                          mathDetail::ImageBuffer<PixelT>& img,
-                          mathDetail::ImageBuffer<VarPixel>& var,
-                          mathDetail::ImageBuffer<MskPixel>& msk
-                          )
+                         mathDetail::ImageBuffer<PixelT>& img,
+                         mathDetail::ImageBuffer<VarPixel>& var,
+                         mathDetail::ImageBuffer<MskPixel>& msk
+                        )
 {
-        int width=image.getWidth();
-        int height=image.getHeight();
-        img.Init(width,height);
-        var.Init(width,height);
-        msk.Init(width,height);
+    int width=image.getWidth();
+    int height=image.getHeight();
+    img.Init(width,height);
+    var.Init(width,height);
+    msk.Init(width,height);
 
-        typedef typename afwImage::MaskedImage<PixelT, MskPixel, VarPixel>
-                            ::x_iterator x_iterator;
+    typedef typename afwImage::MaskedImage<PixelT, MskPixel, VarPixel>
+    ::x_iterator x_iterator;
 
-        //copy input image data to buffer
-        for (int i = 0; i < height; ++i) {
-            x_iterator inPtr = image.x_at(0, i);
-            PixelT*    imageDataPtr = img.GetImgLinePtr(i);
-            MskPixel*  imageMaskPtr = msk.GetImgLinePtr(i);
-            VarPixel*  imageVarPtr  = var.GetImgLinePtr(i);
+    //copy input image data to buffer
+    for (int i = 0; i < height; ++i) {
+        x_iterator inPtr = image.x_at(0, i);
+        PixelT*    imageDataPtr = img.GetImgLinePtr(i);
+        MskPixel*  imageMaskPtr = msk.GetImgLinePtr(i);
+        VarPixel*  imageVarPtr  = var.GetImgLinePtr(i);
 
-            for (x_iterator cnvEnd = inPtr + width; inPtr != cnvEnd;
-                    ++inPtr, ++imageDataPtr, ++imageMaskPtr, ++imageVarPtr ){
-                    *imageDataPtr = (*inPtr).image();
-                    *imageMaskPtr = (*inPtr).mask();
-                    *imageVarPtr  = (*inPtr).variance();
-                }
-            }
+        for (x_iterator cnvEnd = inPtr + width; inPtr != cnvEnd;
+                ++inPtr, ++imageDataPtr, ++imageMaskPtr, ++imageVarPtr ) {
+            *imageDataPtr = (*inPtr).image();
+            *imageMaskPtr = (*inPtr).mask();
+            *imageVarPtr  = (*inPtr).variance();
+        }
+    }
 }
 
 // copies data from three image buffers to MaskedImage
 template <typename PixelT>
 void CopyToImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel>& outImage,
-                int startX, int startY,
-                const mathDetail::ImageBuffer<PixelT>& img,
-                const mathDetail::ImageBuffer<VarPixel>& var,
-                const mathDetail::ImageBuffer<MskPixel>& msk
+                 int startX, int startY,
+                 const mathDetail::ImageBuffer<PixelT>& img,
+                 const mathDetail::ImageBuffer<VarPixel>& var,
+                 const mathDetail::ImageBuffer<MskPixel>& msk
                 )
-    {
-        assert(img.height == var.height);
-        assert(img.height == msk.height);
-        assert(img.width == var.width);
-        assert(img.width == msk.width);
+{
+    assert(img.height == var.height);
+    assert(img.height == msk.height);
+    assert(img.width == var.width);
+    assert(img.width == msk.width);
 
-        typedef typename afwImage::MaskedImage<PixelT, MskPixel, VarPixel>
-                            ::x_iterator x_iterator;
+    typedef typename afwImage::MaskedImage<PixelT, MskPixel, VarPixel>
+    ::x_iterator x_iterator;
 
-        for (int i = 0; i < img.height; ++i) {
-            const PixelT*    outPtrImg = img.GetImgLinePtr(i);
-            const MskPixel*  outPtrMsk = msk.GetImgLinePtr(i);
-            const VarPixel*  outPtrVar = var.GetImgLinePtr(i);
+    for (int i = 0; i < img.height; ++i) {
+        const PixelT*    outPtrImg = img.GetImgLinePtr(i);
+        const MskPixel*  outPtrMsk = msk.GetImgLinePtr(i);
+        const VarPixel*  outPtrVar = var.GetImgLinePtr(i);
 
-            for (x_iterator cnvPtr = outImage.x_at(startX, i + startY),
-                    cnvEnd = cnvPtr + img.width;    cnvPtr != cnvEnd;    ++cnvPtr )
-                {
-                *cnvPtr = typename x_iterator::type(*outPtrImg,*outPtrMsk,*outPtrVar);
-                ++outPtrImg;
-                ++outPtrMsk;
-                ++outPtrVar;
-                }
-            }
-       }
-
-    /*
-     * @brief Compute the dot product of a kernel row or column and the overlapping portion of an %image
-     *
-     * @return computed dot product
-     *
-     * The pixel computed belongs at position imageIter + kernel center.
-     *
-     * @note Same as kernelDotProduct in basicConvolve.cc, copy-pasted
-     */
-    template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
-    inline OutPixelT kernelDotProduct(
-            ImageIterT imageIter,       ///< start of input %image that overlaps kernel vector
-            KernelIterT kernelIter,     ///< start of kernel vector
-            int kWidth)                 ///< width of kernel
-    {
-        OutPixelT outPixel(0);
-        for (int x = 0; x < kWidth; ++x, ++imageIter, ++kernelIter) {
-            KernelPixelT kVal = *kernelIter;
-            if (kVal != 0) {
-
-                outPixel += static_cast<OutPixelT>((*imageIter) * kVal);
-            }
-        }
-        return outPixel;
-    }
-
-
-    /*
-     * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
-     *
-     * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dim.
-     * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or h.
-     * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
-     *
-     * @note Same as kernelDotProduct in basicConvolve.cc, copy-pasted
-     */
-    template <typename OutImageT, typename InImageT>
-    void assertDimensionsOK(
-        OutImageT const &convolvedImage,
-        InImageT const &inImage,
-        lsst::afw::math::Kernel const &kernel
-    ) {
-        if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-            std::ostringstream os;
-            os << "convolvedImage dimensions = ( "
-                << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
-                << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-        }
-        if (afwGeom::any(inImage.getDimensions().lt(kernel.getDimensions()))) {
-            std::ostringstream os;
-            os << "inImage dimensions = ( "
-                << inImage.getWidth() << ", " << inImage.getHeight()
-                << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
-                << ") = kernel dimensions in width and/or height";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-        }
-        if ((kernel.getWidth() < 1) || (kernel.getHeight() < 1)) {
-            std::ostringstream os;
-            os << "kernel dimensions = ( "
-                << kernel.getWidth() << ", " << kernel.getHeight()
-                << ") smaller than (1, 1) in width and/or height";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        for (x_iterator cnvPtr = outImage.x_at(startX, i + startY),
+                cnvEnd = cnvPtr + img.width;    cnvPtr != cnvEnd;    ++cnvPtr )
+        {
+            *cnvPtr = typename x_iterator::type(*outPtrImg,*outPtrMsk,*outPtrVar);
+            ++outPtrImg;
+            ++outPtrMsk;
+            ++outPtrVar;
         }
     }
+}
+
+/*
+ * @brief Compute the dot product of a kernel row or column and the overlapping portion of an %image
+ *
+ * @return computed dot product
+ *
+ * The pixel computed belongs at position imageIter + kernel center.
+ *
+ * @note Same as kernelDotProduct in basicConvolve.cc, copy-pasted
+ */
+template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
+inline OutPixelT kernelDotProduct(
+    ImageIterT imageIter,       ///< start of input %image that overlaps kernel vector
+    KernelIterT kernelIter,     ///< start of kernel vector
+    int kWidth)                 ///< width of kernel
+{
+    OutPixelT outPixel(0);
+    for (int x = 0; x < kWidth; ++x, ++imageIter, ++kernelIter) {
+        KernelPixelT kVal = *kernelIter;
+        if (kVal != 0) {
+
+            outPixel += static_cast<OutPixelT>((*imageIter) * kVal);
+        }
+    }
+    return outPixel;
+}
+
+
+/*
+ * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dim.
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or h.
+ * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
+ *
+ * @note Same as kernelDotProduct in basicConvolve.cc, copy-pasted
+ */
+template <typename OutImageT, typename InImageT>
+void assertDimensionsOK(
+    OutImageT const &convolvedImage,
+    InImageT const &inImage,
+    lsst::afw::math::Kernel const &kernel
+) {
+    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
+        std::ostringstream os;
+        os << "convolvedImage dimensions = ( "
+        << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+        << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+    if (afwGeom::any(inImage.getDimensions().lt(kernel.getDimensions()))) {
+        std::ostringstream os;
+        os << "inImage dimensions = ( "
+        << inImage.getWidth() << ", " << inImage.getHeight()
+        << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
+        << ") = kernel dimensions in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+    if ((kernel.getWidth() < 1) || (kernel.getHeight() < 1)) {
+        std::ostringstream os;
+        os << "kernel dimensions = ( "
+        << kernel.getWidth() << ", " << kernel.getHeight()
+        << ") smaller than (1, 1) in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+}
 
 }   // anonymous namespace
 
@@ -225,14 +224,14 @@ void CopyToImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel>& outImage,
  */
 template <typename OutImageT, typename InImageT>
 bool mathDetail::basicConvolveGPU(
-        OutImageT &convolvedImage,      ///< convolved %image
-        InImageT const& inImage,        ///< %image to convolve
-        afwMath::Kernel const& kernel,  ///< convolution kernel
-        afwMath::ConvolutionControl const& convolutionControl)  ///< convolution control parameters
+    OutImageT &convolvedImage,      ///< convolved %image
+    InImageT const& inImage,        ///< %image to convolve
+    afwMath::Kernel const& kernel,  ///< convolution kernel
+    afwMath::ConvolutionControl const& convolutionControl)  ///< convolution control parameters
 {
-    #ifndef GPU_BUILD
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
-    #else
+#ifndef GPU_BUILD
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
+#else
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
@@ -242,17 +241,17 @@ bool mathDetail::basicConvolveGPU(
         return false;
     } else if (IS_INSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
-            "generic basicConvolve: dispatch to convolveLinearCombinationGPU");
+                          "generic basicConvolve: dispatch to convolveLinearCombinationGPU");
         return mathDetail::convolveLinearCombinationGPU(convolvedImage, inImage,
-            *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
-            convolutionControl);
+                *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
+                convolutionControl);
     }
 
     // use brute force
     pexLog::TTrace<3>("lsst.afw.math.convolve",
-            "generic basicConvolve: dispatch to convolveSpatiallyInvariantGPU");
+                      "generic basicConvolve: dispatch to convolveSpatiallyInvariantGPU");
     return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel, convolutionControl);
-   #endif //GPU_BUILD
+#endif //GPU_BUILD
 }
 
 /**
@@ -285,9 +284,9 @@ bool mathDetail::convolveLinearCombinationGPU(
     afwMath::LinearCombinationKernel const& kernel,         ///< convolution kernel
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    #ifndef GPU_BUILD
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
-    #else
+#ifndef GPU_BUILD
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
+#else
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
     typedef ImageBuffer<KernelPixel> KernelBuffer;
@@ -295,9 +294,9 @@ bool mathDetail::convolveLinearCombinationGPU(
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
         pexLog::TTrace<3>("lsst.afw.math.convolve",
-            "convolveLinearCombinationGPU: spatially invariant; will delegate");
+                          "convolveLinearCombinationGPU: spatially invariant; will delegate");
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
-            convolutionControl.getDoNormalize());
+                convolutionControl.getDoNormalize());
     } else {
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
@@ -315,7 +314,7 @@ bool mathDetail::convolveLinearCombinationGPU(
 
         /*return mathDetail::convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
                 convolutionControl.getDoNormalize());
-*/
+        */
 
         {
             mathDetail::gpu::SelectPreferredCudaDevice();
@@ -329,32 +328,32 @@ bool mathDetail::convolveLinearCombinationGPU(
 
             //if kernel is too small, call CPU convolution
             if (newKernel->getWidth() * newKernel->getHeight() <30 &&
-                convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
+                    convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
                 return false;
 
             //if something is wrong, call CPU convolution
             bool shMemOk = gpu::IsSufficientSharedMemoryAvailableImgAndMask(
-                            newKernel->getWidth(),newKernel->getHeight(),sizeof(KerPixel));
+                               newKernel->getWidth(),newKernel->getHeight(),sizeof(KerPixel));
             if (!shMemOk) {
                 //cannot fit kernels into shared memory, revert to convolution by CPU
                 return false;
-                }
+            }
 
             if (kernelN==0 || kernelN>100)
                 return false;
 
-            for (int i=0;i<kernelN;i++)
+            for (int i=0; i<kernelN; i++)
                 if (kernelList[i]->getDimensions() != newKernel->getDimensions()
-                    || kernelList[i]->getCtr() != newKernel->getCtr()
-                    )
+                        || kernelList[i]->getCtr() != newKernel->getCtr()
+                   )
                     return false;
 
             std::vector< KernelBuffer >  basisKernels(kernelN);
-            for (int i=0;i<kernelN;i++){
+            for (int i=0; i<kernelN; i++) {
                 KernelImage kernelImage(kernelList[i]->getDimensions());
                 (void)kernelList[i]->computeImage(kernelImage, false);
                 basisKernels[i].Init(kernelImage);
-                }
+            }
 
             int const inImageWidth = inImage.getWidth();
             int const inImageHeight = inImage.getHeight();
@@ -366,10 +365,10 @@ bool mathDetail::convolveLinearCombinationGPU(
             std::vector<double> colPos(cnvWidth);
             std::vector<double> rowPos(cnvHeight);
 
-            for (int i=0;i<cnvWidth;i++)
+            for (int i=0; i<cnvWidth; i++)
                 colPos[i]=inImage.indexToPosition(i+cnvStartX, afwImage::X);
 
-            for (int i=0;i<cnvHeight;i++)
+            for (int i=0; i<cnvHeight; i++)
                 rowPos[i]=inImage.indexToPosition(i+cnvStartY, afwImage::Y);
 
             ImageBuffer<InPixelT>  inBufImg;
@@ -383,20 +382,20 @@ bool mathDetail::convolveLinearCombinationGPU(
             ImageBuffer<MskPixel>  outBufMsk(cnvWidth, cnvHeight);
 
             GPU_ConvolutionMI_LinearCombinationKernel<OutPixelT,InPixelT>(
-                                inBufImg, inBufVar, inBufMsk,
-                                colPos, rowPos,
-                                newKernel->getSpatialFunctionList(),
-                                outBufImg, outBufVar, outBufMsk,
-                                basisKernels,
-                                convolutionControl.getDoNormalize()
-                                );
+                inBufImg, inBufVar, inBufMsk,
+                colPos, rowPos,
+                newKernel->getSpatialFunctionList(),
+                outBufImg, outBufVar, outBufMsk,
+                basisKernels,
+                convolutionControl.getDoNormalize()
+            );
 
             CopyToImage(convolvedImage,cnvStartX,cnvStartY,
                         outBufImg, outBufVar, outBufMsk);
         }
     }
     return true;
-    #endif //GPU_BUILD
+#endif //GPU_BUILD
 }
 
 /**
@@ -428,9 +427,9 @@ bool mathDetail::convolveLinearCombinationGPU(
     afwMath::LinearCombinationKernel const& kernel,         ///< convolution kernel
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    #ifndef GPU_BUILD
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
-    #else
+#ifndef GPU_BUILD
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
+#else
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
     typedef ImageBuffer<KernelPixel> KernelBuffer;
@@ -438,9 +437,9 @@ bool mathDetail::convolveLinearCombinationGPU(
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
         pexLog::TTrace<3>("lsst.afw.math.convolve",
-            "convolveLinearCombinationGPU: spatially invariant; delegate");
+                          "convolveLinearCombinationGPU: spatially invariant; delegate");
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
-            convolutionControl.getDoNormalize());
+                convolutionControl.getDoNormalize());
     } else {
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
@@ -471,32 +470,32 @@ bool mathDetail::convolveLinearCombinationGPU(
 
             //if kernel is too small, call CPU convolution
             if (newKernel->getWidth() * newKernel->getHeight() <20 &&
-                convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
+                    convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
                 return false;
 
             //if something is wrong, call CPU convolution
             bool shMemOk = gpu::IsSufficientSharedMemoryAvailable(
-                            newKernel->getWidth(),newKernel->getHeight(),sizeof(KerPixel));
+                               newKernel->getWidth(),newKernel->getHeight(),sizeof(KerPixel));
             if (!shMemOk) {
                 //cannot fit kernels into shared memory, revert to convolution by CPU
                 return false;
-                }
+            }
 
             if (kernelN==0)
                 return false;
 
-            for (int i=0;i<kernelN;i++)
+            for (int i=0; i<kernelN; i++)
                 if (kernelList[i]->getDimensions() != newKernel->getDimensions()
-                    || kernelList[i]->getCtr() != newKernel->getCtr()
-                    )
+                        || kernelList[i]->getCtr() != newKernel->getCtr()
+                   )
                     return false;
 
             std::vector< KernelBuffer >  basisKernels(kernelN);
-            for (int i=0;i<kernelN;i++){
+            for (int i=0; i<kernelN; i++) {
                 KernelImage kernelImage(kernelList[i]->getDimensions());
                 (void)kernelList[i]->computeImage(kernelImage, false);
                 basisKernels[i].Init(kernelImage);
-                }
+            }
 
             int const inImageWidth = inImage.getWidth();
             int const inImageHeight = inImage.getHeight();
@@ -508,28 +507,28 @@ bool mathDetail::convolveLinearCombinationGPU(
             std::vector<double> colPos(cnvWidth);
             std::vector<double> rowPos(cnvHeight);
 
-            for (int i=0;i<cnvWidth;i++)
+            for (int i=0; i<cnvWidth; i++)
                 colPos[i]=inImage.indexToPosition(i+cnvStartX, afwImage::X);
 
-            for (int i=0;i<cnvHeight;i++)
+            for (int i=0; i<cnvHeight; i++)
                 rowPos[i]=inImage.indexToPosition(i+cnvStartY, afwImage::Y);
 
             ImageBuffer<InPixelT>  inBuf(inImage);
             ImageBuffer<OutPixelT> outBuf(cnvWidth, cnvHeight);
 
             GPU_ConvolutionImage_LinearCombinationKernel<OutPixelT,InPixelT>(
-                                inBuf, colPos, rowPos,
-                                newKernel->getSpatialFunctionList(),
-                                outBuf,
-                                basisKernels,
-                                convolutionControl.getDoNormalize()
-                                );
+                inBuf, colPos, rowPos,
+                newKernel->getSpatialFunctionList(),
+                outBuf,
+                basisKernels,
+                convolutionControl.getDoNormalize()
+            );
 
             outBuf.CopyToImage(convolvedImage,cnvStartX,cnvStartY);
         }
     }
     return true;
-    #endif //GPU_BUILD
+#endif //GPU_BUILD
 }
 
 /**
@@ -563,14 +562,14 @@ bool mathDetail::convolveLinearCombinationGPU(
  */
 template <typename OutPixelT, typename InPixelT>
 bool mathDetail::convolveSpatiallyInvariantGPU(
-        afwImage::Image<OutPixelT>& convolvedImage,      ///< convolved %image
-        afwImage::Image<InPixelT > const& inImage,        ///< %image to convolve
-        afwMath::Kernel const& kernel,  ///< convolution kernel
-    	afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+    afwImage::Image<OutPixelT>& convolvedImage,      ///< convolved %image
+    afwImage::Image<InPixelT > const& inImage,        ///< %image to convolve
+    afwMath::Kernel const& kernel,  ///< convolution kernel
+    afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    #ifndef GPU_BUILD
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
-    #else
+#ifndef GPU_BUILD
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
+#else
     bool doNormalize=convolutionControl.getDoNormalize();
 
     typedef typename afwMath::Kernel::Pixel KernelPixel;
@@ -596,7 +595,7 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     KernelXYLocator const kernelLoc = kernelImage.xy_at(0,0);
 
     pexLog::TTrace<5>("lsst.afw.math.convolve",
-            "convolveSpatiallyInvariantGPU: plain Image, kernel is spatially invariant");
+                      "convolveSpatiallyInvariantGPU: plain Image, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);
 
     mathDetail::gpu::SelectPreferredCudaDevice();
@@ -608,10 +607,10 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     if (!shMemOk) {
         //cannot fit kernels into shared memory, revert to convolution by CPU
         return false;
-        }
+    }
     //if kernel is too small, call CPU convolution
     if (kWidth * kHeight <25 &&
-        convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
+            convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
         return false;
 
     ImageBuffer<InPixelT>  inBuf(inImage);
@@ -622,7 +621,7 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
 
     outBuf.CopyToImage(convolvedImage,cnvStartX,cnvStartY);
     return true;
-    #endif //GPU_BUILD
+#endif //GPU_BUILD
 }
 
 /**
@@ -656,14 +655,14 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
  */
 template <typename OutPixelT, typename InPixelT>
 bool mathDetail::convolveSpatiallyInvariantGPU(
-        afwImage::MaskedImage<OutPixelT, MskPixel, VarPixel>& convolvedImage,      ///< convolved %image
-        afwImage::MaskedImage<InPixelT , MskPixel, VarPixel> const& inImage,        ///< %image to convolve
-        afwMath::Kernel const& kernel,  ///< convolution kernel
-	afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+    afwImage::MaskedImage<OutPixelT, MskPixel, VarPixel>& convolvedImage,      ///< convolved %image
+    afwImage::MaskedImage<InPixelT , MskPixel, VarPixel> const& inImage,        ///< %image to convolve
+    afwMath::Kernel const& kernel,  ///< convolution kernel
+    afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    #ifndef GPU_BUILD
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
-    #else
+#ifndef GPU_BUILD
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Afw not compiled with GPU support");
+#else
     bool doNormalize=convolutionControl.getDoNormalize();
 
     typedef afwImage::MaskedImage<InPixelT  > InImageT;
@@ -675,7 +674,7 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
 
     if (kernel.isSpatiallyVarying()) {
         return false;
-        }
+    }
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
 
@@ -694,18 +693,18 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     if (!shMemOk) {
         //cannot fit kernels into shared memory, revert to convolution by CPU
         return false;
-        }
+    }
 
     //if kernel is too small, call CPU convolution
     if (kWidth * kHeight <20
-        && convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
+            && convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
         return false;
 
     KernelImage kernelImage(kernel.getDimensions());
     KernelXYLocator const kernelLoc = kernelImage.xy_at(0,0);
 
     pexLog::TTrace<5>("lsst.afw.math.convolve",
-            "convolveSpatiallyInvariantGPU: MaskedImage, kernel is spatially invariant");
+                      "convolveSpatiallyInvariantGPU: MaskedImage, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);
 
     ImageBuffer<InPixelT>  inBufImg;
@@ -720,15 +719,15 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     ImageBuffer<KernelPixel> kernelBuf(kernelImage);
 
     GPU_ConvolutionMI_SpatiallyInvariantKernel<OutPixelT,InPixelT>(
-                inBufImg,inBufVar,inBufMsk,
-                outBufImg,outBufVar, outBufMsk,
-                kernelBuf
-                );
+        inBufImg,inBufVar,inBufMsk,
+        outBufImg,outBufVar, outBufMsk,
+        kernelBuf
+    );
 
     CopyToImage(convolvedImage,cnvStartX,cnvStartY,
-                        outBufImg, outBufVar, outBufMsk);
+                outBufImg, outBufVar, outBufMsk);
     return true;
-    #endif //GPU_BUILD
+#endif //GPU_BUILD
 }
 
 /*

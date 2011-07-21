@@ -1,4 +1,3 @@
-
 // -*- LSST-C++ -*-
 
 /*
@@ -40,18 +39,25 @@
 
 #include <stdio.h>
 
-	namespace lsst {
-	    namespace afw {
-	        namespace math {
-	            namespace detail {
-	                namespace gpu {
+namespace lsst {
+namespace afw {
+namespace math {
+namespace detail {
+namespace gpu {
 
-	void PrintCudaDeviceInfo() {
-        printf("Afw not compiled with GPU support\n");
-        }
-	void TestGpuKernel(int& ret1, int& ret2) { ret1=0; ret2=0;}
+void PrintCudaDeviceInfo() {
+    printf("Afw not compiled with GPU support\n");
+}
+void TestGpuKernel(int& ret1, int& ret2) {
+    ret1=0;
+    ret2=0;
+}
 
-}}}}}
+}
+}
+}
+}
+}
 
 #else
 
@@ -71,14 +77,14 @@ namespace afwMath = lsst::afw::math;
 namespace mathDetailGpu = lsst::afw::math::detail::gpu;
 
 namespace lsst {
-    namespace afw {
-        namespace math {
-            namespace detail {
-                namespace gpu {
+namespace afw {
+namespace math {
+namespace detail {
+namespace gpu {
 
 void PrintDeviceProperties(int id,cudaDeviceProp deviceProp)
 {
-	printf("Name : %s  |", deviceProp.name );
+    printf("Name : %s  |", deviceProp.name );
     printf("  CUDA Capable SM %d.%d hardware, %d multiproc.\n", deviceProp.major, deviceProp.minor, deviceProp.multiProcessorCount);
     printf("   Clock rate:       %6.2f GHz \t", deviceProp.clockRate/(1000.0*1000));
     printf("   Memory on device: %6zu MiB\n", deviceProp.totalGlobalMem/(1<<20) );
@@ -90,11 +96,11 @@ void PrintDeviceProperties(int id,cudaDeviceProp deviceProp)
 
     printf("   Compute mode (device sharing) : ");
     if (deviceProp.computeMode==cudaComputeModeDefault)
-		printf("Default - shared between threads\n" );
-	if (deviceProp.computeMode==cudaComputeModeExclusive)
-		printf("Exclusive - only one thread at a time\n" );
-	if (deviceProp.computeMode==cudaComputeModeProhibited)
-		printf("Prohibited - cannot use this device\n" );
+        printf("Default - shared between threads\n" );
+    if (deviceProp.computeMode==cudaComputeModeExclusive)
+        printf("Exclusive - only one thread at a time\n" );
+    if (deviceProp.computeMode==cudaComputeModeProhibited)
+        printf("Prohibited - cannot use this device\n" );
 
     printf("   Timeout enabled: %3s  ", deviceProp.kernelExecTimeoutEnabled==1 ? "Yes" : "No" );
     printf("   Overlapped copying: %3s  ", deviceProp.deviceOverlap==1 ? "Yes" : "No" );
@@ -113,25 +119,25 @@ void PrintCudaErrorInfo(cudaError_t cudaError, const char* errorStr)
 
 void PrintCudaDeviceInfo()
 {
-	fflush(stdout);
+    fflush(stdout);
 
-	cudaError_t cudaError;
+    cudaError_t cudaError;
 
-	int driverVersion;
-	cudaError=cudaDriverGetVersion(&driverVersion);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA driver version");
-	printf("Driver ver.: %d.%d   ",driverVersion/1000, driverVersion%1000);
-	fflush(stdout);
+    int driverVersion;
+    cudaError=cudaDriverGetVersion(&driverVersion);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA driver version");
+    printf("Driver ver.: %d.%d   ",driverVersion/1000, driverVersion%1000);
+    fflush(stdout);
 
-	int runtimeVersion;
-	cudaError=cudaRuntimeGetVersion(&runtimeVersion);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA runtime version");
-	printf("Runtime ver.: %d.%d   ",runtimeVersion/1000, runtimeVersion%1000);
-	fflush(stdout);
+    int runtimeVersion;
+    cudaError=cudaRuntimeGetVersion(&runtimeVersion);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA runtime version");
+    printf("Runtime ver.: %d.%d   ",runtimeVersion/1000, runtimeVersion%1000);
+    fflush(stdout);
 
-	//int preferredDeviceId = 0;
+    //int preferredDeviceId = 0;
 
-	int cudaDevicesN=0;
+    int cudaDevicesN=0;
     cudaError=cudaGetDeviceCount(&cudaDevicesN);
     if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA device count");
 
@@ -140,23 +146,23 @@ void PrintCudaDeviceInfo()
     if(cudaDevicesN<1) {
         printf("Your system does not have a CUDA capable device\n");
         exit(0);
-		}
+    }
 
-	int curDevId;
-	cudaError=cudaGetDevice(&curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA device id");
-	printf("Info for device %d\n",curDevId);
-	fflush(stdout);
+    int curDevId;
+    cudaError=cudaGetDevice(&curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA device id");
+    printf("Info for device %d\n",curDevId);
+    fflush(stdout);
 
-	cudaDeviceProp deviceProp;
-	cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA device properties");
-	PrintDeviceProperties(curDevId,deviceProp);
-	fflush(stdout);
+    cudaDeviceProp deviceProp;
+    cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"Could not get CUDA device properties");
+    PrintDeviceProperties(curDevId,deviceProp);
+    fflush(stdout);
 
-	for (int i=0;i<79;i++) printf("-");
-	printf("\n");
-	fflush(stdout);
+    for (int i=0; i<79; i++) printf("-");
+    printf("\n");
+    fflush(stdout);
 }
 
 int GetPreferredCudaDevice()
@@ -185,14 +191,14 @@ void SelectPreferredCudaDevice()
 
     if (devId>=0) {
         cudaError_t err = cudaSetDevice(devId);
-        if (err!= cudaSuccess){
+        if (err!= cudaSuccess) {
             cudaGetLastError(); //clear error
             char errorStr[1000];
             sprintf(errorStr, "Error selecting device %d:\n %s\n", devId, cudaGetErrorString(err));
             throw LSST_EXCEPT(pexExcept::RuntimeErrorException, errorStr);
-            }
-        return;
         }
+        return;
+    }
 
     if (devId!=-2)
         return;
@@ -224,13 +230,13 @@ void SelectPreferredCudaDevice()
     cudaError = cudaSetDevice(devId);
     if (cudaError == cudaErrorSetOnActiveProcess) {
         cudaGetDevice(&devId);
-        }
-    else if (cudaError!= cudaSuccess){
+    }
+    else if (cudaError!= cudaSuccess) {
         cudaGetLastError(); //clear error
         sprintf(errorStr, "Error automatically selecting device %d:\n %s\n",
-                        devId, cudaGetErrorString(cudaError));
+                devId, cudaGetErrorString(cudaError));
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, errorStr);
-        }
+    }
 
     cudaDeviceProp deviceProp;
     cudaError=cudaGetDeviceProperties(&deviceProp, devId);
@@ -238,16 +244,16 @@ void SelectPreferredCudaDevice()
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Could not get CUDA device properties");
 
     if (deviceProp.major < prop.major ||
-        (deviceProp.major == prop.major && deviceProp.minor < prop.minor)
-        ){
+            (deviceProp.major == prop.major && deviceProp.minor < prop.minor)
+       ) {
         sprintf(errorStr,"Only SM %d.%d or better GPU devices are currently allowed",prop.major,prop.minor);
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, errorStr );
-        }
+    }
 
     if (deviceProp.major == prop.major && deviceProp.minor < prop.minor)
 
-    if (deviceProp.totalGlobalMem < prop.totalGlobalMem)
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Not enough global memory on GPU");
+        if (deviceProp.totalGlobalMem < prop.totalGlobalMem)
+            throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Not enough global memory on GPU");
 
     if (deviceProp.sharedMemPerBlock < 16 * 1000)
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Not enough shared memory on GPU");
@@ -261,213 +267,213 @@ void SelectPreferredCudaDevice()
 
 int GetCudaDeviceId()
 {
-	int curDevId;
-	cudaError_t cudaError=cudaGetDevice(&curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaDeviceId> Could not get CUDA device id");
-	return curDevId;
+    int curDevId;
+    cudaError_t cudaError=cudaGetDevice(&curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaDeviceId> Could not get CUDA device id");
+    return curDevId;
 }
 
 int GetCudaCurSMSharedMemorySize()
 {
-	int curDevId=GetCudaDeviceId();
-	cudaDeviceProp deviceProp;
-	cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaSMSharedMemorySize> Could not get CUDA device properties");
+    int curDevId=GetCudaDeviceId();
+    cudaDeviceProp deviceProp;
+    cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaSMSharedMemorySize> Could not get CUDA device properties");
 
-	return deviceProp.sharedMemPerBlock;
+    return deviceProp.sharedMemPerBlock;
 }
 
 int GetCudaCurGlobalMemorySize()
 {
-	int curDevId=GetCudaDeviceId();
-	cudaDeviceProp deviceProp;
-	cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaCurGlobalMemorySize> Could not get CUDA device properties");
+    int curDevId=GetCudaDeviceId();
+    cudaDeviceProp deviceProp;
+    cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaCurGlobalMemorySize> Could not get CUDA device properties");
 
-	return deviceProp.totalGlobalMem;
+    return deviceProp.totalGlobalMem;
 }
 
 int GetCudaCurSMRegisterCount()
 {
-	int curDevId=GetCudaDeviceId();
-	cudaDeviceProp deviceProp;
-	cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaSMRegisterCount> Could not get CUDA device properties");
+    int curDevId=GetCudaDeviceId();
+    cudaDeviceProp deviceProp;
+    cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaSMRegisterCount> Could not get CUDA device properties");
 
-	return deviceProp.regsPerBlock;
+    return deviceProp.regsPerBlock;
 }
 
 int GetCudaCurSMCount()
 {
-	int curDevId=GetCudaDeviceId();
-	cudaDeviceProp deviceProp;
-	cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaSMCount> Could not get CUDA device properties");
+    int curDevId=GetCudaDeviceId();
+    cudaDeviceProp deviceProp;
+    cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaSMCount> Could not get CUDA device properties");
 
-	return deviceProp.multiProcessorCount;
+    return deviceProp.multiProcessorCount;
 }
 
 bool GetCudaCurIsDoublePrecisionSupported()
 {
-	int curDevId=GetCudaDeviceId();
-	cudaDeviceProp deviceProp;
-	cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaIsDoublePrecisionSupported> Could not get CUDA device properties");
+    int curDevId=GetCudaDeviceId();
+    cudaDeviceProp deviceProp;
+    cudaError_t cudaError=cudaGetDeviceProperties(&deviceProp, curDevId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"GetCudaIsDoublePrecisionSupported> Could not get CUDA device properties");
 
-	return deviceProp.major>=2 || (deviceProp.major==1 && deviceProp.minor>=3);
+    return deviceProp.major>=2 || (deviceProp.major==1 && deviceProp.minor>=3);
 }
 
 void SetCudaDevice(int devId)
 {
-	cudaError_t cudaError=cudaSetDevice(devId);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"SetCudaDevice> unsucessfull");
+    cudaError_t cudaError=cudaSetDevice(devId);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"SetCudaDevice> unsucessfull");
 }
 
 void CudaReserveDevice()
 {
-	int* dataGpu;
-	cudaError_t cudaError=cudaMalloc((void**)&dataGpu, 256*sizeof(int));
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"CudaReserveDevice> Could not reserve device by calling cudaMalloc");
+    int* dataGpu;
+    cudaError_t cudaError=cudaMalloc((void**)&dataGpu, 256*sizeof(int));
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"CudaReserveDevice> Could not reserve device by calling cudaMalloc");
 
-	cudaError=cudaFree(dataGpu);
-	if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"CudaReserveDevice> Could not release memory by calling cudaFree");
+    cudaError=cudaFree(dataGpu);
+    if (cudaError!=cudaSuccess) PrintCudaErrorInfo(cudaError,"CudaReserveDevice> Could not release memory by calling cudaFree");
 }
 
-    template<typename T>
-	T* AllocOnGpu(int size)
-	{
-		T* dataGpu;
-		cudaError_t cudaError=cudaMalloc((void**)&dataGpu, size*sizeof(T));
-		if (cudaError!=cudaSuccess)
-			return NULL;
+template<typename T>
+T* AllocOnGpu(int size)
+{
+    T* dataGpu;
+    cudaError_t cudaError=cudaMalloc((void**)&dataGpu, size*sizeof(T));
+    if (cudaError!=cudaSuccess)
+        return NULL;
 
-		return dataGpu;
-	}
-    template<typename T>
-	void CopyFromGpu(T* destCpu, T* sourceGpu,int size)
-	{
-		cudaError_t cudaError=cudaMemcpy(
-				/* Desination:*/     destCpu,
-				/* Source:    */     sourceGpu,
-				/* Size in bytes: */ size*sizeof(T),
-				/* Direction   */    cudaMemcpyDeviceToHost
-			  );
-        if (cudaError!=cudaSuccess)
-            throw LSST_EXCEPT(pexExcept::MemoryException, "CopyFromGpu: failed");
-	}
-    template<typename T>
-	void CopyToGpu(T* destGpu, T* sourceCpu,int size)
-	{
-		cudaError_t cudaError;
-		cudaError=cudaMemcpy(
-				/* Desination:*/     destGpu,
-				/* Source:    */     sourceCpu,
-				/* Size in bytes: */ size*sizeof(T),
-				/* Direction   */    cudaMemcpyHostToDevice
-			  );
-        if (cudaError!=cudaSuccess)
-			throw LSST_EXCEPT(pexExcept::MemoryException, "CopyToGpu: failed");
-	}
+    return dataGpu;
+}
+template<typename T>
+void CopyFromGpu(T* destCpu, T* sourceGpu,int size)
+{
+    cudaError_t cudaError=cudaMemcpy(
+                              /* Desination:*/     destCpu,
+                              /* Source:    */     sourceGpu,
+                              /* Size in bytes: */ size*sizeof(T),
+                              /* Direction   */    cudaMemcpyDeviceToHost
+                          );
+    if (cudaError!=cudaSuccess)
+        throw LSST_EXCEPT(pexExcept::MemoryException, "CopyFromGpu: failed");
+}
+template<typename T>
+void CopyToGpu(T* destGpu, T* sourceCpu,int size)
+{
+    cudaError_t cudaError;
+    cudaError=cudaMemcpy(
+                  /* Desination:*/     destGpu,
+                  /* Source:    */     sourceCpu,
+                  /* Size in bytes: */ size*sizeof(T),
+                  /* Direction   */    cudaMemcpyHostToDevice
+              );
+    if (cudaError!=cudaSuccess)
+        throw LSST_EXCEPT(pexExcept::MemoryException, "CopyToGpu: failed");
+}
 
-	template<typename T>
-	T* TransferToGpu(const T* sourceCpu,int size)
-	{
-		T* dataGpu;
-		cudaError_t cudaError=cudaMalloc((void**)&dataGpu, size*sizeof(T));
-		if (cudaError!=cudaSuccess){
-			return NULL;
-			}
-		cudaError=cudaMemcpy(
-				/* Desination:*/     dataGpu,
-				/* Source:    */     sourceCpu,
-				/* Size in bytes: */ size*sizeof(T),
-				/* Direction   */    cudaMemcpyHostToDevice
-			  );
-        if (cudaError!=cudaSuccess)
-			throw LSST_EXCEPT(pexExcept::MemoryException, "TransferToGpu: transfer failed");
+template<typename T>
+T* TransferToGpu(const T* sourceCpu,int size)
+{
+    T* dataGpu;
+    cudaError_t cudaError=cudaMalloc((void**)&dataGpu, size*sizeof(T));
+    if (cudaError!=cudaSuccess) {
+        return NULL;
+    }
+    cudaError=cudaMemcpy(
+                  /* Desination:*/     dataGpu,
+                  /* Source:    */     sourceCpu,
+                  /* Size in bytes: */ size*sizeof(T),
+                  /* Direction   */    cudaMemcpyHostToDevice
+              );
+    if (cudaError!=cudaSuccess)
+        throw LSST_EXCEPT(pexExcept::MemoryException, "TransferToGpu: transfer failed");
 
-		return dataGpu;
-	}
+    return dataGpu;
+}
 
-	/**
-        A class for handling GPU memory managment and copying data to and from GPU
+/**
+    A class for handling GPU memory managment and copying data to and from GPU
 
-        Automatically releases GPU memory on destruction, simplifying GPU memory management
-	*/
-	template<typename T>
-	class GpuMemOwner
-	{
-        public:
-        T* ptr;
-        int size;
-        GpuMemOwner() : ptr(NULL) {}
+    Automatically releases GPU memory on destruction, simplifying GPU memory management
+*/
+template<typename T>
+class GpuMemOwner
+{
+public:
+    T* ptr;
+    int size;
+    GpuMemOwner() : ptr(NULL) {}
 
-        T* Transfer(const T* source, int size_p) {
-            assert(ptr==NULL);
-            size = size_p;
-            ptr = TransferToGpu(source,size);
-            return ptr;
-            }
-        T* Transfer(const ImageBuffer<T>& source) {
-            assert(ptr==NULL);
-            size = source.Size();
-            ptr=TransferToGpu(source.img, size);
-            return ptr;
-            }
-        T* Alloc(int size_p)  {
-            assert(ptr==NULL);
-            size = size_p;
-            ptr=AllocOnGpu<T>(size);
-            return ptr;
-            }
-        T* CopyToGpu(ImageBuffer<T>& source) {
-            assert(ptr!=NULL);
-            assert(source.Size() == size);
-            gpu::CopyToGpu(ptr,source.img,size);
-            return ptr;
-            }
-
-        ~GpuMemOwner(){
-            if (ptr!=NULL)
-                cudaFree(ptr);
-            }
-	};
-
-    // Returns true if there is sufficient shared memory for loading an image block,
-    // where image block includes including filter frame.
-    bool IsSufficientSharedMemoryAvailable(int filterW, int filterH, int pixSize)
-    {
-        int shMemSize=GetCudaCurSMSharedMemorySize();
-        int bufferSize=(filterW+blockSizeX-1)*(filterH+blockSizeY-1)*pixSize;
-
-        return shMemSize-90-bufferSize > 0;
+    T* Transfer(const T* source, int size_p) {
+        assert(ptr==NULL);
+        size = size_p;
+        ptr = TransferToGpu(source,size);
+        return ptr;
+    }
+    T* Transfer(const ImageBuffer<T>& source) {
+        assert(ptr==NULL);
+        size = source.Size();
+        ptr=TransferToGpu(source.img, size);
+        return ptr;
+    }
+    T* Alloc(int size_p)  {
+        assert(ptr==NULL);
+        size = size_p;
+        ptr=AllocOnGpu<T>(size);
+        return ptr;
+    }
+    T* CopyToGpu(ImageBuffer<T>& source) {
+        assert(ptr!=NULL);
+        assert(source.Size() == size);
+        gpu::CopyToGpu(ptr,source.img,size);
+        return ptr;
     }
 
-    // Returns true if there is sufficient shared memory for loading an image block,
-    // and acommpanying block of mask data (mask image block),
-    // where image block and mask image block include including filter frame.
-    bool IsSufficientSharedMemoryAvailableImgAndMask(int filterW, int filterH, int pixSize)
-    {
-        int shMemSize=GetCudaCurSMSharedMemorySize();
-        int imgBufferSize=(filterW+blockSizeX-1)*(filterH+blockSizeY-1)*pixSize;
-        int mskBufferSize=(filterW+blockSizeX-1)*(filterH+blockSizeY-1)*sizeof(MskPixel);
-
-        int memRemaining=shMemSize-200-imgBufferSize-mskBufferSize ;
-
-        return memRemaining > 0;
+    ~GpuMemOwner() {
+        if (ptr!=NULL)
+            cudaFree(ptr);
     }
+};
 
-    // This function decides on the best GPU block count
-    // uses simple heuristics (not to much blocks and not too many)
-    // but guarantees that number of blocks will be a multiple of number of multiprocessors
-    int CalcBlockCount(int multiprocCount)
-    {
-        if (multiprocCount<12)
-            return multiprocCount*4;
-        if (multiprocCount<24)
-            return multiprocCount*2;
-        return multiprocCount;
-    }
+// Returns true if there is sufficient shared memory for loading an image block,
+// where image block includes including filter frame.
+bool IsSufficientSharedMemoryAvailable(int filterW, int filterH, int pixSize)
+{
+    int shMemSize=GetCudaCurSMSharedMemorySize();
+    int bufferSize=(filterW+blockSizeX-1)*(filterH+blockSizeY-1)*pixSize;
+
+    return shMemSize-90-bufferSize > 0;
+}
+
+// Returns true if there is sufficient shared memory for loading an image block,
+// and acommpanying block of mask data (mask image block),
+// where image block and mask image block include including filter frame.
+bool IsSufficientSharedMemoryAvailableImgAndMask(int filterW, int filterH, int pixSize)
+{
+    int shMemSize=GetCudaCurSMSharedMemorySize();
+    int imgBufferSize=(filterW+blockSizeX-1)*(filterH+blockSizeY-1)*pixSize;
+    int mskBufferSize=(filterW+blockSizeX-1)*(filterH+blockSizeY-1)*sizeof(MskPixel);
+
+    int memRemaining=shMemSize-200-imgBufferSize-mskBufferSize ;
+
+    return memRemaining > 0;
+}
+
+// This function decides on the best GPU block count
+// uses simple heuristics (not to much blocks and not too many)
+// but guarantees that number of blocks will be a multiple of number of multiprocessors
+int CalcBlockCount(int multiprocCount)
+{
+    if (multiprocCount<12)
+        return multiprocCount*4;
+    if (multiprocCount<24)
+        return multiprocCount*2;
+    return multiprocCount;
+}
 
 
 
@@ -475,11 +481,11 @@ void CudaReserveDevice()
 // should return 5 and 8 in ret1 and ret2
 void TestGpuKernel(int& ret1, int& ret2)
 {
-	int res[2];
+    int res[2];
 
-	int* resGpu=gpu::AllocOnGpu<int>(2);
+    int* resGpu=gpu::AllocOnGpu<int>(2);
 
-	CallTestGpuKernel(resGpu);
+    CallTestGpuKernel(resGpu);
 
     gpu::CopyFromGpu(res,resGpu,2);
 
@@ -497,19 +503,19 @@ vector<T> SumsOfImages(const vector< ImageBuffer<T> >&  images)
 {
     int n=int(images.size());
     vector<T> sum(n);
-    for (int i=0; i<n;i++){
+    for (int i=0; i<n; i++) {
         KerPixel totalSum=0;
         int h=images[i].height;
         int w=images[i].width;
 
-        for (int y=0;y<h;y++) {
+        for (int y=0; y<h; y++) {
             KerPixel rowSum=0;
-            for (int x=0;x<w;x++)
+            for (int x=0; x<w; x++)
                 rowSum+= images[i].Pixel(x,y);
             totalSum+=rowSum;
-            }
-        sum[i]=totalSum;
         }
+        sum[i]=totalSum;
+    }
     return sum;
 }
 
@@ -529,16 +535,16 @@ vector<T> SumsOfImages(const vector< ImageBuffer<T> >&  images)
            the first output buffer to be used is given by sFnValBeg
 */
 inline bool CalculateSpatialFunctionsValuesAndNormalization(
-        const int i, const int curKernelN, const bool isLastPass,
-        const bool doNormalize,
-        const vector<double>& colPos,
-        const vector<double>& rowPos,
-        const vector< afwMath::Kernel::SpatialFunctionPtr >& sFn,
-        const vector< KerPixel >&   basisKernelSum,
-        ImageBuffer<double>& norm,       // accumulator and result, input and output
-        vector< ImageBuffer<double> >& sFnVal, //output buffers
-        int sFnValBeg
-        )
+    const int i, const int curKernelN, const bool isLastPass,
+    const bool doNormalize,
+    const vector<double>& colPos,
+    const vector<double>& rowPos,
+    const vector< afwMath::Kernel::SpatialFunctionPtr >& sFn,
+    const vector< KerPixel >&   basisKernelSum,
+    ImageBuffer<double>& norm,       // accumulator and result, input and output
+    vector< ImageBuffer<double> >& sFnVal, //output buffers
+    int sFnValBeg
+)
 {
     const bool isFirstPass= i==0;
     bool normalizationError=false;
@@ -548,43 +554,43 @@ inline bool CalculateSpatialFunctionsValuesAndNormalization(
     assert(norm.width==outW);
     assert(norm.height==outH);
 
-        // calculate spatial function values for processed kernels
-        int sfnKstart=0;
-        if (doNormalize && isFirstPass){
-            sfnKstart=1;
-            for (int y=0; y<outH; y++)
-                for (int x=0; x<outW; x++) {
-                    double val=(*sFn[0])(colPos[x],rowPos[y]);
-                    sFnVal[sFnValBeg].Pixel(x,y)=val;
-                    norm.Pixel(x,y) = basisKernelSum[0] * val;
-                    }
+    // calculate spatial function values for processed kernels
+    int sfnKstart=0;
+    if (doNormalize && isFirstPass) {
+        sfnKstart=1;
+        for (int y=0; y<outH; y++)
+            for (int x=0; x<outW; x++) {
+                double val=(*sFn[0])(colPos[x],rowPos[y]);
+                sFnVal[sFnValBeg].Pixel(x,y)=val;
+                norm.Pixel(x,y) = basisKernelSum[0] * val;
             }
+    }
 
-        if (doNormalize)
-            for (int kernelI=sfnKstart; kernelI<curKernelN; kernelI++)
-                for (int y=0; y<outH; y++)
-                    for (int x=0; x<outW; x++) {
-                        double val=(*sFn[i+kernelI])(colPos[x],rowPos[y]);
-                        sFnVal[sFnValBeg+kernelI].Pixel(x,y)=val;
-                        norm.Pixel(x,y) += basisKernelSum[i+kernelI] * val;
-                        }
-        else
-            for (int kernelI=sfnKstart; kernelI<curKernelN; kernelI++)
-                for (int y=0; y<outH; y++)
-                    for (int x=0; x<outW; x++) {
-                        double val=(*sFn[i+kernelI])(colPos[x],rowPos[y]);
-                        sFnVal[sFnValBeg+kernelI].Pixel(x,y)=val;
-                        }
-
-        if (doNormalize && isLastPass)
+    if (doNormalize)
+        for (int kernelI=sfnKstart; kernelI<curKernelN; kernelI++)
             for (int y=0; y<outH; y++)
                 for (int x=0; x<outW; x++) {
-                    double kernelSum=norm.Pixel(x,y);
-                    if (kernelSum==0)
-                        normalizationError=true;
-                    else
-                        norm.Pixel(x,y) = 1.0 / kernelSum;
-                    }
+                    double val=(*sFn[i+kernelI])(colPos[x],rowPos[y]);
+                    sFnVal[sFnValBeg+kernelI].Pixel(x,y)=val;
+                    norm.Pixel(x,y) += basisKernelSum[i+kernelI] * val;
+                }
+    else
+        for (int kernelI=sfnKstart; kernelI<curKernelN; kernelI++)
+            for (int y=0; y<outH; y++)
+                for (int x=0; x<outW; x++) {
+                    double val=(*sFn[i+kernelI])(colPos[x],rowPos[y]);
+                    sFnVal[sFnValBeg+kernelI].Pixel(x,y)=val;
+                }
+
+    if (doNormalize && isLastPass)
+        for (int y=0; y<outH; y++)
+            for (int x=0; x<outW; x++) {
+                double kernelSum=norm.Pixel(x,y);
+                if (kernelSum==0)
+                    normalizationError=true;
+                else
+                    norm.Pixel(x,y) = 1.0 / kernelSum;
+            }
 
     return normalizationError;
 }
@@ -601,34 +607,38 @@ inline bool CalculateSpatialFunctionsValuesAndNormalization(
 */
 template <typename OutPixelT>
 void CombineOutputsAndSfnIntoResult(
-        int curKernelN, bool isFirstPass,
-        const vector< ImageBuffer<double> >&    sFnVal,
-        int sFnValBeg,
-        const vector< ImageBuffer<double> >& outBuf,
-        ImageBuffer<OutPixelT>&             outImage   //accumulator and result, input and output
-        )
+    int curKernelN, bool isFirstPass,
+    const vector< ImageBuffer<double> >&    sFnVal,
+    int sFnValBeg,
+    const vector< ImageBuffer<double> >& outBuf,
+    ImageBuffer<OutPixelT>&             outImage   //accumulator and result, input and output
+)
 {
     for (int kernelI=0; kernelI<curKernelN; kernelI++)
         if (isFirstPass && kernelI==0)
-            for (int y=0;y<outImage.height;y++) {
+            for (int y=0; y<outImage.height; y++) {
                 OutPixelT* outPtr          = outImage.GetImgLinePtr(y);
                 const double* outBufPtr    = outBuf[kernelI].GetImgLinePtr(y);
                 const double* sFnValPtr    = sFnVal[sFnValBeg+kernelI].GetImgLinePtr(y);
-                for (int x=0;x<outImage.width;x++) {
+                for (int x=0; x<outImage.width; x++) {
                     *outPtr = *outBufPtr * *sFnValPtr;
-                    outPtr++; outBufPtr++; sFnValPtr++;
-                    }
+                    outPtr++;
+                    outBufPtr++;
+                    sFnValPtr++;
                 }
+            }
         else
-            for (int y=0;y<outImage.height;y++) {
+            for (int y=0; y<outImage.height; y++) {
                 OutPixelT* outPtr          = outImage.GetImgLinePtr(y);
                 const double* outBufPtr = outBuf[kernelI].GetImgLinePtr(y);
                 const double* sFnValPtr    = sFnVal[sFnValBeg+kernelI].GetImgLinePtr(y);
-                for (int x=0;x<outImage.width;x++) {
+                for (int x=0; x<outImage.width; x++) {
                     *outPtr += *outBufPtr * *sFnValPtr;
-                    outPtr++; outBufPtr++; sFnValPtr++;
-                    }
+                    outPtr++;
+                    outBufPtr++;
+                    sFnValPtr++;
                 }
+            }
 }
 
 /**
@@ -645,20 +655,20 @@ void CombineOutputsAndSfnIntoResult(
 */
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_MultipleKernels(
-        const ImageBuffer<InPixelT>& inImage,
-        const vector<double>& colPos,
-        const vector<double>& rowPos,
-        std::vector< afwMath::Kernel::SpatialFunctionPtr >& sFn,
-        vector< ImageBuffer<double> >&   sFnVal, //output
-        bool                             reuseSfnValBuffers,
-        int maxSimKernels,
-        ImageBuffer<OutPixelT>&  outImage, //output
-        KerPixel*   basisKernelsListGPU,
-        int kernelW, int kernelH,
-        const vector< KerPixel >&   basisKernelSum,
-        ImageBuffer<double>& norm,  //output
-        bool doNormalize
-        )
+    const ImageBuffer<InPixelT>& inImage,
+    const vector<double>& colPos,
+    const vector<double>& rowPos,
+    std::vector< afwMath::Kernel::SpatialFunctionPtr >& sFn,
+    vector< ImageBuffer<double> >&   sFnVal, //output
+    bool                             reuseSfnValBuffers,
+    int maxSimKernels,
+    ImageBuffer<OutPixelT>&  outImage, //output
+    KerPixel*   basisKernelsListGPU,
+    int kernelW, int kernelH,
+    const vector< KerPixel >&   basisKernelSum,
+    ImageBuffer<double>& norm,  //output
+    bool doNormalize
+)
 {
     int kernelN=sFn.size();
 
@@ -676,11 +686,11 @@ void GPU_ConvolutionImage_MultipleKernels(
     vector< gpu::GpuMemOwner<double> > outImageGPU_Owner(kernelN);
 
     int simultaneousKernelN=0;
-    for (int i=0;i<maxSimKernels;i++){
+    for (int i=0; i<maxSimKernels; i++) {
         outImageGPUPtr[i]=outImageGPU_Owner[i].Alloc( outImage.Size());
         if (outImageGPUPtr[i]==NULL) break;
         simultaneousKernelN=i+1;
-        }
+    }
     if (simultaneousKernelN==0)
         throw LSST_EXCEPT(pexExcept::MemoryException, "Not enough memory on GPU for any kernels");
 
@@ -688,7 +698,7 @@ void GPU_ConvolutionImage_MultipleKernels(
 
     // allocate convolution output buffers on CPU  (one per kernel)
     vector< ImageBuffer<double> > outBuf(simultaneousKernelN);
-    for (int i=0;i<simultaneousKernelN;i++)
+    for (int i=0; i<simultaneousKernelN; i++)
         outBuf[i].Init(outImage.width, outImage.height);
 
     int blockN=gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
@@ -704,19 +714,19 @@ void GPU_ConvolutionImage_MultipleKernels(
     cudaGetLastError(); //clear error status
 
     for (int i=0; i<kernelN; i+=prevCurKernelN)
-        {
+    {
         bool isLastPass  = i+simultaneousKernelN>=kernelN;
         bool isFirstPass = i==0;
 
         mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<double,InPixelT>(
-                        inImageGPU.ptr, inImage.width, inImage.height,
-                        basisKernelsListGPU+(i*kernelW*kernelH),
-                        curKernelN,
-                        kernelW, kernelH,
-                        outImageGPU,
-                        blockN,
-                        shMemSize
-                        );
+            inImageGPU.ptr, inImage.width, inImage.height,
+            basisKernelsListGPU+(i*kernelW*kernelH),
+            curKernelN,
+            kernelW, kernelH,
+            outImageGPU,
+            blockN,
+            shMemSize
+        );
         //the following part until CopyFromGpu executes in parallel with GPU
 
         //add up result from previous calculation
@@ -728,11 +738,11 @@ void GPU_ConvolutionImage_MultipleKernels(
             sFnValBeg=0;
 
         normalizationError = normalizationError ||
-                CalculateSpatialFunctionsValuesAndNormalization(
-                            i, curKernelN, isLastPass, doNormalize,
-                            colPos, rowPos, sFn, basisKernelSum,
-                            norm, sFnVal, sFnValBeg
-                            );
+                             CalculateSpatialFunctionsValuesAndNormalization(
+                                 i, curKernelN, isLastPass, doNormalize,
+                                 colPos, rowPos, sFn, basisKernelSum,
+                                 norm, sFnVal, sFnValBeg
+                             );
 
         cudaThreadSynchronize();
         if (cudaGetLastError()!=cudaSuccess)
@@ -744,31 +754,31 @@ void GPU_ConvolutionImage_MultipleKernels(
         prevIsFirstPass=isFirstPass;
         prevCurKernelN=curKernelN;
         curKernelN=simultaneousKernelN;
-        }
+    }
     CombineOutputsAndSfnIntoResult(prevCurKernelN, prevIsFirstPass, sFnVal, sFnValBeg, outBuf, outImage);
 
     if (doNormalize) {
         if (normalizationError)
             throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
 
-        for (int y=0;y<outImage.height;y++)
-            for (int x=0;x<outImage.width;x++)
+        for (int y=0; y<outImage.height; y++)
+            for (int x=0; x<outImage.width; x++)
                 outImage.Pixel(x,y) *= norm.Pixel(x,y);
-        }
+    }
 }
 
 } //local namespace ends
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_LinearCombinationKernel(
-        ImageBuffer<InPixelT>& inImage,
-        vector<double> colPos,
-        vector<double> rowPos,
-        std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn,
-        ImageBuffer<OutPixelT>&                outImage,
-        std::vector< ImageBuffer<KerPixel> >&  basisKernels,
-        bool doNormalize
-        )
+    ImageBuffer<InPixelT>& inImage,
+    vector<double> colPos,
+    vector<double> rowPos,
+    std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn,
+    ImageBuffer<OutPixelT>&                outImage,
+    std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+    bool doNormalize
+)
 {
     assert(basisKernels.size() == sFn.size());
 
@@ -777,10 +787,10 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
     int kernelH=basisKernels[0].height;
     int kernelSize=kernelW*kernelH;
 
-    for (int i=0;i<kernelN;i++){
+    for (int i=0; i<kernelN; i++) {
         assert(kernelW==basisKernels[i].width);
         assert(kernelH==basisKernels[i].height);
-        }
+    }
 
     //calculate kernel sums
     std::vector< KerPixel > basisKernelSum(kernelN);
@@ -794,40 +804,41 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
     gpu::GpuMemOwner<KerPixel > basisKernelsGPU;
     basisKernelsGPU.Alloc(kernelSize * kernelN);
 
-    for (int i=0;i<kernelN;i++) {
+    for (int i=0; i<kernelN; i++) {
         KerPixel* kernelBeg=basisKernelsGPU.ptr + (kernelSize * i);
         gpu::CopyToGpu(kernelBeg,
                        basisKernels[i].img,
                        kernelSize
-                       );
-        }
+                      );
+    }
 
     // allocate array of spatial function values on CPU  (one per kernel)
     vector< ImageBuffer<double> > sFnVal(maxSimKernels);
-    for (int i=0;i<maxSimKernels;i++)
+    for (int i=0; i<maxSimKernels; i++)
         sFnVal[i].Init(outImage.width, outImage.height);
 
     //buffer for normalization coefficients
     ImageBuffer<double> norm;
-    norm.width = outImage.width; norm.height = outImage.height; //squelch warnings
+    norm.width = outImage.width;
+    norm.height = outImage.height; //squelch warnings
     if (doNormalize)
         norm.Init(outImage.width, outImage.height);
 
     GPU_ConvolutionImage_MultipleKernels<OutPixelT,InPixelT>(
-                inImage,
-                colPos,
-                rowPos,
-                sFn,
-                sFnVal, //output
-                true,  //reuseSfnValBuffers,
-                maxSimKernels,
-                outImage,  //output
-                basisKernelsGPU.ptr,
-                kernelW, kernelH,
-                basisKernelSum,
-                norm,  //output
-                doNormalize
-                );
+        inImage,
+        colPos,
+        rowPos,
+        sFn,
+        sFnVal, //output
+        true,  //reuseSfnValBuffers,
+        maxSimKernels,
+        outImage,  //output
+        basisKernelsGPU.ptr,
+        kernelW, kernelH,
+        basisKernelSum,
+        norm,  //output
+        doNormalize
+    );
 
 }
 
@@ -844,18 +855,18 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_LinearCombinationKernel(
-        ImageBuffer<InPixelT>& inImageImg,
-        ImageBuffer<VarPixel>& inImageVar,
-        ImageBuffer<MskPixel>& inImageMsk,
-        vector<double> colPos,
-        vector<double> rowPos,
-        std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn,
-        ImageBuffer<OutPixelT>&                outImageImg,
-        ImageBuffer<VarPixel>&                 outImageVar,
-        ImageBuffer<MskPixel>&                 outImageMsk,
-        std::vector< ImageBuffer<KerPixel> >&  basisKernels,
-        bool doNormalize
-        )
+    ImageBuffer<InPixelT>& inImageImg,
+    ImageBuffer<VarPixel>& inImageVar,
+    ImageBuffer<MskPixel>& inImageMsk,
+    vector<double> colPos,
+    vector<double> rowPos,
+    std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn,
+    ImageBuffer<OutPixelT>&                outImageImg,
+    ImageBuffer<VarPixel>&                 outImageVar,
+    ImageBuffer<MskPixel>&                 outImageMsk,
+    std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+    bool doNormalize
+)
 {
     int blockN=gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
 
@@ -873,10 +884,10 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     const int kernelH=basisKernels[0].height;
     const int kernelSize = kernelW*kernelH;
 
-    for (int i=0;i<kernelN;i++){
+    for (int i=0; i<kernelN; i++) {
         assert(kernelW==basisKernels[i].width);
         assert(kernelH==basisKernels[i].height);
-        }
+    }
 
     //calculate kernel sums
     std::vector< KerPixel > basisKernelSum(kernelN);
@@ -887,56 +898,57 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     gpu::GpuMemOwner<KerPixel > basisKernelsGPU;
     basisKernelsGPU.Alloc(kernelSize * kernelN);
 
-    for (int i=0;i<kernelN;i++) {
+    for (int i=0; i<kernelN; i++) {
         KerPixel* kernelBeg=basisKernelsGPU.ptr + (kernelSize * i);
         gpu::CopyToGpu(kernelBeg,
                        basisKernels[i].img,
                        kernelSize
-                       );
-        }
+                      );
+    }
 
     // allocate array of spatial function values on CPU and GPU
     vector< ImageBuffer<double> >         sFnVal(kernelN);
     vector< double* >                     sFnValGPUPtr(kernelN);
     vector< gpu::GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
 
-    for (int i=0;i<kernelN;i++)
+    for (int i=0; i<kernelN; i++)
         sFnVal[i].Init(outWidth, outHeight);
 
     //buffer for normalization coefficients
     ImageBuffer<double> norm;
-    norm.width = outWidth; norm.height = outHeight; //squelch warnings
+    norm.width = outWidth;
+    norm.height = outHeight; //squelch warnings
     if (doNormalize)
         norm.Init(outWidth, outHeight);
 
 
-    { //==================== image plane ===================
+    {   //==================== image plane ===================
         int maxSimKernels = 6;    // heuristic - more than 7 kernels can not provide increase in speed
         maxSimKernels = min(maxSimKernels,kernelN);
 
         GPU_ConvolutionImage_MultipleKernels<OutPixelT,InPixelT>(
-                inImageImg,
-                colPos,
-                rowPos,
-                sFn,
-                sFnVal, //output
-                false,  //reuseSfnValBuffers,
-                maxSimKernels,
-                outImageImg,  //output
-                basisKernelsGPU.ptr,
-                kernelW, kernelH,
-                basisKernelSum,
-                norm,  //output
-                doNormalize
-                );
+            inImageImg,
+            colPos,
+            rowPos,
+            sFn,
+            sFnVal, //output
+            false,  //reuseSfnValBuffers,
+            maxSimKernels,
+            outImageImg,  //output
+            basisKernelsGPU.ptr,
+            kernelW, kernelH,
+            basisKernelSum,
+            norm,  //output
+            doNormalize
+        );
     } //==================== image plane ends===============
 
     //transfer sFn values
-    for (int i=0;i<kernelN;i++){
+    for (int i=0; i<kernelN; i++) {
         sFnValGPUPtr[i]=sFnValGPU_Owner[i].Transfer(sFnVal[i]);
         if (sFnValGPUPtr[i]==NULL)
             throw LSST_EXCEPT(pexExcept::MemoryException, "Not enough memory on GPU for spatial function values");
-        }
+    }
     double**    sFnValGPU      =gpu::TransferToGpu(&sFnValGPUPtr[0],kernelN);
 
     //transfer normalization coeficients
@@ -968,17 +980,17 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
 
     cudaGetLastError(); //clear error status
     mathDetailGpu::Call_ConvolutionKernel_LC_Var(
-                        inImageGPUVar.ptr, inImageVar.width, inImageVar.height,
-                        inImageGPUMsk.ptr,
-                        basisKernelsGPU.ptr, kernelN,
-                        kernelW, kernelH,
-                        sFnValGPU,
-                        normGPU_Owner.ptr,
-                        outImageGPUVar.ptr,
-                        outImageGPUMsk.ptr,
-                        blockN,
-                        shMemSize
-                        );
+        inImageGPUVar.ptr, inImageVar.width, inImageVar.height,
+        inImageGPUMsk.ptr,
+        basisKernelsGPU.ptr, kernelN,
+        kernelW, kernelH,
+        sFnValGPU,
+        normGPU_Owner.ptr,
+        outImageGPUVar.ptr,
+        outImageGPUMsk.ptr,
+        blockN,
+        shMemSize
+    );
     cudaThreadSynchronize();
     if (cudaGetLastError()!=cudaSuccess)
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "GPU calculation failed to run");
@@ -1005,10 +1017,10 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_SpatiallyInvariantKernel(
-        ImageBuffer<InPixelT>&    inImage,
-        ImageBuffer<OutPixelT>&   outImage,
-        ImageBuffer<KerPixel>&    kernel
-        )
+    ImageBuffer<InPixelT>&    inImage,
+    ImageBuffer<OutPixelT>&   outImage,
+    ImageBuffer<KerPixel>&    kernel
+)
 {
     int kernelW=kernel.width;
     int kernelH=kernel.height;
@@ -1043,13 +1055,13 @@ void GPU_ConvolutionImage_SpatiallyInvariantKernel(
 
     cudaGetLastError(); //clear error status
     mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<OutPixelT,InPixelT>(
-                        inImageGPU.ptr, inImage.width, inImage.height,
-                        basisKernelGPU.ptr, 1,
-                        kernelW, kernelH,
-                        outImageGPU,
-                        blockN,
-                        shMemSize
-                        );
+        inImageGPU.ptr, inImage.width, inImage.height,
+        basisKernelGPU.ptr, 1,
+        kernelW, kernelH,
+        outImageGPU,
+        blockN,
+        shMemSize
+    );
     cudaThreadSynchronize();
     if (cudaGetLastError()!=cudaSuccess)
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "GPU calculation failed to run");
@@ -1067,14 +1079,14 @@ void GPU_ConvolutionImage_SpatiallyInvariantKernel(
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_SpatiallyInvariantKernel(
-        ImageBuffer<InPixelT>&    inImageImg,
-        ImageBuffer<VarPixel>&    inImageVar,
-        ImageBuffer<MskPixel>&    inImageMsk,
-        ImageBuffer<OutPixelT>&   outImageImg,
-        ImageBuffer<VarPixel>&    outImageVar,
-        ImageBuffer<MskPixel>&    outImageMsk,
-        ImageBuffer<KerPixel>&    kernel
-        )
+    ImageBuffer<InPixelT>&    inImageImg,
+    ImageBuffer<VarPixel>&    inImageVar,
+    ImageBuffer<MskPixel>&    inImageMsk,
+    ImageBuffer<OutPixelT>&   outImageImg,
+    ImageBuffer<VarPixel>&    outImageVar,
+    ImageBuffer<MskPixel>&    outImageMsk,
+    ImageBuffer<KerPixel>&    kernel
+)
 {
     int kernelW=kernel.width;
     int kernelH=kernel.height;
@@ -1129,16 +1141,16 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
     int blockN=gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
 
     mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<OutPixelT,InPixelT>(
-                        inImageGPUImg.ptr, inImageImg.width, inImageImg.height,
-                        basisKernelGPU.ptr, 1,
-                        kernelW, kernelH,
-                        outImageGPUImg,
-                        blockN,
-                        shMemSize
-                        );
-     //square kernel
-    for (int y=0;y<kernelH;y++)
-        for (int x=0;x<kernelW;x++)
+        inImageGPUImg.ptr, inImageImg.width, inImageImg.height,
+        basisKernelGPU.ptr, 1,
+        kernelW, kernelH,
+        outImageGPUImg,
+        blockN,
+        shMemSize
+    );
+    //square kernel
+    for (int y=0; y<kernelH; y++)
+        for (int x=0; x<kernelW; x++)
             kernel.Pixel(x,y) *= kernel.Pixel(x,y);
 
     gpu::CopyFromGpu(outImageImg.img, outImageGPUPtrImg[0], outImageImg.Size() );
@@ -1148,26 +1160,26 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
     cudaGetLastError(); //clear last error
 
     mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<VarPixel,VarPixel>(
-                        inImageGPUVar.ptr, inImageVar.width, inImageVar.height,
-                        basisKernelGPU.ptr, 1,
-                        kernelW, kernelH,
-                        outImageGPUVar,
-                        blockN,
-                        shMemSize
-                        );
+        inImageGPUVar.ptr, inImageVar.width, inImageVar.height,
+        basisKernelGPU.ptr, 1,
+        kernelW, kernelH,
+        outImageGPUVar,
+        blockN,
+        shMemSize
+    );
 
     cudaThreadSynchronize();
     if (cudaGetLastError()!=cudaSuccess)
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "GPU variance calculation failed to run");
 
     mathDetailGpu::Call_SpatiallyInvariantMaskConvolutionKernel(
-                        inImageGPUMsk.ptr, inImageMsk.width, inImageMsk.height,
-                        basisKernelGPU.ptr, 1,
-                        kernelW, kernelH,
-                        outImageGPUMsk,
-                        blockN,
-                        shMemSize
-                        );
+        inImageGPUMsk.ptr, inImageMsk.width, inImageMsk.height,
+        basisKernelGPU.ptr, 1,
+        kernelW, kernelH,
+        outImageGPUMsk,
+        blockN,
+        shMemSize
+    );
     cudaThreadSynchronize();
     if (cudaGetLastError()!=cudaSuccess)
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "GPU mask calculation failed to run");
@@ -1210,7 +1222,10 @@ INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
 /// \endcond
 
-}}}} //namespace lsst::afw::math::detail ends
+}
+}
+}
+} //namespace lsst::afw::math::detail ends
 
 #endif //GPU_BUILD
 

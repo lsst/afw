@@ -37,15 +37,15 @@
  */
 
 namespace lsst {
-    namespace afw {
-        namespace math {
-            namespace detail {
+namespace afw {
+namespace math {
+namespace detail {
 
-                typedef lsst::afw::image::VariancePixel VarPixel;
-                typedef lsst::afw::image::MaskPixel     MskPixel;
-                typedef double KerPixel;
+typedef lsst::afw::image::VariancePixel VarPixel;
+typedef lsst::afw::image::MaskPixel     MskPixel;
+typedef double KerPixel;
 
-                namespace gpu {
+namespace gpu {
 
 #ifdef GPU_BUILD
 
@@ -58,37 +58,41 @@ void CallTestGpuKernel(T* ret);
 
 template <typename OutPixelT, typename InPixelT>
 void Call_SpatiallyInvariantImageConvolutionKernel(
-        InPixelT*  inImageGPU, int inImageWidth, int inImageHeight,
-        KerPixel*  allKernelsGPU, int kernelTotalN,
-        int kernelW, int kernelH,
-        OutPixelT* outImageGPU[],
-        int blockN,
-        int sharedMemorySize
-        );
+    InPixelT*  inImageGPU, int inImageWidth, int inImageHeight,
+    KerPixel*  allKernelsGPU, int kernelTotalN,
+    int kernelW, int kernelH,
+    OutPixelT* outImageGPU[],
+    int blockN,
+    int sharedMemorySize
+);
 
 void Call_SpatiallyInvariantMaskConvolutionKernel(
-        MskPixel*  inImageGPU, int inImageWidth, int inImageHeight,
-        KerPixel*  allKernelsGPU, int kernelTotalN,
-        int kernelW, int kernelH,
-        MskPixel* outImageGPU[],
-        int blockN,
-        int sharedMemorySize
-        );
+    MskPixel*  inImageGPU, int inImageWidth, int inImageHeight,
+    KerPixel*  allKernelsGPU, int kernelTotalN,
+    int kernelW, int kernelH,
+    MskPixel* outImageGPU[],
+    int blockN,
+    int sharedMemorySize
+);
 
 void Call_ConvolutionKernel_LC_Var(
-        VarPixel*  inImageGPU, int inImageWidth, int inImageHeight,
-        MskPixel*  inMskGPU,
-        KerPixel*  kernelGPU, int kernelTotalN,
-        int kernelW, int kernelH,
-        double*  sfValGPU[],
-        double* normGPU,
-        VarPixel* outImageGPU,
-        MskPixel*  outMskGPU,
-        int blockN,
-        int sharedMemorySize
-        );
+    VarPixel*  inImageGPU, int inImageWidth, int inImageHeight,
+    MskPixel*  inMskGPU,
+    KerPixel*  kernelGPU, int kernelTotalN,
+    int kernelW, int kernelH,
+    double*  sfValGPU[],
+    double* normGPU,
+    VarPixel* outImageGPU,
+    MskPixel*  outMskGPU,
+    int blockN,
+    int sharedMemorySize
+);
 
 #endif //GPU_BUILD
 
-}}}}}  //namespace lsst::afw::math::detail::gpu ends
+}
+}
+}
+}
+}  //namespace lsst::afw::math::detail::gpu ends
 
