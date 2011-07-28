@@ -197,15 +197,9 @@ bool SelectPreferredCudaDevice()
     return false;
 }
 
-void AutoSelectCudaDevice()
+cudaDeviceProp GetDesiredDeviceProperties()
 {
-    int cudaDevicesN=0;
-    cudaGetDeviceCount(&cudaDevicesN);
-    if (cudaDevicesN==0)
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "No CUDA capable GPUs found");
-
     cudaDeviceProp prop;
-    char errorStr[1000];
     memset(&prop, 1, sizeof(prop));
 
     //min sm 1.3
@@ -223,6 +217,19 @@ void AutoSelectCudaDevice()
     prop.maxThreadsPerBlock = 256;
     prop.totalGlobalMem = 500 * 1024 * 1024;
 
+    return prop;
+}
+
+void AutoSelectCudaDevice()
+{
+    int cudaDevicesN=0;
+    cudaGetDeviceCount(&cudaDevicesN);
+    if (cudaDevicesN==0)
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "No CUDA capable GPUs found");
+
+    cudaDeviceProp prop=GetDesiredDeviceProperties();
+    char errorStr[1000];
+
     int devId;
     cudaError_t cudaError= cudaChooseDevice(&devId, &prop);
     //printf("Error device %d:\n %s\n", devId, cudaGetErrorString(err));
@@ -239,6 +246,17 @@ void AutoSelectCudaDevice()
                 devId, cudaGetErrorString(cudaError));
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, errorStr);
     }
+}
+
+void VerifyCudaDevice()
+{
+    cudaDeviceProp prop=GetDesiredDeviceProperties();
+    char errorStr[1000];
+
+    int devId;
+    cudaError_t cudaError=cudaGetDevice(&devId);
+    if (cudaError!=cudaSuccess)
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Could not get selected CUDA device ID");
 
     cudaDeviceProp deviceProp;
     cudaError=cudaGetDeviceProperties(&deviceProp, devId);

@@ -81,8 +81,10 @@ bool TryToSelectCudaDevice(afwMath::ConvolutionControl const& convolutionControl
     if (devSel!=afwMath::ConvolutionControl::AUTO_GPU_THROW) {
 
         bool done=mathDetail::gpu::SelectPreferredCudaDevice();
-        if (!done)
+        if (!done) {
             mathDetail::gpu::AutoSelectCudaDevice();
+            mathDetail::gpu::VerifyCudaDevice();
+        }
 
         isDeviceOk=true;
         return true;
@@ -100,6 +102,7 @@ bool TryToSelectCudaDevice(afwMath::ConvolutionControl const& convolutionControl
     catch(...) {
         return false;
     }
+    mathDetail::gpu::VerifyCudaDevice();
 
     isDeviceOk=true;
     return true;

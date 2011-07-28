@@ -51,6 +51,9 @@ bool SelectPreferredCudaDevice();
 // throws exception when automatic selection fails
 void AutoSelectCudaDevice();
 
+// verifies basic parameters of Cuda device
+void VerifyCudaDevice();
+
 } //namespace gpu ends
 
 template <typename OutPixelT, typename InPixelT>
