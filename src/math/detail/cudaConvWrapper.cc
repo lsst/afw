@@ -178,7 +178,7 @@ bool SelectPreferredCudaDevice()
 {
     int devId=GetPreferredCudaDevice();
 
-    //printf("DEVICE ID %d\n", devId);
+     //printf("DEVICE ID %d\n", devId);
 
     if (devId>=0) {
         cudaError_t err = cudaSetDevice(devId);
