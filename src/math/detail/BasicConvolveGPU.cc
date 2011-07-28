@@ -65,21 +65,34 @@ typedef mathDetail::VarPixel VarPixel;
 typedef mathDetail::MskPixel MskPixel;
 typedef mathDetail::KerPixel KerPixel;
 
+
+
 bool TryToSelectCudaDevice(afwMath::ConvolutionControl const& convolutionControl)
 {
+    static bool isDeviceSelected=false;
+    static bool isDeviceOk=false;
+    if (isDeviceSelected)
+        return isDeviceOk;
+    isDeviceSelected=true;
+
     afwMath::ConvolutionControl::DeviceSelection_t devSel;
     devSel=convolutionControl.getDeviceSelection();
 
     if (devSel!=afwMath::ConvolutionControl::AUTO_GPU_THROW) {
+
         bool done=mathDetail::gpu::SelectPreferredCudaDevice();
         if (!done)
             mathDetail::gpu::AutoSelectCudaDevice();
 
+        isDeviceOk=true;
         return true;
     }
 
     bool done=mathDetail::gpu::SelectPreferredCudaDevice();
-    if (done) return true;
+    if (done) {
+        isDeviceOk=true;
+        return true;
+    }
 
     try {
         mathDetail::gpu::AutoSelectCudaDevice();
@@ -87,6 +100,8 @@ bool TryToSelectCudaDevice(afwMath::ConvolutionControl const& convolutionControl
     catch(...) {
         return false;
     }
+
+    isDeviceOk=true;
     return true;
 }
 
@@ -324,6 +339,9 @@ bool mathDetail::convolveLinearCombinationGPU(
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
                 convolutionControl.getDoNormalize());
     } else {
+        if (TryToSelectCudaDevice(convolutionControl)==false)
+            return false;
+
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
         afwMath::Kernel::Ptr refKernelPtr; // possibly refactored version of kernel
@@ -343,8 +361,6 @@ bool mathDetail::convolveLinearCombinationGPU(
         */
 
         {
-            if (TryToSelectCudaDevice(convolutionControl)==false)
-                return false;
             afwMath::LinearCombinationKernel* newKernel;
 
             newKernel = dynamic_cast<afwMath::LinearCombinationKernel*> (&(*refKernelPtr));

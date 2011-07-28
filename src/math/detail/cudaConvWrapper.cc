@@ -174,14 +174,8 @@ int GetPreferredCudaDevice()
         return atoi(devStr);
 }
 
-namespace {
-    bool isDeviceSet=false;
-    }
-
 bool SelectPreferredCudaDevice()
 {
-    if (isDeviceSet) return true;
-
     int devId=GetPreferredCudaDevice();
 
     //printf("DEVICE ID %d\n", devId);
@@ -194,22 +188,17 @@ bool SelectPreferredCudaDevice()
             sprintf(errorStr, "Error selecting device %d:\n %s\n", devId, cudaGetErrorString(err));
             throw LSST_EXCEPT(pexExcept::RuntimeErrorException, errorStr);
             }
-        isDeviceSet=true;
         return true;
     }
 
-    if (devId!=-2) {
-        isDeviceSet=true;
+    if (devId!=-2)
         return true;
-        }
+
     return false;
 }
 
 void AutoSelectCudaDevice()
 {
-    if (isDeviceSet) return;
-    isDeviceSet=true;
-
     int cudaDevicesN=0;
     cudaGetDeviceCount(&cudaDevicesN);
     if (cudaDevicesN==0)
@@ -276,8 +265,6 @@ void AutoSelectCudaDevice()
 
     if (deviceProp.maxThreadsPerBlock < prop.maxThreadsPerBlock)
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Not enough threads per block available on GPU");
-
-    return;
 }
 
 int GetCudaDeviceId()
