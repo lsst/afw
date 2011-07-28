@@ -43,7 +43,13 @@ namespace gpu {
 bool IsSufficientSharedMemoryAvailable(int filterW, int filterH, int pixSize);
 bool IsSufficientSharedMemoryAvailableImgAndMask(int filterW, int filterH, int pixSize);
 
-void SelectPreferredCudaDevice();
+// returns true when preffered device has been selected
+// returns false when there is no preffered device
+// throws exception when unable to select preffered device
+bool SelectPreferredCudaDevice();
+
+// throws exception when automatic selection fails
+void AutoSelectCudaDevice();
 
 } //namespace gpu ends
 

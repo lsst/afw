@@ -174,16 +174,13 @@ int GetPreferredCudaDevice()
         return atoi(devStr);
 }
 
-void SelectPreferredCudaDevice()
-{
-    static bool isDeviceSet=false;
-    if (isDeviceSet) return;
-    isDeviceSet=true;
+namespace {
+    bool isDeviceSet=false;
+    }
 
-    int cudaDevicesN=0;
-    cudaGetDeviceCount(&cudaDevicesN);
-    if (cudaDevicesN==0)
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "No CUDA capable GPUs found");
+bool SelectPreferredCudaDevice()
+{
+    if (isDeviceSet) return true;
 
     int devId=GetPreferredCudaDevice();
 
@@ -191,17 +188,32 @@ void SelectPreferredCudaDevice()
 
     if (devId>=0) {
         cudaError_t err = cudaSetDevice(devId);
-        if (err!= cudaSuccess) {
-            cudaGetLastError(); //clear error
+        if (err!= cudaSuccess){
+            cudaGetLastError(); //clear error code
             char errorStr[1000];
             sprintf(errorStr, "Error selecting device %d:\n %s\n", devId, cudaGetErrorString(err));
             throw LSST_EXCEPT(pexExcept::RuntimeErrorException, errorStr);
-        }
-        return;
+            }
+        isDeviceSet=true;
+        return true;
     }
 
-    if (devId!=-2)
-        return;
+    if (devId!=-2) {
+        isDeviceSet=true;
+        return true;
+        }
+    return false;
+}
+
+void AutoSelectCudaDevice()
+{
+    if (isDeviceSet) return;
+    isDeviceSet=true;
+
+    int cudaDevicesN=0;
+    cudaGetDeviceCount(&cudaDevicesN);
+    if (cudaDevicesN==0)
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "No CUDA capable GPUs found");
 
     cudaDeviceProp prop;
     char errorStr[1000];
@@ -222,6 +234,7 @@ void SelectPreferredCudaDevice()
     prop.maxThreadsPerBlock = 256;
     prop.totalGlobalMem = 500 * 1024 * 1024;
 
+    int devId;
     cudaError_t cudaError= cudaChooseDevice(&devId, &prop);
     //printf("Error device %d:\n %s\n", devId, cudaGetErrorString(err));
     if (cudaError!= cudaSuccess)
@@ -263,6 +276,8 @@ void SelectPreferredCudaDevice()
 
     if (deviceProp.maxThreadsPerBlock < prop.maxThreadsPerBlock)
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Not enough threads per block available on GPU");
+
+    return;
 }
 
 int GetCudaDeviceId()

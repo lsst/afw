@@ -65,6 +65,32 @@ typedef mathDetail::VarPixel VarPixel;
 typedef mathDetail::MskPixel MskPixel;
 typedef mathDetail::KerPixel KerPixel;
 
+bool TryToSelectCudaDevice(afwMath::ConvolutionControl const& convolutionControl)
+{
+    afwMath::ConvolutionControl::DeviceSelection_t devSel;
+    devSel=convolutionControl.getDeviceSelection();
+
+    if (devSel!=afwMath::ConvolutionControl::AUTO_GPU_THROW) {
+        bool done=mathDetail::gpu::SelectPreferredCudaDevice();
+        if (!done)
+            mathDetail::gpu::AutoSelectCudaDevice();
+
+        return true;
+    }
+
+    bool done=mathDetail::gpu::SelectPreferredCudaDevice();
+    if (done) return true;
+
+    try {
+        mathDetail::gpu::AutoSelectCudaDevice();
+    }
+    catch(...) {
+        return false;
+    }
+    return true;
+}
+
+
 // copies data from MaskedImage to three image buffers
 template <typename PixelT>
 void CopyFromMaskedImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel> const& image,
@@ -317,7 +343,8 @@ bool mathDetail::convolveLinearCombinationGPU(
         */
 
         {
-            mathDetail::gpu::SelectPreferredCudaDevice();
+            if (TryToSelectCudaDevice(convolutionControl)==false)
+                return false;
             afwMath::LinearCombinationKernel* newKernel;
 
             newKernel = dynamic_cast<afwMath::LinearCombinationKernel*> (&(*refKernelPtr));
@@ -441,6 +468,10 @@ bool mathDetail::convolveLinearCombinationGPU(
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
                 convolutionControl.getDoNormalize());
     } else {
+
+        if (TryToSelectCudaDevice(convolutionControl)==false)
+            return false;
+
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
         afwMath::Kernel::Ptr refKernelPtr; // possibly refactored version of kernel
@@ -459,7 +490,6 @@ bool mathDetail::convolveLinearCombinationGPU(
         //        convolutionControl.getDoNormalize());
 
         {
-            mathDetail::gpu::SelectPreferredCudaDevice();
             afwMath::LinearCombinationKernel* newKernel;
 
             newKernel = dynamic_cast<afwMath::LinearCombinationKernel*> (&(*refKernelPtr));
@@ -572,6 +602,9 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
 #else
     bool doNormalize=convolutionControl.getDoNormalize();
 
+    if (TryToSelectCudaDevice(convolutionControl)==false)
+        return false;
+
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
     typedef typename KernelImage::const_x_iterator KernelXIterator;
@@ -597,8 +630,6 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     pexLog::TTrace<5>("lsst.afw.math.convolve",
                       "convolveSpatiallyInvariantGPU: plain Image, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);
-
-    mathDetail::gpu::SelectPreferredCudaDevice();
 
     typedef afwImage::Image<InPixelT  > InImageT;
     typedef afwImage::Image<OutPixelT > OutImageT;
@@ -687,7 +718,8 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     int const cnvStartX = kernel.getCtrX();
     int const cnvStartY = kernel.getCtrY();
 
-    mathDetail::gpu::SelectPreferredCudaDevice();
+    if (TryToSelectCudaDevice(convolutionControl)==false)
+        return false;
 
     bool shMemOk = gpu::IsSufficientSharedMemoryAvailable(kWidth,kHeight,sizeof(KerPixel));
     if (!shMemOk) {
