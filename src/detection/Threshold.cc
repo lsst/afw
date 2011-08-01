@@ -23,8 +23,15 @@
 #include <string>
 #include <boost/format.hpp>
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/math/Statistics.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Threshold.h"
 
+namespace image = lsst::afw::image;
+namespace math = lsst::afw::math;
+namespace pexLogging = lsst::pex::logging;
 
 namespace lsst {
 namespace afw {
@@ -96,6 +103,24 @@ double Threshold::getValue(const double param) const {
     }
 }
 
+template<typename ImageT>
+double Threshold::getValue(ImageT const& image) const {
+    double param = -1;                  // Parameter for getValue()
+    if (_type == STDEV || 
+        _type == VARIANCE) {
+        math::Statistics stats = math::makeStatistics(image, math::STDEVCLIP);
+        double const sd = stats.getValue(math::STDEVCLIP);
+
+        pexLogging::TTrace<3>("afw.detection", "St. Dev = %g", sd);
+        
+        if (_type == VARIANCE) {
+            param = sd*sd;
+        } else {
+            param = sd;
+        }
+    }
+    return getValue(param);
+}
 
 /**
  * \brief Factory method for creating Threshold objects
@@ -114,5 +139,19 @@ Threshold createThreshold(
 ) {
     return Threshold(value, Threshold::parseTypeString(typeStr), polarity);
 }
+
+
+//
+// Explicit instantiations
+//
+#define INSTANTIATE(TYPE) \
+template double Threshold::getValue(image::TYPE<unsigned short> const&) const; \
+template double Threshold::getValue(image::TYPE<int> const&) const; \
+template double Threshold::getValue(image::TYPE<float> const&) const; \
+template double Threshold::getValue(image::TYPE<double> const&) const;
+
+INSTANTIATE(Image);
+INSTANTIATE(MaskedImage);
+
 
 }}}

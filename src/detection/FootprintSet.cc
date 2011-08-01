@@ -139,36 +139,6 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
 
 /************************************************************************************************************/
 /*
- * Convert a Threshold into a value and polarity
- */
-template<typename ImageT>
-static double
-getThresholdValue(detection::Threshold const &threshold, // threshold to find objects
-                  ImageT const& img                      // the image to be searched
-                 )
-{                     
-    double thresholdParam = -1;          // standard deviation of image (may be needed by Threshold)
-    if (threshold.getType() == detection::Threshold::STDEV ||
-        threshold.getType() == detection::Threshold::VARIANCE) {
-        math::Statistics stats = math::makeStatistics(img, math::STDEVCLIP);
-        double const sd = stats.getValue(math::STDEVCLIP);
-
-        pexLogging::TTrace<3>("afw.detection", "St. Dev = %g", sd);
-        
-        if (threshold.getType() == detection::Threshold::VARIANCE) {
-            thresholdParam = sd*sd;
-        } else {
-            thresholdParam = sd;
-        }
-    }
-
-    double const thresholdVal = threshold.getValue(thresholdParam);
-    
-    return thresholdVal;
-}
-
-/************************************************************************************************************/
-/*
  * Functions to determine if a pixel's in a Footprint
  */
 template<typename ImagePixelT>
@@ -345,7 +315,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         _footprints.get(), 
         _region, 
         img,
-        getThresholdValue(threshold, img), threshold.getPolarity(),
+        threshold.getValue(img), threshold.getPolarity(),
         npixMin
     );
 }
@@ -410,7 +380,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         _footprints.get(), 
         _region,
         *maskedImg.getImage(), 
-        getThresholdValue(threshold, maskedImg), threshold.getPolarity(),
+        threshold.getValue(maskedImg), threshold.getPolarity(),
         npixMin
     );    
     // Set Mask if requested    
@@ -953,6 +923,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     FootprintSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
     swap(ds);
 }
+
 
 /************************************************************************************************************/
 /**

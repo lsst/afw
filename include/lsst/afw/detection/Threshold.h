@@ -76,6 +76,15 @@ public:
      * @return value of threshold
      */
     double getValue(const double param = -1) const; 
+
+    /**
+     * return value of threshold by interrogating the image, if required
+     * @param image Image to interrogate, if threshold type demands
+     * @return value of threshold
+     */
+    template<typename ImageT>
+    double getValue(ImageT const& image) const;
+
     /// return Threshold's polarity
     bool getPolarity() const { return _polarity; }
 private:
