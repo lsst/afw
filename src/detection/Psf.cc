@@ -129,7 +129,9 @@ Psf::Image::Ptr Psf::doComputeImage(
     std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true);
     
     if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
-        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, "lanczos5");
+        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
+        unsigned int const warpBuffer = 5; // Buffer to use in warping        
+        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
     }
     im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
                ir_dy.first - kernel->getCtrY() + (ir_dy.second <= 0.5 ? 0 : 1));
