@@ -493,10 +493,13 @@ using boost::serialization::make_nvp;
      * @brief 2-dimensional polynomial function with cross terms
      *
      * f(x,y) = c0                                          (0th order)
-     *          + c1 x + c2 y                               (1st order)
-     *          + c2 x^2 + c3 x y + c4 y^2                  (2nd order)
-     *          + c5 x^3 + c6 x^2 y + c7 x y^2 + c8 y^3     (3rd order)
+     *          + c1 x   + c2 y                             (1st order)
+     *          + c3 x^2 + c4 x y   + c5 y^2                (2nd order)
+     *          + c6 x^3 + c7 x^2 y + c8 x y^2 + c9 y^3     (3rd order)
      *          + ...
+     *
+     * Intermediate products for the most recent y are cached,
+     * so when computing for a set of x, y it is more efficient to change x before you change y.
      *
      * @ingroup afw
      */
@@ -516,7 +519,8 @@ using boost::serialization::make_nvp;
             unsigned int order) ///< order of polynomial (0 for constant)
         :
             BasePolynomialFunction2<ReturnT>(order),
-            _yCoeffs(this->_order + 1)
+            _oldY(0),
+            _xCoeffs(this->_order + 1)
         {}
 
         /**
@@ -534,49 +538,62 @@ using boost::serialization::make_nvp;
                                     ///< length must be one of 1, 3, 6, 10, 15...
         :
             BasePolynomialFunction2<ReturnT>(params),
-            _yCoeffs(this->_order + 1)
+            _oldY(0),
+            _xCoeffs(this->_order + 1)
         {}
-        
+
         virtual ~PolynomialFunction2() {}
-       
+
         virtual Function2Ptr clone() const {
             return Function2Ptr(new PolynomialFunction2(this->_params));
         }
-        
+
         virtual ReturnT operator() (double x, double y) const {
             /* Solve as follows:
-            - f(x,y) = Cy0 + Cy1 y + Cy2 y^2 + Cy3 y^3 + ...
+            - f(x,y) = Cx0 + Cx1 x + Cx2 x^2 + Cx3 x^3 + ...
             where:
-              Cy0 = P0 + P1 x + P3 x^2 + P6 x^3 + ...
-              Cy1 = P2 + P4 x + P7 x2 + ...
-              Cy2 = P5 + P8 x + ...
-              Cy3 = P9 + ...
+              Cx0 = P0 + P2 y + P5 y^2 + P9 y^3 + ...
+              Cx1 = P1 + P4 y + P8 y2 + ...
+              Cx2 = P3 + P7 y + ...
+              Cx3 = P6 + ...
               ...
-
-            First compute Cy0, Cy1...Cyn by solving 1-d polynomials in x in the usual way.
-            Then compute f(x,y) by solving the 1-d polynomial in y in the usual way.
+ 
+            Compute Cx0, Cx1...Cxn by solving 1-d polynomials in y in the usual way.
+            These values are cached and only recomputed for new values of Y or if the parameters change.
+            
+            Then compute f(x,y) by solving the 1-d polynomial in x in the usual way.
             */
-            const int maxYCoeffInd = this->_order;
-            int paramInd = static_cast<int>(this->_params.size()) - 1;
-            // initialize the y coefficients
-            for (int yCoeffInd = maxYCoeffInd; yCoeffInd >= 0; --yCoeffInd, --paramInd) {
-                _yCoeffs[yCoeffInd] = this->_params[paramInd];
-            }
-            // finish computing the y coefficients
-            for (int startYCoeffInd = maxYCoeffInd - 1, yCoeffInd = startYCoeffInd;
-                paramInd >= 0; --paramInd) {
-                _yCoeffs[yCoeffInd] = (_yCoeffs[yCoeffInd] * x) + this->_params[paramInd];
-                if (yCoeffInd == 0) {
-                    --startYCoeffInd;
-                    yCoeffInd = startYCoeffInd;
-                } else {
-                    --yCoeffInd;
+            const int maxXCoeffInd = this->_order;
+
+            if ((y != _oldY) || !this->_isCacheValid) {
+                // update _xCoeffs cache
+                // note: paramInd is decremented in both of the following loops
+                int paramInd = static_cast<int>(this->_params.size()) - 1;
+
+                // initialize _xCoeffs to coeffs for pure y^n; e.g. for 3rd order:
+                // _xCoeffs[0] = _params[9], _xCoeffs[1] = _params[8], ... _xCoeffs[3] = _params[6]
+                for (int xCoeffInd = 0; xCoeffInd <= maxXCoeffInd; ++xCoeffInd, --paramInd) {
+                    _xCoeffs[xCoeffInd] = this->_params[paramInd];
                 }
+     
+                // finish computing _xCoeffs
+                for (int xCoeffInd = 0, endXCoeffInd = maxXCoeffInd; paramInd >= 0; --paramInd) {
+                    _xCoeffs[xCoeffInd] = (_xCoeffs[xCoeffInd] * y) + this->_params[paramInd];
+                    ++xCoeffInd;
+                    if (xCoeffInd >= endXCoeffInd) {
+                        xCoeffInd = 0;
+                        --endXCoeffInd;
+                    }
+                }
+     
+                _oldY = y;
+                this->_isCacheValid = true;
             }
-            // compute y polynomial
-            double retVal = _yCoeffs[maxYCoeffInd];
-            for (int yCoeffInd = maxYCoeffInd - 1; yCoeffInd >= 0; --yCoeffInd) {
-                retVal = (retVal * y) + _yCoeffs[yCoeffInd];
+            
+            // use _xCoeffs to compute result
+            double retVal = _xCoeffs[maxXCoeffInd];
+            for (int xCoeffInd = maxXCoeffInd - 1; xCoeffInd >= 0; --xCoeffInd) {
+                retVal = (retVal * x) + _xCoeffs[xCoeffInd];
             }
             return static_cast<ReturnT>(retVal);
         }
@@ -591,18 +608,19 @@ using boost::serialization::make_nvp;
         }
 
     private:
-        mutable std::vector<double> _yCoeffs; ///< working vector
+        mutable double _oldY;         ///< value of y for which _xCoeffs is valid
+        mutable std::vector<double> _xCoeffs; ///< working vector
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit PolynomialFunction2() : BasePolynomialFunction2<ReturnT>(), _yCoeffs(0) {}
-
+        explicit PolynomialFunction2() : BasePolynomialFunction2<ReturnT>(), _oldY(0), _xCoeffs(0)  {}
+ 
     private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
             ar & make_nvp("fn2", boost::serialization::base_object<BasePolynomialFunction2<ReturnT> >(*this));
-            ar & make_nvp("yCoeffs", this->_yCoeffs);
+            ar & make_nvp("yCoeffs", this->_xCoeffs); // sets size of _xCoeffs; name is historical
         }
     };
     
@@ -736,8 +754,8 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit Chebyshev1Function1() : Function1<ReturnT>(1), _minX(0.0), _maxX(0.0),
-            _scale(1.0), _offset(0.0), _maxInd(0) {}
+        explicit Chebyshev1Function1() : Function1<ReturnT>(1),
+            _minX(0.0), _maxX(0.0), _scale(1.0), _offset(0.0), _maxInd(0) {}
 
     private:
         friend class boost::serialization::access;
@@ -795,8 +813,9 @@ using boost::serialization::make_nvp;
                                        lsst::afw::geom::Point2D( 1.0,  1.0)))   ///< allowed x,y range
         :
             BasePolynomialFunction2<ReturnT>(order),
-            _xCheby(this->_order + 1),
-            _yCoeffs(this->_order + 1)
+            _oldYPrime(0),
+            _yCheby(this->_order + 1),
+            _xCoeffs(this->_order + 1)
         {
             _initialize(xyRange);
         }
@@ -816,8 +835,9 @@ using boost::serialization::make_nvp;
                                        lsst::afw::geom::Point2D( 1.0,  1.0)))   ///< allowed x,y range
         :
             BasePolynomialFunction2<ReturnT>(params),
-            _xCheby(this->_order + 1),
-            _yCoeffs(this->_order + 1)
+            _oldYPrime(0),
+            _yCheby(this->_order + 1),
+            _xCoeffs(this->_order + 1)
         {
             _initialize(xyRange);
         }
@@ -871,37 +891,53 @@ using boost::serialization::make_nvp;
             double const xPrime = (x + _offsetX) * _scaleX;
             double const yPrime = (y + _offsetY) * _scaleY;
 
-            // Compute _xCheby[i] = Ti(x') using the standard recurrence relationship;
-            // note that _initialize already set _xCheby[0] = 1.
-            if (this->_order > 0) {
-                _xCheby[1] = xPrime;
-            }
-            for (int xInd = 2; xInd <= this->_order; ++xInd) {
-                _xCheby[xInd] = (2 * xPrime * _xCheby[xInd-1]) - _xCheby[xInd-2];
-            }
-            
-            // Initialize _yCoeffs to right-hand terms of equation shown in documentation block
-            int paramInd = static_cast<int>(this->_params.size()) - 1;
-            for (int yCoeffInd = this->_order, xChebyInd = 0; yCoeffInd >= 0;
-                --yCoeffInd, ++xChebyInd, --paramInd) {
-                _yCoeffs[yCoeffInd] = this->_params[paramInd] * _xCheby[xChebyInd];
-            }
-            // Add the remaining terms to _yCoeffs (starting from _order-1 because _yCoeffs[_order] is done)
-            for (int startYCoeffInd = this->_order - 1, yCoeffInd = startYCoeffInd, xChebyInd = 0;
-                paramInd >= 0; --paramInd) {
-                _yCoeffs[yCoeffInd] += this->_params[paramInd] * _xCheby[xChebyInd];
-                if (yCoeffInd == 0) {
-                    --startYCoeffInd;
-                    yCoeffInd = startYCoeffInd;
-                    xChebyInd = 0;
-                } else {
-                    --yCoeffInd;
-                    ++xChebyInd;
+            const int nParams = static_cast<int>(this->_params.size());
+            const int order = this->_order;
+
+            if ((yPrime != _oldYPrime) || !this->_isCacheValid) {
+                // update cached _yCheby and _xCoeffs
+                _yCheby[0] = 1.0;
+                _yCheby[1] = yPrime;
+                for (int chebyInd = 2; chebyInd <= order; chebyInd++) {
+                    _yCheby[chebyInd] = (2 * yPrime * _yCheby[chebyInd-1]) - _yCheby[chebyInd-2];
                 }
+                
+                for (int coeffInd=0; coeffInd <= order; coeffInd++) {
+                    _xCoeffs[coeffInd] = 0;
+                }
+                for (int coeffInd = 0, endCoeffInd = 0, paramInd = 0; paramInd < nParams; paramInd++) {
+                    _xCoeffs[coeffInd] += this->_params[paramInd] * _yCheby[endCoeffInd];
+                    --coeffInd;
+                    ++endCoeffInd;
+                    if (coeffInd < 0) {
+                        coeffInd = endCoeffInd;
+                        endCoeffInd = 0;
+                    }
+                }
+                
+                _oldYPrime = yPrime;
+                this->_isCacheValid = true;
+            }
+
+            double result = _xCoeffs[0];
+            if (order == 0) {
+                return result;
             }
             
-            // Compute result using Clenshaw algorithm for the polynomial in y
-            return static_cast<ReturnT>(_clenshaw(yPrime, 0));
+            result += _xCoeffs[1] * xPrime;
+            if (order == 1) {
+                return result;
+            }
+            
+            double txPrev = 1.0;
+            double tx = xPrime;
+            for (int chebyInd = 2; chebyInd <= order; chebyInd++) {
+                double txNext = (2 * xPrime * tx) - txPrev;
+                result += _xCoeffs[chebyInd] * txNext;
+                txPrev = tx;
+                tx = txNext;
+            }
+            return result;
         }
 
         virtual std::string toString(std::string const& prefix) const {
@@ -913,8 +949,9 @@ using boost::serialization::make_nvp;
         }
 
     private:
-        mutable std::vector<double> _xCheby;    ///< working vector: value of Tn(x')
-        mutable std::vector<double> _yCoeffs;   ///< working vector: transformed coeffs of Y polynomial
+        mutable double _oldYPrime;
+        mutable std::vector<double> _yCheby;    ///< working vector: value of Tn(y')
+        mutable std::vector<double> _xCoeffs;   ///< working vector: transformed coeffs of x polynomial
         double _minX;    ///< minimum allowed x
         double _minY;    ///< minimum allowed y
         double _maxX;    ///< maximum allowed x
@@ -923,24 +960,6 @@ using boost::serialization::make_nvp;
         double _scaleY;   ///< y' = (y + _offsetY) * _scaleY
         double _offsetX;  ///< x' = (x + _offsetX) * _scaleX
         double _offsetY;  ///< y' = (y + _offsetY) * _scaleY
-        
-        /**
-         * @brief Clenshaw recursive function for solving the Chebyshev polynomial
-         */
-        double _clenshaw(double y, int ind) const {
-            if (ind == this->_order) {
-                return _yCoeffs[ind];
-            } else if (ind == 0) {
-                return (y * _clenshaw(y, 1)) + _yCoeffs[0] - _clenshaw(y, 2);
-            } else if (ind == this->_order - 1) {
-                return (2 * y * _clenshaw(y, ind+1)) + _yCoeffs[ind];
-            } else if (ind < this->_order) {
-                return (2 * y * _clenshaw(y, ind+1)) + _yCoeffs[ind] - _clenshaw(y, ind+2);
-            } else {
-                // this case only occurs if _order < 3
-                return 0;
-            }
-        }
         
         /**
          * @brief initialize private constants
@@ -954,13 +973,18 @@ using boost::serialization::make_nvp;
             _scaleY = 2.0 / (_maxY - _minY);
             _offsetX = -(_minX + _maxX) * 0.5;
             _offsetY = -(_minY + _maxY) * 0.5;
-            _xCheby[0] = 1.0;
         }
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit Chebyshev1Function2() : BasePolynomialFunction2<ReturnT>(), _minX(0.0), _minY(0.0),
-            _maxX(0.0), _maxY(0.0), _scaleX(1.0), _scaleY(1.0), _offsetX(0.0), _offsetY(0.0), _xCheby(0) {}
+        explicit Chebyshev1Function2() : BasePolynomialFunction2<ReturnT>(),
+            _oldYPrime(0),
+            _yCheby(0),
+            _xCoeffs(0),
+            _minX(0.0), _minY(0.0),
+            _maxX(0.0), _maxY(0.0),
+            _scaleX(1.0), _scaleY(1.0),
+            _offsetX(0.0), _offsetY(0.0) {}
 
     private:
         friend class boost::serialization::access;
@@ -975,8 +999,8 @@ using boost::serialization::make_nvp;
             ar & make_nvp("scaleY", this->_scaleY);
             ar & make_nvp("offsetX", this->_offsetX);
             ar & make_nvp("offsetY", this->_offsetY);
-            ar & make_nvp("xCheby", this->_xCheby);
-            _yCoeffs.resize(_xCheby.size());
+            ar & make_nvp("xCheby", this->_yCheby); // sets size of _yCheby; name is historical
+            _xCoeffs.resize(_yCheby.size());
         }
     };
 
