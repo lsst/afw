@@ -368,19 +368,48 @@ bool mathDetail::convolveLinearCombinationGPU(
 
             newKernel = dynamic_cast<afwMath::LinearCombinationKernel*> (&(*refKernelPtr));
 
+            int kernelN=newKernel->getNBasisKernels();
+            std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn = newKernel->getSpatialFunctionList();
+            if (sFn.size()<1)
+                return false;
+            if (int(sFn.size())!=kernelN)
+                return false;
+
+            bool isAllCheby=true;
+            for (int i=0; i<kernelN; i++)
+                if (! IS_INSTANCE( *sFn[i], afwMath::Chebyshev1Function2<double> ) )
+                    isAllCheby=false;
+            bool isAllPoly=true;
+            for (int i=0; i<kernelN; i++)
+                if (! IS_INSTANCE( *sFn[i], afwMath::PolynomialFunction2<double> ) )
+                    isAllPoly=false;
+
+            int order=0;
+            SpatialFunctionType_t sfType;
+            if (isAllPoly) {
+                order= dynamic_cast<const afwMath::PolynomialFunction2<double>*>( sFn[0].get() ) ->getOrder();
+                sfType=sftPolynomial;
+            }
+            else if(isAllCheby) {
+                order= dynamic_cast<const afwMath::Chebyshev1Function2<double>*>( sFn[0].get() ) ->getOrder();
+                sfType=sftChebyshev;
+            }
+            else
+                return false;
+
             //get copies of basis kernels
             afwMath::KernelList kernelList=newKernel->getKernelList();
-            int kernelN=newKernel->getNBasisKernels();
 
             //if kernel is too small, call CPU convolution
-            if (newKernel->getWidth() * newKernel->getHeight() <30 &&
+            if (newKernel->getWidth() * newKernel->getHeight() <25 &&
                     convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_GPU)
                 return false;
 
             //if something is wrong, call CPU convolution
-            bool shMemOk = gpu::IsSufficientSharedMemoryAvailableImgAndMask(
-                               newKernel->getWidth(),newKernel->getHeight(),sizeof(KerPixel));
-            if (!shMemOk) {
+            bool shMemOkA = gpu::IsSufficientSharedMemoryAvailable_ForImgAndMaskBlock(
+                                newKernel->getWidth(),newKernel->getHeight(),sizeof(double));
+            bool shMemOkB = gpu::IsSufficientSharedMemoryAvailable_ForSfn(order,kernelN);
+            if (!shMemOkA || !shMemOkB) {
                 //cannot fit kernels into shared memory, revert to convolution by CPU
                 return false;
             }
@@ -430,9 +459,10 @@ bool mathDetail::convolveLinearCombinationGPU(
             GPU_ConvolutionMI_LinearCombinationKernel<OutPixelT,InPixelT>(
                 inBufImg, inBufVar, inBufMsk,
                 colPos, rowPos,
-                newKernel->getSpatialFunctionList(),
+                sFn,
                 outBufImg, outBufVar, outBufMsk,
                 basisKernels,
+                sfType,
                 convolutionControl.getDoNormalize()
             );
 
@@ -513,9 +543,39 @@ bool mathDetail::convolveLinearCombinationGPU(
 
             newKernel = dynamic_cast<afwMath::LinearCombinationKernel*> (&(*refKernelPtr));
 
+            int kernelN=newKernel->getNBasisKernels();
+            std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn = newKernel->getSpatialFunctionList();
+            if (sFn.size()<1)
+                return false;
+            if (int(sFn.size())!=kernelN)
+                return false;
+
+            bool isAllCheby=true;
+            for (int i=0; i<kernelN; i++)
+                if (! IS_INSTANCE( *sFn[i], afwMath::Chebyshev1Function2<double> ) )
+                    isAllCheby=false;
+            bool isAllPoly=true;
+            for (int i=0; i<kernelN; i++)
+                if (! IS_INSTANCE( *sFn[i], afwMath::PolynomialFunction2<double> ) )
+                    isAllPoly=false;
+            if (!isAllPoly && !isAllCheby)
+                return false;
+
+            int order=0;
+            SpatialFunctionType_t sfType;
+            if (isAllPoly) {
+                order= dynamic_cast<const afwMath::PolynomialFunction2<double>*>( sFn[0].get() ) ->getOrder();
+                sfType=sftPolynomial;
+            }
+            else if(isAllCheby) {
+                order= dynamic_cast<const afwMath::Chebyshev1Function2<double>*>( sFn[0].get() ) ->getOrder();
+                sfType=sftChebyshev;
+            }
+            else
+                return false;
+
             //get copies of basis kernels
             afwMath::KernelList kernelList=newKernel->getKernelList();
-            int kernelN=newKernel->getNBasisKernels();
 
             //if kernel is too small, call CPU convolution
             if (newKernel->getWidth() * newKernel->getHeight() <20 &&
@@ -523,9 +583,10 @@ bool mathDetail::convolveLinearCombinationGPU(
                 return false;
 
             //if something is wrong, call CPU convolution
-            bool shMemOk = gpu::IsSufficientSharedMemoryAvailable(
-                               newKernel->getWidth(),newKernel->getHeight(),sizeof(KerPixel));
-            if (!shMemOk) {
+            bool shMemOkA = gpu::IsSufficientSharedMemoryAvailable_ForImgBlock(
+                                newKernel->getWidth(),newKernel->getHeight(),sizeof(double));
+            bool shMemOkB = gpu::IsSufficientSharedMemoryAvailable_ForSfn(order,kernelN);
+            if (!shMemOkA || !shMemOkB) {
                 //cannot fit kernels into shared memory, revert to convolution by CPU
                 return false;
             }
@@ -567,9 +628,10 @@ bool mathDetail::convolveLinearCombinationGPU(
 
             GPU_ConvolutionImage_LinearCombinationKernel<OutPixelT,InPixelT>(
                 inBuf, colPos, rowPos,
-                newKernel->getSpatialFunctionList(),
+                sFn,
                 outBuf,
                 basisKernels,
+                sfType,
                 convolutionControl.getDoNormalize()
             );
 
@@ -653,7 +715,7 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     typedef afwImage::Image<InPixelT  > InImageT;
     typedef afwImage::Image<OutPixelT > OutImageT;
 
-    bool shMemOk = gpu::IsSufficientSharedMemoryAvailable(kWidth,kHeight,sizeof(KerPixel));
+    bool shMemOk = gpu::IsSufficientSharedMemoryAvailable_ForImgBlock(kWidth,kHeight,sizeof(double));
     if (!shMemOk) {
         //cannot fit kernels into shared memory, revert to convolution by CPU
         return false;
@@ -740,7 +802,7 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     if (TryToSelectCudaDevice(convolutionControl)==false)
         return false;
 
-    bool shMemOk = gpu::IsSufficientSharedMemoryAvailable(kWidth,kHeight,sizeof(KerPixel));
+    bool shMemOk = gpu::IsSufficientSharedMemoryAvailable_ForImgAndMaskBlock(kWidth,kHeight,sizeof(double));
     if (!shMemOk) {
         //cannot fit kernels into shared memory, revert to convolution by CPU
         return false;

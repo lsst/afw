@@ -40,8 +40,9 @@ namespace math {
 namespace detail {
 namespace gpu {
 
-bool IsSufficientSharedMemoryAvailable(int filterW, int filterH, int pixSize);
-bool IsSufficientSharedMemoryAvailableImgAndMask(int filterW, int filterH, int pixSize);
+bool IsSufficientSharedMemoryAvailable_ForImgBlock(int filterW, int filterH, int pixSize);
+bool IsSufficientSharedMemoryAvailable_ForImgAndMaskBlock(int filterW, int filterH, int pixSize);
+bool IsSufficientSharedMemoryAvailable_ForSfn(int order, int kernelN);
 
 // returns true when preffered device has been selected
 // returns false when there is no preffered device
@@ -55,6 +56,8 @@ void AutoSelectCudaDevice();
 void VerifyCudaDevice();
 
 } //namespace gpu ends
+
+enum SpatialFunctionType_t { sftChebyshev, sftPolynomial};
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_SpatiallyInvariantKernel(
@@ -82,6 +85,7 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
     std::vector< lsst::afw::math::Kernel::SpatialFunctionPtr > sFn,
     ImageBuffer<OutPixelT>&                outImage,
     std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+    SpatialFunctionType_t sfType,
     bool doNormalize
 );
 
@@ -97,6 +101,7 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     ImageBuffer<VarPixel>&                 outImageVar,
     ImageBuffer<MskPixel>&                 outImageMsk,
     std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+    SpatialFunctionType_t sfType,
     bool doNormalize
 );
 

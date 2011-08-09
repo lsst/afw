@@ -56,6 +56,34 @@ namespace gpu {
 template <typename T>
 void CallTestGpuKernel(T* ret);
 
+void Call_ChebyshevImageValues(
+    double* out, int outW, int outH,
+    int order,
+    double* params,
+    double* rowPos,
+    double* colPos,
+    double minX, double minY, double maxX, double maxY,
+    int sharedMemorySize
+);
+
+void Call_PolynomialImageValues(
+    double* out, int outW, int outH,
+    int order,
+    double* params,
+    double* rowPos,
+    double* colPos,
+    int sharedMemorySize
+);
+
+void Call_NormalizationImageValues(
+    double* out, int outW, int outH,
+    double** sFn, int n,
+    double* kernelSum,
+    bool* isDivideByZeroGPU,
+    int blockN,
+    int sharedMemorySize
+);
+
 template <typename OutPixelT, typename InPixelT>
 void Call_SpatiallyInvariantImageConvolutionKernel(
     InPixelT*  inImageGPU, int inImageWidth, int inImageHeight,
@@ -71,6 +99,18 @@ void Call_SpatiallyInvariantMaskConvolutionKernel(
     KerPixel*  allKernelsGPU, int kernelTotalN,
     int kernelW, int kernelH,
     MskPixel* outImageGPU[],
+    int blockN,
+    int sharedMemorySize
+);
+
+template <typename OutPixelT, typename InPixelT>
+void Call_ConvolutionKernel_LC_Img(
+    InPixelT*  inImageGPU, int inImageWidth, int inImageHeight,
+    KerPixel*  kernelGPU, int kernelTotalN,
+    int kernelW, int kernelH,
+    double* sfValGPU[],
+    double* normGPU,
+    OutPixelT* outImageGPU,
     int blockN,
     int sharedMemorySize
 );
