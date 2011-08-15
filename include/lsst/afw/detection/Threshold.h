@@ -48,7 +48,8 @@ public:
         VALUE,               //!< Use pixel value
         BITMASK,             //!< Use (pixels & (given mask))
         STDEV,               //!< Use number of sigma given s.d.
-        VARIANCE             //!< Use number of sigma given variance
+        VARIANCE,            //!< Use number of sigma given variance
+        PIXEL_STDEV          //!< Use number of sigma given per-pixel s.d.
     }; 
 
     /** 

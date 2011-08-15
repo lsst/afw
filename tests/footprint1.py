@@ -33,7 +33,7 @@ or
 """
 
 
-import sys
+import math, sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
@@ -71,6 +71,9 @@ class Object(object):
         self.val = val
         self.spans = spans
 
+    def __str__(self):
+        return ", ".join([str(s) for s in self.spans])
+
     def insert(self, im):
         """Insert self into an image"""
         for sp in self.spans:
@@ -88,7 +91,7 @@ class Object(object):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ThresholdTestCase(unittest.TestCase):
-    def testTresholdFactory(self):
+    def testThresholdFactory(self):
         """
         Test the creation of a Threshold object
 
@@ -133,7 +136,11 @@ class ThresholdTestCase(unittest.TestCase):
         except:
             self.fail("Failed to build Threshold with BITMASK parameters")
         
-
+        try:
+            afwDetect.createThreshold(5, "pixel_stdev")
+        except:
+            self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
+        
 class FootprintTestCase(unittest.TestCase):
     """A test case for Footprint"""
     def setUp(self):
@@ -528,7 +535,7 @@ class FootprintSetTestCase(unittest.TestCase):
         self.objects += [Object(20, [(5, 7, 8), (5, 10, 10), (6, 8, 9)])]
         self.objects += [Object(20, [(6, 3, 3)])]
 
-        im.set(0)                       # clear image
+        self.ms.set((0, 0x0, 4.0))      # clear image; set variance
         for obj in self.objects:
             obj.insert(im)
 
@@ -556,6 +563,24 @@ class FootprintSetTestCase(unittest.TestCase):
     def testFootprints2(self):
         """Check that we found the correct number of objects using makeFootprintSet"""
         ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
+
+        objects = ds.getFootprints()
+
+        self.assertEqual(len(objects), len(self.objects))
+        for i in range(len(objects)):
+            self.assertEqual(objects[i], self.objects[i])
+            
+    def testFootprints3(self):
+        """Check that we found the correct number of objects using makeFootprintSet and PIXEL_STDEV"""
+        threshold = 4.5                 # in units of sigma
+
+        self.ms.set(2, 4, (10, 0x0, 36)) # not detected (high variance)
+
+        y, x = self.objects[2].spans[0][0:2]
+        self.ms.set(x, y, (threshold, 0x0, 1.0))
+
+        ds = afwDetect.makeFootprintSet(self.ms,
+                                        afwDetect.createThreshold(threshold, "pixel_stdev"), "OBJECT")
 
         objects = ds.getFootprints()
 

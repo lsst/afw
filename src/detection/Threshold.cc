@@ -46,6 +46,8 @@ Threshold::ThresholdType Threshold::parseTypeString(std::string const & typeStr)
         return Threshold::STDEV;
     } else if (typeStr.compare("variance") == 0) {
         return Threshold::VARIANCE;
+    } else if (typeStr.compare("pixel_stdev") == 0) {
+        return Threshold::PIXEL_STDEV;
     } else {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
@@ -86,6 +88,7 @@ double Threshold::getValue(const double param) const {
         return _value*param;
       case VALUE:
       case BITMASK:
+      case PIXEL_STDEV:
         return _value;
       case VARIANCE:
         if (param <= 0) {
