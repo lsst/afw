@@ -1,5 +1,5 @@
 import gdb
-import re
+import math, re
 
 try:
     debug
@@ -23,6 +23,23 @@ try:
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+    def getEigenMatrixDimensions(val):
+        m_storage = val["m_storage"]
+        try:
+            nx, ny = m_storage["m_cols"], m_storage["m_rows"]
+        except gdb.error:           # only available for dynamic Matrices
+            try:
+                nx, ny = m_storage.type.template_argument(1), m_storage.type.template_argument(2)
+            except RuntimeError:
+                # should get dimens from template, but that's gdb bug #11060
+                size = m_storage["m_data"]["array"].type.sizeof
+                size0 = m_storage["m_data"]["array"].dereference().type.sizeof
+                # guess! Assume square
+                nx = int(math.sqrt(size/size0))
+                ny = size/(nx*size0)
+
+        return nx, ny
+
     class EigenMatrixPrinter(object):
         "Print an Eigen Matrix"
 
@@ -30,9 +47,9 @@ try:
             self.val = val
 
         def to_string(self):
-            m_storage = self.val["m_storage"]
-            return "{%dx%d}" % (m_storage["m_cols"], m_storage["m_rows"])
+            nx, ny = getEigenMatrixDimensions(self.val)
 
+            return "{%dx%g}" % (nx, ny)
 
     class EigenVectorPrinter(object):
         "Print an Eigen Vector"
@@ -42,7 +59,19 @@ try:
 
         def to_string(self):
             m_storage = self.val["m_storage"]
-            return "{%d}" % (m_storage["n"])
+
+            try:
+                n = m_storage["n"]
+            except gdb.error:           # only available for dynamic Matrices
+                try:
+                    n = m_storage.type.template_argument(1)
+                except RuntimeError:
+                    # should get dimens from template, but that's gdb bug #11060
+                    size = m_storage["m_data"]["array"].type.sizeof
+                    size0 = m_storage["m_data"]["array"].dereference().type.sizeof
+                    n = math.sqrt(size/size0)
+
+            return "{%d}" % (n)
 
     class PrintEigenCommand(gdb.Command):
         """Print an eigen Matrix or Vector
@@ -55,21 +84,23 @@ try:
                                                       gdb.COMMAND_DATA,
                                                       gdb.COMPLETE_SYMBOL)
 
-        def _mget(self, var, x, y=0):
-            m_storage = var["m_storage"]
 
+        def _mget(self, var, x, y=0):
             if re.search(r"Matrix", str(var.type)):
                 if False:
                     return var["operator()(int, int)"](x, y)
                 else:
-                    if x < 0 or x >= m_storage["m_cols"] or y < 0 or y >= m_storage["m_rows"]:
+                    NX, NY = getEigenMatrixDimensions(var)
+
+                    if x < 0 or x >= NX or y < 0 or y >= NY:
                         raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
-                                           (x, y, m_storage["m_cols"] - 1, m_storage["m_rows"] - 1))
+                                           (x, y, NX - 1, NY - 1))
 
-                    step = m_storage["m_cols"]/var.type.template_argument(0).sizeof
+                    m_data = var["m_storage"]["m_data"]
+                    # convert to a pointer to the start of the array
+                    m_data = m_data.address.cast(m_data.type.template_argument(0).pointer())
 
-                    m_data = m_storage["m_data"]
-                    return m_data[x + y*step]
+                    return m_data[x + y*NX]
             else:                       # Vector
                 if x < 0 or x >= m_storage["m_cols"]:
                     raise gdb.GdbError("Element %d is out of range 0:%d" % (x, m_storage["m_cols"] - 1))
@@ -94,15 +125,15 @@ try:
             isMatrix = re.search(r"Matrix", str(var.type))
             if isMatrix:
                 x0, y0 = 0, 0
-                NX, NY = var["m_storage"]["m_cols"], var["m_storage"]["m_rows"]
+                NX, NY = getEigenMatrixDimensions(var)
                 nx, ny = NX, NY
 
                 if args:
                     if len(args) == 1:
                         raise gdb.GdbError("Please specify an element's x and y indexes")
                     else:
-                        x0 = eval(args.pop(0), {}, {})
-                        y0 = eval(args.pop(0), {}, {})
+                        x0 = gdb.parse_and_eval(args.pop(0))
+                        y0 = gdb.parse_and_eval(args.pop(0))
 
                 if args:
                     nx = int(args.pop(0))
@@ -118,7 +149,7 @@ try:
                 x0, nx = 0, var["m_storage"]["n"]
 
                 if args:
-                    x0 = eval(args.pop(0), {}, {})
+                    x0 = gdb.parse_and_eval(args.pop(0))
                 if args:
                     nx = int(args.pop(0))
 
@@ -358,8 +389,8 @@ try:
             if len(args) < 2:
                 raise gdb.GdbError("Please specify a pixel's x and y indexes")
 
-            x0 = eval(args.pop(0), {}, {})
-            y0 = eval(args.pop(0), {}, {})
+            x0 = gdb.parse_and_eval(args.pop(0))
+            y0 = gdb.parse_and_eval(args.pop(0))
 
             if len(args) == 0:
                 print "%g" % self.get(var, x0, y0)
@@ -378,13 +409,14 @@ try:
 
 
             if args:
-                centerPatch = eval(args.pop(0), {}, {})
+                centerPatch = gdb.parse_and_eval(args.pop(0))
                 if centerPatch:
                     x0 -= nx//2
                     y0 -= ny//2
 
             if args:
-                obeyXY0 = eval(args.pop(0), {}, {})
+                obeyXY0 = gdb.parse_and_eval(args.pop(0))
+
                 if obeyXY0:
                     arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
 
