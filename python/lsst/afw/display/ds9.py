@@ -368,7 +368,7 @@ def show(frame=None):
     ds9Cmd(selectFrame(frame) + "; raise", trap=False)
 
 def setMaskColor(color=GREEN):
-    """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
+    """Set the ds9 mask colour to; eg. setMaskColor(RED)"""
     ds9Cmd("mask color %s" % color)
 
 
@@ -522,7 +522,7 @@ def buffer(enable=True):
     if enable:
         cmdBuffer.pushSize()
     else:
-        ds9.cmdBuffer.popSize()
+        cmdBuffer.popSize()
 
 flush = cmdBuffer.flush(silent=True)
 
