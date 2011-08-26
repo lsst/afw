@@ -57,6 +57,11 @@ SWIG_SHARED_PTR_DERIVED(CcdPtr, lsst::afw::cameraGeom::Detector, lsst::afw::came
 SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Raft);
 SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Camera);
 
+SWIG_SHARED_PTR(DistortionPtr, lsst::afw::cameraGeom::Distortion);
+SWIG_SHARED_PTR_DERIVED(NullDistortionPtr, lsst::afw::cameraGeom::Distortion, lsst::afw::cameraGeom::NullDistortion);
+SWIG_SHARED_PTR_DERIVED(RadialPolyDistortionPtr, lsst::afw::cameraGeom::Distortion, lsst::afw::cameraGeom::RadialPolyDistortion);
+
+
 %template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
 
@@ -79,6 +84,7 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 %include "lsst/afw/cameraGeom/Ccd.h"
 %include "lsst/afw/cameraGeom/Raft.h"
 %include "lsst/afw/cameraGeom/Camera.h"
+%include "lsst/afw/cameraGeom/Distortion.h"
 
 %inline %{
     lsst::afw::cameraGeom::DetectorMosaic::Ptr

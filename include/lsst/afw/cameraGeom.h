@@ -30,5 +30,6 @@
 #include "lsst/afw/cameraGeom/Ccd.h"
 #include "lsst/afw/cameraGeom/Raft.h"
 #include "lsst/afw/cameraGeom/Camera.h"
+#include "lsst/afw/cameraGeom/Distortion.h"
 
 #endif

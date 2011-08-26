@@ -26,10 +26,12 @@
 #include <algorithm>
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Distortion.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace cameraGeom = lsst::afw::cameraGeom;
+
 
 /************************************************************************************************************/
 /// Test for equality of two Ids; ignore serial if < 0 and name if == ""
@@ -319,4 +321,28 @@ void cameraGeom::Detector::setOrientation(
     if (n90 == 1 || n90 == 3) {
         _size = afwGeom::Extent2D(_size[1], _size[0]);
     }
+}
+
+
+void cameraGeom::Detector::setDistortion(PTR(Distortion) distortion) {
+    _distortion = distortion;
+}
+
+PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() {
+    
+    // if we have a distortion ... return it
+    if (_distortion) {
+        return _distortion;
+        
+        // otherwise, return our parent's ... no parent? return a Distortion() object
+    } else {
+        PTR(Detector) parent = this->getParent();
+        if (parent) {
+            return parent->getDistortion();
+        } else {
+            return PTR(Distortion)(new Distortion());
+        }
+    }
+    
+    return PTR(Distortion)(); //new Distortion());
 }

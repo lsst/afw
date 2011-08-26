@@ -26,6 +26,7 @@
 #include <string>
 #include "boost/weak_ptr.hpp"
 #include <boost/enable_shared_from_this.hpp>
+#include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
@@ -45,6 +46,8 @@ namespace cameraGeom {
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/Defect.h"
 
+class Distortion;
+    
 /**
  * Describe a detector (e.g. a CCD)
  */
@@ -65,7 +68,8 @@ public:
                      ) :
         lsst::daf::base::Citizen(typeid(this)),
         _id(id), _isTrimmed(false), _allPixels(),
-        _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize)
+        _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize),
+        _distortion(PTR(Distortion)()) // init as a null pointer
     {
         _parent = boost::weak_ptr<Detector>();
         
@@ -177,6 +181,11 @@ public:
     /// Get the Detector's Defect list
     std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> > const& getDefects() const { return _defects; }
     std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >& getDefects() { return _defects; }
+
+    void setDistortion(PTR(Distortion) distortion);
+    PTR(Distortion) getDistortion();
+    
+    
 protected:
     /// Return a shared pointer to this
     Ptr getThisPtr() {
@@ -186,6 +195,9 @@ protected:
     lsst::afw::geom::Box2I& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
+
+   
+    
 private:
     Id _id;
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?
@@ -200,6 +212,8 @@ private:
     boost::weak_ptr<Detector> _parent;  // Parent Detector in the hierarchy
 
     std::vector<lsst::afw::image::DefectBase::Ptr> _defects; // Defects in this detector
+    
+    PTR(Distortion) _distortion;
 };
 
 namespace detail {
