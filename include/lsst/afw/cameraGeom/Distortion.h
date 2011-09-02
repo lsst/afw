@@ -97,26 +97,27 @@ public:
     lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p);
     lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p);
     
+    double transformR(double r, std::vector<double> const &coeffs);
+    double iTransformR(double rp); 
+    double iTransformDr(double rp);
+    
     Moment distort(lsst::afw::geom::Point2D const &p, Moment const &Iqq); 
     Moment undistort(lsst::afw::geom::Point2D const &p, Moment const &Iqq);
 
     std::vector<double> getCoeffs()   {return _coeffs;   }
     std::vector<double> getICoeffs()  {return _icoeffs;  }
     std::vector<double> getDCoeffs()  {return _dcoeffs;  }
-    std::vector<double> getIdCoeffs() {return _idcoeffs; }
     
 private:
     int _maxN;
     std::vector<double> _coeffs;
     std::vector<double> _icoeffs;
     std::vector<double> _dcoeffs;
-    std::vector<double> _idcoeffs;
+    
     std::vector<double> _invert(std::vector<double> const &coeffs);
     std::vector<double> _deriv(std::vector<double> const &coeffs);
-    double _transformR(double r, std::vector<double> const &coeffs);
-    lsst::afw::geom::Point2D _transform(lsst::afw::geom::Point2D const &p, std::vector<double> const &coeffs);
-    Moment _transform(lsst::afw::geom::Point2D const &p, cameraGeom::Moment const &iqq,
-                      std::vector<double> const &coeffs);
+    lsst::afw::geom::Point2D _transform(lsst::afw::geom::Point2D const &p, bool forward=true);
+    Moment _transform(lsst::afw::geom::Point2D const &p, cameraGeom::Moment const &iqq, bool forward=true);
 };
 
 

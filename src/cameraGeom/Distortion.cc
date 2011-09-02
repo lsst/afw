@@ -105,21 +105,15 @@ cameraGeom::RadialPolyDistortion::RadialPolyDistortion(std::vector<double> const
                           "Only 6th-order polynomials supported for radial distortion.");
     }
 
-    _icoeffs = _invert(_coeffs);
-    _dcoeffs = _deriv(_coeffs);
-
-    // can't invert _dcoeffs as it has non-zero c0 term
-    //_idcoeffs = _invert(_dcoeffs);
-    // --> must take derivative of _icoeffs instead:
-    _idcoeffs = _deriv(_icoeffs);
-    
+    _icoeffs  = _invert(_coeffs);
+    _dcoeffs  = _deriv(_coeffs);
 }
     
-    // We'll need the coeffs for the inverse of the input polynomial
-
-    // handle up to 6th order
-    // terms from Mathematical Handbook of Formula's and Tables, Spiegel & Liu.
-
+// We'll need the coeffs for the inverse of the input polynomial
+// handle up to 6th order
+// terms from Mathematical Handbook of Formula's and Tables, Spiegel & Liu.
+// This is a taylor approx, so not perfect.  We'll use it to get close to the inverse
+// and then use Newton Raphson to get to machine precision. (only needs 1 or 2 iterations)
 std::vector<double> cameraGeom::RadialPolyDistortion::_invert(std::vector<double> const &c) {
 
     std::vector<double> ic(_maxN, 0.0);
@@ -167,13 +161,13 @@ std::vector<double> cameraGeom::RadialPolyDistortion::_invert(std::vector<double
 std::vector<double> cameraGeom::RadialPolyDistortion::_deriv(std::vector<double> const &coeffs) {
     std::vector<double> dcoeffs(_maxN, 0.0);
     for (int i=0; i<_maxN-1; i++) {
-        dcoeffs[i] = (i+1)*coeffs[i+1];
+        dcoeffs[i] = (i + 1.0)*coeffs[i+1];
     }
     return dcoeffs;
 }
 
 
-double cameraGeom::RadialPolyDistortion::_transformR(double r, std::vector<double> const &coeffs) {
+double cameraGeom::RadialPolyDistortion::transformR(double r, std::vector<double> const &coeffs) {
     
     double rp = 0.0;
     for (std::vector<double>::size_type i = coeffs.size() - 1; i > 0; i--) {
@@ -185,20 +179,55 @@ double cameraGeom::RadialPolyDistortion::_transformR(double r, std::vector<doubl
 }
 
 
-afwGeom::Point2D cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p, std::vector<double> const &coeffs) {
-    
+double cameraGeom::RadialPolyDistortion::iTransformR(double rp) {
+
+    double tolerance = 1.0e-10;
+
+    double r = transformR(rp, _icoeffs); // this gets us *very* close (with 0.01%)
+    double err = 2.0*tolerance;
+    int iter = 0, maxIter = 10;;
+
+    // only 1 or 2 iterations needed to get to machine precision
+    while ( (err > tolerance) && (iter < maxIter)) {
+        double fr   = transformR(r, _coeffs) - rp;
+        double dfr  = transformR(r, _dcoeffs);
+        double rnew = r - fr/dfr;
+        err = std::abs((rnew - r)/r);
+        r = rnew;
+        iter++;
+    }
+    return r;
+}
+
+
+double cameraGeom::RadialPolyDistortion::iTransformDr(double rp) {
+
+    // The inverse function is a reflection in y=x
+    // If r' = f(r), and r = g(r') is its inverse, then the derivative dg(r') = 1.0/df(g(r'))
+    // sorry to use prime ' to denote a different coord 
+    double r  = iTransformR(rp);
+    double dr = 1.0/transformR(r, _dcoeffs);
+    return dr;
+}
+
+
+afwGeom::Point2D cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p,
+                                                              bool forward) {
     double x = p.getX();
     double y = p.getY();
     double r = std::sqrt(x*x + y*y);
     double t = std::atan2(y, x);
-    
-    double rp = _transformR(r, coeffs);
+
+    double rp = (forward) ? transformR(r, _coeffs) : iTransformR(r);
+
     return afwGeom::Point2D(rp*std::cos(t), rp*std::sin(t));
 }
 
 
 
-cameraGeom::Moment cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p, cameraGeom::Moment const &iqq, std::vector<double> const &coeffs) {
+cameraGeom::Moment cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p,
+                                                                cameraGeom::Moment const &iqq,
+                                                                bool forward) {
 
     double x = p.getX();
     double y = p.getY();
@@ -206,64 +235,44 @@ cameraGeom::Moment cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D
     double t = std::atan2(y, x);
     double cost = std::cos(t);
     double sint = std::sin(t);
-    double dr = _transformR(r, coeffs);
+
+    double dr = (forward) ? transformR(r, _dcoeffs) : iTransformDr(r); 
 
     Eigen::Matrix2d M, R, Rinv;
     M    <<   dr,  0.0,   0.0,  1.0;  // scaling matrix to stretch along x-axis
-    R    << cost,  -sint, sint, cost;  // rotate from theta to along x-axis
+    R    << cost,  sint, -sint, cost;  // rotate from theta to along x-axis
     Rinv = R.inverse();
     Eigen::Matrix2d Mp = Rinv*M*R;
 
     double ixx = iqq.getIxx();
     double iyy = iqq.getIyy();
     double ixy = iqq.getIxy();
-    double alpha = Mp(0,0);
-    double beta  = Mp(0,1);
-    double gamma = Mp(1,0);
-    double delta = Mp(1,1);
 
-    //std::cout << alpha << " " << beta <<" "<<gamma<<" "<<delta<<std::endl;
-    //double iuu = alpha*alpha*ixx +   beta*beta*iyy + 2.0*alpha*beta*ixy;
-    //double ivv = gamma*gamma*ixx + delta*delta*iyy + 2.0*gamma*delta*ixy;
-    //double iuv = alpha*gamma*ixx +  delta*beta*iyy + (alpha*delta+beta*gamma)*ixy;
-    //double denom = std::sqrt(std::pow((ixx - iyy)/2.0, 2) + ixy*ixy);
-    //double cxx = iyy/denom;
-    //double cyy = ixx/denom;
-    //double cxy = -2.0*ixy/denom;
-    
     Eigen::Matrix2d I;
-    I << ixx, ixy, ixy, iyy;
+    I << ixx, 0.5*ixy, 0.5*ixy, iyy;
 
-    Eigen::Matrix2d Inew = Mp.inverse()*I*(Mp.transpose()).inverse();
-
-    //cxx = Inew(0,0);
-    //cyy = Inew(1,1);
-    //cxy = Inew(0,1) + Inew(1,0);
-
-    //denom = std::sqrt(std::pow((cxx - cyy)/2.0, 2) + cxy*cxy);
-    //ixx = cyy/denom;
-    //iyy = cxx/denom;
-    //ixy = -2.0*cxy/denom;
+    //Eigen::Matrix2d Inew = Mp.inverse()*I*(Mp.transpose()).inverse();
+    Eigen::Matrix2d Inew = Mp*I*Mp.transpose();
 
     double iuu = Inew(0,0);
     double ivv = Inew(1,1);
-    double iuv = 0.5*(Inew(0,1) + Inew(1,0));
+    double iuv = (Inew(0,1) + Inew(1,0));
+    
     return cameraGeom::Moment(iuu, ivv, iuv);
     
 }
 
-
 afwGeom::Point2D cameraGeom::RadialPolyDistortion::distort(afwGeom::Point2D const &p)  {
-    return this->_transform(p, _coeffs);
+    return this->_transform(p, true);
 }
 afwGeom::Point2D cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point2D const &p)  {
-    return this->_transform(p, _icoeffs);
+    return this->_transform(p, false);
 }
 cameraGeom::Moment cameraGeom::RadialPolyDistortion::distort(afwGeom::Point2D const &p,
                                                              cameraGeom::Moment const &Iqq) {
-    return this->_transform(p, Iqq, _dcoeffs);
+    return this->_transform(p, Iqq, true);
 }
 cameraGeom::Moment cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point2D const &p,
                                                                cameraGeom::Moment const &Iqq) {
-    return this->_transform(p, Iqq, _idcoeffs);
+    return this->_transform(p, Iqq, false);
 }

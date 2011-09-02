@@ -31,6 +31,7 @@ Run with:
 """
 
 import os, sys
+import math
 import unittest
 
 import lsst.utils.tests    as utilsTests
@@ -78,11 +79,45 @@ class DistortionTestCase(unittest.TestCase):
 	    m = cameraGeom.Moment(ixx, iyy, ixy)
 	    mDist = dist.distort(p, m)
 	    mm    = dist.undistort(pDist, mDist)
+	    r0 = math.sqrt(x*x+y*y)
 
+	    theta = math.atan2(y,x)
+	    #dx = 0.001*math.cos(theta)
+	    #dy = 0.001*math.sin(theta)
+	    #dr = math.sqrt(dx*dx+dy*dy)
+	    scale = 1.0000001
+	    p2 = afwGeom.Point2D(scale*x, scale*y)
+	    p2Dist = dist.distort(p2)
+
+	    r1 = math.sqrt(pDist.getX()*pDist.getX() + pDist.getY()*pDist.getY())
+	    r2 = math.sqrt(p2Dist.getX()*p2Dist.getX() + p2Dist.getY()*p2Dist.getY())
+	    if r0 > 0:
+		drTest = (r2 - r1)/((scale-1.0)*r0)
+	    else:
+		drTest = 0.0
+	    
+	    if hasattr(dist, 'transformR'):
+		dr = dist.transformR(r0, dist.getDCoeffs())
+		if r0 > 0:
+		    ror = dist.transformR(r0, dist.getCoeffs())/r0
+		else:
+		    ror = 1.0
+	    else:
+		dr = 1.0
+		ror = 1.0
+	    
 	    if self.prynt:
+		print "r,dr:  %.12f,%.12f %.12f"       % (ror, dr, drTest)
 		print "m:     %.12f %.12f %.12f" % (m.getIxx(), m.getIyy(), m.getIxy())
 		print "mDist: %.12f %.12f %.12f" % (mDist.getIxx(), mDist.getIyy(), mDist.getIxy())
 		print "mp:    %.12f %.12f %.12f" % (mm.getIxx(), mm.getIyy(), mm.getIxy())
+
+		ixyTmp = m.getIxy() if m.getIxy() != 0.0 else 1.0
+		print "err:   %.12f %.12f %.12f" % (
+		    (m.getIxx()-mm.getIxx())/m.getIxx(),
+		    (m.getIyy()-mm.getIyy())/m.getIyy(),
+		    (m.getIxy()-mm.getIxy())/ixyTmp,
+		    )
 		
 	    self.assertAlmostEqual(mm.getIxx(), m.getIxx(), 2)
 	    self.assertAlmostEqual(mm.getIyy(), m.getIyy(), 2)
@@ -126,48 +161,64 @@ class DistortionTestCase(unittest.TestCase):
 
     def testMomentDistortion(self):
 
-	ixx, iyy, ixy = 1.0, 1.0, 0.0
+	moments = [
+	    [1.0, 1.0, 0.0],
+	    [1.0, 1.0, 0.1],
+	    ]
+	#self.xs = [5000.0]
+	#self.ys = [0.0]
+	
 	nDist = cameraGeom.NullDistortion()
 	rDist = cameraGeom.RadialPolyDistortion(self.coeffs)
 
 	print rDist.getCoeffs()
 	print rDist.getICoeffs()
 
-	import numpy
-	import matplotlib.figure as figure
-	from matplotlib.backends.backend_agg import FigureCanvasAgg as FigCanvas
-	fig = figure.Figure()
-	canvas = FigCanvas(fig)
-	ax = fig.add_subplot(211)
-	dax = fig.add_subplot(212)
-	r = numpy.arange(0, 7500, 100)
-	c = rDist.getCoeffs()
-	c.reverse()
-	ic = rDist.getICoeffs()
-	ic.reverse()
-	dc = rDist.getDCoeffs()
-	dc.reverse()
-	idc = rDist.getIdCoeffs()
-	idc.reverse()
-	rp  = numpy.polyval(c, r)
-	irp = numpy.polyval(ic, r)
-	drp = numpy.polyval(dc, r)
-	idrp = numpy.polyval(idc, r)
-	
-	ax.plot(r, rp-r, '-b')
-	ax.plot(r, irp-r, '.b')
-	ax.plot(r, (rp-r)+(irp-r), 'r-')
-	dax.plot(r, drp, '-g')
-	dax.plot(r, idrp, '.g')
-	dax.plot(r, drp*idrp, 'r-')
-	
-	fig.savefig("foo.png")
-	
-	for x in self.xs:
-	    for y in self.ys:
-		print x, y
-		self.roundTrip(nDist, x, y, [ixx, iyy, ixy])
-		self.roundTrip(rDist, x, y, [ixx, iyy, ixy])
+	if False: #True:
+	    import numpy
+	    import matplotlib.figure as figure
+	    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigCanvas
+	    fig = figure.Figure()
+	    canvas = FigCanvas(fig)
+	    ax = fig.add_subplot(211)
+	    dax = fig.add_subplot(212)
+	    r = numpy.arange(0, 7500, 100)
+	    c = rDist.getCoeffs()
+	    c.reverse()
+	    ic = rDist.getICoeffs()
+	    ic.reverse()
+	    dc = rDist.getDCoeffs()
+	    dc.reverse()
+	    idc = rDist.getIdCoeffs()
+	    idc.reverse()
+	    
+	    rp  = numpy.polyval(c, r)
+	    irp = numpy.polyval(ic, r)
+	    r_round = numpy.polyval(ic, rp)
+	    
+	    drp = numpy.polyval(dc, r)
+	    idrp = numpy.polyval(idc, r)
+	    d_round = numpy.polyval(idc, rp)
+				    
+	    ax.plot(r, rp-r, '-b')
+	    ax.plot(r, -(irp-r), '.b')
+	    ax.semilogy(r, abs(r_round-r), 'r-')
+	    ax.axhline(1.0)
+	    ax.axhline(1.0e-3)
+	    dax.plot(r, drp, '-g')
+	    dax.plot(r, idrp, '.g')
+	    dax.semilogy(r, numpy.abs(1.0-d_round*drp), 'r-')
+	    dax.axhline(1.0e-3)
+
+	    fig.savefig("foo.png")
+
+	for moment in moments:
+	    ixx, iyy, ixy = moment
+	    for x in self.xs:
+		for y in self.ys:
+		    print x, y
+		    self.roundTrip(nDist, x, y, [ixx, iyy, ixy])
+		    self.roundTrip(rDist, x, y, [ixx, iyy, ixy])
 
 
 	
