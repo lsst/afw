@@ -86,7 +86,7 @@ public:
      *  @brief Return the minimum and maximum coordinates of the box (inclusive).
      */
     //@{
-    Point2I const & getMin() const { return _minimum; }
+    Point2I const getMin() const { return _minimum; }
     int getMinX() const { return _minimum.getX(); }
     int getMinY() const { return _minimum.getY(); }
 
@@ -101,7 +101,7 @@ public:
      *  \brief Return STL-style begin (inclusive) and end (exclusive) coordinates for the box.
      */
     //@{
-    Point2I const & getBegin() const { return _minimum; }
+    Point2I const getBegin() const { return _minimum; }
     int getBeginX() const { return _minimum.getX(); }
     int getBeginY() const { return _minimum.getY(); }
 
@@ -116,7 +116,7 @@ public:
      *  \brief Return the size of the box in pixels.
      */
     //@{
-    Extent2I const & getDimensions() const { return _dimensions; }
+    Extent2I const getDimensions() const { return _dimensions; }
     int getWidth() const { return _dimensions.getX(); }
     int getHeight() const { return _dimensions.getY(); }
     int getArea() const { return getWidth() * getHeight(); }
@@ -210,11 +210,11 @@ public:
      *  @brief Return the minimum (inclusive) and maximum (exclusive) coordinates of the box.
      */
     //@{
-    Point2D const & getMin() const { return _minimum; }
+    Point2D const getMin() const { return _minimum; }
     double getMinX() const { return _minimum.getX(); }
     double getMinY() const { return _minimum.getY(); }
 
-    Point2D const & getMax() const { return _maximum; }
+    Point2D const getMax() const { return _maximum; }
     double getMaxX() const { return _maximum.getX(); }
     double getMaxY() const { return _maximum.getY(); }
     //@}

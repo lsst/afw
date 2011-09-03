@@ -65,9 +65,11 @@ namespace geom = lsst::afw::geom;
 namespace {
     struct Threshold_traits {
     };
-    struct ThresholdLevel_traits : public Threshold_traits {
+    struct ThresholdLevel_traits : public Threshold_traits { // Threshold is a single number
     };
-    struct ThresholdBitmask_traits : public Threshold_traits {
+    struct ThresholdPixelLevel_traits : public Threshold_traits { // Threshold varies from pixel to pixel
+    };
+    struct ThresholdBitmask_traits : public Threshold_traits { // Threshold ORs with a bitmask
     };
 
     //
@@ -139,62 +141,53 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
 
 /************************************************************************************************************/
 /*
- * Convert a Threshold into a value and polarity
- */
-template<typename ImageT>
-static double
-getThresholdValue(detection::Threshold const &threshold, // threshold to find objects
-                  ImageT const& img                      // the image to be searched
-                 )
-{                     
-    double thresholdParam = -1;          // standard deviation of image (may be needed by Threshold)
-    if (threshold.getType() == detection::Threshold::STDEV ||
-        threshold.getType() == detection::Threshold::VARIANCE) {
-        math::Statistics stats = math::makeStatistics(img, math::STDEVCLIP);
-        double const sd = stats.getValue(math::STDEVCLIP);
-
-        pexLogging::TTrace<3>("afw.detection", "St. Dev = %g", sd);
-        
-        if (threshold.getType() == detection::Threshold::VARIANCE) {
-            thresholdParam = sd*sd;
-        } else {
-            thresholdParam = sd;
-        }
-    }
-
-    double const thresholdVal = threshold.getValue(thresholdParam);
-    
-    return thresholdVal;
-}
-
-/************************************************************************************************************/
-/*
  * Functions to determine if a pixel's in a Footprint
  */
-template<typename ImagePixelT>
-static inline bool inFootprint(ImagePixelT pixVal, bool polarity, double thresholdVal,
-                              ThresholdLevel_traits) {
+template<typename ImagePixelT, typename IterT>
+static inline bool inFootprint(ImagePixelT pixVal, IterT,
+                               bool polarity, double thresholdVal, ThresholdLevel_traits) {
     return (polarity ? pixVal : -pixVal) >= thresholdVal;
 }
 
-template<typename ImagePixelT>
-static inline bool inFootprint(ImagePixelT pixVal, bool, double thresholdVal,
-                              ThresholdBitmask_traits) {
+template<typename ImagePixelT, typename IterT>
+static inline bool inFootprint(ImagePixelT pixVal, IterT var,
+                               bool polarity, double thresholdVal, ThresholdPixelLevel_traits) {
+    return (polarity ? pixVal : -pixVal) >= thresholdVal*::sqrt(*var);
+}
+
+template<typename ImagePixelT, typename IterT>
+static inline bool inFootprint(ImagePixelT pixVal, IterT,
+                               bool, double thresholdVal, ThresholdBitmask_traits) {
     return (pixVal & static_cast<long>(thresholdVal));
+}
+/*
+ * Advance the x_iterator to the variance image, when relevant (it may be NULL otherwise)
+ */
+template<typename IterT>
+static inline IterT
+advancePtr(IterT varPtr, Threshold_traits) {
+    return varPtr;
+}
+
+template<typename IterT>
+static inline IterT
+advancePtr(IterT varPtr, ThresholdPixelLevel_traits) {
+    return varPtr + 1;
 }
 
 /*
  * Here's the working routine for the FootprintSet constructors; see documentation
  * of the constructors themselves
  */
-template<typename ImagePixelT, typename MaskPixelT, typename ThresholdTraitT>
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT, typename ThresholdTraitT>
 static void findFootprints(
         typename detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintList *_footprints, // Footprints
-        geom::Box2I const& _region,            // BBox of pixels that are being searched
+        geom::Box2I const& _region,               // BBox of pixels that are being searched
         image::ImageBase<ImagePixelT> const &img, // Image to search for objects
-        double const thresholdVal,                 // threshold value defining Footprints
+        image::Image<VariancePixelT> const *var,  // img's variance
+        double const thresholdVal,                // threshold value defining Footprints
         bool const polarity,                      // if false, search _below_ thresholdVal
-        int const npixMin                      // minimum number of pixels in an object
+        int const npixMin                         // minimum number of pixels in an object
 ) {
     int id;                             /* object ID */
     int in_span;                        /* object ID of current IdSpan */
@@ -229,6 +222,7 @@ static void findFootprints(
  * Go through image identifying objects
  */
     typedef typename image::Image<ImagePixelT>::x_iterator x_iterator;
+    typedef typename image::Image<VariancePixelT>::x_iterator x_var_iterator;
 
     in_span = 0;                        // not in a span
     for (int y = 0; y != height; ++y) {
@@ -244,10 +238,12 @@ static void findFootprints(
         in_span = 0;                    /* not in a span */
 
         x_iterator pixPtr = img.row_begin(y);
-        for (int x = 0; x < width; ++x, ++pixPtr) {
+        x_var_iterator varPtr = (var == NULL) ? NULL : var->row_begin(y);
+        for (int x = 0; x < width; ++x, ++pixPtr, varPtr = advancePtr(varPtr, ThresholdTraitT())) {
             ImagePixelT const pixVal = *pixPtr;
 
-            if (isBadPixel(pixVal) || !inFootprint(pixVal, polarity, thresholdVal, ThresholdTraitT())) {
+            if (isBadPixel(pixVal) || !inFootprint(pixVal, varPtr,
+                                                   polarity, thresholdVal, ThresholdTraitT())) {
                 if (in_span) {
                     IdSpan::Ptr sp(new IdSpan(in_span, y, x0, x - 1));
                     spans.push_back(sp);
@@ -341,11 +337,14 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     _footprints(new FootprintList()),
     _region(img.getBBox(image::PARENT))
 {
-    findFootprints<ImagePixelT, MaskPixelT, ThresholdLevel_traits>(
+    typedef float VariancePixelT;
+     
+    findFootprints<ImagePixelT, MaskPixelT, VariancePixelT, ThresholdLevel_traits>(
         _footprints.get(), 
         _region, 
         img,
-        getThresholdValue(threshold, img), threshold.getPolarity(),
+        NULL,
+        threshold.getValue(img), threshold.getPolarity(),
         npixMin
     );
 }
@@ -364,20 +363,19 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
 {
     switch (threshold.getType()) {
       case Threshold::BITMASK:
-        findFootprints<MaskPixelT, MaskPixelT, ThresholdBitmask_traits>(
-            _footprints.get(), _region, msk, threshold.getValue(), threshold.getPolarity(), npixMin);
+        findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
+            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(), npixMin);
         break;
 
       case Threshold::VALUE:
-        findFootprints<MaskPixelT, MaskPixelT, ThresholdLevel_traits>(
-            _footprints.get(), _region, msk, threshold.getValue(), threshold.getPolarity(), npixMin);
+        findFootprints<MaskPixelT, MaskPixelT, float, ThresholdLevel_traits>(
+            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(), npixMin);
         break;
 
       default:
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                           "You must specify a numerical threshold value with a Mask");
     }
-    
 }
 
 /**
@@ -405,14 +403,32 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())
     )
 {
+    typedef typename image::MaskedImage<ImagePixelT, MaskPixelT>::Variance::Pixel VariancePixelT;
     // Find the Footprints    
-    findFootprints<ImagePixelT, MaskPixelT, ThresholdLevel_traits>(
-        _footprints.get(), 
-        _region,
-        *maskedImg.getImage(), 
-        getThresholdValue(threshold, maskedImg), threshold.getPolarity(),
-        npixMin
-    );    
+    switch (threshold.getType()) {
+      case Threshold::PIXEL_STDEV:
+        findFootprints<ImagePixelT, MaskPixelT, VariancePixelT, ThresholdPixelLevel_traits>(
+            _footprints.get(), 
+            _region,
+            *maskedImg.getImage(), 
+            maskedImg.getVariance().get(), 
+            threshold.getValue(maskedImg),
+            threshold.getPolarity(),
+            npixMin
+                                                                                  );
+        break;
+      default:
+        findFootprints<ImagePixelT, MaskPixelT, VariancePixelT, ThresholdLevel_traits>(
+            _footprints.get(), 
+            _region,
+            *maskedImg.getImage(), 
+            maskedImg.getVariance().get(), 
+            threshold.getValue(maskedImg),
+            threshold.getPolarity(),
+            npixMin
+                                                                                  );
+        break;
+    }
     // Set Mask if requested    
     if (planeName == "") {
         return;
@@ -953,6 +969,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     FootprintSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
     swap(ds);
 }
+
 
 /************************************************************************************************************/
 /**

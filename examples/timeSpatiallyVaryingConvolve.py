@@ -44,7 +44,7 @@ dataDir = eups.productDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata")
 
-InputMaskedImagePath = os.path.join(dataDir, "med")
+InputMaskedImagePath = os.path.join(dataDir, "med.fits")
 
 def getSpatialParameters(nKernelParams, func):
     """Get basic spatial parameters list
@@ -195,26 +195,32 @@ def run():
     convControl.setDoNormalize(True)
     spOrder = 3
     print "All kernels use a spatial model of a Polynomial2 of order %s" % (spOrder,)
-    print
     
-    if len(sys.argv) < 2:
-        inImage = afwImage.MaskedImageF(InputMaskedImagePath)
-        # to get original behavior change True to False:
-        if (False):
-            bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(256, 256))
-            inImage = afwImage.MaskedImageF(inImage, bbox, afwImage.LOCAL, False)
-    else:
-        inImage = afwImage.MaskedImageF(sys.argv[1])
-    outImage = afwImage.MaskedImageF(inImage.getDimensions())
-    
-    timeSet(outImage, inImage, getAnalyticKernel,
-        "AnalyticKernel", convControl, spOrder=spOrder)
-    timeSet(outImage, inImage, getSeparableKernel,
-        "SeparableKernel", convControl, spOrder=spOrder, doInterp=False)
-    timeSet(outImage, inImage, getGaussianLinearCombinationKernel,
-        "LinearCombinationKernel with 5 Gaussian Basis Kernels", convControl, spOrder=spOrder)
-    timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
-        "LinearCombinationKernel with Delta Function Basis", convControl, spOrder=spOrder)
+    for imageClass in (
+        afwImage.ImageF,
+        afwImage.ImageD,
+        afwImage.MaskedImageF,
+        afwImage.MaskedImageD,
+    ):
+        print "\n*** Test convolution with %s ***\n" % (imageClass.__name__,)
+        if len(sys.argv) < 2:
+            inImage = imageClass(InputMaskedImagePath)
+            # to get original behavior change True to False:
+            if (False):
+                bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(256, 256))
+                inImage = imageClass(inImage, bbox, afwImage.LOCAL, False)
+        else:
+            inImage = imageClass(sys.argv[1])
+        outImage = imageClass(inImage.getDimensions())
+        
+        timeSet(outImage, inImage, getAnalyticKernel,
+            "AnalyticKernel", convControl, spOrder=spOrder)
+        timeSet(outImage, inImage, getSeparableKernel,
+            "SeparableKernel", convControl, spOrder=spOrder, doInterp=False)
+        timeSet(outImage, inImage, getGaussianLinearCombinationKernel,
+            "LinearCombinationKernel with 5 Gaussian Basis Kernels", convControl, spOrder=spOrder)
+        timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
+            "LinearCombinationKernel with Delta Function Basis", convControl, spOrder=spOrder)
 
 if __name__ == "__main__":
     run()

@@ -570,7 +570,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     double mean, variance;
     if (_sctrl.getWeighted()) {
         mean = (wsum > 0) ? center + sum/wsum : NaN;
-        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*n) : NaN;
+        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
         sum += center*wsum;
     } else {
         mean = (n) ? center + sum/n : NaN;

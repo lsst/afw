@@ -55,7 +55,7 @@ class offsetImageTestCase(unittest.TestCase):
     """A test case for offsetImage"""
 
     def setUp(self):
-        self.inImage = afwImage.ImageF(afwGeom.Extent2I(200, 100))
+        self.inImage = afwImage.ImageF(200, 100)
         self.background = 200
         self.inImage.set(self.background)
         self.algorithm = "lanczos5"
@@ -112,7 +112,7 @@ class offsetImageTestCase(unittest.TestCase):
     def testOffsetGaussian(self):
         """Insert a Gaussian, offset, and check the residuals"""
         size = 100
-        im = afwImage.ImageF(afwGeom.Extent2I(size, size))
+        im = afwImage.ImageF(size, size)
 
         xc, yc = size/2.0, size/2.0
 
@@ -168,7 +168,7 @@ class transformImageTestCase(unittest.TestCase):
     """A test case for rotating images"""
 
     def setUp(self):
-        self.inImage = afwImage.ImageF(afwGeom.Extent2I(20, 10))
+        self.inImage = afwImage.ImageF(20, 10)
         self.inImage.set(0, 0, 100)
         self.inImage.set(10, 0, 50)
 
@@ -215,7 +215,7 @@ class binImageTestCase(unittest.TestCase):
     def testBin(self):
         """Test that we can bin images"""
 
-        inImage = afwImage.ImageF(afwGeom.Extent2I(203, 131))
+        inImage = afwImage.ImageF(203, 131)
         inImage.set(1)
         bin = 4
 
@@ -227,6 +227,34 @@ class binImageTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
         self.assertEqual(stats.getValue(afwMath.MIN), 1)
         self.assertEqual(stats.getValue(afwMath.MAX), 1)
+
+    def testBin(self):
+        """Test that we can bin images anisotropically"""
+
+        inImage = afwImage.ImageF(203, 131)
+        val = 1
+        inImage.set(val)
+        binX, binY = 2, 4
+
+        outImage = afwMath.binImage(inImage, binX, binY)
+
+        self.assertEqual(outImage.getWidth(), inImage.getWidth()//binX)
+        self.assertEqual(outImage.getHeight(), inImage.getHeight()//binY)
+
+        stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
+        self.assertEqual(stats.getValue(afwMath.MIN), val)
+        self.assertEqual(stats.getValue(afwMath.MAX), val)
+
+        inImage.set(0)
+        subImg = inImage.Factory(inImage, afwGeom.BoxI(afwGeom.PointI(4, 4), afwGeom.ExtentI(4, 8)),
+                                 afwImage.LOCAL)
+        subImg.set(100)
+        del subImg
+        outImage = afwMath.binImage(inImage, binX, binY)
+
+        if display:
+            ds9.mtv(inImage, frame=2, title="unbinned")
+            ds9.mtv(outImage, frame=3, title="binned %dx%d" % (binX, binY))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -29,9 +29,12 @@
  */
 #include <iterator>
 #include "lsst/afw/math/offsetImage.h"
+#include "lsst/afw/geom/Box.h"
+#include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/image/ImageUtils.h"
 
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
 namespace afw {
@@ -52,18 +55,35 @@ template<typename ImageT>
 typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offset
                                  float dx,               ///< move the %image this far in the column direction
                                  float dy,               ///< move the %image this far in the row direction
-                                 std::string const& algorithmName  ///< Type of resampling Kernel to use
+                                 std::string const& algorithmName,  ///< Type of resampling Kernel to use
+                                 unsigned int buffer ///< Buffer for kernel size
                                 ) {
     SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
 
-    if (offsetKernel->getWidth() > inImage.getWidth() || offsetKernel->getHeight() > inImage.getHeight()) {
+    typename ImageT::Ptr buffImage;
+    if (buffer > 0) {
+        // Paste input image into buffered image
+        afwGeom::Extent2I const &dims = inImage.getDimensions();
+        typename ImageT::Ptr buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
+        buffImage = buffered;
+        afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), dims);
+        typename ImageT::Ptr buffSmall(new ImageT(*buffImage, box, afwImage::LOCAL, false));
+        *buffSmall <<= inImage;
+    } else {
+        buffImage = boost::make_shared<ImageT>(inImage);
+    }
+
+    if (offsetKernel->getWidth() > buffImage->getWidth() || 
+        offsetKernel->getHeight() > buffImage->getHeight()) {
         throw LSST_EXCEPT(pexExcept::LengthErrorException,
-                          (boost::format("Image of size %dx%d is too small to offset using a %s kernel (minimum %dx%d)") %
-                           inImage.getWidth() %  inImage.getHeight() % algorithmName %
+                          (boost::format("Image of size %dx%d is too small to offset using a %s kernel"
+                                         "(minimum %dx%d)") %
+                           buffImage->getWidth() % buffImage->getHeight() % algorithmName %
                            offsetKernel->getWidth() % offsetKernel->getHeight()).str());
     }
 
-    typename ImageT::Ptr outImage(new ImageT(inImage, true)); // output image, a deep copy
+//    typename ImageT::Ptr convImage(new ImageT(buffImage, true)); // output image, a deep copy
+    typename ImageT::Ptr convImage(new ImageT(buffImage->getDimensions())); // Convolved image
 
     std::pair<int, double> deltaX = afwImage::positionToIndex(dx, true); // true => return the std::pair
     std::pair<int, double> deltaY = afwImage::positionToIndex(dy, true);
@@ -104,7 +124,17 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
     
     offsetKernel->setKernelParameters(std::make_pair(dx, dy));
 
-    convolve(*outImage, inImage, *offsetKernel, true, true);
+    convolve(*convImage, *buffImage, *offsetKernel, true, true);
+
+    typename ImageT::Ptr outImage;
+    if (buffer > 0) {
+        afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), inImage.getDimensions());
+        typename ImageT::Ptr out(new ImageT(*convImage, box, afwImage::LOCAL, true));
+        outImage = out;
+    } else {
+        outImage = convImage;
+    }
+
     outImage->setXY0(geom::Point2I(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
 
     return outImage;
@@ -117,9 +147,9 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 /// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
-                                                    std::string const&); \
+                                                    std::string const&, unsigned int); \
     template afwImage::MaskedImage<TYPE>::Ptr offsetImage(afwImage::MaskedImage<TYPE> const&, float, float, \
-                                                          std::string const&);
+                                                          std::string const&, unsigned int);
 
 INSTANTIATE(double)
 INSTANTIATE(float)

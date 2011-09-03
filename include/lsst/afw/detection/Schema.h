@@ -129,13 +129,13 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, unsigned int const version) {
-        ar & const_cast<std::string&>(_name);
-        ar & const_cast<unsigned int&>(_index);
-        ar & const_cast<Schema::Type&>(_type);
-        ar & const_cast<int&>(_dimen);
-        ar & const_cast<std::string&>(_units);
-        ar & _component;
-        ar & _entries;
+        ar & make_nvp("name", const_cast<std::string&>(_name));
+        ar & make_nvp("index", const_cast<unsigned int&>(_index));
+        ar & make_nvp("type", const_cast<Schema::Type&>(_type));
+        ar & make_nvp("dimen", const_cast<int&>(_dimen));
+        ar & make_nvp("units", const_cast<std::string&>(_units));
+        ar & make_nvp("component", _component);
+        ar & make_nvp("entries", _entries);
     }
 
 
@@ -205,8 +205,15 @@ public:
         return os;
     }
 private:
+    SchemaEntry(void) : Schema() { }
     virtual SchemaEntry *_clone() const { return new SchemaEntry(*this); }
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, unsigned int const version) {
+        ar & make_nvp("schemaBase", boost::serialization::base_object<Schema>(*this));
+    }
 };
 
 }}}
+
 #endif

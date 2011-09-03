@@ -29,8 +29,9 @@
 
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
-#include "lsst/afw/image/Exposure.h"    // Exposure.h brings in almost everything
+#include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/Exposure.h"    // Exposure.h brings in almost everything
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/image/ImageUtils.h"

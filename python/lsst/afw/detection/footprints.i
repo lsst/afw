@@ -53,6 +53,15 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %include "lsst/afw/detection/FootprintSet.h"
 %include "lsst/afw/detection/FootprintFunctor.h"
 
+%define %thresholdOperations(TYPE)
+    %extend lsst::afw::detection::Threshold {
+        %template(getValue) getValue<TYPE<unsigned short> >;
+        %template(getValue) getValue<TYPE<int> >;
+        %template(getValue) getValue<TYPE<float> >;
+        %template(getValue) getValue<TYPE<double> >;
+    }
+%enddef
+
 %extend lsst::afw::detection::Footprint {
     %template(intersectMask) intersectMask<lsst::afw::image::MaskPixel>;
 }
@@ -72,8 +81,8 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 
 %define %maskOperations(PIXEL_TYPE)
     %template(footprintAndMask) lsst::afw::detection::footprintAndMask<PIXEL_TYPE>;
-    %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<lsst::afw::image::MaskPixel>;
-    %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<lsst::afw::image::MaskPixel>;
+    %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<PIXEL_TYPE>;
+    %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<PIXEL_TYPE>;
 %enddef
 
 %define %FootprintSet(NAME, PIXEL_TYPE)
@@ -81,7 +90,8 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %template(makeFootprintSet) lsst::afw::detection::makeFootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
 %enddef
 
-
+%thresholdOperations(lsst::afw::image::Image);
+%thresholdOperations(lsst::afw::image::MaskedImage);
 %imageOperations(F, float);
 %imageOperations(D, double);
 %maskOperations(lsst::afw::image::MaskPixel);

@@ -96,6 +96,29 @@ class dgPsfTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.SUM).getValue(), 1.0)
 
+    def testComputeImage3(self):
+        """Test the computation of the PSF's image at a point for non-native sizes"""
+        #
+        # First an analytic Kernel
+        #
+        ksize = 15
+        aPsf = afwDetect.createPsf("Kernel",
+                                   afwMath.AnalyticKernel(ksize, ksize, afwMath.GaussianFunction2D(1, 1)))
+        #
+        # Then an image-based Kernel
+        #
+        iPsf = afwDetect.createPsf("Kernel", afwMath.FixedKernel(aPsf.computeImage()))
+
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                dimen = afwGeom.Extent2I(ksize + 2*dx, ksize + 2*dy)
+
+                aIm = aPsf.computeImage(dimen)
+                self.assertTrue(aIm.getDimensions() == dimen)
+
+                iIm = iPsf.computeImage(dimen)
+                self.assertTrue(iIm.getDimensions() == dimen)
+
     def testLocalPsf(self):
         image = self.psf.computeImage(afwGeom.Point2D(0.0, 0.0), False)
         local = self.psf.getLocalPsf(afwGeom.Point2D(0.0, 0.0))

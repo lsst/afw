@@ -26,7 +26,7 @@
 #include "lsst/afw/detection/LocalPsf.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 #include "lsst/ndarray/eigen.h"
-#include <Eigen/Cholesky>
+#include <Eigen/LU>
 #include <Eigen/Array>
 
 /************************************************************************************************************/
@@ -71,22 +71,23 @@ afwDet::LocalPsf::Shapelet afwDet::ImageLocalPsf::computeShapelet(
         for (int x = 0; x < _image.getWidth(); ++x) {
             b.fillEvaluation(
                 matrix[x + y * _image.getWidth()],
-                g(geom::Point2D(x - _image.getX0(), y - _image.getY0()))
+                g(geom::Point2D(x + _image.getX0(), y + _image.getY0()))
             );
         }
     }
     Eigen::MatrixXd h(matrix.getSize<1>(), matrix.getSize<1>());
     h.part<Eigen::SelfAdjoint>() = ndarray::viewAsTransposedEigen(matrix) * ndarray::viewAsEigen(matrix);
     Eigen::VectorXd rhs = ndarray::viewAsTransposedEigen(matrix) * ndarray::viewAsEigen(array);
-    Eigen::LDLT<Eigen::MatrixXd> cholesky(h);
+    Eigen::LU<Eigen::MatrixXd> solver(h);
     ndarray::Array<Pixel,1,1> shapeletArray = ndarray::allocate(matrix.getSize<1>());
-    ndarray::EigenView<Pixel,1,1> shapeletVector(shapeletArray);
-    if (!cholesky.solve(rhs, &shapeletVector)) {
+    Eigen::VectorXd shapeletVector;
+    if (!solver.solve(rhs, &shapeletVector)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::RuntimeErrorException,
             "Singular matrix encountered in shapelet conversion."
         );
     }
+    ndarray::viewAsEigen(shapeletArray) = shapeletVector;
     Shapelet result(order, basisType, ellipse, shapeletArray);
     result.getCoefficients().deep() /= result.evaluate().integrate();
     return result;
@@ -114,6 +115,12 @@ afwGeom::ellipses::Ellipse afwDet::ImageLocalPsf::computeMoments() const {
     ixx -= ix * ix;
     iyy -= iy * iy;
     ixy -= ix * iy;
+    if (ixx < 0.0 || iyy < 0.0 || ixx*iyy < ixy*ixy) {
+	throw LSST_EXCEPT(
+	    lsst::pex::exceptions::RuntimeErrorException,
+	    "PSF Quadrupole moments do not define a valid ellipse"
+	);
+    }
     return geom::ellipses::Ellipse(
         geom::ellipses::Quadrupole(ixx, iyy, ixy),
         getPoint() + geom::Extent2D(ix, iy)
@@ -134,11 +141,12 @@ void afwDet::ImageLocalPsf::evaluatePointSource(
     image::Image<Pixel>::Ptr shiftedImage = math::offsetImage(_image, offset.getX(), offset.getY());
     geom::Box2I bbox = shiftedImage->getBBox(image::PARENT);
     if (!bbox.contains(fp.getBBox())) {
-        image::Image<Pixel> tmp(fp.getBBox());
+        geom::Box2I tmpBBox = fp.getBBox();
+        tmpBBox.include(bbox);
+        image::Image<Pixel> tmp(tmpBBox);
         image::Image<Pixel> sub(tmp, bbox, image::PARENT, false);
         sub <<= *shiftedImage;
         shiftedImage->swap(tmp);
-        bbox = fp.getBBox();
     }
     detection::flattenArray(fp, shiftedImage->getArray(), array, shiftedImage->getXY0());
 }

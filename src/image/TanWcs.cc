@@ -62,7 +62,7 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
 TanWcs::TanWcs() : 
     Wcs(),
     _hasDistortion(false),
-    _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+    _sipA(), _sipB(), _sipAp(), _sipBp() {
 }
 
 afwGeom::Angle TanWcs::pixelScale() const {
@@ -77,7 +77,7 @@ afwGeom::Angle TanWcs::pixelScale() const {
 TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) : 
     Wcs(fitsMetadata),
     _hasDistortion(false),
-    _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+    _sipA(), _sipB(), _sipAp(), _sipBp() {
 
     //Internal params for wcslib. These should be set via policy - but for the moment...
     _relax = 1;
@@ -135,13 +135,13 @@ TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) :
     }
     
     //Check that the existence of forward sip matrices <=> existence of reverse matrices
-    if( _hasDistortion) {
-        if ((_sipA.rows() == 1) || (_sipB.rows() == 1)) {
+    if (_hasDistortion) {
+        if (_sipA.rows() <= 1 || _sipB.rows() <= 1) {
                 string msg = "Existence of forward distorton matrices suggested, but not found";
                 throw LSST_EXCEPT(except::InvalidParameterException, msg);
         }
 
-        if ((_sipAp.rows() == 1) || (_sipBp.rows() == 1)) {
+        if (_sipAp.rows() <= 1 || _sipBp.rows() <= 1) {
                 string msg = "Forward distorton matrices present, but no reverse matrices";
                 throw LSST_EXCEPT(except::InvalidParameterException, msg);
         }
@@ -195,7 +195,7 @@ TanWcs::TanWcs(
        ) :
        Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
        _hasDistortion(false),
-       _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+       _sipA(), _sipB(), _sipAp(), _sipBp() {
        
        //Nothing to do here
 }
@@ -227,7 +227,7 @@ TanWcs::TanWcs(
            Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
            _hasDistortion(true),
            //Sip's set by a dedicated method that does error checking
-           _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+           _sipA(), _sipB(), _sipAp(), _sipBp() {
 
     //Input checking is done constructor of base class, so don't need to do 
     //any here.

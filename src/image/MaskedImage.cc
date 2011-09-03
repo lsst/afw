@@ -490,7 +490,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Ima
 
 /// Subtract a MaskedImage rhs from a MaskedImage
 ///
-/// The %images are added; the masks are ORd together; and the variances are added
+/// The %images are subtracted; the masks are ORd together; and the variances are added
 ///
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -502,7 +502,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(Mas
 
 /// Subtract a scaled MaskedImage c*rhs from a MaskedImage
 ///
-/// The %images are added; the masks are ORd together; and the variances are added
+/// The %images are subtracted; the masks are ORd together; and the variances are added
 ///
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

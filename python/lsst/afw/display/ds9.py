@@ -217,18 +217,25 @@ def ds9Version():
 try:
     cmdBuffer
 except NameError:
-    XPA_SZ_LINE = 4096                  # internal buffersize in xpa.  Sigh
+    XPA_SZ_LINE = 4096 - 100            # internal buffersize in xpa. Sigh; esp. as the 100 is some needed slop
 
     class Buffer(object):
         """Control buffering the sending of commands to ds9;
 annoying but necessary for anything resembling performance
 
-The usual usage pattern is probably:
+The usual usage pattern (from a module importing this file, ds9.py) is probably:
    ds9.cmdBuffer.pushSize()
    # bunches of ds9.{dot,line} commands
    ds9.cmdBuffer.flush()
    # bunches more ds9.{dot,line} commands
    ds9.cmdBuffer.popSize()
+
+N.b. These are available as:
+   ds9.buffer()
+   # bunches of ds9.{dot,line} commands
+   ds9.flush()
+   # bunches more ds9.{dot,line} commands
+   ds9.buffer(False)
         """
 
         def __init__(self, size=0):
@@ -265,24 +272,25 @@ The usual usage pattern is probably:
         def pushSize(self, size=-1):
             """Replace current ds9 command buffer size with size (see also popSize)
             @param:  Size of buffer (-1: largest possible given bugs in xpa)"""
+            self.flush()
             self._bufsize.append(0)
             self.set(size)
 
         def popSize(self):
             """Switch back to the previous command buffer size (see also pushSize)"""
+            self.flush()
+
             if len(self._bufsize) > 1:
                 self._bufsize.pop()
 
-            self.flush()
-
-        def flush(self):
+        def flush(self, silent=False):
             """Flush the pending commands"""
-            ds9Cmd(flush=True)
+            ds9Cmd(flush=True, silent=silent)
 
     cmdBuffer = Buffer(0)
 
 
-def ds9Cmd(cmd=None, trap=True, flush=False):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -309,7 +317,7 @@ def ds9Cmd(cmd=None, trap=True, flush=False):
     except IOError, e:
         if not trap:
             raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
-        else:
+        elif not silent:
             print >> sys.stderr, "Caught ds9 exception processing command \"%s\": %s" % (cmd, e)
 
 def initDS9(execDs9=True):
@@ -360,7 +368,7 @@ def show(frame=None):
     ds9Cmd(selectFrame(frame) + "; raise", trap=False)
 
 def setMaskColor(color=GREEN):
-    """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
+    """Set the ds9 mask colour to; eg. setMaskColor(RED)"""
     ds9Cmd("mask color %s" % color)
 
 
@@ -510,6 +518,14 @@ def _mtv(data, wcs, title, isMask):
 #
 # Graphics commands
 #
+def buffer(enable=True):
+    if enable:
+        cmdBuffer.pushSize()
+    else:
+        cmdBuffer.popSize()
+
+flush = cmdBuffer.flush(silent=True)
+
 def erase(frame=None):
     """Erase the specified DS9 frame"""
     if frame is None:

@@ -413,6 +413,10 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix = "") const;
 
+        virtual Pixel getSum() const {
+            return _sum;
+        }
+
     private:
         lsst::afw::image::Image<Pixel> _image;
         Pixel _sum;

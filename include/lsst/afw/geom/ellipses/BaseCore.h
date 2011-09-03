@@ -233,7 +233,6 @@ protected:
     virtual Jacobian _dAssignToAxes(double & a, double & b, double & theta) const = 0;
     virtual Jacobian _dAssignFromAxes(double a, double b, double theta) = 0;
 
-    ParameterVector _vector;
 #endif
 };
 

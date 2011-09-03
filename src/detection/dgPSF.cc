@@ -50,14 +50,24 @@ PTR(LocalPsf) dgPsf::doGetLocalPsf(
     lsst::afw::image::Color const &
 ) const {
     afwMath::shapelets::MultiShapeletFunction multiShapelet;
-    multiShapelet.getElements().push_back(
-        afwMath::shapelets::ShapeletFunction(0, afwMath::shapelets::HERMITE, _sigma1, center)
-    );
-    multiShapelet.getElements().push_back(
-        afwMath::shapelets::ShapeletFunction(0, afwMath::shapelets::HERMITE, _sigma2, center)
-    );
-    multiShapelet.getElements().front().getCoefficients()[0] = 1.0;
-    multiShapelet.getElements().back().getCoefficients()[0] = _b;
+    double eps = std::numeric_limits<double>::epsilon();
+    if(_sigma1 <= eps && _sigma2 <= eps){
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::RuntimeErrorException,
+            "This psf is malformed, both sigma1 and sigma2 are zero"
+        );
+    }
+    if(_sigma1 > eps) {
+        afwMath::shapelets::ShapeletFunction element(0, afwMath::shapelets::HERMITE, _sigma1, center);
+        element.getCoefficients()[0]= 1.0;
+        multiShapelet.getElements().push_back(element);
+    }
+    if(_sigma2 > eps) {
+        afwMath::shapelets::ShapeletFunction element(0, afwMath::shapelets::HERMITE, _sigma2, center);
+        element.getCoefficients()[0] = _b;
+        multiShapelet.getElements().push_back(element);
+    }
+
     return boost::make_shared<ShapeletLocalPsf>(center, multiShapelet);
 }
 

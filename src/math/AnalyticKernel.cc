@@ -111,12 +111,14 @@ double afwMath::AnalyticKernel::computeImage(
     double xPos,
     double yPos
 ) const {
+#if 0
     if (image.getDimensions() != this->getDimensions()) {
         std::ostringstream os;
         os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
             << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
+#endif
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(xPos, yPos);
     }
@@ -125,10 +127,10 @@ double afwMath::AnalyticKernel::computeImage(
     double yOffset = -this->getCtrY();
 
     double imSum = 0;
-    for (int y = 0; y != this->getHeight(); ++y) {
+    for (int y = 0; y != image.getHeight(); ++y) {
         double const fy = y + yOffset;
         afwImage::Image<Pixel>::x_iterator ptr = image.row_begin(y);
-        for (int x = 0; x != this->getWidth(); ++x, ++ptr) {
+        for (int x = 0; x != image.getWidth(); ++x, ++ptr) {
             double const fx = x + xOffset;
             Pixel const pixelVal = (*_kernelFunctionPtr)(fx, fy);
             *ptr = pixelVal;

@@ -34,9 +34,11 @@ import eups
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
+import lsst.afw.image.utils as imageUtils
 import lsst.afw.image.testUtils as imageTestUtils
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as logging
+import lsst.pex.logging as pexLog
+import lsst.pex.policy as pexPolicy
 
 import lsst.afw.display.ds9 as ds9
 try:
@@ -50,7 +52,7 @@ except:
     #SAVE_FAILED_FITS_FILES = False
     SAVE_FAILED_FITS_FILES = True
 
-logging.Debug("lsst.afw.math", VERBOSITY)
+pexLog.Debug("lsst.afw.math", VERBOSITY)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -74,12 +76,27 @@ class WarpExposureTestCase(unittest.TestCase):
         - bad mask pixels get smeared out so we have to excluded all bad mask pixels
           from the output image when comparing masks.
         """
+        filterPolicyFile = pexPolicy.DefaultPolicyFile("afw", "SdssFilters.paf", "tests")
+        filterPolicy = pexPolicy.Policy.createPolicy(filterPolicyFile, filterPolicyFile.getRepositoryPath(), True)
+        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
+
         originalExposure = afwImage.ExposureF(originalExposurePath)
-        afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
+        originalFilter = afwImage.Filter("i")
+        originalCalib = afwImage.Calib()
+        originalCalib.setFluxMag0(1.0e5, 1.0e3)
+        originalExposure.setFilter(originalFilter)
+        originalExposure.setCalib(originalCalib)
+        afwWarpedExposure = afwImage.ExposureF(
+            originalExposure.getBBox(afwImage.PARENT),
+            originalExposure.getWcs())
         warpingKernel = afwMath.LanczosWarpingKernel(4)
         afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull")
+        
+        self.assertEquals(afwWarpedExposure.getFilter().getName(), originalFilter.getName())
+        self.assertEquals(afwWarpedExposure.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
+        
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")

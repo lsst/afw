@@ -82,9 +82,13 @@ public:
     }
     
     /**:
-     * Retun the Footprint%s of detected objects
+     * Return the Footprint%s of detected objects
      */
     PTR(FootprintList) getFootprints() { return _footprints; } 
+    /**:
+     * Set the Footprint%s of detected objects
+     */
+    void setFootprints(PTR(FootprintList) footprints) { _footprints = footprints; }
     /**
      * Retun the Footprint%s of detected objects
      */

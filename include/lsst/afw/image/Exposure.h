@@ -104,7 +104,7 @@ public:
         std::string const &baseName, 
         int const hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const origin = LOCAL, 
+        ImageOrigin const origin=LOCAL,
         bool const conformMasks=false
     );
     
@@ -113,7 +113,7 @@ public:
         size_t *ramFileLen,
         int const hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const origin = LOCAL, 
+        ImageOrigin const origin=LOCAL, 
         bool const conformMasks=false
     );
     
@@ -125,7 +125,7 @@ public:
     Exposure(
         Exposure const &src, 
         lsst::afw::geom::Box2I const& bbox, 
-        ImageOrigin const origin = LOCAL, 
+        ImageOrigin const origin=LOCAL, 
         bool const deep=false
     );
 
@@ -195,7 +195,7 @@ public:
      */
     geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::Box2I getBBox(ImageOrigin const origin) const {
+    geom::Box2I getBBox(ImageOrigin const origin=LOCAL) const {
         return _maskedImage.getBBox(origin);
     }
     /**

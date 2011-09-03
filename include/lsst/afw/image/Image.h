@@ -176,7 +176,8 @@ namespace image {
         explicit ImageBase(const geom::Extent2I  & dimensions=geom::Extent2I());
         explicit ImageBase(const geom::Box2I &bbox);
         ImageBase(const ImageBase& src, const bool deep=false);
-        explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox, const ImageOrigin origin, const bool deep=false);
+        explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox,
+                           const ImageOrigin origin=LOCAL, const bool deep=false);
         /// generalised copy constructor
         ///
         /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
@@ -411,17 +412,17 @@ namespace image {
         explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
         explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
-        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin, 
+        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=LOCAL, 
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin = LOCAL);
+                       ImageOrigin const origin=LOCAL);
         explicit Image(char **ramFile, size_t *ramFileLen, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin = LOCAL);
+                       ImageOrigin const origin=LOCAL);
 
         // generalised copy constructor
         template<typename OtherPixelT>
