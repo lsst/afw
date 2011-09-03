@@ -471,6 +471,22 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 else:
                     yGutter = (yc - yGutter)/float(nRow - 1) - raft.getSize()[1]
 
+
+    #######################
+    # get the distortion
+    distortPolicy = cameraPol.get('Distortion')
+    distortActive = distortPolicy.get('active')
+    activePolicy  = distortPolicy.get(distortActive)
+
+    distort = None
+    if distortActive == "NullDistortion":
+	distort = cameraGeom.NullDistortion()
+    elif distortActive == "RadialPolyDistortion":
+	coeffs = activePolicy.getArray('coeffs')
+	distort = cameraGeom.RadialPolyDistortion(coeffs)
+    camera.setDistortion(distort)
+
+
     if cameraInfo is not None:
         cameraInfo.clear()
         cameraInfo["ampSerial"] = raftInfo["ampSerial"]

@@ -34,15 +34,20 @@ import os, sys
 import math
 import unittest
 
-import lsst.utils.tests    as utilsTests
-import lsst.afw.geom       as afwGeom
-import lsst.afw.cameraGeom as cameraGeom
+import numpy
+
+import lsst.pex.policy           as pexPolicy
+import lsst.utils.tests          as utilsTests
+import lsst.afw.geom             as afwGeom
+import lsst.afw.cameraGeom       as cameraGeom
+import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
 class DistortionTestCase(unittest.TestCase):
 
     def setUp(self):
-	self.prynt = True #False
-	#self.coeffs = [0.0, 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12, 1.0e-15]
+	self.prynt = True#False
+
+	# try the suprimecam numbers
 	self.coeffs = [0.0, 1.0, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]
 
 	self.xs = [0.0, 1000.0, 5000.0]
@@ -159,69 +164,108 @@ class DistortionTestCase(unittest.TestCase):
 	self.roundTrip(det.getDistortion(), x, y)
 
 
+    def tryAFewCoords(self, dist, moment):
+	for x in self.xs:
+	    for y in self.ys:
+		if self.prynt:
+		    print x, y
+		self.roundTrip(dist, x, y, moment)
+	
+
     def testMomentDistortion(self):
 
 	moments = [
 	    [1.0, 1.0, 0.0],
 	    [1.0, 1.0, 0.1],
 	    ]
-	#self.xs = [5000.0]
-	#self.ys = [0.0]
 	
 	nDist = cameraGeom.NullDistortion()
 	rDist = cameraGeom.RadialPolyDistortion(self.coeffs)
 
-	print rDist.getCoeffs()
-	print rDist.getICoeffs()
-
-	if False: #True:
-	    import numpy
-	    import matplotlib.figure as figure
-	    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigCanvas
-	    fig = figure.Figure()
-	    canvas = FigCanvas(fig)
-	    ax = fig.add_subplot(211)
-	    dax = fig.add_subplot(212)
-	    r = numpy.arange(0, 7500, 100)
-	    c = rDist.getCoeffs()
-	    c.reverse()
-	    ic = rDist.getICoeffs()
-	    ic.reverse()
-	    dc = rDist.getDCoeffs()
-	    dc.reverse()
-	    idc = rDist.getIdCoeffs()
-	    idc.reverse()
-	    
-	    rp  = numpy.polyval(c, r)
-	    irp = numpy.polyval(ic, r)
-	    r_round = numpy.polyval(ic, rp)
-	    
-	    drp = numpy.polyval(dc, r)
-	    idrp = numpy.polyval(idc, r)
-	    d_round = numpy.polyval(idc, rp)
-				    
-	    ax.plot(r, rp-r, '-b')
-	    ax.plot(r, -(irp-r), '.b')
-	    ax.semilogy(r, abs(r_round-r), 'r-')
-	    ax.axhline(1.0)
-	    ax.axhline(1.0e-3)
-	    dax.plot(r, drp, '-g')
-	    dax.plot(r, idrp, '.g')
-	    dax.semilogy(r, numpy.abs(1.0-d_round*drp), 'r-')
-	    dax.axhline(1.0e-3)
-
-	    fig.savefig("foo.png")
+	if self.prynt:
+	    print rDist.getCoeffs()
+	    print rDist.getICoeffs()
 
 	for moment in moments:
-	    ixx, iyy, ixy = moment
-	    for x in self.xs:
-		for y in self.ys:
-		    print x, y
-		    self.roundTrip(nDist, x, y, [ixx, iyy, ixy])
-		    self.roundTrip(rDist, x, y, [ixx, iyy, ixy])
+	    self.tryAFewCoords(rDist, moment)
+	    self.tryAFewCoords(nDist, moment)
 
 
+    def testDistortionInACamera(self):
+
+	print "Ahadhadsfd f ... go fix the hardcoded suprimecam geom paf path."
+
+	if False:
+	    policyFile = "/home/sbickert/sandbox/lsst/obs-sub-t/suprimecam/Full_Suprimecam_geom.paf"
+	    pol = pexPolicy.Policy(policyFile)
+	    pol = cameraGeomUtils.getGeomPolicy(pol)
+	    cam = cameraGeomUtils.makeCamera(pol)
+
+	    # see if the distortion object made it into the camera object
+	    dist = cam.getDistortion()
+	    self.tryAFewCoords(dist, [1.0, 1.0, 0.1])
+
+	    # see if the distortion object is accessible in the ccds
+	    for raft in cam:
+		for ccd in cameraGeom.cast_Raft(raft):
+		    ccd = cameraGeom.cast_Ccd(ccd)
+		    print "CCD id: ", ccd.getId()
+		    ccdDist = ccd.getDistortion()
+		    self.tryAFewCoords(dist, [1.0, 1.0, 0.1])
+
+
+    def testzAxisCases(self):
+
+	r = 1000.0
+	iqq = cameraGeom.Moment(1.0, 1.0, 0.0)
 	
+	px    = afwGeom.Point2D(r, 0.0)
+	py    = afwGeom.Point2D(0.0, r)
+	pxy   = afwGeom.Point2D(r/numpy.sqrt(2.0), r/numpy.sqrt(2.0))
+
+	nDist = cameraGeom.NullDistortion()
+	rDist = cameraGeom.RadialPolyDistortion(self.coeffs)
+
+	rcoeffs = self.coeffs[:]
+	rcoeffs.reverse()
+
+	r2Known = numpy.polyval(rcoeffs, r)
+	epsilon = 1.0e-6
+	drKnown = (r2Known - numpy.polyval(rcoeffs, r+epsilon))/epsilon
+	
+	for p in [px, py, pxy]:
+	    p2 = rDist.distort(p)
+	    x, y = p2.getX(), p2.getY()
+	    r2Calc = numpy.sqrt(x*x+y*y)
+	    if self.prynt:
+		print "r2known,r2Calc: ", r2Known, r2Calc
+	    self.assertAlmostEqual(r2Known, r2Calc)
+
+	p2 = rDist.distort(px)
+	r2Calc = p2.getX()
+	scale = drKnown
+	iqq2 = rDist.distort(px, iqq)
+	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
+	print "scale: ", scale, ixx, iqq.getIxx()*scale**2
+	self.assertAlmostEqual(ixx, iqq.getIxx()*scale**2)
+
+	p2 = rDist.distort(py)
+	r2Calc = p2.getY()
+	scale = drKnown
+	iqq2 = rDist.distort(py, iqq)
+	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
+	print "scale: ", scale, iyy, iqq.getIyy()*scale**2
+	self.assertAlmostEqual(iyy, iqq.getIyy()*scale**2)
+	    
+	p2 = rDist.distort(pxy)
+	x, y = p2.getX(), p2.getY()
+	r2Calc = numpy.sqrt(x*x+y*y)
+	scale = drKnown
+	iqq2 = rDist.distort(pxy, iqq)
+	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
+	print "scale: ", scale, ixy, (scale**2 - 1.0)
+	self.assertAlmostEqual(ixy, (scale**2-1.0))
+	    
         
 #################################################################
 # Test suite boiler plate
