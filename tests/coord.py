@@ -497,7 +497,17 @@ class CoordTestCase(unittest.TestCase):
             self.assertAlmostEqual(phi2, phi2Exp, 12)
         
 
-        
+    def testVirtualGetName(self):
+
+        gal = afwCoord.GalacticCoord(0.0, 0.0)
+        clone = gal.clone()
+        gal_names = gal.getCoordNames()      # ("L", "B")
+        clone_names = clone.getCoordNames()  #("Ra", "Dec")
+
+        self.assertEqual(gal_names[0], clone_names[0])
+        self.assertEqual(gal_names[1], clone_names[1])
+
+ 
         
 #################################################################
 # Test suite boiler plate

@@ -84,13 +84,13 @@ public:
 
     virtual Coord::Ptr clone() const { return Coord::Ptr(new Coord(*this)); }
     
-    void reset(double const longitude, double const latitude, double const epoch = 2000.0);
+    virtual void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
     double getEpoch() const { return _epoch; }
 
     lsst::afw::geom::Point2D getPosition(CoordUnit unit = DEGREES) const;
     lsst::afw::geom::Point3D getVector() const;
-    inline std::pair<std::string, std::string> getCoordNames() const {
+    virtual std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("RA", "Dec");
     }
 
@@ -147,7 +147,7 @@ public:
 
     virtual Coord::Ptr clone() const { return IcrsCoord::Ptr(new IcrsCoord(*this)); }
     
-    void reset(double const longitude, double const latitude);
+    virtual void reset(double const longitude, double const latitude);
     
     double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
     double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
@@ -223,9 +223,9 @@ public:
 
     virtual Coord::Ptr clone() const { return GalacticCoord::Ptr(new GalacticCoord(*this)); }
 
-    void reset(double const longitude, double const latitude);
+    virtual void reset(double const longitude, double const latitude);
     
-    inline std::pair<std::string, std::string> getCoordNames() const {
+    virtual std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("L", "B");
     }
     
@@ -265,7 +265,7 @@ public:
     
     virtual Coord::Ptr clone() const { return EclipticCoord::Ptr(new EclipticCoord(*this)); }
 
-    std::pair<std::string, std::string> getCoordNames() const {
+    virtual std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Lambda", "Beta");
     }
     double getLambda(CoordUnit unit) const         { return getLongitude(unit); }   
@@ -307,7 +307,7 @@ public:
 
     virtual Coord::Ptr clone() const { return TopocentricCoord::Ptr(new TopocentricCoord(*this)); }
 
-    std::pair<std::string, std::string> getCoordNames() const {
+    virtual std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Az", "Alt");
     }
     double getAzimuth(CoordUnit unit) const         { return getLongitude(unit); }   
