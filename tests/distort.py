@@ -36,6 +36,8 @@ import unittest
 
 import numpy
 
+import eups
+
 import lsst.pex.policy           as pexPolicy
 import lsst.utils.tests          as utilsTests
 import lsst.afw.geom             as afwGeom
@@ -193,25 +195,23 @@ class DistortionTestCase(unittest.TestCase):
 
     def testDistortionInACamera(self):
 
-	print "Ahadhadsfd f ... go fix the hardcoded suprimecam geom paf path."
+	policyFile = cameraGeomUtils.getGeomPolicy(os.path.join(eups.productDir("afw"),
+								"tests", "TestCameraGeom.paf"))
+	pol = pexPolicy.Policy(policyFile)
+	pol = cameraGeomUtils.getGeomPolicy(pol)
+	cam = cameraGeomUtils.makeCamera(pol)
 
-	if False:
-	    policyFile = "/home/sbickert/sandbox/lsst/obs-sub-t/suprimecam/Full_Suprimecam_geom.paf"
-	    pol = pexPolicy.Policy(policyFile)
-	    pol = cameraGeomUtils.getGeomPolicy(pol)
-	    cam = cameraGeomUtils.makeCamera(pol)
+	# see if the distortion object made it into the camera object
+	dist = cam.getDistortion()
+	self.tryAFewCoords(dist, [1.0, 1.0, 0.1])
 
-	    # see if the distortion object made it into the camera object
-	    dist = cam.getDistortion()
-	    self.tryAFewCoords(dist, [1.0, 1.0, 0.1])
-
-	    # see if the distortion object is accessible in the ccds
-	    for raft in cam:
-		for ccd in cameraGeom.cast_Raft(raft):
-		    ccd = cameraGeom.cast_Ccd(ccd)
-		    print "CCD id: ", ccd.getId()
-		    ccdDist = ccd.getDistortion()
-		    self.tryAFewCoords(dist, [1.0, 1.0, 0.1])
+	# see if the distortion object is accessible in the ccds
+	for raft in cam:
+	    for ccd in cameraGeom.cast_Raft(raft):
+		ccd = cameraGeom.cast_Ccd(ccd)
+		print "CCD id: ", ccd.getId()
+		ccdDist = ccd.getDistortion()
+		self.tryAFewCoords(dist, [1.0, 1.0, 0.1])
 
 
     def testzAxisCases(self):

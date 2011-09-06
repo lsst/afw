@@ -17,6 +17,12 @@ Camera: {
         index: 1 0                      # location of Raft in Camera; in (range(nCol), range(nRow))
         offset: 2.11 0.0                # offset of Raft center from boresight, (x, y); mm
     }
+    Distortion: {
+	active: "RadialPolyDistortion"
+        RadialPolyDistortion: {
+    	    coeffs: 0.0 1.0 7.16417e-08 3.03146e-10 5.69338e-14 -6.61572e-18
+    	}
+    }
 }
 #
 # N.b. we need to specify nQuarter/orientation for each CCD due to pex_policy #1117
