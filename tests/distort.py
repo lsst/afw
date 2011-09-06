@@ -47,7 +47,7 @@ import lsst.afw.cameraGeom.utils as cameraGeomUtils
 class DistortionTestCase(unittest.TestCase):
 
     def setUp(self):
-	self.prynt = True#False
+	self.prynt = False
 
 	# try the suprimecam numbers
 	self.coeffs = [0.0, 1.0, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]
@@ -209,7 +209,8 @@ class DistortionTestCase(unittest.TestCase):
 	for raft in cam:
 	    for ccd in cameraGeom.cast_Raft(raft):
 		ccd = cameraGeom.cast_Ccd(ccd)
-		print "CCD id: ", ccd.getId()
+		if self.prynt:
+		    print "CCD id: ", ccd.getId()
 		ccdDist = ccd.getDistortion()
 		self.tryAFewCoords(dist, [1.0, 1.0, 0.1])
 
@@ -246,7 +247,8 @@ class DistortionTestCase(unittest.TestCase):
 	scale = drKnown
 	iqq2 = rDist.distort(px, iqq)
 	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
-	print "scale: ", scale, ixx, iqq.getIxx()*scale**2
+	if self.prynt:
+	    print "scale: ", scale, ixx, iqq.getIxx()*scale**2
 	self.assertAlmostEqual(ixx, iqq.getIxx()*scale**2)
 
 	p2 = rDist.distort(py)
@@ -254,7 +256,8 @@ class DistortionTestCase(unittest.TestCase):
 	scale = drKnown
 	iqq2 = rDist.distort(py, iqq)
 	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
-	print "scale: ", scale, iyy, iqq.getIyy()*scale**2
+	if self.prynt:
+	    print "scale: ", scale, iyy, iqq.getIyy()*scale**2
 	self.assertAlmostEqual(iyy, iqq.getIyy()*scale**2)
 	    
 	p2 = rDist.distort(pxy)
@@ -263,7 +266,8 @@ class DistortionTestCase(unittest.TestCase):
 	scale = drKnown
 	iqq2 = rDist.distort(pxy, iqq)
 	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
-	print "scale: ", scale, ixy, (scale**2 - 1.0)
+	if self.prynt:
+	    print "scale: ", scale, ixy, (scale**2 - 1.0)
 	self.assertAlmostEqual(ixy, (scale**2-1.0))
 	    
         
