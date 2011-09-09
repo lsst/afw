@@ -91,6 +91,28 @@ class AngleTestCase(unittest.TestCase):
     def testPi(self):
         self.assertEqual(afwGeom.PI, math.pi)
 
+    def testComparison(self):
+        a2 = 2.0 * afwGeom.arcseconds
+        a1 = 0.5 * afwGeom.arcseconds
+        a3 = 0.5 * afwGeom.arcseconds
+        print 'a1', a1
+        print 'a2', a2
+        print 'a3', a3
+        self.assertEqual(a1 == a3, True)
+        self.assertEqual(a1 != a2, True)
+        self.assertEqual(a1 <= a2, True)
+        self.assertEqual(a1 <  a2, True)
+        self.assertEqual(a2 >  a1, True)
+        self.assertEqual(a2 >= a1, True)
+
+        self.assertEqual(a1 != a3, False)
+        self.assertEqual(a1 == a2, False)
+        self.assertEqual(a1 >= a2, False)
+        self.assertEqual(a1 >  a2, False)
+        self.assertEqual(a2 <  a1, False)
+        self.assertEqual(a2 <= a1, False)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

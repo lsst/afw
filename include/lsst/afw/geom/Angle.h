@@ -87,7 +87,7 @@ AngleUnit const radians =    AngleUnit(1.0); ///< constant with units of radians
 AngleUnit const degrees =    AngleUnit(PI/180.0); // constant with units of degrees
 AngleUnit const hours   =    AngleUnit(PI*15.0/180.0); // constant with units of hours
 AngleUnit const arcminutes = AngleUnit(PI/60/180.0); // constant with units of arcminutes
-AngleUnit const arcseconds = AngleUnit(PI/180.0/3600); // constant with units of arcseconds
+AngleUnit const arcseconds = AngleUnit(PI/180.0/3600.0); // constant with units of arcseconds
 
 /************************************************************************************************************/
 /**
@@ -156,6 +156,20 @@ ANGLE_OPUP_TYPE(-=, double)
 ANGLE_OPUP_TYPE(-=, int)
 
 #undef ANGLE_OPUP_TYPE
+
+#define ANGLE_COMP(OP)                          \
+    bool operator OP ( const Angle& rhs ) {     \
+        return _val OP rhs._val;                \
+    }
+
+ANGLE_COMP(==)
+ANGLE_COMP(!=)
+ANGLE_COMP(<=)
+ANGLE_COMP(>=)
+ANGLE_COMP(<)
+ANGLE_COMP(>)
+
+#undef ANGLE_COMP
 
 private:
     double _val;
