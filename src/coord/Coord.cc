@@ -198,6 +198,33 @@ double pointToLatitude(lsst::afw::geom::Point3D const &p3d) {
 }
 
 
+std::pair<double, double> pointToLonLat(lsst::afw::geom::Point3D const &p3d, double const defaultLongitude=0.0, bool normalize=true) {
+    std::pair<double, double> lonLat;
+
+    if (normalize) {
+        double const inorm = 1.0/p3d.asEigen().norm();
+        double const x = inorm*p3d.getX();
+        double const y = inorm*p3d.getY();
+        double const z = inorm*p3d.getZ();
+        if (fabs(x) <= atPoleEpsilon && fabs(y) <= atPoleEpsilon) {
+            lonLat.first = 0.0;
+            lonLat.second = (z >= 0) ? M_PI/2.0 : -M_PI/2.0;
+        } else {
+            lonLat.first = afwCoord::degToRad*reduceAngle( afwCoord::radToDeg*atan2(y, x) );
+            lonLat.second = asin(z);
+        }
+    } else {
+        if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
+            lonLat.first = 0.0;
+            lonLat.second = (p3d.getZ() >= 0) ? M_PI/2.0 : -M_PI/2.0;
+        } else {
+            lonLat.first = afwCoord::degToRad*reduceAngle( afwCoord::radToDeg*atan2(p3d.getY(), p3d.getX()) );
+            lonLat.second = asin(p3d.getZ());
+        }
+    }
+    return lonLat;
+}
+
     
 } // end anonymous namespace
 
@@ -329,11 +356,14 @@ afwCoord::Coord::Coord(
 afwCoord::Coord::Coord(
                        lsst::afw::geom::Point3D const &p3d,   ///< Point3D
                        double const epoch,            ///< epoch of coordinate
+                       bool normalize,                ///< normalize the p3d provided
                        double const defaultLongitude  ///< longitude to use if x=y=0
-                      ) :
-    _longitudeRad(pointToLongitude(p3d, defaultLongitude)),
-    _latitudeRad(pointToLatitude(p3d)),
-    _epoch(epoch) {}
+                      ) : _longitudeRad(0.0), _latitudeRad(0.0), _epoch(epoch) {
+    std::pair<double, double> lonLat = pointToLonLat(p3d, defaultLongitude, normalize);
+    _longitudeRad = lonLat.first;
+    _latitudeRad = lonLat.second;
+    _epoch = epoch;
+}
 
 
 /**
@@ -492,8 +522,9 @@ void afwCoord::Coord::rotate(
     xprime[2] = (uz*uz + (1.0 - uz*uz)*c)*x[2] +  (uz*ux*mc - uy*s)*x[0] +  (uy*uz*mc + ux*s)*x[1];
     
     // in-situ
-    _longitudeRad = pointToLongitude(xprime);
-    _latitudeRad  = pointToLatitude(xprime);
+    std::pair<double, double> lonLat = pointToLonLat(xprime);
+    _longitudeRad = lonLat.first;
+    _latitudeRad  = lonLat.second;
 }
 
 
@@ -1242,7 +1273,9 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
         CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,     ///< the coord in Point3D format
         double const epoch,            ///< epoch of coordinate
-        double const defaultLongitude ///< longitude to use if x=y=0
+        bool normalize,                ///< normalize the p3d provided
+        double const defaultLongitude  ///< longitude to use if x=y=0
+        
 ) {
     Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES), epoch);
@@ -1256,7 +1289,9 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
 afwCoord::Coord::Ptr afwCoord::makeCoord(
         CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,  ///< the coord in Point3D format
-        double const defaultLongitude ///< longitude to use if x=y=0
+        bool normalize,                 ///< normalize the p3d provided
+        double const defaultLongitude  ///< longitude to use if x=y=0
+        
 ) {
     Coord c(p3d, 2000.0, defaultLongitude);
     return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES));

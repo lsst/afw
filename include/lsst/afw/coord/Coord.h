@@ -74,8 +74,8 @@ public:
     typedef boost::shared_ptr<Coord const> ConstPtr;
 
     Coord(lsst::afw::geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
-    Coord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0,
-        double const defaultLongitude=0.0);
+    Coord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0, bool normalize=true,
+          double const defaultLongitude=0.0);
     // ra,dec in degrees.
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
@@ -139,8 +139,8 @@ public:
     typedef boost::shared_ptr<IcrsCoord> Ptr;
 
     IcrsCoord(lsst::afw::geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
-    IcrsCoord(lsst::afw::geom::Point3D const &p3d, double const defaultLongitude=0.0) :
-        Coord(p3d, 2000.0, defaultLongitude) {}
+    IcrsCoord(lsst::afw::geom::Point3D const &p3d, bool normalize=true, double const defaultLongitude=0.0) :
+        Coord(p3d, 2000.0, normalize, defaultLongitude) {}
     IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
@@ -173,9 +173,9 @@ public:
     
     Fk5Coord(lsst::afw::geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    Fk5Coord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0,
-        double const defaultLongitude=0.0) :
-        Coord(p3d, epoch, defaultLongitude) {}
+    Fk5Coord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0, bool normalize=true,
+             double const defaultLongitude=0.0) :
+        Coord(p3d, epoch, normalize, defaultLongitude) {}
     Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
         Coord(ra, dec, epoch) {}
     Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) :
@@ -215,8 +215,9 @@ public:
     typedef boost::shared_ptr<GalacticCoord> Ptr;
     
     GalacticCoord(lsst::afw::geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit) {}
-    GalacticCoord(lsst::afw::geom::Point3D const &p3d, double const defaultLongitude=0.0) :
-        Coord(p3d, defaultLongitude) {}
+    GalacticCoord(lsst::afw::geom::Point3D const &p3d, bool normalize=true,
+                  double const defaultLongitude=0.0) :
+        Coord(p3d, normalize, defaultLongitude) {}
     GalacticCoord(double const l, double const b) : Coord(l, b) {}
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
@@ -255,8 +256,9 @@ public:
     EclipticCoord(lsst::afw::geom::Point2D const &p2d, CoordUnit unit = DEGREES,
         double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    EclipticCoord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0,
-                  double const defaultLongitude=0.0) : Coord(p3d, epoch, defaultLongitude) {}
+    EclipticCoord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0, bool normalize=true,
+                  double const defaultLongitude=0.0) :
+        Coord(p3d, epoch, normalize, defaultLongitude) {}
     EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
@@ -298,8 +300,8 @@ public:
     TopocentricCoord(lsst::afw::geom::Point2D const &p2d, CoordUnit unit, double const epoch,
                      Observatory const &obs) : Coord(p2d, unit, epoch), _obs(obs) {}
     TopocentricCoord(lsst::afw::geom::Point3D const &p3d, double const epoch,
-                     Observatory const &obs, double const defaultLongitude=0.0) :
-        Coord(p3d, epoch, defaultLongitude), _obs(obs) {}
+                     Observatory const &obs, bool normalize=true, double const defaultLongitude=0.0) :
+        Coord(p3d, epoch, normalize, defaultLongitude), _obs(obs) {}
     TopocentricCoord(double const az, double const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
     TopocentricCoord(std::string const az, std::string const alt, double const epoch,
@@ -336,7 +338,7 @@ Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, CoordUnit unit,
                      double const epoch);
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d, double const epoch,
-                     double const defaultLongitude);
+                     bool normalized=true, double const defaultLongitude=0.0);
 Coord::Ptr makeCoord(CoordSystem const system);
 
 // ra,dec in degrees
@@ -344,7 +346,7 @@ Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec
 Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, CoordUnit unit);
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d,
-                     double const defaultLongitude=0.0);
+                     bool normalize=true, double const defaultLongitude=0.0);
 
 
 /*
