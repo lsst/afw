@@ -205,10 +205,11 @@ class CoordTestCase(unittest.TestCase):
         """Ticket 1761 found that non-normalized inputs caused failures. """
 
         c = afwCoord.Coord(afwGeom.Point3D(0,1,0))
+        dfltLong = 0.0
         
         norm = False
-        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, norm)
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, dfltLong, norm)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, dfltLong, norm)
         sep1 = c.angularSeparation(c1, afwCoord.DEGREES)
         sep2 = c.angularSeparation(c2, afwCoord.DEGREES)
         known1 = 45.286483672428574
@@ -222,8 +223,8 @@ class CoordTestCase(unittest.TestCase):
         ######################
         # normalize and sep1, sep2 should both equal 54.7356
         norm = True
-        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, norm)
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, dfltLong, norm)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, dfltLong, norm)
         sep1 = c.angularSeparation(c1, afwCoord.DEGREES)
         sep2 = c.angularSeparation(c2, afwCoord.DEGREES)
         known = 54.735610317245339

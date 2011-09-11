@@ -356,8 +356,8 @@ afwCoord::Coord::Coord(
 afwCoord::Coord::Coord(
                        lsst::afw::geom::Point3D const &p3d,   ///< Point3D
                        double const epoch,            ///< epoch of coordinate
-                       bool normalize,                ///< normalize the p3d provided
-                       double const defaultLongitude  ///< longitude to use if x=y=0
+                       double const defaultLongitude, ///< longitude to use if x=y=0
+                       bool normalize                 ///< normalize the p3d provided
                       ) : _longitudeRad(0.0), _latitudeRad(0.0), _epoch(epoch) {
     std::pair<double, double> lonLat = pointToLonLat(p3d, defaultLongitude, normalize);
     _longitudeRad = lonLat.first;
@@ -1273,8 +1273,8 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
         CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,     ///< the coord in Point3D format
         double const epoch,            ///< epoch of coordinate
-        bool normalize,                ///< normalize the p3d provided
-        double const defaultLongitude  ///< longitude to use if x=y=0
+        double const defaultLongitude, ///< longitude to use if x=y=0
+        bool normalize                 ///< normalize the p3d provided
         
 ) {
     Coord c(p3d, 2000.0, defaultLongitude);
@@ -1287,10 +1287,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+        CoordSystem const system,             ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,  ///< the coord in Point3D format
-        bool normalize,                 ///< normalize the p3d provided
-        double const defaultLongitude  ///< longitude to use if x=y=0
+        double const defaultLongitude,        ///< longitude to use if x=y=0
+        bool normalize                        ///< normalize the p3d provided
         
 ) {
     Coord c(p3d, 2000.0, defaultLongitude);
@@ -1305,10 +1305,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-        CoordSystem const system, ///< the system (equ, fk5, galactic ..)
+        CoordSystem const system,               ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
-        CoordUnit unit,       ///< the units (eg. DEGREES, RADIANS)
-        double const epoch  ///< epoch of coordinate
+        CoordUnit unit,                         ///< the units (eg. DEGREES, RADIANS)
+        double const epoch                      ///< epoch of coordinate
 ) {
     switch (unit) {
       case DEGREES:
