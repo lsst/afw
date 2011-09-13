@@ -138,6 +138,117 @@ namespace {
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
 }
+/*
+ * Find all the Peaks within a Footprint
+ */
+namespace {
+    template <typename ImageT>
+    class FindPeaksInFootprint: public detection::FootprintFunctor<ImageT> {
+    public:
+        explicit FindPeaksInFootprint(ImageT const& image, ///< The image the source lives in
+                                      bool polarity,       ///< true if we're looking for -ve "peaks"
+                                      detection::Footprint::PeakList &peaks
+                                     ) : detection::FootprintFunctor<ImageT>(image),
+                                         _polarity(polarity), _peaks(peaks) {}
+        
+        /// \brief method called for each pixel by apply()
+        void operator()(typename ImageT::xy_locator loc, ///< locator pointing at the pixel
+                        int x,                           ///< column-position of pixel
+                        int y                            ///< row-position of pixel
+                       ) {
+            typename ImageT::Pixel val = loc(0, 0);
+
+            if (_polarity) {            // look for +ve peaks
+                if (loc(-1,  1) > val || loc( 0,  1) > val || loc( 1,  1) > val || 
+                    loc(-1,  0) > val ||                      loc( 1,  0) > val || 
+                    loc(-1, -1) > val || loc( 0, -1) > val || loc( 1, -1) > val) {
+                    return;
+                }
+            } else {                    // look for -ve "peaks" (pits)
+                if (loc(-1,  1) < val || loc( 0,  1) < val || loc( 1,  1) < val || 
+                    loc(-1,  0) < val ||                      loc( 1,  0) < val || 
+                    loc(-1, -1) < val || loc( 0, -1) < val || loc( 1, -1) < val) {
+                    return;
+                }
+            }
+
+            _peaks.push_back(PTR(detection::Peak)(new detection::Peak(x, y)));
+        }
+    private:
+        bool _polarity;
+        detection::Footprint::PeakList &_peaks;
+    };
+
+    template <typename ImageT>
+    class FindMaxInFootprint : public detection::FootprintFunctor<ImageT> {
+    public:
+        explicit FindMaxInFootprint(ImageT const& image, ///< The image the source lives in
+                                    bool polarity        ///< true if we're looking for -ve "peaks"
+                                   ) : detection::FootprintFunctor<ImageT>(image),
+                                       _polarity(polarity), _x(0), _y(0),
+                                       _min( std::numeric_limits<double>::max()),
+                                       _max(-std::numeric_limits<double>::max()) {}
+
+        /// \brief Reset everything for a new Footprint
+        void reset() {
+            _x = _y = 0;
+            _min =  std::numeric_limits<double>::max();
+            _max = -std::numeric_limits<double>::max();
+        }
+        virtual void reset(detection::Footprint const&) {}
+
+        /// \brief method called for each pixel by apply()
+        void operator()(typename ImageT::xy_locator loc, ///< locator pointing at the pixel
+                        int x,                           ///< column-position of pixel
+                        int y                            ///< row-position of pixel
+                       ) {
+            typename ImageT::Pixel val = loc(0, 0);
+
+            if (_polarity) {
+                if (val > _max) {
+                    _max = val;
+                    _x = x;
+                    _y = y;
+                }
+            } else {
+                if (val < _min) {
+                    _min = val;
+                    _x = x;
+                    _y = y;
+                }
+            }
+        }
+
+        /// Return the Footprint's Peak
+        PTR(detection::Peak) makePeak() const {
+            return boost::make_shared<detection::Peak>(detection::Peak(_x, _y));
+        }
+    private:
+        bool _polarity;
+        int _x, _y;
+        double _min, _max;
+    };
+
+    template<typename ImageT, typename ThresholdT>
+    void findPeaks(PTR(detection::Footprint) foot, ImageT const& img, bool polarity, ThresholdT)
+    {
+        FindPeaksInFootprint<ImageT> peakFinder(img, polarity, foot->getPeaks());
+        peakFinder.apply(*foot, 1);
+
+        if (foot->getPeaks().empty()) {
+            FindMaxInFootprint<ImageT> maxFinder(img, polarity);
+            maxFinder.apply(*foot);
+            foot->getPeaks().push_back(maxFinder.makePeak());
+        }
+    }
+
+    // No need to search for peaks when processing a Mask
+    template<typename ImageT>
+    void findPeaks(PTR(detection::Footprint), ImageT const&, bool, ThresholdBitmask_traits)
+    {
+        ;
+    }
+}
 
 /************************************************************************************************************/
 /*
@@ -306,7 +417,7 @@ static void findFootprints(
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) { // <= size to catch the last object
             if (i == spans.size() || spans[i]->id != id) {
-                detection::Footprint::Ptr fp(new detection::Footprint(i - i0, _region));
+                PTR(detection::Footprint) fp(new detection::Footprint(i - i0, _region));
             
                 for (; i0 < i; i0++) {
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
@@ -321,6 +432,13 @@ static void findFootprints(
                 id = spans[i]->id;
             }
         }
+    }
+/*
+ * Find all peaks within those Footprints
+ */
+    typedef typename detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintList::iterator fiterator;
+    for (fiterator ptr = _footprints->begin(), end = _footprints->end(); ptr != end; ++ptr) {
+        findPeaks(*ptr, img, polarity, ThresholdTraitT());
     }
 }
 
