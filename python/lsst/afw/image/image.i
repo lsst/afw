@@ -57,6 +57,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %boost_picklable(lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
 
 %template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> > >;
+%template(vector##NAME##TYPE##CONST) std::vector<boost::shared_ptr<const lsst::afw::image::Image<PIXEL_TYPE> > >;
 %template(NAME##Pca##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::Image<PIXEL_TYPE> >;
 %template(NAME##PcaM##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
 

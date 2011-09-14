@@ -36,6 +36,7 @@
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
 
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"
 
@@ -49,12 +50,13 @@ namespace image {
         typedef typename boost::shared_ptr<ImageT> Ptr;
         typedef typename boost::shared_ptr<const ImageT> ConstPtr;
 
-        typedef std::vector<typename ImageT::Ptr> ImageList;
+        typedef std::vector<PTR(ImageT)> ImageList;
+        typedef std::vector<CONST_PTR(ImageT)> ConstImageList;
 
         ImagePca(bool constantWeight=true);
 
-        void addImage(typename ImageT::Ptr img, double flux=0.0);
-        ImageList getImageList() const;
+        void addImage(CONST_PTR(ImageT) img, double flux=0.0);
+        ConstImageList getImageList() const;
 
         /// Return the dimension of the images being analyzed
         geom::Extent2I const getDimensions() const { return _dimensions; }
@@ -71,9 +73,9 @@ namespace image {
     private:
         double getFlux(int i) const { return _fluxList[i]; }
 
-        ImageList _imageList;           // image to analyze
+        ConstImageList _imageList;      // image to analyze
         std::vector<double> _fluxList;  // fluxes of images
-        geom::Extent2I _dimensions;      // width/height of images on _imageList
+        geom::Extent2I _dimensions;     // width/height of images on _imageList
 
         //int _border;                  // how many pixels to ignore around regions
         bool _constantWeight;           // should all stars have the same weight?
