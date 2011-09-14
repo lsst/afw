@@ -62,8 +62,8 @@ ImagePca<ImageT>::ImagePca(bool constantWeight ///< Should all stars be weighted
  * @throw lsst::pex::exceptions::LengthErrorException if all the images aren't the same size
  */
 template <typename ImageT>
-void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to set
-                                double flux               ///< Image's flux
+void ImagePca<ImageT>::addImage(CONST_PTR(ImageT) img, ///< Image to add to set
+                                double flux            ///< Image's flux
                                ) {
     if (_imageList.empty()) {
         _dimensions = img->getDimensions();
@@ -89,7 +89,7 @@ void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to s
 
 /// Return the list of images being analyzed
 template <typename ImageT>
-typename ImagePca<ImageT>::ImageList ImagePca<ImageT>::getImageList() const {
+typename ImagePca<ImageT>::ConstImageList ImagePca<ImageT>::getImageList() const {
     return _imageList;
 }
 
@@ -106,7 +106,7 @@ typename ImageT::Ptr ImagePca<ImageT>::getMean() const {
     typename ImageT::Ptr mean(new ImageT(getDimensions()));
     *mean = static_cast<typename ImageT::Pixel>(0);
 
-    for (typename ImageList::const_iterator ptr = _imageList.begin(), end = _imageList.end();
+    for (typename ConstImageList::const_iterator ptr = _imageList.begin(), end = _imageList.end();
          ptr != end; ++ptr) {
         *mean += **ptr;
     }
@@ -151,12 +151,18 @@ namespace {
         static typename type::Ptr getImage(typename ImageT::Ptr image) {
             return image;
         }
+        static typename type::ConstPtr getImage(typename ImageT::ConstPtr image) {
+            return image;
+        }
     };
 
     template<typename ImageT>
     struct GetImage_<ImageT, typename image::detail::MaskedImage_tag> {
         typedef typename ImageT::Image type;
         static typename type::Ptr getImage(typename ImageT::Ptr image) {
+            return image->getImage();
+        }
+        static typename type::ConstPtr getImage(typename ImageT::ConstPtr image) {
             return image->getImage();
         }
     };
@@ -401,7 +407,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
 
 template <typename ImageT>
 double do_updateBadPixels(detail::basic_tag const&,
-                        typename ImagePca<ImageT>::ImageList const&,
+                        typename ImagePca<ImageT>::ConstImageList const&,
                         std::vector<double> const&,
                         typename ImagePca<ImageT>::ImageList const&,
                         unsigned long, int const)
@@ -412,7 +418,7 @@ double do_updateBadPixels(detail::basic_tag const&,
 template <typename ImageT>
 double do_updateBadPixels(
         detail::MaskedImage_tag const&,
-        typename ImagePca<ImageT>::ImageList const& imageList,
+        typename ImagePca<ImageT>::ConstImageList const& imageList,
         std::vector<double> const& fluxes,   // fluxes of images
         typename ImagePca<ImageT>::ImageList const& eigenImages, // Eigen images
         unsigned long mask, ///< Mask defining bad pixels
