@@ -49,19 +49,19 @@ public:
 
     FootprintSet(image::Image<ImagePixelT> const& img,
                  Threshold const& threshold,
-                 int const npixMin=1);
+                 int const npixMin=1, bool const setPeaks=true);
     FootprintSet(image::Mask<MaskPixelT> const& img,
                  Threshold const& threshold,
                  int const npixMin=1);
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
-                 int const npixMin=1);
+                 int const npixMin=1, bool const setPeaks=true);
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  int x,
                  int y,
-                 std::vector<Peak> const* peaks = NULL);
+                 std::vector<PTR(Peak)> const* peaks = NULL);
     FootprintSet(FootprintSet const&);
     FootprintSet(FootprintSet const& set, int r, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, 
@@ -169,9 +169,9 @@ typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
         Threshold const& threshold,
         int x,
         int y,
-        std::vector<Peak> const* peaks = NULL
+        std::vector<PTR(Peak)> const* peaks = NULL
 ) {
-    return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
+    return PTR(FootprintSet<ImagePixelT, MaskPixelT>)(
         new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks)
     );
 }
@@ -180,7 +180,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
         FootprintSet<ImagePixelT, MaskPixelT> const& rhs, //!< the input FootprintSet
         int r,                          //!< Grow Footprints by r pixels
-        bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
+        bool isotropic=true             //!< Grow isotropically (as opposed to a Manhattan metric)
                                         //!< @note Isotropic grows are significantly slower
 ) {
     return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
