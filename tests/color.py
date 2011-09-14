@@ -81,6 +81,18 @@ class CalibTestCase(unittest.TestCase):
         self.calib.setExptime(dt)
         self.assertEqual(self.calib.getExptime(), dt)
 
+    def testDetectorTime(self):
+        """Test that we can ask a calib for the MidTime at a point in a detector"""
+
+        import lsst.afw.geom as afwGeom
+        import lsst.afw.cameraGeom as cameraGeom
+
+        det = cameraGeom.Detector(cameraGeom.Id(1))
+
+        p = afwGeom.PointI(3, 4)
+        if False:                       # Ticket #1337
+            self.calib.getMidTime(det, p)
+
     def testPhotom(self):
         """Test the zero-point information"""
         
