@@ -32,6 +32,7 @@
 #include "boost/regex.hpp"
 
 #include "lsst/base.h"
+#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/image/fits/fits_io_private.h"
@@ -135,6 +136,27 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
 }
 
 /************************************************************************************************************/
+
+namespace {
+    int
+    fits_write_key_checkNaN(fitsfile *fd, int datatype,
+                             char *keyWordChars, double *tmp, char *keyCommentChars, int *status)
+    {
+        fits_write_key(fd, datatype, keyWordChars, tmp, keyCommentChars, status);
+
+        if (*status == BAD_F2C) {
+            if (lsst::utils::isnan(*tmp)) {
+                throw LSST_EXCEPT(FitsException, (boost::format("%s's value is NaN") % keyWordChars).str());
+            } else if (lsst::utils::isinf(*tmp)) {
+                throw LSST_EXCEPT(FitsException, (boost::format("%s's value is Inf") % keyWordChars).str());
+            }                
+        }
+
+        return *status;
+    }
+}
+    
+/************************************************************************************************************/
 // append a record to the FITS header.   Note the specialization to string values
 
 void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
@@ -207,11 +229,11 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
         if (metadata->isArray(keyWord)) {
             std::vector<double> tmp = metadata->getArray<double>(keyWord);
             for (unsigned int i = 0; i != tmp.size(); ++i) {
-                fits_write_key(fd, TDOUBLE, keyWordChars, &tmp[i], keyCommentChars, &status);
+                fits_write_key_checkNaN(fd, TDOUBLE, keyWordChars, &tmp[i], keyCommentChars, &status);
             }
         } else {
             double tmp = metadata->get<double>(keyWord);
-            fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
+            fits_write_key_checkNaN(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
         }
     } else if (valueType == typeid(std::string)) {
         char* cval;
