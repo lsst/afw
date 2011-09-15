@@ -224,6 +224,16 @@ class FilterTestCase(unittest.TestCase):
         f = afwImage.Filter(metadata, True)
         self.assertEqual(f.getName(), badFilter) # name is correctly defined
 
+    def testFilterEquality(self):
+        # a "g" filter
+        f = afwImage.Filter("g")
+        g = afwImage.Filter("g")
+
+        self.assertEqual(f, g)
+
+        f = afwImage.Filter()           # the unknown filter
+        self.assertNotEqual(f, f)       # ... doesn't equal itself
+
     def testFilterProperty(self):
         # a "g" filter
         f = afwImage.Filter("g")
