@@ -30,7 +30,7 @@ public :
     explicit Color(double g_r=std::numeric_limits<double>::quiet_NaN()) : _g_r(g_r) {}
 
     operator bool() const {
-        return lsst::utils::isnan(_g_r);
+        return !lsst::utils::isnan(_g_r);
     }
 
     /** Return the effective wavelength for this object in the given filter
