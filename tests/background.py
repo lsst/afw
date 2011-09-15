@@ -93,7 +93,8 @@ class BackgroundTestCase(unittest.TestCase):
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.05551471441612] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00295902395123] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.08468385712251] ) # cooked to known value
-        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00305806663295] ) # cooked to known value
+        #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00305806663295] ) # cooked to known value
+        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.0035102188698] ) # cooked to known value
         #imgfiles.append("v1_i1_g_m400_s20_u16.fits")
         #imgfiles.append("v1_i2_g_m400_s20_f.fits"
         #imgfiles.append("v1_i2_g_m400_s20_u16.fits")
@@ -301,6 +302,17 @@ class BackgroundTestCase(unittest.TestCase):
                 self.assertAlmostEqual(testval, mean, 10)
 
         
+    def testTicket1681OffByOne(self):
+	im = afwImage.ImageF(40, 40); im.set(5, 6, 100);
+	nx, ny = im.getWidth()//2, im.getHeight()//2
+	print nx, ny
+	bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
+	bctrl.setStatisticsProperty(afwMath.MEAN)
+	bkd = afwMath.makeBackground(im, bctrl)
+	bim = bkd.getImageF()
+	im.writeFits("im.fits")
+	bim.writeFits("bim.fits")
+
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
