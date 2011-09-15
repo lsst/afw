@@ -77,6 +77,11 @@ public :
     std::pair<double, double> getFlux(double const mag, double const magErr) const;
     double getMagnitude(double const flux) const;
     std::pair<double, double> getMagnitude(double const flux, double const fluxErr) const;
+    /*
+     * Compare two Calibs
+     */
+    bool operator==(Calib const& rhs) const;
+    bool operator!=(Calib const& rhs) const { return !(*this == rhs); }
 private :
     lsst::daf::base::DateTime _midTime;
     double _exptime;

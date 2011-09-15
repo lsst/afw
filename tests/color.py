@@ -142,6 +142,15 @@ class CalibTestCase(unittest.TestCase):
         afwImage.stripCalibKeywords(metadata)
         self.assertEqual(len(metadata.names()), 0)
 
+    def testCalibEquality(self):
+        self.assertEqual(self.calib, self.calib)
+        self.assertFalse(self.calib != self.calib)
+
+        calib2 = afwImage.Calib()
+        calib2.setExptime(12)
+
+        self.assertNotEqual(calib2, self.calib)
+
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):
@@ -325,10 +334,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(CalibTestCase)
-    if not False:
-        suites += unittest.makeSuite(ColorTestCase)
-    else:
-        print >> sys.stderr, "Skipping Color tests (wait until #1196 is merged)"
+    suites += unittest.makeSuite(ColorTestCase)
     suites += unittest.makeSuite(FilterTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)

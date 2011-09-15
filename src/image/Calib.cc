@@ -114,6 +114,20 @@ int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata 
     return nstripped;
 }
 }
+
+/**
+ * Are two Calibs identical?
+ *
+ * \note Maybe this should be an approximate comparison
+ */
+bool Calib::operator==(Calib const& rhs) const {
+    return
+        //_midTime == rhs._midTime &&
+        _exptime == rhs._exptime &&
+        _fluxMag0 == rhs._fluxMag0 &&
+        _fluxMag0Sigma == rhs._fluxMag0Sigma;
+}
+
 /**
  * Set the time of the middle of an exposure
  *
