@@ -245,12 +245,13 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             ds9.mtv(self.im, frame=0)
         
     def setUp(self):
-        self.im = None
+        self.im, self.fs = None, None
 
     def tearDown(self):
         del self.im
+        del self.fs
 
-    def doTestPeaks(self, dwidth=0, dheight=0, callback=None, polarity=True, grow=0):
+    def doTestPeaks(self, dwidth=0, dheight=0, threshold=10, callback=None, polarity=True, grow=0):
         """Worker routine for tests
         polarity:  True if should search for +ve pixels"""
         
@@ -267,24 +268,29 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.peaks[i] = sorted([(x, y, self.im.getImage().get(x, y)) for x, y in peaks],
                                    lambda x, y: cmp(y[2], x[2]))
 
-        threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, polarity)
+        threshold = afwDetect.Threshold(threshold, afwDetect.Threshold.VALUE, polarity)
         fs = afwDetect.makeFootprintSet(self.im, threshold, "BINNED1")
+        self.fs = fs
 
         if grow:
             fs = afwDetect.makeFootprintSet(fs, 1, True)
             msk = self.im.getMask()
-            afwDetect.setMaskFromFootprintList(msk, fs.getFootprints(), msk.getPlaneBitMask("SAT"))
+            afwDetect.setMaskFromFootprintList(msk, fs.getFootprints(), msk.getPlaneBitMask("DETECTED"))
             del msk
 
-        feet = fs.getFootprints()
+        self.checkPeaks(dwidth, dheight, frame=3)
+
+    def checkPeaks(self, dwidth=0, dheight=0, frame=3):
+        """Check that we got the peaks right"""
+        feet = self.fs.getFootprints()
         if display:
-            ds9.mtv(self.im, frame=0)
+            ds9.mtv(self.im, frame=frame)
 
             for i, foot in enumerate(feet):
                 for p in foot.getPeaks():
-                    ds9.dot("+", p.getIx(), p.getIy(), size=0.4, frame=0)
+                    ds9.dot("+", p.getIx(), p.getIy(), size=0.4, frame=frame)
                 for trueX, trueY, peakVal in self.peaks[i]:
-                    ds9.dot("x", trueX, trueY, size=0.4, ctype=ds9.RED, frame=0)
+                    ds9.dot("x", trueX, trueY, size=0.4, ctype=ds9.RED, frame=frame)
 
         for i, foot in enumerate(feet):
             npeak = None
@@ -301,36 +307,33 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 npeak = len(self.peaks[i])
 
             self.assertEqual(len(foot.getPeaks()), npeak)
-                
+
             for j, p in enumerate(foot.getPeaks()):
                 trueX, trueY, peakVal = self.peaks[i][j]
-                try:
-                    self.assertEqual((p.getIx(), p.getIy()), (trueX, trueY))
-                except:
-                    print [(p.getIx(), p.getIy(), p.getPeakValue()) for p in foot.getPeaks()], "v", \
-                          self.peaks[i]
+                self.assertEqual((p.getIx(), p.getIy()), (trueX, trueY))
 
-    def XXXtestSinglePeak(self):
+    def testSinglePeak(self):
         """Test that we can find single Peaks in Footprints"""
 
         self.doTestPeaks()
 
-    def XXXtestSingleNegativePeak(self):
+    def testSingleNegativePeak(self):
         """Test that we can find single Peaks in Footprints when looking for -ve detections"""
 
         self.doTestPeaks(polarity=False)
 
-    def XXXtestSinglePeakAtEdge(self):
+    def testSinglePeakAtEdge(self):
         """Test that we handle Peaks correctly at the edge"""
         
         self.doTestPeaks(dheight=-1)
 
-    def XXXtestSingleNegativePeakAtEdge(self):
+    def testSingleNegativePeakAtEdge(self):
         """Test that we handle -ve Peaks correctly at the edge"""
         
         self.doTestPeaks(dheight=-1, polarity=False)
 
-    def XXXtestMultiPeak(self):
+    def testMultiPeak(self):
+        """Test that multiple peaks are handled correctly"""
         def callback():
             x, y = 12, 7
             self.im.getImage().set(x, y, 100)
@@ -338,7 +341,8 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         self.doTestPeaks(callback=callback)
 
-    def XXXtestMultiNegativePeak(self):
+    def testMultiNegativePeak(self):
+        """Test that multiple negative peaks are handled correctly"""
         def callback():
             x, y = 12, 7
             self.im.getImage().set(x, y, -100)
@@ -347,11 +351,33 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.doTestPeaks(polarity=False, callback=callback)
 
     def testGrowFootprints(self):
+        """Test that we can grow footprints, correctly merging those that now overlap"""
         def callback():
             self.im.getImage().set(10, 4, 20)
             self.peaks[-2].append((10, 4,))
 
         self.doTestPeaks(dwidth=1, dheight=1, callback=callback, grow=1)
+
+    def testMergeFootprints(self):
+        peaks2 = []
+        def callback():
+            x, y, I = 10, 4, -20
+            self.im.getImage().set(x, y, I)
+            peaks2.append((x, y, I))
+
+        self.doTestPeaks(threshold=10, callback=callback, grow=0)
+
+        threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, False)
+        fs2 = afwDetect.makeFootprintSet(self.im, threshold)
+
+        msk = self.im.getMask()
+        afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
+
+        self.fs.merge(fs2, 1, 1)
+        self.peaks[-2] += peaks2
+        afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
+
+        self.checkPeaks(frame=3)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -364,7 +390,6 @@ def suite():
     suites += unittest.makeSuite(PeaksInFootprintsTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
-
 
 def run(shouldExit=False):
     """Run the tests"""

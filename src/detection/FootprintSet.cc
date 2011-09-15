@@ -64,6 +64,8 @@ namespace geom = lsst::afw::geom;
 
 /************************************************************************************************************/
 namespace {
+    typedef unsigned short IdPixelT;    // Type of temporary Images used in merging Footprints
+
     struct Threshold_traits {
     };
     struct ThresholdLevel_traits : public Threshold_traits { // Threshold is a single number
@@ -1034,6 +1036,16 @@ pmFindFootprintAtPoint(psImage const *img,      // image to search
 
 /************************************************************************************************************/
 /**
+ * Construct an empty FootprintSet given a region that its footprints would have lived in
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(geom::Box2I region ///< the desired region
+                                                              ) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _footprints(PTR(FootprintList)(new FootprintList)), _region(region) {
+}
+
+/**
  * Copy constructor
  */
 template<typename ImagePixelT, typename MaskPixelT>
@@ -1054,13 +1066,32 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::operator=(FootprintSet const& 
     return *this;
 }
 
+/************************************************************************************************************/
+/**
+ * Merge a FootprintSet into *this
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+void detection::FootprintSet<ImagePixelT, MaskPixelT>::merge(
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const& rhs, ///< the Footprints to merge
+        int tGrow,                                                  ///< No. of pixels to grow this Footprints
+        int rGrow,                                                  ///< No. of pixels to grow rhs Footprints
+        bool isotropic                                              ///< Use (expensive) isotropic grow
+                                                            )
+{
+    detection::FootprintSet<IdPixelT, MaskPixelT> fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, isotropic);
+    /*
+     * Swap the new FootprintSet into place
+     */
+    this->swap(fs);
+}
+
 /// Set the corners of the FootprintSet's MaskedImage to region
 ///
 /// N.b. updates all the Footprints' regions too
 //
 template<typename ImagePixelT, typename MaskPixelT>
 void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(
-    geom::Box2I const& region // desired region
+    geom::Box2I const& region ///< desired region
 ) {
     _region = region;
 
@@ -1112,6 +1143,98 @@ namespace {
     };
 }
 
+/************************************************************************************************************/
+namespace {
+    /*
+     * Worker routine for merging two FootprintSets, possibly growing them as we proceed
+     */
+    template<typename ImagePixelT, typename MaskPixelT>
+    detection::FootprintSet<IdPixelT, MaskPixelT>
+    mergeFootprintSets(
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const &lhs, // the FootprintSet to be merged to
+        int rLhs,                                         // Grow lhs Footprints by this many pixels
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const &rhs, // the FootprintSet to be merged into lhs
+        int rRhs,                                         // Grow rhs Footprints by this many pixels
+        bool isotropic                  // Grow isotropically (as opposed to a Manhattan metric)
+                                        // n.b. Isotropic grows are significantly slower
+                      )
+    {
+        typedef detection::Footprint Footprint;
+        typedef detection::FootprintSet<ImagePixelT, MaskPixelT> FootprintSet;
+        typedef typename FootprintSet::FootprintList FootprintList;
+        
+        geom::Box2I const region = lhs.getRegion();
+        if (region != rhs.getRegion()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              boost::format("The two FootprintSets must have the same region").str());
+        }
+        
+        image::Image<IdPixelT>::Ptr idImage(new image::Image<IdPixelT>(region));
+        idImage->setXY0(region.getMinX(), region.getMinY());
+        *idImage = 0;
+
+        FootprintList const& lhsFootprints = *lhs.getFootprints();
+        FootprintList const& rhsFootprints = *rhs.getFootprints();
+        int const nLhs = lhsFootprints.size();
+        int const nRhs = rhsFootprints.size();
+
+        if (nLhs + nRhs > std::numeric_limits<IdPixelT>::max() - 1) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+                              (boost::format("%d footprints > %d; change IdPixelT's typedef")
+                               % (nLhs + nRhs) % (std::numeric_limits<IdPixelT>::max() - 1)).str());
+        }
+
+        int id = 0;                         // the ID inserted into the image
+        for (typename FootprintList::const_iterator ptr = lhsFootprints.begin(), end = lhsFootprints.end();
+             ptr != end; ++ptr) {
+            CONST_PTR(Footprint) foot = *ptr;
+
+            if (rLhs > 0) {
+                foot = growFootprint(*foot, rLhs, isotropic);
+            }
+            foot->insertIntoImage(*idImage, ++id);
+        }
+        for (typename FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end();
+             ptr != end; ++ptr) {
+            CONST_PTR(Footprint) foot = *ptr;
+
+            if (rRhs > 0) {
+                foot = growFootprint(*foot, rRhs, isotropic);
+            }
+            foot->insertIntoImage(*idImage, ++id);
+        }
+
+        detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1), 1, false); // detect all pixels in rhs + lhs
+        /*
+         * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
+         */
+        FindIdsInFootprint<image::Image<IdPixelT> > idFinder(*idImage);
+
+        for (typename FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
+             ptr != end; ++ptr) {
+            PTR(Footprint) foot = *ptr;
+
+            idFinder.apply(*foot);
+
+            Footprint::PeakList &peaks = foot->getPeaks();
+
+            for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
+                     idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
+                int const indx = *idptr - 1;
+                Footprint::PeakList const& oldPeaks =
+                    ((indx < nLhs) ? lhsFootprints[indx] : rhsFootprints[indx - nLhs])->getPeaks();
+
+                peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+            }
+            // we could be cleverer here as both lists are already sorted, but std::vector has no
+            // merge method and it probably isn't worth the trouble of hand-coding the merge
+            std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
+        }
+
+        return fs;
+    }
+}
+
 /**
  * Grow all the Footprints in the input FootprintSet, returning a new FootprintSet
  *
@@ -1133,21 +1256,22 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                           (boost::format("I cannot grow by negative numbers: %d") % r).str());
     }
-
-    typedef unsigned short PixelT;
-
+#if 1
+    detection::FootprintSet<IdPixelT, MaskPixelT> fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0,
+                                                                          rhs, r, isotropic);
+#else
     geom::Box2I region = rhs.getRegion();
-    image::Image<PixelT>::Ptr idImage(
-        new image::Image<PixelT>(region)
+    image::Image<IdPixelT>::Ptr idImage(
+        new image::Image<IdPixelT>(region)
     );
     idImage->setXY0(region.getMinX(), region.getMinY());
     *idImage = 0;
 
     FootprintList const& rhsFootprints = *rhs.getFootprints();
-    if (static_cast<int>(rhsFootprints.size()) > std::numeric_limits<PixelT>::max() - 1) {
+    if (static_cast<int>(rhsFootprints.size()) > std::numeric_limits<IdPixelT>::max() - 1) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
-                          (boost::format("%d footprints > %d; change PixelT's typedef")
-                           % rhsFootprints.size() % (std::numeric_limits<PixelT>::max() - 1)).str());
+                          (boost::format("%d footprints > %d; change IdPixelT's typedef")
+                           % rhsFootprints.size() % (std::numeric_limits<IdPixelT>::max() - 1)).str());
     }
 
     int id = 0;                         // the ID inserted into the image
@@ -1157,11 +1281,11 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         gfoot->insertIntoImage(*idImage, ++id); // 1 more than the index into rhsFootprints
     }
 
-    FootprintSet<PixelT> fs(*idImage, Threshold(1), 1, false);
+    FootprintSet<IdPixelT> fs(*idImage, Threshold(1), 1, false);
     /*
      * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
      */
-    FindIdsInFootprint<image::Image<PixelT> > idFinder(*idImage);
+    FindIdsInFootprint<image::Image<IdPixelT> > idFinder(*idImage);
 
     for (FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
          ptr != end; ++ptr) {
@@ -1171,7 +1295,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
 
         detection::Footprint::PeakList &peaks = foot->getPeaks();
 
-        for (std::set<PixelT>::iterator idptr = idFinder.getIds().begin(),
+        for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
                                         idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
             detection::Footprint::PeakList const& rhsPeaks = rhsFootprints[*idptr - 1]->getPeaks();
             peaks.insert(peaks.end(), rhsPeaks.begin(), rhsPeaks.end());
@@ -1180,6 +1304,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         // merge method and it probably isn't worth the trouble of hand-coding the merge
         std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
     }
+#endif
     /*
      * Finally swap the new FootprintSet into place
      */

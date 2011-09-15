@@ -62,8 +62,9 @@ public:
                  int x,
                  int y,
                  std::vector<PTR(Peak)> const* peaks = NULL);
+    FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
-    FootprintSet(FootprintSet const& set, int r, bool isotropic=true);
+    FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, 
                  FootprintSet const& footprints2,
                  bool const includePeaks);
@@ -120,6 +121,8 @@ public:
     ) {
         setMask(mask.get(), planeName);
     }
+
+    void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
 private:
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in

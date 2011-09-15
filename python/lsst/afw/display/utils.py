@@ -246,9 +246,12 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
               (x0 - borderWidth, y0 - borderWidth),
               ], frame=frame, ctype=ctype)
 
-def drawFootprint(foot, borderWidth=0.5, origin=None, frame=None, ctype=None, bin=1):
+def drawFootprint(foot, borderWidth=0.5, origin=None, frame=None, ctype=None, bin=1,
+                  peaks=False, symb="+", size=0.4, ctypePeak=None):
     """Draw an afwDetection::Footprint on a ds9 frame with the specified ctype.  Include an extra borderWidth
 pixels If origin is present, it's Added to the Footprint
+
+If peaks is True, also show the object's Peaks using the specified symbol and size and ctypePeak
 
 All Footprint coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
@@ -263,7 +266,7 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
             x0 += origin[0]; x1 += origin[0]
             y += origin[1]
 
-            x0 /= bin; x1 /= bin; y /= bin
+        x0 /= bin; x1 /= bin; y /= bin
     
         ds9.line([(x0 - borderWidth, y - borderWidth),
                   (x0 - borderWidth, y + borderWidth),
@@ -271,5 +274,17 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
                   (x1 + borderWidth, y - borderWidth),
                   (x0 - borderWidth, y - borderWidth),
                   ], frame=frame, ctype=ctype)
+
+    if peaks:
+        for p in foot.getPeaks():
+            x, y = p.getIx(), p.getIy()
+
+            if origin:
+                x += origin[0]; y += origin[1]
+
+            x /= bin; y /= bin
+
+            ds9.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)
+
 
     ds9.cmdBuffer.popSize()
