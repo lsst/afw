@@ -1146,6 +1146,21 @@ namespace {
 /************************************************************************************************************/
 namespace {
     /*
+     * Return the number of bits required to represent a unsigned long
+     */
+    int nbit(unsigned long const n) {
+        if (n == 0) {
+            return 0;
+        }
+
+        unsigned int const log2 = ::log(n)/::log(2);   // rounds down
+        if ((1U << log2) == n) {
+            return log2;
+        } else {
+            return log2 + 1;
+        }
+    }
+    /*
      * Worker routine for merging two FootprintSets, possibly growing them as we proceed
      */
     template<typename ImagePixelT, typename MaskPixelT>
@@ -1177,11 +1192,17 @@ namespace {
         FootprintList const& rhsFootprints = *rhs.getFootprints();
         int const nLhs = lhsFootprints.size();
         int const nRhs = rhsFootprints.size();
+        /*
+         * In general the lists of Footprints overlap, so we need to make sure that the IDs can be
+         * uniquely recovered from the idImage.  We do this by allocating a range of bits to the lhs IDs
+         */
+        int const lhsIdNbit = nbit(nLhs);
+        int const lhsIdMask = (1 << lhsIdNbit) - 1;
 
-        if (nLhs + nRhs > std::numeric_limits<IdPixelT>::max() - 1) {
+        if ((nRhs << lhsIdNbit) > std::numeric_limits<IdPixelT>::max() - 1) {
             throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
-                              (boost::format("%d footprints > %d; change IdPixelT's typedef")
-                               % (nLhs + nRhs) % (std::numeric_limits<IdPixelT>::max() - 1)).str());
+                              (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef")
+                               % nLhs % nRhs).str());
         }
 
         int id = 0;                         // the ID inserted into the image
@@ -1194,6 +1215,8 @@ namespace {
             }
             foot->insertIntoImage(*idImage, ++id);
         }
+
+        id = lhsIdMask;
         for (typename FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end();
              ptr != end; ++ptr) {
             CONST_PTR(Footprint) foot = *ptr;
@@ -1220,11 +1243,17 @@ namespace {
 
             for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
                      idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
-                int const indx = *idptr - 1;
-                Footprint::PeakList const& oldPeaks =
-                    ((indx < nLhs) ? lhsFootprints[indx] : rhsFootprints[indx - nLhs])->getPeaks();
+                unsigned int indx = *idptr;
+                if ((indx & lhsIdMask) > 0) {
+                    Footprint::PeakList const& oldPeaks = lhsFootprints[(indx & lhsIdMask) - 1]->getPeaks();
+                    peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+                }
+                indx >>= lhsIdNbit;
 
-                peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+                if (indx > 0) {
+                    Footprint::PeakList const& oldPeaks = rhsFootprints[indx - 1]->getPeaks();
+                    peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+                }
             }
             // we could be cleverer here as both lists are already sorted, but std::vector has no
             // merge method and it probably isn't worth the trouble of hand-coding the merge
