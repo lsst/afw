@@ -41,10 +41,8 @@ SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
 %extend lsst::afw::detection::SourceMatch {
     %pythoncode {
     def __repr__(self):
-        s1 = repr(self.first)
-        s2 = repr(self.second)
-        return "SourceMatch(%s,\n            %s,\n            %g)" % (
-               s1, s2, self.distance)
+        return "SourceMatch(%s,\n            %s,\n            %g)" % \
+        (repr(self.first), repr(self.second), self.distance)
 
     def __str__(self):
         s1, s2 = self.first, self.second
