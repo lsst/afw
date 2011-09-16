@@ -205,22 +205,20 @@ class Mosaic(object):
         if len(labels) != self.nImage:
             raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
 
-        ds9.cmdBuffer.pushSize()
+        with ds9.Buffering():
+            for i in range(len(labels)):
+                if labels[i]:
+                    label, ctype = labels[i], None
+                    try:
+                        label, ctype = label
+                    except:
+                        pass
 
-        for i in range(len(labels)):
-            if labels[i]:
-                label, ctype = labels[i], None
-                try:
-                    label, ctype = label
-                except:
-                    pass
+                    if not label:
+                        continue
 
-                if not label:
-                    continue
-                    
-                ds9.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(), frame=frame, ctype=ctype)
-
-        ds9.cmdBuffer.popSize()
+                    ds9.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(),
+                            frame=frame, ctype=ctype)
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
@@ -256,35 +254,31 @@ If peaks is True, also show the object's Peaks using the specified symbol and si
 All Footprint coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
 
-    ds9.cmdBuffer.pushSize()
-
-    borderWidth /= bin
-    for s in foot.getSpans():
-        y, x0, x1 = s.getY(), s.getX0(), s.getX1()
-
-        if origin:
-            x0 += origin[0]; x1 += origin[0]
-            y += origin[1]
-
-        x0 /= bin; x1 /= bin; y /= bin
-    
-        ds9.line([(x0 - borderWidth, y - borderWidth),
-                  (x0 - borderWidth, y + borderWidth),
-                  (x1 + borderWidth, y + borderWidth),
-                  (x1 + borderWidth, y - borderWidth),
-                  (x0 - borderWidth, y - borderWidth),
-                  ], frame=frame, ctype=ctype)
-
-    if peaks:
-        for p in foot.getPeaks():
-            x, y = p.getIx(), p.getIy()
+    with ds9.Buffering():
+        borderWidth /= bin
+        for s in foot.getSpans():
+            y, x0, x1 = s.getY(), s.getX0(), s.getX1()
 
             if origin:
-                x += origin[0]; y += origin[1]
+                x0 += origin[0]; x1 += origin[0]
+                y += origin[1]
 
-            x /= bin; y /= bin
+            x0 /= bin; x1 /= bin; y /= bin
 
-            ds9.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)
+            ds9.line([(x0 - borderWidth, y - borderWidth),
+                      (x0 - borderWidth, y + borderWidth),
+                      (x1 + borderWidth, y + borderWidth),
+                      (x1 + borderWidth, y - borderWidth),
+                      (x0 - borderWidth, y - borderWidth),
+                      ], frame=frame, ctype=ctype)
 
+        if peaks:
+            for p in foot.getPeaks():
+                x, y = p.getIx(), p.getIy()
 
-    ds9.cmdBuffer.popSize()
+                if origin:
+                    x += origin[0]; y += origin[1]
+
+                x /= bin; y /= bin
+
+                ds9.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)
