@@ -100,7 +100,8 @@ int ttypeFromBitpix(const int bitpix) {
 //! \brief Move to the specified HDU
 void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file descriptor
                  int hdu,               //!< desired HDU
-                 bool relative          //!< Is move relative to current HDU? (default: false)
+                 bool relative,         //!< Is move relative to current HDU? (default: false)
+                 bool headerOnly        //!< There may be no data, so don't skip if we don't find any
                 ) {
     int status = 0;     // cfitsio status
         
@@ -125,9 +126,11 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
 
             if (nAxis == 0) {
                 if (fits_movrel_hdu(fd, 1, NULL, &status) != 0) {
-                    throw LSST_EXCEPT(FitsException,
-                                      err_msg(fd, status,
-                                              boost::format("Attempted to skip data-less hdu %d") % hdu));
+                    if (!headerOnly) {
+                        throw LSST_EXCEPT(FitsException,
+                                          err_msg(fd, status,
+                                                  boost::format("Attempted to skip data-less hdu %d") % hdu));
+                    }
                 }
             }
         }
@@ -417,7 +420,7 @@ lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///<
                                               ) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList);
 
-    detail::fits_reader m(fileName, metadata, hdu);
+    detail::fits_reader m(fileName, metadata, hdu, true);
     cfitsio::getMetadata(m.get(), metadata, strip);
 
     return metadata;
