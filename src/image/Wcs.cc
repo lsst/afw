@@ -58,6 +58,17 @@ typedef lsst::afw::coord::Coord::Ptr CoordPtr;
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
 
+//Set internal params for wcslib
+void lsst::afw::image::Wcs::_setWcslibParams()
+{
+    _wcsfixCtrl =                       // ctrl for wcsfix
+        2;                              // Translate "H" to "h"
+    _wcshdrCtrl =                       // ctrl for wcspih
+        2;                              // Report each rejected keyrecord and the reason why it was rejected
+    _relax =                            // relax parameter for wcspih;
+        WCSHDR_all;                     // Accept all extensions recognized by the parser
+}
+
 const int lsstToFitsPixels = +1;
 const int fitsToLsstPixels = -1;
 
@@ -71,6 +82,7 @@ lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
     _coordSystem(static_cast<afwCoord::CoordSystem>(-1)), _skyCoordsReversed(false) {
+    _setWcslibParams();
     _initWcs();    
 }
 
@@ -83,15 +95,12 @@ Wcs::Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata):
                 _nWcsInfo(0), 
                 _relax(0), 
                 _wcsfixCtrl(0), 
-                _wcshdrCtrl(2),
+                _wcshdrCtrl(0),
                 _nReject(0),
                 _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
                 _skyCoordsReversed(false)
 {
-    //Internal params for wcslib. These should be set via policy - but for the moment...
-    _relax = 1;
-    _wcsfixCtrl = 2;
-    _wcshdrCtrl = 2;
+    _setWcslibParams();
 
     initWcsLibFromFits(fitsMetadata);
     _initWcs();
@@ -137,13 +146,14 @@ Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD
                  LsstBase(typeid(this)),
                  _wcsInfo(NULL), 
                  _nWcsInfo(0), 
-                 _relax(1), 
-                 _wcsfixCtrl(2), 
-                 _wcshdrCtrl(2),
+                 _relax(0), 
+                 _wcsfixCtrl(0), 
+                 _wcshdrCtrl(0),
                  _nReject(0),
                  _coordSystem(static_cast<afwCoord::CoordSystem>(-1)),
                  _skyCoordsReversed(false)
 {
+    _setWcslibParams();
     initWcsLib(crval, crpix, CD, 
                ctype1, ctype2,
                equinox, raDecSys,
