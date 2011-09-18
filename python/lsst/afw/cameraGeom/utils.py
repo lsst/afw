@@ -925,7 +925,7 @@ def makeDefectsFromFits(filename):
        The dictionary is indexed by an Id object --- remember to compare by str(id) not object identity
     """
     if not pyfits:
-        raise RuntimeError("Import of pyfits failed, so makeDefectsFromFits isn't available"
+        raise RuntimeError("Import of pyfits failed, so makeDefectsFromFits isn't available")
 
     hdulist = pyfits.open(filename)
     defects = {}
