@@ -79,6 +79,7 @@ public:
     }
 
     virtual ::std::ostream &output(std::ostream &os) const;
+    virtual Photometry::Ptr average() const;
 
 private:
     LSST_SERIALIZE_PARENT(lsst::afw::detection::Measurement<Photometry>)

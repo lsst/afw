@@ -66,9 +66,26 @@ public:
         return os << "(" << getX() << "+-" << getXErr() << ", " << getY() << "+-" << getYErr() << ")";
     }
 
+    virtual Astrometry::Ptr average() const {
+        double xSum = 0.0, xSumWeight = 0.0, ySum = 0.0, ySumWeight = 0.0;
+        for (const_iterator iter = begin(); iter != end(); ++iter) {
+            ConstPtr astrom = *iter;
+            if (!astrom->empty()) {
+                astrom = astrom->average();
+            }
+            double xWeight = 1.0 / (astrom->getXErr() * astrom->getXErr());
+            double yWeight = 1.0 / (astrom->getYErr() * astrom->getYErr());
+            xSum += astrom->getX() * xWeight;
+            ySum += astrom->getY() * yWeight;
+            xSumWeight += xWeight;
+            ySumWeight += yWeight;
+        }
+        return Ptr(new Astrometry(xSum / xSumWeight, 1.0 / xSumWeight, ySum / ySumWeight, 1.0 / ySumWeight));
+    }
 private:
     LSST_SERIALIZE_PARENT(lsst::afw::detection::Measurement<Astrometry>)
 };
+
 }}}
 
 LSST_REGISTER_SERIALIZER(lsst::afw::detection::Astrometry)

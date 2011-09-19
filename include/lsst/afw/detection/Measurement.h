@@ -208,6 +208,12 @@ public:
               ) const {
         return get(i, getSchema()->find(name, component));
     }             
+
+    /**
+     * Average component measurements
+     */
+    virtual TPtr average() const = 0;
+
 protected:
     /// Fast compile-time-computed access to set the values of _data
     template<unsigned int INDEX, typename U>

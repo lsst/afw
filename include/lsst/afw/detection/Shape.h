@@ -247,6 +247,11 @@ public:
         return os << "(" << getX() << "+-" << getXErr() << ", " << getY() << "+-" << getYErr() << ")";
     }
 
+    virtual Shape::Ptr average() const {
+        // It's not clear how shapes should be averaged.
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Shape.average() not implemented.");
+    }
+
 private:
     LSST_SERIALIZE_PARENT(lsst::afw::detection::Measurement<Shape>)
 };
