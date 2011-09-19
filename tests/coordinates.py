@@ -179,6 +179,91 @@ class ExtentTestCase(CoordinateTestCase):
             vector1 = [v1/scalar for v1 in vector1]
             self.assertClose(tuple(p1), tuple(vector1))
 
+    def testConstructors(self):
+        #test extent from extent 2-d
+        e1 = geom.Extent2I(1, 2)
+        e2 = geom.Extent2I(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Extent2D(1.2, 3.4)
+        e2 = geom.Extent2D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Extent2I(1,2)
+        e2 = geom.Extent2D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+        
+        #test extent from extent 3-d
+        e1 = geom.Extent3I(1, 2, 3)
+        e2 = geom.Extent3I(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Extent3D(1.2, 3.4, 5.6)
+        e2 = geom.Extent3D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Extent3I(1,2,3)
+        e2 = geom.Extent3D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        #test extent from point 2-d
+        e1 = geom.Point2I(1, 2)
+        e2 = geom.Extent2I(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Point2D(1.2, 3.4)
+        e2 = geom.Extent2D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Point2I(1,2)
+        e2 = geom.Extent2D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        #test extent from point 3-d
+        e1 = geom.Point3I(1, 2, 3)
+        e2 = geom.Extent3I(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Point3D(1.2, 3.4, 5.6)
+        e2 = geom.Extent3D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Point3I(1,2,3)
+        e2 = geom.Extent3D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        #test invalid constructors
+        try:
+            e1 = geom.Extent2D(1.2, 3.4)
+            e2 = geom.Extent2I(e1)
+        except:
+            pass
+        else:
+            self.fail("Should not allow conversion Extent2D to Extent2I")
+        try:
+            e1 = geom.Extent3D(1.2, 3.4, 5.6)
+            e2 = geom.Extent3I(e1)
+        except:
+            pass
+        else:
+            self.fail("Should not allow conversion Extent3D to Extent3I")
+
+        try:
+            e1 = geom.Point2D(1.2, 3.4)
+            e2 = geom.Extent2I(e1)
+        except:
+            pass
+        else:
+            self.fail("Should not allow conversion Point2D to Extent 2I")
+        try:
+            e1 = geom.Point3D(1.2, 3.4, 5.6)
+            e2 = geom.Extent3I(e1)
+        except:
+            pass
+        else:
+            self.fail("Should not allow conversion Point3D to Extent3I")
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
