@@ -133,6 +133,14 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %extend lsst::afw::geom::Point<double,3> {
     %template(Point3D) Point<int>;
 };
+%extend lsst::afw::geom::Extent<double,2> {
+    %template(Extent2D) Extent<int>;
+};
+
+%extend lsst::afw::geom::Extent<double,3> {
+    %template(Extent3D) Extent<int>;
+};
+
 
 %include "LinearTransform.i"
 %include "AffineTransform.i"
