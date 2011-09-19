@@ -23,7 +23,8 @@
 #include "lsst/afw/geom/CoordinateBase.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_integral.hpp>
 namespace geom = lsst::afw::geom;
 
 template <typename T, int N>
@@ -100,3 +101,7 @@ template class geom::Extent<int,2>;
 template class geom::Extent<int,3>;
 template class geom::Extent<double,2>;
 template class geom::Extent<double,3>;
+template geom::Extent<double,2>::Extent(geom::Extent<int,2> const &);
+template geom::Extent<double,3>::Extent(geom::Extent<int,3> const &);
+template geom::Extent<double,2>::Extent(geom::Point<int,2> const &);
+template geom::Extent<double,3>::Extent(geom::Point<int,3> const &);
