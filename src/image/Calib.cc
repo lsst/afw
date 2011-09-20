@@ -66,7 +66,7 @@ Calib::Calib(std::vector<CONST_PTR(Calib::Calib)> const& calibs ///< Set of cali
         if (::fabs(fluxMag00 - calib._fluxMag0) > std::numeric_limits<double>::epsilon() ||
             ::fabs(fluxMag0Sigma0 - calib._fluxMag0Sigma) > std::numeric_limits<double>::epsilon()) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              (boost::format("You may only combine calibs with the same DN/second: "
+                              (boost::format("You may only combine calibs with the same fluxMag0: "
                                              "%g +- %g v %g +- %g")
                                % calib.getFluxMag0().first % calib.getFluxMag0().second
                                % calibs[0]->getFluxMag0().first % calibs[0]->getFluxMag0().second
