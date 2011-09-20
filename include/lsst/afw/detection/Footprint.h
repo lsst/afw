@@ -38,7 +38,6 @@
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 
@@ -54,6 +53,8 @@ using boost::serialization::make_nvp;
 namespace lsst {
 namespace afw { 
 namespace detection {
+
+class Peak;
 
 /*!
  * \brief A range of pixels within one row of an Image
@@ -110,7 +111,7 @@ public:
 
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
-    typedef std::vector<Peak::Ptr> PeakList;
+    typedef std::vector<PTR(Peak)> PeakList;
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());

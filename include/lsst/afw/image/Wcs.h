@@ -214,6 +214,7 @@ protected:
     
     void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
     void _initWcs();
+    void _setWcslibParams();
     
     struct wcsprm* _wcsInfo;
     int _nWcsInfo;

@@ -26,14 +26,14 @@
 Tests for Peaks
 
 Run with:
-   python Peak_1.py
+   python peak1.py
 or
    python
-   >>> import unittest; T=load("Peak_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
+   >>> import peak1; peak1.run()
 """
 
-
 import unittest
+import numpy
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.detection as afwDetect
@@ -80,6 +80,18 @@ class PeakTestCase(unittest.TestCase):
             self.assertEqual(peak.getIx(), int(x) if x > 0 else -int(-x) - 1)
             self.assertEqual(peak.getIy(), int(y) if y > 0 else -int(-y) - 1)
 
+    def testPeakVal(self):
+        peak = afwDetect.Peak(1, 1)
+        self.assertTrue(numpy.isnan(peak.getPeakValue()))
+
+        val = 666.0
+        peak.setPeakValue(val)
+        self.assertEqual(peak.getPeakValue(), val)
+        del peak
+
+        peak = afwDetect.Peak(1, 1, val)
+        self.assertEqual(peak.getPeakValue(), val)
+        
     def testId(self):
         """Test uniqueness of IDs"""
         
