@@ -212,7 +212,20 @@ public:
     /**
      * Average component measurements
      */
-    virtual TPtr average() const = 0;
+    virtual TPtr average() const {
+        TPtr averages(new T());
+        if (empty()) {
+            // Has values in it; should not happen since subclasses should override
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                              "Don't know how to average values");
+        }
+        for (const_iterator iter = begin(); iter != end(); ++iter) {
+            TPtr avg = (*iter)->average();
+            averages->add(avg);
+        }
+        return averages;
+    }
+
 
 protected:
     /// Fast compile-time-computed access to set the values of _data
