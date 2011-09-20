@@ -34,6 +34,7 @@ or
 
 import unittest
 import numpy
+import math
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
@@ -129,6 +130,45 @@ class PointTestCase(CoordinateTestCase):
             p1.shift(Extent(p2))
             vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
             self.assertClose(tuple(p1), tuple(vector1))
+
+    def testConstructors(self):
+        #test 2-d
+        e1 = geom.Point2I(1, 2)
+        e2 = geom.Point2I(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+        
+        e1 = geom.Point2D(1.2, 3.4)
+        e2 = geom.Point2D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        
+        e1 = geom.Point2I(1, 3)
+        e2 = geom.Point2D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        #test 3-d
+        e1 = geom.Point3I(1, 2, 3)
+        e2 = geom.Point3I(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+        
+        e1 = geom.Point3D(1.2, 3.4, 5.6)
+        e2 = geom.Point3D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        e1 = geom.Point3I(1, 2, 3)
+        e2 = geom.Point3D(e1)
+        self.assertClose(tuple(e1), tuple(e2))
+
+        #test rounding to integral coordinates
+        e1 = geom.Point2D(1.2, 3.4)
+        e2 = geom.Point2I(e1)
+        self.assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+
+        e1 = geom.Point3D(1.2, 3.4, 5.6)
+        e2 = geom.Point3I(e1)
+        self.assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+
+
 
 class ExtentTestCase(CoordinateTestCase):
     """A test case for Extent"""
