@@ -93,3 +93,16 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "stack.i"
 %include "objectVectors.i" // must come last
 
+%inline %{
+    struct InitGsl {
+        InitGsl() {
+            static int first = true;
+
+            if (first) {
+                (void)gsl_set_error_handler_off();
+            }
+        }
+    };
+
+    InitGsl _initGsl;                   // created at import time, to initialise the GSL library
+%}

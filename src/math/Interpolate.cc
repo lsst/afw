@@ -30,9 +30,11 @@
  */
 #include <limits>
 #include <map>
+#include "boost/format.hpp"
+#include "boost/shared_ptr.hpp"
+#include "gsl/gsl_errno.h"
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"
-#include "boost/shared_ptr.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Interpolate.h"
@@ -64,8 +66,24 @@ math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double>
 void math::Interpolate::initialize(std::vector<double> const &x, std::vector<double> const &y,
                                    ::gsl_interp_type const *gslInterpType) {
     _acc    = ::gsl_interp_accel_alloc();
+    if (!_acc) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "gsl_interp_accel_alloc failed");
+    }
+    
     _interp = ::gsl_interp_alloc(gslInterpType, y.size());
-    ::gsl_interp_init(_interp, &x[0], &y[0], y.size());
+    if (!_interp) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+                          (boost::format("Failed to initialise spline for type %s, length %d")
+                           % gslInterpType->name % y.size()).str());
+
+    }
+    
+    int const status = ::gsl_interp_init(_interp, &x[0], &y[0], y.size());
+    if (status != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          str(boost::format("gsl_interp_init failed: %s [%d]")
+                              % ::gsl_strerror(status) % status));
+    }
 }
 
 math::Interpolate::~Interpolate() {
@@ -82,15 +100,25 @@ double math::Interpolate::interpolate(double const x) {
  *
  */
 ::gsl_interp_type const *math::styleToGslInterpType(Interpolate::Style const style) {
-    ::gsl_interp_type const* gslInterpTypeStyles[7];
-    gslInterpTypeStyles[Interpolate::CONSTANT]                 = ::gsl_interp_linear;           
-    gslInterpTypeStyles[Interpolate::LINEAR]                   = ::gsl_interp_linear;           
-    gslInterpTypeStyles[Interpolate::CUBIC_SPLINE]             = ::gsl_interp_cspline;          
-    gslInterpTypeStyles[Interpolate::NATURAL_SPLINE]           = ::gsl_interp_cspline;          
-    gslInterpTypeStyles[Interpolate::CUBIC_SPLINE_PERIODIC]    = ::gsl_interp_cspline_periodic; 
-    gslInterpTypeStyles[Interpolate::AKIMA_SPLINE]             = ::gsl_interp_akima;            
-    gslInterpTypeStyles[Interpolate::AKIMA_SPLINE_PERIODIC]    = ::gsl_interp_akima_periodic;
-    return gslInterpTypeStyles[style];
+    switch (style) {
+      case Interpolate::CONSTANT:
+        return ::gsl_interp_linear;
+      case Interpolate::LINEAR:
+        return ::gsl_interp_linear;
+      case Interpolate::CUBIC_SPLINE:
+        return ::gsl_interp_cspline;
+      case Interpolate::NATURAL_SPLINE:
+        return ::gsl_interp_cspline;
+      case Interpolate::CUBIC_SPLINE_PERIODIC:
+        return ::gsl_interp_cspline_periodic;
+      case Interpolate::AKIMA_SPLINE:
+        return ::gsl_interp_akima;
+      case Interpolate::AKIMA_SPLINE_PERIODIC:
+        return ::gsl_interp_akima_periodic;
+      case Interpolate::NUM_STYLES:
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
+                          str(boost::format("You can't get here: style == %") % style));
+    }
 }
     
 /**
@@ -98,14 +126,17 @@ double math::Interpolate::interpolate(double const x) {
  *
  */
 math::Interpolate::Style math::stringToInterpStyle(std::string const style) {
-    std::map<std::string, Interpolate::Style> gslInterpTypeStrings;
-    gslInterpTypeStrings["CONSTANT"]              = Interpolate::CONSTANT;
-    gslInterpTypeStrings["LINEAR"]                = Interpolate::LINEAR;               
-    gslInterpTypeStrings["CUBIC_SPLINE"]          = Interpolate::CUBIC_SPLINE;         
-    gslInterpTypeStrings["NATURAL_SPLINE"]        = Interpolate::NATURAL_SPLINE;      
-    gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = Interpolate::CUBIC_SPLINE_PERIODIC;
-    gslInterpTypeStrings["AKIMA_SPLINE"]          = Interpolate::AKIMA_SPLINE;  
-    gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = Interpolate::AKIMA_SPLINE_PERIODIC;
+    static std::map<std::string, Interpolate::Style> gslInterpTypeStrings;
+    if (gslInterpTypeStrings.empty()) {
+        gslInterpTypeStrings["CONSTANT"]              = Interpolate::CONSTANT;
+        gslInterpTypeStrings["LINEAR"]                = Interpolate::LINEAR;               
+        gslInterpTypeStrings["CUBIC_SPLINE"]          = Interpolate::CUBIC_SPLINE;         
+        gslInterpTypeStrings["NATURAL_SPLINE"]        = Interpolate::NATURAL_SPLINE;      
+        gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = Interpolate::CUBIC_SPLINE_PERIODIC;
+        gslInterpTypeStrings["AKIMA_SPLINE"]          = Interpolate::AKIMA_SPLINE;  
+        gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = Interpolate::AKIMA_SPLINE_PERIODIC;
+    }
+    
     if ( gslInterpTypeStrings.find(style) == gslInterpTypeStrings.end()) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Interp style not found: "+style);
     }
