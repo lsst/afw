@@ -45,6 +45,11 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/detection/BaseSourceAttributes.h"
+#include "lsst/afw/detection/Measurement.h"
+#include "lsst/afw/detection/Astrometry.h"
+#include "lsst/afw/detection/Shape.h"
+#include "lsst/afw/detection/Photometry.h"
+
 
 /*
  * Avoid bug in lsst/base.h; it's fixed in base 3.1.3 
@@ -66,10 +71,6 @@ namespace afw {
     
 namespace detection {
     class Footprint;
-    template<typename T> class Measurement;
-    class Astrometry;
-    class Photometry;
-    class Shape;
     
 /*! An integer id for each nullable field in Source. */
 enum SourceNullableField {
@@ -168,26 +169,91 @@ public :
     void setYAstrom(double const yAstrom) { 
         set(_yAstrom, yAstrom, Y_ASTROM);            
     }
-    void setAstrometry(PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Astrometry>) astrom) {
+    void setAstrometry(PTR(Measurement<Astrometry>) astrom) {
         _astrom = astrom;
     }
-    PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Astrometry>) getAstrometry() const {
+    PTR(Measurement<Astrometry>) getAstrometry() const {
         return _astrom;
     }
-    void setPhotometry(PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Photometry>) photom) {
+    void setPhotometry(PTR(Measurement<Photometry>) photom) {
         _photom = photom;
     }
-    PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Photometry>) getPhotometry() const {
+    PTR(Measurement<Photometry>) getPhotometry() const {
         return _photom;
     }
-    void setShape(PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Shape>) shape) {
+    void setShape(PTR(Measurement<Shape>) shape) {
         _shape = shape;
     }
-    PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Shape>) getShape() const {
+    PTR(Measurement<Shape>) getShape() const {
         return _shape;
     }
     
     bool operator==(Source const & d) const;
+
+    void extractAstrometry(Astrometry const& astrom) {
+        setXAstrom(astrom.getX());
+        setXAstromErr(astrom.getXErr());
+        setYAstrom(astrom.getY());
+        setYAstrom(astrom.getYErr());
+        // XXX flags
+    }
+
+    void extractShape(Shape const& shape) {
+        setIxx(shape.getIxx());       // <xx>
+        setIxxErr(shape.getIxxErr()); // sqrt(Var<xx>)
+        setIxy(shape.getIxy());       // <xy>
+        setIxyErr(shape.getIxyErr()); // sign(Covar(x, y))*sqrt(|Covar(x, y)|))        
+        setIyy(shape.getIyy());       // <yy>
+        setIyyErr(shape.getIyyErr()); // sqrt(Var<yy>)
+        
+        setPsfIxx(shape.getPsfIxx());       // <xx>
+        setPsfIxxErr(shape.getPsfIxxErr()); // sqrt(Var<xx>)
+        setPsfIxy(shape.getPsfIxy());       // <xy>
+        setPsfIxyErr(shape.getPsfIxyErr()); // sign(Covar(x, y))*sqrt(|Covar(x, y)|))        
+        setPsfIyy(shape.getPsfIyy());       // <yy>
+        setPsfIyyErr(shape.getPsfIyyErr()); // sqrt(Var<yy>)
+        
+        setE1(shape.getE1());
+        setE1Err(shape.getE1Err());
+        setE2(shape.getE2());
+        setE2Err(shape.getE2Err());
+        setShear1(shape.getShear1());
+        setShear1Err(shape.getShear1Err());
+        setShear2(shape.getShear2());
+        setShear2Err(shape.getShear2Err());
+        
+        setResolution(shape.getResolution());
+        setShapeStatus(shape.getShapeStatus());
+        setSigma(shape.getSigma());
+        setSigmaErr(shape.getSigmaErr());
+
+        // XXX flags
+    }
+
+    void extractPsfPhotometry(Photometry const& phot) {
+        setPsfFlux(phot.getFlux());
+        setPsfFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
+    void extractModelPhotometry(Photometry const& phot) {
+        setModelFlux(phot.getFlux());
+        setModelFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
+    void extractApPhotometry(Photometry const& phot) {
+        setApFlux(phot.getFlux());
+        setApFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
+    void extractInstPhotometry(Photometry const& phot) {
+        setInstFlux(phot.getFlux());
+        setInstFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
 
 private :
     CONST_PTR(Footprint) _footprint;
