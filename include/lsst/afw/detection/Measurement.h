@@ -68,6 +68,11 @@ public:
     const_iterator end() const {
         return _measuredValues.end();
     }
+    /// Return the size of the set
+    size_t size() const {
+        return _measuredValues.size();
+    }
+
 #if 1
     /// Return an iterator to the named algorithm
     const_iterator find_iter(std::string const&name // The name of the desired algorithm
@@ -213,16 +218,33 @@ public:
      * Average component measurements
      */
     virtual TPtr average() const {
-        TPtr averages(new T());
         if (empty()) {
             // Has values in it; should not happen since subclasses should override
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               "Don't know how to average values");
         }
+
+        // Assemble list of measurements made with the same algorithm
+        typedef std::map<std::string,TPtr> AlgMap;
+        AlgMap algorithms;
         for (const_iterator iter = begin(); iter != end(); ++iter) {
-            TPtr avg = (*iter)->average();
+            std::string const& name = (*iter)->getAlgorithm();
+            typename AlgMap::const_iterator algIter = algorithms.find(name);
+            if (algIter == algorithms.end()) {
+                TPtr meas(new T());
+                algorithms[name] = meas;
+            }
+            algorithms[name]->add(*iter);
+        }
+
+        // Get averages of each algorithm
+        TPtr averages(new T());
+        for (typename AlgMap::const_iterator iter = algorithms.begin(); iter != algorithms.end(); ++iter) {
+            TPtr meas = iter->second;
+            TPtr avg = meas->size() == 1 ? *meas->begin() : meas->average();
             averages->add(avg);
         }
+
         return averages;
     }
 
