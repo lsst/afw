@@ -38,6 +38,7 @@
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
@@ -161,6 +162,13 @@ public:
         image::Mask<MaskPixelT> const & mask, 
         MaskPixelT bitmask=~0x0
     );
+
+
+    /// Transform a footprint from one frame to another via their WCSes
+    Footprint::Ptr transform(image::Wcs const& source,
+                             image::Wcs const& target,
+                             geom::Box2I const& bbox
+        );
 
 private:
     friend class boost::serialization::access;
