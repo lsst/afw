@@ -138,7 +138,7 @@ public:
 		// from Coord.cc : reduceAngle():
 		// if _val was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
 		// Thus, a rare equivalence conditional test for a double ...
-		if (_val == 360.0)
+		if (_val == TWOPI)
 			_val = 0.0;
 	}
 

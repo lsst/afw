@@ -349,6 +349,15 @@ class SourceTestCase(unittest.TestCase):
                 f.close()
                 raise
 
+    def testLongId(self):
+        """Test that we can set an ID from a python long; #1714"""
+
+        if False:                       # #1714 is not fixed (Source ctor takes int)
+            s = afwDet.Source(2355928297481L)
+
+        s = afwDet.Source()
+        s.setId(2355928297481L)         # ... but we can set the ID
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

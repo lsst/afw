@@ -24,6 +24,8 @@
 ## \file
 ## \brief Definitions to talk to ds9 from python
 
+from __future__ import with_statement
+
 import os, re, math, sys, time
 
 try:
@@ -236,6 +238,13 @@ N.b. These are available as:
    ds9.flush()
    # bunches more ds9.{dot,line} commands
    ds9.buffer(False)
+
+or (better)
+   with ds9.Buffering():
+       # bunches of ds9.{dot,line} commands
+       ds9.flush()
+       # bunches more ds9.{dot,line} commands
+   
         """
 
         def __init__(self, size=0):
@@ -525,6 +534,15 @@ def buffer(enable=True):
         cmdBuffer.popSize()
 
 flush = cmdBuffer.flush(silent=True)
+
+class Buffering(object):
+    """A class intended to be used with python's with statement:
+
+    """
+    def __enter__(self):
+        buffer(True)
+    def __exit__(self, *args):
+        buffer(False)
 
 def erase(frame=None):
     """Erase the specified DS9 frame"""

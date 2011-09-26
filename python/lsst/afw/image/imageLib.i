@@ -162,6 +162,7 @@ def version(HeadURL = r"$HeadURL$"):
 
 SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 %include "lsst/afw/image/Calib.h"
+%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
 
 #if defined(IMPORT_FUNCTION_I)
 %{

@@ -98,7 +98,7 @@ public:
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
-        _noGoodPixelsMask(lsst::afw::image::Mask<>::getPlaneBitMask("BAD")),
+        _noGoodPixelsMask(lsst::afw::image::Mask<>::getPlaneBitMask("EDGE")),
         _isNanSafe(isNanSafe),
         _isWeighted(isWeighted),
         _isMultiplyingWeights(false) {

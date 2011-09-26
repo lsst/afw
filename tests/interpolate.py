@@ -37,6 +37,7 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.math as afwMath
+import lsst.pex.exceptions as pexExcept
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -86,14 +87,19 @@ class InterpolateTestCase(unittest.TestCase):
         self.assertEqual(youtS, self.y1test)
 
     def testAkimaSplineParabola(self):
-        
-        # === test the Spline interpolator =======================
+        """test the Spline interpolator"""
         # specify interp type with the enum style interface
         yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
         
+
         self.assertEqual(youtS, self.y2test)
 
+    def testInvalidInputs(self):
+        """Test that invalid inputs cause an abort"""
+
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.MemoryException,
+                                       lambda : afwMath.Interpolate([0], [1]))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -175,6 +175,35 @@ afwGeom::Angle pointToLatitude(lsst::afw::geom::Point3D const &p3d) {
     }
     return lat;
 }
+std::pair<afwGeom::Angle, afwGeom::Angle> pointToLonLat(lsst::afw::geom::Point3D const &p3d, double const defaultLongitude=0.0, bool normalize=true) {
+    std::pair<afwGeom::Angle, afwGeom::Angle> lonLat;
+
+    if (normalize) {
+        double const inorm = 1.0/p3d.asEigen().norm();
+        double const x = inorm*p3d.getX();
+        double const y = inorm*p3d.getY();
+        double const z = inorm*p3d.getZ();
+        if (fabs(x) <= atPoleEpsilon && fabs(y) <= atPoleEpsilon) {
+            lonLat.first = 0.0 * afwGeom::radians;
+            lonLat.second = ((z >= 0) ? 1.0 : -1.0) * afwGeom::HALFPI * afwGeom::radians;
+        } else {
+            lonLat.first = atan2(y, x) * afwGeom::radians;
+            lonLat.first.wrap();
+            lonLat.second = asin(z) * afwGeom::radians;
+        }
+    } else {
+        if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
+            lonLat.first = 0.0 * afwGeom::radians;
+            lonLat.second = ((p3d.getZ() >= 0) ? 1.0 : -1.0) * afwGeom::HALFPI * afwGeom::radians;
+        } else {
+            lonLat.first = atan2(p3d.getY(), p3d.getX()) * afwGeom::radians;
+            lonLat.first.wrap();
+            lonLat.second = asin(p3d.getZ()) * afwGeom::radians;
+        }
+    }
+    return lonLat;
+}
+
     
 } // end anonymous namespace
 
@@ -297,12 +326,18 @@ afwCoord::Coord::Coord(
 afwCoord::Coord::Coord(
                        afwGeom::Point3D const &p3d,   ///< Point3D
                        double const epoch,            ///< epoch of coordinate
+                       bool normalize,                 ///< normalize the p3d provided
                        afwGeom::Angle const defaultLongitude  ///< longitude to use if x=y=0
                       ) :
-    _longitude(pointToLongitude(p3d, defaultLongitude)),
-    _latitude(pointToLatitude(p3d)),
-    _epoch(epoch) {}
+    _longitude(0. * afwGeom::radians),
+    _latitude(0. * afwGeom::radians),
+    _epoch(epoch) {
 
+    std::pair<afwGeom::Angle, afwGeom::Angle> lonLat = pointToLonLat(p3d, defaultLongitude, normalize);
+    _longitudeRad = lonLat.first;
+    _latitudeRad = lonLat.second;
+    _epoch = epoch;
+}
 
 /**
  * @brief Constructor for the Coord base class
@@ -452,8 +487,9 @@ void afwCoord::Coord::rotate(
     xprime[2] = (uz*uz + (1.0 - uz*uz)*c)*x[2] +  (uz*ux*mc - uy*s)*x[0] +  (uy*uz*mc + ux*s)*x[1];
     
     // in-situ
-    _longitude = pointToLongitude(xprime);
-    _latitude  = pointToLatitude(xprime);
+    std::pair<afwGeom::Angle, afwGeom::Angle> lonLat = pointToLonLat(xprime);
+    _longitude = lonLat.first;
+    _latitude  = lonLat.second;
 }
 
 
@@ -1182,9 +1218,10 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
         CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,     ///< the coord in Point3D format
         double const epoch,            ///< epoch of coordinate
+        bool normalize,                 ///< normalize the p3d provided
         afwGeom::Angle const defaultLongitude ///< longitude to use if x=y=0
 ) {
-    Coord c(p3d, 2000.0, defaultLongitude);
+    Coord c(p3d, 2000.0, normalize, defaultLongitude);
     return makeCoord(system, c.getLongitude(), c.getLatitude(), epoch);
 }
 /**
@@ -1194,15 +1231,14 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+        CoordSystem const system,             ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,  ///< the coord in Point3D format
+        bool normalize,                        ///< normalize the p3d provided
         afwGeom::Angle const defaultLongitude ///< longitude to use if x=y=0
 ) {
-    Coord c(p3d, 2000.0, defaultLongitude);
+    Coord c(p3d, 2000.0, normalize, defaultLongitude);
     return makeCoord(system, c.getLongitude(), c.getLatitude());
 }
-
-
 
 /**
  * @brief Factory function to create a Coord of arbitrary type with Point2D
@@ -1210,9 +1246,9 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  */
 afwCoord::Coord::Ptr afwCoord::makeCoord(
-        CoordSystem const system, ///< the system (equ, fk5, galactic ..)
+        CoordSystem const system,               ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
-        afwGeom::AngleUnit unit,       ///< the units (eg. DEGREES, RADIANS)
+        afwGeom::AngleUnit unit,       ///< the units (eg. degrees, radians)
         double const epoch  ///< epoch of coordinate
 ) {
     if (unit == afwGeom::hours) {
@@ -1239,9 +1275,6 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
         return makeCoord(system, afwGeom::Angle(p2d.getX(), unit), afwGeom::Angle(p2d.getY(), unit));
     }
 }
-
-
-
 
 /**
  * @brief Factory function to create a Coord of arbitrary type with string RA [in degrees, not hours!], Dec
