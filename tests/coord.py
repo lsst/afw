@@ -194,7 +194,7 @@ class CoordTestCase(unittest.TestCase):
             epoch = 2000.0
             norm = True
             c = afwCoord.Fk5Coord(afwGeom.Point3D(p3d), epoch, norm)
-            ra, dec = c.getRa(afwCoord.DEGREES), c.getDec(afwCoord.DEGREES)
+            ra, dec = c.getRa().asDegrees(), c.getDec().asDegrees()
             print "Un-normed p3d: ", p3d, "-->", equKnown, ra, dec
             self.assertAlmostEqual(equKnown[0], ra)
             self.assertAlmostEqual(equKnown[1], dec)
@@ -204,13 +204,13 @@ class CoordTestCase(unittest.TestCase):
         """Ticket 1761 found that non-normalized inputs caused failures. """
 
         c = afwCoord.Coord(afwGeom.Point3D(0,1,0))
-        dfltLong = 0.0
+        dfltLong = 0.0 * afwGeom.radians
         
         norm = False
-        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, dfltLong, norm)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, dfltLong, norm)
-        sep1 = c.angularSeparation(c1, afwCoord.DEGREES)
-        sep2 = c.angularSeparation(c2, afwCoord.DEGREES)
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm, dfltLong)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, norm, dfltLong)
+        sep1 = c.angularSeparation(c1).asDegrees()
+        sep2 = c.angularSeparation(c2).asDegrees()
         known1 = 45.286483672428574
         known2 = 55.550098012046512
         print "sep: ", sep1, sep2, known1, known2
@@ -222,10 +222,10 @@ class CoordTestCase(unittest.TestCase):
         ######################
         # normalize and sep1, sep2 should both equal 54.7356
         norm = True
-        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, dfltLong, norm)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, dfltLong, norm)
-        sep1 = c.angularSeparation(c1, afwCoord.DEGREES)
-        sep2 = c.angularSeparation(c2, afwCoord.DEGREES)
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm, dfltLong)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, norm, dfltLong)
+        sep1 = c.angularSeparation(c1).asDegrees()
+        sep2 = c.angularSeparation(c2).asDegrees()
         known = 54.735610317245339
         print "sep: ", sep1, sep2, known
 
@@ -556,7 +556,7 @@ class CoordTestCase(unittest.TestCase):
 
     def testVirtualGetName(self):
 
-        gal = afwCoord.GalacticCoord(0.0, 0.0)
+        gal = afwCoord.GalacticCoord(0.0 * afwGeom.radians, 0.0 * afwGeom.radians)
         clone = gal.clone()
         gal_names = gal.getCoordNames()      # ("L", "B")
         clone_names = clone.getCoordNames()  #("Ra", "Dec")

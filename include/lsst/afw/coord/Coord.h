@@ -353,7 +353,7 @@ Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p
                      double const epoch);
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d, double const epoch,
                      bool normalize=true,
-                     lsst::afw::geom::Angle const defaultLongitude);
+                     lsst::afw::geom::Angle const defaultLongitude=lsst::afw::geom::Angle(0.));
 Coord::Ptr makeCoord(CoordSystem const system);
 
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Angle const ra, lsst::afw::geom::Angle const dec);
@@ -361,7 +361,7 @@ Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit);
 Coord::Ptr makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d,
                      bool normalize=true,
-                     lsst::afw::geom::Angle const defaultLongitude= lsst::afw::geom::Angle(0.));
+                     lsst::afw::geom::Angle const defaultLongitude=lsst::afw::geom::Angle(0.));
 
 /*
  * Utility functions

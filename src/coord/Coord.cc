@@ -334,8 +334,8 @@ afwCoord::Coord::Coord(
     _epoch(epoch) {
 
     std::pair<afwGeom::Angle, afwGeom::Angle> lonLat = pointToLonLat(p3d, defaultLongitude, normalize);
-    _longitudeRad = lonLat.first;
-    _latitudeRad = lonLat.second;
+    _longitude = lonLat.first;
+    _latitude  = lonLat.second;
     _epoch = epoch;
 }
 
