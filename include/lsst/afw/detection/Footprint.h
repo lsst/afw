@@ -167,8 +167,7 @@ public:
     /// Transform a footprint from one frame to another via their WCSes
     Footprint::Ptr transform(image::Wcs const& source,
                              image::Wcs const& target,
-                             geom::Box2I const& bbox
-        );
+                             geom::Box2I const& bbox) const;
 
 private:
     friend class boost::serialization::access;

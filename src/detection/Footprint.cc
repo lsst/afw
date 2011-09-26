@@ -1538,7 +1538,7 @@ INSTANTIATE(double);
 Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WCS (for this footprint)
                                     image::Wcs const& target, // Target image WCS
                                     geom::Box2I const& bbox   // Bounding box for target image
-    ) {
+    ) const {
     // Transform the original bounding box
     geom::Box2I fpBox = getBBox(); // Original bounding box
     geom::Point2D p00 = transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target);
