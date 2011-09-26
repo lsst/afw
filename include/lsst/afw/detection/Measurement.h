@@ -248,8 +248,6 @@ public:
         return averages;
     }
 
-
-protected:
     /// Fast compile-time-computed access to set the values of _data
     template<unsigned int INDEX, typename U>
     void set(U value                    ///< Desired value
