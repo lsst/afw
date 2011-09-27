@@ -34,8 +34,7 @@
 
 #include "lsst/ndarray/eigen.h"
 
-#include <Eigen/Core>
-#include <Eigen/Array>
+#include "Eigen/Core"
 
 namespace image = lsst::afw::image;
 namespace detection = lsst::afw::detection;
@@ -70,7 +69,7 @@ BOOST_AUTO_TEST_CASE(conversion) {
     BOOST_CHECK_EQUAL( oldArea, footprint.getArea() );
 
     nd::Array<double,1,1> v = nd::allocate(footprint.getArea());
-    nd::viewAsEigen(v).setRandom();
+    v.asEigen().setRandom();
 
     doRoundTrip(footprint, v, geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(10, 10)));
 

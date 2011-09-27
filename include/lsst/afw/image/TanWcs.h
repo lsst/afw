@@ -23,7 +23,7 @@
 #ifndef LSST_AFW_IMAGE_TANWCS_H
 #define LSST_AFW_IMAGE_TANWCS_H
 
-#include "Eigen/Core.h"
+#include "Eigen/Core"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"

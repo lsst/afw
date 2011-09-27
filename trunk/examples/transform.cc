@@ -32,7 +32,7 @@
  */
 
 #include <iostream>
-#include <Eigen/Core>
+#include "Eigen/Core"
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"

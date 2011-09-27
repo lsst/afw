@@ -25,7 +25,7 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_EllipticityBase_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_EllipticityBase_h_INCLUDED
 
-#include <Eigen/Core>
+#include "Eigen/Core"
 #include <complex>
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {

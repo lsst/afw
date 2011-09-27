@@ -35,10 +35,7 @@
 #include <limits>
 #include <cstdio>
 
-#include "Eigen/Core.h"
-#include "Eigen/LU"
-#include "Eigen/SVD"
-#include "Eigen/Geometry"
+#include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string.hpp"

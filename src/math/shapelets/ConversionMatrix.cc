@@ -31,7 +31,7 @@
 #include <boost/math/special_functions/factorials.hpp>
 #include <boost/noncopyable.hpp>
 
-#include <Eigen/LU>
+#include "Eigen/LU"
 
 #include <complex>
 #include <vector>
