@@ -80,10 +80,6 @@ public:
     virtual double getFluxErr(int i) const {
         return lsst::afw::detection::Measurement<Photometry>::get<FLUX_ERR, double>(i);
     }
-    /// Return the radius used to measure the flux (if an array)
-    virtual double getRadius(int i) const {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
 
     virtual ::std::ostream &output(std::ostream &os) const;
     virtual Photometry::Ptr average() const;
