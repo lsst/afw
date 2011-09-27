@@ -42,6 +42,13 @@ public:
                                                       lsst::afw::detection::Schema::DOUBLE, 1));
     }
 
+    virtual Ptr clone() const {
+        if (empty()) {
+            return boost::make_shared<Photometry>(getFlux(), getFluxErr());
+        }
+        return Measurement<Photometry>::clone();
+    }
+
     /// Return the number of fluxes available (> 1 iff an array)
     virtual int getNFlux() const {
         return 1;

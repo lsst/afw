@@ -120,6 +120,42 @@ public:
         
     }
     
+    virtual Ptr clone() const {
+        if (empty()) {
+            Ptr shape = boost::make_shared<Shape>();
+            shape->set<X>(shape->get<X, double>());
+            shape->set<X_ERR>(shape->get<X_ERR, double>());
+            shape->set<Y>(shape->get<Y, double>());
+            shape->set<Y_ERR>(shape->get<Y_ERR, double>());
+            shape->set<IXX>(shape->get<IXX, double>());
+            shape->set<IXX_ERR>(shape->get<IXX_ERR, double>());
+            shape->set<IXY>(shape->get<IXY, double>());
+            shape->set<IXY_ERR>(shape->get<IXY_ERR, double>());
+            shape->set<IYY>(shape->get<IYY, double>());
+            shape->set<IYY_ERR>(shape->get<IYY_ERR, double>());
+            shape->set<SIGMA>(shape->get<SIGMA, double>());
+            shape->set<SIGMA_ERR>(shape->get<SIGMA_ERR, double>());
+            shape->set<E1>(shape->get<E1, double>());
+            shape->set<E1_ERR>(shape->get<E1_ERR, double>());
+            shape->set<E2>(shape->get<E2, double>());
+            shape->set<E2_ERR>(shape->get<E2_ERR, double>());
+            shape->set<SHEAR1>(shape->get<SHEAR1, double>());
+            shape->set<SHEAR2>(shape->get<SHEAR2, double>());
+            shape->set<SHEAR1_ERR>(shape->get<SHEAR1_ERR, double>());
+            shape->set<SHEAR2_ERR>(shape->get<SHEAR2_ERR, double>());
+            shape->set<RESOLUTION>(shape->get<RESOLUTION, double>());
+            shape->set<PSF_IXX>(shape->get<PSF_IXX, double>());
+            shape->set<PSF_IXX_ERR>(shape->get<PSF_IXX_ERR, double>());
+            shape->set<PSF_IXY>(shape->get<PSF_IXY, double>());
+            shape->set<PSF_IXY_ERR>(shape->get<PSF_IXY_ERR, double>());
+            shape->set<PSF_IYY>(shape->get<PSF_IYY, double>());
+            shape->set<PSF_IYY_ERR>(shape->get<PSF_IYY_ERR, double>());
+            shape->set<SHAPE_STATUS>(shape->get<SHAPE_STATUS, short>());
+            return shape;
+        }
+        return Measurement<Shape>::clone();
+    }
+
     /// Return the x-moment
     double getX() const {
         return Measurement<Shape>::get<Shape::X, double>();

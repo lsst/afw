@@ -45,6 +45,13 @@ public:
         schema->add(SchemaEntry("yErr", Y_ERR, Schema::DOUBLE, 1, "pixel"));
     }
     
+    virtual Ptr clone() const {
+        if (empty()) {
+            return boost::make_shared<Astrometry>(getX(), getXErr(), getY(), getYErr());
+        }
+        return Measurement<Astrometry>::clone();
+    }
+
     /// Return the x-centroid
     double getX() const {
         return Measurement<Astrometry>::get<Astrometry::X, double>();

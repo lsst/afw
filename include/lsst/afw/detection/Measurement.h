@@ -112,6 +112,14 @@ public:
         }
     }
 
+    virtual TPtr clone(void) const {
+        TPtr meas = boost::make_shared<T>();
+        for (Measurement::const_iterator ptr = begin(); ptr != end(); ++ptr) {
+            meas->add((*ptr)->clone());
+        }
+        return meas;
+    }
+
     /// Add a (shared_pointer to) an individual measurement of type T
     void add(TPtr val) {
         _measuredValues.push_back(val);
