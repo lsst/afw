@@ -1,0 +1,6 @@
+The file printers.py provides some support for inspecting LSST datatypes from gdb
+
+The python pretty printing's in a bit of a state of flux, but this code works with gdb 7.2 if you build it
+with python support.
+
+N.b. the magic loading of printing.py happens in $AFW_DIR/lib/libafw.so-gdb.py

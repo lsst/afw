@@ -1,0 +1,43 @@
+namespace lsst { namespace afw { namespace detection {
+/**
+ \page Math
+ */
+
+/**
+ \page StatisticsExample Statistics
+
+ \dontinclude statistics.cc
+
+Demonstrate the use of Statistics; the code's in \link statistics.cc\endlink.
+
+Start by including needed headers and declaring namespace aliases
+\until namespace math
+Create an Image
+\until 100000
+Create a Statistics object from that Image, requesting the number of points, the mean, and the standard deviation.
+\until Statistics
+And print the desired quantities.  Note that we didn't request that the error in the mean be calculated,
+so a \c NaN is returned.
+\until }
+
+Here's another way to do the same thing.  We use \c makeStatistics (cf. \c std::make_pair) to avoid having to
+specify what sort of \c Statistics we're creating (and in C++0X you'll be able to say
+\code
+auto stats = math::makeStatistics(img, math::STDEV | math::MEAN | math::ERRORS);
+\endcode
+which means that we <em>never</em> have to provide information that the compiler
+has up its sleeve --- very convenient for generic template programming)
+\until Statistics
+Print the answers again, but this time return that value and its error as a \c std::pair
+\until }
+
+Don't ask for things that you didn't request.
+\until }
+\until }
+\until }
+be tidy and return success (unnecessary; unlike C, C++ will return this 0 for you automatically)
+\until }
+
+\example statistics.cc
+ */
+}}}
