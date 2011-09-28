@@ -39,8 +39,8 @@ bool geom::allclose(
     CoordinateBase<Derived,T,N> const & b, 
     T rtol, T atol
 ) {
-    Eigen::Array<T,N,1> diff = (a.asEigen<Eigen::ArrayXpr>() - b.asEigen<Eigen::ArrayXpr>()).abs();
-    Eigen::Array<T,N,1> rhs = (0.5*(a.asEigen<Eigen::ArrayXpr>() + b.asEigen<Eigen::ArrayXpr>())).abs();
+    Eigen::Array<T,N,1> diff = (a.asEigen().array() - b.asEigen().array()).abs();
+    Eigen::Array<T,N,1> rhs = (0.5*(a.asEigen().array() + b.asEigen().array())).abs();
     rhs *= rtol;
     rhs += atol;
     return (diff <= rhs).all();

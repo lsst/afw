@@ -32,7 +32,8 @@
 #include "lsst/utils/ieee.h"
 
 #include "Eigen/Core"
-#include "Eigen/QR"
+#include "Eigen/SVD"
+#include "Eigen/Eigenvalues"
 
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/math/Statistics.h"
@@ -209,7 +210,6 @@ void ImagePca<ImageT>::analyze()
         }
     }
     flux_bar /= nImage;
-    // TODO
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eVecValues(R);
     Eigen::MatrixXd const& Q = eVecValues.eigenvectors();
     Eigen::VectorXd const& lambda = eVecValues.eigenvalues();
@@ -382,7 +382,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     if (nEigen == 1) {
         x(0) = b(0)/A(0, 0);
     } else {
-        A.svd().solve(b, &x);
+        x = A.jacobiSvd().solve(b);
     }
     //
     // Accumulate the best-fit-image in bestFitImage

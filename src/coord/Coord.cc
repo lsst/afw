@@ -36,6 +36,7 @@
 #include <cstdio>
 
 #include "Eigen/Core"
+#include "Eigen/Geometry"
 
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string.hpp"
