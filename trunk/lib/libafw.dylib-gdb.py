@@ -1,1 +1,0 @@
-libafw.so-gdb.py
