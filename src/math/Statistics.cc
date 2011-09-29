@@ -311,12 +311,14 @@ namespace {
     SumReturn sumImage(ImageT const &img,
                        MaskT const &msk,
                        VarianceT const &var,
+                       VarianceT const *weights,
                        int const,
                        int const nCrude,
                        int const stride,
                        double const meanCrude,
                        double const cliplimit,
-                       afwMath::StatisticsControl const& sctrl
+                       bool const useMultiplyWeights,
+                       int const andMask
                       )
     {
         int n = 0;
@@ -330,19 +332,18 @@ namespace {
         for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
             typename MaskT::x_iterator mptr = msk.row_begin(iY);
-            typename VarianceT::x_iterator vptr = var.row_begin(iY);
+            typename VarianceT::x_iterator vptr = weights ? weights->row_begin(iY) : var.row_begin(iY);
         
             for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
                  ptr != end; ++ptr, ++mptr, ++vptr) {
             
-                if (IsFinite()(*ptr) &&
-                    !(*mptr & sctrl.getAndMask()) &&
+                if (IsFinite()(*ptr) && !(*mptr & andMask) &&
                     InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
                 
                     double const delta = (*ptr - meanCrude);
 
                     if (IsWeighted) {
-                        if ( sctrl.getMultiplyWeights()) {
+                        if (useMultiplyWeights) {
                             sum   += (*vptr)*delta;
                             sumx2 += (*vptr)*delta*delta;
                             wsum  += (*vptr);
@@ -385,21 +386,25 @@ namespace {
     SumReturn sumImage(ImageT const &img,
                        MaskT const &msk,
                        VarianceT const &var,
+                       VarianceT const *weights,
                        int const flags,
                        int const nCrude,
                        int const stride,
                        double const meanCrude,
                        double const cliplimit,
-                       afwMath::StatisticsControl const& sctrl,
+                       bool const useMultiplyWeights,
+                       int const andMask,
                        bool doGetWeighted
                       )
     {
         if (doGetWeighted) {
             return sumImage<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, true>(
-                     img, msk, var, flags, nCrude, 1, meanCrude, cliplimit, sctrl);
+                     img, msk, var, weights,
+                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
         } else {
             return sumImage<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, false>(
-                     img, msk, var, flags, nCrude, 1, meanCrude, cliplimit, sctrl);
+                     img, msk, var, weights,
+                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
         }
     }
 
@@ -412,23 +417,27 @@ namespace {
     SumReturn sumImage(ImageT const &img,
                        MaskT const &msk,
                        VarianceT const &var,
+                       VarianceT const *weights,
                        int const flags,
                        int const nCrude,
                        int const stride,
                        double const meanCrude,
                        double const cliplimit,
-                       afwMath::StatisticsControl const& sctrl,
+                       bool const useMultiplyWeights,
+                       int const andMask,
                        bool doCheckFinite,
                        bool doGetWeighted
                       )
     {
         if (doCheckFinite) {
             return sumImage<CheckFinite, HasValueLtMin, HasValueGtMax, InClipRange, IsWeighted>(
-                     img, msk, var, flags, nCrude, 1, meanCrude, cliplimit, sctrl,
+                     img, msk, var, weights,
+                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
                      doGetWeighted);
         } else {
             return sumImage<AlwaysTrue, HasValueLtMin, HasValueGtMax, InClipRange, IsWeighted>(
-                     img, msk, var, flags, nCrude, 1, meanCrude, cliplimit, sctrl,
+                     img, msk, var, weights,
+                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
                      doGetWeighted);
         }
     }
@@ -449,9 +458,8 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT const &img,
                                                                       MaskT const &msk,
                                                                       VarianceT const &var,
-                                                                      int const flags) {
-
-
+                                                                      int const flags)
+{
     // =====================================================
     // a crude estimate of the mean, used for numerical stability of variance
     SumReturn loopValues;
@@ -467,10 +475,14 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT con
     } else {
         strideCrude = 10;
     }
+
+    VarianceT *weights = NULL;  
     double cliplimit = -1;              // unused
-    loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(img, msk, var,
+    loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(img, msk, var, weights,
                                                                    flags, nCrude, strideCrude, meanCrude,
-                                                                   cliplimit, _sctrl,
+                                                                   cliplimit,
+                                                                   _sctrl.getMultiplyWeights(),
+                                                                   _sctrl.getAndMask(),
                                                                    _sctrl.getNanSafe(),
                                                                    _sctrl.getWeighted());        
     nCrude = loopValues.get<0>();
@@ -485,17 +497,20 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT con
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
     
-    // If we want max or min (you get both)
-    if (flags & (MIN | MAX)) {
-        loopValues = sumImage<ChkFin, ChkMin, ChkMax, AlwaysT, true>(img, msk, var,
+    if (flags & (MIN | MAX)) {           // if we want max or min (you get both) as well as other flags
+        loopValues = sumImage<ChkFin, ChkMin, ChkMax, AlwaysT, true>(img, msk, var, weights,
                                                                      flags, nCrude, 1, meanCrude,
-                                                                     cliplimit, _sctrl,
+                                                                     cliplimit,
+                                                                     _sctrl.getMultiplyWeights(),
+                                                                     _sctrl.getAndMask(),
                                                                      true,
                                                                      _sctrl.getWeighted());        
     } else {
-        loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var,
+        loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, weights,
                                                                       flags, nCrude, 1, meanCrude,
-                                                                      cliplimit, _sctrl,
+                                                                      cliplimit,
+                                                                      _sctrl.getMultiplyWeights(),
+                                                                      _sctrl.getAndMask(),
                                                                       _sctrl.getNanSafe(),
                                                                       _sctrl.getWeighted());        
     }
@@ -542,8 +557,8 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     VarianceT const &var,
     int const flags,
     std::pair<double, double> const clipinfo
-                                                                     ) {
-    
+                                                                     )
+{
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
 
@@ -556,19 +571,24 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     // Estimate the full precision variance using that crude mean
     SumReturn loopValues;
 
+    VarianceT *weights = NULL;  
     int const stride = 1;
     int nCrude = 0;
     
     if (flags & (MIN | MAX)) {           // if we want max or min (you get both) as well as other flags
-        loopValues = sumImage<ChkFin, ChkMin, ChkMax, ChkClip, true>(img, msk, var,
+        loopValues = sumImage<ChkFin, ChkMin, ChkMax, ChkClip, true>(img, msk, var, weights,
                                                                      flags, nCrude, stride, center,
-                                                                     cliplimit, _sctrl,
+                                                                     cliplimit, 
+                                                                     _sctrl.getMultiplyWeights(),
+                                                                     _sctrl.getAndMask(),
                                                                      true,
                                                                      _sctrl.getWeighted());        
     } else {                            // fast loop ... just the mean & variance
-        loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(img, msk, var,
-                                                                      flags, nCrude, stride,
-                                                                       center, cliplimit, _sctrl,
+        loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(img, msk, var, weights,
+                                                                       flags, nCrude, stride,
+                                                                       center, cliplimit,
+                                                                      _sctrl.getMultiplyWeights(),
+                                                                      _sctrl.getAndMask(),
                                                                       _sctrl.getNanSafe(),
                                                                       _sctrl.getWeighted());        
     }
