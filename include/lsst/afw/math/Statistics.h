@@ -203,7 +203,6 @@ private:
 
     // return type for _getStandard
     typedef boost::tuple<double, double, double, double, double, lsst::afw::image::MaskPixel> StandardReturn; 
-    typedef boost::tuple<int, double, double, double, double, double, lsst::afw::image::MaskPixel> SumReturn; 
     typedef boost::tuple<double, double, double> MedianQuartileReturn;
     
     long _flags;                        // The desired calculation
@@ -228,16 +227,6 @@ private:
                                                                              VarianceT const &var,
                                                                              int const flags);
         
-    template<typename IsFinite,
-             typename HasValueLtMin,
-             typename HasValueGtMax,
-             typename InClipRange,
-             bool MultiplyWeight,
-             typename ImageT, typename MaskT, typename VarianceT>
-    SumReturn _sumImage(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags,
-                        int const nCrude, int const stride = 1, double const meanCrude = 0,
-                        double const cliplimit = std::numeric_limits<double>::quiet_NaN());
-    
     template<typename ImageT, typename MaskT, typename VarianceT>
     StandardReturn _getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags);
     template<typename ImageT, typename MaskT, typename VarianceT>
