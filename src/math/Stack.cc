@@ -123,6 +123,9 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
 
     // get a list to contain a pixel from x,y for each image
     afwMath::MaskedVector<PixelT> pixelSet(images.size());
+    // and a weight vector
+    std::vector<lsst::afw::image::VariancePixel> weights(images.size());
+    //
     afwMath::StatisticsControl sctrlTmp(sctrl);
 
     // if we're forcing the user variances ...

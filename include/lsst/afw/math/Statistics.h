@@ -238,9 +238,6 @@ private:
 /**
  * @brief This iterator will never increment.  It is returned by row_begin() in the MaskImposter class
  *        (below) to allow phony mask pixels to be iterated over for non-mask images within Statistics.
- * @note As the iterator always returns 0x0, the comparisons in Statistics::_getStandard() should always
- *       evaluate to 0x0 and they should be compiled out for calls to non-masked Images.
- *
  */
 template <typename ValueT>
 class infinite_iterator
@@ -423,8 +420,7 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
     MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
     MaskImposter<lsst::afw::image::VariancePixel> var;
 
-    lsst::afw::image::Image<lsst::afw::image::VariancePixel> weights(vweights.size(), 1);
-    std::copy(vweights.begin(), vweights.end(), weights.row_begin(0));
+    ImageImposter<lsst::afw::image::VariancePixel> weights(vweights);
     
     return Statistics(img, msk, var, weights, flags, sctrl);
 }
@@ -456,8 +452,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
-    lsst::afw::image::Image<lsst::afw::image::VariancePixel> weights(vweights.size(), 1);
-    std::copy(vweights.begin(), vweights.end(), weights.row_begin(0));
+    ImageImposter<lsst::afw::image::VariancePixel> weights(vweights);
 
     if (sctrl.getWeighted()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), weights, flags, sctrl);
