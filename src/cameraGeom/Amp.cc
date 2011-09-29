@@ -49,12 +49,10 @@ cameraGeom::Amp::Amp(
     afwGeom::Box2I const& allPixels,           ///< Bounding box of the pixels read off this amplifier
     afwGeom::Box2I const& biasSec,             ///< Bounding box of amplifier's bias section
     afwGeom::Box2I const& dataSec,             ///< Bounding box of amplifier's data section
-    cameraGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
     ElectronicParams::Ptr eParams              ///< electronic properties of Amp
 ) : Detector(id, true),
     _biasSec(biasSec), 
     _dataSec(dataSec), 
-    _readoutCorner(readoutCorner), 
     _eParams(eParams)
 {
     if (biasSec.getWidth() > 0 && biasSec.getHeight() > 0 &&
@@ -81,7 +79,7 @@ cameraGeom::Amp::Amp(
 
     getAllPixels() = allPixels;
 
-    _originOnDisk = afwGeom::Point2I(0, 0);
+    _originInDetector = afwGeom::Point2I(0, 0);
     _nQuarter = 0;
     _flipLR = _flipTB = false;
     
@@ -157,10 +155,39 @@ void cameraGeom::Amp::rotateBy90(
 lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) const {
     // Reset the BBox's origin within the Detector to reflect the on-disk value
 
-    bbox.shift(-geom::Extent2I(_originOnDisk));
+    bbox.shift(-geom::Extent2I(_originInDetector));
     // Rotate the BBox to reflect the on-disk orientation
     afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
-    return cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
+    afwGeom::Box2I tbbox = afwGeom::Box2I(afwGeom::Point2I(0,0), dimensions);
+    bbox = cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
+    tbbox = cameraGeom::detail::rotateBBoxBy90(tbbox, -_nQuarter, dimensions);
+    if(_flipTB){
+        bbox.flipTB(tbbox.getDimensions());
+    }
+    if(_flipLR){
+        bbox.flipLR(tbbox.getDimensions());
+    }
+    return bbox;
+}
+
+/**
+ * Convert a Amp's BBox from electronic coordinates where the first pixel is at (0,0)
+ * to the appropriate orientation for inclusion in a sensor in the camera
+ * coordinate system.  The origin of the amp is set in the addAmp() method on
+ * the Ccd class.
+ *
+ * This is intended to be used when each amp is in its separate file (or HDU) on disk
+ */
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromDisk(lsst::afw::geom::Box2I bbox) const {
+    // Rotate the BBox to reflect the on-disk orientation
+    afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
+    if(_flipLR){
+        bbox.flipLR(dimensions);
+    }
+    if(_flipTB){
+        bbox.flipTB(dimensions);
+    }
+    return cameraGeom::detail::rotateBBoxBy90(bbox, _nQuarter, dimensions);
 }
 
 /**

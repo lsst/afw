@@ -105,7 +105,7 @@ public:
 
     explicit Amp(Id id, lsst::afw::geom::Box2I const& allPixels,
                  lsst::afw::geom::Box2I const& biasSec, lsst::afw::geom::Box2I const& dataSec,
-                 ReadoutCorner readoutCorner, ElectronicParams::Ptr eparams);
+                 ElectronicParams::Ptr eparams);
 
     ~Amp() {}
 
@@ -160,18 +160,6 @@ public:
 
     void setTrimmedGeom();
 
-    /// Set the origin of Amplifier data when on disk (in Detector coordinates)
-    void setDiskLayout(
-            lsst::afw::geom::Point2I const& originOnDisk, // Origin of Amp data on disk (in Detector coords)
-            int nQuarter,                         // number of quarter-turns in +ve direction
-            bool flipLR,                          // Flip the Amp data left <--> right before rotation
-            bool flipTB                           // Flip the Amp data top <--> bottom before rotation
-                      ) {
-        _originOnDisk = originOnDisk;
-        _nQuarter = nQuarter;
-        _flipLR = flipLR;
-        _flipTB = flipTB;
-    }
 
     /// Return the biasSec as read from disk
     lsst::afw::geom::Box2I getDiskBiasSec() const {
@@ -183,9 +171,37 @@ public:
         return _mapToDisk(getDataSec(false));
     }
 
-    /// Return the biasSec as read from disk
+    /// Return the all as read from disk
     lsst::afw::geom::Box2I getDiskAllPixels() const {
         return _mapToDisk(getAllPixels(false));
+    }
+    /// Define the position and orientation of an Amp in a chip (in Detector coordinates)
+    void setDiskToChipLayout(
+            lsst::afw::geom::Point2I pos,         // Position of Amp data (in Detector coords)
+            int nQuarter,                         // number of quarter-turns in +ve direction
+            bool flipLR,                          // Flip the Amp data left <--> right before rotation
+            bool flipTB                           // Flip the Amp data top <--> bottom before rotation
+                      ) {
+        _nQuarter = nQuarter;
+        _flipLR = flipLR;
+        _flipTB = flipTB;
+
+        if (_flipLR && _flipTB)
+            _readoutCorner = URC;
+        else if (_flipLR)
+            _readoutCorner = LRC;
+        else if (_flipTB)
+            _readoutCorner = ULC;
+        else
+            _readoutCorner = LLC;
+
+        _readoutCorner = static_cast<ReadoutCorner>((_readoutCorner + nQuarter)%4);
+        _biasSec = _mapFromDisk(_biasSec);
+        _dataSec = _mapFromDisk(_dataSec);
+        getAllPixels() = _mapFromDisk(getAllPixels());
+        this->shift(pos.getX()*getAllPixels().getWidth(), pos.getY()*getAllPixels().getHeight());
+        setTrimmedGeom();
+        _originInDetector = getAllPixels().getMin();
     }
 
     template<typename ImageT>
@@ -198,15 +214,17 @@ private:
     ElectronicParams::Ptr _eParams;     // electronic properties of Amp
     lsst::afw::geom::Box2I _trimmedDataSec; // Bounding box of all the Detector's pixels after bias trimming
     //
-    // These values refer to the way that the Amplifier data is laid out on disk.  If the Amps have
-    // been assembled into a single Ccd image _originOnDisk == (0, 0) and _nQuarter == 0
+    // These values refer to the way that the Amplifier data is laid out on disk.  This 
+    // If the Amps have
+    // been assembled into a single Ccd image _originInDetector == (0, 0) and _nQuarter == 0
     //
-    lsst::afw::geom::Point2I _originOnDisk;     // Origin of Amplifier data on disk (in Detector coordinates)
+    lsst::afw::geom::Point2I _originInDetector;     // Origin of Amplifier data on disk (in Detector coordinates)
     int _nQuarter;                      // number of quarter-turns to apply in +ve direction
     bool _flipLR;                       // flip the data left <--> right before rotation
     bool _flipTB;                       // Flip the data top <--> bottom before rotation
 
     lsst::afw::geom::Box2I _mapToDisk(lsst::afw::geom::Box2I bbox) const;
+    lsst::afw::geom::Box2I _mapFromDisk(lsst::afw::geom::Box2I bbox) const;
 };
     
 }}}

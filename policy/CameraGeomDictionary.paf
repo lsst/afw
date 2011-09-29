@@ -199,27 +199,6 @@ definitions: {
                                 minOccurs: 2
                                 maxOccurs: 2
                             }
-                            readoutCorner: {
-                                description: "location of first pixel read"
-                                allowed: {
-                                    value: "LLC"
-                                    description: "Lower left corner"
-                                }
-                                allowed: {
-                                    value: "ULC"
-                                    description: "Upper left corner"
-                                }
-                                allowed: {
-                                    value: "URC"
-                                    description: "Upper right corner"
-                                }
-                                allowed: {
-                                    value: "LRC"
-                                    description: "Lower right corner"
-                                }
-                                minOccurs: 0
-                                maxOccurs: 1
-                            }
                         }
                     }
                 }
@@ -317,6 +296,12 @@ definitions: {
                                 minOccurs: 0
                                 maxOccurs: 1
                                 default: false
+                            }
+                            nQuarter: {
+                                type: int
+                                description: "Number of rotations to apply to the amp to fit it in the detector in camera coordinates"
+                                minOccurs: 0
+                                maxOccurs: 1
                             }
                             hdu: {
                                 type: int

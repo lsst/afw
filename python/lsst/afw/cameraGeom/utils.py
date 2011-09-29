@@ -195,6 +195,16 @@ in particular that it has an entry ampSerial which is a single-element list, the
     # Actually build the Ccd
     #
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
+    #
+    # Discover how the per-amp data is laid out on disk; it's common for the data acquisition system to
+    # put together a single image for an entire CCD, but it isn't mandatory
+    #
+    diskFormatPol = geomPolicy.get("CcdDiskLayout")
+    hduPerAmp = diskFormatPol.get("HduPerAmp")
+    ampDiskLayout = {}
+    if hduPerAmp:
+        for p in diskFormatPol.getArray("Amp"):
+            ampDiskLayout[p.get("serial")] = (p.get("hdu"), p.get("flipLR"), p.get("flipTB"), p.get("nQuarter"))
     
     for k in defectDict.keys():
         if ccdId == k:
@@ -232,7 +242,6 @@ in particular that it has an entry ampSerial which is a single-element list, the
             ampSerial0 = serial
 
         Col, Row = index = tuple(ampPol.getArray("index"))
-        c =  ampPol.get("readoutCorner")
 
         if Col not in range(nCol) or Row not in range(nRow):
             msg = "Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow)
@@ -267,27 +276,27 @@ in particular that it has an entry ampSerial which is a single-element list, the
         eWidth = extended + width + overclockH
         eHeight = preRows + height + overclockV
 
-        allPixels = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(eWidth, eHeight))
+        allPixelsOnDisk = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(eWidth, eHeight))
 
-        try:
-            c = readoutCorners[c]
-        except IndexError:
-            raise RuntimeError, ("Unknown readoutCorner %s" % c)
-        
-        if c in (cameraGeom.Amp.LLC, cameraGeom.Amp.ULC):
-            biasSec = afwGeom.Box2I(afwGeom.Point2I(extended + width, preRows), afwGeom.Extent2I(overclockH, height))
-            dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
-        elif c in (cameraGeom.Amp.LRC, cameraGeom.Amp.URC):
-            biasSec = afwGeom.Box2I(afwGeom.Point2I(0, preRows), afwGeom.Extent2I(overclockH, height))
-            dataSec = afwGeom.Box2I(afwGeom.Point2I(overclockH, preRows), afwGeom.Extent2I(width, height))
+        biasSec = afwGeom.Box2I(afwGeom.Point2I(extended + width, preRows), afwGeom.Extent2I(overclockH, height))
+        dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial, Col, Row),
-                             allPixels, biasSec, dataSec, c, eParams)
+                             allPixelsOnDisk, biasSec, dataSec, eParams)
+
+	if hduPerAmp:
+            #
+            # Set the on-disk layout parameters now that we've possibly rotated the Ccd to fit the raft
+            #
+            hdu, flipLR, flipTB, nQuarterAmp = ampDiskLayout[amp.getId().getSerial()]
+    	    #The following maps how the amp pixels must be changed to go from electronic (on disk) coordinates
+	    #to detector coordinates.  This also sets the readout corner.
+            amp.setDiskToChipLayout(afwGeom.Point2I(Col, Row), nQuarterAmp, flipLR, flipTB)
         #
         # Actually add amp to the Ccd
         #
-        ccd.addAmp(Col, Row, amp)
+        ccd.addAmp(amp)
     #
     # Information for the test code
     #
@@ -346,16 +355,6 @@ particular that it has an entry ampSerial which is a single-element list, the am
         except Exception, e:
             raftId = cameraGeom.Id(0, "unknown")
     #
-    # Discover how the per-amp data is laid out on disk; it's common for the data acquisition system to
-    # put together a single image for an entire CCD, but it isn't mandatory
-    #
-    diskFormatPol = geomPolicy.get("CcdDiskLayout")
-    hduPerAmp = diskFormatPol.get("HduPerAmp")
-    ampDiskLayout = {}
-    if hduPerAmp:
-        for p in diskFormatPol.getArray("Amp"):
-            ampDiskLayout[p.get("serial")] = (p.get("hdu"), p.get("flipLR"), p.get("flipTB"))
-    #
     # Build the Raft
     #
     raft = cameraGeom.Raft(raftId, nCol, nRow)
@@ -391,14 +390,6 @@ particular that it has an entry ampSerial which is a single-element list, the am
                          afwGeom.Point2D(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
 
-        #
-        # Set the on-disk layout parameters now that we've possibly rotated the Ccd to fit the raft
-        #
-        if hduPerAmp:
-            for amp in ccd:
-                hdu, flipLR, flipTB = ampDiskLayout[amp.getId().getSerial()]
-                nQuarterAmp = 0         # XXX For now; needs to come from policy
-                amp.setDiskLayout(amp.getAllPixels().getMin(), nQuarterAmp, flipLR, flipTB)
 
         if raftInfo is not None:
             # Guess the gutter between detectors
