@@ -25,7 +25,9 @@ public:
         set<FLUX_ERR>(fluxErr);
         set<RADIUS>(radius);
     }
-    AperturePhotometry(void) : Photometry() { }
+    AperturePhotometry() : Photometry() {
+        init();
+    }
 
     /// Add desired fields to the schema
     virtual void defineSchema(lsst::afw::detection::Schema::Ptr schema) {
