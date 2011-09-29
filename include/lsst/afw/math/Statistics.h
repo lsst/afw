@@ -191,6 +191,14 @@ public:
                         int const flags,
                         StatisticsControl const& sctrl = StatisticsControl());
 
+    template<typename ImageT, typename MaskT, typename VarianceT>
+    explicit Statistics(ImageT const &img,
+                        MaskT const &msk,
+                        VarianceT const &var,
+                        VarianceT const &weights,
+                        int const flags,
+                        StatisticsControl const& sctrl = StatisticsControl());
+
     Value getResult(Property const prop = NOTHING) const;
     
     double getError(Property const prop = NOTHING) const;
@@ -200,11 +208,6 @@ public:
     }
     
 private:
-
-    // return type for _getStandard
-    typedef boost::tuple<double, double, double, double, double, lsst::afw::image::MaskPixel> StandardReturn; 
-    typedef boost::tuple<double, double, double> MedianQuartileReturn;
-    
     long _flags;                        // The desired calculation
 
     int _n;                             // number of pixels in the image
@@ -221,31 +224,14 @@ private:
 
     StatisticsControl _sctrl;           // the control structure
 
-    template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
-    boost::shared_ptr<std::vector<typename ImageT::Pixel> >  _makeVectorCopy(ImageT const &img,
-                                                                             MaskT const &msk,
-                                                                             VarianceT const &var,
-                                                                             int const flags);
-        
     template<typename ImageT, typename MaskT, typename VarianceT>
-    StandardReturn _getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags);
-    template<typename ImageT, typename MaskT, typename VarianceT>
-    StandardReturn _getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var,
-                                int const flags, std::pair<double, double> clipinfo);
-
-    template<typename Pixel>
-    double _percentile(std::vector<Pixel> &img, double const percentile);   
-
-    template<typename Pixel>
-    MedianQuartileReturn _medianAndQuartiles(std::vector<Pixel> &img);
-    
-    inline double _varianceError(double const variance, int const n) const {
-        return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
-    }
-
+    explicit doStatistics(ImageT const &img,
+                          MaskT const &msk,
+                          VarianceT const &var,
+                          VarianceT const &weights,
+                          int const flags,
+                          StatisticsControl const& sctrl);
 };
-
-
             
 /*************************************  The factory functions **********************************/
 /**
