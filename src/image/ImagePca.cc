@@ -382,7 +382,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     if (nEigen == 1) {
         x(0) = b(0)/A(0, 0);
     } else {
-        x = A.jacobiSvd().solve(b);
+        x = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
     }
     //
     // Accumulate the best-fit-image in bestFitImage
