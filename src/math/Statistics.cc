@@ -163,11 +163,11 @@ namespace {
              typename HasValueGtMax,
              typename InClipRange,
              bool IsWeighted,
-             typename ImageT, typename MaskT, typename VarianceT>
+             typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     SumReturn sumImage(ImageT const &img,
                        MaskT const &msk,
                        VarianceT const &var,
-                       VarianceT const *weights,
+                       WeightT const &weights,
                        int const,
                        int const nCrude,
                        int const stride,
@@ -188,7 +188,7 @@ namespace {
         for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
             typename MaskT::x_iterator mptr = msk.row_begin(iY);
-            typename VarianceT::x_iterator vptr = weights ? weights->row_begin(iY) : var.row_begin(iY);
+            typename WeightT::x_iterator vptr = weights.row_begin(iY);
         
             for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
                  ptr != end; ++ptr, ++mptr, ++vptr) {
@@ -238,11 +238,11 @@ namespace {
              typename HasValueGtMax,
              typename InClipRange,
              bool IsWeighted,
-             typename ImageT, typename MaskT, typename VarianceT>
+             typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     SumReturn sumImage(ImageT const &img,
                        MaskT const &msk,
                        VarianceT const &var,
-                       VarianceT const *weights,
+                       WeightT const &weights,
                        int const flags,
                        int const nCrude,
                        int const stride,
@@ -269,11 +269,11 @@ namespace {
              typename HasValueGtMax,
              typename InClipRange,
              bool IsWeighted,
-             typename ImageT, typename MaskT, typename VarianceT>
+             typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     SumReturn sumImage(ImageT const &img,
                        MaskT const &msk,
                        VarianceT const &var,
-                       VarianceT const *weights,
+                       WeightT const &weights,
                        int const flags,
                        int const nCrude,
                        int const stride,
@@ -312,11 +312,11 @@ namespace {
     typedef boost::tuple<int, double, double, double, double, double,
                          lsst::afw::image::MaskPixel> StandardReturn;
 
-    template<typename ImageT, typename MaskT, typename VarianceT>
+    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     StandardReturn getStandard(ImageT const &img,
                                MaskT const &msk,
                                VarianceT const &var,
-                               VarianceT const *weights,
+                               WeightT const &weights,
                                int const flags,
                                bool const useMultiplyWeights,
                                int const andMask,
@@ -406,11 +406,11 @@ namespace {
      * @brief A routine to get standard stats: mean, variance, min, max with
      *   clipping on std::pair<double,double> = center, cliplimit
      */
-    template<typename ImageT, typename MaskT, typename VarianceT>
+    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     StandardReturn getStandard(ImageT const &img,
                                MaskT const &msk,
                                VarianceT const &var,
-                               VarianceT const *weights,
+                               WeightT const &weights,
                                int const flags,
                                std::pair<double, double> const clipinfo,
                                bool const useMultiplyWeights,
@@ -677,17 +677,41 @@ afwMath::Property afwMath::stringToStatisticsProperty(std::string const property
  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwMath::Statistics::Statistics(
+        ImageT const &img,                      ///< Image whose properties we want
+        MaskT const &msk,                       ///< Mask to control which pixels are included
+        VarianceT const &var,                   ///< Variances corresponding to values in Image
+        int const flags,                        ///< Describe what we want to calculate
+        afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+                                        ) :
+    _flags(flags), _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
+    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN), _sctrl(sctrl) {
+    doStatistics(img, msk, var, var, flags, sctrl);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+afwMath::Statistics::Statistics(
+        ImageT const &img,                      ///< Image whose properties we want
+        MaskT const &msk,                       ///< Mask to control which pixels are included
+        VarianceT const &var,                   ///< Variances corresponding to values in Image
+        WeightT const &weights,                 ///< Weights to use corresponding to values in Image
+        int const flags,                        ///< Describe what we want to calculate
+        afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+                                        ) :
+    _flags(flags), _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
+    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN), _sctrl(sctrl) {
+    doStatistics(img, msk, var, weights, flags, sctrl);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+void afwMath::Statistics::doStatistics(
     ImageT const &img,             ///< Image whose properties we want
     MaskT const &msk,              ///< Mask to control which pixels are included
     VarianceT const &var,          ///< Variances corresponding to values in Image
+    WeightT const &weights,        ///< Weights to use corresponding to values in Image
     int const flags,               ///< Describe what we want to calculate
-    StatisticsControl const& sctrl ///< Control how things are calculated
-                               ) :
-    _flags(flags),
-    _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
-    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
-    _sctrl(sctrl) {
-    
+    afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+                               )
+{
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
@@ -697,8 +721,6 @@ afwMath::Statistics::Statistics(
     assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
 
     // get the standard statistics
-    VarianceT *weights = NULL;  
-
     StandardReturn standard = getStandard(img, msk, var, weights, flags,
                                           _sctrl.getMultiplyWeights(), _sctrl.getAndMask(),
                                           _sctrl.getNanSafe(), _sctrl.getWeighted());        
@@ -747,7 +769,7 @@ afwMath::Statistics::Statistics(
                 // returns a tuple but we'll ignore clipped min, max, and sum;
                 StandardReturn clipped = getStandard(img, msk, var, weights, flags, clipinfo,
                                           _sctrl.getMultiplyWeights(), _sctrl.getAndMask(),
-                                          _sctrl.getNanSafe(), _sctrl.getWeighted());        
+                                          _sctrl.getNanSafe(), _sctrl.getWeighted());
                 
                 _meanclip = clipped.get<1>();
                 _varianceclip = clipped.get<2>();
@@ -986,11 +1008,25 @@ typedef afwImage::VariancePixel VPixel;
                               afwImage::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl);
 
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS_WEIGHT(TYPE)                       \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwImage::Image<VPixel> const &var,               \
+                              afwImage::Image<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl);
+
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
     template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
                               afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                               afwImage::Image<VPixel> const &var,               \
+                              int const flags, StatisticsControl const& sctrl);
+
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR_WEIGHT(TYPE)                       \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,          \
+                              afwImage::Image<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl);
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(TYPE)                       \
@@ -1015,7 +1051,9 @@ typedef afwImage::VariancePixel VPixel;
 
 #define INSTANTIATE_IMAGE_STATISTICS(T) \
     INSTANTIATE_MASKEDIMAGE_STATISTICS(T); \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS_WEIGHT(T); \
     INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(T); \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR_WEIGHT(T); \
     INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(T); \
     INSTANTIATE_REGULARIMAGE_STATISTICS(T); \
     INSTANTIATE_VECTOR_STATISTICS(T)
@@ -1025,4 +1063,5 @@ INSTANTIATE_IMAGE_STATISTICS(double);
 INSTANTIATE_IMAGE_STATISTICS(float);
 INSTANTIATE_IMAGE_STATISTICS(int);
 INSTANTIATE_IMAGE_STATISTICS(boost::uint16_t);
+
 /// \endcond

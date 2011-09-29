@@ -191,11 +191,11 @@ public:
                         int const flags,
                         StatisticsControl const& sctrl = StatisticsControl());
 
-    template<typename ImageT, typename MaskT, typename VarianceT>
+    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     explicit Statistics(ImageT const &img,
                         MaskT const &msk,
                         VarianceT const &var,
-                        VarianceT const &weights,
+                        WeightT const &weights,
                         int const flags,
                         StatisticsControl const& sctrl = StatisticsControl());
 
@@ -224,13 +224,13 @@ private:
 
     StatisticsControl _sctrl;           // the control structure
 
-    template<typename ImageT, typename MaskT, typename VarianceT>
-    explicit doStatistics(ImageT const &img,
-                          MaskT const &msk,
-                          VarianceT const &var,
-                          VarianceT const &weights,
-                          int const flags,
-                          StatisticsControl const& sctrl);
+    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    void doStatistics(ImageT const &img,
+                      MaskT const &msk,
+                      VarianceT const &var,
+                      WeightT const &weights,
+                      int const flags,
+                      StatisticsControl const& sctrl);
 };
             
 /*************************************  The factory functions **********************************/
@@ -284,7 +284,7 @@ Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img,
 
 
 /**
- * @brief Handle a straigh front-end to the constructor
+ * @brief Handle a straight front-end to the constructor
  * @relates Statistics
  */
 template<typename ImageT, typename MaskT, typename VarianceT>
@@ -297,7 +297,6 @@ Statistics makeStatistics(ImageT const &img,
     return Statistics(img, msk, var, flags, sctrl);
 }
 
-    
 /**
  * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
  * @relates Statistics
@@ -307,12 +306,33 @@ Statistics makeStatistics(
         lsst::afw::image::MaskedImage<Pixel> const &mimg, 
         int const flags,  
         StatisticsControl const& sctrl = StatisticsControl() 
-) {
+                         )
+{
     if (sctrl.getWeighted()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
     } else {
         MaskImposter<lsst::afw::image::VariancePixel> var;
         return Statistics(*mimg.getImage(), *mimg.getMask(), var, flags, sctrl);
+    }
+}
+
+/**
+ * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
+ * @relates Statistics
+ */
+template<typename Pixel>
+Statistics makeStatistics(
+        lsst::afw::image::MaskedImage<Pixel> const &mimg,
+        lsst::afw::image::Image<lsst::afw::image::VariancePixel> const &weights,
+        int const flags,  
+        StatisticsControl const& sctrl = StatisticsControl() 
+                         )
+{
+    if (sctrl.getWeighted()) {
+        return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), weights, flags, sctrl);
+    } else {
+        MaskImposter<lsst::afw::image::VariancePixel> var;
+        return Statistics(*mimg.getImage(), *mimg.getMask(), var, weights, flags, sctrl);
     }
 }
 

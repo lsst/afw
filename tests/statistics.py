@@ -26,15 +26,16 @@
 Tests for Statistics
 
 Run with:
-   ./Statistics.py
+   ./statistics.py
 or
    python
-   >>> import Statistics; Statistics.run()
+   >>> import statistics; statistics.run()
 """
 
 import sys
 import math
 import os
+import numpy as np
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -371,6 +372,24 @@ class StatisticsTestCase(unittest.TestCase):
         # ... variance = 0.1 is stored as 0.100000001
         self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
 
+    def testWeightedSum(self):
+        """Test using a weight image separate from the variance plane"""
+        ctrl = afwMath.StatisticsControl()
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10))
+        mi.getImage().set(1.0)
+        mi.getVariance().set(np.nan)
+
+        weights = afwImage.ImageF(mi.getDimensions())
+        weights.set(0.1)
+        
+        stats = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
+        self.assertEqual(stats.getValue(afwMath.SUM), 100.0)
+        
+        ctrl.setWeighted(True)
+        weighted = afwMath.makeStatistics(mi, weights, afwMath.SUM, ctrl)
+        # precision at "4 places" as images are floats
+        # ... variance = 0.1 is stored as 0.100000001
+        self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
         
     def testMeanClip(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
