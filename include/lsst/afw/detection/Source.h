@@ -194,7 +194,7 @@ public :
         setXAstrom(astrom.getX());
         setXAstromErr(astrom.getXErr());
         setYAstrom(astrom.getY());
-        setYAstrom(astrom.getYErr());
+        setYAstromErr(astrom.getYErr());
         // XXX flags
     }
 
