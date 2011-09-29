@@ -113,7 +113,7 @@ SWIG_SHARED_PTR_DERIVED(AperturePhotometry, lsst::afw::detection::Photometry,
 %include "lsst/afw/detection/Shape.h"
 %include "lsst/afw/detection/AperturePhotometry.h"
 
-inline %{
+%inline %{
     lsst::afw::detection::AperturePhotometry::Ptr
     cast_AperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
         return boost::shared_dynamic_cast<lsst::afw::detection::AperturePhotometry>(phot);
