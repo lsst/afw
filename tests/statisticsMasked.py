@@ -23,13 +23,13 @@
 #
 
 """
-Tests for Statistics
+Tests for statisticsMasked
 
 Run with:
-   ./Statistics.py
+   ./statisticsMasked.py
 or
    python
-   >>> import Statistics; Statistics.run()
+   >>> import statisticsMasked; statisticsMasked.run()
 """
 
 
