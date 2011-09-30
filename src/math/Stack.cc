@@ -98,6 +98,11 @@ void checkOnlyOneFlag(unsigned int flags) {
  ****************************************************************************/
 /*
  * A function to handle MaskedImage stacking
+ *
+ * A boolean template variable has been used to allow the compiler to generate the different instantiations
+ *   to handle cases when we are, or are not, weighting
+ *
+ * Additionally, we may or may not want to weight based on the variance -- another template boolean
  */
 template<typename PixelT, bool isWeighted, bool useVariance>
 typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
@@ -121,17 +126,19 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     //
     afwMath::StatisticsControl sctrlTmp(sctrl);
 
-    // If we're using wvector, they're multiplicative weights
     if (useVariance) {                  // weight using the variance image
+        assert(isWeighted);
+        assert(wvector.empty());
+        
         weights.resize(images.size());
 
         sctrlTmp.setWeighted(true);
-        sctrlTmp.setMultiplyWeights(false);
+        sctrlTmp.setMultiplyWeights(false); // inverse variance weighting
     } else if (isWeighted) {
         weights.assign(wvector.begin(), wvector.end());
 
         sctrlTmp.setWeighted(true);
-        sctrlTmp.setMultiplyWeights(true);
+        sctrlTmp.setMultiplyWeights(true); // We're using wvector so they're multiplicative weights
     }
     assert (weights.empty() || weights.size() == images.size());
 
@@ -214,8 +221,6 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
  * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
  *
  * All the work is done in the function comuteMaskedImageStack.
- * A boolean template variable has been used to allow the compiler to generate the different instantiations
- *   to handle cases when we are, or are not, dealing with the variance plane.
  */
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
@@ -239,21 +244,22 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     }
 }
 
+
+namespace {
 /****************************************************************************
  *
  * stack Images
  *
  * All the work is done in the function comuteImageStack.
  * A boolean template variable has been used to allow the compiler to generate the different instantiations
- *   to handle cases when we are, or are not, dealing with the variance plane.
+ *   to handle cases when we are, or are not, weighting
  *
  ****************************************************************************/
-
-
-namespace {
-/***********************************************************************************/
 /*
  * A function to compute some statistics of a stack of regular images
+ *
+ * A boolean template variable has been used to allow the compiler to generate the different instantiations
+ *   to handle cases when we are, or are not, weighting
  */
 template<typename PixelT, bool isWeighted>
 typename afwImage::Image<PixelT>::Ptr computeImageStack(
@@ -333,6 +339,9 @@ namespace {
 /**********************************************************************************/
 /*
  * A function to compute some statistics of a stack of vectors
+ *
+ * A boolean template variable has been used to allow the compiler to generate the different instantiations
+ *   to handle cases when we are, or are not, weighting
  */
 template<typename PixelT, bool isWeighted>
 typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
@@ -382,9 +391,7 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
  * @brief A function to handle stacking a vector of vectors
  * @relates Statistics
  *
- * All the work is done in the function comuteVectorStack.
- * A boolean template variable has been used to allow the compiler to generate the different instantiations
- *   to handle cases when we are, or are not, dealing with the variance plane.
+ * All the work is done in the function computeVectorStack.
  */
 template<typename PixelT>
 boost::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
@@ -413,8 +420,6 @@ boost::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
 /**
  * @brief A function to collapse a maskedImage to a one column image
  * @relates Statistics
- *
- *
  */
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
