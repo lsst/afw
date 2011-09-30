@@ -50,6 +50,7 @@
 namespace lsst {
 namespace afw {
 namespace math {
+    typedef lsst::afw::image::VariancePixel WeightPixel; // Type used for weights
             
 /**
  * @brief control what is calculated
@@ -276,7 +277,7 @@ Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img,
                           int const flags,  
                           StatisticsControl const& sctrl = StatisticsControl() 
                          ) {
-    MaskImposter<lsst::afw::image::VariancePixel> var;
+    MaskImposter<WeightPixel> var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -309,7 +310,7 @@ Statistics makeStatistics(
     if (sctrl.getWeighted()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
     } else {
-        MaskImposter<lsst::afw::image::VariancePixel> var;
+        MaskImposter<WeightPixel> var;
         return Statistics(*mimg.getImage(), *mimg.getMask(), var, flags, sctrl);
     }
 }
@@ -321,7 +322,7 @@ Statistics makeStatistics(
 template<typename Pixel>
 Statistics makeStatistics(
         lsst::afw::image::MaskedImage<Pixel> const &mimg,
-        lsst::afw::image::Image<lsst::afw::image::VariancePixel> const &weights,
+        lsst::afw::image::Image<WeightPixel> const &weights,
         int const flags,  
         StatisticsControl const& sctrl = StatisticsControl() 
                          )
@@ -329,7 +330,7 @@ Statistics makeStatistics(
     if (sctrl.getWeighted()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), weights, flags, sctrl);
     } else {
-        MaskImposter<lsst::afw::image::VariancePixel> var;
+        MaskImposter<WeightPixel> var;
         return Statistics(*mimg.getImage(), *mimg.getMask(), var, weights, flags, sctrl);
     }
 }
@@ -357,7 +358,7 @@ Statistics makeStatistics(
 ) {
     // make a phony mask that will be compiled out
     MaskImposter<lsst::afw::image::MaskPixel> const msk;
-    MaskImposter<lsst::afw::image::VariancePixel> const var;
+    MaskImposter<WeightPixel> const var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -402,7 +403,7 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
                          ) {
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
     MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
-    MaskImposter<lsst::afw::image::VariancePixel> var;
+    MaskImposter<WeightPixel> var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -412,15 +413,15 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
  */
 template<typename EntryT>
 Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
-                          std::vector<lsst::afw::image::VariancePixel> const &vweights, ///< Weights
+                          std::vector<WeightPixel> const &vweights, ///< Weights
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
     MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
-    MaskImposter<lsst::afw::image::VariancePixel> var;
+    MaskImposter<WeightPixel> var;
 
-    ImageImposter<lsst::afw::image::VariancePixel> weights(vweights);
+    ImageImposter<WeightPixel> weights(vweights);
     
     return Statistics(img, msk, var, weights, flags, sctrl);
 }
@@ -437,7 +438,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
     if (sctrl.getWeighted()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
     } else {
-        MaskImposter<lsst::afw::image::VariancePixel> var;
+        MaskImposter<WeightPixel> var;
         return Statistics(*mv.getImage(), *mv.getMask(), var, flags, sctrl);
     }
 }
@@ -448,21 +449,19 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
  */
 template<typename EntryT>
 Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< MaskedVector
-                          std::vector<lsst::afw::image::VariancePixel> const &vweights, ///< weights
+                          std::vector<WeightPixel> const &vweights, ///< weights
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
-    ImageImposter<lsst::afw::image::VariancePixel> weights(vweights);
+    ImageImposter<WeightPixel> weights(vweights);
 
     if (sctrl.getWeighted()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), weights, flags, sctrl);
     } else {
-        MaskImposter<lsst::afw::image::VariancePixel> var;
+        MaskImposter<WeightPixel> var;
         return Statistics(*mv.getImage(), *mv.getMask(), var, weights, flags, sctrl);
     }
 }
-
-
     
 }}}
 

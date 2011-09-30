@@ -43,10 +43,8 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath  = lsst::afw::math;
 namespace pexExcept = lsst::pex::exceptions;
 
-
 namespace {
-    typedef std::vector<lsst::afw::image::VariancePixel> WeightVector; // vector of weights (yes, really)
-
+    typedef std::vector<afwMath::WeightPixel> WeightVector; // vector of weights (yes, really)
 /*
  * A bit counter (to make sure that only one type of statistics has been requested)
  */
@@ -72,33 +70,42 @@ void checkOnlyOneFlag(unsigned int flags) {
     }
     
 }
-    
-} // end anonymous namespace
 
+    /*
+     * Check that we have objects, and the right number of weights (or none)
+     */
+    template<typename ObjectVectorT, typename WeightVectorT>
+    void checkObjectsAndWeights(ObjectVectorT const& objects,
+                                WeightVectorT const& wvector
+                               )
+    {
+        if (objects.size() == 0) {
+            throw LSST_EXCEPT(pexExcept::LengthErrorException, "Please specify at least one object to stack");
+        }
 
-
-
-
+        if (!wvector.empty() && wvector.size() != objects.size() ) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                              str(boost::format("Weight vector has different length "
+                                                "from number of objects to be stacked: %d v. %d")
+                                  % wvector.size() % objects.size()));
+        }
+    }
 
 /****************************************************************************
  *
  * stack MaskedImages
  *
  ****************************************************************************/
-
-namespace {
-    
 /*
  * A function to handle MaskedImage stacking
  */
-    
-template<typename PixelT, bool UseWeights>
+template<typename PixelT, bool isWeighted, bool useVariance>
 typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                              std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > const &images,
-                             afwMath::Property flags,               
+                             afwMath::Property flags,
                              afwMath::StatisticsControl const& sctrl,
-                             WeightVector const &wvector
-                                                          )
+                             WeightVector const &wvector=WeightVector()
+                                                                   )
 {
     // create the image to be returned
     typedef afwImage::MaskedImage<PixelT> Image;
@@ -115,17 +122,18 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     afwMath::StatisticsControl sctrlTmp(sctrl);
 
     // If we're using wvector, they're multiplicative weights
-    if (UseWeights) {
+    if (useVariance) {                  // weight using the variance image
+        weights.resize(images.size());
+
+        sctrlTmp.setWeighted(true);
+        sctrlTmp.setMultiplyWeights(false);
+    } else if (isWeighted) {
         weights.assign(wvector.begin(), wvector.end());
 
         sctrlTmp.setWeighted(true);
         sctrlTmp.setMultiplyWeights(true);
-    } else {                                // use the variance plane if we weight at all
-        weights.resize(images.size());
-
-        sctrlTmp.setMultiplyWeights(false); // n.b. we don't turn on weighting, just ensure inverse-variances
     }
-    assert (weights.size() == images.size());
+    assert (weights.empty() || weights.size() == images.size());
 
     // loop over x,y ... the loop over the stack to fill pixelSet
     // - get the stats on pixelSet and put the value in the output image at x,y
@@ -150,16 +158,18 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                 psPtr.mask()  = mskTmp;
                 psPtr.variance() = rows[i].variance();
 
-                // if we're not using the wvector weights, use the variance plane as weights
-                if (!UseWeights) {      // should check if sctrl wants to use weights before loading variance
+                if (useVariance) {      // we're weighting using the variance
                     *wtPtr = rows[i].variance();
                 }
 
                 ++rows[i];
             }
-            afwMath::Statistics stat =
-                afwMath::makeStatistics(pixelSet, weights,
-                                        flags | afwMath::NPOINT | afwMath::ERRORS, sctrlTmp);
+
+            afwMath::Property const eflags = static_cast<afwMath::Property>(flags |
+                                                                            afwMath::NPOINT | afwMath::ERRORS);
+            afwMath::Statistics stat = isWeighted ?
+                afwMath::makeStatistics(pixelSet, weights, eflags, sctrlTmp) :
+                afwMath::makeStatistics(pixelSet,          eflags, sctrlTmp);
             
             PixelT variance = ::pow(stat.getError(flags), 2);
             msk = stat.getOrMask();
@@ -191,7 +201,6 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     }
 
     return imgStack;
-
 }
     
 } // end anonymous namespace
@@ -213,32 +222,22 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images, //!< images to process
         afwMath::Property flags,                                           //!< Desired statistic (only one!)
         afwMath::StatisticsControl const& sctrl,                           //!< Fine control over processing
-        WeightVector const &wvector        //!< optional weights vector
-                                                              ) {
-    if (images.size() == 0) {
-        throw LSST_EXCEPT(pexExcept::LengthErrorException, "Please specify at least one object to stack");
-    }
-
+        WeightVector const &wvector                                        //!< optional weights vector
+                                                              )
+{
+    checkObjectsAndWeights(images, wvector);
     checkOnlyOneFlag(flags);
 
-    // if we're going to use constant weights 
-    if ( wvector.size() == images.size() ) {
-        return computeMaskedImageStack<PixelT, true>(images, flags, sctrl, wvector);
-        
-    // if we're weighting by the pixel variance        
-    } else if ( wvector.size() == 0 ) {
-        return computeMaskedImageStack<PixelT, false>(images, flags, sctrl, wvector);
-        
-    // Fail if the number weights isn't the same as the number of images to be weighted.
+    if (sctrl.getWeighted()) {
+        if (wvector.empty()) {
+            return computeMaskedImageStack<PixelT, true, true>(images, flags, sctrl); // use variance
+        } else {
+            return computeMaskedImageStack<PixelT, true, false>(images, flags, sctrl, wvector); // use wvector
+        }
     } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-                          "Weight vector must have same length as number of MaskedImages to be stacked.");
+        return computeMaskedImageStack<PixelT, false, false>(images, flags, sctrl);
     }
 }
-
-
-
-
 
 /****************************************************************************
  *
@@ -256,12 +255,12 @@ namespace {
 /*
  * A function to compute some statistics of a stack of regular images
  */
-template<typename PixelT>
+template<typename PixelT, bool isWeighted>
 typename afwImage::Image<PixelT>::Ptr computeImageStack(
         std::vector<typename afwImage::Image<PixelT>::Ptr > &images,  
         afwMath::Property flags,               
         afwMath::StatisticsControl const& sctrl,
-        WeightVector const &weights
+        WeightVector const &weights=WeightVector()
                                                         )
 {
     // create the image to be returned
@@ -287,7 +286,11 @@ typename afwImage::Image<PixelT>::Ptr computeImageStack(
                 (*pixelSet.getImage())(i, 0) = (*images[i])(x, y);
             }
             
-            (*imgStack)(x, y) = afwMath::makeStatistics(pixelSet, weights, flags, sctrlTmp).getValue();
+            if (isWeighted) {
+                (*imgStack)(x, y) = afwMath::makeStatistics(pixelSet, weights, flags, sctrlTmp).getValue();
+            } else {
+                (*imgStack)(x, y) = afwMath::makeStatistics(pixelSet, weights, flags, sctrlTmp).getValue();
+            }
         }
     }
 
@@ -307,15 +310,16 @@ typename afwImage::Image<PixelT>::Ptr afwMath::statisticsStack(
         afwMath::Property flags,               
         afwMath::StatisticsControl const& sctrl,
         WeightVector const &wvector
-                                                        ) {
+                                                        )
+{
+    checkObjectsAndWeights(images, wvector);
     checkOnlyOneFlag(flags);
 
-    if (!wvector.empty() && wvector.size() != images.size() ) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-                          str(boost::format("Weight vector has different length from number of objects to be stacked: %d v. %d") % wvector.size() % images.size()));
+    if (wvector.empty()) {
+        return computeImageStack<PixelT, false>(images, flags, sctrl);
+    } else {
+        return computeImageStack<PixelT, true>(images, flags, sctrl, wvector);
     }
-    
-    return computeImageStack<PixelT>(images, flags, sctrl, wvector);
 }
 
 /****************************************************************************
@@ -330,12 +334,12 @@ namespace {
 /*
  * A function to compute some statistics of a stack of vectors
  */
-template<typename PixelT>
+template<typename PixelT, bool isWeighted>
 typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
         std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,  
         afwMath::Property flags,               
         afwMath::StatisticsControl const& sctrl,
-        WeightVector const &wvector
+        WeightVector const &wvector=WeightVector()
                                                                       )
 {
     // create the image to be returned
@@ -361,7 +365,11 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
             psPtr.value() = (*vectors[i])[x];
         }
 
-        (*vecStack)[x] = afwMath::makeStatistics(pixelSet, wvector, flags, sctrlTmp).getValue(flags);
+        if (isWeighted) {
+            (*vecStack)[x] = afwMath::makeStatistics(pixelSet, wvector, flags, sctrlTmp).getValue(flags);
+        } else {
+            (*vecStack)[x] = afwMath::makeStatistics(pixelSet, flags, sctrlTmp).getValue(flags);
+        }
     }
 
     return vecStack;
@@ -386,14 +394,14 @@ boost::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
         WeightVector const &wvector
                                                                       )
 {
+    checkObjectsAndWeights(vectors, wvector);
     checkOnlyOneFlag(flags);
 
-    if (!wvector.empty() && wvector.size() != vectors.size() ) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-                          str(boost::format("Weight vector has different length from number of objects to be stacked: %d v. %d") % wvector.size() % vectors.size()));
+    if (wvector.empty()) {
+        return computeVectorStack<PixelT, false>(vectors, flags, sctrl);
+    } else {
+        return computeVectorStack<PixelT, true>(vectors, flags, sctrl, wvector);
     }
-
-    return computeVectorStack<PixelT>(vectors, flags, sctrl, wvector);
 }
 
 /**************************************************************************
@@ -401,8 +409,6 @@ boost::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
  * XY row column stacking
  *
  **************************************************************************/
-
-
 
 /**
  * @brief A function to collapse a maskedImage to a one column image
