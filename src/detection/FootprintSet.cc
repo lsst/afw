@@ -1224,7 +1224,7 @@ namespace {
             if (rRhs > 0) {
                 foot = growFootprint(*foot, rRhs, isotropic);
             }
-            foot->insertIntoImage(*idImage, ++id);
+            foot->insertIntoImage(*idImage, id += (1 << lhsIdNbit));
         }
 
         detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1), 1, false); // detect all pixels in rhs + lhs
