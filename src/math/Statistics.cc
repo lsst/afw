@@ -142,9 +142,9 @@ namespace {
     typedef AlwaysFalse     AlwaysF;
     
     /*********************************************************************************************************/
-    // return type for sumImage
-    typedef boost::tuple<int, double, double, double, double, double, lsst::afw::image::MaskPixel,
-                         double, double> SumReturn; 
+    // return type for processPixels
+    typedef boost::tuple<int, double, double, double, double, double,
+                         lsst::afw::image::MaskPixel> ProcessReturn; 
     
     /*
      * Functions which convert the booleans into calls to the proper templated types, one type per
@@ -163,20 +163,20 @@ namespace {
              typename HasValueLtMin,
              typename HasValueGtMax,
              typename InClipRange,
-             bool IsWeighted,
+             bool isWeighted,
              typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    SumReturn sumImage(ImageT const &img,
-                       MaskT const &msk,
-                       VarianceT const &var,
-                       WeightT const &weights,
-                       int const,
-                       int const nCrude,
-                       int const stride,
-                       double const meanCrude,
-                       double const cliplimit,
-                       bool const useMultiplyWeights,
-                       int const andMask
-                      )
+    ProcessReturn processPixels(ImageT const &img,
+                                MaskT const &msk,
+                                VarianceT const &var,
+                                WeightT const &weights,
+                                int const,
+                                int const nCrude,
+                                int const stride,
+                                double const meanCrude,
+                                double const cliplimit,
+                                bool const useMultiplyWeights,
+                                int const andMask
+                               )
     {
         int n = 0;
         double wsum = 0.0;
@@ -189,29 +189,31 @@ namespace {
         for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
             typename MaskT::x_iterator mptr = msk.row_begin(iY);
-            typename WeightT::x_iterator vptr = weights.row_begin(iY);
+            //typename VarianceT::x_iterator vptr = weights.row_begin(iY);
+            typename WeightT::x_iterator wptr = weights.row_begin(iY);
         
             for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
-                 ptr != end; ++ptr, ++mptr, ++vptr) {
+                 ptr != end; ++ptr, ++mptr, ++wptr) {
             
                 if (IsFinite()(*ptr) && !(*mptr & andMask) &&
                     InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
                 
                     double const delta = (*ptr - meanCrude);
 
-                    if (IsWeighted) {
+                    if (isWeighted) {
+                        double weight = *wptr;
                         if (useMultiplyWeights) {
-                            sum   += (*vptr)*delta;
-                            sumx2 += (*vptr)*delta*delta;
-                            wsum  += (*vptr);
+                            ;
                         } else {
-                            if (*vptr > 0) {
-                                sum   += delta/(*vptr);
-                                sumx2 += delta*delta/(*vptr);
-                                wsum  += 1.0/(*vptr);
+                            if (*wptr <= 0) {
+                                continue;
                             }
+                            weight = 1/weight;
                         }
-                    
+
+                        sum   += weight*delta;
+                        sumx2 += weight*delta*delta;
+                        wsum  += weight;
                     } else {
                         sum += delta;
                         sumx2 += delta*delta;
@@ -233,7 +235,7 @@ namespace {
 
         // estimate of population mean and variance
         double mean, variance;
-        if (IsWeighted) {
+        if (isWeighted) {
             mean = (wsum > 0) ? meanCrude + sum/wsum : NaN;
             variance = (n > 1) ?
                 sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
@@ -244,37 +246,37 @@ namespace {
             sum += n*meanCrude;
         }
 
-        return SumReturn(n, sum, sumx2, min, max, wsum, allPixelOrMask, mean, variance);
+        return ProcessReturn(n, sum, mean, variance, min, max, allPixelOrMask);
     }
 
     template<typename IsFinite,
              typename HasValueLtMin,
              typename HasValueGtMax,
              typename InClipRange,
-             bool IsWeighted,
+             bool isWeighted,
              typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    SumReturn sumImage(ImageT const &img,
-                       MaskT const &msk,
-                       VarianceT const &var,
-                       WeightT const &weights,
-                       int const flags,
-                       int const nCrude,
-                       int const stride,
-                       double const meanCrude,
-                       double const cliplimit,
-                       bool const useMultiplyWeights,
-                       int const andMask,
-                       bool doGetWeighted
-                      )
+    ProcessReturn processPixels(ImageT const &img,
+                                MaskT const &msk,
+                                VarianceT const &var,
+                                WeightT const &weights,
+                                int const flags,
+                                int const nCrude,
+                                int const stride,
+                                double const meanCrude,
+                                double const cliplimit,
+                                bool const useMultiplyWeights,
+                                int const andMask,
+                                bool doGetWeighted
+                               )
     {
         if (doGetWeighted) {
-            return sumImage<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, true>(
-                                                                                       img, msk, var, weights,
-                                                                                       flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
+            return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
         } else {
-            return sumImage<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, false>(
-                                                                                        img, msk, var, weights,
-                                                                                        flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
+            return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, false>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
         }
     }
 
@@ -282,33 +284,33 @@ namespace {
              typename HasValueLtMin,
              typename HasValueGtMax,
              typename InClipRange,
-             bool IsWeighted,
+             bool isWeighted,
              typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    SumReturn sumImage(ImageT const &img,
-                       MaskT const &msk,
-                       VarianceT const &var,
-                       WeightT const &weights,
-                       int const flags,
-                       int const nCrude,
-                       int const stride,
-                       double const meanCrude,
-                       double const cliplimit,
-                       bool const useMultiplyWeights,
-                       int const andMask,
-                       bool doCheckFinite,
-                       bool doGetWeighted
-                      )
+    ProcessReturn processPixels(ImageT const &img,
+                                MaskT const &msk,
+                                VarianceT const &var,
+                                WeightT const &weights,
+                                int const flags,
+                                int const nCrude,
+                                int const stride,
+                                double const meanCrude,
+                                double const cliplimit,
+                                bool const useMultiplyWeights,
+                                int const andMask,
+                                bool doCheckFinite,
+                                bool doGetWeighted
+                               )
     {
         if (doCheckFinite) {
-            return sumImage<CheckFinite, HasValueLtMin, HasValueGtMax, InClipRange, IsWeighted>(
-                                                                                                img, msk, var, weights,
-                                                                                                flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
-                                                                                                doGetWeighted);
+            return processPixels<CheckFinite, HasValueLtMin, HasValueGtMax, InClipRange, isWeighted>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
+                                 doGetWeighted);
         } else {
-            return sumImage<AlwaysTrue, HasValueLtMin, HasValueGtMax, InClipRange, IsWeighted>(
-                                                                                               img, msk, var, weights,
-                                                                                               flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
-                                                                                               doGetWeighted);
+            return processPixels<AlwaysTrue, HasValueLtMin, HasValueGtMax, InClipRange, isWeighted>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
+                                 doGetWeighted);
         }
     }
 
@@ -339,7 +341,7 @@ namespace {
     {
         // =====================================================
         // a crude estimate of the mean, used for numerical stability of variance
-        SumReturn loopValues;
+        ProcessReturn loopValues;
     
         int nCrude       = 0;
         double meanCrude = 0.0;
@@ -354,14 +356,15 @@ namespace {
         }
 
         double cliplimit = -1;              // unused
-        loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(img, msk, var, weights,
-                                                                       flags, nCrude, strideCrude, meanCrude,
-                                                                       cliplimit,
-                                                                       useMultiplyWeights, andMask,
-                                                                       doCheckFinite, doGetWeighted);
+        loopValues = processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(
+                                   img, msk, var, weights,
+                                   flags, nCrude, strideCrude, meanCrude,
+                                   cliplimit,
+                                   useMultiplyWeights, andMask,
+                                   doCheckFinite, doGetWeighted);
         nCrude = loopValues.get<0>();
-
         double sumCrude = loopValues.get<1>();
+        
         meanCrude = 0.0;
         if (nCrude > 0) {
             meanCrude = sumCrude/nCrude;
@@ -372,28 +375,28 @@ namespace {
         // - get the min and max as well
     
         if (flags & (afwMath::MIN | afwMath::MAX)) {
-            loopValues = sumImage<ChkFin, ChkMin, ChkMax, AlwaysT, true>(img, msk, var, weights,
-                                                                         flags, nCrude, 1, meanCrude,
-                                                                         cliplimit,
-                                                                         useMultiplyWeights, andMask,
-                                                                         true, doGetWeighted);
+            loopValues = processPixels<ChkFin, ChkMin, ChkMax, AlwaysT, true>(
+                                       img, msk, var, weights,
+                                       flags, nCrude, 1, meanCrude,
+                                       cliplimit,
+                                       useMultiplyWeights, andMask,
+                                       true, doGetWeighted);
         } else {
-            loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, weights,
-                                                                          flags, nCrude, 1, meanCrude,
-                                                                          cliplimit,
-                                                                          useMultiplyWeights, andMask,
-                                                                          doCheckFinite, doGetWeighted);
+            loopValues = processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(
+                                       img, msk, var, weights,
+                                       flags, nCrude, 1, meanCrude,
+                                       cliplimit,
+                                       useMultiplyWeights, andMask,
+                                       doCheckFinite, doGetWeighted);
         }
 
-        int n        = loopValues.get<0>();
-        double sum   = loopValues.get<1>();
-
-        double min   = loopValues.get<3>();
-        double max   = loopValues.get<4>();
-
+        int n        =    loopValues.get<0>();
+        double sum   =    loopValues.get<1>();
+        double mean  =    loopValues.get<2>();
+        double variance = loopValues.get<3>();
+        double min   =    loopValues.get<4>();
+        double max   =    loopValues.get<5>();
         afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-        double mean = loopValues.get<7>();
-        double variance = loopValues.get<8>();
     
         return StandardReturn(n, mean, variance, min, max, sum, allPixelOrMask);
     }
@@ -428,34 +431,34 @@ namespace {
     
         // =======================================================
         // Estimate the full precision variance using that crude mean
-        SumReturn loopValues;
+        ProcessReturn loopValues;
 
         int const stride = 1;
         int nCrude = 0;
     
         if (flags & (afwMath::MIN | afwMath::MAX)) {
-            loopValues = sumImage<ChkFin, ChkMin, ChkMax, ChkClip, true>(img, msk, var, weights,
-                                                                         flags, nCrude, stride, center,
-                                                                         cliplimit,
-                                                                         useMultiplyWeights, andMask,
-                                                                         true, doGetWeighted);
+            loopValues = processPixels<ChkFin, ChkMin, ChkMax, ChkClip, true>(
+                                       img, msk, var, weights,
+                 flags, nCrude, stride, center,
+                                       cliplimit,
+                                       useMultiplyWeights, andMask,
+                                       true, doGetWeighted);
         } else {                            // fast loop ... just the mean & variance
-            loopValues = sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(img, msk, var, weights,
-                                                                           flags, nCrude, stride,
-                                                                           center, cliplimit,
-                                                                           useMultiplyWeights, andMask,
-                                                                           doCheckFinite, doGetWeighted);
+            loopValues = processPixels<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(
+                                       img, msk, var, weights,
+                                       flags, nCrude, stride,
+                                       center, cliplimit,
+                                       useMultiplyWeights, andMask,
+                                       doCheckFinite, doGetWeighted);
         }
     
-        int n        = loopValues.get<0>();
-        double sum   = loopValues.get<1>();
-
-        double min   = loopValues.get<3>();
-        double max   = loopValues.get<4>();
-
+        int n        =    loopValues.get<0>();
+        double sum   =    loopValues.get<1>();
+        double mean  =    loopValues.get<2>();
+        double variance = loopValues.get<3>();
+        double min   =    loopValues.get<4>();
+        double max   =    loopValues.get<5>();
         afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-        double mean = loopValues.get<7>();
-        double variance = loopValues.get<8>();
         
         return StandardReturn(n, mean, variance, min, max, sum, allPixelOrMask);
     }
@@ -610,7 +613,7 @@ namespace {
                                                                            int const andMask
                                                                           )
     {
-        // Note to self == Steve: I'm not going to keep track of allPixelOrMask here ... sumImage() does that
+        // Note need to keep track of allPixelOrMask here ... processPixels() does that
         // and it always gets called
         boost::shared_ptr<std::vector<typename ImageT::Pixel> >
             imgcp(new std::vector<typename ImageT::Pixel>(0));
