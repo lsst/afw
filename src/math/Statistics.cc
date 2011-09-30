@@ -143,7 +143,8 @@ namespace {
     
     /*********************************************************************************************************/
     // return type for sumImage
-    typedef boost::tuple<int, double, double, double, double, double, lsst::afw::image::MaskPixel> SumReturn; 
+    typedef boost::tuple<int, double, double, double, double, double, lsst::afw::image::MaskPixel,
+                         double, double> SumReturn; 
     
     /*
      * Functions which convert the booleans into calls to the proper templated types, one type per
@@ -230,7 +231,20 @@ namespace {
             max = NaN;
         }
 
-        return SumReturn(n, sum, sumx2, min, max, wsum, allPixelOrMask);
+        // estimate of population mean and variance
+        double mean, variance;
+        if (IsWeighted) {
+            mean = (wsum > 0) ? meanCrude + sum/wsum : NaN;
+            variance = (n > 1) ?
+                sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
+            sum += meanCrude*wsum;
+        } else {
+            mean = (n) ? meanCrude + sum/n : NaN;
+            variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
+            sum += n*meanCrude;
+        }
+
+        return SumReturn(n, sum, sumx2, min, max, wsum, allPixelOrMask, mean, variance);
     }
 
     template<typename IsFinite,
@@ -255,12 +269,12 @@ namespace {
     {
         if (doGetWeighted) {
             return sumImage<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, true>(
-                     img, msk, var, weights,
-                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
+                                                                                       img, msk, var, weights,
+                                                                                       flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
         } else {
             return sumImage<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, false>(
-                     img, msk, var, weights,
-                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
+                                                                                        img, msk, var, weights,
+                                                                                        flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask);
         }
     }
 
@@ -287,19 +301,22 @@ namespace {
     {
         if (doCheckFinite) {
             return sumImage<CheckFinite, HasValueLtMin, HasValueGtMax, InClipRange, IsWeighted>(
-                     img, msk, var, weights,
-                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
-                     doGetWeighted);
+                                                                                                img, msk, var, weights,
+                                                                                                flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
+                                                                                                doGetWeighted);
         } else {
             return sumImage<AlwaysTrue, HasValueLtMin, HasValueGtMax, InClipRange, IsWeighted>(
-                     img, msk, var, weights,
-                     flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
-                     doGetWeighted);
+                                                                                               img, msk, var, weights,
+                                                                                               flags, nCrude, 1, meanCrude, cliplimit, useMultiplyWeights, andMask,
+                                                                                               doGetWeighted);
         }
     }
 
+    // return type for getStandard
+    typedef boost::tuple<int, double, double, double, double, double,
+                         lsst::afw::image::MaskPixel> StandardReturn;
+
     /* =========================================================================
-     * getStandard(img, flags)
      * @brief Compute the standard stats: mean, variance, min, max
      *
      * @param img    an afw::Image to compute the stats over
@@ -307,21 +324,17 @@ namespace {
      *
      * @note An overloaded version below is used to get clipped versions
      */
-    
-    // return type for getStandard
-    typedef boost::tuple<int, double, double, double, double, double,
-                         lsst::afw::image::MaskPixel> StandardReturn;
-
     template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    StandardReturn getStandard(ImageT const &img,
-                               MaskT const &msk,
-                               VarianceT const &var,
-                               WeightT const &weights,
-                               int const flags,
-                               bool const useMultiplyWeights,
-                               int const andMask,
-                               bool doCheckFinite,
-                               bool doGetWeighted
+    StandardReturn getStandard(ImageT const &img,              // image
+                               MaskT const &msk,               // mask
+                               VarianceT const &var,           // variance
+                               WeightT const &weights,         // weights to apply to each pixel
+                               int const flags,                // what to measure
+                               bool const useMultiplyWeights,  // weights are multiplicative (not inverse)
+                               int const andMask,              // mask of bad pixels
+                               bool doCheckFinite,             // check for NaN/Inf
+                               bool doGetWeighted,             // use the weights
+                               bool calcErrorFromInputVariance // estimate errors from input variance
                               )
     {
         // =====================================================
@@ -350,7 +363,7 @@ namespace {
 
         double sumCrude = loopValues.get<1>();
         meanCrude = 0.0;
-        if ( nCrude > 0 ) {
+        if (nCrude > 0) {
             meanCrude = sumCrude/nCrude;
         }
 
@@ -374,49 +387,35 @@ namespace {
 
         int n        = loopValues.get<0>();
         double sum   = loopValues.get<1>();
-        double sumx2 = loopValues.get<2>();
+
         double min   = loopValues.get<3>();
         double max   = loopValues.get<4>();
-        double wsum  = loopValues.get<5>();
+
         afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-    
-        // estimate of population mean and variance
-        double mean, variance;
-        if (doGetWeighted) {
-            mean = (wsum > 0) ? meanCrude + sum/wsum : NaN;
-            variance = (n > 1) ?
-                sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
-            sum += meanCrude*wsum;
-        } else {
-            mean = (n) ? meanCrude + sum/n : NaN;
-            variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
-            sum += n*meanCrude;
-        }
+        double mean = loopValues.get<7>();
+        double variance = loopValues.get<8>();
     
         return StandardReturn(n, mean, variance, min, max, sum, allPixelOrMask);
     }
 
     /* ==========================================================
-     * *overload getStandard(img, flags, clipinfo)
-     *
-     * @param img      an afw::Image to compute stats for
-     * @param flags    an int (bit field indicating which stats to compute
-     * @param clipinfo the center and cliplimit for the first clip iteration
      *
      * @brief A routine to get standard stats: mean, variance, min, max with
      *   clipping on std::pair<double,double> = center, cliplimit
      */
     template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    StandardReturn getStandard(ImageT const &img,
-                               MaskT const &msk,
-                               VarianceT const &var,
-                               WeightT const &weights,
-                               int const flags,
-                               std::pair<double, double> const clipinfo,
-                               bool const useMultiplyWeights,
-                               int const andMask,
-                               bool doCheckFinite,
-                               bool doGetWeighted                               
+    StandardReturn getStandard(ImageT const &img,                        // image
+                               MaskT const &msk,                         // mask
+                               VarianceT const &var,                     // variance
+                               WeightT const &weights,                   // weights to apply to each pixel
+                               int const flags,                          // what to measure
+                               std::pair<double, double> const clipinfo, // the center and cliplimit for the
+                                                                         // first clip iteration 
+                               bool const useMultiplyWeights,  // weights are multiplicative (not inverse)
+                               int const andMask,              // mask of bad pixels
+                               bool doCheckFinite,             // check for NaN/Inf
+                               bool doGetWeighted,             // use the weights
+                               bool calcErrorFromInputVariance // estimate errors from input variance
                               )
     {
         double const center = clipinfo.first;
@@ -450,29 +449,18 @@ namespace {
     
         int n        = loopValues.get<0>();
         double sum   = loopValues.get<1>();
-        double sumx2 = loopValues.get<2>();
+
         double min   = loopValues.get<3>();
         double max   = loopValues.get<4>();
-        double wsum  = loopValues.get<5>();
+
         afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-    
-        // estimate of population variance
-        double mean, variance;
-        if (doGetWeighted) {
-            mean = (wsum > 0) ? center + sum/wsum : NaN;
-            variance = (n > 1) ?
-                sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
-            sum += center*wsum;
-        } else {
-            mean = (n) ? center + sum/n : NaN;
-            variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
-            sum += n*center;
-        }
-    
+        double mean = loopValues.get<7>();
+        double variance = loopValues.get<8>();
+        
         return StandardReturn(n, mean, variance, min, max, sum, allPixelOrMask);
     }
 
-    inline double _varianceError(double const variance, int const n)
+    inline double varianceError(double const variance, int const n)
     {
         return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
     }
@@ -723,7 +711,8 @@ void afwMath::Statistics::doStatistics(
     // get the standard statistics
     StandardReturn standard = getStandard(img, msk, var, weights, flags,
                                           _sctrl.getMultiplyWeights(), _sctrl.getAndMask(),
-                                          _sctrl.getNanSafe(), _sctrl.getWeighted());        
+                                          _sctrl.getNanSafe(), _sctrl.getWeighted(),
+                                          _sctrl.getCalcErrorFromInputVariance());
 
     _n = standard.get<0>();
     _mean = standard.get<1>();
@@ -768,8 +757,9 @@ void afwMath::Statistics::doStatistics(
                 
                 // returns a tuple but we'll ignore clipped min, max, and sum;
                 StandardReturn clipped = getStandard(img, msk, var, weights, flags, clipinfo,
-                                          _sctrl.getMultiplyWeights(), _sctrl.getAndMask(),
-                                          _sctrl.getNanSafe(), _sctrl.getWeighted());
+                                                     _sctrl.getMultiplyWeights(), _sctrl.getAndMask(),
+                                                     _sctrl.getNanSafe(), _sctrl.getWeighted(),
+                                                     _sctrl.getCalcErrorFromInputVariance());
                 
                 _meanclip = clipped.get<1>();
                 _varianceclip = clipped.get<2>();
@@ -841,25 +831,25 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case VARIANCE:
         ret.first = _variance;
         if (_flags & ERRORS) {
-            ret.second = _varianceError(ret.first, _n);
+            ret.second = varianceError(ret.first, _n);
         }
         break;
       case STDEV:
         ret.first = sqrt(_variance);
         if (_flags & ERRORS) {
-            ret.second = 0.5*_varianceError(_variance, _n)/ret.first;
+            ret.second = 0.5*varianceError(_variance, _n)/ret.first;
         }
         break;
       case VARIANCECLIP:
         ret.first = _varianceclip;
         if (_flags & ERRORS) {
-            ret.second = _varianceError(ret.first, _n);
+            ret.second = varianceError(ret.first, _n);
         }
         break;
       case STDEVCLIP:
         ret.first = sqrt(_varianceclip);  // bug: nClip != _n
         if (_flags & ERRORS) {
-            ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first;
+            ret.second = 0.5*varianceError(_varianceclip, _n)/ret.first;
         }
         break;
 

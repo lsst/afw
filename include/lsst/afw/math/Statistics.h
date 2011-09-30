@@ -95,7 +95,7 @@ public:
         int numIter = 3,           ///< Number of iterations
         lsst::afw::image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
         bool isNanSafe = true,     ///< flag NaNs
-        bool isWeighted = false    ///< use inverse Variance plane for weights
+        bool isWeighted = false    ///< use weighted statistics (via a vector or an inverse variance)
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
@@ -103,7 +103,9 @@ public:
         _noGoodPixelsMask(lsst::afw::image::Mask<>::getPlaneBitMask("EDGE")),
         _isNanSafe(isNanSafe),
         _isWeighted(isWeighted),
-        _isMultiplyingWeights(false) {
+        _isMultiplyingWeights(false),
+        _calcErrorFromInputVariance(false)
+        {
         
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
@@ -116,8 +118,8 @@ public:
     bool getNanSafe() const { return _isNanSafe; }
     bool getWeighted() const { return _isWeighted; }
     bool getMultiplyWeights() const { return _isMultiplyingWeights; }
-    
-    
+    bool getCalcErrorFromInputVariance() const { return _calcErrorFromInputVariance; }
+        
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
     void setAndMask(int andMask) { _andMask = andMask; }
@@ -125,16 +127,19 @@ public:
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
     void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
     void setMultiplyWeights(bool isMultiplyingWeights) { _isMultiplyingWeights = isMultiplyingWeights; }
-    
+    void setCalcErrorFromInputVariance(bool calcErrorFromInputVariance) {
+        _calcErrorFromInputVariance = calcErrorFromInputVariance;
+    }
 
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
-    int _andMask;               // and-Mask to specify which mask planes to ignore
-    int _noGoodPixelsMask;      // mask to set if no values are acceptable
+    int _andMask;                         // and-Mask to specify which mask planes to ignore
+    int _noGoodPixelsMask;                // mask to set if no values are acceptable
     bool _isNanSafe;                      // Check for NaNs before running (slower)
     bool _isWeighted;                     // Use inverse variance to weight statistics.
     bool _isMultiplyingWeights;           // Treat variance plane as weights and multiply instead of dividing
+    bool _calcErrorFromInputVariance;      // Calculate errors from the input variances, if available
 };
 
             
