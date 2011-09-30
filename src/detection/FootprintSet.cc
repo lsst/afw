@@ -1231,6 +1231,9 @@ namespace {
         /*
          * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
          */
+
+#if 0 // This doesn't work when we grow the footprints; RHL to fix
+
         FindIdsInFootprint<image::Image<IdPixelT> > idFinder(*idImage);
 
         for (typename FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
@@ -1259,7 +1262,7 @@ namespace {
             // merge method and it probably isn't worth the trouble of hand-coding the merge
             std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
         }
-
+#endif
         return fs;
     }
 }
