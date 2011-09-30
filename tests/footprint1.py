@@ -548,11 +548,11 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetect.FootprintSetF(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
+        ds = afwDetect.makeFootprintSet(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
-        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10))
+        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -590,7 +590,7 @@ class FootprintSetTestCase(unittest.TestCase):
             
     def testFootprintsMasks(self):
         """Check that detectionSets have the proper mask bits set"""
-        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10), "OBJECT")
+        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
         objects = ds.getFootprints()
 
         if display:
@@ -604,7 +604,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
-        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10))
+        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
@@ -624,7 +624,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
-        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10))
+        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = ds.insertIntoImage(True)
@@ -638,7 +638,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""
-        ds = afwDetect.FootprintSetF(self.ms.getImage(), afwDetect.Threshold(10))
+        ds = afwDetect.makeFootprintSet(self.ms.getImage(), afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -649,7 +649,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         
-        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10), "OBJECT")
+        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)

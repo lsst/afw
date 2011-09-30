@@ -93,11 +93,11 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _subimgWidth = _imgWidth / _nxSample;
     _subimgHeight = _imgHeight / _nySample;
     for (int iX = 0; iX < _nxSample; ++iX) {
-        _xcen[iX] = std::floor((iX + 0.5)*_subimgWidth);
+        _xcen[iX] = (iX + 0.5)*_subimgWidth - 0.5;
         _xorig[iX] = iX * _subimgWidth;
     }
     for (int iY = 0; iY < _nySample; ++iY) {
-        _ycen[iY] = std::floor((iY + 0.5)*_subimgHeight);
+        _ycen[iY] = (iY + 0.5)*_subimgHeight - 0.5;
         _yorig[iY] = iY * _subimgHeight;
     }
 

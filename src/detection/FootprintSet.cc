@@ -44,6 +44,7 @@
  */
 #include <algorithm>
 #include <cassert>
+#include <set>
 #include <string>
 #include <typeinfo>
 #include "boost/format.hpp"
@@ -63,6 +64,8 @@ namespace geom = lsst::afw::geom;
 
 /************************************************************************************************************/
 namespace {
+    typedef unsigned short IdPixelT;    // Type of temporary Images used in merging Footprints
+
     struct Threshold_traits {
     };
     struct ThresholdLevel_traits : public Threshold_traits { // Threshold is a single number
@@ -139,6 +142,131 @@ template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
 }
 
+namespace {
+    /*
+     * Find all the Peaks within a Footprint
+     */
+    template <typename ImageT>
+    class FindPeaksInFootprint: public detection::FootprintFunctor<ImageT> {
+    public:
+        explicit FindPeaksInFootprint(ImageT const& image, ///< The image the source lives in
+                                      bool polarity,       ///< true if we're looking for -ve "peaks"
+                                      detection::Footprint::PeakList &peaks
+                                     ) : detection::FootprintFunctor<ImageT>(image),
+                                         _polarity(polarity), _peaks(peaks) {}
+        
+        /// \brief method called for each pixel by apply()
+        void operator()(typename ImageT::xy_locator loc, ///< locator pointing at the pixel
+                        int x,                           ///< column-position of pixel
+                        int y                            ///< row-position of pixel
+                       ) {
+            typename ImageT::Pixel val = loc(0, 0);
+
+            if (_polarity) {            // look for +ve peaks
+                if (loc(-1,  1) > val || loc( 0,  1) > val || loc( 1,  1) > val || 
+                    loc(-1,  0) > val ||                      loc( 1,  0) > val || 
+                    loc(-1, -1) > val || loc( 0, -1) > val || loc( 1, -1) > val) {
+                    return;
+                }
+            } else {                    // look for -ve "peaks" (pits)
+                if (loc(-1,  1) < val || loc( 0,  1) < val || loc( 1,  1) < val || 
+                    loc(-1,  0) < val ||                      loc( 1,  0) < val || 
+                    loc(-1, -1) < val || loc( 0, -1) < val || loc( 1, -1) < val) {
+                    return;
+                }
+            }
+
+            _peaks.push_back(PTR(detection::Peak)(new detection::Peak(x, y, val)));
+        }
+    private:
+        bool _polarity;
+        detection::Footprint::PeakList &_peaks;
+    };
+
+    /*
+     * Find the maximum (or minimum, if polarity is false) pixel in a Footprint
+     */
+    template <typename ImageT>
+    class FindMaxInFootprint : public detection::FootprintFunctor<ImageT> {
+    public:
+        explicit FindMaxInFootprint(ImageT const& image, ///< The image the source lives in
+                                    bool polarity        ///< true if we're looking for -ve "peaks"
+                                   ) : detection::FootprintFunctor<ImageT>(image),
+                                       _polarity(polarity), _x(0), _y(0),
+                                       _min( std::numeric_limits<double>::max()),
+                                       _max(-std::numeric_limits<double>::max()) {}
+
+        /// \brief Reset everything for a new Footprint
+        void reset() {
+            _x = _y = 0;
+            _min =  std::numeric_limits<double>::max();
+            _max = -std::numeric_limits<double>::max();
+        }
+        virtual void reset(detection::Footprint const&) {}
+
+        /// \brief method called for each pixel by apply()
+        void operator()(typename ImageT::xy_locator loc, ///< locator pointing at the pixel
+                        int x,                           ///< column-position of pixel
+                        int y                            ///< row-position of pixel
+                       ) {
+            typename ImageT::Pixel val = loc(0, 0);
+
+            if (_polarity) {
+                if (val > _max) {
+                    _max = val;
+                    _x = x;
+                    _y = y;
+                }
+            } else {
+                if (val < _min) {
+                    _min = val;
+                    _x = x;
+                    _y = y;
+                }
+            }
+        }
+
+        /// Return the Footprint's Peak
+        PTR(detection::Peak) makePeak() const {
+            return boost::make_shared<detection::Peak>(detection::Peak(_x, _y, _polarity ? _max : _min));
+        }
+    private:
+        bool _polarity;
+        int _x, _y;
+        double _min, _max;
+    };
+    /*
+     * Sort peaks by decreasing pixel value.  N.b. -ve peaks are sorted the same way as +ve ones
+     */
+    struct SortPeaks {
+	bool operator()(CONST_PTR(detection::Peak) a, CONST_PTR(detection::Peak) b) {
+            return a->getPeakValue() > b->getPeakValue();
+        }
+    };
+    
+    template<typename ImageT, typename ThresholdT>
+    void findPeaks(PTR(detection::Footprint) foot, ImageT const& img, bool polarity, ThresholdT)
+    {
+        FindPeaksInFootprint<ImageT> peakFinder(img, polarity, foot->getPeaks());
+        peakFinder.apply(*foot, 1);
+
+        std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
+
+        if (foot->getPeaks().empty()) {
+            FindMaxInFootprint<ImageT> maxFinder(img, polarity);
+            maxFinder.apply(*foot);
+            foot->getPeaks().push_back(maxFinder.makePeak());
+        }
+    }
+
+    // No need to search for peaks when processing a Mask
+    template<typename ImageT>
+    void findPeaks(PTR(detection::Footprint), ImageT const&, bool, ThresholdBitmask_traits)
+    {
+        ;
+    }
+}
+
 /************************************************************************************************************/
 /*
  * Functions to determine if a pixel's in a Footprint
@@ -187,7 +315,8 @@ static void findFootprints(
         image::Image<VariancePixelT> const *var,  // img's variance
         double const thresholdVal,                // threshold value defining Footprints
         bool const polarity,                      // if false, search _below_ thresholdVal
-        int const npixMin                         // minimum number of pixels in an object
+        int const npixMin,                        // minimum number of pixels in an object
+        bool const setPeaks                      // should I set the Peaks list?
 ) {
     int id;                             /* object ID */
     int in_span;                        /* object ID of current IdSpan */
@@ -306,7 +435,7 @@ static void findFootprints(
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) { // <= size to catch the last object
             if (i == spans.size() || spans[i]->id != id) {
-                detection::Footprint::Ptr fp(new detection::Footprint(i - i0, _region));
+                PTR(detection::Footprint) fp(new detection::Footprint(i - i0, _region));
             
                 for (; i0 < i; i0++) {
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
@@ -322,6 +451,15 @@ static void findFootprints(
             }
         }
     }
+/*
+ * Find all peaks within those Footprints
+ */
+    if (setPeaks) {
+        typedef typename detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintList::iterator fiterator;
+        for (fiterator ptr = _footprints->begin(), end = _footprints->end(); ptr != end; ++ptr) {
+            findPeaks(*ptr, img, polarity, ThresholdTraitT());
+        }
+    }
 }
 
 /************************************************************************************************************/
@@ -332,7 +470,8 @@ template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         image::Image<ImagePixelT> const &img, //!< Image to search for objects
         Threshold const &threshold,     //!< threshold to find objects
-        int const npixMin              //!< minimum number of pixels in an object
+        int const npixMin,              //!< minimum number of pixels in an object
+        bool const setPeaks            //!< should I set the Peaks list?
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
     _region(img.getBBox(image::PARENT))
@@ -345,7 +484,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         img,
         NULL,
         threshold.getValue(img), threshold.getPolarity(),
-        npixMin
+        npixMin,
+        setPeaks
     );
 }
 
@@ -356,7 +496,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         image::Mask<MaskPixelT> const &msk, //!< Image to search for objects
         Threshold const &threshold,     //!< threshold to find objects
-        int const npixMin              //!< minimum number of pixels in an object
+        int const npixMin               //!< minimum number of pixels in an object
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
     _region(msk.getBBox(image::PARENT))
@@ -364,12 +504,14 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     switch (threshold.getType()) {
       case Threshold::BITMASK:
         findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
-            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(), npixMin);
+            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(),
+            npixMin, false);
         break;
 
       case Threshold::VALUE:
         findFootprints<MaskPixelT, MaskPixelT, float, ThresholdLevel_traits>(
-            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(), npixMin);
+            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(),
+            npixMin, false);
         break;
 
       default:
@@ -395,7 +537,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
         Threshold const &threshold,     //!< threshold to find objects
         std::string const &planeName,   //!< mask plane to set (if != "")
-        int const npixMin              //!< minimum number of pixels in an object
+        int const npixMin,              //!< minimum number of pixels in an object
+        bool const setPeaks            //!< should I set the Peaks list?
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
     _region(
@@ -414,7 +557,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
             maskedImg.getVariance().get(), 
             threshold.getValue(maskedImg),
             threshold.getPolarity(),
-            npixMin
+            npixMin,
+            setPeaks
                                                                                   );
         break;
       default:
@@ -425,7 +569,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
             maskedImg.getVariance().get(), 
             threshold.getValue(maskedImg),
             threshold.getPolarity(),
-            npixMin
+            npixMin,
+            setPeaks
                                                                                   );
         break;
     }
@@ -479,7 +624,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     Threshold const &,                                   //!< threshold to find objects
     int,                                                 //!< Footprint should include this pixel (column)
     int,                                                 //!< Footprint should include this pixel (row) 
-    std::vector<Peak> const *       //!< Footprint should include at most one of these peaks
+    std::vector<PTR(Peak)> const *      //!< Footprint should include at most one of these peaks
 ) : lsst::daf::data::LsstBase(typeid(this)),
     _footprints(new FootprintList()),
     _region(geom::Point2I(img.getX0(), img.getY0()),
@@ -891,6 +1036,16 @@ pmFindFootprintAtPoint(psImage const *img,      // image to search
 
 /************************************************************************************************************/
 /**
+ * Construct an empty FootprintSet given a region that its footprints would have lived in
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(geom::Box2I region ///< the desired region
+                                                              ) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _footprints(PTR(FootprintList)(new FootprintList)), _region(region) {
+}
+
+/**
  * Copy constructor
  */
 template<typename ImagePixelT, typename MaskPixelT>
@@ -911,13 +1066,32 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::operator=(FootprintSet const& 
     return *this;
 }
 
+/************************************************************************************************************/
+/**
+ * Merge a FootprintSet into *this
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+void detection::FootprintSet<ImagePixelT, MaskPixelT>::merge(
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const& rhs, ///< the Footprints to merge
+        int tGrow,                                                  ///< No. of pixels to grow this Footprints
+        int rGrow,                                                  ///< No. of pixels to grow rhs Footprints
+        bool isotropic                                              ///< Use (expensive) isotropic grow
+                                                            )
+{
+    detection::FootprintSet<IdPixelT, MaskPixelT> fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, isotropic);
+    /*
+     * Swap the new FootprintSet into place
+     */
+    this->swap(fs);
+}
+
 /// Set the corners of the FootprintSet's MaskedImage to region
 ///
 /// N.b. updates all the Footprints' regions too
 //
 template<typename ImagePixelT, typename MaskPixelT>
 void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(
-    geom::Box2I const& region // desired region
+    geom::Box2I const& region ///< desired region
 ) {
     _region = region;
 
@@ -929,6 +1103,167 @@ void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(
 }
 
 /************************************************************************************************************/
+namespace {
+    /*
+     * Find the list of pixel values that lie in a Footprint
+     *
+     * Used when the Footprints are constructed from an Image containing Footprint indices
+     */
+    template <typename ImageT>
+    class FindIdsInFootprint: public detection::FootprintFunctor<ImageT> {
+    public:
+        explicit FindIdsInFootprint(ImageT const& image ///< The image the source lives in
+                                   ) : detection::FootprintFunctor<ImageT>(image), _ids(), _old(0) {}
+        /// \brief Reset everything for a new Footprint
+        void reset() {
+            _ids.clear();
+            _old = 0;
+        }
+        
+        /// \brief method called for each pixel by apply()
+        void operator()(typename ImageT::xy_locator loc, ///< locator pointing at the pixel
+                        int x,                           ///< column-position of pixel
+                        int y                            ///< row-position of pixel
+                       ) {
+            typename ImageT::Pixel val = loc(0, 0);
+
+            if (val != _old) {
+                _ids.insert(val);
+                _old = val;
+            }
+        }
+
+        std::set<typename ImageT::Pixel> const& getIds() const {
+            return _ids;
+        }
+
+    private:
+        std::set<typename ImageT::Pixel> _ids;
+        typename ImageT::Pixel _old;
+    };
+}
+
+/************************************************************************************************************/
+namespace {
+    /*
+     * Return the number of bits required to represent a unsigned long
+     */
+    int nbit(unsigned long const n) {
+        if (n == 0) {
+            return 0;
+        }
+
+        unsigned int const log2 = ::log(n)/::log(2);   // rounds down
+        if ((1U << log2) == n) {
+            return log2;
+        } else {
+            return log2 + 1;
+        }
+    }
+    /*
+     * Worker routine for merging two FootprintSets, possibly growing them as we proceed
+     */
+    template<typename ImagePixelT, typename MaskPixelT>
+    detection::FootprintSet<IdPixelT, MaskPixelT>
+    mergeFootprintSets(
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const &lhs, // the FootprintSet to be merged to
+        int rLhs,                                         // Grow lhs Footprints by this many pixels
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const &rhs, // the FootprintSet to be merged into lhs
+        int rRhs,                                         // Grow rhs Footprints by this many pixels
+        bool isotropic                  // Grow isotropically (as opposed to a Manhattan metric)
+                                        // n.b. Isotropic grows are significantly slower
+                      )
+    {
+        typedef detection::Footprint Footprint;
+        typedef detection::FootprintSet<ImagePixelT, MaskPixelT> FootprintSet;
+        typedef typename FootprintSet::FootprintList FootprintList;
+        
+        geom::Box2I const region = lhs.getRegion();
+        if (region != rhs.getRegion()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              boost::format("The two FootprintSets must have the same region").str());
+        }
+        
+        image::Image<IdPixelT>::Ptr idImage(new image::Image<IdPixelT>(region));
+        idImage->setXY0(region.getMinX(), region.getMinY());
+        *idImage = 0;
+
+        FootprintList const& lhsFootprints = *lhs.getFootprints();
+        FootprintList const& rhsFootprints = *rhs.getFootprints();
+        int const nLhs = lhsFootprints.size();
+        int const nRhs = rhsFootprints.size();
+        /*
+         * In general the lists of Footprints overlap, so we need to make sure that the IDs can be
+         * uniquely recovered from the idImage.  We do this by allocating a range of bits to the lhs IDs
+         */
+        int const lhsIdNbit = nbit(nLhs);
+        int const lhsIdMask = (1 << lhsIdNbit) - 1;
+
+        if ((nRhs << lhsIdNbit) > std::numeric_limits<IdPixelT>::max() - 1) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+                              (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef")
+                               % nLhs % nRhs).str());
+        }
+
+        int id = 0;                         // the ID inserted into the image
+        for (typename FootprintList::const_iterator ptr = lhsFootprints.begin(), end = lhsFootprints.end();
+             ptr != end; ++ptr) {
+            CONST_PTR(Footprint) foot = *ptr;
+
+            if (rLhs > 0) {
+                foot = growFootprint(*foot, rLhs, isotropic);
+            }
+            foot->insertIntoImage(*idImage, ++id);
+        }
+
+        id = lhsIdMask;
+        for (typename FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end();
+             ptr != end; ++ptr) {
+            CONST_PTR(Footprint) foot = *ptr;
+
+            if (rRhs > 0) {
+                foot = growFootprint(*foot, rRhs, isotropic);
+            }
+            foot->insertIntoImage(*idImage, id += (1 << lhsIdNbit));
+        }
+
+        detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1), 1, false); // detect all pixels in rhs + lhs
+        /*
+         * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
+         */
+        FindIdsInFootprint<image::Image<IdPixelT> > idFinder(*idImage);
+
+        for (typename FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
+             ptr != end; ++ptr) {
+            PTR(Footprint) foot = *ptr;
+
+            idFinder.apply(*foot);
+
+            Footprint::PeakList &peaks = foot->getPeaks();
+
+            for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
+                     idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
+                unsigned int indx = *idptr;
+                if ((indx & lhsIdMask) > 0) {
+                    Footprint::PeakList const& oldPeaks = lhsFootprints[(indx & lhsIdMask) - 1]->getPeaks();
+                    peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+                }
+                indx >>= lhsIdNbit;
+
+                if (indx > 0) {
+                    Footprint::PeakList const& oldPeaks = rhsFootprints[indx - 1]->getPeaks();
+                    peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+                }
+            }
+            // we could be cleverer here as both lists are already sorted, but std::vector has no
+            // merge method and it probably isn't worth the trouble of hand-coding the merge
+            std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
+        }
+
+        return fs;
+    }
+}
+
 /**
  * Grow all the Footprints in the input FootprintSet, returning a new FootprintSet
  *
@@ -950,26 +1285,60 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                           (boost::format("I cannot grow by negative numbers: %d") % r).str());
     }
-
-    typedef unsigned short ImageT;
+#if 1
+    detection::FootprintSet<IdPixelT, MaskPixelT> fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0,
+                                                                          rhs, r, isotropic);
+#else
     geom::Box2I region = rhs.getRegion();
-    image::Image<ImageT>::Ptr idImage(
-        new image::Image<ImageT>(region)
+    image::Image<IdPixelT>::Ptr idImage(
+        new image::Image<IdPixelT>(region)
     );
     idImage->setXY0(region.getMinX(), region.getMinY());
     *idImage = 0;
 
-    CONST_PTR(FootprintList) rhsFootprints = rhs.getFootprints();
-    for (FootprintList::const_iterator ptr = rhsFootprints->begin(), end = rhsFootprints->end();
-         ptr != end; ++ptr) {
-        Footprint::Ptr gfoot = growFootprint(**ptr, r, isotropic);
-        gfoot->insertIntoImage(*idImage, 10); // The value 10 is random; more than 1 anyway
+    FootprintList const& rhsFootprints = *rhs.getFootprints();
+    if (static_cast<int>(rhsFootprints.size()) > std::numeric_limits<IdPixelT>::max() - 1) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+                          (boost::format("%d footprints > %d; change IdPixelT's typedef")
+                           % rhsFootprints.size() % (std::numeric_limits<IdPixelT>::max() - 1)).str());
     }
 
-    FootprintSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
-    swap(ds);
-}
+    int id = 0;                         // the ID inserted into the image
+    for (FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end();
+         ptr != end; ++ptr) {
+        Footprint::Ptr gfoot = growFootprint(**ptr, r, isotropic);
+        gfoot->insertIntoImage(*idImage, ++id); // 1 more than the index into rhsFootprints
+    }
 
+    FootprintSet<IdPixelT> fs(*idImage, Threshold(1), 1, false);
+    /*
+     * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
+     */
+    FindIdsInFootprint<image::Image<IdPixelT> > idFinder(*idImage);
+
+    for (FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
+         ptr != end; ++ptr) {
+        PTR(Footprint) foot = *ptr;
+
+        idFinder.apply(*foot);
+
+        detection::Footprint::PeakList &peaks = foot->getPeaks();
+
+        for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
+                                        idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
+            detection::Footprint::PeakList const& rhsPeaks = rhsFootprints[*idptr - 1]->getPeaks();
+            peaks.insert(peaks.end(), rhsPeaks.begin(), rhsPeaks.end());
+        }
+        // we could be cleverer here as both lists are already sorted, but std::vector has no
+        // merge method and it probably isn't worth the trouble of hand-coding the merge
+        std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
+    }
+#endif
+    /*
+     * Finally swap the new FootprintSet into place
+     */
+    swap(fs);
+}
 
 /************************************************************************************************************/
 /**

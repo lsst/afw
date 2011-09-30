@@ -36,7 +36,10 @@ import math
 import os
 import sys
 import unittest
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    pyfits = None
 
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
@@ -919,8 +922,11 @@ def makeDefectsFromFits(filename):
     """Create a dictionary of DefectSets from a fits file with one ccd worth
     of defects per extension.
 
-       The dictionay is indexed by an Id object --- remember to compare by str(id) not object identity
+       The dictionary is indexed by an Id object --- remember to compare by str(id) not object identity
     """
+    if not pyfits:
+        raise RuntimeError("Import of pyfits failed, so makeDefectsFromFits isn't available")
+
     hdulist = pyfits.open(filename)
     defects = {}
     for hdu in hdulist[1:]:

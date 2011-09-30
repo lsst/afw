@@ -30,8 +30,10 @@
  *
  */
 #include <vector>
+#include <cassert>
 #include "boost/shared_ptr.hpp"
 
+#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Stack.h"
 #include "lsst/afw/math/MaskedVector.h"
@@ -163,9 +165,29 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
             
             PixelT variance = ::pow(stat.getError(flags), 2);
             msk = stat.getOrMask();
-            if (stat.getValue(afwMath::NPOINT) == 0) {
+            int const npoint = stat.getValue(afwMath::NPOINT);
+            if (npoint == 0) {
                 msk = sctrlTmp.getNoGoodPixelsMask();
+            } else if (npoint == 1) {   // the population variance is NaN (we divided by N - 1)
+                assert(lsst::utils::isnan(variance));
+                int ngood = 0;          // good (based on mask checks)
+                for (unsigned int i = 0; i < images.size(); ++i) {
+                    x_iterator ptr = rows[i]; ptr += -1;
+                    if (!(ptr.mask() & sctrl.getAndMask())) {
+                        ++ngood;
+                        variance = ptr.variance();
+                    }
+                }
+#if 0
+                assert(ngood == 1);     // we don't handle the case that images were clipped so ngood > npoint
+#else
+                if (ngood != 1) {
+                    assert(ngood > 1);
+                    std::cerr << "ngood = " << ngood << " complain to RHL" << std::endl;
+                }
+#endif
             }
+
             *ptr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(flags), msk, variance);
         }
     }

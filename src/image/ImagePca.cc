@@ -446,8 +446,10 @@ double do_updateBadPixels(
                         float const var = iptr.variance()/(flux_i*flux_i);
                         float const ivar = 1.0/var;
 
-                        *mptr += value*ivar;
-                        *wptr += ivar;
+                        if (lsst::utils::isfinite(value*ivar)) {
+                            *mptr += value*ivar;
+                            *wptr += ivar;
+                        }
                     }
                 }
             }

@@ -160,7 +160,7 @@ class CoordTestCase(unittest.TestCase):
         coordList.append([(0.0, 0.0), (1.0, 0.0, 0.0)])
         coordList.append([(90.0, 0.0), (0.0, 1.0, 0.0)])
         coordList.append([(0.0, 90.0), (0.0, 0.0, 1.0)])
-        
+
         for equ, p3dknown in coordList:
             
             # convert to p3d
@@ -177,7 +177,64 @@ class CoordTestCase(unittest.TestCase):
             self.assertAlmostEqual(equBack.getRa(afwCoord.DEGREES), equ[0])
             self.assertAlmostEqual(equBack.getDec(afwCoord.DEGREES), equ[1])
             
+
+        # and try some un-normalized ones too
+        coordList = []
+        # too long
+        coordList.append([(0.0, 0.0), (1.3, 0.0, 0.0)])
+        coordList.append([(90.0, 0.0), (0.0, 1.2, 0.0)])
+        coordList.append([(0.0, 90.0), (0.0, 0.0, 2.3)])
+        # too short
+        coordList.append([(0.0, 0.0), (0.5, 0.0, 0.0)])
+        coordList.append([(90.0, 0.0), (0.0, 0.7, 0.0)])
+        coordList.append([(0.0, 90.0), (0.0, 0.0, 0.9)])
         
+        for equKnown, p3d in coordList:
+            
+            # convert to Coord
+            epoch = 2000.0
+            norm = True
+            c = afwCoord.Fk5Coord(afwGeom.Point3D(p3d), epoch, norm)
+            ra, dec = c.getRa(afwCoord.DEGREES), c.getDec(afwCoord.DEGREES)
+            print "Un-normed p3d: ", p3d, "-->", equKnown, ra, dec
+            self.assertAlmostEqual(equKnown[0], ra)
+            self.assertAlmostEqual(equKnown[1], dec)
+
+
+    def testTicket1761(self):
+        """Ticket 1761 found that non-normalized inputs caused failures. """
+
+        c = afwCoord.Coord(afwGeom.Point3D(0,1,0))
+        dfltLong = 0.0
+        
+        norm = False
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, dfltLong, norm)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, dfltLong, norm)
+        sep1 = c.angularSeparation(c1, afwCoord.DEGREES)
+        sep2 = c.angularSeparation(c2, afwCoord.DEGREES)
+        known1 = 45.286483672428574
+        known2 = 55.550098012046512
+        print "sep: ", sep1, sep2, known1, known2
+
+        # these weren't normalized, and should get the following *incorrect* answers
+        self.assertAlmostEqual(sep1, known1)
+        self.assertAlmostEqual(sep2, known2)
+
+        ######################
+        # normalize and sep1, sep2 should both equal 54.7356
+        norm = True
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, dfltLong, norm)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, dfltLong, norm)
+        sep1 = c.angularSeparation(c1, afwCoord.DEGREES)
+        sep2 = c.angularSeparation(c2, afwCoord.DEGREES)
+        known = 54.735610317245339
+        print "sep: ", sep1, sep2, known
+
+        # these weren't normalized, and should get the following *incorrect* answers
+        self.assertAlmostEqual(sep1, known)
+        self.assertAlmostEqual(sep2, known)
+
+
     def testNames(self):
         """Test the names of the Coords (Useful with Point2D form)"""
 
