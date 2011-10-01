@@ -43,13 +43,18 @@
 #include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "boost/shared_ptr.hpp"
-#include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/MaskedVector.h"
 
 namespace lsst {
 namespace afw {
+    namespace image {
+        template<typename> class Image;
+        template<typename, typename, typename> class MaskedImage;
+    }
 namespace math {
+    template<typename> class MaskedVector; // forward declaration
+
     typedef lsst::afw::image::VariancePixel WeightPixel; // Type used for weights
             
 /**
@@ -85,6 +90,7 @@ Property stringToStatisticsProperty(std::string const property);
  * 
  */
 class StatisticsControl {
+    typedef enum { FALSE=0, TRUE=1, NONE } Boolean; // initial state is None
 public:
 
     typedef boost::shared_ptr<StatisticsControl> Ptr;
@@ -95,18 +101,16 @@ public:
         int numIter = 3,           ///< Number of iterations
         lsst::afw::image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
         bool isNanSafe = true,     ///< flag NaNs
-        bool isWeighted = false    ///< use weighted statistics (via a vector or an inverse variance)
+        int useWeights = NONE      ///< use weighted statistics (via a vector or an inverse variance)
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
         _noGoodPixelsMask(lsst::afw::image::Mask<>::getPlaneBitMask("EDGE")),
         _isNanSafe(isNanSafe),
-        _isWeighted(isWeighted),
-        _isMultiplyingWeights(false),
+        _useWeights(useWeights == 0 ? FALSE : (useWeights == 1) ? TRUE : NONE),
         _calcErrorFromInputVariance(false)
-        {
-        
+    {
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
     }
@@ -116,8 +120,8 @@ public:
     int getAndMask() const { return _andMask; }
     int getNoGoodPixelsMask() const { return _noGoodPixelsMask; }
     bool getNanSafe() const { return _isNanSafe; }
-    bool getWeighted() const { return _isWeighted; }
-    bool getMultiplyWeights() const { return _isMultiplyingWeights; }
+    bool getWeighted() const { return _useWeights == TRUE ? true : false; }
+    bool getWeightedIsSet() const { return _useWeights != NONE ? true : false; }
     bool getCalcErrorFromInputVariance() const { return _calcErrorFromInputVariance; }
         
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
@@ -125,8 +129,7 @@ public:
     void setAndMask(int andMask) { _andMask = andMask; }
     void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
-    void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
-    void setMultiplyWeights(bool isMultiplyingWeights) { _isMultiplyingWeights = isMultiplyingWeights; }
+    void setWeighted(bool useWeights) { _useWeights = useWeights ? TRUE : FALSE; }
     void setCalcErrorFromInputVariance(bool calcErrorFromInputVariance) {
         _calcErrorFromInputVariance = calcErrorFromInputVariance;
     }
@@ -137,11 +140,9 @@ private:
     int _andMask;                         // and-Mask to specify which mask planes to ignore
     int _noGoodPixelsMask;                // mask to set if no values are acceptable
     bool _isNanSafe;                      // Check for NaNs before running (slower)
-    bool _isWeighted;                     // Use inverse variance to weight statistics.
-    bool _isMultiplyingWeights;           // Treat variance plane as weights and multiply instead of dividing
-    bool _calcErrorFromInputVariance;      // Calculate errors from the input variances, if available
+    Boolean _useWeights;                      // Calculate weighted statistics (int because of 3-valued logic)
+    bool _calcErrorFromInputVariance;     // Calculate errors from the input variances, if available
 };
-
             
 /**
  * @ingroup afw
@@ -230,6 +231,7 @@ private:
     lsst::afw::image::MaskPixel _allPixelOrMask;   //  the 'or' of all masked pixels
 
     StatisticsControl _sctrl;           // the control structure
+    bool _weightsAreMultiplicative;     // Multiply by weights rather than dividing by them
 
     template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     void doStatistics(ImageT const &img,
@@ -392,6 +394,7 @@ public:
     int getWidth() const { return _v.size(); }
     int getHeight() const { return 1; }
     
+    bool empty() const { return _v.empty(); }
 private:
     std::vector<ValueT> const &_v;                  // a private reference to the data
     std::vector<ValueT> const &_getVector() const { return _v; } // get the ref for the copyCon

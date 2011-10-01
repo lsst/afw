@@ -62,7 +62,7 @@ class StatisticsTestCase(unittest.TestCase):
     def tearDown(self):
         del self.image
 
-    def XXXXtestDefaultGet(self):
+    def testDefaultGet(self):
         """Test that we can get a single statistic without specifying it"""
         stats = afwMath.makeStatistics(self.image, afwMath.MEDIAN)
 
@@ -80,7 +80,7 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(self.image, afwMath.MEDIAN | afwMath.MEAN)
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, tst)
 
-    def XXXXtestStats1(self):
+    def testStats1(self):
         stats = afwMath.makeStatistics(self.image,
                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM)
 
@@ -91,7 +91,7 @@ class StatisticsTestCase(unittest.TestCase):
         #BOOST_CHECK(std::isnan(stats.getError(afwMath.MEAN))) // didn't ask for error, so it's a NaN
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
-    def XXXXtestStats2(self):
+    def testStats2(self):
         stats = afwMath.makeStatistics(self.image, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
         mean = stats.getResult(afwMath.MEAN)
         sd = stats.getValue(afwMath.STDEV)
@@ -99,7 +99,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(mean[0], self.image.get(0, 0))
         self.assertEqual(mean[1], sd/math.sqrt(self.image.getWidth()*self.image.getHeight()))
 
-    def XXXXtestStats3(self):
+    def testStats3(self):
         stats = afwMath.makeStatistics(self.image, afwMath.NPOINT)
 
         def getMean():
@@ -107,7 +107,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, getMean)
 
-    def XXXXtestStatsZebra(self):
+    def testStatsZebra(self):
         """Add 1 to every other row"""
         image2 = self.image.Factory(self.image, True)
         #
@@ -137,7 +137,7 @@ class StatisticsTestCase(unittest.TestCase):
         meanSquare = afwMath.makeStatistics(image2, afwMath.MEANSQUARE).getValue()
         self.assertEqual(meanSquare, 0.5*(image2.get(0, 0)**2 + image2.get(0, 1)**2))
 
-    def XXXXtestStatsStdevclip(self):
+    def testStatsStdevclip(self):
         """Test STDEVCLIP; cf. #611"""
         image2 = self.image.Factory(self.image, True)
 
@@ -150,7 +150,7 @@ class StatisticsTestCase(unittest.TestCase):
                          afwMath.makeStatistics(image2, afwMath.MEAN).getValue(),
                          stats.getValue(afwMath.SUM))
 
-    def XXXXtestMedian(self):
+    def testMedian(self):
         """Test the median code"""
         stats = afwMath.makeStatistics(self.image, afwMath.MEDIAN)
 
@@ -159,27 +159,27 @@ class StatisticsTestCase(unittest.TestCase):
         values = [1.0, 2.0, 3.0, 2.0 ]
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2.0)
 
-    def XXXXtestIqrange(self):
+    def testIqrange(self):
         """Test the inter-quartile range"""
         stats = afwMath.makeStatistics(self.image, afwMath.IQRANGE)
         self.assertEqual(stats.getValue(afwMath.IQRANGE), 0)
 
-    def XXXXtestMeanClip(self):
+    def testMeanClip(self):
         """Test the 3-sigma clipped mean"""
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
 
-    def XXXXtestStdevClip(self):
+    def testStdevClip(self):
         """Test the 3-sigma clipped standard deviation"""
         stats = afwMath.makeStatistics(self.image, afwMath.STDEVCLIP)
         self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
 
-    def XXXXtestVarianceClip(self):
+    def testVarianceClip(self):
         """Test the 3-sigma clipped variance"""
         stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
         self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
-    def XXXXtestSampleImageStats(self):
+    def testSampleImageStats(self):
         """ Compare our results to known values in test data """
         
         imgfiles = []
@@ -220,7 +220,7 @@ class StatisticsTestCase(unittest.TestCase):
             self.assertAlmostEqual(stdev, trueStdev, 8)
 
 
-    def XXXXtestStatisticsRamp(self):
+    def testStatisticsRamp(self):
         """ Tests Statistics on a 'ramp' (image with constant gradient) """
 
         
@@ -268,7 +268,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(z0 + dzdx*(nx - 1)/2.0, stats.getValue(afwMath.MEANCLIP))
 
         
-    def XXXXtestMask(self):
+    def testMask(self):
         mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
         mask.set(0x0)
 
@@ -286,7 +286,7 @@ class StatisticsTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, tst)
 
 
-    def XXXXtestTicket1025(self):
+    def testTicket1025(self):
         """
         Ticket #1025 reported that the Statistics median was getting '3' as the median of [1,2,3,2]
         it was caused by an off-by-one error in the implementation
@@ -304,7 +304,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 5.0)
         
 
-    def XXXXtestTicket1123(self):
+    def testTicket1123(self):
         """
         Ticket #1123 reported that the Statistics stack routine throws an exception
         when all pixels in a stack are masked.  Returning a NaN pixel in the stack is preferred
@@ -340,7 +340,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stdev, 0.0)
 
 
-    def XXXXtestTicket1125(self):
+    def testTicket1125(self):
         """Ticket 1125 reported that the clipped routines were aborting when called with no valid pixels. """
         mimg = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
         mimg.set([self.val, 0x1, self.val])
@@ -357,7 +357,7 @@ class StatisticsTestCase(unittest.TestCase):
 
 
 
-    def XXXXtestWeightedSum(self):
+    def testWeightedSum(self):
         ctrl = afwMath.StatisticsControl()
         mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10))
         mi.getImage().set(1.0)
@@ -372,24 +372,26 @@ class StatisticsTestCase(unittest.TestCase):
         # ... variance = 0.1 is stored as 0.100000001
         self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
 
-    def XXXXtestWeightedSum2(self):
+    def testWeightedSum2(self):
         """Test using a weight image separate from the variance plane"""
+        weight, mean = 0.1, 1.0
+
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10))
-        mi.getImage().set(1.0)
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10)); npix = 10*10
+        mi.getImage().set(mean)
         mi.getVariance().set(np.nan)
 
         weights = afwImage.ImageF(mi.getDimensions())
-        weights.set(0.1)
+        weights.set(weight)
         
         stats = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
-        self.assertEqual(stats.getValue(afwMath.SUM), 100.0)
+        self.assertEqual(stats.getValue(afwMath.SUM), mean*npix)
         
         ctrl.setWeighted(True)
         weighted = afwMath.makeStatistics(mi, weights, afwMath.SUM, ctrl)
         # precision at "4 places" as images are floats
         # ... variance = 0.1 is stored as 0.100000001
-        self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
+        self.assertAlmostEqual(weighted.getValue(afwMath.SUM), mean*npix*weight, 4) 
         
     def testErrorsFromVariance(self):
         """Test that we can estimate the errors from the incoming variances"""
@@ -407,7 +409,6 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.SUM), npix*mean)
         
         ctrl.setWeighted(True)
-        ctrl.setMultiplyWeights(True)
         #ctrl.setCalcErrorFromInputVariance(True)
         weighted = afwMath.makeStatistics(mi, weights,
                                           afwMath.MEAN | afwMath.SUM | afwMath.VARIANCE | afwMath.ERRORS,
@@ -419,7 +420,7 @@ class StatisticsTestCase(unittest.TestCase):
         #self.assertAlmostEqual(weighted.getValue(afwMath.VARIANCE), variance, 5)
         print "mean =", weighted.getResult(afwMath.MEAN)
         
-    def XXXXtestMeanClip(self):
+    def testMeanClip(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)

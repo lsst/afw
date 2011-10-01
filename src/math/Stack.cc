@@ -133,12 +133,10 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
         weights.resize(images.size());
 
         sctrlTmp.setWeighted(true);
-        sctrlTmp.setMultiplyWeights(false); // inverse variance weighting
     } else if (isWeighted) {
         weights.assign(wvector.begin(), wvector.end());
 
         sctrlTmp.setWeighted(true);
-        sctrlTmp.setMultiplyWeights(true); // We're using wvector so they're multiplicative weights
     }
     assert (weights.empty() || weights.size() == images.size());
 
@@ -166,7 +164,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                 psPtr.variance() = rows[i].variance();
 
                 if (useVariance) {      // we're weighting using the variance
-                    *wtPtr = rows[i].variance();
+                    *wtPtr = 1.0/rows[i].variance();
                 }
 
                 ++rows[i];
@@ -279,10 +277,8 @@ typename afwImage::Image<PixelT>::Ptr computeImageStack(
     // set the mask to be an infinite iterator
     afwMath::MaskImposter<afwImage::MaskPixel> msk;
 
-    // If we're using wvector, they're multiplicative weights
     if (!weights.empty()) {
         sctrlTmp.setWeighted(true);
-        sctrlTmp.setMultiplyWeights(true);
     }
         
     // get the desired statistic
@@ -361,10 +357,8 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
     // set the mask to be an infinite iterator
     afwMath::MaskImposter<afwImage::MaskPixel> msk;
     
-    // If we're using wvector, they're multiplicative weights
     if (!wvector.empty()) {
         sctrlTmp.setWeighted(true);
-        sctrlTmp.setMultiplyWeights(true);
     }
     
     // collect elements from the stack into the MaskedVector to do stats

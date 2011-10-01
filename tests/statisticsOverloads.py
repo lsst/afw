@@ -124,8 +124,6 @@ class StatisticsTestCase(unittest.TestCase):
     def testWeightedVector(self):
         """Test std::vector, but with weights"""
         sctrl = afwMath.StatisticsControl()
-        sctrl.setWeighted(True)
-        sctrl.setMultiplyWeights(True)
 
         nval = len(self.vecList[0])
         weight = 10
