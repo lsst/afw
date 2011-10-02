@@ -143,9 +143,15 @@ namespace {
     
     /*********************************************************************************************************/
     // return type for processPixels
-    typedef boost::tuple<int, double, double, double, double, double,
-                         lsst::afw::image::MaskPixel> ProcessReturn; 
-    
+    typedef boost::tuple<int,                        // n
+                         double,                     // sum
+                         afwMath::Statistics::Value, // mean
+                         afwMath::Statistics::Value, // variance
+                         double,                     // min
+                         double,                     // max
+                         lsst::afw::image::MaskPixel // allPixelOrMask
+                         > StandardReturn;
+
     /*
      * Functions which convert the booleans into calls to the proper templated types, one type per
      * recursion level
@@ -165,7 +171,7 @@ namespace {
              typename InClipRange,
              bool useWeights,
              typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    ProcessReturn processPixels(ImageT const &img,
+    StandardReturn processPixels(ImageT const &img,
                                 MaskT const &msk,
                                 VarianceT const &var,
                                 WeightT const &weights,
@@ -185,8 +191,8 @@ namespace {
         double sumx = 0;                // sum(data*weight)
         double sumx2 = 0;               // sum(data*weight^2)
 #if 1
-        double sumwv = 0.0;             // sum(variance*weight)
-        double sumwv2 = 0.0;            // sum(variance*weight^2)
+        double sumvw = 0.0;             // sum(variance*weight)
+        double sumvw2 = 0.0;            // sum(variance*weight^2)
 #endif
         double min = (nCrude) ? meanCrude : MAX_DOUBLE;
         double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
@@ -225,8 +231,8 @@ namespace {
                         
                         if (calcErrorFromInputVariance) {
                             double const var = *vptr;
-                            sumwv  += weight*var;
-                            sumwv2 += ::pow(weight*var, 2);
+                            sumvw  += var*weight;
+                            sumvw2 += var*weight*weight;
                         }
                     } else {
                         sumx += delta;
@@ -253,18 +259,25 @@ namespace {
         }
 
         // N.b. if sumw == 0 or sumw*sumw == sumw2 (e.g. n == 1) we'll get NaNs
+        // N.b. the estimator of the variance assumes that the sample points all have the same variance;
+        // otherwise, what is it that we're estimating?
         mean = sumx/sumw;
+        variance = sumx2/sumw - ::pow(mean, 2);    // biased estimator
+        variance *= sumw*sumw/(sumw*sumw - sumw2); // debias
+
+        double meanVar;                 // (standard error of mean)^2
         if (calcErrorFromInputVariance) {
-            variance = sumwv/sumw;  // estimate of sample variance
+            meanVar = sumvw2/(sumw*sumw);
         } else {
-            variance = sumx2/sumw - ::pow(mean, 2);    // biased estimator
-            variance *= sumw*sumw/(sumw*sumw - sumw2); // debias
-        }
+            meanVar = variance*sumw2/(sumw*sumw);
+        }                
         
         sumx += sumw*meanCrude;
         mean += meanCrude;
 
-        return ProcessReturn(n, sumx, mean, variance, min, max, allPixelOrMask);
+        return StandardReturn(n, sumx,
+                              afwMath::Statistics::Value(mean, meanVar),
+                              afwMath::Statistics::Value(variance, NaN), min, max, allPixelOrMask);
     }
 
     template<typename IsFinite,
@@ -273,7 +286,7 @@ namespace {
              typename InClipRange,
              bool useWeights,
              typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    ProcessReturn processPixels(ImageT const &img,
+    StandardReturn processPixels(ImageT const &img,
                                 MaskT const &msk,
                                 VarianceT const &var,
                                 WeightT const &weights,
@@ -307,7 +320,7 @@ namespace {
              typename InClipRange,
              bool useWeights,
              typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    ProcessReturn processPixels(ImageT const &img,
+    StandardReturn processPixels(ImageT const &img,
                                 MaskT const &msk,
                                 VarianceT const &var,
                                 WeightT const &weights,
@@ -338,10 +351,6 @@ namespace {
         }
     }
 
-    // return type for getStandard
-    typedef boost::tuple<int, double, double, double, double, double,
-                         lsst::afw::image::MaskPixel> StandardReturn;
-
     /* =========================================================================
      * @brief Compute the standard stats: mean, variance, min, max
      *
@@ -365,8 +374,6 @@ namespace {
     {
         // =====================================================
         // a crude estimate of the mean, used for numerical stability of variance
-        ProcessReturn loopValues;
-    
         int nCrude       = 0;
         double meanCrude = 0.0;
 
@@ -380,14 +387,14 @@ namespace {
         }
 
         double cliplimit = -1;              // unused
-        loopValues = processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(
-                                   img, msk, var, weights,
-                                   flags, nCrude, strideCrude, meanCrude,
-                                   cliplimit,
-                                   weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                   doCheckFinite, doGetWeighted);
-        nCrude = loopValues.get<0>();
-        double sumCrude = loopValues.get<1>();
+        StandardReturn values = processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(
+                                              img, msk, var, weights,
+                                              flags, nCrude, strideCrude, meanCrude,
+                                              cliplimit,
+                                              weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                              doCheckFinite, doGetWeighted);
+        nCrude = values.get<0>();
+        double sumCrude = values.get<1>();
         
         meanCrude = 0.0;
         if (nCrude > 0) {
@@ -399,30 +406,20 @@ namespace {
         // - get the min and max as well
     
         if (flags & (afwMath::MIN | afwMath::MAX)) {
-            loopValues = processPixels<ChkFin, ChkMin, ChkMax, AlwaysT, true>(
-                                       img, msk, var, weights,
-                                       flags, nCrude, 1, meanCrude,
-                                       cliplimit,
-                                       weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                       true, doGetWeighted);
+            return processPixels<ChkFin, ChkMin, ChkMax, AlwaysT, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude,
+                                 cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 true, doGetWeighted);
         } else {
-            loopValues = processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(
-                                       img, msk, var, weights,
-                                       flags, nCrude, 1, meanCrude,
-                                       cliplimit,
-                                       weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                       doCheckFinite, doGetWeighted);
+            return processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude,
+                                 cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 doCheckFinite, doGetWeighted);
         }
-
-        int n        =    loopValues.get<0>();
-        double sum   =    loopValues.get<1>();
-        double mean  =    loopValues.get<2>();
-        double variance = loopValues.get<3>();
-        double min   =    loopValues.get<4>();
-        double max   =    loopValues.get<5>();
-        afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-    
-        return StandardReturn(n, mean, variance, min, max, sum, allPixelOrMask);
     }
 
     /* ==========================================================
@@ -449,42 +446,31 @@ namespace {
         double const cliplimit = clipinfo.second;
 
         if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
-            //return StandardReturn(n, mean, variance, min, max, sum + center*n);
-            return StandardReturn(0, NaN, NaN, NaN, NaN, NaN, ~0x0);
+            return StandardReturn(0, NaN,
+                                  afwMath::Statistics::Value(NaN, NaN),
+                                  afwMath::Statistics::Value(NaN, NaN), NaN, NaN, ~0x0);
         }
     
         // =======================================================
         // Estimate the full precision variance using that crude mean
-        ProcessReturn loopValues;
-
         int const stride = 1;
         int nCrude = 0;
     
         if (flags & (afwMath::MIN | afwMath::MAX)) {
-            loopValues = processPixels<ChkFin, ChkMin, ChkMax, ChkClip, true>(
-                                       img, msk, var, weights,
-                 flags, nCrude, stride, center,
-                                       cliplimit,
-                                       weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                       true, doGetWeighted);
+            return processPixels<ChkFin, ChkMin, ChkMax, ChkClip, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, stride,
+                                 center, cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 true, doGetWeighted);
         } else {                            // fast loop ... just the mean & variance
-            loopValues = processPixels<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(
-                                       img, msk, var, weights,
-                                       flags, nCrude, stride,
-                                       center, cliplimit,
-                                       weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                       doCheckFinite, doGetWeighted);
+            return processPixels<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, stride,
+                                 center, cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 doCheckFinite, doGetWeighted);
         }
-    
-        int n        =    loopValues.get<0>();
-        double sum   =    loopValues.get<1>();
-        double mean  =    loopValues.get<2>();
-        double variance = loopValues.get<3>();
-        double min   =    loopValues.get<4>();
-        double max   =    loopValues.get<5>();
-        afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-        
-        return StandardReturn(n, mean, variance, min, max, sum, allPixelOrMask);
     }
 
     inline double varianceError(double const variance, int const n)
@@ -698,8 +684,8 @@ afwMath::Statistics::Statistics(
         int const flags,                        ///< Describe what we want to calculate
         afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
                                         ) :
-    _flags(flags), _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
-    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
+    _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
+    _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
     _sctrl(sctrl), _weightsAreMultiplicative(false)
 {
     doStatistics(img, msk, var, var, _flags, _sctrl);
@@ -722,8 +708,8 @@ afwMath::Statistics::Statistics(
         int const flags,                        ///< Describe what we want to calculate
         afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
                                         ) :
-    _flags(flags), _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
-    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
+    _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
+    _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
     _sctrl(sctrl), _weightsAreMultiplicative(true)
 {
     if (!isEmpty(weights)) {
@@ -763,11 +749,11 @@ void afwMath::Statistics::doStatistics(
                                           _sctrl.getNanSafe(), _sctrl.getWeighted());
 
     _n = standard.get<0>();
-    _mean = standard.get<1>();
-    _variance = standard.get<2>();
-    _min = standard.get<3>();
-    _max = standard.get<4>();
-    _sum = standard.get<5>();
+    _sum = standard.get<1>();
+    _mean = standard.get<2>();
+    _variance = standard.get<3>();
+    _min = standard.get<4>();
+    _max = standard.get<5>();
     _allPixelOrMask = standard.get<6>();
 
     // ==========================================================
@@ -786,10 +772,10 @@ void afwMath::Statistics::doStatistics(
 
         // if we *only* want the median, just use percentile(), otherwise use medianAndQuartiles()
         if ( (flags & (MEDIAN)) && !(flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) ) {
-            _median = percentile(*imgcp, 0.5);
+            _median = Value(percentile(*imgcp, 0.5), NaN);
         } else {
             MedianQuartileReturn mq = medianAndQuartiles(*imgcp);
-            _median = mq.get<0>();
+            _median = Value(mq.get<0>(), NaN);
             _iqrange = mq.get<2>() - mq.get<1>();
         }
         
@@ -797,9 +783,9 @@ void afwMath::Statistics::doStatistics(
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
                 
-                double const center = (i_i > 0) ? _meanclip : _median;
+                double const center = ((i_i > 0) ? _meanclip : _median).first;
                 double const hwidth = (i_i > 0 && _n > 1) ?
-                    _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) :
+                    _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip.first) :
                     _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
                 std::pair<double, double> const clipinfo(center, hwidth);
                 
@@ -809,8 +795,8 @@ void afwMath::Statistics::doStatistics(
                                                      _sctrl.getCalcErrorFromInputVariance(),
                                                      _sctrl.getNanSafe(), _sctrl.getWeighted());
                 
-                _meanclip = clipped.get<1>();
-                _varianceclip = clipped.get<2>();
+                _meanclip = clipped.get<2>();
+                _varianceclip = clipped.get<3>();
                 // ... ignore other values
             }
         }
@@ -864,48 +850,48 @@ std::pair<double, double> afwMath::Statistics::getResult(
         
         // == means ==
       case MEAN:
-        ret.first = _mean;
+        ret.first = _mean.first;
         if (_flags & ERRORS) {
-            ret.second = sqrt(_variance/_n);
+            ret.second = sqrt(_variance.first/_n);
         }
         break;
       case MEANCLIP:
-        ret.first = _meanclip;
+        ret.first = _meanclip.first;
         if ( _flags & ERRORS ) {
-            ret.second = sqrt(_varianceclip/_n);  // this is a bug ... _nClip != _n
+            ret.second = sqrt(_varianceclip.first/_n);  // this is a bug ... _nClip != _n
         }
         break;
         
         // == stdevs & variances ==
       case VARIANCE:
-        ret.first = _variance;
+        ret.first = _variance.first;
         if (_flags & ERRORS) {
             ret.second = varianceError(ret.first, _n);
         }
         break;
       case STDEV:
-        ret.first = sqrt(_variance);
+        ret.first = sqrt(_variance.first);
         if (_flags & ERRORS) {
-            ret.second = 0.5*varianceError(_variance, _n)/ret.first;
+            ret.second = 0.5*varianceError(_variance.first, _n)/ret.first;
         }
         break;
       case VARIANCECLIP:
-        ret.first = _varianceclip;
+        ret.first = _varianceclip.first;
         if (_flags & ERRORS) {
             ret.second = varianceError(ret.first, _n);
         }
         break;
       case STDEVCLIP:
-        ret.first = sqrt(_varianceclip);  // bug: nClip != _n
+        ret.first = sqrt(_varianceclip.first);  // bug: nClip != _n
         if (_flags & ERRORS) {
-            ret.second = 0.5*varianceError(_varianceclip, _n)/ret.first;
+            ret.second = 0.5*varianceError(_varianceclip.first, _n)/ret.first;
         }
         break;
 
       case MEANSQUARE:
-        ret.first = (_n - 1)/static_cast<double>(_n)*_variance + _mean*_mean;
+        ret.first = (_n - 1)/static_cast<double>(_n)*_variance.first + ::pow(_mean.first, 2);
         if (_flags & ERRORS) {
-            ret.second = ::sqrt(2*ret.first*ret.first/(_n*_n)); // assumes Gaussian
+            ret.second = ::sqrt(2*::pow(ret.first/_n, 2)); // assumes Gaussian
         }
         break;
         
@@ -923,15 +909,15 @@ std::pair<double, double> afwMath::Statistics::getResult(
         }
         break;
       case MEDIAN:
-        ret.first = _median;
+        ret.first = _median.first;
         if ( _flags & ERRORS ) {
-            ret.second = sqrt(M_PI/2*_variance/_n); // assumes Gaussian
+            ret.second = sqrt(M_PI/2*_variance.first/_n); // assumes Gaussian
         }
         break;
       case IQRANGE:
         ret.first = _iqrange;
         if ( _flags & ERRORS ) {
-            ret.second = 0;
+            ret.second = NaN;           // we're not estimating this properly
         }
         break;
 
@@ -984,8 +970,8 @@ Statistics::Statistics(
     StatisticsControl const& sctrl                  ///< Control how things are calculated
                       ) :
     _flags(flags),
-    _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),
-    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
+    _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN),
+    _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
     _sctrl(sctrl) {
     
     if ((flags & ~(NPOINT | SUM)) != 0x0) {

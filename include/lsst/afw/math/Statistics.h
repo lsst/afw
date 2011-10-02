@@ -219,14 +219,14 @@ private:
     long _flags;                        // The desired calculation
 
     int _n;                             // number of pixels in the image
-    double _mean;                       // the image's mean
-    double _variance;                   // the image's variance
+    Value _mean;                        // the image's mean
+    Value _variance;                    // the image's variance
     double _min;                        // the image's minimum
     double _max;                        // the image's maximum
     double _sum;                        // the sum of all the image's pixels
-    double _meanclip;                   // the image's N-sigma clipped mean
-    double _varianceclip;               // the image's N-sigma clipped variance
-    double _median;                     // the image's median
+    Value _meanclip;                    // the image's N-sigma clipped mean
+    Value _varianceclip;                // the image's N-sigma clipped variance
+    Value _median;                      // the image's median
     double _iqrange;                    // the image's interquartile range
     lsst::afw::image::MaskPixel _allPixelOrMask;   //  the 'or' of all masked pixels
 
