@@ -246,7 +246,7 @@ class StatisticsTestCase(unittest.TestCase):
         
         self.assertEqual(stats.getValue(afwMath.NPOINT), nx*ny)
         self.assertEqual(testmean, mean)
-        self.assertEqual(teststdev, stdev )
+        self.assertAlmostEqual(teststdev, stdev)
         
         stats = afwMath.makeStatistics(img, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
         mean, meanErr = stats.getResult(afwMath.MEAN)

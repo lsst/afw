@@ -180,16 +180,21 @@ namespace {
                                )
     {
         int n = 0;
-        double wsum = 0.0;              // weighted sum of data
-        double wvsum = 0.0;             // weighted sum of variance
-        double sum = 0, sumx2 = 0;
+        double sumw = 0.0;              // sum(weight)  (N.b. weight will be 1.0 if !useWeights)
+        double sumw2 = 0.0;             // sum(weight^2)
+        double sumx = 0;                // sum(data*weight)
+        double sumx2 = 0;               // sum(data*weight^2)
+#if 1
+        double sumwv = 0.0;             // sum(variance*weight)
+        double sumwv2 = 0.0;            // sum(variance*weight^2)
+#endif
         double min = (nCrude) ? meanCrude : MAX_DOUBLE;
         double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
 
         afwImage::MaskPixel allPixelOrMask = 0x0;
     
         for (int iY = 0; iY < img.getHeight(); iY += stride) {
-        
+
             typename MaskT::x_iterator mptr = msk.row_begin(iY);
             typename VarianceT::x_iterator vptr = var.row_begin(iY);
             typename WeightT::x_iterator wptr = weights.row_begin(iY);
@@ -213,21 +218,26 @@ namespace {
                             weight = 1/weight;
                         }
 
-                        wsum  += weight;
-                        sum   += weight*delta;
-                        sumx2 += weight*delta*delta;
-                        wvsum += weight*weight*(*vptr);
+                        sumw   += weight;
+                        sumw2  += weight*weight;
+                        sumx   += weight*delta;
+                        sumx2  += weight*delta*delta;
+                        
+                        if (calcErrorFromInputVariance) {
+                            double const var = *vptr;
+                            sumwv  += weight*var;
+                            sumwv2 += ::pow(weight*var, 2);
+                        }
                     } else {
-                        sum += delta;
+                        sumx += delta;
                         sumx2 += delta*delta;
                     }
 
                     allPixelOrMask |= *mptr;
                 
-                    if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
-                    if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
+                    if (HasValueLtMin()(*ptr, min)) { min = *ptr; }
+                    if (HasValueGtMax()(*ptr, max)) { max = *ptr; }
                     n++;
-                
                 }
             }
         }
@@ -236,27 +246,25 @@ namespace {
             max = NaN;
         }
 
-        // estimate of population mean and variance
+        // estimate of population mean and variance.
         double mean, variance;
-        if (useWeights) {
-            mean = (wsum > 0) ? sum/wsum : NaN;
-            if (calcErrorFromInputVariance) {
-                variance = wvsum/wsum;  // estimate of sample variance
-            } else {
-                variance = (n > 1) ?
-                    sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
-            }
-
-            sum += wsum*meanCrude;
-        } else {
-            mean = (n) ? sum/n : NaN;
-            variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
-
-            sum += n*meanCrude;
+        if (!useWeights) {
+            sumw = sumw2 = n;
         }
+
+        // N.b. if sumw == 0 or sumw*sumw == sumw2 (e.g. n == 1) we'll get NaNs
+        mean = sumx/sumw;
+        if (calcErrorFromInputVariance) {
+            variance = sumwv/sumw;  // estimate of sample variance
+        } else {
+            variance = sumx2/sumw - ::pow(mean, 2);    // biased estimator
+            variance *= sumw*sumw/(sumw*sumw - sumw2); // debias
+        }
+        
+        sumx += sumw*meanCrude;
         mean += meanCrude;
 
-        return ProcessReturn(n, sum, mean, variance, min, max, allPixelOrMask);
+        return ProcessReturn(n, sumx, mean, variance, min, max, allPixelOrMask);
     }
 
     template<typename IsFinite,

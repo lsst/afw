@@ -90,7 +90,7 @@ Property stringToStatisticsProperty(std::string const property);
  * 
  */
 class StatisticsControl {
-    typedef enum { FALSE=0, TRUE=1, NONE } Boolean; // initial state is None
+    typedef enum { FALSE=0, TRUE=1, NONE } Boolean; // initial state is NONE
 public:
 
     typedef boost::shared_ptr<StatisticsControl> Ptr;
@@ -140,7 +140,7 @@ private:
     int _andMask;                         // and-Mask to specify which mask planes to ignore
     int _noGoodPixelsMask;                // mask to set if no values are acceptable
     bool _isNanSafe;                      // Check for NaNs before running (slower)
-    Boolean _useWeights;                      // Calculate weighted statistics (int because of 3-valued logic)
+    Boolean _useWeights;                  // Calculate weighted statistics (int because of 3-valued logic)
     bool _calcErrorFromInputVariance;     // Calculate errors from the input variances, if available
 };
             

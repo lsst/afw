@@ -61,7 +61,7 @@ class StackTestCase(unittest.TestCase):
         self.nX, self.nY = 64, 64
         self.values = [1.0, 2.0, 2.0, 3.0, 8.0 ]
         
-    def XXXXtestMean(self):
+    def testMean(self):
         """ Test the statisticsStack() function for a MEAN"""
 
         knownMean = 0.0
@@ -76,7 +76,7 @@ class StackTestCase(unittest.TestCase):
         self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)
 
         
-    def XXXXtestStatistics(self):
+    def testStatistics(self):
         """ Test the statisticsStack() function """
         
         imgList = afwImage.vectorImageF()
@@ -108,7 +108,7 @@ class StackTestCase(unittest.TestCase):
         self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
 
 
-    def XXXXtestConstantWeightedStack(self):
+    def testConstantWeightedStack(self):
         """ Test statisticsStack() function when weighting by a vector of weights"""
         
         sctrl = afwMath.StatisticsControl()
@@ -126,7 +126,7 @@ class StackTestCase(unittest.TestCase):
         self.assertAlmostEqual(imgStack.get(self.nX/2, self.nY/2), wmean)
 
 
-    def XXXXtestRequestMoreThanOneStat(self):
+    def testRequestMoreThanOneStat(self):
         """ Make sure we throw an exception if someone requests more than one type of statistics. """
 
         sctrl = afwMath.StatisticsControl()
@@ -141,7 +141,7 @@ class StackTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, pexEx.InvalidParameterException, tst)
 
 
-    def XXXXtestReturnInputs(self):
+    def testReturnInputs(self):
         """ Make sure that a single file put into the stacker is returned unscathed"""
 
         imgList = afwImage.vectorMaskedImageF()
@@ -164,7 +164,7 @@ class StackTestCase(unittest.TestCase):
 
         self.assertEqual(img.get(0, 0)[0], imgStack.get(0, 0)[0])
 
-    def XXXXtestStackBadPixels(self):
+    def testStackBadPixels(self):
         """Check that we properly ignore masked pixels, and set noGoodPixelsMask where there are
         no good pixels"""
         mimgVec = afwImage.vectorMaskedImageF()
@@ -233,7 +233,7 @@ class StackTestCase(unittest.TestCase):
 
         self.assertEqual(afwMath.makeStatistics(mimgStack.getMask(), afwMath.SUM, sctrl).getValue(), maskVal)
 
-    def XXXXtestTicket1412(self):
+    def testTicket1412(self):
         """Ticket 1412: ignored mask bits are propegated to output stack."""
 
         mimg1 = afwImage.MaskedImageF(afwGeom.Extent2I(1, 1))
