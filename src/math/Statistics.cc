@@ -800,10 +800,9 @@ void afwMath::Statistics::doStatistics(
                                                      _sctrl.getNanSafe(), _sctrl.getWeighted());
                 
                 int const nClip = clipped.get<0>();
-                double const meanClip = clipped.get<2>().first; // clipped mean
+                _meanclip = clipped.get<2>();     // clipped mean
                 double const varClip = clipped.get<3>().first;  // clipped variance
 
-                _meanclip = Value(meanClip, varClip/nClip);
                 _varianceclip = Value(varClip, varianceError(varClip, nClip));
                 // ... ignore other values
             }

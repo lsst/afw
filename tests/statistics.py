@@ -405,11 +405,13 @@ class StatisticsTestCase(unittest.TestCase):
         weights.set(weight)
 
         ctrl.setCalcErrorFromInputVariance(True)
-        weighted = afwMath.makeStatistics(mi, weights, afwMath.MEAN | afwMath.SUM | afwMath.ERRORS, ctrl)
+        weighted = afwMath.makeStatistics(mi, weights,
+                                          afwMath.MEAN | afwMath.MEANCLIP | afwMath.SUM | afwMath.ERRORS, ctrl)
 
         self.assertAlmostEqual(weighted.getValue(afwMath.SUM)/(npix*mean*weight), 1)
         self.assertAlmostEqual(weighted.getValue(afwMath.MEAN), mean)
         self.assertAlmostEqual(weighted.getError(afwMath.MEAN)**2, variance/npix)
+        self.assertAlmostEqual(weighted.getError(afwMath.MEANCLIP)**2, variance/npix)
         
     def testMeanClip(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
