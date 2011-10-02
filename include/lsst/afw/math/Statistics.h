@@ -334,7 +334,8 @@ Statistics makeStatistics(
         StatisticsControl const& sctrl = StatisticsControl() 
                          )
 {
-    if (sctrl.getWeighted()) {
+    if (sctrl.getWeighted() ||
+        (!sctrl.getWeightedIsSet() && (weights.getWidth() != 0 && weights.getHeight() != 0))) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), weights, flags, sctrl);
     } else {
         MaskImposter<WeightPixel> var;

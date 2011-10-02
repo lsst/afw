@@ -141,6 +141,13 @@ namespace {
     typedef AlwaysTrue      AlwaysT;
     typedef AlwaysFalse     AlwaysF;
     
+    // Return the variance of a variance, assuming a Gaussian
+    // There is apparently an attempt to correct for bias in the factor (n - 1)/n.  RHL
+    inline double varianceError(double const variance, int const n)
+    {
+        return 2*(n - 1)*variance*variance/static_cast<double>(n*n);
+    }
+
     /*********************************************************************************************************/
     // return type for processPixels
     typedef boost::tuple<int,                        // n
@@ -272,12 +279,14 @@ namespace {
             meanVar = variance*sumw2/(sumw*sumw);
         }                
         
+        double varVar = varianceError(variance, n); // error in variance; incorrect if useWeights is true
+
         sumx += sumw*meanCrude;
         mean += meanCrude;
 
         return StandardReturn(n, sumx,
                               afwMath::Statistics::Value(mean, meanVar),
-                              afwMath::Statistics::Value(variance, NaN), min, max, allPixelOrMask);
+                              afwMath::Statistics::Value(variance, varVar), min, max, allPixelOrMask);
     }
 
     template<typename IsFinite,
@@ -471,11 +480,6 @@ namespace {
                                  weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
                                  doCheckFinite, doGetWeighted);
         }
-    }
-
-    inline double varianceError(double const variance, int const n)
-    {
-        return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
     }
 
     /* percentile()
@@ -795,8 +799,12 @@ void afwMath::Statistics::doStatistics(
                                                      _sctrl.getCalcErrorFromInputVariance(),
                                                      _sctrl.getNanSafe(), _sctrl.getWeighted());
                 
-                _meanclip = clipped.get<2>();
-                _varianceclip = clipped.get<3>();
+                int const nClip = clipped.get<0>();
+                double const meanClip = clipped.get<2>().first; // clipped mean
+                double const varClip = clipped.get<3>().first;  // clipped variance
+
+                _meanclip = Value(meanClip, varClip/nClip);
+                _varianceclip = Value(varClip, varianceError(varClip, nClip));
                 // ... ignore other values
             }
         }
@@ -818,7 +826,7 @@ void afwMath::Statistics::doStatistics(
  *
  */
 std::pair<double, double> afwMath::Statistics::getResult(
-        afwMath::Property const iProp ///< Desired property
+                                                         afwMath::Property const iProp ///< Desired property
                                                         ) const {
     
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
@@ -852,13 +860,13 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case MEAN:
         ret.first = _mean.first;
         if (_flags & ERRORS) {
-            ret.second = sqrt(_variance.first/_n);
+            ret.second = ::sqrt(_mean.second);
         }
         break;
       case MEANCLIP:
         ret.first = _meanclip.first;
         if ( _flags & ERRORS ) {
-            ret.second = sqrt(_varianceclip.first/_n);  // this is a bug ... _nClip != _n
+            ret.second = ::sqrt(_meanclip.second);
         }
         break;
         
@@ -866,25 +874,25 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case VARIANCE:
         ret.first = _variance.first;
         if (_flags & ERRORS) {
-            ret.second = varianceError(ret.first, _n);
+            ret.second = ::sqrt(_variance.second);
         }
         break;
       case STDEV:
         ret.first = sqrt(_variance.first);
         if (_flags & ERRORS) {
-            ret.second = 0.5*varianceError(_variance.first, _n)/ret.first;
+            ret.second = 0.5*::sqrt(_variance.second)/ret.first;
         }
         break;
       case VARIANCECLIP:
         ret.first = _varianceclip.first;
         if (_flags & ERRORS) {
-            ret.second = varianceError(ret.first, _n);
+            ret.second = ret.second;
         }
         break;
       case STDEVCLIP:
-        ret.first = sqrt(_varianceclip.first);  // bug: nClip != _n
+        ret.first = sqrt(_varianceclip.first);
         if (_flags & ERRORS) {
-            ret.second = 0.5*varianceError(_varianceclip.first, _n)/ret.first;
+            ret.second = 0.5*::sqrt(_varianceclip.second)/ret.first;
         }
         break;
 

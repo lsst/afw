@@ -387,7 +387,6 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
         self.assertEqual(stats.getValue(afwMath.SUM), mean*npix)
         
-        ctrl.setWeighted(True)
         weighted = afwMath.makeStatistics(mi, weights, afwMath.SUM, ctrl)
         # precision at "4 places" as images are floats
         # ... variance = 0.1 is stored as 0.100000001
@@ -404,21 +403,13 @@ class StatisticsTestCase(unittest.TestCase):
 
         weights = afwImage.ImageF(mi.getDimensions())
         weights.set(weight)
-        
-        stats = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
-        self.assertEqual(stats.getValue(afwMath.SUM), npix*mean)
-        
-        ctrl.setWeighted(True)
-        #ctrl.setCalcErrorFromInputVariance(True)
-        weighted = afwMath.makeStatistics(mi, weights,
-                                          afwMath.MEAN | afwMath.SUM | afwMath.VARIANCE | afwMath.ERRORS,
-                                          ctrl)
-        # precision at "4 places" as images are floats ... 0.1 is stored as 0.100000001
-        print weighted.getValue(afwMath.SUM), npix*mean
+
+        ctrl.setCalcErrorFromInputVariance(True)
+        weighted = afwMath.makeStatistics(mi, weights, afwMath.MEAN | afwMath.SUM | afwMath.ERRORS, ctrl)
+
         self.assertAlmostEqual(weighted.getValue(afwMath.SUM)/(npix*mean*weight), 1)
         self.assertAlmostEqual(weighted.getValue(afwMath.MEAN), mean)
-        #self.assertAlmostEqual(weighted.getValue(afwMath.VARIANCE), variance, 5)
-        print "mean =", weighted.getResult(afwMath.MEAN)
+        self.assertAlmostEqual(weighted.getError(afwMath.MEAN)**2, variance/npix)
         
     def testMeanClip(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
@@ -433,7 +424,6 @@ class StatisticsTestCase(unittest.TestCase):
         img.set(0)
         stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(), 0)
-        
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
