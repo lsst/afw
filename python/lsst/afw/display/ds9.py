@@ -226,25 +226,26 @@ except NameError:
 annoying but necessary for anything resembling performance
 
 The usual usage pattern (from a module importing this file, ds9.py) is probably:
-   ds9.cmdBuffer.pushSize()
-   # bunches of ds9.{dot,line} commands
-   ds9.cmdBuffer.flush()
-   # bunches more ds9.{dot,line} commands
-   ds9.cmdBuffer.popSize()
 
-N.b. These are available as:
+   with ds9.Buffering():
+       # bunches of ds9.{dot,line} commands
+       ds9.flush()
+       # bunches more ds9.{dot,line} commands
+
+or (if you don't like "with")
    ds9.buffer()
    # bunches of ds9.{dot,line} commands
    ds9.flush()
    # bunches more ds9.{dot,line} commands
    ds9.buffer(False)
 
-or (better)
-   with ds9.Buffering():
-       # bunches of ds9.{dot,line} commands
-       ds9.flush()
-       # bunches more ds9.{dot,line} commands
+or (the old idiom):
    
+   ds9.cmdBuffer.pushSize()
+   # bunches of ds9.{dot,line} commands
+   ds9.cmdBuffer.flush()
+   # bunches more ds9.{dot,line} commands
+   ds9.cmdBuffer.popSize()
         """
 
         def __init__(self, size=0):
@@ -494,6 +495,7 @@ except NameError:
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
+    title = str(title)
     if True:
         if isMask:
             xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()

@@ -246,15 +246,20 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
               (x0 - borderWidth, y0 - borderWidth),
               ], frame=frame, ctype=ctype)
 
-def drawFootprint(foot, borderWidth=0.5, origin=None, frame=None, ctype=None, bin=1,
+def drawFootprint(foot, borderWidth=0.5, origin=None, XY0=None, frame=None, ctype=None, bin=1,
                   peaks=False, symb="+", size=0.4, ctypePeak=None):
     """Draw an afwDetection::Footprint on a ds9 frame with the specified ctype.  Include an extra borderWidth
-pixels If origin is present, it's Added to the Footprint
+pixels If origin is present, it's Added to the Footprint; if XY0 is present is Subtracted from the Footprint
 
 If peaks is True, also show the object's Peaks using the specified symbol and size and ctypePeak
 
 All Footprint coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
+
+    if XY0:
+        if origin:
+            raise RuntimeError("You may not specify both origin and XY0")
+        origin = (-XY0[0], -XY0[1])
 
     with ds9.Buffering():
         borderWidth /= bin

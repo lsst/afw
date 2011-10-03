@@ -49,7 +49,7 @@ try:
         def to_string(self):
             nx, ny = getEigenMatrixDimensions(self.val)
 
-            return "{%dx%g}" % (nx, ny)
+            return "%s{%dx%d}" % (self.val.type, nx, ny)
 
     class EigenVectorPrinter(object):
         "Print an Eigen Vector"
@@ -98,7 +98,7 @@ try:
 
                     m_data = var["m_storage"]["m_data"]
                     # convert to a pointer to the start of the array
-                    m_data = m_data.address.cast(m_data.type.template_argument(0).pointer())
+                    m_data = m_data.address.cast(m_data.type)
 
                     return m_data[x + y*NX]
             else:                       # Vector
@@ -385,28 +385,38 @@ try:
                 var = var.dereference()     # be nice
 
             pixelTypeName = str(var.type.template_argument(0))
-
-            if len(args) < 2:
-                raise gdb.GdbError("Please specify a pixel's x and y indexes")
-
-            x0 = gdb.parse_and_eval(args.pop(0))
-            y0 = gdb.parse_and_eval(args.pop(0))
-
-            if len(args) == 0:
-                print "%g" % self.get(var, x0, y0)
-                return
-
-            nx = int(args.pop(0))
-            if args:
-                ny = int(args.pop(0))
+            if pixelTypeName in ["short", "unsigned short"]:
+                dataFmt = "0x%x"
+            elif pixelTypeName in ["int", "unsigned int"]:
+                dataFmt = "%d"
             else:
-                ny = 1
+                dataFmt = "%.2f"
+
+            if len(args) == 1 and args[0] == "all":
+                args.pop(0)
+                x0, y0 = 0, 0
+                nx, ny = 0, 0
+            else:
+                if len(args) < 2:
+                    raise gdb.GdbError("Please specify a pixel's x and y indexes")
+
+                x0 = gdb.parse_and_eval(args.pop(0))
+                y0 = gdb.parse_and_eval(args.pop(0))
+
+                if len(args) == 0:
+                    print dataFmt % self.get(var, x0, y0)
+                    return
+
+                nx = int(args.pop(0))
+                if args:
+                    ny = int(args.pop(0))
+                else:
+                    ny = 1
 
             if nx == 0:
                 nx = var["_gilView"]["_dimensions"]["x"]
             if ny == 0:
                 ny = var["_gilView"]["_dimensions"]["y"]
-
 
             if args:
                 centerPatch = gdb.parse_and_eval(args.pop(0))
@@ -428,13 +438,6 @@ try:
             #
             # OK, finally time to print
             #
-            if pixelTypeName in ["short", "unsigned short"]:
-                dataFmt = "0x%x"
-            elif pixelTypeName in ["int", "unsigned int"]:
-                dataFmt = "%d"
-            else:
-                dataFmt = "%.2f"
-
             print "%-4s" % "",
             for x in range(x0, x0 + nx):
                 print "%8d" % x,
