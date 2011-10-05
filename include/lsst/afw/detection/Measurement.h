@@ -73,6 +73,10 @@ public:
         return _measuredValues.size();
     }
 
+    TPtr operator[](size_t index) {
+        return _measuredValues[index];
+    }
+
 #if 1
     /// Return an iterator to the named algorithm
     const_iterator find_iter(std::string const&name // The name of the desired algorithm
@@ -120,6 +124,10 @@ public:
         return meas;
     }
 
+    static TPtr null(void) {
+        return boost::make_shared<T>();
+    }
+
     /// Add a (shared_pointer to) an individual measurement of type T
     void add(TPtr val) {
         _measuredValues.push_back(val);
@@ -127,12 +135,14 @@ public:
 
     /// Print all the values to os;  note that this is a virtual function called by operator<<
     virtual std::ostream &output(std::ostream &os) const {
+        os << getAlgorithm() << "[";
         for (typename Measurement::const_iterator ptr = begin(); ptr != end(); ++ptr) {
             if (ptr != begin()) {
-                os << " ";
+                os << ",";
             }
-            os << "[" << **ptr << "]";
+            os << (*ptr)->output(os);
         }
+        os << "]";
 
         return os;
     }
@@ -155,6 +165,13 @@ public:
     std::string const& getAlgorithm() const {
         return getSchema()->getComponent();
     }
+    void setAlgorithm(std::string const& name) {
+        getSchema()->setComponent(name);
+        for (iterator iter = begin(); iter != end(); ++iter) {
+            (*iter)->setAlgorithm(name);
+        }
+    }
+
     /**
      * Return some Measurement's value as a double given its Schema
      *
@@ -249,7 +266,7 @@ public:
         TPtr averages(new T());
         for (typename AlgMap::const_iterator iter = algorithms.begin(); iter != algorithms.end(); ++iter) {
             TPtr meas = iter->second;
-            TPtr avg = meas->size() == 1 ? *meas->begin() : meas->average();
+            TPtr avg = meas->size() == 1 ? (*meas->begin())->clone() : meas->average();
             averages->add(avg);
         }
 

@@ -49,6 +49,11 @@ public:
         return Measurement<Photometry>::clone();
     }
 
+    static Ptr null(void) {
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        return boost::make_shared<Photometry>(NaN, NaN);
+    }
+
     /// Return the number of fluxes available (> 1 iff an array)
     virtual int getNFlux() const {
         return 1;

@@ -41,6 +41,18 @@ public:
                                                       lsst::afw::detection::Schema::DOUBLE, 1, "pixels"));
     }
 
+    virtual PTR(Photometry) clone() const {
+        if (empty()) {
+            return boost::make_shared<AperturePhotometry>(getFlux(), getFluxErr(), getRadius());
+        }
+        return Measurement<Photometry>::clone();
+    }
+
+    static Ptr null() {
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        return boost::make_shared<AperturePhotometry>(NaN, NaN, NaN);
+    }
+
     virtual std::vector<double> getFluxes() const {
         std::vector<double> fluxes;
         if (empty()) {

@@ -52,6 +52,11 @@ public:
         return Measurement<Astrometry>::clone();
     }
 
+    static Ptr null() {
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        return boost::make_shared<Astrometry>(NaN, NaN, NaN, NaN);
+    }
+
     /// Return the x-centroid
     double getX() const {
         return Measurement<Astrometry>::get<Astrometry::X, double>();
@@ -70,6 +75,10 @@ public:
     }
 
     virtual ::std::ostream &output(std::ostream &os) const {
+        os << "{" << size() << "}";
+        if (size() > 0) {
+            return os << Measurement<Astrometry>::output(os);
+        }
         return os << "(" << getX() << "+-" << getXErr() << ", " << getY() << "+-" << getYErr() << ")";
     }
 
@@ -79,6 +88,10 @@ public:
             ConstPtr astrom = *iter;
             if (!astrom->empty()) {
                 astrom = astrom->average();
+            }
+            if (lsst::utils::isnan(astrom->getX()) || lsst::utils::isnan(astrom->getY()) ||
+                lsst::utils::isnan(astrom->getXErr()) || lsst::utils::isnan(astrom->getYErr())) {
+                continue;
             }
             double xWeight = 1.0 / (astrom->getXErr() * astrom->getXErr());
             double yWeight = 1.0 / (astrom->getYErr() * astrom->getYErr());
