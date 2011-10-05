@@ -49,7 +49,7 @@ import lsst.afw.cameraGeom as cameraGeom
 
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
-
+display = True
 try:
     type(display)
 except NameError:
@@ -277,9 +277,12 @@ in particular that it has an entry ampSerial which is a single-element list, the
         eHeight = preRows + height + overclockV
 
         allPixelsOnDisk = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(eWidth, eHeight))
-
-        biasSec = afwGeom.Box2I(afwGeom.Point2I(extended + width, preRows), afwGeom.Extent2I(overclockH, height))
-        dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
+        if extended > 0 and overclockH == 0:
+            biasSec = afwGeom.Box2I(afwGeom.Point2I(0, preRows), afwGeom.Extent2I(extended, height))
+            dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
+        else:
+            biasSec = afwGeom.Box2I(afwGeom.Point2I(extended + width, preRows), afwGeom.Extent2I(overclockH, height))
+            dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial, Col, Row),
@@ -485,7 +488,8 @@ def makeAmpImageFromCcd(amp, imageSource=SynthesizeCcdImage(), isTrimmed=None, i
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
 def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
-                     isTrimmed=None, imageFactory=afwImage.ImageU, bin=1, natural=False):
+                     isTrimmed=None, imageFactory=afwImage.ImageU, bin=1,
+                     natural=False, display=False):
     """Make an Image of a Ccd (or just a single amp)
 
     If natural is True, return the CCD image without worrying about whether it's rotated when
@@ -507,13 +511,17 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     #
     # Start by building the image in "Natural" (non-rotated) orientation
     # (unless it's 'raw', in which case it's just easier to prepareAmpData)
+    # This only gets the CCD data into the nominal camera coordinate system
+    # If the chip is rotated relative to the others in the focal plane, 
+    # it still needs to be rotated.
     #
     if imageSource.isRaw:
         ccdImage = imageFactory(ccd.getAllPixelsNoRotation(isTrimmed))
 
         for a in ccd:
             im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
-            im <<= a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
+            im <<= a.prepareAmpData(imageSource.getImage(ccd, a,
+                imageFactory=imageFactory, isTrimmed=isTrimmed))
     else:
         ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
 
@@ -522,9 +530,10 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     #
     # Now rotate to the as-installed orientation
     #
-    if not natural and not imageSource.isRaw:
+    if not natural:
         ccdImage = afwMath.rotateImageBy90(ccdImage, ccd.getOrientation().getNQuarter())
-
+    if display:
+        showCcd(ccd, ccdImage=ccdImage, isTrimmed=isTrimmed)
     return ccdImage
 
 def trimExposure(ccdImage, ccd=None):
@@ -546,7 +555,7 @@ def trimExposure(ccdImage, ccd=None):
 def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1):
     """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
 of the detectors"""
-    
+
     if isTrimmed is None:
         isTrimmed = ccd.isTrimmed()
 
@@ -579,7 +588,8 @@ of the detectors"""
         return
 
     nQuarter = ccd.getOrientation().getNQuarter()
-    ccdDim = ccd.getAllPixels(isTrimmed).getDimensions()
+    ccdDim = cameraGeom.rotateBBoxBy90(ccd.getAllPixels(isTrimmed), nQuarter,
+            ccd.getAllPixels(isTrimmed).getDimensions()).getDimensions()
     for a in ccd:
         bbox = a.getAllPixels(isTrimmed)
         if nQuarter != 0:
@@ -596,8 +606,9 @@ of the detectors"""
                                       borderWidth=0.49, ctype=ctype, frame=frame, bin=bin)
         # Label each Amp
         ap = a.getAllPixels(isTrimmed)
-        xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
-        cen = afwGeom.makePointI(xc, yc)
+        xc, yc = (ap.getMin()[0] + ap.getMax()[0])//2, (ap.getMin()[1] +
+                ap.getMax()[1])//2
+        cen = afwGeom.Point2I(xc, yc)
         #
         # Rotate the amp labels too
         #
@@ -609,7 +620,8 @@ of the detectors"""
             c, s = -1, 0
         elif nQuarter == 3:
             c, s = 0, 1
-
+        ccdHeight = ccd.getAllPixels(isTrimmed).getHeight()
+        ccdWidth = ccd.getAllPixels(isTrimmed).getWidth()
         xc -= 0.5*ccdHeight
         yc -= 0.5*ccdWidth
             

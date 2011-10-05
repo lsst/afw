@@ -154,20 +154,20 @@ void cameraGeom::Amp::rotateBy90(
  */
 lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) const {
     // Reset the BBox's origin within the Detector to reflect the on-disk value
-
-    bbox.shift(-geom::Extent2I(_originInDetector));
+    afwGeom::Box2I cbbox = afwGeom::Box2I(bbox.getMin(), bbox.getDimensions());
+    cbbox.shift(-geom::Extent2I(_originInDetector));
     // Rotate the BBox to reflect the on-disk orientation
     afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
     afwGeom::Box2I tbbox = afwGeom::Box2I(afwGeom::Point2I(0,0), dimensions);
-    bbox = cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
+    cbbox = cameraGeom::detail::rotateBBoxBy90(cbbox, -_nQuarter, dimensions);
     tbbox = cameraGeom::detail::rotateBBoxBy90(tbbox, -_nQuarter, dimensions);
     if(_flipTB){
-        bbox.flipTB(tbbox.getDimensions());
+        cbbox.flipTB(tbbox.getDimensions());
     }
     if(_flipLR){
-        bbox.flipLR(tbbox.getDimensions());
+        cbbox.flipLR(tbbox.getDimensions());
     }
-    return bbox;
+    return cbbox;
 }
 
 /**
@@ -180,14 +180,15 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) 
  */
 lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromDisk(lsst::afw::geom::Box2I bbox) const {
     // Rotate the BBox to reflect the on-disk orientation
+    afwGeom::Box2I cbbox = afwGeom::Box2I(bbox.getMin(), bbox.getDimensions());
     afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
     if(_flipLR){
-        bbox.flipLR(dimensions);
+        cbbox.flipLR(dimensions);
     }
     if(_flipTB){
-        bbox.flipTB(dimensions);
+        cbbox.flipTB(dimensions);
     }
-    return cameraGeom::detail::rotateBBoxBy90(bbox, _nQuarter, dimensions);
+    return cameraGeom::detail::rotateBBoxBy90(cbbox, _nQuarter, dimensions);
 }
 
 /**
