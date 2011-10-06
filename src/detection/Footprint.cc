@@ -400,12 +400,30 @@ void Footprint::shift(
 
 /**
  * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
+ *
+ * The list of ids found under the new Footprint are returned
  */
-void Footprint::insertIntoImage(
+std::vector<int>
+Footprint::insertIntoImage(
     image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-    int const id, //!< Add id to idImage for pixels in the Footprint
-    geom::Box2I const& region //!< Footprint's region (default: getRegion())
-) const {    
+    int const id,                           //!< Add id to idImage for pixels in the Footprint
+    bool overwriteId,                       //!< should id replace any value already in idImage?
+    geom::Box2I const& region               //!< Footprint's region (default: getRegion())
+) const
+{    
+    return std::vector<int>();
+}
+
+/**
+ * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
+ */
+void
+Footprint::insertIntoImage(
+    image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
+    int const id,                           //!< Add id to idImage for pixels in the Footprint
+    geom::Box2I const& region               //!< Footprint's region (default: getRegion())
+) const
+{    
     int width, height, x0, y0;
     if(!region.isEmpty()) {
         height = region.getHeight();

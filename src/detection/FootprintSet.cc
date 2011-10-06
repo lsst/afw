@@ -1224,18 +1224,16 @@ namespace {
             if (rRhs > 0) {
                 foot = growFootprint(*foot, rRhs, isotropic);
             }
-            foot->insertIntoImage(*idImage, id += (1 << lhsIdNbit));
+            foot->insertIntoImage(*idImage, ++id);
         }
 
         detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1), 1, false); // detect all pixels in rhs + lhs
         /*
          * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
          */
-
-#if 0 // This doesn't work when we grow the footprints; RHL to fix
-
         FindIdsInFootprint<image::Image<IdPixelT> > idFinder(*idImage);
 
+#if 0
         for (typename FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
              ptr != end; ++ptr) {
             PTR(Footprint) foot = *ptr;

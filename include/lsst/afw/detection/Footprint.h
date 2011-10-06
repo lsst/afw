@@ -154,6 +154,11 @@ public:
                          int const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
+    std::vector<int> insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
+                                     int const id,
+                                     bool overwriteId,
+                                     geom::Box2I const& region=geom::Box2I()
+    ) const;
 
     Footprint & operator=(Footprint & other);
 
