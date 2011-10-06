@@ -167,18 +167,18 @@ void geom::Box2I::shift(Extent2I const & offset) {
 }
 
 /// \brief Flip a bounding box about the y-axis given a parent box of extent (pextent).
-void geom::Box2I::flipLR(Extent2I const & pextent) {
+void geom::Box2I::flipLR(int xextent) {
     if (isEmpty()) return; // should we throw an exception here instead of a no-op?
     // Apply flip about y-axis assumine parent coordinate system
-    _minimum[0] = pextent[0] - (_minimum[0] + _dimensions[0]);
+    _minimum[0] = xextent - (_minimum[0] + _dimensions[0]);
     // _dimensions should remain unchanged
 }
 //
 /// \brief Flip a bounding box about the x-axis given a parent box of extent (pextent).
-void geom::Box2I::flipTB(Extent2I const & pextent) {
+void geom::Box2I::flipTB(int yextent) {
     if (isEmpty()) return; // should we throw an exception here instead of a no-op?
     // Apply flip about y-axis assumine parent coordinate system
-    _minimum[1] = pextent[1] - (_minimum[1] + _dimensions[1]);
+    _minimum[1] = yextent - (_minimum[1] + _dimensions[1]);
     // _dimensions should remain unchanged
 }
 
@@ -390,28 +390,28 @@ void geom::Box2D::shift(Extent2D const & offset) {
 }
 
 /// \brief Flip a bounding box about the y-axis given a parent box of extent (pextent).
-void geom::Box2D::flipLR(Extent2D const & pextent) {
+void geom::Box2D::flipLR(float xextent) {
     if (isEmpty()) return; // should we throw an exception here instead of a no-op?
     // Swap min and max values for x dimension
     _minimum[0] += _maximum[0];
     _maximum[0] = _minimum[0] - _maximum[0];
     _minimum[0] -= _maximum[0];
     // Apply flip assuming coordinate system of parent.
-    _minimum[0] = pextent[0] - _minimum[0];
-    _maximum[0] = pextent[0] - _maximum[0];
+    _minimum[0] = xextent - _minimum[0];
+    _maximum[0] = xextent - _maximum[0];
     // _dimensions should remain unchanged
 }
 
 /// \brief Flip a bounding box about the x-axis given a parent box of extent (pextent).
-void geom::Box2D::flipTB(Extent2D const & pextent) {
+void geom::Box2D::flipTB(float yextent) {
     if (isEmpty()) return; // should we throw an exception here instead of a no-op?
     // Swap min and max values for y dimension
     _minimum[1] += _maximum[1];
     _maximum[1] = _minimum[1] - _maximum[1];
     _minimum[1] -= _maximum[1];
     // Apply flip assuming coordinate system of parent.
-    _minimum[1] = pextent[1] - _minimum[1];
-    _maximum[1] = pextent[1] - _maximum[1];
+    _minimum[1] = yextent - _minimum[1];
+    _maximum[1] = yextent - _maximum[1];
     // _dimensions should remain unchanged
 }
 

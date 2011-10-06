@@ -159,7 +159,7 @@ public:
     }
 
     void setTrimmedGeom();
-
+    void setDiskToChipLayout(lsst::afw::geom::Point2I, int, bool, bool);
 
     /// Return the biasSec as read from disk
     lsst::afw::geom::Box2I getDiskBiasSec() const {
@@ -176,6 +176,7 @@ public:
         return _mapToDisk(getAllPixels(false));
     }
     /// Define the position and orientation of an Amp in a chip (in Detector coordinates)
+    /*
     void setDiskToChipLayout(
             lsst::afw::geom::Point2I pos,         // Position of Amp data (in Detector coords)
             int nQuarter,                         // number of quarter-turns in +ve direction
@@ -203,6 +204,7 @@ public:
         setTrimmedGeom();
         _originInDetector = getAllPixels().getMin();
     }
+    */
 
     template<typename ImageT>
     typename ImageT::Ptr prepareAmpData(ImageT const& im);
