@@ -100,6 +100,8 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 
 SWIG_SHARED_PTR_DERIVED(AperturePhotometry, lsst::afw::detection::Photometry, 
                         lsst::afw::detection::AperturePhotometry);
+SWIG_SHARED_PTR_DERIVED(MultipleAperturePhotometry, lsst::afw::detection::Photometry, 
+                        lsst::afw::detection::MultipleAperturePhotometry);
 
 %include "lsst/afw/detection/Schema.h"
 %include "lsst/afw/detection/Measurement.h"
@@ -117,6 +119,10 @@ SWIG_SHARED_PTR_DERIVED(AperturePhotometry, lsst::afw::detection::Photometry,
     lsst::afw::detection::AperturePhotometry::Ptr
     cast_AperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
         return boost::shared_dynamic_cast<lsst::afw::detection::AperturePhotometry>(phot);
+    }
+    lsst::afw::detection::MultipleAperturePhotometry::Ptr
+    cast_MultipleAperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::MultipleAperturePhotometry>(phot);
     }
 %}
 

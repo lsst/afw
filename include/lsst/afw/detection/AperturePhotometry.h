@@ -3,47 +3,59 @@
 
 #include <boost/serialization/export.hpp>
 
+#include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/afw/detection/Photometry.h"
 
 namespace lsst { namespace afw { namespace detection {
 
+struct ApertureFlux {
+    ApertureFlux(double radius_,
+                 double flux_=std::numeric_limits<double>::quiet_NaN(),
+                 double fluxErr_=std::numeric_limits<double>::quiet_NaN()) :
+        radius(radius_), flux(flux_), fluxErr(fluxErr_) {}
+    double radius, flux, fluxErr;    // type must match defineSchema below
+};
+
+
 class AperturePhotometry : public Photometry
 {
-    enum { RADIUS = Photometry::NVALUE,
+    enum { FLUX=Photometry::FLUX,
+           FLUX_ERR,
+           RADIUS,
            NVALUE };
 public:
     typedef boost::shared_ptr<AperturePhotometry> Ptr;
     typedef boost::shared_ptr<AperturePhotometry const> ConstPtr;
 
     /// Ctor
-    AperturePhotometry(double flux, double fluxErr, double radius) : Photometry() {
-        // XXX Photometry() and Measurement() have called init() too, but they don't know they right type,
-        // and hence we have to call init() over again....  Wish there was a simple way not to have to do this.
-        // Oh, this is just ticket #1675.  Definitely leave that to the Great Cleanup.
-        init();
+    AperturePhotometry(ApertureFlux const& fluxes) : Photometry() {
+        init();                         // This allocates space for everything in the schema
+        set<RADIUS>(fluxes.radius);
+        set<FLUX>(fluxes.flux);
+        set<FLUX_ERR>(fluxes.fluxErr);
+    }
+    AperturePhotometry(double radius, double flux, double fluxErr) : Photometry() {
+        init();                         // This allocates space for everything in the schema
+        set<RADIUS>(radius);
         set<FLUX>(flux);
         set<FLUX_ERR>(fluxErr);
-        set<RADIUS>(radius);
     }
     AperturePhotometry() : Photometry() {
         init();
     }
 
     /// Add desired fields to the schema
-    virtual void defineSchema(lsst::afw::detection::Schema::Ptr schema) {
-        // XXX Can I avoid clearing the schema, and just extend what's in Photometry?
+    virtual void defineSchema(Schema::Ptr schema ///< our schema; == _mySchema
+                     ) {
         schema->clear();
-        schema->add(lsst::afw::detection::SchemaEntry("flux",    FLUX,    
-                                                      lsst::afw::detection::Schema::DOUBLE, 1));
-        schema->add(lsst::afw::detection::SchemaEntry("fluxErr", FLUX_ERR, 
-                                                      lsst::afw::detection::Schema::DOUBLE, 1));
-        schema->add(lsst::afw::detection::SchemaEntry("radius",  RADIUS,   
-                                                      lsst::afw::detection::Schema::DOUBLE, 1, "pixels"));
+        schema->add(SchemaEntry("flux",    FLUX,     Schema::DOUBLE, 1));
+        schema->add(SchemaEntry("fluxErr", FLUX_ERR, Schema::DOUBLE, 1));
+        schema->add(SchemaEntry("radius",  RADIUS,   Schema::DOUBLE, 1, "pixels"));
     }
 
     virtual PTR(Photometry) clone() const {
         if (empty()) {
-            return boost::make_shared<AperturePhotometry>(getFlux(), getFluxErr(), getRadius());
+            return boost::make_shared<AperturePhotometry>(getRadius(), getFlux(), getFluxErr());
         }
         return Measurement<Photometry>::clone();
     }
@@ -53,62 +65,158 @@ public:
         return boost::make_shared<AperturePhotometry>(NaN, NaN, NaN);
     }
 
-    virtual std::vector<double> getFluxes() const {
-        std::vector<double> fluxes;
-        if (empty()) {
-            fluxes.push_back(get<FLUX, double>());
-        } else {
-            for (const_iterator i = begin(); i != end(); ++i) {
-                PTR(AperturePhotometry) phot = boost::dynamic_pointer_cast<AperturePhotometry, Photometry>(*i);
-                if (phot->empty()) {
-                    fluxes.push_back(phot->get<FLUX, double>());
-                } else {
-                    std::vector<double> const& more = phot->getFluxes();
-                    for (std::vector<double>::const_iterator k = more.begin(); k != more.end(); ++k) {
-                        fluxes.push_back(*k);
-                    }
-                }
-            }
-        }
-        return fluxes;
-    }
-
     virtual double getRadius() const { return get<RADIUS, double>(); }
 
     virtual PTR(Photometry) average(void) {
         if (empty()) {
             return clone();
         }
-        typedef std::vector<ConstPtr> Group;
-        typedef std::map<double, Group> GroupMap;
-        std::map<double, Group> groups;
+
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+
+        double sumFlux = 0;
+        double sumWeight = 0;
+        double radius = NaN;
+
         for (iterator iter = begin(); iter != end(); ++iter) {
             PTR(AperturePhotometry) phot = boost::dynamic_pointer_cast<AperturePhotometry, Photometry>(*iter);
-            double const radius = phot->getRadius();
-            GroupMap::const_iterator mapIter = groups.find(radius);
-            if (mapIter == groups.end()) {
-                groups[radius] = Group();
+            if (lsst::utils::isnan(getRadius())) {
+                continue;
             }
-            groups[radius].push_back(phot);
-        }
-        PTR(AperturePhotometry) averages = boost::make_shared<AperturePhotometry>();
-        for (GroupMap::iterator groupIter = groups.begin(); groupIter != groups.end(); ++groupIter) {
-            double const radius = groupIter->first;
-            Group const group = groupIter->second;
-            double sum = 0.0, sumWeight = 0.0;
-            for (Group::const_iterator grpIter = group.begin(); grpIter != group.end(); ++grpIter) {
-                CONST_PTR(AperturePhotometry) phot = *grpIter;
-                double flux = phot->getFlux();
-                double fluxErr = phot->getFluxErr();
-                double weight = 1.0 / (fluxErr * fluxErr);
-                sum += flux * weight;
-                sumWeight += weight;
+            if (lsst::utils::isnan(radius)) {
+                radius = getRadius();
+            } else if (getRadius() != radius) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                                  (boost::format("Radius doesn't match: %f vs %f") % 
+                                   radius % getRadius()).str());
             }
-            double const flux = sum / sumWeight;
-            double const fluxErr = ::sqrt(1.0 / sumWeight);
-            averages->add(boost::make_shared<AperturePhotometry>(flux, fluxErr, radius));
+            double const weight = 1.0 / (getFluxErr() * getFluxErr());
+            sumFlux += getFlux() * weight;
+            sumWeight += weight;
         }
-        return averages;
+        
+        return boost::make_shared<AperturePhotometry>(radius, sumFlux / sumWeight, ::sqrt(1.0 / sumWeight));
+    }
+
+
+private:
+    LSST_SERIALIZE_PARENT(lsst::afw::detection::Photometry)
+};
+
+
+/// XXX Template on NRADIUS?
+class MultipleAperturePhotometry : public Photometry
+{
+    enum { NRADIUS = 3 };               // dimension of RADIUS array
+    enum { FLUX=Photometry::FLUX,
+           FLUX_ERR = FLUX     + NRADIUS,
+           RADIUS   = FLUX_ERR + NRADIUS,
+           NVALUE   = RADIUS   + NRADIUS };
+public:
+    typedef boost::shared_ptr<MultipleAperturePhotometry> Ptr;
+    typedef boost::shared_ptr<MultipleAperturePhotometry const> ConstPtr;
+
+    /// Ctor
+    MultipleAperturePhotometry(std::vector<ApertureFlux> const& fluxes) : Photometry() {
+        init();                         // This allocates space for everything in the schema
+
+        int const nflux = fluxes.size();
+        assert (nflux <= NRADIUS);      // XXX be nice
+        for (int i = 0; i != nflux; ++i) {
+            set<RADIUS>(i, fluxes[i].radius);
+            set<FLUX>(i, fluxes[i].flux);
+            set<FLUX_ERR>(i, fluxes[i].fluxErr);
+        }
+        // Ensure everything has a value; lest we get boost::any cast problems....
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        for (int i = nflux; i != NRADIUS; ++i) {
+            set<RADIUS>(i, NaN);
+            set<FLUX>(i, NaN);
+            set<FLUX_ERR>(i, NaN);
+        }
+    }
+
+    MultipleAperturePhotometry() : Photometry() {
+        init();
+    }
+
+    /// Add desired fields to the schema
+    virtual void defineSchema(Schema::Ptr schema ///< our schema; == _mySchema
+                     ) {
+        schema->clear();
+        schema->add(SchemaEntry("flux",    FLUX,     Schema::DOUBLE, NRADIUS));
+        schema->add(SchemaEntry("fluxErr", FLUX_ERR, Schema::DOUBLE, NRADIUS));
+        schema->add(SchemaEntry("radius",  RADIUS,   Schema::DOUBLE, NRADIUS, "pixels"));
+    }
+
+    virtual PTR(Photometry) clone() const {
+        if (empty()) {
+            return boost::make_shared<MultipleAperturePhotometry>(getFluxes());
+        }
+        return Measurement<Photometry>::clone();
+    }
+
+    static Ptr null() {
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        std::vector<ApertureFlux> nulls;
+        for (size_t i = 0; i < NRADIUS; ++i) {
+            nulls.push_back(ApertureFlux(NaN, NaN, NaN));
+        }
+        return boost::make_shared<MultipleAperturePhotometry>(nulls);
+    }
+
+    virtual std::vector<ApertureFlux> getFluxes() const {
+        std::vector<ApertureFlux> fluxes;
+        for (size_t i = 0; i != NRADIUS; ++i) {
+            fluxes.push_back(ApertureFlux(get<RADIUS, double>(i), get<FLUX, double>(i), 
+                                          get<FLUX_ERR, double>(i)));
+        }
+        return fluxes;
+    }
+
+    virtual PTR(Photometry) average(void) {
+        if (empty()) {
+            return clone();
+        }
+        std::vector<double> sumFlux(NRADIUS);
+        std::vector<double> sumWeight(NRADIUS);
+        std::vector<double> radius(NRADIUS);
+
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+
+        for (size_t i = 0; i != NRADIUS; ++i) {
+            sumFlux[i] = 0;
+            sumWeight[i] = 0;
+            radius[i] = NaN;
+        }
+
+        for (iterator iter = begin(); iter != end(); ++iter) {
+            PTR(MultipleAperturePhotometry) phot = 
+                boost::dynamic_pointer_cast<MultipleAperturePhotometry, Photometry>(*iter);
+            std::vector<ApertureFlux> const& apFlux = getFluxes();
+            for (size_t i = 0; i != NRADIUS; ++i) {
+                if (lsst::utils::isnan(apFlux[i].radius)) {
+                    continue;
+                }
+                if (lsst::utils::isnan(radius[i])) {
+                    radius[i] = apFlux[i].radius;
+                } else if (apFlux[i].radius != radius[i]) {
+                    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                                      (boost::format("Radius %d doesn't match: %f vs %f") % 
+                                       i % radius[i] % apFlux[i].radius).str());
+                }
+                double const weight = 1.0 / (apFlux[i].fluxErr * apFlux[i].fluxErr);
+                sumFlux[i] += apFlux[i].flux * weight;
+                sumWeight[i] += weight;
+            }
+        }
+
+        std::vector<ApertureFlux> apFlux;
+        for (size_t i = 0; i != NRADIUS; ++i) {
+            apFlux.push_back(ApertureFlux(radius[i], sumFlux[i] / sumWeight[i], ::sqrt(1.0 / sumWeight[i])));
+        }
+
+        return boost::make_shared<MultipleAperturePhotometry>(apFlux);
     }
 
 private:
@@ -118,5 +226,6 @@ private:
 }}}
 
 LSST_REGISTER_SERIALIZER(lsst::afw::detection::AperturePhotometry)
+LSST_REGISTER_SERIALIZER(lsst::afw::detection::MultipleAperturePhotometry)
 
 #endif
