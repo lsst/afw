@@ -31,6 +31,7 @@
  */
 #include <algorithm>
 #include <list>
+#include <set>
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
@@ -154,10 +155,11 @@ public:
                          int const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
-    std::vector<int> insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
-                                     int const id,
-                                     bool overwriteId,
-                                     geom::Box2I const& region=geom::Box2I()
+    void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
+                         int const id,
+                         bool const overwriteId, long const idMask,
+                         std::set<int> *oldIds,
+                         geom::Box2I const& region=geom::Box2I()
     ) const;
 
     Footprint & operator=(Footprint & other);
