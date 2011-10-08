@@ -40,6 +40,40 @@ try:
 
         return nx, ny
 
+    def getEigenValue(var, x, y=0):
+        if re.search(r"Matrix", str(var.type)):
+            if False:
+                return var["operator()(int, int)"](x, y)
+            else:
+                NX, NY = getEigenMatrixDimensions(var)
+
+                if x < 0 or x >= NX or y < 0 or y >= NY:
+                    raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
+                                       (x, y, NX - 1, NY - 1))
+
+                m_data = var["m_storage"]["m_data"]
+                if False:
+                    # convert to a pointer to the start of the array
+                    import pdb; pdb.set_trace() 
+                    m_data = m_data.address.cast(m_data.type)
+
+                try:
+                    val = m_data[x + y*NX]
+                except:
+                    val = m_data["array"][x + y*NX]
+        else:                       # Vector
+            if x < 0 or x >= m_storage["m_cols"]:
+                raise gdb.GdbError("Element %d is out of range 0:%d" % (x, m_storage["m_cols"] - 1))
+
+            val = m_storage["m_data"][x]
+
+        if val.type.code == gdb.TYPE_CODE_INT:
+            val = int(val)
+        elif val.type.code == gdb.TYPE_CODE_FLT:
+            val = float(val)
+
+        return val            
+
     class EigenMatrixPrinter(object):
         "Print an Eigen Matrix"
 
@@ -86,26 +120,10 @@ try:
 
 
         def _mget(self, var, x, y=0):
-            if re.search(r"Matrix", str(var.type)):
-                if False:
-                    return var["operator()(int, int)"](x, y)
-                else:
-                    NX, NY = getEigenMatrixDimensions(var)
+            return getEigenValue(var, x, y)
 
-                    if x < 0 or x >= NX or y < 0 or y >= NY:
-                        raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
-                                           (x, y, NX - 1, NY - 1))
-
-                    m_data = var["m_storage"]["m_data"]
-                    # convert to a pointer to the start of the array
-                    m_data = m_data.address.cast(m_data.type)
-
-                    return m_data[x + y*NX]
-            else:                       # Vector
-                if x < 0 or x >= m_storage["m_cols"]:
-                    raise gdb.GdbError("Element %d is out of range 0:%d" % (x, m_storage["m_cols"] - 1))
-
-                return m_storage["m_data"][x]
+        def _vget(self, var, x):
+            return getEigenValue(var, x)
 
         def invoke (self, args, fromTty):
             self.dont_repeat()
@@ -116,6 +134,9 @@ try:
             imgName = args.pop(0)
             var = gdb.parse_and_eval(imgName)
 
+            if not re.search(r"^Eigen::(Matrix|Vector)", str(var.type)):
+                raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
+                
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
@@ -248,7 +269,8 @@ try:
             self.val = val
 
         def to_string(self):
-            return "{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+            return "Source{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"],
+                                                          self.val["_xAstrom"], self.val["_yAstrom"])
 
     class FootprintPrinter(object):
         "Print a Footprint"
@@ -257,7 +279,23 @@ try:
             self.val = val
 
         def to_string(self):
-            return "RHL Footprint (fixme when gdb 7.3 arrives)"
+            if False:
+                nspan = self.val["_spans"]["size"]() # Fails (as it's type is METHOD, not CODE)
+            else:
+                vec_impl = self.val["_spans"]["_M_impl"]
+                nspan = vec_impl["_M_finish"] - vec_impl["_M_start"]
+
+            return "Footprint{id=%d, nspan=%d, area=%d; BBox %s}" % (self.val["_fid"], nspan,
+                                                                     self.val["_area"], self.val["_bbox"])
+
+    class FootprintSetPrinter(object):
+        "Print a FootprintSet"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "FootprintSet{%s; %s}" % (self.val["_region"], self.val["_footprints"])
 
     class PeakPrinter(object):
         "Print a Peak"
@@ -270,6 +308,27 @@ try:
                                                          self.val["_fx"], self.val["_fy"])
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class Box2Printer(object):
+        "Print a Box2"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            # Make sure &foo works, too.
+            type = self.val.type
+            if type.code == gdb.TYPE_CODE_REF:
+                type = type.target ()
+
+            llc = [getEigenValue(self.val["_minimum"]["_vector"], 0, i) for i in range(2)]
+            dims = [getEigenValue(self.val["_dimensions"]["_vector"], 0, i) for i in range(2)]
+
+            return "Box2{(%s,%s)--(%s,%s)}" % (llc[0], llc[1],
+                                                 llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
+
+        def display_hint (self):
+            return "array"
 
     class CoordinateBasePrinter(object):
         "Print a CoordinateBase"
@@ -373,6 +432,9 @@ try:
 
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
+
+            if not re.search(r"^lsst::afw::image::(Image|Mask|MaskedImage)", str(var.type)):
+                raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
             if re.search(r"MaskedImage", str(var.type)):
                 print "N.b. %s is a MaskedImage; showing image" % (imgName)
@@ -500,6 +562,8 @@ try:
 
         printer.add_printer('lsst::afw::detection::Footprint',
                             '^lsst::afw::detection::Footprint$', FootprintPrinter)
+        printer.add_printer('lsst::afw::detection::FootprintSet',
+                            '^lsst::afw::detection::FootprintSet', FootprintSetPrinter)
         printer.add_printer('lsst::afw::detection::Peak',
                             '^lsst::afw::detection::Peak$', PeakPrinter)
         printer.add_printer('lsst::afw::detection::Source',
@@ -507,10 +571,12 @@ try:
         printer.add_printer('lsst::afw::detection::BaseSourceAttributes',
                             '^lsst::afw::detection::BaseSourceAttributes$', BaseSourceAttributesPrinter)
 
-        printer.add_printer('lsst::afw::geom::Point',
-                            '^lsst::afw::geom::Point', CoordinateBasePrinter)
+        printer.add_printer('lsst::afw::geom::Box',
+                            '^lsst::afw::geom::Box', Box2Printer)
         printer.add_printer('lsst::afw::geom::Extent',
                             '^lsst::afw::geom::Extent', CoordinateBasePrinter)
+        printer.add_printer('lsst::afw::geom::Point',
+                            '^lsst::afw::geom::Point', CoordinateBasePrinter)
 
         printer.add_printer('lsst::afw::image::ImageBase',
                             'lsst::afw::image::ImageBase<[^>]+>$', ImagePrinter)
