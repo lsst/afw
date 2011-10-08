@@ -107,7 +107,7 @@ void cameraGeom::Amp::setTrimmedGeom() {
     getAllTrimmedPixels() = _trimmedDataSec;
 }
 
-void cameraGeom::Amp::setDiskToChipLayout(
+void cameraGeom::Amp::setElectronicToChipLayout(
         lsst::afw::geom::Point2I pos,         // Position of Amp data (in Detector coords)
         int nQuarter,                         // number of quarter-turns in +ve direction
         bool flipLR,                          // Flip the Amp data left <--> right before rotation
@@ -127,9 +127,9 @@ void cameraGeom::Amp::setDiskToChipLayout(
         _readoutCorner = LLC;
 
     _readoutCorner = static_cast<ReadoutCorner>((_readoutCorner + nQuarter)%4);
-    _biasSec = _mapFromDisk(_biasSec);
-    _dataSec = _mapFromDisk(_dataSec);
-    getAllPixels() = _mapFromDisk(getAllPixels());
+    _biasSec = _mapFromElectronic(_biasSec);
+    _dataSec = _mapFromElectronic(_dataSec);
+    getAllPixels() = _mapFromElectronic(getAllPixels());
     this->shift(pos.getX()*getAllPixels().getWidth(), pos.getY()*getAllPixels().getHeight());
     setTrimmedGeom();
     _originInDetector = getAllPixels().getMin();
@@ -180,7 +180,7 @@ void cameraGeom::Amp::rotateBy90(
  *
  * This is intended to be used when each amp is in its separate file (or HDU) on disk
  */
-lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) const {
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapToElectronic(lsst::afw::geom::Box2I bbox) const {
     // Reset the BBox's origin within the Detector to reflect the on-disk value
     bbox.shift(-geom::Extent2I(_originInDetector));
     // Rotate the BBox to reflect the on-disk orientation
@@ -205,7 +205,7 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) 
  *
  * This is intended to be used when each amp is in its separate file (or HDU) on disk
  */
-lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromDisk(lsst::afw::geom::Box2I bbox) const {
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromElectronic(lsst::afw::geom::Box2I bbox) const {
     // Rotate the BBox to reflect the on-disk orientation
     afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
     if(_flipLR){

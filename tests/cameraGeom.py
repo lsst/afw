@@ -49,7 +49,7 @@ import lsst.afw.display.utils as displayUtils
 
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
-
+#display = True
 try:
     type(display)
 except NameError:
@@ -69,17 +69,17 @@ def trimCcd(ccd, ccdImage=""):
     ccd.setTrimmed(True)
 
     if ccdImage is not None:
-        trimmedImage = ccdImage.Factory(ccd.getAllPixelsNoRotation())
+        trimmedImage = ccdImage.Factory(ccd.getAllPixels())
         for a in ccd:
             data = ccdImage.Factory(ccdImage, a.getDataSec(False), afwImage.LOCAL)
             tdata = trimmedImage.Factory(trimmedImage, a.getDataSec(), afwImage.LOCAL)
             tdata <<= data
     else:
         trimmedImage = None
-
+    """
     if trimmedImage:
         trimmedImage = afwMath.rotateImageBy90(trimmedImage, ccd.getOrientation().getNQuarter())
-
+    """
     return trimmedImage
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -106,6 +106,29 @@ class CameraGeomTestCase(unittest.TestCase):
                 print "ccd", c
             for a in self.geomPolicy.getArray("Amp"):
                 print "amp", a
+
+    def testRotatedCcd(self):
+        """Test if we can build a Ccd out of Amps"""
+
+        #print >> sys.stderr, "Skipping testRotatedCcd"; return
+
+        ccdId = cameraGeom.Id(1, "Rot. CCD")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+        ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
+        if display:
+            cameraGeomUtils.showCcd(ccd)
+            ds9.incrDefaultFrame()
+        #
+        # Trim the CCD and try again
+        #
+
+
+        trimmedImage = trimCcd(ccd)
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, trimmedImage)
+            ds9.incrDefaultFrame()
 
     def testId(self):
         """Test cameraGeom.Id"""
@@ -149,7 +172,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
             eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
             amp = cameraGeom.Amp(cameraGeom.Id(serial, "", Col, 0), allPixels, biasSec, dataSec,
-                                 cameraGeom.Amp.LLC, eParams)
+                                 eParams)
 
             ccd.addAmp(afwGeom.Point2I(Col, 0), amp); Col += 1
         #
@@ -239,28 +262,6 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(ccd.getPixelFromPosition(pos), pix)
         self.assertEqual(ccd.getPositionFromPixel(pix), posll)
 
-    def testRotatedCcd(self):
-        """Test if we can build a Ccd out of Amps"""
-
-        #print >> sys.stderr, "Skipping testRotatedCcd"; return
-
-        ccdId = cameraGeom.Id("Rot. CCD")
-        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
-        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
-        ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
-        if display:
-            cameraGeomUtils.showCcd(ccd)
-            ds9.incrDefaultFrame()
-        #
-        # Trim the CCD and try again
-        #
-
-
-        trimmedImage = trimCcd(ccd)
-
-        if display:
-            cameraGeomUtils.showCcd(ccd, trimmedImage)
-            ds9.incrDefaultFrame()
 
     def testSortedCcds(self):
         """Test if the Ccds are sorted by ID after insertion into a Raft"""
@@ -391,7 +392,7 @@ class CameraGeomTestCase(unittest.TestCase):
         # Check that we can find an Amp in the bowels of the camera
         ccdName = "C:0,0"
         amp = cameraGeomUtils.findAmp(camera, cameraGeom.Id(ccdName), 1, 2)
-        self.assertEqual(amp.getId().getName(), "ID6")
+        self.assertEqual(amp.getId().getName(), "ID7")
         self.assertEqual(amp.getParent().getId().getName(), ccdName)
 
     def testDefectBase(self):

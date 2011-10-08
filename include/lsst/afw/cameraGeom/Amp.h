@@ -159,52 +159,23 @@ public:
     }
 
     void setTrimmedGeom();
-    void setDiskToChipLayout(lsst::afw::geom::Point2I, int, bool, bool);
+    /// Define the position and orientation of an Amp in a chip (in Detector coordinates)
+    void setElectronicToChipLayout(lsst::afw::geom::Point2I, int, bool, bool);
 
     /// Return the biasSec as read from disk
-    lsst::afw::geom::Box2I getDiskBiasSec() const {
-        return _mapToDisk(getBiasSec(false));
+    lsst::afw::geom::Box2I getElectronicBiasSec() const {
+        return _mapToElectronic(getBiasSec(false));
     }
 
     /// Return the dataSec as read from disk
-    lsst::afw::geom::Box2I getDiskDataSec() const {
-        return _mapToDisk(getDataSec(false));
+    lsst::afw::geom::Box2I getElectronicDataSec() const {
+        return _mapToElectronic(getDataSec(false));
     }
 
     /// Return the all as read from disk
-    lsst::afw::geom::Box2I getDiskAllPixels() const {
-        return _mapToDisk(getAllPixels(false));
+    lsst::afw::geom::Box2I getElectronicAllPixels() const {
+        return _mapToElectronic(getAllPixels(false));
     }
-    /// Define the position and orientation of an Amp in a chip (in Detector coordinates)
-    /*
-    void setDiskToChipLayout(
-            lsst::afw::geom::Point2I pos,         // Position of Amp data (in Detector coords)
-            int nQuarter,                         // number of quarter-turns in +ve direction
-            bool flipLR,                          // Flip the Amp data left <--> right before rotation
-            bool flipTB                           // Flip the Amp data top <--> bottom before rotation
-                      ) {
-        _nQuarter = nQuarter;
-        _flipLR = flipLR;
-        _flipTB = flipTB;
-
-        if (_flipLR && _flipTB)
-            _readoutCorner = URC;
-        else if (_flipLR)
-            _readoutCorner = LRC;
-        else if (_flipTB)
-            _readoutCorner = ULC;
-        else
-            _readoutCorner = LLC;
-
-        _readoutCorner = static_cast<ReadoutCorner>((_readoutCorner + nQuarter)%4);
-        _biasSec = _mapFromDisk(_biasSec);
-        _dataSec = _mapFromDisk(_dataSec);
-        getAllPixels() = _mapFromDisk(getAllPixels());
-        this->shift(pos.getX()*getAllPixels().getWidth(), pos.getY()*getAllPixels().getHeight());
-        setTrimmedGeom();
-        _originInDetector = getAllPixels().getMin();
-    }
-    */
 
     template<typename ImageT>
     typename ImageT::Ptr prepareAmpData(ImageT const& im);
@@ -225,8 +196,8 @@ private:
     bool _flipLR;                       // flip the data left <--> right before rotation
     bool _flipTB;                       // Flip the data top <--> bottom before rotation
 
-    lsst::afw::geom::Box2I _mapToDisk(lsst::afw::geom::Box2I bbox) const;
-    lsst::afw::geom::Box2I _mapFromDisk(lsst::afw::geom::Box2I bbox) const;
+    lsst::afw::geom::Box2I _mapToElectronic(lsst::afw::geom::Box2I bbox) const;
+    lsst::afw::geom::Box2I _mapFromElectronic(lsst::afw::geom::Box2I bbox) const;
 };
     
 }}}

@@ -77,9 +77,9 @@ class GetCcdImage(object):
 
         if amp:
             if self.isTrimmed:
-                bbox = amp.getDiskDataSec()
+                bbox = amp.getElectronicDataSec()
             else:
-                bbox = amp.getDiskAllPixels()
+                bbox = amp.getElectronicAllPixels()
         else:
             bbox = ccd.getAllPixels()
 
@@ -101,17 +101,19 @@ class SynthesizeCcdImage(GetCcdImage):
     def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
         """Return an image of the specified amp in the specified ccd"""
         
-        bbox = amp.getAllPixels(self.isTrimmed)
+        if self.isTrimmed:
+            bbox = amp.getElectronicDataSec()
+        else:
+            bbox = amp.getElectronicAllPixels()
         im = imageFactory(bbox.getDimensions())
         xy0 = afwGeom.Extent2I(bbox.getMin())
-
         im += int(amp.getElectronicParams().getReadNoise())
-        bbox = afwGeom.Box2I(amp.getDataSec(self.isTrimmed))
+        bbox = afwGeom.Box2I(amp.getElectronicDataSec())
         bbox.shift(-xy0)
         sim = imageFactory(im, bbox, afwImage.LOCAL)
         sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
         # Mark the amplifier
-        dataSec = amp.getDataSec(self.isTrimmed)
+        dataSec = amp.getElectronicDataSec()
         if amp.getReadoutCorner() == cameraGeom.Amp.LLC:
             xy = dataSec.getMin()
         elif amp.getReadoutCorner() == cameraGeom.Amp.LRC:
@@ -122,9 +124,9 @@ class SynthesizeCcdImage(GetCcdImage):
             xy = afwGeom.Point2I(dataSec.getMaxX() - 2, dataSec.getMaxY() - 2)
         else:
             assert(not "Possible readoutCorner")
-
-        imageFactory(im, afwGeom.Box2I(xy - xy0, afwGeom.Extent2I(3, 3)), afwImage.LOCAL).set(0)
-
+        #Since the image is in electronic coordinates, we need only make at
+        #the origin.
+        imageFactory(im, afwGeom.Box2I(bbox.getMin(), afwGeom.Extent2I(3, 3)), afwImage.LOCAL).set(0)
         return im
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -199,13 +201,11 @@ in particular that it has an entry ampSerial which is a single-element list, the
     # Discover how the per-amp data is laid out on disk; it's common for the data acquisition system to
     # put together a single image for an entire CCD, but it isn't mandatory
     #
-    diskFormatPol = geomPolicy.get("CcdDiskLayout")
+    diskFormatPol = geomPolicy.get("CcdElectronicLayout")
     hduPerAmp = diskFormatPol.get("HduPerAmp")
-    ampDiskLayout = {}
-    if hduPerAmp:
-        for p in diskFormatPol.getArray("Amp"):
-            ampDiskLayout[p.get("serial")] = (p.get("hdu"), p.get("flipLR"), p.get("flipTB"), p.get("nQuarter"))
-    
+    ampElectronicLayout = {}
+    for p in diskFormatPol.getArray("Amp"):
+        ampElectronicLayout[p.get("serial")] = (p.get("hdu"), p.get("flipLR"), p.get("flipTB"), p.get("nQuarter"))
     for k in defectDict.keys():
         if ccdId == k:
             ccd.setDefects(defectDict[k])
@@ -276,7 +276,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
         eWidth = extended + width + overclockH
         eHeight = preRows + height + overclockV
 
-        allPixelsOnDisk = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(eWidth, eHeight))
+        allPixelsInAmp = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(eWidth, eHeight))
         if extended > 0 and overclockH == 0:
             biasSec = afwGeom.Box2I(afwGeom.Point2I(0, preRows), afwGeom.Extent2I(extended, height))
             dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
@@ -286,16 +286,11 @@ in particular that it has an entry ampSerial which is a single-element list, the
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial, Col, Row),
-                             allPixelsOnDisk, biasSec, dataSec, eParams)
-
-	if hduPerAmp:
-            #
-            # Set the on-disk layout parameters now that we've possibly rotated the Ccd to fit the raft
-            #
-            hdu, flipLR, flipTB, nQuarterAmp = ampDiskLayout[amp.getId().getSerial()]
-    	    #The following maps how the amp pixels must be changed to go from electronic (on disk) coordinates
-	    #to detector coordinates.  This also sets the readout corner.
-            amp.setDiskToChipLayout(afwGeom.Point2I(Col, Row), nQuarterAmp, flipLR, flipTB)
+                             allPixelsInAmp, biasSec, dataSec, eParams)
+        hdu, flipLR, flipTB, nQuarterAmp = ampElectronicLayout[amp.getId().getSerial()]
+        #The following maps how the amp pixels must be changed to go from electronic (on disk) coordinates
+        #to detector coordinates.  This also sets the readout corner.
+        amp.setElectronicToChipLayout(afwGeom.Point2I(Col, Row), nQuarterAmp, flipLR, flipTB)
         #
         # Actually add amp to the Ccd
         #
@@ -516,12 +511,13 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     # it still needs to be rotated.
     #
     if imageSource.isRaw:
-        ccdImage = imageFactory(ccd.getAllPixelsNoRotation(isTrimmed))
+        #ccdImage = imageFactory(ccd.getAllPixelsNoRotation(isTrimmed))
+        ccdImage = imageFactory(ccd.getAllPixels(isTrimmed))
 
         for a in ccd:
             im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
             im <<= a.prepareAmpData(imageSource.getImage(ccd, a,
-                imageFactory=imageFactory, isTrimmed=isTrimmed))
+                imageFactory=imageFactory))
     else:
         ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
 
@@ -530,8 +526,8 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     #
     # Now rotate to the as-installed orientation
     #
-    if not natural:
-        ccdImage = afwMath.rotateImageBy90(ccdImage, ccd.getOrientation().getNQuarter())
+    #if not natural:
+    #    ccdImage = afwMath.rotateImageBy90(ccdImage, ccd.getOrientation().getNQuarter())
     if display:
         showCcd(ccd, ccdImage=ccdImage, isTrimmed=isTrimmed)
     return ccdImage
@@ -588,20 +584,20 @@ of the detectors"""
         return
 
     nQuarter = ccd.getOrientation().getNQuarter()
-    ccdDim = cameraGeom.rotateBBoxBy90(ccd.getAllPixels(isTrimmed), nQuarter,
-            ccd.getAllPixels(isTrimmed).getDimensions()).getDimensions()
+#    ccdDim = cameraGeom.rotateBBoxBy90(ccd.getAllPixels(isTrimmed), nQuarter,
+#           ccd.getAllPixels(isTrimmed).getDimensions()).getDimensions()
     for a in ccd:
         bbox = a.getAllPixels(isTrimmed)
-        if nQuarter != 0:
-            bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
+#        if nQuarter != 0:
+#            bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
 
         displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49,
                               frame=frame, bin=bin)
 
         if not isTrimmed:
             for bbox, ctype in ((a.getBiasSec(), ds9.RED), (a.getDataSec(), ds9.BLUE)):
-                if nQuarter != 0:
-                    bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
+#                if nQuarter != 0:
+#                    bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
                 displayUtils.drawBBox(bbox, origin=ccdOrigin,
                                       borderWidth=0.49, ctype=ctype, frame=frame, bin=bin)
         # Label each Amp
@@ -620,6 +616,7 @@ of the detectors"""
             c, s = -1, 0
         elif nQuarter == 3:
             c, s = 0, 1
+        c, s = 1, 0
         ccdHeight = ccd.getAllPixels(isTrimmed).getHeight()
         ccdWidth = ccd.getAllPixels(isTrimmed).getWidth()
         xc -= 0.5*ccdHeight
@@ -641,22 +638,26 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
     """Make an Image of a Raft"""
 
     if raftCenter is None:
-        raftCenter = afwGeom.Point2I(raft.getAllPixels().getDimensions()//2)
+        raftCenter = afwGeom.Point2I(raft.getAllPixels().getDimensions()[0]//2,
+                raft.getAllPixels().getDimensions()[0]//2)
 
-    raftImage = imageFactory(raft.getAllPixels().Dimensions()//bin)
+    dimensions = afwGeom.Extent2I(raft.getAllPixels().getDimensions()[0]//bin,
+            raft.getAllPixels().getDimensions()[1]//bin)
+    raftImage = imageFactory(dimensions)
 
     for det in raft:
         ccd = cameraGeom.cast_Ccd(det)
         
         bbox = ccd.getAllPixels(True)
-        cen = getCenterPixel()
+        cen = ccd.getCenterPixel()
         origin = afwGeom.PointI(cen[0], cen[1]) - \
                 bbox.getDimensions()/2 + \
                 afwGeom.Extent2I(raftCenter[0], raftCenter[1])
-
+        dims = afwGeom.Extent2I(bbox.getDimensions()[0]//bin,
+                bbox.getDimensions[1]//bin)
         bbox = afwGeom.Box2I(afwGeom.Point2I((origin.getX() + bbox.getMinX())//bin,
                                              (origin.getY() + bbox.getMinY())//bin),
-                             bbox.getDimensions()//bin)
+                             dims)
 
         ccdImage = raftImage.Factory(raftImage, bbox, afwImage.LOCAL)
         ccdImage <<= makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
@@ -712,9 +713,11 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
         bbox = raft.getAllPixels()
         origin = camera.getCenterPixel() + afwGeom.Extent2D(raft.getCenterPixel()) - \
                  afwGeom.Extent2D(bbox.getWidth()/2, bbox.getHeight()/2)               
-        bbox = afwGeom.Box2I(afwGeom.Point2I((origin.getX() + bbox.getMinX())//bin,
-                                           (origin.getY() + bbox.getMinY())//bin),
-                             bbox.getDimensions()//bin)
+        dimensions = afwGeom.Extent2I(bbox.getDimensions()[0]//bin,
+                bbox.getDimensions()[1]//bin)
+        bbox = afwGeom.Box2I(afwGeom.Point2I(int((origin.getX() + bbox.getMinX())//bin),
+                                           int((origin.getY() + bbox.getMinY())//bin)),
+                             dimensions)
 
         im = cameraImage.Factory(cameraImage, bbox, afwImage.LOCAL)
 

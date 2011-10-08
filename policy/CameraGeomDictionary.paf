@@ -259,10 +259,10 @@ definitions: {
     #
     # How the amps within a CCD are laid out in disk files
     #
-    CcdDiskLayout: {
+    CcdElectronicLayout: {
         type: Policy
         dictionary: {
-            target: "CcdDiskLayout"
+            target: "CcdElectronicLayout"
             definitions: {
                 HduPerAmp: {
                     type: bool

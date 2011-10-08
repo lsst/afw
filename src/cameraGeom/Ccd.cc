@@ -217,15 +217,11 @@ void cameraGeom::Ccd::setOrientation(
         cameraGeom::Orientation const& orientation // the detector's new Orientation
                                     )
 {
-#if 0    
     int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
     afwGeom::Extent2I const dimensions = getAllPixels(false).getDimensions();
-#endif
     cameraGeom::Detector::setOrientation(orientation);
-#if 0    
     std::for_each(_amps.begin(), _amps.end(),
                   boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
-#endif
 }
 
 /************************************************************************************************************/

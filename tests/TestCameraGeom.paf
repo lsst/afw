@@ -82,36 +82,36 @@ Ccd: {
     nCol: 2                             # number of columns of amps; 2 == Left and Right
     nRow: 4                             # number of rows of amps
     Amp: {
+        serial: 1
         index: 0 0                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LLC              # location of first pixel read
     }
     Amp: {
+        serial: 2
         index: 0 1                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LLC              # location of first pixel read
     }
     Amp: {
+        serial: 3
         index: 0 2                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LLC              # location of first pixel read
     }
     Amp: {
+        serial: 4
         index: 0 3                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LLC              # location of first pixel read
     }
     Amp: {
+        serial: 5
         index: 1 0                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LRC              # location of first pixel read
     }
     Amp: {
+        serial: 6
         index: 1 1                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LRC              # location of first pixel read
     }
     Amp: {
+        serial: 7
         index: 1 2                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LRC              # location of first pixel read
     }
     Amp: {
+        serial: 8
         index: 1 3                      # Location of Amp in CCD thought of as a grid of amplifiers
-        readoutCorner: LRC              # location of first pixel read
     }
 }
 
@@ -124,6 +124,66 @@ Amp: {
     preRows: 2                          # extra rows before first real serial transfer
     overclockH: 15                      # number of serial overclock pixels
     overclockV: 5                       # number of parallel overclock pixels
+}
+
+CcdElectronicLayout: {
+    HduPerAmp: false
+    Amp: {
+        serial: 1
+        flipLR: false
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
+    Amp: {
+        serial: 2
+        flipLR: false
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
+    Amp: {
+        serial: 3
+        flipLR: false
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
+    Amp: {
+        serial: 4
+        flipLR: false
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
+    Amp: {
+        serial: 5
+        flipLR: true
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
+    Amp: {
+        serial: 6
+        flipLR: true
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
+    Amp: {
+        serial: 7
+        flipLR: true
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
+    Amp: {
+        serial: 8
+        flipLR: true
+        flipTB: false
+        nQuarter: 0
+        hdu: 0
+    }
 }
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
