@@ -166,6 +166,7 @@ void cameraGeom::Amp::rotateBy90(
     getAllPixels() = cameraGeom::detail::rotateBBoxBy90(getAllPixels(), n90, dimensions);
     _biasSec = cameraGeom::detail::rotateBBoxBy90(_biasSec, n90, dimensions);
     _dataSec = cameraGeom::detail::rotateBBoxBy90(_dataSec, n90, dimensions);
+    _nQuarter = (_nQuarter + n90)%4;
 
     setTrimmedGeom();
     //

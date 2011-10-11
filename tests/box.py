@@ -356,6 +356,56 @@ class Box2DTestCase(unittest.TestCase):
         box.clip(geom.Box2D(geom.Point2D(-1,-2), geom.Point2D(5,4), True))
         self.assertEqual(box, geom.Box2D(geom.Point2D(0,0), geom.Point2D(5,4), True))
 
+    def testFlipI(self):
+        parentExtent = geom.Extent2I(15,20)
+        x00, y00, x11, y11 = (8,11,13,16)
+        lrx00,lry00,lrx11,lry11 = (1,11,6,16)
+        tbx00,tby00,tbx11,tby11 = (8,3,13,8)
+      
+        box0 = geom.Box2I(geom.Point2I(x00, y00),
+                geom.Point2I(x11, y11))
+        box1 = geom.Box2I(geom.Point2I(x00, y00),
+                geom.Point2I(x11, y11))
+        box0.flipLR(parentExtent[0])
+        box1.flipTB(parentExtent[1])
+
+        #test flip RL
+        self.assertEqual(box0.getMinX(), lrx00);
+        self.assertEqual(box0.getMinY(), lry00);
+        self.assertEqual(box0.getMaxX(), lrx11);
+        self.assertEqual(box0.getMaxY(), lry11);
+
+        #test flip TB 
+        self.assertEqual(box1.getMinX(), tbx00);
+        self.assertEqual(box1.getMinY(), tby00);
+        self.assertEqual(box1.getMaxX(), tbx11);
+        self.assertEqual(box1.getMaxY(), tby11);
+
+    def testFlipD(self):
+        parentExtent = geom.Extent2D(15.1,20.6)
+        x00, y00, x11, y11 = (8.3,11.4,13.2,16.9)
+        lrx00,lry00,lrx11,lry11 = (1.9,11.4,6.8,16.9)
+        tbx00,tby00,tbx11,tby11 = (8.3,3.7,13.2,9.2)
+      
+        box0 = geom.Box2D(geom.Point2D(x00, y00),
+                geom.Point2D(x11, y11))
+        box1 = geom.Box2D(geom.Point2D(x00, y00),
+                geom.Point2D(x11, y11))
+        box0.flipLR(parentExtent[0])
+        box1.flipTB(parentExtent[1])
+
+        #test flip RL
+        self.assertAlmostEqual(box0.getMinX(), lrx00, places=6);
+        self.assertAlmostEqual(box0.getMinY(), lry00, places=6);
+        self.assertAlmostEqual(box0.getMaxX(), lrx11, places=6);
+        self.assertAlmostEqual(box0.getMaxY(), lry11, places=6);
+
+        #test flip TB 
+        self.assertAlmostEqual(box1.getMinX(), tbx00, places=6);
+        self.assertAlmostEqual(box1.getMinY(), tby00, places=6);
+        self.assertAlmostEqual(box1.getMaxX(), tbx11, places=6);
+        self.assertAlmostEqual(box1.getMaxY(), tby11, places=6);
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

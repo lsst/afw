@@ -112,22 +112,10 @@ class SynthesizeCcdImage(GetCcdImage):
         bbox.shift(-xy0)
         sim = imageFactory(im, bbox, afwImage.LOCAL)
         sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
-        # Mark the amplifier
-        dataSec = amp.getElectronicDataSec()
-        if amp.getReadoutCorner() == cameraGeom.Amp.LLC:
-            xy = dataSec.getMin()
-        elif amp.getReadoutCorner() == cameraGeom.Amp.LRC:
-            xy = afwGeom.Point2I(dataSec.getMaxX() - 2, dataSec.getMinY())
-        elif amp.getReadoutCorner() == cameraGeom.Amp.ULC:
-            xy = afwGeom.Point2I(dataSec.getMinX()    , dataSec.getMaxY() - 2)
-        elif amp.getReadoutCorner() == cameraGeom.Amp.URC:
-            xy = afwGeom.Point2I(dataSec.getMaxX() - 2, dataSec.getMaxY() - 2)
-        else:
-            assert(not "Possible readoutCorner")
-        #Since the image is in electronic coordinates, we need only make at
-        #the origin.
+        #Since the image is in electronic coordinates, we need only mark at
+        #the origin of the dataSec.
         imageFactory(im, afwGeom.Box2I(bbox.getMin(), afwGeom.Extent2I(3, 3)), afwImage.LOCAL).set(0)
-        return im
+        return amp.prepareAmpData(im)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -513,11 +501,13 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     if imageSource.isRaw:
         #ccdImage = imageFactory(ccd.getAllPixelsNoRotation(isTrimmed))
         ccdImage = imageFactory(ccd.getAllPixels(isTrimmed))
-
         for a in ccd:
             im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
-            im <<= a.prepareAmpData(imageSource.getImage(ccd, a,
-                imageFactory=imageFactory))
+            #It makes sense to me to push this to the imageSource since it is
+            #more likely to know if the data need to be prepared or not.
+            #im <<= a.prepareAmpData(imageSource.getImage(ccd, a,
+            #    imageFactory=imageFactory))
+            im <<= imageSource.getImage(ccd, a, imageFactory=imageFactory)
     else:
         ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
 
@@ -639,7 +629,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
 
     if raftCenter is None:
         raftCenter = afwGeom.Point2I(raft.getAllPixels().getDimensions()[0]//2,
-                raft.getAllPixels().getDimensions()[0]//2)
+                raft.getAllPixels().getDimensions()[1]//2)
 
     dimensions = afwGeom.Extent2I(raft.getAllPixels().getDimensions()[0]//bin,
             raft.getAllPixels().getDimensions()[1]//bin)
@@ -650,11 +640,11 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
         
         bbox = ccd.getAllPixels(True)
         cen = ccd.getCenterPixel()
-        origin = afwGeom.PointI(cen[0], cen[1]) - \
-                bbox.getDimensions()/2 + \
-                afwGeom.Extent2I(raftCenter[0], raftCenter[1])
+        origin = afwGeom.Point2I(cen)
+        origin -= bbox.getDimensions()/2
+        origin += afwGeom.Extent2I(raftCenter)
         dims = afwGeom.Extent2I(bbox.getDimensions()[0]//bin,
-                bbox.getDimensions[1]//bin)
+                bbox.getDimensions()[1]//bin)
         bbox = afwGeom.Box2I(afwGeom.Point2I((origin.getX() + bbox.getMinX())//bin,
                                              (origin.getY() + bbox.getMinY())//bin),
                              dims)
@@ -757,7 +747,7 @@ of the detectors"""
             ds9.dot(raft.getId().getName(), center[0]/bin, center[1]/bin, frame=frame)
 
         showRaft(raft, None, frame=frame, overlay=overlay,
-                 raftOrigin=center - afwGeom.makeExtentD(raft.getAllPixels().getWidth()/2,
+                 raftOrigin=center - afwGeom.Extent2D(raft.getAllPixels().getWidth()/2,
                                                          raft.getAllPixels().getHeight()/2), 
                  bin=bin)
 
