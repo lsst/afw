@@ -237,7 +237,7 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     // Serialize most fields normally
     ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
-    ar & ip->_coordSystem & ip->_skyCoordsReversed;
+    ar & ip->_coordSystem;
 
     ar & ip->_hasDistortion;
     

@@ -226,25 +226,6 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs)
     }
 %}
 
-
-%inline {
-    /**
-     * Create a WCS from crval, image, and the elements of CD
-     */
-    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::geom::PointD crval,
-                                         lsst::afw::geom::PointD crpix,
-                                         double CD11, double CD12, double CD21, double CD22) {
-
-    Eigen::Matrix2d CD;
-    CD(0, 0) = CD11;
-    CD(0, 1) = CD12;
-    CD(1, 0) = CD21;
-    CD(1, 1) = CD22;
-    
-    return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(crval, crpix, CD));
-}
-}
-
 /************************************************************************************************************/
 
 #if !defined(CAMERA_GEOM_LIB_I)

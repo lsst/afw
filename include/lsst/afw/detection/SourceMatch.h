@@ -36,6 +36,7 @@
 #include "lsst/afw/detection/Source.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/base/PropertySet.h"
+#include "lsst/afw/geom/Angle.h"
 
 // forward declaration
 namespace lsst { namespace afw { namespace formatters {
@@ -47,6 +48,7 @@ namespace lsst { namespace afw { namespace detection {
 struct SourceMatch {
     Source::Ptr first;
     Source::Ptr second;
+    // match distance, in RADIANS or PIXELS depending on the type of match requested.
     double distance;
 
     SourceMatch() : first(), second(), distance(0.0) {}
@@ -56,8 +58,8 @@ struct SourceMatch {
 };
 
 std::vector<SourceMatch> matchRaDec(SourceSet const &set1, SourceSet const &set2,
-                                    double radius, bool closest=true);
-std::vector<SourceMatch> matchRaDec(SourceSet const &set, double radius, bool symmetric = true);
+                                    lsst::afw::geom::Angle radius, bool closest=true);
+std::vector<SourceMatch> matchRaDec(SourceSet const &set, lsst::afw::geom::Angle radius, bool symmetric = true);
 std::vector<SourceMatch> matchXy(SourceSet const &set1, SourceSet const &set2,
                                  double radius, bool closest=true);
 std::vector<SourceMatch> matchXy(SourceSet const &set, double radius, bool symmetric = true);

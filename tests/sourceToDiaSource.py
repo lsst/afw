@@ -36,6 +36,7 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDet
+import lsst.afw.geom as afwGeom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -43,15 +44,16 @@ class SourceToDiaSourceTestCase(unittest.TestCase):
     """A test case for converting Sources to DiaSources"""
     def setUp(self):
 
+        R = afwGeom.radians
         self.methods = {
             "Id" : 3,
-            "Ra": 4, "Dec" : 2,
+            "Ra": 4* R, "Dec" : 2* R,
             "XFlux" : 1.0, "YFlux" : 1.0,
-            "RaFlux" : 1.0, "DecFlux" : 1.0,
+            "RaFlux" : 1.0* R, "DecFlux" : 1.0* R,
             "XPeak" : 1.0, "YPeak" : 1.0,
-            "RaPeak" : 1.0, "DecPeak" : 1.0,
+            "RaPeak" : 1.0* R, "DecPeak" : 1.0* R,
             "XAstrom" : 1.0, "YAstrom" : 1.0,
-            "RaAstrom" : 1.0, "DecAstrom" : 1.0,
+            "RaAstrom" : 1.0* R, "DecAstrom" : 1.0* R,
             "PsfFlux" : 1.0, "ApFlux" : 2.0,
             "Ixx" : 0.3, "Iyy" : 0.4, "Ixy" : 0.5,
             "PsfIxx" : 0.3, "PsfIyy" : 0.3, "PsfIxy" : 0.3,

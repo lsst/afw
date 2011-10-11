@@ -21,7 +21,7 @@
  */
  
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE testlsf1d
+#define BOOST_TEST_MODULE sipterms
  
 //The boost unit test header
 #include "boost/test/unit_test.hpp"
@@ -37,6 +37,7 @@ using namespace std;
 
 #include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Utils.h"
@@ -96,14 +97,14 @@ void testSip(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd sip
 
             if(1) {
                 printf("\n%.1f %.1f : %.3f\n", u, v, distortX);
-                printf("%.7f %.7f \n", lin.getRa(afwCoord::DEGREES), lin.getDec(afwCoord::DEGREES));
-                printf("%.7f %.7f \n", sip.getRa(afwCoord::DEGREES), sip.getDec(afwCoord::DEGREES));
-                printf("Diff: %.7f %.7f \n", sip.getRa(afwCoord::DEGREES) - lin.getRa(afwCoord::DEGREES), \
-                        sip.getDec(afwCoord::DEGREES) - lin.getDec(afwCoord::DEGREES));
+                printf("%.7f %.7f \n", lin.getRa().asDegrees(), lin.getDec().asDegrees());
+                printf("%.7f %.7f \n", sip.getRa().asDegrees(), sip.getDec().asDegrees());
+                printf("Diff: %.7f %.7f \n", sip.getRa().asDegrees() - lin.getRa().asDegrees(), \
+                        sip.getDec().asDegrees() - lin.getDec().asDegrees());
             }
                                 
-            BOOST_CHECK_CLOSE(lin.getRa(afwCoord::DEGREES), sip.getRa(afwCoord::DEGREES), 1e-7); 
-            BOOST_CHECK_CLOSE(lin.getDec(afwCoord::DEGREES), sip.getDec(afwCoord::DEGREES), 1e-7); 
+            BOOST_CHECK_CLOSE(lin.getRa().asDegrees(), sip.getRa().asDegrees(), 1e-7); 
+            BOOST_CHECK_CLOSE(lin.getDec().asDegrees(), sip.getDec().asDegrees(), 1e-7); 
             
             v+=step;
         }
@@ -127,18 +128,19 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
     afwGeom::Point2D xy0 = linWcs.getPixelOrigin();
     
     afwCoord::Fk5Coord raDec0 = linWcs.getSkyOrigin()->toFk5();
-    double ra = raDec0.getRa(afwCoord::DEGREES) - range;
-    double raUpr = raDec0.getRa(afwCoord::DEGREES) + range;
+    double ra = raDec0.getRa().asDegrees() - range;
+    double raUpr = raDec0.getRa().asDegrees() + range;
     
     while(ra<= raUpr)
     {
 
-        double dec = raDec0.getDec(afwCoord::DEGREES) - range;
-        double decUpr = raDec0.getDec(afwCoord::DEGREES) + range;
+        double dec = raDec0.getDec().asDegrees() - range;
+        double decUpr = raDec0.getDec().asDegrees() + range;
         while(dec<= decUpr)
         {
-            afwGeom::Point2D xy = linWcs.skyToPixel(ra, dec);
-            afwGeom::Point2D xySip = sipWcs.skyToPixel(ra, dec);
+			afwCoord::Coord::Ptr rd = afwCoord::makeCoord(afwCoord::FK5, ra * afwGeom::degrees, dec * afwGeom::degrees);
+            afwGeom::Point2D xy = linWcs.skyToPixel(rd);
+            afwGeom::Point2D xySip = sipWcs.skyToPixel(rd);
             
             //Get pixel origin returns crpix in fits coords, so we convert to 
             //lsst coords before using (hence the -1)
@@ -148,9 +150,8 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
             double distortX = calculateDistortion(sipAp, u, v);
             double distortY = calculateDistortion(sipBp, u, v);
 
-            if(0)
             {
-                printf("\n%.7f %.7f\n", ra, dec);
+                printf("\ntestSipP()\n%.7f %.7f\n", ra, dec);
                 printf("%.4f %.4f : %.4f %.4f\n", u, v, distortX, distortY);
                 printf("%.4f %.4f \n", xy[0], xy[1]);
                 printf("%.4f %.4f \n", xySip[0], xySip[1]);
@@ -161,7 +162,6 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
             BOOST_CHECK_CLOSE(xy[1] + distortY, xySip[1], 1e-4); 
             
             dec+=step;
-            //return;
         }
             
         ra+=step;
@@ -203,6 +203,7 @@ BOOST_AUTO_TEST_CASE(basic)
 
     //Test x direction
     //
+	printf("Quadratic in x\n");
     //quadratic in x direction            
     sipA(2,0) = 1e-4;
     afwImg::TanWcs sipWcs1(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
@@ -211,12 +212,14 @@ BOOST_AUTO_TEST_CASE(basic)
 
     
     //Quadratic in y    
+	printf("Quadratic in y\n");
     sipA(0,2) = 1e-4;
     afwImg::TanWcs sipWcs2(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs2, sipA, sipB);
     sipA(0,2) = 0;
     
     //Cross term
+	printf("Cross terms\n");
     sipA(1,1) = 1e-4;
     afwImg::TanWcs sipWcs3(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs3, sipA, sipB);
@@ -225,49 +228,56 @@ BOOST_AUTO_TEST_CASE(basic)
 
     //test y direction
     //
+	printf("Quadratic in y\n");
     sipB(2,0) = 1e-4;
     afwImg::TanWcs sipWcs4(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs4, sipA, sipB);
     sipB(2,0) = 0;
     
     //Quadratic in y    
+	printf("Quadratic in x(y)\n");
     sipA(0,2) = 1e-4;
     afwImg::TanWcs sipWcs5(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs5, sipA, sipB);
-    sipB(0,2) = 0;
+    sipA(0,2) = 0;
     
     //Cross term
+	printf("x' = f(x,y)\n");
     sipA(1,1) = 1e-4;
     afwImg::TanWcs sipWcs6(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs6, sipA, sipB);
-    sipB(1,1) = 0;
+    sipA(1,1) = 0;
 
 
     ///
     //Test reverse coeff.
     ///
+	printf("inverse 1\n");
     sipAp(2,0) = 1.e-4;
     afwImg::TanWcs sipWcs7(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs7, sipAp, sipBp);
-    sipA(2,0) = 0;
+    sipAp(2,0) = 0;
 
     //The linear term is allowed in the reverse matrix    
+	printf("inverse 2\n");
     sipAp(1,0) = 1.e-4;
     afwImg::TanWcs sipWcs8(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs8, sipAp, sipBp);
-    sipA(1,0) = 0;
+    sipAp(1,0) = 0;
 
 
+	printf("inverse 3\n");
     sipBp(2,0) = 1.e-4;
     afwImg::TanWcs sipWcs9(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs9, sipAp, sipBp);
-    sipA(2,0) = 0;
+    sipBp(2,0) = 0;
 
     //The linear term is allowed in the reverse matrix    
+	printf("inverse 4\n");
     sipBp(1,0) = 1.e-4;
     afwImg::TanWcs sipWcs10(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs10, sipAp, sipBp);
-    sipA(1,0) = 0;
+    sipBp(1,0) = 0;
     
 }
 
@@ -297,12 +307,12 @@ void createSipTests(afwImg::TanWcs &wcs1, afwImg::TanWcs &wcs2)
             afwCoord::Fk5Coord pos2 = wcs2.pixelToSky(x0+u, y0+v)->toFk5();
 
             printf("\n%.1f %.1f \n", u, v);
-            printf("%.7f %.7f \n", pos1.getRa(afwCoord::DEGREES), pos1.getDec(afwCoord::DEGREES));
-            printf("%.7f %.7f \n", pos2.getRa(afwCoord::DEGREES), pos2.getDec(afwCoord::DEGREES));
+            printf("%.7f %.7f \n", pos1.getRa().asDegrees(), pos1.getDec().asDegrees());
+            printf("%.7f %.7f \n", pos2.getRa().asDegrees(), pos2.getDec().asDegrees());
             
                                 
-            BOOST_CHECK_CLOSE(pos1.getRa(afwCoord::DEGREES), pos2.getRa(afwCoord::DEGREES), 1e-7); 
-            BOOST_CHECK_CLOSE(pos1.getDec(afwCoord::DEGREES), pos2.getDec(afwCoord::DEGREES), 1e-7); 
+            BOOST_CHECK_CLOSE(pos1.getRa().asDegrees(), pos2.getRa().asDegrees(), 1e-7); 
+            BOOST_CHECK_CLOSE(pos1.getDec().asDegrees(), pos2.getDec().asDegrees(), 1e-7); 
             
             v+=step;
         }

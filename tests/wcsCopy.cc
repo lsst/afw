@@ -63,7 +63,7 @@ int main() {
         
         //Change the CTYPES so makeWcs creates an object of the base class
         metadata->set("CTYPE1", "RA---SIN");
-        metadata->set("CTYPE3", "DEC--SIN");
+        metadata->set("CTYPE2", "DEC--SIN");
         wcsPtr = lsst::afw::image::makeWcs(metadata);
         doTest(wcsPtr);
         
