@@ -112,6 +112,13 @@ class AngleTestCase(unittest.TestCase):
         self.assertEqual(a2 <  a1, False)
         self.assertEqual(a2 <= a1, False)
 
+    def testTrig(self):
+        self.assertEqual(math.cos(self.d), -1.0)
+        self.assertAlmostEqual(math.sin(self.d),  0.0, places=15)
+        thirty = 30.*afwGeom.degrees
+        self.assertAlmostEqual(math.sin(thirty), 0.5, places=15)
+        
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
