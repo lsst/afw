@@ -976,7 +976,7 @@ Footprint::Ptr growFootprintSlow(
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
 
     FootprintSet<int>::Ptr
-        grownList(new FootprintSet<int>(*convolvedImage, 0.5, "", 1));
+        grownList(new FootprintSet<int>(*convolvedImage, 0.5, 1.0, "", 1));
 
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();

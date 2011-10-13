@@ -213,6 +213,17 @@ class FootprintSetUTestCase(unittest.TestCase):
         self.assertGreater(len(grown.getFootprints()), 0)
         self.assertLessEqual(len(grown.getFootprints()), len(ds.getFootprints()))
 
+    def testThresholdMultiplier(self):
+        """Inclusion threshold multiplier"""
+        thresh = 10
+        multiplier = 2.0
+        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(thresh), multiplier)
+
+        objects = [obj for obj in self.objects if obj.val >= thresh*multiplier]
+        self.assertEqual(len(ds.getFootprints()), len(objects))
+        for obj, foot in zip(objects, ds.getFootprints()):
+            self.assertEqual(obj, foot)
+
     def testInf(self):
         """Test detection for images with Infs"""
 
