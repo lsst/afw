@@ -203,6 +203,16 @@ class FootprintSetUTestCase(unittest.TestCase):
             ds9.mtv(self.im, frame=0)
             ds9.mtv(idImage, frame=1)
 
+    def testGrow(self):
+        """Grow footprints using the FootprintSet constructor"""
+        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
+        self.assertEqual(len(ds.getFootprints()), len(self.objects))
+        grown = afwDetect.makeFootprintSet(ds, 1, False)
+        self.assertEqual(len(ds.getFootprints()), len(self.objects))
+
+        self.assertGreater(len(grown.getFootprints()), 0)
+        self.assertLessEqual(len(grown.getFootprints()), len(ds.getFootprints()))
+
     def testInf(self):
         """Test detection for images with Infs"""
 
