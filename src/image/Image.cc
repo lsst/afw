@@ -537,7 +537,8 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
  * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(char **ramFile, size_t *ramFileLen,
+image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
+                            size_t *ramFileLen,      ///< Pointer to the length of the FITS file in memory
                             int const hdu,               ///< Desired HDU
                             lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
                             geom::Box2I const& bbox,                           ///< Only read these pixels
@@ -600,7 +601,8 @@ void image::Image<PixelT>::writeFits(
  */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-    char **ramFile, size_t *ramFileLen,
+    char **ramFile,     ///< Pointer to a pointer to the FITS file in memory
+    size_t *ramFileLen, ///< Pointer to the length of the FITS file in memory
     boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
     std::string const& mode                     //!< "w" to write a new file; "a" to append
 ) const {

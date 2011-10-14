@@ -153,8 +153,9 @@ template double Threshold::getValue(image::TYPE<int> const&) const; \
 template double Threshold::getValue(image::TYPE<float> const&) const; \
 template double Threshold::getValue(image::TYPE<double> const&) const;
 
+#ifndef DOXYGEN
 INSTANTIATE(Image);
 INSTANTIATE(MaskedImage);
-
+#endif
 
 }}}
