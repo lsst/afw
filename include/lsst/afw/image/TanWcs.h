@@ -25,7 +25,7 @@
 
 #include "Eigen/Core.h"
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/Wcs.h" 

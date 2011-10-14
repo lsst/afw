@@ -472,7 +472,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         Threshold const &threshold,     //!< threshold to find objects
         int const npixMin,              //!< minimum number of pixels in an object
         bool const setPeaks            //!< should I set the Peaks list?
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _footprints(new FootprintList()),
     _region(img.getBBox(image::PARENT))
 {
@@ -497,7 +497,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         image::Mask<MaskPixelT> const &msk, //!< Image to search for objects
         Threshold const &threshold,     //!< threshold to find objects
         int const npixMin               //!< minimum number of pixels in an object
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _footprints(new FootprintList()),
     _region(msk.getBBox(image::PARENT))
 {
@@ -539,7 +539,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         std::string const &planeName,   //!< mask plane to set (if != "")
         int const npixMin,              //!< minimum number of pixels in an object
         bool const setPeaks            //!< should I set the Peaks list?
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _footprints(new FootprintList()),
     _region(
         geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
@@ -625,7 +625,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     int,                                                 //!< Footprint should include this pixel (column)
     int,                                                 //!< Footprint should include this pixel (row) 
     std::vector<PTR(Peak)> const *      //!< Footprint should include at most one of these peaks
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _footprints(new FootprintList()),
     _region(geom::Point2I(img.getX0(), img.getY0()),
             geom::Extent2I(img.getWidth(), img.getHeight())) 
@@ -1041,7 +1041,7 @@ pmFindFootprintAtPoint(psImage const *img,      // image to search
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(geom::Box2I region ///< the desired region
                                                               ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _footprints(PTR(FootprintList)(new FootprintList)), _region(region) {
 }
 
@@ -1052,7 +1052,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         FootprintSet const &rhs         //!< the input FootprintSet
                                                               ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _footprints(rhs._footprints), _region(rhs._region) {
 }
 
@@ -1309,7 +1309,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
                                         //!< @note Isotropic grows are significantly slower
                                                               )
-    : lsst::daf::data::LsstBase(typeid(this)),
+    : lsst::daf::base::Citizen(typeid(this)),
       _footprints(rhs._footprints), _region(rhs._region) {
 
     if (r == 0) {
@@ -1385,7 +1385,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         FootprintSet const& fs2,
         bool const 
                                                               )
-    : lsst::daf::data::LsstBase(typeid(this)),
+    : lsst::daf::base::Citizen(typeid(this)),
       _footprints(new FootprintList()),
       _region(fs1._region)
 {

@@ -30,7 +30,7 @@
 #include "Eigen/Core.h"
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/AffineTransform.h"
@@ -95,7 +95,7 @@ namespace image {
 /// present when reading a header (keywords CRPIX1a etc are also accepted)
 
 class Wcs : public lsst::daf::base::Persistable,
-            public lsst::daf::data::LsstBase
+            public lsst::daf::base::Citizen
 {
 public:
     typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;

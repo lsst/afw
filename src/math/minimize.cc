@@ -51,7 +51,7 @@ namespace {
      * Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::base::Citizen {
     public:
         explicit MinimizerFunctionBase1(
             afwMath::Function1<ReturnT> const &function,
@@ -83,7 +83,7 @@ namespace {
      * Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::base::Citizen {
     public:
         explicit MinimizerFunctionBase2(
             afwMath::Function2<ReturnT> const &function,
@@ -123,7 +123,7 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
     std::vector<double> const &xPositionList, 
     double errorDef)
 :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
@@ -140,7 +140,7 @@ MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
     std::vector<double> const &yPositionList,
     double errorDef)
 :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),

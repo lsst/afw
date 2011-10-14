@@ -92,6 +92,13 @@ math::Interpolate::~Interpolate() {
 }
 
 double math::Interpolate::interpolate(double const x) {
+    if (x < _x.front() || x > _x.back()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Interpolation point %f outside range [%f, %f]")
+             % x % _x.front() % _x.back()).str()
+        );
+    }
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], x, _acc);
 }
 

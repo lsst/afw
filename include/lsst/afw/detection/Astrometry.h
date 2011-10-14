@@ -71,6 +71,4 @@ private:
 };
 }}}
 
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::Astrometry)
-
 #endif

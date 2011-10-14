@@ -51,7 +51,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     unsigned int height, ///< number of rows
     MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(width, height)),
     _mask(new Mask(width, height, planeDict)),
     _variance(new Variance(width, height)) {
@@ -69,7 +69,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     geom::Extent2I const & dimensions, //!< Number of columns, rows in image
     MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(dimensions)),
     _mask(new Mask(dimensions, planeDict)),
     _variance(new Variance(dimensions)) {
@@ -91,7 +91,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     geom::Box2I const & bbox, //!< dimensions of image: width x height
     MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(bbox)),
     _mask(new Mask(bbox, planeDict)),
     _variance(new Variance(bbox)) {
@@ -119,7 +119,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     ImageOrigin const origin,                   //!< Coordinate system for bbox
     bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
     bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance() 
 {
     // Does it looks like an MEF file?
@@ -264,7 +264,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     ImageOrigin const origin,                   //!< Coordinate system for bbox
     bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
     bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance() 
 {
     /*
@@ -346,7 +346,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         MaskPtr mask,                   ///< %Mask
         VariancePtr variance            ///< Variance %Mask
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(image),
     _mask(mask),
     _variance(variance) {
@@ -361,7 +361,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     MaskedImage const& rhs, ///< %Image to copy
     bool deep               ///< Make deep copy?
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
         _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
@@ -382,7 +382,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     bool deep                   ///< If false, new ImageBase shares storage with rhs;
                                 ///< if true make a new, standalone, MaskedImage
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(*rhs.getImage(), bbox, origin, deep)),
     _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask *>(NULL)),
     _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, origin, deep) : static_cast<Variance *>(NULL)) {

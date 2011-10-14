@@ -104,7 +104,7 @@ int Footprint::id = 0;
 Footprint::Footprint(
     int nspan,         //!< initial number of Span%s in this Footprint
     geom::Box2I const & region //!< Bounding box of MaskedImage footprint
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _area(0),
     _bbox(geom::Box2I()),
@@ -123,7 +123,7 @@ Footprint::Footprint(
 Footprint::Footprint(
     geom::Box2I const& bbox, //!< The bounding box defining the rectangle
     geom::Box2I const& region //!< Bounding box of MaskedImage footprint
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _area(0),
     _bbox(bbox),
@@ -143,7 +143,7 @@ Footprint::Footprint(
     geom::Point2I const & center, 
     double const radius,
     geom::BoxI const & region
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _area(0),
     _bbox(geom::BoxI()),
@@ -161,7 +161,7 @@ Footprint::Footprint(
 Footprint::Footprint(
     geom::ellipses::Ellipse const & ellipse, 
     geom::Box2I const & region
-) :  lsst::daf::data::LsstBase(typeid(this)),
+) :  lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _area(0),
     _bbox(geom::Box2I()),
@@ -209,7 +209,7 @@ Footprint::Footprint(
 Footprint::Footprint(
     Footprint::SpanList const & spans,
     geom::Box2I const & region
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _area(0),
     _bbox(geom::Box2I()),
@@ -223,7 +223,7 @@ Footprint::Footprint(
 }
 
 Footprint::Footprint(Footprint const & other) 
-  : lsst::daf::data::LsstBase(typeid(this)),
+  : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _bbox(other._bbox),
     _region(other._region)
@@ -548,7 +548,7 @@ template void Footprint::serialize(boost::archive::binary_iarchive &, unsigned i
 /**
  * Assignment operator. Will not change the id
  */
-Footprint & Footprint::operator=(Footprint::Footprint & other) {
+Footprint & Footprint::operator=(Footprint & other) {
     _region = other._region;
 
     //deep copy spans

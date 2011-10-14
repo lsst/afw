@@ -49,8 +49,7 @@ void doRoundTrip(
 ) {
     nd::Array<double,2,2> i1 = detection::expandArray(footprint, v, box);
     nd::Array<double,1,1> v1 = detection::flattenArray(footprint, i1, box.getMin());
-    BOOST_CHECK( nd::all(nd::equal(v1, v)) );
-
+    BOOST_CHECK( std::equal(v1.begin(), v1.end(), v.begin()) );
 }
 
 BOOST_AUTO_TEST_CASE(conversion) {

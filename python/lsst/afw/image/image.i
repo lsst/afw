@@ -34,7 +34,7 @@
 // Must go Before the %include
 //
 %define %imagePtr(NAME, TYPE, PIXEL_TYPE...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Base, lsst::daf::data::LsstBase, lsst::afw::image::ImageBase<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Base, lsst::daf::base::Citizen, lsst::afw::image::ImageBase<PIXEL_TYPE>);
 SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Image<PIXEL_TYPE>);
 SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
 %declareNumPyConverters(lsst::afw::image::ImageBase<PIXEL_TYPE>::Array);
@@ -42,7 +42,7 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %enddef
 
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::base::Citizen, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 %enddef
 
 //

@@ -252,6 +252,4 @@ private:
 };
 }}}
 
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::Shape)
-
 #endif

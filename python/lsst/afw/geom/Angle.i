@@ -25,12 +25,10 @@
 %}
 
 %extend lsst::afw::geom::Angle {
-    const char *__str__() {
+    std::string __str__() {
         std::ostringstream ss;
         ss << *self;
-
-        static char buff[41];
-        return strncpy(buff, ss.str().c_str(), sizeof(buff) - 1);
+        return ss.str();
     }
             
     %pythoncode %{
@@ -52,6 +50,8 @@
              return Angle_div(lhs, self)
          def __eq__(self, rhs):
              return float(self) == float(rhs)
+         def __repr__(self):
+             return str(self)
     %}
 }
 

@@ -101,7 +101,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     unsigned int height,                ///< number of rows
     afwImage::Wcs const & wcs           ///< the Wcs
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
     _wcs(wcs.clone()),
     _detector(),
@@ -119,7 +119,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Extent2I const & dimensions, ///< desired image width/height
     afwImage::Wcs const & wcs   ///< the Wcs
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
     _wcs(wcs.clone()),
     _detector(),
@@ -137,7 +137,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
     afwImage::Wcs const & wcs   ///< the Wcs
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
     _wcs(wcs.clone()),
     _detector(),
@@ -154,7 +154,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage, ///< the MaskedImage
     afwImage::Wcs const& wcs   ///< the Wcs
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
     _wcs(wcs.clone()),
     _detector(),
@@ -173,7 +173,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     Exposure const &src, ///< Parent Exposure
     bool const deep      ///< Should we copy the pixels?
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), deep),
     _wcs(src._wcs->clone()),
     _detector(src._detector),
@@ -200,7 +200,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     ImageOrigin const origin,   ///< Coordinate system for bbox
     bool const deep      ///< Should we copy the pixels?
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, origin, deep),
     _wcs(src._wcs->clone()),
     _detector(src._detector),
@@ -237,7 +237,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     ImageOrigin const origin,       ///< Coordinate system for bbox
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :
-    lsst::daf::data::LsstBase(typeid(this))
+    lsst::daf::base::Citizen(typeid(this))
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
 
@@ -259,7 +259,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     ImageOrigin const origin,       ///< Coordinate system for bbox
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :
-    lsst::daf::data::LsstBase(typeid(this))
+    lsst::daf::base::Citizen(typeid(this))
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 

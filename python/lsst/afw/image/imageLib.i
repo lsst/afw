@@ -40,7 +40,6 @@ Basic routines to talk to lsst::afw::image classes
 #include "boost/cstdint.hpp"
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
@@ -118,7 +117,6 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/pex/policy/policyLib.i"
 %import "lsst/daf/persistence/persistenceLib.i"
-%import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
@@ -239,7 +237,7 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs)
 
 // Must go Before the %include
 %define %exposurePtr(TYPE, PIXEL_TYPE)
-SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::base::Citizen, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %enddef
 
 // Must go After the %include
