@@ -397,112 +397,54 @@ void Footprint::shift(
     _bbox.shift(geom::Extent2I(dx, dy));
 }
 
-namespace {
-    /*
-     * Set the pixels in idImage which are in Footprint by adding or replacing the specified value to the Image
-     *
-     * The ids that are overwritten are returned for the callers deliction
-     */
-    template<bool overwriteId>
-    void
-    doInsertIntoImage(geom::Box2I const& _region, // unpacked from Footprint
-                      Footprint::SpanList const& _spans,      // unpacked from Footprint
-                      image::Image<boost::uint16_t>& idImage, // Image to contain the footprint
-                      int const id,                           // Add/replace id to idImage for pixels in Footprint
-                      geom::Box2I const& region,              // Footprint's region (default: getRegion())
-                      long const mask=0x0,                    // Don't overwrite bits in this mask
-                      std::set<int> *oldIds=NULL              // if non-NULL, set the IDs that were overwritten
-                   )
-    {    
-        int width, height, x0, y0;
-        if(!region.isEmpty()) {
-            height = region.getHeight();
-            width = region.getWidth();
-            x0 = region.getMinX();
-            y0 = region.getMinY();
-        } else {
-            height = _region.getHeight();
-            width = _region.getWidth();
-            x0 = _region.getMinX();
-            y0 = _region.getMinY();
-        }
-
-        if (width != idImage.getWidth() || height != idImage.getHeight()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              (boost::format("Image of size (%dx%d) doesn't match "
-                                             "Footprint's host Image of size (%dx%d)") %
-                               idImage.getWidth() % idImage.getHeight() % width % height).str());
-        }
-
-        std::set<int>::const_iterator pos; // hint on where to insert into oldIds
-        if (oldIds) {
-            pos = oldIds->begin();
-        }
-        for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
-            Span::Ptr const span = *spi;
-
-            int const sy0 = span->getY() - y0;
-            if (sy0 < 0 || sy0 >= height) {
-                continue;
-            }
-
-            int sx0 = span->getX0() - x0;
-            if (sx0 < 0) {
-                sx0 = 0;
-            }
-            int sx1 = span->getX1() - x0;
-            int const swidth = (sx1 >= width) ? width - sx0 : sx1 - sx0 + 1;
-
-            for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
-                     end = ptr + swidth; ptr != end; ++ptr) {
-                if (overwriteId) {
-                    long val = *ptr & mask;
-                    if (val != 0 and oldIds != NULL) {
-                        pos = oldIds->insert(pos, *ptr); // update our hint, pos
-                    }
-
-                    *ptr = val + (id & ~mask);
-                } else {
-                    *ptr += id;
-                }
-                    
-            }
-        }
-    }
-}
 
 /**
  * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
  */
-void
-Footprint::insertIntoImage(
+void Footprint::insertIntoImage(
     image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-    int const id,                           //!< Add id to idImage for pixels in the Footprint
-    geom::Box2I const& region               //!< Footprint's region (default: getRegion())
-) const
-{    
-    static_cast<void>(doInsertIntoImage<false>(_region, _spans, idImage, id, region));
-}
-
-/**
- * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
- *
- * The list of ids found under the new Footprint are returned
- */
-void
-Footprint::insertIntoImage(
-    image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-    int const id,                           //!< Add id to idImage for pixels in the Footprint
-    bool overwriteId,                       //!< should id replace any value already in idImage?
-    long const mask,                        //!< Don't overwrite ID bits in this mask
-    std::set<int> *oldIds,                  //!< if non-NULL, set the IDs that were overwritten
-    geom::Box2I const& region               //!< Footprint's region (default: getRegion())
-) const
-{    
-    if (overwriteId) {
-        doInsertIntoImage<true>(_region, _spans, idImage, id, region, mask, oldIds);
+    int const id, //!< Add id to idImage for pixels in the Footprint
+    geom::Box2I const& region //!< Footprint's region (default: getRegion())
+) const {    
+    int width, height, x0, y0;
+    if(!region.isEmpty()) {
+        height = region.getHeight();
+        width = region.getWidth();
+        x0 = region.getMinX();
+        y0 = region.getMinY();
     } else {
-        doInsertIntoImage<false>(_region, _spans, idImage, id, region, mask, oldIds);
+        height = _region.getHeight();
+        width = _region.getWidth();
+        x0 = _region.getMinX();
+        y0 = _region.getMinY();
+    }
+
+    if (width != idImage.getWidth() || height != idImage.getHeight()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          (boost::format("Image of size (%dx%d) doesn't match "
+                                         "Footprint's host Image of size (%dx%d)") %
+                           idImage.getWidth() % idImage.getHeight() % width % height).str());
+    }
+
+    for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
+        Span::Ptr const span = *spi;
+
+        int const sy0 = span->getY() - y0;
+        if (sy0 < 0 || sy0 >= height) {
+            continue;
+        }
+
+        int sx0 = span->getX0() - x0;
+        if (sx0 < 0) {
+            sx0 = 0;
+        }
+        int sx1 = span->getX1() - x0;
+        int const swidth = (sx1 >= width) ? width - sx0 : sx1 - sx0 + 1;
+
+        for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
+                 end = ptr + swidth; ptr != end; ++ptr) {
+            *ptr += id;
+        }
     }
 }
 

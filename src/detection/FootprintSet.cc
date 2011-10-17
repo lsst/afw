@@ -1207,7 +1207,7 @@ namespace {
         }
 
         unsigned int const log2 = ::log(n)/::log(2);   // rounds down
-        if ((1U << log2) > n) {
+        if ((1U << log2) == n) {
             return log2;
         } else {
             return log2 + 1;
@@ -1257,13 +1257,6 @@ namespace {
                               (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef")
                                % nLhs % nRhs).str());
         }
-        /*
-         * When we insert grown Footprints into the idImage we can potentially overwrite an entire Footprint,
-         * losing any peaks that it might contain.  We'll preserve the overwritten Ids in case we need to
-         * get them back (n.b. Footprints that overlap, but both if which survive, will appear in this list)
-         */
-        typedef std::map<int, std::set<int> > OldIdMap;
-        OldIdMap overwrittenIds;        // here's a map from id -> overwritten IDs
 
         int id = 0;                         // the ID inserted into the image
         for (typename FootprintList::const_iterator ptr = lhsFootprints.begin(), end = lhsFootprints.end();
@@ -1273,12 +1266,7 @@ namespace {
             if (rLhs > 0) {
                 foot = growFootprint(*foot, rLhs, isotropic);
             }
-
-            std::set<int> overwritten;
-            foot->insertIntoImage(*idImage, ++id, true, ~0x0, &overwritten);
-            if (!overwritten.empty()) {
-                overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
-            }
+            foot->insertIntoImage(*idImage, ++id);
         }
 
         id = lhsIdMask;
@@ -1289,34 +1277,16 @@ namespace {
             if (rRhs > 0) {
                 foot = growFootprint(*foot, rRhs, isotropic);
             }
-
-            std::set<int> overwritten;
-            foot->insertIntoImage(*idImage, ++id, true, ~lhsIdMask, &overwritten);
-
-            if (!overwritten.empty()) {
-                overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
-            }
+            foot->insertIntoImage(*idImage, id += (1 << lhsIdNbit));
         }
 
-        /*********************************************************************************************************/
-                
-        for (OldIdMap::iterator mapPtr = overwrittenIds.begin(), end = overwrittenIds.end();
-             mapPtr != end; ++mapPtr) {
-            int id = mapPtr->first;
-            std::set<int> &overwritten = mapPtr->second;
-
-            for (std::set<int>::iterator ptr = overwritten.begin(), end = overwritten.end(); ptr != end; ++ptr){
-                std::cout << "RHL overwrote a pixel of Footprint " << *ptr << " -> " << id << std::endl;
-            }
-        }
-
-        /*********************************************************************************************************/
-
-        detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1),
-                                             1, false); // detect all pixels in rhs + lhs
+        detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1), 1, false); // detect all pixels in rhs + lhs
         /*
          * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
          */
+
+#if 0 // This doesn't work when we grow the footprints; RHL to fix
+
         FindIdsInFootprint<image::Image<IdPixelT> > idFinder(*idImage);
 
         for (typename FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
@@ -1345,7 +1315,7 @@ namespace {
             // merge method and it probably isn't worth the trouble of hand-coding the merge
             std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
         }
-
+#endif
         return fs;
     }
 }
