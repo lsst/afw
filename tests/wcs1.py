@@ -106,7 +106,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(xy.getX(), xy2.getX())
         self.assertAlmostEqual(xy.getY(), xy2.getY())
 
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 245.167400, +19.1976583)
+        raDec = afwCoord.makeCoord(afwCoord.ICRS, 245.167400 * afwGeom.degrees, +19.1976583 * afwGeom.degrees)
         
         xy = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(xy)
@@ -119,26 +119,34 @@ class WCSTestCaseSDSS(unittest.TestCase):
         # values from wcstools xy2sky (v3.8.1). Confirmed by ds9
         raDec0 = afwGeom.Point2D(245.15984167, +19.1960472) 
         raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
-        
 
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
         self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) 
 
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 244, 20)
+        raDec = afwCoord.makeCoord(afwCoord.ICRS, 244 * afwGeom.degrees, 20 * afwGeom.degrees)
+        print 'testIdentity'
+        print 'wcs:'
+        for x in self.wcs.getFitsMetadata().toList():
+            print '  ', x
+        print 'raDec:', raDec
+        print type(self.wcs)
         rowCol = self.wcs.skyToPixel(raDec)
+        print 'rowCol:', rowCol
         raDec2 = self.wcs.pixelToSky(rowCol)
+        print 'raDec2:', raDec2
 
         p1 = raDec.getPosition()
         p2 = raDec.getPosition()
+        print 'p1,p2', p1,p2
         self.assertAlmostEqual(p1[0], p2[0])
         self.assertAlmostEqual(p1[1], p2[1])
 
     def testInvalidRaDec(self):
         """Test a conversion for an invalid position.  Well, "test" isn't
         quite right as the result is invalid, but make sure that it still is"""
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 1, 2)
+        raDec = afwCoord.makeCoord(afwCoord.ICRS, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
 
         self.assertRaises(lsst.pex.exceptions.exceptionsLib.LsstCppException, self.wcs.skyToPixel, raDec)
 
@@ -191,8 +199,8 @@ class WCSTestCaseCFHT(unittest.TestCase):
         p00 = afwGeom.Point2D(10, 10)
         p00 = afwGeom.Point2D(self.metadata.getAsDouble("CRPIX1"), self.metadata.getAsDouble("CRPIX2"))
 
-        sky00 = self.wcs.pixelToSky(p00).getPosition()
-        cosdec = math.cos(math.pi/180*sky00[1])
+        sky00 = self.wcs.pixelToSky(p00)
+        cosdec = math.cos(sky00[1])
 
         side = 1e-3
         icrs = afwCoord.ICRS

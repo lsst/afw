@@ -139,7 +139,7 @@ SWIG_SHARED_PTR_DERIVED(MultipleAperturePhotometry, lsst::afw::detection::Photom
         std::ostringstream os;
         os << "Source " << $self->getId();
         os.precision(9);
-        os << " (" << (180./M_PI * $self->getRa()) << ", " << (180./M_PI * $self->getDec()) << " deg)";
+        os << " (" << ($self->getRa().asDegrees()) << ", " << ($self->getDec().asDegrees()) << " deg)";
         return os.str();
     }
 
@@ -179,7 +179,7 @@ SWIG_SHARED_PTR_DERIVED(MultipleAperturePhotometry, lsst::afw::detection::Photom
         std::ostringstream os;
         os << "DiaSource " << $self->getId();
         os.precision(9);
-        os << " (" << (180./M_PI * $self->getRa()) << ", " << (180./M_PI * $self->getDec()) << " deg)";
+        os << " (" << ($self->getRa().asDegrees()) << ", " << ($self->getDec().asDegrees()) << " deg)";
         return os.str();
     }
 };

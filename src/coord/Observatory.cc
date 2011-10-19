@@ -37,24 +37,26 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/tuple/tuple.hpp"
 
+#include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Observatory.h"
 
 namespace coord        = lsst::afw::coord;
 namespace ex           = lsst::pex::exceptions;
+namespace afwGeom      = lsst::afw::geom;
 
 
 
 /**
- * @brief Constructor for the observatory with lat/long as doubles
+ * @brief Constructor for the observatory with lat/long as afwGeom::Angles
  */
 coord::Observatory::Observatory(
-                                double const longitude, ///< observatory longitude (+ve E of Greenwich)
-                                double const latitude,  ///< observatory latitude 
+                                afwGeom::Angle const longitude, ///< observatory longitude (+ve E of Greenwich)
+                                afwGeom::Angle const latitude,  ///< observatory latitude 
                                 double const elevation  ///< observatory elevation
                                ) :
-    _latitudeRad(degToRad*latitude),
-    _longitudeRad(degToRad*longitude),
+    _latitude(latitude),
+    _longitude(longitude),
     _elevation(elevation) {
 }
 
@@ -63,14 +65,16 @@ coord::Observatory::Observatory(
 /*
  * @brief Constructor for the observatory with lat/long as strings
  *
+ * @note RA is assumed to be in DMS, not HMS!
+ *
  */
 coord::Observatory::Observatory(
                                 std::string const longitude, ///< observatory longitude
                                 std::string const latitude,  ///< observatory latitude 
                                 double const elevation       ///< observatory elevation
                                ) : 
-    _latitudeRad(degToRad*dmsStringToDegrees(latitude)),
-    _longitudeRad(degToRad*dmsStringToDegrees(longitude)),
+    _latitude(dmsStringToAngle(latitude)),
+    _longitude(dmsStringToAngle(longitude)),
     _elevation(elevation) {
 }
 
@@ -81,23 +85,8 @@ coord::Observatory::Observatory(
  * @brief The main access method for the longitudinal coordinate
  *
  */
-double coord::Observatory::getLongitude(
-                                        CoordUnit unit  ///< units to return (DEGREES, RADIANS, HOURS)
-                                       ) const {
-    switch (unit) {
-      case DEGREES:
-        return radToDeg*_longitudeRad;
-        break;
-      case RADIANS:
-        return _longitudeRad;
-        break;
-      case HOURS:
-        return radToDeg*_longitudeRad/15.0;
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES, RADIANS, or HOURS.");
-        break;
-    }
+afwGeom::Angle coord::Observatory::getLongitude() const {
+    return _longitude;
 }
 
 /**
@@ -107,20 +96,8 @@ double coord::Observatory::getLongitude(
  *       an exception to be thrown
  *
  */
-double coord::Observatory::getLatitude(
-                                       CoordUnit unit ///< units to return (DEGREES, RADIANS)
-                                      ) const {
-    switch (unit) {
-      case DEGREES:
-        return radToDeg*_latitudeRad;
-        break;
-      case RADIANS:
-        return _latitudeRad;
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES, or RADIANS.");
-        break;
-    }
+afwGeom::Angle coord::Observatory::getLatitude() const {
+    return _latitude;
 }
 
 
@@ -128,18 +105,18 @@ double coord::Observatory::getLatitude(
  * @brief Set the latitude
  */
 void coord::Observatory::setLatitude(
-                 double const latitude ///< the latitude
+                 afwGeom::Angle const latitude ///< the latitude
                 )   {
-    _latitudeRad = degToRad*latitude;
+    _latitude = latitude;
 }
 
 /**
  * @brief Set the longitude
  */
 void coord::Observatory::setLongitude(
-                                      double const longitude ///< the longitude
+                                      afwGeom::Angle const longitude ///< the longitude
                                      ) {
-    _longitudeRad = degToRad*longitude;
+    _longitude = longitude;
 }
 
 
@@ -162,7 +139,7 @@ void coord::Observatory::setElevation(
  *
  */
 std::string coord::Observatory::getLongitudeStr() const {
-    return degreesToDmsString(radToDeg*_longitudeRad);
+    return angleToDmsString(_longitude);
 }
 /**
  * @brief Allow quick access to the longitude coordinate as a string
@@ -172,7 +149,7 @@ std::string coord::Observatory::getLongitudeStr() const {
  *
  */
 std::string coord::Observatory::getLatitudeStr() const {
-    return degreesToDmsString(radToDeg*_latitudeRad);
+    return angleToDmsString(_latitude);
 }
 
 /**
@@ -183,8 +160,8 @@ std::ostream & coord::operator<<(std::ostream &os,             ///< Stream to pr
                                 )
 {
     return os << (boost::format("%gW, %gN  %g")
-                  % obs.getLatitude(coord::DEGREES)
-                  % obs.getLongitude(coord::DEGREES)
+                  % obs.getLatitude().asDegrees()
+                  % obs.getLongitude().asDegrees()
                   % obs.getElevation()).str();
 }
 

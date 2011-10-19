@@ -47,6 +47,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Source.h"
@@ -60,6 +61,7 @@ using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 
 namespace afwFormatters = lsst::afw::formatters;
+namespace afwGeom = lsst::afw::geom;
 using namespace lsst::afw::detection;
 
 
@@ -91,32 +93,32 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         data.setObjectId(static_cast<int64_t>(j +  4));
         data.setMovingObjectId(static_cast<int64_t>(j +  5));
         data.setProcHistoryId(-1);
-        data.setRa(0);
-        data.setRaErrForDetection(0);
-        data.setRaErrForWcs(0);
-        data.setDec(0);
-        data.setDecErrForDetection(0);
-        data.setDecErrForWcs(0);
+        data.setRa(0. * afwGeom::degrees);
+        data.setRaErrForDetection(0 * afwGeom::degrees);
+        data.setRaErrForWcs(0 * afwGeom::degrees);
+        data.setDec(0 * afwGeom::degrees);
+        data.setDecErrForDetection(0 * afwGeom::degrees);
+        data.setDecErrForWcs(0 * afwGeom::degrees);
         data.setXFlux(static_cast<double>(j + 14));
         data.setXFluxErr(static_cast<float>(j + 15));
         data.setYFlux(static_cast<double>(j + 16));
         data.setYFluxErr(static_cast<float>(j + 17));
-        data.setRaFlux(0);
-        data.setRaFluxErr(0);
-        data.setDecFlux(0);
-        data.setDecFluxErr(0);
+        data.setRaFlux(0 * afwGeom::degrees);
+        data.setRaFluxErr(0 * afwGeom::degrees);
+        data.setDecFlux(0 * afwGeom::degrees);
+        data.setDecFluxErr(0 * afwGeom::degrees);
         data.setXPeak(static_cast<double>(j + 22));
         data.setYPeak(static_cast<double>(j + 23));
-        data.setRaPeak(0);
-        data.setDecPeak(0);
+        data.setRaPeak(0 * afwGeom::degrees);
+        data.setDecPeak(0 * afwGeom::degrees);
         data.setXAstrom(static_cast<double>(j + 26));
         data.setXAstromErr(static_cast<float>(j + 27));
         data.setYAstrom(static_cast<double>(j + 28));
         data.setYAstromErr(static_cast<float>(j + 29));        
-        data.setRaAstrom(0);
-        data.setRaAstromErr(0);
-        data.setDecAstrom(0);
-        data.setDecAstromErr(0);                
+        data.setRaAstrom(0 * afwGeom::degrees);
+        data.setRaAstromErr(0 * afwGeom::degrees);
+        data.setDecAstrom(0 * afwGeom::degrees);
+        data.setDecAstromErr(0 * afwGeom::degrees);
         data.setTaiMidPoint(static_cast<double>(j + 34));
         data.setTaiRange(static_cast<double>(j + 35));
         data.setPsfFlux(static_cast<double>(j + 39));
@@ -138,8 +140,8 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         data.setChi2(static_cast<float>(j + 55));
         data.setSky(static_cast<float>(j + 56));
         data.setSkyErr(static_cast<float>(j + 57));
-        data.setRaObject(0);
-        data.setDecObject(0);
+        data.setRaObject(0 * afwGeom::degrees);
+        data.setDecObject(0 * afwGeom::degrees);
         data.setFlagForAssociation(1);
         data.setFlagForDetection(2);
         data.setFlagForWcs(3);
@@ -233,12 +235,12 @@ static void testBoost(void) {
             "persist()/retrieve() resulted in PersistableSourceVector corruption");
 
 
-        for(int i =0; i < dsv.size(); ++i) {
+        for (size_t i=0; i < dsv.size(); ++i) {
             boost::shared_ptr<const Footprint> dsvFp = dsv[i]->getFootprint();
             std::cerr<<"Original Area: " << dsvFp->getArea() << std::endl;
             boost::shared_ptr<const Footprint> persistFp = persistVec->getSources()[i]->getFootprint();
             std::cerr<<"Original Area: " << persistFp->getArea() << std::endl;
-            for(int j = 0; j < dsvFp->getSpans().size(); ++j) {
+            for(size_t j = 0; j < dsvFp->getSpans().size(); ++j) {
                 BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getY(), persistFp->getSpans()[j]->getY());
                 BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getX0(), persistFp->getSpans()[j]->getX0());
                 BOOST_CHECK_EQUAL(dsvFp->getSpans()[j]->getX1(), persistFp->getSpans()[j]->getX1());

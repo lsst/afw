@@ -23,13 +23,15 @@
  */
 
 #include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace shapelets = lsst::afw::math::shapelets;
 namespace nd = lsst::ndarray;
+namespace afwGeom = lsst::afw::geom;
 
 namespace {
 
-static double const NORMALIZATION = std::pow(M_PI, -0.25);
+static double const NORMALIZATION = std::pow(afwGeom::PI, -0.25);
 
 /**
  *  @brief An iterator-like object to help in traversing "packed" shapelet or Hermite polynomial
@@ -126,7 +128,7 @@ void fillEvaluation1d(nd::Array<shapelets::Pixel,1,1> const & result, double x) 
 void fillIntegration1d(nd::Array<shapelets::Pixel,1,1> const & result, int moment) {
     int const order = result.getSize<0>() - 1;
     result.deep() = 0.0;
-    result[0] = std::pow(4.0*M_PI, 0.25);
+    result[0] = std::pow(4.0*afwGeom::PI, 0.25);
     for (int n = 2; n <= order; n += 2) {
         result[n] = std::sqrt((n - 1.0) / n) * result[n-2];
     }
