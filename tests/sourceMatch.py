@@ -39,6 +39,7 @@ from math import radians
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDetect
+import lsst.afw.geom as afwGeom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -58,19 +59,19 @@ class SourceMatchTestCase(unittest.TestCase):
         for i in range(nobj):
             s = afwDetect.Source()
             s.setId(i)
-            s.setRa(radians(10 + 0.001*i))
-            s.setDec(radians(10 + 0.001*i))
+            s.setRa((10 + 0.001*i) * afwGeom.degrees)
+            s.setDec((10 + 0.001*i) * afwGeom.degrees)
 
             self.ss1.append(s)
 
             s = afwDetect.Source()
             s.setId(2*nobj + i)
-            s.setRa(radians(10 + 0.001*i))
-            s.setDec(radians(10 + 0.001*i))
+            s.setRa((10 + 0.001*i) * afwGeom.degrees)
+            s.setDec((10 + 0.001*i) * afwGeom.degrees)
 
             self.ss2.append(s)
 
-        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0, False)
+        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(mat), nobj)
 
@@ -84,20 +85,20 @@ class SourceMatchTestCase(unittest.TestCase):
         ss2 = afwDetect.SourceSet()
         for ss in (ss1, ss2):
             s = afwDetect.Source()
-            s.setRa(float('nan'))
+            s.setRa(float('nan') * afwGeom.radians)
             ss.append(s)
             s = afwDetect.Source()
-            s.setDec(float('nan'))
+            s.setDec(float('nan') * afwGeom.radians)
             ss.append(s)
             s = afwDetect.Source()
-            s.setRa(0.0)
-            s.setDec(0.0)
+            s.setRa(0.0 * afwGeom.radians)
+            s.setDec(0.0 * afwGeom.radians)
             ss.append(s)
             s = afwDetect.Source()
-            s.setRa(float('nan'))
-            s.setDec(float('nan'))
+            s.setRa(float('nan') * afwGeom.radians)
+            s.setDec(float('nan') * afwGeom.radians)
             ss.append(s)
-        mat = afwDetect.matchRaDec(ss1, ss2, 1.0, False)
+        mat = afwDetect.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
         self.assertEqual(len(mat), 1)
 
     def testPhotometricCalib(self):
@@ -133,8 +134,8 @@ class SourceMatchTestCase(unittest.TestCase):
 
             s = afwDetect.Source()
             s.setId(objId)
-            s.setRa(radians(ra))
-            s.setDec(radians(dec))
+            s.setRa(ra * afwGeom.degrees)
+            s.setDec(dec * afwGeom.degrees)
             s.setPsfFlux(psfMags[band])
 
             if mode == PRIMARY:
@@ -169,8 +170,8 @@ class SourceMatchTestCase(unittest.TestCase):
             s = afwDetect.Source()
             s.setId(id)
             id += 1
-            s.setRa(radians(ra))
-            s.setDec(radians(dec))
+            s.setRa(ra * afwGeom.degrees)
+            s.setDec(dec * afwGeom.degrees)
             s.setPsfFlux(flux[0])
 
             template.append(s)
@@ -179,7 +180,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Actually do the match
         #
-        matches = afwDetect.matchRaDec(sdss, template, 1.0, False)
+        matches = afwDetect.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(matches), 901)
 
@@ -195,7 +196,7 @@ class SourceMatchTestCase(unittest.TestCase):
         for s in sdssSecondary:
             sdss.append(s)
 
-        matches = afwDetect.matchRaDec(sdss, 1.0, False)
+        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         #
@@ -211,7 +212,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 if s.getId() not in matchIds:
                     print "RHL", s.getId()
 
-        matches = afwDetect.matchRaDec(sdss, 1.0, True)
+        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
         
         if False:

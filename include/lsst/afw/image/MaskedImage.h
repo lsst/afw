@@ -626,13 +626,13 @@ public:
     explicit MaskedImage(
         std::string const& baseName, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin = LOCAL,
+        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     );
     explicit MaskedImage(
         char **ramFile, size_t *ramFileLen, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin = LOCAL,
+        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     ); 
 
@@ -644,7 +644,7 @@ public:
     MaskedImage(
         MaskedImage const & rhs, 
         geom::Box2I const & bbox, 
-        ImageOrigin const origin, 
+        ImageOrigin const origin=LOCAL, 
         bool const deep=false
     );
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -776,7 +776,7 @@ public:
     /// Return the number of rows in the %image
     int getHeight() const { return _image->getHeight(); }
     geom::Extent2I getDimensions() const {return _image->getDimensions();}
-    geom::Box2I getBBox(ImageOrigin const origin) const {return _image->getBBox(origin);}
+    geom::Box2I getBBox(ImageOrigin const origin=LOCAL) const {return _image->getBBox(origin);}
     /**
      * Return the %image's row-origin
      *

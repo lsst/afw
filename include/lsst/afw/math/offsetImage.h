@@ -32,7 +32,8 @@ namespace afw {
 namespace math {
 
 template<typename ImageT>
-typename ImageT::Ptr offsetImage(ImageT const& image, float dx, float dy, std::string const& algorithmName="lanczos5");
+typename ImageT::Ptr offsetImage(ImageT const& image, float dx, float dy, 
+                                 std::string const& algorithmName="lanczos5", unsigned int buffer=0);
 template<typename ImageT>
 typename ImageT::Ptr rotateImageBy90(ImageT const& image, int nQuarter);
 

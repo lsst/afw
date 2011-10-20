@@ -35,6 +35,7 @@
 
 #include <iostream>
 #include "lsst/afw/coord/Utils.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
 namespace afw {    
@@ -48,15 +49,15 @@ namespace coord {
 class Observatory {
 public:
     
-    Observatory(double const longitude, double const latitude, double const elevation);
+    Observatory(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude, double const elevation);
     Observatory(std::string const longitude, std::string const latitude, double const elevation);
     
-    void setLatitude(double const latitude);
-    void setLongitude(double const longitude);
+    void setLatitude(lsst::afw::geom::Angle const latitude);
+    void setLongitude(lsst::afw::geom::Angle const longitude);
     void setElevation(double const elevation);
     
-    double getLatitude(CoordUnit unit) const;
-    double getLongitude(CoordUnit unit) const;
+    lsst::afw::geom::Angle getLatitude() const;
+    lsst::afw::geom::Angle getLongitude() const;
     double getElevation() const { return _elevation; }
     
     std::string getLatitudeStr() const;
@@ -64,17 +65,17 @@ public:
 
     bool operator==(Observatory const& rhs) const {
         return
-            (_latitudeRad - rhs._latitudeRad) == 0.0 &&
-            (_longitudeRad - rhs._longitudeRad) == 0.0 &&
-            (_elevation - rhs._elevation) == 0.0;
+            ((_latitude - rhs._latitude) == 0.0) &&
+            ((_longitude - rhs._longitude) == 0.0) &&
+            ((_elevation - rhs._elevation) == 0.0);
     }
     bool operator!=(Observatory const& rhs) const {
         return !(*this == rhs);
     }
 
 private:
-    double _latitudeRad;
-    double _longitudeRad;
+    lsst::afw::geom::Angle _latitude;
+    lsst::afw::geom::Angle _longitude;
     double _elevation;
 };
 

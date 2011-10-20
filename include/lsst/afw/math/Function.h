@@ -71,6 +71,9 @@ using boost::serialization::make_nvp;
      *   using this->_params or this->getParams() to reference the parameters
      * - If the function is a linear combination of parameters then override the function isLinearCombination.
      *
+     * If you wish to cache any information you may use the _isCacheValid flag;
+     * this is automatically set false whenever parameters are changed.
+     *
      * Design Notes:
      * The reason these functions exist (rather than using a pre-existing function class,
      * such as Functor in VisualWorkbench) is because the Kernel class requires function
@@ -93,17 +96,19 @@ using boost::serialization::make_nvp;
             unsigned int nParams)   ///< number of function parameters
         :
             lsst::daf::data::LsstBase(typeid(this)),
-            _params(nParams)
+            _params(nParams),
+            _isCacheValid(false)
         {}
 
         /**
          * @brief Construct a Function given the function parameters.
          */
         explicit Function(
-            std::vector<double> const &params)
+            std::vector<double> const &params)   ///< function parameters
         :
             lsst::daf::data::LsstBase(typeid(this)),
-            _params(params)   ///< function parameters
+            _params(params),
+            _isCacheValid(false)
         {}
         
         virtual ~Function() {}
@@ -153,6 +158,7 @@ using boost::serialization::make_nvp;
             unsigned int ind,   ///< index of parameter
             double newValue)    ///< new value for parameter
         {
+            _isCacheValid = false;
             _params[ind] = newValue;
         }
         
@@ -170,6 +176,7 @@ using boost::serialization::make_nvp;
                     (boost::format("params has %d entries instead of %d") % \
                     params.size() % _params.size()).str());
             }
+            _isCacheValid = false;
             _params = params;
         }
     
@@ -191,9 +198,10 @@ using boost::serialization::make_nvp;
 
     protected:
         std::vector<double> _params;
+        mutable bool _isCacheValid;
 
         /* Default constructor: intended only for serialization */
-        explicit Function() : lsst::daf::data::LsstBase(typeid(this)), _params(0) {}   
+        explicit Function() : lsst::daf::data::LsstBase(typeid(this)), _params(0), _isCacheValid(false) {}   
 
     private: // serialization support
         friend class boost::serialization::access;

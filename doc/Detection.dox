@@ -12,14 +12,14 @@ Demonstrate the use of FootprintFunctor%s to work with Footprint%s; the
 code's in \link footprintFunctor.cc\endlink.
 
 Start by including needed headers and declaring namespace aliases
-\until namespace image
+\until namespace afwGeom
 We don't want our functor visible in the global namespace, or even
 outside this file, so put it in an anonymous namespace:
 \until namespace
 Declare our functor \c FindSetBits, it's parameterised over \c MaskT,
 and provide a constructor. \c _bits is the accumulator for Mask bits in the Footprint
-\until detection::FootprintFunctor
-\until detection::FootprintFunctor
+\until afwDetect::FootprintFunctor
+\until afwDetect::FootprintFunctor
 Define what it means to \c apply the functor; in this case, OR together the bits
 \until }
 Return the desired value

@@ -23,15 +23,17 @@
 
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
 #include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
+#include "lsst/afw/geom/Angle.h"
 #include "lsst/ndarray/eigen.h"
 
+namespace afwGeom = lsst::afw::geom;
 namespace shapelets = lsst::afw::math::shapelets;
 
 namespace lsst { namespace afw { namespace math { namespace shapelets { namespace detail {
 
 namespace {
 
-static double const NORMALIZATION = std::pow(M_PI, -0.25);
+static double const NORMALIZATION = std::pow(afwGeom::PI, -0.25);
 
 class TripleProductIntegral {
 public:
@@ -313,7 +315,7 @@ lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvo
             }
         }
     }
-    kq *= 4.0 * M_PI * (
+    kq *= 4.0 * afwGeom::PI * (
         std::fabs(convolved_gt_inv.computeDeterminant()
                   * psf_gt.computeDeterminant()
                   * model_gt.computeDeterminant())

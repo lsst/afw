@@ -49,21 +49,29 @@ public:
 
     FootprintSet(image::Image<ImagePixelT> const& img,
                  Threshold const& threshold,
-                 int const npixMin=1);
+                 double const includeThresholdMultiplier=1.0,
+                 int const npixMin=1, bool const setPeaks=true);
     FootprintSet(image::Mask<MaskPixelT> const& img,
                  Threshold const& threshold,
+                 double const includeThresholdMultiplier=1.0,
                  int const npixMin=1);
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
+                 double const includeThresholdMultiplier,
                  std::string const& planeName = "",
-                 int const npixMin=1);
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+                 Threshold const& threshold,
+                 std::string const& planeName = "",
+                 int const npixMin=1, bool const setPeaks=true);
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  int x,
                  int y,
-                 std::vector<Peak> const* peaks = NULL);
+                 std::vector<PTR(Peak)> const* peaks = NULL);
+    FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
-    FootprintSet(FootprintSet const& set, int r, bool isotropic=true);
+    FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, 
                  FootprintSet const& footprints2,
                  bool const includePeaks);
@@ -82,9 +90,13 @@ public:
     }
     
     /**:
-     * Retun the Footprint%s of detected objects
+     * Return the Footprint%s of detected objects
      */
     PTR(FootprintList) getFootprints() { return _footprints; } 
+    /**:
+     * Set the Footprint%s of detected objects
+     */
+    void setFootprints(PTR(FootprintList) footprints) { _footprints = footprints; }
     /**
      * Retun the Footprint%s of detected objects
      */
@@ -116,7 +128,13 @@ public:
     ) {
         setMask(mask.get(), planeName);
     }
+
+    void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
 private:
+    void findFootprintsAndMask(const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg,
+                               Threshold const &threshold, double const includeThresholdMultiplier,
+                               std::string const &planeName, int const npixMin, bool const setPeaks);
+
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in
 };
@@ -125,11 +143,12 @@ template<typename ImagePixelT, typename MaskPixelT>
 typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
         image::Image<ImagePixelT> const& img,
         Threshold const& threshold,
+        double const includeThresholdMultiplier=1.0,
         std::string const& = "",
         int const npixMin=1
 ) {
     return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
-        new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, npixMin)
+        new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, includeThresholdMultiplier, npixMin)
     );
 }
 
@@ -137,11 +156,27 @@ template<typename MaskPixelT>
 typename FootprintSet<MaskPixelT, MaskPixelT>::Ptr makeFootprintSet(
         image::Mask<MaskPixelT> const& msk,
         Threshold const& threshold,
+        double const includeThresholdMultiplier=1.0,
         std::string const& = "",
         int const npixMin=1
 ) {
     return typename FootprintSet<MaskPixelT, MaskPixelT>::Ptr(
-        new FootprintSet<MaskPixelT, MaskPixelT>(msk, threshold, npixMin)
+        new FootprintSet<MaskPixelT, MaskPixelT>(msk, threshold, includeThresholdMultiplier, npixMin)
+    );
+}
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+        Threshold const& threshold,
+        double const includeThresholdMultiplier,
+        std::string const& planeName = "",
+        int const npixMin=1
+) {
+    return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
+        new FootprintSet<ImagePixelT, MaskPixelT>(
+            img, threshold, includeThresholdMultiplier, planeName, npixMin
+        )
     );
 }
 
@@ -154,7 +189,7 @@ typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
 ) {
     return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
         new FootprintSet<ImagePixelT, MaskPixelT>(
-            img, threshold, planeName, npixMin
+            img, threshold, 1.0, planeName, npixMin
         )
     );
 }
@@ -165,9 +200,9 @@ typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
         Threshold const& threshold,
         int x,
         int y,
-        std::vector<Peak> const* peaks = NULL
+        std::vector<PTR(Peak)> const* peaks = NULL
 ) {
-    return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
+    return PTR(FootprintSet<ImagePixelT, MaskPixelT>)(
         new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks)
     );
 }
@@ -176,7 +211,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
         FootprintSet<ImagePixelT, MaskPixelT> const& rhs, //!< the input FootprintSet
         int r,                          //!< Grow Footprints by r pixels
-        bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
+        bool isotropic=true             //!< Grow isotropically (as opposed to a Manhattan metric)
                                         //!< @note Isotropic grows are significantly slower
 ) {
     return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(

@@ -109,8 +109,6 @@ class KernelTestCase(unittest.TestCase):
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
 
-        self.checkComputeImage(kernel)
-
     def testShrinkGrowBBox(self):
         """Test Kernel methods shrinkBBox and growBBox
         """
@@ -166,8 +164,6 @@ class KernelTestCase(unittest.TestCase):
         kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.Point2I(1, 1))
         self.basicTests(kernel, 0)
 
-        self.checkComputeImage(kernel)
-
     def testFixedKernel(self):
         """Test FixedKernel using a ramp function
         """
@@ -204,8 +200,6 @@ class KernelTestCase(unittest.TestCase):
         if errStr:
             self.fail(errStr)
 
-        self.checkComputeImage(kernel)
-    
     def testLinearCombinationKernelDelta(self):
         """Test LinearCombinationKernel using a set of delta basis functions
         """
@@ -240,8 +234,6 @@ class KernelTestCase(unittest.TestCase):
         if errStr:
             self.fail(errStr)
 
-        self.checkComputeImage(kernel)
-    
     def testComputeImageRaise(self):
         """Test Kernel.computeImage raises OverflowException iff doNormalize True and kernel sum exactly 0
         """
@@ -368,8 +360,6 @@ class KernelTestCase(unittest.TestCase):
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
 
-        self.checkComputeImage(kernel)
-        
     def testMakeBadKernels(self):
         """Attempt to make various invalid kernels; make sure the constructor shows an exception
         """
@@ -698,25 +688,6 @@ class KernelTestCase(unittest.TestCase):
         except pexExcept.LsstCppException, e:
             if not doRaise:
                 self.fail(kernelDescr + ".computeImage should not have raised an exception")
-
-    def checkComputeImage(self, kernel):
-        """Verify that one cannot compute a kernel image of the wrong size
-        """
-        kWidth = kernel.getWidth()
-        kHeight = kernel.getHeight()
-
-        for doNormalize in (False, True):
-            for width in (0, 1, kWidth-1, kWidth, kWidth+1):
-                for height in (0, 1, kHeight-1, kHeight, kHeight+1):
-                    if (width, height) == (kWidth, kHeight):
-                        continue
-                    outImage = afwImage.ImageD(afwGeom.Extent2I(width, height))
-                    try:
-                        kernel.computeImage(outImage, doNormalize)
-                        self.fail("computeImage accepted wrong-sized image; kernel=%s; image size=(%s, %s)" %
-                            (kernel, width, height))
-                    except pexExcept.LsstCppException:
-                        pass
 
     def compareKernels(self, kernel1, kernel2, compareParams=True, newCtr1=(0, 0)):
         """Compare two kernels; return None if they match, else return a string kernelDescribing a difference.
