@@ -99,10 +99,12 @@ namespace {
     public:
         typedef boost::shared_ptr<IdSpan> Ptr;
         
-        explicit IdSpan(int id, int y, int x0, int x1) : id(id), y(y), x0(x0), x1(x1) {}
+        explicit IdSpan(int id, int y, int x0, int x1, double good) : 
+            id(id), y(y), x0(x0), x1(x1), good(good) {}
         int id;                         /* ID for object */
         int y;                          /* Row wherein IdSpan dwells */
         int x0, x1;                     /* inclusive range of columns */
+        bool good;                      /* includes a value over the desired threshold? */
     };
 /*
  * comparison functor; sort by ID then row
@@ -288,6 +290,7 @@ static inline bool inFootprint(ImagePixelT pixVal, IterT,
                                bool, double thresholdVal, ThresholdBitmask_traits) {
     return (pixVal & static_cast<long>(thresholdVal));
 }
+
 /*
  * Advance the x_iterator to the variance image, when relevant (it may be NULL otherwise)
  */
@@ -314,6 +317,7 @@ static void findFootprints(
         image::ImageBase<ImagePixelT> const &img, // Image to search for objects
         image::Image<VariancePixelT> const *var,  // img's variance
         double const thresholdVal,                // threshold value defining Footprints
+        double const includeThresholdMultiplier, // threshold multiplier for inclusion in FootprintSet
         bool const polarity,                      // if false, search _below_ thresholdVal
         int const npixMin,                        // minimum number of pixels in an object
         bool const setPeaks                      // should I set the Peaks list?
@@ -322,6 +326,7 @@ static void findFootprints(
     int in_span;                        /* object ID of current IdSpan */
     int nobj = 0;                       /* number of objects found */
     int x0 = 0;                         /* unpacked from a IdSpan */
+    double const includeThresholdVal = thresholdVal * includeThresholdMultiplier; // threshold for inclusion
 
     typedef typename image::Image<ImagePixelT> ImageT;
     
@@ -365,6 +370,7 @@ static void findFootprints(
         std::fill_n(idc - 1, width + 2, 0);
         
         in_span = 0;                    /* not in a span */
+        bool good = (includeThresholdMultiplier == 1.0); /* Span exceeds the threshold? */
 
         x_iterator pixPtr = img.row_begin(y);
         x_var_iterator varPtr = (var == NULL) ? NULL : var->row_begin(y);
@@ -374,10 +380,11 @@ static void findFootprints(
             if (isBadPixel(pixVal) || !inFootprint(pixVal, varPtr,
                                                    polarity, thresholdVal, ThresholdTraitT())) {
                 if (in_span) {
-                    IdSpan::Ptr sp(new IdSpan(in_span, y, x0, x - 1));
+                    IdSpan::Ptr sp(new IdSpan(in_span, y, x0, x - 1, good));
                     spans.push_back(sp);
 
                     in_span = 0;
+                    good = false;
                 }
             } else {                    /* a pixel to fix */
                 if (idc[x - 1] != 0) {
@@ -406,11 +413,16 @@ static void findFootprints(
                
                     idc[x] = id = idp[x + 1];
                 }
+
+                if (!good && inFootprint(pixVal, varPtr, polarity, includeThresholdVal, 
+                                         ThresholdTraitT())) {
+                    good = true;
+                }
             }
         }
 
         if (in_span) {
-            IdSpan::Ptr sp(new IdSpan(in_span, y, x0, width - 1));
+            IdSpan::Ptr sp(new IdSpan(in_span, y, x0, width - 1, good));
             spans.push_back(sp);
         }
     }
@@ -437,11 +449,13 @@ static void findFootprints(
             if (i == spans.size() || spans[i]->id != id) {
                 PTR(detection::Footprint) fp(new detection::Footprint(i - i0, _region));
             
+                bool good = false;      // Span includes pixel sufficient to include footprint in set?
                 for (; i0 < i; i0++) {
+                    good |= spans[i0]->good;
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
                 }
 
-                if (!(fp->getNpix() < npixMin)) {
+                if (good && !(fp->getNpix() < npixMin)) {
                     _footprints->push_back(fp);
                 }
             }
@@ -470,6 +484,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         image::Image<ImagePixelT> const &img, //!< Image to search for objects
         Threshold const &threshold,     //!< threshold to find objects
+        double const includeThresholdMultiplier, //!< threshold multiplier for inclusion in FootprintSet
         int const npixMin,              //!< minimum number of pixels in an object
         bool const setPeaks            //!< should I set the Peaks list?
 ) : lsst::daf::base::Citizen(typeid(this)),
@@ -483,67 +498,23 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         _region, 
         img,
         NULL,
-        threshold.getValue(img), threshold.getPolarity(),
+        threshold.getValue(img), includeThresholdMultiplier, threshold.getPolarity(),
         npixMin,
         setPeaks
     );
 }
 
-/*
- * \brief Find a FootprintSet given a Mask and a threshold
+/* 
+ * \brief Find a FootprintSet and set the mask plane appropriately
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        image::Mask<MaskPixelT> const &msk, //!< Image to search for objects
-        Threshold const &threshold,     //!< threshold to find objects
-        int const npixMin               //!< minimum number of pixels in an object
-) : lsst::daf::base::Citizen(typeid(this)),
-    _footprints(new FootprintList()),
-    _region(msk.getBBox(image::PARENT))
-{
-    switch (threshold.getType()) {
-      case Threshold::BITMASK:
-        findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
-            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(),
-            npixMin, false);
-        break;
-
-      case Threshold::VALUE:
-        findFootprints<MaskPixelT, MaskPixelT, float, ThresholdLevel_traits>(
-            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getPolarity(),
-            npixMin, false);
-        break;
-
-      default:
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                          "You must specify a numerical threshold value with a Mask");
-    }
-}
-
-/**
- * \brief Find a FootprintSet given a MaskedImage and a threshold
- *
- * Go through an image, finding sets of connected pixels above threshold
- * and assembling them into Footprint%s;  the resulting set of objects
- * is returned as an \c array<Footprint::Ptr>
- *
- * If threshold.getPolarity() is true, pixels above the Threshold are
- * assembled into Footprints; if it's false, then pixels \e below Threshold
- * are processed (Threshold will probably have to be below the background level
- * for this to make sense, e.g. for difference imaging)
- */
-template<typename ImagePixelT, typename MaskPixelT>
-detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+void detection::FootprintSet<ImagePixelT, MaskPixelT>::findFootprintsAndMask(
         const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
-        Threshold const &threshold,     //!< threshold to find objects
+        Threshold const &threshold,     //!< threshold for footprints (controls size)
+        double const includeThresholdMultiplier, //!< threshold multiplier for inclusion in FootprintSet
         std::string const &planeName,   //!< mask plane to set (if != "")
         int const npixMin,              //!< minimum number of pixels in an object
         bool const setPeaks            //!< should I set the Peaks list?
-) : lsst::daf::base::Citizen(typeid(this)),
-    _footprints(new FootprintList()),
-    _region(
-        geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
-        geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())
     )
 {
     typedef typename image::MaskedImage<ImagePixelT, MaskPixelT>::Variance::Pixel VariancePixelT;
@@ -556,6 +527,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
             *maskedImg.getImage(), 
             maskedImg.getVariance().get(), 
             threshold.getValue(maskedImg),
+            includeThresholdMultiplier,
             threshold.getPolarity(),
             npixMin,
             setPeaks
@@ -568,6 +540,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
             *maskedImg.getImage(), 
             maskedImg.getVariance().get(), 
             threshold.getValue(maskedImg),
+            includeThresholdMultiplier,
             threshold.getPolarity(),
             npixMin,
             setPeaks
@@ -612,6 +585,86 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     }
 }
 
+/*
+ * \brief Find a FootprintSet given a Mask and a threshold
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        image::Mask<MaskPixelT> const &msk, //!< Image to search for objects
+        Threshold const &threshold,     //!< threshold to find objects
+        double const includeThresholdMultiplier, //!< threshold multiplier for inclusion in FootprintSet
+        int const npixMin               //!< minimum number of pixels in an object
+) : lsst::daf::base::Citizen(typeid(this)),
+    _footprints(new FootprintList()),
+    _region(msk.getBBox(image::PARENT))
+{
+    switch (threshold.getType()) {
+      case Threshold::BITMASK:
+        findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
+            _footprints.get(), _region, msk, NULL, threshold.getValue(), includeThresholdMultiplier,
+            threshold.getPolarity(), npixMin, false);
+        break;
+
+      case Threshold::VALUE:
+        findFootprints<MaskPixelT, MaskPixelT, float, ThresholdLevel_traits>(
+            _footprints.get(), _region, msk, NULL, threshold.getValue(), includeThresholdMultiplier,
+            threshold.getPolarity(), npixMin, false);
+        break;
+
+      default:
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "You must specify a numerical threshold value with a Mask");
+    }
+}
+
+
+/**
+ * \brief Find a FootprintSet given a MaskedImage and a threshold
+ *
+ * Go through an image, finding sets of connected pixels above threshold
+ * and assembling them into Footprint%s;  the resulting set of objects
+ * is returned as an \c array<Footprint::Ptr>
+ *
+ * If threshold.getPolarity() is true, pixels above the Threshold are
+ * assembled into Footprints; if it's false, then pixels \e below Threshold
+ * are processed (Threshold will probably have to be below the background level
+ * for this to make sense, e.g. for difference imaging)
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
+        Threshold const &threshold,     //!< threshold for footprints (controls size)
+        double const includeThresholdMultiplier, //!< threshold multiplier for inclusion in FootprintSet
+        std::string const &planeName,   //!< mask plane to set (if != "")
+        int const npixMin,              //!< minimum number of pixels in an object
+        bool const setPeaks            //!< should I set the Peaks list?
+) : lsst::daf::base::Citizen(typeid(this)),
+    _footprints(new FootprintList()),
+    _region(
+        geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
+        geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())
+    )
+{
+    findFootprintsAndMask(maskedImg, threshold, includeThresholdMultiplier, planeName, npixMin, setPeaks);
+}
+
+template<typename ImagePixelT, typename MaskPixelT>
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
+        Threshold const &threshold,     //!< threshold for footprints (controls size)
+        std::string const &planeName,   //!< mask plane to set (if != "")
+        int const npixMin,              //!< minimum number of pixels in an object
+        bool const setPeaks            //!< should I set the Peaks list?
+) : lsst::daf::base::Citizen(typeid(this)),
+    _footprints(new FootprintList()),
+    _region(
+        geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
+        geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())
+    )
+{
+    findFootprintsAndMask(maskedImg, threshold, 1.0, planeName, npixMin, setPeaks);
+}
+    
 /************************************************************************************************************/
 /**
  * Return a FootprintSet consisting a Footprint containing the point (x, y) (if above threshold)

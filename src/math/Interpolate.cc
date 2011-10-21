@@ -92,6 +92,7 @@ math::Interpolate::~Interpolate() {
 }
 
 double math::Interpolate::interpolate(double const x) {
+#if 0 // Enable this when we upgrade GSL to make failure more graceful.
     if (x < _x.front() || x > _x.back()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
@@ -99,6 +100,7 @@ double math::Interpolate::interpolate(double const x) {
              % x % _x.front() % _x.back()).str()
         );
     }
+#endif
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], x, _acc);
 }
 
