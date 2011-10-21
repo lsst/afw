@@ -114,7 +114,7 @@ geom::Box2I::Box2I(Box2D const & other, EdgeHandlingEnum edgeHandling) : _minimu
 }
 
 /// @brief Return slices to extract the box's region from an ndarray::Array.
-lsst::ndarray::View< boost::fusion::vector2<lsst::ndarray::detail::RangeDim,lsst::ndarray::detail::RangeDim> >
+lsst::ndarray::View< boost::fusion::vector2<lsst::ndarray::index::Range,lsst::ndarray::index::Range> >
 geom::Box2I::getSlices() const {
     return lsst::ndarray::view(getBeginY(), getEndY())(getBeginX(), getEndX());
 }

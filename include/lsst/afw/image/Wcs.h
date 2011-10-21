@@ -27,7 +27,7 @@
 #define LSST_AFW_IMAGE_WCS_H
 
 
-#include "Eigen/Core.h"
+#include "Eigen/Core"
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"

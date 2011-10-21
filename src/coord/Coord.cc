@@ -35,9 +35,7 @@
 #include <limits>
 #include <cstdio>
 
-#include "Eigen/Core.h"
-#include "Eigen/LU"
-#include "Eigen/SVD"
+#include "Eigen/Core"
 #include "Eigen/Geometry"
 
 #include "lsst/pex/exceptions.h"

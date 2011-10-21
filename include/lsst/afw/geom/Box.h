@@ -123,7 +123,7 @@ public:
     //@}
 
     lsst::ndarray::View< 
-        boost::fusion::vector2< lsst::ndarray::detail::RangeDim, lsst::ndarray::detail::RangeDim > 
+        boost::fusion::vector2< lsst::ndarray::index::Range, lsst::ndarray::index::Range > 
         >
     getSlices() const;
 

@@ -164,7 +164,7 @@ void shapelets::ShapeletFunction::convolve(lsst::afw::math::shapelets::ShapeletF
     if (_basisType == LAGUERRE) {
         ConversionMatrix::convertCoefficientVector(_coefficients, LAGUERRE, HERMITE, getOrder());
     }
-    ndarray::viewAsEigen(_coefficients) = matrix * ndarray::viewAsEigen(_coefficients);
+    _coefficients.asEigen() = matrix * _coefficients.asEigen();
     if (_basisType == LAGUERRE) {
         ConversionMatrix::convertCoefficientVector(_coefficients, HERMITE, LAGUERRE, getOrder());
     }
