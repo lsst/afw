@@ -1,11 +1,24 @@
 import gdb
 import math, re
+import optparse
 
 try:
     debug
 except:
     debug = False
-    
+
+class GdbOptionParser(optparse.OptionParser):
+    def __init__(self, usage, *args, **kwargs):
+        optparse.OptionParser.__init__(self, *args, **kwargs) # OptionParser is an old-style class
+        self.set_usage(usage)
+
+    def parse_args(self, args, values=None):
+        """Call optparse.OptionParser.parse_args after running gdb.string_to_argv on args"""
+        return optparse.OptionParser.parse_args(self, gdb.string_to_argv(args), values)
+
+    def exit(self, status=0, msg=None):
+        raise gdb.GdbError(msg)
+   
 try:
     import gdb.printing
 
@@ -20,6 +33,16 @@ try:
                 return "shared_ptr(%s)" % self.val["px"].dereference()
             else:
                 return "NULL"
+
+    class GilPixelPrinter(object):
+        "Print a boost::gil pixel"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            import pdb; pdb.set_trace() 
+            return self.val["_v0"]
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -398,7 +421,7 @@ try:
 
     class PrintImageCommand(gdb.Command):
         """Print an Image
-    Usage: show image <image> x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
+    Usage: show image [--all | --center --xy0 | --width #] <image> x0 y0 [nx [ny]]
     If nx or ny is 0, show the entire image
     """
 
@@ -424,9 +447,22 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            args = gdb.string_to_argv(args)
+            parser = GdbOptionParser("show image [opts] [nx [ny]]")
+            parser.add_option("-a", "--all", action="store_true", help="Display the whole image/mask")
+            parser.add_option("-c", "--center", action="store_true", help="Center the output at (x, y)")
+            parser.add_option("-o", "--origin", type="string", nargs=2, default=("0", "0"),
+                              help="Print the region starting at (x, y)")
+            parser.add_option("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
+            parser.add_option("-w", "--width", type="int", default=8, help="Field width for pixels")
+
+            (opts, args) =  parser.parse_args(args)
+
+            x0 = gdb.parse_and_eval(opts.origin[0])
+            y0 = gdb.parse_and_eval(opts.origin[1])
+
             if len(args) < 1:
                 raise gdb.GdbError("Please specify an image")
+
             imgName = args.pop(0)
             var = gdb.parse_and_eval(imgName)
 
@@ -454,19 +490,11 @@ try:
             else:
                 dataFmt = "%.2f"
 
-            if len(args) == 1 and args[0] == "all":
-                args.pop(0)
-                x0, y0 = 0, 0
+            if opts.all:
                 nx, ny = 0, 0
             else:
-                if len(args) < 2:
-                    raise gdb.GdbError("Please specify a pixel's x and y indexes")
-
-                x0 = gdb.parse_and_eval(args.pop(0))
-                y0 = gdb.parse_and_eval(args.pop(0))
-
                 if len(args) == 0:
-                    print dataFmt % self.get(var, x0, y0)
+                    print "(%d, %d): %s" % (x0, y0, (dataFmt % self.get(var, x0, y0)))
                     return
 
                 nx = int(args.pop(0))
@@ -475,42 +503,36 @@ try:
                 else:
                     ny = 1
 
+            if args:
+                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
+
             if nx == 0:
                 nx = var["_gilView"]["_dimensions"]["x"]
             if ny == 0:
                 ny = var["_gilView"]["_dimensions"]["y"]
 
-            if args:
-                centerPatch = gdb.parse_and_eval(args.pop(0))
-                if centerPatch:
-                    x0 -= nx//2
-                    y0 -= ny//2
+            if opts.center:
+                x0 -= nx//2
+                y0 -= ny//2
 
-            if args:
-                obeyXY0 = gdb.parse_and_eval(args.pop(0))
-
-                if obeyXY0:
-                    arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
-
-                    x0 -= arr[0]
-                    y0 -= arr[1]
-
-            if args:
-                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
+            if opts.xy0:
+                arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
+                
+                x0 -= arr[0]
+                y0 -= arr[1]
             #
             # OK, finally time to print
             #
             print "%-4s" % "",
             for x in range(x0, x0 + nx):
-                print "%8d" % x,
+                print "%*d" % (opts.width, x),
             print ""
 
             for y in reversed(range(y0, y0 + ny)):
                 print "%-4d" % y,
                 for x in range(x0, x0 + nx):
-                    print "%8s" % (dataFmt % self.get(var, x, y)),
+                    print "%*s" % (opts.width, dataFmt % self.get(var, x, y)),
                 print ""
-
 
     PrintImageCommand()
 
@@ -536,6 +558,8 @@ try:
 
         printer.add_printer('boost::shared_ptr',
                             '^(boost|tr1|std)::shared_ptr', SharedPtrPrinter)
+        printer.add_printer('boost::gil::pixel',
+                            'boost::gil::.*_pixel_t', GilPixelPrinter)
 
         return printer
 
