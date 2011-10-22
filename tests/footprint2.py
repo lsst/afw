@@ -65,9 +65,14 @@ def toString(*args):
 
 def cmpPeaks(im, a, b):
     """Comparison function to sort by (decreasing) peak height"""
-    a = im.get(a[0], a[1])[0]
-    b = im.get(b[0], b[1])[0]
-    return cmp(b, a)
+    ai = im.get(a[0], a[1])[0]
+    bi = im.get(b[0], b[1])[0]
+
+    val = cmp(bi, ai)
+    if val:
+        return val
+
+    return cmp(a, b)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -103,7 +108,7 @@ class FootprintSetUTestCase(unittest.TestCase):
         self.objects = []
         self.objects += [Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
         self.objects += [Object(20, [(5, 7, 8), (5, 10, 10), (6, 8, 9)])]
-        self.objects += [Object(20, [(7, 3, 3)])]
+        self.objects += [Object(20, [(6, 3, 3)])]
 
         self.im.set(0)                       # clear image
         for obj in self.objects:
@@ -205,24 +210,13 @@ class FootprintSetUTestCase(unittest.TestCase):
 
     def testGrow(self):
         """Grow footprints using the FootprintSet constructor"""
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
-        self.assertEqual(len(ds.getFootprints()), len(self.objects))
-        grown = afwDetect.makeFootprintSet(ds, 1, False)
-        self.assertEqual(len(ds.getFootprints()), len(self.objects))
+        fs = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10), "BINNED1")
+        self.assertEqual(len(fs.getFootprints()), len(self.objects))
+        grown = afwDetect.FootprintSetU(fs, 1, False)
+        self.assertEqual(len(fs.getFootprints()), len(self.objects))
 
-        self.assertTrue(len(grown.getFootprints()) > 0)
-        self.assertTrue(len(grown.getFootprints()) >= len(ds.getFootprints()))
-
-    def testThresholdMultiplier(self):
-        """Inclusion threshold multiplier"""
-        thresh = 10
-        multiplier = 2.0
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(thresh), multiplier)
-
-        objects = [obj for obj in self.objects if obj.val >= thresh*multiplier]
-        self.assertEqual(len(ds.getFootprints()), len(objects))
-        for obj, foot in zip(objects, ds.getFootprints()):
-            self.assertEqual(obj, foot)
+        self.assertGreater(len(grown.getFootprints()), 0)
+        self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
 
     def testInf(self):
         """Test detection for images with Infs"""
@@ -307,7 +301,6 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         threshold = afwDetect.Threshold(threshold, afwDetect.Threshold.VALUE, polarity)
         fs = afwDetect.makeFootprintSet(self.im, threshold, "BINNED1")
-        self.fs = fs
 
         if grow:
             fs = afwDetect.makeFootprintSet(fs, grow, True)
@@ -315,6 +308,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             afwDetect.setMaskFromFootprintList(msk, fs.getFootprints(), msk.getPlaneBitMask("DETECTED"))
             del msk
 
+        self.fs = fs
         self.checkPeaks(dwidth, dheight, frame=3)
 
     def checkPeaks(self, dwidth=0, dheight=0, frame=3):
@@ -323,12 +317,14 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         if display:
             ds9.mtv(self.im, frame=frame)
 
-            if False: #with ds9.Buffering():
+            with ds9.Buffering():
                 for i, foot in enumerate(feet):
                     for p in foot.getPeaks():
                         ds9.dot("+", p.getIx(), p.getIy(), size=0.4, frame=frame)
-                    for trueX, trueY, peakVal in self.peaks[i]:
-                        ds9.dot("x", trueX, trueY, size=0.4, ctype=ds9.RED, frame=frame)
+
+                    if i < len(self.peaks):
+                        for trueX, trueY, peakVal in self.peaks[i]:
+                            ds9.dot("x", trueX, trueY, size=0.4, ctype=ds9.RED, frame=frame)
 
         for i, foot in enumerate(feet):
             npeak = None
@@ -345,29 +341,39 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 npeak = len(self.peaks[i])
 
             if npeak != len(foot.getPeaks()):
-                print "RHL", [(p.getIx(), p.getIy()) for p in foot.getPeaks()]
+                print "RHL", foot.repr()
+                #print "RHL", [(p.repr().split(":")[0], p.getIx(), p.getIy()) for p in foot.getPeaks()]
+                print "RHL", [(p.getId(), p.getIx(), p.getIy()) for p in foot.getPeaks()]
                 print "RHL", [p[0:2] for p in self.peaks[i]]
 
             self.assertEqual(len(foot.getPeaks()), npeak)
 
             for j, p in enumerate(foot.getPeaks()):
                 trueX, trueY, peakVal = self.peaks[i][j]
+                if (p.getIx(), p.getIy()) != (trueX, trueY):
+                    print "RHL", [(pp.getId(), pp.getIx(), pp.getIy()) for pp in foot.getPeaks()]
+                    print "RHL", [pp[0:2] for pp in self.peaks[i]]
+
                 self.assertEqual((p.getIx(), p.getIy()), (trueX, trueY))
 
     def testSinglePeak(self):
         """Test that we can find single Peaks in Footprints"""
+
         self.doTestPeaks()
 
     def testSingleNegativePeak(self):
         """Test that we can find single Peaks in Footprints when looking for -ve detections"""
+
         self.doTestPeaks(polarity=False)
 
     def testSinglePeakAtEdge(self):
         """Test that we handle Peaks correctly at the edge"""
+        
         self.doTestPeaks(dheight=-1)
 
     def testSingleNegativePeakAtEdge(self):
         """Test that we handle -ve Peaks correctly at the edge"""
+        
         self.doTestPeaks(dheight=-1, polarity=False)
 
     def testMultiPeak(self):
@@ -376,6 +382,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             x, y = 12, 7
             self.im.getImage().set(x, y, 100)
             self.peaks[1].append((x, y))
+
         self.doTestPeaks(callback=callback)
 
     def testMultiNegativePeak(self):
@@ -384,6 +391,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             x, y = 12, 7
             self.im.getImage().set(x, y, -100)
             self.peaks[1].append((x, y))
+
         self.doTestPeaks(polarity=False, callback=callback)
 
     def testGrowFootprints(self):
@@ -391,6 +399,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         def callback():
             self.im.getImage().set(10, 4, 20)
             self.peaks[-2].append((10, 4,))
+
         self.doTestPeaks(dwidth=1, dheight=1, callback=callback, grow=1)
 
     def testGrowFootprints2(self):
@@ -402,9 +411,10 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.peaks[-2].append((10, 4, ))
 
             self.peaks[0] = sorted(sum(self.peaks, []), lambda x, y: cmpPeaks(self.im, x, y))
+
         self.doTestPeaks(x0=0, y0=2, dwidth=2, dheight=2, callback=callback, grow=2)
 
-    def testMergeFootprints(self):
+    def testMergeFootprints(self):      # YYYY
         """Merge positive and negative Footprints"""
         x0, y0 = 5, 6
         dwidth, dheight = 6, 7
@@ -451,24 +461,20 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         peaks2 = []
         self.doTestPeaks(threshold=10, callback=callback, grow=0)
 
-        if False:
-            # I don't think the fs.merge should retain the peaks as different
-            # as the operation doesn't know about the different polarity.
-            # It should just see them as different spans and merge them.
-            threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, False)
-            fs2 = afwDetect.makeFootprintSet(self.im, threshold)
+        threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, False)
+        fs2 = afwDetect.makeFootprintSet(self.im, threshold)
 
-            msk = self.im.getMask()
-            afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
+        msk = self.im.getMask()
+        afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
 
-            self.fs.merge(fs2, grow1, grow2)
-            self.peaks[0] += peaks2
+        self.fs.merge(fs2, grow1, grow2)
+        self.peaks[0] += peaks2
 
-            self.peaks[0] = sorted(sum(self.peaks, []), lambda x, y: cmpPeaks(self.im, x, y))
+        self.peaks[0] = sorted(sum(self.peaks, []), lambda x, y: cmpPeaks(self.im, x, y))
 
-            afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
+        afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
 
-            self.checkPeaks(frame=3)
+        self.checkPeaks(frame=3)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

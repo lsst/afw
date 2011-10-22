@@ -74,6 +74,13 @@ public:
     { }
 
     ~Peak() {};
+    
+    bool operator==(Peak const& rhs) const {
+        return _id == rhs._id;
+    }
+    bool operator!=(Peak const& rhs) const {
+        return !(*this == rhs);
+    }
 
     int getId() const { return _id; }   //!< Return the Peak's unique ID
 
