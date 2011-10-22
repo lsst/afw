@@ -461,7 +461,7 @@ namespace {
                         pos = oldIds->insert(pos, *ptr); // update our hint, pos
                     }
 
-                    *ptr = val + (id & ~mask);
+                    *ptr = id | (val & ~mask);
                 } else {
                     *ptr += id;
                 }

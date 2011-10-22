@@ -1311,8 +1311,7 @@ namespace {
         }
 
         /*********************************************************************************************************/
-
-        detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1),
+        detection::FootprintSet<IdPixelT> fs(*idImage, detection::Threshold(1), 1.0,
                                              1, false); // detect all pixels in rhs + lhs
         /*
          * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
@@ -1396,7 +1395,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         gfoot->insertIntoImage(*idImage, ++id); // 1 more than the index into rhsFootprints
     }
 
-    FootprintSet<IdPixelT> fs(*idImage, Threshold(1), 1, false);
+    FootprintSet<IdPixelT> fs(*idImage, Threshold(1), 1.0, 1, false);
     /*
      * Now go through the new Footprints looking up their progenitor's IDs and merging the peak lists
      */
