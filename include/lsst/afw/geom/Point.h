@@ -115,7 +115,6 @@ protected:
 
     template <typename Vector>
     explicit PointBase(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-    void _swap(PointBase & other) {Super::_swap(other);}
 };
 
 /**
@@ -146,7 +145,7 @@ public:
     /// @brief Explicit constructor from Extent.
     explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}          
 
-    void swap(Point & other) {_swap(other);}
+    void swap(Point & other) { this->_swap(other); }
 };
 
 /**
@@ -201,7 +200,7 @@ public:
     /// @brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T> asTuple() const { return boost::make_tuple(this->_vector.x(),this->_vector.y()); }
 
-    void swap(Point & other) {Super::_swap(other);}
+    void swap(Point & other) { this->_swap(other); }
 };
 
 /**
@@ -254,7 +253,7 @@ public:
         return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z());
     }
 
-    void swap(Point & other) {_swap(other);}
+    void swap(Point & other) { this->_swap(other); }
 };
 
 typedef Point<int,2> PointI;
