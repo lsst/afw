@@ -65,9 +65,14 @@ def toString(*args):
 
 def cmpPeaks(im, a, b):
     """Comparison function to sort by (decreasing) peak height"""
-    a = im.get(a[0], a[1])[0]
-    b = im.get(b[0], b[1])[0]
-    return cmp(b, a)
+    ai = im.get(a[0], a[1])[0]
+    bi = im.get(b[0], b[1])[0]
+
+    val = cmp(bi, ai)
+    if val:
+        return val
+
+    return cmp(a, b)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -205,24 +210,13 @@ class FootprintSetUTestCase(unittest.TestCase):
 
     def testGrow(self):
         """Grow footprints using the FootprintSet constructor"""
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
-        self.assertEqual(len(ds.getFootprints()), len(self.objects))
-        grown = afwDetect.makeFootprintSet(ds, 1, False)
-        self.assertEqual(len(ds.getFootprints()), len(self.objects))
+        fs = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10), "BINNED1")
+        self.assertEqual(len(fs.getFootprints()), len(self.objects))
+        grown = afwDetect.FootprintSetU(fs, 1, False)
+        self.assertEqual(len(fs.getFootprints()), len(self.objects))
 
         self.assertGreater(len(grown.getFootprints()), 0)
-        self.assertLessEqual(len(grown.getFootprints()), len(ds.getFootprints()))
-
-    def testThresholdMultiplier(self):
-        """Inclusion threshold multiplier"""
-        thresh = 10
-        multiplier = 2.0
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(thresh), multiplier)
-
-        objects = [obj for obj in self.objects if obj.val >= thresh*multiplier]
-        self.assertEqual(len(ds.getFootprints()), len(objects))
-        for obj, foot in zip(objects, ds.getFootprints()):
-            self.assertEqual(obj, foot)
+        self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
 
     def testInf(self):
         """Test detection for images with Infs"""
@@ -307,7 +301,6 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         threshold = afwDetect.Threshold(threshold, afwDetect.Threshold.VALUE, polarity)
         fs = afwDetect.makeFootprintSet(self.im, threshold, "BINNED1")
-        self.fs = fs
 
         if grow:
             fs = afwDetect.makeFootprintSet(fs, grow, True)
@@ -315,6 +308,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             afwDetect.setMaskFromFootprintList(msk, fs.getFootprints(), msk.getPlaneBitMask("DETECTED"))
             del msk
 
+        self.fs = fs
         self.checkPeaks(dwidth, dheight, frame=3)
 
     def checkPeaks(self, dwidth=0, dheight=0, frame=3):
@@ -327,8 +321,10 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 for i, foot in enumerate(feet):
                     for p in foot.getPeaks():
                         ds9.dot("+", p.getIx(), p.getIy(), size=0.4, frame=frame)
-                    for trueX, trueY, peakVal in self.peaks[i]:
-                        ds9.dot("x", trueX, trueY, size=0.4, ctype=ds9.RED, frame=frame)
+
+                    if i < len(self.peaks):
+                        for trueX, trueY, peakVal in self.peaks[i]:
+                            ds9.dot("x", trueX, trueY, size=0.4, ctype=ds9.RED, frame=frame)
 
         for i, foot in enumerate(feet):
             npeak = None
@@ -345,13 +341,19 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 npeak = len(self.peaks[i])
 
             if npeak != len(foot.getPeaks()):
-                print "RHL", [(p.getIx(), p.getIy()) for p in foot.getPeaks()]
+                print "RHL", foot.repr()
+                #print "RHL", [(p.repr().split(":")[0], p.getIx(), p.getIy()) for p in foot.getPeaks()]
+                print "RHL", [(p.getId(), p.getIx(), p.getIy()) for p in foot.getPeaks()]
                 print "RHL", [p[0:2] for p in self.peaks[i]]
 
             self.assertEqual(len(foot.getPeaks()), npeak)
 
             for j, p in enumerate(foot.getPeaks()):
                 trueX, trueY, peakVal = self.peaks[i][j]
+                if (p.getIx(), p.getIy()) != (trueX, trueY):
+                    print "RHL", [(pp.getId(), pp.getIx(), pp.getIy()) for pp in foot.getPeaks()]
+                    print "RHL", [pp[0:2] for pp in self.peaks[i]]
+
                 self.assertEqual((p.getIx(), p.getIy()), (trueX, trueY))
 
     def testSinglePeak(self):
@@ -412,7 +414,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         self.doTestPeaks(x0=0, y0=2, dwidth=2, dheight=2, callback=callback, grow=2)
 
-    def testMergeFootprints(self):
+    def testMergeFootprints(self):      # YYYY
         """Merge positive and negative Footprints"""
         x0, y0 = 5, 6
         dwidth, dheight = 6, 7
