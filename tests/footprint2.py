@@ -314,6 +314,11 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
     def checkPeaks(self, dwidth=0, dheight=0, frame=3):
         """Check that we got the peaks right"""
         feet = self.fs.getFootprints()
+        #
+        # Check that we found all the peaks
+        #
+        self.assertEqual(sum([len(f.getPeaks()) for f in feet]), sum([len(f.getPeaks()) for f in feet]))
+
         if display:
             ds9.mtv(self.im, frame=frame)
 
@@ -414,7 +419,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         self.doTestPeaks(x0=0, y0=2, dwidth=2, dheight=2, callback=callback, grow=2)
 
-    def testMergeFootprints(self):      # YYYY
+    def testMergeFootprints(self):
         """Merge positive and negative Footprints"""
         x0, y0 = 5, 6
         dwidth, dheight = 6, 7
