@@ -326,6 +326,16 @@ PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
     return (psf) ? psf->clone() : PTR(afwDetection::Psf)();
 }
 
+/**
+ * Clone a Calib; defined here so that we don't have to expose the insides of Calib in Exposure.h
+ */
+template<typename ImageT, typename MaskT, typename VarianceT> 
+PTR(afwImage::Calib) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneCalib(
+    CONST_PTR(afwImage::Calib) calib    // the Calib to clone
+) {
+    return PTR(afwImage::Calib)(calib ? new afwImage::Calib(*calib) : NULL);
+}
+
 /** @brief Get the Wcs of an Exposure.
   *
   * @return a boost::shared_ptr to the Wcs.

@@ -141,7 +141,7 @@ public:
         _wcs(rhs.getWcs()->clone()),
         _detector(rhs.getDetector()),
         _filter(rhs.getFilter()),
-        _calib(new lsst::afw::image::Calib(*rhs.getCalib())),
+        _calib(_cloneCalib(rhs.getCalib())),
         _psf(_clonePsf(rhs.getPsf()))
     {
         if (not deep) {
@@ -261,6 +261,7 @@ private:
 
     lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
     static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
+    static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
 };
 
 /**
