@@ -295,16 +295,22 @@ namespace {
                      idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
                 unsigned int indx = *idptr;
                 if ((indx & lhsIdMask) > 0) {
+                    int i = (indx & lhsIdMask) - 1;
+                    assert (i < lhsFootprints.size());
+                    Footprint::PeakList const& oldPeaks = lhsFootprints[i]->getPeaks();
+
                     int const nold = peaks.size();
-                    Footprint::PeakList const& oldPeaks = lhsFootprints[(indx & lhsIdMask) - 1]->getPeaks();
                     peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
                     std::inplace_merge(peaks.begin(), peaks.begin() + nold, peaks.end(), SortPeaks());
                 }
                 indx >>= lhsIdNbit;
 
                 if (indx > 0) {
+                    int i = indx - 1;
+                    assert (i < rhsFootprints.size());
+                    Footprint::PeakList const& oldPeaks = rhsFootprints[i]->getPeaks();
+                    
                     int const nold = peaks.size();
-                    Footprint::PeakList const& oldPeaks = rhsFootprints[indx - 1]->getPeaks();
                     peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
                     std::inplace_merge(peaks.begin(), peaks.begin() + nold, peaks.end(), SortPeaks());
                 }
