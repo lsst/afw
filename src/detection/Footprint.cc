@@ -461,7 +461,7 @@ namespace {
                 if (overwriteId) {
                     long val = *ptr & ~mask;
                     if (val != 0 and oldIds != NULL) {
-                        pos = oldIds->insert(pos, *ptr); // update our hint, pos
+                        pos = oldIds->insert(pos, val); // update our hint, pos
                     }
 
                     *ptr = (*ptr & mask) + id;
