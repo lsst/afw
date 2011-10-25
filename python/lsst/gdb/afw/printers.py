@@ -267,7 +267,7 @@ try:
                 var = var["px"]
 
             if var.type.code != gdb.TYPE_CODE_PTR:
-                var = var.address()
+                var = var.address
 
             try:
                 citizen = var.dynamic_cast(gdb.lookup_type("lsst::daf::base::Citizen").pointer()).dereference()
