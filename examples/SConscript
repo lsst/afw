@@ -12,7 +12,7 @@ for path in glob.glob("#examples/*.cc"):
     ccExamples.append(name)
 
 scripts.BasicSConscript.examples(
-    ccExamples=ccExamples, swigSrc={"testSpatialCellLib.i": ["testSpatialCell.cc"]}
+    ccExamples=ccExamples, swigSrc={"testSpatialCellLib": ["testSpatialCell.cc"]}
     )
 
 targets["examples"].extend(
