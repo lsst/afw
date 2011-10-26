@@ -181,24 +181,11 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
             int const npoint = stat.getValue(afwMath::NPOINT);
             if (npoint == 0) {
                 msk = sctrlTmp.getNoGoodPixelsMask();
-            } else if (npoint == 1) {   // the population variance is NaN (we divided by N - 1)
-                assert(lsst::utils::isnan(variance));
-                int ngood = 0;          // good (based on mask checks)
-                for (unsigned int i = 0; i < images.size(); ++i) {
-                    x_iterator ptr = rows[i]; ptr += -1;
-                    if (!(ptr.mask() & sctrl.getAndMask())) {
-                        ++ngood;
-                        variance = ptr.variance();
-                    }
-                }
-#if 0
-                assert(ngood == 1);     // we don't handle the case that images were clipped so ngood > npoint
-#else
-                if (ngood != 1) {
-                    assert(ngood > 1);
-                    std::cerr << "ngood = " << ngood << " complain to RHL" << std::endl;
-                }
-#endif
+            } else if (npoint == 1) {
+                /*
+                 * you should be using sctrl.setCalcErrorFromInputVariance(true) if you want to avoid
+                 * getting a variance of NaN when you only have one input
+                 */
             }
 
             *ptr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(flags), msk, variance);
