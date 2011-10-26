@@ -49,6 +49,7 @@ import lsst.afw.display.utils as displayUtils
 
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
+display = True
 try:
     type(display)
 except NameError:
@@ -472,7 +473,7 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertEqual(camera.getPixelFromPosition(pos), pix)
             self.assertEqual(camera.getPositionFromPixel(pix), posll)
         # Check that we can find an Amp in the bowels of the camera
-        ccdName = "C:0,0"
+        ccdName = "C:1,0"
         amp = cameraGeomUtils.findAmp(camera, cameraGeom.Id(ccdName), 1, 2)
         self.assertEqual(amp.getId().getName(), "ID7")
         self.assertEqual(amp.getParent().getId().getName(), ccdName)

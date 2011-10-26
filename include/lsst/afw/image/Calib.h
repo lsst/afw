@@ -60,6 +60,7 @@ public :
     typedef boost::shared_ptr<Calib const> ConstPtr;
 
     explicit Calib();
+    explicit Calib(std::vector<CONST_PTR(Calib)> const& calibs);
     explicit Calib(CONST_PTR(lsst::daf::base::PropertySet));
 
     void setMidTime(lsst::daf::base::DateTime const& midTime);

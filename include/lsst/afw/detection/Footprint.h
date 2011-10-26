@@ -31,6 +31,7 @@
  */
 #include <algorithm>
 #include <list>
+#include <set>
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
@@ -38,7 +39,6 @@
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 
@@ -54,6 +54,8 @@ using boost::serialization::make_nvp;
 namespace lsst {
 namespace afw { 
 namespace detection {
+
+class Peak;
 
 /*!
  * \brief A range of pixels within one row of an Image
@@ -110,7 +112,7 @@ public:
 
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
-    typedef std::vector<Peak::Ptr> PeakList;
+    typedef std::vector<PTR(Peak)> PeakList;
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
@@ -151,6 +153,12 @@ public:
 
     void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
                          int const id,
+                         geom::Box2I const& region=geom::Box2I()
+    ) const;
+    void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
+                         int const id,
+                         bool const overwriteId, long const idMask,
+                         std::set<int> *oldIds,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
 

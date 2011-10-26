@@ -120,6 +120,13 @@ definitions: {
                                 maxOccurs: 1
                                 default: "None"
                             }
+                            ptype: {
+                                type: string
+                                description: "Type of Ccd"
+                                minOccurs: 1
+                                maxOccurs: 1
+                                default: "default"
+                            }
                             index: {
                                 type: int
                                 description: "Location of CCD in Raft thought of as a grid of CCDs"
@@ -158,6 +165,13 @@ definitions: {
         dictionary: {
             target: "Ccd"
             definitions: {
+                ptype: {
+                    type: string
+                    description: "Type of ccd so cameras can use multiple types of detectors"
+                    minOccurs: 1
+                    maxOccurs: 1
+                    default: "default"
+                }
                 pixelSize: {
                     type: double
                     description: "Pixel size in microns"
@@ -185,13 +199,15 @@ definitions: {
                             serial: {
                                 type: int
                                 description: "Serial number for this Amp"
-                                minOccurs: 0
+                                minOccurs: 1
                                 maxOccurs: 1
                             }
-                            id: {
+                            ptype: {
                                 type: string
-                                description: "ID for this Amp"
-                                default: "??"
+                                description: "Type of amp"
+                                minOccurs: 1
+                                maxOccurs: 1
+                                default: "default"
                             }
                             index: {
                                 type: int
@@ -199,100 +215,9 @@ definitions: {
                                 minOccurs: 2
                                 maxOccurs: 2
                             }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    #
-    # Now define an Amp within a Ccd
-    #
-    Amp: {
-        type: policy
-        dictionary: {
-            target: Amp
-            definitions: {
-                height: {
-                    type: int
-                    description: "Number of rows in physical device"
-                    minOccurs: 1
-                    maxOccurs: 1
-                }
-                width: {
-                    type: int
-                    description: "Number of columns in physical device"
-                    minOccurs: 1
-                    maxOccurs: 1
-                }
-                extended: {
-                    type: int
-                    description: "length of extended register"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-                preRows: {
-                    type: int
-                    description: "extra rows before first real serial transfer"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-                overclockH: {
-                    type: int
-                    description: "number of serial overclock pixels"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-                overclockV: {
-                    type: int
-                    description: number of parallel overclock pixels
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-            }
-        }
-    }
-    #
-    # How the amps within a CCD are laid out in disk files
-    #
-    CcdElectronicLayout: {
-        type: Policy
-        dictionary: {
-            target: "CcdElectronicLayout"
-            definitions: {
-                HduPerAmp: {
-                    type: bool
-                    description: "Amps are each stored in their own HDU (maybe their own file)"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: false
-                }
-
-                Amp: {
-                    type: policy
-                    dictionary: {
-                        target: Amp
-                        definitions: {
-                            serial: {
-                                type: int
-                                description: "Serial number for this Amp"
-                                minOccurs: 0 # Really 1, but then the validator complains
-                                maxOccurs: 1
-                            }
                             flipLR: {
                                 type: bool
                                 description: "Does then data need to be flipped left <--> right?"
-                                minOccurs: 0
-                                maxOccurs: 1
-                                default: false
-                            }
-                            flipTB: {
-                                type: bool
-                                description: "Does then data need to be flipped top <--> bottom?"
                                 minOccurs: 0
                                 maxOccurs: 1
                                 default: false
@@ -312,6 +237,47 @@ definitions: {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+    #
+    # Now define an Amp within a Ccd
+    #
+    Amp: {
+        type: policy
+        dictionary: {
+            target: Amp
+            definitions: {
+                ptype: {
+                    type: string
+                    minOccurs: 1
+                    maxOccurs: 1
+                    default: "default"
+                }
+                biassec: {
+                    type: int
+                    description: "Bias section on the chip in zero-based readout coordinates: minx, miny, maxx, maxy"
+                    minOccurs: 4
+                    maxOccurs: 4
+                }
+                datasec: {
+                    type: int
+                    description: "Data section on the chip in zero-based readout coordinates: minx, miny, maxx, maxy"
+                    minOccurs: 4
+                    maxOccurs: 4
+                }
+                ewidth: {
+                    type: int
+                    description: "Width in pixels of the raw data"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                eheight: {
+                    type: int
+                    description: "Height in pixels of the raw data"
+                    minOccurs: 1
+                    maxOccurs: 1
                 }
             }
         }
@@ -361,6 +327,13 @@ definitions: {
                                             minOccurs: 0
                                             maxOccurs: 1
                                             default: "None"
+                                        }
+                                        ptype: {
+                                            type: string
+                                            description: "Type of the Ccd"
+                                            minOccurs: 1
+                                            maxOccurs: 1
+                                            default: "default"
                                         }
                                         Amp: {
                                             type: policy

@@ -265,23 +265,16 @@ afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
     }
     //
     // Fiddle things a little if the detector has an even number of pixels so that square BBoxes
+    // ** I don't think it matters if the detector has even numbers of pixels, should it?
     // will map into themselves
     //
     if(n90 == 1) {
-        if (dimensions[0]%2 == 0) {
             x0--; x1--;
-        }
     } else if (n90 == 2) {
-        if (dimensions[0]%2 == 0) {
             x0--; x1--;
-        }
-        if (dimensions[1]%2 == 0) {
             y0--; y1--;
-        }
     } else if(n90 == 3) {
-        if (dimensions[1]%2 == 0) {
             y0--; y1--;
-        }
     }
         
     afwGeom::Point2I LLC(centerPixel[0] + x0, centerPixel[1] + y0);
@@ -289,9 +282,11 @@ afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
         
     afwGeom::Box2I newBbox(LLC, URC);
         
-    int const dxy0 = (dimensions[1] - dimensions[0])/2; // how far the origin moved
+    //int const dxy0 = (dimensions[1]/2 - dimensions[0]/2); // how far the origin moved
+    
+    int const dxy0 = centerPixel[0] - centerPixel[1];
     if (n90%2 == 1 && dxy0 != 0) {
-        newBbox.shift(geom::Extent2I(dxy0, -dxy0));
+        newBbox.shift(geom::Extent2I(-dxy0, dxy0));
     }
         
     return newBbox;
@@ -315,7 +310,6 @@ void cameraGeom::Detector::setOrientation(
     _trimmedAllPixels = cameraGeom::detail::rotateBBoxBy90(
         _trimmedAllPixels, n90, getAllPixels(true).getDimensions()
     );
-        
     if (n90 == 1 || n90 == 3) {
         _size = afwGeom::Extent2D(_size[1], _size[0]);
     }

@@ -81,7 +81,7 @@ cameraGeom::Amp::Amp(
 
     _originInDetector = afwGeom::Point2I(0, 0);
     _nQuarter = 0;
-    _flipLR = _flipTB = false;
+    _flipLR = false;
     
     setTrimmedGeom();
 }
@@ -110,19 +110,13 @@ void cameraGeom::Amp::setTrimmedGeom() {
 void cameraGeom::Amp::setElectronicToChipLayout(
         lsst::afw::geom::Point2I pos,         // Position of Amp data (in Detector coords)
         int nQuarter,                         // number of quarter-turns in +ve direction
-        bool flipLR,                          // Flip the Amp data left <--> right before rotation
-        bool flipTB                           // Flip the Amp data top <--> bottom before rotation
+        bool flipLR                           // Flip the Amp data left <--> right before rotation
                   ) {
     _nQuarter = nQuarter;
     _flipLR = flipLR;
-    _flipTB = flipTB;
 
-    if (_flipLR && _flipTB)
-        _readoutCorner = URC;
-    else if (_flipLR)
+    if (_flipLR)
         _readoutCorner = LRC;
-    else if (_flipTB)
-        _readoutCorner = ULC;
     else
         _readoutCorner = LLC;
 
@@ -189,9 +183,6 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapToElectronic(lsst::afw::geom::Box2I 
     afwGeom::Box2I tbbox = afwGeom::Box2I(afwGeom::Point2I(0,0), dimensions);
     bbox = cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
     tbbox = cameraGeom::detail::rotateBBoxBy90(tbbox, -_nQuarter, dimensions);
-    if(_flipTB){
-        bbox.flipTB(tbbox.getDimensions()[1]);
-    }
     if(_flipLR){
         bbox.flipLR(tbbox.getDimensions()[0]);
     }
@@ -212,9 +203,6 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromElectronic(lsst::afw::geom::Box2
     if(_flipLR){
         bbox.flipLR(dimensions[0]);
     }
-    if(_flipTB){
-        bbox.flipTB(dimensions[1]);
-    }
     return cameraGeom::detail::rotateBBoxBy90(bbox, _nQuarter, dimensions);
 }
 
@@ -227,7 +215,7 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromElectronic(lsst::afw::geom::Box2
 template<typename ImageT>
 typename ImageT::Ptr cameraGeom::Amp::prepareAmpData(ImageT const& inImage)
 {
-    typename ImageT::Ptr flippedImage = afwMath::flipImage(inImage, _flipLR, _flipTB);
+    typename ImageT::Ptr flippedImage = afwMath::flipImage(inImage, _flipLR, false);
 
     return afwMath::rotateImageBy90(*flippedImage, _nQuarter);
 }

@@ -43,6 +43,48 @@ namespace lsst { namespace afw { namespace image {
  */
 Calib::Calib() : _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
 /**
+ * ctor from a vector of Calibs
+ *
+ * \note All the input calibs must have the same zeropoint; throw InvalidParameterException if this isn't true
+ */
+Calib::Calib(std::vector<CONST_PTR(Calib::Calib)> const& calibs ///< Set of calibs to be merged
+            ) :
+    _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0)
+{
+    if (calibs.empty()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "You must provide at least one input Calib");
+    }
+
+    double const fluxMag00 = calibs[0]->_fluxMag0;
+    double const fluxMag0Sigma0 = calibs[0]->_fluxMag0Sigma;
+
+    double midTimeSum = 0.0;            // sum(time*expTime)
+    for (std::vector<CONST_PTR(Calib)>::const_iterator ptr = calibs.begin(); ptr != calibs.end(); ++ptr) {
+        Calib const& calib = **ptr;
+
+        if (::fabs(fluxMag00 - calib._fluxMag0) > std::numeric_limits<double>::epsilon() ||
+            ::fabs(fluxMag0Sigma0 - calib._fluxMag0Sigma) > std::numeric_limits<double>::epsilon()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              (boost::format("You may only combine calibs with the same fluxMag0: "
+                                             "%g +- %g v %g +- %g")
+                               % calib.getFluxMag0().first % calib.getFluxMag0().second
+                               % calibs[0]->getFluxMag0().first % calibs[0]->getFluxMag0().second
+                              ).str());
+        }
+
+        double const exptime = calib._exptime;
+
+        midTimeSum += calib._midTime.get()*exptime;
+        _exptime += exptime;
+    }
+
+    daf::base::DateTime tmp(midTimeSum/_exptime); // there's no way to set the double value directly
+    using std::swap;
+    swap(_midTime, tmp);
+}
+
+/**
  * ctor
  */
 Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
@@ -122,7 +164,7 @@ int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata 
  */
 bool Calib::operator==(Calib const& rhs) const {
     return
-        //_midTime == rhs._midTime &&
+        ::fabs(_midTime.get() - rhs._midTime.get()) < std::numeric_limits<double>::epsilon() &&
         _exptime == rhs._exptime &&
         _fluxMag0 == rhs._fluxMag0 &&
         _fluxMag0Sigma == rhs._fluxMag0Sigma;

@@ -23,7 +23,7 @@
 #
 
 """
-Tests for Color and Filter
+Tests for Calib, Color, and Filter
 
 Run with:
    color.py
@@ -80,6 +80,18 @@ class CalibTestCase(unittest.TestCase):
         dt = 123.4
         self.calib.setExptime(dt)
         self.assertEqual(self.calib.getExptime(), dt)
+
+    def testDetectorTime(self):
+        """Test that we can ask a calib for the MidTime at a point in a detector"""
+
+        import lsst.afw.geom as afwGeom
+        import lsst.afw.cameraGeom as cameraGeom
+
+        det = cameraGeom.Detector(cameraGeom.Id(1))
+
+        p = afwGeom.PointI(3, 4)
+        if False:                       # Ticket #1337
+            self.calib.getMidTime(det, p)
 
     def testPhotom(self):
         """Test the zero-point information"""
@@ -150,6 +162,33 @@ class CalibTestCase(unittest.TestCase):
         calib2.setExptime(12)
 
         self.assertNotEqual(calib2, self.calib)
+
+    def testCalibFromCalibs(self):
+        """Test creating a Calib from an array of Calibs"""
+        exptime = 20
+        mag0, mag0Sigma = 1.0, 0.01
+        time0 = dafBase.DateTime.now().get()
+
+        calibs = afwImage.vectorCalib()
+        ncalib = 3
+        for i in range(ncalib):
+            calib = afwImage.Calib()
+            calib.setMidTime(dafBase.DateTime(time0 + i))
+            calib.setExptime(exptime)
+            calib.setFluxMag0(mag0, mag0Sigma)
+
+            calibs.append(calib)
+
+        ocalib = afwImage.Calib(calibs)
+        
+        self.assertEqual(ocalib.getExptime(), ncalib*exptime)
+        self.assertAlmostEqual(calibs[ncalib//2].getMidTime().get(), ocalib.getMidTime().get())
+        #
+        # Check that we can only merge Calibs with the same fluxMag0 values
+        #
+        calibs[0].setFluxMag0(1.001*mag0, mag0Sigma)
+        tests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                                  lambda : afwImage.Calib(calibs))
 
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""

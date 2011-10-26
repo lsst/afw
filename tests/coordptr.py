@@ -36,6 +36,7 @@ import unittest
 import eups
 import lsst.afw.image            as image
 import lsst.afw.geom             as geom
+import lsst.afw.geom             as afwGeom
 import lsst.afw.coord.coordLib   as coord
 import lsst.utils.tests          as utilsTests
 import lsst.daf.base             as dafBase
@@ -51,9 +52,9 @@ class CoordPtrTestCase(unittest.TestCase):
         
     def testMakeCoord(self):
         
-        c = coord.Coord(1,2)
+        c = coord.Coord(1 * afwGeom.degrees,2 * afwGeom.degrees)
         print type(c)
-        c = coord.makeCoord(coord.FK5, 1, 2)
+        c = coord.makeCoord(coord.FK5, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
         print type(c)
     def testMakeWcs(self):
         path= eups.productDir("afw")

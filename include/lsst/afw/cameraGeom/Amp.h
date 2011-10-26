@@ -160,7 +160,7 @@ public:
 
     void setTrimmedGeom();
     /// Define the position and orientation of an Amp in a chip (in Detector coordinates)
-    void setElectronicToChipLayout(lsst::afw::geom::Point2I, int, bool, bool);
+    void setElectronicToChipLayout(lsst::afw::geom::Point2I, int, bool);
 
     /// Return the biasSec as read from disk
     lsst::afw::geom::Box2I getElectronicBiasSec() const {
@@ -194,7 +194,6 @@ private:
     lsst::afw::geom::Point2I _originInDetector;     // Origin of Amplifier data on disk (in Detector coordinates)
     int _nQuarter;                      // number of quarter-turns to apply in +ve direction
     bool _flipLR;                       // flip the data left <--> right before rotation
-    bool _flipTB;                       // Flip the data top <--> bottom before rotation
 
     lsst::afw::geom::Box2I _mapToElectronic(lsst::afw::geom::Box2I bbox) const;
     lsst::afw::geom::Box2I _mapFromElectronic(lsst::afw::geom::Box2I bbox) const;

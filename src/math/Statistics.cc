@@ -38,10 +38,12 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/utils/ieee.h"
+#include "lsst/afw/geom/Angle.h"
 
 using namespace std;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
+namespace afwGeom = lsst::afw::geom;
 namespace ex = lsst::pex::exceptions;
 
 namespace {
@@ -821,7 +823,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case MEDIAN:
         ret.first = _median;
         if ( _flags & ERRORS ) {
-            ret.second = sqrt(M_PI/2*_variance/_n); // assumes Gaussian
+            ret.second = sqrt(afwGeom::HALFPI * _variance/_n); // assumes Gaussian
         }
         break;
       case IQRANGE:

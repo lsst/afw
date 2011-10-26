@@ -150,18 +150,36 @@ def getGeomPolicy(cameraGeomPolicy):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}):
+def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}, ccdDescription=None):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
 If ccdInfo is provided it's set to various facts about the CCDs which are used in unit tests.  Note
 in particular that it has an entry ampSerial which is a single-element list, the amplifier serial counter
     """
-    ccdPol = geomPolicy.get("Ccd")
-
+    ccdPol = None
+    if ccdDescription:
+        try:
+            tId = cameraGeom.Id(ccdDescription.get("serial"), ccdDescription.get("name"))
+        except Exception, e:
+            tId = cameraGeom.Id(0, "unknown")
+        if ccdId:
+            if not tId == ccdId:
+                raise("Identifiers don't agree -- Passed: %s, Policy: %s"%(ccdId.__str__(), tId.__str__()))
+        else:
+            ccdId = tId
+        ccdTempArr = geomPolicy.getArray("Ccd")
+        for ct in ccdTempArr:
+            if ct.get("ptype") == ccdDescription.get("ptype"):
+                ccdPol = ct
+    else:        
+        ccdPol = geomPolicy.get("Ccd")
+    if not ccdPol:
+        raise("No valid CCD policy found")
     pixelSize = ccdPol.get("pixelSize")
 
     nCol = ccdPol.get("nCol")
     nRow = ccdPol.get("nRow")
+    ccdType = ccdPol.get("ptype")
     if not ccdId:
         try:
             ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
@@ -176,7 +194,8 @@ in particular that it has an entry ampSerial which is a single-element list, the
     for pol in electronicPol.getArray("Raft"):
         for pol in pol.getArray("Ccd"):
             electronicCcdName = pol.get("name")
-            if electronicCcdName in ("*", ccdId.getName()):
+            electronicCcdType = pol.get("ptype")
+            if electronicCcdName in ("*", ccdId.getName()) and electronicCcdType == ccdType:
                 electronics["ccdName"] = electronicCcdName
                 for p in pol.getArray("Amp"):
                     electronics[tuple(p.getArray("index"))] = p
@@ -185,15 +204,6 @@ in particular that it has an entry ampSerial which is a single-element list, the
     # Actually build the Ccd
     #
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
-    #
-    # Discover how the per-amp data is laid out on disk; it's common for the data acquisition system to
-    # put together a single image for an entire CCD, but it isn't mandatory
-    #
-    diskFormatPol = geomPolicy.get("CcdElectronicLayout")
-    hduPerAmp = diskFormatPol.get("HduPerAmp")
-    ampElectronicLayout = {}
-    for p in diskFormatPol.getArray("Amp"):
-        ampElectronicLayout[p.get("serial")] = (p.get("hdu"), p.get("flipLR"), p.get("flipTB"), p.get("nQuarter"))
     for k in defectDict.keys():
         if ccdId == k:
             ccd.setDefects(defectDict[k])
@@ -230,6 +240,10 @@ in particular that it has an entry ampSerial which is a single-element list, the
             ampSerial0 = serial
 
         Col, Row = index = tuple(ampPol.getArray("index"))
+        ampType = ampPol.get("ptype")
+        flipLR = ampPol.get("flipLR")
+        nQuarterAmp = ampPol.get("nQuarter")
+        hdu = ampPol.get("hdu")
 
         if Col not in range(nCol) or Row not in range(nRow):
             msg = "Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow)
@@ -252,33 +266,28 @@ in particular that it has an entry ampSerial which is a single-element list, the
         #
         # Now lookup properties common to all the CCD's amps
         #
-        ampPol = geomPolicy.get("Amp")
-        width = ampPol.get("width")
-        height = ampPol.get("height")
+        ampPolArr = geomPolicy.getArray("Amp")
+        ampPol = None
+        for p in ampPolArr:
+            if p.get("ptype") == ampType:
+                ampPol = p
+        if ampPol is None:
+            raise RuntimeError, ("Unable to find bounding box info for Amp: %i, %i in Ccd \"%s\""%(Col, Row, ccd.getId()))
 
-        extended = ampPol.get("extended")
-        preRows = ampPol.get("preRows")
-        overclockH = ampPol.get("overclockH")
-        overclockV = ampPol.get("overclockV")
-
-        eWidth = extended + width + overclockH
-        eHeight = preRows + height + overclockV
-
+        minx, miny, maxx, maxy = tuple(ampPol.getArray("datasec"))
+        dataSec = afwGeom.Box2I(afwGeom.Point2I(minx, miny), afwGeom.Point2I(maxx, maxy))
+        minx, miny, maxx, maxy = tuple(ampPol.getArray("biassec"))
+        biasSec = afwGeom.Box2I(afwGeom.Point2I(minx, miny), afwGeom.Point2I(maxx, maxy))
+        eWidth = ampPol.get("ewidth")
+        eHeight = ampPol.get("eheight")
         allPixelsInAmp = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(eWidth, eHeight))
-        if extended > 0 and overclockH == 0:
-            biasSec = afwGeom.Box2I(afwGeom.Point2I(0, preRows), afwGeom.Extent2I(extended, height))
-            dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
-        else:
-            biasSec = afwGeom.Box2I(afwGeom.Point2I(extended + width, preRows), afwGeom.Extent2I(overclockH, height))
-            dataSec = afwGeom.Box2I(afwGeom.Point2I(extended, preRows), afwGeom.Extent2I(width, height))
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial, Col, Row),
                              allPixelsInAmp, biasSec, dataSec, eParams)
-        hdu, flipLR, flipTB, nQuarterAmp = ampElectronicLayout[amp.getId().getSerial()]
         #The following maps how the amp pixels must be changed to go from electronic (on disk) coordinates
         #to detector coordinates.  This also sets the readout corner.
-        amp.setElectronicToChipLayout(afwGeom.Point2I(Col, Row), nQuarterAmp, flipLR, flipTB)
+        amp.setElectronicToChipLayout(afwGeom.Point2I(Col, Row), nQuarterAmp, flipLR)
         #
         # Actually add amp to the Ccd
         #
@@ -287,6 +296,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
     # Information for the test code
     #
     if ccdInfo is not None:
+        width, height = tuple(dataSec.getDimensions())
         ccdInfo.clear()
         ccdInfo["ampSerial"] = ampSerial
         ccdInfo["name"] = ccd.getId().getName()
@@ -370,12 +380,10 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 raise RuntimeError, msg
 
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
-        ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
-
+        ccd = makeCcd(geomPolicy, ccdDescription=ccdPol, ccdId=ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
         raft.addDetector(afwGeom.Point2I(Col, Row),
                          afwGeom.Point2D(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
-
 
         if raftInfo is not None:
             # Guess the gutter between detectors

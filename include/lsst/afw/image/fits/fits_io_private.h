@@ -81,7 +81,8 @@ namespace cfitsio {
         
     int ttypeFromBitpix(const int bitpix);
 
-    void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, int hdu, bool relative=false);
+    void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, int hdu, bool relative=false,
+                     bool headerOnly=false);
 
     void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
                    std::string const& keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata);
@@ -318,9 +319,9 @@ protected:
     geom::Box2I _bbox;                             //!< Bounding Box of desired part of data
     ImageOrigin _origin;
 
-    void init() {
+    void init(bool headerOnly=false) {
 
-        move_to_hdu(_fd.get(), _hdu, false);
+        move_to_hdu(_fd.get(), _hdu, false, headerOnly);
 
         /* get image data type */
         int bitpix = 0;     // BITPIX from FITS header
@@ -416,6 +417,14 @@ public:
                 ImageOrigin const origin = LOCAL
     ) : fits_file_mgr(ramFile, ramFileLen, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) { 
         init(); 
+    }
+
+    fits_reader(const std::string& filename,
+                lsst::daf::base::PropertySet::Ptr metadata,
+                int hdu, bool headerOnly
+               ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata),
+                   _bbox(geom::Box2I()), _origin(LOCAL) { 
+        init(headerOnly); 
     }
 
     ~fits_reader() { }

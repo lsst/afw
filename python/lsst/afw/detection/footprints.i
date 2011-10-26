@@ -26,6 +26,7 @@
 
 %{
 #include "lsst/afw/detection/Threshold.h"
+#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
