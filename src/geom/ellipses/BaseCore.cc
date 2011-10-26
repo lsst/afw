@@ -23,8 +23,11 @@
  */
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/Angle.h"
 #include <boost/format.hpp>
 #include <map>
+
+namespace afwGeom = lsst::afw::geom;
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
@@ -111,7 +114,7 @@ void BaseCore::scale(double factor) {
 double BaseCore::getArea() const {
     double ixx, iyy, ixy;
     _assignToQuadrupole(ixx, iyy, ixy);
-    return std::sqrt(ixx * iyy - ixy * ixy) * M_PI;
+    return std::sqrt(ixx * iyy - ixy * ixy) * afwGeom::PI;
 }
 
 double BaseCore::getDeterminantRadius() const {

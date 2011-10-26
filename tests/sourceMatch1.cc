@@ -34,15 +34,15 @@
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/math/Random.h"
 #include "lsst/afw/coord/Utils.h"
+#include "lsst/afw/geom/Angle.h"
 
 
 namespace det = lsst::afw::detection;
 namespace math = lsst::afw::math;
 namespace coord = lsst::afw::coord;
+namespace afwGeom = lsst::afw::geom;
 
 namespace {
-
-double const PI = 3.14159265358979323846;
 
 math::Random & rng() {
     static math::Random * generator = 0;
@@ -61,8 +61,8 @@ void makeSources(det::SourceSet &set, int n) {
         src->setXAstrom(rng().uniform());
         src->setYAstrom(rng().uniform());
         double z = rng().flat(-1.0, 1.0);
-        src->setRa(rng().flat(0.0, 2.*M_PI));
-        src->setDec(std::asin(z));
+        src->setRa(rng().flat(0.0, 360.) * afwGeom::degrees);
+        src->setDec(std::asin(z) * afwGeom::radians);
         set.push_back(src);
     }
 }
@@ -85,7 +85,8 @@ struct DistRaDec {
         double a = sinDeltaDec*sinDeltaDec + cosDec1CosDec2*sinDeltaRa*sinDeltaRa;
         double b = std::sqrt(a);
         double c = b > 1 ? 1 : b;
-        return 3600.0*(180.0/PI)*2.0*std::asin(c);
+        // radians
+        return 2.0 * std::asin(c);
     }
 };
 
@@ -181,7 +182,7 @@ void compareMatches(std::vector<det::SourceMatch> &matches,
 BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::acos(1.0 - 2.0*M/N)*(180.0/PI)*3600.0;
+    afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
     det::SourceSet set1, set2;
     makeSources(set1, N);
@@ -194,7 +195,7 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
 BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::acos(1.0 - 2.0*M/N)*(180.0/PI)*3600.0;
+    afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
     det::SourceSet set;
     makeSources(set, N);
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
 BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::sqrt(M/(PI*static_cast<double>(N)));
+    double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
     det::SourceSet set1, set2;
     makeSources(set1, N);
@@ -219,7 +220,7 @@ BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
 BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::sqrt(M/(PI*static_cast<double>(N)));
+    double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
     det::SourceSet set;
     makeSources(set, N);
@@ -232,19 +233,15 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
 static void normalizeRaDec(det::SourceSet ss) {
     for (size_t i=0; i<ss.size(); i++) {
         double r,d;
-        r = ss[i]->getRa();
-        d = ss[i]->getDec();
+        r = ss[i]->getRa().asRadians();
+        d = ss[i]->getDec().asRadians();
         // wrap Dec over the (north) pole
-        if (d > M_PI_2) {
-            d = M_PI - d;
-            r = r + M_PI;
+        if (d > afwGeom::HALFPI) {
+            d = afwGeom::PI - d;
+            r = r + afwGeom::PI;
         }
-        while (r < 0)
-            r += 2.*M_PI;
-        while (r >= 2.*M_PI)
-            r -= 2.*M_PI;
-        ss[i]->setRa(r);
-        ss[i]->setDec(d);
+        ss[i]->setRa(r * afwGeom::radians);
+        ss[i]->setDec(d * afwGeom::radians);
     }
 }
 
@@ -256,17 +253,17 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     // for each source, add a true match right on top, plus one within range
     // and one outside range in each direction.
 
-    double rad = 0.1 * coord::degToRad;
+    afwGeom::Angle rad = 0.1 * afwGeom::degrees;
     int id1 = 0;
     int id2 = 1000000;
     for (double  j=0.1; j<1; j+=0.1) {
         for (int i=0; i<360; i+=45) {
-            double ra = i * coord::degToRad;
-            double dec = (90 - j) * coord::degToRad;
-            double ddec1 = rad;
-            double dra1 = rad / cos(dec);
-            double ddec2 = 2. * rad;
-            double dra2 = 2. * rad / cos(dec);
+            afwGeom::Angle ra = i * afwGeom::degrees;
+            afwGeom::Angle dec = (90 - j) * afwGeom::degrees;
+            afwGeom::Angle ddec1 = rad;
+            afwGeom::Angle dra1 = rad / cos(dec);
+            afwGeom::Angle ddec2 = 2. * rad;
+            afwGeom::Angle dra2 = 2. * rad / cos(dec);
 
             det::Source::Ptr src1(new det::Source);
             src1->setSourceId(id1);

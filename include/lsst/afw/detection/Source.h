@@ -106,10 +106,8 @@ public :
     float  getPetroFluxErr() const { return _petroFluxErr; }    
     float  getSky() const { return _sky; }
     float  getSkyErr() const { return _skyErr; }
-    // in radians
-    double getRaObject() const { return _raObject; }
-    // in radians
-    double getDecObject() const { return _decObject; }
+    lsst::afw::geom::Angle getRaObject() const { return _raObject * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle getDecObject() const { return _decObject * lsst::afw::geom::radians; }
 
 #ifndef SWIG
     CONST_PTR(Footprint) getFootprint() const { return _footprint; }
@@ -133,19 +131,19 @@ public :
         set(_skyErr, skyErr, SKY_ERR);
     }
     // in radians
-    void setRaObject(double const raObject) {
-        set(_raObject, raObject, RA_OBJECT);
+    void setRaObject(lsst::afw::geom::Angle const raObject) {
+        setAngle(_raObject, raObject, RA_OBJECT);
     }
     // in radians
-    void setDecObject(double const decObject) {
-        set(_decObject, decObject, DEC_OBJECT);
+    void setDecObject(lsst::afw::geom::Angle const decObject) {
+        setAngle(_decObject, decObject, DEC_OBJECT);
     }
 
     void setRaDecObject(lsst::afw::coord::Coord::ConstPtr radec) {
-        // Convert to LSST-decreed ICRS and radians.
+        // Convert to LSST-decreed ICRS
         lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
-        setRaObject(icrs.getRa(lsst::afw::coord::RADIANS));
-        setDecObject(icrs.getDec(lsst::afw::coord::RADIANS));
+        setRaObject(icrs.getRa());
+        setDecObject(icrs.getDec());
     }
 
     void setAllRaDecFields(lsst::afw::coord::Coord::ConstPtr radec) {

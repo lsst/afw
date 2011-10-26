@@ -180,7 +180,7 @@ void afwForm::WcsFormatter::delegateSerialize(
     // Serialize most fields normally
     ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
-    ar & ip->_coordSystem & ip->_skyCoordsReversed;
+    ar & ip->_coordSystem;
 
     
     // If we are loading, create the array of Wcs parameter structs
