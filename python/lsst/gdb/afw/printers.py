@@ -161,7 +161,7 @@ try:
 
             var = gdb.parse_and_eval(opts.eigenObject)
 
-            if not re.search(r"^Eigen::(Matrix|Vector)", str(var.type)):
+            if not re.search(r"Eigen::(Matrix|Vector)", str(var.type)):
                 raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
                 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -477,7 +477,7 @@ try:
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
-            if not re.search(r"^lsst::afw::image::(Image|Mask|MaskedImage)", str(var.type)):
+            if not re.search(r"lsst::afw::image::(Image|Mask|MaskedImage)", str(var.type)):
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
             if re.search(r"MaskedImage", str(var.type)):
