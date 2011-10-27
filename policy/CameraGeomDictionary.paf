@@ -235,6 +235,12 @@ definitions: {
                                 maxOccurs: 1
                                 default: 0
                             }
+                            diskCoordSys: {
+                                type: string
+                                description: "I can concieve of 3 different options for how the pixels are held on disk: amp (electronic), sensor, and camera coordinates"
+                                minOccurs: 1
+                                maxOccurs: 1
+                            }
                         }
                     }
                 }

@@ -110,10 +110,12 @@ void cameraGeom::Amp::setTrimmedGeom() {
 void cameraGeom::Amp::setElectronicToChipLayout(
         lsst::afw::geom::Point2I pos,         // Position of Amp data (in Detector coords)
         int nQuarter,                         // number of quarter-turns in +ve direction
-        bool flipLR                           // Flip the Amp data left <--> right before rotation
+        bool flipLR,                          // Flip the Amp data left <--> right before rotation
+        DiskCoordSys sys                      // Orientation of pixel data on disk 
                   ) {
     _nQuarter = nQuarter;
     _flipLR = flipLR;
+    _diskCoordSys = sys;
 
     if (_flipLR)
         _readoutCorner = LRC;

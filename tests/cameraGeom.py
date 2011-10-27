@@ -317,6 +317,7 @@ class CameraGeomTestCase(unittest.TestCase):
         corr = afwGeom.Extent2D(corrI.getX(), corrI.getY())
         pix += corr
         
+        self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.SENSOR)
         self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
         self.assertEqual(ccd.getPositionFromPixel(pix), posll)
         #
@@ -600,7 +601,7 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Do the same tests for trimed ccds.
         #
-        ccdId = cameraGeom.Id(1, "LsstLike Trimmed")
+        ccdId = cameraGeom.Id(1, "LsstLike")
         ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
 
@@ -614,7 +615,7 @@ class CameraGeomTestCase(unittest.TestCase):
             cameraGeomUtils.showCcd(ccd, outImage)
             ds9.incrDefaultFrame()
 
-        ccdId = cameraGeom.Id(1, "ScLike Trimmed")
+        ccdId = cameraGeom.Id(1, "ScLike")
         ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
 

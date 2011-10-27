@@ -200,9 +200,9 @@ public:
         }
         /// Convert an iterator to a Pixel
         operator Pixel() const {
-            return Pixel(_image(this->template get<0>()[0]),
-                         _mask(this->template get<1>()[0]),
-                         _variance(this->template get<2>()[0]));
+            return Pixel(_iter->template get<0>()[0],
+                         _iter->template get<1>()[0],
+                         _iter->template get<2>()[0]);
         }
 
         /// Dereference the iterator, returning a Pixel

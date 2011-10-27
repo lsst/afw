@@ -87,10 +87,8 @@ namespace {
  * Return a string-representation of a Span
  */
 std::string Span::toString() const {
-    return (boost::format("%d: %d..%d") % _y % _x0 % _x1).str();
+    return str(boost::format("%d: %d..%d") % _y % _x0 % _x1);
 }
-
-
 
 /*****************************************************************************/
 /// Counter for Footprint IDs
@@ -114,7 +112,7 @@ Footprint::Footprint(
     if (nspan < 0) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Number of spans requested is -ve: %d") % nspan).str());
+            str(boost::format("Number of spans requested is -ve: %d") % nspan));
     }
 }
 /**
@@ -429,9 +427,14 @@ namespace {
 
         if (width != idImage.getWidth() || height != idImage.getHeight()) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              (boost::format("Image of size (%dx%d) doesn't match "
-                                             "Footprint's host Image of size (%dx%d)") %
-                               idImage.getWidth() % idImage.getHeight() % width % height).str());
+                              str(boost::format("Image of size (%dx%d) doesn't match "
+                                                "Footprint's host Image of size (%dx%d)") %
+                                  idImage.getWidth() % idImage.getHeight() % width % height));
+        }
+
+        if (id & mask) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % id % mask));
         }
 
         std::set<int>::const_iterator pos; // hint on where to insert into oldIds
@@ -456,12 +459,12 @@ namespace {
             for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
                      end = ptr + swidth; ptr != end; ++ptr) {
                 if (overwriteId) {
-                    long val = *ptr & mask;
+                    long val = *ptr & ~mask;
                     if (val != 0 and oldIds != NULL) {
-                        pos = oldIds->insert(pos, *ptr); // update our hint, pos
+                        pos = oldIds->insert(pos, val); // update our hint, pos
                     }
 
-                    *ptr = val + (id & ~mask);
+                    *ptr = (*ptr & mask) + id;
                 } else {
                     *ptr += id;
                 }

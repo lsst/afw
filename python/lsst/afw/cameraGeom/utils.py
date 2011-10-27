@@ -228,6 +228,11 @@ in particular that it has an entry ampSerial which is a single-element list, the
                           LRC = cameraGeom.Amp.LRC,
                           ULC = cameraGeom.Amp.ULC,
                           URC = cameraGeom.Amp.URC)
+
+    diskCoordSys = dict(AMP = cameraGeom.Amp.AMP,
+                        SENSOR = cameraGeom.Amp.SENSOR,
+                        CAMERA = cameraGeom.Amp.CAMERA)
+
     for ampPol in ccdPol.getArray("Amp"):
         if ampPol.exists("serial"):
             serial = ampPol.get("serial")
@@ -242,6 +247,11 @@ in particular that it has an entry ampSerial which is a single-element list, the
         Col, Row = index = tuple(ampPol.getArray("index"))
         ampType = ampPol.get("ptype")
         flipLR = ampPol.get("flipLR")
+        try:
+            coordSys = diskCoordSys[ampPol.get("diskCoordSys").upper()]        
+          
+        except Exception, e:
+            raise("Coordinate system specified in the policy must be one of: %s"%(",".join(diskCoordSys.keys())))
         nQuarterAmp = ampPol.get("nQuarter")
         hdu = ampPol.get("hdu")
 
@@ -287,7 +297,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
                              allPixelsInAmp, biasSec, dataSec, eParams)
         #The following maps how the amp pixels must be changed to go from electronic (on disk) coordinates
         #to detector coordinates.  This also sets the readout corner.
-        amp.setElectronicToChipLayout(afwGeom.Point2I(Col, Row), nQuarterAmp, flipLR)
+        amp.setElectronicToChipLayout(afwGeom.Point2I(Col, Row), nQuarterAmp, flipLR, coordSys)
         #
         # Actually add amp to the Ccd
         #
