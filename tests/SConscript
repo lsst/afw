@@ -1,7 +1,8 @@
 # -*- python -*-
-from lsst.sconsUtils import scripts, env
 import os
+
 import lsst.daf.persistence
+from lsst.sconsUtils import scripts, env
 
 dataDir = env.ProductDir("afwdata")
 if not dataDir:

@@ -1,20 +1,22 @@
 # -*- python -*-
-from lsst.sconsUtils import scripts, env, targets
-import glob, os
+import os
+import glob
 
-ccExamples = []
-spatialCellSrc = ["spatialCellExample.cc", "testSpatialCell.cc"]
+from lsst.sconsUtils import scripts, env, targets
+
+ccExampleList = []
+spatialCellSrcList = ["spatialCellExample.cc", "testSpatialCell.cc"]
 for path in glob.glob("#examples/*.cc"):
     base, name = os.path.split(path)
     if name.endswith("_wrap.cc"): continue
-    if name in spatialCellSrc:
+    if name in spatialCellSrcList:
         continue
-    ccExamples.append(name)
+    ccExampleList.append(name)
 
 scripts.BasicSConscript.examples(
-    ccExamples=ccExamples, swigSrc={"testSpatialCellLib": ["testSpatialCell.cc"]}
+    ccExamples=ccExampleList, swigSrc={"testSpatialCellLib": ["testSpatialCell.cc"]}
     )
 
 targets["examples"].extend(
-    env.Program(spatialCellSrc, LIBS=env.getLibs("main"))
+    env.Program(spatialCellSrcList, LIBS=env.getLibs("main"))
     )
