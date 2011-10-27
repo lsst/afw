@@ -179,6 +179,18 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
         self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
+    def testMaxWithNan(self):
+        """Test that we can get a single statistic without specifying it"""
+        x, y = 10, 10
+        self.image.set(x, y, np.nan)
+        self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MAX).getValue(), self.val)
+        self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(), self.val)
+
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setNanSafe(False)
+        self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MAX, sctrl).getValue()))
+        self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MEAN, sctrl).getValue()))
+
     def testSampleImageStats(self):
         """ Compare our results to known values in test data """
         
