@@ -1,5 +1,6 @@
 # -*- python -*-
 from lsst.sconsUtils import env
 
+# We can't use BasicSConscript here because the circular dependency requires the -D option in SWIGFLAGS
 env.SwigLoadableModule("_imageLib", ["imageLib.i"], SWIGFLAGS=(env["SWIGFLAGS"] + ["-DIMPORT_FUNCTION_I"]),
                        LIBS=env.getLibs("main python"))

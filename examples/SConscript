@@ -1,13 +1,15 @@
 # -*- python -*-
 import os
-import glob
-
 from lsst.sconsUtils import scripts, env, targets
+
+# This is more complicated than an examples SConscript should usually be (most can just use
+# BasicSConscript.examples() with no arguments), because we have a source file that's compiled
+# into both a C++ program and a SWIG module.
 
 ccExampleList = []
 spatialCellSrcList = ["spatialCellExample.cc", "testSpatialCell.cc"]
-for path in glob.glob("#examples/*.cc"):
-    base, name = os.path.split(path)
+for path in Glob("#examples/*.cc"):
+    base, name = os.path.split(path.abspath)
     if name.endswith("_wrap.cc"): continue
     if name in spatialCellSrcList:
         continue
