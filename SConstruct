@@ -1,1 +1,8 @@
-main = Program("example", Glob("src/*.cc"), CPPPATH=["include"])
+# -*- python -*-
+
+from lsst.sconsUtils import scripts
+
+scripts.BasicSConstruct(
+    packageName="catalog",
+    versionString="",
+)

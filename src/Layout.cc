@@ -1,8 +1,8 @@
 #include "boost/fusion/algorithm/iteration/for_each.hpp"
 
-#include "catalog/Layout.h"
+#include "lsst/catalog/Layout.h"
 
-namespace catalog {
+namespace lsst { namespace catalog {
 
 int Layout::findOffset(int size, int align) {
     for (std::list<Gap>::iterator i = _gaps.begin(); i != _gaps.end(); ++i) {
@@ -55,4 +55,4 @@ Layout::Description Layout::describe() const {
     return result;
 }
 
-} // namespace catalog
+}} // namespace lsst::catalog

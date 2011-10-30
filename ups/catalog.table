@@ -1,0 +1,4 @@
+setupRequired(ndarray >= 4.6.0.0)
+
+#envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
+envAppend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
