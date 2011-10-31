@@ -269,10 +269,12 @@ try:
             if var.type.code != gdb.TYPE_CODE_PTR:
                 var = var.address
 
-            try:
-                citizen = var.dynamic_cast(gdb.lookup_type("lsst::daf::base::Citizen").pointer()).dereference()
-            except gdb.error:
-                raise gdb.GdbError("Failed to cast %s to Citizen *" % opts.object)
+            citizen = var.dynamic_cast(gdb.lookup_type("lsst::daf::base::Citizen").pointer())
+
+            if not citizen:
+                raise gdb.GdbError("Failed to cast %s to Citizen -- is it a subclass?" % opts.object)
+            
+            citizen = citizen.dereference()
 
             print citizen
 
@@ -308,7 +310,7 @@ try:
 
         def to_string(self):
             if False:
-                nspan = self.val["_spans"]["size"]() # Fails (as it's type is METHOD, not CODE)
+                nspan = self.val["_spans"]["size"]() # Fails (as its type is METHOD, not CODE)
             else:
                 vec_impl = self.val["_spans"]["_M_impl"]
                 nspan = vec_impl["_M_finish"] - vec_impl["_M_start"]
@@ -333,6 +335,12 @@ try:
 
         def to_string(self):
             return "Peak{%d, (%.2f, %.2f)}" % (self.val["_id"], self.val["_fx"], self.val["_fy"])
+
+    class PsfPrinter(object):
+        "Print a Psf"
+
+        def to_string(self):
+            return "%s" % (self.typeName())
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -454,10 +462,11 @@ try:
             parser.add_argument("-o", "--origin", type=str, nargs=2, default=("0", "0"),
                                 help="Print the region starting at (x, y)")
             parser.add_argument("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
+            parser.add_argument("-d", "--dataFmt", default="%.2f", help="Format for values")
             parser.add_argument("-f", "--formatWidth", type=int, default=8, help="Field width for values")
             parser.add_argument("image", help="Expression giving image to show")
-            parser.add_argument("width", help="Width of patch to print", default=1, nargs="?")
-            parser.add_argument("height", help="Height of patch to print", default=1, nargs="?")
+            parser.add_argument("width", type=int, help="Width of patch to print", default=1, nargs="?")
+            parser.add_argument("height", type=int, help="Height of patch to print", default=1, nargs="?")
 
             opts =  parser.parse_args(args)
 
@@ -477,7 +486,7 @@ try:
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
-            if not re.search(r"lsst::afw::image::(Image|Mask|MaskedImage)", str(var.type)):
+            if not re.search(r"lsst::afw::image::(Image|Mask|MaskedImage)", str(var.type.unqualified())):
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
             if re.search(r"MaskedImage", str(var.type)):
@@ -491,7 +500,9 @@ try:
                 var = var.dereference()     # be nice
 
             pixelTypeName = str(var.type.template_argument(0))
-            if pixelTypeName in ["short", "unsigned short"]:
+            if opts.dataFmt:
+                dataFmt = opts.dataFmt
+            elif pixelTypeName in ["short", "unsigned short"]:
                 dataFmt = "0x%x"
             elif pixelTypeName in ["int", "unsigned int"]:
                 dataFmt = "%d"
@@ -530,6 +541,15 @@ try:
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+    class KernelPrinter(object):
+        "Print a Kernel"
+
+        def to_string(self):
+            return "%s(%dx%d)" % (self.typeName(),
+                                  self.val["_width"], self.val["_height"])
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
     printers = []
 
     def register(obj):
@@ -551,7 +571,7 @@ try:
         printer.add_printer('boost::shared_ptr',
                             '^(boost|tr1|std)::shared_ptr', SharedPtrPrinter)
         printer.add_printer('boost::gil::pixel',
-                            'boost::gil::.*_pixel_t', GilPixelPrinter)
+                            'boost::gil::.*pixel_t', GilPixelPrinter)
 
         return printer
 
@@ -582,6 +602,8 @@ try:
                             '^lsst::afw::detection::FootprintSet', FootprintSetPrinter)
         printer.add_printer('lsst::afw::detection::Peak',
                             '^lsst::afw::detection::Peak$', PeakPrinter)
+        printer.add_printer('lsst::afw::detection::Psf',
+                            '^lsst::afw::detection::Psf$', PsfPrinter)
         printer.add_printer('lsst::afw::detection::Source',
                             '^lsst::afw::detection::Source$', SourcePrinter)
         printer.add_printer('lsst::afw::detection::BaseSourceAttributes',
@@ -604,6 +626,9 @@ try:
                             '^lsst::afw::image::MaskedImage<[^>]+>$', MaskedImagePrinter)
         printer.add_printer('lsst::afw::image::Exposure',
                             '^lsst::afw::image::Exposure', ExposurePrinter)
+
+        printer.add_printer('lsst::afw::math::Kernel',
+                            '^lsst::afw::math::Kernel', KernelPrinter)
 
         return printer
 
