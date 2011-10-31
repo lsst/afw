@@ -8,7 +8,14 @@
 #include "boost/mpl/vector.hpp"
 #include "boost/format.hpp"
 
+#include "lsst/catalog/Point.h"
+#include "lsst/catalog/Shape.h"
+#include "lsst/catalog/Array.h"
+#include "lsst/catalog/Covariance.h"
+
 namespace lsst { namespace catalog {
+
+template <typename T> class Key;
 
 namespace detail {
 
@@ -17,24 +24,9 @@ template <> struct TypeName<int> { static char const * getName() { return "int";
 template <> struct TypeName<float> { static char const * getName() { return "float"; } };
 template <> struct TypeName<double> { static char const * getName() { return "double"; } };
 
+struct NoFieldData {};
+
 } // namespace detail
-
-template <typename T>
-struct Point {
-    T x;
-    T y;
-};
-
-template <typename T>
-struct Shape {
-    T xx;
-    T yy;
-    T xy;
-};
-
-template <typename T> class Vector {};
-
-template <typename T> class Covariance;
 
 struct FieldDescription {
     char const * name;
@@ -73,6 +65,10 @@ struct FieldBase {
 template <typename T>
 struct Field : public FieldBase {
 
+    typedef lsst::ndarray::Array<T,1,1> Column;
+
+    typedef detail::NoFieldData FieldData;
+
     Field(char const * name, char const * doc) : FieldBase(name, doc) {}
 
     FieldDescription describe() const {
@@ -81,10 +77,32 @@ struct Field : public FieldBase {
 
     int getByteSize() const { return sizeof(T); }
     int getByteAlign() const { return sizeof(T); }
+
+private:
+    template <typename W> friend class Key;
+
+    static Column makeColumn(
+        void * buf, int recordCount, ndarray::Manager::Ptr const & manager, FieldData
+    ) {
+        return ndarray::detail::ArrayAccess<Column>::construct(
+            reinterpret_cast<T*>(buf),
+            ndarray::detail::Core<1>::create(
+                ndarray::makeVector(recordCount),
+                ndarray::makeVector(1),
+                manager
+            )
+        );
+    }
+
+    FieldData getFieldData() const { return FieldData(); }
 };
 
 template <typename U>
 struct Field< Point<U> > : public FieldBase {
+
+    typedef Point< ndarray::Array<U,1> > Column;
+
+    typedef detail::NoFieldData FieldData;
 
     Field(char const * name, char const * doc) : FieldBase(name, doc) {}
 
@@ -97,10 +115,33 @@ struct Field< Point<U> > : public FieldBase {
 
     int getByteSize() const { return sizeof(U) * 2; }
     int getByteAlign() const { return sizeof(U) * 2; }
+
+private:
+    template <typename W> friend class Key;
+
+    static Column makeColumn(
+        void * buf, int recordCount, ndarray::Manager::Ptr const & manager, FieldData
+    ) {
+        ndarray::detail::Core<1>::Ptr core = ndarray::detail::Core<1>::create(
+            ndarray::makeVector(recordCount),
+            ndarray::makeVector(2),
+            manager
+        );
+        return Column(
+            ndarray::detail::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf), core),
+            ndarray::detail::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf)+1, core)
+        );   
+    }
+
+    FieldData getFieldData() const { return FieldData(); }
 };
 
 template <typename U>
 struct Field< Shape<U> > : public FieldBase {
+
+    typedef Shape< ndarray::Array<U,1> > Column;
+
+    typedef detail::NoFieldData FieldData;
 
     Field(char const * name, char const * doc) : FieldBase(name, doc) {}
 
@@ -113,11 +154,35 @@ struct Field< Shape<U> > : public FieldBase {
 
     int getByteSize() const { return sizeof(U) * 3; }
     int getByteAlign() const { return sizeof(U) * 2; }
+
+private:
+    template <typename W> friend class Key;
+
+    static Column makeColumn(
+        void * buf, int recordCount, ndarray::Manager::Ptr const & manager, FieldData
+    ) {
+        ndarray::detail::Core<1>::Ptr core = ndarray::detail::Core<1>::create(
+            ndarray::makeVector(recordCount),
+            ndarray::makeVector(3),
+            manager
+        );
+        return Column(
+            ndarray::detail::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf), core),
+            ndarray::detail::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf)+1, core),
+            ndarray::detail::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf)+2, core)
+        );   
+    }
+
+    FieldData getFieldData() const { return FieldData(); }
 };
 
 template <typename U> 
-struct Field< Vector<U> > : public FieldBase {
+struct Field< Array<U> > : public FieldBase {
     
+    typedef ndarray::Array<U,2,2> Column;
+
+    typedef int FieldData;
+
     Field(char const * name, char const * doc, int size_) : FieldBase(name, doc), size(size_) {}
 
     FieldDescription describe() const {
@@ -131,11 +196,33 @@ struct Field< Vector<U> > : public FieldBase {
     int getByteAlign() const { return sizeof(U) * 2; }
 
     int size;
+
+private:
+    template <typename W> friend class Key;
+
+    static Column makeColumn(
+        void * buf, int recordCount, ndarray::Manager::Ptr const & manager, FieldData size
+    ) {
+        return ndarray::detail::ArrayAccess<Column>::construct(
+            reinterpret_cast<U*>(buf),
+            ndarray::detail::Core<2>::create(
+                ndarray::makeVector(recordCount, size),
+                ndarray::makeVector(size, 1),
+                manager
+            )
+        );
+    }
+
+    FieldData getFieldData() const { return size; }
 };
 
 template <typename U>
 struct Field< Covariance<U> > : public FieldBase {
-    
+
+    typedef CovarianceColumn<U> Column;
+
+    typedef int FieldData;
+
     Field(char const * name, char const * doc, int size_) : FieldBase(name, doc), size(size_) {}
 
     FieldDescription describe() const {
@@ -145,14 +232,29 @@ struct Field< Covariance<U> > : public FieldBase {
         );
     }
 
-    int getByteSize() const { return sizeof(U) * (size * (size - 1)) / 2; }
+    int getByteSize() const { return sizeof(U) * (size * (size + 1)) / 2; }
     int getByteAlign() const { return sizeof(U) * 2; }
 
     int size;
+
+private:
+    template <typename W> friend class Key;
+
+    static Column makeColumn(
+        void * buf, int recordCount, ndarray::Manager::Ptr const & manager, FieldData size
+    ) {
+        return Column(reinterpret_cast<U*>(buf), recordCount, manager, size);
+    }
+
+    FieldData getFieldData() const { return size; }
 };
 
 template <typename U>
 struct Field< Covariance< Point<U> > > : public FieldBase {
+
+    typedef CovarianceColumn< Point<U> > Column;
+
+    typedef detail::NoFieldData FieldData;
 
     Field(char const * name, char const * doc) : FieldBase(name, doc) {}
 
@@ -165,10 +267,25 @@ struct Field< Covariance< Point<U> > > : public FieldBase {
 
     int getByteSize() const { return sizeof(U) * 3; }
     int getByteAlign() const { return sizeof(U) * 2; }
+
+private:
+    template <typename W> friend class Key;
+
+    static Column makeColumn(
+        void * buf, int recordCount, ndarray::Manager::Ptr const & manager, FieldData
+    ) {
+        return Column(reinterpret_cast<U*>(buf), recordCount, manager);
+    }
+
+    FieldData getFieldData() const { return FieldData(); }
 };
 
 template <typename U>
 struct Field< Covariance< Shape<U> > > : public FieldBase {
+
+    typedef CovarianceColumn< Shape<U> > Column;
+
+    typedef detail::NoFieldData FieldData;
 
     Field(char const * name, char const * doc) : FieldBase(name, doc) {}
 
@@ -181,6 +298,17 @@ struct Field< Covariance< Shape<U> > > : public FieldBase {
 
     int getByteSize() const { return sizeof(double) * 6; }
     int getByteAlign() const { return sizeof(double) * 2; }
+
+private:
+    template <typename W> friend class Key;
+
+    static Column makeColumn(
+        void * buf, int recordCount, ndarray::Manager::Ptr const & manager, FieldData
+    ) {
+        return Column(reinterpret_cast<U*>(buf), recordCount, manager);
+    }
+
+    FieldData getFieldData() const { return FieldData(); }
 };
 
 namespace detail {
@@ -194,8 +322,8 @@ typedef boost::mpl::vector<
     Point<double>,
     Shape<float>,
     Shape<double>,
-    Vector<float>,
-    Vector<double>,
+    Array<float>,
+    Array<double>,
     Covariance<float>,
     Covariance<double>,
     Covariance< Point<float> >,

@@ -9,7 +9,7 @@ using namespace lsst::catalog;
 int main() {
 
     Layout layout;
-    layout.addField(Field<int>("myIntField", "an integer scalar field."));
+    layout.addField(Field< int >("myIntField", "an integer scalar field."));
     layout.addField(Field< Vector<double> >("myDVecField", "a double vector field.", 5));
     layout.addField(Field< float >("myFloatField", "a float scalar field."));
 

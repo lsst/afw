@@ -1,8 +1,6 @@
 // -*- c++ -*-
-#ifndef TABLE_Layout_h_INCLUDED
-#define TABLE_Layout_h_INCLUDED
-
-#include "boost/shared_array.hpp"
+#ifndef TABLE_Table_h_INCLUDED
+#define TABLE_Table_h_INCLUDED
 
 #include "lsst/catalog/Layout.h"
 
@@ -13,14 +11,19 @@ public:
     
     Layout const & getLayout() const { return _layout; }
 
+    template <typename T>
+    typename Field<T>::Column operator[](Key<T> const & key) const {
+        return key.makeColumn(_buf, _recordCount, _manager);
+    }
+
 private:
     Layout _layout;
     int _recordSize;
     int _recordCount;
     ndarray::Manager::Ptr _manager;
-    char * _data;
+    void * _buf;
 };
 
 }} // namespace lsst::catalog
 
-#endif // !TABLE_Layout_h_INCLUDED
+#endif // !TABLE_Table_h_INCLUDED

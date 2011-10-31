@@ -15,27 +15,49 @@
 #include "boost/fusion/adapted/mpl.hpp"
 #include "boost/fusion/container/map/convert.hpp"
 #include "boost/fusion/sequence/intrinsic/at_key.hpp"
+#include "boost/compressed_pair.hpp"
+#include "boost/type_traits/is_same.hpp"
 
+#include "lsst/ndarray.h"
 #include "lsst/catalog/Field.h"
 
 namespace lsst { namespace catalog {
 
 class Layout;
+class Table;
 
 template <typename T>
 class Key {
 public:
 
-    bool operator==(Key const & other) const { return _offset == other._offset; }
-    bool operator!=(Key const & other) const { return _offset != other._offset; }
-    
+    template <typename U>
+    bool operator==(Key<U> const & other) const {
+        return boost::is_same<T,U>::value && _data.first() == other._data.first();
+    }
+
+    template <typename U>
+    bool operator!=(Key<U> const & other) const {
+        return boost::is_same<T,U>::value && _data.first() != other._data.first();
+    }
+
 private:
 
     friend class Layout;
+    friend class Table;
 
-    explicit Key(int offset) : _offset(offset) {}
+    typename Field<T>::Column 
+    makeColumn(void * buf, int recordCount, ndarray::Manager::Ptr const & manager) const {
+        return Field<T>::makeColumn(
+            reinterpret_cast<char *>(buf) + _data.first() * recordCount,
+            recordCount,
+            manager,
+            _data.second()
+        );
+    }
 
-    int _offset;
+    explicit Key(int offset, Field<T> const & field) : _data(offset, field.getFieldData()) {}
+
+    boost::compressed_pair<int,typename Field<T>::FieldData> _data;
 };
 
 class Layout {
@@ -45,8 +67,10 @@ public:
     struct Item {
         Field<T> field;
         Key<T> key;
+
+        Item(Field<T> const & field_, Key<T> const & key_) : field(field_), key(key_) {}
     };
-   
+
 private:
 
     struct MakeItemPair {
@@ -75,7 +99,7 @@ public:
     template <typename T>
     Key<T> addField(Field<T> const & field) {
         int offset = findOffset(field.getByteSize(), field.getByteAlign());
-        Item<T> i = { field, Key<T>(offset) };
+        Item<T> i(field, Key<T>(offset, field));
         boost::fusion::at_key<T>(_data).push_back(i);
         return i.key;
     }
