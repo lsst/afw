@@ -88,7 +88,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
                          stats.getValue(afwMath.SUM))
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
-        #BOOST_CHECK(std::isnan(stats.getError(afwMath.MEAN))) // didn't ask for error, so it's a NaN
+        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN))) # didn't ask for error, so it's a NaN
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
     def testStats2(self):
@@ -180,16 +180,27 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
     def testMaxWithNan(self):
-        """Test that we can get a single statistic without specifying it"""
-        x, y = 10, 10
-        self.image.set(x, y, np.nan)
-        self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MAX).getValue(), self.val)
-        self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(), self.val)
+        """Test that we can handle NaNs correctly"""
 
-        sctrl = afwMath.StatisticsControl()
-        sctrl.setNanSafe(False)
-        self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MAX, sctrl).getValue()))
-        self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MEAN, sctrl).getValue()))
+        x, y = 10, 10
+        for useImage in [True, False]:
+            if useImage:
+                self.image = afwImage.ImageF(100, 100)
+                self.image.set(self.val)
+                self.image.set(x, y, np.nan)
+            else:
+                self.image = afwImage.MaskedImageF(100, 100)            
+                self.image.set(self.val, 0x0, 1.0)
+                self.image.set(x, y, (np.nan, 0x0, 1.0))
+
+            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MAX).getValue(), self.val)
+            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(), self.val)
+            
+            sctrl = afwMath.StatisticsControl()
+
+            sctrl.setNanSafe(False)
+            self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MAX, sctrl).getValue()))
+            self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MEAN, sctrl).getValue()))
 
     def testSampleImageStats(self):
         """ Compare our results to known values in test data """
