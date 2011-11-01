@@ -18,6 +18,10 @@ inline int indexCovariance(int i, int j) {
     return (i < j) ? (i + j*(j+1)/2) : (j + i*(i+1)/2);
 }
 
+inline int computePackedSize(int size) {
+    return size * (size + 1) / 2;
+}
+
 template <typename Derived, typename T, int N>
 class CovarianceBase {
 public:
@@ -114,23 +118,24 @@ public:
 
 protected:
 
-    explicit CovarianceColumnBase(T * buf, int recordCount, ndarray::Manager::Ptr const & manager, int size) 
-        : _packed(
-            ndarray::detail::ArrayAccess< ndarray::Array<T,2,-2> >::construct(
-                buf,
-                ndarray::detail::Core<2>::create(
-                    ndarray::makeVector(size * (size + 1) / 2, recordCount),
-                    ndarray::COLUMN_MAJOR,
-                    manager
-                )
+    explicit CovarianceColumnBase(
+        T * buf, int recordCount, int recordStride, ndarray::Manager::Ptr const & manager, int size
+    ) : _packed(
+        ndarray::detail::ArrayAccess< ndarray::Array<T,2,-1> >::construct(
+            buf,
+            ndarray::detail::Core<2>::create(
+                ndarray::makeVector(size * (size + 1) / 2, recordCount),
+                ndarray::makeVector(1, recordStride),
+                manager
             )
-        ) 
+        )
+    ) 
     {}
 
 private:
     void operator=(CovarianceColumnBase const &);
 
-    ndarray::Array<T,2,-2> _packed;
+    ndarray::Array<T,2,-1> _packed;
 };
 
 } // namespace detail
@@ -144,8 +149,10 @@ public:
 
     int getSize() const { return _size; }
 
-    CovarianceColumn(T * buf, int recordCount, ndarray::Manager::Ptr const & manager, int size) 
-        : Super(buf, recordCount, size), _size(size) {}
+    CovarianceColumn(
+        T * buf, int recordCount, int recordStride, 
+        ndarray::Manager::Ptr const & manager, int size
+    ) : Super(buf, recordCount, recordStride, manager, size), _size(size) {}
 
 private:
     int _size;
@@ -160,8 +167,9 @@ public:
 
     int getSize() const { return 2; }
 
-    CovarianceColumn(U * buf, int recordCount, ndarray::Manager::Ptr const & manager) 
-        : Super(buf, recordCount, manager, 2) {}
+    CovarianceColumn(U * buf, int recordCount, int recordStride, ndarray::Manager::Ptr const & manager) 
+        : Super(buf, recordCount, recordStride, manager, 2)
+    {}
 
 };
 
@@ -174,8 +182,9 @@ public:
 
     int getSize() const { return 3; }
 
-    CovarianceColumn(U * buf, int recordCount, ndarray::Manager::Ptr const & manager)
-        : Super(buf, recordCount, manager, 3) {}
+    CovarianceColumn(U * buf, int recordCount, int recordStride, ndarray::Manager::Ptr const & manager)
+        : Super(buf, recordCount, recordStride, manager, 3)
+    {}
 
 };
 

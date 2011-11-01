@@ -1,29 +1,30 @@
 // -*- c++ -*-
-#ifndef TABLE_Table_h_INCLUDED
-#define TABLE_Table_h_INCLUDED
+#ifndef CATALOG_Table_h_INCLUDED
+#define CATALOG_Table_h_INCLUDED
 
 #include "lsst/catalog/Layout.h"
+#include "lsst/catalog/ColumnView.h"
 
 namespace lsst { namespace catalog {
 
+template <typename Source>
+
+template <typename 
 class Table {
 public:
     
-    Layout const & getLayout() const { return _layout; }
+    Layout const & getLayout() const;
 
-    template <typename T>
-    typename Field<T>::Column operator[](Key<T> const & key) const {
-        return key.makeColumn(_buf, _recordCount, _manager);
-    }
+    ColumnView consolidate();
 
 private:
-    Layout _layout;
-    int _recordSize;
-    int _recordCount;
-    ndarray::Manager::Ptr _manager;
-    void * _buf;
+
+    struct Impl;
+
+    boost::shared_ptr<Impl> _storage;
+
 };
 
 }} // namespace lsst::catalog
 
-#endif // !TABLE_Table_h_INCLUDED
+#endif // !CATALOG_Table_h_INCLUDED

@@ -25,6 +25,7 @@ namespace lsst { namespace catalog {
 
 class Layout;
 class Table;
+class ColumnView;
 
 template <typename T>
 class Key {
@@ -44,16 +45,7 @@ private:
 
     friend class Layout;
     friend class Table;
-
-    typename Field<T>::Column 
-    makeColumn(void * buf, int recordCount, ndarray::Manager::Ptr const & manager) const {
-        return Field<T>::makeColumn(
-            reinterpret_cast<char *>(buf) + _data.first() * recordCount,
-            recordCount,
-            manager,
-            _data.second()
-        );
-    }
+    friend class ColumnView;
 
     explicit Key(int offset, Field<T> const & field) : _data(offset, field.getFieldData()) {}
 
