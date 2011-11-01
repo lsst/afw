@@ -8,10 +8,11 @@ using namespace lsst::catalog;
 
 int main() {
 
-    Layout layout;
-    layout.addField(Field< int >("myIntField", "an integer scalar field."));
-    layout.addField(Field< Array<double> >("myDArrayField", "a double array field.", 5));
-    layout.addField(Field< float >("myFloatField", "a float scalar field."));
+    LayoutBuilder builder;
+    builder.add(Field< int >("myIntField", "an integer scalar field."));
+    builder.add(Field< Array<double> >("myDArrayField", "a double array field.", 5));
+    builder.add(Field< float >("myFloatField", "a float scalar field."));
+    Layout layout = builder.finish();
 
     Layout::Description description = layout.describe();
 

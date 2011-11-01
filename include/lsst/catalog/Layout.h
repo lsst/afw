@@ -8,13 +8,7 @@
 #include <string>
 #include <stdexcept>
 
-#define FUSION_MAX_VECTOR_SIZE 20
-#define FUSION_MAX_MAP_SIZE 20
-
-#include "boost/mpl/transform.hpp"
-#include "boost/fusion/adapted/mpl.hpp"
-#include "boost/fusion/container/map/convert.hpp"
-#include "boost/fusion/sequence/intrinsic/at_key.hpp"
+#include "boost/shared_ptr.hpp"
 #include "boost/compressed_pair.hpp"
 #include "boost/type_traits/is_same.hpp"
 
@@ -23,7 +17,12 @@
 
 namespace lsst { namespace catalog {
 
+namespace detail {
+class LayoutImpl;
+} // namespace detail
+
 class Layout;
+class LayoutBuilder;
 class Table;
 class ColumnView;
 
@@ -43,13 +42,40 @@ public:
 
 private:
 
-    friend class Layout;
-    friend class Table;
-    friend class ColumnView;
+    friend class detail::LayoutImpl;
 
-    explicit Key(int offset, Field<T> const & field) : _data(offset, field.getFieldData()) {}
+    Field<T> reconstructField(FieldBase const & base) const { return Field<T>(base, _data.second()); }
 
+    explicit Key(int nullOffset, int nullMask, int offset, Field<T> const & field) :
+        _nullOffset(nullOffset), _nullMask(nullMask), _data(offset, field.getFieldData()) {}
+
+    int _nullOffset;
+    int _nullMask;
     boost::compressed_pair<int,typename Field<T>::FieldData> _data;
+};
+
+class LayoutBuilder {
+public:
+
+    template <typename T>
+    Key<T> add(Field<T> const & field);
+
+    Layout finish();
+
+    LayoutBuilder();
+    LayoutBuilder(LayoutBuilder const & other);
+    
+    LayoutBuilder & operator=(LayoutBuilder const & other);
+
+    ~LayoutBuilder();
+
+private:
+
+    friend class Layout;
+
+    class Impl;
+
+    boost::shared_ptr<Impl> _impl;
 };
 
 class Layout {
@@ -63,68 +89,27 @@ public:
         Item(Field<T> const & field_, Key<T> const & key_) : field(field_), key(key_) {}
     };
 
-private:
-
-    struct MakeItemPair {
-        template <typename T> struct apply {
-            typedef boost::fusion::pair< T, std::vector< Item<T> > > type;
-        };
-    };
-
-    struct Describe;
-
-    typedef boost::fusion::result_of::as_map<
-        boost::mpl::transform< detail::FieldTypes, MakeItemPair >::type
-    >::type Data;
-
-    struct Gap {
-        int offset;
-        int size;
-    };
-
-    static int const MIN_RECORD_ALIGN = sizeof(double) * 2;
-
-public:
-
     typedef std::set<FieldDescription> Description;
 
     template <typename T>
-    Key<T> addField(Field<T> const & field) {
-        int offset = findOffset(field.getByteSize(), field.getByteAlign());
-        Item<T> i(field, Key<T>(offset, field));
-        boost::fusion::at_key<T>(_data).push_back(i);
-        return i.key;
-    }
+    Item<T> find(Key<T> const & key) const;
 
     template <typename T>
-    Item<T> find(Key<T> const & key) const {
-        std::vector< Item<T> > const & vec = boost::fusion::at_key<T>(_data);
-        for (typename std::vector< Item<T> >::const_iterator i = vec.begin(); i != vec.end(); ++i) {
-            if (i->key == key) return *i;
-        }
-        throw std::invalid_argument("Key not found.");
-    }
-
-    template <typename T>
-    Item<T> find(std::string const & name) const {
-        std::vector< Item<T> > const & vec = boost::fusion::at_key<T>(_data);
-        for (typename std::vector< Item<T> >::const_iterator i = vec.begin(); i != vec.end(); ++i) {
-            if (i->field.name == name) return *i;
-        }
-        throw std::invalid_argument("Name not found.");        
-    }
+    Item<T> find(std::string const & name) const;
 
     Description describe() const;
 
-    int computeStride() const { return _bytes + (MIN_RECORD_ALIGN - _bytes % MIN_RECORD_ALIGN); }
+    ~Layout();
 
 private:
 
-    int findOffset(int size, int align);
+    friend class LayoutBuilder;
+    
+    typedef detail::LayoutImpl Impl;
 
-    Data _data;
-    int _bytes;
-    std::list<Gap> _gaps;
+    Layout(boost::shared_ptr<Impl> const & impl);
+
+    boost::shared_ptr<Impl> _impl;
 };
 
 }} // namespace lsst::catalog

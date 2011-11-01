@@ -15,8 +15,8 @@ public:
     typename Field<T>::Column operator[](Key<T> const & key) const {
         return Field<T>::makeColumn(
             reinterpret_cast<char *>(_buf) + key._data.first() * _colStride,
-            _rowStride, _colStride, _manager, key._data.second()
-        );  
+            _order, _recordCount, _recordSize, _manager, key._data.second()
+        );
     }
 
     ColumnView copy() const;
@@ -24,10 +24,12 @@ public:
 
     ndarray::DataOrderEnum getOrder() const;
 
+    static ColumnView allocate(Layout const & layout, int recordCount);
+
 private:
     ndarray::DataOrderEnum _order;
-    int _recordSize;
     int _recordCount;
+    int _recordSize;
     ndarray::Manager::Ptr _manager;
     void * _buf;
     Layout _layout;

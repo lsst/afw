@@ -166,6 +166,8 @@ typename Field< Covariance< Shape<U> > >::Column Field< Covariance< Shape<U> > >
     );
 }
 
+//----- Explicit instantiation ------------------------------------------------------------------------------
+
 #define INSTANTIATE_FIELD(r, data, elem)            \
     template class Field< elem >;
 
