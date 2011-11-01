@@ -6,17 +6,17 @@ from lsst.sconsUtils import scripts, env, targets
 # BasicSConscript.examples() with no arguments), because we have a source file that's compiled
 # into both a C++ program and a SWIG module.
 
-ccExampleList = []
+ccList = []
 spatialCellSrcList = ["spatialCellExample.cc", "testSpatialCell.cc"]
 for path in Glob("#examples/*.cc"):
     base, name = os.path.split(path.abspath)
     if name.endswith("_wrap.cc"): continue
     if name in spatialCellSrcList:
         continue
-    ccExampleList.append(name)
+    ccList.append(name)
 
 scripts.BasicSConscript.examples(
-    ccExamples=ccExampleList, swigSrc={"testSpatialCellLib": ["testSpatialCell.cc"]}
+    ccList=ccList, swigSrc={"testSpatialCellLib": ["testSpatialCell.cc"]}
     )
 
 targets["examples"].extend(
