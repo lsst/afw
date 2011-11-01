@@ -55,15 +55,17 @@ public:
     /** 
      * Threshold constructor
      *
-     * @param value desired threshold value
-     * @param type interpretation of type
-     * @param polarity search pixel above threshold? (useful for -ve thresholds)
+     * @param 
+     * @param type 
+     * @param polarity 
      */
     Threshold(
-        double const value,
-        ThresholdType const type = VALUE,
-        bool const polarity = true
-    ) : _value(value), _type(type), _polarity(polarity) {}
+        double const value,               ///< desired threshold value
+        ThresholdType const type = VALUE, ///< interpretation of type
+        bool const polarity = true,       ///< search pixel above threshold? (useful for -ve thresholds)
+        double const includeMultiplier = 1.0 ///< threshold multiplier for inclusion in FootprintSet
+             ) : _value(value), _type(type), _polarity(polarity),
+                 _includeMultiplier(includeMultiplier) {}
 
     //! return type of threshold
     ThresholdType getType() const { return _type; }
@@ -88,10 +90,21 @@ public:
 
     /// return Threshold's polarity
     bool getPolarity() const { return _polarity; }
+    /// set Threshold's polarity
+    void setPolarity(bool const polarity ///< desired polarity
+                    ) { _polarity = polarity; }
+
+    /// return includeMultiplier
+    double getIncludeMultiplier() const { return _includeMultiplier; }
+    /// set includeMultiplier
+    void setIncludeMultiplier(double const includeMultiplier ///< desired multiplier
+                             ) { _includeMultiplier = includeMultiplier; }
+
 private:
     double _value;                      //!< value of threshold, to be interpreted via _type
     ThresholdType _type;                //!< type of threshold
     bool _polarity;                     //!< true for positive polarity, false for negative
+    double _includeMultiplier;          //!< multiplier for threshold needed for inclusion in FootprintSet
 };
 
 // brief Factory method for creating Threshold objects

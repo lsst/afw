@@ -1,11 +1,21 @@
 import gdb
 import math, re
+import argparse
 
 try:
     debug
 except:
     debug = False
-    
+
+class GdbArgumentParser(argparse.ArgumentParser):
+    def parse_args(self, args=None, namespace=None):
+        if args:
+            args = gdb.string_to_argv(args)
+        return argparse.ArgumentParser.parse_args(self, args, namespace)
+        
+    def exit(self, status=0, msg=None):
+        raise gdb.GdbError(msg)
+
 try:
     import gdb.printing
 
@@ -20,6 +30,16 @@ try:
                 return "shared_ptr(%s)" % self.val["px"].dereference()
             else:
                 return "NULL"
+
+    class GilPixelPrinter(object):
+        "Print a boost::gil pixel"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            import pdb; pdb.set_trace() 
+            return self.val["_v0"]
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -128,11 +148,18 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            args = gdb.string_to_argv(args)
-            if len(args) < 1:
-                raise gdb.GdbError("Please specify a matrix or vector")
-            imgName = args.pop(0)
-            var = gdb.parse_and_eval(imgName)
+            parser = GdbArgumentParser("show eigen")
+            parser.add_argument("-d", "--dataFmt", default="%.2f", help="Format for values")
+            parser.add_argument("-f", "--formatWidth", type=int, default=8, help="Field width for values")
+            parser.add_argument("-o", "--origin", type=str, nargs="+",
+                                help="Origin of the part of the object to print")
+            parser.add_argument("eigenObject", help="Expression giving Eigen::Matrix/Vector to show")
+            parser.add_argument("nx", help="Width of patch to print", type=int, default=0, nargs="?")
+            parser.add_argument("ny", help="Height of patch to print", type=int, default=0, nargs="?")
+
+            opts =  parser.parse_args(args)
+
+            var = gdb.parse_and_eval(opts.eigenObject)
 
             if not re.search(r"^Eigen::(Matrix|Vector)", str(var.type)):
                 raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
@@ -145,60 +172,62 @@ try:
 
             isMatrix = re.search(r"Matrix", str(var.type))
             if isMatrix:
-                x0, y0 = 0, 0
                 NX, NY = getEigenMatrixDimensions(var)
-                nx, ny = NX, NY
 
-                if args:
-                    if len(args) == 1:
-                        raise gdb.GdbError("Please specify an element's x and y indexes")
-                    else:
-                        x0 = gdb.parse_and_eval(args.pop(0))
-                        y0 = gdb.parse_and_eval(args.pop(0))
-
-                if args:
-                    nx = int(args.pop(0))
-                    if args:
-                        ny = int(args.pop(0))
-                    else:
-                        ny = 1
-
+                if opts.origin:
+                    if len(opts.origin) != 2:
+                        raise gdb.GdbError("Please specify both x0 and y0")
+                        
+                    x0 = gdb.parse_and_eval(opts.origin[0])
+                    y0 = gdb.parse_and_eval(opts.origin[1])
+                else:
+                    x0, y0 = 0, 0
+                    
+                nx = opts.nx
+                ny = opts.ny
+                if nx == 0:
+                    nx = NX
+                if ny == 0:
+                    ny = NY
+                    
                 if nx == 1 and ny == 1:
-                    print "%g" % self._vget(var, x0, y0)
+                    print "%g" % self._vget(var, x0)
                     return
             else:
-                x0, nx = 0, var["m_storage"]["n"]
+                NX = 0, var["m_storage"]["n"]
 
-                if args:
-                    x0 = gdb.parse_and_eval(args.pop(0))
-                if args:
-                    nx = int(args.pop(0))
+                if opts.origin:
+                    if len(opts.origin) != 1:
+                        raise gdb.GdbError("Please only specify x0")
+
+                    x0 = gdb.parse_and_eval(opts.origin[0])
+                else:
+                    x0 = 0
+                    
+                nx = opts.nx
+                if nx == 0:
+                    nx = NX
 
                 if nx == 1:
                     print "%g" % self._vget(var, x0)
                     return
-
-            if args:
-                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
             #
             # OK, finally time to print
             #
-            dataFmt = "%.2f"
-
-            print "%-4s" % "",
-            for x in range(x0, min(NX, x0 + nx)):
-                print "%8d" % x,
-            print ""
-
             if isMatrix:
+                print "%-4s" % "",
+                for x in range(x0, min(NX, x0 + nx)):
+                    print "%*d" % (opts.formatWidth, x),
+                print ""
+
                 for y in range(y0, min(NY, y0 + ny)):
                     print "%-4d" % y,
                     for x in range(x0, min(NX, x0 + nx)):
-                        print "%8s" % (dataFmt % self._mget(var, x, y)),
+                        print "%*s" % (opts.formatWidth, (opts.dataFmt % self._mget(var, x, y))),
                     print ""
             else:
                 for x in range(x0, min(NX, x0 + nx)):
-                    print "%8s" % (dataFmt % self._vget(var, x)),
+                    print "%*s" % (opts.formatWidth, (opts.dataFmt % self._vget(var, x))),
                 print ""
 
     PrintEigenCommand()
@@ -228,23 +257,22 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            args = gdb.string_to_argv(args)
-            if len(args) < 1:
-                raise gdb.GdbError("Please specify an object")
-            objName = args.pop(0)
-            
-            if args:
-                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
+            parser = GdbArgumentParser("show citizen")
+            parser.add_argument("object", help="The object in question")
 
-            var = gdb.parse_and_eval(objName)
+            opts =  parser.parse_args(args)
+
+            var = gdb.parse_and_eval(opts.object)
+            if re.search(r"shared_ptr<", str(var.type)):
+                var = var["px"]
 
             if var.type.code != gdb.TYPE_CODE_PTR:
-                raise gdb.GdbError("%s it not a pointer" % objName)
+                var = var.address
 
             try:
                 citizen = var.dynamic_cast(gdb.lookup_type("lsst::daf::base::Citizen").pointer()).dereference()
             except gdb.error:
-                raise gdb.GdbError("Failed to cast %s to Citizen *" % objName)
+                raise gdb.GdbError("Failed to cast %s to Citizen *" % opts.object)
 
             print citizen
 
@@ -304,8 +332,7 @@ try:
             self.val = val
 
         def to_string(self):
-            return "Peak{%d, (%d, %d), (%.3f, %.3f)}" % (self.val["_id"], self.val["_ix"], self.val["_iy"],
-                                                         self.val["_fx"], self.val["_fy"])
+            return "Peak{%d, (%.2f, %.2f)}" % (self.val["_id"], self.val["_fx"], self.val["_fy"])
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -397,10 +424,7 @@ try:
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     class PrintImageCommand(gdb.Command):
-        """Print an Image
-    Usage: show image <image> x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
-    If nx or ny is 0, show the entire image
-    """
+        """Print an Image"""
 
         def __init__ (self):
             super (PrintImageCommand, self).__init__ ("show image",
@@ -424,11 +448,31 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            args = gdb.string_to_argv(args)
+            parser = GdbArgumentParser("show image")
+            parser.add_argument("-a", "--all", action="store_true", help="Display the whole image/mask")
+            parser.add_argument("-c", "--center", action="store_true", help="Center the output at (x, y)")
+            parser.add_argument("-o", "--origin", type=str, nargs=2, default=("0", "0"),
+                                help="Print the region starting at (x, y)")
+            parser.add_argument("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
+            parser.add_argument("-f", "--formatWidth", type=int, default=8, help="Field width for values")
+            parser.add_argument("image", help="Expression giving image to show")
+            parser.add_argument("width", help="Width of patch to print", default=1, nargs="?")
+            parser.add_argument("height", help="Height of patch to print", default=1, nargs="?")
+
+            opts =  parser.parse_args(args)
+
+            x0 = gdb.parse_and_eval(opts.origin[0])
+            y0 = gdb.parse_and_eval(opts.origin[1])
+
             if len(args) < 1:
                 raise gdb.GdbError("Please specify an image")
-            imgName = args.pop(0)
-            var = gdb.parse_and_eval(imgName)
+
+            if opts.all:
+                nx, ny = 0, 0
+            else:
+                nx, ny = opts.width, opts.height
+
+            var = gdb.parse_and_eval(opts.image)
 
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
@@ -437,7 +481,7 @@ try:
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
             if re.search(r"MaskedImage", str(var.type)):
-                print "N.b. %s is a MaskedImage; showing image" % (imgName)
+                print "N.b. %s is a MaskedImage; showing image" % (opts.image)
                 var = var["_image"]
 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -454,63 +498,33 @@ try:
             else:
                 dataFmt = "%.2f"
 
-            if len(args) == 1 and args[0] == "all":
-                args.pop(0)
-                x0, y0 = 0, 0
-                nx, ny = 0, 0
-            else:
-                if len(args) < 2:
-                    raise gdb.GdbError("Please specify a pixel's x and y indexes")
-
-                x0 = gdb.parse_and_eval(args.pop(0))
-                y0 = gdb.parse_and_eval(args.pop(0))
-
-                if len(args) == 0:
-                    print dataFmt % self.get(var, x0, y0)
-                    return
-
-                nx = int(args.pop(0))
-                if args:
-                    ny = int(args.pop(0))
-                else:
-                    ny = 1
-
             if nx == 0:
                 nx = var["_gilView"]["_dimensions"]["x"]
             if ny == 0:
                 ny = var["_gilView"]["_dimensions"]["y"]
 
-            if args:
-                centerPatch = gdb.parse_and_eval(args.pop(0))
-                if centerPatch:
-                    x0 -= nx//2
-                    y0 -= ny//2
+            if opts.center:
+                x0 -= nx//2
+                y0 -= ny//2
 
-            if args:
-                obeyXY0 = gdb.parse_and_eval(args.pop(0))
-
-                if obeyXY0:
-                    arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
-
-                    x0 -= arr[0]
-                    y0 -= arr[1]
-
-            if args:
-                raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
+            if opts.xy0:
+                arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
+                
+                x0 -= arr[0]
+                y0 -= arr[1]
             #
             # OK, finally time to print
             #
             print "%-4s" % "",
             for x in range(x0, x0 + nx):
-                print "%8d" % x,
+                print "%*d" % (opts.formatWidth, x),
             print ""
 
             for y in reversed(range(y0, y0 + ny)):
                 print "%-4d" % y,
                 for x in range(x0, x0 + nx):
-                    print "%8s" % (dataFmt % self.get(var, x, y)),
+                    print "%*s" % (opts.formatWidth, dataFmt % self.get(var, x, y)),
                 print ""
-
 
     PrintImageCommand()
 
@@ -536,6 +550,8 @@ try:
 
         printer.add_printer('boost::shared_ptr',
                             '^(boost|tr1|std)::shared_ptr', SharedPtrPrinter)
+        printer.add_printer('boost::gil::pixel',
+                            'boost::gil::.*_pixel_t', GilPixelPrinter)
 
         return printer
 
