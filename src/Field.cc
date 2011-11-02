@@ -27,14 +27,14 @@ std::string Field<T>::getTypeString() const {
 
 template <typename T>
 typename Field<T>::Column Field<T>::makeColumn(
-    void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+    void * buf, int recordCount, int recordSize,
     ndarray::Manager::Ptr const & manager, NoFieldData const &
 ) {
     return ndd::ArrayAccess<Column>::construct(
         reinterpret_cast<T*>(buf),
         ndd::Core<1>::create(
             ndarray::makeVector(recordCount),
-            ndarray::makeVector((order == ndarray::ROW_MAJOR) ? recordSize : 1),
+            ndarray::makeVector<int>(recordSize  / sizeof(T)),
             manager
         )
     );
@@ -49,12 +49,12 @@ std::string Field< Point<U> >::getTypeString() const {
 
 template <typename U>
 typename Field< Point<U> >::Column Field< Point<U> >::makeColumn(
-    void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+    void * buf, int recordCount, int recordSize,
     ndarray::Manager::Ptr const & manager, NoFieldData const &
 ) {
     ndd::Core<1>::Ptr core = ndarray::detail::Core<1>::create(
         ndarray::makeVector(recordCount),
-        ndarray::makeVector((order == ndarray::ROW_MAJOR) ? recordSize : 2),
+        ndarray::makeVector<int>(recordSize / sizeof(U)),
         manager
     );
     return Column(
@@ -72,12 +72,12 @@ std::string Field< Shape<U> >::getTypeString() const {
 
 template <typename U>
 typename Field< Shape<U> >::Column Field< Shape<U> >::makeColumn(
-    void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+    void * buf, int recordCount, int recordSize,
     ndarray::Manager::Ptr const & manager, NoFieldData const &
 ) {
     ndd::Core<1>::Ptr core = ndarray::detail::Core<1>::create(
         ndarray::makeVector(recordCount),
-        ndarray::makeVector((order == ndarray::ROW_MAJOR) ? recordSize : 3),
+        ndarray::makeVector<int>(recordSize / sizeof(U)),
         manager
     );
     return Column(
@@ -96,14 +96,14 @@ std::string Field< Array<U> >::getTypeString() const {
 
 template <typename U>
 typename Field< Array<U> >::Column Field< Array<U> >::makeColumn(
-    void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+    void * buf, int recordCount, int recordSize,
     ndarray::Manager::Ptr const & manager, int size
 ) {
     return ndarray::detail::ArrayAccess<Column>::construct(
         reinterpret_cast<U*>(buf),
         ndarray::detail::Core<2>::create(
             ndarray::makeVector(recordCount, size),
-            ndarray::makeVector((order == ndarray::ROW_MAJOR) ? recordSize : size, 1),
+            ndarray::makeVector<int>(recordSize / sizeof(U), 1),
             manager
         )
     );
@@ -118,14 +118,10 @@ std::string Field< Covariance<U> >::getTypeString() const {
 
 template <typename U>
 typename Field< Covariance<U> >::Column Field< Covariance<U> >::makeColumn(
-    void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+    void * buf, int recordCount, int recordSize,
     ndarray::Manager::Ptr const & manager, int size
 ) {
-    return Column(
-        reinterpret_cast<U*>(buf), recordCount, 
-        (order == ndarray::ROW_MAJOR) ? recordSize : detail::computePackedSize(size),
-        manager, size
-    );
+    return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager, size);
 }
 
 //----- Point covariance ------------------------------------------------------------------------------------
@@ -137,14 +133,10 @@ std::string Field< Covariance< Point<U> > >::getTypeString() const {
 
 template <typename U>
 typename Field< Covariance< Point<U> > >::Column Field< Covariance< Point<U> > >::makeColumn(
-    void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+    void * buf, int recordCount, int recordSize,
     ndarray::Manager::Ptr const & manager, NoFieldData const &
 ) {
-    return Column(
-        reinterpret_cast<U*>(buf), recordCount,
-        (order == ndarray::ROW_MAJOR) ? recordSize : 3,
-        manager
-    );
+    return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager);
 }
 
 //----- Shape covariance ------------------------------------------------------------------------------------
@@ -156,14 +148,10 @@ std::string Field< Covariance< Shape<U> > >::getTypeString() const {
 
 template <typename U>
 typename Field< Covariance< Shape<U> > >::Column Field< Covariance< Shape<U> > >::makeColumn(
-    void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+    void * buf, int recordCount, int recordSize,
     ndarray::Manager::Ptr const & manager, NoFieldData const &
 ) {
-    return Column(
-        reinterpret_cast<U*>(buf), recordCount, 
-        (order == ndarray::ROW_MAJOR) ? recordSize : 6,
-        manager
-    );
+    return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager);
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

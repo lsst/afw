@@ -7,13 +7,16 @@
 
 namespace lsst { namespace catalog {
 
-template <typename Source>
+class RecordBase {
+    
+private:
+    void * _buf;
+};
 
-template <typename 
-class Table {
+class TableBase {
 public:
     
-    Layout const & getLayout() const;
+    Layout getLayout() const;
 
     ColumnView consolidate();
 

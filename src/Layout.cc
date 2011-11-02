@@ -228,6 +228,10 @@ Layout::Description Layout::describe() const {
     return result;
 }
 
+int Layout::getRecordSize() const {
+    return _impl->_recordSize;
+}
+
 Layout::Layout(boost::shared_ptr<Layout::Impl> const & impl) : _impl(impl) {}
 
 Layout::~Layout() {}

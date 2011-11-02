@@ -24,7 +24,7 @@ private:
     Field(FieldBase const & base, NoFieldData const &) : FieldBase(base) {}
 
     static Column makeColumn(
-        void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+        void * buf, int recordCount, int recordSize,
         ndarray::Manager::Ptr const & manager, NoFieldData const &
     );
 
@@ -57,7 +57,7 @@ private:
     Field(FieldBase const & base, int size_) : FieldBase(base), size(size_) {}
 
     static Column makeColumn(
-        void * buf, ndarray::DataOrderEnum order, int recordCount, int recordSize,
+        void * buf, int recordCount, int recordSize,
         ndarray::Manager::Ptr const & manager, int size
     );
 

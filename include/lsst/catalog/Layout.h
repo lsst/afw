@@ -43,6 +43,7 @@ public:
 private:
 
     friend class detail::LayoutImpl;
+    friend class ColumnView;
 
     Field<T> reconstructField(FieldBase const & base) const { return Field<T>(base, _data.second()); }
 
@@ -98,6 +99,8 @@ public:
     Item<T> find(std::string const & name) const;
 
     Description describe() const;
+
+    int getRecordSize() const;
 
     ~Layout();
 
