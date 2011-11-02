@@ -2,60 +2,16 @@
 #ifndef CATALOG_Layout_h_INCLUDED
 #define CATALOG_Layout_h_INCLUDED
 
-#include <vector>
-#include <list>
 #include <set>
-#include <string>
-#include <stdexcept>
 
 #include "boost/shared_ptr.hpp"
-#include "boost/compressed_pair.hpp"
-#include "boost/type_traits/is_same.hpp"
 
 #include "lsst/ndarray.h"
-#include "lsst/catalog/Field.h"
+#include "lsst/catalog/Key.h"
 
 namespace lsst { namespace catalog {
 
-namespace detail {
-class LayoutImpl;
-} // namespace detail
-
 class Layout;
-class LayoutBuilder;
-template <typename Aux> class Record;
-template <typename Aux> class Table;
-class ColumnView;
-
-template <typename T>
-class Key {
-public:
-
-    template <typename U>
-    bool operator==(Key<U> const & other) const {
-        return boost::is_same<T,U>::value && _data.first() == other._data.first();
-    }
-
-    template <typename U>
-    bool operator!=(Key<U> const & other) const {
-        return boost::is_same<T,U>::value && _data.first() != other._data.first();
-    }
-
-private:
-
-    friend class detail::LayoutImpl;
-    friend class ColumnView;
-    template <typename Aux> friend class Record;
-
-    Field<T> reconstructField(FieldBase const & base) const { return Field<T>(base, _data.second()); }
-
-    explicit Key(int nullOffset, int nullMask, int offset, Field<T> const & field) :
-        _nullOffset(nullOffset), _nullMask(nullMask), _data(offset, field.getFieldData()) {}
-
-    int _nullOffset;
-    int _nullMask;
-    boost::compressed_pair<int,typename Field<T>::FieldData> _data;
-};
 
 class LayoutBuilder {
 public:
@@ -84,21 +40,10 @@ private:
 class Layout {
 public:
 
-    template <typename T>
-    struct Item {
-        Field<T> field;
-        Key<T> key;
-
-        Item(Field<T> const & field_, Key<T> const & key_) : field(field_), key(key_) {}
-    };
-
     typedef std::set<FieldDescription> Description;
 
     template <typename T>
-    Item<T> find(Key<T> const & key) const;
-
-    template <typename T>
-    Item<T> find(std::string const & name) const;
+    Key<T> find(std::string const & name) const;
 
     Description describe() const;
 
@@ -110,11 +55,11 @@ private:
 
     friend class LayoutBuilder;
     
-    typedef detail::LayoutImpl Impl;
+    struct Data;
 
-    Layout(boost::shared_ptr<Impl> const & impl);
+    Layout(boost::shared_ptr<Data> const & data);
 
-    boost::shared_ptr<Impl> _impl;
+    boost::shared_ptr<Data> _data;
 };
 
 }} // namespace lsst::catalog

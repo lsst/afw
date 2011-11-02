@@ -2,22 +2,23 @@
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/catalog/ColumnView.h"
+#include "lsst/catalog/detail/KeyAccess.h"
 
 namespace lsst { namespace catalog {
 
 template <typename T>
 ColumnView::IsNullColumn ColumnView::isNull(Key<T> const & key) const {
     return Field<int>::makeColumn(
-        reinterpret_cast<int *>(_buf) + key._nullOffset,
+        reinterpret_cast<int *>(_buf) + detail::KeyAccess::getData(key).nullOffset,
         _recordCount, _layout.getRecordSize(), _manager, NoFieldData()
-    ) & key._nullMask;
+    ) & detail::KeyAccess::getData(key).nullMask;
 }
 
 template <typename T>
 typename Field<T>::Column ColumnView::operator[](Key<T> const & key) const {
     return Field<T>::makeColumn(
-        reinterpret_cast<char *>(_buf) + key._data.first(),
-        _recordCount, _layout.getRecordSize(), _manager, key._data.second()
+        reinterpret_cast<char *>(_buf) + detail::KeyAccess::getData(key).offset,
+        _recordCount, _layout.getRecordSize(), _manager, detail::KeyAccess::getData(key).field.getFieldData()
     );
 }
 
