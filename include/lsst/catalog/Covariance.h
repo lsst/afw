@@ -23,95 +23,11 @@ inline int computePackedSize(int size) {
 }
 
 template <typename Derived, typename T, int N>
-class CovarianceBase {
-public:
-
-    typedef Eigen::Matrix<T,N,N> Matrix;
-
-    T & operator()(int i, int j) const {
-        return _buf[detail::indexCovariance(i, j)];
-    }
-
-    int getSize() const { return static_cast<Derived const &>(*this).getSize(); }
-
-    Matrix const getMatrix() const {
-        Matrix m(getSize(), getSize());
-        for (int i = 0; i < getSize(); ++i) {
-            for (int j = 0; j < getSize(); ++j) {
-                m(i, j) = _buf[detail::indexCovariance(i, j)];
-            }
-        }
-        return m;
-    }
-
-    template <typename U>
-    void setMatrix(Eigen::MatrixBase<U> const & m) {
-        if (m.rows() != getSize() || m.cols() != getSize())
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException, "Matrix has incorrect size.");
-        for (int i = 0; i < getSize(); ++i) {
-            for (int j = 0; j < getSize(); ++j) {
-                _buf[detail::indexCovariance(i, j)] = m(i, j);
-            }
-        }
-    }
-
-protected:
-    explicit CovarianceBase(T * buf) : _buf(buf) {}
-private:
-    void operator=(CovarianceBase const &);
-
-    T * _buf;
-};
-
-} // namespace detail
-
-template <typename T>
-class Covariance : public detail::CovarianceBase< Covariance<T>, T, Eigen::Dynamic > {
-    typedef detail::CovarianceBase< Covariance<T>, T, Eigen::Dynamic > Super;
-public:
-
-    int getSize() const { return _size; }
-
-    Covariance(T * buf, int size) : Super(buf), _size(size) {}
-
-private:
-    int _size;
-};
-
-template <typename U>
-class Covariance< Point<U> > : public detail::CovarianceBase< Covariance< Point<U> >, U, 2 > {
-    typedef detail::CovarianceBase< Covariance< Point<U> >, U, 2 > Super;
-public:
-
-    int getSize() const { return 2; }
-
-    Covariance(U * data, int) : Super(data) {}
-
-};
-
-template <typename U>
-class Covariance< Shape<U> > : public detail::CovarianceBase< Covariance< Shape<U> >, U, 3 > {
-    typedef detail::CovarianceBase< Covariance< Shape<U> >, U, 3> Super;
-public:
-
-    int getSize() const { return 3; }
-
-    Covariance(U * data, int) : Super(data) {}
-
-};
-
-namespace detail {
-
-template <typename Derived, typename T, int N>
 class CovarianceColumnBase {
 public:
 
     ndarray::ArrayRef<T,1> operator()(int i, int j) const {
-        return _packed[detail::indexCovariance(i, j)];
-    }
-
-    Covariance<T> operator[](int n) const {
-        return Covariance<T>(_packed.getData() + n * _packed.template getStride<1>(), getSize());
+        return _packed[indexCovariance(i, j)];
     }
 
     int getSize() const { return static_cast<Derived const &>(*this).getSize(); }

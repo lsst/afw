@@ -124,6 +124,18 @@ typename Field< Covariance<U> >::Column Field< Covariance<U> >::makeColumn(
     return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager, size);
 }
 
+template <typename U>
+typename Field< Covariance<U> >::Value Field< Covariance<U> >::makeValue(void * buf, int size) {
+    U * p = reinterpret_cast<U*>(buf);
+    Value r(size, size);
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            r(i, j) = p[detail::indexCovariance(i, j)];
+        }
+    }
+    return r;
+}
+
 //----- Point covariance ------------------------------------------------------------------------------------
 
 template <typename U>
@@ -139,6 +151,20 @@ typename Field< Covariance< Point<U> > >::Column Field< Covariance< Point<U> > >
     return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager);
 }
 
+template <typename U>
+typename Field< Covariance< Point<U> > >::Value Field< Covariance< Point<U> > >::makeValue(
+    void * buf, NoFieldData const &
+) {
+    U * p = reinterpret_cast<U*>(buf);
+    Value r;
+    for (int i = 0; i < r.rows(); ++i) {
+        for (int j = 0; j < r.cols(); ++j) {
+            r(i, j) = p[detail::indexCovariance(i, j)];
+        }
+    }
+    return r;
+}
+
 //----- Shape covariance ------------------------------------------------------------------------------------
 
 template <typename U>
@@ -152,6 +178,20 @@ typename Field< Covariance< Shape<U> > >::Column Field< Covariance< Shape<U> > >
     ndarray::Manager::Ptr const & manager, NoFieldData const &
 ) {
     return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager);
+}
+
+template <typename U>
+typename Field< Covariance< Shape<U> > >::Value Field< Covariance< Shape<U> > >::makeValue(
+    void * buf, NoFieldData const &
+) {
+    U * p = reinterpret_cast<U*>(buf);
+    Value r;
+    for (int i = 0; i < r.rows(); ++i) {
+        for (int j = 0; j < r.cols(); ++j) {
+            r(i, j) = p[detail::indexCovariance(i, j)];
+        }
+    }
+    return r;
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

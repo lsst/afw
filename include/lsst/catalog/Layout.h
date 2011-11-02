@@ -23,7 +23,8 @@ class LayoutImpl;
 
 class Layout;
 class LayoutBuilder;
-class Table;
+template <typename Aux> class Record;
+template <typename Aux> class Table;
 class ColumnView;
 
 template <typename T>
@@ -44,6 +45,7 @@ private:
 
     friend class detail::LayoutImpl;
     friend class ColumnView;
+    template <typename Aux> friend class Record;
 
     Field<T> reconstructField(FieldBase const & base) const { return Field<T>(base, _data.second()); }
 

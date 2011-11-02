@@ -74,7 +74,6 @@ private:
 
 #include "lsst/catalog/Point.h"
 #include "lsst/catalog/Shape.h"
-#include "lsst/catalog/Array.h"
 #include "lsst/catalog/Covariance.h"
 
 #define CATALOG_FIELD_TYPE_N 16
@@ -95,6 +94,8 @@ namespace detail {
 }
 
 template <typename T> class Key;
+template <typename T> class Array;
+template <typename T> class Covariance;
 class ColumnView;
 
 struct NoFieldData {};
@@ -131,41 +132,66 @@ struct FieldBase {
 
     char const * name;
     char const * doc;
+    bool notNull;
 };
 
 template <typename T>
 struct Field : public FieldBase {
+    typedef T Value;
 FIELD_BODY_NO_DATA(`lsst::ndarray::Array<T,1>', `sizeof(T)', `sizeof(T)')
+    static Value makeValue(void * buf, NoFieldData const &) {
+        return *reinterpret_cast<T*>(buf);
+    }
 };
 
 template <typename U>
 struct Field< Point<U> > : public FieldBase {
+    typedef Point<U> Value;
 FIELD_BODY_NO_DATA(`Point< lsst::ndarray::Array<U,1> >', `sizeof(U)*2', `sizeof(U)*2')
+    static Value makeValue(void * buf, NoFieldData const &) {
+        return Value(*reinterpret_cast<U*>(buf), *(reinterpret_cast<U*>(buf) + 1));
+    }
 };
 
 template <typename U>
 struct Field< Shape<U> > : public FieldBase {
+    typedef Shape<U> Value;
 FIELD_BODY_NO_DATA(`Shape< lsst::ndarray::Array<U,1> >', `sizeof(U)*3', `sizeof(U)*2')
+    static Value makeValue(void * buf, NoFieldData const &) {
+        return Value(
+            *reinterpret_cast<U*>(buf), *(reinterpret_cast<U*>(buf) + 1), *(reinterpret_cast<U*>(buf) + 2)
+        );
+    }
 };
 
 template <typename U> 
 struct Field< Array<U> > : public FieldBase {
+    typedef Eigen::Map< const Eigen::Array<U,Eigen::Dynamic,1> > Value;
 FIELD_BODY_SIZED(`lsst::ndarray::Array<U,2,1>', `sizeof(U)*size', `sizeof(U)')
+    static Value makeValue(void * buf, int size) {
+        return Value(reinterpret_cast<U*>(buf), size);
+    }
 };
 
 template <typename U>
 struct Field< Covariance<U> > : public FieldBase {
+    typedef Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> Value;
 FIELD_BODY_SIZED(`CovarianceColumn<U>', `sizeof(U)*detail::computePackedSize(size)', `sizeof(U)')
+    static Value makeValue(void * buf, int size);
 };
 
 template <typename U>
 struct Field< Covariance< Point<U> > > : public FieldBase {
+    typedef Eigen::Matrix<U,2,2> Value;
 FIELD_BODY_NO_DATA(`CovarianceColumn< Point<U> >', `sizeof(U)*3', `sizeof(U)*2');
+    static Value makeValue(void * buf, NoFieldData const &);
 };
 
 template <typename U>
 struct Field< Covariance< Shape<U> > > : public FieldBase {
+    typedef Eigen::Matrix<U,3,3> Value;
 FIELD_BODY_NO_DATA(`CovarianceColumn< Shape<U> >', `sizeof(U)*6', `sizeof(U)*2');
+    static Value makeValue(void * buf, NoFieldData const &);
 };
 
 namespace detail {
