@@ -80,18 +80,29 @@ namespace formatters {
 template <typename ImagePixelT>
 class ImageFormatterTraits {
 public:
-    static std::string name;
+    static std::string name();
 };
 
-template<> std::string ImageFormatterTraits<boost::uint16_t>::name("ImageU");
-template<> std::string ImageFormatterTraits<int>::name("ImageI");
-template<> std::string ImageFormatterTraits<float>::name("ImageF");
-template<> std::string ImageFormatterTraits<double>::name("ImageD");
-
+template<> std::string ImageFormatterTraits<boost::uint16_t>::name() {
+    static std::string name = "ImageU";
+    return name;
+}
+template<> std::string ImageFormatterTraits<int>::name() {
+    static std::string name = "ImageI";
+    return name;
+}
+template<> std::string ImageFormatterTraits<float>::name() {
+    static std::string name = "ImageF";
+    return name;
+}
+template<> std::string ImageFormatterTraits<double>::name() {
+    static std::string name = "ImageD";
+    return name;
+}
 
 template <typename ImagePixelT>
 lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::registration(
-    ImageFormatterTraits<ImagePixelT>::name,
+    ImageFormatterTraits<ImagePixelT>::name(),
     typeid(Image<ImagePixelT>),
     createInstance);
 

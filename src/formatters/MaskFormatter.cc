@@ -73,15 +73,17 @@ namespace formatters {
 template <typename imagePixelT>
 class MaskFormatterTraits {
 public:
-    static std::string name;
+    static std::string name();
 };
 
-template<> std::string MaskFormatterTraits<MaskPixel>::name("Mask");
-
+template<> std::string MaskFormatterTraits<MaskPixel>::name() {
+    static std::string name = "Mask";
+    return name;
+}
 
 template <typename MaskPixelT>
 lsst::daf::persistence::FormatterRegistration MaskFormatter<MaskPixelT>::registration(
-    MaskFormatterTraits<MaskPixelT>::name,
+    MaskFormatterTraits<MaskPixelT>::name(),
     typeid(Mask<MaskPixelT>),
     createInstance);
 
