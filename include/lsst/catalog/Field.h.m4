@@ -72,6 +72,8 @@ private:
 #include "boost/mpl/vector.hpp"
 #include "boost/preprocessor/punctuation/paren.hpp"
 
+#include "lsst/catalog/FieldBase.h"
+#include "lsst/catalog/FieldDescription.h"
 #include "lsst/catalog/Point.h"
 #include "lsst/catalog/Shape.h"
 #include "lsst/catalog/Covariance.h"
@@ -89,51 +91,12 @@ private:
 
 namespace lsst { namespace catalog {
 
-namespace detail {
-    class FieldInstantiator;
-}
-
 template <typename T> class Key;
 template <typename T> class Array;
 template <typename T> class Covariance;
 class ColumnView;
 
 struct NoFieldData {};
-
-struct FieldDescription {
-    char const * name;
-    char const * doc;
-    std::string type;
-
-    bool operator<(FieldDescription const & other) const {
-        return std::strcmp(name, other.name) < 0;
-    }
-
-    bool operator==(FieldDescription const & other) const {
-        return name == other.name; // okay because these are all string literals
-    }
-
-    bool operator!=(FieldDescription const & other) const {
-        return name != other.name; // okay because these are all string literals
-    }
-
-    friend std::ostream & operator<<(std::ostream & os, FieldDescription const & d) {
-        return os << d.name << ": " << d.type << " (" << d.doc << ")";
-    }
-
-    FieldDescription(char const * name_, char const * doc_, std::string const & type_) :
-        name(name_), doc(doc_), type(type_)
-    {}
-};
-
-struct FieldBase {
-
-    FieldBase(char const * name_, char const * doc_) : name(name_), doc(doc_) {}
-
-    char const * name;
-    char const * doc;
-    bool notNull;
-};
 
 template <typename T>
 struct Field : public FieldBase {
