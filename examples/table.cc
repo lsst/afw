@@ -10,8 +10,8 @@ int main() {
 
     LayoutBuilder builder;
     builder.add(Field< int >("myIntField", "an integer scalar field."));
-    builder.add(Field< Array<double> >("myDArrayField", "a double array field.", 5));
-    builder.add(Field< float >("myFloatField", "a float scalar field."));
+    builder.add(Field< Array<double> >(5, "myDArrayField", "a double array field.", NOT_NULL));
+    builder.add(Field< float >("myFloatField", "a float scalar field.", NOT_NULL));
     Layout layout = builder.finish();
 
     Layout::Description description = layout.describe();

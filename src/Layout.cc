@@ -86,16 +86,18 @@ Key<T> LayoutBuilder::Impl::add(Field<T> const & field) {
         boost::shared_ptr<Data> result(new Data(*_data));
         _data.swap(result);
     }
-    if (!_currentNullMask) {
-        _currentNullOffset = findOffset(sizeof(int), sizeof(int));
-        _currentNullMask = 1;
-    }
     boost::shared_ptr< detail::KeyData<T> > keyData = boost::make_shared< detail::KeyData<T> >(field);
+    if (field.canBeNull) {
+        if (!_currentNullMask) {
+            _currentNullOffset = findOffset(sizeof(int), sizeof(int));
+            _currentNullMask = 1;
+        }
+        keyData->nullOffset = _currentNullOffset;
+        keyData->nullMask = _currentNullMask;
+        _currentNullMask <<= 1;
+    }
     keyData->offset = findOffset(field.getByteSize(), field.getByteAlign());
-    keyData->nullOffset = _currentNullOffset;
-    keyData->nullMask = _currentNullMask;
     Key<T> key = detail::KeyAccess::make(keyData);
-    _currentNullMask <<= 1;
     boost::fusion::at_key<T>(_data->keys).push_back(key);
     return key;
 }

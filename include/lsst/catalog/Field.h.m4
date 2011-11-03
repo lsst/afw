@@ -5,7 +5,8 @@ define(`FIELD_BODY_NO_DATA',
 
     typedef NoFieldData FieldData;
 
-    Field(char const * name, char const * doc) : FieldBase(name, doc) {}
+    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
+        : FieldBase(name, doc, canBeNull) {}
 
     int getByteSize() const { return $2; }
     int getByteAlign() const { return $3; }
@@ -36,7 +37,8 @@ define(`FIELD_BODY_SIZED',
 
     typedef int FieldData;
 
-    Field(char const * name, char const * doc, int size_) : FieldBase(name, doc), size(size_) {}
+    Field(int size_, char const * name, char const * doc, NullEnum canBeNull)
+        : FieldBase(name, doc, canBeNull), size(size_) {}
 
     int getByteSize() const { return $2; }
     int getByteAlign() const { return $3; }

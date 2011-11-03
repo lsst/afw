@@ -41,7 +41,8 @@ struct Field : public FieldBase {
 
     typedef NoFieldData FieldData;
 
-    Field(char const * name, char const * doc) : FieldBase(name, doc) {}
+    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
+        : FieldBase(name, doc, canBeNull) {}
 
     int getByteSize() const { return sizeof(T); }
     int getByteAlign() const { return sizeof(T); }
@@ -79,7 +80,8 @@ struct Field< Point<U> > : public FieldBase {
 
     typedef NoFieldData FieldData;
 
-    Field(char const * name, char const * doc) : FieldBase(name, doc) {}
+    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
+        : FieldBase(name, doc, canBeNull) {}
 
     int getByteSize() const { return sizeof(U)*2; }
     int getByteAlign() const { return sizeof(U)*2; }
@@ -117,7 +119,8 @@ struct Field< Shape<U> > : public FieldBase {
 
     typedef NoFieldData FieldData;
 
-    Field(char const * name, char const * doc) : FieldBase(name, doc) {}
+    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
+        : FieldBase(name, doc, canBeNull) {}
 
     int getByteSize() const { return sizeof(U)*3; }
     int getByteAlign() const { return sizeof(U)*2; }
@@ -157,7 +160,8 @@ struct Field< Array<U> > : public FieldBase {
 
     typedef int FieldData;
 
-    Field(char const * name, char const * doc, int size_) : FieldBase(name, doc), size(size_) {}
+    Field(int size_, char const * name, char const * doc, NullEnum canBeNull)
+        : FieldBase(name, doc, canBeNull), size(size_) {}
 
     int getByteSize() const { return sizeof(U)*size; }
     int getByteAlign() const { return sizeof(U); }
@@ -197,7 +201,8 @@ struct Field< Covariance<U> > : public FieldBase {
 
     typedef int FieldData;
 
-    Field(char const * name, char const * doc, int size_) : FieldBase(name, doc), size(size_) {}
+    Field(int size_, char const * name, char const * doc, NullEnum canBeNull)
+        : FieldBase(name, doc, canBeNull), size(size_) {}
 
     int getByteSize() const { return sizeof(U)*detail::computePackedSize(size); }
     int getByteAlign() const { return sizeof(U); }
@@ -235,7 +240,8 @@ struct Field< Covariance< Point<U> > > : public FieldBase {
 
     typedef NoFieldData FieldData;
 
-    Field(char const * name, char const * doc) : FieldBase(name, doc) {}
+    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
+        : FieldBase(name, doc, canBeNull) {}
 
     int getByteSize() const { return sizeof(U)*3; }
     int getByteAlign() const { return sizeof(U)*2; }
@@ -271,7 +277,8 @@ struct Field< Covariance< Shape<U> > > : public FieldBase {
 
     typedef NoFieldData FieldData;
 
-    Field(char const * name, char const * doc) : FieldBase(name, doc) {}
+    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
+        : FieldBase(name, doc, canBeNull) {}
 
     int getByteSize() const { return sizeof(U)*6; }
     int getByteAlign() const { return sizeof(U)*2; }

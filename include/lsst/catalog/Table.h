@@ -13,10 +13,7 @@ class TableStorage;
 
 } // namespace detail
 
-class NoAux {};
-
-template <typename Aux = NoAux>
-class Record {
+class RecordBase {
     
     Layout getLayout() const;
 
@@ -32,19 +29,17 @@ class Record {
     template <typename T>
     void unset(Key<T> const & key) const;
 
-    Aux & getAux() const { return _data.second(); }
-
 private:
 
     template <typename OtherAux> friend class Iterator;
     template <typename OtherAux> friend class Table;
 
-    boost::compressed_pair<void*,Aux> _data;
+    void * _buf;
+    void * _aux;
     boost::shared_ptr<detail::TableStorage> _storage;
 };
 
-template <typename Aux = NoAux, typename RecordT = Record<Aux> >
-class Table {
+class TableBase {
 public:
 
     Layout getLayout() const;
