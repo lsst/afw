@@ -1,16 +1,16 @@
 // -*- c++ -*-
-#ifndef CATALOG_TableBase_h_INCLUDED
-#define CATALOG_TableBase_h_INCLUDED
+#ifndef CATALOG_SimpleTable_h_INCLUDED
+#define CATALOG_SimpleTable_h_INCLUDED
 
 #include "lsst/catalog/detail/fusion_limits.h"
 
 #include "lsst/catalog/Layout.h"
 #include "lsst/catalog/ColumnView.h"
-#include "lsst/catalog/RecordBase.h"
+#include "lsst/catalog/SimpleRecord.h"
 
 namespace lsst { namespace catalog {
 
-class TableBase {
+class SimpleTable {
 public:
 
     Layout getLayout() const;
@@ -21,17 +21,17 @@ public:
 
     int getRecordCount() const;
 
-    RecordBase operator[](int index) const;
+    SimpleRecord operator[](int index) const;
 
     void erase(int index);
 
-    RecordBase append(Aux::Ptr const & aux = Aux::Ptr());
+    SimpleRecord append(Aux::Ptr const & aux = Aux::Ptr());
 
-    TableBase(Layout const & layout, int defaultBlockSize, int capacity=0);
+    SimpleTable(Layout const & layout, int defaultBlockSize, int capacity=0);
 
-    TableBase(TableBase const & other) : _storage(other._storage) {}
+    SimpleTable(SimpleTable const & other) : _storage(other._storage) {}
 
-    ~TableBase() {}
+    ~SimpleTable() {}
 
 private:
     boost::shared_ptr<detail::TableStorage> _storage;
@@ -39,4 +39,4 @@ private:
 
 }} // namespace lsst::catalog
 
-#endif // !CATALOG_TableBase_h_INCLUDED
+#endif // !CATALOG_SimpleTable_h_INCLUDED

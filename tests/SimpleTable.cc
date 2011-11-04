@@ -7,11 +7,11 @@
 #include <algorithm>
 
 #include "lsst/catalog/Layout.h"
-#include "lsst/catalog/TableBase.h"
+#include "lsst/catalog/SimpleTable.h"
 
-using namespace lsst::catalog;
+BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
-BOOST_AUTO_TEST_CASE(SimpleTable) {
+    using namespace lsst::catalog;
 
     LayoutBuilder builder;
     
@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE(SimpleTable) {
     std::ostream_iterator<FieldDescription> osi(std::cout, "\n");
     std::copy(description.begin(), description.end(), osi);
     
-    TableBase table(layout, 16);
+    SimpleTable table(layout, 16);
     
-    RecordBase r0 = table.append();
+    SimpleRecord r0 = table.append();
 
     BOOST_CHECK(r0.isNull(myInt));
     BOOST_CHECK(!r0.isNull(myFloat));
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(SimpleTable) {
     BOOST_CHECK((r0.get(myArray) == Eigen::ArrayXd::Ones(5)).all());
     BOOST_CHECK_EQUAL(r0.get(myFloat), 3.14f);
 
-    RecordBase r1 = table.append();
+    SimpleRecord r1 = table.append();
     BOOST_CHECK_EQUAL(table.getRecordCount(), 2);
     r1.set(myInt, 25);
     r1.set(myFloat, 5.7f);
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(SimpleTable) {
     BOOST_CHECK(r1.isNull(myInt));
     BOOST_CHECK(!r1.isNull(myFloat));
 
-    RecordBase r0a = table[0];
+    SimpleRecord r0a = table[0];
     BOOST_CHECK_EQUAL(r0.get(myInt), r0a.get(myInt));
     BOOST_CHECK_EQUAL(r0.get(myFloat), r0a.get(myFloat));
 
@@ -70,6 +70,6 @@ BOOST_AUTO_TEST_CASE(SimpleTable) {
     BOOST_CHECK(!table.isConsolidated());
     BOOST_CHECK_EQUAL(table.getRecordCount(), 1);
 
-    RecordBase r1a = table[0];
+    SimpleRecord r1a = table[0];
     BOOST_CHECK((r1.get(myArray) == r1a.get(myArray)).all());
 }

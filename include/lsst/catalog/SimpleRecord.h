@@ -1,6 +1,6 @@
 // -*- c++ -*-
-#ifndef CATALOG_RecordBase_h_INCLUDED
-#define CATALOG_RecordBase_h_INCLUDED
+#ifndef CATALOG_SimpleRecord_h_INCLUDED
+#define CATALOG_SimpleRecord_h_INCLUDED
 
 #include "lsst/catalog/detail/fusion_limits.h"
 
@@ -16,7 +16,7 @@ struct TableStorage;
 
 } // namespace detail
 
-class TableBase;
+class SimpleTable;
 
 class Aux {
 public:
@@ -24,7 +24,7 @@ public:
     virtual ~Aux() {}
 };
 
-class RecordBase {
+class SimpleRecord {
 public:
 
     Layout getLayout() const;
@@ -37,9 +37,9 @@ public:
 
     template <typename T> void unset(Key<T> const & key) const;
 
-    RecordBase(RecordBase const & other) : _buf(other._buf), _aux(other._aux), _storage(other._storage) {}
+    SimpleRecord(SimpleRecord const & other) : _buf(other._buf), _aux(other._aux), _storage(other._storage) {}
 
-    RecordBase & operator=(RecordBase const & other) {
+    SimpleRecord & operator=(SimpleRecord const & other) {
         _buf = other._buf;
         _aux = other._aux;
         _storage = other._storage;
@@ -48,13 +48,13 @@ public:
 
     Aux::Ptr getAux() const { return _aux; }
 
-    ~RecordBase();
+    ~SimpleRecord();
 
 private:
 
-    friend class TableBase;
+    friend class SimpleTable;
 
-    RecordBase(char * buf, Aux::Ptr const & aux, boost::shared_ptr<detail::TableStorage> const & storage) :
+    SimpleRecord(char * buf, Aux::Ptr const & aux, boost::shared_ptr<detail::TableStorage> const & storage) :
         _buf(reinterpret_cast<char*>(buf)), _aux(aux), _storage(storage)
     {}
 
@@ -66,13 +66,13 @@ private:
 };
 
 template <typename T>
-inline bool RecordBase::isNull(Key<T> const & key) const {
+inline bool SimpleRecord::isNull(Key<T> const & key) const {
     return *reinterpret_cast<int*>(_buf + detail::KeyAccess::getData(key).nullOffset)
         & detail::KeyAccess::getData(key).nullMask;
 }
     
 template <typename T>
-inline typename Field<T>::Value RecordBase::get(Key<T> const & key) const {
+inline typename Field<T>::Value SimpleRecord::get(Key<T> const & key) const {
     return detail::FieldAccess::getValue(
         detail::KeyAccess::getData(key).field,
         _buf + detail::KeyAccess::getData(key).offset
@@ -80,7 +80,7 @@ inline typename Field<T>::Value RecordBase::get(Key<T> const & key) const {
 }
 
 template <typename T, typename U>
-inline void RecordBase::set(Key<T> const & key, U const & value) const {
+inline void SimpleRecord::set(Key<T> const & key, U const & value) const {
     detail::FieldAccess::setValue(
         detail::KeyAccess::getData(key).field,
         _buf + detail::KeyAccess::getData(key).offset,
@@ -93,7 +93,7 @@ inline void RecordBase::set(Key<T> const & key, U const & value) const {
 }
 
 template <typename T>
-inline void RecordBase::unset(Key<T> const & key) const {
+inline void SimpleRecord::unset(Key<T> const & key) const {
     detail::FieldAccess::setDefault(
         detail::KeyAccess::getData(key).field,
         _buf + detail::KeyAccess::getData(key).offset
@@ -106,4 +106,4 @@ inline void RecordBase::unset(Key<T> const & key) const {
 
 }} // namespace lsst::catalog
 
-#endif // !CATALOG_RecordBase_h_INCLUDED
+#endif // !CATALOG_SimpleRecord_h_INCLUDED

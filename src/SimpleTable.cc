@@ -1,8 +1,8 @@
 #include "boost/noncopyable.hpp"
 #include "boost/make_shared.hpp"
 
-#include "lsst/catalog/RecordBase.h"
-#include "lsst/catalog/TableBase.h"
+#include "lsst/catalog/SimpleRecord.h"
+#include "lsst/catalog/SimpleTable.h"
 #include "lsst/catalog/detail/LayoutAccess.h"
 
 namespace lsst { namespace catalog {
@@ -36,9 +36,9 @@ struct UnsetField {
     template <typename T>
     void operator()(Key<T> const & key) const { record->unset(key); }
 
-    UnsetField(RecordBase * record_) : record(record_) {}
+    UnsetField(SimpleRecord * record_) : record(record_) {}
 
-    RecordBase * record;
+    SimpleRecord * record;
 };
 
 } // anonymous
@@ -67,25 +67,25 @@ struct TableStorage : private boost::noncopyable {
 
 } // namespace detail
 
-//----- RecordBase implementation ---------------------------------------------------------------------------
+//----- SimpleRecord implementation ---------------------------------------------------------------------------
 
-Layout RecordBase::getLayout() const { return _storage->layout; }
+Layout SimpleRecord::getLayout() const { return _storage->layout; }
 
-RecordBase::~RecordBase() {}
+SimpleRecord::~SimpleRecord() {}
 
-void RecordBase::initialize() const {
+void SimpleRecord::initialize() const {
     
 }
 
-//----- TableBase implementation ----------------------------------------------------------------------------
+//----- SimpleTable implementation ----------------------------------------------------------------------------
 
-Layout TableBase::getLayout() const { return _storage->layout; }
+Layout SimpleTable::getLayout() const { return _storage->layout; }
 
-bool TableBase::isConsolidated() const {
+bool SimpleTable::isConsolidated() const {
     return _storage->consolidated;
 }
 
-ColumnView TableBase::consolidate() {
+ColumnView SimpleTable::consolidate() {
     if (!_storage->consolidated) {
         boost::shared_ptr<detail::TableStorage> newStorage =
             boost::make_shared<detail::TableStorage>(_storage->layout, _storage->defaultBlockSize);
@@ -110,11 +110,11 @@ ColumnView TableBase::consolidate() {
     );
 }
 
-int TableBase::getRecordCount() const {
+int SimpleTable::getRecordCount() const {
     return _storage->records.size();
 }
 
-RecordBase TableBase::operator[](int index) const {
+SimpleRecord SimpleTable::operator[](int index) const {
     if (index >= static_cast<int>(_storage->records.size())) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
@@ -122,10 +122,10 @@ RecordBase TableBase::operator[](int index) const {
         );
     }
     detail::RecordPair const & pair = _storage->records[index];
-    return RecordBase(pair.buf, pair.aux, _storage);
+    return SimpleRecord(pair.buf, pair.aux, _storage);
 }
 
-void TableBase::erase(int index) {
+void SimpleTable::erase(int index) {
     if (index >= static_cast<int>(_storage->records.size())) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
@@ -138,19 +138,19 @@ void TableBase::erase(int index) {
     }
 }
 
-RecordBase TableBase::append(Aux::Ptr const & aux) {
+SimpleRecord SimpleTable::append(Aux::Ptr const & aux) {
     if (_storage->blocks.empty() || _storage->blocks.back().isFull()) {
         _storage->addBlock(_storage->defaultBlockSize);
     }
     detail::RecordPair pair = { _storage->blocks.back().next, aux };
     _storage->records.push_back(pair);
     _storage->blocks.back().next += _storage->layout.getRecordSize();
-    RecordBase result(pair.buf, aux, _storage);
+    SimpleRecord result(pair.buf, aux, _storage);
     detail::LayoutAccess::getData(_storage->layout).forEachKey(detail::UnsetField(&result));
     return result;
 }
 
-TableBase::TableBase(Layout const & layout, int defaultBlockSize, int capacity) :
+SimpleTable::SimpleTable(Layout const & layout, int defaultBlockSize, int capacity) :
     _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize))
 {
     if (capacity) _storage->addBlock(capacity);

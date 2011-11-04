@@ -8,7 +8,7 @@
 
 namespace lsst { namespace catalog {
 
-class TableBase;
+class SimpleTable;
 
 class ColumnView {
 public:
@@ -28,7 +28,7 @@ public:
 
 private:
 
-    friend class TableBase;
+    friend class SimpleTable;
 
     ColumnView(Layout const & layout, int recordCount, char * buf, ndarray::Manager::Ptr const & manager);
 
