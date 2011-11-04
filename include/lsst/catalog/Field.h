@@ -1,6 +1,8 @@
 #ifndef CATALOG_Field_h_INCLUDED
 #define CATALOG_Field_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include <cstring>
 #include <iostream>
 

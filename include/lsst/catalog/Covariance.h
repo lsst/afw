@@ -2,6 +2,8 @@
 #ifndef CATALOG_Covariance_h_INCLUDED
 #define CATALOG_Covariance_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"

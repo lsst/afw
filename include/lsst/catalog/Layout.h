@@ -2,6 +2,8 @@
 #ifndef CATALOG_Layout_h_INCLUDED
 #define CATALOG_Layout_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include <set>
 
 #include "boost/shared_ptr.hpp"
@@ -10,6 +12,13 @@
 #include "lsst/catalog/Key.h"
 
 namespace lsst { namespace catalog {
+
+namespace detail {
+
+class LayoutData;
+class LayoutAccess;
+
+} // namespace detail
 
 class Layout;
 
@@ -54,8 +63,9 @@ public:
 private:
 
     friend class LayoutBuilder;
+    friend class detail::LayoutAccess;
     
-    struct Data;
+    typedef detail::LayoutData Data;
 
     Layout(boost::shared_ptr<Data> const & data);
 

@@ -2,6 +2,8 @@
 #ifndef CATALOG_DETAIL_KeyData_h_INCLUDED
 #define CATALOG_DETAIL_KeyData_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include "lsst/catalog/Field.h"
 
 namespace lsst { namespace catalog {

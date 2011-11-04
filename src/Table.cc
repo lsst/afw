@@ -3,6 +3,7 @@
 
 #include "lsst/catalog/RecordBase.h"
 #include "lsst/catalog/TableBase.h"
+#include "lsst/catalog/detail/LayoutAccess.h"
 
 namespace lsst { namespace catalog {
 
@@ -28,6 +29,16 @@ struct Block {
 struct RecordPair {
     char * buf;
     Aux::Ptr aux;
+};
+
+struct UnsetField {
+
+    template <typename T>
+    void operator()(Key<T> const & key) const { record->unset(key); }
+
+    UnsetField(RecordBase * record_) : record(record_) {}
+
+    RecordBase * record;
 };
 
 } // anonymous
@@ -61,6 +72,10 @@ struct TableStorage : private boost::noncopyable {
 Layout RecordBase::getLayout() const { return _storage->layout; }
 
 RecordBase::~RecordBase() {}
+
+void RecordBase::initialize() const {
+    
+}
 
 //----- TableBase implementation ----------------------------------------------------------------------------
 
@@ -129,7 +144,10 @@ RecordBase TableBase::append(Aux::Ptr const & aux) {
     }
     detail::RecordPair pair = { _storage->blocks.back().next, aux };
     _storage->records.push_back(pair);
-    return RecordBase(pair.buf, aux, _storage);
+    _storage->blocks.back().next += _storage->layout.getRecordSize();
+    RecordBase result(pair.buf, aux, _storage);
+    detail::LayoutAccess::getData(_storage->layout).forEachKey(detail::UnsetField(&result));
+    return result;
 }
 
 TableBase::TableBase(Layout const & layout, int defaultBlockSize, int capacity) :

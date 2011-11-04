@@ -2,6 +2,8 @@
 #ifndef CATALOG_DETAIL_FieldAccess_h_INCLUDED
 #define CATALOG_DETAIL_FieldAccess_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include "lsst/catalog/Field.h"
 
 namespace lsst { namespace catalog { namespace detail {
@@ -31,7 +33,7 @@ struct FieldAccess {
         return field.setValue(buf, value);
     }
 
-    template <typename T, typename U>
+    template <typename T>
     static void setDefault(
         Field<T> const & field, char * buf
     ) {

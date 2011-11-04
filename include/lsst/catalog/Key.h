@@ -2,6 +2,8 @@
 #ifndef CATALOG_Key_h_INCLUDED
 #define CATALOG_Key_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/catalog/detail/KeyData.h"

@@ -2,6 +2,8 @@
 #ifndef CATALOG_ColumnView_h_INCLUDED
 #define CATALOG_ColumnView_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include "lsst/catalog/Layout.h"
 
 namespace lsst { namespace catalog {

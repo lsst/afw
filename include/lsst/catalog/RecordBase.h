@@ -2,6 +2,8 @@
 #ifndef CATALOG_RecordBase_h_INCLUDED
 #define CATALOG_RecordBase_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include "lsst/catalog/Layout.h"
 #include "lsst/catalog/detail/KeyAccess.h"
 #include "lsst/catalog/detail/FieldAccess.h"
@@ -56,6 +58,8 @@ private:
         _buf(reinterpret_cast<char*>(buf)), _aux(aux), _storage(storage)
     {}
 
+    void initialize() const;
+
     char * _buf;
     Aux::Ptr _aux;
     boost::shared_ptr<detail::TableStorage> _storage;
@@ -82,8 +86,10 @@ inline void RecordBase::set(Key<T> const & key, U const & value) const {
         _buf + detail::KeyAccess::getData(key).offset,
         value
     );
-    *reinterpret_cast<int*>(_buf + detail::KeyAccess::getData(key).nullOffset)
-        |= detail::KeyAccess::getData(key).nullMask;        
+    if (detail::KeyAccess::getData(key).field.canBeNull) {
+        *reinterpret_cast<int*>(_buf + detail::KeyAccess::getData(key).nullOffset)
+            &= ~detail::KeyAccess::getData(key).nullMask;
+    }
 }
 
 template <typename T>
@@ -91,9 +97,11 @@ inline void RecordBase::unset(Key<T> const & key) const {
     detail::FieldAccess::setDefault(
         detail::KeyAccess::getData(key).field,
         _buf + detail::KeyAccess::getData(key).offset
-    );        
-    *reinterpret_cast<int*>(_buf + detail::KeyAccess::getData(key).nullOffset)
-        &= ~detail::KeyAccess::getData(key).nullMask;
+    );
+    if (detail::KeyAccess::getData(key).field.canBeNull) {
+        *reinterpret_cast<int*>(_buf + detail::KeyAccess::getData(key).nullOffset)
+            |= detail::KeyAccess::getData(key).nullMask;
+    }
 }
 
 }} // namespace lsst::catalog

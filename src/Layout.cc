@@ -1,35 +1,17 @@
-#include <vector>
 #include <list>
 #include <stdexcept>
 
-#define FUSION_MAX_VECTOR_SIZE 20
-#define FUSION_MAX_MAP_SIZE 20
-
 #include "boost/make_shared.hpp"
-#include "boost/mpl/transform.hpp"
-#include "boost/fusion/algorithm/iteration/for_each.hpp"
-#include "boost/fusion/adapted/mpl.hpp"
-#include "boost/fusion/container/map/convert.hpp"
-#include "boost/fusion/sequence/intrinsic/at_key.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/catalog/Layout.h"
 #include "lsst/catalog/detail/KeyAccess.h"
+#include "lsst/catalog/detail/LayoutData.h"
 
 namespace lsst { namespace catalog {
 
 namespace {
-
-struct MakeKeyVectorPair {
-    template <typename T> struct apply {
-        typedef boost::fusion::pair< T, std::vector< Key<T> > > type;
-    };
-};
-
-typedef boost::fusion::result_of::as_map<
-    boost::mpl::transform< detail::FieldTypes, MakeKeyVectorPair >::type
-    >::type KeyContainer;
 
 struct LayoutGap {
     int offset;
@@ -37,16 +19,6 @@ struct LayoutGap {
 };
 
 } // anonymous
-
-//----- Layout private implementation -----------------------------------------------------------------------
-
-struct Layout::Data {
-
-    Data() : recordSize(0), keys() {}
-
-    int recordSize;
-    KeyContainer keys;
-};
 
 //----- LayoutBuilder private implementation ----------------------------------------------------------------
 
@@ -178,15 +150,11 @@ namespace {
 struct Describe {
 
     template <typename T>
-    void operator()(boost::fusion::pair< T, std::vector< Key<T> > > const & type) const {
-        for (
-             typename std::vector< Key<T> >::const_iterator i = type.second.begin();
-             i != type.second.end();
-             ++i
-        ) {
-            result->insert(i->getField().describe());
-        }
+    void operator()(Key<T> const & key) const {
+        result->insert(key.getField().describe());
     }
+
+    explicit Describe(Layout::Description * result_) : result(result_) {}
 
     Layout::Description * result;
 };
@@ -195,8 +163,7 @@ struct Describe {
 
 Layout::Description Layout::describe() const {
     Description result;
-    Describe f = { &result };
-    boost::fusion::for_each(_data->keys, f);
+    _data->forEachKey(Describe(&result));
     return result;
 }
 

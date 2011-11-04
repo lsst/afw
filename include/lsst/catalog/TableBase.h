@@ -2,6 +2,8 @@
 #ifndef CATALOG_TableBase_h_INCLUDED
 #define CATALOG_TableBase_h_INCLUDED
 
+#include "lsst/catalog/detail/fusion_limits.h"
+
 #include "lsst/catalog/Layout.h"
 #include "lsst/catalog/ColumnView.h"
 #include "lsst/catalog/RecordBase.h"
