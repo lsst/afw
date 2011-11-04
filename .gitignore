@@ -1,2 +1,3 @@
-examples/table
+tests/.tests
+tests/table
 include/lsst/catalog/Field.h
