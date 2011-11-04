@@ -6,6 +6,8 @@
 
 namespace lsst { namespace catalog {
 
+class TableBase;
+
 class ColumnView {
 public:
     
@@ -23,10 +25,15 @@ public:
     typename Field<T>::Column operator[](Key<T> const & key) const;
 
 private:
+
+    friend class TableBase;
+
+    ColumnView(Layout const & layout, int recordCount, char * buf, ndarray::Manager::Ptr const & manager);
+
     int _recordCount;
-    ndarray::Manager::Ptr _manager;
-    void * _buf;
+    char * _buf;
     Layout _layout;
+    ndarray::detail::Core<1>::Ptr _intCore;
 };
 
 }} // namespace lsst::catalog

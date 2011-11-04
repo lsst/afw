@@ -26,10 +26,14 @@
 
 namespace lsst { namespace catalog {
 
-template <typename T> class Key;
 template <typename T> class Array;
 template <typename T> class Covariance;
-class ColumnView;
+
+namespace detail {
+
+struct FieldAccess;
+
+} // namespace detail
 
 struct NoFieldData {};
 
@@ -38,8 +42,6 @@ struct Field : public FieldBase {
     typedef T Value;
 
     typedef lsst::ndarray::Array<T,1> Column;
-
-    typedef NoFieldData FieldData;
 
     Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
         : FieldBase(name, doc, canBeNull) {}
@@ -55,21 +57,18 @@ struct Field : public FieldBase {
 
 private:
 
-    template <typename OtherT> friend class Key;
-    friend class ColumnView;
+    friend class detail::FieldAccess;
 
-    Field(FieldBase const & base, NoFieldData const &) : FieldBase(base) {}
+    Column getColumn(
+        char * buf, int recordCount, int recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) const;
 
-    static Column makeColumn(
-        void * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager, NoFieldData const &
-    );
+    void setDefault(char * buf) const;
 
-    FieldData getFieldData() const { return FieldData(); }
+    Value getValue(char * buf) const { return *reinterpret_cast<T*>(buf); }
 
-    static Value makeValue(void * buf, NoFieldData const &) {
-        return *reinterpret_cast<T*>(buf);
-    }
+    void setValue(char * buf, T value) const { *reinterpret_cast<T*>(buf) = value; }
 };
 
 template <typename U>
@@ -77,8 +76,6 @@ struct Field< Point<U> > : public FieldBase {
     typedef Point<U> Value;
 
     typedef Point< lsst::ndarray::Array<U,1> > Column;
-
-    typedef NoFieldData FieldData;
 
     Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
         : FieldBase(name, doc, canBeNull) {}
@@ -94,20 +91,22 @@ struct Field< Point<U> > : public FieldBase {
 
 private:
 
-    template <typename OtherT> friend class Key;
-    friend class ColumnView;
+    friend class detail::FieldAccess;
 
-    Field(FieldBase const & base, NoFieldData const &) : FieldBase(base) {}
+    Column getColumn(
+        char * buf, int recordCount, int recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) const;
 
-    static Column makeColumn(
-        void * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager, NoFieldData const &
-    );
+    void setDefault(char * buf) const;
 
-    FieldData getFieldData() const { return FieldData(); }
-
-    static Value makeValue(void * buf, NoFieldData const &) {
+    Value getValue(char * buf) const {
         return Value(*reinterpret_cast<U*>(buf), *(reinterpret_cast<U*>(buf) + 1));
+    }
+
+    void setValue(char * buf, Point<U> const & value) const {
+        reinterpret_cast<U*>(buf)[0] = value.x;
+        reinterpret_cast<U*>(buf)[1] = value.y;
     }
 };
 
@@ -116,8 +115,6 @@ struct Field< Shape<U> > : public FieldBase {
     typedef Shape<U> Value;
 
     typedef Shape< lsst::ndarray::Array<U,1> > Column;
-
-    typedef NoFieldData FieldData;
 
     Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
         : FieldBase(name, doc, canBeNull) {}
@@ -133,22 +130,25 @@ struct Field< Shape<U> > : public FieldBase {
 
 private:
 
-    template <typename OtherT> friend class Key;
-    friend class ColumnView;
+    friend class detail::FieldAccess;
 
-    Field(FieldBase const & base, NoFieldData const &) : FieldBase(base) {}
+    Column getColumn(
+        char * buf, int recordCount, int recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) const;
 
-    static Column makeColumn(
-        void * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager, NoFieldData const &
-    );
+    void setDefault(char * buf) const;
 
-    FieldData getFieldData() const { return FieldData(); }
-
-    static Value makeValue(void * buf, NoFieldData const &) {
+    Value getValue(char * buf) const {
         return Value(
             *reinterpret_cast<U*>(buf), *(reinterpret_cast<U*>(buf) + 1), *(reinterpret_cast<U*>(buf) + 2)
         );
+    }
+
+    void setValue(char * buf, Shape<U> const & value) const {
+        reinterpret_cast<U*>(buf)[0] = value.xx;
+        reinterpret_cast<U*>(buf)[1] = value.yy;
+        reinterpret_cast<U*>(buf)[2] = value.xy;
     }
 };
 
@@ -157,8 +157,6 @@ struct Field< Array<U> > : public FieldBase {
     typedef Eigen::Map< const Eigen::Array<U,Eigen::Dynamic,1> > Value;
 
     typedef lsst::ndarray::Array<U,2,1> Column;
-
-    typedef int FieldData;
 
     Field(int size_, char const * name, char const * doc, NullEnum canBeNull)
         : FieldBase(name, doc, canBeNull), size(size_) {}
@@ -176,20 +174,29 @@ struct Field< Array<U> > : public FieldBase {
 
 private:
 
-    template <typename OtherT> friend class Key;
-    friend class ColumnView;
+    friend class detail::FieldAccess;
 
-    Field(FieldBase const & base, int size_) : FieldBase(base), size(size_) {}
+    Column getColumn(
+        char * buf, int recordCount, int recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) const;
 
-    static Column makeColumn(
-        void * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager, int size
-    );
+    void setDefault(char * buf) const;
 
-    FieldData getFieldData() const { return size; }
+    Value getValue(char * buf) const { return Value(reinterpret_cast<U*>(buf), size); }
 
-    static Value makeValue(void * buf, int size) {
-        return Value(reinterpret_cast<U*>(buf), size);
+    template <typename Derived>
+    void setValue(char * buf, Eigen::DenseBase<Derived> const & value) const {
+        BOOST_STATIC_ASSERT( Derived::IsVectorAtCompileTime );
+        if (value.size() != size) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                "Incorrect size in array field assignment."
+            );
+        }
+        for (int i = 0; i < size; ++i) {
+             reinterpret_cast<U*>(buf)[i] = value[i];
+        }
     }
 };
 
@@ -198,8 +205,6 @@ struct Field< Covariance<U> > : public FieldBase {
     typedef Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> Value;
 
     typedef CovarianceColumn<U> Column;
-
-    typedef int FieldData;
 
     Field(int size_, char const * name, char const * doc, NullEnum canBeNull)
         : FieldBase(name, doc, canBeNull), size(size_) {}
@@ -217,19 +222,31 @@ struct Field< Covariance<U> > : public FieldBase {
 
 private:
 
-    template <typename OtherT> friend class Key;
-    friend class ColumnView;
+    friend class detail::FieldAccess;
 
-    Field(FieldBase const & base, int size_) : FieldBase(base), size(size_) {}
+    Column getColumn(
+        char * buf, int recordCount, int recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) const;
 
-    static Column makeColumn(
-        void * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager, int size
-    );
+    void setDefault(char * buf) const;
 
-    FieldData getFieldData() const { return size; }
+    Value getValue(char * buf) const;
 
-    static Value makeValue(void * buf, int size);
+    template <typename Derived>
+    void setValue(char * buf, Eigen::DenseBase<Derived> const & value) const {
+        if (value.rows() != size || value.cols() != size) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                "Incorrect size in covariance field assignment."
+            );
+        }
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) { 
+                reinterpret_cast<U*>(buf)[detail::indexCovariance(i, j)] = value(i, j);
+            }
+        }
+    }
 };
 
 template <typename U>
@@ -237,8 +254,6 @@ struct Field< Covariance< Point<U> > > : public FieldBase {
     typedef Eigen::Matrix<U,2,2> Value;
 
     typedef CovarianceColumn< Point<U> > Column;
-
-    typedef NoFieldData FieldData;
 
     Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
         : FieldBase(name, doc, canBeNull) {}
@@ -254,19 +269,26 @@ struct Field< Covariance< Point<U> > > : public FieldBase {
 
 private:
 
-    template <typename OtherT> friend class Key;
-    friend class ColumnView;
+    friend class detail::FieldAccess;
 
-    Field(FieldBase const & base, NoFieldData const &) : FieldBase(base) {}
+    Column getColumn(
+        char * buf, int recordCount, int recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) const;
 
-    static Column makeColumn(
-        void * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager, NoFieldData const &
-    );
-
-    FieldData getFieldData() const { return FieldData(); }
+    void setDefault(char * buf) const;
 ;
-    static Value makeValue(void * buf, NoFieldData const &);
+    Value getValue(char * buf) const;
+
+    template <typename Derived>
+    void setValue(char * buf, Eigen::DenseBase<Derived> const & value) const {
+        BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == 2 && Derived::ColsAtCompileTime == 2);
+        for (int i = 0; i < 2; ++i) {
+            for (int j = 0; j < 2; ++j) { 
+                reinterpret_cast<U*>(buf)[detail::indexCovariance(i, j)] = value(i, j);
+            }
+        }
+    }
 };
 
 template <typename U>
@@ -274,8 +296,6 @@ struct Field< Covariance< Shape<U> > > : public FieldBase {
     typedef Eigen::Matrix<U,3,3> Value;
 
     typedef CovarianceColumn< Shape<U> > Column;
-
-    typedef NoFieldData FieldData;
 
     Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
         : FieldBase(name, doc, canBeNull) {}
@@ -291,19 +311,26 @@ struct Field< Covariance< Shape<U> > > : public FieldBase {
 
 private:
 
-    template <typename OtherT> friend class Key;
-    friend class ColumnView;
+    friend class detail::FieldAccess;
 
-    Field(FieldBase const & base, NoFieldData const &) : FieldBase(base) {}
+    Column getColumn(
+        char * buf, int recordCount, int recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) const;
 
-    static Column makeColumn(
-        void * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager, NoFieldData const &
-    );
-
-    FieldData getFieldData() const { return FieldData(); }
+    void setDefault(char * buf) const;
 ;
-    static Value makeValue(void * buf, NoFieldData const &);
+    Value getValue(char * buf) const;
+
+    template <typename Derived>
+    void setValue(char * buf, Eigen::DenseBase<Derived> const & value) const {
+        BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == 3 && Derived::ColsAtCompileTime == 3);
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) { 
+                reinterpret_cast<U*>(buf)[detail::indexCovariance(i, j)] = value(i, j);
+            }
+        }
+    }
 };
 
 namespace detail {
