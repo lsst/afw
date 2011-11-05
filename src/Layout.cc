@@ -44,7 +44,7 @@ private:
 
     void operator=(Impl const & other);
 
-    int findOffset(int size, int align);
+    int findOffset(int size);
 
     boost::shared_ptr<Data> _data;
     std::list<LayoutGap> _gaps;
@@ -61,14 +61,14 @@ Key<T> LayoutBuilder::Impl::add(Field<T> const & field) {
     boost::shared_ptr< detail::KeyData<T> > keyData = boost::make_shared< detail::KeyData<T> >(field);
     if (field.canBeNull) {
         if (!_currentNullMask) {
-            _currentNullOffset = findOffset(sizeof(int), sizeof(int));
+            _currentNullOffset = findOffset(sizeof(int));
             _currentNullMask = 1;
         }
         keyData->nullOffset = _currentNullOffset;
         keyData->nullMask = _currentNullMask;
         _currentNullMask <<= 1;
     }
-    keyData->offset = findOffset(field.getByteSize(), field.getByteAlign());
+    keyData->offset = findOffset(field.getElementCount() * sizeof(typename Field<T>::Element));
     Key<T> key = detail::KeyAccess::make(keyData);
     boost::fusion::at_key<T>(_data->keys).push_back(key);
     return key;
@@ -80,9 +80,9 @@ boost::shared_ptr<LayoutBuilder::Impl::Data> LayoutBuilder::Impl::finish() {
     return _data;
 }
 
-int LayoutBuilder::Impl::findOffset(int size, int align) {
+int LayoutBuilder::Impl::findOffset(int size) {
     for (std::list<LayoutGap>::iterator i = _gaps.begin(); i != _gaps.end(); ++i) {
-        if (i->offset % align == 0 && i->size >= size) {
+        if (i->offset % size == 0 && i->size >= size) {
             int offset = i->offset;
             if (i->size == size) {
                 _gaps.erase(i);
@@ -93,8 +93,8 @@ int LayoutBuilder::Impl::findOffset(int size, int align) {
             return offset;
         }
     }
-    int extra = align - _data->recordSize % align;
-    if (extra == align) {
+    int extra = size - _data->recordSize % size;
+    if (extra == size) {
         int offset = _data->recordSize;
         _data->recordSize += size;
         return offset;

@@ -1,5 +1,0 @@
-# -*- python -*-
-
-from lsst.sconsUtils import env, targets
-
-targets["include"] = env.M4("lsst/catalog/Field.h", "lsst/catalog/Field.h.m4")

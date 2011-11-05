@@ -11,15 +11,6 @@ namespace lsst { namespace catalog { namespace detail {
 struct FieldAccess {
 
     template <typename T>
-    static typename Field<T>::Column getColumn(
-        Field<T> const & field,
-        char * buf, int recordCount, int recordSize, 
-        ndarray::Manager::Ptr const & manager
-    ) {
-        return field.getColumn(buf, recordCount, recordSize, manager);
-    }
-
-    template <typename T>
     static typename Field<T>::Value getValue(
         Field<T> const & field, char * buf
     ) {

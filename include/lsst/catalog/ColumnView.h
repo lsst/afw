@@ -18,23 +18,26 @@ public:
         ndarray::detail::BitwiseAndTag::ExprScalar< ndarray::Array<int,1>, int >::Bound
     > IsNullColumn;
 
-    Layout getLayout() const { return _layout; }
+    Layout getLayout() const;
 
     template <typename T>
     IsNullColumn isNull(Key<T> const & key) const;
         
     template <typename T>
-    typename Field<T>::Column operator[](Key<T> const & key) const;
+    typename ndarray::Array<T,1> operator[](Key<T> const & key) const;
+
+    ~ColumnView();
 
 private:
 
     friend class SimpleTable;
 
+    struct Impl;
+
     ColumnView(Layout const & layout, int recordCount, char * buf, ndarray::Manager::Ptr const & manager);
 
-    int _recordCount;
-    char * _buf;
-    Layout _layout;
+    boost::shared_ptr<Impl> _impl;
+
     ndarray::detail::Core<1>::Ptr _intCore;
 };
 

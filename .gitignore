@@ -1,3 +1,2 @@
 tests/.tests
 tests/SimpleTable
-include/lsst/catalog/Field.h

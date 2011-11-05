@@ -1,3 +1,4 @@
+// -*- c++ -*-
 #ifndef CATALOG_Field_h_INCLUDED
 #define CATALOG_Field_h_INCLUDED
 
@@ -8,16 +9,23 @@
 
 #include "boost/mpl/vector.hpp"
 #include "boost/preprocessor/punctuation/paren.hpp"
+#include "Eigen/Core"
 
+#include "lsst/pex/exceptions.h"
 #include "lsst/catalog/FieldBase.h"
 #include "lsst/catalog/FieldDescription.h"
 #include "lsst/catalog/Point.h"
 #include "lsst/catalog/Shape.h"
 #include "lsst/catalog/Covariance.h"
 
+#define CATALOG_SCALAR_FIELD_TYPE_N 3
+#define CATALOG_SCALAR_FIELD_TYPES              \
+    int, float, double
+#define CATALOG_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() CATALOG_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
+
 #define CATALOG_FIELD_TYPE_N 16
 #define CATALOG_FIELD_TYPES                     \
-    int, float, double,                         \
+    CATALOG_SCALAR_FIELD_TYPES,                 \
     Point<int>, Point<float>, Point<double>,    \
     Shape<float>, Shape<double>,                \
     Array<float>, Array<double>,                \
@@ -25,6 +33,28 @@
     Covariance< Point<float> >, Covariance< Point<double> >,    \
     Covariance< Shape<float> >, Covariance< Shape<double> >
 #define CATALOG_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() CATALOG_FIELD_TYPES BOOST_PP_RPAREN()
+
+#define FIELD_SIMPLE_PUBLIC_INTERFACE(SIZE)                             \
+    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL) \
+        : FieldBase(name, doc, canBeNull) {}                            \
+    explicit Field(FieldBase const & base) : FieldBase(base) {}         \
+    int getElementCount() const { return SIZE; }                        \
+    FieldDescription describe() const {                                 \
+        return FieldDescription(this->name, this->doc, this->getTypeString()); \
+    }                                                                   \
+    std::string getTypeString() const
+
+#define FIELD_SIZED_PUBLIC_INTERFACE(SIZE)                              \
+    Field(int size_, char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL) \
+        : FieldBase(name, doc, canBeNull), size(size_) {}               \
+    Field(int size_, FieldBase const & base) : FieldBase(base), size(size_) {} \
+    int getElementCount() const { return SIZE; }                        \
+    FieldDescription describe() const {                                 \
+        return FieldDescription(this->name, this->doc, this->getTypeString()); \
+    }                                                                   \
+    std::string getTypeString() const;                                  \
+    int size
+
 
 namespace lsst { namespace catalog {
 
@@ -42,29 +72,13 @@ struct NoFieldData {};
 template <typename T>
 struct Field : public FieldBase {
     typedef T Value;
+    typedef T Element;
 
-    typedef lsst::ndarray::Array<T,1> Column;
-
-    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
-        : FieldBase(name, doc, canBeNull) {}
-
-    int getByteSize() const { return sizeof(T); }
-    int getByteAlign() const { return sizeof(T); }
-
-    FieldDescription describe() const {
-        return FieldDescription(this->name, this->doc, this->getTypeString());
-    }
-
-    std::string getTypeString() const;
+    FIELD_SIMPLE_PUBLIC_INTERFACE(1);
 
 private:
 
     friend class detail::FieldAccess;
-
-    Column getColumn(
-        char * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) const;
 
     void setDefault(char * buf) const;
 
@@ -76,29 +90,13 @@ private:
 template <typename U>
 struct Field< Point<U> > : public FieldBase {
     typedef Point<U> Value;
+    typedef U Element;
 
-    typedef Point< lsst::ndarray::Array<U,1> > Column;
-
-    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
-        : FieldBase(name, doc, canBeNull) {}
-
-    int getByteSize() const { return sizeof(U)*2; }
-    int getByteAlign() const { return sizeof(U)*2; }
-
-    FieldDescription describe() const {
-        return FieldDescription(this->name, this->doc, this->getTypeString());
-    }
-
-    std::string getTypeString() const;
+    FIELD_SIMPLE_PUBLIC_INTERFACE(2);
 
 private:
 
     friend class detail::FieldAccess;
-
-    Column getColumn(
-        char * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) const;
 
     void setDefault(char * buf) const;
 
@@ -115,29 +113,13 @@ private:
 template <typename U>
 struct Field< Shape<U> > : public FieldBase {
     typedef Shape<U> Value;
+    typedef U Element;
 
-    typedef Shape< lsst::ndarray::Array<U,1> > Column;
-
-    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
-        : FieldBase(name, doc, canBeNull) {}
-
-    int getByteSize() const { return sizeof(U)*3; }
-    int getByteAlign() const { return sizeof(U)*2; }
-
-    FieldDescription describe() const {
-        return FieldDescription(this->name, this->doc, this->getTypeString());
-    }
-
-    std::string getTypeString() const;
+    FIELD_SIMPLE_PUBLIC_INTERFACE(3);
 
 private:
 
     friend class detail::FieldAccess;
-
-    Column getColumn(
-        char * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) const;
 
     void setDefault(char * buf) const;
 
@@ -157,31 +139,13 @@ private:
 template <typename U> 
 struct Field< Array<U> > : public FieldBase {
     typedef Eigen::Map< const Eigen::Array<U,Eigen::Dynamic,1> > Value;
+    typedef U Element;
 
-    typedef lsst::ndarray::Array<U,2,1> Column;
-
-    Field(int size_, char const * name, char const * doc, NullEnum canBeNull)
-        : FieldBase(name, doc, canBeNull), size(size_) {}
-
-    int getByteSize() const { return sizeof(U)*size; }
-    int getByteAlign() const { return sizeof(U); }
-
-    FieldDescription describe() const {
-        return FieldDescription(this->name, this->doc, this->getTypeString());
-    }
-
-    std::string getTypeString() const;
-
-    int size;
+    FIELD_SIZED_PUBLIC_INTERFACE(size);
 
 private:
 
     friend class detail::FieldAccess;
-
-    Column getColumn(
-        char * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) const;
 
     void setDefault(char * buf) const;
 
@@ -205,31 +169,13 @@ private:
 template <typename U>
 struct Field< Covariance<U> > : public FieldBase {
     typedef Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> Value;
+    typedef U Element;
 
-    typedef CovarianceColumn<U> Column;
-
-    Field(int size_, char const * name, char const * doc, NullEnum canBeNull)
-        : FieldBase(name, doc, canBeNull), size(size_) {}
-
-    int getByteSize() const { return sizeof(U)*detail::computePackedSize(size); }
-    int getByteAlign() const { return sizeof(U); }
-
-    FieldDescription describe() const {
-        return FieldDescription(this->name, this->doc, this->getTypeString());
-    }
-
-    std::string getTypeString() const;
-
-    int size;
+    FIELD_SIZED_PUBLIC_INTERFACE(detail::computeCovarianceSize(size));
 
 private:
 
     friend class detail::FieldAccess;
-
-    Column getColumn(
-        char * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) const;
 
     void setDefault(char * buf) const;
 
@@ -254,29 +200,13 @@ private:
 template <typename U>
 struct Field< Covariance< Point<U> > > : public FieldBase {
     typedef Eigen::Matrix<U,2,2> Value;
+    typedef U Element;
 
-    typedef CovarianceColumn< Point<U> > Column;
-
-    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
-        : FieldBase(name, doc, canBeNull) {}
-
-    int getByteSize() const { return sizeof(U)*3; }
-    int getByteAlign() const { return sizeof(U)*2; }
-
-    FieldDescription describe() const {
-        return FieldDescription(this->name, this->doc, this->getTypeString());
-    }
-
-    std::string getTypeString() const;
+    FIELD_SIMPLE_PUBLIC_INTERFACE(3);
 
 private:
 
     friend class detail::FieldAccess;
-
-    Column getColumn(
-        char * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) const;
 
     void setDefault(char * buf) const;
 ;
@@ -296,29 +226,13 @@ private:
 template <typename U>
 struct Field< Covariance< Shape<U> > > : public FieldBase {
     typedef Eigen::Matrix<U,3,3> Value;
+    typedef U Element;
 
-    typedef CovarianceColumn< Shape<U> > Column;
-
-    Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL)
-        : FieldBase(name, doc, canBeNull) {}
-
-    int getByteSize() const { return sizeof(U)*6; }
-    int getByteAlign() const { return sizeof(U)*2; }
-
-    FieldDescription describe() const {
-        return FieldDescription(this->name, this->doc, this->getTypeString());
-    }
-
-    std::string getTypeString() const;
+    FIELD_SIMPLE_PUBLIC_INTERFACE(6);
 
 private:
 
     friend class detail::FieldAccess;
-
-    Column getColumn(
-        char * buf, int recordCount, int recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) const;
 
     void setDefault(char * buf) const;
 ;
@@ -337,6 +251,7 @@ private:
 
 namespace detail {
 
+typedef boost::mpl::vector< CATALOG_SCALAR_FIELD_TYPES > ScalarFieldTypes;
 typedef boost::mpl::vector< CATALOG_FIELD_TYPES > FieldTypes;
 
 } // namespace detail

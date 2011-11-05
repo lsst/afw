@@ -6,8 +6,6 @@
 
 #include "lsst/catalog/Field.h"
 
-namespace ndd = lsst::ndarray::detail;
-
 namespace lsst { namespace catalog {
 
 namespace {
@@ -38,21 +36,6 @@ std::string Field<T>::getTypeString() const {
 }
 
 template <typename T>
-typename Field<T>::Column Field<T>::getColumn(
-    char * buf, int recordCount, int recordSize,
-    ndarray::Manager::Ptr const & manager
-) const {
-    return ndd::ArrayAccess<Column>::construct(
-        reinterpret_cast<T*>(buf),
-        ndd::Core<1>::create(
-            ndarray::makeVector(recordCount),
-            ndarray::makeVector<int>(recordSize  / sizeof(T)),
-            manager
-        )
-    );
-}
-
-template <typename T>
 void Field<T>::setDefault(char * buf) const {
     *reinterpret_cast<T*>(buf) = TypeTraits<T>::getDefault();
 }
@@ -62,22 +45,6 @@ void Field<T>::setDefault(char * buf) const {
 template <typename U>
 std::string Field< Point<U> >::getTypeString() const {
     return (boost::format("Point<%s>") % TypeTraits<U>::getName()).str();
-}
-
-template <typename U>
-typename Field< Point<U> >::Column Field< Point<U> >::getColumn(
-    char * buf, int recordCount, int recordSize,
-    ndarray::Manager::Ptr const & manager
-) const {
-    ndd::Core<1>::Ptr core = ndarray::detail::Core<1>::create(
-        ndarray::makeVector(recordCount),
-        ndarray::makeVector<int>(recordSize / sizeof(U)),
-        manager
-    );
-    return Column(
-        ndd::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf), core),
-        ndd::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf) + 1, core)
-    );
 }
 
 template <typename U>
@@ -91,23 +58,6 @@ void Field< Point<U> >::setDefault(char * buf) const {
 template <typename U>
 std::string Field< Shape<U> >::getTypeString() const {
     return (boost::format("Shape<%s>") % TypeTraits<U>::getName()).str();
-}
-
-template <typename U>
-typename Field< Shape<U> >::Column Field< Shape<U> >::getColumn(
-    char * buf, int recordCount, int recordSize,
-    ndarray::Manager::Ptr const & manager
-) const {
-    ndd::Core<1>::Ptr core = ndarray::detail::Core<1>::create(
-        ndarray::makeVector(recordCount),
-        ndarray::makeVector<int>(recordSize / sizeof(U)),
-        manager
-    );
-    return Column(
-        ndd::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf), core),
-        ndd::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf) + 1, core),
-        ndd::ArrayAccess< ndarray::Array<U,1> >::construct(reinterpret_cast<U*>(buf) + 2, core)
-    );
 }
 
 template <typename U>
@@ -125,21 +75,6 @@ std::string Field< Array<U> >::getTypeString() const {
 }
 
 template <typename U>
-typename Field< Array<U> >::Column Field< Array<U> >::getColumn(
-    char * buf, int recordCount, int recordSize,
-    ndarray::Manager::Ptr const & manager
-) const {
-    return ndarray::detail::ArrayAccess<Column>::construct(
-        reinterpret_cast<U*>(buf),
-        ndarray::detail::Core<2>::create(
-            ndarray::makeVector(recordCount, size),
-            ndarray::makeVector<int>(recordSize / sizeof(U), 1),
-            manager
-        )
-    );
-}
-
-template <typename U>
 void Field< Array<U> >::setDefault(char * buf) const {
     for (int i = 0; i < size; ++i) {
         reinterpret_cast<U*>(buf)[i] = TypeTraits<U>::getDefault();
@@ -151,14 +86,6 @@ void Field< Array<U> >::setDefault(char * buf) const {
 template <typename U>
 std::string Field< Covariance<U> >::getTypeString() const {
     return (boost::format("Cov(%s[%d])") % TypeTraits<U>::getName() % this->size).str();
-}
-
-template <typename U>
-typename Field< Covariance<U> >::Column Field< Covariance<U> >::getColumn(
-    char * buf, int recordCount, int recordSize,
-    ndarray::Manager::Ptr const & manager
-) const {
-    return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager, size);
 }
 
 template <typename U>
@@ -175,7 +102,7 @@ typename Field< Covariance<U> >::Value Field< Covariance<U> >::getValue(char * b
 
 template <typename U>
 void Field< Covariance<U> >::setDefault(char * buf) const {
-    int const p = detail::computePackedSize(size);
+    int const p = detail::computeCovarianceSize(size);
     for (int i = 0; i < p; ++i) {
         reinterpret_cast<U*>(buf)[i] = TypeTraits<U>::getDefault();
     }
@@ -186,14 +113,6 @@ void Field< Covariance<U> >::setDefault(char * buf) const {
 template <typename U>
 std::string Field< Covariance< Point<U> > >::getTypeString() const {
     return (boost::format("Cov(Point<%s>)") % TypeTraits<U>::getName()).str();
-}
-
-template <typename U>
-typename Field< Covariance< Point<U> > >::Column Field< Covariance< Point<U> > >::getColumn(
-    char * buf, int recordCount, int recordSize,
-    ndarray::Manager::Ptr const & manager
-) const {
-    return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager);
 }
 
 template <typename U>
@@ -220,14 +139,6 @@ void Field< Covariance< Point<U> > >::setDefault(char * buf) const {
 template <typename U>
 std::string Field< Covariance< Shape<U> > >::getTypeString() const {
     return (boost::format("Cov(Point<%s>)") % TypeTraits<U>::getName()).str();
-}
-
-template <typename U>
-typename Field< Covariance< Shape<U> > >::Column Field< Covariance< Shape<U> > >::getColumn(
-    char * buf, int recordCount, int recordSize,
-    ndarray::Manager::Ptr const & manager
-) const {
-    return Column(reinterpret_cast<U*>(buf), recordCount, recordSize / sizeof(U), manager);
 }
 
 template <typename U>
