@@ -170,19 +170,40 @@ class BackgroundTestCase(unittest.TestCase):
             for ypix in ypixels:
                 testval = backobj.getPixel(xpix, ypix)
                 self.assertAlmostEqual( testval, rampimg.get(xpix, ypix), 10 )
-                
+
+    def getParabolaImage(self, nx, ny):
+        parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
+        d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
+        for x in range(nx):
+            for y in range(ny):
+                parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
+        return parabimg
+
+    def testTicket1781(self):
+        # make an unusual-sized image
+        nx = 511
+        ny = 63
+
+        parabimg = self.getParabolaImage(nx, ny)
+
+        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
+        bctrl.setNxSample(16)
+        bctrl.setNySample(4)
+        bctrl.getStatisticsControl().setNumSigmaClip(10.0)  
+        bctrl.getStatisticsControl().setNumIter(1)
+        backobj = afwMath.makeBackground(parabimg, bctrl)
+
+        parabimg.writeFits('in.fits')
+        backobj.getImageF().writeFits('out.fits')
+
 
     def testParabola(self):
 
         # make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         nx = 512
         ny = 512
-        parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
-        d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
 
-        for x in range(nx):
-            for y in range(ny):
-                parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
+        parabimg = self.getParabolaImage(nx, ny)
         
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
@@ -303,15 +324,15 @@ class BackgroundTestCase(unittest.TestCase):
 
         
     def testTicket1681OffByOne(self):
-	im = afwImage.ImageF(40, 40); im.set(5, 6, 100);
-	nx, ny = im.getWidth()//2, im.getHeight()//2
-	print nx, ny
-	bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
-	bctrl.setStatisticsProperty(afwMath.MEAN)
-	bkd = afwMath.makeBackground(im, bctrl)
-	bim = bkd.getImageF()
-	im.writeFits("im.fits")
-	bim.writeFits("bim.fits")
+        im = afwImage.ImageF(40, 40); im.set(5, 6, 100);
+        nx, ny = im.getWidth()//2, im.getHeight()//2
+        print nx, ny
+        bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
+        bctrl.setStatisticsProperty(afwMath.MEAN)
+        bkd = afwMath.makeBackground(im, bctrl)
+        bim = bkd.getImageF()
+        im.writeFits("im.fits")
+        bim.writeFits("bim.fits")
 
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

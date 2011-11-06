@@ -92,6 +92,28 @@ math::Interpolate::~Interpolate() {
 }
 
 double math::Interpolate::interpolate(double const x) {
+    // New GSL versions refuse to extrapolate.
+    // gsl_interp_init() requires x to be ordered, so can just check
+    // the array endpoints for out-of-bounds.
+    if ((x < _x[0]) || (x > _x[_x.size()-1])) {
+        // do our own quadratic extrapolation.
+        // (GSL only provides first and second derivative functions)
+        double x0, y0;
+        if (x < _x[0]) {
+            x0 = _x[0];
+            y0 = _y[0];
+        } else {
+            x0 = _x[_x.size()-1];
+            y0 = _y[_x.size()-1];
+        }
+        // first derivative at endpoint
+        double d = ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], x0, _acc);
+        // second derivative at endpoint
+        double d2 = ::gsl_interp_eval_deriv2(_interp, &_x[0], &_y[0], x0, _acc);
+        return y0 + (x - x0)*d + (x - x0)*(x - x0)*d2;
+    }
+    assert(x >= _x[0]);
+    assert(x <= _x[_x.size()-1]);
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], x, _acc);
 }
 
