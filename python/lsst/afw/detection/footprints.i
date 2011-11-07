@@ -22,7 +22,17 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-%ignore lsst::afw::detection::FootprintFunctor::operator();
+/// Map uint64_t correctly
+%apply unsigned long long { boost::uint64_t };
+//%typemap(out) boost::uint64_t {
+//    $result = PyLong_FromUnsignedLongLong($1);
+//}
+//%typemap(in) boost::uint64_t {
+//    $1 = PyLong_AsUnsignedLongLong($input);
+//}
+//%typemap(typecheck) boost::uint64_t {
+//    $1 = (PyInt_Check($input) || PyLong_Check($input)) ? 1 : 0;
+//}
 
 %{
 #include "lsst/afw/detection/Threshold.h"
@@ -33,6 +43,8 @@
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 %}
+
+%ignore lsst::afw::detection::FootprintFunctor::operator();
 
 // already in image.i.
 // %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
@@ -63,8 +75,15 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
     }
 %enddef
 
+%define %footprintOperations(PIXEL)
+%template(insertIntoImage) lsst::afw::detection::Footprint::insertIntoImage<PIXEL>;
+%enddef
+
 %extend lsst::afw::detection::Footprint {
     %template(intersectMask) intersectMask<lsst::afw::image::MaskPixel>;
+    %footprintOperations(unsigned short)
+    %footprintOperations(int)
+    %footprintOperations(boost::uint64_t)
 }
 
 %template(PeakContainerT)      std::vector<lsst::afw::detection::Peak::Ptr>;

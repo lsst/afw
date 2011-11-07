@@ -89,6 +89,10 @@ template<>
 std::string ExposureFormatterTraits<float, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureF");
 template<>
 std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureD");
+template<>
+std::string ExposureFormatterTraits<boost::uint64_t,
+                                    afwImg::MaskPixel,
+                                    afwImg::VariancePixel>::name("ExposureL");
 
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -478,4 +482,5 @@ INSTANTIATE(uint16_t, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(int, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(float, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(double, afwImg::MaskPixel, afwImg::VariancePixel)
+INSTANTIATE(uint64_t, afwImg::MaskPixel, afwImg::VariancePixel)
 /// \endcond
