@@ -401,15 +401,15 @@ namespace {
      *
      * The ids that are overwritten are returned for the callers deliction
      */
-    template<bool overwriteId>
+    template<bool overwriteId, typename PixelT>
     void
     doInsertIntoImage(geom::Box2I const& _region, // unpacked from Footprint
                       Footprint::SpanList const& _spans,      // unpacked from Footprint
-                      image::Image<boost::uint16_t>& idImage, // Image to contain the footprint
-                      int const id,                           // Add/replace id to idImage for pixels in Footprint
+                      image::Image<PixelT>& idImage, // Image to contain the footprint
+                      boost::uint64_t const id, // Add/replace id to idImage for pixels in Footprint
                       geom::Box2I const& region,              // Footprint's region (default: getRegion())
                       long const mask=0x0,                    // Don't overwrite bits in this mask
-                      std::set<int> *oldIds=NULL              // if non-NULL, set the IDs that were overwritten
+                      std::set<boost::uint64_t> *oldIds=NULL // if non-NULL, set the IDs that were overwritten
                    )
     {    
         int width, height, x0, y0;
@@ -437,7 +437,7 @@ namespace {
                               str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % id % mask));
         }
 
-        std::set<int>::const_iterator pos; // hint on where to insert into oldIds
+        typename std::set<boost::uint64_t>::const_iterator pos; // hint on where to insert into oldIds
         if (oldIds) {
             pos = oldIds->begin();
         }
@@ -456,7 +456,7 @@ namespace {
             int sx1 = span->getX1() - x0;
             int const swidth = (sx1 >= width) ? width - sx0 : sx1 - sx0 + 1;
 
-            for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
+            for (typename image::Image<PixelT>::x_iterator ptr = idImage.x_at(sx0, sy0),
                      end = ptr + swidth; ptr != end; ++ptr) {
                 if (overwriteId) {
                     long val = *ptr & ~mask;
@@ -477,10 +477,11 @@ namespace {
 /**
  * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
  */
+template<typename PixelT>
 void
 Footprint::insertIntoImage(
-    image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-    int const id,                           //!< Add id to idImage for pixels in the Footprint
+    typename image::Image<PixelT>& idImage, //!< Image to contain the footprint
+    boost::uint64_t const id,               //!< Add id to idImage for pixels in the Footprint
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
 {    
@@ -492,16 +493,23 @@ Footprint::insertIntoImage(
  *
  * The list of ids found under the new Footprint are returned
  */
+template<typename PixelT>
 void
 Footprint::insertIntoImage(
-    image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-    int const id,                           //!< Add id to idImage for pixels in the Footprint
+    image::Image<PixelT>& idImage,          //!< Image to contain the footprint
+    boost::uint64_t const id,               //!< Add id to idImage for pixels in the Footprint
     bool overwriteId,                       //!< should id replace any value already in idImage?
     long const mask,                        //!< Don't overwrite ID bits in this mask
-    std::set<int> *oldIds,                  //!< if non-NULL, set the IDs that were overwritten
+    std::set<boost::uint64_t> *oldIds,      //!< if non-NULL, set the IDs that were overwritten
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
-{    
+{
+    if (id > std::numeric_limits<PixelT>::max()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::OutOfRangeException,
+            "id out of range for image type"
+        );
+    }
     if (overwriteId) {
         doInsertIntoImage<true>(_region, _spans, idImage, id, region, mask, oldIds);
     } else {
@@ -1537,7 +1545,7 @@ template image::MaskPixel setMaskFromFootprint(
     image::Mask<image::MaskPixel> *mask,
     Footprint const& foot, image::MaskPixel const bitmask);
 
-#define INSTANTIATE(TYPE) \
+#define INSTANTIATE_FLOAT(TYPE) \
 template \
 TYPE setImageFromFootprint(image::Image<TYPE> *image,        \
                                       Footprint const& footprint, \
@@ -1551,8 +1559,30 @@ TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
                                           CONST_PTR(std::vector<Footprint::Ptr>) footprints, \
                                           TYPE const value); \
 
-INSTANTIATE(float);
-INSTANTIATE(double);
+INSTANTIATE_FLOAT(float);
+INSTANTIATE_FLOAT(double);
+
+
+#define INSTANTIATE_MASK(PIXEL)                                         \
+template                                                                \
+void Footprint::insertIntoImage(                                        \
+    lsst::afw::image::Image<PIXEL>& idImage,                            \
+    boost::uint64_t const id,                                           \
+    geom::Box2I const& region=geom::Box2I()                             \
+    ) const;                                                            \
+template                                                                \
+void Footprint::insertIntoImage(                                        \
+    lsst::afw::image::Image<PIXEL>& idImage,                            \
+    boost::uint64_t const id,                                           \
+    bool const overwriteId, long const idMask,                          \
+    std::set<boost::uint64_t> *oldIds,                                  \
+    geom::Box2I const& region=geom::Box2I()                             \
+    ) const;                                                            \
+
+INSTANTIATE_MASK(boost::uint16_t);
+INSTANTIATE_MASK(int);
+INSTANTIATE_MASK(boost::uint64_t);
+
 
 }}}
 // \endcond

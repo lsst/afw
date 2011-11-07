@@ -890,7 +890,8 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint16_t> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<float> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs)
+   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs); \
+   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint64_t> const& rhs);
 
 #define INSTANTIATE(T) \
    template class image::ImageBase<T>; \
@@ -904,4 +905,5 @@ INSTANTIATE(boost::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
+INSTANTIATE(boost::uint64_t);
 /// \endcond

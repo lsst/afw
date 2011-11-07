@@ -66,7 +66,7 @@ namespace geom = lsst::afw::geom;
 namespace {
     /// Don't let doxygen see this block  \cond
 
-    typedef unsigned short IdPixelT;    // Type of temporary Images used in merging Footprints
+    typedef boost::uint16_t IdPixelT;    // Type of temporary Images used in merging Footprints
 
     struct Threshold_traits {
     };
@@ -220,10 +220,10 @@ namespace {
          * losing any peaks that it might contain.  We'll preserve the overwritten Ids in case we need to
          * get them back (n.b. Footprints that overlap, but both if which survive, will appear in this list)
          */
-        typedef std::map<int, std::set<int> > OldIdMap;
+        typedef std::map<int, std::set<boost::uint64_t> > OldIdMap;
         OldIdMap overwrittenIds;        // here's a map from id -> overwritten IDs
 
-        int id = 1;                     // the ID inserted into the image
+        IdPixelT id = 1;                     // the ID inserted into the image
         for (typename FootprintList::const_iterator ptr = lhsFootprints.begin(), end = lhsFootprints.end();
              ptr != end; ++ptr, ++id) {
             CONST_PTR(Footprint) foot = *ptr;
@@ -232,7 +232,7 @@ namespace {
                 foot = growFootprint(*foot, rLhs, isotropic);
             }
 
-            std::set<int> overwritten;
+            std::set<boost::uint64_t> overwritten;
             foot->insertIntoImage(*idImage, id, true, 0x0, &overwritten);
 
             if (!overwritten.empty()) {
@@ -250,7 +250,7 @@ namespace {
                 foot = growFootprint(*foot, rRhs, isotropic);
             }
 
-            std::set<int> overwritten;
+            std::set<boost::uint64_t> overwritten;
             foot->insertIntoImage(*idImage, id, true, lhsIdMask, &overwritten);
 
             if (!overwritten.empty()) {
@@ -278,23 +278,23 @@ namespace {
 
             idFinder.apply(*foot);      // find the (mangled) [lr]hsFootprint IDs that contribute to foot
 
-            std::set<int> lhsFootprintIndxs, rhsFootprintIndxs; // indexes into [lr]hsFootprints
+            std::set<boost::uint64_t> lhsFootprintIndxs, rhsFootprintIndxs; // indexes into [lr]hsFootprints
 
             for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
                      idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
                 unsigned int indx = *idptr;
                 if ((indx & lhsIdMask) > 0) {
-                    int i = (indx & lhsIdMask) - 1;
+                    boost::uint64_t i = (indx & lhsIdMask) - 1;
                     lhsFootprintIndxs.insert(i);
                     /*
                      * Now allow for Footprints that vanished beneath this one
                      */
                     OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
                     if (mapPtr != overwrittenIds.end()) {
-                        std::set<int> &overwritten = mapPtr->second;
+                        std::set<boost::uint64_t> &overwritten = mapPtr->second;
 
-                        for (std::set<int>::iterator ptr = overwritten.begin(),
-                                                     end = overwritten.end(); ptr != end; ++ptr){
+                        for (std::set<boost::uint64_t>::iterator ptr = overwritten.begin(),
+                                 end = overwritten.end(); ptr != end; ++ptr){
                             lhsFootprintIndxs.insert((*ptr & lhsIdMask) - 1);
                         }
                     }
@@ -302,17 +302,17 @@ namespace {
                 indx >>= lhsIdNbit;
 
                 if (indx > 0) {
-                    int i = indx - 1;
+                    boost::uint64_t i = indx - 1;
                     rhsFootprintIndxs.insert(i);
                     /*
                      * Now allow for Footprints that vanished beneath this one
                      */
                     OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
                     if (mapPtr != overwrittenIds.end()) {
-                        std::set<int> &overwritten = mapPtr->second;
+                        std::set<boost::uint64_t> &overwritten = mapPtr->second;
 
-                        for (std::set<int>::iterator ptr = overwritten.begin(),
-                                                     end = overwritten.end(); ptr != end; ++ptr) {
+                        for (std::set<boost::uint64_t>::iterator ptr = overwritten.begin(),
+                                 end = overwritten.end(); ptr != end; ++ptr) {
                             rhsFootprintIndxs.insert(*ptr - 1);
                         }
                     }
@@ -324,9 +324,9 @@ namespace {
              */
             Footprint::PeakList &peaks = foot->getPeaks();
 
-            for (std::set<int>::iterator ptr = lhsFootprintIndxs.begin(),
+            for (std::set<boost::uint64_t>::iterator ptr = lhsFootprintIndxs.begin(),
                      end = lhsFootprintIndxs.end(); ptr != end; ++ptr) {
-                unsigned int i = *ptr;
+                boost::uint64_t i = *ptr;
                 assert (i < lhsFootprints.size());
                 Footprint::PeakList const& oldPeaks = lhsFootprints[i]->getPeaks();
 
@@ -335,9 +335,9 @@ namespace {
                 std::inplace_merge(peaks.begin(), peaks.begin() + nold, peaks.end(), SortPeaks());
             }
 
-            for (std::set<int>::iterator ptr = rhsFootprintIndxs.begin(),
+            for (std::set<boost::uint64_t>::iterator ptr = rhsFootprintIndxs.begin(),
                      end = rhsFootprintIndxs.end(); ptr != end; ++ptr) {
-                unsigned int i = *ptr;
+                boost::uint64_t i = *ptr;
                 assert (i < rhsFootprints.size());
                 Footprint::PeakList const& oldPeaks = rhsFootprints[i]->getPeaks();
 
@@ -1424,17 +1424,17 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  * \returns an image::Image::Ptr
  */
 template<typename ImagePixelT, typename MaskPixelT>
-typename image::Image<boost::uint16_t>::Ptr
+PTR(image::Image<detection::FootprintIdPixel>)
 detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(
         bool const relativeIDs          ///< Use IDs starting at 0 (rather than the ones in the Footprint%s)
-                                                                 )
+                                                                 ) const
 {
-    typename image::Image<boost::uint16_t>::Ptr im(
-        new image::Image<boost::uint16_t>(_region)
+    typename image::Image<detection::FootprintIdPixel>::Ptr im(
+        new image::Image<detection::FootprintIdPixel>(_region)
     );
     *im = 0;
 
-    int id = 0;
+    detection::FootprintIdPixel id = 0;
     for (FootprintList::const_iterator fiter = _footprints->begin(); 
          fiter != _footprints->end(); fiter++
     ) {
