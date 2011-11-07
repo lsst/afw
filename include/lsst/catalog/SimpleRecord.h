@@ -16,13 +16,13 @@ struct TableStorage;
 
 } // namespace detail
 
-class SimpleTable;
-
-class Aux {
+class RecordAux {
 public:
-    typedef boost::shared_ptr<Aux> Ptr;
-    virtual ~Aux() {}
+    typedef boost::shared_ptr<RecordAux> Ptr;
+    virtual ~RecordAux() {}
 };
+
+class SimpleTable;
 
 class SimpleRecord {
 public:
@@ -37,7 +37,8 @@ public:
 
     template <typename T> void unset(Key<T> const & key) const;
 
-    SimpleRecord(SimpleRecord const & other) : _buf(other._buf), _aux(other._aux), _storage(other._storage) {}
+    SimpleRecord(SimpleRecord const & other)
+        : _buf(other._buf), _aux(other._aux), _storage(other._storage) {}
 
     SimpleRecord & operator=(SimpleRecord const & other) {
         _buf = other._buf;
@@ -46,22 +47,28 @@ public:
         return *this;
     }
 
-    Aux::Ptr getAux() const { return _aux; }
-
     ~SimpleRecord();
+
+protected:
+
+    RecordAux::Ptr getAux() const { return _aux; }
 
 private:
 
     friend class SimpleTable;
 
-    SimpleRecord(char * buf, Aux::Ptr const & aux, boost::shared_ptr<detail::TableStorage> const & storage) :
+    SimpleRecord(
+        char * buf,
+        RecordAux::Ptr const & aux,
+        boost::shared_ptr<detail::TableStorage> const & storage
+    ) :
         _buf(reinterpret_cast<char*>(buf)), _aux(aux), _storage(storage)
     {}
 
     void initialize() const;
 
     char * _buf;
-    Aux::Ptr _aux;
+    RecordAux::Ptr _aux;
     boost::shared_ptr<detail::TableStorage> _storage;
 };
 

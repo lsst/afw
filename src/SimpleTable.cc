@@ -28,7 +28,7 @@ struct Block {
 
 struct RecordPair {
     char * buf;
-    Aux::Ptr aux;
+    RecordAux::Ptr aux;
 };
 
 struct UnsetField {
@@ -49,6 +49,7 @@ struct TableStorage : private boost::noncopyable {
     std::vector<RecordPair> records;
     int defaultBlockSize;
     char * consolidated;
+    TableAux::Ptr aux;
 
     void addBlock(int recordCount) {
         blocks.push_back(Block(recordCount * layout.getRecordSize()));
@@ -59,8 +60,8 @@ struct TableStorage : private boost::noncopyable {
         }
     }
 
-    TableStorage(Layout const & layout_, int defaultBlockSize_) :
-        layout(layout_), defaultBlockSize(defaultBlockSize_), consolidated(0)
+    TableStorage(Layout const & layout_, int defaultBlockSize_, TableAux::Ptr const & aux_) :
+        layout(layout_), defaultBlockSize(defaultBlockSize_), consolidated(0), aux(aux_)
     {}
 
 };
@@ -88,7 +89,11 @@ bool SimpleTable::isConsolidated() const {
 ColumnView SimpleTable::consolidate() {
     if (!_storage->consolidated) {
         boost::shared_ptr<detail::TableStorage> newStorage =
-            boost::make_shared<detail::TableStorage>(_storage->layout, _storage->defaultBlockSize);
+            boost::make_shared<detail::TableStorage>(
+                _storage->layout,
+                _storage->defaultBlockSize,
+                _storage->aux
+            );
         newStorage->addBlock(_storage->records.size());
         newStorage->records.reserve(_storage->records.size());
         detail::Block & block = newStorage->blocks.back();
@@ -138,7 +143,7 @@ void SimpleTable::erase(int index) {
     }
 }
 
-SimpleRecord SimpleTable::append(Aux::Ptr const & aux) {
+SimpleRecord SimpleTable::append(RecordAux::Ptr const & aux) {
     if (_storage->blocks.empty() || _storage->blocks.back().isFull()) {
         _storage->addBlock(_storage->defaultBlockSize);
     }
@@ -150,10 +155,28 @@ SimpleRecord SimpleTable::append(Aux::Ptr const & aux) {
     return result;
 }
 
-SimpleTable::SimpleTable(Layout const & layout, int defaultBlockSize, int capacity) :
-    _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize))
+SimpleTable::SimpleTable(
+    Layout const & layout,
+    int defaultBlockSize,
+    int capacity,
+    TableAux::Ptr const & aux
+) :
+    _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize, aux))
 {
     if (capacity) _storage->addBlock(capacity);
 }
+
+SimpleTable::SimpleTable(
+    Layout const & layout,
+    int defaultBlockSize,
+    TableAux::Ptr const & aux
+) : _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize, aux))
+{}
+
+SimpleTable::SimpleTable(
+    Layout const & layout,
+    int defaultBlockSize
+) : _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize, TableAux::Ptr()))
+{}
 
 }} // namespace lsst::catalog

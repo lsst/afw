@@ -10,6 +10,12 @@
 
 namespace lsst { namespace catalog {
 
+class TableAux {
+public:
+    typedef boost::shared_ptr<TableAux> Ptr;
+    virtual ~TableAux() {}
+};
+
 class SimpleTable {
 public:
 
@@ -25,13 +31,30 @@ public:
 
     void erase(int index);
 
-    SimpleRecord append(Aux::Ptr const & aux = Aux::Ptr());
+    SimpleRecord append(RecordAux::Ptr const & aux = RecordAux::Ptr());
 
-    SimpleTable(Layout const & layout, int defaultBlockSize, int capacity=0);
+    SimpleTable(
+        Layout const & layout,
+        int defaultBlockSize,
+        int capacity,
+        TableAux::Ptr const & aux = TableAux::Ptr()
+    );
+
+    SimpleTable(
+        Layout const & layout,
+        int defaultBlockSize,
+        TableAux::Ptr const & aux
+    );
+
+    SimpleTable(Layout const & layout, int defaultBlockSize);
 
     SimpleTable(SimpleTable const & other) : _storage(other._storage) {}
 
     ~SimpleTable() {}
+
+protected:
+
+    TableAux::Ptr getAux() const;
 
 private:
     boost::shared_ptr<detail::TableStorage> _storage;
