@@ -134,8 +134,17 @@ public:
  * Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
  *
  */
-afwCoord::Coord const GalacticPoleInFk5 = afwCoord::Coord(192.85950 * afwGeom::degrees, 27.12825 * afwGeom::degrees, 2000.0); // C&O
-afwCoord::Coord const Fk5PoleInGalactic = afwCoord::Coord(122.93200 * afwGeom::degrees, 27.12825 * afwGeom::degrees, 2000.0); // C&O
+afwCoord::Coord const& GalacticPoleInFk5()
+{
+    static afwCoord::Coord pole(192.85950*afwGeom::degrees, 27.12825*afwGeom::degrees, 2000.0); // C&O
+    return pole;
+}
+
+afwCoord::Coord const& Fk5PoleInGalactic()
+{
+    static afwCoord::Coord pole(122.93200 * afwGeom::degrees, 27.12825 * afwGeom::degrees, 2000.0); // C&O
+    return pole;
+}
 
 /**
  * @brief Compute the mean Sidereal Time at Greenwich
@@ -806,7 +815,7 @@ afwCoord::GalacticCoord afwCoord::Fk5Coord::toGalactic() const {
         c = *this;
     }
     
-    Coord ct = c.transform(Fk5PoleInGalactic, GalacticPoleInFk5);
+    Coord ct = c.transform(Fk5PoleInGalactic(), GalacticPoleInFk5());
     return GalacticCoord(ct.getLongitude(), ct.getLatitude());
     
 }
@@ -967,7 +976,7 @@ void afwCoord::GalacticCoord::reset(afwGeom::Angle const longitudeDeg, afwGeom::
 afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5(double const epoch) const {
     // transform to fk5
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
-    Coord c = transform(GalacticPoleInFk5, Fk5PoleInGalactic);
+    Coord c = transform(GalacticPoleInFk5(), Fk5PoleInGalactic());
     return Fk5Coord(c.getLongitude(), c.getLatitude(), 2000.0).precess(epoch);
 }
 /**
