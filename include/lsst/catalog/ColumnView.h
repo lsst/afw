@@ -24,7 +24,7 @@ public:
     IsNullColumn isNull(Key<T> const & key) const;
         
     template <typename T>
-    typename ndarray::Array<T,1> operator[](Key<T> const & key) const;
+    typename ndarray::Array<T const,1> operator[](Key<T> const & key) const;
 
     ~ColumnView();
 

@@ -7,6 +7,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "boost/type_traits/is_same.hpp"
+#include "boost/mpl/if.hpp"
 #include "boost/mpl/vector.hpp"
 #include "boost/preprocessor/punctuation/paren.hpp"
 #include "Eigen/Core"
@@ -35,25 +37,34 @@
 #define CATALOG_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() CATALOG_FIELD_TYPES BOOST_PP_RPAREN()
 
 #define FIELD_SIMPLE_PUBLIC_INTERFACE(SIZE)                             \
+    /** @brief Standard constructor for a field with static size. */                       \
     Field(char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL) \
         : FieldBase(name, doc, canBeNull) {}                            \
+    /** @brief Construct a typed field from a non-typed FieldBase. */   \
     explicit Field(FieldBase const & base) : FieldBase(base) {}         \
+    /** @brief Return the number of elements in a compound or array field. */    \
     int getElementCount() const { return SIZE; }                        \
+    /** @brief Return a non-template struct that describes the Field, including its type. */ \
     FieldDescription describe() const {                                 \
         return FieldDescription(this->name, this->doc, this->getTypeString()); \
     }                                                                   \
+    /** @brief Return a string description of the field type. */        \
     std::string getTypeString() const
 
 #define FIELD_SIZED_PUBLIC_INTERFACE(SIZE)                              \
+    /** @brief Standard constructor for a field with dynamic size. */   \
     Field(int size_, char const * name, char const * doc, NullEnum canBeNull=ALLOW_NULL) \
         : FieldBase(name, doc, canBeNull), size(size_) {}               \
+    /** @brief Construct a typed field from a size and a non-typed FieldBase. */   \
     Field(int size_, FieldBase const & base) : FieldBase(base), size(size_) {} \
+    /** @brief Return the number of elements in a compound or array field. */    \
     int getElementCount() const { return SIZE; }                        \
+    /** @brief Return a non-template struct that describes the Field, including its type. */ \
     FieldDescription describe() const {                                 \
         return FieldDescription(this->name, this->doc, this->getTypeString()); \
     }                                                                   \
-    std::string getTypeString() const;                                  \
-    int size
+    /** @brief Return a string description of the field type. */        \
+    std::string getTypeString() const
 
 
 namespace lsst { namespace catalog {
@@ -69,11 +80,19 @@ struct FieldAccess;
 
 } // namespace detail
 
-struct NoFieldData {};
 
+/**
+ *  @brief A simple class that defines and documents a field in a table.
+ *
+ *  The default Field template should be used for scalar numeric POD types.
+ */
 template <typename T>
 struct Field : public FieldBase {
+
+    /// @brief The type returned for an individual record.
     typedef T Value;
+
+    /// @brief The type of a single element if this were a compound field (which it isn't).
     typedef T Element;
 
     FIELD_SIMPLE_PUBLIC_INTERFACE(1);
@@ -89,9 +108,25 @@ private:
     void setValue(char * buf, T value) const { *reinterpret_cast<T*>(buf) = value; }
 };
 
+/**
+ *  @brief A simple class that defines and documents a field in a table.
+ *
+ *  This specialization is for compound point fields.  It uses lsst::afw::geom::Point2I or Point2D
+ *  as a value type.  Note that we use Point2D even with Point<float>, so precision may be lost when
+ *  setting a Point<float> field with a Point2D.
+ */
 template <typename U>
 struct Field< Point<U> > : public FieldBase {
-    typedef afw::geom::Point<U> Value;
+
+    /// @brief The type returned for an individual record.
+    typedef afw::geom::Point<
+        typename boost::mpl::if_<
+            boost::is_same<U,float>,
+            double, U
+            >::type
+        > Value;
+
+    /// @brief The type of a single element of the compound field.
     typedef U Element;
 
     FIELD_SIMPLE_PUBLIC_INTERFACE(2);
@@ -112,9 +147,20 @@ private:
     }
 };
 
+/**
+ *  @brief A simple class that defines and documents a field in a table.
+ *
+ *  This specialization is for compound shape fields.  It uses lsst::afw::ellipses::Quadrupole
+ *  as a value type.  Note that precision may be lost when setting a Shape<float> field with
+ *  a Quadrupole.
+ */
 template <typename U>
 struct Field< Shape<U> > : public FieldBase {
+
+    /// @brief The type returned for an individual record.
     typedef afw::geom::ellipses::Quadrupole Value;
+
+    /// @brief The type of a single element of the compound field.
     typedef U Element;
 
     FIELD_SIMPLE_PUBLIC_INTERFACE(3);
@@ -138,12 +184,28 @@ private:
     }
 };
 
+/**
+ *  @brief A simple class that defines and documents a field in a table.
+ *
+ *  This specialization is for array fields.  The array size is part of the field itself;
+ *  different records may not have different array sizes (but the size does not need to be
+ *  known at compile time).  Array values for individual records are Eigen::Array objects
+ *  (or as an optimization, a const Eigen::Map behaving like and Eigen::Array).  Array
+ *  fields can be set with any dense 1-d Eigen object.
+ */
 template <typename U> 
 struct Field< Array<U> > : public FieldBase {
+
+    /// @brief The type returned for an individual record.
     typedef Eigen::Map< const Eigen::Array<U,Eigen::Dynamic,1> > Value;
+
+    /// @brief The type of a single element of the array.
     typedef U Element;
 
     FIELD_SIZED_PUBLIC_INTERFACE(size);
+
+    /// @brief Number of elements in the array.
+    int size;
 
 private:
 
@@ -168,12 +230,33 @@ private:
     }
 };
 
+/**
+ *  @brief A simple class that defines and documents a field in a table.
+ *
+ *  This specialization is for covariance matrices associated with array fields.  The size
+ *  is part of the field itself; different records may not have different sizes (but the
+ *  size does not need to be known at compile time).
+ *
+ *  The covariance matrix is symmetric, and stored as a pack ed array with
+ *  (size * (size+1) / 2) elements.
+ *
+ *  Covariance values for individual records are Eigen::Matrix objects.  If Eigen
+ *  adds support for symmetric packed storage, we may return a Map instead.  Any Eigen
+ *  matrix expression can be used to set the field.
+ */
 template <typename U>
 struct Field< Covariance<U> > : public FieldBase {
+
+    /// @brief The type returned for an individual record.
     typedef Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> Value;
+
+    /// @brief The type of a single element of the covariance matrix.
     typedef U Element;
 
     FIELD_SIZED_PUBLIC_INTERFACE(detail::computeCovarianceSize(size));
+
+    /// @brief Number of rows or columns of the (square) covariance matrix.
+    int size;
 
 private:
 
@@ -199,9 +282,24 @@ private:
     }
 };
 
+/**
+ *  @brief A simple class that defines and documents a field in a table.
+ *
+ *  This specialization is for covariance matrices associated with point fields.
+ *
+ *  The covariance matrix is symmetric, and stored as a packed 3-element array.
+ *
+ *  Covariance values for individual records are Eigen::Matrix objects.  If Eigen
+ *  adds support for symmetric packed storage, we may return a Map instead.  Any Eigen
+ *  matrix expression can be used to set the field.
+ */
 template <typename U>
 struct Field< Covariance< Point<U> > > : public FieldBase {
+
+    /// @brief The type returned for an individual record.
     typedef Eigen::Matrix<U,2,2> Value;
+
+    /// @brief The type of a single element of the covariance matrix.
     typedef U Element;
 
     FIELD_SIMPLE_PUBLIC_INTERFACE(3);
@@ -225,9 +323,24 @@ private:
     }
 };
 
+/**
+ *  @brief A simple class that defines and documents a field in a table.
+ *
+ *  This specialization is for covariance matrices associated with point fields.
+ *
+ *  The covariance matrix is symmetric, and stored as a packed 6-element array.
+ *
+ *  Covariance values for individual records are Eigen::Matrix objects.  If Eigen
+ *  adds support for symmetric packed storage, we may return a Map instead.  Any Eigen
+ *  matrix expression can be used to set the field.
+ */
 template <typename U>
 struct Field< Covariance< Shape<U> > > : public FieldBase {
+
+    /// @brief The type returned for an individual record.
     typedef Eigen::Matrix<U,3,3> Value;
+
+    /// @brief The type of a single element of the covariance matrix.
     typedef U Element;
 
     FIELD_SIMPLE_PUBLIC_INTERFACE(6);

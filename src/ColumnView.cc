@@ -63,8 +63,8 @@ ColumnView::IsNullColumn ColumnView::isNull(Key<T> const & key) const {
 }
 
 template <typename T>
-typename ndarray::Array<T,1> ColumnView::operator[](Key<T> const & key) const {
-    return ndarray::detail::ArrayAccess< ndarray::Array<T,1> >::construct(
+typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
+    return ndarray::detail::ArrayAccess< ndarray::Array<T const,1> >::construct(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + detail::KeyAccess::getData(key).offset
         ),
@@ -84,7 +84,7 @@ ColumnView::ColumnView(
     template ColumnView::IsNullColumn ColumnView::isNull(Key< elem > const &) const;
 
 #define INSTANTIATE_COLUMNVIEW_SCALAR(r, data, elem)                    \
-    template ndarray::Array< elem, 1> ColumnView::operator[](Key< elem > const &) const;
+    template ndarray::Array< elem const, 1> ColumnView::operator[](Key< elem > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_ALL, _,

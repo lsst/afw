@@ -12,7 +12,7 @@ template <typename T>
 Key<typename Field<T>::Element> KeyAccess::extractElement(Key<T> const & key, int offset) {
     typedef typename Field<T>::Element U;
     boost::shared_ptr< KeyData<U> > data = boost::make_shared< KeyData<U> >(Field<U>(key.getField()));
-    data->offset = key._data->offset + offset;
+    data->offset = key._data->offset + sizeof(U) * offset;
     data->nullOffset = key._data->nullOffset;
     data->nullMask = key._data->nullMask;
     return Key<U>(data);
