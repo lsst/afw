@@ -151,14 +151,16 @@ public:
     void normalize();
     bool isNormalized() const {return _normalized;}
 
-    void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
-                         int const id,
+    template<typename PixelT>
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+                         boost::uint64_t const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
-    void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
-                         int const id,
+    template<typename PixelT>
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+                         boost::uint64_t const id,
                          bool const overwriteId, long const idMask,
-                         std::set<int> *oldIds,
+                         typename std::set<boost::uint64_t> *oldIds,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
 

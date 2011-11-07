@@ -35,6 +35,13 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+/// Pixel type for FootprintSet::insertIntoImage()
+///
+/// This is independent of the template parameters for FootprintSet, and
+/// including it within FootprintSet makes it difficult for SWIG to interpret
+/// the type.
+typedef boost::uint64_t FootprintIdPixel;
+
 /************************************************************************************************************/
 /*!
  * \brief A set of Footprints, associated with a MaskedImage
@@ -101,9 +108,9 @@ public:
      */
     geom::Box2I const getRegion() const { return _region; } 
 
-    typename image::Image<boost::uint16_t>::Ptr insertIntoImage(
+    PTR(image::Image<FootprintIdPixel>) insertIntoImage(
         const bool relativeIDs
-    );
+        ) const;
     void setMask(
         image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
         std::string const& planeName   ///< Here's the name of the mask plane to fit
