@@ -48,9 +48,9 @@ class Key< Shape<U> > {
 public:
     KEY_STANDARD_PUBLIC_INTERFACE(Shape<U>);
 
-    Key<U> getXX() const;
-    Key<U> getYY() const;
-    Key<U> getXY() const;
+    Key<U> getIXX() const;
+    Key<U> getIYY() const;
+    Key<U> getIXY() const;
 
 private:
     KEY_STANDARD_PRIVATE_INTERFACE(Shape<U>);

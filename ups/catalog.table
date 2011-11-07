@@ -1,4 +1,5 @@
 setupRequired(ndarray >= 4.6.0.0)
+setupRequired(afw >= 4.6.0.0)
 setupRequired(pex_exceptions >= 4.6.0.0)
 
 #envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)

@@ -12,10 +12,10 @@
 #include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/ellipses.h"
 #include "lsst/catalog/FieldBase.h"
 #include "lsst/catalog/FieldDescription.h"
-#include "lsst/catalog/Point.h"
-#include "lsst/catalog/Shape.h"
 #include "lsst/catalog/Covariance.h"
 
 #define CATALOG_SCALAR_FIELD_TYPE_N 3
@@ -58,6 +58,8 @@
 
 namespace lsst { namespace catalog {
 
+template <typename T> class Point;
+template <typename T> class Shape;
 template <typename T> class Array;
 template <typename T> class Covariance;
 
@@ -89,7 +91,7 @@ private:
 
 template <typename U>
 struct Field< Point<U> > : public FieldBase {
-    typedef Point<U> Value;
+    typedef afw::geom::Point<U> Value;
     typedef U Element;
 
     FIELD_SIMPLE_PUBLIC_INTERFACE(2);
@@ -104,15 +106,15 @@ private:
         return Value(*reinterpret_cast<U*>(buf), *(reinterpret_cast<U*>(buf) + 1));
     }
 
-    void setValue(char * buf, Point<U> const & value) const {
-        reinterpret_cast<U*>(buf)[0] = value.x;
-        reinterpret_cast<U*>(buf)[1] = value.y;
+    void setValue(char * buf, Value const & value) const {
+        reinterpret_cast<U*>(buf)[0] = value.getX();
+        reinterpret_cast<U*>(buf)[1] = value.getY();
     }
 };
 
 template <typename U>
 struct Field< Shape<U> > : public FieldBase {
-    typedef Shape<U> Value;
+    typedef afw::geom::ellipses::Quadrupole Value;
     typedef U Element;
 
     FIELD_SIMPLE_PUBLIC_INTERFACE(3);
@@ -129,10 +131,10 @@ private:
         );
     }
 
-    void setValue(char * buf, Shape<U> const & value) const {
-        reinterpret_cast<U*>(buf)[0] = value.xx;
-        reinterpret_cast<U*>(buf)[1] = value.yy;
-        reinterpret_cast<U*>(buf)[2] = value.xy;
+    void setValue(char * buf, Value const & value) const {
+        reinterpret_cast<U*>(buf)[0] = value.getIXX();
+        reinterpret_cast<U*>(buf)[1] = value.getIYY();
+        reinterpret_cast<U*>(buf)[2] = value.getIXY();
     }
 };
 

@@ -27,13 +27,13 @@ template <typename U>
 Key<U> Key< Point<U> >::getY() const { return detail::KeyAccess::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> Key< Shape<U> >::getXX() const { return detail::KeyAccess::extractElement(*this, 0); }
+Key<U> Key< Shape<U> >::getIXX() const { return detail::KeyAccess::extractElement(*this, 0); }
 
 template <typename U>
-Key<U> Key< Shape<U> >::getYY() const { return detail::KeyAccess::extractElement(*this, 1); }
+Key<U> Key< Shape<U> >::getIYY() const { return detail::KeyAccess::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> Key< Shape<U> >::getXY() const { return detail::KeyAccess::extractElement(*this, 2); }
+Key<U> Key< Shape<U> >::getIXY() const { return detail::KeyAccess::extractElement(*this, 2); }
 
 template <typename U>
 Key<U> Key< Array<U> >::at(int i) const {
