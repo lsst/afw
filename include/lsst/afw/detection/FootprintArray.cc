@@ -122,7 +122,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
     geom::Point2I const & origin
 ) {
     ndarray::Vector<int,N-1> shape 
-        = ndarray::concatenate(fp.getArea(), src.template getShape().template last<N-2>());
+        = ndarray::concatenate(fp.getArea(), src.getShape().template last<N-2>());
     std::cerr << "shape: " << shape << "\n";
     ndarray::Array<typename boost::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
     flattenArray(fp, src, dest, origin);
@@ -212,7 +212,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
             ndarray::makeVector(box.getHeight(), box.getWidth()), 
-            src.template getShape().template last<N-1>()
+            src.getShape().template last<N-1>()
         )
     );
     dest.deep() = 0.0;
