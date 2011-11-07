@@ -182,7 +182,7 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
     }
     unsigned int pixels = cols * rows * planes;
     MaskPixelT* data = ip->_vwImagePtr->data();
-    ar & boost::serialization::make_binary_object(data, pixels * sizeof(MaskPixelT));
+    ar & boost::serialization::make_array(data, pixels);
     execTrace("MaskFormatter delegateSerialize end");
 }
 

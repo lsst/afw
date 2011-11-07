@@ -393,6 +393,7 @@ namespace image {
     template<typename PixelT>
     class Image : public ImageBase<PixelT> {
     public:
+        template<typename, typename, typename> friend class MaskedImage;
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
 
