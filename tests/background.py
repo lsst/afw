@@ -181,8 +181,8 @@ class BackgroundTestCase(unittest.TestCase):
 
     def testTicket1781(self):
         # make an unusual-sized image
-        nx = 511
-        ny = 63
+        nx = 526
+        ny = 154
 
         parabimg = self.getParabolaImage(nx, ny)
 
