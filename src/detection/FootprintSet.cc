@@ -66,7 +66,7 @@ namespace geom = lsst::afw::geom;
 namespace {
     /// Don't let doxygen see this block  \cond
 
-    typedef boost::uint16_t IdPixelT;    // Type of temporary Images used in merging Footprints
+    typedef boost::uint64_t IdPixelT;    // Type of temporary Images used in merging Footprints
 
     struct Threshold_traits {
     };
