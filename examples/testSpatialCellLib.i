@@ -48,9 +48,7 @@ Various swigged-up C++ classes for testing
 %import "lsst/afw/image/imageLib.i"
 %import "lsst/afw/math/mathLib.i"
 
-SWIG_SHARED_PTR_DERIVED(ExampleCandidate,
-                        lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> >,
-                        ExampleCandidate);
+%shared_ptr(ExampleCandidate);
 
 %include "testSpatialCell.h"
 

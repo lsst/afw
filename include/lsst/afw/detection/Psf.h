@@ -6,6 +6,8 @@
 //
 #include <string>
 #include <typeinfo>
+#include "boost/static_assert.hpp"
+#include "boost/type_traits/is_same.hpp"
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
@@ -42,7 +44,11 @@ public:
     typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
 
     typedef lsst::afw::math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
-    typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by computeImage
+    // SWIG doesn't understand typedef lsst::afw::image::Image<Pixel> Image;
+#if !defined(SWIG)
+    BOOST_STATIC_ASSERT((boost::is_same<double, Pixel>::value));
+#endif
+    typedef lsst::afw::image::Image<double> Image;
 
     /// ctor
     Psf() : lsst::daf::base::Citizen(typeid(this)) {}

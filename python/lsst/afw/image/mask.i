@@ -26,20 +26,7 @@
 #   include "lsst/afw/image/Mask.h"
 %}
 
-%ignore lsst::afw::image::Mask::operator();
-
 /************************************************************************************************************/
-//
-// Must go Before the %include
-//
-// N.b. assumes that the corresponding image has been declared to swig; otherwise
-// you'll need something like
-//    SWIG_SHARED_PTR(NAME##TYPE##Base, lsst::afw::image::ImageBase<PIXEL_TYPE>);
-//
-//
-%define %maskPtr(NAME, TYPE, PIXEL_TYPE...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Mask<PIXEL_TYPE>);
-%enddef
 
 //
 // Must go After the %include
@@ -117,7 +104,11 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lss
 /************************************************************************************************************/
 %apply int { unsigned short };
 
-%maskPtr(Mask, U, boost::uint16_t);
+//
+// Must go Before the %include
+//
+%ignore lsst::afw::image::Mask<boost::uint16_t>::operator();
+%shared_ptr(lsst::afw::image::Mask<boost::uint16_t>);
 
 %include "lsst/afw/image/Mask.h"
 

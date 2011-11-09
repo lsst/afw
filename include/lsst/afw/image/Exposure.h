@@ -267,13 +267,14 @@ private:
 /**
  * A function to return an Exposure of the correct type (cf. std::make_pair)
  */
-    template<typename MaskedImageT>
-    typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr makeExposure(MaskedImageT & mimage, ///< the Exposure's image
-                                                                             Wcs const& wcs=NoWcs ///< the Exposure's WCS
-                                                                            ) {
-        return typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr(
-                                                            new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs));
-    }
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+typename Exposure<ImagePixelT, MaskPixelT, VariancePixelT>::Ptr makeExposure(
+    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage, ///< the Exposure's image
+    Wcs const & wcs=NoWcs ///< the Exposure's WCS
+) {
+    return typename Exposure<ImagePixelT, MaskPixelT, VariancePixelT>::Ptr(
+        new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));
+}
 
 }}} // lsst::afw::image
 

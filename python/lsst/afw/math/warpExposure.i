@@ -32,12 +32,9 @@
 //
 // These definitions must go before you %include the .h file; the %templates must go after
 //
-SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel,
-    lsst::afw::math::BilinearWarpingKernel);
-SWIG_SHARED_PTR_DERIVED(LanczosWarpingKernel, lsst::afw::math::SeparableKernel,
-    lsst::afw::math::LanczosWarpingKernel);
-SWIG_SHARED_PTR_DERIVED(NearestWarpingKernel, lsst::afw::math::SeparableKernel,
-    lsst::afw::math::NearestWarpingKernel);
+%shared_ptr(lsst::afw::math::BilinearWarpingKernel);
+%shared_ptr(lsst::afw::math::LanczosWarpingKernel);
+%shared_ptr(lsst::afw::math::NearestWarpingKernel);
 
 %include "lsst/afw/math/warpExposure.h"
 

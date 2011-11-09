@@ -28,11 +28,13 @@
 #include <sstream>
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
+#include "lsst/daf/base.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
 
 using namespace std;
 
+namespace dafBase = lsst::daf::base;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;

@@ -37,14 +37,14 @@
 // already in image.i.
 // %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
-SWIG_SHARED_PTR(Peak,      lsst::afw::detection::Peak);
-SWIG_SHARED_PTR(Footprint, lsst::afw::detection::Footprint);
-SWIG_SHARED_PTR(Span,      lsst::afw::detection::Span);
-SWIG_SHARED_PTR(FootprintSetU, lsst::afw::detection::FootprintSet<boost::uint16_t, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintSetI, lsst::afw::detection::FootprintSet<int, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintSetF, lsst::afw::detection::FootprintSet<float, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr >);
+%shared_ptr(lsst::afw::detection::Peak);
+%shared_ptr(lsst::afw::detection::Footprint);
+%shared_ptr(lsst::afw::detection::Span);
+%shared_ptr(lsst::afw::detection::FootprintSet<boost::uint16_t, lsst::afw::image::MaskPixel>);
+%shared_ptr(lsst::afw::detection::FootprintSet<int, lsst::afw::image::MaskPixel>);
+%shared_ptr(lsst::afw::detection::FootprintSet<float, lsst::afw::image::MaskPixel>);
+%shared_ptr(lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
+%shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
@@ -67,9 +67,9 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
     %template(intersectMask) intersectMask<lsst::afw::image::MaskPixel>;
 }
 
-%template(PeakContainerT)      std::vector<lsst::afw::detection::Peak::Ptr>;
-%template(SpanContainerT)      std::vector<lsst::afw::detection::Span::Ptr>;
-%template(FootprintContainerT) std::vector<lsst::afw::detection::Footprint::Ptr>;
+%template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
+%template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Span> >;
+%template(FootprintContainerT) std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
 
 %define %imageOperations(NAME, PIXEL_TYPE)
     %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;

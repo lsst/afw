@@ -34,8 +34,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
-#include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/Mask.h"
+#include "lsst/pex/logging.h"
+#include "lsst/afw/image.h"
 #include "lsst/afw/cameraGeom.h"
 %}
 
@@ -47,15 +47,13 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %lsst_exceptions();
 
-SWIG_SHARED_PTR(DetectorPtr, lsst::afw::cameraGeom::Detector);
-
-SWIG_SHARED_PTR_DERIVED(AmpPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Amp);
-SWIG_SHARED_PTR(ElectronicParamsPtr, lsst::afw::cameraGeom::ElectronicParams);
-SWIG_SHARED_PTR_DERIVED(DetectorMosaicPtr, lsst::afw::cameraGeom::Detector,
-                        lsst::afw::cameraGeom::DetectorMosaic);
-SWIG_SHARED_PTR_DERIVED(CcdPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Ccd);
-SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Raft);
-SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Camera);
+%shared_ptr(lsst::afw::cameraGeom::Detector);
+%shared_ptr(lsst::afw::cameraGeom::Amp);
+%shared_ptr(lsst::afw::cameraGeom::ElectronicParams);
+%shared_ptr(lsst::afw::cameraGeom::DetectorMosaic);
+%shared_ptr(lsst::afw::cameraGeom::Ccd);
+%shared_ptr(lsst::afw::cameraGeom::Raft);
+%shared_ptr(lsst::afw::cameraGeom::Camera);
 
 %template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
@@ -100,6 +98,7 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
     cast_Raft(lsst::afw::cameraGeom::Detector::Ptr detector) {
         return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Raft>(detector);
     }
+
 %}
 
 %define Instantiate(PIXEL_TYPE...)

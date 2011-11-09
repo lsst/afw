@@ -31,7 +31,7 @@
 %declareNumPyConverters(Eigen::Matrix2d);
 %declareNumPyConverters(Eigen::Matrix3d);
 
-SWIG_SHARED_PTR(LinearTransformPtr, lsst::afw::geom::LinearTransform);
+%shared_ptr(lsst::afw::geom::LinearTransform);
 
 %rename(__mul__) lsst::afw::geom::LinearTransform::operator*;
 %ignore lsst::afw::geom::LinearTransform::operator[];
