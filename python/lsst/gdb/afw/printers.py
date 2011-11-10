@@ -1,20 +1,61 @@
 import gdb
 import math, re
-import argparse
 
 try:
     debug
 except:
     debug = False
 
-class GdbArgumentParser(argparse.ArgumentParser):
-    def parse_args(self, args=None, namespace=None):
-        if args:
+import optparse
+
+class GdbOptionParser(optparse.OptionParser):
+    """A subclass of the standard optparse OptionParser for gdb
+
+GdbOptionParser raises GdbError rather than exiting when asked for help, or
+when given an illegal value. E.g.
+
+parser = gdb.printing.GdbOptionParser("show image")
+parser.add_option("-a", "--all", action="store_true",
+                  help="Display the whole image")
+parser.add_option("-w", "--width", type="int", default=8,
+                  help="Field width for pixels")
+
+opts, args =  parser.parse_args(args)
+"""
+
+    def __init__(self, prog, *args, **kwargs):
+        """
+Like optparse.OptionParser's API, but with an initial command name argument
+"""
+        # OptionParser is an old-style class, so no super
+        if not kwargs.get("prog"):
+            kwargs["prog"] = prog
+        optparse.OptionParser.__init__(self, *args, **kwargs)
+
+    def parse_args(self, args, values=None):
+        """Call OptionParser.parse_args after running gdb.string_to_argv"""
+        if args is None:            # defaults to sys.argv
+            args = ""
+        try:
             args = gdb.string_to_argv(args)
-        return argparse.ArgumentParser.parse_args(self, args, namespace)
-        
-    def exit(self, status=0, msg=None):
-        raise gdb.GdbError(msg)
+        except TypeError:
+            pass
+
+        help = ("-h" in args or "--help" in args)
+        opts, args = optparse.OptionParser.parse_args(self, args, values)
+        opts.help = help
+        if help:
+            args = []
+    
+        return opts, args
+
+    def exit(self, status=0, msg=""):
+        """Raise GdbError rather than exiting"""
+        if status == 0:
+            if msg:
+                print >> sys.stderr, msg
+        else:
+            raise gdb.GdbError(msg)
 
 try:
     import gdb.printing
@@ -148,16 +189,36 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            parser = GdbArgumentParser("show eigen")
-            parser.add_argument("-d", "--dataFmt", default="%.2f", help="Format for values")
-            parser.add_argument("-f", "--formatWidth", type=int, default=8, help="Field width for values")
-            parser.add_argument("-o", "--origin", type=str, nargs="+",
+            parser = GdbOptionParser("show eigen")
+            parser.add_option("-d", "--dataFmt", default="%.2f", help="Format for values")
+            parser.add_option("-f", "--formatWidth", type="int", default=8, help="Field width for values")
+            parser.add_option("-o", "--origin", type="str", nargs="+",
                                 help="Origin of the part of the object to print")
-            parser.add_argument("eigenObject", help="Expression giving Eigen::Matrix/Vector to show")
-            parser.add_argument("nx", help="Width of patch to print", type=int, default=0, nargs="?")
-            parser.add_argument("ny", help="Height of patch to print", type=int, default=0, nargs="?")
+            if False:
+                parser.add_option("eigenObject", help="Expression giving Eigen::Matrix/Vector to show")
+                parser.add_option("nx", help="Width of patch to print", type="int", default=0, nargs="?")
+                parser.add_option("ny", help="Height of patch to print", type="int", default=0, nargs="?")
+                
+                opts =  parser.parse_args(args)
+                if opts.help:
+                    return
+            else:
+                (opts, args) = parser.parse_args(args)
+                if opts.help:
+                    return
+                
+                if not args:
+                    raise gdb.GdbError("Please specify an object")
+                opts.eigenObject = args.pop(0)
 
-            opts =  parser.parse_args(args)
+                opts.nx, opts.ny = 0, 0
+                if args:
+                    opts.nx = int(args.pop(0))
+                if args:
+                    opts.ny = int(args.pop(0))
+
+                if args:
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
 
             var = gdb.parse_and_eval(opts.eigenObject)
 
@@ -257,11 +318,25 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            parser = GdbArgumentParser("show citizen")
-            parser.add_argument("object", help="The object in question")
+            parser = GdbOptionParser("show citizen")
+            if False:
+                parser.add_option("object", help="The object in question")
 
-            opts =  parser.parse_args(args)
+                opts =  parser.parse_args(args)
+                if opts.help:
+                    return
+            else:
+                opts, args =  parser.parse_args(args)
+                if opts.help:
+                    return
+                
+                if not args:
+                    raise gdb.GdbError("Please specify an object")
+                opts.object = args.pop(0)
 
+                if args:
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
+            
             var = gdb.parse_and_eval(opts.object)
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"]
@@ -448,24 +523,43 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            parser = GdbArgumentParser("show image")
-            parser.add_argument("-a", "--all", action="store_true", help="Display the whole image/mask")
-            parser.add_argument("-c", "--center", action="store_true", help="Center the output at (x, y)")
-            parser.add_argument("-o", "--origin", type=str, nargs=2, default=("0", "0"),
+            parser = GdbOptionParser("show image")
+            parser.add_option("-a", "--all", action="store_true", help="Display the whole image/mask")
+            parser.add_option("-c", "--center", action="store_true", help="Center the output at (x, y)")
+            parser.add_option("-o", "--origin", type="str", nargs=2, default=("0", "0"),
                                 help="Print the region starting at (x, y)")
-            parser.add_argument("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
-            parser.add_argument("-f", "--formatWidth", type=int, default=8, help="Field width for values")
-            parser.add_argument("image", help="Expression giving image to show")
-            parser.add_argument("width", help="Width of patch to print", default=1, nargs="?")
-            parser.add_argument("height", help="Height of patch to print", default=1, nargs="?")
+            parser.add_option("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
+            parser.add_option("-f", "--formatWidth", type="int", default=8, help="Field width for values")
 
-            opts =  parser.parse_args(args)
+            if False:
+                parser.add_option("image", help="Expression giving image to show")
+                parser.add_option("width", help="Width of patch to print", default=1, nargs="?")
+                parser.add_option("height", help="Height of patch to print", default=1, nargs="?")
+
+                opts =  parser.parse_args(args)
+                if opts.help:
+                    return
+            else:
+                opts, args =  parser.parse_args(args)
+                if opts.help:
+                    return
+
+                if not args:
+                    raise gdb.GdbError("Please specify an image")
+
+                opts.image = args.pop(0)
+
+                opts.width, opts.height = 1, 1
+                if args:
+                    opts.width = int(args.pop(0))
+                if args:
+                    opts.height = int(args.pop(0))
+
+                if args:
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
 
             x0 = gdb.parse_and_eval(opts.origin[0])
             y0 = gdb.parse_and_eval(opts.origin[1])
-
-            if len(args) < 1:
-                raise gdb.GdbError("Please specify an image")
 
             if opts.all:
                 nx, ny = 0, 0
@@ -477,7 +571,7 @@ try:
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
-            if not re.search(r"^lsst::afw::image::(Image|Mask|MaskedImage)", str(var.type)):
+            if not re.search(r"^(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type)):
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
             if re.search(r"MaskedImage", str(var.type)):
