@@ -69,43 +69,47 @@ typedef mathDetail::KerPixel KerPixel;
 
 bool TryToSelectCudaDevice(afwMath::ConvolutionControl const& convolutionControl)
 {
-    static bool isDeviceSelected=false;
-    static bool isDeviceOk=false;
-    if (isDeviceSelected)
-        return isDeviceOk;
-    isDeviceSelected=true;
+    #if !defined(GPU_BUILD)
+        return false;
+    #else
+        static bool isDeviceSelected=false;
+        static bool isDeviceOk=false;
+        if (isDeviceSelected)
+            return isDeviceOk;
+        isDeviceSelected=true;
 
-    afwMath::ConvolutionControl::DeviceSelection_t devSel;
-    devSel=convolutionControl.getDeviceSelection();
+        afwMath::ConvolutionControl::DeviceSelection_t devSel;
+        devSel=convolutionControl.getDeviceSelection();
 
-    if (devSel!=afwMath::ConvolutionControl::AUTO_GPU_THROW) {
+        if (devSel!=afwMath::ConvolutionControl::AUTO_GPU_THROW) {
 
-        bool done=mathDetail::gpu::SelectPreferredCudaDevice();
-        if (!done) {
-            mathDetail::gpu::AutoSelectCudaDevice();
-            mathDetail::gpu::VerifyCudaDevice();
+            bool done=mathDetail::gpu::SelectPreferredCudaDevice();
+            if (!done) {
+                mathDetail::gpu::AutoSelectCudaDevice();
+                mathDetail::gpu::VerifyCudaDevice();
+            }
+
+            isDeviceOk=true;
+            return true;
         }
 
+        bool done=mathDetail::gpu::SelectPreferredCudaDevice();
+        if (done) {
+            isDeviceOk=true;
+            return true;
+        }
+
+        try {
+            mathDetail::gpu::AutoSelectCudaDevice();
+        }
+        catch(...) {
+            return false;
+        }
+        mathDetail::gpu::VerifyCudaDevice();
+
         isDeviceOk=true;
         return true;
-    }
-
-    bool done=mathDetail::gpu::SelectPreferredCudaDevice();
-    if (done) {
-        isDeviceOk=true;
-        return true;
-    }
-
-    try {
-        mathDetail::gpu::AutoSelectCudaDevice();
-    }
-    catch(...) {
-        return false;
-    }
-    mathDetail::gpu::VerifyCudaDevice();
-
-    isDeviceOk=true;
-    return true;
+    #endif
 }
 
 
