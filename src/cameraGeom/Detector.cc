@@ -265,16 +265,23 @@ afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
     }
     //
     // Fiddle things a little if the detector has an even number of pixels so that square BBoxes
-    // ** I don't think it matters if the detector has even numbers of pixels, should it?
     // will map into themselves
     //
     if(n90 == 1) {
+        if (dimensions[0]%2 == 0) {
             x0--; x1--;
+        }
     } else if (n90 == 2) {
+        if (dimensions[0]%2 == 0) {
             x0--; x1--;
+        }
+        if (dimensions[1]%2 == 0) {
             y0--; y1--;
+        }
     } else if(n90 == 3) {
+        if (dimensions[1]%2 == 0) {
             y0--; y1--;
+        }
     }
         
     afwGeom::Point2I LLC(centerPixel[0] + x0, centerPixel[1] + y0);

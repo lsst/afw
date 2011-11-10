@@ -510,32 +510,20 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
             
         return ampImage
     #
-    # Start by building the image in "Natural" (non-rotated) orientation
-    # (unless it's 'raw', in which case it's just easier to prepareAmpData)
-    # This only gets the CCD data into the nominal camera coordinate system
-    # If the chip is rotated relative to the others in the focal plane, 
-    # it still needs to be rotated.
+    # If the image is raw it may need to be assembled into a full sensor.  The Amp object knows
+    # the coordinates system in which the data is being stored on disk.  Since all bounding box
+    # information is held in camera coordinates, there is no need to rotate the image after assembly.
     #
     if imageSource.isRaw:
-        #ccdImage = imageFactory(ccd.getAllPixelsNoRotation(isTrimmed))
         ccdImage = imageFactory(ccd.getAllPixels(isTrimmed))
         for a in ccd:
             im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
-            #It makes sense to me to push this to the imageSource since it is
-            #more likely to know if the data need to be prepared or not.
-            #im <<= a.prepareAmpData(imageSource.getImage(ccd, a,
-            #    imageFactory=imageFactory))
             im <<= imageSource.getImage(ccd, a, imageFactory=imageFactory)
     else:
         ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
 
     if bin > 1:
         ccdImage = afwMath.binImage(ccdImage, bin)
-    #
-    # Now rotate to the as-installed orientation
-    #
-    #if not natural:
-    #    ccdImage = afwMath.rotateImageBy90(ccdImage, ccd.getOrientation().getNQuarter())
     if display:
         showCcd(ccd, ccdImage=ccdImage, isTrimmed=isTrimmed)
     return ccdImage

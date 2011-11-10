@@ -190,11 +190,11 @@ Ccd: {
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Amp: {
-    ptype: "default"
-    datasec: 10 2 109 52
-    biassec: 110 2 124 52
-    ewidth: 125
-    eheight: 58
+    ptype: "default"                    # Type of amp allowing for different amp configurations in one camera
+    datasec: 10 2 109 52                # Data section in zero indexed pixel coordinates: minx, miny, maxx, maxy
+    biassec: 110 2 124 52               # Bias section in zero indexed pixel coordinates: minx, miny, maxx, maxy
+    ewidth: 125                         # Total width of the amp section in pixels
+    eheight: 58                         # Total height of the amp section in pixels
     #height: 51                          # number of physical rows
     #width: 100                          # number of physical columns
     #extended: 10                        # length of extended register
@@ -204,17 +204,11 @@ Amp: {
 }
 
 Amp: {
-    ptype: "type1"
-    datasec: 15 2 114 205
-    biassec: 0 2 14 205
-    ewidth: 125
-    eheight: 213
-    #height: 204                          # number of physical rows
-    #width: 100                          # number of physical columns
-    #extended: 0                        # length of extended register
-    #preRows: 2                         # extra rows before first real serial transfer
-    #overclockH: 15                      # number of serial overclock pixels
-    #overclockV: 5                       # number of parallel overclock pixels
+    ptype: "type1"                      # Type of amp allowing for different amp configurations in one camera
+    datasec: 15 2 114 205               # Data section in zero indexed pixel coordinates: minx, miny, maxx, maxy
+    biassec: 0 2 14 205                 # Bias section in zero indexed pixel coordinates: minx, miny, maxx, maxy
+    ewidth: 125                         # Total width of the amp section in pixels
+    eheight: 213                        # Total height of the amp section in pixels
 }
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

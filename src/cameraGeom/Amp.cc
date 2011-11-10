@@ -28,6 +28,7 @@
 #include "lsst/afw/math/offsetImage.h"
 #include "lsst/afw/cameraGeom/Amp.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Ccd.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
@@ -170,6 +171,31 @@ void cameraGeom::Amp::rotateBy90(
     //
     _readoutCorner = static_cast<ReadoutCorner>((_readoutCorner + n90)%4);
 }
+/**
+ * Convert an Amp's BBox assuming bounding boxes are in camera coordinates to the coordinate system 
+ * on disk as enumerated in _diskCoordSys
+ */
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) const {
+    cameraGeom::Detector::Ptr pccd = getParent();
+    int n90 = 0;
+    lsst::afw::geom::Box2I allpix = lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(0,0), lsst::afw::geom::Extent2I(0,0));
+    if (pccd) {
+      n90 = pccd->getOrientation().getNQuarter();
+      allpix = pccd->getAllPixels(false);
+    }
+    switch (_diskCoordSys) {
+      case CAMERA:
+        return bbox;
+      case AMP:
+        return _mapToElectronic(bbox);
+      case SENSOR:
+        if( n90 > 0)
+          return cameraGeom::detail::rotateBBoxBy90(bbox, -n90, allpix.getDimensions());
+        else
+          return bbox;
+    }
+    abort();
+}
 
 /**
  * Convert a Amp's BBox assuming it's been assembled into an entire-CCD image to its value
@@ -214,14 +240,38 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromElectronic(lsst::afw::geom::Box2
  * This is only important if the Amps are stored in separate files, rather than being assembled into
  * complete Detectors by the data acquisition system
  */
-template<typename ImageT>
-typename ImageT::Ptr cameraGeom::Amp::prepareAmpData(ImageT const& inImage)
+ template<typename ImageT>
+const ImageT cameraGeom::Amp::prepareAmpData(ImageT const inImage)
 {
-    typename ImageT::Ptr flippedImage = afwMath::flipImage(inImage, _flipLR, false);
+    cameraGeom::Detector::Ptr pccd = getParent();
+    int n90 = 0;
+    if (pccd) 
+      n90 = pccd->getOrientation().getNQuarter();
 
-    return afwMath::rotateImageBy90(*flippedImage, _nQuarter);
+    switch (_diskCoordSys) {
+        case CAMERA:
+            {
+                return inImage;
+            }
+        case AMP:
+            {
+                typename ImageT::Ptr flippedImage = afwMath::flipImage(inImage, _flipLR, false);
+                return *afwMath::rotateImageBy90(*flippedImage, _nQuarter);
+            }
+        case SENSOR:
+            {
+                if( n90 > 0)
+                    return *afwMath::rotateImageBy90(inImage, n90);
+                else
+                    return inImage;
+            }
+        default:
+            {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Invalid on disk coordinate system.");
+            }
+    }
 }
-
+ 
 /************************************************************************************************************/
 
 //
@@ -229,9 +279,9 @@ typename ImageT::Ptr cameraGeom::Amp::prepareAmpData(ImageT const& inImage)
 // \cond
 //
 #define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const&);
+    template const afwImage::Image<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const);
 #define INSTANTIATEMASK(TYPE) \
-    template afwImage::Mask<TYPE>::Ptr cameraGeom::Amp::prepareAmpData(afwImage::Mask<TYPE> const&);
+    template const afwImage::Mask<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::Mask<TYPE> const);
 
 INSTANTIATE(boost::uint16_t)
 INSTANTIATE(float)

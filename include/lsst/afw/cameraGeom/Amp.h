@@ -173,16 +173,31 @@ public:
         return _mapToElectronic(getDataSec(false));
     }
 
-    /// Return the all in electronic coordinates
+    /// Return all pixels in electronic coordinates
     lsst::afw::geom::Box2I getElectronicAllPixels() const {
         return _mapToElectronic(getAllPixels(false));
+    }
+
+    /// Return the biasSec in as stored coordinates
+    lsst::afw::geom::Box2I getDiskBiasSec() const {
+        return _mapToDisk(getBiasSec(false));
+    }
+
+    /// Return the dataSec in as stored coordinates
+    lsst::afw::geom::Box2I getDiskDataSec() const {
+        return _mapToDisk(getDataSec(false));
+    }
+
+    /// Return all pixels in as stored coordinates
+    lsst::afw::geom::Box2I getDiskAllPixels() const {
+        return _mapToDisk(getAllPixels(false));
     }
 
     /// Return the pixel coordinate system on disk
     DiskCoordSys getDiskCoordSys() const { return _diskCoordSys; }
 
     template<typename ImageT>
-    typename ImageT::Ptr prepareAmpData(ImageT const& im);
+    const ImageT prepareAmpData(ImageT const im);
     
 private:
     lsst::afw::geom::Box2I _biasSec;    // Bounding box of amplifier's bias section
@@ -205,6 +220,7 @@ private:
 
     lsst::afw::geom::Box2I _mapToElectronic(lsst::afw::geom::Box2I bbox) const;
     lsst::afw::geom::Box2I _mapFromElectronic(lsst::afw::geom::Box2I bbox) const;
+    lsst::afw::geom::Box2I _mapToDisk(lsst::afw::geom::Box2I bbox) const;
 };
     
 }}}
