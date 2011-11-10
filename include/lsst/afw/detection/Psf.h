@@ -6,8 +6,6 @@
 //
 #include <string>
 #include <typeinfo>
-#include "boost/static_assert.hpp"
-#include "boost/type_traits/is_same.hpp"
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
@@ -44,11 +42,7 @@ public:
     typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
 
     typedef lsst::afw::math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
-    // SWIG doesn't understand typedef lsst::afw::image::Image<Pixel> Image;
-#if !defined(SWIG)
-    BOOST_STATIC_ASSERT((boost::is_same<double, Pixel>::value));
-#endif
-    typedef lsst::afw::image::Image<double> Image;
+    typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by computeImage
 
     /// ctor
     Psf() : lsst::daf::base::Citizen(typeid(this)) {}
@@ -59,15 +53,15 @@ public:
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }
 
-    Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
+    PTR(Image) computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
 
-    Image::Ptr computeImage(lsst::afw::image::Color const& color,
+    PTR(Image) computeImage(lsst::afw::image::Color const& color,
                             lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
