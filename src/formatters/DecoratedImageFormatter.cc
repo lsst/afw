@@ -82,6 +82,7 @@ template<> std::string DecoratedImageFormatterTraits<boost::uint16_t>::name("Dec
 template<> std::string DecoratedImageFormatterTraits<int>::name("DecoratedImageI");
 template<> std::string DecoratedImageFormatterTraits<float>::name("DecoratedImageF");
 template<> std::string DecoratedImageFormatterTraits<double>::name("DecoratedImageD");
+template<> std::string DecoratedImageFormatterTraits<boost::uint64_t>::name("DecoratedImageL");
 
 
 template <typename ImagePixelT>
@@ -225,6 +226,7 @@ InstantiateFormatter(boost::uint16_t);
 InstantiateFormatter(int);
 InstantiateFormatter(float);
 InstantiateFormatter(double);
+InstantiateFormatter(boost::uint64_t);
 
 #undef InstantiateFormatter
 

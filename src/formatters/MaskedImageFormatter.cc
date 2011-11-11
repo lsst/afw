@@ -83,6 +83,8 @@ std::string MaskedImageFormatterTraits<boost::uint16_t, MaskPixel, VariancePixel
 template<> std::string MaskedImageFormatterTraits<int, MaskPixel, VariancePixel>::name("MaskedImageI");
 template<> std::string MaskedImageFormatterTraits<float, MaskPixel, VariancePixel>::name("MaskedImageF");
 template<> std::string MaskedImageFormatterTraits<double, MaskPixel, VariancePixel>::name("MaskedImageD");
+template<>
+std::string MaskedImageFormatterTraits<boost::uint64_t, MaskPixel, VariancePixel>::name("MaskedImageL");
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT,
@@ -206,6 +208,7 @@ INSTANTIATE(uint16_t, MaskPixel, VariancePixel)
 INSTANTIATE(int, MaskPixel, VariancePixel)
 INSTANTIATE(float, MaskPixel, VariancePixel)
 INSTANTIATE(double, MaskPixel, VariancePixel)
+INSTANTIATE(uint64_t, MaskPixel, VariancePixel)
 /// \endcond
 
 }}} // namespace lsst::afw::formatters

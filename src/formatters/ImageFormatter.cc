@@ -87,6 +87,7 @@ template<> std::string ImageFormatterTraits<boost::uint16_t>::name("ImageU");
 template<> std::string ImageFormatterTraits<int>::name("ImageI");
 template<> std::string ImageFormatterTraits<float>::name("ImageF");
 template<> std::string ImageFormatterTraits<double>::name("ImageD");
+template<> std::string ImageFormatterTraits<boost::uint64_t>::name("ImageL");
 
 
 template <typename ImagePixelT>
@@ -286,6 +287,7 @@ InstantiateFormatter(boost::uint16_t);
 InstantiateFormatter(int);
 InstantiateFormatter(float);
 InstantiateFormatter(double);
+InstantiateFormatter(boost::uint64_t);
 
 #undef InstantiateSerializer
 
