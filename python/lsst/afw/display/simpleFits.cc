@@ -31,10 +31,14 @@
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
+
+#ifndef DOXYGEN // just to avoid warnings
 namespace posix {
 #   include <unistd.h>
 #   include <fcntl.h>
 }
+#endif
+
 using namespace posix;
 
 #include "lsst/pex/exceptions.h"

@@ -61,7 +61,7 @@ void flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
     ndarray::Array<U, N-1, D> const & dest,
-    geom::Point2I const & origin
+    geom::Point<int,2> const & origin
 ) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N-1, D> DestT; 
@@ -119,7 +119,7 @@ template <typename T, int N, int C>
 ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    geom::Point2I const & origin
+    geom::Point<int,2> const & origin
 ) {
     ndarray::Vector<int,N-1> shape 
         = ndarray::concatenate(fp.getArea(), src.getShape().template last<N-2>());
@@ -148,7 +148,7 @@ void expandArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
     ndarray::Array<U, N+1, D> const & dest,
-    geom::Point2I const & origin
+    geom::Point<int,2> const & origin
 ) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N+1, D> DestT; 
