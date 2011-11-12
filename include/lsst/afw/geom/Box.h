@@ -139,6 +139,8 @@ public:
     void grow(int buffer) { grow(Extent2I(buffer)); }
     void grow(Extent2I const & buffer);
     void shift(Extent2I const & offset);
+    void flipLR(int xextent);
+    void flipTB(int yextent);
     void include(Point2I const & point);
     void include(Box2I const & other);
     void clip(Box2I const & other);
@@ -255,6 +257,8 @@ public:
     void grow(double buffer) { grow(Extent2D(buffer)); }
     void grow(Extent2D const & buffer);
     void shift(Extent2D const & offset);
+    void flipLR(float xextent);
+    void flipTB(float yextent);
     void include(Point2D const & point);
     void include(Box2D const & other);
     void clip(Box2D const & other);

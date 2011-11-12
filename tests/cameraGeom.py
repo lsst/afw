@@ -49,13 +49,40 @@ import lsst.afw.display.utils as displayUtils
 
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
-
+display = True
 try:
     type(display)
 except NameError:
     display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+class LsstLikeImage(cameraGeomUtils.GetCcdImage):
+    def __init__(self, isTrimmed=True, isRaw=True):
+        super(LsstLikeImage, self).__init__()
+        self.isTrimmed = isTrimmed
+        self.isRaw = isRaw
+    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
+        im = imageFactory(os.path.join(eups.productDir("afw"), "tests",
+            "test_amp.fits.gz"))
+        if self.isTrimmed:
+            bbox = amp.getElectronicDataSec()
+        else:
+            bbox = amp.getElectronicAllPixels()
+        return amp.prepareAmpData(imageFactory(im, bbox, afwImage.LOCAL))
+
+class ScLikeImage(cameraGeomUtils.GetCcdImage):
+    def __init__(self, isTrimmed=True, isRaw=True):
+        super(ScLikeImage, self).__init__()
+        self.isTrimmed = isTrimmed
+        self.isRaw = isRaw
+    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
+        im = imageFactory(os.path.join(eups.productDir("afw"), "tests",
+            "test.fits.gz"))
+        if self.isTrimmed:
+            bbox = amp.getDataSec()
+        else:
+            bbox = amp.getAllPixels()
+        return imageFactory(im, bbox, afwImage.LOCAL)
 
 def trimCcd(ccd, ccdImage=""):
     """Trim a Ccd and maybe the image of the untrimmed Ccd"""
@@ -69,17 +96,17 @@ def trimCcd(ccd, ccdImage=""):
     ccd.setTrimmed(True)
 
     if ccdImage is not None:
-        trimmedImage = ccdImage.Factory(ccd.getAllPixelsNoRotation())
+        trimmedImage = ccdImage.Factory(ccd.getAllPixels())
         for a in ccd:
             data = ccdImage.Factory(ccdImage, a.getDataSec(False), afwImage.LOCAL)
             tdata = trimmedImage.Factory(trimmedImage, a.getDataSec(), afwImage.LOCAL)
             tdata <<= data
     else:
         trimmedImage = None
-
+    """
     if trimmedImage:
         trimmedImage = afwMath.rotateImageBy90(trimmedImage, ccd.getOrientation().getNQuarter())
-
+    """
     return trimmedImage
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -106,6 +133,85 @@ class CameraGeomTestCase(unittest.TestCase):
                 print "ccd", c
             for a in self.geomPolicy.getArray("Amp"):
                 print "amp", a
+
+    def testRotatedCcd(self):
+        """Test if we can build a Ccd out of Amps"""
+
+        #print >> sys.stderr, "Skipping testRotatedCcd"; return
+
+        ccdId = cameraGeom.Id(1, "Rot. CCD")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+        ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
+        if display:
+            cameraGeomUtils.showCcd(ccd)
+            ds9.incrDefaultFrame()
+        #
+        # Trim the CCD and try again
+        #
+
+
+        trimmedImage = trimCcd(ccd)
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, trimmedImage)
+            ds9.incrDefaultFrame()
+
+    def testAssembleCcd(self):
+        """Test if we can build a Ccd out of Amps"""
+
+        #print >> sys.stderr, "Skipping testRotatedCcd"; return
+        compImage = afwImage.ImageI(os.path.join(eups.productDir("afw"),
+            "tests", "test_comp.fits.gz"))
+        compImageTrimmed = afwImage.ImageI(os.path.join(eups.productDir("afw"), "tests",
+            "test_comp_trimmed.fits.gz"))
+
+        ccdId = cameraGeom.Id(1, "LsstLike")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+        #
+        # Test assembly of images that require preparation for assembly (like
+        # LSST images)
+        #
+        outImage = cameraGeomUtils.makeImageFromCcd(ccd,
+                    imageSource=LsstLikeImage(),
+                    isTrimmed=False, imageFactory=afwImage.ImageU)
+        self.assertTrue(outImage==compImage)
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, outImage)
+            ds9.incrDefaultFrame()
+
+        ccdId = cameraGeom.Id(1, "ScLike")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+        
+        outImage = cameraGeomUtils.makeImageFromCcd(ccd,
+                    imageSource=ScLikeImage(),
+                    isTrimmed=False, imageFactory=afwImage.ImageU)
+
+        self.assertTrue(outImage==compImage)
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, outImage)
+            ds9.incrDefaultFrame()
+
+        #
+        # Trim the CCD and try again
+        #
+        ccd.setTrimmed(True)
+        ccdId = cameraGeom.Id(1, "LsstLike Trimmed")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+
+        outImage = cameraGeomUtils.makeImageFromCcd(ccd,
+                    imageSource=LsstLikeImage(),
+                    isTrimmed=True, imageFactory=afwImage.ImageU)
+        self.assertTrue(outImage==compImage)
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, outImage)
+            ds9.incrDefaultFrame()
 
     def testId(self):
         """Test cameraGeom.Id"""
@@ -149,7 +255,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
             eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
             amp = cameraGeom.Amp(cameraGeom.Id(serial, "", Col, 0), allPixels, biasSec, dataSec,
-                                 cameraGeom.Amp.LLC, eParams)
+                                 eParams)
 
             ccd.addAmp(afwGeom.Point2I(Col, 0), amp); Col += 1
         #
@@ -211,6 +317,7 @@ class CameraGeomTestCase(unittest.TestCase):
         corr = afwGeom.Extent2D(corrI.getX(), corrI.getY())
         pix += corr
         
+        self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.SENSOR)
         self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
         self.assertEqual(ccd.getPositionFromPixel(pix), posll)
         #
@@ -239,28 +346,6 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(ccd.getPixelFromPosition(pos), pix)
         self.assertEqual(ccd.getPositionFromPixel(pix), posll)
 
-    def testRotatedCcd(self):
-        """Test if we can build a Ccd out of Amps"""
-
-        #print >> sys.stderr, "Skipping testRotatedCcd"; return
-
-        ccdId = cameraGeom.Id("Rot. CCD")
-        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
-        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
-        ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
-        if display:
-            cameraGeomUtils.showCcd(ccd)
-            ds9.incrDefaultFrame()
-        #
-        # Trim the CCD and try again
-        #
-
-
-        trimmedImage = trimCcd(ccd)
-
-        if display:
-            cameraGeomUtils.showCcd(ccd, trimmedImage)
-            ds9.incrDefaultFrame()
 
     def testSortedCcds(self):
         """Test if the Ccds are sorted by ID after insertion into a Raft"""
@@ -389,9 +474,9 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertEqual(camera.getPixelFromPosition(pos), pix)
             self.assertEqual(camera.getPositionFromPixel(pix), posll)
         # Check that we can find an Amp in the bowels of the camera
-        ccdName = "C:0,0"
+        ccdName = "C:1,0"
         amp = cameraGeomUtils.findAmp(camera, cameraGeom.Id(ccdName), 1, 2)
-        self.assertEqual(amp.getId().getName(), "ID6")
+        self.assertEqual(amp.getId().getName(), "ID7")
         self.assertEqual(amp.getParent().getId().getName(), ccdName)
 
     def testDefectBase(self):
@@ -468,6 +553,81 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertEqual(raft.getId(),   ccd.getParent().getId())
             self.assertEqual(camera.getId(), ccd.getParent().getParent().getId())
             self.assertEqual(None,           ccd.getParent().getParent().getParent())        
+
+    def testAssembleCcd(self):
+        """Test if we can build a Ccd out of Amps"""
+
+        #print >> sys.stderr, "Skipping testAssembleCcd"; return
+        compImage = afwImage.ImageU(os.path.join(eups.productDir("afw"),
+                       "tests", "test_comp.fits.gz"))
+        compImageTrimmed = afwImage.ImageU(os.path.join(eups.productDir("afw"), "tests",
+            "test_comp_trimmed.fits.gz"))
+
+        ccdId = cameraGeom.Id(1, "LsstLike")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+        #
+        # Test assembly of images that require preparation for assembly (like
+        # LSST images)
+        #
+        outImage = cameraGeomUtils.makeImageFromCcd(ccd,
+                    imageSource=LsstLikeImage(),
+                    isTrimmed=False, imageFactory=afwImage.ImageU)
+        self.assertTrue(not (outImage.getArray() - compImage.getArray()).all())
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, outImage)
+            ds9.incrDefaultFrame()
+
+        #
+        # Test assembly of images that reside in a pre-assembled state from
+        # the DAQ (like Suprime-Cam images)
+        #
+
+        ccdId = cameraGeom.Id(1, "ScLike")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+        
+        outImage = cameraGeomUtils.makeImageFromCcd(ccd,
+                    imageSource=ScLikeImage(),
+                    isTrimmed=False, imageFactory=afwImage.ImageU)
+
+        self.assertTrue(not (outImage.getArray() - compImage.getArray()).all())
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, outImage)
+            ds9.incrDefaultFrame()
+
+        #
+        # Do the same tests for trimed ccds.
+        #
+        ccdId = cameraGeom.Id(1, "LsstLike")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+
+        outImage = cameraGeomUtils.makeImageFromCcd(ccd,
+                    imageSource=LsstLikeImage(),
+                    isTrimmed=True, imageFactory=afwImage.ImageU)
+        ccd.setTrimmed(True)
+        self.assertTrue(not (outImage.getArray() - compImageTrimmed.getArray()).all())
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, outImage)
+            ds9.incrDefaultFrame()
+
+        ccdId = cameraGeom.Id(1, "ScLike")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+
+        outImage = cameraGeomUtils.makeImageFromCcd(ccd,
+                    imageSource=ScLikeImage(),
+                    isTrimmed=True, imageFactory=afwImage.ImageU)
+        ccd.setTrimmed(True)
+        self.assertTrue(not (outImage.getArray() - compImageTrimmed.getArray()).all())
+
+        if display:
+            cameraGeomUtils.showCcd(ccd, outImage)
+            ds9.incrDefaultFrame()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
