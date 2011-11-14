@@ -80,6 +80,45 @@ namespace {
             return false;
         }
     };
+
+/// Get extremum from a list of four points
+///
+/// There are four options (min/max, x/y), supplied by the following helpers
+/// that are templated on in the extremum function.
+struct Min {
+    static double func(double a, double b) {
+        return std::min(a, b);
+    }
+};
+struct Max {
+    static double func(double a, double b) {
+        return std::max(a, b);
+    }
+};
+struct XPart {
+    static double get(geom::Point2D p) {
+        return p.getX();
+    }
+};
+struct YPart {
+    static double get(geom::Point2D p) {
+        return p.getY();
+    }
+};
+template <class Extremum, class Part>
+double extremum(geom::Point2D a, geom::Point2D b, geom::Point2D c, geom::Point2D d) {
+    return Extremum::func(Extremum::func(Extremum::func(Part::get(a), Part::get(b)), Part::get(c)), 
+                          Part::get(d));
+}
+
+/// Transform x,y in the frame of one image to another, via their WCSes
+geom::Point2D transformPoint(double x, double y, 
+                             image::Wcs const& source,
+                             image::Wcs const& target){
+    return target.skyToPixel(source.pixelToSky(x, y));
+}
+
+
 } //end namespace
 
 /******************************************************************************/
@@ -664,6 +703,65 @@ void Footprint::intersectMask(
     _bbox.clip(maskBBox);
 }
 
+
+/// Transform a footprint from one image to another, via their WCSes
+///
+/// Original implementation by Sogo Mineo.
+/// If slow, could consider linearising the WCSes and combining the linear versions to a single transform.
+Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WCS (for this footprint)
+                                    image::Wcs const& target, // Target image WCS
+                                    geom::Box2I const& bbox   // Bounding box for target image
+    ) const {
+    // Transform the original bounding box
+    geom::Box2I fpBox = getBBox(); // Original bounding box
+    geom::Point2D p00 = transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target);
+    geom::Point2D p01 = transformPoint(fpBox.getMinX(), fpBox.getMaxY(), source, target);
+    geom::Point2D p10 = transformPoint(fpBox.getMaxX(), fpBox.getMinY(), source, target);
+    geom::Point2D p11 = transformPoint(fpBox.getMaxX(), fpBox.getMaxY(), source, target);
+
+    // calculate the new bounding box that embraces the four transformed points.
+    int xMin = std::floor(0.5 + extremum<Min, XPart>(p00, p01, p10, p11));
+    int yMin = std::floor(0.5 + extremum<Min, YPart>(p00, p01, p10, p11));
+    int xMax = std::floor(0.5 + extremum<Max, XPart>(p00, p01, p10, p11));
+    int yMax = std::floor(0.5 + extremum<Max, YPart>(p00, p01, p10, p11));
+
+    // restrict the transformed bbox by the one supplied
+    xMin = std::max(bbox.getMinX(), xMin);
+    yMin = std::max(bbox.getMinY(), yMin);
+    xMax = std::min(bbox.getMaxX(), xMax);
+    yMax = std::min(bbox.getMaxY(), yMax);
+    geom::Box2I bounding(geom::Point2I(xMin, yMin), geom::Point2I(xMax, yMax));
+
+    // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
+    Footprint::Ptr fpNew = boost::make_shared<Footprint>(bounding, bbox);
+
+    for (int y = yMin; y <= yMax; ++y) {
+        bool inSpan = false;            // Are we in a span?
+        int start = -1;                  // Start of span
+
+        for (int x = xMin; x <= xMax; ++x) {
+            lsst::afw::geom::Point2D p = transformPoint(x, y, target, source);
+            int xSource = std::floor(0.5 + p.getX());
+            int ySource = std::floor(0.5 + p.getY());
+
+            if (contains(lsst::afw::geom::Point2I(xSource, ySource))) {
+                if (!inSpan) {
+                    inSpan = true;
+                    start = x;
+                }
+            } else if (inSpan) {
+                inSpan = false;
+                fpNew->addSpan(y, start, x - 1);
+            }
+        }
+        if (inSpan) {
+            fpNew->addSpan(y, start, xMax);
+        }
+    }
+    
+    return fpNew;
+}
+
 /************************************************************************************************************/
 /**
  * \brief Return a Footprint that's the intersection of a Footprint with a Mask
@@ -1168,6 +1266,7 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
     return bboxes;
 }
 
+
 #if 0
 
 /************************************************************************************************************/
@@ -1586,10 +1685,3 @@ INSTANTIATE_MASK(boost::uint64_t);
 
 }}}
 // \endcond
-
-
-
-
-
-
-
