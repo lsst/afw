@@ -104,6 +104,17 @@ boost::gil::memory_based_2d_locator<T>& operator-=(boost::gil::memory_based_2d_l
 
 namespace boost { namespace gil {
 /*
+ * Define types that are pure (un)signed long, without scaling into [0, 1]
+ */
+typedef uint64_t bits64;
+typedef int64_t bits64s;
+
+GIL_DEFINE_BASE_TYPEDEFS(64, gray)
+GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64, dev2n, devicen_t<2>, devicen_layout_t<2>)
+GIL_DEFINE_BASE_TYPEDEFS(64s, gray)
+GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64s, dev2n, devicen_t<2>, devicen_layout_t<2>)
+            
+/*
  * Define a type that's a pure float, without scaling into [0, 1]
  */
 typedef float bits32f_noscale;
@@ -200,6 +211,8 @@ LSST_BOOST_GIL_OP_EQUALS_ALL(gray16s)
 LSST_BOOST_GIL_OP_EQUALS_ALL(gray32)
 LSST_BOOST_GIL_OP_EQUALS_ALL(gray32s)
 LSST_BOOST_GIL_OP_EQUALS_ALL(gray32f_noscale)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray64)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray64s)
 LSST_BOOST_GIL_OP_EQUALS_ALL(gray64f_noscale)
 
 #undef LSST_BOOST_GIL_OP_EQUALS
@@ -275,6 +288,55 @@ namespace lsst { namespace afw { namespace image { namespace detail {
         typedef boost::gil::gray32f_noscalec_view_t const_view_t;
         typedef boost::gil::channel_traits<float>::reference reference;
         typedef boost::gil::channel_traits<float>::const_reference const_reference;
+    };
+
+    template<> struct types_traits<long, false> {
+        typedef boost::gil::gray64s_image_t image_t;
+        typedef boost::gil::gray64s_view_t view_t;
+        typedef boost::gil::gray64sc_view_t const_view_t;
+        typedef boost::gil::channel_traits<long>::reference reference;
+        typedef boost::gil::channel_traits<long>::const_reference const_reference;
+    };
+
+    template<> struct types_traits<unsigned long, false> {
+        typedef boost::gil::gray64_image_t image_t;
+        typedef boost::gil::gray64_view_t view_t;
+        typedef boost::gil::gray64c_view_t const_view_t;
+        typedef boost::gil::channel_traits<long>::reference reference;
+        typedef boost::gil::channel_traits<long>::const_reference const_reference;
+    };
+
+    #include "boost/mpl/if.hpp"
+    #include "boost/type_traits/is_same.hpp"
+    namespace {
+        struct unknown {};                  // two unused and unimplemented types
+        struct unknown_u {};
+        /*
+         * Return long long type (as type) if it's a synonym for boost::int64_t
+         * We also need unsigned long long (as type_u), because "unsigned unknown" won't compile
+         */ 
+        struct CheckBoost64 {
+            typedef boost::mpl::if_<boost::is_same<long long, boost::int64_t>,
+                                    long long, struct unknown>::type type;
+            typedef boost::mpl::if_<boost::is_same<long long, boost::int64_t>,
+                                    unsigned long long, struct unknown>::type type_u;
+        };
+    }
+
+    template<> struct types_traits<CheckBoost64::type, false> {
+        typedef boost::gil::gray64s_image_t image_t;
+        typedef boost::gil::gray64s_view_t view_t;
+        typedef boost::gil::gray64sc_view_t const_view_t;
+        typedef boost::gil::channel_traits<long>::reference reference;
+        typedef boost::gil::channel_traits<long>::const_reference const_reference;
+    };
+
+    template<> struct types_traits<CheckBoost64::type_u, false> {
+        typedef boost::gil::gray64_image_t image_t;
+        typedef boost::gil::gray64_view_t view_t;
+        typedef boost::gil::gray64c_view_t const_view_t;
+        typedef boost::gil::channel_traits<long>::reference reference;
+        typedef boost::gil::channel_traits<long>::const_reference const_reference;
     };
 
     template<> struct types_traits<double, false> {
