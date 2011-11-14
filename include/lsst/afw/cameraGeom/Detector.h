@@ -86,7 +86,7 @@ public:
 
     /// Return the detector's parent in the hierarchy
     ///
-    /// If the parent is unknown or has been deleted, and empty Ptr is returned
+    /// If the parent is unknown or has been deleted, an empty Ptr is returned
     Ptr getParent() const {
         return Ptr(_parent.lock());
     }

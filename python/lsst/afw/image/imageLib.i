@@ -76,6 +76,8 @@ namespace boost {
     typedef unsigned short uint16_t;
 }
 
+%apply unsigned long long { boost::uint64_t };
+
 /************************************************************************************************************/
 
 %typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
@@ -258,6 +260,7 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::base::Citizen, lsst::afw::ima
 %enddef
 
 %exposurePtr(U, boost::uint16_t);
+%exposurePtr(L, boost::uint64_t);
 %exposurePtr(I, int);
 %exposurePtr(F, float);
 %exposurePtr(D, double);
@@ -270,6 +273,7 @@ SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
+%exposure(L, boost::uint64_t);
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
@@ -281,6 +285,16 @@ SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
          lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
     {
         return lsst::afw::image::Exposure<float,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
+%extend lsst::afw::image::Exposure<boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertD;
+    lsst::afw::image::Exposure<double,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD()
+    {
+        return lsst::afw::image::Exposure<double,
             lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
     }
 }

@@ -102,10 +102,11 @@ public:
     /// location of first pixel read
     // N.b. must be in the order that a rotation by 90 shift right by one;  LLC -> ULC 
     enum ReadoutCorner { LLC, LRC, URC, ULC };
+    enum DiskCoordSys { AMP, SENSOR, CAMERA };
 
     explicit Amp(Id id, lsst::afw::geom::Box2I const& allPixels,
                  lsst::afw::geom::Box2I const& biasSec, lsst::afw::geom::Box2I const& dataSec,
-                 ReadoutCorner readoutCorner, ElectronicParams::Ptr eparams);
+                 ElectronicParams::Ptr eparams);
 
     ~Amp() {}
 
@@ -159,37 +160,44 @@ public:
     }
 
     void setTrimmedGeom();
+    /// Define the position and orientation of an Amp in a chip (in Detector coordinates)
+    void setElectronicToChipLayout(lsst::afw::geom::Point2I, int, bool, DiskCoordSys);
 
-    /// Set the origin of Amplifier data when on disk (in Detector coordinates)
-    void setDiskLayout(
-            lsst::afw::geom::Point2I const& originOnDisk, // Origin of Amp data on disk (in Detector coords)
-            int nQuarter,                         // number of quarter-turns in +ve direction
-            bool flipLR,                          // Flip the Amp data left <--> right before rotation
-            bool flipTB                           // Flip the Amp data top <--> bottom before rotation
-                      ) {
-        _originOnDisk = originOnDisk;
-        _nQuarter = nQuarter;
-        _flipLR = flipLR;
-        _flipTB = flipTB;
+    /// Return the biasSec in electronic coordinates
+    lsst::afw::geom::Box2I getElectronicBiasSec() const {
+        return _mapToElectronic(getBiasSec(false));
     }
 
-    /// Return the biasSec as read from disk
+    /// Return the dataSec in electronic coordinates
+    lsst::afw::geom::Box2I getElectronicDataSec() const {
+        return _mapToElectronic(getDataSec(false));
+    }
+
+    /// Return all pixels in electronic coordinates
+    lsst::afw::geom::Box2I getElectronicAllPixels() const {
+        return _mapToElectronic(getAllPixels(false));
+    }
+
+    /// Return the biasSec in as stored coordinates
     lsst::afw::geom::Box2I getDiskBiasSec() const {
         return _mapToDisk(getBiasSec(false));
     }
 
-    /// Return the dataSec as read from disk
+    /// Return the dataSec in as stored coordinates
     lsst::afw::geom::Box2I getDiskDataSec() const {
         return _mapToDisk(getDataSec(false));
     }
 
-    /// Return the biasSec as read from disk
+    /// Return all pixels in as stored coordinates
     lsst::afw::geom::Box2I getDiskAllPixels() const {
         return _mapToDisk(getAllPixels(false));
     }
 
+    /// Return the pixel coordinate system on disk
+    DiskCoordSys getDiskCoordSys() const { return _diskCoordSys; }
+
     template<typename ImageT>
-    typename ImageT::Ptr prepareAmpData(ImageT const& im);
+    const ImageT prepareAmpData(ImageT const im);
     
 private:
     lsst::afw::geom::Box2I _biasSec;    // Bounding box of amplifier's bias section
@@ -198,14 +206,20 @@ private:
     ElectronicParams::Ptr _eParams;     // electronic properties of Amp
     lsst::afw::geom::Box2I _trimmedDataSec; // Bounding box of all the Detector's pixels after bias trimming
     //
-    // These values refer to the way that the Amplifier data is laid out on disk.  If the Amps have
-    // been assembled into a single Ccd image _originOnDisk == (0, 0) and _nQuarter == 0
+    // These values refer to the way that the Amplifier data is laid out in the sensor. 
+    // The parent CCD object caries the information about how the sensor was actually installed in the camera.
     //
-    lsst::afw::geom::Point2I _originOnDisk;     // Origin of Amplifier data on disk (in Detector coordinates)
+    lsst::afw::geom::Point2I _originInDetector;     // Origin of Amplifier data on disk (in Detector coordinates)
     int _nQuarter;                      // number of quarter-turns to apply in +ve direction
     bool _flipLR;                       // flip the data left <--> right before rotation
-    bool _flipTB;                       // Flip the data top <--> bottom before rotation
+    // The way the pixel data is stored on disk varies from one project to the next.  The three obvious ones are:
+    // amp: All images are a single amp in electronic coordinates (all images from identical devices look the same). -- ImSim images
+    // sensor: Pixels are assembled into a grid relative to the (0,0) index sensor pixel.  CFHTLS images
+    // camera: Pixels are assembled into a sensor grid and rotated to reflect rotation as installed in the camera.  SuprimeCam images
+    DiskCoordSys _diskCoordSys;
 
+    lsst::afw::geom::Box2I _mapToElectronic(lsst::afw::geom::Box2I bbox) const;
+    lsst::afw::geom::Box2I _mapFromElectronic(lsst::afw::geom::Box2I bbox) const;
     lsst::afw::geom::Box2I _mapToDisk(lsst::afw::geom::Box2I bbox) const;
 };
     
