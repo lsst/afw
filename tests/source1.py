@@ -123,38 +123,38 @@ class SourceTestCase(unittest.TestCase):
         per = Persistence.getPersistence(perPol)
         additionalData = dafBase.PropertySet()
         storageName = 'BoostStorage'
-        f,loc = tempfile.mkstemp(suffix='.boost')
+        f,loc = tempfile.mkstemp(suffix='.boost', dir=os.path.join("tests", "data"))
         os.close(f)
         print 'Writing to temp file', loc
-        logLoc = LogicalLocation(loc, additionalData)
-        storageList = StorageList()
-        storage = per.getPersistStorage(storageName, logLoc)
-        storageList.append(storage)
+        try:
+            logLoc = LogicalLocation(loc, additionalData)
+            storageList = StorageList()
+            storage = per.getPersistStorage(storageName, logLoc)
+            storageList.append(storage)
 
-        obj = self.dsv2
-        if hasattr(obj, '__deref__'):
-            # We have a smart pointer, so dereference it.
-            obj = obj.__deref__()
-        # persist
-        per.persist(obj, storageList, additionalData)
+            obj = self.dsv2
+            # persist
+            per.persist(obj, storageList, additionalData)
 
-        # import this pythonType dynamically 
-        pythonTypeTokenList = pytype.split('.')
-        importClassString = pythonTypeTokenList.pop()
-        importClassString = importClassString.strip()
-        importPackage = ".".join(pythonTypeTokenList)
-        importType = __import__(importPackage, globals(), locals(), \
-                                [importClassString], -1) 
-        pythonType = getattr(importType, importClassString)
-        # unpersist
-        additionalData = dafBase.PropertySet()
-        logLoc = LogicalLocation(loc, additionalData)
-        storageList = StorageList()
-        storage = per.getRetrieveStorage(storageName, logLoc)
-        storageList.append(storage)
-        itemData = per.unsafeRetrieve(ctype, storageList, additionalData)
-        finalItem = pythonType.swigConvert(itemData)
-        sources = finalItem
+            # import this pythonType dynamically 
+            pythonTypeTokenList = pytype.split('.')
+            importClassString = pythonTypeTokenList.pop()
+            importClassString = importClassString.strip()
+            importPackage = ".".join(pythonTypeTokenList)
+            importType = __import__(importPackage, globals(), locals(), \
+                                    [importClassString], -1) 
+            pythonType = getattr(importType, importClassString)
+            # unpersist
+            additionalData = dafBase.PropertySet()
+            logLoc = LogicalLocation(loc, additionalData)
+            storageList = StorageList()
+            storage = per.getRetrieveStorage(storageName, logLoc)
+            storageList.append(storage)
+            itemData = per.unsafeRetrieve(ctype, storageList, additionalData)
+            finalItem = pythonType.swigConvert(itemData)
+            sources = finalItem
+        finally:
+            os.remove(loc)
 
         #print 'unpersisted sources:', sources
         obj1 = obj.getSources()

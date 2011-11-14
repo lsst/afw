@@ -66,6 +66,29 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
     afwGeom::Extent2I dim = getAllPixels(true).getDimensions() - afwGeom::Extent2I(1);
     setCenterPixel(afwGeom::Point2D(dim[0]*0.5, dim[1]*0.5));
 }
+/**
+ * Add an Amp to the Ccd if the disk orientation has already been set up (via
+ * setDisktoChipLayout)
+ */
+void cameraGeom::Ccd::addAmp(
+                             cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
+                            )
+{
+    cameraGeom::Amp::Ptr amp(new Amp(amp_c)); // the Amp with absolute coordinates
+    getAllPixels().include(amp->getAllPixels());
+
+    //
+    // Now deal with the geometry after we trim everything except the dataSec
+    //
+    amp->setTrimmedGeom();
+    getAllTrimmedPixels().include(amp->getDataSec(true));
+    // insert new Amp, keeping the Amps sorted
+    _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
+    amp->setParent(getThisPtr());
+
+    afwGeom::Extent2I dim = getAllPixels(true).getDimensions() - afwGeom::Extent2I(1);
+    setCenterPixel(afwGeom::Point2D(dim[0]*0.5, dim[1]*0.5));
+}
 
 /**
  * Return the offset from the Detector centre, in mm, given a pixel position wrt Detector's centre
@@ -194,15 +217,16 @@ void cameraGeom::Ccd::setOrientation(
         cameraGeom::Orientation const& orientation // the detector's new Orientation
                                     )
 {
-#if 0    
     int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
     afwGeom::Extent2I const dimensions = getAllPixels(false).getDimensions();
-#endif
     cameraGeom::Detector::setOrientation(orientation);
-#if 0    
-    std::for_each(_amps.begin(), _amps.end(),
-                  boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
-#endif
+    //std::for_each(_amps.begin(), _amps.end(),
+    //              boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
+    for (std::vector<cameraGeom::Amp::Ptr>::const_iterator ptr = _amps.begin(), end = _amps.end();
+         ptr != end; ++ptr) {
+        cameraGeom::Amp::Ptr amp = *ptr;
+        amp->rotateBy90(dimensions, n90);
+    }
 }
 
 /************************************************************************************************************/
