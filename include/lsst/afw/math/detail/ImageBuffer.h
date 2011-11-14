@@ -66,26 +66,25 @@ public:
 
     //copying is not allowed except for uninitialized image buffers
     ImageBuffer(const ImageBuffer& x) {
-        assert(x.img==NULL);
-        img=NULL;
+        assert(x.img == NULL);
+        img = NULL;
     };
 
-    void Init(ImageT const& image)
+    void Init(const ImageT& image)
     {
-        assert(img==NULL);
-        this->width=image.getWidth();
-        this->height=image.getHeight();
+        assert(img == NULL);
+        this->width = image.getWidth();
+        this->height = image.getHeight();
         try {
             img = new PixelT [width*height];
-        }
-        catch(...) {
+        } catch(...) {
             throw LSST_EXCEPT(pexExcept::MemoryException, "ImageBuffer:Init - not enough memory");
         }
 
         //copy input image data to buffer
         for (int i = 0; i < height; ++i) {
             typename ImageT::x_iterator inPtr = image.x_at(0, i);
-            PixelT*                  imageDataPtr = img + i*width;
+            PixelT*                  imageDataPtr = img + i * width;
 
             for (typename ImageT::x_iterator cnvEnd = inPtr + width; inPtr != cnvEnd;
                     ++inPtr, ++imageDataPtr) {
@@ -95,25 +94,24 @@ public:
     }
 
     void Init(int width, int height) {
-        assert(img==NULL);
-        this->width=width;
-        this->height=height;
+        assert(img == NULL);
+        this->width = width;
+        this->height = height;
         try {
             img = new PixelT [width*height];
-        }
-        catch(...) {
+        } catch(...) {
             throw LSST_EXCEPT(pexExcept::MemoryException, "ImageBuffer:Init - not enough memory");
         }
     }
 
-    ImageBuffer(ImageT const& image) {
-        img=NULL;
+    ImageBuffer(const ImageT& image) {
+        img = NULL;
         Init(image);
     }
 
     ImageBuffer(int width, int height) {
-        img=NULL;
-        Init(width,height);
+        img = NULL;
+        Init(width, height);
     }
 
     ~ImageBuffer() {
@@ -121,39 +119,39 @@ public:
     }
 
     int Size() const {
-        return width*height;
+        return width * height;
     }
 
     PixelT* GetImgLinePtr(int y) {
-        assert(img!=NULL);
-        assert(y>=0 && y<height);
+        assert(img != NULL);
+        assert(y >= 0 && y < height);
         return &img[width*y];
     }
     const PixelT* GetImgLinePtr(int y) const {
-        assert(img!=NULL);
-        assert(y>=0 && y<height);
+        assert(img != NULL);
+        assert(y >= 0 && y < height);
         return &img[width*y];
     }
     PixelT& Pixel(int x, int y) {
-        assert(img!=NULL);
-        assert(x>=0 && x<width);
-        assert(y>=0 && y<height);
+        assert(img != NULL);
+        assert(x >= 0 && x < width);
+        assert(y >= 0 && y < height);
         return img[x+ y*width];
     }
     const PixelT& Pixel(int x, int y) const {
-        assert(img!=NULL);
-        assert(x>=0 && x<width);
-        assert(y>=0 && y<height);
+        assert(img != NULL);
+        assert(x >= 0 && x < width);
+        assert(y >= 0 && y < height);
         return img[x+ y*width];
     }
 
-    void CopyFromBuffer(ImageBuffer<PixelT>& buffer, int startX, int startY)
+    void CopyFromBuffer(const ImageBuffer<PixelT>& buffer, int startX, int startY)
     {
-        assert(img!=NULL);
+        assert(img != NULL);
         for (int i = 0; i < height; ++i) {
-            PixelT* inPtr = startX + buffer.GetImgLinePtr(i+startY);
+            PixelT* inPtr = startX + buffer.GetImgLinePtr(i + startY);
             PixelT* outPtr = buffer.GetImgLinePtr(i);
-            for (int j=0; j<width; j++) {
+            for (int j = 0; j < width; j++) {
                 *outPtr = *inPtr;
                 inPtr++;
                 outPtr++;
@@ -163,13 +161,12 @@ public:
 
     void CopyToImage(ImageT outImage, int startX, int startY)
     {
-        assert(img!=NULL);
+        assert(img != NULL);
         for (int i = 0; i < height; ++i) {
             PixelT*  outPtrImg = &img[width*i];
 
             for (typename ImageT::x_iterator cnvPtr = outImage.x_at(startX, i + startY),
-                    cnvEnd = cnvPtr + width;    cnvPtr != cnvEnd;    ++cnvPtr )
-            {
+                    cnvEnd = cnvPtr + width;    cnvPtr != cnvEnd;    ++cnvPtr ) {
                 *cnvPtr = *outPtrImg;
                 ++outPtrImg;
             }

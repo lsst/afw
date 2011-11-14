@@ -44,6 +44,7 @@
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/detail/Convolve.h"
+#include "lsst/afw/math/detail/ConvCpuGpuShared.h"
 #include "lsst/afw/math/detail/ConvolveGPU.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -94,60 +95,39 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
         return outPixel;
     }
 
-    /*
-     * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
-     *
-     * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dim.
-     * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or h.
-     * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
-     */
-    template <typename OutImageT, typename InImageT>
-    void assertDimensionsOK(
-        OutImageT const &convolvedImage,
-        InImageT const &inImage,
-        lsst::afw::math::Kernel const &kernel
-    ) {
-        if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-            std::ostringstream os;
-            os << "convolvedImage dimensions = ( "
-                << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
-                << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-        }
-        if (afwGeom::any(inImage.getDimensions().lt(kernel.getDimensions()))) {
-            std::ostringstream os;
-            os << "inImage dimensions = ( "
-                << inImage.getWidth() << ", " << inImage.getHeight()
-                << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
-                << ") = kernel dimensions in width and/or height";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-        }
-        if ((kernel.getWidth() < 1) || (kernel.getHeight() < 1)) {
-            std::ostringstream os;
-            os << "kernel dimensions = ( "
-                << kernel.getWidth() << ", " << kernel.getHeight()
-                << ") smaller than (1, 1) in width and/or height";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-        }
-    }
-
     /**
-     * @brief Checks some conflicting GPU options
+     * @brief Throws exception when trying to FORCE_GPU without GPU support
      *
      * If GPU support was not included at compile time, FORCE_GPU option will cause
      * this function to throw an exception
      *
-     * @throw lsst::pex::exceptions::RuntimeErrorException FORCE_GPU enabled with no GPU support
+     * @throw lsst::pex::exceptions::RuntimeErrorException when FORCE_GPU enabled with no GPU support
      *
      * @ingroup afw
      */
     void CheckForceGpuOnNoGpu(afwMath::ConvolutionControl const& convolutionControl)
     {
         #ifndef GPU_BUILD
-        if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU)
+        if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU) {
             throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
                     "Gpu acceleration must be enabled at compiling for ConvolutionControl::FORCE_GPU");
+        }
         #endif
+    }
+    /**
+     * @brief Throws exception whenever trying to FORCE_GPU
+     *
+     * FORCE_GPU option will cause this function to throw an exception
+     *
+     * @throw lsst::pex::exceptions::InvalidParameterException when FORCE_GPU is selected
+     *
+     * @ingroup afw
+     */
+    void CheckForceGpuOnUnsupportedKernel(afwMath::ConvolutionControl const& convolutionControl)
+    {
+        if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can not process this type of kernel");     
+        }
     }
 
 }   // anonymous namespace
@@ -232,11 +212,7 @@ void mathDetail::basicConvolve(
     assert (!kernel.isSpatiallyVarying());
     assertDimensionsOK(convolvedImage, inImage, kernel);
 
-    CheckForceGpuOnNoGpu(convolutionControl);
-    #ifdef GPU_BUILD
-        if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU)
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can not process this type of kernel");
-    #endif
+    CheckForceGpuOnUnsupportedKernel(convolutionControl);
 
     int const mImageWidth = inImage.getWidth(); // size of input region
     int const mImageHeight = inImage.getHeight();
@@ -290,21 +266,20 @@ void mathDetail::basicConvolve(
             convolutionControl.getDoNormalize());
     } else {
         CheckForceGpuOnNoGpu(convolutionControl);
-        #ifdef GPU_BUILD
+        if (IsGpuBuild()) {
             if (convolutionControl.getDeviceSelection()==ConvolutionControl::AUTO_GPU_SAFE) {
                 try {
                     bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
                     if (isProcessed) return;
-                    }
-                catch(...) {}
-                }
-            else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
+                } catch(...) {}
+            } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
                 bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
                 if (isProcessed) return;
-                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU)
+                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
                 }
-        #endif
+            }
+        }
 
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
@@ -357,11 +332,7 @@ void mathDetail::basicConvolve(
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
 
-    CheckForceGpuOnNoGpu(convolutionControl);
-    #ifdef GPU_BUILD
-        if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU)
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can not process this type of kernel");
-    #endif
+    CheckForceGpuOnUnsupportedKernel(convolutionControl);
 
     afwGeom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
     afwGeom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
@@ -519,11 +490,7 @@ void mathDetail::convolveWithBruteForce(
         pexLog::TTrace<5>("lsst.afw.math.convolve",
             "convolveWithBruteForce: kernel is spatially varying");
 
-        CheckForceGpuOnNoGpu(convolutionControl);
-        #ifdef GPU_BUILD
-            if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU)
-                throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can not process this type of kernel");
-        #endif
+        CheckForceGpuOnUnsupportedKernel(convolutionControl);
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
@@ -546,21 +513,20 @@ void mathDetail::convolveWithBruteForce(
             "convolveWithBruteForce: kernel is spatially invariant");
 
         CheckForceGpuOnNoGpu(convolutionControl);
-        #ifdef GPU_BUILD
+        if (IsGpuBuild()) {
             if (convolutionControl.getDeviceSelection()==ConvolutionControl::AUTO_GPU_SAFE) {
                 try {
                     bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
                     if (isProcessed) return;
-                    }
-                catch(...) {}
-                }
-            else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
+                } catch(...) {}
+            } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
                 bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
-                if (isProcessed) return;
-                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU)
+                if (isProcessed) return;                
+                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
                 }
-        #endif
+            }
+        }
 
         (void)kernel.computeImage(kernelImage, doNormalize);
 

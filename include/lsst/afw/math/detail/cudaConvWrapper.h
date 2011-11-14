@@ -32,8 +32,6 @@
  * @ingroup afw
  */
 
-#ifdef GPU_BUILD
-
 namespace lsst {
 namespace afw {
 namespace math {
@@ -59,56 +57,59 @@ void VerifyCudaDevice();
 
 enum SpatialFunctionType_t { sftChebyshev, sftPolynomial};
 
+#ifdef GPU_BUILD
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_SpatiallyInvariantKernel(
-    ImageBuffer<InPixelT>&    inImage,
-    ImageBuffer<OutPixelT>&   outImage,
-    ImageBuffer<KerPixel>&    kernel
-);
+        ImageBuffer<InPixelT>&    inImage,
+        ImageBuffer<OutPixelT>&   outImage,
+        ImageBuffer<KerPixel>&    kernel
+                                                  );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_SpatiallyInvariantKernel(
-    ImageBuffer<InPixelT>&    inImageImg,
-    ImageBuffer<VarPixel>&    inImageVar,
-    ImageBuffer<MskPixel>&    inImageMsk,
-    ImageBuffer<OutPixelT>&   outImageImg,
-    ImageBuffer<VarPixel>&    outImageVar,
-    ImageBuffer<MskPixel>&    outImageMsk,
-    ImageBuffer<KerPixel>&    kernel
-);
+        ImageBuffer<InPixelT>&    inImageImg,
+        ImageBuffer<VarPixel>&    inImageVar,
+        ImageBuffer<MskPixel>&    inImageMsk,
+        ImageBuffer<OutPixelT>&   outImageImg,
+        ImageBuffer<VarPixel>&    outImageVar,
+        ImageBuffer<MskPixel>&    outImageMsk,
+        ImageBuffer<KerPixel>&    kernel
+                                               );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_LinearCombinationKernel(
-    ImageBuffer<InPixelT>& inImage,
-    std::vector<double> colPos,
-    std::vector<double> rowPos,
-    std::vector< lsst::afw::math::Kernel::SpatialFunctionPtr > sFn,
-    ImageBuffer<OutPixelT>&                outImage,
-    std::vector< ImageBuffer<KerPixel> >&  basisKernels,
-    SpatialFunctionType_t sfType,
-    bool doNormalize
-);
+        ImageBuffer<InPixelT>& inImage,
+        std::vector<double> colPos,
+        std::vector<double> rowPos,
+        std::vector< lsst::afw::math::Kernel::SpatialFunctionPtr > sFn,
+        ImageBuffer<OutPixelT>&                outImage,
+        std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+        SpatialFunctionType_t sfType,
+        bool doNormalize
+                                                 );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_LinearCombinationKernel(
-    ImageBuffer<InPixelT>& inImageImg,
-    ImageBuffer<VarPixel>& inImageVar,
-    ImageBuffer<MskPixel>& inImageMsk,
-    std::vector<double> colPos,
-    std::vector<double> rowPos,
-    std::vector< lsst::afw::math::Kernel::SpatialFunctionPtr > sFn,
-    ImageBuffer<OutPixelT>&                outImageImg,
-    ImageBuffer<VarPixel>&                 outImageVar,
-    ImageBuffer<MskPixel>&                 outImageMsk,
-    std::vector< ImageBuffer<KerPixel> >&  basisKernels,
-    SpatialFunctionType_t sfType,
-    bool doNormalize
-);
+        ImageBuffer<InPixelT>& inImageImg,
+        ImageBuffer<VarPixel>& inImageVar,
+        ImageBuffer<MskPixel>& inImageMsk,
+        std::vector<double> colPos,
+        std::vector<double> rowPos,
+        std::vector< lsst::afw::math::Kernel::SpatialFunctionPtr > sFn,
+        ImageBuffer<OutPixelT>&                outImageImg,
+        ImageBuffer<VarPixel>&                 outImageVar,
+        ImageBuffer<MskPixel>&                 outImageMsk,
+        std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+        SpatialFunctionType_t sfType,
+        bool doNormalize
+                                              );
+
+#endif //GPU_BUILD
 
 }
 }
 }
 } //namespace lsst::afw::math::detail ends
 
-#endif //GPU_BUILD
+
 

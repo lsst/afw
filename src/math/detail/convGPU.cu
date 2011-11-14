@@ -54,7 +54,7 @@ namespace {
 
 __host__ __device__
 int CeilDivide(int num, int divisor)    {
-    return (num+divisor-1)/divisor;
+    return (num + divisor - 1) / divisor;
 }
 
 /**
@@ -74,15 +74,21 @@ template <typename InPixelT, typename ArithPixelT>
 __device__ void LoadImageToSmem(ArithPixelT* smemImg, InPixelT* img, int imgW, int imgH,
                                 int x, int y, int simgPitchX, int simgPitchY)
 {
-    if (x+simgPitchX<=imgW && y+simgPitchY<=imgH)
-        for (int i=0; i<simgPitchY; i++)
-            for (int j=threadIdx.x; j<simgPitchX; j+=blockDim.x)
-                smemImg[i*simgPitchX+j]=img[(i+y)*imgW+j+x];
-    else
-        for (int i=0; i<simgPitchY; i++)
-            for (int j=threadIdx.x; j<simgPitchX; j+=blockDim.x)
-                if ((i+y)*imgW+j+x < imgW*imgH)
-                    smemImg[i*simgPitchX+j]=img[(i+y)*imgW+j+x];
+    if (x + simgPitchX <= imgW && y + simgPitchY <= imgH) {
+        for (int i = 0; i < simgPitchY; i++) {
+            for (int j = threadIdx.x; j < simgPitchX; j += blockDim.x) {
+                smemImg[i*simgPitchX+j] = img[(i+y)*imgW+j+x];
+            }
+        }
+    } else {
+        for (int i = 0; i < simgPitchY; i++) {
+            for (int j = threadIdx.x; j < simgPitchX; j += blockDim.x) {
+                if ((i + y)*imgW + j + x < imgW * imgH) {
+                    smemImg[i*simgPitchX+j] = img[(i+y)*imgW+j+x];
+                }
+            }
+        }
+    }
 }
 
 } //local namespace ends
@@ -103,16 +109,16 @@ __device__ double ChebyshevLineY (
     double* yCoeffs
 )
 {
-    if (order<2)
-        return yCoeffs[0] + order * yCoeffs[1]*y ;
+    if (order < 2)
+        return yCoeffs[0] + order * yCoeffs[1] * y ;
 
     double CshM2 = yCoeffs[order];
     double CshM1 = 2 * y * yCoeffs[order] + yCoeffs[order-1];
 
-    for (int i=order-2; i>0; i--) {
+    for (int i = order - 2; i > 0; i--) {
         double CshNext = 2 * y * CshM1 + yCoeffs[i] - CshM2;
-        CshM2=CshM1;
-        CshM1=CshNext;
+        CshM2 = CshM1;
+        CshM1 = CshNext;
     }
 
     return y * CshM1 + yCoeffs[0] - CshM2;
@@ -143,9 +149,9 @@ __device__ void Chebyshev_T_of_X (
     double* _xCheby    //temporary
 )
 {
-    if (threadIdx.x>=blockSizeX) return;
+    if (threadIdx.x >= blockSizeX) return;
 
-    int paramN= (order+1)*(order+2)/2;
+    int paramN = (order + 1) * (order + 2) / 2;
 
     /* Solve as follows:
     - f(x,y) = Cy0 T0(y') + Cy1 T1(y') + Cy2 T2(y') + Cy3 T3(y') + ...
@@ -202,9 +208,9 @@ __device__ void Polynomial_T_of_X (
     double* _yCoeffs  //output
 )
 {
-    if (threadIdx.x>=blockSizeX) return;
+    if (threadIdx.x >= blockSizeX) return;
 
-    int paramN= (order+1)*(order+2)/2;
+    int paramN = (order + 1) * (order + 2) / 2;
 
     /* Solve as follows:
         - f(x,y) = Cy0 + Cy1 y + Cy2 y^2 + Cy3 y^3 + ...
@@ -253,56 +259,56 @@ __global__ void ChebyshevImageValues(
     const double offsetX = -(minX + maxX) * 0.5;
     const double offsetY = -(minY + maxY) * 0.5;
 
-    const int coeffN = order+1;
-    double* smemDbl=(double*)smem;
+    const int coeffN = order + 1;
+    double* smemDbl = (double*)smem;
 
-    const int coeffPadding=coeffN + 1 - (coeffN%2);
+    const int coeffPadding = coeffN + 1 - (coeffN % 2);
 
-    double* yCoeffsAll=smemDbl ;
-    double* xChebyAll =yCoeffsAll + (coeffPadding*blockSizeX);
-    double* smemParams =xChebyAll + (coeffPadding*blockSizeX);
+    double* yCoeffsAll = smemDbl ;
+    double* xChebyAll = yCoeffsAll + (coeffPadding * blockSizeX);
+    double* smemParams = xChebyAll + (coeffPadding * blockSizeX);
 
-    int yLineGroup=threadIdx.x%blockSizeX;
+    int yLineGroup = threadIdx.x % blockSizeX;
 
-    double* yCoeffs=yCoeffsAll + (coeffPadding*yLineGroup);
-    double* xCheby =xChebyAll  + (coeffPadding*yLineGroup);
+    double* yCoeffs = yCoeffsAll + (coeffPadding * yLineGroup);
+    double* xCheby = xChebyAll  + (coeffPadding * yLineGroup);
 
     //load params to shared memory
-    int paramN= (order+1)*(order+2)/2;
-    for(int i=threadIdx.x; i<paramN; i+=blockDim.x)
-        smemParams[i]=params[i];
+    int paramN = (order + 1) * (order + 2) / 2;
+    for(int i = threadIdx.x; i < paramN; i += blockDim.x)
+        smemParams[i] = params[i];
 
-    int totalBlocks=CeilDivide(outW,blockSizeX);
-    int totalPixelsInBlock=blockSizeX*outH;
+    int totalBlocks = CeilDivide(outW, blockSizeX);
+    int totalPixelsInBlock = blockSizeX * outH;
 
-    for (int blkI=blockIdx.x; blkI<totalBlocks; blkI+=gridDim.x)
+    for (int blkI = blockIdx.x; blkI < totalBlocks; blkI += gridDim.x)
     {
-        int blkX=blkI*blockSizeX;
-        int blkY=0;
+        int blkX = blkI * blockSizeX;
+        int blkY = 0;
 
-        int curPixelX=threadIdx.x%blockSizeX;
-        int curPixelY=threadIdx.x/blockSizeX;
+        int curPixelX = threadIdx.x % blockSizeX;
+        int curPixelY = threadIdx.x / blockSizeX;
 
-        int outPixelX=blkX+curPixelX;
-        const int x=colPos[outPixelX];
+        int outPixelX = blkX + curPixelX;
+        const int x = colPos[outPixelX];
         const double xPrime = (x + offsetX) * scaleX;
 
         __syncthreads();
         Chebyshev_T_of_X(order, xPrime, smemParams, yCoeffs, xCheby);
         __syncthreads();
 
-        for(int curPixel=threadIdx.x; curPixel<totalPixelsInBlock; curPixel+=blockDim.x)
+        for(int curPixel = threadIdx.x; curPixel < totalPixelsInBlock; curPixel += blockDim.x)
         {
-            int outPixelY=blkY+curPixelY;
+            int outPixelY = blkY + curPixelY;
 
-            if (outPixelX>=outW || outPixelY>=outH) continue;
+            if (outPixelX >= outW || outPixelY >= outH) continue;
 
-            const int y=rowPos[outPixelY];
+            const int y = rowPos[outPixelY];
             const double yPrime = (y + offsetY) * scaleY;
 
             out[outPixelY*outW + outPixelX] = ChebyshevLineY(order, yPrime, yCoeffs);
 
-            curPixelY+=blockDim.x/blockSizeX;
+            curPixelY += blockDim.x / blockSizeX;
         }
     }
 
@@ -316,52 +322,52 @@ __global__ void PolynomialImageValues(
     double* colPos
 )
 {
-    const int coeffN = order+1;
-    double* smemDbl=(double*)smem;
+    const int coeffN = order + 1;
+    double* smemDbl = (double*)smem;
 
-    const int coeffPadding=coeffN + 1 - (coeffN%2);
+    const int coeffPadding = coeffN + 1 - (coeffN % 2);
 
-    double* yCoeffsAll=smemDbl ;
-    double* smemParams =yCoeffsAll + (coeffPadding*blockSizeX);
+    double* yCoeffsAll = smemDbl ;
+    double* smemParams = yCoeffsAll + (coeffPadding * blockSizeX);
 
-    int yLineGroup=threadIdx.x%blockSizeX;
+    int yLineGroup = threadIdx.x % blockSizeX;
 
-    double* yCoeffs=yCoeffsAll + (coeffPadding*yLineGroup);
+    double* yCoeffs = yCoeffsAll + (coeffPadding * yLineGroup);
 
     //load params to shared memory
-    int paramN= (order+1)*(order+2)/2;
-    for(int i=threadIdx.x; i<paramN; i+=blockDim.x)
-        smemParams[i]=params[i];
+    int paramN = (order + 1) * (order + 2) / 2;
+    for(int i = threadIdx.x; i < paramN; i += blockDim.x)
+        smemParams[i] = params[i];
 
-    int totalBlocks=CeilDivide(outW,blockSizeX);
-    int totalPixelsInBlock=blockSizeX*outH;
+    int totalBlocks = CeilDivide(outW, blockSizeX);
+    int totalPixelsInBlock = blockSizeX * outH;
 
-    for (int blkI=blockIdx.x; blkI<totalBlocks; blkI+=gridDim.x)
+    for (int blkI = blockIdx.x; blkI < totalBlocks; blkI += gridDim.x)
     {
-        int blkX=blkI*blockSizeX;
-        int blkY=0;
+        int blkX = blkI * blockSizeX;
+        int blkY = 0;
 
-        int curPixelX=threadIdx.x%blockSizeX;
-        int curPixelY=threadIdx.x/blockSizeX;
+        int curPixelX = threadIdx.x % blockSizeX;
+        int curPixelY = threadIdx.x / blockSizeX;
 
-        int outPixelX=blkX+curPixelX;
-        const int x=colPos[outPixelX];
+        int outPixelX = blkX + curPixelX;
+        const int x = colPos[outPixelX];
 
         __syncthreads();
         Polynomial_T_of_X(order, x, smemParams, yCoeffs);
         __syncthreads();
 
-        for(int curPixel=threadIdx.x; curPixel<totalPixelsInBlock; curPixel+=blockDim.x)
+        for(int curPixel = threadIdx.x; curPixel < totalPixelsInBlock; curPixel += blockDim.x)
         {
-            int outPixelY=blkY+curPixelY;
+            int outPixelY = blkY + curPixelY;
 
-            if (outPixelX>=outW || outPixelY>=outH) continue;
+            if (outPixelX >= outW || outPixelY >= outH) continue;
 
-            const int y=rowPos[outPixelY];
+            const int y = rowPos[outPixelY];
 
             out[outPixelY*outW + outPixelX] = PolynomialLineY(order, y, yCoeffs);
 
-            curPixelY+=blockDim.x/blockSizeX;
+            curPixelY += blockDim.x / blockSizeX;
         }
     }
 
@@ -379,9 +385,9 @@ void Call_ChebyshevImageValues(
 )
 {
     dim3 block(256);
-    dim3 grid(CeilDivide(outW,blockSizeX));
+    dim3 grid(CeilDivide(outW, blockSizeX));
 
-    ChebyshevImageValues<<<grid, block, sharedMemorySize >>>(
+    ChebyshevImageValues <<< grid, block, sharedMemorySize >>>(
         out, outW, outH, order, params,
         rowPos, colPos,
         minX, minY, maxX, maxY
@@ -399,9 +405,9 @@ void Call_PolynomialImageValues(
 )
 {
     dim3 block(256);
-    dim3 grid(CeilDivide(outW,blockSizeX));
+    dim3 grid(CeilDivide(outW, blockSizeX));
 
-    PolynomialImageValues<<<grid, block, sharedMemorySize >>>(
+    PolynomialImageValues <<< grid, block, sharedMemorySize >>>(
         out, outW, outH, order, params,
         rowPos, colPos
     );
@@ -413,33 +419,33 @@ __global__ void NormalizationImageValues(
     double* kernelSum, bool* isDivideByZeroGPU
 )
 {
-    double*  smemDbl=(double*)smem;
-    double*  smemKernelSum=smemDbl ;
-    double** smemSfnPtr=(double**) (smemKernelSum + n);
+    double*  smemDbl = (double*)smem;
+    double*  smemKernelSum = smemDbl ;
+    double** smemSfnPtr = (double**) (smemKernelSum + n);
 
     //load kernel sums into shared memory
-    for(int i=threadIdx.x; i<n; i+=blockDim.x)
-        smemKernelSum[i]=kernelSum[i];
+    for(int i = threadIdx.x; i < n; i += blockDim.x) {
+        smemKernelSum[i] = kernelSum[i];
+    }
     //load pointers to sFn values into shared memory
-    for(int i=threadIdx.x; i<n; i+=blockDim.x)
-        smemSfnPtr[i]=sFn[i];
+    for(int i = threadIdx.x; i < n; i += blockDim.x) {
+        smemSfnPtr[i] = sFn[i];
+    }
     __syncthreads();
 
-    int totalPixels=outW*outH;
+    int totalPixels = outW * outH;
 
-    for(int curPixel=threadIdx.x; curPixel<totalPixels; curPixel+=blockDim.x)
+    for(int curPixel = threadIdx.x; curPixel < totalPixels; curPixel += blockDim.x)
     {
         //int outPixelX=curPixel%outW;
         //int outPixelY=curPixel/outW;
 
-        double sum=0;
-        for (int i=0; i<n; i++)
-            sum+=smemSfnPtr[i][curPixel] * smemKernelSum[i];
-
-        if (sum==0)
-            *isDivideByZeroGPU=true;
-        else
-            out[curPixel]= 1.0/sum;
+        double sum = 0;
+        for (int i = 0; i < n; i++)  {
+            sum += smemSfnPtr[i][curPixel] * smemKernelSum[i];
+        }
+        if (sum == 0)  *isDivideByZeroGPU = true;
+        else         out[curPixel] = 1.0 / sum;
     }
 
 }
@@ -457,7 +463,7 @@ void Call_NormalizationImageValues(
     dim3 block(256);
     dim3 grid(blockN);
 
-    NormalizationImageValues<<<grid, block, sharedMemorySize >>>(
+    NormalizationImageValues <<< grid, block, sharedMemorySize >>>(
         out, outW, outH,
         sFn, n,
         kernelSum,
@@ -498,23 +504,24 @@ __device__ dfloat ApplyFilterOnce(
     int curPixelX, int curPixelY, int simgPitchX
 )
 {
-    dfloat* smemImg=(dfloat*)smem;
-    dfloat totalSum=0;
-    dfloat* pixLine=&smemImg[curPixelY*simgPitchX+curPixelX];
-    dfloat* filtLine=smemFilt;
-    int pixLineAdd= simgPitchX-filtW;
+    dfloat* smemImg = (dfloat*)smem;
+    dfloat totalSum = 0;
+    dfloat* pixLine = &smemImg[curPixelY*simgPitchX+curPixelX];
+    dfloat* filtLine = smemFilt;
+    int pixLineAdd = simgPitchX - filtW;
 
-    for (int filtY=0; filtY<filtH; filtY++) {
-        dfloat sum=0;
+    for (int filtY = 0; filtY < filtH; filtY++) {
+        dfloat sum = 0;
 #pragma unroll 4
-        for (int x=0; x<filtW; x++) {
-            if (*filtLine!=0)
-                sum+=*pixLine * *filtLine;
+        for (int x = 0; x < filtW; x++) {
+            if (*filtLine != 0) {
+                sum += *pixLine * *filtLine;
+            }
             pixLine++;
             filtLine++;
         }
-        pixLine+=pixLineAdd;
-        totalSum+=sum;
+        pixLine += pixLineAdd;
+        totalSum += sum;
     }
     return totalSum;
 }
@@ -530,21 +537,21 @@ __device__ dfloat ApplyFilterOnce(
     int curPixelX, int curPixelY, int simgPitchX
 )
 {
-    dfloat* smemImg=(dfloat*)smem;
-    dfloat totalSum=0;
-    dfloat* pixLineOrig=&smemImg[curPixelY*simgPitchX+curPixelX];
-    dfloat* filtLineOrig=smemFilt;
-    int remainingFiltW=filtW;
-    int pixLineAdd= simgPitchX;
+    dfloat* smemImg = (dfloat*)smem;
+    dfloat totalSum = 0;
+    dfloat* pixLineOrig = &smemImg[curPixelY*simgPitchX+curPixelX];
+    dfloat* filtLineOrig = smemFilt;
+    int remainingFiltW = filtW;
+    int pixLineAdd = simgPitchX;
     int procWidth;
 
-    if (remainingFiltW>=12) {
-        procWidth=24;
-        while (remainingFiltW>=procWidth) {
-            dfloat* pixLine =pixLineOrig;
-            dfloat* filtLine=filtLineOrig;
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+    if (remainingFiltW >= 12) {
+        procWidth = 24;
+        while (remainingFiltW >= procWidth) {
+            dfloat* pixLine = pixLineOrig;
+            dfloat* filtLine = filtLineOrig;
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProductX4(0)
                 SumUpPixelProductX4(4)
                 SumUpPixelProductX4(8)
@@ -552,157 +559,155 @@ __device__ dfloat ApplyFilterOnce(
                 SumUpPixelProductX4(16)
                 SumUpPixelProductX4(20)
 
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-            remainingFiltW-=procWidth;
-            pixLineOrig+=procWidth;
-            filtLineOrig+=procWidth;
+            remainingFiltW -= procWidth;
+            pixLineOrig += procWidth;
+            filtLineOrig += procWidth;
         }
 
-        procWidth=12;
-        if (remainingFiltW>=procWidth) {
-            dfloat* pixLine =pixLineOrig;
-            dfloat* filtLine=filtLineOrig;
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+        procWidth = 12;
+        if (remainingFiltW >= procWidth) {
+            dfloat* pixLine = pixLineOrig;
+            dfloat* filtLine = filtLineOrig;
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProductX4(0)
                 SumUpPixelProductX4(4)
                 SumUpPixelProductX4(8)
 
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-            remainingFiltW-=procWidth;
-            pixLineOrig+=procWidth;
-            filtLineOrig+=procWidth;
+            remainingFiltW -= procWidth;
+            pixLineOrig += procWidth;
+            filtLineOrig += procWidth;
         }
 
-        if (remainingFiltW==0)
-            return totalSum;
+        if (remainingFiltW == 0) return totalSum;
     }
 
-    dfloat* pixLine =pixLineOrig;
-    dfloat* filtLine=filtLineOrig;
+    dfloat* pixLine = pixLineOrig;
+    dfloat* filtLine = filtLineOrig;
 
-    if (remainingFiltW<4) {
-        if (remainingFiltW==1)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+    if (remainingFiltW < 4) {
+        if (remainingFiltW == 1)
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProduct(0)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-        else if (remainingFiltW==2)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+        else if (remainingFiltW == 2)
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProduct(0)
                 SumUpPixelProduct(1)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-        else if (remainingFiltW==3)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+        else if (remainingFiltW == 3)
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProduct(0)
                 SumUpPixelProduct(1)
                 SumUpPixelProduct(2)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
         return totalSum;
     }
-    if (remainingFiltW<9) {
-        if (remainingFiltW==4)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+    if (remainingFiltW < 9) {
+        if (remainingFiltW == 4) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProductX4(0)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-        else if (remainingFiltW==5)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+        } else if (remainingFiltW == 5) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProductX4(0)
                 SumUpPixelProduct(4)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-        else if (remainingFiltW==6)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+        } else if (remainingFiltW == 6) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProductX4(0)
                 SumUpPixelProduct(4)
                 SumUpPixelProduct(5)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-        else if (remainingFiltW==7)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+        } else if (remainingFiltW == 7) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProductX4(0)
                 SumUpPixelProduct(4)
                 SumUpPixelProduct(5)
                 SumUpPixelProduct(6)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-
-        else if (remainingFiltW==8)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                dfloat sum=0;
+        } else if (remainingFiltW == 8) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                dfloat sum = 0;
                 SumUpPixelProductX4(0)
                 SumUpPixelProductX4(4)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum+=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum += sum;
             }
-
+        }
         return totalSum;
     }
-    if (remainingFiltW==9)
-        for (int filtY=0; filtY<filtH; filtY++) {
-            dfloat sum=0;
+    if (remainingFiltW == 9) {
+        for (int filtY = 0; filtY < filtH; filtY++) {
+            dfloat sum = 0;
             SumUpPixelProductX4(0)
             SumUpPixelProductX4(4)
             SumUpPixelProduct(8)
-            filtLine+=filtW;
-            pixLine+=pixLineAdd;
-            totalSum+=sum;
+            filtLine += filtW;
+            pixLine += pixLineAdd;
+            totalSum += sum;
         }
-    else if (remainingFiltW==10)
-        for (int filtY=0; filtY<filtH; filtY++) {
-            dfloat sum=0;
+    } else if (remainingFiltW == 10) {
+        for (int filtY = 0; filtY < filtH; filtY++) {
+            dfloat sum = 0;
             SumUpPixelProductX4(0)
             SumUpPixelProductX4(4)
             SumUpPixelProduct(8)
             SumUpPixelProduct(9)
-            filtLine+=filtW;
-            pixLine+=pixLineAdd;
-            totalSum+=sum;
+            filtLine += filtW;
+            pixLine += pixLineAdd;
+            totalSum += sum;
         }
-    else if (remainingFiltW==11)
-        for (int filtY=0; filtY<filtH; filtY++) {
-            dfloat sum=0;
+    } else if (remainingFiltW == 11) {
+        for (int filtY = 0; filtY < filtH; filtY++) {
+            dfloat sum = 0;
             SumUpPixelProductX4(0)
             SumUpPixelProductX4(4)
             SumUpPixelProduct(8)
             SumUpPixelProduct(9)
             SumUpPixelProduct(10)
-            filtLine+=filtW;
-            pixLine+=pixLineAdd;
-            totalSum+=sum;
+            filtLine += filtW;
+            pixLine += pixLineAdd;
+            totalSum += sum;
         }
-
+    }
     return totalSum;
 }
 
@@ -716,11 +721,11 @@ __global__ void SpatiallyInvariantImgConvolutionKernel(
     OutPixelT** result
 )
 {
-    const int outW=imgW-filtW+1;
-    const int outH=imgH-filtH+1;
+    const int outW = imgW - filtW + 1;
+    const int outH = imgH - filtH + 1;
 
-    int simgPitchX=blockSizeX+filtW-1;
-    int simgPitchY=blockSizeY+filtH-1;
+    int simgPitchX = blockSizeX + filtW - 1;
+    int simgPitchY = blockSizeY + filtH - 1;
 
     /*int simgSize=simgPitchX*simgPitchY;
     dfloat* smemFiltBeg=(dfloat*)smem + simgSize;
@@ -731,47 +736,47 @@ __global__ void SpatiallyInvariantImgConvolutionKernel(
             smemFilt[i]=filt[filtI][i];
         }*/
 
-    int blockNX=CeilDivide(outW,blockSizeX);
-    int blockNY=CeilDivide(outH,blockSizeY);
+    int blockNX = CeilDivide(outW, blockSizeX);
+    int blockNY = CeilDivide(outH, blockSizeY);
 
-    int totalBlocks=blockNX*blockNY;
-    int totalPixelsInBlock=blockSizeX*blockSizeY;
+    int totalBlocks = blockNX * blockNY;
+    int totalPixelsInBlock = blockSizeX * blockSizeY;
 
-    for (int blkI=blockIdx.x; blkI<totalBlocks; blkI+=gridDim.x)
+    for (int blkI = blockIdx.x; blkI < totalBlocks; blkI += gridDim.x)
     {
-        int blkX=blkI%blockNX;
-        int blkY=blkI/blockNX;
+        int blkX = blkI % blockNX;
+        int blkY = blkI / blockNX;
 
-        int x=blkX*blockSizeX;
-        int y=blkY*blockSizeY;
+        int x = blkX * blockSizeX;
+        int y = blkY * blockSizeY;
         __syncthreads();
-        LoadImageToSmem((dfloat*) smem, img,imgW,imgH,x,y,simgPitchX,simgPitchY);
+        LoadImageToSmem((dfloat*) smem, img, imgW, imgH, x, y, simgPitchX, simgPitchY);
         __syncthreads();
 
-        int curPixelX=threadIdx.x%blockSizeX;
-        int curPixelY=threadIdx.x/blockSizeX;
+        int curPixelX = threadIdx.x % blockSizeX;
+        int curPixelY = threadIdx.x / blockSizeX;
 
-        for(int curPixel=threadIdx.x; curPixel<totalPixelsInBlock; curPixel+=blockDim.x)
+        for(int curPixel = threadIdx.x; curPixel < totalPixelsInBlock; curPixel += blockDim.x)
         {
-            int outPixelX=x+curPixelX;
-            int outPixelY=y+curPixelY;
+            int outPixelX = x + curPixelX;
+            int outPixelY = y + curPixelY;
 
-            if (outPixelX>=outW || outPixelY>=outH) continue;
+            if (outPixelX >= outW || outPixelY >= outH) continue;
 
-            for (int filtI=0; filtI<filtN; filtI++) {
-                dfloat* filtPtr=&allFilt[filtI*filtW*filtH];
+            for (int filtI = 0; filtI < filtN; filtI++) {
+                dfloat* filtPtr = &allFilt[filtI*filtW*filtH];
                 //dfloat* smemFilt=smemFiltBeg + (filtW*filtH)*(filtI-filtStart);
 
                 //dfloat sum = ApplyFilterOnce(smemFilt, filtW, filtH, curPixelX, curPixelY, simgPitchX);
                 dfloat sum = ApplyFilterOnce(filtPtr, filtW, filtH, curPixelX, curPixelY, simgPitchX);
 
-                OutPixelT* curResultImg=result[filtI];
-                curResultImg[outPixelY*outW + outPixelX]=OutPixelT(sum);
+                OutPixelT* curResultImg = result[filtI];
+                curResultImg[outPixelY*outW + outPixelX] = OutPixelT(sum);
             }
 
-            curPixelX+=blockDim.x;
-            while (curPixelX>=blockSizeX) {
-                curPixelX-=blockSizeX;
+            curPixelX += blockDim.x;
+            while (curPixelX >= blockSizeX) {
+                curPixelX -= blockSizeX;
                 curPixelY++;
             }
         }
@@ -792,7 +797,7 @@ void Call_SpatiallyInvariantImageConvolutionKernel(
     dim3 block(256);
     dim3 grid(blockN);
 
-    SpatiallyInvariantImgConvolutionKernel<OutPixelT,InPixelT><<<grid, block, sharedMemorySize >>>(
+    SpatiallyInvariantImgConvolutionKernel<OutPixelT, InPixelT> <<< grid, block, sharedMemorySize >>>(
         inImageGPU, inImageWidth, inImageHeight,
         allKernelsGPU, kernelTotalN,
         kernelW, kernelH,
@@ -839,58 +844,57 @@ __device__ dfloat ApplyFilterOnceLCImg(
     int curPixelX, int curPixelY, int simgPitchX
 )
 {
-    dfloat* smemImg=(dfloat*)smem;
-    dfloat totalSum=0;
-    dfloat* pixLine=&smemImg[curPixelY*simgPitchX+curPixelX];
-    int pixLineAdd= simgPitchX-filtW;
-    int kernelSize=  filtW * filtH;
+    dfloat* smemImg = (dfloat*)smem;
+    dfloat totalSum = 0;
+    dfloat* pixLine = &smemImg[curPixelY*simgPitchX+curPixelX];
+    int pixLineAdd = simgPitchX - filtW;
+    int kernelSize =  filtW * filtH;
 
-    int filtRemainder=filtN%3;
+    int filtRemainder = filtN % 3;
 
-    for (int y=0; y<filtH; y++) {
-        dfloat sum=0;
-        for (int x=0; x<filtW; x++) {
-            dfloat* filtLine=allFilt + y * filtW + x;
+    for (int y = 0; y < filtH; y++) {
+        dfloat sum = 0;
+        for (int x = 0; x < filtW; x++) {
+            dfloat* filtLine = allFilt + y * filtW + x;
 
             dfloat filtVal;
 
-            filtVal= *filtLine * sfVal[0];
-            filtLine+=kernelSize;
+            filtVal = *filtLine * sfVal[0];
+            filtLine += kernelSize;
 
-            int filtI=1;
-            if (filtRemainder==2) {
+            int filtI = 1;
+            if (filtRemainder == 2) {
                 filtVal += *filtLine * sfVal[1];
-                filtLine+=kernelSize;
-                filtI=2;
-            }
-            else if (filtRemainder==0) {
+                filtLine += kernelSize;
+                filtI = 2;
+            } else if (filtRemainder == 0) {
                 filtVal += *filtLine * sfVal[1];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtVal += *filtLine * sfVal[2];
-                filtLine+=kernelSize;
-                filtI=3;
+                filtLine += kernelSize;
+                filtI = 3;
             }
 
-            while(filtI<filtN) {
+            while(filtI < filtN) {
                 filtVal += *filtLine * sfVal[filtI];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtI++;
                 filtVal += *filtLine * sfVal[filtI];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtI++;
                 filtVal += *filtLine * sfVal[filtI];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtI++;
             }
 
-            filtVal*=normVal;
-            if (filtVal!=0) {
+            filtVal *= normVal;
+            if (filtVal != 0) {
                 sum += *pixLine * filtVal;
             }
             pixLine++;
         }
-        pixLine+=pixLineAdd;
-        totalSum+=sum;
+        pixLine += pixLineAdd;
+        totalSum += sum;
     }
     return totalSum;
 }
@@ -909,11 +913,11 @@ __global__ void ConvolutionKernel_LC_Img(
 {
     //Asserts that : blockDim.x is divisible by blockSizeX
 
-    const int outW=imgW-filtW+1;
-    const int outH=imgH-filtH+1;
+    const int outW = imgW - filtW + 1;
+    const int outH = imgH - filtH + 1;
 
-    int simgPitchX=blockSizeX+filtW-1;
-    int simgPitchY=blockSizeY+filtH-1;
+    int simgPitchX = blockSizeX + filtW - 1;
+    int simgPitchY = blockSizeY + filtH - 1;
 
     /*int simgSize=simgPitchX*simgPitchY;
 
@@ -925,48 +929,48 @@ __global__ void ConvolutionKernel_LC_Img(
             smemFilt[i]=filt[filtI][i];
         }*/
 
-    int blockNX=CeilDivide(outW,blockSizeX);
-    int blockNY=CeilDivide(outH,blockSizeY);
+    int blockNX = CeilDivide(outW, blockSizeX);
+    int blockNY = CeilDivide(outH, blockSizeY);
 
-    int totalBlocks=blockNX*blockNY;
-    int totalPixelsInBlock=blockSizeX*blockSizeY;
+    int totalBlocks = blockNX * blockNY;
+    int totalPixelsInBlock = blockSizeX * blockSizeY;
 
-    for (int blkI=blockIdx.x; blkI<totalBlocks; blkI+=gridDim.x)
+    for (int blkI = blockIdx.x; blkI < totalBlocks; blkI += gridDim.x)
     {
-        int blkX=blkI%blockNX;
-        int blkY=blkI/blockNX;
+        int blkX = blkI % blockNX;
+        int blkY = blkI / blockNX;
 
-        int x=blkX*blockSizeX;
-        int y=blkY*blockSizeY;
+        int x = blkX * blockSizeX;
+        int y = blkY * blockSizeY;
 
         __syncthreads();
-        LoadImageToSmem((dfloat*) smem, img,imgW,imgH,x,y,simgPitchX,simgPitchY);
+        LoadImageToSmem((dfloat*) smem, img, imgW, imgH, x, y, simgPitchX, simgPitchY);
         __syncthreads();
 
-        int curPixelX=threadIdx.x%blockSizeX;
-        int curPixelY=threadIdx.x/blockSizeX;
+        int curPixelX = threadIdx.x % blockSizeX;
+        int curPixelY = threadIdx.x / blockSizeX;
 
-        for(int curPixel=threadIdx.x; curPixel<totalPixelsInBlock; curPixel+=blockDim.x)
+        for(int curPixel = threadIdx.x; curPixel < totalPixelsInBlock; curPixel += blockDim.x)
         {
-            int outPixelX=x+curPixelX;
-            int outPixelY=y+curPixelY;
-            int outAddr=outPixelY*outW + outPixelX;
+            int outPixelX = x + curPixelX;
+            int outPixelY = y + curPixelY;
+            int outAddr = outPixelY * outW + outPixelX;
 
-            if (outPixelX>=outW || outPixelY>=outH) continue;
+            if (outPixelX >= outW || outPixelY >= outH) continue;
 
-            double sfVal[100];
-            for (int filtI=0; filtI<filtN; filtI++)
-                sfVal[filtI]=sfValImg[filtI][outAddr];
+            double sfVal[maxGpuSfCount];
+            for (int filtI = 0; filtI < filtN; filtI++)
+                sfVal[filtI] = sfValImg[filtI][outAddr];
 
-            double normVal=1;
-            if (norm!=NULL)
-                normVal=norm[outAddr];
+            double normVal = 1;
+            if (norm != NULL)
+                normVal = norm[outAddr];
 
             double sum = ApplyFilterOnceLCImg(filt, filtN, filtW, filtH,
                                               sfVal, normVal, curPixelX, curPixelY, simgPitchX);
-            out[outAddr]= OutPixelT(sum);
+            out[outAddr] = OutPixelT(sum);
 
-            curPixelY+=blockDim.x/blockSizeX;
+            curPixelY += blockDim.x / blockSizeX;
         }
     }
 
@@ -987,7 +991,7 @@ void Call_ConvolutionKernel_LC_Img(
     dim3 block(256);
     dim3 grid(blockN);
 
-    ConvolutionKernel_LC_Img<<<grid, block, sharedMemorySize >>>(
+    ConvolutionKernel_LC_Img <<< grid, block, sharedMemorySize >>>(
         inImageGPU, inImageWidth, inImageHeight,
         kernelGPU, kernelTotalN,
         kernelW, kernelH,
@@ -1042,61 +1046,60 @@ __device__ dfloat ApplyFilterOnceLCVar(
     int curPixelX, int curPixelY, int simgPitchX
 )
 {
-    dfloat* smemImg=(dfloat*)smem;
-    dfloat totalSum=0;
-    dfloat* pixLine=&smemImg[curPixelY*simgPitchX+curPixelX];
-    MskPixel* pixMskLine=&smemMsk[curPixelY*simgPitchX+curPixelX];
-    int pixLineAdd= simgPitchX-filtW;
-    int kernelSize=  filtW * filtH;
+    dfloat* smemImg = (dfloat*)smem;
+    dfloat totalSum = 0;
+    dfloat* pixLine = &smemImg[curPixelY*simgPitchX+curPixelX];
+    MskPixel* pixMskLine = &smemMsk[curPixelY*simgPitchX+curPixelX];
+    int pixLineAdd = simgPitchX - filtW;
+    int kernelSize =  filtW * filtH;
 
-    mskSum=0;
-    int filtRemainder=filtN%3;
+    mskSum = 0;
+    int filtRemainder = filtN % 3;
 
-    for (int y=0; y<filtH; y++) {
-        dfloat sum=0;
-        for (int x=0; x<filtW; x++) {
-            dfloat* filtLine=allFilt + y * filtW + x;
+    for (int y = 0; y < filtH; y++) {
+        dfloat sum = 0;
+        for (int x = 0; x < filtW; x++) {
+            dfloat* filtLine = allFilt + y * filtW + x;
 
-            dfloat filtVal= *filtLine * sfVal[0];
-            filtLine+=kernelSize;
+            dfloat filtVal = *filtLine * sfVal[0];
+            filtLine += kernelSize;
 
-            int filtI=1;
-            if (filtRemainder==2) {
+            int filtI = 1;
+            if (filtRemainder == 2) {
                 filtVal += *filtLine * sfVal[1];
-                filtLine+=kernelSize;
-                filtI=2;
-            }
-            else if (filtRemainder==0) {
+                filtLine += kernelSize;
+                filtI = 2;
+            } else if (filtRemainder == 0) {
                 filtVal += *filtLine * sfVal[1];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtVal += *filtLine * sfVal[2];
-                filtLine+=kernelSize;
-                filtI=3;
+                filtLine += kernelSize;
+                filtI = 3;
             }
 
-            while(filtI<filtN) {
+            while(filtI < filtN) {
                 filtVal += *filtLine * sfVal[filtI];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtI++;
                 filtVal += *filtLine * sfVal[filtI];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtI++;
                 filtVal += *filtLine * sfVal[filtI];
-                filtLine+=kernelSize;
+                filtLine += kernelSize;
                 filtI++;
             }
 
-            filtVal*=normVal;
-            if (filtVal!=0) {
-                sum += *pixLine * (filtVal*filtVal);
+            filtVal *= normVal;
+            if (filtVal != 0) {
+                sum += *pixLine * (filtVal * filtVal);
                 mskSum |= *pixMskLine;
             }
             pixLine++;
             pixMskLine++;
         }
-        pixLine+=pixLineAdd;
-        pixMskLine+=pixLineAdd;
-        totalSum+=sum;
+        pixLine += pixLineAdd;
+        pixMskLine += pixLineAdd;
+        totalSum += sum;
     }
     return totalSum;
 }
@@ -1116,14 +1119,14 @@ __global__ void ConvolutionKernel_LC_Var(
 {
     //Asserts that : blockDim.x is divisible by blockSizeX
 
-    const int outW=imgW-filtW+1;
-    const int outH=imgH-filtH+1;
+    const int outW = imgW - filtW + 1;
+    const int outH = imgH - filtH + 1;
 
-    int simgPitchX=blockSizeX+filtW-1;
-    int simgPitchY=blockSizeY+filtH-1;
+    int simgPitchX = blockSizeX + filtW - 1;
+    int simgPitchY = blockSizeY + filtH - 1;
 
-    int simgSize=simgPitchX*simgPitchY;
-    MskPixel* smemMsk=(MskPixel*)((dfloat*)smem + simgSize);
+    int simgSize = simgPitchX * simgPitchY;
+    MskPixel* smemMsk = (MskPixel*)((dfloat*)smem + simgSize);
 
     /*dfloat* smemFiltBeg=(dfloat*)smem + simgSize;
 
@@ -1133,52 +1136,52 @@ __global__ void ConvolutionKernel_LC_Var(
             smemFilt[i]=filt[filtI][i];
         }*/
 
-    int blockNX=CeilDivide(outW,blockSizeX);
-    int blockNY=CeilDivide(outH,blockSizeY);
+    int blockNX = CeilDivide(outW, blockSizeX);
+    int blockNY = CeilDivide(outH, blockSizeY);
 
-    int totalBlocks=blockNX*blockNY;
-    int totalPixelsInBlock=blockSizeX*blockSizeY;
+    int totalBlocks = blockNX * blockNY;
+    int totalPixelsInBlock = blockSizeX * blockSizeY;
 
-    for (int blkI=blockIdx.x; blkI<totalBlocks; blkI+=gridDim.x)
+    for (int blkI = blockIdx.x; blkI < totalBlocks; blkI += gridDim.x)
     {
-        int blkX=blkI%blockNX;
-        int blkY=blkI/blockNX;
+        int blkX = blkI % blockNX;
+        int blkY = blkI / blockNX;
 
-        int x=blkX*blockSizeX;
-        int y=blkY*blockSizeY;
+        int x = blkX * blockSizeX;
+        int y = blkY * blockSizeY;
 
         __syncthreads();
-        LoadImageToSmem((dfloat*) smem, img,imgW,imgH,x,y,simgPitchX,simgPitchY);
-        LoadImageToSmem(        smemMsk, inMsk,imgW,imgH,x,y,simgPitchX,simgPitchY);
+        LoadImageToSmem((dfloat*) smem, img, imgW, imgH, x, y, simgPitchX, simgPitchY);
+        LoadImageToSmem(        smemMsk, inMsk, imgW, imgH, x, y, simgPitchX, simgPitchY);
         __syncthreads();
 
-        int curPixelX=threadIdx.x%blockSizeX;
-        int curPixelY=threadIdx.x/blockSizeX;
+        int curPixelX = threadIdx.x % blockSizeX;
+        int curPixelY = threadIdx.x / blockSizeX;
 
-        for(int curPixel=threadIdx.x; curPixel<totalPixelsInBlock; curPixel+=blockDim.x)
+        for(int curPixel = threadIdx.x; curPixel < totalPixelsInBlock; curPixel += blockDim.x)
         {
-            int outPixelX=x+curPixelX;
-            int outPixelY=y+curPixelY;
-            int outAddr=outPixelY*outW + outPixelX;
+            int outPixelX = x + curPixelX;
+            int outPixelY = y + curPixelY;
+            int outAddr = outPixelY * outW + outPixelX;
 
-            if (outPixelX>=outW || outPixelY>=outH) continue;
+            if (outPixelX >= outW || outPixelY >= outH) continue;
 
-            double sfVal[100];
-            for (int filtI=0; filtI<filtN; filtI++)
-                sfVal[filtI]=sfValImg[filtI][outAddr];
+            double sfVal[maxGpuSfCount];
+            for (int filtI = 0; filtI < filtN; filtI++) {
+                sfVal[filtI] = sfValImg[filtI][outAddr];
+            }
 
-            double normVal=1;
-            if (norm!=NULL)
-                normVal=norm[outAddr];
+            double normVal = 1;
+            if (norm != NULL) normVal = norm[outAddr];
 
             MskPixel mskSum;
             dfloat sum = ApplyFilterOnceLCVar(smemMsk, mskSum, filt, filtN, filtW, filtH,
                                               sfVal, normVal, curPixelX, curPixelY, simgPitchX);
 
-            outVar[outAddr]=sum;
-            outMsk[outAddr]=mskSum;
+            outVar[outAddr] = sum;
+            outMsk[outAddr] = mskSum;
 
-            curPixelY+=blockDim.x/blockSizeX;
+            curPixelY += blockDim.x / blockSizeX;
         }
     }
 
@@ -1200,7 +1203,7 @@ void Call_ConvolutionKernel_LC_Var(
     dim3 block(256);
     dim3 grid(blockN);
 
-    ConvolutionKernel_LC_Var<<<grid, block, sharedMemorySize >>>(
+    ConvolutionKernel_LC_Var <<< grid, block, sharedMemorySize >>>(
         inImageGPU, inImageWidth, inImageHeight,
         inMskGPU,
         kernelGPU, kernelTotalN,
@@ -1241,23 +1244,24 @@ __device__ MskPixel MaskApplyFilterOnce(
     int curPixelX, int curPixelY, int simgPitchX
 )
 {
-    MskPixel* smemImg=(MskPixel*)smem;
-    MskPixel totalSum=0;
-    MskPixel* pixLine=&smemImg[curPixelY*simgPitchX+curPixelX];
-    dfloat* filtLine=smemFilt;
-    int pixLineAdd= simgPitchX-filtW;
+    MskPixel* smemImg = (MskPixel*)smem;
+    MskPixel totalSum = 0;
+    MskPixel* pixLine = &smemImg[curPixelY*simgPitchX+curPixelX];
+    dfloat* filtLine = smemFilt;
+    int pixLineAdd = simgPitchX - filtW;
 
-    for (int filtY=0; filtY<filtH; filtY++) {
-        MskPixel sum=0;
+    for (int filtY = 0; filtY < filtH; filtY++) {
+        MskPixel sum = 0;
 #pragma unroll 4
-        for (int x=0; x<filtW; x++) {
-            if (*filtLine!=0)
+        for (int x = 0; x < filtW; x++) {
+            if (*filtLine != 0) {
                 sum |= *pixLine;
+            }
             pixLine++;
             filtLine++;
         }
-        pixLine+=pixLineAdd;
-        totalSum |=sum;
+        pixLine += pixLineAdd;
+        totalSum |= sum;
     }
     return totalSum;
 }
@@ -1273,21 +1277,21 @@ __device__ MskPixel MaskApplyFilterOnce(
     int curPixelX, int curPixelY, int simgPitchX
 )
 {
-    MskPixel* smemImg=(MskPixel*)smem;
-    MskPixel totalSum=0;
-    MskPixel* pixLineOrig=&smemImg[curPixelY*simgPitchX+curPixelX];
-    dfloat* filtLineOrig=smemFilt;
-    int remainingFiltW=filtW;
-    int pixLineAdd= simgPitchX;
+    MskPixel* smemImg = (MskPixel*)smem;
+    MskPixel totalSum = 0;
+    MskPixel* pixLineOrig = &smemImg[curPixelY*simgPitchX+curPixelX];
+    dfloat* filtLineOrig = smemFilt;
+    int remainingFiltW = filtW;
+    int pixLineAdd = simgPitchX;
     int procWidth;
 
-    if (remainingFiltW>=12) {
-        procWidth=24;
-        while (remainingFiltW>=procWidth) {
-            MskPixel* pixLine =pixLineOrig;
-            dfloat* filtLine=filtLineOrig;
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+    if (remainingFiltW >= 12) {
+        procWidth = 24;
+        while (remainingFiltW >= procWidth) {
+            MskPixel* pixLine = pixLineOrig;
+            dfloat* filtLine = filtLineOrig;
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMaskX4(0)
                 SumUpPixelProductMaskX4(4)
                 SumUpPixelProductMaskX4(8)
@@ -1295,157 +1299,156 @@ __device__ MskPixel MaskApplyFilterOnce(
                 SumUpPixelProductMaskX4(16)
                 SumUpPixelProductMaskX4(20)
 
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-            remainingFiltW-=procWidth;
-            pixLineOrig+=procWidth;
-            filtLineOrig+=procWidth;
+            remainingFiltW -= procWidth;
+            pixLineOrig += procWidth;
+            filtLineOrig += procWidth;
         }
 
-        procWidth=12;
-        if (remainingFiltW>=procWidth) {
-            MskPixel* pixLine =pixLineOrig;
-            dfloat* filtLine=filtLineOrig;
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+        procWidth = 12;
+        if (remainingFiltW >= procWidth) {
+            MskPixel* pixLine = pixLineOrig;
+            dfloat* filtLine = filtLineOrig;
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMaskX4(0)
                 SumUpPixelProductMaskX4(4)
                 SumUpPixelProductMaskX4(8)
 
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum|=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-            remainingFiltW-=procWidth;
-            pixLineOrig+=procWidth;
-            filtLineOrig+=procWidth;
+            remainingFiltW -= procWidth;
+            pixLineOrig += procWidth;
+            filtLineOrig += procWidth;
         }
 
-        if (remainingFiltW==0)
-            return totalSum;
+        if (remainingFiltW == 0) return totalSum;
     }
 
-    MskPixel* pixLine =pixLineOrig;
-    dfloat* filtLine=filtLineOrig;
+    MskPixel* pixLine = pixLineOrig;
+    dfloat* filtLine = filtLineOrig;
 
-    if (remainingFiltW<4) {
-        if (remainingFiltW==1)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+    if (remainingFiltW < 4) {
+        if (remainingFiltW == 1) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMask(0)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-        else if (remainingFiltW==2)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+        } else if (remainingFiltW == 2) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMask(0)
                 SumUpPixelProductMask(1)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-        else if (remainingFiltW==3)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+        } else if (remainingFiltW == 3) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMask(0)
                 SumUpPixelProductMask(1)
                 SumUpPixelProductMask(2)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
-            }
-        return totalSum;
-    }
-    if (remainingFiltW<9) {
-        if (remainingFiltW==4)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
-                SumUpPixelProductMaskX4(0)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
                 totalSum |= sum;
             }
-        else if (remainingFiltW==5)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+        }
+        return totalSum;
+    }
+    if (remainingFiltW < 9) {
+        if (remainingFiltW == 4) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
+                SumUpPixelProductMaskX4(0)
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
+            }
+        } else if (remainingFiltW == 5) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMaskX4(0)
                 SumUpPixelProductMask(4)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-        else if (remainingFiltW==6)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+        } else if (remainingFiltW == 6) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMaskX4(0)
                 SumUpPixelProductMask(4)
                 SumUpPixelProductMask(5)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-        else if (remainingFiltW==7)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+        } else if (remainingFiltW == 7) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMaskX4(0)
                 SumUpPixelProductMask(4)
                 SumUpPixelProductMask(5)
                 SumUpPixelProductMask(6)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-
-        else if (remainingFiltW==8)
-            for (int filtY=0; filtY<filtH; filtY++) {
-                MskPixel sum=0;
+        } else if (remainingFiltW == 8) {
+            for (int filtY = 0; filtY < filtH; filtY++) {
+                MskPixel sum = 0;
                 SumUpPixelProductMaskX4(0)
                 SumUpPixelProductMaskX4(4)
-                filtLine+=filtW;
-                pixLine+=pixLineAdd;
-                totalSum |=sum;
+                filtLine += filtW;
+                pixLine += pixLineAdd;
+                totalSum |= sum;
             }
-
+        }
         return totalSum;
     }
-    if (remainingFiltW==9)
-        for (int filtY=0; filtY<filtH; filtY++) {
-            MskPixel sum=0;
+    if (remainingFiltW == 9) {
+        for (int filtY = 0; filtY < filtH; filtY++) {
+            MskPixel sum = 0;
             SumUpPixelProductMaskX4(0)
             SumUpPixelProductMaskX4(4)
             SumUpPixelProductMask(8)
-            filtLine+=filtW;
-            pixLine+=pixLineAdd;
-            totalSum |=sum;
+            filtLine += filtW;
+            pixLine += pixLineAdd;
+            totalSum |= sum;
         }
-    else if (remainingFiltW==10)
-        for (int filtY=0; filtY<filtH; filtY++) {
-            MskPixel sum=0;
+    } else if (remainingFiltW == 10) {
+        for (int filtY = 0; filtY < filtH; filtY++) {
+            MskPixel sum = 0;
             SumUpPixelProductMaskX4(0)
             SumUpPixelProductMaskX4(4)
             SumUpPixelProductMask(8)
             SumUpPixelProductMask(9)
-            filtLine+=filtW;
-            pixLine+=pixLineAdd;
-            totalSum |=sum;
+            filtLine += filtW;
+            pixLine += pixLineAdd;
+            totalSum |= sum;
         }
-    else if (remainingFiltW==11)
-        for (int filtY=0; filtY<filtH; filtY++) {
-            MskPixel sum=0;
+    } else if (remainingFiltW == 11) {
+        for (int filtY = 0; filtY < filtH; filtY++) {
+            MskPixel sum = 0;
             SumUpPixelProductMaskX4(0)
             SumUpPixelProductMaskX4(4)
             SumUpPixelProductMask(8)
             SumUpPixelProductMask(9)
             SumUpPixelProductMask(10)
-            filtLine+=filtW;
-            pixLine+=pixLineAdd;
-            totalSum |=sum;
+            filtLine += filtW;
+            pixLine += pixLineAdd;
+            totalSum |= sum;
         }
-
+    }
     return totalSum;
 }
 
@@ -1460,11 +1463,11 @@ __global__ void SpatiallyInvariantMaskConvolutionKernel(
     MskPixel** result
 )
 {
-    const int outW=imgW-filtW+1;
-    const int outH=imgH-filtH+1;
+    const int outW = imgW - filtW + 1;
+    const int outH = imgH - filtH + 1;
 
-    int simgPitchX=blockSizeX+filtW-1;
-    int simgPitchY=blockSizeY+filtH-1;
+    int simgPitchX = blockSizeX + filtW - 1;
+    int simgPitchY = blockSizeY + filtH - 1;
 
 
     /*int simgSize=simgPitchX*simgPitchY;
@@ -1476,46 +1479,46 @@ __global__ void SpatiallyInvariantMaskConvolutionKernel(
             smemFilt[i]=filt[filtI][i];
         }*/
 
-    int blockNX=CeilDivide(outW,blockSizeX);
-    int blockNY=CeilDivide(outH,blockSizeY);
+    int blockNX = CeilDivide(outW, blockSizeX);
+    int blockNY = CeilDivide(outH, blockSizeY);
 
-    int totalBlocks=blockNX*blockNY;
-    int totalPixelsInBlock=blockSizeX*blockSizeY;
+    int totalBlocks = blockNX * blockNY;
+    int totalPixelsInBlock = blockSizeX * blockSizeY;
 
-    for (int blkI=blockIdx.x; blkI<totalBlocks; blkI+=gridDim.x)
+    for (int blkI = blockIdx.x; blkI < totalBlocks; blkI += gridDim.x)
     {
-        int blkX=blkI%blockNX;
-        int blkY=blkI/blockNX;
+        int blkX = blkI % blockNX;
+        int blkY = blkI / blockNX;
 
-        int x=blkX*blockSizeX;
-        int y=blkY*blockSizeY;
+        int x = blkX * blockSizeX;
+        int y = blkY * blockSizeY;
         __syncthreads();
-        LoadImageToSmem((MskPixel*) smem, img,imgW,imgH,x,y,simgPitchX,simgPitchY);
+        LoadImageToSmem((MskPixel*) smem, img, imgW, imgH, x, y, simgPitchX, simgPitchY);
         __syncthreads();
 
-        int curPixelX=threadIdx.x%blockSizeX;
-        int curPixelY=threadIdx.x/blockSizeX;
+        int curPixelX = threadIdx.x % blockSizeX;
+        int curPixelY = threadIdx.x / blockSizeX;
 
-        for(int curPixel=threadIdx.x; curPixel<totalPixelsInBlock; curPixel+=blockDim.x)
+        for(int curPixel = threadIdx.x; curPixel < totalPixelsInBlock; curPixel += blockDim.x)
         {
-            int outPixelX=x+curPixelX;
-            int outPixelY=y+curPixelY;
+            int outPixelX = x + curPixelX;
+            int outPixelY = y + curPixelY;
 
-            if (outPixelX>=outW || outPixelY>=outH) continue;
+            if (outPixelX >= outW || outPixelY >= outH) continue;
 
-            for (int filtI=0; filtI<filtN; filtI++) {
+            for (int filtI = 0; filtI < filtN; filtI++) {
                 //dfloat* smemFilt=smemFiltBeg + (filtW*filtH)*(filtI-filtStart);
-                dfloat* filtPtr=&allFilt[filtI*filtW*filtH];
+                dfloat* filtPtr = &allFilt[filtI*filtW*filtH];
 
                 MskPixel sum = MaskApplyFilterOnce(filtPtr, filtW, filtH, curPixelX, curPixelY, simgPitchX);
 
-                MskPixel* curResultImg=result[filtI];
-                curResultImg[outPixelY*outW + outPixelX]=sum;
+                MskPixel* curResultImg = result[filtI];
+                curResultImg[outPixelY*outW + outPixelX] = sum;
             }
 
-            curPixelX+=blockDim.x;
-            while (curPixelX>=blockSizeX) {
-                curPixelX-=blockSizeX;
+            curPixelX += blockDim.x;
+            while (curPixelX >= blockSizeX) {
+                curPixelX -= blockSizeX;
                 curPixelY++;
             }
         }
@@ -1535,7 +1538,7 @@ void Call_SpatiallyInvariantMaskConvolutionKernel(
     dim3 block(256);
     dim3 grid(blockN);
 
-    SpatiallyInvariantMaskConvolutionKernel<<<grid, block, sharedMemorySize >>>(
+    SpatiallyInvariantMaskConvolutionKernel <<< grid, block, sharedMemorySize >>>(
         inImageGPU, inImageWidth, inImageHeight,
         allKernelsGPU, kernelTotalN,
         kernelW, kernelH,
@@ -1570,10 +1573,10 @@ INSTANTIATE(boost::uint16_t, boost::uint16_t)
 template <typename T>
 __global__ void Test(T* ret)
 {
-    int threadId = blockIdx.x*blockDim.x + threadIdx.x;
+    int threadId = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (threadId==0) ret[0]=5;
-    if (threadId==1) ret[1]=8;
+    if (threadId == 0) ret[0] = 5;
+    if (threadId == 1) ret[1] = 8;
 
 }
 
@@ -1583,7 +1586,7 @@ void CallTestGpuKernel(T* ret)
     dim3 block(192);
     dim3 grid(60);
 
-    Test<<<grid, block>>>(ret);
+    Test <<< grid, block>>>(ret);
 
 }
 
