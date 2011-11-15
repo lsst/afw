@@ -126,6 +126,19 @@ public:
     Extent<T,N> & operator/=(T scalar) { this->_vector /= scalar; return static_cast<Extent<T,N>&>(*this); }
     //@}
 
+    std::string toString() const {
+        std::stringstream out;
+        out << "Extent(";
+        for (size_t i = 0; i < N; ++i) {
+            if (i != 0) {
+                out << ",";
+            }
+            out << (*this)[i];
+        }
+        out << ")";
+        return out.str();
+    }
+
 protected:
 
     /// \brief Construct an Extent<T,N> with all elements set to the same scalar value.

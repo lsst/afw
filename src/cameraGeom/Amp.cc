@@ -62,8 +62,8 @@ cameraGeom::Amp::Amp(
         throw LSST_EXCEPT(
             lsst::pex::exceptions::OutOfRangeException,
             (boost::format(
-                "%||'s bias section doesn't fit in allPixels") % id
-            ).str()
+                "%||'s bias section (%s) doesn't fit in allPixels (%s)") % 
+             id % biasSec.toString() % allPixels.toString()).str()
         );
     }
     if (dataSec.getWidth() > 0 && dataSec.getHeight() > 0 &&
@@ -72,8 +72,8 @@ cameraGeom::Amp::Amp(
         throw LSST_EXCEPT(
             lsst::pex::exceptions::OutOfRangeException,
             (boost::format(
-                "%||'s data section doesn't fit in allPixels") % id
-            ).str()
+                "%||'s data section (%s) doesn't fit in allPixels (%s)") % 
+             id % dataSec.toString() % allPixels.toString()).str()
         );
         
     }

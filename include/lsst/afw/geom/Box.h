@@ -29,6 +29,7 @@
 #ifndef LSST_AFW_GEOM_BOX_H
 #define LSST_AFW_GEOM_BOX_H
 
+#include "boost/format.hpp"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/ndarray.h"
@@ -148,6 +149,10 @@ public:
     bool operator==(Box2I const & other) const;
     bool operator!=(Box2I const & other) const;
 
+    std::string toString() const {
+        return (boost::format("Box2I(%s,%s)") % _minimum.toString() % _dimensions.toString()).str();
+    }
+
 private:
     Point2I _minimum;
     Extent2I _dimensions;
@@ -265,6 +270,10 @@ public:
 
     bool operator==(Box2D const & other) const;
     bool operator!=(Box2D const & other) const;
+
+    std::string toString() const {
+        return (boost::format("Box2D(%s,%s)") % _minimum.toString() % _maximum.toString()).str();
+    }
 
 private:
     void _tweakMax(int n) {
