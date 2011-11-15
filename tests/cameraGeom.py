@@ -49,7 +49,6 @@ import lsst.afw.display.utils as displayUtils
 
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
-display = True
 try:
     type(display)
 except NameError:
