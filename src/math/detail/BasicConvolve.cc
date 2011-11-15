@@ -271,7 +271,9 @@ void mathDetail::basicConvolve(
                 try {
                     bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
                     if (isProcessed) return;
-                } catch(...) {}
+                } catch(pexExcept::GpuMemoryException) { }
+                catch(pexExcept::MemoryException) { }
+                catch(pexExcept::GpuRuntimeErrorException) { }
             } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
                 bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
                 if (isProcessed) return;
@@ -518,7 +520,9 @@ void mathDetail::convolveWithBruteForce(
                 try {
                     bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
                     if (isProcessed) return;
-                } catch(...) {}
+                } catch(pexExcept::GpuMemoryException) { }
+                catch(pexExcept::MemoryException) { }
+                catch(pexExcept::GpuRuntimeErrorException) { }
             } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
                 bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
                 if (isProcessed) return;                
