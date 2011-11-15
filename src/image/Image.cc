@@ -514,7 +514,8 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         int,
         unsigned int,
         float,
-        double
+        double,
+        boost::uint64_t
     > fits_image_types;
 
     if (!boost::filesystem::exists(fileName)) {
@@ -524,6 +525,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     if (!metadata) {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
+
     if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
@@ -552,7 +554,8 @@ image::Image<PixelT>::Image(char **ramFile, size_t *ramFileLen,
         int,
         unsigned int,
         float,
-        double
+        double,
+        boost::uint64_t
     > fits_image_types;
 
     if (!metadata) {
