@@ -267,7 +267,10 @@ void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadat
         // If equinox exist and < 1984, use FK4. If >= 1984, use FK5
         if (fitsMetadata->exists("RADECSYS")) {
             std::string radecsys = fitsMetadata->getAsString("RADECSYS");
-            radecsys.erase(radecsys.find(" "));
+            size_t space = radecsys.find(" ");
+            if (space != std::string::npos) {
+                radecsys.erase(space);
+            }
             snprintf(_wcsInfo->radesys, STRLEN, radecsys.c_str());
         } else if (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) {
             std::string const EQUINOX = fitsMetadata->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
