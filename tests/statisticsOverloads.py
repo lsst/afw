@@ -26,10 +26,10 @@
 Tests for Statistics
 
 Run with:
-   ./Statistics.py
+   ./statisticsOverloads.py
 or
    python
-   >>> import Statistics; Statistics.run()
+   >>> import statisticsOverloads; statisticsOverloads.run()
 """
 
 
@@ -40,7 +40,6 @@ import lsst.pex.exceptions
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
-#import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -121,6 +120,21 @@ class StatisticsTestCase(unittest.TestCase):
     def testVector(self):
         for vec in self.vecList:
             self.compareMakeStatistics(vec, vec.size())
+
+    def testWeightedVector(self):
+        """Test std::vector, but with weights"""
+        sctrl = afwMath.StatisticsControl()
+
+        nval = len(self.vecList[0])
+        weight = 10
+        weights = [i*weight/float(nval - 1) for i in range(nval)]
+
+        for vec in self.vecList:
+            stats = afwMath.makeStatistics(vec, weights,
+                                           afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, sctrl)
+
+            self.assertAlmostEqual(0.5*weight*sum(vec)/stats.getValue(afwMath.SUM), 1.0)
+            self.assertAlmostEqual(sum(vec)/vec.size(), stats.getValue(afwMath.MEAN))
 
     # Try calling the Statistics constructor directly
     def testStatisticsConstructor(self):
