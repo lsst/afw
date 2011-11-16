@@ -260,11 +260,16 @@ void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadat
     
     //The Wcs standard requires a default value for RADESYS if the keyword
     //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code 
-    //conforms to Calbretta & Greisen 2002 \S 3.1
+    //conforms to Calabretta & Greisen 2002 \S 3.1
     if (!(fitsMetadata->exists("RADESYS") || fitsMetadata->exists("RADESYSa"))) {
 
-        //If equinox exist and < 1984, use FK4. If >= 1984, use FK5
-        if (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) {
+        // If RADECSYS exists, use that (counter to Calabretta & Greisen 2002 \S 3.1, but commonly used).
+        // If equinox exist and < 1984, use FK4. If >= 1984, use FK5
+        if (fitsMetadata->exists("RADECSYS")) {
+            std::string radecsys = fitsMetadata->getAsString("RADECSYS");
+            radecsys.erase(radecsys.find(" "));
+            snprintf(_wcsInfo->radesys, STRLEN, radecsys.c_str());
+        } else if (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) {
             std::string const EQUINOX = fitsMetadata->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
             double const equinox = fitsMetadata->getAsDouble(EQUINOX);
             if(equinox < 1984) {

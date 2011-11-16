@@ -109,6 +109,19 @@ public:
     /// @brief Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
     
+    std::string toString() const {
+        std::stringstream out;
+        out << "Point(";
+        for (size_t i = 0; i < N; ++i) {
+            if (i != 0) {
+                out << ",";
+            }
+            out << (*this)[i];
+        }
+        out << ")";
+        return out.str();
+    }
+
 protected:
 
     explicit PointBase(T val = static_cast<T>(0)) : Super(val) {}

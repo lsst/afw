@@ -92,6 +92,8 @@ int ttypeFromBitpix(const int bitpix) {
         return TFLOAT;
       case DOUBLE_IMG:                  // double
         return TDOUBLE;
+      case LONGLONG_IMG:                // int64
+        return TLONGLONG;
       default:
         throw LSST_EXCEPT(FitsException, (boost::format("Unsupported value BITPIX==%d") % bitpix).str());
     }

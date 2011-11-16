@@ -118,6 +118,7 @@ void cameraGeom::DetectorMosaic::addDetector(
     //
     // Don't permit non-square Detectors to have relative rotations other than 0, 180
     //
+    /*
     if (_detectors.size() > 0) {
         if ((orient.getNQuarter() - (*begin())->getOrientation().getNQuarter())%2 != 0 &&
             det->getAllPixels(true).getWidth() != det->getAllPixels(true).getHeight()) {
@@ -128,7 +129,7 @@ void cameraGeom::DetectorMosaic::addDetector(
                                (*begin())->getId() % (*begin())->getOrientation().getNQuarter()).str());
         }
     }
-
+    */
     det->setOrientation(orient);
     //
     // If this is the first detector, set the center pixel.  We couldn't do this earlier as

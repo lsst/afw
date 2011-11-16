@@ -32,7 +32,6 @@ or
    >>> import footprint2; footprint2.run()
 """
 
-
 import sys
 import unittest
 import lsst.utils.tests as tests

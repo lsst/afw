@@ -153,6 +153,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 
 INSTANTIATE(double)
 INSTANTIATE(float)
+INSTANTIATE(int)
 /// \endcond
 
 }}}
