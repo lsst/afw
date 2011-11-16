@@ -13,6 +13,9 @@
 /splineInterpolate.stdout
 /b
 
+# afw/extensions/rgb can get checked out within afw...
+/extensions
+
 # /doc/
 /doc/debug.txt
 /doc/htmlDir
