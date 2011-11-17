@@ -62,6 +62,7 @@ examples/Spline
 include/lsst/afw/image/ImageExceptions.h
 lib/libafw.*
 python/lsst/*.pyc
+python/lsst/afw/version.py
 python/lsst/afw/*.pyc
 python/lsst/afw/cameraGeom/*.pyc
 python/lsst/afw/cameraGeom/cameraGeomLib_wrap.*
