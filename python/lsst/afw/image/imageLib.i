@@ -61,6 +61,8 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
+
+#pragma clang diagnostic ignored "-Warray-bounds"
 %}
 
 %include "../boost_picklable.i"
