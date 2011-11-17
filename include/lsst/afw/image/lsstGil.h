@@ -319,7 +319,7 @@ namespace lsst { namespace afw { namespace image { namespace detail {
             typedef boost::mpl::if_<boost::is_same<long long, boost::int64_t>,
                                     long long, struct unknown>::type type;
             typedef boost::mpl::if_<boost::is_same<long long, boost::int64_t>,
-                                    unsigned long long, struct unknown>::type type_u;
+                                    unsigned long long, struct unknown_u>::type type_u;
         };
     }
 
