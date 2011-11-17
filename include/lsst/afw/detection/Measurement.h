@@ -285,7 +285,11 @@ private:
 #pragma warning (push)
 #pragma warning (disable: 2259)          // conversion from "long" to "double" may lose significant bits
 #endif
-            return static_cast<U>(boost::any_cast<long>(val));
+            try {                       // clang's unhappy even if sizeof(long) == sizeof(long long)
+                return static_cast<U>(boost::any_cast<long>(val));
+            } catch(boost::bad_any_cast) {
+                return static_cast<U>(boost::any_cast<long long>(val));
+            }
 #if defined(__ICC)
 #pragma warning (pop)
 #endif
