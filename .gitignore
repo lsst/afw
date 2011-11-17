@@ -64,7 +64,30 @@ examples/spatialCellExample
 examples/simpleStacker
 examples/Spline
 lib/libafw.*
+<<<<<<< HEAD
 python/lsst/afw/version.py
+=======
+python/lsst/*.pyc
+python/lsst/afw/version.py
+python/lsst/afw/*.pyc
+python/lsst/afw/cameraGeom/*.pyc
+python/lsst/afw/cameraGeom/cameraGeomLib_wrap.*
+python/lsst/afw/cameraGeom/cameraGeomLib.py
+python/lsst/afw/cameraGeom/_cameraGeomLib.so
+python/lsst/afw/coord/*.os
+python/lsst/afw/coord/*.so
+python/lsst/afw/coord/*.pyc
+python/lsst/afw/coord/coordLib.py
+python/lsst/afw/coord/*wrap.cc
+python/lsst/afw/detection/*.os
+python/lsst/afw/detection/*.pyc
+python/lsst/afw/detection/*.so
+python/lsst/afw/detection/*_wrap.cc
+python/lsst/afw/detection/detectionLib.py
+python/lsst/afw/display/*.pyc
+python/lsst/afw/display/*.os
+python/lsst/afw/display/*.so
+>>>>>>> 05061379ee5000de14e44abaa44dfddc02e91f89
 python/lsst/afw/display/fwDisplay.py
 python/lsst/afw/display/xpa.py
 tests/core.*
