@@ -1,13 +1,13 @@
 namespace lsst { namespace afw { namespace image {
 /**
-\page secDisplay  How to %display images
-\section secDisplay  How to display images
+\page afwSecDisplay  How to %display images
+\section afwSecDisplay  How to display images
 
- - \ref secDs9Mosaics
- - \ref secDs9Commands
- - \ref secDs9Firewall
+ - \ref afwSecDs9Mosaics
+ - \ref afwSecDs9Commands
+ - \ref afwSecDs9Firewall
  
-\section secDs9  Using DS9 in the LSST framework
+\section afwSecDs9  Using DS9 in the LSST framework
 
 At present (July 2009) we are using ds9 (http://hea-www.harvard.edu/RD/ds9) to %display
 Image%s, Mask%s, and MaskedImage%s.  This has a number of drawbacks (slow; slightly
@@ -71,7 +71,7 @@ ds9.mtv(mi.getMask(), frame=1)
 <DD> Displayed like MaskedImage, but with the default WCS set from the MaskedImage's \c Wcs
 </DL>
 
-\subsection secDs9Mosaics   How to build a mosaic image
+\subsection afwSecDs9Mosaics   How to build a mosaic image
 
 There are facilities to build mosaics of %images in \c lsst.afw.display.utils
 
@@ -153,7 +153,7 @@ You can return the (ix, iy)th (or nth) bounding box with getBBox()
       </table>
 </LI>
 
-\subsection secDs9Commands  All supported ds9 commands
+\subsection afwSecDs9Commands  All supported ds9 commands
 
 <UL>
 <LI> %Image commands
@@ -271,7 +271,7 @@ of the following constants defined in \c ds9;  the advantage of the latter
 approach is that the python interpreter can detect typos: \c BLACK, \c WHITE, \c RED, \c BLUE,
 \c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
 
-\subsection secDs9Firewall  How to use ds9 through a firewall
+\subsection afwSecDs9Firewall  How to use ds9 through a firewall
 
 On your home machine, type
 \code

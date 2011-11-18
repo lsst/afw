@@ -44,11 +44,7 @@
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/ellipses/Separable.h"
 
-namespace lsst { namespace afw { namespace geom {
-
-using ellipses::Ellipse;
-
-namespace ellipses {
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 typedef Separable<Distortion,DeterminantRadius> SeparableDistortionDeterminantRadius;
 typedef Separable<Distortion,TraceRadius> SeparableDistortionTraceRadius;

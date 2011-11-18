@@ -105,7 +105,7 @@ private:
  * (see FootprintSet), or to create Footprints in the shape of various
  * geometrical figures
  */
-class Footprint : public lsst::daf::data::LsstBase {
+class Footprint : public lsst::daf::base::Citizen {
 public:
     typedef boost::shared_ptr<Footprint> Ptr;
     typedef boost::shared_ptr<const Footprint> ConstPtr;

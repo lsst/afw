@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         
         BOOST_CHECK_EQUAL(stats.getValue(math::NPOINT), nx*ny);
         BOOST_CHECK_EQUAL(testmean, mean);
-        BOOST_CHECK_EQUAL(teststdev, stdev );
+        BOOST_CHECK_CLOSE(teststdev, stdev, 1e-9);
     }
 
     {

@@ -38,11 +38,9 @@ void test(char *name, char *masterName) {
 
     typedef afwImage::MaskPixel MaskPixel;
 
-    afwImage::Mask<afwImage::MaskPixel> testMask;
-    testMask.readFits(name);
+    afwImage::Mask<afwImage::MaskPixel> testMask(name);
 
-    afwImage::Mask<MaskPixel> masterMask;
-    masterMask.readFits(masterName);
+    afwImage::Mask<MaskPixel> masterMask(masterName);
 
     // check whether Mask planes got setup right from FITS header...
     cout << "test MaskPlanes from FITS header:" << endl;

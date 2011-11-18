@@ -1,13 +1,13 @@
 namespace lsst { namespace afw { namespace image {
 /**
-\page secImageAlgorithm  How to use algorithms to manipulate Images
-\section secImageAlgorithm  How to use algorithms to manipulate Images
+\page afwSecImageAlgorithm  How to use algorithms to manipulate Images
+\section afwSecImageAlgorithm  How to use algorithms to manipulate Images
 
 All of these algorithms require the inclusion of <TT>lsst/afw/image/ImageAlgorithm.h</TT>, and are in namespace @c lsst::afw::image.
 
- - \ref secForEachPixel
+ - \ref afwSecForEachPixel
  
-\section secForEachPixel Apply a functor to each pixel in an Image
+\section afwSecForEachPixel Apply a functor to each pixel in an Image
 
 @c afw supports @c for_each_pixel as a way to process each pixel in an Image, in a similar way to the STL's @c
 for_each.  The name doesn't follow the LSST C++ guidelines, but in this case I felt that conformity to the
@@ -38,7 +38,7 @@ is a @c tr1::function with a virtual @c operator() added.
 
 </DL>
 
-\subsection secForEachPixelExample Example of using for_each_pixel
+\subsection afwSecForEachPixelExample Example of using for_each_pixel
 
 This code is in \link forEachPixel.cc\endlink.
 

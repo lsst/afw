@@ -32,7 +32,7 @@
 #include <cmath>
 #include <limits>
 #include <boost/shared_ptr.hpp>
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 
 #include <boost/serialization/nvp.hpp>
 

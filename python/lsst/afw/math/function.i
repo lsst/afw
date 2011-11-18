@@ -33,7 +33,7 @@
 
 // Must be used before %include
 %define %baseFunctionPtrs(TYPE, CTYPE)
-SWIG_SHARED_PTR_DERIVED(Function##TYPE, lsst::daf::data::LsstBase, lsst::afw::math::Function<CTYPE>);
+SWIG_SHARED_PTR_DERIVED(Function##TYPE, lsst::daf::base::Citizen, lsst::afw::math::Function<CTYPE>);
 SWIG_SHARED_PTR_DERIVED(Function1##TYPE, lsst::afw::math::Function<CTYPE>, lsst::afw::math::Function1<CTYPE>);
 SWIG_SHARED_PTR_DERIVED(Function2##TYPE, lsst::afw::math::Function<CTYPE>, lsst::afw::math::Function2<CTYPE>);
 SWIG_SHARED_PTR_DERIVED(BasePolynomialFunction2##TYPE, lsst::afw::math::Function2<CTYPE>,

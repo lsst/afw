@@ -4,7 +4,7 @@
 #include <boost/format.hpp>
 
 #include "lsst/afw/geom/ellipses.h"
-#include <Eigen/LU>
+#include "Eigen/LU"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 

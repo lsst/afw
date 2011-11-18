@@ -23,8 +23,8 @@
 #ifndef LSST_AFW_GEOM_LINEAR_TRANSFORM_H 
 #define LSST_AFW_GEOM_LINEAR_TRANSFORM_H
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include "Eigen/Core"
+#include "Eigen/Geometry"
 #include "lsst/pex/exceptions/Runtime.h"
 
 #include "lsst/afw/geom/Point.h"

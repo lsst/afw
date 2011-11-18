@@ -26,8 +26,7 @@
 #include "lsst/afw/detection/LocalPsf.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 #include "lsst/ndarray/eigen.h"
-#include <Eigen/LU>
-#include <Eigen/Array>
+#include "Eigen/SVD"
 
 /************************************************************************************************************/
 
@@ -75,19 +74,11 @@ afwDet::LocalPsf::Shapelet afwDet::ImageLocalPsf::computeShapelet(
             );
         }
     }
-    Eigen::MatrixXd h(matrix.getSize<1>(), matrix.getSize<1>());
-    h.part<Eigen::SelfAdjoint>() = ndarray::viewAsTransposedEigen(matrix) * ndarray::viewAsEigen(matrix);
-    Eigen::VectorXd rhs = ndarray::viewAsTransposedEigen(matrix) * ndarray::viewAsEigen(array);
-    Eigen::LU<Eigen::MatrixXd> solver(h);
+    Eigen::JacobiSVD< ndarray::EigenView<Pixel,2,2>::PlainEigenType > solver(
+        matrix.asEigen(), Eigen::ComputeThinU | Eigen::ComputeThinV
+    );
     ndarray::Array<Pixel,1,1> shapeletArray = ndarray::allocate(matrix.getSize<1>());
-    Eigen::VectorXd shapeletVector;
-    if (!solver.solve(rhs, &shapeletVector)) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::RuntimeErrorException,
-            "Singular matrix encountered in shapelet conversion."
-        );
-    }
-    ndarray::viewAsEigen(shapeletArray) = shapeletVector;
+    shapeletArray.asEigen() = solver.solve(array.asEigen());
     Shapelet result(order, basisType, ellipse, shapeletArray);
     result.getCoefficients().deep() /= result.evaluate().integrate();
     return result;

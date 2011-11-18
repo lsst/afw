@@ -51,7 +51,7 @@ typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
         std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &images,      ///< Images to process
         Property flags, ///< statistics requested
         StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
-        std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
+        std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
                                                              );
 
 /**
@@ -62,7 +62,7 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
         std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &images,///< MaskedImages to process
         Property flags, ///< statistics requested
         StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
-        std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
+        std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
                                                                    );
 
 
@@ -70,11 +70,11 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
  * @brief A function to compute some statistics of a stack of std::vectors
  */
 template<typename PixelT>
-typename boost::shared_ptr<std::vector<PixelT> > statisticsStack(
+boost::shared_ptr<std::vector<PixelT> > statisticsStack(
         std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,      ///< Vectors to process
         Property flags,              ///< statistics requested
         StatisticsControl const& sctrl=StatisticsControl(),  ///< control structure
-        std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
+        std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
                                                                 );
     
 
