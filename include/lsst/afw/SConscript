@@ -1,5 +1,0 @@
-# -*- python -*-
-#
-from lsst.sconsUtils import env
-
-AddPostAction(env.M4("image/ImageExceptions.h.m4"), "chmod 444 $TARGET")
