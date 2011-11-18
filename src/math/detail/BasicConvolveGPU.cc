@@ -313,7 +313,7 @@ bool mathDetail::convolveLinearCombinationGPU(
             // too few basis kernels for refactoring to be worthwhile
             refKernelPtr = kernel.clone();
         }
-
+        assertDimensionsOK(convolvedImage, inImage, kernel);
 
         const afwMath::LinearCombinationKernel* newKernel =
             dynamic_cast<afwMath::LinearCombinationKernel*> (refKernelPtr.get());
@@ -495,6 +495,8 @@ bool mathDetail::convolveLinearCombinationGPU(
         }
 
         {
+            assertDimensionsOK(convolvedImage, inImage, kernel);
+
             const afwMath::LinearCombinationKernel* newKernel =
                 dynamic_cast<afwMath::LinearCombinationKernel*> (refKernelPtr.get());
             assert(newKernel!=NULL);
