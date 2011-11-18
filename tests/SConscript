@@ -16,7 +16,7 @@ else:
         print "Database tests may be skipped or may fail"
     
     # set up arguments for C++ tests
-    inFile = os.path.join(dataDir, "871034p_1_MI")
+    inFile = os.path.join(dataDir, "data", "871034p_1_MI")
     inFileRamFitsIO1 = os.path.join(dataDir, "fpC-002570-r6-0199_sub.fits")
     inFileRamFitsIO2 = os.path.join(dataDir, "fpC-005902-r6-0677_sub.fits")
     testArgs = dict(
