@@ -210,7 +210,6 @@ class SavingSubImagesTest(unittest.TestCase):
             outFile = "tmp2.fits"
             subImg.writeFits(outFile)
             newImg = afwImage.ExposureF(outFile)
-            os.system("cp %s tmp-%s.fits" % (outFile, deep))
             os.remove(outFile)
 
             subXY0 = subImg.getMaskedImage().getXY0()

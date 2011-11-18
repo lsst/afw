@@ -189,7 +189,7 @@ void SpatialCell::visitCandidates(CandidateVisitor *visitor, ///< Pass this obje
         
         try {
             visitor->processCandidate((*candidate).get());
-        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+        } catch(lsst::pex::exceptions::Exception &e) {
             if (ignoreExceptions) {
                 ;
             } else {

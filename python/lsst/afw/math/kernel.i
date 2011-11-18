@@ -42,7 +42,7 @@ SWIG_SHARED_PTR_DERIVED(TYPE, lsst::afw::math::Kernel, lsst::afw::math::TYPE);
 %boost_picklable(lsst::afw::math::TYPE)
 %enddef
 
-SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kernel); // the base class
+SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::base::Citizen, lsst::afw::math::Kernel); // the base class
 %lsst_persistable(lsst::afw::math::Kernel)
 %boost_picklable(lsst::afw::math::Kernel)
 

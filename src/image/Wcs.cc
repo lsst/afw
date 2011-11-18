@@ -34,7 +34,7 @@
 #include "wcslib/wcshdr.h"
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/pex/exceptions.h"
@@ -81,7 +81,7 @@ const int fitsToLsstPixels = -1;
 
 ///@brief Construct an invalid Wcs given no arguments
 lsst::afw::image::Wcs::Wcs() :
-    LsstBase(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
     _coordSystem(static_cast<afwCoord::CoordSystem>(-1)) {
     _setWcslibParams();
@@ -92,14 +92,14 @@ lsst::afw::image::Wcs::Wcs() :
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
 ///out which (if any) sub-class of Wcs is appropriate
 Wcs::Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata):
-                LsstBase(typeid(this)),
-                _wcsInfo(NULL), 
-                _nWcsInfo(0), 
-                _relax(0), 
-                _wcsfixCtrl(0), 
-                _wcshdrCtrl(0),
-                _nReject(0),
-                _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    daf::base::Citizen(typeid(this)),
+    _wcsInfo(NULL), 
+    _nWcsInfo(0), 
+    _relax(0), 
+    _wcsfixCtrl(0), 
+    _wcshdrCtrl(0),
+    _nReject(0),
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
 {
     _setWcslibParams();
 
@@ -146,14 +146,14 @@ Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD
                  double equinox, std::string raDecSys,
                  const std::string cunits1, const std::string cunits2
                 ):
-                 LsstBase(typeid(this)),
-                 _wcsInfo(NULL), 
-                 _nWcsInfo(0), 
-                 _relax(0), 
-                 _wcsfixCtrl(0), 
-                 _wcshdrCtrl(0),
-                 _nReject(0),
-                 _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    daf::base::Citizen(typeid(this)),
+    _wcsInfo(NULL), 
+    _nWcsInfo(0), 
+    _relax(0), 
+    _wcsfixCtrl(0), 
+    _wcshdrCtrl(0),
+    _nReject(0),
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
 {
     _setWcslibParams();
     initWcsLib(crval, crpix, CD, 
@@ -393,7 +393,7 @@ void Wcs::initWcsLib(GeomPoint crval, GeomPoint const crpix, Eigen::Matrix2d con
 
 ///Copy constructor
 Wcs::Wcs(afwImg::Wcs const & rhs) : 
-    LsstBase(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), 
     _nWcsInfo(rhs._nWcsInfo), 
     _relax(rhs._relax), 

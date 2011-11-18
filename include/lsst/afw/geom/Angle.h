@@ -60,8 +60,14 @@ class Angle;
 /**
  * \brief A class used to convert scalar POD types such as double to Angle
  *
- * \eg Angle pi = 180*degrees;
- * is equivalent to Angle pi(180, degrees);
+ * For example:
+ * \code
+ *    Angle pi = 180*degrees;
+ * \endcode
+ * is equivalent to 
+ * \code
+ *    Angle pi(180, degrees);
+ * \endcode
  */
 class AngleUnit {
     friend class Angle;

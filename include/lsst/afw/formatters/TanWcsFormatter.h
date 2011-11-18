@@ -45,7 +45,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 
-#include "Eigen/Core.h"
+#include "Eigen/Core"
 
 namespace lsst {
 namespace afw {

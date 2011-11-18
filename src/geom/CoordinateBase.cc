@@ -39,11 +39,11 @@ bool geom::allclose(
     CoordinateBase<Derived,T,N> const & b, 
     T rtol, T atol
 ) {
-    Eigen::Matrix<T,N,1> diff = (a.asEigen() - b.asEigen()).cwise().abs();
-    Eigen::Matrix<T,N,1> rhs = (0.5*(a.asEigen() + b.asEigen())).cwise().abs();
+    Eigen::Array<T,N,1> diff = (a.asEigen().array() - b.asEigen().array()).abs();
+    Eigen::Array<T,N,1> rhs = (0.5*(a.asEigen().array() + b.asEigen().array())).abs();
     rhs *= rtol;
-    rhs.cwise() += atol;
-    return (diff.cwise() <= rhs).all();
+    rhs += atol;
+    return (diff <= rhs).all();
 }
 
 template bool geom::allclose<geom::Point2D,double,2>(

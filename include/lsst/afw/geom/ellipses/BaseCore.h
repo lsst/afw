@@ -32,10 +32,10 @@
  *  @note Do not include directly; use the main ellipse header file.
  */
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
+#include "boost/shared_ptr.hpp"
+#include "boost/make_shared.hpp"
 #include <memory>
-#include <Eigen/Array>
+#include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/LinearTransform.h"

@@ -49,7 +49,6 @@ class ImageIoTestCase(unittest.TestCase):
         # Create the additionalData PropertySet
         self.cols = 4
         self.rows = 4
-        self.filename = "imageIo2.fits"
 
     def testIo(self):
         for Image in (afwImage.ImageU,
@@ -62,8 +61,11 @@ class ImageIoTestCase(unittest.TestCase):
             for x in xrange(0, self.cols):
                 for y in xrange(0, self.rows):
                     image.set(x, y, x + y)
-            image.writeFits(self.filename)
-            readImage = Image(self.filename)
+
+            with utilsTests.temporaryFile("imageIo2.fits") as filename:
+                image.writeFits(filename)
+                readImage = Image(filename)
+
             self.checkImages(readImage, image)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

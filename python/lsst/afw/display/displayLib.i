@@ -33,7 +33,6 @@ Basic routines to talk to ds9
 
 %{
 #   include "lsst/daf/base.h"
-#   include "lsst/daf/data.h"
 #   include "lsst/daf/persistence.h"
 #   include "lsst/pex/policy.h"
 #   include "lsst/pex/logging/Log.h"

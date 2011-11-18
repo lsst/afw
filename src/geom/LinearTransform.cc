@@ -22,7 +22,7 @@
  
 #include "lsst/afw/geom/LinearTransform.h"
 
-#include <Eigen/LU>
+#include "Eigen/LU"
 
 #include <iostream>
 #include <iomanip>
@@ -58,7 +58,7 @@ void afwGeom::LinearTransform::setParameterVector(
  * @throws lsst::afw::geom::SingularTransformException
  */
 afwGeom::LinearTransform const afwGeom::LinearTransform::invert() const {
-    Eigen::LU<Matrix> lu(getMatrix());
+    Eigen::FullPivLU<Matrix> lu(getMatrix());
     if (!lu.isInvertible()) {
         throw LSST_EXCEPT(
             lsst::afw::geom::SingularTransformException,

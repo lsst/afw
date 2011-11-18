@@ -1,5 +1,7 @@
 // -*- lsst-c++ -*-
 #include "lsst/afw/detection/Photometry.h"
+#include "lsst/afw/detection/Astrometry.h"
+#include "lsst/afw/detection/Shape.h"
 
 namespace lsst { namespace afw { namespace detection {
 
@@ -15,7 +17,6 @@ std::ostream &Photometry::output(std::ostream &os ///< The stream to output to
     }
     return os;
 }
-
 
 Photometry::Ptr Photometry::average() const {
     double sum = 0.0, sumWeight = 0.0;
@@ -37,3 +38,8 @@ Photometry::Ptr Photometry::average() const {
 }
 
 }}} // namespace
+
+LSST_REGISTER_SERIALIZER(lsst::afw::detection::Photometry)
+LSST_REGISTER_SERIALIZER(lsst::afw::detection::Astrometry)
+LSST_REGISTER_SERIALIZER(lsst::afw::detection::Shape)
+

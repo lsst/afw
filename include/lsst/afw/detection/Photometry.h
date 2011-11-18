@@ -94,6 +94,4 @@ private:
 };
 }}}
 
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::Photometry)
-
 #endif

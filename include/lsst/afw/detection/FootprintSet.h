@@ -48,7 +48,7 @@ typedef boost::uint64_t FootprintIdPixel;
  *
  */
 template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel>
-class FootprintSet : public lsst::daf::data::LsstBase {
+class FootprintSet : public lsst::daf::base::Citizen {
 public:
     typedef boost::shared_ptr<FootprintSet> Ptr;
     /// The FootprintSet's set of Footprint%s
