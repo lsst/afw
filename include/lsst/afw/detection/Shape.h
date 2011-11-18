@@ -312,6 +312,92 @@ public:
         return Measurement<Shape>::get<Shape::SHAPE_STATUS, short>();
     }
     
+    /// Modifiers
+    /// These are required because boost::make_shared limits us to 9 arguments for the constructor.
+    /// We therefore need a way of setting values
+
+    /// Return the e1 ellipticity
+    void setE1(double value) {
+        Measurement<Shape>::set<Shape::E1, double>(value);
+    }
+    /// Return the error in the e1 ellipticity
+    void setE1Err(double value) {
+        Measurement<Shape>::set<Shape::E1_ERR, double>(value);
+    }
+    /// Return the e2 ellipticity
+    void setE2(double value) {
+        Measurement<Shape>::set<Shape::E2, double>(value);
+    }
+    /// Return the error in the e2 ellipticity
+    void setE2Err(double value) {
+        Measurement<Shape>::set<Shape::E2_ERR, double>(value);
+    }
+
+
+    /// Return the shear1
+    void setShear1(double value) {
+        Measurement<Shape>::set<Shape::SHEAR1, double>(value);
+    }
+    /// Return the error in the shear1
+    void setShear1Err(double value) {
+        Measurement<Shape>::set<Shape::SHEAR1_ERR, double>(value);
+    }
+    /// Return the shear2
+    void setShear2(double value) {
+        Measurement<Shape>::set<Shape::SHEAR2, double>(value);
+    }
+    /// Return the error in the shear2
+    void setShear2Err(double value) {
+        Measurement<Shape>::set<Shape::SHEAR2_ERR, double>(value);
+    }
+
+
+    /// set the resolution
+    void setResolution(double value) {
+        Measurement<Shape>::set<Shape::RESOLUTION, double>(value);
+    }
+    
+    /// Return the width
+    void setSigma(double value) {
+        Measurement<Shape>::set<Shape::SIGMA, double>(value);
+    }
+    /// Return the error in the width
+    void setSigmaErr(double value) {
+        Measurement<Shape>::set<Shape::SIGMA_ERR, double>(value);
+    }
+
+
+    /// Return the xx-moment for the PSF
+    void setPsfIxx(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXX, double>(value);
+    }
+    /// Return the error in the xx-moment for the PSF
+    void setPsfIxxErr(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXX_ERR, double>(value);
+    }
+    /// Return the xx-moment for the PSF
+    void setPsfIxy(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXY, double>(value);
+    }
+    /// Return the error in the xy-moment for the PSF
+    void setPsfIxyErr(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXY_ERR, double>(value);
+    }
+    /// Return the yy-moment for the PSF
+    void setPsfIyy(double value) {
+        Measurement<Shape>::set<Shape::PSF_IYY, double>(value);
+    }
+    /// Return the error in the yy-moment for the PSF
+    void setPsfIyyErr(double value) {
+        Measurement<Shape>::set<Shape::PSF_IYY_ERR, double>(value);
+    }
+
+    /// Return the status of the routine which performed the calculation
+    // This should be a boost::int16_t, but Schema doesn't support that.
+    void setShapeStatus(short status) {
+        Measurement<Shape>::set<Shape::SHAPE_STATUS, short>(status);
+    }
+    
     virtual ::std::ostream &output(std::ostream &os) const {
         if (size() > 0) {
             return os << "[" << Measurement<Shape>::output(os) << "]";
