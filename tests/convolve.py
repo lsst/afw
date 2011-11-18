@@ -28,6 +28,7 @@ Tests convolution of various kernels with Images and MaskedImages.
 """
 import math
 import os
+import os.path
 import unittest
 import string
 
@@ -55,7 +56,7 @@ except NameError:
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 

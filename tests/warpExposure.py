@@ -54,7 +54,7 @@ except:
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 
