@@ -127,14 +127,5 @@ int main(int argc, char **argv) {
 
     std::cout << "col, row of " << inFilename << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
               << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;
-    /*
-     * Set some metadata in the Wcs
-     */
-    PTR(lsst::daf::base::PropertySet) md(new lsst::daf::base::PropertySet);
-    wcs->setMetadata(md);
-    wcs->getMetadata()->add("Hello", 1);
-    wcs->getMetadata()->add("Hello", 2);
-    wcs->getMetadata()->add("Hello", 3);
 
-    std::cout << md->toString() << std::endl;
 }

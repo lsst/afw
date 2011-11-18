@@ -40,7 +40,7 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "Eigen/Core.h"
+#include "Eigen/Core"
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Wcs.h"

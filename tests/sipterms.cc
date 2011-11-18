@@ -33,7 +33,7 @@ using namespace std;
 #include <cstdio>
 #include <cassert>
 #include "boost/shared_ptr.hpp"
-#include "Eigen/Core.h"
+#include "Eigen/Core"
 
 #include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/geom/Point.h"

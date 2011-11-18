@@ -112,7 +112,7 @@ shapelets::MultiShapeletFunctionEvaluator::MultiShapeletFunctionEvaluator(
     update(function);
 }
 
-geom::Ellipse shapelets::MultiShapeletFunctionEvaluator::computeMoments() const {
+geom::ellipses::Ellipse shapelets::MultiShapeletFunctionEvaluator::computeMoments() const {
     double q0 = 0.0;
     Eigen::Vector2d q1 = Eigen::Vector2d::Zero();
     Eigen::Matrix2d q2 = Eigen::Matrix2d::Zero();
@@ -122,7 +122,7 @@ geom::Ellipse shapelets::MultiShapeletFunctionEvaluator::computeMoments() const 
     q1 /= q0;
     q2 /= q0;
     q2 -= q1 * q1.transpose();
-    return geom::Ellipse(
+    return geom::ellipses::Ellipse(
         geom::ellipses::Quadrupole(geom::ellipses::Quadrupole::Matrix(q2), false),
         geom::Point2D(q1)
     );

@@ -57,7 +57,7 @@ class EllipseTestCase(unittest.TestCase):
 
     def testAccessors(self):
         for core in self.cores:
-            vec = numpy.random.randn(3,1) * 1E-3 + core.getParameterVector()
+            vec = numpy.random.randn(3) * 1E-3 + core.getParameterVector()
             core.setParameterVector(vec)
             self.assert_((core.getParameterVector()==vec).all())
             center = geom.Point2D(*numpy.random.randn(2))

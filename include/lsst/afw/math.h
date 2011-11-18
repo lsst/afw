@@ -39,6 +39,7 @@
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/math/SpatialCell.h"
 #include "lsst/afw/math/offsetImage.h"
+#include "lsst/afw/math/MaskedVector.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Integrate.h"
 #include "lsst/afw/math/Interpolate.h"

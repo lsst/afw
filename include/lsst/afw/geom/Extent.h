@@ -37,6 +37,22 @@
 
 namespace lsst { namespace afw { namespace geom {
 
+// These are present to avoid a static assertion for instantiating computeNorm() on integer types.
+namespace detail {
+
+template <int N>
+double computeExtentNorm(Extent<double,N> const & s) {
+    return s.asEigen().norm();
+}
+
+template <int N>
+int computeExtentNorm(Extent<int,N> const & s) {
+    assert(false);
+}
+
+} // namespace detail
+
+
 template<typename T, int N>
 class ExtentBase : public CoordinateBase<Extent<T,N>,T,N> {
     typedef CoordinateBase<Extent<T,N>,T,N> Super;
@@ -46,7 +62,7 @@ public:
     T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
     /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
-    T computeNorm() const { return this->asEigen().norm(); }
+    T computeNorm() const { return detail::computeExtentNorm(static_cast<Extent<T,N> const &>(*this)); }
 
     /**
      *  @brief Standard equality comparison.

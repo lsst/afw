@@ -42,7 +42,7 @@
 
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 

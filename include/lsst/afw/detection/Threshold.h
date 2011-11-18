@@ -54,10 +54,6 @@ public:
 
     /** 
      * Threshold constructor
-     *
-     * @param 
-     * @param type 
-     * @param polarity 
      */
     Threshold(
         double const value,               ///< desired threshold value

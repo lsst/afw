@@ -96,7 +96,7 @@ Here's the function that reads a FITS file and finds a set of object in it.  It 
 \until readImage
 
 First read a part of the FITS file. We use <TT>eups::productDir</TT> to find the directory, and only read a
-part of the %image (that's the \c BBox).  The use of a \c boost::shared_ptr<MaskedImage> (written as \c ::Ptr)
+part of the %image (that's the \c BBox).  The use of a \c boost::shared_ptr<MaskedImage> (written as \c MaskedImage::Ptr)
 is because I want to call the actual constructor in the scope of the try block, but I want to use the %image at
 function scope.
 

@@ -80,19 +80,33 @@ namespace formatters {
 template <typename ImagePixelT>
 class ImageFormatterTraits {
 public:
-    static std::string name;
+    static std::string name();
 };
 
-template<> std::string ImageFormatterTraits<boost::uint16_t>::name("ImageU");
-template<> std::string ImageFormatterTraits<int>::name("ImageI");
-template<> std::string ImageFormatterTraits<float>::name("ImageF");
-template<> std::string ImageFormatterTraits<double>::name("ImageD");
-template<> std::string ImageFormatterTraits<boost::uint64_t>::name("ImageL");
-
+template<> std::string ImageFormatterTraits<boost::uint16_t>::name() {
+    static std::string name = "ImageU";
+    return name;
+}
+template<> std::string ImageFormatterTraits<int>::name() {
+    static std::string name = "ImageI";
+    return name;
+}
+template<> std::string ImageFormatterTraits<float>::name() {
+    static std::string name = "ImageF";
+    return name;
+}
+template<> std::string ImageFormatterTraits<double>::name() {
+    static std::string name = "ImageD";
+    return name;
+}
+template<> std::string ImageFormatterTraits<boost::uint64_t>::name() {
+    static std::string name = "ImageL";
+    return name;
+}
 
 template <typename ImagePixelT>
 lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::registration(
-    ImageFormatterTraits<ImagePixelT>::name,
+    ImageFormatterTraits<ImagePixelT>::name(),
     typeid(Image<ImagePixelT>),
     createInstance);
 
@@ -253,20 +267,19 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
         height = ip->getHeight();
     }
     ar & make_nvp("width", width) & make_nvp("height", height);
-    std::size_t nbytes = width * height * sizeof(ImagePixelT);
     if (Archive::is_loading::value) {
         boost::scoped_ptr<Image<ImagePixelT> > ni(
             new Image<ImagePixelT>(geom::Extent2I(width, height))
         );
         typename Image<ImagePixelT>::Array array = ni->getArray();
-        ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(array.getData(), nbytes));
+        ar & make_nvp("array",
+                      boost::serialization::make_array(array.getData(), array.getNumElements()));
         ip->swap(*ni);
     } else {
         ndarray::Array<ImagePixelT, 2, 2> array = ndarray::dynamic_dimension_cast<2>(ip->getArray());
         if(array.empty())
             array = ndarray::copy(ip->getArray());
-        ar & make_nvp("bytes", boost::serialization::make_binary_object(array.getData(), nbytes));
+        ar & make_nvp("array", boost::serialization::make_array(array.getData(), array.getNumElements()));
     }
 }
 

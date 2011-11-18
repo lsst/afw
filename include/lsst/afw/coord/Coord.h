@@ -84,7 +84,12 @@ public:
 
     virtual Coord::Ptr clone() const { return Coord::Ptr(new Coord(*this)); }
     
-    virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude, double const epoch = 2000.0);
+    virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude) {
+        double const epoch = 2000.0;
+        reset(longitude, latitude, epoch);
+    }
+    virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude,
+                       double const epoch);
 
     double getEpoch() const { return _epoch; }
 

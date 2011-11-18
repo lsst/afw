@@ -27,14 +27,14 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 Ellipse::ParameterVector const Ellipse::getParameterVector() const {
     ParameterVector r;
-    r.start<3>() = _core->getParameterVector();
-    r.end<2>() = _center.asEigen();
+    r.head<3>() = _core->getParameterVector();
+    r.tail<2>() = _center.asEigen();
     return r;
 }
 
 void Ellipse::setParameterVector(Ellipse::ParameterVector const & vector) {
-    _core->setParameterVector(vector.start<3>());
-    _center = Point2D(vector.end<2>());
+    _core->setParameterVector(vector.head<3>());
+    _center = Point2D(vector.tail<2>());
 }
 
 void Ellipse::readParameters(double const * iter) {
