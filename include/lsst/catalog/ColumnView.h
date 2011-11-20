@@ -13,15 +13,7 @@ class SimpleTable;
 class ColumnView {
 public:
     
-    typedef ndarray::detail::UnaryOpExpression< 
-        ndarray::Array<int,1>,
-        ndarray::detail::BitwiseAndTag::ExprScalar< ndarray::Array<int,1>, int >::Bound
-    > IsNullColumn;
-
     Layout getLayout() const;
-
-    template <typename T>
-    IsNullColumn isNull(Key<T> const & key) const;
         
     template <typename T>
     typename ndarray::Array<T,1> operator[](Key<T> const & key) const;

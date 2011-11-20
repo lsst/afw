@@ -11,7 +11,7 @@ inline int indexCovariance(int i, int j) {
     return (i < j) ? (i + j*(j+1)/2) : (j + i*(i+1)/2);
 }
 
-inline int computeCovarianceSize(int size) {
+inline int computeCovariancePackedSize(int size) {
     return size * (size + 1) / 2;
 }
 

@@ -10,8 +10,7 @@
 #include "boost/fusion/sequence/intrinsic/at_key.hpp"
 
 #include "lsst/catalog/ColumnView.h"
-#include "lsst/catalog/detail/KeyAccess.h"
-#include "lsst/catalog/detail/FieldAccess.h"
+#include "lsst/catalog/detail/Access.h"
 
 namespace lsst { namespace catalog {
 
@@ -53,20 +52,10 @@ struct ColumnView::Impl {
 Layout ColumnView::getLayout() const { return _impl->layout; }
 
 template <typename T>
-ColumnView::IsNullColumn ColumnView::isNull(Key<T> const & key) const {
-    return ndarray::detail::ArrayAccess< ndarray::Array<int,1> >::construct(
-        reinterpret_cast<int *>(
-            reinterpret_cast<char *>(_impl->buf) + detail::KeyAccess::getData(key).nullOffset
-        ),
-        boost::fusion::at_key<int>(_impl->cores)
-    ) & detail::KeyAccess::getData(key).nullMask;
-}
-
-template <typename T>
 typename ndarray::Array<T,1> ColumnView::operator[](Key<T> const & key) const {
     return ndarray::detail::ArrayAccess< ndarray::Array<T,1> >::construct(
         reinterpret_cast<T *>(
-            reinterpret_cast<char *>(_impl->buf) + detail::KeyAccess::getData(key).offset
+            reinterpret_cast<char *>(_impl->buf) + detail::Access::getOffset(key)
         ),
         boost::fusion::at_key<T>(_impl->cores)
     );
@@ -80,16 +69,8 @@ ColumnView::ColumnView(
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
-#define INSTANTIATE_COLUMNVIEW_ALL(r, data, elem)                       \
-    template ColumnView::IsNullColumn ColumnView::isNull(Key< elem > const &) const;
-
 #define INSTANTIATE_COLUMNVIEW_SCALAR(r, data, elem)                    \
     template ndarray::Array< elem, 1> ColumnView::operator[](Key< elem > const &) const;
-
-BOOST_PP_SEQ_FOR_EACH(
-    INSTANTIATE_COLUMNVIEW_ALL, _,
-    BOOST_PP_TUPLE_TO_SEQ(CATALOG_FIELD_TYPE_N, CATALOG_FIELD_TYPE_TUPLE)
-)
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_SCALAR, _,

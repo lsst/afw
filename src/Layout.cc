@@ -6,143 +6,63 @@
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/catalog/Layout.h"
-#include "lsst/catalog/detail/KeyAccess.h"
+#include "lsst/catalog/detail/Access.h"
 #include "lsst/catalog/detail/LayoutData.h"
 
 namespace lsst { namespace catalog {
 
-namespace {
-
-struct LayoutGap {
-    int offset;
-    int size;
-};
-
-} // anonymous
-
-//----- LayoutBuilder private implementation ----------------------------------------------------------------
-
-class LayoutBuilder::Impl {
-public:
-
-    typedef Layout::Data Data;
-
-    template <typename T>
-    Key<T> add(Field<T> const & field);
-
-    boost::shared_ptr<Data> finish();
-
-    Impl() : _data(new Data()), _gaps(), _currentNullOffset(0), _currentNullMask(0) {}
-
-    Impl(Impl const & other) :
-        _data(new Data(*other._data)), _gaps(other._gaps), 
-        _currentNullOffset(other._currentNullOffset),
-        _currentNullMask(other._currentNullMask)
-    {}
-
-private:
-
-    void operator=(Impl const & other);
-
-    int findOffset(int size);
-
-    boost::shared_ptr<Data> _data;
-    std::list<LayoutGap> _gaps;
-    int _currentNullOffset;
-    int _currentNullMask;
-};
+//----- LayoutBuilder implementation ------------------------------------------------------------------------
 
 template <typename T>
-Key<T> LayoutBuilder::Impl::add(Field<T> const & field) {
+Key<T> LayoutBuilder::add(Field<T> const & field) {
+    static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
     if (!_data.unique()) {
-        boost::shared_ptr<Data> result(new Data(*_data));
-        _data.swap(result);
+        boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
+        _data.swap(data);
     }
-    boost::shared_ptr< detail::KeyData<T> > keyData = boost::make_shared< detail::KeyData<T> >(field);
-    if (field.canBeNull) {
-        if (!_currentNullMask) {
-            _currentNullOffset = findOffset(sizeof(int));
-            _currentNullMask = 1;
-        }
-        keyData->nullOffset = _currentNullOffset;
-        keyData->nullMask = _currentNullMask;
-        _currentNullMask <<= 1;
+    int padding = ELEMENT_SIZE - _data->recordSize % ELEMENT_SIZE;
+    if (padding != ELEMENT_SIZE) {
+        _data->recordSize += padding;
     }
-    keyData->offset = findOffset(field.getElementCount() * sizeof(typename Field<T>::Element));
-    Key<T> key = detail::KeyAccess::make(keyData);
-    boost::fusion::at_key<T>(_data->keys).push_back(key);
-    return key;
+    Layout::Item<T> item = { detail::Access::makeKey(field, _data->recordSize), field };
+    _data->recordSize += field.getElementCount() * ELEMENT_SIZE;
+    boost::fusion::at_key<T>(_data->items).push_back(item);
+    return item.key;
 }
 
-boost::shared_ptr<LayoutBuilder::Impl::Data> LayoutBuilder::Impl::finish() {
-    static int const MIN_RECORD_ALIGN = sizeof(double) * 2;
+Layout LayoutBuilder::finish() {
+    static int const MIN_RECORD_ALIGN = sizeof(double) * detail::LayoutData::ALIGN_N_DOUBLE;
+    if (!_data.unique()) {
+        boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
+        _data.swap(data);
+    }
     _data->recordSize += (MIN_RECORD_ALIGN - _data->recordSize % MIN_RECORD_ALIGN);
     return _data;
 }
 
-int LayoutBuilder::Impl::findOffset(int size) {
-    for (std::list<LayoutGap>::iterator i = _gaps.begin(); i != _gaps.end(); ++i) {
-        if (i->offset % size == 0 && i->size >= size) {
-            int offset = i->offset;
-            if (i->size == size) {
-                _gaps.erase(i);
-            } else {
-                i->offset += size;
-                i->size -= size;
-            }
-            return offset;
-        }
-    }
-    int extra = size - _data->recordSize % size;
-    if (extra == size) {
-        int offset = _data->recordSize;
-        _data->recordSize += size;
-        return offset;
-    } else {
-        LayoutGap gap = { _data->recordSize, extra };
-        _data->recordSize += extra;
-        _gaps.push_back(gap);
-        int offset = _data->recordSize;
-        _data->recordSize += size;
-        return offset;
-    }
-}
+LayoutBuilder::LayoutBuilder() : _data(boost::make_shared<Data>()) {}
 
-//----- LayoutBuilder public implementation -----------------------------------------------------------------
-
-template <typename T>
-Key<T> LayoutBuilder::add(Field<T> const & field) {
-    if (!_impl.unique()) {
-        boost::shared_ptr<Impl> impl(new Impl(*_impl));
-        _impl.swap(impl);
-    }
-    return _impl->add(field);
-}
-
-Layout LayoutBuilder::finish() {
-    return Layout(_impl->finish());
-}
-
-LayoutBuilder::LayoutBuilder() : _impl(new Impl()) {}
-
-LayoutBuilder::LayoutBuilder(LayoutBuilder const & other) : _impl(other._impl) {}
+LayoutBuilder::LayoutBuilder(LayoutBuilder const & other) : _data(other._data) {}
 
 LayoutBuilder & LayoutBuilder::operator=(LayoutBuilder const & other) {
-    _impl = other._impl;
+    _data = other._data;
     return *this;
 }
 
 LayoutBuilder::~LayoutBuilder() {}
 
-//----- Layout public implementation ------------------------------------------------------------------------
+//----- Layout implementation -------------------------------------------------------------------------------
 
 template <typename T>
-Key<T> Layout::find(std::string const & name) const {
-    std::vector< Key<T> > const & vec = boost::fusion::at_key<T>(_data->keys);
-    for (typename std::vector< Key<T> >::const_iterator i = vec.begin(); i != vec.end(); ++i) {
-        if (i->getField().name == name) return *i;
+Layout::Item<T> Layout::find(std::string const & name) const {
+    std::vector< Item<T> > const & vec = boost::fusion::at_key<T>(_data->items);
+    for (typename std::vector< Item<T> >::const_iterator i = vec.begin(); i != vec.end(); ++i) {
+        if (i->field.getName() == name) return *i;
     }
-    throw std::invalid_argument("Name not found.");        
+    throw LSST_EXCEPT(
+        lsst::pex::exceptions::NotFoundException,
+        (boost::format("Field with name '%s' not found.") % name).str()
+    );
 }
 
 namespace {
@@ -150,8 +70,8 @@ namespace {
 struct Describe {
 
     template <typename T>
-    void operator()(Key<T> const & key) const {
-        result->insert(key.getField().describe());
+    void operator()(Layout::Item<T> const & item) const {
+        result->insert(item.field.describe());
     }
 
     explicit Describe(Layout::Description * result_) : result(result_) {}
@@ -163,7 +83,7 @@ struct Describe {
 
 Layout::Description Layout::describe() const {
     Description result;
-    _data->forEachKey(Describe(&result));
+    _data->forEachItem(Describe(&result));
     return result;
 }
 
@@ -179,7 +99,7 @@ Layout::~Layout() {}
 
 #define INSTANTIATE_LAYOUT(r, data, elem)                           \
     template Key< elem > LayoutBuilder::add(Field< elem > const &); \
-    template Key< elem > Layout::find(std::string const & ) const;
+    template Layout::Item< elem > Layout::find(std::string const & ) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_LAYOUT, _,

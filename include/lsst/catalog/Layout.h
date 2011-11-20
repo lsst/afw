@@ -10,13 +10,13 @@
 
 #include "lsst/ndarray.h"
 #include "lsst/catalog/Key.h"
+#include "lsst/catalog/Field.h"
 
 namespace lsst { namespace catalog {
 
 namespace detail {
 
 class LayoutData;
-class LayoutAccess;
 
 } // namespace detail
 
@@ -40,10 +40,10 @@ public:
 private:
 
     friend class Layout;
+    
+    typedef detail::LayoutData Data;
 
-    class Impl;
-
-    boost::shared_ptr<Impl> _impl;
+    boost::shared_ptr<Data> _data;
 };
 
 class Layout {
@@ -52,7 +52,13 @@ public:
     typedef std::set<FieldDescription> Description;
 
     template <typename T>
-    Key<T> find(std::string const & name) const;
+    struct Item {
+        Key<T> key;
+        Field<T> field;
+    };
+
+    template <typename T>
+    Item<T> find(std::string const & name) const;
 
     Description describe() const;
 
@@ -63,7 +69,7 @@ public:
 private:
 
     friend class LayoutBuilder;
-    friend class detail::LayoutAccess;
+    friend class detail::Access;
     
     typedef detail::LayoutData Data;
 

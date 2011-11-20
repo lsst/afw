@@ -3,13 +3,17 @@
 
 #include "lsst/catalog/SimpleRecord.h"
 #include "lsst/catalog/SimpleTable.h"
-#include "lsst/catalog/detail/LayoutAccess.h"
+#include "lsst/catalog/detail/Access.h"
 
 namespace lsst { namespace catalog {
 
 namespace detail {
 
 namespace {
+
+struct AllocType {
+    double element[LayoutData::ALIGN_N_DOUBLE];
+};
 
 struct Block {
     char * next;
@@ -19,8 +23,10 @@ struct Block {
     bool isFull() const { return next == end; }
 
     explicit Block(int blockSize) {
-        std::pair<ndarray::Manager::Ptr,char*> p = ndarray::SimpleManager<char>::allocate(blockSize);
-        next = p.second;
+        assert(blockSize / sizeof(AllocType)); // LayoutBuilder::finish() should guarantee this.
+        std::pair<ndarray::Manager::Ptr,AllocType*> p 
+            = ndarray::SimpleManager<AllocType>::allocate(blockSize / sizeof(AllocType));
+        next = reinterpret_cast<char*>(p.second);
         end = next + blockSize;
         manager = p.first;
     }
@@ -29,16 +35,6 @@ struct Block {
 struct RecordPair {
     char * buf;
     RecordAux::Ptr aux;
-};
-
-struct UnsetField {
-
-    template <typename T>
-    void operator()(Key<T> const & key) const { record->unset(key); }
-
-    UnsetField(SimpleRecord * record_) : record(record_) {}
-
-    SimpleRecord * record;
 };
 
 } // anonymous
@@ -151,7 +147,6 @@ SimpleRecord SimpleTable::append(RecordAux::Ptr const & aux) {
     _storage->records.push_back(pair);
     _storage->blocks.back().next += _storage->layout.getRecordSize();
     SimpleRecord result(pair.buf, aux, _storage);
-    detail::LayoutAccess::getData(_storage->layout).forEachKey(detail::UnsetField(&result));
     return result;
 }
 

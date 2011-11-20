@@ -18,19 +18,21 @@ namespace lsst { namespace catalog { namespace detail {
 
 struct LayoutData {
 
-    struct MakeKeyVectorPair {
+    static int const ALIGN_N_DOUBLE = 2;
+
+    struct MakeItemVectorPair {
         template <typename T> struct apply {
-            typedef boost::fusion::pair< T, std::vector< Key<T> > > type;
+            typedef boost::fusion::pair< T, std::vector< Layout::Item<T> > > type;
         };
     };
 
     template <typename Function>
-    struct IterateKeyVector {
+    struct IterateItemVector {
 
         template <typename T>
-        void operator()(boost::fusion::pair< T, std::vector< Key<T> > > const & type) const {
+        void operator()(boost::fusion::pair< T, std::vector< Layout::Item<T> > > const & type) const {
             for (
-                typename std::vector< Key<T> >::const_iterator i = type.second.begin();
+                typename std::vector< Layout::Item<T> >::const_iterator i = type.second.begin();
                 i != type.second.end();
                 ++i
             ) {
@@ -38,25 +40,25 @@ struct LayoutData {
             }
         };
         
-        explicit IterateKeyVector(Function func_) : func(func_) {}
+        explicit IterateItemVector(Function func_) : func(func_) {}
 
         Function func;
     };
 
     typedef boost::fusion::result_of::as_map<
-        boost::mpl::transform< detail::FieldTypes, MakeKeyVectorPair >::type
-        >::type KeyContainer;
+        boost::mpl::transform< detail::FieldTypes, MakeItemVectorPair >::type
+        >::type ItemContainer;
 
-    LayoutData() : recordSize(0), keys() {}
+    LayoutData() : recordSize(0), items() {}
 
     template <typename Function>
-    void forEachKey(Function func) const {
-        IterateKeyVector<Function> metaFunc(func);
-        boost::fusion::for_each(keys, metaFunc);
+    void forEachItem(Function func) const {
+        IterateItemVector<Function> metaFunc(func);
+        boost::fusion::for_each(items, metaFunc);
     }
 
     int recordSize;
-    KeyContainer keys;
+    ItemContainer items;
 };
 
 }}} // namespace lsst::catalog::detail

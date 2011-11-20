@@ -1,2 +1,17 @@
+*.dylib
+*.o
+*.so
+*.os
+*.pyc
+*_wrap.cc
+*.cfgc
+*Lib.py
+version.py
+.sconf_temp
+.sconsign.dblite
+config.log
+doc/*.tag
+doc/html
+doc/doxygen.conf
 tests/.tests
 tests/SimpleTable
