@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "boost/noncopyable.hpp"
 #include "boost/make_shared.hpp"
 
@@ -33,7 +35,7 @@ struct Block {
 };
 
 struct RecordPair {
-    char * buf;
+    void * buf;
     RecordAux::Ptr aux;
 };
 
@@ -44,7 +46,7 @@ struct TableStorage : private boost::noncopyable {
     std::vector<Block> blocks;
     std::vector<RecordPair> records;
     int defaultBlockSize;
-    char * consolidated;
+    void * consolidated;
     TableAux::Ptr aux;
 
     void addBlock(int recordCount) {
@@ -64,7 +66,7 @@ struct TableStorage : private boost::noncopyable {
 
 } // namespace detail
 
-//----- SimpleRecord implementation ---------------------------------------------------------------------------
+//----- SimpleRecord implementation -------------------------------------------------------------------------
 
 Layout SimpleRecord::getLayout() const { return _storage->layout; }
 
@@ -74,7 +76,7 @@ void SimpleRecord::initialize() const {
     
 }
 
-//----- SimpleTable implementation ----------------------------------------------------------------------------
+//----- SimpleTable implementation --------------------------------------------------------------------------
 
 Layout SimpleTable::getLayout() const { return _storage->layout; }
 
@@ -100,7 +102,7 @@ ColumnView SimpleTable::consolidate() {
             ++i, block.next += recordSize
         ) {
             detail::RecordPair newPair = { block.next, i->aux };
-            std::copy(i->buf, i->buf + recordSize, newPair.buf);
+            std::memcpy(newPair.buf, i->buf, recordSize);
             newStorage->records.push_back(newPair);
         }
         _storage.swap(newStorage);

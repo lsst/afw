@@ -30,7 +30,7 @@ typedef boost::fusion::result_of::as_map<
 
 struct ColumnView::Impl {
     int recordCount;
-    char * buf;
+    void * buf;
     Layout layout;
     CoreContainer cores;
 
@@ -42,7 +42,7 @@ struct ColumnView::Impl {
         );
     }
 
-    Impl(Layout const & layout_, int recordCount_, char * buf_, ndarray::Manager::Ptr const & manager_)
+    Impl(Layout const & layout_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
         : recordCount(recordCount_), buf(buf_), layout(layout_)
     {
         boost::fusion::for_each(cores, *this);
@@ -79,7 +79,7 @@ typename ndarray::Array<T,2,1> ColumnView::operator[](Key< Array<T> > const & ke
 ColumnView::~ColumnView() {}
 
 ColumnView::ColumnView(
-    Layout const & layout, int recordCount, char * buf, ndarray::Manager::Ptr const & manager
+    Layout const & layout, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
 ) : _impl(new Impl(layout, recordCount, buf, manager)) {}
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

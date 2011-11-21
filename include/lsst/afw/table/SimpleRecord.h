@@ -64,16 +64,16 @@ private:
     friend class SimpleTable;
 
     SimpleRecord(
-        char * buf,
+        void * buf,
         RecordAux::Ptr const & aux,
         boost::shared_ptr<detail::TableStorage> const & storage
     ) :
-        _buf(reinterpret_cast<char*>(buf)), _aux(aux), _storage(storage)
+        _buf(reinterpret_cast<void*>(buf)), _aux(aux), _storage(storage)
     {}
 
     void initialize() const;
 
-    char * _buf;
+    void * _buf;
     RecordAux::Ptr _aux;
     boost::shared_ptr<detail::TableStorage> _storage;
 };

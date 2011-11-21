@@ -29,7 +29,7 @@ private:
 
     struct Impl;
 
-    ColumnView(Layout const & layout, int recordCount, char * buf, ndarray::Manager::Ptr const & manager);
+    ColumnView(Layout const & layout, int recordCount, void * buf, ndarray::Manager::Ptr const & manager);
 
     boost::shared_ptr<Impl> _impl;
 };
