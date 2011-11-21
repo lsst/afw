@@ -61,4 +61,5 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
     SimpleRecord r1a = table[0];
     BOOST_CHECK((r1.get(myArray) == r1a.get(myArray)).all());
+
 }

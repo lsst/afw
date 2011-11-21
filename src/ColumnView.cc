@@ -61,6 +61,21 @@ typename ndarray::Array<T,1> ColumnView::operator[](Key<T> const & key) const {
     );
 }
 
+template <typename T>
+typename ndarray::Array<T,2,1> ColumnView::operator[](Key< Array<T> > const & key) const {
+    ndarray::detail::Core<1>::Ptr scalarCore = boost::fusion::at_key<T>(_impl->cores);
+    return ndarray::detail::ArrayAccess< ndarray::Array<T,2,1> >::construct(
+        reinterpret_cast<T *>(
+            reinterpret_cast<char *>(_impl->buf) + detail::Access::getOffset(key)
+        ),
+        ndarray::detail::Core<2>::create(
+            ndarray::makeVector(scalarCore->getSize(), key.getSize()),
+            ndarray::makeVector(scalarCore->getStride(), 1),
+            scalarCore->getManager()
+        )
+    );
+}
+
 ColumnView::~ColumnView() {}
 
 ColumnView::ColumnView(
@@ -70,7 +85,8 @@ ColumnView::ColumnView(
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_COLUMNVIEW_SCALAR(r, data, elem)                    \
-    template ndarray::Array< elem, 1> ColumnView::operator[](Key< elem > const &) const;
+    template ndarray::Array< elem, 1> ColumnView::operator[](Key< elem > const &) const; \
+    template ndarray::Array< elem, 2, 1 > ColumnView::operator[](Key< Array< elem > > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_SCALAR, _,

@@ -18,6 +18,9 @@ public:
     template <typename T>
     typename ndarray::Array<T,1> operator[](Key<T> const & key) const;
 
+    template <typename T>
+    typename ndarray::Array<T,2,1> operator[](Key< Array<T> > const & key) const;
+
     ~ColumnView();
 
 private:
@@ -29,8 +32,6 @@ private:
     ColumnView(Layout const & layout, int recordCount, char * buf, ndarray::Manager::Ptr const & manager);
 
     boost::shared_ptr<Impl> _impl;
-
-    ndarray::detail::Core<1>::Ptr _intCore;
 };
 
 }} // namespace lsst::catalog
