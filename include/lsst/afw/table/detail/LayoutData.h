@@ -1,8 +1,8 @@
 // -*- c++ -*-
-#ifndef CATALOG_DETAIL_LayoutData_h_INCLUDED
-#define CATALOG_DETAIL_LayoutData_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
+#define AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
 #include <vector>
 
@@ -12,9 +12,9 @@
 #include "boost/fusion/container/map/convert.hpp"
 #include "boost/fusion/sequence/intrinsic/at_key.hpp"
 
-#include "lsst/catalog/Layout.h"
+#include "lsst/afw/table/Layout.h"
 
-namespace lsst { namespace catalog { namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 struct LayoutData {
 
@@ -61,6 +61,6 @@ struct LayoutData {
     ItemContainer items;
 };
 
-}}} // namespace lsst::catalog::detail
+}}}} // namespace lsst::afw::table::detail
 
-#endif // !CATALOG_DETAIL_LayoutData_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_LayoutData_h_INCLUDED

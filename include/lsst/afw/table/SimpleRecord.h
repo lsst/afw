@@ -1,13 +1,13 @@
 // -*- c++ -*-
-#ifndef CATALOG_SimpleRecord_h_INCLUDED
-#define CATALOG_SimpleRecord_h_INCLUDED
+#ifndef AFW_TABLE_SimpleRecord_h_INCLUDED
+#define AFW_TABLE_SimpleRecord_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
-#include "lsst/catalog/Layout.h"
-#include "lsst/catalog/detail/Access.h"
+#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 namespace detail {
 
@@ -78,6 +78,6 @@ private:
     boost::shared_ptr<detail::TableStorage> _storage;
 };
   
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_SimpleRecord_h_INCLUDED
+#endif // !AFW_TABLE_SimpleRecord_h_INCLUDED

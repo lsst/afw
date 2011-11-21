@@ -1,13 +1,13 @@
 // -*- c++ -*-
-#ifndef CATALOG_DETAIL_Access_h_INCLUDED
-#define CATALOG_DETAIL_Access_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_Access_h_INCLUDED
+#define AFW_TABLE_DETAIL_Access_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
-#include "lsst/catalog/detail/FieldBase.h"
-#include "lsst/catalog/Layout.h"
-#include "lsst/catalog/detail/LayoutData.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/FieldBase.h"
+#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/detail/LayoutData.h"
 
-namespace lsst { namespace catalog { namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 class Access {
 public:
@@ -48,6 +48,6 @@ public:
 
 };
 
-}}} // namespace lsst::catalog::detail
+}}}} // namespace lsst::afw::table::detail
 
-#endif // !CATALOG_DETAIL_Access_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_Access_h_INCLUDED

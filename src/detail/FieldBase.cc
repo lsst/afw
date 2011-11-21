@@ -1,4 +1,4 @@
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
 #include <limits>
 
@@ -6,9 +6,9 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/catalog/detail/FieldBase.h"
+#include "lsst/afw/table/detail/FieldBase.h"
 
-namespace lsst { namespace catalog { namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 namespace {
 
@@ -82,7 +82,7 @@ std::string FieldBase< Covariance< Shape<U> > >::getTypeString() const {
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_FIELD_BASE, _,
-    BOOST_PP_TUPLE_TO_SEQ(CATALOG_FIELD_TYPE_N, CATALOG_FIELD_TYPE_TUPLE)
+    BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE)
 )
 
-}}} // namespace lsst::catalog::detail
+}}}} // namespace lsst::afw::table::detail

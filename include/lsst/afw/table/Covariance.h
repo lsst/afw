@@ -1,8 +1,8 @@
 // -*- c++ -*-
-#ifndef CATALOG_Covariance_h_INCLUDED
-#define CATALOG_Covariance_h_INCLUDED
+#ifndef AFW_TABLE_Covariance_h_INCLUDED
+#define AFW_TABLE_Covariance_h_INCLUDED
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 namespace detail {
 
@@ -17,6 +17,6 @@ inline int computeCovariancePackedSize(int size) {
 
 } // namespace detail
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_Covariance_h_INCLUDED
+#endif // !AFW_TABLE_Covariance_h_INCLUDED

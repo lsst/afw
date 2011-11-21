@@ -1,14 +1,14 @@
 // -*- c++ -*-
-#ifndef CATALOG_SimpleTable_h_INCLUDED
-#define CATALOG_SimpleTable_h_INCLUDED
+#ifndef AFW_TABLE_SimpleTable_h_INCLUDED
+#define AFW_TABLE_SimpleTable_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
-#include "lsst/catalog/Layout.h"
-#include "lsst/catalog/ColumnView.h"
-#include "lsst/catalog/SimpleRecord.h"
+#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/ColumnView.h"
+#include "lsst/afw/table/SimpleRecord.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 class TableAux {
 public:
@@ -60,6 +60,6 @@ private:
     boost::shared_ptr<detail::TableStorage> _storage;
 };
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_SimpleTable_h_INCLUDED
+#endif // !AFW_TABLE_SimpleTable_h_INCLUDED

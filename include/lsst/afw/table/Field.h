@@ -1,12 +1,12 @@
 // -*- c++ -*-
-#ifndef CATALOG_Field_h_INCLUDED
-#define CATALOG_Field_h_INCLUDED
+#ifndef AFW_TABLE_Field_h_INCLUDED
+#define AFW_TABLE_Field_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
-#include "lsst/catalog/detail/FieldBase.h"
-#include "lsst/catalog/FieldDescription.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/FieldBase.h"
+#include "lsst/afw/table/FieldDescription.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 template <typename T>
 struct Field : public detail::FieldBase<T> {
@@ -30,6 +30,6 @@ private:
     std::string _doc;
 };
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_Field_h_INCLUDED
+#endif // !AFW_TABLE_Field_h_INCLUDED

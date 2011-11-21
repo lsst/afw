@@ -1,12 +1,12 @@
 // -*- c++ -*-
-#ifndef CATALOG_ColumnView_h_INCLUDED
-#define CATALOG_ColumnView_h_INCLUDED
+#ifndef AFW_TABLE_ColumnView_h_INCLUDED
+#define AFW_TABLE_ColumnView_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
-#include "lsst/catalog/Layout.h"
+#include "lsst/afw/table/Layout.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 class SimpleTable;
 
@@ -34,6 +34,6 @@ private:
     boost::shared_ptr<Impl> _impl;
 };
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_ColumnView_h_INCLUDED
+#endif // !AFW_TABLE_ColumnView_h_INCLUDED

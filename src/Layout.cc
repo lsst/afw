@@ -5,11 +5,11 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/catalog/Layout.h"
-#include "lsst/catalog/detail/Access.h"
-#include "lsst/catalog/detail/LayoutData.h"
+#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/detail/Access.h"
+#include "lsst/afw/table/detail/LayoutData.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 //----- LayoutBuilder implementation ------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ Layout::~Layout() {}
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_LAYOUT, _,
-    BOOST_PP_TUPLE_TO_SEQ(CATALOG_FIELD_TYPE_N, CATALOG_FIELD_TYPE_TUPLE)
+    BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE)
 )
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table

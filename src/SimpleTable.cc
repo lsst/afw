@@ -1,11 +1,11 @@
 #include "boost/noncopyable.hpp"
 #include "boost/make_shared.hpp"
 
-#include "lsst/catalog/SimpleRecord.h"
-#include "lsst/catalog/SimpleTable.h"
-#include "lsst/catalog/detail/Access.h"
+#include "lsst/afw/table/SimpleRecord.h"
+#include "lsst/afw/table/SimpleTable.h"
+#include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 namespace detail {
 
@@ -174,4 +174,4 @@ SimpleTable::SimpleTable(
 ) : _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize, TableAux::Ptr()))
 {}
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table

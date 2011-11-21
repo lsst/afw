@@ -1,10 +1,10 @@
 // -*- c++ -*-
-#ifndef CATALOG_DETAIL_KeyBase_h_INCLUDED
-#define CATALOG_DETAIL_KeyBase_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_KeyBase_h_INCLUDED
+#define AFW_TABLE_DETAIL_KeyBase_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
-namespace lsst { namespace catalog { 
+namespace lsst { namespace afw { namespace table { 
 
 template <typename T> class Key;
 
@@ -59,6 +59,6 @@ public:
     Key<U> operator()(int i, int j) const;
 };
 
-}}} // namespace lsst::catalog::detail
+}}}} // namespace lsst::afw::table::detail
 
-#endif // !CATALOG_DETAIL_KeyBase_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_KeyBase_h_INCLUDED

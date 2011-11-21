@@ -1,8 +1,8 @@
 // -*- c++ -*-
-#ifndef CATALOG_DETAIL_FieldBase_h_INCLUDED
-#define CATALOG_DETAIL_FieldBase_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_FieldBase_h_INCLUDED
+#define AFW_TABLE_DETAIL_FieldBase_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
 #include <cstring>
 #include <iostream>
@@ -14,26 +14,26 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/catalog/Covariance.h"
-#include "lsst/catalog/detail/KeyBase.h"
+#include "lsst/afw/table/Covariance.h"
+#include "lsst/afw/table/detail/KeyBase.h"
 
-#define CATALOG_SCALAR_FIELD_TYPE_N 3
-#define CATALOG_SCALAR_FIELD_TYPES              \
+#define AFW_TABLE_SCALAR_FIELD_TYPE_N 3
+#define AFW_TABLE_SCALAR_FIELD_TYPES              \
     int, float, double
-#define CATALOG_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() CATALOG_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
+#define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
-#define CATALOG_FIELD_TYPE_N 16
-#define CATALOG_FIELD_TYPES                     \
-    CATALOG_SCALAR_FIELD_TYPES,                 \
+#define AFW_TABLE_FIELD_TYPE_N 16
+#define AFW_TABLE_FIELD_TYPES                     \
+    AFW_TABLE_SCALAR_FIELD_TYPES,                 \
     Point<int>, Point<float>, Point<double>,    \
     Shape<float>, Shape<double>,                \
     Array<float>, Array<double>,                \
     Covariance<float>, Covariance<double>,                      \
     Covariance< Point<float> >, Covariance< Point<double> >,    \
     Covariance< Shape<float> >, Covariance< Shape<double> >
-#define CATALOG_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() CATALOG_FIELD_TYPES BOOST_PP_RPAREN()
+#define AFW_TABLE_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_FIELD_TYPES BOOST_PP_RPAREN()
 
-namespace lsst { namespace catalog { namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 template <typename T>
 struct FieldBase {
@@ -283,9 +283,9 @@ protected:
 
 };
 
-typedef boost::mpl::vector< CATALOG_SCALAR_FIELD_TYPES > ScalarFieldTypes;
-typedef boost::mpl::vector< CATALOG_FIELD_TYPES > FieldTypes;
+typedef boost::mpl::vector< AFW_TABLE_SCALAR_FIELD_TYPES > ScalarFieldTypes;
+typedef boost::mpl::vector< AFW_TABLE_FIELD_TYPES > FieldTypes;
 
-}}} // namespace lsst::catalog::detail
+}}}} // namespace lsst::afw::table::detail
 
-#endif // !CATALOG_DETAIL_FieldBase_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_FieldBase_h_INCLUDED

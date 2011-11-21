@@ -1,12 +1,12 @@
 // -*- c++ -*-
-#ifndef CATALOG_Key_h_INCLUDED
-#define CATALOG_Key_h_INCLUDED
+#ifndef AFW_TABLE_Key_h_INCLUDED
+#define AFW_TABLE_Key_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
-#include "lsst/catalog/detail/FieldBase.h"
-#include "lsst/catalog/detail/KeyBase.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/FieldBase.h"
+#include "lsst/afw/table/detail/KeyBase.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 template <typename T>
 class Key : public detail::KeyBase<T>, public detail::FieldBase<T> {
@@ -28,6 +28,6 @@ private:
     int _offset;
 };
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_Key_h_INCLUDED
+#endif // !AFW_TABLE_Key_h_INCLUDED

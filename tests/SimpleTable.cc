@@ -6,12 +6,12 @@
 #include <iterator>
 #include <algorithm>
 
-#include "lsst/catalog/Layout.h"
-#include "lsst/catalog/SimpleTable.h"
+#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/SimpleTable.h"
 
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
-    using namespace lsst::catalog;
+    using namespace lsst::afw::table;
 
     LayoutBuilder builder;
     
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
 BOOST_AUTO_TEST_CASE(testColumnView) {
 
-    using namespace lsst::catalog;
+    using namespace lsst::afw::table;
 
     LayoutBuilder builder;
     Key<float> floatKey = builder.add(Field<float>("f1", "f1 doc"));

@@ -1,12 +1,12 @@
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/catalog/detail/KeyBase.h"
-#include "lsst/catalog/detail/Access.h"
+#include "lsst/afw/table/detail/KeyBase.h"
+#include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace catalog { namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 template <typename U>
 Key<U> KeyBase< Point<U> >::getX() const { return Access::extractElement(*this, 0); }
@@ -78,8 +78,8 @@ Key<U> KeyBase< Covariance< Shape<U> > >::operator()(int i, int j) const {
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_KEY, _,
-    BOOST_PP_TUPLE_TO_SEQ(CATALOG_FIELD_TYPE_N, CATALOG_FIELD_TYPE_TUPLE)
+    BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE)
 )
 
 } // namespace detail
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table

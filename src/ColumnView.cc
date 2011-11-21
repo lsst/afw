@@ -1,4 +1,4 @@
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
@@ -9,10 +9,10 @@
 #include "boost/fusion/container/map/convert.hpp"
 #include "boost/fusion/sequence/intrinsic/at_key.hpp"
 
-#include "lsst/catalog/ColumnView.h"
-#include "lsst/catalog/detail/Access.h"
+#include "lsst/afw/table/ColumnView.h"
+#include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 namespace {
 
@@ -90,7 +90,7 @@ ColumnView::ColumnView(
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_SCALAR, _,
-    BOOST_PP_TUPLE_TO_SEQ(CATALOG_SCALAR_FIELD_TYPE_N, CATALOG_SCALAR_FIELD_TYPE_TUPLE)
+    BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_SCALAR_FIELD_TYPE_N, AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE)
 )
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table

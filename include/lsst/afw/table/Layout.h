@@ -1,18 +1,18 @@
 // -*- c++ -*-
-#ifndef CATALOG_Layout_h_INCLUDED
-#define CATALOG_Layout_h_INCLUDED
+#ifndef AFW_TABLE_Layout_h_INCLUDED
+#define AFW_TABLE_Layout_h_INCLUDED
 
-#include "lsst/catalog/detail/fusion_limits.h"
+#include "lsst/afw/table/detail/fusion_limits.h"
 
 #include <set>
 
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/ndarray.h"
-#include "lsst/catalog/Key.h"
-#include "lsst/catalog/Field.h"
+#include "lsst/afw/table/Key.h"
+#include "lsst/afw/table/Field.h"
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 namespace detail {
 
@@ -78,6 +78,6 @@ private:
     boost::shared_ptr<Data> _data;
 };
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_Layout_h_INCLUDED
+#endif // !AFW_TABLE_Layout_h_INCLUDED

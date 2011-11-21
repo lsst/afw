@@ -2,4 +2,4 @@
 
 from lsst.sconsUtils import scripts
 
-scripts.BasicSConstruct("catalog")
+scripts.BasicSConstruct("afw_table")

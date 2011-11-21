@@ -1,11 +1,11 @@
 // -*- c++ -*-
-#ifndef CATALOG_FieldDescription_h_INCLUDED
-#define CATALOG_FieldDescription_h_INCLUDED
+#ifndef AFW_TABLE_FieldDescription_h_INCLUDED
+#define AFW_TABLE_FieldDescription_h_INCLUDED
 
 #include <cstring>
 #include <iostream>
 
-namespace lsst { namespace catalog {
+namespace lsst { namespace afw { namespace table {
 
 struct FieldDescription {
     std::string name;
@@ -32,6 +32,6 @@ struct FieldDescription {
 
 };
 
-}} // namespace lsst::catalog
+}}} // namespace lsst::afw::table
 
-#endif // !CATALOG_FieldDescription_h_INCLUDED
+#endif // !AFW_TABLE_FieldDescription_h_INCLUDED
