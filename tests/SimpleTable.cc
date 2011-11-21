@@ -63,3 +63,45 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     BOOST_CHECK((r1.get(myArray) == r1a.get(myArray)).all());
 
 }
+
+BOOST_AUTO_TEST_CASE(testColumnView) {
+
+    using namespace lsst::catalog;
+
+    LayoutBuilder builder;
+    Key<float> floatKey = builder.add(Field<float>("f1", "f1 doc"));
+    Key< Array<double> > arrayKey = builder.add(Field< Array<double> >("f2", "f2 doc", 5));
+    Layout layout = builder.finish();
+    
+    SimpleTable table(layout, 16);
+    Eigen::ArrayXd r = Eigen::ArrayXd::Random(20);
+    for (int i = 0; i < 20; ++i) {
+        SimpleRecord record = table.append();
+        record.set(floatKey, r[i]);
+        record.set(arrayKey, Eigen::ArrayXd::Random(5));
+        if (i < 16) {
+            BOOST_CHECK(table.isConsolidated());
+        } else {
+            BOOST_CHECK(!table.isConsolidated());
+        }
+    }
+    
+    SimpleTable tableCopy(table);
+    ColumnView columns = table.consolidate();
+    BOOST_CHECK(!tableCopy.isConsolidated());
+    BOOST_CHECK(table.isConsolidated());
+
+    for (int i = 0; i < 20; ++i) {
+        SimpleRecord record = table[i];
+        SimpleRecord recordCopy = tableCopy[i];
+        BOOST_CHECK_EQUAL(record.get(floatKey), recordCopy.get(floatKey));
+        BOOST_CHECK_EQUAL(record.get(floatKey), columns[floatKey][i]);
+        for (int j = 0; j < 5; ++j) {
+            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], recordCopy.get(arrayKey)[j]);
+            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], recordCopy.get(arrayKey[j]));
+            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], columns[arrayKey[j]][i]);
+            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], columns[arrayKey][i][j]);
+        }
+    }
+    
+}

@@ -1,0 +1,5 @@
+# -*- python -*-
+
+from lsst.sconsUtils import scripts
+
+scripts.BasicSConscript.doc(inputs=["#include"])
