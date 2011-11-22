@@ -1,6 +1,6 @@
 // -*- c++ -*-
-#ifndef AFW_TABLE_RecordBase_h_INCLUDED
-#define AFW_TABLE_RecordBase_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
+#define AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
 
 #include "lsst/afw/table/detail/fusion_limits.h"
 
@@ -8,21 +8,16 @@
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/detail/RecordData.h"
 
-namespace lsst { namespace afw { namespace table {
-
-namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 struct TableImpl;
-template <typename RecordT, IteratorTypeEnum type> class Iterator;
-
-} // namespace detail
-
 class TableBase;
+template <typename RecordT, IteratorTypeEnum type> class Iterator;
 
 class RecordBase {
 public:
 
-    typedef detail::RecordData::IdType IdType;
+    typedef RecordData::IdType IdType;
 
     Layout getLayout() const;
 
@@ -30,17 +25,17 @@ public:
 
     template <typename T> 
     typename Field<T>::Reference operator[](Key<T> const & key) const {
-        return detail::Access::getReference(key, _data);
+        return Access::getReference(key, _data);
     }
     
     template <typename T>
     typename Field<T>::Value get(Key<T> const & key) const {
-        return detail::Access::getValue(key, _data);
+        return Access::getValue(key, _data);
     }
 
     template <typename T, typename U>
     void set(Key<T> const & key, U const & value) const {
-        detail::Access::setValue(key, _data, value);
+        Access::setValue(key, _data, value);
     }
 
     ~RecordBase();
@@ -56,23 +51,23 @@ protected:
         return *this;
     }
 
-    detail::RecordAux::Ptr getAux() const { return _data->aux; }
+    RecordAux::Ptr getAux() const { return _data->aux; }
 
 private:
 
     friend class TableBase;
-    template <typename RecordT, IteratorTypeEnum type> friend class detail::Iterator;
+    template <typename RecordT, IteratorTypeEnum type> friend class Iterator;
 
     RecordBase(
-        detail::RecordData * data,
-        boost::shared_ptr<detail::TableImpl> const & storage
+        RecordData * data,
+        boost::shared_ptr<TableImpl> const & storage
     ) : _data(data), _table(storage)
     {}
 
-    detail::RecordData * _data;
-    boost::shared_ptr<detail::TableImpl> _table;
+    RecordData * _data;
+    boost::shared_ptr<TableImpl> _table;
 };
   
-}}} // namespace lsst::afw::table
+}}}} // namespace lsst::afw::table::detail
 
-#endif // !AFW_TABLE_RecordBase_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
