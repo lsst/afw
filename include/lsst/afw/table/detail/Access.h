@@ -9,6 +9,8 @@
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
+class TableImpl;
+
 class Access {
 public:
 

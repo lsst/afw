@@ -3,8 +3,8 @@
 #include "boost/noncopyable.hpp"
 #include "boost/make_shared.hpp"
 
-#include "lsst/afw/table/SimpleRecord.h"
-#include "lsst/afw/table/SimpleTable.h"
+#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -69,7 +69,7 @@ private:
 
 } // anonymous
 
-struct TableStorage : private boost::noncopyable {
+struct TableImpl : private boost::noncopyable {
     Layout layout;
     Block::Ptr block;
     std::vector<RecordAux::Ptr> recordAux;
@@ -91,7 +91,7 @@ struct TableStorage : private boost::noncopyable {
         block.swap(newBlock);
     }
 
-    TableStorage(Layout const & layout_, int defaultBlockRecordCount_, TableAux::Ptr const & aux_) :
+    TableImpl(Layout const & layout_, int defaultBlockRecordCount_, TableAux::Ptr const & aux_) :
         layout(layout_), defaultBlockRecordCount(defaultBlockRecordCount_), recordCount(0), 
         front(0), back(0), consolidated(0), aux(aux_)
     {}
@@ -100,112 +100,98 @@ struct TableStorage : private boost::noncopyable {
 
 } // namespace detail
 
-//----- SimpleRecord implementation -------------------------------------------------------------------------
+//----- RecordBase implementation -------------------------------------------------------------------------
 
-Layout SimpleRecord::getLayout() const { return _storage->layout; }
+Layout RecordBase::getLayout() const { return _table->layout; }
 
-SimpleRecord::~SimpleRecord() {}
+RecordBase::~RecordBase() {}
 
-//----- SimpleTable implementation --------------------------------------------------------------------------
+//----- TableBase implementation --------------------------------------------------------------------------
 
-Layout SimpleTable::getLayout() const { return _storage->layout; }
+Layout TableBase::getLayout() const { return _impl->layout; }
 
-bool SimpleTable::isConsolidated() const {
-    return _storage->consolidated;
+bool TableBase::isConsolidated() const {
+    return _impl->consolidated;
 }
 
 #if 0
-ColumnView SimpleTable::consolidate() {
-    if (!_storage->consolidated) {
-        boost::shared_ptr<detail::TableStorage> newStorage =
-            boost::make_shared<detail::TableStorage>(
-                _storage->layout,
-                _storage->defaultBlockRecordCount,
-                _storage->aux
+ColumnView TableBase::consolidate() {
+    if (!_impl->consolidated) {
+        boost::shared_ptr<detail::TableImpl> newStorage =
+            boost::make_shared<detail::TableImpl>(
+                _impl->layout,
+                _impl->defaultBlockRecordCount,
+                _impl->aux
             );
-        newStorage->addBlock(_storage->records.size());
-        newStorage->records.reserve(_storage->records.size());
+        newStorage->addBlock(_impl->records.size());
+        newStorage->records.reserve(_impl->records.size());
         detail::Block & block = newStorage->blocks.back();
-        int recordSize = _storage->layout.getRecordSize();
+        int recordSize = _impl->layout.getRecordSize();
         for (
-            std::vector<detail::RecordPair>::iterator i = _storage->records.begin();
-            i != _storage->records.end();
+            std::vector<detail::RecordPair>::iterator i = _impl->records.begin();
+            i != _impl->records.end();
             ++i, block.next += recordSize
         ) {
             detail::RecordPair newPair = { block.next, i->aux };
             std::memcpy(newPair.buf, i->buf, recordSize);
             newStorage->records.push_back(newPair);
         }
-        _storage.swap(newStorage);
+        _impl.swap(newStorage);
     }
     return ColumnView(
-        _storage->layout, _storage->records.size(),
-        _storage->consolidated, _storage->blocks.back().manager
+        _impl->layout, _impl->records.size(),
+        _impl->consolidated, _impl->blocks.back().manager
     );
 }
 #endif
 
-int SimpleTable::getRecordCount() const {
-    return _storage->recordCount;
+int TableBase::getRecordCount() const {
+    return _impl->recordCount;
 }
 
-SimpleRecord SimpleTable::append(detail::RecordAux::Ptr const & aux) {
-    if (!_storage->block || _storage->block->isFull()) {
-        _storage->addBlock(_storage->defaultBlockRecordCount);
+RecordBase TableBase::append(detail::RecordAux::Ptr const & aux) {
+    if (!_impl->block || _impl->block->isFull()) {
+        _impl->addBlock(_impl->defaultBlockRecordCount);
     }
-    detail::RecordData * p = _storage->block->makeNextRecord();
+    detail::RecordData * p = _impl->block->makeNextRecord();
     assert(p != 0);
-    if (_storage->back == 0) {
-        _storage->back = p;
-        _storage->front = p;
+    if (_impl->back == 0) {
+        _impl->back = p;
+        _impl->front = p;
     } else {
-        _storage->back->sibling = p;
-        _storage->back = _storage->back->sibling;
+        _impl->back->sibling = p;
+        _impl->back = _impl->back->sibling;
     }
-    ++_storage->recordCount;
-    SimpleRecord result(p, _storage);
+    ++_impl->recordCount;
+    RecordBase result(p, _impl);
     return result;
 }
 
-SimpleRecord SimpleTable::front() const {
-    assert(_storage->front);
-    return SimpleRecord(_storage->front, _storage);
+RecordBase TableBase::front() const {
+    assert(_impl->front);
+    return RecordBase(_impl->front, _impl);
 }
 
-SimpleRecord SimpleTable::back(SimpleTable::IteratorTypeEnum iterType) const {
-    assert(_storage->back);
-    detail::RecordData * p = _storage->back;
-    if (iterType == ALL) {
+RecordBase TableBase::back(IteratorTypeEnum iterType) const {
+    assert(_impl->back);
+    detail::RecordData * p = _impl->back;
+    if (iterType != NO_CHILDREN) {
         while (p->child != 0) {
             p = p->child;
         }
     }
-    return SimpleRecord(p, _storage);
+    return RecordBase(p, _impl);
 }
 
-SimpleTable::SimpleTable(
+TableBase::TableBase(
     Layout const & layout,
     int defaultBlockRecordCount,
     int capacity,
     detail::TableAux::Ptr const & aux
 ) :
-    _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockRecordCount, aux))
+    _impl(boost::make_shared<detail::TableImpl>(layout, defaultBlockRecordCount, aux))
 {
-    if (capacity) _storage->addBlock(capacity);
+    if (capacity) _impl->addBlock(capacity);
 }
-
-SimpleTable::SimpleTable(
-    Layout const & layout,
-    int defaultBlockRecordCount,
-    detail::TableAux::Ptr const & aux
-) : _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockRecordCount, aux))
-{}
-
-SimpleTable::SimpleTable(
-    Layout const & layout,
-    int defaultBlockRecordCount
-) : _storage(
-    boost::make_shared<detail::TableStorage>(layout, defaultBlockRecordCount, detail::TableAux::Ptr())
-) {}
 
 }}} // namespace lsst::afw::table

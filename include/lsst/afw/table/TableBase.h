@@ -1,12 +1,12 @@
 // -*- c++ -*-
-#ifndef AFW_TABLE_SimpleTable_h_INCLUDED
-#define AFW_TABLE_SimpleTable_h_INCLUDED
+#ifndef AFW_TABLE_TableBase_h_INCLUDED
+#define AFW_TABLE_TableBase_h_INCLUDED
 
 #include "lsst/afw/table/detail/fusion_limits.h"
 
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/ColumnView.h"
-#include "lsst/afw/table/SimpleRecord.h"
+#include "lsst/afw/table/RecordBase.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -20,7 +20,7 @@ public:
 
 } // namespace detail
 
-class SimpleTable {
+class TableBase {
 public:
 
     Layout getLayout() const;
@@ -33,39 +33,31 @@ public:
 
     int getRecordCount() const;
 
-    SimpleRecord append(detail::RecordAux::Ptr const & aux = detail::RecordAux::Ptr());
+    ~TableBase() {}
 
-    SimpleRecord front() const;
+protected:
 
-    SimpleRecord back(IteratorTypeEnum iterType=ALL) const;
-
-    SimpleTable(
+    TableBase(
         Layout const & layout,
         int defaultBlockRecordCount,
         int capacity,
         detail::TableAux::Ptr const & aux = detail::TableAux::Ptr()
     );
 
-    SimpleTable(
-        Layout const & layout,
-        int defaultBlockRecordCount,
-        detail::TableAux::Ptr const & aux
-    );
+    TableBase(TableBase const & other) : _impl(other._impl) {}
 
-    SimpleTable(Layout const & layout, int defaultBlockRecordCount);
+    RecordBase append(detail::RecordAux::Ptr const & aux = detail::RecordAux::Ptr());
 
-    SimpleTable(SimpleTable const & other) : _storage(other._storage) {}
+    RecordBase front() const;
 
-    ~SimpleTable() {}
-
-protected:
+    RecordBase back(IteratorTypeEnum iterType=ALL_RECORDS) const;
 
     detail::TableAux::Ptr getAux() const;
 
 private:
-    boost::shared_ptr<detail::TableStorage> _storage;
+    boost::shared_ptr<detail::TableImpl> _impl;
 };
 
 }}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_SimpleTable_h_INCLUDED
+#endif // !AFW_TABLE_TableBase_h_INCLUDED

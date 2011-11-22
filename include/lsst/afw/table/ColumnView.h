@@ -8,7 +8,7 @@
 
 namespace lsst { namespace afw { namespace table {
 
-class SimpleTable;
+class TableBase;
 
 class ColumnView {
 public:
@@ -25,7 +25,7 @@ public:
 
 private:
 
-    friend class SimpleTable;
+    friend class TableBase;
 
     struct Impl;
 
