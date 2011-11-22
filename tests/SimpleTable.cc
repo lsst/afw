@@ -49,20 +49,23 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     r1.set(myFloat, 5.7f);
     r1.set(myArray, Eigen::ArrayXd::Random(5));
 
-    SimpleRecord r0a = table[0];
+    SimpleRecord r0a = table.front();
     BOOST_CHECK_EQUAL(r0.get(myInt), r0a.get(myInt));
     BOOST_CHECK_EQUAL(r0.get(myFloat), r0a.get(myFloat));
 
     BOOST_CHECK(table.isConsolidated());
 
+#if 0
     table.erase(0);
     BOOST_CHECK(!table.isConsolidated());
     BOOST_CHECK_EQUAL(table.getRecordCount(), 1);
 
     SimpleRecord r1a = table[0];
     BOOST_CHECK((r1.get(myArray) == r1a.get(myArray)).all());
-
+#endif
 }
+
+#if 0
 
 BOOST_AUTO_TEST_CASE(testColumnView) {
 
@@ -105,3 +108,5 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
     }
     
 }
+
+#endif

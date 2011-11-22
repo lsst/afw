@@ -10,11 +10,15 @@
 
 namespace lsst { namespace afw { namespace table {
 
+namespace detail {
+
 class TableAux {
 public:
     typedef boost::shared_ptr<TableAux> Ptr;
     virtual ~TableAux() {}
 };
+
+} // namespace detail
 
 class SimpleTable {
 public:
@@ -23,30 +27,32 @@ public:
 
     bool isConsolidated() const;
 
+#if 0
     ColumnView consolidate();
+#endif
 
     int getRecordCount() const;
 
-    SimpleRecord operator[](int index) const;
+    SimpleRecord append(detail::RecordAux::Ptr const & aux = detail::RecordAux::Ptr());
 
-    void erase(int index);
+    SimpleRecord front() const;
 
-    SimpleRecord append(RecordAux::Ptr const & aux = RecordAux::Ptr());
+    SimpleRecord back() const;
 
     SimpleTable(
         Layout const & layout,
-        int defaultBlockSize,
+        int defaultBlockRecordCount,
         int capacity,
-        TableAux::Ptr const & aux = TableAux::Ptr()
+        detail::TableAux::Ptr const & aux = detail::TableAux::Ptr()
     );
 
     SimpleTable(
         Layout const & layout,
-        int defaultBlockSize,
-        TableAux::Ptr const & aux
+        int defaultBlockRecordCount,
+        detail::TableAux::Ptr const & aux
     );
 
-    SimpleTable(Layout const & layout, int defaultBlockSize);
+    SimpleTable(Layout const & layout, int defaultBlockRecordCount);
 
     SimpleTable(SimpleTable const & other) : _storage(other._storage) {}
 
@@ -54,7 +60,7 @@ public:
 
 protected:
 
-    TableAux::Ptr getAux() const;
+    detail::TableAux::Ptr getAux() const;
 
 private:
     boost::shared_ptr<detail::TableStorage> _storage;

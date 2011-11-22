@@ -13,53 +13,87 @@ namespace detail {
 
 namespace {
 
-struct AllocType {
-    double element[LayoutData::ALIGN_N_DOUBLE];
-};
+class Block : public ndarray::Manager {
+public:
 
-struct Block {
-    char * next;
-    char * end;
-    ndarray::Manager::Ptr manager;
+    typedef boost::intrusive_ptr<Block> Ptr;
 
-    bool isFull() const { return next == end; }
-
-    explicit Block(int blockSize) {
-        assert(blockSize / sizeof(AllocType)); // LayoutBuilder::finish() should guarantee this.
-        std::pair<ndarray::Manager::Ptr,AllocType*> p 
-            = ndarray::SimpleManager<AllocType>::allocate(blockSize / sizeof(AllocType));
-        next = reinterpret_cast<char*>(p.second);
-        end = next + blockSize;
-        manager = p.first;
+    RecordData * makeNextRecord() {
+        if (isFull()) return 0;
+        RecordData * r = new (_nextLocation) RecordData();
+        _nextLocation += _recordSize;
+        return r;
     }
-};
 
-struct RecordPair {
-    void * buf;
-    RecordAux::Ptr aux;
+    bool isFull() const { return _nextLocation == _end; }
+
+    void * getBuffer() const {
+        return _buf.get();
+    }
+
+    static Ptr allocate(int recordSize, int recordCount) {
+        boost::intrusive_ptr<Block> r(new Block(recordSize, recordCount));
+        return r;
+    }
+
+    virtual ~Block() {
+        char * iter = reinterpret_cast<char*>(_buf.get());
+        while (iter != _nextLocation) {
+            reinterpret_cast<RecordData*>(iter)->~RecordData();
+            iter += _recordSize;
+        }
+    }
+
+    Ptr chain;
+
+private:
+
+    struct AllocType {
+        double element[LayoutData::ALIGN_N_DOUBLE];
+    };
+    
+    explicit Block(int recordSize, int recordCount) :
+        _recordSize(recordSize),
+        _buf(new AllocType[(recordSize * recordCount) / sizeof(AllocType)]),
+        _nextLocation(reinterpret_cast<char*>(_buf.get())),
+        _end(_nextLocation + recordSize * recordCount)
+    {
+        assert((recordSize * recordCount) % sizeof(AllocType) == 0);
+    }
+
+    int _recordSize;
+    boost::scoped_array<AllocType> _buf;
+    char * _nextLocation;
+    char * _end;
 };
 
 } // anonymous
 
 struct TableStorage : private boost::noncopyable {
     Layout layout;
-    std::vector<Block> blocks;
-    std::vector<RecordPair> records;
-    int defaultBlockSize;
+    Block::Ptr block;
+    std::vector<RecordAux::Ptr> recordAux;
+    int defaultBlockRecordCount;
+    int recordCount;
+    RecordData * front;
+    RecordData * back;
     void * consolidated;
     TableAux::Ptr aux;
 
-    void addBlock(int recordCount) {
-        blocks.push_back(Block(recordCount * layout.getRecordSize()));
-        if (blocks.size() == 1) {
-            consolidated = blocks.back().next;
-        } else {
+    void addBlock(int blockRecordCount) {
+        Block::Ptr newBlock = Block::allocate(layout.getRecordSize(), blockRecordCount);
+        if (block) {
+            newBlock->chain.swap(block);
             consolidated = 0;
+        } else {
+            consolidated = newBlock->getBuffer();
         }
+        block.swap(newBlock);
     }
 
-    TableStorage(Layout const & layout_, int defaultBlockSize_, TableAux::Ptr const & aux_) :
-        layout(layout_), defaultBlockSize(defaultBlockSize_), consolidated(0), aux(aux_)
+    TableStorage(Layout const & layout_, int defaultBlockRecordCount_, TableAux::Ptr const & aux_) :
+        layout(layout_), defaultBlockRecordCount(defaultBlockRecordCount_), recordCount(0), 
+        front(0), back(0), consolidated(0), aux(aux_)
     {}
 
 };
@@ -72,10 +106,6 @@ Layout SimpleRecord::getLayout() const { return _storage->layout; }
 
 SimpleRecord::~SimpleRecord() {}
 
-void SimpleRecord::initialize() const {
-    
-}
-
 //----- SimpleTable implementation --------------------------------------------------------------------------
 
 Layout SimpleTable::getLayout() const { return _storage->layout; }
@@ -84,12 +114,13 @@ bool SimpleTable::isConsolidated() const {
     return _storage->consolidated;
 }
 
+#if 0
 ColumnView SimpleTable::consolidate() {
     if (!_storage->consolidated) {
         boost::shared_ptr<detail::TableStorage> newStorage =
             boost::make_shared<detail::TableStorage>(
                 _storage->layout,
-                _storage->defaultBlockSize,
+                _storage->defaultBlockRecordCount,
                 _storage->aux
             );
         newStorage->addBlock(_storage->records.size());
@@ -112,68 +143,63 @@ ColumnView SimpleTable::consolidate() {
         _storage->consolidated, _storage->blocks.back().manager
     );
 }
+#endif
 
 int SimpleTable::getRecordCount() const {
-    return _storage->records.size();
+    return _storage->recordCount;
 }
 
-SimpleRecord SimpleTable::operator[](int index) const {
-    if (index >= static_cast<int>(_storage->records.size())) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
-            "Record index out of range."
-        );
+SimpleRecord SimpleTable::append(detail::RecordAux::Ptr const & aux) {
+    if (!_storage->block || _storage->block->isFull()) {
+        _storage->addBlock(_storage->defaultBlockRecordCount);
     }
-    detail::RecordPair const & pair = _storage->records[index];
-    return SimpleRecord(pair.buf, pair.aux, _storage);
-}
-
-void SimpleTable::erase(int index) {
-    if (index >= static_cast<int>(_storage->records.size())) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
-            "Record index out of range."
-        );
+    detail::RecordData * p = _storage->block->makeNextRecord();
+    assert(p != 0);
+    if (_storage->back == 0) {
+        _storage->back = p;
+        _storage->front = p;
+    } else {
+        _storage->back->sibling = p;
+        _storage->back = _storage->back->sibling;
     }
-    _storage->records.erase(_storage->records.begin() + index);
-    if (index < static_cast<int>(_storage->records.size())) {
-        _storage->consolidated = 0;
-    }
-}
-
-SimpleRecord SimpleTable::append(RecordAux::Ptr const & aux) {
-    if (_storage->blocks.empty() || _storage->blocks.back().isFull()) {
-        _storage->addBlock(_storage->defaultBlockSize);
-    }
-    detail::RecordPair pair = { _storage->blocks.back().next, aux };
-    _storage->records.push_back(pair);
-    _storage->blocks.back().next += _storage->layout.getRecordSize();
-    SimpleRecord result(pair.buf, aux, _storage);
+    ++_storage->recordCount;
+    SimpleRecord result(p, _storage);
     return result;
+}
+
+SimpleRecord SimpleTable::front() const {
+    assert(_storage->front);
+    return SimpleRecord(_storage->front, _storage);
+}
+
+SimpleRecord SimpleTable::back() const {
+    assert(_storage->front);
+    return SimpleRecord(_storage->back, _storage);
 }
 
 SimpleTable::SimpleTable(
     Layout const & layout,
-    int defaultBlockSize,
+    int defaultBlockRecordCount,
     int capacity,
-    TableAux::Ptr const & aux
+    detail::TableAux::Ptr const & aux
 ) :
-    _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize, aux))
+    _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockRecordCount, aux))
 {
     if (capacity) _storage->addBlock(capacity);
 }
 
 SimpleTable::SimpleTable(
     Layout const & layout,
-    int defaultBlockSize,
-    TableAux::Ptr const & aux
-) : _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize, aux))
+    int defaultBlockRecordCount,
+    detail::TableAux::Ptr const & aux
+) : _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockRecordCount, aux))
 {}
 
 SimpleTable::SimpleTable(
     Layout const & layout,
-    int defaultBlockSize
-) : _storage(boost::make_shared<detail::TableStorage>(layout, defaultBlockSize, TableAux::Ptr()))
-{}
+    int defaultBlockRecordCount
+) : _storage(
+    boost::make_shared<detail::TableStorage>(layout, defaultBlockRecordCount, detail::TableAux::Ptr())
+) {}
 
 }}} // namespace lsst::afw::table

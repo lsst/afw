@@ -17,17 +17,22 @@
 #include "lsst/afw/table/Covariance.h"
 #include "lsst/afw/table/detail/KeyBase.h"
 
-#define AFW_TABLE_SCALAR_FIELD_TYPE_N 3
+#define AFW_TABLE_SCALAR_FIELD_TYPE_N 4
 #define AFW_TABLE_SCALAR_FIELD_TYPES              \
-    int, float, double
+    int, boost::uint64_t, float, double
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
-#define AFW_TABLE_FIELD_TYPE_N 16
-#define AFW_TABLE_FIELD_TYPES                     \
-    AFW_TABLE_SCALAR_FIELD_TYPES,                 \
-    Point<int>, Point<float>, Point<double>,    \
-    Shape<float>, Shape<double>,                \
-    Array<float>, Array<double>,                \
+#define AFW_TABLE_ARRAY_FIELD_TYPE_N 2
+#define AFW_TABLE_ARRAY_FIELD_TYPES             \
+    float, double
+#define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
+
+#define AFW_TABLE_FIELD_TYPE_N 17
+#define AFW_TABLE_FIELD_TYPES                                   \
+    AFW_TABLE_SCALAR_FIELD_TYPES,                               \
+    Array<float>, Array<double>,                                \
+    Point<int>, Point<float>, Point<double>,                    \
+    Shape<float>, Shape<double>,                                \
     Covariance<float>, Covariance<double>,                      \
     Covariance< Point<float> >, Covariance< Point<double> >,    \
     Covariance< Shape<float> >, Covariance< Shape<double> >

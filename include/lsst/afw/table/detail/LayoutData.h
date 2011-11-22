@@ -16,6 +16,24 @@
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
+class RecordAux {
+public:
+    typedef boost::shared_ptr<RecordAux> Ptr;
+    virtual ~RecordAux() {}
+};
+
+struct RecordData {
+    typedef boost::uint64_t IdType;
+
+    IdType id;
+    RecordAux::Ptr aux;
+    RecordData * parent;
+    RecordData * child;
+    RecordData * sibling;
+
+    RecordData() : id(0), aux(), parent(0), child(0), sibling(0) {}
+};
+
 struct LayoutData {
 
     static int const ALIGN_N_DOUBLE = 2;
@@ -49,7 +67,7 @@ struct LayoutData {
         boost::mpl::transform< detail::FieldTypes, MakeItemVectorPair >::type
         >::type ItemContainer;
 
-    LayoutData() : recordSize(0), items() {}
+    LayoutData() : recordSize(sizeof(RecordData)), items() {}
 
     template <typename Function>
     void forEachItem(Function func) const {

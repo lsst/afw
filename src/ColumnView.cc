@@ -86,11 +86,18 @@ ColumnView::ColumnView(
 
 #define INSTANTIATE_COLUMNVIEW_SCALAR(r, data, elem)                    \
     template ndarray::Array< elem, 1> ColumnView::operator[](Key< elem > const &) const; \
-    template ndarray::Array< elem, 2, 1 > ColumnView::operator[](Key< Array< elem > > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_SCALAR, _,
     BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_SCALAR_FIELD_TYPE_N, AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE)
+)
+
+#define INSTANTIATE_COLUMNVIEW_ARRAY(r, data, elem)                    \
+    template ndarray::Array< elem, 2, 1 > ColumnView::operator[](Key< Array< elem > > const &) const; \
+
+BOOST_PP_SEQ_FOR_EACH(
+    INSTANTIATE_COLUMNVIEW_ARRAY, _,
+    BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_ARRAY_FIELD_TYPE_N, AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE)
 )
 
 }}} // namespace lsst::afw::table

@@ -17,6 +17,9 @@ template <typename T> struct TypeTraits;
 template <> struct TypeTraits<int> {
     static char const * getName() { return "int"; }
 };
+template <> struct TypeTraits<boost::uint64_t> {
+    static char const * getName() { return "uint64"; }
+};
 template <> struct TypeTraits<float> {
     static char const * getName() { return "float"; }
 };
