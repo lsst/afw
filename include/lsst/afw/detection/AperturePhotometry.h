@@ -67,7 +67,7 @@ public:
 
     virtual double getRadius() const { return get<RADIUS, double>(); }
 
-    virtual PTR(Photometry) average(void) {
+    virtual PTR(Photometry) average() const {
         if (empty()) {
             return clone();
         }
@@ -78,7 +78,7 @@ public:
         double sumWeight = 0;
         double radius = NaN;
 
-        for (iterator iter = begin(); iter != end(); ++iter) {
+        for (const_iterator iter = begin(); iter != end(); ++iter) {
             PTR(AperturePhotometry) phot = boost::dynamic_pointer_cast<AperturePhotometry, Photometry>(*iter);
             if (lsst::utils::isnan(getRadius())) {
                 continue;
@@ -174,7 +174,7 @@ public:
         return fluxes;
     }
 
-    virtual PTR(Photometry) average(void) {
+    virtual PTR(Photometry) average() const {
         if (empty()) {
             return clone();
         }
@@ -190,7 +190,7 @@ public:
             radius[i] = NaN;
         }
 
-        for (iterator iter = begin(); iter != end(); ++iter) {
+        for (const_iterator iter = begin(); iter != end(); ++iter) {
             PTR(MultipleAperturePhotometry) phot = 
                 boost::dynamic_pointer_cast<MultipleAperturePhotometry, Photometry>(*iter);
             std::vector<ApertureFlux> const& apFlux = getFluxes();
