@@ -62,7 +62,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/formatters/ExposureFormatter.h"
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
 
-#pragma clang diagnostic ignored "-Warray-bounds"
+#pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
 %include "../boost_picklable.i"
