@@ -1,4 +1,4 @@
-#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/config.h"
 
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"

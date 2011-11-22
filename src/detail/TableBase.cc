@@ -70,7 +70,6 @@ private:
 struct TableImpl : private boost::noncopyable {
     Layout layout;
     Block::Ptr block;
-    std::vector<RecordAux::Ptr> recordAux;
     int defaultBlockRecordCount;
     int recordCount;
     RecordData * front;
@@ -145,7 +144,7 @@ int TableBase::getRecordCount() const {
     return _impl->recordCount;
 }
 
-RecordBase TableBase::append(RecordAux::Ptr const & aux) {
+RecordBase TableBase::_addRecord(RecordAux::Ptr const & aux) {
     if (!_impl->block || _impl->block->isFull()) {
         _impl->addBlock(_impl->defaultBlockRecordCount);
     }
@@ -163,20 +162,27 @@ RecordBase TableBase::append(RecordAux::Ptr const & aux) {
     return result;
 }
 
-RecordBase TableBase::front() const {
-    assert(_impl->front);
-    return RecordBase(_impl->front, _impl);
-}
-
-RecordBase TableBase::back(IteratorTypeEnum iterType) const {
-    assert(_impl->back);
-    RecordData * p = _impl->back;
-    if (iterType != NO_CHILDREN) {
-        while (p->child != 0) {
-            p = p->child;
-        }
+RecordBase TableBase::_addRecord(RecordBase const & parent, RecordAux::Ptr const & aux) {
+    if (!parent._data) {
+        return _addRecord(aux);
     }
-    return RecordBase(p, _impl);
+    if (parent._table != _impl) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            "Parent record is not a member of this table."
+        );
+    }
+    assert(_impl->back != 0);
+    if (!_impl->block || _impl->block->isFull()) {
+        _impl->addBlock(_impl->defaultBlockRecordCount);
+    }
+    RecordData * p = _impl->block->makeNextRecord();
+    assert(p != 0);
+    parent._data->child = p;
+    p->parent = parent._data;
+    ++_impl->recordCount;
+    RecordBase result(p, _impl);
+    return result;
 }
 
 TableBase::TableBase(

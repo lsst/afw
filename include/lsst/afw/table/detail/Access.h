@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_DETAIL_Access_h_INCLUDED
 #define AFW_TABLE_DETAIL_Access_h_INCLUDED
 
-#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/config.h"
 #include "lsst/afw/table/detail/FieldBase.h"
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/LayoutData.h"
@@ -10,6 +10,7 @@
 namespace lsst { namespace afw { namespace table { namespace detail {
 
 class TableImpl;
+class RecordBase;
 
 class Access {
 public:
@@ -59,6 +60,11 @@ public:
 
     static LayoutData const & getData(Layout const & layout) {
         return *layout._data;
+    }
+
+    template <typename RecordT>
+    static RecordT makeRecord(RecordBase const & base) {
+        return RecordT(base);
     }
 
 };

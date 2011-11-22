@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_Key_h_INCLUDED
 #define AFW_TABLE_Key_h_INCLUDED
 
-#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/config.h"
 #include "lsst/afw/table/detail/FieldBase.h"
 #include "lsst/afw/table/detail/KeyBase.h"
 

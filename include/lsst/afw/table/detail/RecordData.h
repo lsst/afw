@@ -2,15 +2,15 @@
 #ifndef AFW_TABLE_DETAIL_RecordData_h_INCLUDED
 #define AFW_TABLE_DETAIL_RecordData_h_INCLUDED
 
-#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/config.h"
 
 #include "boost/shared_ptr.hpp"
 
 namespace lsst { namespace afw { namespace table {
 
-enum IteratorTypeEnum { NO_CHILDREN, ALL_RECORDS, CONSOLIDATED };
+namespace detail {
 
- namespace detail {
+enum IteratorTypeEnum { NO_CHILDREN, ALL_RECORDS };
 
 class RecordAux {
 public:
@@ -19,9 +19,8 @@ public:
 };
 
 struct RecordData {
-    typedef boost::uint64_t IdType;
     
-    IdType id;
+    RecordId id;
     RecordAux::Ptr aux;
     RecordData * parent;
     RecordData * child;

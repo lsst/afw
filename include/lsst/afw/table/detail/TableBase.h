@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_DETAIL_TableBase_h_INCLUDED
 #define AFW_TABLE_DETAIL_TableBase_h_INCLUDED
 
-#include "lsst/afw/table/detail/fusion_limits.h"
+#include "lsst/afw/table/config.h"
 
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/ColumnView.h"
@@ -42,11 +42,9 @@ protected:
 
     TableBase(TableBase const & other) : _impl(other._impl) {}
 
-    RecordBase append(RecordAux::Ptr const & aux = RecordAux::Ptr());
+    RecordBase _addRecord(RecordAux::Ptr const & aux = RecordAux::Ptr());
 
-    RecordBase front() const;
-
-    RecordBase back(IteratorTypeEnum iterType=ALL_RECORDS) const;
+    RecordBase _addRecord(RecordBase const & parent, RecordAux::Ptr const & aux = RecordAux::Ptr());
 
     TableAux::Ptr getAux() const;
 
