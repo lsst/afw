@@ -37,7 +37,7 @@ public:
 
     SimpleRecord front() const;
 
-    SimpleRecord back() const;
+    SimpleRecord back(IteratorTypeEnum iterType=ALL) const;
 
     SimpleTable(
         Layout const & layout,

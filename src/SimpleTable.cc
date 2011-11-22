@@ -172,9 +172,15 @@ SimpleRecord SimpleTable::front() const {
     return SimpleRecord(_storage->front, _storage);
 }
 
-SimpleRecord SimpleTable::back() const {
-    assert(_storage->front);
-    return SimpleRecord(_storage->back, _storage);
+SimpleRecord SimpleTable::back(SimpleTable::IteratorTypeEnum iterType) const {
+    assert(_storage->back);
+    detail::RecordData * p = _storage->back;
+    if (iterType == ALL) {
+        while (p->child != 0) {
+            p = p->child;
+        }
+    }
+    return SimpleRecord(p, _storage);
 }
 
 SimpleTable::SimpleTable(

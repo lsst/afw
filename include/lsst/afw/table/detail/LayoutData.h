@@ -13,26 +13,9 @@
 #include "boost/fusion/sequence/intrinsic/at_key.hpp"
 
 #include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/detail/RecordData.h"
 
 namespace lsst { namespace afw { namespace table { namespace detail {
-
-class RecordAux {
-public:
-    typedef boost::shared_ptr<RecordAux> Ptr;
-    virtual ~RecordAux() {}
-};
-
-struct RecordData {
-    typedef boost::uint64_t IdType;
-
-    IdType id;
-    RecordAux::Ptr aux;
-    RecordData * parent;
-    RecordData * child;
-    RecordData * sibling;
-
-    RecordData() : id(0), aux(), parent(0), child(0), sibling(0) {}
-};
 
 struct LayoutData {
 

@@ -13,6 +13,8 @@ namespace detail {
 
 struct TableStorage;
 
+template <typename RecordT> friend class detail::Iterator;
+
 } // namespace detail
 
 class SimpleTable;
@@ -59,12 +61,12 @@ protected:
 private:
 
     friend class SimpleTable;
+    template <typename RecordT> friend class detail::Iterator;
 
     SimpleRecord(
         detail::RecordData * buf,
         boost::shared_ptr<detail::TableStorage> const & storage
-    ) :
-        _buf(buf), _storage(storage)
+    ) : _buf(buf), _storage(storage)
     {}
 
     detail::RecordData * _buf;
