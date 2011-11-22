@@ -25,7 +25,7 @@ env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base 
 
 # Enable GPU code
 import eups
-if eups.productDir("cuda_sdk") and eups.productDir("cuda_toolkit"):
+if eups.productDir("cuda_toolkit") and eups.productDir("cuda_sdk"):
     env.libs["afw"]   += env.getlibs("cudart cuda")
     env.Tool("cuda", toolpath=['python/lsst/afw'])
     env.Append(  CCFLAGS = "-DGPU_BUILD")
