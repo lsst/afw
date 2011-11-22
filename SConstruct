@@ -22,7 +22,10 @@ env = scons.makeEnv(
 env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base daf_data daf_persistence " +
     "pex_exceptions pex_logging pex_policy security fftw3")
 
-if env.Detect('nvcc')!= None:
+
+# Enable GPU code
+import eups
+if eups.productDir("cuda_sdk") and eups.productDir("cuda_toolkit"):
     env.libs["afw"]   += env.getlibs("cudart cuda")
     env.Tool("cuda", toolpath=['python/lsst/afw'])
     env.Append(  CCFLAGS = "-DGPU_BUILD")
