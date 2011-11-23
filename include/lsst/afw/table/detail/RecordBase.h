@@ -13,6 +13,9 @@ namespace lsst { namespace afw { namespace table { namespace detail {
 struct TableImpl;
 class TableBase;
 
+class TreeIteratorBase;
+class SetIteratorBase;
+
 class RecordBase {
 public:
 
@@ -51,6 +54,9 @@ public:
 protected:
 
     AuxBase::Ptr getAux() const { return _data->aux; }
+
+    TreeIteratorBase _asTreeIterator(IteratorMode mode) const;
+    SetIteratorBase _asSetIterator() const;
 
     RecordBase _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr());
     RecordBase _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());

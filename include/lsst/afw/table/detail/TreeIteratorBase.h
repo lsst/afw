@@ -10,11 +10,7 @@
 #include "lsst/afw/table/detail/RecordData.h"
 #include "lsst/afw/table/detail/RecordBase.h"
 
-namespace lsst { namespace afw { namespace table { 
-
-enum IteratorMode { NO_CHILDREN, ALL_RECORDS };
-
-namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 struct TableImpl;
 
@@ -46,6 +42,10 @@ private:
     RecordBase _record;    
     IteratorMode _mode;
 };
+
+inline TreeIteratorBase RecordBase::_asTreeIterator(IteratorMode mode) const {
+    return TreeIteratorBase(_data, _table, mode);
+}
 
 }}}} // namespace lsst::afw::table::detail
 

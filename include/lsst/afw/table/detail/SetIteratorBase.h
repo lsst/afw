@@ -48,6 +48,10 @@ private:
     boost::shared_ptr<TableImpl> _table;
 };
 
+inline SetIteratorBase RecordBase::_asSetIterator() const {
+    return SetIteratorBase(RecordSet::s_iterator_to(*_data), _table);
+}
+
 }}}} // namespace lsst::afw::table::detail
 
 #endif // !AFW_TABLE_DETAIL_SetIteratorBase_h_INCLUDED
