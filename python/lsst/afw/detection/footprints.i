@@ -58,6 +58,15 @@ SWIG_SHARED_PTR(FootprintSetF, lsst::afw::detection::FootprintSet<float, lsst::a
 SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
 SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr >);
 
+%define %HeavyFootprintPtr(NAME, TYPE)
+   SWIG_SHARED_PTR_DERIVED(HeavyFootprint##NAME,
+                           lsst::afw::detection::Footprint,
+                           lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+%enddef
+
+%HeavyFootprintPtr(I, int);
+%HeavyFootprintPtr(F, float);
+
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
 %include "lsst/afw/detection/Threshold.h"
@@ -90,6 +99,11 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %template(SpanContainerT)      std::vector<lsst::afw::detection::Span::Ptr>;
 %template(FootprintContainerT) std::vector<lsst::afw::detection::Footprint::Ptr>;
 
+%define %heavyFootprints(NAME, PIXEL_TYPE...)
+    %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>;
+    %template(makeHeavyFootprint) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE>;
+%enddef
+
 %define %imageOperations(NAME, PIXEL_TYPE)
     %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(FootprintFunctorMI ##NAME)
@@ -109,6 +123,9 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %template(FootprintSet##NAME) lsst::afw::detection::FootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
 %template(makeFootprintSet) lsst::afw::detection::makeFootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
 %enddef
+
+%heavyFootprints(I, int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+%heavyFootprints(F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 
 %thresholdOperations(lsst::afw::image::Image);
 %thresholdOperations(lsst::afw::image::MaskedImage);
