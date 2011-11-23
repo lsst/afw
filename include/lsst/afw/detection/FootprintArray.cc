@@ -36,6 +36,7 @@
  */
 
 #include "lsst/afw/detection/FootprintArray.h"
+#include "lsst/afw/detection/Footprint.h"
 #include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
 

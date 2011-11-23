@@ -22,7 +22,6 @@
 
 #include <boost/type_traits.hpp>
 #include "lsst/ndarray.h"
-#include "lsst/afw/detection/Footprint.h"
 
 #if !defined(LSST_DETECTION_FOOTPRINT_ARRAY_H)
 #define LSST_DETECTION_FOOTPRINT_ARRAY_H
@@ -30,6 +29,7 @@
 namespace lsst{
 namespace afw {
 namespace detection {
+class Footprint;
 
 template <typename T, typename U, int N, int C, int D>
 void flattenArray(
