@@ -235,6 +235,32 @@ Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
                                 typename image::Mask<MaskT>::Ptr const&  mask,
                                 MaskT const bitmask);
     
+/*!
+ * \brief A set of pixels in an Image, including those pixels' actual values
+ */
+template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
+          typename VariancePixelT=lsst::afw::image::VariancePixel>
+class HeavyFootprint : public Footprint {
+public:
+    explicit HeavyFootprint(
+        Footprint const& foot,
+        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage);
+
+    void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage,
+                lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()) const;
+private:
+    lsst::ndarray::Array<ImagePixelT, 1, 1> _image;
+    lsst::ndarray::Array<MaskPixelT, 1, 1> _mask;
+    lsst::ndarray::Array<VariancePixelT, 1, 1> _variance;
+};
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
+    Footprint const& foot,
+    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& img)
+{
+    return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img);
+}    
 
 }}}
 
