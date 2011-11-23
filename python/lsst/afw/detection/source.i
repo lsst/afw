@@ -31,6 +31,7 @@
 #include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
+#include "lsst/afw/detection/AperturePhotometry.h"
 #include "lsst/afw/detection/Shape.h"
 
 #include "lsst/afw/formatters/SourceFormatter.h"
@@ -81,6 +82,9 @@
 %MeasurementBefore(Photometry);
 %MeasurementBefore(Shape);
 
+%shared_ptr(lsst::afw::detection::AperturePhotometry);
+%shared_ptr(lsst::afw::detection::MultipleAperturePhotometry);
+
 %include "lsst/afw/detection/Schema.h"
 %include "lsst/afw/detection/Measurement.h"
 
@@ -91,6 +95,18 @@
 %include "lsst/afw/detection/Astrometry.h"
 %include "lsst/afw/detection/Photometry.h"
 %include "lsst/afw/detection/Shape.h"
+%include "lsst/afw/detection/AperturePhotometry.h"
+
+%inline %{
+    lsst::afw::detection::AperturePhotometry::Ptr
+    cast_AperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::AperturePhotometry>(phot);
+    }
+    lsst::afw::detection::MultipleAperturePhotometry::Ptr
+    cast_MultipleAperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::MultipleAperturePhotometry>(phot);
+    }
+%}
 
 /************************************************************************************************************/
 

@@ -99,7 +99,11 @@ std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VarianceP
     static std::string name = "ExposureD";
     return name;
 }
-
+template<>
+std::string ExposureFormatterTraits<boost::uint64_t, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+    static std::string name = "ExposureL";
+    return name;
+}
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 lsst::daf::persistence::FormatterRegistration afwForm::ExposureFormatter<ImagePixelT,
@@ -488,4 +492,5 @@ INSTANTIATE(uint16_t, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(int, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(float, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(double, afwImg::MaskPixel, afwImg::VariancePixel)
+INSTANTIATE(uint64_t, afwImg::MaskPixel, afwImg::VariancePixel)
 /// \endcond

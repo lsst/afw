@@ -61,6 +61,8 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
+
+#pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
 %include "../boost_picklable.i"
@@ -72,7 +74,6 @@ Basic routines to talk to lsst::afw::image classes
 namespace boost {
     namespace mpl { }
 }
-
 
 /************************************************************************************************************/
 
@@ -258,6 +259,7 @@ using lsst::afw::image::NoWcs;
 %enddef
 
 %exposurePtr(boost::uint16_t);
+%exposurePtr(boost::uint64_t);
 %exposurePtr(int);
 %exposurePtr(float);
 %exposurePtr(double);
@@ -270,6 +272,7 @@ namespace lsst { namespace afw { namespace detection {
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
+%exposure(L, boost::uint64_t);
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
@@ -281,6 +284,16 @@ namespace lsst { namespace afw { namespace detection {
          lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
     {
         return lsst::afw::image::Exposure<float,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
+%extend lsst::afw::image::Exposure<boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertD;
+    lsst::afw::image::Exposure<double,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD()
+    {
+        return lsst::afw::image::Exposure<double,
             lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
     }
 }

@@ -583,7 +583,9 @@ double innerProduct(Image1T const& lhs, ///< first image
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr) {
                 typename Image1T::Pixel val = *lptr;
-                sum += val*val;
+                if (lsst::utils::isfinite(val)) {
+                    sum += val*val;
+                }
             }
         }
     } else {
@@ -597,7 +599,10 @@ double innerProduct(Image1T const& lhs, ///< first image
             typename Image2T::const_x_iterator rptr = rhs.row_begin(y) + border;
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr, ++rptr) {
-                sum += (*lptr)*(*rptr);
+                double const tmp = (*lptr)*(*rptr);
+                if (lsst::utils::isfinite(tmp)) {
+                    sum += tmp;
+                }
             }
         }
     }
@@ -620,6 +625,7 @@ double innerProduct(Image1T const& lhs, ///< first image
     template double innerProduct(Image<U> const&, Image<T> const&, int);
 
 INSTANTIATE(boost::uint16_t)
+INSTANTIATE(boost::uint64_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)

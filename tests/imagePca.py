@@ -26,14 +26,15 @@
 Tests for PCA on Images
 
 Run with:
-   python ImagePca.py
+   python imagePca.py
 or
    python
-   >>> import ImagePca; ImagePca.run()
+   >>> import imagePca; imagePca.run()
 """
 
 
 import unittest
+import numpy as np
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -137,6 +138,31 @@ class ImagePcaTestCase(unittest.TestCase):
 
             self.ImageSet.addImage(im, 1.0)
         
+        self.ImageSet.analyze()
+
+        eImages = []
+        for img in self.ImageSet.getEigenImages():
+            eImages.append(img)
+
+        if display:
+            mos = displayUtils.Mosaic(background=-10)
+            ds9.mtv(mos.makeMosaic(eImages), frame=1)
+
+    def testPcaNaN(self):
+        """Test calculating PCA when the images can contain NaNs"""
+
+        width, height = 20, 10
+
+        values = (100, 200, 300)
+        for i, val in enumerate(values):
+            im = afwImage.ImageF(afwGeom.Extent2I(width, height))
+            im.set(val)
+
+            if i == 1:
+                im.set(width//2, height//2, np.nan)
+
+            self.ImageSet.addImage(im, 1.0)
+
         self.ImageSet.analyze()
 
         eImages = []

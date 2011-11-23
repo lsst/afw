@@ -99,6 +99,10 @@ template<> std::string ImageFormatterTraits<double>::name() {
     static std::string name = "ImageD";
     return name;
 }
+template<> std::string ImageFormatterTraits<boost::uint64_t>::name() {
+    static std::string name = "ImageL";
+    return name;
+}
 
 template <typename ImagePixelT>
 lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::registration(
@@ -296,6 +300,7 @@ InstantiateFormatter(boost::uint16_t);
 InstantiateFormatter(int);
 InstantiateFormatter(float);
 InstantiateFormatter(double);
+InstantiateFormatter(boost::uint64_t);
 
 #undef InstantiateSerializer
 

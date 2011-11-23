@@ -33,6 +33,7 @@ or
 """
 
 import os
+import os.path
 
 import sys
 import unittest
@@ -75,7 +76,7 @@ class MaskTestCase(unittest.TestCase):
         self.mask2 = afwImage.MaskU(self.mask1.getDimensions())
         self.mask2.set(self.val2)
 
-        dataDir = eups.productDir("afwdata")
+        dataDir = os.path.join(eups.productDir("afwdata"), "data")
         if dataDir:
             if True:
                 self.maskFile = os.path.join(dataDir, "small_MI_msk.fits")

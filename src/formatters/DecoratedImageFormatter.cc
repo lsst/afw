@@ -94,6 +94,10 @@ template<> std::string DecoratedImageFormatterTraits<double>::name() {
     static std::string name = "DecoratedImageD";
     return name;
 }
+template<> std::string DecoratedImageFormatterTraits<boost::uint64_t>::name() {
+    static std::string name = "DecoratedImageL";
+    return name;
+}
 
 template <typename ImagePixelT>
 lsst::daf::persistence::FormatterRegistration DecoratedImageFormatter<ImagePixelT>::registration(
@@ -236,6 +240,7 @@ InstantiateFormatter(boost::uint16_t);
 InstantiateFormatter(int);
 InstantiateFormatter(float);
 InstantiateFormatter(double);
+InstantiateFormatter(boost::uint64_t);
 
 #undef InstantiateFormatter
 

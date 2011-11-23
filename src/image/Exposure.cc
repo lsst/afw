@@ -477,4 +477,5 @@ template class afwImage::Exposure<boost::uint16_t>;
 template class afwImage::Exposure<int>;
 template class afwImage::Exposure<float>;
 template class afwImage::Exposure<double>;
+template class afwImage::Exposure<boost::uint64_t>;
 /// \endcond

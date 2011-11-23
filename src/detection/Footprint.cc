@@ -80,6 +80,45 @@ namespace {
             return false;
         }
     };
+
+/// Get extremum from a list of four points
+///
+/// There are four options (min/max, x/y), supplied by the following helpers
+/// that are templated on in the extremum function.
+struct Min {
+    static double func(double a, double b) {
+        return std::min(a, b);
+    }
+};
+struct Max {
+    static double func(double a, double b) {
+        return std::max(a, b);
+    }
+};
+struct XPart {
+    static double get(geom::Point2D p) {
+        return p.getX();
+    }
+};
+struct YPart {
+    static double get(geom::Point2D p) {
+        return p.getY();
+    }
+};
+template <class Extremum, class Part>
+double extremum(geom::Point2D a, geom::Point2D b, geom::Point2D c, geom::Point2D d) {
+    return Extremum::func(Extremum::func(Extremum::func(Part::get(a), Part::get(b)), Part::get(c)), 
+                          Part::get(d));
+}
+
+/// Transform x,y in the frame of one image to another, via their WCSes
+geom::Point2D transformPoint(double x, double y, 
+                             image::Wcs const& source,
+                             image::Wcs const& target){
+    return target.skyToPixel(source.pixelToSky(x, y));
+}
+
+
 } //end namespace
 
 /******************************************************************************/
@@ -401,15 +440,15 @@ namespace {
      *
      * The ids that are overwritten are returned for the callers deliction
      */
-    template<bool overwriteId>
+    template<bool overwriteId, typename PixelT>
     void
     doInsertIntoImage(geom::Box2I const& _region, // unpacked from Footprint
                       Footprint::SpanList const& _spans,      // unpacked from Footprint
-                      image::Image<boost::uint16_t>& idImage, // Image to contain the footprint
-                      int const id,                           // Add/replace id to idImage for pixels in Footprint
+                      image::Image<PixelT>& idImage, // Image to contain the footprint
+                      boost::uint64_t const id, // Add/replace id to idImage for pixels in Footprint
                       geom::Box2I const& region,              // Footprint's region (default: getRegion())
                       long const mask=0x0,                    // Don't overwrite bits in this mask
-                      std::set<int> *oldIds=NULL              // if non-NULL, set the IDs that were overwritten
+                      std::set<boost::uint64_t> *oldIds=NULL // if non-NULL, set the IDs that were overwritten
                    )
     {    
         int width, height, x0, y0;
@@ -437,7 +476,7 @@ namespace {
                               str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % id % mask));
         }
 
-        std::set<int>::const_iterator pos; // hint on where to insert into oldIds
+        typename std::set<boost::uint64_t>::const_iterator pos; // hint on where to insert into oldIds
         if (oldIds) {
             pos = oldIds->begin();
         }
@@ -456,12 +495,12 @@ namespace {
             int sx1 = span->getX1() - x0;
             int const swidth = (sx1 >= width) ? width - sx0 : sx1 - sx0 + 1;
 
-            for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
+            for (typename image::Image<PixelT>::x_iterator ptr = idImage.x_at(sx0, sy0),
                      end = ptr + swidth; ptr != end; ++ptr) {
                 if (overwriteId) {
                     long val = *ptr & ~mask;
                     if (val != 0 and oldIds != NULL) {
-                        pos = oldIds->insert(pos, *ptr); // update our hint, pos
+                        pos = oldIds->insert(pos, val); // update our hint, pos
                     }
 
                     *ptr = (*ptr & mask) + id;
@@ -477,10 +516,11 @@ namespace {
 /**
  * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
  */
+template<typename PixelT>
 void
 Footprint::insertIntoImage(
-    image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-    int const id,                           //!< Add id to idImage for pixels in the Footprint
+    typename image::Image<PixelT>& idImage, //!< Image to contain the footprint
+    boost::uint64_t const id,               //!< Add id to idImage for pixels in the Footprint
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
 {    
@@ -492,16 +532,23 @@ Footprint::insertIntoImage(
  *
  * The list of ids found under the new Footprint are returned
  */
+template<typename PixelT>
 void
 Footprint::insertIntoImage(
-    image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-    int const id,                           //!< Add id to idImage for pixels in the Footprint
+    image::Image<PixelT>& idImage,          //!< Image to contain the footprint
+    boost::uint64_t const id,               //!< Add id to idImage for pixels in the Footprint
     bool overwriteId,                       //!< should id replace any value already in idImage?
     long const mask,                        //!< Don't overwrite ID bits in this mask
-    std::set<int> *oldIds,                  //!< if non-NULL, set the IDs that were overwritten
+    std::set<boost::uint64_t> *oldIds,      //!< if non-NULL, set the IDs that were overwritten
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
-{    
+{
+    if (id > std::numeric_limits<PixelT>::max()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::OutOfRangeException,
+            "id out of range for image type"
+        );
+    }
     if (overwriteId) {
         doInsertIntoImage<true>(_region, _spans, idImage, id, region, mask, oldIds);
     } else {
@@ -654,6 +701,65 @@ void Footprint::intersectMask(
     _area = maskedArea;
     _spans = maskedSpans;
     _bbox.clip(maskBBox);
+}
+
+
+/// Transform a footprint from one image to another, via their WCSes
+///
+/// Original implementation by Sogo Mineo.
+/// If slow, could consider linearising the WCSes and combining the linear versions to a single transform.
+Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WCS (for this footprint)
+                                    image::Wcs const& target, // Target image WCS
+                                    geom::Box2I const& bbox   // Bounding box for target image
+    ) const {
+    // Transform the original bounding box
+    geom::Box2I fpBox = getBBox(); // Original bounding box
+    geom::Point2D p00 = transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target);
+    geom::Point2D p01 = transformPoint(fpBox.getMinX(), fpBox.getMaxY(), source, target);
+    geom::Point2D p10 = transformPoint(fpBox.getMaxX(), fpBox.getMinY(), source, target);
+    geom::Point2D p11 = transformPoint(fpBox.getMaxX(), fpBox.getMaxY(), source, target);
+
+    // calculate the new bounding box that embraces the four transformed points.
+    int xMin = std::floor(0.5 + extremum<Min, XPart>(p00, p01, p10, p11));
+    int yMin = std::floor(0.5 + extremum<Min, YPart>(p00, p01, p10, p11));
+    int xMax = std::floor(0.5 + extremum<Max, XPart>(p00, p01, p10, p11));
+    int yMax = std::floor(0.5 + extremum<Max, YPart>(p00, p01, p10, p11));
+
+    // restrict the transformed bbox by the one supplied
+    xMin = std::max(bbox.getMinX(), xMin);
+    yMin = std::max(bbox.getMinY(), yMin);
+    xMax = std::min(bbox.getMaxX(), xMax);
+    yMax = std::min(bbox.getMaxY(), yMax);
+    geom::Box2I bounding(geom::Point2I(xMin, yMin), geom::Point2I(xMax, yMax));
+
+    // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
+    Footprint::Ptr fpNew = boost::make_shared<Footprint>(bounding, bbox);
+
+    for (int y = yMin; y <= yMax; ++y) {
+        bool inSpan = false;            // Are we in a span?
+        int start = -1;                  // Start of span
+
+        for (int x = xMin; x <= xMax; ++x) {
+            lsst::afw::geom::Point2D p = transformPoint(x, y, target, source);
+            int xSource = std::floor(0.5 + p.getX());
+            int ySource = std::floor(0.5 + p.getY());
+
+            if (contains(lsst::afw::geom::Point2I(xSource, ySource))) {
+                if (!inSpan) {
+                    inSpan = true;
+                    start = x;
+                }
+            } else if (inSpan) {
+                inSpan = false;
+                fpNew->addSpan(y, start, x - 1);
+            }
+        }
+        if (inSpan) {
+            fpNew->addSpan(y, start, xMax);
+        }
+    }
+    
+    return fpNew;
 }
 
 /************************************************************************************************************/
@@ -1160,6 +1266,7 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
     return bboxes;
 }
 
+
 #if 0
 
 /************************************************************************************************************/
@@ -1537,7 +1644,7 @@ template image::MaskPixel setMaskFromFootprint(
     image::Mask<image::MaskPixel> *mask,
     Footprint const& foot, image::MaskPixel const bitmask);
 
-#define INSTANTIATE(TYPE) \
+#define INSTANTIATE_FLOAT(TYPE) \
 template \
 TYPE setImageFromFootprint(image::Image<TYPE> *image,        \
                                       Footprint const& footprint, \
@@ -1551,15 +1658,30 @@ TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
                                           CONST_PTR(std::vector<Footprint::Ptr>) footprints, \
                                           TYPE const value); \
 
-INSTANTIATE(float);
-INSTANTIATE(double);
+INSTANTIATE_FLOAT(float);
+INSTANTIATE_FLOAT(double);
+
+
+#define INSTANTIATE_MASK(PIXEL)                                         \
+template                                                                \
+void Footprint::insertIntoImage(                                        \
+    lsst::afw::image::Image<PIXEL>& idImage,                            \
+    boost::uint64_t const id,                                           \
+    geom::Box2I const& region=geom::Box2I()                             \
+    ) const;                                                            \
+template                                                                \
+void Footprint::insertIntoImage(                                        \
+    lsst::afw::image::Image<PIXEL>& idImage,                            \
+    boost::uint64_t const id,                                           \
+    bool const overwriteId, long const idMask,                          \
+    std::set<boost::uint64_t> *oldIds,                                  \
+    geom::Box2I const& region=geom::Box2I()                             \
+    ) const;                                                            \
+
+INSTANTIATE_MASK(boost::uint16_t);
+INSTANTIATE_MASK(int);
+INSTANTIATE_MASK(boost::uint64_t);
+
 
 }}}
 // \endcond
-
-
-
-
-
-
-

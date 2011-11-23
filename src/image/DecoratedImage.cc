@@ -175,4 +175,5 @@ template class image::DecoratedImage<boost::uint16_t>;
 template class image::DecoratedImage<int>;
 template class image::DecoratedImage<float>;
 template class image::DecoratedImage<double>;
+template class image::DecoratedImage<boost::uint64_t>;
 

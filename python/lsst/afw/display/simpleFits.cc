@@ -515,6 +515,7 @@ INSTANTIATE_IMAGE(boost::uint16_t);
 INSTANTIATE_IMAGE(int);
 INSTANTIATE_IMAGE(float);
 INSTANTIATE_IMAGE(double);
+INSTANTIATE_IMAGE(boost::uint64_t);
 
 INSTANTIATE_MASK(boost::uint16_t);
 /// \endcond

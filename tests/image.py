@@ -33,6 +33,7 @@ or
 """
 
 import os
+import os.path
 
 import sys
 import unittest
@@ -359,7 +360,7 @@ class DecoratedImageTestCase(unittest.TestCase):
             )
         self.dimage1.getImage().set(self.val1)
 
-        dataDir = eups.productDir("afwdata")
+        dataDir = os.path.join(eups.productDir("afwdata"), "data")
         if dataDir:
             self.fileForMetadata = os.path.join(dataDir, "small_MI_img.fits")
             self.trueMetadata = {"RELHUMID" : 10.69}
@@ -395,7 +396,7 @@ class DecoratedImageTestCase(unittest.TestCase):
     def testReadFits(self):
         """Test reading FITS files"""
         
-        dataDir = eups.productDir("afwdata")
+        dataDir = os.path.join(eups.productDir("afwdata"), "data")
         if not dataDir:
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return

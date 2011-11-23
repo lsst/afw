@@ -32,7 +32,6 @@ or
    >>> import footprint2; footprint2.run()
 """
 
-
 import sys
 import unittest
 import lsst.utils.tests as tests
@@ -314,6 +313,11 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
     def checkPeaks(self, dwidth=0, dheight=0, frame=3):
         """Check that we got the peaks right"""
         feet = self.fs.getFootprints()
+        #
+        # Check that we found all the peaks
+        #
+        self.assertEqual(sum([len(f.getPeaks()) for f in feet]), sum([len(f.getPeaks()) for f in feet]))
+
         if display:
             ds9.mtv(self.im, frame=frame)
 
@@ -413,6 +417,61 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.peaks[0] = sorted(sum(self.peaks, []), lambda x, y: cmpPeaks(self.im, x, y))
 
         self.doTestPeaks(x0=0, y0=2, dwidth=2, dheight=2, callback=callback, grow=2)
+
+    def testGrowFootprints3(self):
+        """Test that we can grow footprints, correctly merging those that now totally overwritten"""
+
+        self.im = afwImage.MaskedImageF(14, 11)
+
+        self.im.getImage().set(0)
+        self.peaks = []
+        
+        I = 11
+        for x, y in [(4, 7), (5, 7), (6, 7), (7, 7), (8, 7),
+                     (4, 6),                                     (8, 6),
+                     (4, 5),                                     (8, 5),
+                     (4, 4),                                     (8, 4),
+                     (4, 3),                                     (8, 3),
+                     ]:
+            self.im.getImage().set(x, y, I)
+            I -= 1e-3
+
+        self.im.getImage().set(4, 7, 15)
+        self.peaks.append([(4, 7,),])
+        
+        self.im.getImage().set(6, 5, 30)
+        self.peaks[0].append((6, 5,))
+
+        self.fs = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10), "BINNED1")
+        #
+        # The disappearing Footprint special case only shows up if the outer Footprint is grown
+        # _after_ the inner one.  So arrange the order properly
+        feet = self.fs.getFootprints()
+        feet[0], feet[1] = feet[1], feet[0]
+
+        msk = self.im.getMask()
+
+        grow = 2
+        self.fs = afwDetect.makeFootprintSet(self.fs, grow, False)
+        afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(),
+                                           msk.getPlaneBitMask("DETECTED_NEGATIVE"))
+
+        if display:
+            frame = 0
+
+            ds9.mtv(self.im, frame=frame)
+
+            with ds9.Buffering():
+                for i, foot in enumerate(self.fs.getFootprints()):
+                    for p in foot.getPeaks():
+                        ds9.dot("+", p.getIx(), p.getIy(), size=0.4, frame=frame)
+
+                    if i < len(self.peaks):
+                        for trueX, trueY in self.peaks[i]:
+                            ds9.dot("x", trueX, trueY, size=0.4, ctype=ds9.RED, frame=frame)
+
+        self.assertEqual(len(self.fs.getFootprints()), 1)
+        self.assertEqual(len(self.fs.getFootprints()[0].getPeaks()), len(self.peaks[0]))
 
     def testMergeFootprints(self):      # YYYY
         """Merge positive and negative Footprints"""
