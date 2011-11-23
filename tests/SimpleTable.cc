@@ -7,9 +7,9 @@
 #include <algorithm>
 
 #include "lsst/afw/table/Layout.h"
-#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/SimpleTable.h"
 
-BOOST_AUTO_TEST_CASE(testTableBase) {
+BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
     using namespace lsst::afw::table;
 
@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE(testTableBase) {
     std::ostream_iterator<FieldDescription> osi(std::cout, "\n");
     std::copy(description.begin(), description.end(), osi);
     
-    TableBase table(layout, 16);
+    SimpleTable table(layout, 16);
     
-    RecordBase r0 = table.append();
+    SimpleRecord r0 = table.addRecord();
 
     r0.set(myInt, 53);
     r0.set(myArray, Eigen::ArrayXd::Ones(5));
@@ -43,13 +43,13 @@ BOOST_AUTO_TEST_CASE(testTableBase) {
     BOOST_CHECK((r0.get(myArray) == Eigen::ArrayXd::Ones(5)).all());
     BOOST_CHECK_EQUAL(r0.get(myFloat), 3.14f);
 
-    RecordBase r1 = table.append();
+    SimpleRecord r1 = table.addRecord();
     BOOST_CHECK_EQUAL(table.getRecordCount(), 2);
     r1.set(myInt, 25);
     r1.set(myFloat, 5.7f);
     r1.set(myArray, Eigen::ArrayXd::Random(5));
 
-    RecordBase r0a = table.front();
+    SimpleRecord r0a = table.front();
     BOOST_CHECK_EQUAL(r0.get(myInt), r0a.get(myInt));
     BOOST_CHECK_EQUAL(r0.get(myFloat), r0a.get(myFloat));
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(testTableBase) {
     BOOST_CHECK(!table.isConsolidated());
     BOOST_CHECK_EQUAL(table.getRecordCount(), 1);
 
-    RecordBase r1a = table[0];
+    SimpleRecord r1a = table[0];
     BOOST_CHECK((r1.get(myArray) == r1a.get(myArray)).all());
 #endif
 }
@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
     Key< Array<double> > arrayKey = builder.add(Field< Array<double> >("f2", "f2 doc", 5));
     Layout layout = builder.finish();
     
-    TableBase table(layout, 16);
+    SimpleTable table(layout, 16);
     Eigen::ArrayXd r = Eigen::ArrayXd::Random(20);
     for (int i = 0; i < 20; ++i) {
-        RecordBase record = table.append();
+        SimpleRecord record = table.addRecord();
         record.set(floatKey, r[i]);
         record.set(arrayKey, Eigen::ArrayXd::Random(5));
         if (i < 16) {
@@ -89,14 +89,14 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
         }
     }
     
-    TableBase tableCopy(table);
+    SimpleTable tableCopy(table);
     ColumnView columns = table.consolidate();
     BOOST_CHECK(!tableCopy.isConsolidated());
     BOOST_CHECK(table.isConsolidated());
 
     for (int i = 0; i < 20; ++i) {
-        RecordBase record = table[i];
-        RecordBase recordCopy = tableCopy[i];
+        SimpleRecord record = table[i];
+        SimpleRecord recordCopy = tableCopy[i];
         BOOST_CHECK_EQUAL(record.get(floatKey), recordCopy.get(floatKey));
         BOOST_CHECK_EQUAL(record.get(floatKey), columns[floatKey][i]);
         for (int j = 0; j < 5; ++j) {

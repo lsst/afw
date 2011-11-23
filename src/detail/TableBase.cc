@@ -228,7 +228,7 @@ TableBase::TableBase(
 ) :
     _impl(boost::make_shared<TableImpl>(layout, defaultBlockRecordCount, aux))
 {
-    if (capacity) _impl->addBlock(capacity);
+    if (capacity > 0) _impl->addBlock(capacity);
 }
 
 }}}} // namespace lsst::afw::table::detail

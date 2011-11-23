@@ -12,7 +12,7 @@
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename RecordT, typename TableAuxT=detail::AuxBase>
+template <typename RecordT, typename TableAuxT=AuxBase>
 class TableInterface : public detail::TableBase {
 public:
 
@@ -40,8 +40,15 @@ protected:
     typedef TableAuxT TableAux;
     typedef typename Record::RecordAux RecordAux;
 
+    TableInterface(
+        Layout const & layout,
+        int defaultBlockRecordCount,
+        int capacity,
+        AuxBase::Ptr const & aux = AuxBase::Ptr()
+    ) : detail::TableBase(layout, defaultBlockRecordCount, capacity, aux) {}
+
     Record _addRecord(boost::shared_ptr<RecordAux> const & aux = boost::shared_ptr<RecordAux>()) {
-        return detail::Access::makeRecord<Record>(this->_addRecord(aux));
+        return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(aux));
     }
 
     boost::shared_ptr<TableAux> getAux() const {
