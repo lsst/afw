@@ -7,14 +7,9 @@
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/detail/RecordBase.h"
+#include "lsst/afw/table/detail/IteratorBase.h"
 
 namespace lsst { namespace afw { namespace table { namespace detail {
-
-class TableAux {
-public:
-    typedef boost::shared_ptr<TableAux> Ptr;
-    virtual ~TableAux() {}
-};
 
 class TableBase {
 public:
@@ -37,16 +32,22 @@ protected:
         Layout const & layout,
         int defaultBlockRecordCount,
         int capacity,
-        TableAux::Ptr const & aux = TableAux::Ptr()
+        AuxBase::Ptr const & aux = AuxBase::Ptr()
     );
 
     TableBase(TableBase const & other) : _impl(other._impl) {}
 
-    RecordBase _addRecord(RecordAux::Ptr const & aux = RecordAux::Ptr());
+    IteratorBase _begin(IteratorMode mode) const;
 
-    RecordBase _addRecord(RecordBase const & parent, RecordAux::Ptr const & aux = RecordAux::Ptr());
+    IteratorBase _end(IteratorMode mode) const;
 
-    TableAux::Ptr getAux() const;
+    RecordBase _front() const;
+
+    RecordBase _back(IteratorMode mode) const;
+
+    RecordBase _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr());
+
+    AuxBase::Ptr getAux() const;
 
 private:
     boost::shared_ptr<TableImpl> _impl;

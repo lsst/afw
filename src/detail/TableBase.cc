@@ -75,7 +75,7 @@ struct TableImpl : private boost::noncopyable {
     RecordData * front;
     RecordData * back;
     void * consolidated;
-    TableAux::Ptr aux;
+    AuxBase::Ptr aux;
 
     void addBlock(int blockRecordCount) {
         Block::Ptr newBlock = Block::allocate(layout.getRecordSize(), blockRecordCount);
@@ -88,18 +88,53 @@ struct TableImpl : private boost::noncopyable {
         block.swap(newBlock);
     }
 
-    TableImpl(Layout const & layout_, int defaultBlockRecordCount_, TableAux::Ptr const & aux_) :
+    TableImpl(Layout const & layout_, int defaultBlockRecordCount_, AuxBase::Ptr const & aux_) :
         layout(layout_), defaultBlockRecordCount(defaultBlockRecordCount_), recordCount(0), 
         front(0), back(0), consolidated(0), aux(aux_)
     {}
 
 };
 
+//----- IteratorBase implementation -------------------------------------------------------------------------
+
+void IteratorBase::increment() {
+    switch (_mode) {
+    case ALL_RECORDS:
+        if (_record._data->child) {
+            _record._data = _record._data->child;
+            } else if (_record._data->sibling) {
+            _record._data = _record._data->sibling;
+        } else {
+            while (_record._data) {
+                _record._data = _record._data->parent;
+                if (_record._data) _record._data = _record._data->sibling;
+            }
+        }
+        break;
+    case NO_CHILDREN:
+        _record._data = _record._data->sibling;
+        break;
+    }
+}
+
 //----- RecordBase implementation -------------------------------------------------------------------------
 
 Layout RecordBase::getLayout() const { return _table->layout; }
 
 RecordBase::~RecordBase() {}
+
+RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) {
+    if (_table->block->isFull()) {
+        _table->addBlock(_table->defaultBlockRecordCount);
+    }
+    RecordData * p = _table->block->makeNextRecord();
+    assert(p != 0);
+    _data->child = p;
+    p->parent = _data;
+    ++_table->recordCount;
+    RecordBase result(p, _table);
+    return result;
+}
 
 //----- TableBase implementation --------------------------------------------------------------------------
 
@@ -144,7 +179,30 @@ int TableBase::getRecordCount() const {
     return _impl->recordCount;
 }
 
-RecordBase TableBase::_addRecord(RecordAux::Ptr const & aux) {
+IteratorBase TableBase::_begin(IteratorMode mode) const {
+    return IteratorBase(_impl->front, _impl, mode);
+}
+
+IteratorBase TableBase::_end(IteratorMode mode) const {
+    return IteratorBase(0, _impl, mode);
+}
+
+RecordBase TableBase::_front() const {
+    return RecordBase(_impl->front, _impl);
+}
+
+RecordBase TableBase::_back(IteratorMode mode) const {
+    RecordData * p = _impl->back;
+    if (mode == ALL_RECORDS) {
+        while (p->sibling) {
+            p = p->sibling;
+            if (p->child) p = p->child;
+        }
+    }
+    return RecordBase(p, _impl);
+}
+
+RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) {
     if (!_impl->block || _impl->block->isFull()) {
         _impl->addBlock(_impl->defaultBlockRecordCount);
     }
@@ -162,34 +220,11 @@ RecordBase TableBase::_addRecord(RecordAux::Ptr const & aux) {
     return result;
 }
 
-RecordBase TableBase::_addRecord(RecordBase const & parent, RecordAux::Ptr const & aux) {
-    if (!parent._data) {
-        return _addRecord(aux);
-    }
-    if (parent._table != _impl) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            "Parent record is not a member of this table."
-        );
-    }
-    assert(_impl->back != 0);
-    if (!_impl->block || _impl->block->isFull()) {
-        _impl->addBlock(_impl->defaultBlockRecordCount);
-    }
-    RecordData * p = _impl->block->makeNextRecord();
-    assert(p != 0);
-    parent._data->child = p;
-    p->parent = parent._data;
-    ++_impl->recordCount;
-    RecordBase result(p, _impl);
-    return result;
-}
-
 TableBase::TableBase(
     Layout const & layout,
     int defaultBlockRecordCount,
     int capacity,
-    TableAux::Ptr const & aux
+    AuxBase::Ptr const & aux
 ) :
     _impl(boost::make_shared<TableImpl>(layout, defaultBlockRecordCount, aux))
 {

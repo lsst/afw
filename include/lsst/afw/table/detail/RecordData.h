@@ -8,20 +8,18 @@
 
 namespace lsst { namespace afw { namespace table {
 
-namespace detail {
-
-enum IteratorTypeEnum { NO_CHILDREN, ALL_RECORDS };
-
-class RecordAux {
+class AuxBase {
 public:
-    typedef boost::shared_ptr<RecordAux> Ptr;
-    virtual ~RecordAux() {}
+    typedef boost::shared_ptr<AuxBase> Ptr;
+    virtual ~AuxBase() {}
 };
+
+namespace detail {
 
 struct RecordData {
     
     RecordId id;
-    RecordAux::Ptr aux;
+    AuxBase::Ptr aux;
     RecordData * parent;
     RecordData * child;
     RecordData * sibling;

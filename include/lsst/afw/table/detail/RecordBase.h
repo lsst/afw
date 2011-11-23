@@ -43,16 +43,16 @@ public:
         return !this->operator==(other);
     }
 
-    bool iterateInPlace(IteratorTypeEnum iterType);
+    RecordBase(RecordBase const & other)
+        : _data(other._data), _table(other._table) {}
 
     ~RecordBase();
 
 protected:
 
-    RecordAux::Ptr getAux() const { return _data->aux; }
+    AuxBase::Ptr getAux() const { return _data->aux; }
 
-    RecordBase(RecordBase const & other)
-        : _data(other._data), _table(other._table) {}
+    RecordBase _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr());
 
     void operator=(RecordBase const & other) {
         _data = other._data;

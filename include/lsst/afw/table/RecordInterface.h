@@ -9,7 +9,7 @@
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename Derived, typename RecordAuxT=detail::RecordAux>
+template <typename Derived, typename RecordAuxT=detail::AuxBase>
 class RecordInterface : public detail::RecordBase {
 public:
 
@@ -17,10 +17,14 @@ protected:
 
     template <typename RecordT, typename TableAuxT> friend class TableInterface;
 
-    typedef RecordAuxT Aux;
+    typedef RecordAuxT RecordAux;
 
-    boost::shared_ptr<Aux> getAux() const {
-        return boost::static_pointer_cast<Aux>(detail::RecordBase::getAux());
+    boost::shared_ptr<RecordAux> getAux() const {
+        return boost::static_pointer_cast<RecordAux>(detail::RecordBase::getAux());
+    }
+
+    Record _addChild(boost::shared_ptr<RecordAux> const & aux = boost::shared_ptr<RecordAux>()) {
+        return detail::Access::makeRecord<Record>(this->_addChild(aux));
     }
 
     explicit RecordInterface(detail::RecordBase const & other) : detail::RecordBase(other) {}

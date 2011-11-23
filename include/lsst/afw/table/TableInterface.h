@@ -4,30 +4,50 @@
 
 #include "lsst/afw/table/config.h"
 
-#include "boost/mpl/int.h"
+#include "boost/iterator/transform_iterator.hpp"
 
 #include "lsst/afw/table/RecordInterface.h"
-#include "lsst/afw/table/detail/Iterator.h"
 #include "lsst/afw/table/detail/TableBase.h"
+#include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename RecordT, typename TableAuxT=detail::TableAux>
+template <typename RecordT, typename TableAuxT=detail::AuxBase>
 class TableInterface : public detail::TableBase {
 public:
 
     typedef RecordT Record;
+    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::IteratorBase> Iterator;
+
+    Iterator begin(IteratorMode mode = ALL_RECORDS) const {
+        return Iterator(detail::RecordConverter<RecordT>(), this->_begin(mode));
+    }
+
+    Iterator end(IteratorMode mode = ALL_RECORDS) const {
+        return Iterator(detail::RecordConverter<RecordT>(), this->_end(mode));
+    }
+
+    Record front() const {
+        return detail::Access::makeRecord<Record>(this->_front());
+    }
+
+    Record back(IteratorMode mode = ALL_RECORDS) const {
+        return detail::Access::makeRecord<Record>(this->_back(mode));
+    }
 
 protected:
 
     typedef TableAuxT TableAux;
-    typedef typename Record::Aux RecordAux;
+    typedef typename Record::RecordAux RecordAux;
+
+    Record _addRecord(boost::shared_ptr<RecordAux> const & aux = boost::shared_ptr<RecordAux>()) {
+        return detail::Access::makeRecord<Record>(this->_addRecord(aux));
+    }
 
     boost::shared_ptr<TableAux> getAux() const {
         return boost::static_pointer_cast<TableAux>(detail::TableBase::getAux());
     }
     
-
 };
 
 }}} // namespace lsst::afw::table

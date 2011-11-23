@@ -69,6 +69,16 @@ public:
 
 };
 
+template <typename RecordT>
+struct RecordConverter {
+    typedef RecordBase argument_type;
+    typedef RecordT result_type;
+    
+    result_type operator()(argument_type const & base) const {
+        return Access::makeRecord<RecordT>(base);
+    }
+};
+
 }}}} // namespace lsst::afw::table::detail
 
 #endif // !AFW_TABLE_DETAIL_Access_h_INCLUDED
