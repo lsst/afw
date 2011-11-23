@@ -5,6 +5,7 @@
 #include "lsst/afw/table/config.h"
 
 #include "boost/shared_ptr.hpp"
+#include "boost/intrusive/set.hpp"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -16,7 +17,7 @@ public:
 
 namespace detail {
 
-struct RecordData {
+struct RecordData : public boost::intrusive::set_base_hook<> {
     
     RecordId id;
     AuxBase::Ptr aux;
@@ -24,8 +25,30 @@ struct RecordData {
     RecordData * child;
     RecordData * sibling;
 
+    bool operator<(RecordData const & other) const { return id < other.id; }
+
     RecordData() : id(0), aux(), parent(0), child(0), sibling(0) {}
 };
+
+struct CompareRecordIdLess {
+    bool operator()(RecordId id, RecordData const & data) const {
+        return id < data.id;
+    }
+    bool operator()(RecordData const & data, RecordId id) const {
+        return data.id < id;
+    }
+};
+
+struct CompareRecordIdEqual {
+    bool operator()(RecordId id, RecordData const & data) const {
+        return id == data.id;
+    }
+    bool operator()(RecordData const & data, RecordId id) const {
+        return data.id == id;
+    }
+};
+
+typedef boost::intrusive::set<RecordData> RecordSet;
 
 }}}} // namespace lsst::afw::table::detail
 

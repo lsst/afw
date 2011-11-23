@@ -5,7 +5,10 @@
 
 #include "lsst/afw/table/detail/RecordBase.h"
 #include "lsst/afw/table/detail/TableBase.h"
+#include "lsst/afw/table/detail/TreeIteratorBase.h"
+#include "lsst/afw/table/detail/SetIteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
+
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
@@ -76,15 +79,15 @@ private:
 } // anonymous
 
 struct TableImpl : private boost::noncopyable {
-    Layout layout;
-    Block::Ptr block;
     int defaultBlockRecordCount;
-    int recordCount;
     RecordData * front;
     RecordData * back;
     void * consolidated;
+    Block::Ptr block;
     IdFactory::Ptr idFactory;
     AuxBase::Ptr aux;
+    Layout layout;
+    RecordSet records;
 
     void addBlock(int blockRecordCount) {
         Block::Ptr newBlock = Block::allocate(layout.getRecordSize(), blockRecordCount);
@@ -97,21 +100,62 @@ struct TableImpl : private boost::noncopyable {
         block.swap(newBlock);
     }
 
+    RecordData * addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux) {
+        RecordSet::insert_commit_data insertData;
+        if (!records.insert_check(id, CompareRecordIdLess(), insertData).second) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                (boost::format("Record ID '%lld' is not unique.") % id).str()
+            );
+        }
+        if (!block || block->isFull()) {
+            addBlock(defaultBlockRecordCount);
+        }
+        RecordData * p = block->makeNextRecord();
+        assert(p != 0);
+        p->id = id;
+        p->aux = aux;
+        if (parent) {
+            if (parent->child) {
+                RecordData * q = parent->child;
+                while (q->sibling) {
+                    q = q->sibling;
+                }
+                q->sibling = p;
+            }
+            parent->child = p;
+            p->parent = parent;
+        } else {
+            if (back == 0) {
+                assert(front == 0);
+                front = p;
+            } else {
+                assert(back->sibling == 0);
+                back->sibling = p;
+            }
+            back = p;
+        }
+        records.insert_commit(*p, insertData);
+        return p;
+    }
+
     TableImpl(
         Layout const & layout_, int defaultBlockRecordCount_, 
         IdFactory::Ptr const & idFactory_, AuxBase::Ptr const & aux_
     ) :
-        layout(layout_), defaultBlockRecordCount(defaultBlockRecordCount_), recordCount(0), 
-        front(0), back(0), consolidated(0), idFactory(idFactory_), aux(aux_)
+        defaultBlockRecordCount(defaultBlockRecordCount_), front(0), back(0), consolidated(0), 
+        idFactory(idFactory_), aux(aux_), layout(layout_)
     {
         if (!idFactory) idFactory = boost::make_shared<DefaultIdFactory>();
     }
 
+    ~TableImpl() { records.clear(); }
+
 };
 
-//----- IteratorBase implementation -------------------------------------------------------------------------
+//----- TreeIteratorBase implementation ---------------------------------------------------------------------
 
-void IteratorBase::increment() {
+void TreeIteratorBase::increment() {
     switch (_mode) {
     case ALL_RECORDS:
         if (_record._data->child) {
@@ -131,25 +175,19 @@ void IteratorBase::increment() {
     }
 }
 
-//----- RecordBase implementation -------------------------------------------------------------------------
+//----- SetIteratorBase implementation ----------------------------------------------------------------------
+
+SetIteratorBase::~SetIteratorBase() {}
+
+//----- RecordBase implementation ---------------------------------------------------------------------------
 
 Layout RecordBase::getLayout() const { return _table->layout; }
 
 RecordBase::~RecordBase() {}
 
 RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) {
-    if (_table->block->isFull()) {
-        _table->addBlock(_table->defaultBlockRecordCount);
-    }
-    RecordData * p = _table->block->makeNextRecord();
-    assert(p != 0);
-    p->id = id;
-    p->aux = aux;
-    _data->child = p;
-    p->parent = _data;
-    ++_table->recordCount;
-    RecordBase result(p, _table);
-    return result;
+    RecordData * p = _table->addRecord(id, _data, aux);
+    return RecordBase(p, _table);
 }
 
 RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) {
@@ -196,30 +234,23 @@ ColumnView TableBase::consolidate() {
 #endif
 
 int TableBase::getRecordCount() const {
-    return _impl->recordCount;
+    return _impl->records.size();
 }
 
-IteratorBase TableBase::_begin(IteratorMode mode) const {
-    return IteratorBase(_impl->front, _impl, mode);
+TreeIteratorBase TableBase::_beginTree(IteratorMode mode) const {
+    return TreeIteratorBase(_impl->front, _impl, mode);
 }
 
-IteratorBase TableBase::_end(IteratorMode mode) const {
-    return IteratorBase(0, _impl, mode);
+TreeIteratorBase TableBase::_endTree(IteratorMode mode) const {
+    return TreeIteratorBase(0, _impl, mode);
 }
 
-RecordBase TableBase::_front() const {
-    return RecordBase(_impl->front, _impl);
+SetIteratorBase TableBase::_beginSet() const {
+    return SetIteratorBase(_impl->records.begin(), _impl);
 }
 
-RecordBase TableBase::_back(IteratorMode mode) const {
-    RecordData * p = _impl->back;
-    if (mode == ALL_RECORDS) {
-        while (p->sibling) {
-            p = p->sibling;
-            if (p->child) p = p->child;
-        }
-    }
-    return RecordBase(p, _impl);
+SetIteratorBase TableBase::_endSet() const {
+    return SetIteratorBase(_impl->records.end(), _impl);
 }
 
 RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) {
@@ -227,23 +258,8 @@ RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) {
 }
 
 RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) {
-    if (!_impl->block || _impl->block->isFull()) {
-        _impl->addBlock(_impl->defaultBlockRecordCount);
-    }
-    RecordData * p = _impl->block->makeNextRecord();
-    assert(p != 0);
-    p->id = id;
-    p->aux = aux;
-    if (_impl->back == 0) {
-        _impl->back = p;
-        _impl->front = p;
-    } else {
-        _impl->back->sibling = p;
-        _impl->back = _impl->back->sibling;
-    }
-    ++_impl->recordCount;
-    RecordBase result(p, _impl);
-    return result;
+    RecordData * p = _impl->addRecord(id, 0, aux);
+    return RecordBase(p, _impl);
 }
 
 TableBase::TableBase(

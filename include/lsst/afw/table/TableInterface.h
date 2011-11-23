@@ -9,31 +9,56 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/RecordInterface.h"
 #include "lsst/afw/table/detail/TableBase.h"
+#include "lsst/afw/table/detail/TreeIteratorBase.h"
+#include "lsst/afw/table/detail/SetIteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
+
+template <typename RecordT>
+class TreeView : private detail::TableBase {
+public:
+
+    typedef RecordT Record;
+    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::TreeIteratorBase> Iterator;
+    typedef Iterator iterator;
+    typedef Iterator const_iterator;
+
+    Iterator begin() const {
+        return Iterator(this->_beginTree(_mode), detail::RecordConverter<RecordT>());
+    }
+
+    Iterator end() const {
+        return Iterator(this->_endTree(_mode), detail::RecordConverter<RecordT>());
+    }
+
+private:
+
+    template <typename OtherRecordT, typename TableAuxT> friend class TableInterface;
+
+    TreeView(detail::TableBase const & table, IteratorMode mode) : detail::TableBase(table), _mode(mode) {}
+
+    IteratorMode _mode;
+};
 
 template <typename RecordT, typename TableAuxT=AuxBase>
 class TableInterface : public detail::TableBase {
 public:
 
     typedef RecordT Record;
-    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::IteratorBase> Iterator;
+    typedef TreeView<Record> Tree;
+    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::SetIteratorBase> Iterator;
+    typedef Iterator iterator;
+    typedef Iterator const_iterator;
 
-    Iterator begin(IteratorMode mode = ALL_RECORDS) const {
-        return Iterator(detail::RecordConverter<RecordT>(), this->_begin(mode));
+    Tree asTree(IteratorMode mode) const { return Tree(*this, mode); }
+
+    Iterator begin() const {
+        return Iterator(this->_beginSet(), detail::RecordConverter<RecordT>());
     }
 
-    Iterator end(IteratorMode mode = ALL_RECORDS) const {
-        return Iterator(detail::RecordConverter<RecordT>(), this->_end(mode));
-    }
-
-    Record front() const {
-        return detail::Access::makeRecord<Record>(this->_front());
-    }
-
-    Record back(IteratorMode mode = ALL_RECORDS) const {
-        return detail::Access::makeRecord<Record>(this->_back(mode));
+    Iterator end() const {
+        return Iterator(this->_endSet(), detail::RecordConverter<RecordT>());
     }
 
 protected:

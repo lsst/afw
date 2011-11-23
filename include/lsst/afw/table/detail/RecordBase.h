@@ -63,7 +63,8 @@ protected:
 private:
 
     friend class TableBase;
-    friend class IteratorBase;
+    friend class SetIteratorBase;
+    friend class TreeIteratorBase;
 
     RecordBase() : _data(0), _table() {}
 

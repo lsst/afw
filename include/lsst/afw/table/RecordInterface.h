@@ -6,7 +6,7 @@
 
 #include "lsst/base.h"
 #include "lsst/afw/table/detail/RecordBase.h"
-#include "lsst/afw/table/detail/IteratorBase.h"
+#include "lsst/afw/table/detail/TreeIteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {

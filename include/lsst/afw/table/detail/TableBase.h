@@ -7,7 +7,8 @@
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/detail/RecordBase.h"
-#include "lsst/afw/table/detail/IteratorBase.h"
+#include "lsst/afw/table/detail/TreeIteratorBase.h"
+#include "lsst/afw/table/detail/SetIteratorBase.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -47,13 +48,11 @@ protected:
 
     TableBase(TableBase const & other) : _impl(other._impl) {}
 
-    IteratorBase _begin(IteratorMode mode) const;
+    TreeIteratorBase _beginTree(IteratorMode mode) const;
+    TreeIteratorBase _endTree(IteratorMode mode) const;
 
-    IteratorBase _end(IteratorMode mode) const;
-
-    RecordBase _front() const;
-
-    RecordBase _back(IteratorMode mode) const;
+    SetIteratorBase _beginSet() const;
+    SetIteratorBase _endSet() const;
 
     RecordBase _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr());
     RecordBase _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());

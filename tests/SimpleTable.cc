@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     r2.set(myFloat, 5.7f);
     r2.set(myArray, Eigen::ArrayXd::Random(5));
 
-    SimpleRecord r1a = table.front();
+    SimpleRecord r1a = *table.begin();
     BOOST_CHECK_EQUAL(r1a.getId(), 1u);
     BOOST_CHECK_EQUAL(r1.get(myInt), r1a.get(myInt));
     BOOST_CHECK_EQUAL(r1.get(myFloat), r1a.get(myFloat));
