@@ -4,6 +4,7 @@
 
 #include "lsst/afw/table/config.h"
 
+#include "lsst/base.h"
 #include "lsst/afw/table/detail/RecordBase.h"
 #include "lsst/afw/table/detail/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
@@ -20,12 +21,16 @@ protected:
 
     typedef RecordAuxT RecordAux;
 
-    boost::shared_ptr<RecordAux> getAux() const {
+    PTR(RecordAux) getAux() const {
         return boost::static_pointer_cast<RecordAux>(detail::RecordBase::getAux());
     }
 
-    Derived _addChild(boost::shared_ptr<RecordAux> const & aux = boost::shared_ptr<RecordAux>()) {
+    Derived _addChild(PTR(RecordAux) const & aux = PTR(RecordAux)()) {
         return detail::Access::makeRecord<Derived>(this->detail::RecordBase::_addChild(aux));
+    }
+
+    Derived _addChild(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) {
+        return detail::Access::makeRecord<Derived>(this->detail::RecordBase::_addChild(id, aux));
     }
 
     explicit RecordInterface(detail::RecordBase const & other) : detail::RecordBase(other) {}

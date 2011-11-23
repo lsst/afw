@@ -11,6 +11,14 @@ namespace lsst { namespace afw { namespace table { namespace detail {
 
 namespace {
 
+class DefaultIdFactory : public IdFactory {
+public:
+    virtual RecordId operator()() { return ++_current; }
+    DefaultIdFactory() : _current(0) {}
+private:
+    RecordId _current;
+};
+
 class Block : public ndarray::Manager {
 public:
 
@@ -75,6 +83,7 @@ struct TableImpl : private boost::noncopyable {
     RecordData * front;
     RecordData * back;
     void * consolidated;
+    IdFactory::Ptr idFactory;
     AuxBase::Ptr aux;
 
     void addBlock(int blockRecordCount) {
@@ -88,10 +97,15 @@ struct TableImpl : private boost::noncopyable {
         block.swap(newBlock);
     }
 
-    TableImpl(Layout const & layout_, int defaultBlockRecordCount_, AuxBase::Ptr const & aux_) :
+    TableImpl(
+        Layout const & layout_, int defaultBlockRecordCount_, 
+        IdFactory::Ptr const & idFactory_, AuxBase::Ptr const & aux_
+    ) :
         layout(layout_), defaultBlockRecordCount(defaultBlockRecordCount_), recordCount(0), 
-        front(0), back(0), consolidated(0), aux(aux_)
-    {}
+        front(0), back(0), consolidated(0), idFactory(idFactory_), aux(aux_)
+    {
+        if (!idFactory) idFactory = boost::make_shared<DefaultIdFactory>();
+    }
 
 };
 
@@ -123,17 +137,23 @@ Layout RecordBase::getLayout() const { return _table->layout; }
 
 RecordBase::~RecordBase() {}
 
-RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) {
+RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) {
     if (_table->block->isFull()) {
         _table->addBlock(_table->defaultBlockRecordCount);
     }
     RecordData * p = _table->block->makeNextRecord();
     assert(p != 0);
+    p->id = id;
+    p->aux = aux;
     _data->child = p;
     p->parent = _data;
     ++_table->recordCount;
     RecordBase result(p, _table);
     return result;
+}
+
+RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) {
+    return _addChild((*_table->idFactory)(), aux);
 }
 
 //----- TableBase implementation --------------------------------------------------------------------------
@@ -203,11 +223,17 @@ RecordBase TableBase::_back(IteratorMode mode) const {
 }
 
 RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) {
+    return _addRecord((*_impl->idFactory)(), aux);
+}
+
+RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) {
     if (!_impl->block || _impl->block->isFull()) {
         _impl->addBlock(_impl->defaultBlockRecordCount);
     }
     RecordData * p = _impl->block->makeNextRecord();
     assert(p != 0);
+    p->id = id;
+    p->aux = aux;
     if (_impl->back == 0) {
         _impl->back = p;
         _impl->front = p;
@@ -224,9 +250,10 @@ TableBase::TableBase(
     Layout const & layout,
     int defaultBlockRecordCount,
     int capacity,
+    IdFactory::Ptr const & idFactory,
     AuxBase::Ptr const & aux
 ) :
-    _impl(boost::make_shared<TableImpl>(layout, defaultBlockRecordCount, aux))
+    _impl(boost::make_shared<TableImpl>(layout, defaultBlockRecordCount, idFactory, aux))
 {
     if (capacity > 0) _impl->addBlock(capacity);
 }

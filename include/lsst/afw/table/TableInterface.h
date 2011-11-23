@@ -6,6 +6,7 @@
 
 #include "boost/iterator/transform_iterator.hpp"
 
+#include "lsst/base.h"
 #include "lsst/afw/table/RecordInterface.h"
 #include "lsst/afw/table/detail/TableBase.h"
 #include "lsst/afw/table/detail/Access.h"
@@ -44,14 +45,19 @@ protected:
         Layout const & layout,
         int defaultBlockRecordCount,
         int capacity,
-        AuxBase::Ptr const & aux = AuxBase::Ptr()
-    ) : detail::TableBase(layout, defaultBlockRecordCount, capacity, aux) {}
+        IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
+        PTR(TableAux) const & aux = PTR(TableAux)()
+    ) : detail::TableBase(layout, defaultBlockRecordCount, capacity, idFactory, aux) {}
 
-    Record _addRecord(boost::shared_ptr<RecordAux> const & aux = boost::shared_ptr<RecordAux>()) {
+    Record _addRecord(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) {
+        return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(id, aux));
+    }
+
+    Record _addRecord(PTR(RecordAux) const & aux = PTR(RecordAux)()) {
         return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(aux));
     }
 
-    boost::shared_ptr<TableAux> getAux() const {
+    PTR(TableAux) getAux() const {
         return boost::static_pointer_cast<TableAux>(detail::TableBase::getAux());
     }
     

@@ -9,7 +9,16 @@
 #include "lsst/afw/table/detail/RecordBase.h"
 #include "lsst/afw/table/detail/IteratorBase.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
+
+class IdFactory {
+public:
+    typedef boost::shared_ptr<IdFactory> Ptr;
+    virtual RecordId operator()() = 0;
+    virtual ~IdFactory() {}
+};
+
+namespace detail {
 
 class TableBase {
 public:
@@ -32,6 +41,7 @@ protected:
         Layout const & layout,
         int defaultBlockRecordCount,
         int capacity,
+        IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
         AuxBase::Ptr const & aux = AuxBase::Ptr()
     );
 
@@ -46,6 +56,7 @@ protected:
     RecordBase _back(IteratorMode mode) const;
 
     RecordBase _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr());
+    RecordBase _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());
 
     AuxBase::Ptr getAux() const;
 

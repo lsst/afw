@@ -33,25 +33,26 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     
     SimpleTable table(layout, 16);
     
-    SimpleRecord r0 = table.addRecord();
-
-    r0.set(myInt, 53);
-    r0.set(myArray, Eigen::ArrayXd::Ones(5));
-    r0.set(myFloat, 3.14f);
-
-    BOOST_CHECK_EQUAL(r0.get(myInt), 53);
-    BOOST_CHECK((r0.get(myArray) == Eigen::ArrayXd::Ones(5)).all());
-    BOOST_CHECK_EQUAL(r0.get(myFloat), 3.14f);
-
     SimpleRecord r1 = table.addRecord();
-    BOOST_CHECK_EQUAL(table.getRecordCount(), 2);
-    r1.set(myInt, 25);
-    r1.set(myFloat, 5.7f);
-    r1.set(myArray, Eigen::ArrayXd::Random(5));
+    BOOST_CHECK_EQUAL(r1.getId(), 1u);
+    r1.set(myInt, 53);
+    r1.set(myArray, Eigen::ArrayXd::Ones(5));
+    r1.set(myFloat, 3.14f);
+    BOOST_CHECK_EQUAL(r1.get(myInt), 53);
+    BOOST_CHECK((r1.get(myArray) == Eigen::ArrayXd::Ones(5)).all());
+    BOOST_CHECK_EQUAL(r1.get(myFloat), 3.14f);
 
-    SimpleRecord r0a = table.front();
-    BOOST_CHECK_EQUAL(r0.get(myInt), r0a.get(myInt));
-    BOOST_CHECK_EQUAL(r0.get(myFloat), r0a.get(myFloat));
+    SimpleRecord r2 = table.addRecord();
+    BOOST_CHECK_EQUAL(r2.getId(), 2u);
+    BOOST_CHECK_EQUAL(table.getRecordCount(), 2);
+    r2.set(myInt, 25);
+    r2.set(myFloat, 5.7f);
+    r2.set(myArray, Eigen::ArrayXd::Random(5));
+
+    SimpleRecord r1a = table.front();
+    BOOST_CHECK_EQUAL(r1a.getId(), 1u);
+    BOOST_CHECK_EQUAL(r1.get(myInt), r1a.get(myInt));
+    BOOST_CHECK_EQUAL(r1.get(myFloat), r1a.get(myFloat));
 
     BOOST_CHECK(table.isConsolidated());
 
@@ -60,8 +61,8 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     BOOST_CHECK(!table.isConsolidated());
     BOOST_CHECK_EQUAL(table.getRecordCount(), 1);
 
-    SimpleRecord r1a = table[0];
-    BOOST_CHECK((r1.get(myArray) == r1a.get(myArray)).all());
+    SimpleRecord r2a = table[0];
+    BOOST_CHECK((r2.get(myArray) == r2a.get(myArray)).all());
 #endif
 }
 

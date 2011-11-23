@@ -53,6 +53,7 @@ protected:
     AuxBase::Ptr getAux() const { return _data->aux; }
 
     RecordBase _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr());
+    RecordBase _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());
 
     void operator=(RecordBase const & other) {
         _data = other._data;

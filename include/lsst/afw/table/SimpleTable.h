@@ -15,11 +15,13 @@ public:
     SimpleTable(
         Layout const & layout,
         int defaultBlockRecordCount,
-        int capacity = 0
-    ) : TableInterface<SimpleRecord>(layout, defaultBlockRecordCount, capacity) {}
+        int capacity = 0,
+        IdFactory::Ptr const & idFactory = IdFactory::Ptr()
+    ) : TableInterface<SimpleRecord>(layout, defaultBlockRecordCount, capacity, idFactory) {}
 
     
     Record addRecord() { return _addRecord(); }
+    Record addRecord(RecordId id) { return _addRecord(id); }
 
 };
 

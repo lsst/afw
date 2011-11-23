@@ -13,6 +13,8 @@ public:
 
     SimpleRecord addChild() { return _addChild(); }
 
+    SimpleRecord addChild(RecordId id) { return _addChild(id); }
+
 private:
 
     friend class detail::Access;
