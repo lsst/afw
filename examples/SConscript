@@ -36,6 +36,7 @@ env.Program("convolveLinear", ["convolveLinear.cc"], LIBS=env.getlibs("afw"))
 env.Program("simpleConvolve", ["simpleConvolve.cc"], LIBS=env.getlibs("afw"))
 env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("afw"))
 env.Program("timeConvolve", ["timeConvolve.cc"], LIBS=env.getlibs("afw"))
+env.Program("timeConvolveGpu", ["timeConvolveGpu.cc"], LIBS=env.getlibs("afw"))
 
 env.Program("makeExposure", ["makeExposure.cc"], LIBS=env.getlibs("afw wcs"))
 env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("afw wcs"))

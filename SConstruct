@@ -25,9 +25,9 @@ env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base 
 if env.Detect('nvcc')!= None:
     env.libs["afw"]   += env.getlibs("cudart cuda")
     env.Tool("cuda", toolpath=['python/lsst/afw'])
-    env.Append(  CCFLAGS = "-DGPU_BUILD")
-    env.Append(NVCCFLAGS = "-DGPU_BUILD")
-    env.Append(NVCCFLAGS = "--ptxas-options=-v")
+    env.Append(  CCFLAGS = "-DGPU_BUILD ")
+    env.Append(NVCCFLAGS = "-DGPU_BUILD ")
+    env.Append(NVCCFLAGS = " --ptxas-options=-v")
     env.Append(NVCCFLAGS = ' -O2 -Iinclude -maxrregcount=58 --compiler-options "-fPIC"')
     env.Append(NVCCFLAGS = ' -gencode=arch=compute_13,code=\\"sm_13,compute_13\\" ')
     env.Append(NVCCFLAGS = ' -gencode=arch=compute_20,code=\\"sm_20,compute_20\\" ')

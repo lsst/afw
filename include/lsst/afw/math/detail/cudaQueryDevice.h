@@ -32,8 +32,6 @@
  * @ingroup afw
  */
 
-#ifdef GPU_BUILD
-
 namespace lsst {
 namespace afw {
 namespace math {
@@ -76,6 +74,4 @@ void CudaThreadExit();
 }
 }
 } //namespace lsst::afw::math::detail ends
-
-#endif //GPU_BUILD
 

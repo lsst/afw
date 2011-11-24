@@ -50,6 +50,43 @@ namespace gpu {
 void PrintCudaDeviceInfo() {
     printf("Afw not compiled with GPU support\n");
 }
+
+int GetCudaCurDeviceId() {
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+int GetCudaCurSMSharedMemorySize(){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+int GetCudaCurGlobalMemorySize(){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+int GetCudaCurSMRegisterCount(){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+int GetCudaCurSMCount(){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+bool GetCudaCurIsDoublePrecisionSupported(){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+void SetCudaDevice(int devId){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+void CudaReserveDevice(){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
+void CudaThreadExit(){
+    throw LSST_EXCEPT(pexExcept::GpuRuntimeErrorException, "AFW not built with GPU support");
+}
+
 void TestGpuKernel(int& ret1, int& ret2) {
     ret1 = 0;
     ret2 = 0;
