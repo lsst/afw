@@ -54,8 +54,6 @@ env.Program("rowColumnStats", ["rowColumnStats.cc"], LIBS=env.getlibs("afw"))
 
 env.Program(["ccd.cc"], LIBS=env.getlibs("afw"))
 
-env.Program(["testGPU.cc"], LIBS=env.getlibs("afw"))
-
 #
 # Build all ticket test files
 #

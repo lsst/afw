@@ -8,7 +8,9 @@ Import('env')
 
 ccFiles = glob.glob("../src/*/*.cc") + glob.glob("../src/*/*/*.cc") + glob.glob("../src/*/*/*/*.cc")
 
-if env.Detect('nvcc')!= None:
+# link with GPU code
+import eups
+if eups.productDir("cuda_toolkit") and eups.productDir("cuda_sdk"):
     ccFiles.append('../src/math/detail/convGPU.os')
 
 try:
