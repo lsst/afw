@@ -55,74 +55,17 @@ def generate(env):
         programfiles=os.environ.get('PROGRAMFILES', '')
         homedrive=os.environ.get('HOMEDRIVE', '')
 
-        # find CUDA Toolkit path and set CUDA_TOOLKIT_PATH
-        try:
-                cudaToolkitPath = env['CUDA_TOOLKIT_PATH']
-        except:
-                paths=[home + '/NVIDIA_CUDA_TOOLKIT',
-                       home + '/Apps/NVIDIA_CUDA_TOOLKIT',
-                           home + '/Apps/NVIDIA_CUDA_TOOLKIT',
-                           home + '/Apps/CudaToolkit',
-                           home + '/Apps/CudaTK',
-                           '/usr/local/NVIDIA_CUDA_TOOLKIT',
-                           '/usr/local/CUDA_TOOLKIT',
-                           '/usr/local/cuda_toolkit',
-                           '/usr/local/CUDA',
-                           '/usr/local/cuda',
-                           '/Developer/NVIDIA CUDA TOOLKIT',
-                           '/Developer/CUDA TOOLKIT',
-                           '/Developer/CUDA',
-                           programfiles + 'NVIDIA Corporation/NVIDIA CUDA TOOLKIT',
-                           programfiles + 'NVIDIA Corporation/NVIDIA CUDA',
-                           programfiles + 'NVIDIA Corporation/CUDA TOOLKIT',
-                           programfiles + 'NVIDIA Corporation/CUDA',
-                           programfiles + 'NVIDIA/NVIDIA CUDA TOOLKIT',
-                           programfiles + 'NVIDIA/NVIDIA CUDA',
-                           programfiles + 'NVIDIA/CUDA TOOLKIT',
-                           programfiles + 'NVIDIA/CUDA',
-                           programfiles + 'CUDA TOOLKIT',
-                           programfiles + 'CUDA',
-                           homedrive + '/CUDA TOOLKIT',
-                           homedrive + '/CUDA']
-                for path in paths:
-                        if os.path.isdir(path):
-                                print 'scons: CUDA Toolkit found in ' + path
-                                cudaToolkitPath = path
-                                break
-                if cudaToolkitPath == None:
-                        sys.exit("Cannot find the CUDA Toolkit path. Please modify your SConscript or add the path in cudaenv.py")
-        env['CUDA_TOOLKIT_PATH'] = cudaToolkitPath
+        # find CUDA Toolkit path and set CUDA_TOOLKIT_DIR
+        cudaToolkitPath = os.environ.get('CUDA_TOOLKIT_DIR', None)
+        if cudaToolkitPath == None:
+                sys.exit("Cannot find the CUDA Toolkit path; please set up product cuda_toolkit")
+        env['CUDA_TOOLKIT_DIR'] = cudaToolkitPath
 
-        # find CUDA SDK path and set CUDA_SDK_PATH
-	cudaSDKPath = None
-        try:
-                cudaSDKPath = env['CUDA_SDK_PATH']
-        except:
-                paths=[home + '/NVIDIA_CUDA_SDK', # i am just guessing here
-                       home + '/Apps/NVIDIA_CUDA_SDK',
-                           home + '/Apps/CudaSDK',
-                           '/usr/local/NVIDIA_CUDA_SDK',
-                           '/usr/local/CUDASDK',
-                           '/usr/local/cuda_sdk',
-                           '/usr/local/NVIDIA_GPU_Computing_SDK',
-                           '/Developer/NVIDIA CUDA SDK',
-                           '/Developer/CUDA SDK',
-                           '/Developer/CUDA',
-                           programfiles + 'NVIDIA Corporation/NVIDIA CUDA SDK',
-                           programfiles + 'NVIDIA/NVIDIA CUDA SDK',
-                           programfiles + 'NVIDIA CUDA SDK',
-                           programfiles + 'CudaSDK',
-                           homedrive + '/NVIDIA CUDA SDK',
-                           homedrive + '/CUDA SDK',
-                           homedrive + '/CUDA/SDK']
-                for path in paths:
-                        if os.path.isdir(path):
-                                print 'scons: CUDA SDK found in ' + path
-                                cudaSDKPath = path
-                                break
-                if cudaSDKPath == None:
-                        sys.exit("Cannot find the CUDA SDK path. Please set env['CUDA_SDK_PATH'] to point to your SDK path")
-        env['CUDA_SDK_PATH'] = cudaSDKPath
+        # find CUDA SDK path and set CUDA_SDK_DIR
+	cudaSDKPath = os.environ.get('CUDA_SDK_DIR', None)
+        if cudaSDKPath == None:
+                sys.exit("Cannot find the CUDA SDK path; please set up product cuda_sdk")
+        env['CUDA_SDK_DIR'] = cudaSDKPath
 
         # cuda libraries
         if env['PLATFORM'] == 'posix':
