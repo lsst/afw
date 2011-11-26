@@ -41,11 +41,13 @@
 namespace lsst {
 namespace afw {
 namespace detection {
-
+/**
+ * Create a HeavyFootprint from a regular Footprint and the image that provides the pixel values
+ */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
-    Footprint const& foot,
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage
+    Footprint const& foot,              ///< The Footprint defining the pixels to set
+    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage ///< The pixel values
         ) : Footprint(foot),
             _image(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
             _mask(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
@@ -56,14 +58,17 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     flattenArray(*this, mimage.getVariance()->getArray(), _variance, mimage.getXY0());
 }
 
+/**
+ * Replace all the pixels in the image with the values in the HeavyFootprint
+ */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage,
-        lsst::afw::geom::Point2I const & origin) const
+        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage ///< Image to set
+                                                                    ) const
 {
-    expandArray(*this, _image,    mimage.getImage()->getArray(),    origin);
-    expandArray(*this, _mask,     mimage.getMask()->getArray(),     origin);
-    expandArray(*this, _variance, mimage.getVariance()->getArray(), origin);
+    expandArray(*this, _image,    mimage.getImage()->getArray(),    mimage.getXY0());
+    expandArray(*this, _mask,     mimage.getMask()->getArray(),     mimage.getXY0());
+    expandArray(*this, _variance, mimage.getVariance()->getArray(), mimage.getXY0());
 }
 
 /************************************************************************************************************/
@@ -75,6 +80,8 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 #define INSTANTIATE(TYPE) \
     template class HeavyFootprint<TYPE>;
 
+INSTANTIATE(boost::uint16_t);
+INSTANTIATE(double);
 INSTANTIATE(float);
 INSTANTIATE(int);
 

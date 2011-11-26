@@ -102,6 +102,25 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %define %heavyFootprints(NAME, PIXEL_TYPE...)
     %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>;
     %template(makeHeavyFootprint) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE>;
+
+    %inline %{
+        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>)
+            /**
+             * Cast a Footprint to a HeavyFootprint of a specified type
+             */
+            cast_HeavyFootprint##NAME(PTR(lsst::afw::detection::Footprint) foot) {
+            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE> >(foot);
+        }
+
+        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>)
+            /**
+             * Cast a Footprint to a HeavyFootprint; the MaskedImage disambiguates the type
+             */
+            cast_HeavyFootprint(PTR(lsst::afw::detection::Footprint) foot,
+                                lsst::afw::image::MaskedImage<PIXEL_TYPE> const&) {
+            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE> >(foot);
+        }
+    %}
 %enddef
 
 %define %imageOperations(NAME, PIXEL_TYPE)

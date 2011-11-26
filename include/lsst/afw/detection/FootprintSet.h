@@ -130,6 +130,8 @@ public:
     }
 
     void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
+
+    void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg);
 private:
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in

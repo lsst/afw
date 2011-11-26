@@ -1453,6 +1453,22 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(
 }
 
 /************************************************************************************************************/
+/**
+ * Convert all the Footprints in the FootprintSet to be HeavyFootprint%s
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+void
+detection::FootprintSet<ImagePixelT, MaskPixelT>::makeHeavy(
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg
+                                                           )
+{
+    for (typename FootprintList::iterator ptr = _footprints->begin(),
+                                          end = _footprints->end(); ptr != end; ++ptr) {
+        ptr->reset(new detection::HeavyFootprint<ImagePixelT, MaskPixelT>(**ptr, mimg));
+    }
+}
+
+/************************************************************************************************************/
 //
 // Explicit instantiations
 //

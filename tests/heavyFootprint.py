@@ -99,6 +99,42 @@ class HeavyFootprintTestCase(unittest.TestCase):
         self.assertEqual(np.min(self.mi.getVariance().getArray()), 0.0)
         self.assertEqual(np.max(self.mi.getVariance().getArray()), 0.0)
 
+    def testMakeHeavy(self):
+        """Test that we can make a FootprintSet heavy"""
+        fs = afwDetect.makeFootprintSet(self.mi, afwDetect.Threshold(1))
+
+        fs.makeHeavy(self.mi)
+
+        omi = self.mi.Factory(self.mi.getDimensions())
+
+        for foot in fs.getFootprints():
+            self.assertNotEqual(afwDetect.cast_HeavyFootprint(foot, self.mi), None)
+            afwDetect.cast_HeavyFootprint(foot, self.mi).insert(omi)
+
+        for foot in fs.getFootprints():
+            self.assertNotEqual(afwDetect.cast_HeavyFootprintF(foot), None)
+            afwDetect.cast_HeavyFootprintF(foot).insert(omi)
+
+        self.assertTrue(np.all(np.equal(self.mi.getImage().getArray(), omi.getImage().getArray())))
+
+    def testCast_HeavyFootprint(self):
+        """Test that we can cast a Footprint to a HeavyFootprint"""
+
+        hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
+        #
+        # This isn't quite a full test, as hfoot is already a HeavyFootprint,
+        # the complete test is in testMakeHeavy
+        #        
+        self.assertNotEqual(afwDetect.cast_HeavyFootprint(hfoot, self.mi), None,
+                            "Cast to the right sort of HeavyFootprint")
+        self.assertNotEqual(afwDetect.cast_HeavyFootprintF(hfoot), None,
+                            "Cast to the right sort of HeavyFootprint")
+
+        self.assertEqual(afwDetect.cast_HeavyFootprint(self.foot, self.mi), None,
+                         "Can't cast a Footprint to a HeavyFootprint")
+        self.assertEqual(afwDetect.cast_HeavyFootprintI(hfoot), None,
+                         "Cast to the wrong sort of HeavyFootprint")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

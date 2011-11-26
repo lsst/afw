@@ -121,7 +121,7 @@ public:
 
     explicit Footprint(SpanList const & spans, geom::Box2I const & region=geom::Box2I());
     Footprint(Footprint const & other);    
-    ~Footprint();
+    virtual ~Footprint();
 
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
@@ -246,8 +246,7 @@ public:
         Footprint const& foot,
         lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage);
 
-    void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage,
-                lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()) const;
+    void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
 private:
     lsst::ndarray::Array<ImagePixelT, 1, 1> _image;
     lsst::ndarray::Array<MaskPixelT, 1, 1> _mask;
