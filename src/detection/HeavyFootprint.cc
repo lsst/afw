@@ -35,13 +35,17 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Footprint.h"
+<<<<<<< HEAD
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/FootprintArray.cc"
+=======
+>>>>>>> e5a2602cdf88c9b39a3752d72a320074fc122ba7
 
 namespace lsst {
 namespace afw {
 namespace detection {
+<<<<<<< HEAD
 namespace {
     template<typename T>
     struct setPixel {
@@ -125,6 +129,16 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
     expandArray(*this, _image,    mimage.getImage()->getArray(),    mimage.getXY0());
     expandArray(*this, _mask,     mimage.getMask()->getArray(),     mimage.getXY0());
     expandArray(*this, _variance, mimage.getVariance()->getArray(), mimage.getXY0());
+=======
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
+    Footprint const& foot,
+    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& image
+                              ) : Footprint(foot)
+{
+    ;
+>>>>>>> e5a2602cdf88c9b39a3752d72a320074fc122ba7
 }
 
 /************************************************************************************************************/
@@ -136,8 +150,11 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 #define INSTANTIATE(TYPE) \
     template class HeavyFootprint<TYPE>;
 
+<<<<<<< HEAD
 INSTANTIATE(boost::uint16_t);
 INSTANTIATE(double);
+=======
+>>>>>>> e5a2602cdf88c9b39a3752d72a320074fc122ba7
 INSTANTIATE(float);
 INSTANTIATE(int);
 

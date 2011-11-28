@@ -32,14 +32,27 @@ or
    >>> import heavyFootprint; heavyFootprint.run()
 """
 
+<<<<<<< HEAD
 import numpy as np
+=======
+
+>>>>>>> e5a2602cdf88c9b39a3752d72a320074fc122ba7
 import math, sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
+<<<<<<< HEAD
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
 import lsst.afw.geom as afwGeom
+=======
+import lsst.afw.geom as afwGeom
+import lsst.afw.geom.ellipses as afwGeomEllipses
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
+import lsst.afw.detection as afwDetect
+import lsst.afw.detection.utils as afwDetectUtils
+>>>>>>> e5a2602cdf88c9b39a3752d72a320074fc122ba7
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -58,6 +71,7 @@ except NameError:
 class HeavyFootprintTestCase(unittest.TestCase):
     """A test case for HeavyFootprint"""
     def setUp(self):
+<<<<<<< HEAD
         self.mi = afwImage.MaskedImageF(20, 10)
         self.objectPixelVal = (10, 0x1, 100)
         
@@ -68,12 +82,17 @@ class HeavyFootprintTestCase(unittest.TestCase):
 
             for x in range(x0, x1 + 1):
                 self.mi.set(x, y, self.objectPixelVal)
+=======
+        self.foot = afwDetect.Footprint()
+        self.mi = afwImage.MaskedImageF(10, 20)
+>>>>>>> e5a2602cdf88c9b39a3752d72a320074fc122ba7
 
     def tearDown(self):
         del self.foot
         del self.mi
 
     def testCreate(self):
+<<<<<<< HEAD
         """Check that we can create a HeavyFootprint"""
 
         imi = self.mi.Factory(self.mi, True) # copy of input image
@@ -179,6 +198,10 @@ class HeavyFootprintTestCase(unittest.TestCase):
                          "Can't cast a Footprint to a HeavyFootprint")
         self.assertEqual(afwDetect.cast_HeavyFootprintI(hfoot), None,
                          "Cast to the wrong sort of HeavyFootprint")
+=======
+        hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
+        print "RHL", hfoot.getId()
+>>>>>>> e5a2602cdf88c9b39a3752d72a320074fc122ba7
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
