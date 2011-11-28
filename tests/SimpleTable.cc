@@ -48,6 +48,10 @@ BOOST_AUTO_TEST_CASE(testIterators) {
         RecordId n = 1;
         for (SimpleTable::Iterator i = table.begin(); i != table.end(); ++i, ++n) {
             BOOST_CHECK_EQUAL(i->getId(), n);
+            if (i->hasChildren()) {
+                BOOST_CHECK_THROW(i->unlink(), lsst::pex::exceptions::LogicErrorException);
+                BOOST_CHECK_THROW(table.unlink(i), lsst::pex::exceptions::LogicErrorException);
+            }
         }
         BOOST_CHECK_EQUAL(n, 40ul);
     }
@@ -58,6 +62,8 @@ BOOST_AUTO_TEST_CASE(testIterators) {
         SimpleTable::Tree tree = table.asTree(NO_NESTING);
         for (SimpleTable::Tree::Iterator i = tree.begin(); i != tree.end(); ++i, ++n) {
             BOOST_CHECK_EQUAL(i->getId(), n);
+            BOOST_CHECK_THROW(i->unlink(), lsst::pex::exceptions::LogicErrorException);
+            BOOST_CHECK_THROW(tree.unlink(i), lsst::pex::exceptions::LogicErrorException);
         }
         BOOST_CHECK_EQUAL(n, 4ul);
     }
@@ -75,11 +81,15 @@ BOOST_AUTO_TEST_CASE(testIterators) {
         for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
             BOOST_CHECK_EQUAL(t->getId(), i->getId());
             BOOST_CHECK_EQUAL(t->getId(), order[n]);
+            BOOST_CHECK_THROW(t->unlink(), lsst::pex::exceptions::LogicErrorException);
+            BOOST_CHECK_THROW(tree.unlink(t), lsst::pex::exceptions::LogicErrorException);
             ++t, ++n;
             SimpleRecord::Children ic = i->getChildren(NO_NESTING);
             for (SimpleRecord::Children::Iterator j = ic.begin(); j != ic.end(); ++j) {
                 BOOST_CHECK_EQUAL(t->getId(), j->getId());
                 BOOST_CHECK_EQUAL(t->getId(), order[n]);
+                BOOST_CHECK_THROW(t->unlink(), lsst::pex::exceptions::LogicErrorException);
+                BOOST_CHECK_THROW(tree.unlink(t), lsst::pex::exceptions::LogicErrorException);
                 ++t, ++n;
                 SimpleRecord::Children jc = j->getChildren(NO_NESTING);
                 for (SimpleRecord::Children::Iterator k = jc.begin(); k != jc.end(); ++k) {
@@ -91,6 +101,7 @@ BOOST_AUTO_TEST_CASE(testIterators) {
         }
         BOOST_CHECK( t == tree.end() );
     }
+
 }
 
 BOOST_AUTO_TEST_CASE(testSimpleTable) {

@@ -154,13 +154,13 @@ struct TableImpl : private boost::noncopyable {
     void unlink(RecordData * record) {
         if (record->child) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
+                lsst::pex::exceptions::LogicErrorException,
                 "Children must be erased before parent record."
             );
         }
         if (!record->is_linked()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
+                lsst::pex::exceptions::LogicErrorException,
                 "Record has already been unlinked."
             );
         }
