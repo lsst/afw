@@ -119,8 +119,12 @@ class HeavyFootprintTestCase(unittest.TestCase):
         """Test that we can make a FootprintSet heavy"""
         fs = afwDetect.makeFootprintSet(self.mi, afwDetect.Threshold(1))
 
-        #ctrl = afwDetect.HeavyFootprintCtrl(afwDetect.HeavyFootprintCtrl.NONE)
-        fs.makeHeavy(self.mi)
+        ctrl = afwDetect.HeavyFootprintCtrl(afwDetect.HeavyFootprintCtrl.NONE)
+        fs.makeHeavy(self.mi, ctrl)
+
+        if display:
+            ds9.mtv(self.mi, frame=0, title="input")
+            #ds9.mtv(omi, frame=1, title="output")
 
         omi = self.mi.Factory(self.mi.getDimensions())
 
@@ -138,6 +142,9 @@ class HeavyFootprintTestCase(unittest.TestCase):
         """Test that we can cast a Footprint to a HeavyFootprint"""
 
         hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
+
+        ctrl = afwDetect.HeavyFootprintCtrl(afwDetect.HeavyFootprintCtrl.NONE)
+        hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi, ctrl)
         #
         # This isn't quite a full test, as hfoot is already a HeavyFootprint,
         # the complete test is in testMakeHeavy
