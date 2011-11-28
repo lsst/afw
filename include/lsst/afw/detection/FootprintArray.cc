@@ -111,6 +111,7 @@ void flattenArray(
     for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); s != fp.getSpans().end(); ++s) {
         Span const & span = **s;
         typename SourceT::Reference row(src[span.getY() - xy0.getY()]);
+
         std::copy(
             row.begin() + span.getX0() - xy0.getX(),
             row.begin() + span.getX1() + 1 - xy0.getX(), 
@@ -118,7 +119,51 @@ void flattenArray(
         );
         destIter += span.getWidth();
     }
+}
 
+/**
+ * @brief Flatten the first two dimensions of an array
+ *
+ * Use this footprint to map 2-D points in the source to 1-D position in
+ * the destination. This forces a deep copy of the relevant parts of the 
+ * source.
+ *
+ * @param[in]  fp      footprint to operate on
+ * @param[in]  src     array to copy from.  The first two dimensions are (height, width).
+ * @param[out] dest    array to copy to. The dimensions of the dest must be area of
+ *                     the footprint, inner N-1 dimensions of the source
+ * @param[in]  xy0     xy0 of the src array in the footprint's coordinate system
+ *
+ * For example,
+ \code
+ flattenArray(foot, image.getArray(), array, pixelOp(), image.getXY0()); 
+ \endcode 
+ */
+template <typename T, typename U, int N, int C, int D, typename PixelOpT>
+void flattenArray(
+    Footprint const & fp,
+    ndarray::Array<T,N,C> const & src,
+    ndarray::Array<U, N-1, D> const & dest,
+    PixelOpT const& pixelOp,
+    geom::Point2I const & xy0
+) {
+    typedef ndarray::Array<T, N, C> SourceT; 
+    typedef ndarray::Array<U, N-1, D> DestT; 
+    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
+
+    checkConvertArray(fp, dest, src, xy0);
+
+    typename DestT::Iterator destIter(dest.begin());
+    for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); s != fp.getSpans().end(); ++s) {
+        Span const & span = **s;
+        typename SourceT::Reference row(src[span.getY() - xy0.getY()]);
+        typename SourceT::Reference::Iterator rowIter = row.begin() + span.getX0() - xy0.getX();
+        for (typename DestT::Iterator destEnd = destIter + span.getWidth(); destIter != destEnd;
+             ++destIter, ++rowIter) {
+            *destIter = *rowIter;
+            *rowIter = pixelOp(*rowIter);
+        }
+    }
 }
 
 /**
@@ -208,12 +253,12 @@ void expandArray(
  * @param[in]  pixelOp Functor taking src's pixel value, and returning the value of dest
  * @param[in]  xy0  xy0 of the src array in the footprint's coordinate system
  */
-template <typename T, typename U, int N, int C, int D>
+template <typename T, typename U, int N, int C, int D, typename PixelOpT>
 void expandArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
     ndarray::Array<U, N+1, D> const & dest,
-    std::tr1::function<U (T)> const& pixelOp,
+    PixelOpT const& pixelOp,
     geom::Point2I const & xy0
                 )
 {

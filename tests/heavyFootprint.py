@@ -58,6 +58,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
     """A test case for HeavyFootprint"""
     def setUp(self):
         self.mi = afwImage.MaskedImageF(20, 10)
+        self.objectPixelVal = (10, 0x1, 100)
         
         self.foot = afwDetect.Footprint()
         for y, x0, x1 in [(2, 10, 13),
@@ -65,7 +66,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
             self.foot.addSpan(y, x0, x1)
 
             for x in range(x0, x1 + 1):
-                self.mi.set(x, y, (10, 0x1, 100))
+                self.mi.set(x, y, self.objectPixelVal)
 
     def tearDown(self):
         del self.foot
@@ -73,22 +74,37 @@ class HeavyFootprintTestCase(unittest.TestCase):
 
     def testCreate(self):
         """Check that we can create a HeavyFootprint"""
-        
+
+        imi = self.mi.Factory(self.mi, True) # copy of input image
+
         hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
         self.assertNotEqual(hfoot.getId(), None) # check we can call a base-class method
-
+        #
+        # Check we didn't modify the input image
+        #
+        self.assertTrue(np.all(np.equal(self.mi.getImage().getArray(), imi.getImage().getArray())))
+        
         omi = self.mi.Factory(self.mi.getDimensions())
+        omi.set((1, 0x4, 0.1))
         hfoot.insert(omi)
 
         if display:
-            ds9.mtv(self.mi, frame=0)
-            ds9.mtv(omi, frame=1)
+            ds9.mtv(imi, frame=0, title="input")
+            ds9.mtv(omi, frame=1, title="output")
 
         for s in self.foot.getSpans():
             y = s.getY()
             for x in range(s.getX0(), s.getX1() + 1):
-                self.assertEqual(self.mi.get(x, y), omi.get(x, y))
-                self.mi.set(x, y, (0, 0, 0)) # clear the pixels in the Footprint
+                self.assertEqual(imi.get(x, y), omi.get(x, y))
+
+    def testSetFootprint(self):
+        """Check that we can create a HeavyFootprint and set the pixels under it"""
+
+        ctrl = afwDetect.HeavyFootprintCtrl()
+        ctrl.setModifySource(afwDetect.HeavyFootprintCtrl.SET) # clear the pixels in the Footprint
+        ctrl.setMaskVal(self.objectPixelVal[1])
+
+        hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi, ctrl)
         #
         # Check that we cleared all the pixels
         #
@@ -103,6 +119,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
         """Test that we can make a FootprintSet heavy"""
         fs = afwDetect.makeFootprintSet(self.mi, afwDetect.Threshold(1))
 
+        #ctrl = afwDetect.HeavyFootprintCtrl(afwDetect.HeavyFootprintCtrl.NONE)
         fs.makeHeavy(self.mi)
 
         omi = self.mi.Factory(self.mi.getDimensions())

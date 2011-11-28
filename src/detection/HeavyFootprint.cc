@@ -35,27 +35,83 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 
 namespace lsst {
 namespace afw {
 namespace detection {
+namespace {
+    template<typename T>
+    struct setPixel {
+        setPixel(T val) : _val(val) {}
+
+        T operator()(T) const {
+            return _val;
+        }
+    private:
+        T _val;
+    };
+
+    template<>
+    struct setPixel<boost::uint16_t> {
+        typedef boost::uint16_t T;
+
+        setPixel(T val) : _mask(~val) {}
+
+        T operator()(T pix) const {
+            pix &= _mask;
+            return pix;
+        }
+    private:
+        T _mask;
+    };
+}
+
 /**
  * Create a HeavyFootprint from a regular Footprint and the image that provides the pixel values
+ *
+ * \note: the HeavyFootprintCtrl is passed by const* not const& so that we needn't provide a definition
+ * in Footprint.h
  */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     Footprint const& foot,              ///< The Footprint defining the pixels to set
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage ///< The pixel values
+    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage, ///< The pixel values
+    HeavyFootprintCtrl const *ctrl     ///< Control how we manipulate HeavyFootprints
         ) : Footprint(foot),
             _image(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
             _mask(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
             _variance(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix())))
 {
-    flattenArray(*this, mimage.getImage()->getArray(),    _image,    mimage.getXY0());
-    flattenArray(*this, mimage.getMask()->getArray(),     _mask,     mimage.getXY0());
-    flattenArray(*this, mimage.getVariance()->getArray(), _variance, mimage.getXY0());
+    HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
+
+    if (!ctrl) {
+        ctrl = &ctrl_s;
+    }
+
+    switch (ctrl->getModifySource()) {
+      case HeavyFootprintCtrl::NONE:
+        flattenArray(*this, mimage.getImage()->getArray(),    _image,    mimage.getXY0());
+        flattenArray(*this, mimage.getMask()->getArray(),     _mask,     mimage.getXY0());
+        flattenArray(*this, mimage.getVariance()->getArray(), _variance, mimage.getXY0());
+        break;
+      case HeavyFootprintCtrl::SET:
+        {
+        ImagePixelT const ival = ctrl->getImageVal();
+        MaskPixelT const mval = ctrl->getMaskVal();
+        VariancePixelT const vval = ctrl->getVarianceVal();
+        
+        flattenArray(*this, mimage.getImage()->getArray(),    _image,
+            setPixel<ImagePixelT>(ival), mimage.getXY0());
+        flattenArray(*this, mimage.getMask()->getArray(),     _mask,
+            setPixel<MaskPixelT>(mval), mimage.getXY0());
+        flattenArray(*this, mimage.getVariance()->getArray(), _variance,
+            setPixel<VariancePixelT>(vval), mimage.getXY0());
+        break;
+        }
+    }
 }
 
 /**
