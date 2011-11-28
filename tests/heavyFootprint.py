@@ -39,6 +39,7 @@ import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -137,6 +138,26 @@ class HeavyFootprintTestCase(unittest.TestCase):
             afwDetect.cast_HeavyFootprintF(foot).insert(omi)
 
         self.assertTrue(np.all(np.equal(self.mi.getImage().getArray(), omi.getImage().getArray())))
+
+    def testMakeHeavy(self):
+        """Test that inserting a HeavyFootprint obeys XY0"""
+        fs = afwDetect.makeFootprintSet(self.mi, afwDetect.Threshold(1))
+
+        fs.makeHeavy(self.mi)
+
+        bbox = afwGeom.BoxI(afwGeom.PointI(9, 1), afwGeom.ExtentI(7, 4))
+        omi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL, True)
+        omi.set((0, 0x0, 0))
+
+        for foot in fs.getFootprints():
+            afwDetect.cast_HeavyFootprint(foot, self.mi).insert(omi)
+
+        if display:
+            ds9.mtv(self.mi, frame=0, title="input")
+            ds9.mtv(omi, frame=1, title="sub")
+
+        submi = self.mi.Factory(self.mi, bbox)
+        self.assertTrue(np.all(np.equal(submi.getImage().getArray(), omi.getImage().getArray())))
 
     def testCast_HeavyFootprint(self):
         """Test that we can cast a Footprint to a HeavyFootprint"""
