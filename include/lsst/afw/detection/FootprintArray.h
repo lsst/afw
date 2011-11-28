@@ -19,8 +19,8 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-
-#include <boost/type_traits.hpp>
+#include "boost/tr1/functional.hpp"
+#include "boost/type_traits.hpp"
 #include "lsst/ndarray.h"
 
 #if !defined(LSST_DETECTION_FOOTPRINT_ARRAY_H)
@@ -36,14 +36,14 @@ void flattenArray(
     Footprint const & fp,
     lsst::ndarray::Array<T,N,C> const & src,
     lsst::ndarray::Array<U, N-1, D> const & dest,
-    lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
+    lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
 template <typename T, int N, int C>
 lsst::ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
     lsst::ndarray::Array<T,N,C> const & src,
-    lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
+    lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
 
@@ -52,7 +52,16 @@ void expandArray(
     Footprint const & fp,
     lsst::ndarray::Array<T,N,C> const & src,
     lsst::ndarray::Array<U, N+1, D> const & dest,
-    lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
+    lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
+);
+
+template <typename T, typename U, int N, int C, int D>
+void expandArray(
+    Footprint const & fp,
+    lsst::ndarray::Array<T, N, C> const & src,
+    lsst::ndarray::Array<U, N+1, D> const & dest,
+    std::tr1::function<U (T)> const& pixelOp,
+    lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
 template <typename T, int N, int C>
