@@ -21,6 +21,10 @@ public:
 
     Layout getLayout() const;
 
+    bool hasParent() const { return _data->parent; }
+
+    bool hasChildren() const { return _data->child; }
+
     RecordId getId() const { return _data->id; }
 
     template <typename T> 
@@ -55,8 +59,21 @@ protected:
 
     AuxBase::Ptr getAux() const { return _data->aux; }
 
+    RecordBase _getParent() const {
+        if (!_data->parent) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::NotFoundException,
+                "Record has no parent."
+            );
+        }
+        return RecordBase(_data->parent, _table);
+    }
+
     TreeIteratorBase _asTreeIterator(IteratorMode mode) const;
     SetIteratorBase _asSetIterator() const;
+
+    TreeIteratorBase _beginChildren(IteratorMode mode) const;
+    TreeIteratorBase _endChildren(IteratorMode mode) const;
 
     RecordBase _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr());
     RecordBase _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());

@@ -20,32 +20,6 @@ class LayoutData;
 
 } // namespace detail
 
-class Layout;
-
-class LayoutBuilder {
-public:
-
-    template <typename T>
-    Key<T> add(Field<T> const & field);
-
-    Layout finish();
-
-    LayoutBuilder();
-    LayoutBuilder(LayoutBuilder const & other);
-    
-    LayoutBuilder & operator=(LayoutBuilder const & other);
-
-    ~LayoutBuilder();
-
-private:
-
-    friend class Layout;
-    
-    typedef detail::LayoutData Data;
-
-    boost::shared_ptr<Data> _data;
-};
-
 class Layout {
 public:
 
@@ -64,6 +38,14 @@ public:
 
     int getRecordSize() const;
 
+    template <typename T>
+    Key<T> add(Field<T> const & field);
+
+    Layout();
+    Layout(Layout const & other);
+    
+    Layout & operator=(Layout const & other);
+
     ~Layout();
 
 private:
@@ -73,7 +55,7 @@ private:
     
     typedef detail::LayoutData Data;
 
-    Layout(boost::shared_ptr<Data> const & data);
+    void finish();
 
     boost::shared_ptr<Data> _data;
 };

@@ -23,11 +23,12 @@ struct RecordData : public boost::intrusive::set_base_hook<> {
     AuxBase::Ptr aux;
     RecordData * parent;
     RecordData * child;
-    RecordData * sibling;
+    RecordData * previous;
+    RecordData * next;
 
     bool operator<(RecordData const & other) const { return id < other.id; }
 
-    RecordData() : id(0), aux(), parent(0), child(0), sibling(0) {}
+    RecordData() : id(0), aux(), parent(0), child(0), previous(0), next(0) {}
 };
 
 struct CompareRecordIdLess {

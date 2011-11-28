@@ -32,6 +32,10 @@ public:
         return Iterator(this->_endTree(_mode), detail::RecordConverter<RecordT>());
     }
 
+    Iterator erase(Iterator const & iter) {
+        return Iterator(this->_erase(iter), detail::RecordConverter<RecordT>());
+    }
+
 private:
 
     template <typename OtherRecordT, typename TableAuxT> friend class TableInterface;
@@ -59,6 +63,16 @@ public:
 
     Iterator end() const {
         return Iterator(this->_endSet(), detail::RecordConverter<RecordT>());
+    }
+
+    void erase(Record const & record) { this->_erase(record); }
+
+    Iterator erase(Iterator const & iter) {
+        return Iterator(this->_erase(iter.base()), detail::RecordConverter<RecordT>());
+    }
+
+    Record operator[](RecordId id) const {
+        return detail::Access::makeRecord<RecordT>(this->_get(id));
     }
 
 protected:

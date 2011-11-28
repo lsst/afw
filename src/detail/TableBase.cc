@@ -118,25 +118,45 @@ struct TableImpl : private boost::noncopyable {
         if (parent) {
             if (parent->child) {
                 RecordData * q = parent->child;
-                while (q->sibling) {
-                    q = q->sibling;
+                while (q->next) {
+                    q = q->next;
                 }
-                q->sibling = p;
+                q->next = p;
+                p->previous = q;
+            } else {
+                parent->child = p;
             }
-            parent->child = p;
             p->parent = parent;
         } else {
             if (back == 0) {
                 assert(front == 0);
                 front = p;
             } else {
-                assert(back->sibling == 0);
-                back->sibling = p;
+                assert(back->next == 0);
+                back->next = p;
+                p->previous = back;
             }
             back = p;
         }
         records.insert_commit(*p, insertData);
         return p;
+    }
+
+    RecordSet::iterator detachRecord(RecordData * record) {
+        if (record->child) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::RuntimeErrorException,
+                "Children must be erased before parent record."
+            );
+        }
+        if (record->previous) {
+            record->previous->next = record->next;
+        } else if (record->parent) {
+            record->parent->child = record->next;
+        }
+        if (record->next) {
+            record->next->previous = record->previous;
+        }
     }
 
     TableImpl(
@@ -146,6 +166,7 @@ struct TableImpl : private boost::noncopyable {
         defaultBlockRecordCount(defaultBlockRecordCount_), front(0), back(0), consolidated(0), 
         idFactory(idFactory_), aux(aux_), layout(layout_)
     {
+        Access::finishLayout(layout);
         if (!idFactory) idFactory = boost::make_shared<DefaultIdFactory>();
     }
 
@@ -160,17 +181,17 @@ void TreeIteratorBase::increment() {
     case ALL_RECORDS:
         if (_record._data->child) {
             _record._data = _record._data->child;
-            } else if (_record._data->sibling) {
-            _record._data = _record._data->sibling;
+        } else if (_record._data->next) {
+            _record._data = _record._data->next;
         } else {
-            while (_record._data) {
+            while (!_record._data->next && _record._data->parent) {
                 _record._data = _record._data->parent;
-                if (_record._data) _record._data = _record._data->sibling;
             }
+            _record._data = _record._data->next;
         }
         break;
     case NO_CHILDREN:
-        _record._data = _record._data->sibling;
+        _record._data = _record._data->next;
         break;
     }
 }
@@ -184,6 +205,14 @@ SetIteratorBase::~SetIteratorBase() {}
 Layout RecordBase::getLayout() const { return _table->layout; }
 
 RecordBase::~RecordBase() {}
+
+TreeIteratorBase RecordBase::_beginChildren(IteratorMode mode) const {
+    return TreeIteratorBase(_data->child, _table, mode);
+}
+
+TreeIteratorBase RecordBase::_endChildren(IteratorMode mode) const {
+    return TreeIteratorBase((mode == NO_CHILDREN || _data->child == 0) ? 0 : _data->next, _table, mode);
+}
 
 RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) {
     RecordData * p = _table->addRecord(id, _data, aux);
@@ -237,6 +266,31 @@ int TableBase::getRecordCount() const {
     return _impl->records.size();
 }
 
+SetIteratorBase TableBase::_erase(SetIteratorBase const & iter) {
+    if (iter->_table != _impl) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            "Record is not an element of this table."
+        );
+    }
+    _impl->detachRecord(iter->_data);
+    return SetIteratorBase(_impl->records.erase(iter.base()), _impl);
+}
+
+TreeIteratorBase TableBase::_erase(TreeIteratorBase const & iter) {
+    if (iter->_table != _impl) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            "Record is not an element of this table."
+        );
+    }
+    TreeIteratorBase result(iter);
+    ++result;
+    _impl->detachRecord(iter->_data);
+    _impl->records.erase(_impl->records.iterator_to(*iter->_data));
+    return result;
+}
+
 TreeIteratorBase TableBase::_beginTree(IteratorMode mode) const {
     return TreeIteratorBase(_impl->front, _impl, mode);
 }
@@ -251,6 +305,22 @@ SetIteratorBase TableBase::_beginSet() const {
 
 SetIteratorBase TableBase::_endSet() const {
     return SetIteratorBase(_impl->records.end(), _impl);
+}
+
+RecordBase TableBase::_get(RecordId id) const {
+    RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
+    if (j == _impl->records.end()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::NotFoundException,
+            (boost::format("Record with id '%lld' not found.") % id).str()
+        );
+    }
+    return RecordBase(&(*j), _impl);
+}
+
+SetIteratorBase TableBase::_find(RecordId id) const {
+    RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
+    return SetIteratorBase(j, _impl);
 }
 
 RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) {

@@ -9,20 +9,102 @@
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/SimpleTable.h"
 
+BOOST_AUTO_TEST_CASE(testIterators) {
+    using namespace lsst::afw::table;
+
+    Layout layout;
+    Key<double> key = layout.add(Field<double>("f", "doc"));
+    SimpleTable table(layout, 40);
+
+    /*
+     *  top:              ------ 1 ------                ------ 2 ------                ------ 3 ------
+     *                  /        |        \            /        |        \            /        |        \ 
+     *  middle:        4         5         6          7         8         9          10       11        12
+     *              /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \
+     *  bottom:    13 14 15  16 17 18  19 20 21   22 23 24  25 26 27  28 29 30   31 32 33  34 35 36  37 38 39
+     */
+    std::list<SimpleRecord> top;
+    for (int i = 0; i < 3; ++i) {
+        top.push_back(table.addRecord());
+        top.back()[key] = Eigen::ArrayXd::Random(1)[0];
+    }
+    std::list<SimpleRecord> middle;
+    for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
+        for (int j = 0; j < 3; ++j) {
+            middle.push_back(i->addChild());
+            middle.back()[key] = Eigen::ArrayXd::Random(1)[0];
+        }
+    }
+    std::list<SimpleRecord> bottom;
+    for (std::list<SimpleRecord>::iterator j = middle.begin(); j != middle.end(); ++j) {
+        for (int k = 0; k < 3; ++k) {
+            bottom.push_back(j->addChild());
+            bottom.back()[key] = Eigen::ArrayXd::Random(1)[0];
+        }
+    }
+
+    // Test set-like iterators on table itself; should be ordered by ID.
+    {
+        RecordId n = 1;
+        for (SimpleTable::Iterator i = table.begin(); i != table.end(); ++i, ++n) {
+            BOOST_CHECK_EQUAL(i->getId(), n);
+        }
+        BOOST_CHECK_EQUAL(n, 40ul);
+    }
+
+    // Test tree iterators with NO_CHILDREN; should be equivalent to "top".
+    {
+        RecordId n = 1;
+        SimpleTable::Tree tree = table.asTree(NO_CHILDREN);
+        for (SimpleTable::Tree::Iterator i = tree.begin(); i != tree.end(); ++i, ++n) {
+            BOOST_CHECK_EQUAL(i->getId(), n);
+        }
+        BOOST_CHECK_EQUAL(n, 4ul);
+    }
+
+    // Test tree iterators with ALL_RECORDS and child iteration; should be depth-first search.
+    {
+        RecordId order[] = {
+            1,  4, 13, 14, 15,  5, 16, 17, 18,  6, 19, 20, 21, 
+            2,  7, 22, 23, 24,  8, 25, 26, 27,  9, 28, 29, 30,
+            3, 10, 31, 32, 33, 11, 34, 35, 36, 12, 37, 38, 39
+        };
+        int n = 0;
+        SimpleTable::Tree tree = table.asTree(ALL_RECORDS);
+        SimpleTable::Tree::Iterator t = tree.begin();
+        for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
+            BOOST_CHECK_EQUAL(t->getId(), i->getId());
+            BOOST_CHECK_EQUAL(t->getId(), order[n]);
+            ++t, ++n;
+            SimpleRecord::Children ic = i->getChildren(NO_CHILDREN);
+            for (SimpleRecord::Children::Iterator j = ic.begin(); j != ic.end(); ++j) {
+                BOOST_CHECK_EQUAL(t->getId(), j->getId());
+                BOOST_CHECK_EQUAL(t->getId(), order[n]);
+                ++t, ++n;
+                SimpleRecord::Children jc = j->getChildren(NO_CHILDREN);
+                for (SimpleRecord::Children::Iterator k = jc.begin(); k != jc.end(); ++k) {
+                    BOOST_CHECK_EQUAL(t->getId(), k->getId());
+                    BOOST_CHECK_EQUAL(t->getId(), order[n]);
+                    ++t, ++n;
+                }
+            }
+        }
+        BOOST_CHECK( t == tree.end() );
+    }
+}
+
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
     using namespace lsst::afw::table;
 
-    LayoutBuilder builder;
+    Layout layout;
     
-    Key<int> myInt = builder.add(Field< int >("myIntField", "an integer scalar field."));
+    Key<int> myInt = layout.add(Field< int >("myIntField", "an integer scalar field."));
     
     Key< Array<double> > myArray 
-        = builder.add(Field< Array<double> >("myArrayField", "a double array field.", 5));
+        = layout.add(Field< Array<double> >("myArrayField", "a double array field.", 5));
     
-    builder.add(Field< float >("myFloatField", "a float scalar field."));
-
-    Layout layout = builder.finish();
+    layout.add(Field< float >("myFloatField", "a float scalar field."));
 
     Key<float> myFloat = layout.find<float>("myFloatField").key;
 

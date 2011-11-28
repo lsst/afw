@@ -62,6 +62,10 @@ public:
         return *layout._data;
     }
 
+    static void finishLayout(Layout & layout) {
+        layout.finish();
+    }
+
     template <typename RecordT>
     static RecordT makeRecord(RecordBase const & base) {
         return RecordT(base);

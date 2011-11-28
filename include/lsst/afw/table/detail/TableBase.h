@@ -48,11 +48,18 @@ protected:
 
     TableBase(TableBase const & other) : _impl(other._impl) {}
 
+    SetIteratorBase _erase(SetIteratorBase const & iter);
+    TreeIteratorBase _erase(TreeIteratorBase const & iter);
+    void _erase(RecordBase const & record) { _erase(record._asSetIterator()); }
+
     TreeIteratorBase _beginTree(IteratorMode mode) const;
     TreeIteratorBase _endTree(IteratorMode mode) const;
 
     SetIteratorBase _beginSet() const;
     SetIteratorBase _endSet() const;
+
+    RecordBase _get(RecordId id) const;
+    SetIteratorBase _find(RecordId id) const;
 
     RecordBase _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr());
     RecordBase _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());
