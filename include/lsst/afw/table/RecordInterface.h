@@ -7,7 +7,7 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/detail/RecordBase.h"
 #include "lsst/afw/table/detail/TreeIteratorBase.h"
-#include "lsst/afw/table/detail/SetIteratorBase.h"
+#include "lsst/afw/table/detail/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -48,7 +48,7 @@ public:
 
     typedef RecordT Record;
     typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::TreeIteratorBase> TreeIterator;
-    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::SetIteratorBase> SetIterator;
+    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::IteratorBase> Iterator;
     typedef ChildrenView<RecordT> Children;
 
     Record getParent() const {
@@ -63,8 +63,8 @@ public:
         return TreeIterator(this->_asTreeIterator(mode), detail::RecordConverter<RecordT>());
     }
 
-    SetIterator asSetIterator() const {
-        return SetIterator(this->_asSetIterator(), detail::RecordConverter<RecordT>());
+    Iterator asIterator() const {
+        return Iterator(this->_asIterator(), detail::RecordConverter<RecordT>());
     }
 
 protected:
@@ -77,11 +77,11 @@ protected:
         return boost::static_pointer_cast<RecordAux>(detail::RecordBase::getAux());
     }
 
-    RecordT _addChild(PTR(RecordAux) const & aux = PTR(RecordAux)()) {
+    RecordT _addChild(PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
         return detail::Access::makeRecord<RecordT>(this->detail::RecordBase::_addChild(aux));
     }
 
-    RecordT _addChild(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) {
+    RecordT _addChild(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
         return detail::Access::makeRecord<RecordT>(this->detail::RecordBase::_addChild(id, aux));
     }
 

@@ -29,6 +29,8 @@ public:
     ) : _record(record, table, flags), _mode(mode)
     {}
 
+    TreeMode getMode() const { return _mode; }
+
 private:
 
     friend class boost::iterator_core_access;

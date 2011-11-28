@@ -6,107 +6,195 @@
 #include <iterator>
 #include <algorithm>
 
+#include "boost/assign/std/list.hpp"
+
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/SimpleTable.h"
 
-BOOST_AUTO_TEST_CASE(testIterators) {
-    using namespace lsst::afw::table;
+using namespace lsst::afw::table;
 
-    Layout layout;
-    Key<double> key = layout.add(Field<double>("f", "doc"));
-    SimpleTable table(layout, 40);
 
-    /*
-     *  top:           ------ 1 ------                ------ 2 ------                ------ 3 ------
-     *               /        |        \            /        |        \            /        |        \ 
-     *  middle:     4         5         6          7         8         9          10       11        12
-     *           /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \
-     *  bottom: 13 14 15  16 17 18  19 20 21   22 23 24  25 26 27  28 29 30   31 32 33  34 35 36  37 38 39
-     */
-    std::list<SimpleRecord> top;
-    for (int i = 0; i < 3; ++i) {
-        top.push_back(table.addRecord());
-        top.back()[key] = Eigen::ArrayXd::Random(1)[0];
-    }
-    std::list<SimpleRecord> middle;
-    for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
-        for (int j = 0; j < 3; ++j) {
-            middle.push_back(i->addChild());
-            middle.back()[key] = Eigen::ArrayXd::Random(1)[0];
+
+/*
+ * A table with the following structure:
+ *
+ *  top:           ------ 1 ------                ------ 2 ------                ------ 3 ------
+ *               /        |        \            /        |        \            /        |        \ 
+ *  middle:     4         5         6          7         8         9          10       11        12
+ *           /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  | \
+ *  bottom: 13 14 15  16 17 18  19 20 21   22 23 24  25 26 27  28 29 30   31 32 33  34 35 36  37 38 39
+ */
+struct Example {
+
+    Example() : layout(), key(layout.add(Field<double>("f", "doc"))), table(layout, 40) {
+        std::list<SimpleRecord> top;
+        std::list<SimpleRecord> middle;
+        std::list<SimpleRecord> bottom;
+        for (int i = 0; i < 3; ++i) {
+            top.push_back(table.addRecord());
+            top.back()[key] = Eigen::ArrayXd::Random(1)[0];
+            tableOrder.push_back(top.back().getId());
+            treeOrder[NO_NESTING].push_back(top.back().getId());
         }
-    }
-    std::list<SimpleRecord> bottom;
-    for (std::list<SimpleRecord>::iterator j = middle.begin(); j != middle.end(); ++j) {
-        for (int k = 0; k < 3; ++k) {
-            bottom.push_back(j->addChild());
-            bottom.back()[key] = Eigen::ArrayXd::Random(1)[0];
-        }
-    }
-
-    // Test set-like iterators on table itself; should be ordered by ID.
-    {
-        RecordId n = 1;
-        for (SimpleTable::Iterator i = table.begin(); i != table.end(); ++i, ++n) {
-            BOOST_CHECK_EQUAL(i->getId(), n);
-            if (i->hasChildren()) {
-                BOOST_CHECK_THROW(i->unlink(), lsst::pex::exceptions::LogicErrorException);
-                BOOST_CHECK_THROW(table.unlink(i), lsst::pex::exceptions::LogicErrorException);
+        for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
+            for (int j = 0; j < 3; ++j) {
+                middle.push_back(i->addChild());
+                middle.back()[key] = Eigen::ArrayXd::Random(1)[0];
+                tableOrder.push_back(middle.back().getId());
             }
         }
-        BOOST_CHECK_EQUAL(n, 40ul);
-    }
-
-    // Test tree iterators with NO_NESTING; should be equivalent to "top".
-    {
-        RecordId n = 1;
-        SimpleTable::Tree tree = table.asTree(NO_NESTING);
-        for (SimpleTable::Tree::Iterator i = tree.begin(); i != tree.end(); ++i, ++n) {
-            BOOST_CHECK_EQUAL(i->getId(), n);
-            BOOST_CHECK_THROW(i->unlink(), lsst::pex::exceptions::LogicErrorException);
-            BOOST_CHECK_THROW(tree.unlink(i), lsst::pex::exceptions::LogicErrorException);
+        for (std::list<SimpleRecord>::iterator j = middle.begin(); j != middle.end(); ++j) {
+            for (int k = 0; k < 3; ++k) {
+                bottom.push_back(j->addChild());
+                bottom.back()[key] = Eigen::ArrayXd::Random(1)[0];
+                tableOrder.push_back(bottom.back().getId());
+            }
         }
-        BOOST_CHECK_EQUAL(n, 4ul);
-    }
-
-    // Test tree iterators with DEPTH_FIRST and child iteration; should be depth-first search.
-    {
-        RecordId order[] = {
+        using namespace boost::assign;
+        treeOrder[DEPTH_FIRST] +=   // using Boost.Assign here
             1,  4, 13, 14, 15,  5, 16, 17, 18,  6, 19, 20, 21, 
             2,  7, 22, 23, 24,  8, 25, 26, 27,  9, 28, 29, 30,
-            3, 10, 31, 32, 33, 11, 34, 35, 36, 12, 37, 38, 39
-        };
-        int n = 0;
-        SimpleTable::Tree tree = table.asTree(DEPTH_FIRST);
+            3, 10, 31, 32, 33, 11, 34, 35, 36, 12, 37, 38, 39;
+    }
+
+    template <typename Container>
+    static void _checkIteration(Container const & container, std::list<RecordId> const & order) {
+        std::list<RecordId>::const_iterator o = order.begin();
+        for (typename Container::Iterator i = container.begin(); i != container.end(); ++i, ++o) {
+            BOOST_CHECK_EQUAL(i->getId(), *o);
+            if (i->hasChildren()) {
+                BOOST_CHECK_THROW(i->unlink(), lsst::pex::exceptions::LogicErrorException);
+                BOOST_CHECK_THROW(container.unlink(i), lsst::pex::exceptions::LogicErrorException);
+            }
+        }
+        BOOST_CHECK( o == order.end() );
+    }
+
+    void checkIteration() const {
+        _checkIteration(table, tableOrder);
+        _checkIteration(table.asTree(NO_NESTING), treeOrder[NO_NESTING]);
+        _checkIteration(table.asTree(DEPTH_FIRST), treeOrder[DEPTH_FIRST]);
+    }
+    
+    void remove(RecordId id) {
+        tableOrder.remove(id);
+        treeOrder[NO_NESTING].remove(id);
+        treeOrder[DEPTH_FIRST].remove(id);
+    }
+
+    
+    Layout layout;
+    Key<double> key;
+    SimpleTable table;
+    std::list<RecordId> tableOrder;
+    std::list<RecordId> treeOrder[2];
+};
+
+BOOST_AUTO_TEST_CASE(testIterators) {
+
+    Example example;
+    example.checkIteration();
+
+    // Test record child iterators.
+    {
+        SimpleTable::Tree tree = example.table.asTree(DEPTH_FIRST);
+        SimpleTable::Tree top = example.table.asTree(NO_NESTING);
         SimpleTable::Tree::Iterator t = tree.begin();
-        for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
+        for (SimpleTable::Tree::Iterator i = top.begin(); i != top.end(); ++i) {
             BOOST_CHECK_EQUAL(t->getId(), i->getId());
-            BOOST_CHECK_EQUAL(t->getId(), order[n]);
             BOOST_CHECK_THROW(t->unlink(), lsst::pex::exceptions::LogicErrorException);
             BOOST_CHECK_THROW(tree.unlink(t), lsst::pex::exceptions::LogicErrorException);
-            ++t, ++n;
+            ++t;
             SimpleRecord::Children ic = i->getChildren(NO_NESTING);
             for (SimpleRecord::Children::Iterator j = ic.begin(); j != ic.end(); ++j) {
                 BOOST_CHECK_EQUAL(t->getId(), j->getId());
-                BOOST_CHECK_EQUAL(t->getId(), order[n]);
                 BOOST_CHECK_THROW(t->unlink(), lsst::pex::exceptions::LogicErrorException);
                 BOOST_CHECK_THROW(tree.unlink(t), lsst::pex::exceptions::LogicErrorException);
-                ++t, ++n;
+                ++t;
                 SimpleRecord::Children jc = j->getChildren(NO_NESTING);
                 for (SimpleRecord::Children::Iterator k = jc.begin(); k != jc.end(); ++k) {
                     BOOST_CHECK_EQUAL(t->getId(), k->getId());
-                    BOOST_CHECK_EQUAL(t->getId(), order[n]);
-                    ++t, ++n;
+                    ++t;
                 }
             }
         }
         BOOST_CHECK( t == tree.end() );
     }
 
+    // Test all kinds of unlinking in different places, verifying that we haven't messed up iteration.
+    {
+        SimpleRecord r15 = example.table[15];
+        BOOST_CHECK(r15.isLinked());
+        r15.unlink();
+        BOOST_CHECK(!r15.isLinked());
+        BOOST_CHECK(!r15.hasParent());
+        BOOST_CHECK(example.table.find(15) == example.table.end());
+        BOOST_CHECK_THROW(example.table[15], lsst::pex::exceptions::NotFoundException);
+        example.remove(15);
+        example.checkIteration();
+    }
+    {
+        SimpleTable::Iterator i23 = example.table.find(23);
+        BOOST_CHECK(i23->isLinked());
+        SimpleRecord r23 = *i23;
+        SimpleTable::Iterator i24 = example.table.unlink(i23);
+        BOOST_CHECK(!r23.isLinked());
+        BOOST_CHECK(!r23.hasParent());
+        BOOST_CHECK_EQUAL(i24->getId(), 24ul);
+        example.remove(23);
+        example.checkIteration();
+    } {
+        SimpleRecord r7 = example.table[7];
+        BOOST_CHECK(r7.hasChildren());
+        SimpleTable::Tree::Iterator i22 = r7.asTreeIterator(DEPTH_FIRST); ++i22;
+        BOOST_CHECK_EQUAL(i22->getId(), 22ul);
+        SimpleTable::Tree::Iterator i24 = example.table.asTree(DEPTH_FIRST).unlink(i22);
+        example.remove(22);
+        example.checkIteration();
+        BOOST_CHECK_EQUAL(i24->getId(), 24ul);
+        BOOST_CHECK_THROW(
+            example.table.asTree(NO_NESTING).unlink(i24), 
+            lsst::pex::exceptions::LogicErrorException
+        );
+        {
+            SimpleTable::Tree::Iterator i8 = example.table.asTree(DEPTH_FIRST).unlink(i24);
+            BOOST_CHECK_EQUAL(i8->getId(), 8ul);
+            example.remove(24);
+            example.checkIteration();
+        } {
+            BOOST_CHECK(!r7.hasChildren());
+            SimpleTable::Tree::Iterator i8 
+                = example.table.asTree(NO_NESTING).unlink(r7.asTreeIterator(NO_NESTING));
+            BOOST_CHECK_EQUAL(i8->getId(), 8ul);
+            example.remove(7);
+            example.checkIteration();
+        }
+    } {
+        SimpleTable::Iterator iEnd = example.table.unlink(example.table.find(39));
+        BOOST_CHECK(iEnd == example.table.end());
+        example.remove(39);
+        example.checkIteration();
+    } {
+        SimpleRecord r38 = example.table[38];
+        SimpleTable::Tree::Iterator iEnd 
+            = example.table.asTree(DEPTH_FIRST).unlink(r38.asTreeIterator(DEPTH_FIRST));
+        BOOST_CHECK(iEnd == example.table.asTree(DEPTH_FIRST).end());
+        example.remove(38);
+        example.checkIteration();
+        example.table[37].unlink();
+        example.remove(37);
+        example.checkIteration();
+    } {
+        SimpleRecord r12 = example.table[12];
+        SimpleTable::Tree::Iterator iEnd
+            = example.table.asTree(NO_NESTING).unlink(r12.asTreeIterator(NO_NESTING));
+        BOOST_CHECK(iEnd == example.table.asTree(NO_NESTING).end());
+        example.remove(12);
+        example.checkIteration();
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
-
-    using namespace lsst::afw::table;
 
     Layout layout;
     
@@ -162,8 +250,6 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 #if 0
 
 BOOST_AUTO_TEST_CASE(testColumnView) {
-
-    using namespace lsst::afw::table;
 
     LayoutBuilder builder;
     Key<float> floatKey = builder.add(Field<float>("f1", "f1 doc"));

@@ -20,8 +20,8 @@ public:
     ) : TableInterface<SimpleRecord>(layout, defaultBlockRecordCount, capacity, idFactory) {}
 
     
-    Record addRecord() { return _addRecord(); }
-    Record addRecord(RecordId id) { return _addRecord(id); }
+    Record addRecord() const { return _addRecord(); }
+    Record addRecord(RecordId id) const { return _addRecord(id); }
 
 };
 

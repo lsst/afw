@@ -10,7 +10,7 @@
 #include "lsst/afw/table/RecordInterface.h"
 #include "lsst/afw/table/detail/TableBase.h"
 #include "lsst/afw/table/detail/TreeIteratorBase.h"
-#include "lsst/afw/table/detail/SetIteratorBase.h"
+#include "lsst/afw/table/detail/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -32,8 +32,14 @@ public:
         return Iterator(this->_endTree(_mode), detail::RecordConverter<RecordT>());
     }
 
-    Iterator unlink(Iterator const & iter) {
-        return Iterator(this->_unlink(iter), detail::RecordConverter<RecordT>());
+    Iterator unlink(Iterator const & iter) const {
+        if (iter.base().getMode() != _mode) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LogicErrorException,
+                "TreeView and iterator modes do not agree."
+            );
+        }
+        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<RecordT>());
     }
 
 private:
@@ -51,7 +57,7 @@ public:
 
     typedef RecordT Record;
     typedef TreeView<Record> Tree;
-    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::SetIteratorBase> Iterator;
+    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::IteratorBase> Iterator;
     typedef Iterator iterator;
     typedef Iterator const_iterator;
 
@@ -65,8 +71,12 @@ public:
         return Iterator(this->_end(), detail::RecordConverter<RecordT>());
     }
 
-    Iterator unlink(Iterator const & iter) {
+    Iterator unlink(Iterator const & iter) const {
         return Iterator(this->_unlink(iter.base()), detail::RecordConverter<RecordT>());
+    }
+
+    Iterator find(RecordId id) const {
+        return Iterator(this->_find(id), detail::RecordConverter<RecordT>());
     }
 
     Record operator[](RecordId id) const {
@@ -86,11 +96,11 @@ protected:
         PTR(TableAux) const & aux = PTR(TableAux)()
     ) : detail::TableBase(layout, defaultBlockRecordCount, capacity, idFactory, aux) {}
 
-    Record _addRecord(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) {
+    Record _addRecord(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
         return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(id, aux));
     }
 
-    Record _addRecord(PTR(RecordAux) const & aux = PTR(RecordAux)()) {
+    Record _addRecord(PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
         return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(aux));
     }
 

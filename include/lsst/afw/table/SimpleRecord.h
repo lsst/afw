@@ -11,9 +11,9 @@ namespace lsst { namespace afw { namespace table {
 class SimpleRecord : public RecordInterface<SimpleRecord> {
 public:
 
-    SimpleRecord addChild() { return _addChild(); }
+    SimpleRecord addChild() const { return _addChild(); }
 
-    SimpleRecord addChild(RecordId id) { return _addChild(id); }
+    SimpleRecord addChild(RecordId id) const { return _addChild(id); }
 
 private:
 

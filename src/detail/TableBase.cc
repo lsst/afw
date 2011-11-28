@@ -6,7 +6,7 @@
 #include "lsst/afw/table/detail/RecordBase.h"
 #include "lsst/afw/table/detail/TableBase.h"
 #include "lsst/afw/table/detail/TreeIteratorBase.h"
-#include "lsst/afw/table/detail/SetIteratorBase.h"
+#include "lsst/afw/table/detail/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 
@@ -172,6 +172,7 @@ struct TableImpl : private boost::noncopyable {
         if (record->next) {
             record->next->previous = record->previous;
         }
+        record->parent = 0;
         consolidated = 0;
     }
 
@@ -212,9 +213,9 @@ void TreeIteratorBase::increment() {
     }
 }
 
-//----- SetIteratorBase implementation ----------------------------------------------------------------------
+//----- IteratorBase implementation ----------------------------------------------------------------------
 
-SetIteratorBase::~SetIteratorBase() {}
+IteratorBase::~IteratorBase() {}
 
 //----- RecordBase implementation ---------------------------------------------------------------------------
 
@@ -245,7 +246,8 @@ RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) const {
 
 void RecordBase::unlink() const {
     assertBit(CAN_UNLINK_RECORD);
-    return _table->unlink(_data);
+    _table->unlink(_data);
+    _table->records.erase(_table->records.s_iterator_to(*_data));
 }
 
 //----- TableBase implementation --------------------------------------------------------------------------
@@ -291,11 +293,11 @@ int TableBase::getRecordCount() const {
     return _impl->records.size();
 }
 
-SetIteratorBase TableBase::_unlink(SetIteratorBase const & iter) const {
+IteratorBase TableBase::_unlink(IteratorBase const & iter) const {
     assertBit(CAN_UNLINK_RECORD);
     _impl->assertEqual(iter._table);
     _impl->unlink(iter->_data);
-    return SetIteratorBase(_impl->records.erase(iter.base()), _impl, iter);
+    return IteratorBase(_impl->records.erase(iter.base()), _impl, iter);
 }
 
 TreeIteratorBase TableBase::_unlink(TreeIteratorBase const & iter) const {
@@ -316,12 +318,12 @@ TreeIteratorBase TableBase::_endTree(TreeMode mode) const {
     return TreeIteratorBase(0, _impl, *this, mode);
 }
 
-SetIteratorBase TableBase::_begin() const {
-    return SetIteratorBase(_impl->records.begin(), _impl, *this);
+IteratorBase TableBase::_begin() const {
+    return IteratorBase(_impl->records.begin(), _impl, *this);
 }
 
-SetIteratorBase TableBase::_end() const {
-    return SetIteratorBase(_impl->records.end(), _impl, *this);
+IteratorBase TableBase::_end() const {
+    return IteratorBase(_impl->records.end(), _impl, *this);
 }
 
 RecordBase TableBase::_get(RecordId id) const {
@@ -335,9 +337,9 @@ RecordBase TableBase::_get(RecordId id) const {
     return RecordBase(&(*j), _impl, *this);
 }
 
-SetIteratorBase TableBase::_find(RecordId id) const {
+IteratorBase TableBase::_find(RecordId id) const {
     RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
-    return SetIteratorBase(j, _impl, *this);
+    return IteratorBase(j, _impl, *this);
 }
 
 RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) const {

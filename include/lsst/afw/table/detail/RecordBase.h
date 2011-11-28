@@ -15,7 +15,7 @@ struct TableImpl;
 class TableBase;
 
 class TreeIteratorBase;
-class SetIteratorBase;
+class IteratorBase;
 
 class RecordBase : protected ModificationFlags {
 public:
@@ -80,7 +80,7 @@ protected:
     }
 
     TreeIteratorBase _asTreeIterator(TreeMode mode) const;
-    SetIteratorBase _asSetIterator() const;
+    IteratorBase _asIterator() const;
 
     TreeIteratorBase _beginChildren(TreeMode mode) const;
     TreeIteratorBase _endChildren(TreeMode mode) const;
@@ -89,6 +89,7 @@ protected:
     RecordBase _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
 
     void operator=(RecordBase const & other) {
+        ModificationFlags::operator=(other);
         _data = other._data;
         _table = other._table;
     }
@@ -96,7 +97,7 @@ protected:
 private:
 
     friend class TableBase;
-    friend class SetIteratorBase;
+    friend class IteratorBase;
     friend class TreeIteratorBase;
 
     RecordBase() : ModificationFlags(), _data(0), _table() {}

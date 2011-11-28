@@ -1,6 +1,6 @@
 // -*- c++ -*-
-#ifndef AFW_TABLE_DETAIL_SetIteratorBase_h_INCLUDED
-#define AFW_TABLE_DETAIL_SetIteratorBase_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_IteratorBase_h_INCLUDED
+#define AFW_TABLE_DETAIL_IteratorBase_h_INCLUDED
 
 #include "lsst/afw/table/config.h"
 
@@ -15,9 +15,9 @@ namespace lsst { namespace afw { namespace table { namespace detail {
 
 struct TableImpl;
 
-class SetIteratorBase : 
+class IteratorBase : 
     public boost::iterator_adaptor<
-        SetIteratorBase,     // Derived
+        IteratorBase,     // Derived
         RecordSet::iterator, // Base
         RecordBase,          // Value
         boost::use_default,  // CategoryOrTraversal
@@ -27,16 +27,16 @@ class SetIteratorBase :
 {
 public:
 
-    SetIteratorBase() {}
+    IteratorBase() {}
 
-    SetIteratorBase(
+    IteratorBase(
         base_type const & base,
         boost::shared_ptr<TableImpl> const & table,
         ModificationFlags const & flags
-    ) : SetIteratorBase::iterator_adaptor_(base), ModificationFlags(flags), _table(table)
+    ) : IteratorBase::iterator_adaptor_(base), ModificationFlags(flags), _table(table)
     {}
 
-    ~SetIteratorBase();
+    ~IteratorBase();
 
 private:
 
@@ -47,17 +47,17 @@ private:
         return RecordBase(&(*base()), _table, *this);
     }
 
-    bool equal(SetIteratorBase const & other) const {
+    bool equal(IteratorBase const & other) const {
         return base() == other.base() && _table == other._table;
     }
 
     boost::shared_ptr<TableImpl> _table;
 };
 
-inline SetIteratorBase RecordBase::_asSetIterator() const {
-    return SetIteratorBase(RecordSet::s_iterator_to(*_data), _table, *this);
+inline IteratorBase RecordBase::_asIterator() const {
+    return IteratorBase(RecordSet::s_iterator_to(*_data), _table, *this);
 }
 
 }}}} // namespace lsst::afw::table::detail
 
-#endif // !AFW_TABLE_DETAIL_SetIteratorBase_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_IteratorBase_h_INCLUDED

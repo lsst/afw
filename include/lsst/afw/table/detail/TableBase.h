@@ -8,7 +8,7 @@
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/detail/RecordBase.h"
 #include "lsst/afw/table/detail/TreeIteratorBase.h"
-#include "lsst/afw/table/detail/SetIteratorBase.h"
+#include "lsst/afw/table/detail/IteratorBase.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -50,20 +50,20 @@ protected:
         ModificationFlags const & flags = ModificationFlags::all()
     );
 
-    TableBase(TableBase const & other) : _impl(other._impl) {}
+    TableBase(TableBase const & other) : ModificationFlags(other), _impl(other._impl) {}
 
-    SetIteratorBase _unlink(SetIteratorBase const & iter) const;
+    IteratorBase _unlink(IteratorBase const & iter) const;
     TreeIteratorBase _unlink(TreeIteratorBase const & iter) const;
-    void _unlink(RecordBase const & record) const { _unlink(record._asSetIterator()); }
+    void _unlink(RecordBase const & record) const { _unlink(record._asIterator()); }
 
     TreeIteratorBase _beginTree(TreeMode mode) const;
     TreeIteratorBase _endTree(TreeMode mode) const;
 
-    SetIteratorBase _begin() const;
-    SetIteratorBase _end() const;
+    IteratorBase _begin() const;
+    IteratorBase _end() const;
 
     RecordBase _get(RecordId id) const;
-    SetIteratorBase _find(RecordId id) const;
+    IteratorBase _find(RecordId id) const;
 
     RecordBase _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
     RecordBase _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
