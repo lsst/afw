@@ -17,11 +17,11 @@ BOOST_AUTO_TEST_CASE(testIterators) {
     SimpleTable table(layout, 40);
 
     /*
-     *  top:              ------ 1 ------                ------ 2 ------                ------ 3 ------
-     *                  /        |        \            /        |        \            /        |        \ 
-     *  middle:        4         5         6          7         8         9          10       11        12
-     *              /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \
-     *  bottom:    13 14 15  16 17 18  19 20 21   22 23 24  25 26 27  28 29 30   31 32 33  34 35 36  37 38 39
+     *  top:           ------ 1 ------                ------ 2 ------                ------ 3 ------
+     *               /        |        \            /        |        \            /        |        \ 
+     *  middle:     4         5         6          7         8         9          10       11        12
+     *           /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \    /  |  \   /  |  \   /  |  \
+     *  bottom: 13 14 15  16 17 18  19 20 21   22 23 24  25 26 27  28 29 30   31 32 33  34 35 36  37 38 39
      */
     std::list<SimpleRecord> top;
     for (int i = 0; i < 3; ++i) {
@@ -52,17 +52,17 @@ BOOST_AUTO_TEST_CASE(testIterators) {
         BOOST_CHECK_EQUAL(n, 40ul);
     }
 
-    // Test tree iterators with NO_CHILDREN; should be equivalent to "top".
+    // Test tree iterators with NO_NESTING; should be equivalent to "top".
     {
         RecordId n = 1;
-        SimpleTable::Tree tree = table.asTree(NO_CHILDREN);
+        SimpleTable::Tree tree = table.asTree(NO_NESTING);
         for (SimpleTable::Tree::Iterator i = tree.begin(); i != tree.end(); ++i, ++n) {
             BOOST_CHECK_EQUAL(i->getId(), n);
         }
         BOOST_CHECK_EQUAL(n, 4ul);
     }
 
-    // Test tree iterators with ALL_RECORDS and child iteration; should be depth-first search.
+    // Test tree iterators with DEPTH_FIRST and child iteration; should be depth-first search.
     {
         RecordId order[] = {
             1,  4, 13, 14, 15,  5, 16, 17, 18,  6, 19, 20, 21, 
@@ -70,18 +70,18 @@ BOOST_AUTO_TEST_CASE(testIterators) {
             3, 10, 31, 32, 33, 11, 34, 35, 36, 12, 37, 38, 39
         };
         int n = 0;
-        SimpleTable::Tree tree = table.asTree(ALL_RECORDS);
+        SimpleTable::Tree tree = table.asTree(DEPTH_FIRST);
         SimpleTable::Tree::Iterator t = tree.begin();
         for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
             BOOST_CHECK_EQUAL(t->getId(), i->getId());
             BOOST_CHECK_EQUAL(t->getId(), order[n]);
             ++t, ++n;
-            SimpleRecord::Children ic = i->getChildren(NO_CHILDREN);
+            SimpleRecord::Children ic = i->getChildren(NO_NESTING);
             for (SimpleRecord::Children::Iterator j = ic.begin(); j != ic.end(); ++j) {
                 BOOST_CHECK_EQUAL(t->getId(), j->getId());
                 BOOST_CHECK_EQUAL(t->getId(), order[n]);
                 ++t, ++n;
-                SimpleRecord::Children jc = j->getChildren(NO_CHILDREN);
+                SimpleRecord::Children jc = j->getChildren(NO_NESTING);
                 for (SimpleRecord::Children::Iterator k = jc.begin(); k != jc.end(); ++k) {
                     BOOST_CHECK_EQUAL(t->getId(), k->getId());
                     BOOST_CHECK_EQUAL(t->getId(), order[n]);

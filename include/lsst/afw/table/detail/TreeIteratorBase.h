@@ -19,7 +19,7 @@ class TreeIteratorBase :
 {
 public:
 
-    TreeIteratorBase() : _record(), _mode(ALL_RECORDS) {}
+    TreeIteratorBase() : _record(), _mode(DEPTH_FIRST) {}
 
     TreeIteratorBase(
         RecordData * record,

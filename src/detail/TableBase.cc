@@ -194,7 +194,7 @@ struct TableImpl : private boost::noncopyable {
 
 void TreeIteratorBase::increment() {
     switch (_mode) {
-    case ALL_RECORDS:
+    case DEPTH_FIRST:
         if (_record._data->child) {
             _record._data = _record._data->child;
         } else if (_record._data->next) {
@@ -206,7 +206,7 @@ void TreeIteratorBase::increment() {
             _record._data = _record._data->next;
         }
         break;
-    case NO_CHILDREN:
+    case NO_NESTING:
         _record._data = _record._data->next;
         break;
     }
@@ -228,7 +228,7 @@ TreeIteratorBase RecordBase::_beginChildren(TreeMode mode) const {
 
 TreeIteratorBase RecordBase::_endChildren(TreeMode mode) const {
     return TreeIteratorBase(
-        (mode == NO_CHILDREN || _data->child == 0) ? 0 : _data->next,
+        (mode == NO_NESTING || _data->child == 0) ? 0 : _data->next,
         _table, *this, mode
     );
 }
