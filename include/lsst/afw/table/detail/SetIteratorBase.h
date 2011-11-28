@@ -9,6 +9,7 @@
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/detail/RecordData.h"
 #include "lsst/afw/table/detail/RecordBase.h"
+#include "lsst/afw/table/ModificationFlags.h"
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
@@ -21,14 +22,18 @@ class SetIteratorBase :
         RecordBase,          // Value
         boost::use_default,  // CategoryOrTraversal
         RecordBase           // Reference
-    > 
+    >,
+    protected ModificationFlags
 {
 public:
 
     SetIteratorBase() {}
 
-    SetIteratorBase(base_type const & base, boost::shared_ptr<TableImpl> const & table) : 
-        SetIteratorBase::iterator_adaptor_(base), _table(table)
+    SetIteratorBase(
+        base_type const & base,
+        boost::shared_ptr<TableImpl> const & table,
+        ModificationFlags const & flags
+    ) : SetIteratorBase::iterator_adaptor_(base), ModificationFlags(flags), _table(table)
     {}
 
     ~SetIteratorBase();
@@ -36,9 +41,10 @@ public:
 private:
 
     friend class boost::iterator_core_access;
+    friend class TableBase;
 
     RecordBase dereference() const {
-        return RecordBase(&(*base()), _table);
+        return RecordBase(&(*base()), _table, *this);
     }
 
     bool equal(SetIteratorBase const & other) const {
@@ -49,7 +55,7 @@ private:
 };
 
 inline SetIteratorBase RecordBase::_asSetIterator() const {
-    return SetIteratorBase(RecordSet::s_iterator_to(*_data), _table);
+    return SetIteratorBase(RecordSet::s_iterator_to(*_data), _table, *this);
 }
 
 }}}} // namespace lsst::afw::table::detail

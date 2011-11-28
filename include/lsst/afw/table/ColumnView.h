@@ -16,10 +16,10 @@ public:
     Layout getLayout() const;
         
     template <typename T>
-    typename ndarray::Array<T,1> operator[](Key<T> const & key) const;
+    typename ndarray::Array<T const,1> operator[](Key<T> const & key) const;
 
     template <typename T>
-    typename ndarray::Array<T,2,1> operator[](Key< Array<T> > const & key) const;
+    typename ndarray::Array<T const,2,1> operator[](Key< Array<T> > const & key) const;
 
     ~ColumnView();
 

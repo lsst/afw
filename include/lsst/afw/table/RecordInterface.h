@@ -36,10 +36,10 @@ private:
 
     template <typename OtherRecordT, typename RecordAuxT> friend class RecordInterface;
 
-    ChildrenView(detail::RecordBase const & record, IteratorMode mode) : 
+    ChildrenView(detail::RecordBase const & record, TreeMode mode) : 
         detail::RecordBase(record), _mode(mode) {}
 
-    IteratorMode _mode;
+    TreeMode _mode;
 };
 
 template <typename RecordT, typename RecordAuxT=AuxBase>
@@ -55,11 +55,11 @@ public:
         return detail::Access::makeRecord<RecordT>(this->_getParent());
     }
 
-    Children getChildren(IteratorMode mode) const {
+    Children getChildren(TreeMode mode) const {
         return Children(*this, mode);
     }
 
-    TreeIterator asTreeIterator(IteratorMode mode) const {
+    TreeIterator asTreeIterator(TreeMode mode) const {
         return TreeIterator(this->_asTreeIterator(mode), detail::RecordConverter<RecordT>());
     }
 

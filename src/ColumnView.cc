@@ -52,8 +52,8 @@ struct ColumnView::Impl {
 Layout ColumnView::getLayout() const { return _impl->layout; }
 
 template <typename T>
-typename ndarray::Array<T,1> ColumnView::operator[](Key<T> const & key) const {
-    return ndarray::detail::ArrayAccess< ndarray::Array<T,1> >::construct(
+typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
+    return ndarray::detail::ArrayAccess< ndarray::Array<T const,1> >::construct(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + detail::Access::getOffset(key)
         ),
@@ -62,9 +62,9 @@ typename ndarray::Array<T,1> ColumnView::operator[](Key<T> const & key) const {
 }
 
 template <typename T>
-typename ndarray::Array<T,2,1> ColumnView::operator[](Key< Array<T> > const & key) const {
+typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > const & key) const {
     ndarray::detail::Core<1>::Ptr scalarCore = boost::fusion::at_key<T>(_impl->cores);
-    return ndarray::detail::ArrayAccess< ndarray::Array<T,2,1> >::construct(
+    return ndarray::detail::ArrayAccess< ndarray::Array<T const,2,1> >::construct(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + detail::Access::getOffset(key)
         ),
@@ -85,7 +85,7 @@ ColumnView::ColumnView(
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_COLUMNVIEW_SCALAR(r, data, elem)                    \
-    template ndarray::Array< elem, 1> ColumnView::operator[](Key< elem > const &) const; \
+    template ndarray::Array< elem const, 1> ColumnView::operator[](Key< elem > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_SCALAR, _,
@@ -93,7 +93,7 @@ BOOST_PP_SEQ_FOR_EACH(
 )
 
 #define INSTANTIATE_COLUMNVIEW_ARRAY(r, data, elem)                    \
-    template ndarray::Array< elem, 2, 1 > ColumnView::operator[](Key< Array< elem > > const &) const; \
+    template ndarray::Array< elem const, 2, 1 > ColumnView::operator[](Key< Array< elem > > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_ARRAY, _,

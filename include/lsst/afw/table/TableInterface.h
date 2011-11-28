@@ -32,17 +32,17 @@ public:
         return Iterator(this->_endTree(_mode), detail::RecordConverter<RecordT>());
     }
 
-    Iterator erase(Iterator const & iter) {
-        return Iterator(this->_erase(iter), detail::RecordConverter<RecordT>());
+    Iterator unlink(Iterator const & iter) {
+        return Iterator(this->_unlink(iter), detail::RecordConverter<RecordT>());
     }
 
 private:
 
     template <typename OtherRecordT, typename TableAuxT> friend class TableInterface;
 
-    TreeView(detail::TableBase const & table, IteratorMode mode) : detail::TableBase(table), _mode(mode) {}
+    TreeView(detail::TableBase const & table, TreeMode mode) : detail::TableBase(table), _mode(mode) {}
 
-    IteratorMode _mode;
+    TreeMode _mode;
 };
 
 template <typename RecordT, typename TableAuxT=AuxBase>
@@ -55,20 +55,18 @@ public:
     typedef Iterator iterator;
     typedef Iterator const_iterator;
 
-    Tree asTree(IteratorMode mode) const { return Tree(*this, mode); }
+    Tree asTree(TreeMode mode) const { return Tree(*this, mode); }
 
     Iterator begin() const {
-        return Iterator(this->_beginSet(), detail::RecordConverter<RecordT>());
+        return Iterator(this->_begin(), detail::RecordConverter<RecordT>());
     }
 
     Iterator end() const {
-        return Iterator(this->_endSet(), detail::RecordConverter<RecordT>());
+        return Iterator(this->_end(), detail::RecordConverter<RecordT>());
     }
 
-    void erase(Record const & record) { this->_erase(record); }
-
-    Iterator erase(Iterator const & iter) {
-        return Iterator(this->_erase(iter.base()), detail::RecordConverter<RecordT>());
+    Iterator unlink(Iterator const & iter) {
+        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<RecordT>());
     }
 
     Record operator[](RecordId id) const {

@@ -21,7 +21,7 @@ public:
 
 namespace detail {
 
-class TableBase {
+class TableBase : protected ModificationFlags {
 public:
 
     Layout getLayout() const;
@@ -34,6 +34,9 @@ public:
 
     int getRecordCount() const;
 
+    void disable(ModificationFlags::Bit n) { unsetBit(n); }
+    void makeReadOnly() { unsetAll(); }
+
     ~TableBase() {}
 
 protected:
@@ -43,26 +46,27 @@ protected:
         int defaultBlockRecordCount,
         int capacity,
         IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
-        AuxBase::Ptr const & aux = AuxBase::Ptr()
+        AuxBase::Ptr const & aux = AuxBase::Ptr(),
+        ModificationFlags const & flags = ModificationFlags::all()
     );
 
     TableBase(TableBase const & other) : _impl(other._impl) {}
 
-    SetIteratorBase _erase(SetIteratorBase const & iter);
-    TreeIteratorBase _erase(TreeIteratorBase const & iter);
-    void _erase(RecordBase const & record) { _erase(record._asSetIterator()); }
+    SetIteratorBase _unlink(SetIteratorBase const & iter) const;
+    TreeIteratorBase _unlink(TreeIteratorBase const & iter) const;
+    void _unlink(RecordBase const & record) const { _unlink(record._asSetIterator()); }
 
-    TreeIteratorBase _beginTree(IteratorMode mode) const;
-    TreeIteratorBase _endTree(IteratorMode mode) const;
+    TreeIteratorBase _beginTree(TreeMode mode) const;
+    TreeIteratorBase _endTree(TreeMode mode) const;
 
-    SetIteratorBase _beginSet() const;
-    SetIteratorBase _endSet() const;
+    SetIteratorBase _begin() const;
+    SetIteratorBase _end() const;
 
     RecordBase _get(RecordId id) const;
     SetIteratorBase _find(RecordId id) const;
 
-    RecordBase _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr());
-    RecordBase _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());
+    RecordBase _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
+    RecordBase _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
 
     AuxBase::Ptr getAux() const;
 

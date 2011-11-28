@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     BOOST_CHECK(table.isConsolidated());
 
 #if 0
-    table.erase(0);
+    table.unlink(0);
     BOOST_CHECK(!table.isConsolidated());
     BOOST_CHECK_EQUAL(table.getRecordCount(), 1);
 

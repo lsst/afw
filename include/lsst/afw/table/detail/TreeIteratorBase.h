@@ -21,8 +21,12 @@ public:
 
     TreeIteratorBase() : _record(), _mode(ALL_RECORDS) {}
 
-    TreeIteratorBase(RecordData * record, boost::shared_ptr<TableImpl> const & table, IteratorMode mode) : 
-        _record(record, table), _mode(mode)
+    TreeIteratorBase(
+        RecordData * record,
+        boost::shared_ptr<TableImpl> const & table, 
+        ModificationFlags const & flags,
+        TreeMode mode
+    ) : _record(record, table, flags), _mode(mode)
     {}
 
 private:
@@ -40,11 +44,11 @@ private:
     void increment();
 
     RecordBase _record;    
-    IteratorMode _mode;
+    TreeMode _mode;
 };
 
-inline TreeIteratorBase RecordBase::_asTreeIterator(IteratorMode mode) const {
-    return TreeIteratorBase(_data, _table, mode);
+inline TreeIteratorBase RecordBase::_asTreeIterator(TreeMode mode) const {
+    return TreeIteratorBase(_data, _table, *this, mode);
 }
 
 }}}} // namespace lsst::afw::table::detail

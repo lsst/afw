@@ -11,7 +11,7 @@ namespace lsst { namespace afw { namespace table {
 
 typedef boost::uint64_t RecordId;
 
-enum IteratorMode { NO_CHILDREN, ALL_RECORDS };
+enum TreeMode { NO_CHILDREN, ALL_RECORDS };
 
 }}} // namespace lsst::afw::table
 

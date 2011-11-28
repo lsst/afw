@@ -7,6 +7,7 @@
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/detail/RecordData.h"
+#include "lsst/afw/table/ModificationFlags.h"
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
@@ -16,7 +17,7 @@ class TableBase;
 class TreeIteratorBase;
 class SetIteratorBase;
 
-class RecordBase {
+class RecordBase : protected ModificationFlags {
 public:
 
     Layout getLayout() const;
@@ -27,8 +28,13 @@ public:
 
     RecordId getId() const { return _data->id; }
 
+    void unlink() const;
+
+    bool isLinked() const { return _data->is_linked(); }
+
     template <typename T> 
     typename Field<T>::Reference operator[](Key<T> const & key) const {
+        assertBit(CAN_SET_FIELD);
         return Access::getReference(key, _data);
     }
     
@@ -39,6 +45,7 @@ public:
 
     template <typename T, typename U>
     void set(Key<T> const & key, U const & value) const {
+        assertBit(CAN_SET_FIELD);
         Access::setValue(key, _data, value);
     }
 
@@ -50,8 +57,11 @@ public:
         return !this->operator==(other);
     }
 
+    void disable(ModificationFlags::Bit n) { unsetBit(n); }
+    void makeReadOnly() { unsetAll(); }
+
     RecordBase(RecordBase const & other)
-        : _data(other._data), _table(other._table) {}
+        : ModificationFlags(other), _data(other._data), _table(other._table) {}
 
     ~RecordBase();
 
@@ -66,17 +76,17 @@ protected:
                 "Record has no parent."
             );
         }
-        return RecordBase(_data->parent, _table);
+        return RecordBase(_data->parent, _table, *this);
     }
 
-    TreeIteratorBase _asTreeIterator(IteratorMode mode) const;
+    TreeIteratorBase _asTreeIterator(TreeMode mode) const;
     SetIteratorBase _asSetIterator() const;
 
-    TreeIteratorBase _beginChildren(IteratorMode mode) const;
-    TreeIteratorBase _endChildren(IteratorMode mode) const;
+    TreeIteratorBase _beginChildren(TreeMode mode) const;
+    TreeIteratorBase _endChildren(TreeMode mode) const;
 
-    RecordBase _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr());
-    RecordBase _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr());
+    RecordBase _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
+    RecordBase _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
 
     void operator=(RecordBase const & other) {
         _data = other._data;
@@ -89,12 +99,13 @@ private:
     friend class SetIteratorBase;
     friend class TreeIteratorBase;
 
-    RecordBase() : _data(0), _table() {}
+    RecordBase() : ModificationFlags(), _data(0), _table() {}
 
     RecordBase(
         RecordData * data,
-        boost::shared_ptr<TableImpl> const & storage
-    ) : _data(data), _table(storage)
+        boost::shared_ptr<TableImpl> const & table,
+        ModificationFlags const & flags
+    ) : ModificationFlags(flags), _data(data), _table(table)
     {}
 
     RecordData * _data;

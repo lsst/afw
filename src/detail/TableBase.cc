@@ -100,6 +100,15 @@ struct TableImpl : private boost::noncopyable {
         block.swap(newBlock);
     }
 
+    void assertEqual(boost::shared_ptr<TableImpl> const & other) const {
+        if (other.get() != this) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                "Record and/or Iterator is not associated with this table."
+            );
+        }
+    }
+
     RecordData * addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux) {
         RecordSet::insert_commit_data insertData;
         if (!records.insert_check(id, CompareRecordIdLess(), insertData).second) {
@@ -142,11 +151,17 @@ struct TableImpl : private boost::noncopyable {
         return p;
     }
 
-    RecordSet::iterator detachRecord(RecordData * record) {
+    void unlink(RecordData * record) {
         if (record->child) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::RuntimeErrorException,
                 "Children must be erased before parent record."
+            );
+        }
+        if (!record->is_linked()) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::RuntimeErrorException,
+                "Record has already been unlinked."
             );
         }
         if (record->previous) {
@@ -157,6 +172,7 @@ struct TableImpl : private boost::noncopyable {
         if (record->next) {
             record->next->previous = record->previous;
         }
+        consolidated = 0;
     }
 
     TableImpl(
@@ -206,21 +222,30 @@ Layout RecordBase::getLayout() const { return _table->layout; }
 
 RecordBase::~RecordBase() {}
 
-TreeIteratorBase RecordBase::_beginChildren(IteratorMode mode) const {
-    return TreeIteratorBase(_data->child, _table, mode);
+TreeIteratorBase RecordBase::_beginChildren(TreeMode mode) const {
+    return TreeIteratorBase(_data->child, _table, *this, mode);
 }
 
-TreeIteratorBase RecordBase::_endChildren(IteratorMode mode) const {
-    return TreeIteratorBase((mode == NO_CHILDREN || _data->child == 0) ? 0 : _data->next, _table, mode);
+TreeIteratorBase RecordBase::_endChildren(TreeMode mode) const {
+    return TreeIteratorBase(
+        (mode == NO_CHILDREN || _data->child == 0) ? 0 : _data->next,
+        _table, *this, mode
+    );
 }
 
-RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) {
+RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) const {
+    assertBit(CAN_ADD_RECORD);
     RecordData * p = _table->addRecord(id, _data, aux);
-    return RecordBase(p, _table);
+    return RecordBase(p, _table, *this);
 }
 
-RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) {
+RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) const {
     return _addChild((*_table->idFactory)(), aux);
+}
+
+void RecordBase::unlink() const {
+    assertBit(CAN_UNLINK_RECORD);
+    return _table->unlink(_data);
 }
 
 //----- TableBase implementation --------------------------------------------------------------------------
@@ -266,45 +291,37 @@ int TableBase::getRecordCount() const {
     return _impl->records.size();
 }
 
-SetIteratorBase TableBase::_erase(SetIteratorBase const & iter) {
-    if (iter->_table != _impl) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            "Record is not an element of this table."
-        );
-    }
-    _impl->detachRecord(iter->_data);
-    return SetIteratorBase(_impl->records.erase(iter.base()), _impl);
+SetIteratorBase TableBase::_unlink(SetIteratorBase const & iter) const {
+    assertBit(CAN_UNLINK_RECORD);
+    _impl->assertEqual(iter._table);
+    _impl->unlink(iter->_data);
+    return SetIteratorBase(_impl->records.erase(iter.base()), _impl, iter);
 }
 
-TreeIteratorBase TableBase::_erase(TreeIteratorBase const & iter) {
-    if (iter->_table != _impl) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            "Record is not an element of this table."
-        );
-    }
+TreeIteratorBase TableBase::_unlink(TreeIteratorBase const & iter) const {
+    assertBit(CAN_UNLINK_RECORD);
+    _impl->assertEqual(iter->_table);
     TreeIteratorBase result(iter);
     ++result;
-    _impl->detachRecord(iter->_data);
+    _impl->unlink(iter->_data);
     _impl->records.erase(_impl->records.iterator_to(*iter->_data));
     return result;
 }
 
-TreeIteratorBase TableBase::_beginTree(IteratorMode mode) const {
-    return TreeIteratorBase(_impl->front, _impl, mode);
+TreeIteratorBase TableBase::_beginTree(TreeMode mode) const {
+    return TreeIteratorBase(_impl->front, _impl, *this, mode);
 }
 
-TreeIteratorBase TableBase::_endTree(IteratorMode mode) const {
-    return TreeIteratorBase(0, _impl, mode);
+TreeIteratorBase TableBase::_endTree(TreeMode mode) const {
+    return TreeIteratorBase(0, _impl, *this, mode);
 }
 
-SetIteratorBase TableBase::_beginSet() const {
-    return SetIteratorBase(_impl->records.begin(), _impl);
+SetIteratorBase TableBase::_begin() const {
+    return SetIteratorBase(_impl->records.begin(), _impl, *this);
 }
 
-SetIteratorBase TableBase::_endSet() const {
-    return SetIteratorBase(_impl->records.end(), _impl);
+SetIteratorBase TableBase::_end() const {
+    return SetIteratorBase(_impl->records.end(), _impl, *this);
 }
 
 RecordBase TableBase::_get(RecordId id) const {
@@ -315,21 +332,23 @@ RecordBase TableBase::_get(RecordId id) const {
             (boost::format("Record with id '%lld' not found.") % id).str()
         );
     }
-    return RecordBase(&(*j), _impl);
+    return RecordBase(&(*j), _impl, *this);
 }
 
 SetIteratorBase TableBase::_find(RecordId id) const {
     RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
-    return SetIteratorBase(j, _impl);
+    return SetIteratorBase(j, _impl, *this);
 }
 
-RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) {
+RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) const {
+    assertBit(CAN_ADD_RECORD);
     return _addRecord((*_impl->idFactory)(), aux);
 }
 
-RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) {
+RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) const {
+    assertBit(CAN_ADD_RECORD);
     RecordData * p = _impl->addRecord(id, 0, aux);
-    return RecordBase(p, _impl);
+    return RecordBase(p, _impl, *this);
 }
 
 TableBase::TableBase(
@@ -337,8 +356,9 @@ TableBase::TableBase(
     int defaultBlockRecordCount,
     int capacity,
     IdFactory::Ptr const & idFactory,
-    AuxBase::Ptr const & aux
-) :
+    AuxBase::Ptr const & aux,
+    ModificationFlags const & flags 
+) : ModificationFlags(flags),
     _impl(boost::make_shared<TableImpl>(layout, defaultBlockRecordCount, idFactory, aux))
 {
     if (capacity > 0) _impl->addBlock(capacity);
