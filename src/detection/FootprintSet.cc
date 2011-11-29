@@ -1460,7 +1460,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(
 template<typename ImagePixelT, typename MaskPixelT>
 void
 detection::FootprintSet<ImagePixelT, MaskPixelT>::makeHeavy(
-        image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg, // the image providing pixel values
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg, ///< the image providing pixel values
         HeavyFootprintCtrl const *ctrl     ///< Control how we manipulate HeavyFootprints
                                                            )
 {

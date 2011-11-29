@@ -132,6 +132,7 @@ void flattenArray(
  * @param[in]  src     array to copy from.  The first two dimensions are (height, width).
  * @param[out] dest    array to copy to. The dimensions of the dest must be area of
  *                     the footprint, inner N-1 dimensions of the source
+ * @param[in]  pixelOp Functor taking src's pixel value, and returning the value of dest
  * @param[in]  xy0     xy0 of the src array in the footprint's coordinate system
  *
  * For example,
