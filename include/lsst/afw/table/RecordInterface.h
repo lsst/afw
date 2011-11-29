@@ -34,7 +34,7 @@ public:
 
 private:
 
-    template <typename OtherRecordT, typename RecordAuxT> friend class RecordInterface;
+    template <typename OtherRecordT> friend class RecordInterface;
 
     ChildrenView(detail::RecordBase const & record, TreeMode mode) : 
         detail::RecordBase(record), _mode(mode) {}
@@ -42,7 +42,7 @@ private:
     TreeMode _mode;
 };
 
-template <typename RecordT, typename RecordAuxT=AuxBase>
+template <typename RecordT>
 class RecordInterface : public detail::RecordBase {
 public:
 
@@ -69,19 +69,13 @@ public:
 
 protected:
 
-    template <typename OtherRecordT, typename TableAuxT> friend class TableInterface;
+    template <typename OtherRecordT> friend class TableInterface;
 
-    typedef RecordAuxT RecordAux;
-
-    PTR(RecordAux) getAux() const {
-        return boost::static_pointer_cast<RecordAux>(detail::RecordBase::getAux());
-    }
-
-    RecordT _addChild(PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
+    RecordT _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
         return detail::Access::makeRecord<RecordT>(this->detail::RecordBase::_addChild(aux));
     }
 
-    RecordT _addChild(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
+    RecordT _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
         return detail::Access::makeRecord<RecordT>(this->detail::RecordBase::_addChild(id, aux));
     }
 

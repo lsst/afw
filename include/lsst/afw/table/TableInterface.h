@@ -44,14 +44,14 @@ public:
 
 private:
 
-    template <typename OtherRecordT, typename TableAuxT> friend class TableInterface;
+    template <typename OtherRecordT> friend class TableInterface;
 
     TreeView(detail::TableBase const & table, TreeMode mode) : detail::TableBase(table), _mode(mode) {}
 
     TreeMode _mode;
 };
 
-template <typename RecordT, typename TableAuxT=AuxBase>
+template <typename RecordT>
 class TableInterface : public detail::TableBase {
 public:
 
@@ -85,27 +85,20 @@ public:
 
 protected:
 
-    typedef TableAuxT TableAux;
-    typedef typename Record::RecordAux RecordAux;
-
     TableInterface(
         Layout const & layout,
         int defaultBlockRecordCount,
         int capacity,
         IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
-        PTR(TableAux) const & aux = PTR(TableAux)()
+        AuxBase::Ptr const & aux = AuxBase::Ptr()
     ) : detail::TableBase(layout, defaultBlockRecordCount, capacity, idFactory, aux) {}
 
-    Record _addRecord(RecordId id, PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
+    Record _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
         return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(id, aux));
     }
 
-    Record _addRecord(PTR(RecordAux) const & aux = PTR(RecordAux)()) const {
+    Record _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
         return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(aux));
-    }
-
-    PTR(TableAux) getAux() const {
-        return boost::static_pointer_cast<TableAux>(detail::TableBase::getAux());
     }
     
 };
