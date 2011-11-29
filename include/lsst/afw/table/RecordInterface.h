@@ -1,4 +1,4 @@
-// -*- c++ -*-
+// -*- lsst-c++ -*-
 #ifndef AFW_TABLE_RecordInterface_h_INCLUDED
 #define AFW_TABLE_RecordInterface_h_INCLUDED
 
