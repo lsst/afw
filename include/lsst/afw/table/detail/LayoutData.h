@@ -11,11 +11,24 @@
 #include "boost/fusion/adapted/mpl.hpp"
 #include "boost/fusion/container/map/convert.hpp"
 #include "boost/fusion/sequence/intrinsic/at_key.hpp"
+#include "boost/ref.hpp"
 
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/RecordData.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
+
+/**
+ *  @brief A simple pair-like struct for mapping a Field (name and description) with a Key
+ *         (used for actual data access).
+ */
+template <typename T>
+struct LayoutItem {
+    Key<T> key;
+    Field<T> field;
+};
+
+namespace detail {
 
 struct LayoutData {
 
@@ -23,7 +36,7 @@ struct LayoutData {
 
     struct MakeItemVectorPair {
         template <typename T> struct apply {
-            typedef boost::fusion::pair< T, std::vector< Layout::Item<T> > > type;
+            typedef boost::fusion::pair< T, std::vector< LayoutItem<T> > > type;
         };
     };
 
@@ -31,9 +44,9 @@ struct LayoutData {
     struct IterateItemVector {
 
         template <typename T>
-        void operator()(boost::fusion::pair< T, std::vector< Layout::Item<T> > > const & type) const {
+        void operator()(boost::fusion::pair< T, std::vector< LayoutItem<T> > > const & type) const {
             for (
-                typename std::vector< Layout::Item<T> >::const_iterator i = type.second.begin();
+                typename std::vector< LayoutItem<T> >::const_iterator i = type.second.begin();
                 i != type.second.end();
                 ++i
             ) {
@@ -53,7 +66,7 @@ struct LayoutData {
     LayoutData() : recordSize(sizeof(RecordData)), items() {}
 
     template <typename Function>
-    void forEachItem(Function func) const {
+    void forEach(Function func) const {
         IterateItemVector<Function> metaFunc(func);
         boost::fusion::for_each(items, metaFunc);
     }

@@ -100,6 +100,7 @@ private:
     friend class IteratorBase;
     friend class TreeIteratorBase;
 
+
     RecordBase() : ModificationFlags(), _data(0), _table() {}
 
     RecordBase(
@@ -112,7 +113,7 @@ private:
     RecordData * _data;
     boost::shared_ptr<TableImpl> _table;
 };
-  
+
 }}}} // namespace lsst::afw::table::detail
 
 #endif // !AFW_TABLE_DETAIL_RecordBase_h_INCLUDED

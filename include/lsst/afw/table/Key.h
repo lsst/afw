@@ -18,6 +18,8 @@ public:
     bool operator==(Key const & other) const { return _offset == other._offset; }
     bool operator!=(Key const & other) const { return _offset == other._offset; }
 
+    bool operator<(Key const & other) const { return _offset < other._offset; }
+
 private:
 
     friend class detail::Access;

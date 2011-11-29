@@ -47,12 +47,12 @@ class RecordInterface : public detail::RecordBase {
 public:
 
     typedef RecordT Record;
-    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::TreeIteratorBase> TreeIterator;
-    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::IteratorBase> Iterator;
-    typedef ChildrenView<RecordT> Children;
+    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::TreeIteratorBase> TreeIterator;
+    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::IteratorBase> Iterator;
+    typedef ChildrenView<Record> Children;
 
     Record getParent() const {
-        return detail::Access::makeRecord<RecordT>(this->_getParent());
+        return detail::Access::makeRecord<Record>(this->_getParent());
     }
 
     Children getChildren(TreeMode mode) const {
@@ -60,23 +60,23 @@ public:
     }
 
     TreeIterator asTreeIterator(TreeMode mode) const {
-        return TreeIterator(this->_asTreeIterator(mode), detail::RecordConverter<RecordT>());
+        return TreeIterator(this->_asTreeIterator(mode), detail::RecordConverter<Record>());
     }
 
     Iterator asIterator() const {
-        return Iterator(this->_asIterator(), detail::RecordConverter<RecordT>());
+        return Iterator(this->_asIterator(), detail::RecordConverter<Record>());
     }
 
 protected:
 
     template <typename OtherRecordT> friend class TableInterface;
 
-    RecordT _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
-        return detail::Access::makeRecord<RecordT>(this->detail::RecordBase::_addChild(aux));
+    Record _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
+        return detail::Access::makeRecord<Record>(this->detail::RecordBase::_addChild(aux));
     }
 
-    RecordT _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
-        return detail::Access::makeRecord<RecordT>(this->detail::RecordBase::_addChild(id, aux));
+    Record _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
+        return detail::Access::makeRecord<Record>(this->detail::RecordBase::_addChild(id, aux));
     }
 
     explicit RecordInterface(detail::RecordBase const & other) : detail::RecordBase(other) {}
