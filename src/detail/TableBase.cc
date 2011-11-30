@@ -12,15 +12,9 @@
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
-namespace {
+//----- Block definition and implementation -----------------------------------------------------------------
 
-class DefaultIdFactory : public IdFactory {
-public:
-    virtual RecordId operator()() { return ++_current; }
-    DefaultIdFactory() : _current(0) {}
-private:
-    RecordId _current;
-};
+namespace {
 
 class Block : public ndarray::Manager {
 public:
@@ -77,6 +71,8 @@ private:
 };
 
 } // anonymous
+
+//----- TableImpl definition and implementation -------------------------------------------------------------
 
 struct TableImpl : private boost::noncopyable {
     int defaultBlockRecordCount;
@@ -184,7 +180,7 @@ struct TableImpl : private boost::noncopyable {
         idFactory(idFactory_), aux(aux_), layout(layout_)
     {
         Access::finishLayout(layout);
-        if (!idFactory) idFactory = boost::make_shared<DefaultIdFactory>();
+        if (!idFactory) idFactory = IdFactory::makeSimple();
     }
 
     ~TableImpl() { records.clear(); }
@@ -237,6 +233,7 @@ TreeIteratorBase RecordBase::_endChildren(TreeMode mode) const {
 RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) const {
     assertBit(CAN_ADD_RECORD);
     RecordData * p = _table->addRecord(id, _data, aux);
+    _table->idFactory->notify(id);
     return RecordBase(p, _table, *this);
 }
 
@@ -350,6 +347,7 @@ RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) const {
 RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) const {
     assertBit(CAN_ADD_RECORD);
     RecordData * p = _impl->addRecord(id, 0, aux);
+    _impl->idFactory->notify(id);
     return RecordBase(p, _impl, *this);
 }
 

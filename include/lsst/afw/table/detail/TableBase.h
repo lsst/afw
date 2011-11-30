@@ -9,17 +9,9 @@
 #include "lsst/afw/table/detail/RecordBase.h"
 #include "lsst/afw/table/detail/TreeIteratorBase.h"
 #include "lsst/afw/table/detail/IteratorBase.h"
+#include "lsst/afw/table/IdFactory.h"
 
-namespace lsst { namespace afw { namespace table {
-
-class IdFactory {
-public:
-    typedef boost::shared_ptr<IdFactory> Ptr;
-    virtual RecordId operator()() = 0;
-    virtual ~IdFactory() {}
-};
-
-namespace detail {
+namespace lsst { namespace afw { namespace table { namespace detail {
 
 class TableBase : protected ModificationFlags {
 public:
