@@ -90,7 +90,7 @@ try:
             nx, ny = m_storage["m_cols"], m_storage["m_rows"]
         except gdb.error:           # only available for dynamic Matrices
             try:
-                nx, ny = m_storage.type.template_argument(1), m_storage.type.template_argument(2)
+                nx, ny = val.type.template_argument(1), val.type.template_argument(2)
             except RuntimeError:
                 # should get dimens from template, but that's gdb bug #11060
                 size = m_storage["m_data"]["array"].type.sizeof
@@ -105,28 +105,42 @@ try:
         if re.search(r"Matrix", str(var.type)):
             if False:
                 return var["operator()(int, int)"](x, y)
-            else:
-                NX, NY = getEigenMatrixDimensions(var)
 
-                if x < 0 or x >= NX or y < 0 or y >= NY:
-                    raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
-                                       (x, y, NX - 1, NY - 1))
+            NX, NY = getEigenMatrixDimensions(var)
 
-                m_data = var["m_storage"]["m_data"]
-                if False:
-                    # convert to a pointer to the start of the array
-                    import pdb; pdb.set_trace() 
-                    m_data = m_data.address.cast(m_data.type)
+            if x < 0 or x >= NX or y < 0 or y >= NY:
+                raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
+                                   (x, y, NX - 1, NY - 1))
 
-                try:
-                    val = m_data[x + y*NX]
-                except:
-                    val = m_data["array"][x + y*NX]
+            m_data = var["m_storage"]["m_data"]
+            if False:
+                # convert to a pointer to the start of the array
+                import pdb; pdb.set_trace() 
+                m_data = m_data.address.cast(m_data.type)
+
+            try:
+                val = m_data[x + y*NX]
+            except:
+                val = m_data["array"][x + y*NX]
         else:                       # Vector
-            if x < 0 or x >= m_storage["m_cols"]:
-                raise gdb.GdbError("Element %d is out of range 0:%d" % (x, m_storage["m_cols"] - 1))
+            if False:
+                return var["operator()(int)"](x)
 
-            val = m_storage["m_data"][x]
+            NX = getEigenMatrixDimensions(var)[0]
+
+            if x < 0 or x >= NX:
+                raise gdb.GdbError("Element (%d) is out of range 0:%d" % (x, NX - 1))
+
+            m_data = var["m_storage"]["m_data"]
+
+            if False:
+                # convert to a pointer to the start of the array
+                m_data = m_data.address.cast(m_data.type)
+
+            try:
+                val = m_data[x]
+            except:
+                val = m_data["array"][x]
 
         if val.type.code == gdb.TYPE_CODE_INT:
             val = int(val)
@@ -447,15 +461,37 @@ try:
             self.val = val
 
         def to_string(self):
-            # Make sure &foo works, too.
-            type = self.val.type
-            if type.code == gdb.TYPE_CODE_REF:
-                type = type.target ()
-
             return self.val["_vector"]["m_storage"]["m_data"]["array"]
 
         def display_hint (self):
             return "array"
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class AxesPrinter(object):
+        "Print an ellipse::Axes"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            vec = self.val["_vector"]
+            return "[%g, %g, %g]" % (getEigenValue(vec, 0), getEigenValue(vec, 1), getEigenValue(vec, 2))
+
+    class QuadrupolePrinter(object):
+        "Print an ellipse::Quadrupole"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            mat = self.val["_matrix"]
+
+            if False:
+                return mat
+            else:
+                return "[[%g, %g], [%g, %g]]" % (getEigenValue(mat, 0, 0), getEigenValue(mat, 0, 1),
+                                                 getEigenValue(mat, 1, 0), getEigenValue(mat, 1, 1))
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -709,6 +745,11 @@ try:
                             '^lsst::afw::geom::Extent', CoordinateBasePrinter)
         printer.add_printer('lsst::afw::geom::Point',
                             '^lsst::afw::geom::Point', CoordinateBasePrinter)
+
+        printer.add_printer('lsst::afw::geom::ellipses::Axes',
+                            '^lsst::afw::geom::ellipses::Axes', AxesPrinter)
+        printer.add_printer('lsst::afw::geom::ellipses::Quadrupole',
+                            '^lsst::afw::geom::ellipses::Quadrupole', QuadrupolePrinter)
 
         printer.add_printer('lsst::afw::image::ImageBase',
                             'lsst::afw::image::ImageBase<[^>]+>$', ImagePrinter)
