@@ -13,9 +13,9 @@ namespace lsst { namespace afw { namespace table {
 class LayoutMapper {
 public:
 
-    Layout const & getInputLayout() const { return _input; }
+    Layout const getInputLayout() const { return _input; }
 
-    Layout const & getOutputLayout() const { return _output; }
+    Layout const getOutputLayout() const { return _output; }
 
     /// @brief Add a new field to the output Layout that is not connected to the input Layout.
     template <typename T>
