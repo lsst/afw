@@ -72,7 +72,7 @@ private:
 
 } // anonymous
 
-//----- TableImpl definition and implementation -------------------------------------------------------------
+//----- TableImpl definition --------------------------------------------------------------------------------
 
 struct TableImpl : private boost::noncopyable {
     int defaultBlockRecordCount;
@@ -85,16 +85,7 @@ struct TableImpl : private boost::noncopyable {
     Layout layout;
     RecordSet records;
 
-    void addBlock(int blockRecordCount) {
-        Block::Ptr newBlock = Block::allocate(layout.getRecordSize(), blockRecordCount);
-        if (block) {
-            newBlock->chain.swap(block);
-            consolidated = 0;
-        } else {
-            consolidated = newBlock->getBuffer();
-        }
-        block.swap(newBlock);
-    }
+    void addBlock(int blockRecordCount);
 
     void assertEqual(boost::shared_ptr<TableImpl> const & other) const {
         if (other.get() != this) {
@@ -105,72 +96,9 @@ struct TableImpl : private boost::noncopyable {
         }
     }
 
-    RecordData * addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux) {
-        RecordSet::insert_commit_data insertData;
-        if (!records.insert_check(id, CompareRecordIdLess(), insertData).second) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Record ID '%lld' is not unique.") % id).str()
-            );
-        }
-        if (!block || block->isFull()) {
-            addBlock(defaultBlockRecordCount);
-        }
-        RecordData * p = block->makeNextRecord();
-        assert(p != 0);
-        p->id = id;
-        p->aux = aux;
-        if (parent) {
-            if (parent->child) {
-                RecordData * q = parent->child;
-                while (q->next) {
-                    q = q->next;
-                }
-                q->next = p;
-                p->previous = q;
-            } else {
-                parent->child = p;
-            }
-            p->parent = parent;
-        } else {
-            if (back == 0) {
-                assert(front == 0);
-                front = p;
-            } else {
-                assert(back->next == 0);
-                back->next = p;
-                p->previous = back;
-            }
-            back = p;
-        }
-        records.insert_commit(*p, insertData);
-        return p;
-    }
+    RecordData * addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux);
 
-    void unlink(RecordData * record) {
-        if (record->child) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "Children must be erased before parent record."
-            );
-        }
-        if (!record->is_linked()) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "Record has already been unlinked."
-            );
-        }
-        if (record->previous) {
-            record->previous->next = record->next;
-        } else if (record->parent) {
-            record->parent->child = record->next;
-        }
-        if (record->next) {
-            record->next->previous = record->previous;
-        }
-        record->parent = 0;
-        consolidated = 0;
-    }
+    void unlink(RecordData * record);
 
     TableImpl(
         Layout const & layout_, int defaultBlockRecordCount_, 
@@ -186,6 +114,86 @@ struct TableImpl : private boost::noncopyable {
     ~TableImpl() { records.clear(); }
 
 };
+
+//----- TableImpl implementation ----------------------------------------------------------------------------
+
+void TableImpl::addBlock(int blockRecordCount) {
+    Block::Ptr newBlock = Block::allocate(layout.getRecordSize(), blockRecordCount);
+    if (block) {
+        newBlock->chain.swap(block);
+        consolidated = 0;
+    } else {
+        consolidated = newBlock->getBuffer();
+    }
+    block.swap(newBlock);
+}
+
+RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux) {
+    RecordSet::insert_commit_data insertData;
+    if (!records.insert_check(id, CompareRecordIdLess(), insertData).second) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Record ID '%lld' is not unique.") % id).str()
+        );
+    }
+    if (!block || block->isFull()) {
+        addBlock(defaultBlockRecordCount);
+    }
+    RecordData * p = block->makeNextRecord();
+    assert(p != 0);
+    p->id = id;
+    p->aux = aux;
+    if (parent) {
+        if (parent->child) {
+            RecordData * q = parent->child;
+            while (q->next) {
+                q = q->next;
+            }
+            q->next = p;
+            p->previous = q;
+        } else {
+            parent->child = p;
+        }
+        p->parent = parent;
+    } else {
+        if (back == 0) {
+            assert(front == 0);
+            front = p;
+        } else {
+            assert(back->next == 0);
+            back->next = p;
+            p->previous = back;
+        }
+        back = p;
+    }
+    records.insert_commit(*p, insertData);
+    return p;
+}
+
+void TableImpl::unlink(RecordData * record) {
+    if (record->child) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Children must be erased before parent record."
+        );
+    }
+    if (!record->is_linked()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Record has already been unlinked."
+        );
+    }
+    if (record->previous) {
+        record->previous->next = record->next;
+    } else if (record->parent) {
+        record->parent->child = record->next;
+    }
+    if (record->next) {
+        record->next->previous = record->previous;
+    }
+    record->parent = 0;
+    consolidated = 0;
+}
 
 //----- TreeIteratorBase implementation ---------------------------------------------------------------------
 
