@@ -79,6 +79,9 @@ protected:
         return RecordBase(_data->links.parent, _table, *this);
     }
 
+    TreeIteratorBase _asTreeIterator(TreeMode mode) const;
+    IteratorBase _asIterator() const;
+
     TreeIteratorBase _beginChildren(TreeMode mode) const;
     TreeIteratorBase _endChildren(TreeMode mode) const;
 
