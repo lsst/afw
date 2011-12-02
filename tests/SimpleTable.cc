@@ -26,7 +26,7 @@ using namespace lsst::afw::table;
  */
 struct Example {
 
-    Example() : layout(), key(layout.add(Field<double>("f", "doc"))), table(layout, 40) {
+    Example() : layout(), key(layout.add(Field<double>("f", "doc"))), table(layout, 10) {
         std::list<SimpleRecord> top;
         std::list<SimpleRecord> middle;
         std::list<SimpleRecord> bottom;
@@ -194,6 +194,20 @@ BOOST_AUTO_TEST_CASE(testIterators) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testConsolidate) {
+
+    Example example;
+    example.checkIteration();
+
+    BOOST_CHECK(!example.table.isConsolidated());
+
+    example.table.consolidate();
+    example.checkIteration();
+
+    BOOST_CHECK(example.table.isConsolidated());
+
+}
+
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
     Layout layout;
@@ -237,14 +251,6 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
     BOOST_CHECK(table.isConsolidated());
 
-#if 0
-    table.unlink(0);
-    BOOST_CHECK(!table.isConsolidated());
-    BOOST_CHECK_EQUAL(table.getRecordCount(), 1);
-
-    SimpleRecord r2a = table[0];
-    BOOST_CHECK((r2.get(myArray) == r2a.get(myArray)).all());
-#endif
 }
 
 #if 0

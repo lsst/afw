@@ -22,9 +22,9 @@ public:
 
     Layout getLayout() const;
 
-    bool hasParent() const { return _data->parent; }
+    bool hasParent() const { return _data->links.parent; }
 
-    bool hasChildren() const { return _data->child; }
+    bool hasChildren() const { return _data->links.child; }
 
     RecordId getId() const { return _data->id; }
 
@@ -70,13 +70,13 @@ protected:
     AuxBase::Ptr getAux() const { return _data->aux; }
 
     RecordBase _getParent() const {
-        if (!_data->parent) {
+        if (!_data->links.parent) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::NotFoundException,
                 "Record has no parent."
             );
         }
-        return RecordBase(_data->parent, _table, *this);
+        return RecordBase(_data->links.parent, _table, *this);
     }
 
     TreeIteratorBase _asTreeIterator(TreeMode mode) const;

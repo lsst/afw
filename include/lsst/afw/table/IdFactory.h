@@ -11,8 +11,9 @@ namespace lsst { namespace afw { namespace table {
 /**
  *  @brief A polymorphic functor base class for generating record IDs for a table.
  *
- *  The IDs produced by an IdFactory need not be sequential, but they must be unique, both with respect
- *  to the IDs it generates itself and those passed to it via the notify() member function.
+ *  The IDs produced by an IdFactory need not be sequential, but they must be unique and nonotonically 
+ *  increasing, both with respect to the IDs it generates itself and those passed to it via the
+ *  notify() member function.  Valid IDs must be nonzero, as zero is used to indicate null in some contexts.
  */
 class IdFactory {
 public:

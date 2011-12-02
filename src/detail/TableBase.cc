@@ -144,25 +144,25 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, AuxBase::Ptr
     p->id = id;
     p->aux = aux;
     if (parent) {
-        if (parent->child) {
-            RecordData * q = parent->child;
-            while (q->next) {
-                q = q->next;
+        if (parent->links.child) {
+            RecordData * q = parent->links.child;
+            while (q->links.next) {
+                q = q->links.next;
             }
-            q->next = p;
-            p->previous = q;
+            q->links.next = p;
+            p->links.previous = q;
         } else {
-            parent->child = p;
+            parent->links.child = p;
         }
-        p->parent = parent;
+        p->links.parent = parent;
     } else {
         if (back == 0) {
             assert(front == 0);
             front = p;
         } else {
-            assert(back->next == 0);
-            back->next = p;
-            p->previous = back;
+            assert(back->links.next == 0);
+            back->links.next = p;
+            p->links.previous = back;
         }
         back = p;
     }
@@ -171,7 +171,7 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, AuxBase::Ptr
 }
 
 void TableImpl::unlink(RecordData * record) {
-    if (record->child) {
+    if (record->links.child) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Children must be erased before parent record."
@@ -183,15 +183,15 @@ void TableImpl::unlink(RecordData * record) {
             "Record has already been unlinked."
         );
     }
-    if (record->previous) {
-        record->previous->next = record->next;
-    } else if (record->parent) {
-        record->parent->child = record->next;
+    if (record->links.previous) {
+        record->links.previous->links.next = record->links.next;
+    } else if (record->links.parent) {
+        record->links.parent->links.child = record->links.next;
     }
-    if (record->next) {
-        record->next->previous = record->previous;
+    if (record->links.next) {
+        record->links.next->links.previous = record->links.previous;
     }
-    record->parent = 0;
+    record->links.parent = 0;
     consolidated = 0;
 }
 
@@ -200,19 +200,19 @@ void TableImpl::unlink(RecordData * record) {
 void TreeIteratorBase::increment() {
     switch (_mode) {
     case DEPTH_FIRST:
-        if (_record._data->child) {
-            _record._data = _record._data->child;
-        } else if (_record._data->next) {
-            _record._data = _record._data->next;
+        if (_record._data->links.child) {
+            _record._data = _record._data->links.child;
+        } else if (_record._data->links.next) {
+            _record._data = _record._data->links.next;
         } else {
-            while (!_record._data->next && _record._data->parent) {
-                _record._data = _record._data->parent;
+            while (!_record._data->links.next && _record._data->links.parent) {
+                _record._data = _record._data->links.parent;
             }
-            _record._data = _record._data->next;
+            _record._data = _record._data->links.next;
         }
         break;
     case NO_NESTING:
-        _record._data = _record._data->next;
+        _record._data = _record._data->links.next;
         break;
     }
 }
@@ -228,12 +228,12 @@ Layout RecordBase::getLayout() const { return _table->layout; }
 RecordBase::~RecordBase() {}
 
 TreeIteratorBase RecordBase::_beginChildren(TreeMode mode) const {
-    return TreeIteratorBase(_data->child, _table, *this, mode);
+    return TreeIteratorBase(_data->links.child, _table, *this, mode);
 }
 
 TreeIteratorBase RecordBase::_endChildren(TreeMode mode) const {
     return TreeIteratorBase(
-        (mode == NO_NESTING || _data->child == 0) ? 0 : _data->next,
+        (mode == NO_NESTING || _data->links.child == 0) ? 0 : _data->links.next,
         _table, *this, mode
     );
 }
@@ -263,36 +263,29 @@ bool TableBase::isConsolidated() const {
     return _impl->consolidated;
 }
 
-#if 0
-ColumnView TableBase::consolidate() {
-    if (!_impl->consolidated) {
-        boost::shared_ptr<TableImpl> newStorage =
-            boost::make_shared<TableImpl>(
-                _impl->layout,
-                _impl->defaultBlockRecordCount,
-                _impl->aux
-            );
-        newStorage->addBlock(_impl->records.size());
-        newStorage->records.reserve(_impl->records.size());
-        Block & block = newStorage->blocks.back();
-        int recordSize = _impl->layout.getRecordSize();
-        for (
-            std::vector<RecordPair>::iterator i = _impl->records.begin();
-            i != _impl->records.end();
-            ++i, block.next += recordSize
-        ) {
-            RecordPair newPair = { block.next, i->aux };
-            std::memcpy(newPair.buf, i->buf, recordSize);
-            newStorage->records.push_back(newPair);
-        }
-        _impl.swap(newStorage);
+void TableBase::consolidate(int extraCapacity) {
+    boost::shared_ptr<TableImpl> newImpl =
+        boost::make_shared<TableImpl>(
+            _impl->layout,
+            _impl->defaultBlockRecordCount,
+            _impl->idFactory->clone(),
+            _impl->aux
+        );
+    newImpl->addBlock(_impl->records.size() + extraCapacity);
+    int const dataOffset = sizeof(RecordData);
+    int const dataSize = _impl->layout.getRecordSize() - dataOffset;
+    for (RecordSet::const_iterator i = _impl->records.begin(); i != _impl->records.end(); ++i) {
+        RecordData * newRecord = newImpl->block->makeNextRecord();
+        newRecord->id = i->id;
+        newRecord->aux = i->aux;
+        newRecord->parentId = (i->links.parent) ? i->links.parent->id : 0;
+        std::memcpy(newRecord + dataOffset, &(*i) + dataOffset, dataSize);
+        newImpl->records.insert(newImpl->records.end(), *newRecord);
     }
-    return ColumnView(
-        _impl->layout, _impl->records.size(),
-        _impl->consolidated, _impl->blocks.back().manager
-    );
+    setupPointers(newImpl->records, newImpl->back);
+    newImpl->front = &(*_impl->records.begin());
+    _impl.swap(newImpl);
 }
-#endif
 
 int TableBase::getRecordCount() const {
     return _impl->records.size();

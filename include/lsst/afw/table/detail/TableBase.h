@@ -20,9 +20,7 @@ public:
 
     bool isConsolidated() const;
 
-#if 0
-    ColumnView consolidate();
-#endif
+    void consolidate(int extraCapacity=0);
 
     int getRecordCount() const;
 
