@@ -51,8 +51,6 @@ class RecordInterface : public detail::RecordBase {
 public:
 
     typedef typename Tag::Record Record;
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::TreeIteratorBase> TreeIterator;
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::IteratorBase> Iterator;
     typedef ChildrenView<Tag> Children;
 
     Record getParent() const {
@@ -61,14 +59,6 @@ public:
 
     Children getChildren(TreeMode mode) const {
         return Children(*this, mode);
-    }
-
-    TreeIterator asTreeIterator(TreeMode mode) const {
-        return TreeIterator(this->_asTreeIterator(mode), detail::RecordConverter<Record>());
-    }
-
-    Iterator asIterator() const {
-        return Iterator(this->_asIterator(), detail::RecordConverter<Record>());
     }
 
 protected:
