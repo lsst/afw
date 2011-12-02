@@ -5,15 +5,13 @@
 #include "lsst/afw/table/config.h"
 
 #include <vector>
+#include <algorithm>
 
+#include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"
-#include "boost/fusion/algorithm/iteration/for_each.hpp"
-#include "boost/fusion/adapted/mpl.hpp"
-#include "boost/fusion/container/map/convert.hpp"
-#include "boost/fusion/sequence/intrinsic/at_key.hpp"
-#include "boost/ref.hpp"
+#include "boost/type_traits/remove_const.hpp"
+#include "boost/type_traits/remove_reference.hpp"
 
-#include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/RecordData.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -34,41 +32,45 @@ struct LayoutData {
 
     static int const ALIGN_N_DOUBLE = 2;
 
-    struct MakeItemVectorPair {
-        template <typename T> struct apply {
-            typedef boost::fusion::pair< T, std::vector< LayoutItem<T> > > type;
+    struct MakeItem {
+        template <typename T>
+        struct apply {
+            typedef LayoutItem<T> type;
         };
     };
 
-    template <typename Function>
-    struct IterateItemVector {
+    typedef boost::mpl::transform<FieldTypes,MakeItem>::type ItemTypes;
+    typedef boost::make_variant_over<ItemTypes>::type ItemVariant;
+    typedef std::vector<ItemVariant> ItemContainer;
+
+    template <
+        typename F, 
+        typename Result = typename boost::remove_const<
+            typename boost::remove_reference<F>::type
+            >::type::result_type
+        >
+    struct VisitorWrapper : public boost::static_visitor<Result> {
+
+        typedef Result result_type;
 
         template <typename T>
-        void operator()(boost::fusion::pair< T, std::vector< LayoutItem<T> > > const & type) const {
-            for (
-                typename std::vector< LayoutItem<T> >::const_iterator i = type.second.begin();
-                i != type.second.end();
-                ++i
-            ) {
-                func(*i);
-            }
-        };
-        
-        explicit IterateItemVector(Function func_) : func(func_) {}
+        result_type operator()(LayoutItem<T> const & x) const { return _func(x); };
+    
+        result_type operator()(ItemVariant const & v) const {
+            return boost::apply_visitor(*this, v);
+        }
 
-        Function func;
+        explicit VisitorWrapper(F func = F()) : _func(func) {}
+
+        F _func;
     };
-
-    typedef boost::fusion::result_of::as_map<
-        boost::mpl::transform< detail::FieldTypes, MakeItemVectorPair >::type
-        >::type ItemContainer;
-
+    
     LayoutData() : recordSize(sizeof(RecordData)), items() {}
 
-    template <typename Function>
-    void forEach(Function func) const {
-        IterateItemVector<Function> metaFunc(func);
-        boost::fusion::for_each(items, metaFunc);
+    template <typename F>
+    void forEach(F func) const {
+        VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
+        std::for_each(items.begin(), items.end(), visitor);
     }
 
     int recordSize;

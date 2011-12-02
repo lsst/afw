@@ -7,6 +7,7 @@
 #include <set>
 
 #include "boost/shared_ptr.hpp"
+#include "boost/ref.hpp"
 
 #include "lsst/ndarray.h"
 #include "lsst/afw/table/Key.h"

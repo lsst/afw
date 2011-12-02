@@ -44,7 +44,6 @@ protected:
 
     IteratorBase _unlink(IteratorBase const & iter) const;
     TreeIteratorBase _unlink(TreeIteratorBase const & iter) const;
-    void _unlink(RecordBase const & record) const { _unlink(record._asIterator()); }
 
     TreeIteratorBase _beginTree(TreeMode mode) const;
     TreeIteratorBase _endTree(TreeMode mode) const;

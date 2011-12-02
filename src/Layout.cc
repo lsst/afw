@@ -16,6 +16,8 @@ namespace {
 
 struct Describe {
 
+    typedef void result_type;
+
     template <typename T>
     void operator()(LayoutItem<T> const & item) const {
         result->insert(item.field.describe());
@@ -26,17 +28,63 @@ struct Describe {
     Layout::Description * result;
 };
 
-template <typename T>
-struct ExtractKey {
+struct ExtractOffset : public boost::static_visitor<int> {
 
-    typedef LayoutItem<T> argument_type;
-    typedef Key<T> const & result_type;
+    typedef int result_type;
 
-    Key<T> const & operator()(LayoutItem<T> const & item) const {
-        return item.key;
+    template <typename T>
+    result_type operator()(LayoutItem<T> const & item) const {
+        return detail::Access::getOffset(item.key);
+    }
+
+    result_type operator()(detail::LayoutData::ItemVariant const & v) const {
+        return boost::apply_visitor(*this, v);
     }
 
 };
+
+struct CompareName : public boost::static_visitor<bool> {
+    
+    typedef bool result_type;
+    
+    template <typename T>
+    result_type operator()(LayoutItem<T> const & item) const {
+        return item.field.getName() == _name;
+    }
+
+    result_type operator()(detail::LayoutData::ItemVariant const & v) const {
+        return boost::apply_visitor(*this, v);
+    }
+
+    explicit CompareName(std::string const & name) : _name(name) {}
+
+    std::string _name;
+};
+
+template <typename T, typename VariantIterator>
+LayoutItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIterator const end) {
+    typedef boost::transform_iterator<ExtractOffset,VariantIterator> Iterator;
+    Iterator i = std::lower_bound(
+        Iterator(begin),
+        Iterator(end), 
+        offset
+    );
+    if (*i != offset) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::NotFoundException,
+            "Key not found in Layout."
+        );
+    }
+    try {
+        return boost::get< LayoutItem<T> >(*i.base());
+    } catch (boost::bad_get & err) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            "Field with the given key offset does not have the given type."
+        );
+    }
+};
+
 
 } // anonymous
 
@@ -53,7 +101,7 @@ Key<T> Layout::add(Field<T> const & field) {
     }
     LayoutItem<T> item = { detail::Access::makeKey(field, _data->recordSize), field };
     _data->recordSize += field.getElementCount() * ELEMENT_SIZE;
-    boost::fusion::at_key<T>(_data->items).push_back(item);
+    _data->items.push_back(item);
     return item.key;
 }
 
@@ -61,44 +109,44 @@ Layout::Layout() : _data(boost::make_shared<Data>()) {}
 
 template <typename T>
 LayoutItem<T> Layout::find(std::string const & name) const {
-    std::vector< LayoutItem<T> > const & vec = boost::fusion::at_key<T>(_data->items);
-    for (typename std::vector< LayoutItem<T> >::const_iterator i = vec.begin(); i != vec.end(); ++i) {
-        if (i->field.getName() == name) return *i;
-    }
-    throw LSST_EXCEPT(
-        lsst::pex::exceptions::NotFoundException,
-        (boost::format("Field with name '%s' not found.") % name).str()
+    Data::ItemContainer::iterator i = std::find_if(
+        _data->items.begin(),
+        _data->items.end(),
+        CompareName(name)
     );
+    if (i == _data->items.end()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::NotFoundException,
+            (boost::format("Field with name '%s' not found.") % name).str()
+        );
+    }
+    try {
+        return boost::get< LayoutItem<T> >(*i);
+    } catch (boost::bad_get & err) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Field with name '%s' does not have the given type.") % name).str()
+        );
+    }
 }
 
 template <typename T>
 LayoutItem<T> Layout::find(Key<T> const & key) const {
-    typedef std::vector< LayoutItem<T> > Vector;
-    Vector const & vec = boost::fusion::at_key<T>(_data->items);
-    typedef boost::transform_iterator<ExtractKey<T>,typename Vector::const_iterator> Iterator;
-    Iterator i = std::lower_bound(Iterator(vec.begin()), Iterator(vec.end()), key);
-    if (*i != key) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::NotFoundException,
-            "Key not found in Layout."
-        );
-    }
-    return *i.base();
+    return findByOffset<T>(
+        detail::Access::getOffset(key),
+        _data->items.begin(),
+        _data->items.end()
+    );
 }
 
 template <typename T>
 void Layout::replace(Key<T> const & key, Field<T> const & field) {
-    typedef std::vector< LayoutItem<T> > Vector;
-    typedef boost::transform_iterator<ExtractKey<T>,typename Vector::iterator> Iterator;
-    Vector & vec = boost::fusion::at_key<T>(_data->items);
-    Iterator i = std::lower_bound(Iterator(vec.begin()), Iterator(vec.end()), key);
-    if (*i != key) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::NotFoundException,
-            "Key not found in Layout."
-        );
-    }
-    i.base()->field = field;
+    LayoutItem<T> & item = findByOffset<T>(
+        detail::Access::getOffset(key),
+        _data->items.begin(),
+        _data->items.end()
+    );
+    item.field = field;
 }
 
 Layout::Description Layout::describe() const {

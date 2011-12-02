@@ -6,6 +6,12 @@
 
 #include <map>
 
+#include "boost/fusion/algorithm/iteration/for_each.hpp"
+#include "boost/fusion/adapted/mpl.hpp"
+#include "boost/fusion/container/map/convert.hpp"
+#include "boost/fusion/sequence/intrinsic/at_key.hpp"
+
+
 #include "lsst/afw/table/Layout.h"
 
 namespace lsst { namespace afw { namespace table {
