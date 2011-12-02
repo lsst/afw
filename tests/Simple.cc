@@ -9,7 +9,7 @@
 #include "boost/assign/std/list.hpp"
 
 #include "lsst/afw/table/Layout.h"
-#include "lsst/afw/table/SimpleTable.h"
+#include "lsst/afw/table/Simple.h"
 
 using namespace lsst::afw::table;
 

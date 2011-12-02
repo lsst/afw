@@ -15,21 +15,22 @@
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename RecordT>
+template <typename Tag>
 class TreeView : private detail::TableBase {
 public:
 
-    typedef RecordT Record;
-    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::TreeIteratorBase> Iterator;
+    typedef typename Tag::Table Table;
+    typedef typename Tag::Record Record;
+    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::TreeIteratorBase> Iterator;
     typedef Iterator iterator;
     typedef Iterator const_iterator;
 
     Iterator begin() const {
-        return Iterator(this->_beginTree(_mode), detail::RecordConverter<RecordT>());
+        return Iterator(this->_beginTree(_mode), detail::RecordConverter<Record>());
     }
 
     Iterator end() const {
-        return Iterator(this->_endTree(_mode), detail::RecordConverter<RecordT>());
+        return Iterator(this->_endTree(_mode), detail::RecordConverter<Record>());
     }
 
     Iterator unlink(Iterator const & iter) const {
@@ -39,48 +40,49 @@ public:
                 "TreeView and iterator modes do not agree."
             );
         }
-        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<RecordT>());
+        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<Record>());
     }
 
 private:
 
-    template <typename OtherRecordT> friend class TableInterface;
+    template <typename OtherTag> friend class TableInterface;
 
     TreeView(detail::TableBase const & table, TreeMode mode) : detail::TableBase(table), _mode(mode) {}
 
     TreeMode _mode;
 };
 
-template <typename RecordT>
+template <typename Tag>
 class TableInterface : public detail::TableBase {
 public:
 
-    typedef RecordT Record;
-    typedef TreeView<Record> Tree;
-    typedef boost::transform_iterator<detail::RecordConverter<RecordT>,detail::IteratorBase> Iterator;
+    typedef typename Tag::Table Table;
+    typedef typename Tag::Record Record;
+    typedef TreeView<Tag> Tree;
+    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::IteratorBase> Iterator;
     typedef Iterator iterator;
     typedef Iterator const_iterator;
 
     Tree asTree(TreeMode mode) const { return Tree(*this, mode); }
 
     Iterator begin() const {
-        return Iterator(this->_begin(), detail::RecordConverter<RecordT>());
+        return Iterator(this->_begin(), detail::RecordConverter<Record>());
     }
 
     Iterator end() const {
-        return Iterator(this->_end(), detail::RecordConverter<RecordT>());
+        return Iterator(this->_end(), detail::RecordConverter<Record>());
     }
 
     Iterator unlink(Iterator const & iter) const {
-        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<RecordT>());
+        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<Record>());
     }
 
     Iterator find(RecordId id) const {
-        return Iterator(this->_find(id), detail::RecordConverter<RecordT>());
+        return Iterator(this->_find(id), detail::RecordConverter<Record>());
     }
 
     Record operator[](RecordId id) const {
-        return detail::Access::makeRecord<RecordT>(this->_get(id));
+        return detail::Access::makeRecord<Record>(this->_get(id));
     }
 
 protected:

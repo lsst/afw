@@ -14,4 +14,4 @@ doc/*.tag
 doc/html
 doc/doxygen.conf
 tests/.tests
-tests/SimpleTable
+tests/Simple
