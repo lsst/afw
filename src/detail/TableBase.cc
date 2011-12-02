@@ -34,6 +34,11 @@ public:
         return _buf.get();
     }
 
+    static void padLayout(Layout & layout) {
+        static int const MIN_RECORD_ALIGN = sizeof(AllocType);
+        Access::padLayout(layout, (MIN_RECORD_ALIGN - layout.getRecordSize() % MIN_RECORD_ALIGN));
+    }
+
     static Ptr allocate(int recordSize, int recordCount) {
         boost::intrusive_ptr<Block> r(new Block(recordSize, recordCount));
         return r;
@@ -52,7 +57,7 @@ public:
 private:
 
     struct AllocType {
-        double element[LayoutData::ALIGN_N_DOUBLE];
+        double element[2];
     };
     
     explicit Block(int recordSize, int recordCount) :
@@ -107,7 +112,7 @@ struct TableImpl : private boost::noncopyable {
         defaultBlockRecordCount(defaultBlockRecordCount_), front(0), back(0), consolidated(0), 
         idFactory(idFactory_), aux(aux_), layout(layout_)
     {
-        Access::finishLayout(layout);
+        Block::padLayout(layout);
         if (!idFactory) idFactory = IdFactory::makeSimple();
     }
 

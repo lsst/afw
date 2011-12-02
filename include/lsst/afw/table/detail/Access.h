@@ -58,12 +58,9 @@ public:
         return Key<T>(offset, field);
     }
 
-    static LayoutData const & getData(Layout const & layout) {
-        return *layout._data;
-    }
-
-    static void finishLayout(Layout & layout) {
-        layout.finish();
+    static void padLayout(Layout & layout, int bytes) {
+        layout._edit();
+        layout._data->_recordSize += bytes;
     }
 
     template <typename RecordT>

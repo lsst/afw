@@ -47,10 +47,6 @@ public:
     template <typename T>
     LayoutItem<T> find(Key<T> const & key) const;
 
-    /// @brief Replace the Field (name/description) for an existing Key.
-    template <typename T>
-    void replace(Key<T> const & key, Field<T> const & field);
-
     /**
      *  @brief Return a set with descriptions of all the fields.
      *
@@ -59,8 +55,8 @@ public:
     Description describe() const;
 
     /// @brief Return the raw size of a record in bytes.
-    int getRecordSize() const { return _data->recordSize; }
-    
+    int getRecordSize() const { return _data->_recordSize; }
+
     /**
      *  @brief Add a new field to the Layout, and return the associated Key.
      *
@@ -70,6 +66,10 @@ public:
      */
     template <typename T>
     Key<T> add(Field<T> const & field);
+
+    /// @brief Replace the Field (name/description) for an existing Key.
+    template <typename T>
+    void replace(Key<T> const & key, Field<T> const & field);
 
     /**
      *  @brief Apply a functor to each LayoutItem in the Layout.
@@ -82,7 +82,7 @@ public:
      */
     template <typename Function>
     void forEach(Function func) const {
-        _data->forEach(boost::unwrap_ref(func));
+        _data->forEach(func);
     }
 
     /// @brief Construct an empty Layout.
@@ -93,12 +93,9 @@ private:
     friend class detail::Access;
     
     typedef detail::LayoutData Data;
-
-    /**
-     *  @internal Called by the table constructor to ensure the record size is aligned with the largest
-     *            supported element type.
-     */
-    void finish();
+    
+    /// @brief Copy on write; should be called by all mutators.
+    void _edit();
 
     boost::shared_ptr<Data> _data;
 };
