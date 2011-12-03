@@ -21,7 +21,7 @@
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import math
+import math, re
 import unittest
 
 import numpy
@@ -452,6 +452,26 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's spatial parameters")
+
+        #
+        # check that we can construct a FixedKernel from a LinearCombinationKernel
+        #
+        kernel2 = afwMath.FixedKernel(kernel, afwGeom.PointD(x, y))
+
+        self.assertTrue(re.search("AnalyticKernel", kernel.toString()))
+        self.assertFalse(kernel2.isSpatiallyVarying())
+
+        self.assertTrue(re.search("FixedKernel", kernel2.toString()))
+        self.assertTrue(kernel.isSpatiallyVarying())
+
+        x, y = 100, 200
+        kim = afwImage.ImageD(kernel.getDimensions())
+        kernel.computeImage(kim, True, x, y)
+
+        kim2 = afwImage.ImageD(kernel2.getDimensions())
+        kernel2.computeImage(kim2, True)
+
+        self.assertTrue(numpy.alltrue(kim.getArray() == kim2.getArray()))
 
     def testSVLinearCombinationKernelFixed(self):
         """Test a spatially varying LinearCombinationKernel
