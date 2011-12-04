@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_DETAIL_KeyBase_h_INCLUDED
 #define AFW_TABLE_DETAIL_KeyBase_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 namespace lsst { namespace afw { namespace table { 
 

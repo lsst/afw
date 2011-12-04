@@ -2,30 +2,25 @@
 #ifndef AFW_TABLE_LayoutMapper_h_INCLUDED
 #define AFW_TABLE_LayoutMapper_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
-
-#include <map>
-
-#include "boost/fusion/algorithm/iteration/for_each.hpp"
-#include "boost/fusion/adapted/mpl.hpp"
-#include "boost/fusion/container/map/convert.hpp"
-#include "boost/fusion/sequence/intrinsic/at_key.hpp"
 
 
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/detail/LayoutMapperData.h"
 
 namespace lsst { namespace afw { namespace table {
 
 class LayoutMapper {
 public:
 
-    Layout const getInputLayout() const { return _input; }
+    Layout const getInputLayout() const { return _data->_input; }
 
-    Layout const getOutputLayout() const { return _output; }
+    Layout const getOutputLayout() const { return _data->_output; }
 
     /// @brief Add a new field to the output Layout that is not connected to the input Layout.
     template <typename T>
-    Key<T> add(Field<T> const & newField) { return _output.add(newField); }
+    Key<T> add(Field<T> const & newField) {
+        _edit();
+        return _data->_output.add(newField);
+    }
 
     /**
      *  @brief Add a new field to the output Layout that is a copy of a field in the input Layout.
@@ -68,19 +63,12 @@ public:
     Key<T> getMapping(Key<T> const & inputKey) const;
 
     /// @brief Construct a mapper from the given input Layout.  
-    explicit LayoutMapper(Layout const & input) : _input(input) {}
+    explicit LayoutMapper(Layout const & input);
 
 private:
 
-    struct MakeMapperPair {
-        template <typename T> struct apply {
-            typedef boost::fusion::pair< T, std::map< Key<T>, Key<T> > > type;
-        };
-    };
-
-    typedef boost::fusion::result_of::as_map<
-        boost::mpl::transform< detail::FieldTypes, MakeMapperPair >::type
-        >::type MapContainer;
+    /// @brief Copy on write; should be called by all mutators.
+    void _edit();
 
     template <typename Predicate>
     struct CopyIf {
@@ -97,14 +85,14 @@ private:
         Predicate predicate;
     };
 
-    Layout _input;
-    Layout _output;
-    MapContainer _maps;
+    typedef detail::LayoutMapperData Data;
+
+    boost::shared_ptr<Data> _data;
 };
 
 template <typename Predicate>
 void LayoutMapper::copyIf(Predicate predicate) {
-    _input.forEach(CopyIf<Predicate>(this, predicate));
+    _data->_input.forEach(CopyIf<Predicate>(this, predicate));
 }
 
 }}} // namespace lsst::afw::table

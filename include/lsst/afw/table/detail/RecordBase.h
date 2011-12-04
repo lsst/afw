@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
 #define AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/Access.h"

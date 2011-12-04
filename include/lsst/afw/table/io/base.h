@@ -2,7 +2,7 @@
 #ifndef LSST_AFW_TABLE_IO_base_h_INCLUDED
 #define LSST_AFW_TABLE_IO_base_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include "boost/noncopyable.hpp"
 

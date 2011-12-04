@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_Simple_h_INCLUDED
 #define AFW_TABLE_Simple_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include "lsst/afw/table/RecordInterface.h"
 #include "lsst/afw/table/TableInterface.h"

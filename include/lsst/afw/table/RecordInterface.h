@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_RecordInterface_h_INCLUDED
 #define AFW_TABLE_RecordInterface_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include "boost/iterator/transform_iterator.hpp"
 

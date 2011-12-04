@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
 #define AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include <vector>
 #include <algorithm>
@@ -60,43 +60,26 @@ public:
 
     LayoutData() : _recordSize(sizeof(RecordData)), _items() {}
 
-    template <typename F>
-    void forEach(F func) const {
-        VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
-        std::for_each(_items.begin(), _items.end(), visitor);
-    }
-
 private:
 
-    friend class table::Layout;
-    friend class detail::Access;
-
-    template <
-        typename F, 
-        typename Result = typename boost::remove_const<
-            typename boost::remove_reference<F>::type
-            >::type::result_type
-        >
-    struct VisitorWrapper : public boost::static_visitor<Result> {
-
-        typedef Result result_type;
+    template <typename F>
+    struct VisitorWrapper : public boost::static_visitor<> {
 
         template <typename T>
-        result_type operator()(LayoutItem<T> const & x) const { return _func(x); };
+        void operator()(LayoutItem<T> const & x) const { _func(x); };
     
-        result_type operator()(ItemVariant const & v) const {
-            return boost::apply_visitor(*this, v);
+        void operator()(ItemVariant const & v) const {
+            boost::apply_visitor(*this, v);
         }
 
-        explicit VisitorWrapper(F func = F()) : _func(func) {}
+        explicit VisitorWrapper(F func) : _func(func) {}
 
     private:
         F _func;
     };
 
-    class Describe;
-    class ExtractOffset;
-    class CompareName;
+    friend class table::Layout;
+    friend class detail::Access;
 
     int _recordSize;
     ItemContainer _items;

@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_Layout_h_INCLUDED
 #define AFW_TABLE_Layout_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include <set>
 
@@ -34,6 +34,7 @@ namespace lsst { namespace afw { namespace table {
  *  converted to return by value to ensure proper memory management and encapsulation.
  */
 class Layout {
+    typedef detail::LayoutData Data;
 public:
 
     /// @brief Set type returned by describe().
@@ -80,9 +81,10 @@ public:
      *
      *  The functor will be passed by value by default; use boost::ref to pass it by reference.
      */
-    template <typename Function>
-    void forEach(Function func) const {
-        _data->forEach(func);
+    template <typename F>
+    void forEach(F func) const {
+        Data::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
+        std::for_each(_data->_items.begin(), _data->_items.end(), visitor);
     }
 
     /// @brief Construct an empty Layout.
@@ -91,8 +93,6 @@ public:
 private:
 
     friend class detail::Access;
-    
-    typedef detail::LayoutData Data;
     
     /// @brief Copy on write; should be called by all mutators.
     void _edit();

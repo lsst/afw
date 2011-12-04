@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_DETAIL_FieldBase_h_INCLUDED
 #define AFW_TABLE_DETAIL_FieldBase_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include <cstring>
 #include <iostream>

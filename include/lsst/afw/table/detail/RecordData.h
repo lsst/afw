@@ -2,12 +2,15 @@
 #ifndef AFW_TABLE_DETAIL_RecordData_h_INCLUDED
 #define AFW_TABLE_DETAIL_RecordData_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
-
 #include "boost/shared_ptr.hpp"
 #include "boost/intrusive/set.hpp"
+#include "boost/cstdint.hpp"
 
 namespace lsst { namespace afw { namespace table {
+
+typedef boost::uint64_t RecordId;
+
+enum TreeMode { NO_NESTING, DEPTH_FIRST };
 
 class AuxBase {
 public:

@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_ModificationFlags_h_INCLUDED
 #define AFW_TABLE_ModificationFlags_h_INCLUDED
 
-#include "lsst/afw/table/config.h"
+
 
 #include <bitset>
 

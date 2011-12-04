@@ -7,75 +7,114 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-struct InvertMap {
+struct SwapKeyPair : public boost::static_visitor<> {
 
     template <typename T>
-    void operator()(boost::fusion::pair< T, std::map< Key<T>, Key<T> > > & pair) const {
-        typedef std::map< Key<T>, Key<T> > Map;
-        Map inverted;
-        for (typename Map::iterator i = pair.second.begin(); i != pair.second.end(); ++i) {
-            inverted.insert(std::make_pair(i->second, i->first));
-        }
-        pair.second.swap(inverted);
+    void operator()(std::pair< Key<T>, Key<T> > & pair) const {
+        std::swap(pair.first, pair.second);
+    }
+
+    void operator()(detail::LayoutMapperData::KeyPairVariant & v) const {
+        boost::apply_visitor(*this, v);
     }
 
 };
 
+template <typename T>
+struct KeyPairCompare : public boost::static_visitor<bool> {
+
+    template <typename U>
+    bool operator()(std::pair< Key<U>, Key<U> > const & pair) const {
+        return _target == pair.first;
+    }
+    
+    bool operator()(detail::LayoutMapperData::KeyPairVariant const & v) const {
+        return boost::apply_visitor(*this, v);
+    }
+
+    KeyPairCompare(Key<T> const & target) : _target(target) {}
+
+private:
+    Key<T> const & _target;
+};
+
 } // anonymous
+
+void LayoutMapper::_edit() {
+    if (!_data.unique()) {
+        boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
+        _data.swap(data);
+    }
+}
 
 template <typename T>
 Key<T> LayoutMapper::copy(Key<T> const & inputKey) {
-    typedef std::map< Key<T>, Key<T> > Map;
-    Map & map = boost::fusion::at_key<T>(_maps);
-    typename Map::iterator i = map.lower_bound(inputKey);
-    Field<T> inputField = _input.find(inputKey).field;
-    if (i != map.end() && i->first == inputKey) {
-        _output.replace(i->second, inputField);
-        return i->second;
+    _edit();
+    typename Data::KeyPairMap::iterator i = std::find_if(
+        _data->_map.begin(),
+        _data->_map.end(),
+        KeyPairCompare<T>(inputKey)
+    );
+    Field<T> inputField = _data->_input.find(inputKey).field;
+    if (i != _data->_map.end()) {
+        Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
+        _data->_output.replace(outputKey, inputField);
+        return outputKey;
+    } else {
+        Key<T> outputKey = _data->_output.add(inputField);
+        _data->_map.insert(i, std::make_pair(inputKey, outputKey));
+        return outputKey;
     }
-    Key<T> outputKey = _output.add(inputField);
-    map.insert(i, std::make_pair(inputKey, outputKey));
-    return outputKey;
 }
 
 template <typename T>
 Key<T> LayoutMapper::copy(Key<T> const & inputKey, Field<T> const & field) {
-    typedef std::map< Key<T>, Key<T> > Map;
-    Map & map = boost::fusion::at_key<T>(_maps);
-    typename Map::iterator i = map.lower_bound(inputKey);
-    if (i != map.end() && i->first == inputKey) {
-        _output.replace(i->second, field);
-        return i->second;
+    _edit();
+    typename Data::KeyPairMap::iterator i = std::find_if(
+        _data->_map.begin(),
+        _data->_map.end(),
+        KeyPairCompare<T>(inputKey)
+    );
+    if (i != _data->_map.end()) {
+        Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
+        _data->_output.replace(outputKey, field);
+        return outputKey;
+    } else {
+        Key<T> outputKey = _data->_output.add(field);
+        _data->_map.insert(i, std::make_pair(inputKey, outputKey));
+        return outputKey;
     }
-    Key<T> outputKey = _output.add(field);
-    map.insert(i, std::make_pair(inputKey, outputKey));
-    return outputKey;
 }
 
 void LayoutMapper::invert() {
-    std::swap(_input, _output);
-    boost::fusion::for_each(_maps, InvertMap());
+    _edit();
+    std::swap(_data->_input, _data->_output);
+    std::for_each(_data->_map.begin(), _data->_map.end(), SwapKeyPair());
 }
 
 template <typename T>
 bool LayoutMapper::isMapped(Key<T> const & inputKey) const {
-    typedef std::map< Key<T>, Key<T> > Map;
-    Map const & map = boost::fusion::at_key<T>(_maps);
-    return map.count(inputKey);
+    return std::count_if(
+        _data->_map.begin(),
+        _data->_map.end(),
+        KeyPairCompare<T>(inputKey)
+    );
 }
 
 template <typename T>
 Key<T> LayoutMapper::getMapping(Key<T> const & inputKey) const {
-    typedef std::map< Key<T>, Key<T> > Map;
-    Map const & map = boost::fusion::at_key<T>(_maps);
-    typename Map::const_iterator i = map.find(inputKey);
-    if (i == map.end()) {
+    typename Data::KeyPairMap::iterator i = std::find_if(
+        _data->_map.begin(),
+        _data->_map.end(),
+        KeyPairCompare<T>(inputKey)
+    );
+    if (i == _data->_map.end()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::NotFoundException,
             "Input Key is not mapped."
         );
     }
-    return i->second;
+    return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

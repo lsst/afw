@@ -1,4 +1,4 @@
-#include "lsst/afw/table/config.h"
+
 
 #include "boost/make_shared.hpp"
 

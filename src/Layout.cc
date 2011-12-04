@@ -156,7 +156,7 @@ void Layout::replace(Key<T> const & key, Field<T> const & field) {
 
 Layout::Description Layout::describe() const {
     Description result;
-    _data->forEach(Describe(&result));
+    forEach(Describe(&result));
     return result;
 }
 

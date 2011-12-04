@@ -1,4 +1,4 @@
-#include "lsst/afw/table/config.h"
+
 
 #include <limits>
 
