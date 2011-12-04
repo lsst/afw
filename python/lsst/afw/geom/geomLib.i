@@ -105,11 +105,6 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "lsst/afw/geom/Extent.h"
 %include "lsst/afw/geom/Point.h"
 
-%extend lsst::afw::geom::PointBase {
-    %template(distsqI) distanceSquared<int>;
-    %template(distsqD) distanceSquared<double>;
-}
-
 %Extent_POSTINCLUDE(int,2,I);
 %Extent_POSTINCLUDE(int,3,I);
 %Extent_POSTINCLUDE(double,2,D);
