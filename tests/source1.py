@@ -64,7 +64,7 @@ class SourceTestCase(unittest.TestCase):
             
             ds = afwDet.Source()
             ds.setId(m)
-            ds.setRa(math.radians(m*20))
+            ds.setRa(m*20 * afwGeom.degrees)
             self.container2.push_back(ds)
 
         self.dsv1 = afwDet.PersistableSourceVector(self.container1)
@@ -82,34 +82,35 @@ class SourceTestCase(unittest.TestCase):
 
         # check that getRa() returns in radians
         # MAGIC 0.349... = math.radians(20.)
-        self.assertAlmostEqual(sources[1].getRa(), 0.3490658503988659)
+        self.assertAlmostEqual(sources[1].getRa().asRadians(), 0.3490658503988659)
+
+        # These tests don't make so much sense now that we use Angle!
 
         # check that setRaDec() getRaDec() round-trips.
         ra,dec = 100., 50.
         # makeCoord takes degrees.
-        c1 = afwCoord.makeCoord(afwCoord.ICRS, ra, dec)
+        c1 = afwCoord.makeCoord(afwCoord.ICRS, ra * afwGeom.degrees, dec * afwGeom.degrees)
         # (test that by using degrees explicitly)
         c2 = afwCoord.makeCoord(afwCoord.ICRS, afwGeom.Point2D(ra, dec),
-                                afwCoord.DEGREES)
-        self.assertAlmostEqual(c1.toIcrs().getRa(afwCoord.DEGREES), c2.toIcrs().getRa(afwCoord.DEGREES))
-        self.assertAlmostEqual(c1.toIcrs().getDec(afwCoord.DEGREES), c2.toIcrs().getDec(afwCoord.DEGREES))
+                                afwGeom.degrees)
+        self.assertAlmostEqual(c1.toIcrs().getRa().asDegrees(), c2.toIcrs().getRa().asDegrees())
+        self.assertAlmostEqual(c1.toIcrs().getDec().asDegrees(), c2.toIcrs().getDec().asDegrees())
 
         src = afwDet.Source()
         src.setRaDec(c1)
         # get it back in ICRS by default
         c1b = src.getRaDec()
-        self.assertAlmostEqual(c1.toIcrs().getDec(afwCoord.DEGREES), c1b.toIcrs().getDec(afwCoord.DEGREES))
-        self.assertAlmostEqual(c1.toIcrs().getRa(afwCoord.DEGREES),  c1b.toIcrs().getRa(afwCoord.DEGREES))
+        self.assertAlmostEqual(c1.toIcrs().getDec().asDegrees(), c1b.toIcrs().getDec().asDegrees())
+        self.assertAlmostEqual(c1.toIcrs().getRa().asDegrees(),  c1b.toIcrs().getRa().asDegrees())
 
-        # check internal rep: radians
-        self.assertAlmostEqual(src.getRa(), math.radians(ra))
-        self.assertAlmostEqual(src.getDec(), math.radians(dec))
+        self.assertAlmostEqual(src.getRa().asDegrees(), ra)
+        self.assertAlmostEqual(src.getDec().asDegrees(), dec)
 
-        src.setRa(math.pi)
-        src.setDec(math.pi / 4.)
+        src.setRa(math.pi * afwGeom.radians)
+        src.setDec(math.pi / 4. * afwGeom.radians)
         c1c = src.getRaDec()
-        self.assertAlmostEqual(c1c.getLongitude(afwCoord.DEGREES), 180.)
-        self.assertAlmostEqual(c1c.getLatitude(afwCoord.DEGREES), 45.)
+        self.assertAlmostEqual(c1c.getLongitude().asDegrees(), 180.)
+        self.assertAlmostEqual(c1c.getLatitude().asDegrees(), 45.)
 
     def testBoostFilePersistence(self):
         pytype = "lsst.afw.detection.PersistableSourceVector"
@@ -122,38 +123,38 @@ class SourceTestCase(unittest.TestCase):
         per = Persistence.getPersistence(perPol)
         additionalData = dafBase.PropertySet()
         storageName = 'BoostStorage'
-        f,loc = tempfile.mkstemp(suffix='.boost')
+        f,loc = tempfile.mkstemp(suffix='.boost', dir=os.path.join("tests", "data"))
         os.close(f)
         print 'Writing to temp file', loc
-        logLoc = LogicalLocation(loc, additionalData)
-        storageList = StorageList()
-        storage = per.getPersistStorage(storageName, logLoc)
-        storageList.append(storage)
+        try:
+            logLoc = LogicalLocation(loc, additionalData)
+            storageList = StorageList()
+            storage = per.getPersistStorage(storageName, logLoc)
+            storageList.append(storage)
 
-        obj = self.dsv2
-        if hasattr(obj, '__deref__'):
-            # We have a smart pointer, so dereference it.
-            obj = obj.__deref__()
-        # persist
-        per.persist(obj, storageList, additionalData)
+            obj = self.dsv2
+            # persist
+            per.persist(obj, storageList, additionalData)
 
-        # import this pythonType dynamically 
-        pythonTypeTokenList = pytype.split('.')
-        importClassString = pythonTypeTokenList.pop()
-        importClassString = importClassString.strip()
-        importPackage = ".".join(pythonTypeTokenList)
-        importType = __import__(importPackage, globals(), locals(), \
-                                [importClassString], -1) 
-        pythonType = getattr(importType, importClassString)
-        # unpersist
-        additionalData = dafBase.PropertySet()
-        logLoc = LogicalLocation(loc, additionalData)
-        storageList = StorageList()
-        storage = per.getRetrieveStorage(storageName, logLoc)
-        storageList.append(storage)
-        itemData = per.unsafeRetrieve(ctype, storageList, additionalData)
-        finalItem = pythonType.swigConvert(itemData)
-        sources = finalItem
+            # import this pythonType dynamically 
+            pythonTypeTokenList = pytype.split('.')
+            importClassString = pythonTypeTokenList.pop()
+            importClassString = importClassString.strip()
+            importPackage = ".".join(pythonTypeTokenList)
+            importType = __import__(importPackage, globals(), locals(), \
+                                    [importClassString], -1) 
+            pythonType = getattr(importType, importClassString)
+            # unpersist
+            additionalData = dafBase.PropertySet()
+            logLoc = LogicalLocation(loc, additionalData)
+            storageList = StorageList()
+            storage = per.getRetrieveStorage(storageName, logLoc)
+            storageList.append(storage)
+            itemData = per.unsafeRetrieve(ctype, storageList, additionalData)
+            finalItem = pythonType.swigConvert(itemData)
+            sources = finalItem
+        finally:
+            os.remove(loc)
 
         #print 'unpersisted sources:', sources
         obj1 = obj.getSources()
@@ -163,9 +164,9 @@ class SourceTestCase(unittest.TestCase):
         self.assertEqual(len(obj2), 16)
         s1 = obj2[1]
         # check that RA came out in radians
-        self.assertAlmostEqual(s1.getRa(), 0.3490658503988659)
+        self.assertAlmostEqual(s1.getRa().asRadians(), 0.3490658503988659)
         # check that we can get it out in degrees
-        self.assertAlmostEqual(s1.getRaDec().toIcrs().getRa(afwCoord.DEGREES), 20.)
+        self.assertAlmostEqual(s1.getRaDec().toIcrs().getRa().asDegrees(), 20.)
 
 
     def testIterable(self):
@@ -273,32 +274,33 @@ class SourceTestCase(unittest.TestCase):
                          (float('-inf'), 0.0)):
             # we can't pass inf to methods taking floats - SWIG raises
             # an overflow error
-            s.setRa(vd)
-            s.setDec(vd)
-            s.setRaErrForDetection(vf)
-            s.setRaErrForWcs(vf)
-            s.setDecErrForDetection(vf)
-            s.setDecErrForWcs(vf)
+            R = afwGeom.radians
+            s.setRa(vd * R)
+            s.setDec(vd * R)
+            s.setRaErrForDetection(vf * R)
+            s.setRaErrForWcs(vf * R)
+            s.setDecErrForDetection(vf * R)
+            s.setDecErrForWcs(vf * R)
             s.setXFlux(vd)
             s.setXFluxErr(vf)
             s.setYFlux(vd)
             s.setYFluxErr(vf)
-            s.setRaFlux(vd)
-            s.setRaFluxErr(vf)
-            s.setDecFlux(vd)
-            s.setDecFluxErr(vf)
+            s.setRaFlux(vd * R)
+            s.setRaFluxErr(vf * R)
+            s.setDecFlux(vd * R)
+            s.setDecFluxErr(vf * R)
             s.setXPeak(vd)
             s.setYPeak(vd)
-            s.setRaPeak(vd)
-            s.setDecPeak(vd)
+            s.setRaPeak(vd * R)
+            s.setDecPeak(vd * R)
             s.setXAstrom(vd)
             s.setXAstromErr(vf)
             s.setYAstrom(vd)
             s.setYAstromErr(vf)
-            s.setRaAstrom(vd)
-            s.setRaAstromErr(vf)
-            s.setDecAstrom(vd)
-            s.setDecAstromErr(vf)
+            s.setRaAstrom(vd * R)
+            s.setRaAstromErr(vf * R)
+            s.setDecAstrom(vd * R)
+            s.setDecAstromErr(vf * R)
             s.setTaiMidPoint(vd)
             s.setTaiRange(vd)
             s.setPsfFlux(vd)
@@ -320,8 +322,8 @@ class SourceTestCase(unittest.TestCase):
             s.setChi2(vf)
             s.setSky(vf)
             s.setSkyErr(vf)
-            s.setRaObject(vd)
-            s.setDecObject(vd)
+            s.setRaObject(vd * R)
+            s.setDecObject(vd * R)
             ss.append(s)
             psv = afwDet.PersistableSourceVector(ss) 
             pol = dafPolicy.Policy()
@@ -346,6 +348,15 @@ class SourceTestCase(unittest.TestCase):
             except:
                 f.close()
                 raise
+
+    def testLongId(self):
+        """Test that we can set an ID from a python long; #1714"""
+
+        if False:                       # #1714 is not fixed (Source ctor takes int)
+            s = afwDet.Source(2355928297481L)
+
+        s = afwDet.Source()
+        s.setId(2355928297481L)         # ... but we can set the ID
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

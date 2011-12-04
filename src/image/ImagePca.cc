@@ -32,8 +32,8 @@
 #include "lsst/utils/ieee.h"
 
 #include "Eigen/Core"
-#include "Eigen/QR"
 #include "Eigen/SVD"
+#include "Eigen/Eigenvalues"
 
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/math/Statistics.h"
@@ -210,7 +210,6 @@ void ImagePca<ImageT>::analyze()
         }
     }
     flux_bar /= nImage;
-   
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eVecValues(R);
     Eigen::MatrixXd const& Q = eVecValues.eigenvectors();
     Eigen::VectorXd const& lambda = eVecValues.eigenvalues();
@@ -383,7 +382,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     if (nEigen == 1) {
         x(0) = b(0)/A(0, 0);
     } else {
-        A.svd().solve(b, &x);
+        x = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
     }
     //
     // Accumulate the best-fit-image in bestFitImage
@@ -446,8 +445,10 @@ double do_updateBadPixels(
                         float const var = iptr.variance()/(flux_i*flux_i);
                         float const ivar = 1.0/var;
 
-                        *mptr += value*ivar;
-                        *wptr += ivar;
+                        if (lsst::utils::isfinite(value*ivar)) {
+                            *mptr += value*ivar;
+                            *wptr += ivar;
+                        }
                     }
                 }
             }
@@ -582,7 +583,9 @@ double innerProduct(Image1T const& lhs, ///< first image
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr) {
                 typename Image1T::Pixel val = *lptr;
-                sum += val*val;
+                if (lsst::utils::isfinite(val)) {
+                    sum += val*val;
+                }
             }
         }
     } else {
@@ -596,7 +599,10 @@ double innerProduct(Image1T const& lhs, ///< first image
             typename Image2T::const_x_iterator rptr = rhs.row_begin(y) + border;
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr, ++rptr) {
-                sum += (*lptr)*(*rptr);
+                double const tmp = (*lptr)*(*rptr);
+                if (lsst::utils::isfinite(tmp)) {
+                    sum += tmp;
+                }
             }
         }
     }
@@ -619,6 +625,7 @@ double innerProduct(Image1T const& lhs, ///< first image
     template double innerProduct(Image<U> const&, Image<T> const&, int);
 
 INSTANTIATE(boost::uint16_t)
+INSTANTIATE(boost::uint64_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)

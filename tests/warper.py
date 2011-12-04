@@ -42,7 +42,7 @@ VERBOSITY = 0                       # increase to see trace
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if dataDir == None:
     warnings.warn("skipping all tests because afwdata is not setup")
 else:

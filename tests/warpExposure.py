@@ -49,11 +49,12 @@ except:
     # set True to save afw-warped images as FITS files
     SAVE_FITS_FILES = False
     # set True to save failed afw-warped images as FITS files even if SAVE_FITS_FILES is False
-    SAVE_FAILED_FITS_FILES = False
+    #SAVE_FAILED_FITS_FILES = False
+    SAVE_FAILED_FITS_FILES = True
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 

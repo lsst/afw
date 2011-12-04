@@ -178,6 +178,13 @@ definitions: {
                                 maxOccurs: 1
                                 default: "None"
                             }
+                            ptype: {
+                                type: string
+                                description: "Type of Ccd"
+                                minOccurs: 1
+                                maxOccurs: 1
+                                default: "default"
+                            }
                             index: {
                                 type: int
                                 description: "Location of CCD in Raft thought of as a grid of CCDs"
@@ -216,6 +223,13 @@ definitions: {
         dictionary: {
             target: "Ccd"
             definitions: {
+                ptype: {
+                    type: string
+                    description: "Type of ccd so cameras can use multiple types of detectors"
+                    minOccurs: 1
+                    maxOccurs: 1
+                    default: "default"
+                }
                 pixelSize: {
                     type: double
                     description: "Pixel size in microns"
@@ -243,13 +257,15 @@ definitions: {
                             serial: {
                                 type: int
                                 description: "Serial number for this Amp"
-                                minOccurs: 0
+                                minOccurs: 1
                                 maxOccurs: 1
                             }
-                            id: {
+                            ptype: {
                                 type: string
-                                description: "ID for this Amp"
-                                default: "??"
+                                description: "Type of amp"
+                                minOccurs: 1
+                                maxOccurs: 1
+                                default: "default"
                             }
                             index: {
                                 type: int
@@ -257,25 +273,30 @@ definitions: {
                                 minOccurs: 2
                                 maxOccurs: 2
                             }
-                            readoutCorner: {
-                                description: "location of first pixel read"
-                                allowed: {
-                                    value: "LLC"
-                                    description: "Lower left corner"
-                                }
-                                allowed: {
-                                    value: "ULC"
-                                    description: "Upper left corner"
-                                }
-                                allowed: {
-                                    value: "URC"
-                                    description: "Upper right corner"
-                                }
-                                allowed: {
-                                    value: "LRC"
-                                    description: "Lower right corner"
-                                }
+                            flipLR: {
+                                type: bool
+                                description: "Does then data need to be flipped left <--> right?"
                                 minOccurs: 0
+                                maxOccurs: 1
+                                default: false
+                            }
+                            nQuarter: {
+                                type: int
+                                description: "Number of rotations to apply to the amp to fit it in the detector in camera coordinates"
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            hdu: {
+                                type: int
+                                description: "HDU the data's found in"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: 0
+                            }
+                            diskCoordSys: {
+                                type: string
+                                description: "I can concieve of 3 different options for how the pixels are held on disk: amp (electronic), sensor, and camera coordinates"
+                                minOccurs: 1
                                 maxOccurs: 1
                             }
                         }
@@ -292,99 +313,35 @@ definitions: {
         dictionary: {
             target: Amp
             definitions: {
-                height: {
+                ptype: {
+                    type: string
+                    minOccurs: 1
+                    maxOccurs: 1
+                    default: "default"
+                }
+                biassec: {
                     type: int
-                    description: "Number of rows in physical device"
+                    description: "Bias section on the chip in zero-based readout coordinates: minx, miny, maxx, maxy"
+                    minOccurs: 4
+                    maxOccurs: 4
+                }
+                datasec: {
+                    type: int
+                    description: "Data section on the chip in zero-based readout coordinates: minx, miny, maxx, maxy"
+                    minOccurs: 4
+                    maxOccurs: 4
+                }
+                ewidth: {
+                    type: int
+                    description: "Width in pixels of the raw data"
                     minOccurs: 1
                     maxOccurs: 1
                 }
-                width: {
+                eheight: {
                     type: int
-                    description: "Number of columns in physical device"
+                    description: "Height in pixels of the raw data"
                     minOccurs: 1
                     maxOccurs: 1
-                }
-                extended: {
-                    type: int
-                    description: "length of extended register"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-                preRows: {
-                    type: int
-                    description: "extra rows before first real serial transfer"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-                overclockH: {
-                    type: int
-                    description: "number of serial overclock pixels"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-                overclockV: {
-                    type: int
-                    description: number of parallel overclock pixels
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: 0
-                }
-            }
-        }
-    }
-    #
-    # How the amps within a CCD are laid out in disk files
-    #
-    CcdDiskLayout: {
-        type: Policy
-        dictionary: {
-            target: "CcdDiskLayout"
-            definitions: {
-                HduPerAmp: {
-                    type: bool
-                    description: "Amps are each stored in their own HDU (maybe their own file)"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: false
-                }
-
-                Amp: {
-                    type: policy
-                    dictionary: {
-                        target: Amp
-                        definitions: {
-                            serial: {
-                                type: int
-                                description: "Serial number for this Amp"
-                                minOccurs: 0 # Really 1, but then the validator complains
-                                maxOccurs: 1
-                            }
-                            flipLR: {
-                                type: bool
-                                description: "Does then data need to be flipped left <--> right?"
-                                minOccurs: 0
-                                maxOccurs: 1
-                                default: false
-                            }
-                            flipTB: {
-                                type: bool
-                                description: "Does then data need to be flipped top <--> bottom?"
-                                minOccurs: 0
-                                maxOccurs: 1
-                                default: false
-                            }
-                            hdu: {
-                                type: int
-                                description: "HDU the data's found in"
-                                minOccurs: 0
-                                maxOccurs: 1
-                                default: 0
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -434,6 +391,13 @@ definitions: {
                                             minOccurs: 0
                                             maxOccurs: 1
                                             default: "None"
+                                        }
+                                        ptype: {
+                                            type: string
+                                            description: "Type of the Ccd"
+                                            minOccurs: 1
+                                            maxOccurs: 1
+                                            default: "default"
                                         }
                                         Amp: {
                                             type: policy

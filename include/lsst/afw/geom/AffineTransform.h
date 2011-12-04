@@ -26,7 +26,7 @@
 #define LSST_AFW_MATH_AFFINE_TRANSFORM_H
 
 #include <boost/shared_ptr.hpp>
-#include <Eigen/Geometry>
+#include "Eigen/Core"
 #include <iostream>
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"

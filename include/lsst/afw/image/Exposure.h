@@ -50,8 +50,7 @@
 #include "boost/make_shared.hpp"
 
 #include "lsst/base.h"
-#include "lsst/daf/base/Persistable.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
@@ -76,7 +75,7 @@ class Calib;
 template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
          typename VarianceT=lsst::afw::image::VariancePixel>
 class Exposure : public lsst::daf::base::Persistable,
-                 public lsst::daf::data::LsstBase {
+                 public lsst::daf::base::Citizen {
 public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
     typedef boost::shared_ptr<Exposure> Ptr;
@@ -104,7 +103,7 @@ public:
         std::string const &baseName, 
         int const hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const origin = LOCAL, 
+        ImageOrigin const origin=LOCAL,
         bool const conformMasks=false
     );
     
@@ -113,7 +112,7 @@ public:
         size_t *ramFileLen,
         int const hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const origin = LOCAL, 
+        ImageOrigin const origin=LOCAL, 
         bool const conformMasks=false
     );
     
@@ -125,7 +124,7 @@ public:
     Exposure(
         Exposure const &src, 
         lsst::afw::geom::Box2I const& bbox, 
-        ImageOrigin const origin = LOCAL, 
+        ImageOrigin const origin=LOCAL, 
         bool const deep=false
     );
 
@@ -137,12 +136,12 @@ public:
     Exposure(Exposure<OtherPixelT, MaskT, VarianceT> const& rhs, //!< Input Exposure
              const bool deep        //!< Must be true; needed to disambiguate
     ) :
-        lsst::daf::data::LsstBase(typeid(this)),
+        lsst::daf::base::Citizen(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
         _wcs(rhs.getWcs()->clone()),
         _detector(rhs.getDetector()),
         _filter(rhs.getFilter()),
-        _calib(new lsst::afw::image::Calib(*rhs.getCalib())),
+        _calib(_cloneCalib(rhs.getCalib())),
         _psf(_clonePsf(rhs.getPsf()))
     {
         if (not deep) {
@@ -165,6 +164,9 @@ public:
     lsst::afw::cameraGeom::Detector::Ptr getDetector() const { return _detector; }
     /// Return the Exposure's filter
     Filter getFilter() const { return _filter; }
+    /// Return flexible metadata
+    lsst::daf::base::PropertySet::Ptr getMetadata() const { return _metadata; }
+    void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _metadata = metadata; }
 
     /// Return the Exposure's width
     int getWidth() const { return _maskedImage.getWidth(); }
@@ -195,7 +197,7 @@ public:
      */
     geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::Box2I getBBox(ImageOrigin const origin) const {
+    geom::Box2I getBBox(ImageOrigin const origin=LOCAL) const {
         return _maskedImage.getBBox(origin);
     }
     /**
@@ -255,9 +257,11 @@ private:
     Filter _filter;
     PTR(Calib) _calib;
     PTR(lsst::afw::detection::Psf) _psf;
-    
+    lsst::daf::base::PropertySet::Ptr _metadata;
+
     lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
     static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
+    static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
 };
 
 /**

@@ -24,6 +24,8 @@
 ## \file
 ## \brief Definitions to talk to ds9 from python
 
+from __future__ import with_statement
+
 import os, re, math, sys, time
 
 try:
@@ -224,18 +226,26 @@ except NameError:
 annoying but necessary for anything resembling performance
 
 The usual usage pattern (from a module importing this file, ds9.py) is probably:
-   ds9.cmdBuffer.pushSize()
-   # bunches of ds9.{dot,line} commands
-   ds9.cmdBuffer.flush()
-   # bunches more ds9.{dot,line} commands
-   ds9.cmdBuffer.popSize()
 
-N.b. These are available as:
+   with ds9.Buffering():
+       # bunches of ds9.{dot,line} commands
+       ds9.flush()
+       # bunches more ds9.{dot,line} commands
+
+or (if you don't like "with")
    ds9.buffer()
    # bunches of ds9.{dot,line} commands
    ds9.flush()
    # bunches more ds9.{dot,line} commands
    ds9.buffer(False)
+
+or (the old idiom):
+   
+   ds9.cmdBuffer.pushSize()
+   # bunches of ds9.{dot,line} commands
+   ds9.cmdBuffer.flush()
+   # bunches more ds9.{dot,line} commands
+   ds9.cmdBuffer.popSize()
         """
 
         def __init__(self, size=0):
@@ -368,7 +378,7 @@ def show(frame=None):
     ds9Cmd(selectFrame(frame) + "; raise", trap=False)
 
 def setMaskColor(color=GREEN):
-    """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
+    """Set the ds9 mask colour to; eg. setMaskColor(RED)"""
     ds9Cmd("mask color %s" % color)
 
 
@@ -485,6 +495,7 @@ except NameError:
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
+    title = str(title)
     if True:
         if isMask:
             xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()
@@ -522,9 +533,18 @@ def buffer(enable=True):
     if enable:
         cmdBuffer.pushSize()
     else:
-        ds9.cmdBuffer.popSize()
+        cmdBuffer.popSize()
 
 flush = cmdBuffer.flush(silent=True)
+
+class Buffering(object):
+    """A class intended to be used with python's with statement:
+
+    """
+    def __enter__(self):
+        buffer(True)
+    def __exit__(self, *args):
+        buffer(False)
 
 def erase(frame=None):
     """Erase the specified DS9 frame"""

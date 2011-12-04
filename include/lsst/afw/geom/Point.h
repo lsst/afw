@@ -109,13 +109,25 @@ public:
     /// @brief Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
     
+    std::string toString() const {
+        std::stringstream out;
+        out << "Point(";
+        for (size_t i = 0; i < N; ++i) {
+            if (i != 0) {
+                out << ",";
+            }
+            out << (*this)[i];
+        }
+        out << ")";
+        return out.str();
+    }
+
 protected:
 
     explicit PointBase(T val = static_cast<T>(0)) : Super(val) {}
 
     template <typename Vector>
     explicit PointBase(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-    void _swap(PointBase & other) {Super::_swap(other);}
 };
 
 /**
@@ -146,7 +158,7 @@ public:
     /// @brief Explicit constructor from Extent.
     explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}          
 
-    void swap(Point & other) {_swap(other);}
+    void swap(Point & other) { this->_swap(other); }
 };
 
 /**
@@ -201,7 +213,7 @@ public:
     /// @brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T> asTuple() const { return boost::make_tuple(this->_vector.x(),this->_vector.y()); }
 
-    void swap(Point & other) {Super::_swap(other);}
+    void swap(Point & other) { this->_swap(other); }
 };
 
 /**
@@ -254,7 +266,7 @@ public:
         return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z());
     }
 
-    void swap(Point & other) {_swap(other);}
+    void swap(Point & other) { this->_swap(other); }
 };
 
 typedef Point<int,2> PointI;

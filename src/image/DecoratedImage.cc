@@ -44,7 +44,7 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
     geom::Extent2I const & dimensions ///< desired number of columns. rows
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(dimensions))
 {
     init();
@@ -58,7 +58,7 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
     geom::Box2I const & bbox // (width, height) and origin of the desired Image
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(bbox))
 {
     init();
@@ -72,7 +72,7 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
     typename Image<PixelT>::Ptr rhs ///< Image to go into DecoratedImage
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(rhs)
 {
     init();
@@ -87,7 +87,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
     const DecoratedImage& src, ///< right hand side
     const bool deep            ///< Make deep copy?
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain) 
 {
     setMetadata(src.getMetadata());
@@ -139,7 +139,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
                                               geom::Box2I const& bbox,      ///< Only read these pixels
                                               ImageOrigin const origin     ///< Coordinate system of the bbox
                                              ) :
-    lsst::daf::data::LsstBase(typeid(this))
+    lsst::daf::base::Citizen(typeid(this))
 {             ///< HDU within the file
     init();
     _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
@@ -175,4 +175,5 @@ template class image::DecoratedImage<boost::uint16_t>;
 template class image::DecoratedImage<int>;
 template class image::DecoratedImage<float>;
 template class image::DecoratedImage<double>;
+template class image::DecoratedImage<boost::uint64_t>;
 

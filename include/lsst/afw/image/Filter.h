@@ -117,6 +117,12 @@ public :
      */
     explicit Filter(CONST_PTR(lsst::daf::base::PropertySet), bool const force=false);
 
+    /*
+     * Compare two Filters
+     */
+    bool operator==(Filter const& rhs) const;
+    bool operator!=(Filter const& rhs) const { return !(*this == rhs); }
+
     /**
      * Return a Filter's integral id
      */

@@ -31,6 +31,7 @@
 #include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
+#include "lsst/afw/detection/AperturePhotometry.h"
 #include "lsst/afw/detection/Shape.h"
 
 #include "lsst/afw/formatters/SourceFormatter.h"
@@ -97,6 +98,11 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %MeasurementBefore(Photometry);
 %MeasurementBefore(Shape);
 
+SWIG_SHARED_PTR_DERIVED(AperturePhotometry, lsst::afw::detection::Photometry, 
+                        lsst::afw::detection::AperturePhotometry);
+SWIG_SHARED_PTR_DERIVED(MultipleAperturePhotometry, lsst::afw::detection::Photometry, 
+                        lsst::afw::detection::MultipleAperturePhotometry);
+
 %include "lsst/afw/detection/Schema.h"
 %include "lsst/afw/detection/Measurement.h"
 
@@ -107,6 +113,18 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %include "lsst/afw/detection/Astrometry.h"
 %include "lsst/afw/detection/Photometry.h"
 %include "lsst/afw/detection/Shape.h"
+%include "lsst/afw/detection/AperturePhotometry.h"
+
+%inline %{
+    lsst::afw::detection::AperturePhotometry::Ptr
+    cast_AperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::AperturePhotometry>(phot);
+    }
+    lsst::afw::detection::MultipleAperturePhotometry::Ptr
+    cast_MultipleAperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::MultipleAperturePhotometry>(phot);
+    }
+%}
 
 /************************************************************************************************************/
 
@@ -121,7 +139,7 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
         std::ostringstream os;
         os << "Source " << $self->getId();
         os.precision(9);
-        os << " (" << (180./M_PI * $self->getRa()) << ", " << (180./M_PI * $self->getDec()) << " deg)";
+        os << " (" << ($self->getRa().asDegrees()) << ", " << ($self->getDec().asDegrees()) << " deg)";
         return os.str();
     }
 
@@ -161,7 +179,7 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
         std::ostringstream os;
         os << "DiaSource " << $self->getId();
         os.precision(9);
-        os << " (" << (180./M_PI * $self->getRa()) << ", " << (180./M_PI * $self->getDec()) << " deg)";
+        os << " (" << ($self->getRa().asDegrees()) << ", " << ($self->getDec().asDegrees()) << " deg)";
         return os.str();
     }
 };

@@ -65,7 +65,7 @@ namespace {
 }
 afwMath::Kernel::Kernel()
 :
-    LsstBase(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _spatialFunctionList(),
     _width(0),
     _height(0),
@@ -88,7 +88,7 @@ afwMath::Kernel::Kernel(
     unsigned int nKernelParams,         ///< number of kernel parameters
     SpatialFunction const &spatialFunction) ///< spatial function (or NullSpatialFunction if none specified)
 :
-    LsstBase(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _spatialFunctionList(),
     _width(width),
     _height(height),
@@ -127,7 +127,7 @@ afwMath::Kernel::Kernel(
     std::vector<SpatialFunctionPtr> spatialFunctionList)
         ///< list of spatial function, one per kernel parameter
 :
-    LsstBase(typeid(this)),
+    daf::base::Citizen(typeid(this)),
    _width(width),
    _height(height),
    _ctrX(width/2),

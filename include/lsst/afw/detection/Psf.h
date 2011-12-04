@@ -8,7 +8,7 @@
 #include <typeinfo>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/daf/data.h"
+#include "lsst/daf/base.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/image/Color.h"
 
@@ -36,7 +36,7 @@ template<typename PsfT, typename PsfFactorySignatureT> class PsfFactory;
  *
  * \note A polymorphic base class for Psf%s
  */
-class Psf : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
+class Psf : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
 public:
     typedef boost::shared_ptr<Psf> Ptr;            ///< shared_ptr to a Psf
     typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
@@ -45,7 +45,7 @@ public:
     typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by computeImage
 
     /// ctor
-    Psf() : lsst::daf::data::LsstBase(typeid(this)) {}
+    Psf() : lsst::daf::base::Citizen(typeid(this)) {}
     virtual ~Psf() {}
 
     virtual Ptr clone() const = 0;

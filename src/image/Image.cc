@@ -92,7 +92,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
 template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     geom::Extent2I const & dimensions
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _origin(0,0), _manager(),
     _gilView(_allocateView(dimensions, _manager))
 {}
@@ -105,7 +105,7 @@ image::ImageBase<PixelT>::ImageBase(
 template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     geom::Box2I const & bbox
-) : lsst::daf::data::LsstBase(typeid(this)),
+) : lsst::daf::base::Citizen(typeid(this)),
     _origin(bbox.getMin()), _manager(),
     _gilView(_allocateView(bbox.getDimensions(), _manager))
 {}
@@ -122,7 +122,7 @@ image::ImageBase<PixelT>::ImageBase(
     bool const deep       ///< If false, new ImageBase shares storage with rhs;
                           ///< if true make a new, standalone, ImageBase
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _origin(rhs._origin),
     _manager(rhs._manager),
     _gilView(rhs._gilView)
@@ -150,7 +150,7 @@ image::ImageBase<PixelT>::ImageBase(
     bool const deep       ///< If false, new ImageBase shares storage with rhs;
                           ///< if true make a new, standalone, ImageBase
 ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _origin((origin==PARENT) ? bbox.getMin(): rhs._origin + geom::Extent2I(bbox.getMin())),
     _manager(rhs._manager), // reference counted pointer, don't copy pixels
     _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
@@ -174,7 +174,7 @@ image::ImageBase<PixelT>::ImageBase(
  */
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2I const & xy0) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _origin(xy0),
     _manager(array.getManager()),
     _gilView(
@@ -514,7 +514,8 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         int,
         unsigned int,
         float,
-        double
+        double,
+        boost::uint64_t
     > fits_image_types;
 
     if (!boost::filesystem::exists(fileName)) {
@@ -524,6 +525,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     if (!metadata) {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
+
     if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
@@ -537,7 +539,8 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
  * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(char **ramFile, size_t *ramFileLen,
+image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
+                            size_t *ramFileLen,      ///< Pointer to the length of the FITS file in memory
                             int const hdu,               ///< Desired HDU
                             lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
                             geom::Box2I const& bbox,                           ///< Only read these pixels
@@ -552,7 +555,8 @@ image::Image<PixelT>::Image(char **ramFile, size_t *ramFileLen,
         int,
         unsigned int,
         float,
-        double
+        double,
+        boost::uint64_t
     > fits_image_types;
 
     if (!metadata) {
@@ -600,7 +604,8 @@ void image::Image<PixelT>::writeFits(
  */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-    char **ramFile, size_t *ramFileLen,
+    char **ramFile,     ///< Pointer to a pointer to the FITS file in memory
+    size_t *ramFileLen, ///< Pointer to the length of the FITS file in memory
     boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
     std::string const& mode                     //!< "w" to write a new file; "a" to append
 ) const {
@@ -890,7 +895,8 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint16_t> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<float> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs)
+   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs); \
+   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint64_t> const& rhs);
 
 #define INSTANTIATE(T) \
    template class image::ImageBase<T>; \
@@ -904,4 +910,5 @@ INSTANTIATE(boost::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
+INSTANTIATE(boost::uint64_t);
 /// \endcond

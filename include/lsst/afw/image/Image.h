@@ -46,7 +46,7 @@
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/ndarray.h"
 
@@ -106,7 +106,7 @@ namespace image {
     //
     template<typename PixelT>
     class ImageBase : public lsst::daf::base::Persistable,
-                      public lsst::daf::data::LsstBase {
+                      public lsst::daf::base::Citizen {
     private:
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
@@ -176,14 +176,15 @@ namespace image {
         explicit ImageBase(const geom::Extent2I  & dimensions=geom::Extent2I());
         explicit ImageBase(const geom::Box2I &bbox);
         ImageBase(const ImageBase& src, const bool deep=false);
-        explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox, const ImageOrigin origin, const bool deep=false);
+        explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox,
+                           const ImageOrigin origin=LOCAL, const bool deep=false);
         /// generalised copy constructor
         ///
         /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
         /// ImageBase types.
         template<typename OtherPixelT>
         ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
-            lsst::daf::data::LsstBase(typeid(this)) {
+            lsst::daf::base::Citizen(typeid(this)) {
             if (!deep) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                     "Only deep copies are permitted for ImageBases with different pixel types");
@@ -392,6 +393,7 @@ namespace image {
     template<typename PixelT>
     class Image : public ImageBase<PixelT> {
     public:
+        template<typename, typename, typename> friend class MaskedImage;
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
 
@@ -411,17 +413,17 @@ namespace image {
         explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
         explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
-        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin, 
+        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=LOCAL, 
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin = LOCAL);
+                       ImageOrigin const origin=LOCAL);
         explicit Image(char **ramFile, size_t *ramFileLen, const int hdu=0,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin = LOCAL);
+                       ImageOrigin const origin=LOCAL);
 
         // generalised copy constructor
         template<typename OtherPixelT>
@@ -492,7 +494,7 @@ namespace image {
      */
     template<typename PixelT>
     class DecoratedImage : public lsst::daf::base::Persistable,
-                           public lsst::daf::data::LsstBase {
+                           public lsst::daf::base::Citizen {
     public:
         /// shared_ptr to a DecoratedImage
         typedef boost::shared_ptr<DecoratedImage> Ptr;
@@ -515,6 +517,9 @@ namespace image {
         );
 
         DecoratedImage& operator=(const DecoratedImage& image);
+
+        lsst::daf::base::PropertySet::Ptr getMetadata() const { return _metadata; }
+        void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _metadata = metadata; }
 
         /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
@@ -554,6 +559,8 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
         typename Image<PixelT>::Ptr _image;
+        daf::base::PropertySet::Ptr _metadata;
+        
         double _gain;
 
         void init();

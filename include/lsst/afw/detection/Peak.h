@@ -30,8 +30,9 @@
 #include <algorithm>
 #include <list>
 #include <cmath>
+#include <limits>
 #include <boost/shared_ptr.hpp>
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 
 #include <boost/serialization/nvp.hpp>
 
@@ -51,26 +52,35 @@ public:
     typedef boost::shared_ptr<Peak> Ptr;
     /// A peak at the pixel <tt>(ix, iy)</tt>
     explicit Peak(int ix,               //!< column pixel
-                  int iy)               //!< row pixel
-        : lsst::daf::base::Citizen(typeid(this)),
+                  int iy,               //!< row pixel
+                  float peakValue=std::numeric_limits<float>::quiet_NaN() //!< value of image at peak
+                 ) : lsst::daf::base::Citizen(typeid(this)),
           _id(++id),
-          _ix(ix), _iy(iy), _fx(ix), _fy(iy) {};
+          _ix(ix), _iy(iy), _fx(ix), _fy(iy), _peakValue(peakValue) {};
     /// A peak at the floating-point position <tt>(fx, fy)</tt>
-    explicit Peak(float fx=NAN,       //!< column centre
-                  float fy=NAN)       //!< row centre
-        : lsst::daf::base::Citizen(typeid(this)),
+    explicit Peak(float fx=std::numeric_limits<float>::quiet_NaN(),       //!< column centre
+                  float fy=std::numeric_limits<float>::quiet_NaN(),       //!< row centre
+                  float peakValue=std::numeric_limits<float>::quiet_NaN() //!< value of image at peak
+                 ) : lsst::daf::base::Citizen(typeid(this)),
           _id(++id),
           _ix(fx > 0 ? static_cast<int>(fx) : -static_cast<int>(-fx) - 1),
           _iy(fy > 0 ? static_cast<int>(fy) : -static_cast<int>(-fy) - 1),
-          _fx(fx), _fy(fy) {};
+          _fx(fx), _fy(fy), _peakValue(peakValue) {};
     Peak(Peak const & other) 
       : lsst::daf::base::Citizen(typeid(this)),
         _id(++id),
         _ix(other._ix), _iy(other._iy),
-        _fx(other._fx), _fy(other._fy)
+        _fx(other._fx), _fy(other._fy), _peakValue(std::numeric_limits<float>::quiet_NaN()) 
     { }
 
     ~Peak() {};
+    
+    bool operator==(Peak const& rhs) const {
+        return _id == rhs._id;
+    }
+    bool operator!=(Peak const& rhs) const {
+        return !(*this == rhs);
+    }
 
     int getId() const { return _id; }   //!< Return the Peak's unique ID
 
@@ -81,13 +91,18 @@ public:
     void setFx(float fx) { _fx = fx; }        //!< Set the column centroid
     void setFy(float fy) { _fy = fy; }        //!< Set the row centroid
 
+    void setPeakValue(float peakValue) { _peakValue = peakValue; } //!< Set the value of the image at the peak
+    float getPeakValue() const { return _peakValue; } //!< Return the value of the image at the peak
+
     std::string toString();    
 private:
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, unsigned int const version) {
+        ar & make_nvp("id", _id);
         ar & make_nvp("ix", _ix) & make_nvp("iy", _iy);
         ar & make_nvp("fx", _fx) & make_nvp("fy", _fy);
+        ar & make_nvp("peakValue", _peakValue);
     }
     //Peak(const Peak &) {}             // XXX How do we manage Citizen's copy constructor?
     static int id;
@@ -96,6 +111,7 @@ private:
     int _iy;                            //!< row-position of peak pixel
     float _fx;                          //!< column-position of peak
     float _fy;                          //!< row-position of peak
+    float _peakValue;                   //!< value of image at peak position
 };
 
 }}}

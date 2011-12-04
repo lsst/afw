@@ -31,8 +31,7 @@
 
 #include <utility>
 
-#include <Eigen/Core>
-#include <Eigen/Array>
+#include "Eigen/Core"
 #include <iostream>
 #include "boost/tuple/tuple.hpp"
 

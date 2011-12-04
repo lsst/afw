@@ -23,9 +23,9 @@
 #ifndef LSST_AFW_IMAGE_TANWCS_H
 #define LSST_AFW_IMAGE_TANWCS_H
 
-#include "Eigen/Core.h"
+#include "Eigen/Core"
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/Wcs.h" 
@@ -90,8 +90,8 @@ namespace image {
 
         bool operator==(const TanWcs &) const;
 
-        // Returns the pixel scale, in arcsec/pixel.
-        double pixelScale() const;
+        // Returns the pixel scale, in Angle/pixel.
+		lsst::afw::geom::Angle pixelScale() const;
         
         // Applies the SIP AP and BP distortion (used in the skyToPixel direction)
         lsst::afw::geom::Point2D distortPixel(const lsst::afw::geom::Point2D pixel) const;
@@ -124,8 +124,8 @@ namespace image {
 
         TanWcs & operator = (const TanWcs &);        
 
-        virtual void pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const;
-        virtual lsst::afw::geom::Point2D skyToPixelImpl(double sky1, double sky2) const;
+        virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
+        virtual lsst::afw::geom::Point2D skyToPixelImpl(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
 
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)

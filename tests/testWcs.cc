@@ -40,7 +40,7 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "Eigen/Core.h"
+#include "Eigen/Core"
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Wcs.h"
@@ -52,6 +52,7 @@
 
 namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
+namespace afwGeom = lsst::afw::geom;
 typedef Eigen::Matrix2d matrixD;
 
 
@@ -89,7 +90,7 @@ BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a Lsst
     BOOST_CHECK_CLOSE(ad.getX(), arcsecInDeg, tol);
     BOOST_CHECK_CLOSE(ad.getY(), arcsecInDeg, tol);    
     
-    geom::Point2D xy = wcs.skyToPixel(1*arcsecInDeg, 1*arcsecInDeg);
+    geom::Point2D xy = wcs.skyToPixel(1 * afwGeom::arcseconds, 1 * afwGeom::arcseconds);
     BOOST_CHECK_CLOSE(xy.getX(), 9., tol);
     BOOST_CHECK_CLOSE(xy.getY(), 9., tol);    
 }
@@ -111,26 +112,25 @@ BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     image::Wcs wcs(crval, crpix, CD);
 
     //check the trivial case
-    geom::Point2D xy = wcs.skyToPixel(80.159679, 30.80656);
+    geom::Point2D xy = wcs.skyToPixel(80.159679 * afwGeom::degrees, 30.80656 * afwGeom::degrees);
     BOOST_CHECK_CLOSE(xy.getX(), 890.5, .1);
     BOOST_CHECK_CLOSE(xy.getY(), 892.5, .1);  
         
-    xy = wcs.skyToPixel(80.258354, +30.810147);
+    xy = wcs.skyToPixel(80.258354 * afwGeom::degrees, +30.810147 * afwGeom::degrees);
     BOOST_CHECK_CLOSE(xy.getX(), 588., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 903., .1);
 
-    xy = wcs.skyToPixel(80.382829, +31.0287389);
+    xy = wcs.skyToPixel(80.382829 * afwGeom::degrees, +31.0287389 * afwGeom::degrees);
     BOOST_CHECK_CLOSE(xy.getX(), 202., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 1682., .1);
 
-    xy = wcs.skyToPixel(79.900717, +31.0046556);
+    xy = wcs.skyToPixel(79.900717 * afwGeom::degrees, +31.0046556 * afwGeom::degrees);
     BOOST_CHECK_CLOSE(xy.getX(), 1677., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 1608., .1);
 
-    xy = wcs.skyToPixel(79.987550, +30.6272333);
+    xy = wcs.skyToPixel(79.987550 * afwGeom::degrees, +30.6272333 * afwGeom::degrees);
     BOOST_CHECK_CLOSE(xy.getX(), 1424., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 256., .1);
-
 
 }
 
@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-
     double y = 910;
     geom::Point2D xy = geom::Point2D(251., 910.);
     geom::Point2D ad = wcs.pixelToSky(xy)->getPosition();
-    BOOST_CHECK_CLOSE(wcs.skyToPixel(ad[0], ad[1]).getX(), x, 1e-6);
-    BOOST_CHECK_CLOSE(wcs.skyToPixel(ad[0], ad[1]).getY(), y, 1e-6);
+    BOOST_CHECK_CLOSE(wcs.skyToPixel(ad[0] * afwGeom::degrees, ad[1] * afwGeom::degrees).getX(), x, 1e-6);
+    BOOST_CHECK_CLOSE(wcs.skyToPixel(ad[0] * afwGeom::degrees, ad[1] * afwGeom::degrees).getY(), y, 1e-6);
 }
 
 

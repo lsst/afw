@@ -35,13 +35,20 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+/// Pixel type for FootprintSet::insertIntoImage()
+///
+/// This is independent of the template parameters for FootprintSet, and
+/// including it within FootprintSet makes it difficult for SWIG to interpret
+/// the type.
+typedef boost::uint64_t FootprintIdPixel;
+
 /************************************************************************************************************/
 /*!
  * \brief A set of Footprints, associated with a MaskedImage
  *
  */
 template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel>
-class FootprintSet : public lsst::daf::data::LsstBase {
+class FootprintSet : public lsst::daf::base::Citizen {
 public:
     typedef boost::shared_ptr<FootprintSet> Ptr;
     /// The FootprintSet's set of Footprint%s
@@ -49,21 +56,22 @@ public:
 
     FootprintSet(image::Image<ImagePixelT> const& img,
                  Threshold const& threshold,
-                 int const npixMin=1);
+                 int const npixMin=1, bool const setPeaks=true);
     FootprintSet(image::Mask<MaskPixelT> const& img,
                  Threshold const& threshold,
                  int const npixMin=1);
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
-                 int const npixMin=1);
+                 int const npixMin=1, bool const setPeaks=true);
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  int x,
                  int y,
-                 std::vector<Peak> const* peaks = NULL);
+                 std::vector<PTR(Peak)> const* peaks = NULL);
+    FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
-    FootprintSet(FootprintSet const& set, int r, bool isotropic=true);
+    FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, 
                  FootprintSet const& footprints2,
                  bool const includePeaks);
@@ -100,9 +108,9 @@ public:
      */
     geom::Box2I const getRegion() const { return _region; } 
 
-    typename image::Image<boost::uint16_t>::Ptr insertIntoImage(
+    PTR(image::Image<FootprintIdPixel>) insertIntoImage(
         const bool relativeIDs
-    );
+        ) const;
     void setMask(
         image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
         std::string const& planeName   ///< Here's the name of the mask plane to fit
@@ -120,6 +128,8 @@ public:
     ) {
         setMask(mask.get(), planeName);
     }
+
+    void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
 private:
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in
@@ -169,9 +179,9 @@ typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
         Threshold const& threshold,
         int x,
         int y,
-        std::vector<Peak> const* peaks = NULL
+        std::vector<PTR(Peak)> const* peaks = NULL
 ) {
-    return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
+    return PTR(FootprintSet<ImagePixelT, MaskPixelT>)(
         new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks)
     );
 }
@@ -180,7 +190,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
         FootprintSet<ImagePixelT, MaskPixelT> const& rhs, //!< the input FootprintSet
         int r,                          //!< Grow Footprints by r pixels
-        bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
+        bool isotropic=true             //!< Grow isotropically (as opposed to a Manhattan metric)
                                         //!< @note Isotropic grows are significantly slower
 ) {
     return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(

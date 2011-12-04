@@ -42,6 +42,7 @@ import lsst.pex.policy as dafPolicy
 import lsst.daf.persistence as dafPers
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDet
+import lsst.afw.geom as afwGeom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -59,7 +60,7 @@ class DiaSourceTestCase(unittest.TestCase):
             
             ds = afwDet.DiaSource()
             ds.setId(m)
-            ds.setRa(m*20)
+            ds.setRa(m*20 * afwGeom.degrees)
             self.container2.push_back(ds)
 
         self.dsv1 = afwDet.PersistableDiaSourceVector(self.container1)
@@ -174,12 +175,13 @@ class DiaSourceTestCase(unittest.TestCase):
                          (float('-inf'), 0.0)):
             # we can't pass inf to methods taking floats - SWIG raises
             # an overflow error
-            ds.setRa(vd)
-            ds.setDec(vd)
-            ds.setRaErrForDetection(vf)
-            ds.setRaErrForWcs(vf)
-            ds.setDecErrForDetection(vf)
-            ds.setDecErrForWcs(vf)
+            R = afwGeom.radians
+            ds.setRa(vd * R)
+            ds.setDec(vd * R)
+            ds.setRaErrForDetection(vf * R)
+            ds.setRaErrForWcs(vf * R)
+            ds.setDecErrForDetection(vf * R)
+            ds.setDecErrForWcs(vf * R)
             ds.setXAstrom(vd)
             ds.setXAstromErr(vf)
             ds.setYAstrom(vd)

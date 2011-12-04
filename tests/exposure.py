@@ -31,6 +31,7 @@ Created on: Mon Sep 10, 2007
 """
 
 import os
+import os.path
 
 import unittest
 
@@ -54,7 +55,7 @@ except:
 
 pexLog.Debug("lsst.afw.image", VERBOSITY)
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests") 
 

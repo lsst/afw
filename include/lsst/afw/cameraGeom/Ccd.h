@@ -66,10 +66,16 @@ public:
     //
     // Add an Amp to the Ccd
     //
+    // This assumes that the amp bbox has already been set (via
+    // setDiskToChipLayout).
+    void addAmp(Amp const& amp);
+    // One can also set the amp coordinates when setting up the ccd
     void addAmp(lsst::afw::geom::Point2I const pos, Amp const& amp);
     void addAmp(int const iX, int const iY, Amp const& amp) {
         addAmp(lsst::afw::geom::Point2I(iX, iY), amp);
     }
+
+
 
     virtual void setTrimmed(bool isTrimmed);
     //

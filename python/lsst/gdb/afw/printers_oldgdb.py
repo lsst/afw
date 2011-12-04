@@ -159,8 +159,8 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
         if len(args) < 2:
             raise gdb.GdbError("Please specify a pixel's x and y indexes")
 
-        x0 = eval(args.pop(0), {}, {})
-        y0 = eval(args.pop(0), {}, {})
+        x0 = gdb.parse_and_eval(args.pop(0))
+        y0 = gdb.parse_and_eval(args.pop(0))
 
         if len(args) == 0:
             print "%g" % self.get(var, x0, y0)
@@ -173,13 +173,14 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
             ny = 1
 
         if args:
-            centerPatch = eval(args.pop(0), {}, {})
+            centerPatch = gdb.parse_and_eval(args.pop(0))
             if centerPatch:
                 x0 -= nx//2
                 y0 -= ny//2
 
         if args:
-            obeyXY0 = eval(args.pop(0), {}, {})
+            obeyXY0 = gdb.parse_and_eval(args.pop(0))
+
             if obeyXY0:
                 arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
 

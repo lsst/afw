@@ -23,7 +23,7 @@
 #
 
 """
-Tests for Color and Filter
+Tests for Calib, Color, and Filter
 
 Run with:
    color.py
@@ -69,7 +69,7 @@ class CalibTestCase(unittest.TestCase):
     def tearDown(self):
         del self.calib
 
-    def xtestTime(self):
+    def testTime(self):
         """Test the exposure time information"""
         
         isoDate = "1995-01-26T07:32:00.000000000Z"
@@ -80,6 +80,18 @@ class CalibTestCase(unittest.TestCase):
         dt = 123.4
         self.calib.setExptime(dt)
         self.assertEqual(self.calib.getExptime(), dt)
+
+    def testDetectorTime(self):
+        """Test that we can ask a calib for the MidTime at a point in a detector"""
+
+        import lsst.afw.geom as afwGeom
+        import lsst.afw.cameraGeom as cameraGeom
+
+        det = cameraGeom.Detector(cameraGeom.Id(1))
+
+        p = afwGeom.PointI(3, 4)
+        if False:                       # Ticket #1337
+            self.calib.getMidTime(det, p)
 
     def testPhotom(self):
         """Test the zero-point information"""
@@ -108,7 +120,7 @@ class CalibTestCase(unittest.TestCase):
             self.assertAlmostEqual(flux, self.calib.getFlux(mag, magErr)[0])
             self.assertTrue(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]) < 1.0e-4)
 
-    def xtestCtorFromMetadata(self):
+    def testCtorFromMetadata(self):
         """Test building a Calib from metadata"""
         
         isoDate = "1995-01-26T07:32:00.000000000Z" 
@@ -142,6 +154,42 @@ class CalibTestCase(unittest.TestCase):
         afwImage.stripCalibKeywords(metadata)
         self.assertEqual(len(metadata.names()), 0)
 
+    def testCalibEquality(self):
+        self.assertEqual(self.calib, self.calib)
+        self.assertFalse(self.calib != self.calib)
+
+        calib2 = afwImage.Calib()
+        calib2.setExptime(12)
+
+        self.assertNotEqual(calib2, self.calib)
+
+    def testCalibFromCalibs(self):
+        """Test creating a Calib from an array of Calibs"""
+        exptime = 20
+        mag0, mag0Sigma = 1.0, 0.01
+        time0 = dafBase.DateTime.now().get()
+
+        calibs = afwImage.vectorCalib()
+        ncalib = 3
+        for i in range(ncalib):
+            calib = afwImage.Calib()
+            calib.setMidTime(dafBase.DateTime(time0 + i))
+            calib.setExptime(exptime)
+            calib.setFluxMag0(mag0, mag0Sigma)
+
+            calibs.append(calib)
+
+        ocalib = afwImage.Calib(calibs)
+        
+        self.assertEqual(ocalib.getExptime(), ncalib*exptime)
+        self.assertAlmostEqual(calibs[ncalib//2].getMidTime().get(), ocalib.getMidTime().get())
+        #
+        # Check that we can only merge Calibs with the same fluxMag0 values
+        #
+        calibs[0].setFluxMag0(1.001*mag0, mag0Sigma)
+        tests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                                  lambda : afwImage.Calib(calibs))
+
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):
@@ -154,18 +202,18 @@ class ColorTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def xtestCtor(self):
+    def testCtor(self):
         c = afwImage.Color()
         c = afwImage.Color(1.2)
 
-    def xtestLambdaEff(self):
+    def testLambdaEff(self):
         f = afwImage.Filter("g")
         g_r = 1.2
         c = afwImage.Color(g_r)
 
         self.assertEqual(c.getLambdaEff(f), 1000*g_r) # XXX Not a real implementation!
 
-    def xtestBool(self):
+    def testBool(self):
         """Test that a default-constructed Color tests False, but ones with a g-r value test True"""
         self.assertFalse(afwImage.Color())
         self.assertTrue(afwImage.Color(1.2))
@@ -193,15 +241,15 @@ class FilterTestCase(unittest.TestCase):
 
         return afwImage.FilterProperty(name, filterPolicy, force);
 
-    def xtestListFilters(self):
+    def testListFilters(self):
         self.assertEqual(afwImage.Filter_getNames(), self.filters)
 
-    def xtestCtor(self):
+    def testCtor(self):
         """Test that we can construct a Filter"""
         # A filter of type 
         f = afwImage.Filter("g")
 
-    def xtestCtorFromMetadata(self):
+    def testCtorFromMetadata(self):
         """Test building a Filter from metadata"""
         
         metadata = dafBase.PropertySet()
@@ -224,7 +272,17 @@ class FilterTestCase(unittest.TestCase):
         f = afwImage.Filter(metadata, True)
         self.assertEqual(f.getName(), badFilter) # name is correctly defined
 
-    def xtestFilterProperty(self):
+    def testFilterEquality(self):
+        # a "g" filter
+        f = afwImage.Filter("g")
+        g = afwImage.Filter("g")
+
+        self.assertEqual(f, g)
+
+        f = afwImage.Filter()           # the unknown filter
+        self.assertNotEqual(f, f)       # ... doesn't equal itself
+
+    def testFilterProperty(self):
         # a "g" filter
         f = afwImage.Filter("g")
         # The properties of a g filter
@@ -242,7 +300,7 @@ class FilterTestCase(unittest.TestCase):
 
         self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
 
-    def xtestFilterAliases(self):
+    def testFilterAliases(self):
         """Test that we can provide an alias for a Filter"""
         f0 = afwImage.Filter("z")
         f1 = afwImage.Filter("zprime")
@@ -251,7 +309,7 @@ class FilterTestCase(unittest.TestCase):
         self.assertEqual(f0.getFilterProperty().getLambdaEff(), f1.getFilterProperty().getLambdaEff())
         self.assertEqual(f0.getFilterProperty().getLambdaEff(), f2.getFilterProperty().getLambdaEff())
 
-    def xtestReset(self):
+    def testReset(self):
         """Test that we can reset filter IDs and properties if needs be"""
         # The properties of a g filter
         g = afwImage.FilterProperty.lookup("g")
@@ -283,7 +341,7 @@ class FilterTestCase(unittest.TestCase):
             
         tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
 
-    def xtestUnknownFilter(self):
+    def testUnknownFilter(self):
         """Test that we can define, but not use, an unknown filter"""
         badFilter = "rhl"               # an undefined filter
         # Not defined
@@ -315,10 +373,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(CalibTestCase)
-    if not False:
-        suites += unittest.makeSuite(ColorTestCase)
-    else:
-        print >> sys.stderr, "Skipping Color tests (wait until #1196 is merged)"
+    suites += unittest.makeSuite(ColorTestCase)
     suites += unittest.makeSuite(FilterTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)

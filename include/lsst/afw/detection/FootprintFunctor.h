@@ -54,7 +54,8 @@ public:
     /**
      * \brief Apply operator() to each pixel in the Footprint
      */
-    void apply(Footprint const& foot    ///< The Footprint in question
+    void apply(Footprint const& foot,   ///< The Footprint in question
+               int const margin=0       ///< The required margin from the edge of the image
               ) {
         reset();
         reset(foot);
@@ -86,13 +87,24 @@ public:
             -_image.getX0(), -_image.getY0()
         ); // Origin of the Image's pixels
 
+        int const width = _image.getWidth();
+        int const height = _image.getHeight();
         for (Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
              siter != foot.getSpans().end(); siter++) {
             Span::Ptr const span = *siter;
 
             int const y = span->getY();
-            int const x0 = span->getX0();
-            int const x1 = span->getX1();
+            if (y < margin || y >= height - margin) {
+                continue;
+            }
+            int x0 = span->getX0();
+            int x1 = span->getX1();
+            if (x0 < margin) {
+                x0 = margin;
+            }
+            if (x1 >= width - margin) {
+                x1 = width - margin - 1;
+            }
 
             loc += lsst::afw::image::pair2I(x0 - ox1, y - oy);
 

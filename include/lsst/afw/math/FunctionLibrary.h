@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H
 #define LSST_AFW_MATH_FUNCTIONLIBRARY_H
 /**
@@ -38,6 +38,7 @@
 
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/Function.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -71,13 +72,13 @@ using boost::serialization::make_nvp;
             Function1<ReturnT>(0),
             _xo(xo)
         {}
-        
+
         virtual ~IntegerDeltaFunction1() {};
-        
+
         virtual Function1Ptr clone() const {
             return Function1Ptr(new IntegerDeltaFunction1(_xo));
         }
-        
+
         virtual ReturnT operator() (double x, double y) const {
             return static_cast<ReturnT>(x == _xo);
         }
@@ -88,14 +89,14 @@ using boost::serialization::make_nvp;
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
         };
-    
+
     private:
         double _xo;
 
     protected:
         /* Default constructor: intended only for serialization */
         explicit IntegerDeltaFunction1() : Function1<ReturnT>(0), _xo(0.0) {}
-    
+
     private:
         friend class boost::serialization::access;
         template <class Archive>
@@ -131,13 +132,13 @@ using boost::serialization::make_nvp;
             _xo(xo),
             _yo(yo)
         {}
-        
+
         virtual ~IntegerDeltaFunction2() {}
-        
+
         virtual Function2Ptr clone() const {
             return Function2Ptr(new IntegerDeltaFunction2(_xo, _yo));
         }
-        
+
         virtual ReturnT operator() (double x, double y) const {
             return static_cast<ReturnT>((x == _xo) && (y == _yo));
         }
@@ -152,7 +153,7 @@ using boost::serialization::make_nvp;
     private:
         double _xo;
         double _yo;
-    
+
     protected:
         /* Default constructor: intended only for serialization */
         explicit IntegerDeltaFunction2() : Function2<ReturnT>(0), _xo(0.0), _yo(0.0) {}
@@ -189,22 +190,22 @@ using boost::serialization::make_nvp;
             double sigma)    ///< sigma
         :
             Function1<ReturnT>(1),
-            _multFac(1.0 / std::sqrt(2.0 * M_PI))
+            _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI))
         {
             this->_params[0] = sigma;
         }
         virtual ~GaussianFunction1() {}
-        
+
         virtual Function1Ptr clone() const {
             return Function1Ptr(new GaussianFunction1(this->_params[0]));
         }
-        
+
         virtual ReturnT operator() (double x) const {
             return static_cast<ReturnT> (
                 (_multFac / this->_params[0]) *
                 std::exp(- (x * x) / (2.0 * this->_params[0] * this->_params[0])));
         }
-        
+
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "GaussianFunction1 [" << _multFac << "]: ";
@@ -217,7 +218,7 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(2.0 * M_PI)) {}
+        explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI)) {}
 
     private:
         friend class boost::serialization::access;
@@ -226,7 +227,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT> >(*this));
         }
     };
-    
+
     /**
      * @brief 2-dimensional Gaussian
      *
@@ -253,22 +254,22 @@ using boost::serialization::make_nvp;
             double sigma1,      ///< sigma along the pos1 axis
             double sigma2,      ///< sigma along the pos2 axis
             double angle = 0.0) ///< angle of pos1 axis, in rad (along x=0, y=pi/2)
-        : 
+        :
             Function2<ReturnT>(3),
-            _multFac(1.0 / (2.0 * M_PI))
+            _multFac(1.0 / (lsst::afw::geom::TWOPI))
         {
             this->_params[0] = sigma1;
             this->_params[1] = sigma2;
             this->_params[2] = angle;
             _updateCache();
         }
-        
+
         virtual ~GaussianFunction2() {}
-        
+
         virtual Function2Ptr clone() const {
             return Function2Ptr(new GaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
         }
-        
+
         virtual ReturnT operator() (double x, double y) const {
             if (_angle != this->_params[2]) {
                 _updateCache();
@@ -280,14 +281,14 @@ using boost::serialization::make_nvp;
                 std::exp(- ((pos1 * pos1) / (2.0 * this->_params[0] * this->_params[0]))
                          - ((pos2 * pos2) / (2.0 * this->_params[1] * this->_params[1]))));
         }
-        
+
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "GaussianFunction2: ";
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
-    
+
     private:
         /**
         * @brief Update cached values
@@ -318,7 +319,7 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit GaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (2.0 * M_PI)), _angle(0.0),
+        explicit GaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::afw::geom::TWOPI)), _angle(0.0),
             _sinAngle(0.0), _cosAngle(1.0) {}
 
     private:
@@ -331,7 +332,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("cosAngle", this->_cosAngle);
         }
     };
-    
+
     /**
      * @brief double Guassian (sum of two Gaussians)
      *
@@ -358,22 +359,22 @@ using boost::serialization::make_nvp;
             double sigma1,      ///< sigma of main Gaussian
             double sigma2 = 0,  ///< sigma of second Gaussian
             double ampl2 = 0)   ///< amplitude of second Gaussian as a fraction of main Gaussian at peak
-        : 
+        :
             Function2<ReturnT>(3),
-            _multFac(1.0 / (2.0 * M_PI))
+            _multFac(1.0 / (lsst::afw::geom::TWOPI))
         {
             this->_params[0] = sigma1;
             this->_params[1] = sigma2;
             this->_params[2] = ampl2;
         }
-        
+
         virtual ~DoubleGaussianFunction2() {}
-        
+
         virtual Function2Ptr clone() const {
             return Function2Ptr(
                 new DoubleGaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
         }
-        
+
         virtual ReturnT operator() (double x, double y) const {
             double radSq = (x * x) + (y * y);
             double sigma1Sq = this->_params[0] * this->_params[0];
@@ -384,7 +385,7 @@ using boost::serialization::make_nvp;
                 (std::exp(-radSq / (2.0 * sigma1Sq))
                 + (b * std::exp(-radSq / (2.0 * sigma2Sq)))));
         }
-        
+
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "DoubleGaussianFunction2 [" << _multFac << "]: ";
@@ -397,7 +398,7 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (2.0 * M_PI)) {}
+        explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::afw::geom::TWOPI)) {}
 
     private:
         friend class boost::serialization::access;
@@ -406,7 +407,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
         }
     };
-    
+
     /**
      * @brief 1-dimensional polynomial function.
      *
@@ -429,7 +430,7 @@ using boost::serialization::make_nvp;
         :
             Function1<ReturnT>(order+1) {
         }
-        
+
         /**
          * @brief Construct a polynomial function with the specified parameters.
          *
@@ -447,19 +448,19 @@ using boost::serialization::make_nvp;
                                   "PolynomialFunction1 called with empty vector");
             }
         }
-        
+
         virtual ~PolynomialFunction1() {}
-       
+
         virtual Function1Ptr clone() const {
             return Function1Ptr(new PolynomialFunction1(this->_params));
         }
 
         virtual bool isLinearCombination() const { return true; };
-        
+
         virtual ReturnT operator() (double x) const {
-            int maxInd = static_cast<int>(this->_params.size()) - 1;
-            double retVal = this->_params[maxInd];
-            for (int ii = maxInd-1; ii >= 0; --ii) {
+            int const order = static_cast<int>(this->_params.size()) - 1;
+            double retVal = this->_params[order];
+            for (int ii = order-1; ii >= 0; --ii) {
                 retVal = (retVal * x) + this->_params[ii];
             }
             return static_cast<ReturnT>(retVal);
@@ -557,10 +558,10 @@ using boost::serialization::make_nvp;
               Cx2 = P3 + P7 y + ...
               Cx3 = P6 + ...
               ...
- 
+
             Compute Cx0, Cx1...Cxn by solving 1-d polynomials in y in the usual way.
             These values are cached and only recomputed for new values of Y or if the parameters change.
-            
+
             Then compute f(x,y) by solving the 1-d polynomial in x in the usual way.
             */
             const int maxXCoeffInd = this->_order;
@@ -575,7 +576,7 @@ using boost::serialization::make_nvp;
                 for (int xCoeffInd = 0; xCoeffInd <= maxXCoeffInd; ++xCoeffInd, --paramInd) {
                     _xCoeffs[xCoeffInd] = this->_params[paramInd];
                 }
-     
+
                 // finish computing _xCoeffs
                 for (int xCoeffInd = 0, endXCoeffInd = maxXCoeffInd; paramInd >= 0; --paramInd) {
                     _xCoeffs[xCoeffInd] = (_xCoeffs[xCoeffInd] * y) + this->_params[paramInd];
@@ -585,11 +586,11 @@ using boost::serialization::make_nvp;
                         --endXCoeffInd;
                     }
                 }
-     
+
                 _oldY = y;
                 this->_isCacheValid = true;
             }
-            
+
             // use _xCoeffs to compute result
             double retVal = _xCoeffs[maxXCoeffInd];
             for (int xCoeffInd = maxXCoeffInd - 1; xCoeffInd >= 0; --xCoeffInd) {
@@ -614,7 +615,7 @@ using boost::serialization::make_nvp;
     protected:
         /* Default constructor: intended only for serialization */
         explicit PolynomialFunction2() : BasePolynomialFunction2<ReturnT>(), _oldY(0), _xCoeffs(0)  {}
- 
+
     private:
         friend class boost::serialization::access;
         template <class Archive>
@@ -623,7 +624,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("yCoeffs", this->_xCoeffs); // sets size of _xCoeffs; name is historical
         }
     };
-    
+
     /**
      * @brief 1-dimensional weighted sum of Chebyshev polynomials of the first kind.
      *
@@ -680,9 +681,9 @@ using boost::serialization::make_nvp;
             }
             _initialize(minX, maxX);
         }
-        
+
         virtual ~Chebyshev1Function1() {}
-       
+
         virtual Function1Ptr clone() const {
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
@@ -703,10 +704,26 @@ using boost::serialization::make_nvp;
         unsigned int getOrder() const { return this->getNParameters() - 1; };
 
         virtual bool isLinearCombination() const { return true; };
-        
+
         virtual ReturnT operator() (double x) const {
             double xPrime = (x + _offset) * _scale;
-            return static_cast<ReturnT>(_clenshaw(xPrime, 0));
+            
+            // Clenshaw function for solving the Chebyshev polynomial
+            // Non-recursive version from Kresimir Cosic
+            int const order = _order;
+            if (order == 0) {
+                return this->_params[0];
+            } else if (order == 1) {
+                return this->_params[0] + (this->_params[1] * xPrime);
+            }
+            double cshPrev = this->_params[order];
+            double csh = (2 * xPrime * this->_params[order]) + this->_params[order-1];
+            for (int i = order - 2; i > 0; --i) {
+                double cshNext = (2 * xPrime * csh) + this->_params[i] - cshPrev;
+                cshPrev = csh;
+                csh = cshNext;
+            }
+            return (xPrime * csh) + this->_params[0] - cshPrev;
         }
 
         virtual std::string toString(std::string const& prefix) const {
@@ -721,26 +738,8 @@ using boost::serialization::make_nvp;
         double _maxX;    ///< maximum allowed x
         double _scale;   ///< x' = (x + _offset) * _scale
         double _offset;  ///< x' = (x + _offset) * _scale
-        unsigned int _maxInd;   ///< maximum index for Clenshaw function
-        
-        /**
-         * @brief Clenshaw recursive function for solving the Chebyshev polynomial
-         */
-        double _clenshaw(double x, unsigned int ind) const {
-            if (ind == _maxInd) {
-                return this->_params[ind];
-            } else if (ind == 0) {
-                return (x * _clenshaw(x, 1)) + this->_params[0] - _clenshaw(x, 2);
-            } else if (ind == _maxInd - 1) {
-                return (2 * x * _clenshaw(x, ind+1)) + this->_params[ind];
-            } else if (ind < _maxInd) {
-                return (2 * x * _clenshaw(x, ind+1)) + this->_params[ind] - _clenshaw(x, ind+2);
-            } else {
-                // this case only occurs if _maxInd < 3
-                return 0;
-            }
-        }
-        
+        unsigned int _order;   ///< polynomial order
+
         /**
          * @brief initialize private constants
          */
@@ -749,13 +748,13 @@ using boost::serialization::make_nvp;
             _maxX = maxX;
             _scale = 2.0 / (_maxX - _minX);
             _offset = -(_minX + _maxX) * 0.5;
-            _maxInd = this->getNParameters() - 1;
+            _order = this->getNParameters() - 1;
         }
 
     protected:
         /* Default constructor: intended only for serialization */
         explicit Chebyshev1Function1() : Function1<ReturnT>(1),
-            _minX(0.0), _maxX(0.0), _scale(1.0), _offset(0.0), _maxInd(0) {}
+            _minX(0.0), _maxX(0.0), _scale(1.0), _offset(0.0), _order(0) {}
 
     private:
         friend class boost::serialization::access;
@@ -767,7 +766,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("maxX", this->_maxX);
             ar & make_nvp("scale", this->_scale);
             ar & make_nvp("offset", this->_offset);
-            ar & make_nvp("maxInd", this->_maxInd);
+            ar & make_nvp("maxInd", this->_order);
         }
     };
 
@@ -841,13 +840,13 @@ using boost::serialization::make_nvp;
         {
             _initialize(xyRange);
         }
-        
+
         virtual ~Chebyshev1Function2() {}
-       
+
         virtual Function2Ptr clone() const {
             return Function2Ptr(new Chebyshev1Function2(this->_params, this->getXYRange()));
         }
-        
+
         /**
          * @brief Get x,y range
          */
@@ -855,7 +854,7 @@ using boost::serialization::make_nvp;
             return lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(_minX, _minY),
                                           lsst::afw::geom::Point2D(_maxX, _maxY));
         };
-        
+
         /**
          * @brief Return a truncated copy of lower (or equal) order
          *
@@ -883,7 +882,7 @@ using boost::serialization::make_nvp;
               Cy2 = P5 T0(x') + P8 T1(x') + ...
               Cy3 = P9 T0(x') + ...
               ...
-            
+
             First compute Tn(x') for each n
             Then use that to compute Cy0, Cy1, ...Cyn
             Then solve the y Chebyshev polynomial using the Clenshaw algorithm
@@ -901,7 +900,7 @@ using boost::serialization::make_nvp;
                 for (int chebyInd = 2; chebyInd <= order; chebyInd++) {
                     _yCheby[chebyInd] = (2 * yPrime * _yCheby[chebyInd-1]) - _yCheby[chebyInd-2];
                 }
-                
+
                 for (int coeffInd=0; coeffInd <= order; coeffInd++) {
                     _xCoeffs[coeffInd] = 0;
                 }
@@ -914,30 +913,26 @@ using boost::serialization::make_nvp;
                         endCoeffInd = 0;
                     }
                 }
-                
+
                 _oldYPrime = yPrime;
                 this->_isCacheValid = true;
             }
 
-            double result = _xCoeffs[0];
+            // Clenshaw function for solving the Chebyshev polynomial
+            // Non-recursive version from Kresimir Cosic
             if (order == 0) {
-                return result;
+                return _xCoeffs[0];
+            } else if (order == 1) {
+                return _xCoeffs[0] + (_xCoeffs[1] * xPrime);
             }
-            
-            result += _xCoeffs[1] * xPrime;
-            if (order == 1) {
-                return result;
+            double cshPrev = _xCoeffs[order];
+            double csh = (2 * xPrime * _xCoeffs[order]) + _xCoeffs[order-1];
+            for (int i = order - 2; i > 0; --i) {
+                double cshNext = (2 * xPrime * csh) + _xCoeffs[i] - cshPrev;
+                cshPrev = csh;
+                csh = cshNext;
             }
-            
-            double txPrev = 1.0;
-            double tx = xPrime;
-            for (int chebyInd = 2; chebyInd <= order; chebyInd++) {
-                double txNext = (2 * xPrime * tx) - txPrev;
-                result += _xCoeffs[chebyInd] * txNext;
-                txPrev = tx;
-                tx = txNext;
-            }
-            return result;
+            return (xPrime * csh) + _xCoeffs[0] - cshPrev;
         }
 
         virtual std::string toString(std::string const& prefix) const {
@@ -960,7 +955,7 @@ using boost::serialization::make_nvp;
         double _scaleY;   ///< y' = (y + _offsetY) * _scaleY
         double _offsetX;  ///< x' = (x + _offsetX) * _scaleX
         double _offsetY;  ///< y' = (y + _offsetY) * _scaleY
-        
+
         /**
          * @brief initialize private constants
          */
@@ -1035,13 +1030,13 @@ using boost::serialization::make_nvp;
         }
 
         virtual ~LanczosFunction1() {}
-       
+
         virtual Function1Ptr clone() const {
             return Function1Ptr(new LanczosFunction1(this->getOrder(), this->_params[0]));
         }
-        
+
         virtual ReturnT operator() (double x) const {
-            double xArg1 = (x - this->_params[0]) * M_PI;
+            double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
             double xArg2 = xArg1 * _invN;
             if (std::fabs(xArg1) > 1.0e-5) {
                 return static_cast<ReturnT>(std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2));
@@ -1049,11 +1044,13 @@ using boost::serialization::make_nvp;
                 return static_cast<ReturnT>(1);
             }
         }
-        
+
         /**
          * @brief Get the order of the Lanczos function
          */
-        unsigned int getOrder() const { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
+        unsigned int getOrder() const {
+            return static_cast<unsigned int>(0.5 + (1.0 / _invN));
+        };
 
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
@@ -1068,7 +1065,7 @@ using boost::serialization::make_nvp;
     protected:
         /* Default constructor: intended only for serialization */
         explicit LanczosFunction1() : Function1<ReturnT>(1), _invN(1.0) {}
-    
+
     private:
         friend class boost::serialization::access;
         template <class Archive>
@@ -1111,19 +1108,19 @@ using boost::serialization::make_nvp;
         }
 
         virtual ~LanczosFunction2() {}
-       
+
         virtual Function2Ptr clone() const {
             return Function2Ptr(new LanczosFunction2(this->getOrder(), this->_params[0], this->_params[1]));
         }
-        
+
         virtual ReturnT operator() (double x, double y) const {
-            double xArg1 = (x - this->_params[0]) * M_PI;
+            double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
             double xArg2 = xArg1 * _invN;
             double xFunc = 1;
             if (std::fabs(xArg1) > 1.0e-5) {
                 xFunc = std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2);
             }
-            double yArg1 = (y - this->_params[1]) * M_PI;
+            double yArg1 = (y - this->_params[1]) * lsst::afw::geom::PI;
             double yArg2 = yArg1 * _invN;
             double yFunc = 1;
             if (std::fabs(yArg1) > 1.0e-5) {
@@ -1131,11 +1128,13 @@ using boost::serialization::make_nvp;
             }
             return static_cast<ReturnT>(xFunc * yFunc);
         }
-        
+
         /**
          * @brief Get the order of Lanczos function
          */
-        unsigned int getOrder() const { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
+        unsigned int getOrder() const {
+            return static_cast<unsigned int>(0.5 + (1.0 / _invN));
+        };
 
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;

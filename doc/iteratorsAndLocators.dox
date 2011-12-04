@@ -2,7 +2,7 @@ namespace lsst { namespace afw { namespace image {
 /**
  \page imageIterators Image Iterators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 This code is in \link image1.cc\endlink.
 Note that \link maskedImageIterators MaskedImage iterators\endlink work almost identically,
@@ -18,7 +18,7 @@ If you need access to nearby pixels, see the \link imageLocators Image locator\e
 /**
  \page maskedImageIterators MaskedImage Iterators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 This code is in \link maskedImage2.cc\endlink.
 Note that \link imageIterators Image iterators\endlink work almost identically,
@@ -38,7 +38,7 @@ namespace lsst { namespace afw { namespace image {
 /**
  \page imageLocators Image Locators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 \link imageIterators Iterators\endlink provide access to an %image, %pixel by %pixel.  You
 often want access to neighbouring pixels (e.g. computing a gradient, or smoothing).
@@ -106,7 +106,7 @@ Finally write some output files and close out \c main():
 /**
  \page maskedImageLocators MaskedImage Locators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 (You might be interested to compare this example with the discussion
 of Image \link imageLocators locators\endlink; apart from an include

@@ -64,7 +64,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image for which we want to compute kernel images
         bool doNormalize)                       ///< normalize the kernel images?
 :
-    lsst::daf::data::LsstBase::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
@@ -101,7 +101,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         ImagePtr topLeftImagePtr,               ///< kernel image and sum at top left of region
         ImagePtr topRightImagePtr)              ///< kernel image and sum at top right of region
 :
-    lsst::daf::data::LsstBase::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
