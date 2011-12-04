@@ -29,6 +29,8 @@
 %}
 
 %ignore lsst::afw::image::ImageBase::operator();
+%ignore lsst::afw::image::ImageBase::get0;
+%ignore lsst::afw::image::ImageBase::set0;
 
 //
 // Must go Before the %include
@@ -81,6 +83,14 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::base::Citizen, lsst::afw::image::
 
     PIXEL_TYPE get(int x, int y) {
         return self->operator()(x, y, lsst::afw::image::CheckIndices(true));
+    }
+
+    void set0(int x, int y, double val) {
+        self->set0(x, y, val, lsst::afw::image::CheckIndices(true));
+    }
+    PIXEL_TYPE get0(int x, int y) {
+        PIXEL_TYPE p = self->get0(x, y, lsst::afw::image::CheckIndices(true));
+        return p;
     }
 
     %pythoncode {
