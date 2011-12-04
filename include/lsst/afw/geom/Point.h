@@ -108,6 +108,12 @@ public:
 
     /// @brief Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
+
+    template <typename OT>
+    double distanceSquared(PointBase<OT,N> const & other) {
+        // the cast to double is lame but Eigen seems to require they be the same type
+        return (this->asEigen().cast<double>() - other.asEigen().cast<double>()).squaredNorm();
+    }
     
     std::string toString() const {
         std::stringstream out;

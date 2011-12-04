@@ -42,3 +42,4 @@
 %template(Point ## N ## SUFFIX) lsst::afw::geom::Point<T,N>;
 %CoordinateBase_POSTINCLUDE(T, N, lsst::afw::geom::Point<T,N>);
 %enddef
+//%template(PointBase ## N ## SUFFIX ## distanceSquared) lsst::afw::geom::PointBase<T,N>::distanceSquared<T>;
