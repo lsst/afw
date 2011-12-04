@@ -146,6 +146,8 @@ public:
     /// Set the corners of the MaskedImage wherein the footprints dwell
     void setRegion(geom::Box2I const & region) { _region = region; }
 
+    void clipTo(geom::Box2I const & bbox);
+
     bool contains(geom::Point2I const& pix) const;
     
     void normalize();
