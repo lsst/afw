@@ -2,6 +2,7 @@
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/afw/table/LayoutMapper.h"
+#include "lsst/afw/table/detail/RecordBase.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -38,6 +39,25 @@ private:
     Key<T> const & _target;
 };
 
+struct CopyRecord {
+
+    template <typename U>
+    void operator()(Key<U> const & inputKey, Key<U> const & outputKey) const {
+        detail::Access::copyValue(
+            inputKey, _inputRecord,
+            outputKey, _outputRecord
+        );
+    }
+
+    CopyRecord(detail::RecordData * inputRecord, detail::RecordData * outputRecord) :
+        _inputRecord(inputRecord), _outputRecord(outputRecord)
+    {}
+
+private:
+    detail::RecordData * _inputRecord;
+    detail::RecordData * _outputRecord;
+};
+
 } // anonymous
 
 void LayoutMapper::_edit() {
@@ -48,7 +68,7 @@ void LayoutMapper::_edit() {
 }
 
 template <typename T>
-Key<T> LayoutMapper::copy(Key<T> const & inputKey) {
+Key<T> LayoutMapper::addMapping(Key<T> const & inputKey) {
     _edit();
     typename Data::KeyPairMap::iterator i = std::find_if(
         _data->_map.begin(),
@@ -58,17 +78,17 @@ Key<T> LayoutMapper::copy(Key<T> const & inputKey) {
     Field<T> inputField = _data->_input.find(inputKey).field;
     if (i != _data->_map.end()) {
         Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
-        _data->_output.replace(outputKey, inputField);
+        _data->_output.replaceField(outputKey, inputField);
         return outputKey;
     } else {
-        Key<T> outputKey = _data->_output.add(inputField);
+        Key<T> outputKey = _data->_output.addField(inputField);
         _data->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
 }
 
 template <typename T>
-Key<T> LayoutMapper::copy(Key<T> const & inputKey, Field<T> const & field) {
+Key<T> LayoutMapper::addMapping(Key<T> const & inputKey, Field<T> const & field) {
     _edit();
     typename Data::KeyPairMap::iterator i = std::find_if(
         _data->_map.begin(),
@@ -77,10 +97,10 @@ Key<T> LayoutMapper::copy(Key<T> const & inputKey, Field<T> const & field) {
     );
     if (i != _data->_map.end()) {
         Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
-        _data->_output.replace(outputKey, field);
+        _data->_output.replaceField(outputKey, field);
         return outputKey;
     } else {
-        Key<T> outputKey = _data->_output.add(field);
+        Key<T> outputKey = _data->_output.addField(field);
         _data->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
@@ -117,12 +137,16 @@ Key<T> LayoutMapper::getMapping(Key<T> const & inputKey) const {
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
 }
 
+void LayoutMapper::copyRecord(detail::RecordBase const & input, detail::RecordBase const & output) const {
+    this->forEach(CopyRecord(input._data, output._data));
+}
+
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_LAYOUTMAPPER(r, data, elem)                         \
-    template Key< elem > LayoutMapper::add(Field< elem > const &);      \
-    template Key< elem > LayoutMapper::copy(Key< elem > const &);       \
-    template Key< elem > LayoutMapper::copy(Key< elem > const &, Field< elem > const &); \
+    template Key< elem > LayoutMapper::addOutputField(Field< elem > const &);      \
+    template Key< elem > LayoutMapper::addMapping(Key< elem > const &);       \
+    template Key< elem > LayoutMapper::addMapping(Key< elem > const &, Field< elem > const &); \
     template bool LayoutMapper::isMapped(Key< elem > const &) const;    \
     template Key< elem > LayoutMapper::getMapping(Key< elem > const &) const;
 

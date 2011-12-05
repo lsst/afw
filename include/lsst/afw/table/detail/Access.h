@@ -2,12 +2,15 @@
 #ifndef AFW_TABLE_DETAIL_Access_h_INCLUDED
 #define AFW_TABLE_DETAIL_Access_h_INCLUDED
 
+#include <cstring>
+
 #include "lsst/afw/table/detail/FieldBase.h"
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/LayoutData.h"
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
+struct RecordData;
 class TableImpl;
 class RecordBase;
 
@@ -39,6 +42,19 @@ public:
                 reinterpret_cast<char *>(buf) + key._offset
             ),
             value
+        );
+    }
+
+    template <typename T>
+    static void copyValue(
+        Key<T> const & inputKey, void * inputBuf,
+        Key<T> const & outputKey, void * outputBuf
+    ) {
+        assert(inputKey.getElementCount() == outputKey.getElementCount());
+        std::memcpy(
+            reinterpret_cast<char*>(outputBuf) + outputKey._offset,
+            reinterpret_cast<char*>(inputBuf) + inputKey._offset,
+            inputKey.getElementCount() * sizeof(typename Key<T>::Element)
         );
     }
 

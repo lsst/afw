@@ -26,7 +26,7 @@ using namespace lsst::afw::table;
  */
 struct Example {
 
-    Example() : layout(), key(layout.add(Field<double>("f", "doc"))), table(layout, 10) {
+    Example() : layout(), key(layout.addField(Field<double>("f", "doc"))), table(layout, 10) {
         std::list<SimpleRecord> top;
         std::list<SimpleRecord> middle;
         std::list<SimpleRecord> bottom;
@@ -212,12 +212,12 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
     Layout layout;
     
-    Key<int> myInt = layout.add(Field< int >("myIntField", "an integer scalar field."));
+    Key<int> myInt = layout.addField(Field< int >("myIntField", "an integer scalar field."));
     
     Key< Array<double> > myArray 
-        = layout.add(Field< Array<double> >("myArrayField", "a double array field.", 5));
+        = layout.addField(Field< Array<double> >("myArrayField", "a double array field.", 5));
     
-    layout.add(Field< float >("myFloatField", "a float scalar field."));
+    layout.addField(Field< float >("myFloatField", "a float scalar field."));
 
     Key<float> myFloat = layout.find<float>("myFloatField").key;
 
@@ -258,8 +258,8 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 BOOST_AUTO_TEST_CASE(testColumnView) {
 
     LayoutBuilder builder;
-    Key<float> floatKey = builder.add(Field<float>("f1", "f1 doc"));
-    Key< Array<double> > arrayKey = builder.add(Field< Array<double> >("f2", "f2 doc", 5));
+    Key<float> floatKey = builder.addField(Field<float>("f1", "f1 doc"));
+    Key< Array<double> > arrayKey = builder.addField(Field< Array<double> >("f2", "f2 doc", 5));
     Layout layout = builder.finish();
     
     SimpleTable table(layout, 16);

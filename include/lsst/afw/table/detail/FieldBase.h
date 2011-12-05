@@ -234,7 +234,7 @@ protected:
     }
 
     template <typename Derived>
-    static void setValue(Element * p, Eigen::EigenBase<Derived> const & value) {
+    static void setValue(Element * p, Eigen::MatrixBase<Derived> const & value) {
         BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == SIZE);
         BOOST_STATIC_ASSERT( Derived::ColsAtCompileTime == SIZE);
         for (int i = 0; i < SIZE; ++i) {
@@ -276,7 +276,7 @@ protected:
     }
 
     template <typename Derived>
-    static void setValue(Element * p, Eigen::EigenBase<Derived> const & value) {
+    static void setValue(Element * p, Eigen::MatrixBase<Derived> const & value) {
         BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == SIZE);
         BOOST_STATIC_ASSERT( Derived::ColsAtCompileTime == SIZE);
         for (int i = 0; i < SIZE; ++i) {

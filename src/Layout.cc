@@ -96,7 +96,7 @@ void Layout::_edit() {
 }
 
 template <typename T>
-Key<T> Layout::add(Field<T> const & field) {
+Key<T> Layout::addField(Field<T> const & field) {
     static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
     _edit();
     int padding = ELEMENT_SIZE - _data->_recordSize % ELEMENT_SIZE;
@@ -144,7 +144,7 @@ LayoutItem<T> Layout::find(Key<T> const & key) const {
 }
 
 template <typename T>
-void Layout::replace(Key<T> const & key, Field<T> const & field) {
+void Layout::replaceField(Key<T> const & key, Field<T> const & field) {
     _edit();
     LayoutItem<T> & item = findByOffset<T>(
         detail::Access::getOffset(key),
@@ -163,10 +163,10 @@ Layout::Description Layout::describe() const {
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_LAYOUT(r, data, elem)                               \
-    template Key< elem > Layout::add(Field< elem > const &);            \
+    template Key< elem > Layout::addField(Field< elem > const &);            \
     template LayoutItem< elem > Layout::find(std::string const & ) const; \
     template LayoutItem< elem > Layout::find(Key< elem > const & ) const; \
-    template void Layout::replace(Key< elem > const &, Field< elem > const &);
+    template void Layout::replaceField(Key< elem > const &, Field< elem > const &);
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_LAYOUT, _,

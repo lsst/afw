@@ -66,11 +66,11 @@ public:
      *  much padding is considered an implementation detail).
      */
     template <typename T>
-    Key<T> add(Field<T> const & field);
+    Key<T> addField(Field<T> const & field);
 
     /// @brief Replace the Field (name/description) for an existing Key.
     template <typename T>
-    void replace(Key<T> const & key, Field<T> const & field);
+    void replaceField(Key<T> const & key, Field<T> const & field);
 
     /**
      *  @brief Apply a functor to each LayoutItem in the Layout.

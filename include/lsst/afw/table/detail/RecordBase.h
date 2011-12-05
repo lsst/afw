@@ -9,7 +9,11 @@
 #include "lsst/afw/table/detail/RecordData.h"
 #include "lsst/afw/table/ModificationFlags.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
+
+class LayoutMapper;
+
+namespace detail {
 
 struct TableImpl;
 class TableBase;
@@ -99,7 +103,7 @@ private:
     friend class TableBase;
     friend class IteratorBase;
     friend class TreeIteratorBase;
-
+    friend class table::LayoutMapper;
 
     RecordBase() : ModificationFlags(), _data(0), _table() {}
 
