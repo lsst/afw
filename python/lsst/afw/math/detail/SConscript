@@ -1,9 +1,3 @@
 # -*- python -*-
-import re
-Import("env")
-
-env.CheckSwig("python", ilang="c++",
-    includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw ndarray")
-env.LoadableModuleIncomplete("_detailLib", Split("detailLib.i"),
-                             CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
-                             LIBS=env.getlibs("afw"))
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.python(['detailLib'])

@@ -51,22 +51,22 @@ void linearTransformExample(){
 
     //inspect the transform
     cout << "default LinearTransform matrix: " << def.getMatrix() <<endl;
-    cout << "default LinearTransform parameters: " << def.getVector() << endl;
+    cout << "default LinearTransform parameters: " << def.getParameterVector() << endl;
     
     //Copy construct a scaling transform
     afwGeom::LinearTransform s = afwGeom::LinearTransform::makeScaling(1.5);
     cout << "scaling LinearTransform matrix: "<< s.getMatrix() << endl;
-    cout << "scaling LinearTransform parameters: " << s.getVector() << endl;
+    cout << "scaling LinearTransform parameters: " << s.getParameterVector() << endl;
 
     //copy construt a rotation transform
     afwGeom::LinearTransform r = afwGeom::LinearTransform::makeRotation(1.0);
     cout << "rotation LinearTransform matrix: "<< r.getMatrix() << endl;
-    cout << "rotation LinearTransform parameters: " << r.getVector() << endl;
+    cout << "rotation LinearTransform parameters: " << r.getParameterVector() << endl;
    
     //concactenate the scaling and rotation transform
     afwGeom::LinearTransform c = s*r;
     cout << "rotation+scaling LinearTransform matrix: "<< c.getMatrix() << endl;
-    cout << "rotation+scaling LinearTransform parameters: " << c.getVector() << endl;
+    cout << "rotation+scaling LinearTransform parameters: " << c.getParameterVector() << endl;
     
     //create a point, and duplicate it as an extent
     afwGeom::Point2D point = afwGeom::Point2D(3.0, 4.5);
@@ -89,27 +89,27 @@ void affineTransformExample() {
 
     //inspect the transform
     cout << "default AffineTransform matrix: " << def.getMatrix() <<endl;
-    cout << "default AffineTransform parameters: " << def.getVector() << endl;
+    cout << "default AffineTransform parameters: " << def.getParameterVector() << endl;
     
     //Copy construct a scaling transform
     afwGeom::AffineTransform s = afwGeom::AffineTransform::makeScaling(1.5);
     cout << "scaling AffineTransform matrix: "<< s.getMatrix() << endl;
-    cout << "scaling AffineTransform parameters: " << s.getVector() << endl;
+    cout << "scaling AffineTransform parameters: " << s.getParameterVector() << endl;
 
     //copy construt a rotation transform
     afwGeom::AffineTransform r = afwGeom::AffineTransform::makeRotation(1.0);
     cout << "rotation AffineTransform matrix: "<< r.getMatrix() << endl;
-    cout << "rotation AffineTransform parameters: " << r.getVector() << endl;
+    cout << "rotation AffineTransform parameters: " << r.getParameterVector() << endl;
   
     //copy construct a translation transform
     afwGeom::AffineTransform t = afwGeom::AffineTransform::makeTranslation(afwGeom::Extent2D(15.0, 10.3));
     cout << "translation AffineTransform matrix: "<< t.getMatrix() << endl;
-    cout << "translation AffineTransform parameters: " << t.getVector() << endl;
+    cout << "translation AffineTransform parameters: " << t.getParameterVector() << endl;
 
     //concactenate the scaling and rotation transform
     afwGeom::AffineTransform c = s*r*t;
     cout << "translation+rotation+scaling AffineTransform matrix: "<< c.getMatrix() << endl;
-    cout << "translation+rotation+scaling AffineTransform parameters: " << c.getVector() << endl;
+    cout << "translation+rotation+scaling AffineTransform parameters: " << c.getParameterVector() << endl;
     
     //We can grab just the Linear part of the AffineTransform
     cout << "linear part of affine: " << c.getLinear() <<endl;
@@ -138,29 +138,9 @@ void affineTransformExample() {
 
 }
 
-void wcsExample() {
-    //initialize a trivial WCS for examples
-    lsst::afw::image::Wcs wcs(
-        lsst::afw::image::Point2D(35, 45), 
-        lsst::afw::image::Point2D(0.0,0.0),
-        Eigen::Matrix2d::Identity()
-    );
-    afwGeom::Point2D point = afwGeom::Point2D(35, 45);
-
-    //We can obtain the linear approximation of a WCS at a point as an
-    //AffineTransform
-    afwGeom::AffineTransform approx = wcs.linearizeAt(point);
-    cout << "Linear Approximation of Wcs object at point "<<point<< ": " << approx << endl;    
-    
-    //alternatively we can obtain the CD matrix of the wcs as a LinearTransform
-    cout << "CD matrix of Wcs object: " << wcs.getLinearTransform() << endl;
-    
-
-}
 int main() {
     linearTransformExample();
     affineTransformExample();
-    wcsExample();
 
     return 0;
 }

@@ -47,7 +47,7 @@ Calib::Calib() : _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0) 
  *
  * \note All the input calibs must have the same zeropoint; throw InvalidParameterException if this isn't true
  */
-Calib::Calib(std::vector<CONST_PTR(Calib::Calib)> const& calibs ///< Set of calibs to be merged
+Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to be merged
             ) :
     _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0)
 {

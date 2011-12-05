@@ -279,7 +279,7 @@ shapelets::detail::HermiteConvolution::Impl::Impl(
                 - _monomialFwd(n-2, m) * std::sqrt((n - 1.0) / n);
         }
     }
-    _monomialFwd.marked<Eigen::LowerTriangular>().solveTriangularInPlace(_monomialInv);
+    _monomialFwd.triangularView<Eigen::Lower>().solveInPlace(_monomialInv);
 }
 
 lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution::Impl::evaluate(
@@ -306,12 +306,11 @@ lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvo
     // kq is zero unless {n+m} is even
     Eigen::VectorXd kq = Eigen::VectorXd::Zero(psf_htm.size());
     for (int m = 0, mo = 0; m <= psfOrder; mo += ++m) {
-        Eigen::BlockReturnType<Eigen::VectorXd>::SubVectorType kq_block = kq.segment(mo, m+1);
         for (int n = m, no = mo; n <= psfOrder; (no += ++n) += ++n) {
             if ((n + m) % 4) { // (n + m) % 4 is always 0 or 2
-                kq_block -= psf_htm.block(mo, no, m+1, n+1) * psf_coeff.segment(no, n+1);
+                kq.segment(mo, m+1) -= psf_htm.block(mo, no, m+1, n+1) * psf_coeff.segment(no, n+1);
             } else {
-                kq_block += psf_htm.block(mo, no, m+1, n+1) * psf_coeff.segment(no, n+1);
+                kq.segment(mo, m+1) += psf_htm.block(mo, no, m+1, n+1) * psf_coeff.segment(no, n+1);
             }
         }
     }
@@ -350,14 +349,14 @@ lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvo
     result.setZero();
     for (int m = 0, mo = 0; m <= _rowOrder; mo += ++m) {
         for (int n = 0, no = 0; n <= _colOrder; no += ++n) {
-            Eigen::BlockReturnType< ndarray::EigenView<double,2,2> >::Type out_block 
-                = result.block(mo, no, m+1, n+1);
             int jo = bool(n % 2);
             for (int j = jo; j <= n; (jo += ++j) += ++j) {
                 if ((n - j) % 4) { // (n - j) % 4 is always 0 or 2
-                    out_block -= kqb.block(mo, jo, m+1, j+1) * model_htm.block(jo, no, j+1, n+1);
+                    result.block(mo, no, m+1, n+1) 
+                        -= kqb.block(mo, jo, m+1, j+1) * model_htm.block(jo, no, j+1, n+1);
                 } else {
-                    out_block += kqb.block(mo, jo, m+1, j+1) * model_htm.block(jo, no, j+1, n+1);
+                    result.block(mo, no, m+1, n+1)
+                        += kqb.block(mo, jo, m+1, j+1) * model_htm.block(jo, no, j+1, n+1);
                 }
             }
         }

@@ -193,7 +193,7 @@ class CoordTestCase(unittest.TestCase):
             # convert to Coord
             epoch = 2000.0
             norm = True
-            c = afwCoord.Fk5Coord(afwGeom.Point3D(p3d), epoch, norm)
+            c = afwCoord.Fk5Coord(afwGeom.Point3D(p3d[0], p3d[1], p3d[2]), epoch, norm)
             ra, dec = c.getRa().asDegrees(), c.getDec().asDegrees()
             print "Un-normed p3d: ", p3d, "-->", equKnown, ra, dec
             self.assertAlmostEqual(equKnown[0], ra)

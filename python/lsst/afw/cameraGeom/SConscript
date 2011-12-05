@@ -1,13 +1,11 @@
 # -*- python -*-
-import re
-Import("env")
+from lsst.sconsUtils import env, targets
 
-pkg = env["eups_product"]
-# includedProducts lists the names of all packages on which you depend that have their own SWIG wrappers
-# (which should generally be all of them), separated by spaces.
-env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security ndarray afw")
-
-env.LoadableModuleIncomplete("_cameraGeomLib", "cameraGeomLib.i",
-                             SWIGFLAGS=env['SWIGFLAGS'] + " -DIMPORT_IMAGE_I",
-                             CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
-                             LIBS=env.getlibs("afw"))
+# We can't use BasicSConscript here because the circular dependency requires the -D option in SWIGFLAGS
+targets["python"].extend(
+    env.SwigLoadableModule(
+        "_cameraGeomLib", ["cameraGeomLib.i"],
+        SWIGFLAGS=(env["SWIGFLAGS"] + ["-DIMPORT_IMAGE_I"]),
+        LIBS=env.getLibs("main python")
+    )
+)

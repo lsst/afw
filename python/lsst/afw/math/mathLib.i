@@ -37,11 +37,11 @@ Python interface to lsst::afw::math classes
 #   include "lsst/afw/image.h"
 #   include "lsst/afw/geom.h"
 #   include "lsst/afw/math.h"
+
+#   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
-
 %include "lsst/p_lsstSwig.i"
-
 
 
 %pythoncode %{

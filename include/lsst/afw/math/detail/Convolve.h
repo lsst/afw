@@ -107,7 +107,7 @@ namespace detail {
      * Also note that it uses lazy evaluation: images are computed when they are wanted.
      */
     class KernelImagesForRegion :
-        public lsst::daf::data::LsstBase,
+        public lsst::daf::base::Citizen,
         public lsst::daf::base::Persistable
     {
     public:

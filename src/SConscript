@@ -1,6 +1,0 @@
-# -*- python -*-
-#
-# Note: the shared libraries are built in ../lib
-#
-Import("env")
-

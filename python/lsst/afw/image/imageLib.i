@@ -40,7 +40,6 @@ Basic routines to talk to lsst::afw::image classes
 #include "boost/cstdint.hpp"
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
@@ -62,6 +61,8 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
+
+#pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
 %include "../boost_picklable.i"
@@ -76,6 +77,8 @@ namespace boost {
     typedef int int32_t;
     typedef unsigned short uint16_t;
 }
+
+%apply unsigned long long { boost::uint64_t };
 
 /************************************************************************************************************/
 
@@ -118,7 +121,6 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/pex/policy/policyLib.i"
 %import "lsst/daf/persistence/persistenceLib.i"
-%import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
@@ -239,7 +241,7 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs)
 
 // Must go Before the %include
 %define %exposurePtr(TYPE, PIXEL_TYPE)
-SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::base::Citizen, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %enddef
 
 // Must go After the %include
@@ -260,6 +262,7 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %enddef
 
 %exposurePtr(U, boost::uint16_t);
+%exposurePtr(L, boost::uint64_t);
 %exposurePtr(I, int);
 %exposurePtr(F, float);
 %exposurePtr(D, double);
@@ -272,6 +275,7 @@ SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
+%exposure(L, boost::uint64_t);
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
@@ -283,6 +287,16 @@ SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
          lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
     {
         return lsst::afw::image::Exposure<float,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
+%extend lsst::afw::image::Exposure<boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertD;
+    lsst::afw::image::Exposure<double,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD()
+    {
+        return lsst::afw::image::Exposure<double,
             lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
     }
 }

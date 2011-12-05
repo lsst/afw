@@ -34,8 +34,7 @@
 
 #include "lsst/ndarray/eigen.h"
 
-#include <Eigen/Core>
-#include <Eigen/Array>
+#include "Eigen/Core"
 
 namespace image = lsst::afw::image;
 namespace detection = lsst::afw::detection;
@@ -49,8 +48,7 @@ void doRoundTrip(
 ) {
     nd::Array<double,2,2> i1 = detection::expandArray(footprint, v, box);
     nd::Array<double,1,1> v1 = detection::flattenArray(footprint, i1, box.getMin());
-    BOOST_CHECK( nd::all(nd::equal(v1, v)) );
-
+    BOOST_CHECK( std::equal(v1.begin(), v1.end(), v.begin()) );
 }
 
 BOOST_AUTO_TEST_CASE(conversion) {
@@ -70,7 +68,7 @@ BOOST_AUTO_TEST_CASE(conversion) {
     BOOST_CHECK_EQUAL( oldArea, footprint.getArea() );
 
     nd::Array<double,1,1> v = nd::allocate(footprint.getArea());
-    nd::viewAsEigen(v).setRandom();
+    v.asEigen().setRandom();
 
     doRoundTrip(footprint, v, geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(10, 10)));
 

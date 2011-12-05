@@ -75,18 +75,33 @@ namespace formatters {
 template <typename ImagePixelT>
 class DecoratedImageFormatterTraits {
 public:
-    static std::string name;
+    static std::string name();
 };
 
-template<> std::string DecoratedImageFormatterTraits<boost::uint16_t>::name("DecoratedImageU");
-template<> std::string DecoratedImageFormatterTraits<int>::name("DecoratedImageI");
-template<> std::string DecoratedImageFormatterTraits<float>::name("DecoratedImageF");
-template<> std::string DecoratedImageFormatterTraits<double>::name("DecoratedImageD");
-
+template<> std::string DecoratedImageFormatterTraits<boost::uint16_t>::name() {
+    static std::string name = "DecoratedImageU";
+    return name;
+}
+template<> std::string DecoratedImageFormatterTraits<int>::name() {
+    static std::string name = "DecoratedImageI";
+    return name;
+}
+template<> std::string DecoratedImageFormatterTraits<float>::name() {
+    static std::string name = "DecoratedImageF";
+    return name;
+}
+template<> std::string DecoratedImageFormatterTraits<double>::name() {
+    static std::string name = "DecoratedImageD";
+    return name;
+}
+template<> std::string DecoratedImageFormatterTraits<boost::uint64_t>::name() {
+    static std::string name = "DecoratedImageL";
+    return name;
+}
 
 template <typename ImagePixelT>
 lsst::daf::persistence::FormatterRegistration DecoratedImageFormatter<ImagePixelT>::registration(
-    DecoratedImageFormatterTraits<ImagePixelT>::name,
+    DecoratedImageFormatterTraits<ImagePixelT>::name(),
     typeid(DecoratedImage<ImagePixelT>),
     createInstance);
 
@@ -225,6 +240,7 @@ InstantiateFormatter(boost::uint16_t);
 InstantiateFormatter(int);
 InstantiateFormatter(float);
 InstantiateFormatter(double);
+InstantiateFormatter(boost::uint64_t);
 
 #undef InstantiateFormatter
 

@@ -72,7 +72,6 @@ cameraGeom::Amp::Ptr makeAmp(int const i // which amp? (i == 0 ? left : right)
                                                                                saturationLevel[i]));
     
     return cameraGeom::Amp::Ptr(new cameraGeom::Amp(cameraGeom::Id(i), allPixels, biasSec, dataSec,
-                                                    (i == 0 ? cameraGeom::Amp::LLC : cameraGeom::Amp::LRC),
                                                     eparams));
 }
 

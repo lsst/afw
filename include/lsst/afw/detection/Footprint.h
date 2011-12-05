@@ -39,6 +39,8 @@
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 
@@ -54,8 +56,6 @@ using boost::serialization::make_nvp;
 namespace lsst {
 namespace afw { 
 namespace detection {
-
-class Peak;
 
 /*!
  * \brief A range of pixels within one row of an Image
@@ -105,14 +105,14 @@ private:
  * (see FootprintSet), or to create Footprints in the shape of various
  * geometrical figures
  */
-class Footprint : public lsst::daf::data::LsstBase {
+class Footprint : public lsst::daf::base::Citizen {
 public:
     typedef boost::shared_ptr<Footprint> Ptr;
     typedef boost::shared_ptr<const Footprint> ConstPtr;
 
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
-    typedef std::vector<PTR(Peak)> PeakList;
+    typedef std::vector<Peak::Ptr> PeakList;
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
@@ -151,14 +151,16 @@ public:
     void normalize();
     bool isNormalized() const {return _normalized;}
 
-    void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
-                         int const id,
+    template<typename PixelT>
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+                         boost::uint64_t const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
-    void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, 
-                         int const id,
+    template<typename PixelT>
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+                         boost::uint64_t const id,
                          bool const overwriteId, long const idMask,
-                         std::set<int> *oldIds,
+                         typename std::set<boost::uint64_t> *oldIds,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
 
@@ -169,6 +171,12 @@ public:
         image::Mask<MaskPixelT> const & mask, 
         MaskPixelT bitmask=~0x0
     );
+
+
+    /// Transform a footprint from one frame to another via their WCSes
+    Footprint::Ptr transform(image::Wcs const& source,
+                             image::Wcs const& target,
+                             geom::Box2I const& bbox) const;
 
 private:
     friend class boost::serialization::access;
