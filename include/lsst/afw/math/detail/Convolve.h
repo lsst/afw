@@ -49,6 +49,10 @@
 namespace lsst {
 namespace afw {
 namespace math {
+
+LSST_EXCEPTION_TYPE(GpuMemoryException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuMemoryException)
+LSST_EXCEPTION_TYPE(GpuRuntimeErrorException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuRuntimeErrorException)
+
 namespace detail {
     template <typename OutImageT, typename InImageT>
     void basicConvolve(

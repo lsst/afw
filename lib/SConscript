@@ -5,7 +5,7 @@ objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glo
 
 import eups
 if eups.productDir("cuda_toolkit") and eups.productDir("cuda_sdk"):
-    gpuObj = env.SharedObject('src/math/detail/convGPU', ['src/math/detail/convGPU.cu'])
-    objs.append(gpuObj)
+    gpuObj = env.SharedObject('#src/math/detail/convGPU', ['#src/math/detail/convGPU.cu'])
+    objs.append("#src/math/detail/convGPU.os")
 
 targets["lib"].extend(env.SharedLibrary(env["packageName"], objs, LIBS=env.getLibs("self")))
