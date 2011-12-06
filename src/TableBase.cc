@@ -1,14 +1,15 @@
+// -*- lsst-c++ -*-
+
 #include <cstring>
 
 #include "boost/noncopyable.hpp"
 #include "boost/make_shared.hpp"
 
-#include "lsst/afw/table/detail/RecordBase.h"
-#include "lsst/afw/table/detail/TableBase.h"
-#include "lsst/afw/table/detail/TreeIteratorBase.h"
-#include "lsst/afw/table/detail/IteratorBase.h"
+#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/TreeIteratorBase.h"
+#include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
-
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
@@ -200,6 +201,8 @@ void TableImpl::unlink(RecordData * record) {
     consolidated = 0;
 }
 
+} // namespace detail
+
 //----- TreeIteratorBase implementation ---------------------------------------------------------------------
 
 void TreeIteratorBase::increment() {
@@ -245,7 +248,7 @@ TreeIteratorBase RecordBase::_endChildren(TreeMode mode) const {
 
 RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) const {
     assertBit(CAN_ADD_RECORD);
-    RecordData * p = _table->addRecord(id, _data, aux);
+    detail::RecordData * p = _table->addRecord(id, _data, aux);
     _table->idFactory->notify(id);
     return RecordBase(p, _table, *this);
 }
@@ -269,18 +272,18 @@ bool TableBase::isConsolidated() const {
 }
 
 void TableBase::consolidate(int extraCapacity) {
-    boost::shared_ptr<TableImpl> newImpl =
-        boost::make_shared<TableImpl>(
+    boost::shared_ptr<detail::TableImpl> newImpl =
+        boost::make_shared<detail::TableImpl>(
             _impl->layout,
             _impl->defaultBlockRecordCount,
             _impl->idFactory->clone(),
             _impl->aux
         );
     newImpl->addBlock(_impl->records.size() + extraCapacity);
-    int const dataOffset = sizeof(RecordData);
+    int const dataOffset = sizeof(detail::RecordData);
     int const dataSize = _impl->layout.getRecordSize() - dataOffset;
-    for (RecordSet::const_iterator i = _impl->records.begin(); i != _impl->records.end(); ++i) {
-        RecordData * newRecord = newImpl->block->makeNextRecord();
+    for (detail::RecordSet::const_iterator i = _impl->records.begin(); i != _impl->records.end(); ++i) {
+        detail::RecordData * newRecord = newImpl->block->makeNextRecord();
         newRecord->id = i->id;
         newRecord->aux = i->aux;
         newRecord->parentId = (i->links.parent) ? i->links.parent->id : 0;
@@ -330,7 +333,7 @@ IteratorBase TableBase::_end() const {
 }
 
 RecordBase TableBase::_get(RecordId id) const {
-    RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
+    detail::RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
     if (j == _impl->records.end()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::NotFoundException,
@@ -341,7 +344,7 @@ RecordBase TableBase::_get(RecordId id) const {
 }
 
 IteratorBase TableBase::_find(RecordId id) const {
-    RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
+    detail::RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
     return IteratorBase(j, _impl, *this);
 }
 
@@ -352,7 +355,7 @@ RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) const {
 
 RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) const {
     assertBit(CAN_ADD_RECORD);
-    RecordData * p = _impl->addRecord(id, 0, aux);
+    detail::RecordData * p = _impl->addRecord(id, 0, aux);
     _impl->idFactory->notify(id);
     return RecordBase(p, _impl, *this);
 }
@@ -365,9 +368,9 @@ TableBase::TableBase(
     AuxBase::Ptr const & aux,
     ModificationFlags const & flags 
 ) : ModificationFlags(flags),
-    _impl(boost::make_shared<TableImpl>(layout, defaultBlockRecordCount, idFactory, aux))
+    _impl(boost::make_shared<detail::TableImpl>(layout, defaultBlockRecordCount, idFactory, aux))
 {
     if (capacity > 0) _impl->addBlock(capacity);
 }
 
-}}}} // namespace lsst::afw::table::detail
+}}} // namespace lsst::afw::table

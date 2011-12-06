@@ -1,21 +1,14 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_KeyBase_h_INCLUDED
-#define AFW_TABLE_DETAIL_KeyBase_h_INCLUDED
-
-
+#ifndef AFW_TABLE_KeyBase_h_INCLUDED
+#define AFW_TABLE_KeyBase_h_INCLUDED
 
 namespace lsst { namespace afw { namespace table { 
 
 template <typename T> class Key;
-
 template <typename T> class Point;
 template <typename T> class Shape;
 template <typename T> class Array;
 template <typename T> class Covariance;
-
-namespace detail {
-
-class Access;
 
 template <typename T>
 class KeyBase {};
@@ -59,6 +52,6 @@ public:
     Key<U> operator()(int i, int j) const;
 };
 
-}}}} // namespace lsst::afw::table::detail
+}}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_DETAIL_KeyBase_h_INCLUDED
+#endif // !AFW_TABLE_KeyBase_h_INCLUDED

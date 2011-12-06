@@ -6,11 +6,7 @@
 
 namespace lsst { namespace afw { namespace table {
 
-namespace detail {
-
 class RecordBase;
-
-} // namespace detail
 
 class LayoutMapper {
 public:
@@ -74,7 +70,7 @@ public:
      *  @Note the fact that the output record is passed by const reference is weird but intentional;
      *  see the documentation for RecordBase for more information.
      */
-    void copyRecord(detail::RecordBase const & input, detail::RecordBase const & output) const;
+    void copyRecord(RecordBase const & input, RecordBase const & output) const;
 
     template <typename F>
     void forEach(F func) const {

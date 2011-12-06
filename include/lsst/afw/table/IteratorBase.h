@@ -1,24 +1,22 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_IteratorBase_h_INCLUDED
-#define AFW_TABLE_DETAIL_IteratorBase_h_INCLUDED
-
-
+#ifndef AFW_TABLE_IteratorBase_h_INCLUDED
+#define AFW_TABLE_IteratorBase_h_INCLUDED
 
 #include "boost/iterator/iterator_adaptor.hpp"
 
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/detail/RecordData.h"
-#include "lsst/afw/table/detail/RecordBase.h"
+#include "lsst/afw/table/RecordBase.h"
 #include "lsst/afw/table/ModificationFlags.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
 
 struct TableImpl;
 
 class IteratorBase : 
     public boost::iterator_adaptor<
         IteratorBase,     // Derived
-        RecordSet::iterator, // Base
+        detail::RecordSet::iterator, // Base
         RecordBase,          // Value
         boost::use_default,  // CategoryOrTraversal
         RecordBase           // Reference
@@ -31,7 +29,7 @@ public:
 
     IteratorBase(
         base_type const & base,
-        boost::shared_ptr<TableImpl> const & table,
+        boost::shared_ptr<detail::TableImpl> const & table,
         ModificationFlags const & flags
     ) : IteratorBase::iterator_adaptor_(base), ModificationFlags(flags), _table(table)
     {}
@@ -51,9 +49,9 @@ private:
         return base() == other.base() && _table == other._table;
     }
 
-    boost::shared_ptr<TableImpl> _table;
+    boost::shared_ptr<detail::TableImpl> _table;
 };
 
-}}}} // namespace lsst::afw::table::detail
+}}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_DETAIL_IteratorBase_h_INCLUDED
+#endif // !AFW_TABLE_IteratorBase_h_INCLUDED

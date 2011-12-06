@@ -2,8 +2,6 @@
 #ifndef AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
 #define AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
 
-
-
 #include <vector>
 #include <algorithm>
 
@@ -29,6 +27,8 @@ struct LayoutItem {
 };
 
 namespace detail {
+
+class Access;
 
 /**
  *  @brief An internals class to hide the ugliness of the Layout implementation.

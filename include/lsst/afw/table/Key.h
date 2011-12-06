@@ -2,14 +2,19 @@
 #ifndef AFW_TABLE_Key_h_INCLUDED
 #define AFW_TABLE_Key_h_INCLUDED
 
-
-#include "lsst/afw/table/detail/FieldBase.h"
-#include "lsst/afw/table/detail/KeyBase.h"
+#include "lsst/afw/table/FieldBase.h"
+#include "lsst/afw/table/KeyBase.h"
 
 namespace lsst { namespace afw { namespace table {
 
+namespace detail {
+
+class Access;
+
+} // namespace detail
+
 template <typename T>
-class Key : public detail::KeyBase<T>, public detail::FieldBase<T> {
+class Key : public KeyBase<T>, public FieldBase<T> {
 public:
 
     template <typename OtherT> bool operator==(Key<OtherT> const & other) const { return false; }
@@ -24,8 +29,8 @@ private:
 
     friend class detail::Access;
 
-    explicit Key(int offset, detail::FieldBase<T> const & fb = detail::FieldBase<T>())
-        : detail::FieldBase<T>(fb), _offset(offset) {}
+    explicit Key(int offset, FieldBase<T> const & fb = FieldBase<T>())
+        : FieldBase<T>(fb), _offset(offset) {}
 
     int _offset;
 };

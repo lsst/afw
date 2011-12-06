@@ -1,17 +1,15 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_TableBase_h_INCLUDED
-#define AFW_TABLE_DETAIL_TableBase_h_INCLUDED
-
-
+#ifndef AFW_TABLE_TableBase_h_INCLUDED
+#define AFW_TABLE_TableBase_h_INCLUDED
 
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/ColumnView.h"
-#include "lsst/afw/table/detail/RecordBase.h"
-#include "lsst/afw/table/detail/TreeIteratorBase.h"
-#include "lsst/afw/table/detail/IteratorBase.h"
+#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/TreeIteratorBase.h"
+#include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/IdFactory.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
 
 class TableBase : protected ModificationFlags {
 public:
@@ -60,9 +58,9 @@ protected:
     AuxBase::Ptr getAux() const;
 
 private:
-    boost::shared_ptr<TableImpl> _impl;
+    boost::shared_ptr<detail::TableImpl> _impl;
 };
 
-}}}} // namespace lsst::afw::table::detail
+}}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_DETAIL_TableBase_h_INCLUDED
+#endif // !AFW_TABLE_TableBase_h_INCLUDED

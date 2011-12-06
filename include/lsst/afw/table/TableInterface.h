@@ -8,20 +8,20 @@
 
 #include "lsst/base.h"
 #include "lsst/afw/table/RecordInterface.h"
-#include "lsst/afw/table/detail/TableBase.h"
-#include "lsst/afw/table/detail/TreeIteratorBase.h"
-#include "lsst/afw/table/detail/IteratorBase.h"
+#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/TreeIteratorBase.h"
+#include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
 
 template <typename Tag>
-class TreeView : private detail::TableBase {
+class TreeView : private TableBase {
 public:
 
     typedef typename Tag::Table Table;
     typedef typename Tag::Record Record;
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::TreeIteratorBase> Iterator;
+    typedef boost::transform_iterator<detail::RecordConverter<Record>,TreeIteratorBase> Iterator;
     typedef Iterator iterator;
     typedef Iterator const_iterator;
 
@@ -47,19 +47,19 @@ private:
 
     template <typename OtherTag> friend class TableInterface;
 
-    TreeView(detail::TableBase const & table, TreeMode mode) : detail::TableBase(table), _mode(mode) {}
+    TreeView(TableBase const & table, TreeMode mode) : TableBase(table), _mode(mode) {}
 
     TreeMode _mode;
 };
 
 template <typename Tag>
-class TableInterface : public detail::TableBase {
+class TableInterface : public TableBase {
 public:
 
     typedef typename Tag::Table Table;
     typedef typename Tag::Record Record;
     typedef TreeView<Tag> Tree;
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,detail::IteratorBase> Iterator;
+    typedef boost::transform_iterator<detail::RecordConverter<Record>,IteratorBase> Iterator;
     typedef Iterator iterator;
     typedef Iterator const_iterator;
 
@@ -93,14 +93,14 @@ protected:
         int capacity,
         IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
         AuxBase::Ptr const & aux = AuxBase::Ptr()
-    ) : detail::TableBase(layout, defaultBlockRecordCount, capacity, idFactory, aux) {}
+    ) : TableBase(layout, defaultBlockRecordCount, capacity, idFactory, aux) {}
 
     Record _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
-        return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(id, aux));
+        return detail::Access::makeRecord<Record>(this->TableBase::_addRecord(id, aux));
     }
 
     Record _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
-        return detail::Access::makeRecord<Record>(this->detail::TableBase::_addRecord(aux));
+        return detail::Access::makeRecord<Record>(this->TableBase::_addRecord(aux));
     }
     
 };

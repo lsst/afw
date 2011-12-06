@@ -1,8 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
-#define AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
-
-
+#ifndef AFW_TABLE_RecordBase_h_INCLUDED
+#define AFW_TABLE_RecordBase_h_INCLUDED
 
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/Access.h"
@@ -11,13 +9,14 @@
 
 namespace lsst { namespace afw { namespace table {
 
-class LayoutMapper;
-
 namespace detail {
 
 struct TableImpl;
-class TableBase;
 
+} // namespace detail
+
+class LayoutMapper;
+class TableBase;
 class TreeIteratorBase;
 class IteratorBase;
 
@@ -39,18 +38,18 @@ public:
     template <typename T> 
     typename Field<T>::Reference operator[](Key<T> const & key) const {
         assertBit(CAN_SET_FIELD);
-        return Access::getReference(key, _data);
+        return detail::Access::getReference(key, _data);
     }
     
     template <typename T>
     typename Field<T>::Value get(Key<T> const & key) const {
-        return Access::getValue(key, _data);
+        return detail::Access::getValue(key, _data);
     }
 
     template <typename T, typename U>
     void set(Key<T> const & key, U const & value) const {
         assertBit(CAN_SET_FIELD);
-        Access::setValue(key, _data, value);
+        detail::Access::setValue(key, _data, value);
     }
 
     bool operator==(RecordBase const & other) const {
@@ -103,21 +102,21 @@ private:
     friend class TableBase;
     friend class IteratorBase;
     friend class TreeIteratorBase;
-    friend class table::LayoutMapper;
+    friend class LayoutMapper;
 
     RecordBase() : ModificationFlags(), _data(0), _table() {}
 
     RecordBase(
-        RecordData * data,
-        boost::shared_ptr<TableImpl> const & table,
+        detail::RecordData * data,
+        boost::shared_ptr<detail::TableImpl> const & table,
         ModificationFlags const & flags
     ) : ModificationFlags(flags), _data(data), _table(table)
     {}
 
-    RecordData * _data;
-    boost::shared_ptr<TableImpl> _table;
+    detail::RecordData * _data;
+    boost::shared_ptr<detail::TableImpl> _table;
 };
 
-}}}} // namespace lsst::afw::table::detail
+}}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_DETAIL_RecordBase_h_INCLUDED
+#endif // !AFW_TABLE_RecordBase_h_INCLUDED

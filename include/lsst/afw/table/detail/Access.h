@@ -4,15 +4,18 @@
 
 #include <cstring>
 
-#include "lsst/afw/table/detail/FieldBase.h"
+#include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/detail/LayoutData.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
+
+class RecordBase;
+
+namespace detail {
 
 struct RecordData;
 class TableImpl;
-class RecordBase;
 
 class Access {
 public:

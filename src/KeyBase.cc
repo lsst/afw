@@ -1,27 +1,27 @@
-
+// -*- lsst-c++ -*-
 
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/afw/table/detail/KeyBase.h"
+#include "lsst/afw/table/KeyBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
 
 template <typename U>
-Key<U> KeyBase< Point<U> >::getX() const { return Access::extractElement(*this, 0); }
+Key<U> KeyBase< Point<U> >::getX() const { return detail::Access::extractElement(*this, 0); }
 
 template <typename U>
-Key<U> KeyBase< Point<U> >::getY() const { return Access::extractElement(*this, 1); }
+Key<U> KeyBase< Point<U> >::getY() const { return detail::Access::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> KeyBase< Shape<U> >::getIXX() const { return Access::extractElement(*this, 0); }
+Key<U> KeyBase< Shape<U> >::getIXX() const { return detail::Access::extractElement(*this, 0); }
 
 template <typename U>
-Key<U> KeyBase< Shape<U> >::getIYY() const { return Access::extractElement(*this, 1); }
+Key<U> KeyBase< Shape<U> >::getIYY() const { return detail::Access::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> KeyBase< Shape<U> >::getIXY() const { return Access::extractElement(*this, 2); }
+Key<U> KeyBase< Shape<U> >::getIXY() const { return detail::Access::extractElement(*this, 2); }
 
 template <typename U>
 Key<U> KeyBase< Array<U> >::operator[](int i) const {
@@ -32,7 +32,7 @@ Key<U> KeyBase< Array<U> >::operator[](int i) const {
             "Array key index out of range."
         );
     }
-    return Access::extractElement(*this, i);
+    return detail::Access::extractElement(*this, i);
 }
 
 template <typename U>
@@ -44,7 +44,7 @@ Key<U> KeyBase< Covariance<U> >::operator()(int i, int j) const {
             "Covariance key index out of range."
         );
     }
-    return Access::extractElement(*this, detail::indexCovariance(i, j));
+    return detail::Access::extractElement(*this, detail::indexCovariance(i, j));
 }
 
 template <typename U>
@@ -56,7 +56,7 @@ Key<U> KeyBase< Covariance< Point<U> > >::operator()(int i, int j) const {
             "Covariance key index out of range."
         );
     }
-    return Access::extractElement(*this, detail::indexCovariance(i, j));
+    return detail::Access::extractElement(*this, detail::indexCovariance(i, j));
 }
 
 template <typename U>
@@ -68,7 +68,7 @@ Key<U> KeyBase< Covariance< Shape<U> > >::operator()(int i, int j) const {
             "Covariance key index out of range."
         );
     }
-    return Access::extractElement(*this, detail::indexCovariance(i, j));
+    return detail::Access::extractElement(*this, detail::indexCovariance(i, j));
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
@@ -81,5 +81,4 @@ BOOST_PP_SEQ_FOR_EACH(
     BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE)
 )
 
-} // namespace detail
 }}} // namespace lsst::afw::table

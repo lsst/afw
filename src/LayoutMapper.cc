@@ -2,7 +2,7 @@
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/afw/table/LayoutMapper.h"
-#include "lsst/afw/table/detail/RecordBase.h"
+#include "lsst/afw/table/RecordBase.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -137,7 +137,7 @@ Key<T> LayoutMapper::getMapping(Key<T> const & inputKey) const {
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
 }
 
-void LayoutMapper::copyRecord(detail::RecordBase const & input, detail::RecordBase const & output) const {
+void LayoutMapper::copyRecord(RecordBase const & input, RecordBase const & output) const {
     this->forEach(CopyRecord(input._data, output._data));
 }
 

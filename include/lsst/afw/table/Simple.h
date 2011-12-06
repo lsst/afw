@@ -28,7 +28,7 @@ private:
 
     friend class detail::Access;
 
-    SimpleRecord(detail::RecordBase const & other) : RecordInterface<Simple>(other) {}
+    SimpleRecord(RecordBase const & other) : RecordInterface<Simple>(other) {}
 };
 
 class SimpleTable : public TableInterface<Simple> {

@@ -1,4 +1,4 @@
-
+// -*- lsst-c++ -*-
 
 #include <cassert>
 

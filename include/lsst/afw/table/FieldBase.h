@@ -1,8 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_FieldBase_h_INCLUDED
-#define AFW_TABLE_DETAIL_FieldBase_h_INCLUDED
-
-
+#ifndef AFW_TABLE_FieldBase_h_INCLUDED
+#define AFW_TABLE_FieldBase_h_INCLUDED
 
 #include <cstring>
 #include <iostream>
@@ -15,7 +13,7 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/table/Covariance.h"
-#include "lsst/afw/table/detail/KeyBase.h"
+#include "lsst/afw/table/KeyBase.h"
 
 #define AFW_TABLE_SCALAR_FIELD_TYPE_N 4
 #define AFW_TABLE_SCALAR_FIELD_TYPES              \
@@ -38,7 +36,7 @@
     Covariance< Shape<float> >, Covariance< Shape<double> >
 #define AFW_TABLE_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_FIELD_TYPES BOOST_PP_RPAREN()
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
 
 template <typename T>
 struct FieldBase {
@@ -288,9 +286,13 @@ protected:
 
 };
 
+namespace detail {
+
 typedef boost::mpl::vector< AFW_TABLE_SCALAR_FIELD_TYPES > ScalarFieldTypes;
 typedef boost::mpl::vector< AFW_TABLE_FIELD_TYPES > FieldTypes;
 
-}}}} // namespace lsst::afw::table::detail
+} // namespace detail
 
-#endif // !AFW_TABLE_DETAIL_FieldBase_h_INCLUDED
+}}} // namespace lsst::afw::table
+
+#endif // !AFW_TABLE_FieldBase_h_INCLUDED

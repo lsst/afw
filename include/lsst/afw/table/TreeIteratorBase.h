@@ -1,16 +1,14 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_TreeIteratorBase_h_INCLUDED
-#define AFW_TABLE_DETAIL_TreeIteratorBase_h_INCLUDED
-
-
+#ifndef AFW_TABLE_TreeIteratorBase_h_INCLUDED
+#define AFW_TABLE_TreeIteratorBase_h_INCLUDED
 
 #include "boost/iterator/iterator_facade.hpp"
 
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/detail/RecordData.h"
-#include "lsst/afw/table/detail/RecordBase.h"
+#include "lsst/afw/table/RecordBase.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
 
 struct TableImpl;
 
@@ -22,8 +20,8 @@ public:
     TreeIteratorBase() : _record(), _mode(DEPTH_FIRST) {}
 
     TreeIteratorBase(
-        RecordData * record,
-        boost::shared_ptr<TableImpl> const & table, 
+        detail::RecordData * record,
+        boost::shared_ptr<detail::TableImpl> const & table, 
         ModificationFlags const & flags,
         TreeMode mode
     ) : _record(record, table, flags), _mode(mode)
@@ -53,6 +51,6 @@ inline TreeIteratorBase RecordBase::_asTreeIterator(TreeMode mode) const {
     return TreeIteratorBase(_data, _table, *this, mode);
 }
 
-}}}} // namespace lsst::afw::table::detail
+}}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_DETAIL_TreeIteratorBase_h_INCLUDED
+#endif // !AFW_TABLE_TreeIteratorBase_h_INCLUDED

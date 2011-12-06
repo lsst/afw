@@ -1,4 +1,4 @@
-
+// -*- lsst-c++ -*-
 
 #include <limits>
 
@@ -6,9 +6,9 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/afw/table/detail/FieldBase.h"
+#include "lsst/afw/table/FieldBase.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
 
 namespace {
 
@@ -88,4 +88,4 @@ BOOST_PP_SEQ_FOR_EACH(
     BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE)
 )
 
-}}}} // namespace lsst::afw::table::detail
+}}} // namespace lsst::afw::table

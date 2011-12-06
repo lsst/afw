@@ -7,7 +7,7 @@
 #include "boost/noncopyable.hpp"
 
 #include "lsst/afw/table/LayoutMapper.h"
-#include "lsst/afw/table/detail/TableBase.h"
+#include "lsst/afw/table/TableBase.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -34,7 +34,7 @@ protected:
 
     virtual int loadRecordCount() const = 0;
 
-    virtual void loadData(detail::TableBase & output, LayoutMapper const & mapper) const = 0;
+    virtual void loadData(TableBase & output, LayoutMapper const & mapper) const = 0;
 
 private:
     int _recordCount;

@@ -3,19 +3,19 @@
 #define AFW_TABLE_Field_h_INCLUDED
 
 
-#include "lsst/afw/table/detail/FieldBase.h"
+#include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/FieldDescription.h"
 
 namespace lsst { namespace afw { namespace table {
 
 template <typename T>
-struct Field : public detail::FieldBase<T> {
+struct Field : public FieldBase<T> {
 
     Field(
         std::string const & name,
         std::string const & doc,
-        detail::FieldBase<T> const & base = detail::FieldBase<T>()
-    ) : detail::FieldBase<T>(base), _name(name), _doc(doc) {}
+        FieldBase<T> const & base = FieldBase<T>()
+    ) : FieldBase<T>(base), _name(name), _doc(doc) {}
 
     std::string const & getName() const { return _name; }
 
