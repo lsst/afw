@@ -13,8 +13,6 @@
 
 using namespace lsst::afw::table;
 
-
-
 /*
  * A table with the following structure:
  *

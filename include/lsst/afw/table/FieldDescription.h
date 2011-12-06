@@ -10,6 +10,7 @@ namespace lsst { namespace afw { namespace table {
 struct FieldDescription {
     std::string name;
     std::string doc;
+    std::string units;
     std::string type;
 
     bool operator<(FieldDescription const & other) const { return name < other.name; }
@@ -26,8 +27,9 @@ struct FieldDescription {
         return os << d.name << ": " << d.type << " (" << d.doc << ")";
     }
 
-    FieldDescription(std::string name_, std::string doc_, std::string const & type_) :
-        name(name_), doc(doc_), type(type_)
+    FieldDescription(std::string const & name_, std::string const & doc_, std::string const & units_, 
+                     std::string const & type_) :
+        name(name_), doc(doc_), units(units_), type(type_)
     {}
 
 };

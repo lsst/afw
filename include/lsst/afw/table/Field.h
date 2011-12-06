@@ -11,23 +11,35 @@ namespace lsst { namespace afw { namespace table {
 template <typename T>
 struct Field : public FieldBase<T> {
 
+    typedef typename FieldBase<T>::Element Element;
+
     Field(
         std::string const & name,
         std::string const & doc,
+        std::string const & units = "",
         FieldBase<T> const & base = FieldBase<T>()
-    ) : FieldBase<T>(base), _name(name), _doc(doc) {}
+    ) : FieldBase<T>(base), _name(name), _doc(doc), _units(units) {}
+
+    Field(
+        std::string const & name,
+        std::string const & doc,
+        FieldBase<T> const & base
+    ) : FieldBase<T>(base), _name(name), _doc(doc), _units() {}
 
     std::string const & getName() const { return _name; }
 
     std::string const & getDoc() const { return _doc; }
 
+    std::string const & getUnits() const { return _units; }
+
     FieldDescription describe() const {
-        return FieldDescription(getName(), getDoc(), this->getTypeString());
+        return FieldDescription(getName(), getDoc(), getUnits(), this->getTypeString());
     }
 
 private:
     std::string _name;
     std::string _doc;
+    std::string _units;
 };
 
 }}} // namespace lsst::afw::table
