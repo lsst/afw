@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <map>
 
 #include "boost/assign/std/list.hpp"
 
@@ -31,6 +32,7 @@ struct Example {
         for (int i = 0; i < 3; ++i) {
             top.push_back(table.addRecord());
             top.back()[key] = Eigen::ArrayXd::Random(1)[0];
+            values.insert(std::make_pair(top.back().getId(), top.back().get(key)));
             tableOrder.push_back(top.back().getId());
             treeOrder[NO_NESTING].push_back(top.back().getId());
         }
@@ -38,6 +40,7 @@ struct Example {
             for (int j = 0; j < 3; ++j) {
                 middle.push_back(i->addChild());
                 middle.back()[key] = Eigen::ArrayXd::Random(1)[0];
+                values.insert(std::make_pair(middle.back().getId(), middle.back().get(key)));
                 tableOrder.push_back(middle.back().getId());
             }
         }
@@ -45,6 +48,7 @@ struct Example {
             for (int k = 0; k < 3; ++k) {
                 bottom.push_back(j->addChild());
                 bottom.back()[key] = Eigen::ArrayXd::Random(1)[0];
+                values.insert(std::make_pair(bottom.back().getId(), bottom.back().get(key)));
                 tableOrder.push_back(bottom.back().getId());
             }
         }
@@ -79,13 +83,13 @@ struct Example {
         treeOrder[NO_NESTING].remove(id);
         treeOrder[DEPTH_FIRST].remove(id);
     }
-
     
     Layout layout;
     Key<double> key;
     SimpleTable table;
     std::list<RecordId> tableOrder;
     std::list<RecordId> treeOrder[2];
+    std::map<RecordId,double> values;
 };
 
 BOOST_AUTO_TEST_CASE(testIterators) {
@@ -199,11 +203,18 @@ BOOST_AUTO_TEST_CASE(testConsolidate) {
 
     BOOST_CHECK(!example.table.isConsolidated());
 
+    for (SimpleTable::Iterator i = example.table.begin(); i != example.table.end(); ++i) {
+        BOOST_CHECK_EQUAL(example.values[i->getId()], i->get(example.key));
+    }
+
     example.table.consolidate();
     example.checkIteration();
 
     BOOST_CHECK(example.table.isConsolidated());
 
+    for (SimpleTable::Iterator i = example.table.begin(); i != example.table.end(); ++i) {
+        BOOST_CHECK_EQUAL(example.values[i->getId()], i->get(example.key));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
@@ -251,14 +262,11 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
 }
 
-#if 0
-
 BOOST_AUTO_TEST_CASE(testColumnView) {
 
-    LayoutBuilder builder;
-    Key<float> floatKey = builder.addField(Field<float>("f1", "f1 doc"));
-    Key< Array<double> > arrayKey = builder.addField(Field< Array<double> >("f2", "f2 doc", 5));
-    Layout layout = builder.finish();
+    Layout layout;
+    Key<float> floatKey = layout.addField(Field<float>("f1", "f1 doc"));
+    Key< Array<double> > arrayKey = layout.addField(Field< Array<double> >("f2", "f2 doc", 5));
     
     SimpleTable table(layout, 16);
     Eigen::ArrayXd r = Eigen::ArrayXd::Random(20);
@@ -274,23 +282,25 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
     }
     
     SimpleTable tableCopy(table);
-    ColumnView columns = table.consolidate();
+    BOOST_CHECK_THROW(table.getColumnView(), lsst::pex::exceptions::LogicErrorException);
+    table.consolidate();
     BOOST_CHECK(!tableCopy.isConsolidated());
     BOOST_CHECK(table.isConsolidated());
+    ColumnView columns = table.getColumnView();
 
-    for (int i = 0; i < 20; ++i) {
-        SimpleRecord record = table[i];
-        SimpleRecord recordCopy = tableCopy[i];
+    SimpleTable::Iterator i1 = table.begin();
+    SimpleTable::Iterator i2 = tableCopy.begin();
+    for (int n = 0; i1 != table.end(); ++i1, ++i2, ++n) {
+        SimpleRecord record = *i1;
+        SimpleRecord recordCopy = *i2;
         BOOST_CHECK_EQUAL(record.get(floatKey), recordCopy.get(floatKey));
-        BOOST_CHECK_EQUAL(record.get(floatKey), columns[floatKey][i]);
+        BOOST_CHECK_EQUAL(record.get(floatKey), columns[floatKey][n]);
         for (int j = 0; j < 5; ++j) {
             BOOST_CHECK_EQUAL(record.get(arrayKey)[j], recordCopy.get(arrayKey)[j]);
             BOOST_CHECK_EQUAL(record.get(arrayKey)[j], recordCopy.get(arrayKey[j]));
-            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], columns[arrayKey[j]][i]);
-            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], columns[arrayKey][i][j]);
+            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], columns[arrayKey[j]][n]);
+            BOOST_CHECK_EQUAL(record.get(arrayKey)[j], columns[arrayKey][n][j]);
         }
     }
     
 }
-
-#endif

@@ -31,6 +31,8 @@ public:
 
     void consolidate(int extraCapacity=0);
 
+    ColumnView getColumnView() const;
+
     int getRecordCount() const;
 
     void disable(ModificationFlags::Bit n) { unsetBit(n); }

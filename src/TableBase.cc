@@ -287,12 +287,26 @@ void TableBase::consolidate(int extraCapacity) {
         newRecord->id = i->id;
         newRecord->aux = i->aux;
         newRecord->parentId = (i->links.parent) ? i->links.parent->id : 0;
-        std::memcpy(newRecord + dataOffset, &(*i) + dataOffset, dataSize);
+        std::memcpy(
+            reinterpret_cast<char *>(newRecord) + dataOffset,
+            reinterpret_cast<char const *>(&(*i)) + dataOffset,
+            dataSize
+        );
         newImpl->records.insert(newImpl->records.end(), *newRecord);
     }
     setupPointers(newImpl->records, newImpl->back);
     newImpl->front = &(*_impl->records.begin());
     _impl.swap(newImpl);
+}
+
+ColumnView TableBase::getColumnView() const {
+    if (!isConsolidated()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "getColumnView() can only be called on a consolidated table"
+        );
+    }
+    return ColumnView(_impl->layout, _impl->records.size(), _impl->consolidated, _impl->block);
 }
 
 int TableBase::getRecordCount() const {
