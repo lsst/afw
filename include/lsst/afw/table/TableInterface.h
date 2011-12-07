@@ -89,11 +89,11 @@ protected:
 
     TableInterface(
         Layout const & layout,
-        int defaultBlockRecordCount,
+        int nRecordsPerBlock,
         int capacity,
         IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
         AuxBase::Ptr const & aux = AuxBase::Ptr()
-    ) : TableBase(layout, defaultBlockRecordCount, capacity, idFactory, aux) {}
+    ) : TableBase(layout, nRecordsPerBlock, capacity, idFactory, aux) {}
 
     Record _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
         return detail::Access::makeRecord<Record>(this->TableBase::_addRecord(id, aux));

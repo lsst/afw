@@ -81,7 +81,7 @@ private:
 //----- TableImpl definition --------------------------------------------------------------------------------
 
 struct TableImpl : private boost::noncopyable {
-    int defaultBlockRecordCount;
+    int nRecordsPerBlock;
     RecordData * front;
     RecordData * back;
     void * consolidated;
@@ -107,10 +107,10 @@ struct TableImpl : private boost::noncopyable {
     void unlink(RecordData * record);
 
     TableImpl(
-        Layout const & layout_, int defaultBlockRecordCount_, 
+        Layout const & layout_, int nRecordsPerBlock_, 
         IdFactory::Ptr const & idFactory_, AuxBase::Ptr const & aux_
     ) :
-        defaultBlockRecordCount(defaultBlockRecordCount_), front(0), back(0), consolidated(0), 
+        nRecordsPerBlock(nRecordsPerBlock_), front(0), back(0), consolidated(0), 
         idFactory(idFactory_), aux(aux_), layout(layout_)
     {
         Block::padLayout(layout);
@@ -143,7 +143,7 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, AuxBase::Ptr
         );
     }
     if (!block || block->isFull()) {
-        addBlock(defaultBlockRecordCount);
+        addBlock(nRecordsPerBlock);
     }
     RecordData * p = block->makeNextRecord();
     assert(p != 0);
@@ -265,6 +265,8 @@ void RecordBase::unlink() const {
 
 //----- TableBase implementation --------------------------------------------------------------------------
 
+TableBase::~TableBase() {}
+
 Layout TableBase::getLayout() const { return _impl->layout; }
 
 bool TableBase::isConsolidated() const {
@@ -275,7 +277,7 @@ void TableBase::consolidate(int extraCapacity) {
     boost::shared_ptr<detail::TableImpl> newImpl =
         boost::make_shared<detail::TableImpl>(
             _impl->layout,
-            _impl->defaultBlockRecordCount,
+            _impl->nRecordsPerBlock,
             _impl->idFactory->clone(),
             _impl->aux
         );
@@ -376,13 +378,13 @@ RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) const {
 
 TableBase::TableBase(
     Layout const & layout,
-    int defaultBlockRecordCount,
+    int nRecordsPerBlock,
     int capacity,
     IdFactory::Ptr const & idFactory,
     AuxBase::Ptr const & aux,
     ModificationFlags const & flags 
 ) : ModificationFlags(flags),
-    _impl(boost::make_shared<detail::TableImpl>(layout, defaultBlockRecordCount, idFactory, aux))
+    _impl(boost::make_shared<detail::TableImpl>(layout, nRecordsPerBlock, idFactory, aux))
 {
     if (capacity > 0) _impl->addBlock(capacity);
 }

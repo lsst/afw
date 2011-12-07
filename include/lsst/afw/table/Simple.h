@@ -36,10 +36,10 @@ public:
 
     SimpleTable(
         Layout const & layout,
-        int defaultBlockRecordCount,
+        int nRecordsPerBlock,
         int capacity = 0,
         IdFactory::Ptr const & idFactory = IdFactory::Ptr()
-    ) : TableInterface<Simple>(layout, defaultBlockRecordCount, capacity, idFactory) {}
+    ) : TableInterface<Simple>(layout, nRecordsPerBlock, capacity, idFactory) {}
 
     
     Record addRecord() const { return _addRecord(); }
