@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_TableBase_h_INCLUDED
 #define AFW_TABLE_TableBase_h_INCLUDED
 
+#include "lsst/base.h"
 #include "lsst/afw/table/Layout.h"
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/RecordBase.h"
@@ -9,7 +10,17 @@
 #include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/IdFactory.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+
+namespace daf { namespace base {
+
+class PropertySet;
+
+}} // namespace daf::base
+
+namespace afw { namespace table {
+
+class LayoutMapper;
 
 class TableBase : protected ModificationFlags {
 public:
@@ -39,6 +50,19 @@ protected:
     );
 
     TableBase(TableBase const & other) : ModificationFlags(other), _impl(other._impl) {}
+
+    void _writeFits(
+        std::string const & name,
+        CONST_PTR(daf::base::PropertySet) const & metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const & mode = "w"
+    ) const;
+
+    void _writeFits(
+        std::string const & name,
+        LayoutMapper const & mapper,
+        CONST_PTR(daf::base::PropertySet) const & metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const & mode = "w"
+    ) const;
 
     IteratorBase _unlink(IteratorBase const & iter) const;
     TreeIteratorBase _unlink(TreeIteratorBase const & iter) const;
