@@ -61,7 +61,7 @@ namespace math {
      *
      *
      * AUTO_GPU_THROW - If all conditions for GPU acceleration are satisfied (AFW built 
-     *   with convolution support, a suitable GPU is present, limitations on kernel size 
+     *   with GPU support, a suitable GPU is present, limitations on kernel size 
      *   and other limitations) the code will attempt to use a GPU. Otherwise, CPU code 
      *   will be used to perform the convolution. If GPU execution results in a failure,
      *   an exception will be thrown.
@@ -71,7 +71,7 @@ namespace math {
      *   attempted.
      * FORCE_CPU - CPU code will always be used to perform the convolution.
      * FORCE_GPU - GPU code will always be used to perform the convolution. If any 
-     *   limitation (except for kernel too small limitation) for GPU acceleration is not 
+     *   limitation (except for 'kernel too small' limitation) for GPU acceleration is not 
      *   satisfied, an exception will be thrown.
      *
      * @ingroup afw
@@ -84,7 +84,7 @@ namespace math {
                     ///< instead of setting them to the standard edge pixel?
                 int maxInterpolationDistance = 10,  ///< maximum width or height of a region
                     ///< over which to use linear interpolation interpolate
-                DeviceSelection_t deviceSelection = AUTO_GPU_THROW  ///< use Gpu?
+                DeviceSelection_t deviceSelection = FORCE_CPU  ///< use Gpu acceleration?
                 )
         :
             _doNormalize(doNormalize),
