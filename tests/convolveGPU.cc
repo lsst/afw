@@ -262,9 +262,9 @@ string GetInputFileName(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         else {
-            imgBaseFileName = afwdata + "/med";
-            //imgBaseFileName = afwdata + "/medsub";
-            //imgBaseFileName = afwdata + "/871034p_1_MI";
+            imgBaseFileName = afwdata + "/data/med";
+            //imgBaseFileName = afwdata + "/data/medsub";
+            //imgBaseFileName = afwdata + "/data/871034p_1_MI";
             cout << "Using image: " << imgBaseFileName << endl;
         }
     }
