@@ -507,7 +507,7 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(mi.getImage().get(4, 2), 10)
         self.assertEqual(mi.getImage().get(3, 6), 5)
         
-        if False and display:
+        if display:
             ds9.mtv(mi, frame=1)
         #
         # Check Footprint.contains() while we are about it
@@ -518,6 +518,21 @@ class FootprintTestCase(unittest.TestCase):
         self.assertFalse(objects[0].contains(afwGeom.Point2I(4, 2)))
 
         self.assertTrue(objects[1].contains(afwGeom.Point2I(3, 6)))
+
+    def testMakeFootprintSetXY0(self):
+        """Test setting mask/image pixels from a Footprint list"""
+        
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(12, 8))
+        im = mi.getImage()
+        im.set(100)
+
+        mi.setXY0(afwGeom.PointI(2, 2))
+        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(1), "DETECTED")
+
+        bitmask = mi.getMask().getPlaneBitMask("DETECTED")
+        for y in range(im.getHeight()):
+            for x in range(im.getWidth()):
+                self.assertEqual(mi.getMask().get(x, y), bitmask)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
