@@ -11,10 +11,10 @@
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
-class Loader : private boost::noncopyable {
+class Reader : private boost::noncopyable {
 public:
 
-    virtual ~Loader() {}
+    virtual ~Reader() {}
 
     Layout const getLayout() const { return _layout;}
 
@@ -23,22 +23,33 @@ public:
 protected:
 
     /**
-     *  @brief To be called by (most-)derived class constructor, or when reusing the Loader on a
+     *  @brief To be called by (most-)derived class constructor, or when reusing the Reader on a
      *         new file.
      *
      *  Will call loadLayout() and loadRecordCount().
      */
     void initialize();
 
-    virtual Layout loadLayout() const = 0;
+    virtual Layout readLayout() const = 0;
 
-    virtual int loadRecordCount() const = 0;
+    virtual int readRecordCount() const = 0;
 
-    virtual void loadData(TableBase & output, LayoutMapper const & mapper) const = 0;
+    virtual void readData(TableBase & output, LayoutMapper const & mapper) const = 0;
 
 private:
     int _recordCount;
     Layout _layout;
+};
+
+class Writer : private boost::noncopyable {
+public:
+
+    virtual ~Writer() {}
+
+protected:
+
+    void writeData(TableBase const & output, LayoutMapper const & mapper) const = 0;
+
 };
 
 }}}} // namespace lsst::afw::table::io
