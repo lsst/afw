@@ -102,7 +102,20 @@ class ImageTestCase(unittest.TestCase):
 
     def testSetGetImages(self):
         self.assertEqual(self.image1.get(0, 0), self.val1)
-    
+
+    def testGetSet0Images(self):
+        self.assertEqual(self.image1.get0(0, 0), self.val1)
+        self.image1.setXY0(3,4)
+        self.assertEqual(self.image1.get0(3, 4), self.val1)
+        def f1():
+            return self.image1.get0(0,0)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, f1)
+        self.image1.set(0,0, 42.)
+        self.assertEqual(self.image1.get0(3,4), 42.)
+        self.image1.set0(3,4, self.val1)
+        self.assertEqual(self.image1.get0(3,4), self.val1)
+        self.assertEqual(self.image1.get(0,0), self.val1)
+
     def testAddImages(self):
         self.image2 += self.image1
         self.image1 += self.val1

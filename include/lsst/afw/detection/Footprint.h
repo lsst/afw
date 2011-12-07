@@ -121,7 +121,7 @@ public:
 
     explicit Footprint(SpanList const & spans, geom::Box2I const & region=geom::Box2I());
     Footprint(Footprint const & other);    
-    ~Footprint();
+    virtual ~Footprint();
 
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
@@ -145,6 +145,8 @@ public:
 
     /// Set the corners of the MaskedImage wherein the footprints dwell
     void setRegion(geom::Box2I const & region) { _region = region; }
+
+    void clipTo(geom::Box2I const & bbox);
 
     bool contains(geom::Point2I const& pix) const;
     
@@ -234,7 +236,40 @@ template<typename MaskT>
 Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
                                 typename image::Mask<MaskT>::Ptr const&  mask,
                                 MaskT const bitmask);
-    
+
+/************************************************************************************************************/
+
+class HeavyFootprintCtrl;
+
+/*!
+ * \brief A set of pixels in an Image, including those pixels' actual values
+ */
+template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
+          typename VariancePixelT=lsst::afw::image::VariancePixel>
+class HeavyFootprint : public Footprint {
+public:
+    explicit HeavyFootprint(
+        Footprint const& foot,
+        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
+        HeavyFootprintCtrl const* ctrl=NULL
+                           );
+
+    void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
+private:
+    lsst::ndarray::Array<ImagePixelT, 1, 1> _image;
+    lsst::ndarray::Array<MaskPixelT, 1, 1> _mask;
+    lsst::ndarray::Array<VariancePixelT, 1, 1> _variance;
+};
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
+    Footprint const& foot,
+    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& img,
+    HeavyFootprintCtrl const* ctrl=NULL
+                                                                          )    
+{
+    return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img, ctrl);
+}    
 
 }}}
 

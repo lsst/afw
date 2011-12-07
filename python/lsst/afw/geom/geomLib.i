@@ -137,6 +137,7 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
     %template(Point3D) Point<int>;
     %template(Point3D) Point<double>;
 };
+
 %extend lsst::afw::geom::Extent<double,2> {
     %template(Extent2D) Extent<int>;
     %template(Extent2D) Extent<double>;
@@ -146,6 +147,7 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
     %template(Extent3D) Extent<int>;
     %template(Extent3D) Extent<double>;
 };
+
 %extend lsst::afw::geom::Extent<int,2> {
     %template(Extent2I) Extent<int>;
 };

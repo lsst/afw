@@ -55,6 +55,7 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintSet.h"
+#include "lsst/afw/detection/FootprintCtrl.h"
 
 namespace detection = lsst::afw::detection;
 namespace image = lsst::afw::image;
@@ -1450,6 +1451,29 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(
     }
     
     return im;
+}
+
+/************************************************************************************************************/
+/**
+ * Convert all the Footprints in the FootprintSet to be HeavyFootprint%s
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+void
+detection::FootprintSet<ImagePixelT, MaskPixelT>::makeHeavy(
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg, ///< the image providing pixel values
+        HeavyFootprintCtrl const *ctrl     ///< Control how we manipulate HeavyFootprints
+                                                           )
+{
+    HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
+
+    if (!ctrl) {
+        ctrl = &ctrl_s;
+    }
+
+    for (typename FootprintList::iterator ptr = _footprints->begin(),
+                                          end = _footprints->end(); ptr != end; ++ptr) {
+        ptr->reset(new detection::HeavyFootprint<ImagePixelT, MaskPixelT>(**ptr, mimg, ctrl));
+    }
 }
 
 /************************************************************************************************************/

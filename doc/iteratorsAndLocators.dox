@@ -10,7 +10,11 @@ the main difference being how pixel values are set.
 
 If you need access to nearby pixels, see the \link imageLocators Image locator\endlink tutorial.
 
-\include image1.cc
+\dontinclude image1.cc
+\skip #include
+\until return 0
+\until }
+
 
 \example image1.cc
  */
@@ -26,7 +30,10 @@ the main difference being how pixel values are set.
 
 If you need access to nearby pixels, see the \link maskedImageLocators MaskedImage locator\endlink tutorial.
 
-\include maskedImage1.cc
+\dontinclude maskedImage1.cc
+\skip #include
+\until return 0
+\until }
 
 \example maskedImage1.cc
  */
@@ -52,6 +59,7 @@ kernel (the code's in \link image2.cc\endlink):
 \dontinclude image2.cc
 
 Start by including Image.h defining a namespace for clarity:
+\skip #include
 \until main
 Declare an Image
 \until in(
@@ -125,7 +133,8 @@ Let's consider the problem of smoothing with a
 kernel (the code's in \link maskedImage2.cc\endlink):
 \dontinclude maskedImage2.cc
 
-Start by including Image.h defining a namespace for clarity:
+Start by including MaskedImage.h, defining a namespace for clarity:
+\skip #include
 \until main
 Declare a MaskedImage
 \until in(
