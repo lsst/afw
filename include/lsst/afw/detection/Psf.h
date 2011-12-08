@@ -201,16 +201,16 @@ protected:
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
                                                           lsst::afw::image::Color const&) {
-        return _kernel;
+        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
     }
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
                                                                lsst::afw::image::Color const&) const {
-        return lsst::afw::math::Kernel::ConstPtr(_kernel);
+        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
     }
 
     /// Clone a KernelPsf

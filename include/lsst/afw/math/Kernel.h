@@ -400,6 +400,11 @@ class FourierLocalKernel;
             lsst::afw::image::Image<Pixel> const &image
         );
 
+        explicit FixedKernel(
+            lsst::afw::math::Kernel const& kernel,
+            lsst::afw::geom::Point2D const& pos
+        );
+
         virtual ~FixedKernel() {}
 
         virtual Kernel::Ptr clone() const;

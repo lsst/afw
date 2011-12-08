@@ -213,6 +213,19 @@ namespace image {
         PixelConstReference operator()(int x, int y) const;
         PixelConstReference operator()(int x, int y, CheckIndices const&) const;
 
+        PixelConstReference get0(int x, int y) const {
+            return operator()(x-getX0(), y-getY0());
+        }
+        PixelConstReference get0(int x, int y, CheckIndices const& check) const {
+            return operator()(x-getX0(), y-getY0(), check);
+        }
+        void set0(int x, int y, const PixelT v) {
+            operator()(x-getX0(), y-getY0()) = v;
+        }
+        void set0(int x, int y, const PixelT v, CheckIndices const& check) {
+            operator()(x-getX0(), y-getY0(), check) = v;
+        }
+
         /// Return the number of columns in the %image
         int getWidth() const { return _gilView.width(); }
         /// Return the number of rows in the %image
