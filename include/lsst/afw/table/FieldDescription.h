@@ -24,7 +24,7 @@ struct FieldDescription {
     }
 
     friend std::ostream & operator<<(std::ostream & os, FieldDescription const & d) {
-        return os << d.name << ": " << d.type << " (" << d.doc << ")";
+        return os << d.name << ": " << d.type << " (" d.units << "; " << d.doc << ")";
     }
 
     FieldDescription(std::string const & name_, std::string const & doc_, std::string const & units_, 

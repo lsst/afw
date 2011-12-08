@@ -2,22 +2,26 @@
 #ifndef AFW_TABLE_ColumnView_h_INCLUDED
 #define AFW_TABLE_ColumnView_h_INCLUDED
 
-
-
 #include "lsst/afw/table/Layout.h"
 
 namespace lsst { namespace afw { namespace table {
 
 class TableBase;
 
+/**
+ *  @brief Column-wise view into a consolidated table.
+ */
 class ColumnView {
 public:
-    
+
+    /// @brief Return the layout that defines the fields.
     Layout getLayout() const;
-        
+
+    /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
     typename ndarray::Array<T const,1> operator[](Key<T> const & key) const;
 
+    /// @brief Return a 2-d array corresponding to an array field.
     template <typename T>
     typename ndarray::Array<T const,2,1> operator[](Key< Array<T> > const & key) const;
 

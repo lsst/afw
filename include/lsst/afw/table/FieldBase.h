@@ -38,15 +38,20 @@
 
 namespace lsst { namespace afw { namespace table {
 
+/**
+ *  @brief Field base class specialization for scalars.
+ */
 template <typename T>
 struct FieldBase {
 
-    typedef T Value;
-    typedef T & Reference;
-    typedef T Element;
-    
+    typedef T Value;        ///< @brief the type returned by RecordBase::get
+    typedef T & Reference;  ///< @brief the type returned by RecordBase::operator[]
+    typedef T Element;      ///< @brief the type of subfields (the same as the type itself for scalars)
+
+    /// @brief Return the number of subfield elements (always one for scalars).
     int getElementCount() const { return 1; }
 
+    /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
 protected:
@@ -59,14 +64,26 @@ protected:
 
 };
 
+/**
+ *  @brief Field base class specialization for points.
+ */
 template <typename U>
 struct FieldBase< Point<U> > {
 
-    typedef typename boost::mpl::if_<boost::is_same<U,int>,afw::geom::Point2I,afw::geom::Point2D>::type Value;
+    /**
+     *  @brief the type returned by RecordBase::get
+     *
+     *  This will be geom::Point2I when U is an integer, and geom::Point2D when U is float or double.
+     */
+    typedef typename boost::mpl::if_<boost::is_same<U,int>,geom::Point2I,geom::Point2D>::type Value;
+
+    /// @brief the type of subfields
     typedef U Element;
 
+    /// @brief Return the number of subfield elements (always two for points).
     int getElementCount() const { return 2; }
 
+    /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
 protected:
@@ -79,14 +96,19 @@ protected:
     }
 };
 
+/**
+ *  @brief Field base class specialization for shapes.
+ */
 template <typename U>
 struct FieldBase< Shape<U> > {
 
-    typedef afw::geom::ellipses::Quadrupole Value;
-    typedef U Element;
+    typedef afw::geom::ellipses::Quadrupole Value; ///< @brief the type returned by RecordBase::get
+    typedef U Element; /// @brief the type of subfields
 
+    /// @brief Return the number of subfield elements (always three for shapes).
     int getElementCount() const { return 3; }
 
+    /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
 protected:
@@ -100,16 +122,26 @@ protected:
     }
 };
 
+/**
+ *  @brief Field base class specialization for arrays.
+ */
 template <typename U>
 struct FieldBase< Array<U> > {
 
-    typedef Eigen::Array<U,Eigen::Dynamic,1> Value;
-    typedef Eigen::Map<Value> Reference;
-    typedef U Element;
+    typedef Eigen::Array<U,Eigen::Dynamic,1> Value; ///< @brief the type returned by RecordBase::get
+    typedef Eigen::Map<Value> Reference; ///< @brief the type returned by RecordBase::operator[]
+    typedef U Element;  ///< @brief the type of subfields and array elements
 
     /**
-     *  Constructor is implicit and has an invalid default so it can be used in the Field
-     *  constructor (as if it were an int argument) without specializing Field.
+     *  @brief Construct a FieldBase with the given size.
+     *
+     *  This constructor is implicit and has an invalid default so it can be used in the Field
+     *  constructor (as if it were an int argument) without specializing Field.  In other words,
+     *  it allows one to construct a 25-element array field like this:
+     *  @code
+     *  Field< Array<float> >("name", "documentation", 25)
+     *  @endcode
+     *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
     FieldBase(int size=-1) : _size(size) {
         if (size < 0) throw LSST_EXCEPT(
@@ -118,10 +150,13 @@ struct FieldBase< Array<U> > {
         );
     }
 
+    /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
+    /// @brief Return the number of subfield elements (equal to the size of the array).
     int getElementCount() const { return _size; }
 
+    /// @brief Return the size of the array (equal to the number of subfield elements).
     int getSize() const { return _size; }
 
 protected:
@@ -147,15 +182,34 @@ protected:
     int _size;
 };
 
+/**
+ *  @brief Field base class specialization for dynamically-sized covariance matrices.
+ *
+ *  Covariance matrices are always square and symmetric, and fields are stored packed 
+ *  using the same scheme as LAPACK's UPLO=U:
+ *  { (0,0), (0,1), (1,1), (0,2), (1,2), (2,2), ... }
+ *
+ *  These elements are packed and unpacked into a dense Eigen matrix when getting and setting
+ *  the field.
+ */
 template <typename U>
 struct FieldBase< Covariance<U> > {
 
-    typedef Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> Value;
-    typedef U Element;
+    /// @brief the type returned by RecordBase::get
+    typedef Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> Value; 
+
+    typedef U Element;    ///< @brief the type of subfields and matrix elements
 
     /**
-     *  Constructor is implicit and has an invalid default so it can be used in the Field
-     *  constructor (as if it were an int argument) without specializing Field.
+     *  @brief Construct a FieldBase with the given size.
+     *
+     *  This constructor is implicit and has an invalid default so it can be used in the Field
+     *  constructor (as if it were an int argument) without specializing Field.  In other words,
+     *  it allows one to construct a 25x25 covariance field like this:
+     *  @code
+     *  Field< Covariance<float> >("name", "documentation", 25)
+     *  @endcode
+     *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
     FieldBase(int size=-1) : _size(size) {
         if (size < 0) throw LSST_EXCEPT(
@@ -164,12 +218,16 @@ struct FieldBase< Covariance<U> > {
         );
     }
 
+    /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
+    /// @brief Return the number of subfield elements (the packed size of the covariance matrix).
     int getElementCount() const { return getPackedSize(); }
 
+    /// @brief Return the number of rows/columns of the covariance matrix.
     int getSize() const { return _size; }
     
+    /// @brief Return the packed size of the covariance matrix.
     int getPackedSize() const { return detail::computeCovariancePackedSize(_size); }
     
 protected:
@@ -202,21 +260,34 @@ protected:
     int _size;
 };
 
+/**
+ *  @brief Field base class specialization for covariance matrices for points.
+ *
+ *  Covariance fields are stored packed in the following order:
+ *  { (x,x), (x,y), (y,y) }
+ *
+ *  These elements are packed and unpacked into a dense Eigen matrix when getting and setting
+ *  the field.
+ */
 template <typename U>
 struct FieldBase< Covariance< Point<U> > > {
 
     static int const SIZE = 2;
     static int const PACKED_SIZE = 3;
 
-    typedef Eigen::Matrix<U,SIZE,SIZE> Value;
-    typedef U Element;
+    typedef Eigen::Matrix<U,SIZE,SIZE> Value; ///< @brief the type returned by RecordBase::get
+    typedef U Element; ///< @brief the type of subfields and matrix elements
 
+    /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
+    /// @brief Return the number of subfield elements (the packed size of the covariance matrix).
     int getElementCount() const { return getPackedSize(); }
 
+    /// @brief Return the number of rows/columns of the covariance matrix.
     int getSize() const { return SIZE; }
 
+    /// @brief Return the packed size of the covariance matrix.
     int getPackedSize() const { return PACKED_SIZE; }
 
 protected:
@@ -244,21 +315,34 @@ protected:
 
 };
 
+/**
+ *  @brief Field base class specialization for covariance matrices for shapes.
+ *
+ *  Covariance fields are stored packed in the following order:
+ *  { (xx,xx), (xx,yy), (yy,yy), (xx,xy), (yy,xy), (xy,xy) }
+ *
+ *  These elements are packed and unpacked into a dense Eigen matrix when getting and setting
+ *  the field.
+ */
 template <typename U>
 struct FieldBase< Covariance< Shape<U> > > {
 
     static int const SIZE = 3;
     static int const PACKED_SIZE = 6;
 
-    typedef Eigen::Matrix<U,SIZE,SIZE> Value;
-    typedef U Element;
+    typedef Eigen::Matrix<U,SIZE,SIZE> Value; ///< @brief the type returned by RecordBase::get
+    typedef U Element; ///< @brief the type of subfields and matrix elements
 
+    /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
+    /// @brief Return the number of subfield elements (the packed size of the covariance matrix).
     int getElementCount() const { return getPackedSize(); }
 
+    /// @brief Return the number of rows/columns of the covariance matrix.
     int getSize() const { return SIZE; }
 
+    /// @brief Return the packed size of the covariance matrix.
     int getPackedSize() const { return PACKED_SIZE; }
 
 protected:

@@ -8,6 +8,16 @@
 
 namespace lsst { namespace afw { namespace table {
 
+/**
+ *  @brief A description of a field in a table.
+ *
+ *  Field combines a type with the field name, documentation, units,
+ *  and in some cases, the size of the field.
+ *
+ *  Specializations for different field types are inherited through
+ *  FieldBase; see the documentation for those specializations for
+ *  additional information about particular field types.
+ */
 template <typename T>
 struct Field : public FieldBase<T> {
 

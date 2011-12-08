@@ -29,13 +29,18 @@ public:
     /// @brief Deep-copy the IdFactory.
     virtual Ptr clone() const = 0;
 
+    /**
+     *  @brief Return a simple IdFactory that simply counts from 1.
+     *
+     *  This is used when an empty pointer is passed to the TableBase constructor.
+     */
     static Ptr makeSimple();
 
     virtual ~IdFactory() {}
 
 protected:
 
-    /// @brief Protected to prevent slicing.
+    /// Protected to prevent slicing.
     void operator=(IdFactory const & other) {}
 
 };
