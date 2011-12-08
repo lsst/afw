@@ -29,8 +29,8 @@ class LayoutMapper;
  *  in the form of protected member functions that will need to be wrapped
  *  into public member functions by derived classes.
  *
- *  Data is shared between tables, but the assertion-based modification
- *  are not shared.
+ *  Data is shared between records and tables, but the assertion-based
+ *  modification flags are not shared.
  */
 class TableBase : protected ModificationFlags {
 public:
@@ -72,6 +72,7 @@ public:
     /// @brief Disable all modifications.
     void makeReadOnly() { unsetAll(); }
 
+    /// Destructor is explicit because class holds a shared_ptr to an incomplete class.
     ~TableBase();
 
 protected:
