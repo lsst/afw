@@ -456,6 +456,7 @@ class KernelTestCase(unittest.TestCase):
         #
         # check that we can construct a FixedKernel from a LinearCombinationKernel
         #
+        x, y = 100, 200
         kernel2 = afwMath.FixedKernel(kernel, afwGeom.PointD(x, y))
 
         self.assertTrue(re.search("AnalyticKernel", kernel.toString()))
@@ -464,7 +465,6 @@ class KernelTestCase(unittest.TestCase):
         self.assertTrue(re.search("FixedKernel", kernel2.toString()))
         self.assertTrue(kernel.isSpatiallyVarying())
 
-        x, y = 100, 200
         kim = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(kim, True, x, y)
 
