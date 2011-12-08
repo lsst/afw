@@ -1,3 +1,11 @@
 # -*- python -*-
-from lsst.sconsUtils import scripts
-scripts.BasicSConscript.lib()
+from lsst.sconsUtils import scripts, targets, env
+
+objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glob("#src/*/*/*.cc") + Glob("#src/*/*/*/*.cc"))
+
+import eups
+if eups.productDir("cuda_toolkit"):
+    gpuObj = env.SharedObject('#src/math/detail/convGPU', ['#src/math/detail/convGPU.cu'])
+    objs.append("#src/math/detail/convGPU.os")
+
+targets["lib"].extend(env.SharedLibrary(env["packageName"], objs, LIBS=env.getLibs("self")))

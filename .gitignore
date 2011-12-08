@@ -63,6 +63,7 @@ examples/integratePolar
 examples/forEachPixel
 examples/spatialCellExample
 examples/simpleStacker
+examples/timeConvolveGpu
 examples/Spline
 lib/libafw.*
 python/lsst/*.pyc
@@ -96,6 +97,7 @@ tests/SourceMatchIo
 tests/bBox1
 tests/background
 tests/checkTypeConversions
+tests/convolveGPU
 tests/coord
 tests/decoratedImage
 tests/ellipse
