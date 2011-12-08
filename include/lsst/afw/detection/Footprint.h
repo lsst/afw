@@ -77,6 +77,7 @@ public:
     int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
 
 	bool contains(int x) { return (x >= _x0) && (x <= _x1); }
+	bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
 
     std::string toString() const;    
 
