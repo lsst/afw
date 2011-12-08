@@ -30,8 +30,24 @@ class IteratorBase;
  *  The all-important field accessors and other member functions that do
  *  not involve the final record type are defined as public member functions.
  *
+ *
+ *  Final table classes should generally not inherit from RecordBase directly,
+ *  and instead should inherit from RecordInterface.
+ *
  *  Data is shared between records and tables, but the assertion-based
  *  modification flags are not shared.
+ *
+ *  @note RecordBase (and RecordBase subclasses) have almost exclusively
+ *  const member functions, including mutators.  This reflects the fact that
+ *  the underlying data of a record is shared by multiple objects and
+ *  record copy-construction is shallow; this means we can trivially
+ *  (and accidentally) circumvent const-protection by copy-constructing
+ *  a RecordBase from a const reference to a RecordBase.
+ *  The only real solution to this problem would be to have a different
+ *  class for const records, but that doesn't seem to be worth the trouble
+ *  in this case.  The ModificationFlags mechanism, along with the disable()
+ *  and makeReadOnly() member functions, provides an assertion-based
+ *  substitute for compile-time constness.
  */
 class RecordBase : protected ModificationFlags {
 public:

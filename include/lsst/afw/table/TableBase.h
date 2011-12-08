@@ -25,6 +25,9 @@ class LayoutMapper;
 /**
  *  @brief Base class containing most of the implementation for tables.
  *
+ *  Final table classes should generally not inherit from TableBase directly,
+ *  and instead should inherit from TableInterface.
+ *
  *  Most of the implementation of derived table classes is provided here
  *  in the form of protected member functions that will need to be wrapped
  *  into public member functions by derived classes.
@@ -81,11 +84,11 @@ protected:
      *  @brief Standard constructor for TableBase.
      *
      *  @param[in] layout            Layout that defines the fields, offsets, and record size for the table.
+     *  @param[in] capacity          Number of records to pre-allocate space for in the first block.  This
+     *                               overrides nRecordsPerBlock for the first block and the first block only.
      *  @param[in] nRecordsPerBlock  Number of records to allocate space for in each block.  This is almost
      *                               entirely a performance-only consideration, but it does affect whether
      *                               a table will be remain consolidated after adding records.
-     *  @param[in] capacity          Number of records to pre-allocate space for in the first block.  This
-     *                               overrides nRecordsPerBlock for the first block and the first block only.
      *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
      *                               If empty, defaults to a simple counter that starts at 1.
      *  @param[in] aux               A pointer containing extra arbitrary data for the table.
@@ -94,8 +97,8 @@ protected:
      */
     TableBase(
         Layout const & layout,
-        int nRecordsPerBlock,
         int capacity,
+        int nRecordsPerBlock,
         IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
         AuxBase::Ptr const & aux = AuxBase::Ptr(),
         ModificationFlags const & flags = ModificationFlags::all()

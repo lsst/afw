@@ -25,7 +25,7 @@ using namespace lsst::afw::table;
  */
 struct Example {
 
-    Example() : layout(), key(layout.addField(Field<double>("f", "doc"))), table(layout, 10) {
+    Example() : layout(), key(layout.addField(Field<double>("f", "doc"))), table(layout, 0, 10) {
         std::list<SimpleRecord> top;
         std::list<SimpleRecord> middle;
         std::list<SimpleRecord> bottom;
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     std::ostream_iterator<FieldDescription> osi(std::cout, "\n");
     std::copy(description.begin(), description.end(), osi);
     
-    SimpleTable table(layout, 16);
+    SimpleTable table(layout, 0, 16);
     
     SimpleRecord r1 = table.addRecord();
     BOOST_CHECK_EQUAL(r1.getId(), 1u);
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
     Key<float> floatKey = layout.addField(Field<float>("f1", "f1 doc"));
     Key< Array<double> > arrayKey = layout.addField(Field< Array<double> >("f2", "f2 doc", 5));
     
-    SimpleTable table(layout, 16);
+    SimpleTable table(layout, 0, 16);
     Eigen::ArrayXd r = Eigen::ArrayXd::Random(20);
     for (int i = 0; i < 20; ++i) {
         SimpleRecord record = table.addRecord();

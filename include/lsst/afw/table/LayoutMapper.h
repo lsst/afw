@@ -8,11 +8,20 @@ namespace lsst { namespace afw { namespace table {
 
 class RecordBase;
 
+/**
+ *  @brief A mapping between the keys of two Layouts, used to copy data between them
+ *         or read/write only certain fields during serialization.
+ *
+ *  LayoutMapper is initialized with its input Layout, and contains member functions
+ *  to add mapped or unmapped fields to the output Layout.
+ */
 class LayoutMapper {
 public:
 
+    /// @brief Return the input layout (copy-on-write).
     Layout const getInputLayout() const { return _data->_input; }
 
+    /// @brief Return the output layout (copy-on-write).
     Layout const getOutputLayout() const { return _data->_output; }
 
     /// @brief Add a new field to the output Layout that is not connected to the input Layout.
@@ -67,11 +76,25 @@ public:
      *
      *  IDs, parent/child relationships and auxiliary data are not copied.
      *
-     *  @Note the fact that the output record is passed by const reference is weird but intentional;
+     *  @note the fact that the output record is passed by const reference is weird but intentional;
      *  see the documentation for RecordBase for more information.
      */
     void copyRecord(RecordBase const & input, RecordBase const & output) const;
 
+    /**
+     *  @brief Call the given functor for each key pair in the mapper.
+     *
+     *  Function objects should have a template and/or overloaded operator()
+     *  that takes two Key objects with the same type:
+     *  @code
+     *  struct Functor {
+     *      template <typename T>
+     *      void operator()(Key<T> const & input, Key<T> const & output) const;
+     *  };
+     *  @endcode
+     *
+     *  The order of the key pairs is the same as the order in which they were added.
+     */
     template <typename F>
     void forEach(F func) const {
         Data::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);

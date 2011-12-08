@@ -378,8 +378,8 @@ RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) const {
 
 TableBase::TableBase(
     Layout const & layout,
-    int nRecordsPerBlock,
     int capacity,
+    int nRecordsPerBlock,
     IdFactory::Ptr const & idFactory,
     AuxBase::Ptr const & aux,
     ModificationFlags const & flags 

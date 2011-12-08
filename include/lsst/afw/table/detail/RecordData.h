@@ -8,10 +8,24 @@
 
 namespace lsst { namespace afw { namespace table {
 
+/// @brief Type used for unique IDs for records.
 typedef boost::uint64_t RecordId;
 
-enum TreeMode { NO_NESTING, DEPTH_FIRST };
+/**
+ *  @brief Enum used to specify how a tree iterator works.
+ */
+enum TreeMode {
+    NO_NESTING, ///< Iterate over records in one level of tree without descending to children.
+    DEPTH_FIRST ///< Iterate over all (recursive) children of a record before moving onto a sibling.
+};
 
+/**
+ *  @brief Class used to attach arbitrary extra data members to table and record classes.
+ *
+ *  Final table and record classes that need to additional data members will generally
+ *  create new subclasses of AuxBase that holds these additional members, and then static_cast
+ *  the return value of TableBase::getAux and RecordBase::getAux to the subclass type.
+ */
 class AuxBase {
 public:
     typedef boost::shared_ptr<AuxBase> Ptr;

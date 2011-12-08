@@ -12,6 +12,16 @@ namespace lsst { namespace afw { namespace table {
 
 struct TableImpl;
 
+/**
+ *  @brief An iterator that processes records in an order that corresponds to their
+ *         parent/child relationships.
+ *
+ *  Because TreeIteratorBase dereferences to RecordBase, it is usually wrapped
+ *  with the boost::transform_iterator adapter to return a final record class
+ *  in the iterator-returning methods of a final table class.
+ *
+ *  @sa TreeMode
+ */
 class TreeIteratorBase : 
         public boost::iterator_facade<TreeIteratorBase,RecordBase,boost::forward_traversal_tag,RecordBase> 
 {
