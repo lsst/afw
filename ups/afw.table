@@ -16,7 +16,6 @@ setupOptional(afwdata)
 setupOptional(gcc)
 
 setupOptional(cuda_toolkit)
-setupOptional(cuda_sdk)
 
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
