@@ -4,7 +4,7 @@ from lsst.sconsUtils import scripts, targets, env
 objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glob("#src/*/*/*.cc") + Glob("#src/*/*/*/*.cc"))
 
 import eups
-if eups.productDir("cuda_toolkit") and eups.productDir("cuda_sdk"):
+if eups.productDir("cuda_toolkit"):
     gpuObj = env.SharedObject('#src/math/detail/convGPU', ['#src/math/detail/convGPU.cu'])
     objs.append("#src/math/detail/convGPU.os")
 
