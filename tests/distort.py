@@ -234,8 +234,14 @@ class DistortionTestCase(unittest.TestCase):
 	r2Known = numpy.polyval(rcoeffs, r)
 	epsilon = 1.0e-6
 	drKnown = -(r2Known - numpy.polyval(rcoeffs, r+epsilon))/epsilon
-	
-	for p in [px, py, pxy]:
+
+        points = [px, py, pxy]
+        scalings = [drKnown**2, drKnown**2, 0.5*(drKnown**2-1.0)]
+	for i in range(3):
+            p = points[i]
+            scale = scalings[i]
+
+            # check the point
 	    p2 = rDist.distort(p)
 	    x, y = p2.getX(), p2.getY()
 	    r2Calc = numpy.sqrt(x*x+y*y)
@@ -243,37 +249,14 @@ class DistortionTestCase(unittest.TestCase):
 		print "r2known,r2Calc: ", r2Known, r2Calc
 	    self.assertAlmostEqual(r2Known, r2Calc)
 
-	p2 = rDist.distort(px)
-	r2Calc = p2.getX()
-	scale = drKnown
-	iqq2 = rDist.distort(px, iqq)
-	ixx, iyy, ixy = iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()
-	if self.prynt:
-	    print "scale: ", scale, ixx, iqq.getIXX()*scale**2
-	self.assertAlmostEqual(ixx, iqq.getIXX()*scale**2)
+            # check the moment
+            iqq2 = rDist.distort(p, iqq)
+            iqqList = [iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()]
+            if self.prynt:
+                print "scale: ", scale, iqqList[i]
+            self.assertAlmostEqual(scale, iqqList[i])
 
-	p2 = rDist.distort(py)
-	r2Calc = p2.getY()
-	scale = drKnown
-	iqq2 = rDist.distort(py, iqq)
-	ixx, iyy, ixy = iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()
-	if self.prynt:
-	    print "scale: ", scale, iyy, iqq.getIYY()*scale**2
-	self.assertAlmostEqual(iyy, iqq.getIYY()*scale**2)
-	    
-	#p2 = rDist.distort(pxy)
-	#x, y = p2.getX(), p2.getY()
-	#r2Calc = numpy.sqrt(x*x+y*y)
-	scale = drKnown
-	iqq2 = rDist.distort(pxy, iqq)
-	ixx, iyy, ixy = iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()
-	if self.prynt:
-	    print "scale: ", scale, scale**2, ixy, 0.5*(scale**2 - 1.0)
-        #ax = geomEllip.Axes(iqq2)
-        #print "ellip: ", ax.getA(), ax.getB(), ax.getTheta()
-	self.assertAlmostEqual(ixy, 0.5*(scale**2-1.0))
-	    
-        
+            
 #################################################################
 # Test suite boiler plate
 #################################################################
