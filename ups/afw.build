@@ -1,2 +1,2 @@
-@LSST BUILD@
+@LSST BUILD@ &&
 build_lsst @PRODUCT.replace("_", "/")@ @REPOVERSION@ @PRODUCT@-@VERSION@
