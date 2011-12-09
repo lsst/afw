@@ -36,13 +36,15 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %{
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/cameraGeom.h"
 %}
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
 #if defined(IMPORT_IMAGE_I)
-%import  "lsst/afw/image/imageLib.i" 
+%import  "lsst/afw/image/imageLib.i"
+%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 #endif
 
 %lsst_exceptions();

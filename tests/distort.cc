@@ -40,21 +40,27 @@
 
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 
 using namespace std;
 namespace cameraGeom = lsst::afw::cameraGeom;
-namespace afwGeom  = lsst::afw::geom;
-
+namespace afwGeom    = lsst::afw::geom;
+namespace geomEllip  = lsst::afw::geom::ellipses;
 
 BOOST_AUTO_TEST_CASE(roundTrip) {
     
     double x = 1.0;
     double y = 1.0;
-
+    double ixx = 1.0;
+    double iyy = 1.0;
+    double ixy = 0.0;
+    
     afwGeom::Point2D p(x, y);
     afwGeom::Point2D pDist; // distorted
     afwGeom::Point2D pp;    // undistorted ... roundtrip
-
+    geomEllip::Quadrupole q(ixx, iyy, ixy);
+    geomEllip::Quadrupole qDist;
+    geomEllip::Quadrupole qq;
     
     // try NullDistortion
     cameraGeom::NullDistortion ndist;
@@ -71,6 +77,7 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     
     // try RadialPolyDistortion
     std::vector<double> coeffs;
+    coeffs.push_back(0.0);
     coeffs.push_back(1.0);
     coeffs.push_back(1.1e-3);
     coeffs.push_back(2.2e-6);
@@ -80,14 +87,22 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     
     cameraGeom::RadialPolyDistortion rdist(coeffs);
     pDist = rdist.distort(p);
+    qDist = rdist.distort(p, q);
     pp    = rdist.undistort(pDist);
+    qq    = rdist.undistort(pDist, qDist);
     
-    printf("%.12f %.12f\n", p.getX(),     p.getY());
-    printf("%.12f %.12f\n", pDist.getX(), pDist.getY());
-    printf("%.12f %.12f\n", pp.getX(),    pp.getY());
+    printf("r: %.12f %.12f\n", p.getX(),     p.getY());
+    printf("r: %.12f %.12f\n", pDist.getX(), pDist.getY());
+    printf("r: %.12f %.12f\n", pp.getX(),    pp.getY());
 
+    printf("r: %.12f %.12f\n", q.getIXX(),     q.getIYY());
+    printf("r: %.12f %.12f\n", qDist.getIXX(), qDist.getIYY());
+    printf("r: %.12f %.12f\n", qq.getIXX(),    qq.getIYY());
+    
     BOOST_CHECK_CLOSE(pp.getX(), p.getX(), 1.0e-7);
     BOOST_CHECK_CLOSE(pp.getY(), p.getY(), 1.0e-7);
-    
+    BOOST_CHECK_CLOSE(qq.getIXX(), q.getIXX(), 1.0e-7);
+    BOOST_CHECK_CLOSE(qq.getIYY(), q.getIYY(), 1.0e-7);
+
 }
 

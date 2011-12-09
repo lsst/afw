@@ -29,6 +29,7 @@
 #include "boost/tuple/tuple.hpp"
 
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 
 
 /**
@@ -40,6 +41,7 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+/*    
 class Moment { //: public boost::tuple<double, double, double> {
 public:
     Moment(double ixx, double iyy, double ixy) : _ixx(ixx), _iyy(iyy), _ixy(ixy) {} //boost::tuple<double, double, double>(ixx, iyy, ixy) {}
@@ -55,6 +57,7 @@ public:
 private:
     double _ixx, _iyy, _ixy;
 };
+*/
 
 /**
  * Describe a set of Detectors that are physically closely related (e.g. on the same invar support)
@@ -72,9 +75,11 @@ public:
     virtual lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p); // = 0;
     virtual lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p); // = 0;
 
-    virtual Moment distort(lsst::afw::geom::Point2D const &p, Moment const &Iqq); 
-    virtual Moment undistort(lsst::afw::geom::Point2D const &p, Moment const &Iqq);
-
+    virtual lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
+                                                      lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
+    virtual lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
+                                                        lsst::afw::geom::ellipses::Quadrupole const &Iqq);
+    
 };
 
 
@@ -85,8 +90,10 @@ public:
     lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p);
     lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p);
 
-    Moment distort(lsst::afw::geom::Point2D const &p, Moment const &Iqq); 
-    Moment undistort(lsst::afw::geom::Point2D const &p, Moment const &Iqq);
+    lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
+                                              lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
+    lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
+                                                lsst::afw::geom::ellipses::Quadrupole const &Iqq);
 };
 
 
@@ -101,8 +108,10 @@ public:
     double iTransformR(double rp); 
     double iTransformDr(double rp);
     
-    Moment distort(lsst::afw::geom::Point2D const &p, Moment const &Iqq); 
-    Moment undistort(lsst::afw::geom::Point2D const &p, Moment const &Iqq);
+    lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
+                                              lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
+    lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
+                                                lsst::afw::geom::ellipses::Quadrupole const &Iqq);
 
     std::vector<double> getCoeffs()   {return _coeffs;   }
     std::vector<double> getICoeffs()  {return _icoeffs;  }
@@ -117,7 +126,9 @@ private:
     std::vector<double> _invert(std::vector<double> const &coeffs);
     std::vector<double> _deriv(std::vector<double> const &coeffs);
     lsst::afw::geom::Point2D _transform(lsst::afw::geom::Point2D const &p, bool forward=true);
-    Moment _transform(lsst::afw::geom::Point2D const &p, cameraGeom::Moment const &iqq, bool forward=true);
+    lsst::afw::geom::ellipses::Quadrupole _transform(lsst::afw::geom::Point2D const &p,
+                                                     lsst::afw::geom::ellipses::Quadrupole const &iqq,
+                                                     bool forward=true);
 };
 
 

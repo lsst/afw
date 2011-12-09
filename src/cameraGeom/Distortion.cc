@@ -32,12 +32,15 @@
 #include "Eigen/Geometry"
 
 #include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 
 #include "lsst/pex/exceptions.h"
 #include "boost/format.hpp"
 
 namespace pexEx      = lsst::pex::exceptions;
 namespace afwGeom    = lsst::afw::geom;
+namespace geomEllip  = lsst::afw::geom::ellipses;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
 /* Distortion ... have it be a null distortion*/
@@ -48,14 +51,14 @@ afwGeom::Point2D cameraGeom::Distortion::distort(afwGeom::Point2D const &p) {
 afwGeom::Point2D cameraGeom::Distortion::undistort(afwGeom::Point2D const &p)  {
     return afwGeom::Point2D(p.getX(), p.getY());
 }
-cameraGeom::Moment cameraGeom::Distortion::distort(afwGeom::Point2D const &p,
-                                                   cameraGeom::Moment const &Iqq) {
-    return cameraGeom::Moment(Iqq);
+geomEllip::Quadrupole cameraGeom::Distortion::distort(afwGeom::Point2D const &p,
+                                                      geomEllip::Quadrupole const &Iqq) {
+    return geomEllip::Quadrupole(Iqq);
     
 }
-cameraGeom::Moment cameraGeom::Distortion::undistort(afwGeom::Point2D const &p,
-                                                     cameraGeom::Moment const &Iqq) {
-    return cameraGeom::Moment(Iqq);
+geomEllip::Quadrupole cameraGeom::Distortion::undistort(afwGeom::Point2D const &p,
+                                                     geomEllip::Quadrupole const &Iqq) {
+    return geomEllip::Quadrupole(Iqq);
 }
 
 
@@ -67,13 +70,13 @@ afwGeom::Point2D cameraGeom::NullDistortion::distort(afwGeom::Point2D const &p) 
 afwGeom::Point2D cameraGeom::NullDistortion::undistort(afwGeom::Point2D const &p)  {
     return afwGeom::Point2D(p.getX(), p.getY());
 }
-cameraGeom::Moment cameraGeom::NullDistortion::distort(afwGeom::Point2D const &p,
-                                                       cameraGeom::Moment const &Iqq) {
-    return cameraGeom::Moment(Iqq);
+geomEllip::Quadrupole cameraGeom::NullDistortion::distort(afwGeom::Point2D const &p,
+                                                       geomEllip::Quadrupole const &Iqq) {
+    return geomEllip::Quadrupole(Iqq);
 }
-cameraGeom::Moment cameraGeom::NullDistortion::undistort(afwGeom::Point2D const &p,
-                                                         cameraGeom::Moment const &Iqq) {
-    return cameraGeom::Moment(Iqq);
+geomEllip::Quadrupole cameraGeom::NullDistortion::undistort(afwGeom::Point2D const &p,
+                                                         geomEllip::Quadrupole const &Iqq) {
+    return geomEllip::Quadrupole(Iqq);
 }
 
 
@@ -225,8 +228,8 @@ afwGeom::Point2D cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D c
 
 
 
-cameraGeom::Moment cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p,
-                                                                cameraGeom::Moment const &iqq,
+geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p,
+                                                                geomEllip::Quadrupole const &iqq,
                                                                 bool forward) {
 
     double x = p.getX();
@@ -244,21 +247,25 @@ cameraGeom::Moment cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D
     Rinv = R.inverse();
     Eigen::Matrix2d Mp = Rinv*M*R;
 
-    double ixx = iqq.getIxx();
-    double iyy = iqq.getIyy();
-    double ixy = iqq.getIxy();
-
+#if 0
+    double ixx = iqq.getIXX();
+    double iyy = iqq.getIYY();
+    double ixy = iqq.getIXY();
+    
     Eigen::Matrix2d I;
     I << ixx, 0.5*ixy, 0.5*ixy, iyy;
-
+    
     //Eigen::Matrix2d Inew = Mp.inverse()*I*(Mp.transpose()).inverse();
     Eigen::Matrix2d Inew = Mp*I*Mp.transpose();
-
+    
     double iuu = Inew(0,0);
     double ivv = Inew(1,1);
     double iuv = (Inew(0,1) + Inew(1,0));
     
-    return cameraGeom::Moment(iuu, ivv, iuv);
+    return geomEllip::Quadrupole(iuu, ivv, iuv);
+#else
+    return iqq.transform(afwGeom::LinearTransform(Mp));
+#endif
     
 }
 
@@ -268,11 +275,11 @@ afwGeom::Point2D cameraGeom::RadialPolyDistortion::distort(afwGeom::Point2D cons
 afwGeom::Point2D cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point2D const &p)  {
     return this->_transform(p, false);
 }
-cameraGeom::Moment cameraGeom::RadialPolyDistortion::distort(afwGeom::Point2D const &p,
-                                                             cameraGeom::Moment const &Iqq) {
+geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::distort(afwGeom::Point2D const &p,
+                                                             geomEllip::Quadrupole const &Iqq) {
     return this->_transform(p, Iqq, true);
 }
-cameraGeom::Moment cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point2D const &p,
-                                                               cameraGeom::Moment const &Iqq) {
+geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point2D const &p,
+                                                               geomEllip::Quadrupole const &Iqq) {
     return this->_transform(p, Iqq, false);
 }

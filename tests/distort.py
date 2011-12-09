@@ -41,6 +41,7 @@ import eups
 import lsst.pex.policy           as pexPolicy
 import lsst.utils.tests          as utilsTests
 import lsst.afw.geom             as afwGeom
+import lsst.afw.geom.ellipses    as geomEllip
 import lsst.afw.cameraGeom       as cameraGeom
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -83,10 +84,10 @@ class DistortionTestCase(unittest.TestCase):
 
 	    p = afwGeom.Point2D(x, y)
 	    pDist = dist.distort(p)
-	    m = cameraGeom.Moment(ixx, iyy, ixy)
-	    mDist = dist.distort(p, m)
+	    m = geomEllip.Quadrupole(ixx, iyy, ixy)
+            mDist = dist.distort(p, m)
 	    mm    = dist.undistort(pDist, mDist)
-	    r0 = math.sqrt(x*x+y*y)
+	    r0 = math.sqrt(x*x + y*y)
 
 	    theta = math.atan2(y,x)
 	    #dx = 0.001*math.cos(theta)
@@ -115,20 +116,20 @@ class DistortionTestCase(unittest.TestCase):
 	    
 	    if self.prynt:
 		print "r,dr:  %.12f,%.12f %.12f"       % (ror, dr, drTest)
-		print "m:     %.12f %.12f %.12f" % (m.getIxx(), m.getIyy(), m.getIxy())
-		print "mDist: %.12f %.12f %.12f" % (mDist.getIxx(), mDist.getIyy(), mDist.getIxy())
-		print "mp:    %.12f %.12f %.12f" % (mm.getIxx(), mm.getIyy(), mm.getIxy())
+		print "m:     %.12f %.12f %.12f" % (m.getIXX(), m.getIYY(), m.getIXY())
+		print "mDist: %.12f %.12f %.12f" % (mDist.getIXX(), mDist.getIYY(), mDist.getIXY())
+		print "mp:    %.12f %.12f %.12f" % (mm.getIXX(), mm.getIYY(), mm.getIXY())
 
-		ixyTmp = m.getIxy() if m.getIxy() != 0.0 else 1.0
+		ixyTmp = m.getIXY() if m.getIXY() != 0.0 else 1.0
 		print "err:   %.12f %.12f %.12f" % (
-		    (m.getIxx()-mm.getIxx())/m.getIxx(),
-		    (m.getIyy()-mm.getIyy())/m.getIyy(),
-		    (m.getIxy()-mm.getIxy())/ixyTmp,
+		    (m.getIXX()-mm.getIXX())/m.getIXX(),
+		    (m.getIYY()-mm.getIYY())/m.getIYY(),
+		    (m.getIXY()-mm.getIXY())/ixyTmp,
 		    )
 		
-	    self.assertAlmostEqual(mm.getIxx(), m.getIxx(), 2)
-	    self.assertAlmostEqual(mm.getIyy(), m.getIyy(), 2)
-	    self.assertAlmostEqual(mm.getIxy(), m.getIxy(), 2)
+	    self.assertAlmostEqual(mm.getIXX(), m.getIXX(), 2)
+	    self.assertAlmostEqual(mm.getIYY(), m.getIYY(), 2)
+	    self.assertAlmostEqual(mm.getIXY(), m.getIXY(), 2)
 	    
 
 
@@ -218,7 +219,7 @@ class DistortionTestCase(unittest.TestCase):
     def testzAxisCases(self):
 
 	r = 1000.0
-	iqq = cameraGeom.Moment(1.0, 1.0, 0.0)
+	iqq = geomEllip.Quadrupole(1.0, 1.0, 0.0)
 	
 	px    = afwGeom.Point2D(r, 0.0)
 	py    = afwGeom.Point2D(0.0, r)
@@ -232,7 +233,7 @@ class DistortionTestCase(unittest.TestCase):
 
 	r2Known = numpy.polyval(rcoeffs, r)
 	epsilon = 1.0e-6
-	drKnown = (r2Known - numpy.polyval(rcoeffs, r+epsilon))/epsilon
+	drKnown = -(r2Known - numpy.polyval(rcoeffs, r+epsilon))/epsilon
 	
 	for p in [px, py, pxy]:
 	    p2 = rDist.distort(p)
@@ -246,29 +247,31 @@ class DistortionTestCase(unittest.TestCase):
 	r2Calc = p2.getX()
 	scale = drKnown
 	iqq2 = rDist.distort(px, iqq)
-	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
+	ixx, iyy, ixy = iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()
 	if self.prynt:
-	    print "scale: ", scale, ixx, iqq.getIxx()*scale**2
-	self.assertAlmostEqual(ixx, iqq.getIxx()*scale**2)
+	    print "scale: ", scale, ixx, iqq.getIXX()*scale**2
+	self.assertAlmostEqual(ixx, iqq.getIXX()*scale**2)
 
 	p2 = rDist.distort(py)
 	r2Calc = p2.getY()
 	scale = drKnown
 	iqq2 = rDist.distort(py, iqq)
-	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
+	ixx, iyy, ixy = iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()
 	if self.prynt:
-	    print "scale: ", scale, iyy, iqq.getIyy()*scale**2
-	self.assertAlmostEqual(iyy, iqq.getIyy()*scale**2)
+	    print "scale: ", scale, iyy, iqq.getIYY()*scale**2
+	self.assertAlmostEqual(iyy, iqq.getIYY()*scale**2)
 	    
-	p2 = rDist.distort(pxy)
-	x, y = p2.getX(), p2.getY()
-	r2Calc = numpy.sqrt(x*x+y*y)
+	#p2 = rDist.distort(pxy)
+	#x, y = p2.getX(), p2.getY()
+	#r2Calc = numpy.sqrt(x*x+y*y)
 	scale = drKnown
 	iqq2 = rDist.distort(pxy, iqq)
-	ixx, iyy, ixy = iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()
+	ixx, iyy, ixy = iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()
 	if self.prynt:
-	    print "scale: ", scale, ixy, (scale**2 - 1.0)
-	self.assertAlmostEqual(ixy, (scale**2-1.0))
+	    print "scale: ", scale, scale**2, ixy, 0.5*(scale**2 - 1.0)
+        #ax = geomEllip.Axes(iqq2)
+        #print "ellip: ", ax.getA(), ax.getB(), ax.getTheta()
+	self.assertAlmostEqual(ixy, 0.5*(scale**2-1.0))
 	    
         
 #################################################################
