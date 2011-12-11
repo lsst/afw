@@ -52,22 +52,49 @@ class IteratorBase;
 class RecordBase : protected ModificationFlags {
 public:
 
+    /**
+     *  @brief Return the table's link mode, which describes how records
+     *         are associated with their parents/children/siblings.
+     */
+    LinkMode getLinkMode() const;
+
     /// @brief Return the Layout that holds this record's fields and keys.
     Layout getLayout() const;
 
     /// @brief Return true if the record has a parent record.
-    bool hasParent() const { return _data->links.parent; }
+    bool hasParent() const;
 
-    /// @brief Return true if the record has one or more child records.
-    bool hasChildren() const { return _data->links.child; }
+    /**
+     *  @brief Return true if the record has one or more child records.
+     *
+     *  This operation is in constant time if the link mode is POINTERS,
+     *  but linear time if the link mode is PARENT_ID.
+     */
+    bool hasChildren() const;
 
     /// @brief Return the unique ID of the record.
     RecordId getId() const { return _data->id; }
 
     /**
+     *  @brief Set the ID of the parent of this record.
+     *
+     *  This operation is only allowed when the link mode is PARENT_ID.
+     *  Will throw LogicErrorException if the link mode is POINTERS.
+     */
+    void setParentId(RecordId id) const;
+
+    /**
      *  @brief Remove the record from whatever table it belongs to.
      *
-     *  Will throw LogicErrorException if (!isLinked() || hasChildren()).
+     *  If the record has already been unlinked (i.e. if !isLinked())
+     *  this will always throw LogicErrorException.
+     *
+     *  If the link mode is POINTERS, records with children cannot
+     *  be unlinked (will throw LogicErrorException).
+     *
+     *  If the link mode is PARENT_ID, records with children may
+     *  be removed, but all children must also be removed before
+     *  the link mode is set back to POINTERS.
      */
     void unlink() const;
 
@@ -157,16 +184,13 @@ protected:
     /// @brief Return the record's auxiliary data.
     AuxBase::Ptr getAux() const { return _data->aux; }
 
-    /// @brief Return the record's parent, or throw NotFoundException if !hasParent().
-    RecordBase _getParent() const {
-        if (!_data->links.parent) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::NotFoundException,
-                "Record has no parent."
-            );
-        }
-        return RecordBase(_data->links.parent, _table, *this);
-    }
+    /**
+     *  @brief Return the record's parent, or throw NotFoundException if !hasParent().
+     *
+     *  This operation is constant time when the link mode is POINTERS, and logarithmic
+     *  if it is PARENT_ID.
+     */
+    RecordBase _getParent() const;
 
     //@{
     /**

@@ -19,6 +19,11 @@ enum TreeMode {
     DEPTH_FIRST ///< Iterate over all (recursive) children of a record before moving onto a sibling.
 };
 
+enum LinkMode {
+    POINTERS,
+    PARENT_ID
+};
+
 /**
  *  @brief Class used to attach arbitrary extra data members to table and record classes.
  *

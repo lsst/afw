@@ -81,6 +81,7 @@ private:
 //----- TableImpl definition --------------------------------------------------------------------------------
 
 struct TableImpl : private boost::noncopyable {
+    LinkMode linkMode;
     int nRecordsPerBlock;
     RecordData * front;
     RecordData * back;
@@ -104,13 +105,15 @@ struct TableImpl : private boost::noncopyable {
 
     RecordData * addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux);
 
+    void setLinkMode(LinkMode newMode);
+
     void unlink(RecordData * record);
 
     TableImpl(
         Layout const & layout_, int nRecordsPerBlock_, 
         IdFactory::Ptr const & idFactory_, AuxBase::Ptr const & aux_
     ) :
-        nRecordsPerBlock(nRecordsPerBlock_), front(0), back(0), consolidated(0), 
+        linkMode(POINTERS), nRecordsPerBlock(nRecordsPerBlock_), front(0), back(0), consolidated(0), 
         idFactory(idFactory_), aux(aux_), layout(layout_)
     {
         Block::padLayout(layout);
@@ -122,6 +125,75 @@ struct TableImpl : private boost::noncopyable {
 };
 
 //----- TableImpl implementation ----------------------------------------------------------------------------
+
+void TableImpl::setLinkMode(LinkMode newMode) {
+    if (newMode == linkMode) return;
+    if (newMode == PARENT_ID) {
+        for (RecordSet::iterator i = records.begin(); i != records.end(); ++i) {
+            if (i->links.parent) {
+                RecordId parentId = i->links.parent->id;
+                i->parentId = parentId;
+            }
+        }
+        front = 0;
+        back = 0;
+    } else {
+        // These pointers optimize the case where children of a common parent have contiguous IDs.
+        RecordData * parent = 0;
+        RecordData * sibling = 0;
+        if (!records.empty()) front = &(*records.begin());
+        for (RecordSet::iterator i = records.begin(); i != records.end(); ++i) {
+            if (i->parentId) {
+                if (!parent || parent->id != i->parentId) {
+                    if (i->parentId >= i->id) {
+                        throw LSST_EXCEPT(
+                            lsst::pex::exceptions::LogicErrorException,
+                            (boost::format(
+                                "All child records must have IDs strictly greater than their parents; "
+                                "%lld >= %lld"
+                            ) % i->parentId % i->id).str()
+                        );
+                    }
+                    RecordSet::iterator p = records.find(i->parentId, CompareRecordIdLess());                
+                    if (p == records.end()) {
+                        throw LSST_EXCEPT(
+                            lsst::pex::exceptions::NotFoundException,
+                            (boost::format(
+                                "Parent record %lld not found for child %lld."
+                            ) % i->parentId % i->id).str()
+                        );
+                    }
+                    parent = &(*p);
+                    sibling = 0;
+                }
+                i->links.initialize();
+                if (!parent->links.child) {
+                    parent->links.child = &(*i);
+                } else {
+                    if (!sibling) {
+                        sibling = parent->links.child;
+                        while (sibling->links.next) {
+                            sibling = sibling->links.next;
+                        }
+                    }
+                    sibling->links.next = &(*i);
+                    i->links.previous = sibling;
+                }
+                i->links.parent = parent;
+                sibling = &(*i);
+            } else { // no parent
+                i->links.initialize();
+                i->links.parent = 0;
+                i->links.previous = back;
+                if (back) {
+                    back->links.next = &(*i);
+                }
+                back = &(*i);
+            }
+        } // for loop
+    }
+    linkMode = newMode;
+}
 
 void TableImpl::addBlock(int blockRecordCount) {
     Block::Ptr newBlock = Block::allocate(layout.getRecordSize(), blockRecordCount);
@@ -149,35 +221,39 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, AuxBase::Ptr
     assert(p != 0);
     p->id = id;
     p->aux = aux;
-    if (parent) {
-        if (parent->links.child) {
-            RecordData * q = parent->links.child;
-            while (q->links.next) {
-                q = q->links.next;
+    if (linkMode == POINTERS) {
+        if (parent) {
+            if (parent->links.child) {
+                RecordData * q = parent->links.child;
+                while (q->links.next) {
+                    q = q->links.next;
+                }
+                q->links.next = p;
+                p->links.previous = q;
+            } else {
+                parent->links.child = p;
             }
-            q->links.next = p;
-            p->links.previous = q;
+            p->links.parent = parent;
         } else {
-            parent->links.child = p;
+            if (back == 0) {
+                assert(front == 0);
+                front = p;
+            } else {
+                assert(back->links.next == 0);
+                back->links.next = p;
+                p->links.previous = back;
+            }
+            back = p;
         }
-        p->links.parent = parent;
-    } else {
-        if (back == 0) {
-            assert(front == 0);
-            front = p;
-        } else {
-            assert(back->links.next == 0);
-            back->links.next = p;
-            p->links.previous = back;
-        }
-        back = p;
+    } else if (linkMode == PARENT_ID) {
+        p->parentId = parent->id;
     }
     records.insert_commit(*p, insertData);
     return p;
 }
 
 void TableImpl::unlink(RecordData * record) {
-    if (record->links.child) {
+    if (linkMode == POINTERS && record->links.child) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Children must be erased before parent record."
@@ -189,15 +265,19 @@ void TableImpl::unlink(RecordData * record) {
             "Record has already been unlinked."
         );
     }
-    if (record->links.previous) {
-        record->links.previous->links.next = record->links.next;
-    } else if (record->links.parent) {
-        record->links.parent->links.child = record->links.next;
+    if (linkMode == POINTERS) {
+        if (record->links.previous) {
+            record->links.previous->links.next = record->links.next;
+        } else if (record->links.parent) {
+            record->links.parent->links.child = record->links.next;
+        }
+        if (record->links.next) {
+            record->links.next->links.previous = record->links.previous;
+        }
+        record->links.parent = 0;
+    } else if (linkMode == PARENT_ID) {
+        record->parentId = 0;
     }
-    if (record->links.next) {
-        record->links.next->links.previous = record->links.previous;
-    }
-    record->links.parent = 0;
     consolidated = 0;
 }
 
@@ -206,6 +286,14 @@ void TableImpl::unlink(RecordData * record) {
 //----- TreeIteratorBase implementation ---------------------------------------------------------------------
 
 void TreeIteratorBase::increment() {
+#ifndef NDEBUG
+    if (_record._table->linkMode == PARENT_ID) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Tree iterators are invalidated when the link mode is set to PARENT_ID."
+        );
+    }
+#endif
     switch (_mode) {
     case DEPTH_FIRST:
         if (_record._data->links.child) {
@@ -231,15 +319,92 @@ IteratorBase::~IteratorBase() {}
 
 //----- RecordBase implementation ---------------------------------------------------------------------------
 
+LinkMode RecordBase::getLinkMode() const { return _table->linkMode; }
+
 Layout RecordBase::getLayout() const { return _table->layout; }
 
 RecordBase::~RecordBase() {}
 
+void RecordBase::setParentId(RecordId id) const {
+    if (_table->linkMode == POINTERS) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot set parent ID when link mode is POINTERS."
+        );
+    }
+    _data->parentId = id;
+}
+
+bool RecordBase::hasParent() const {
+    if (_table->linkMode == PARENT_ID) {
+        return _data->parentId;
+    } else {
+        return _data->links.parent;
+    }
+
+}
+
+bool RecordBase::hasChildren() const {
+    if (_table->linkMode == POINTERS) {
+        return _data->links.child;        
+    } else {
+        for (detail::RecordSet::const_iterator i = _table->records.begin(); i != _table->records.end(); ++i) {
+            if (i->parentId == _data->id) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+RecordBase RecordBase::_getParent() const {
+    if (_table->linkMode == POINTERS) {
+        if (!_data->links.parent) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::NotFoundException,
+                "Record has no parent."
+            );
+        }
+        return RecordBase(_data->links.parent, _table, *this);
+    } else {
+        if (!_data->parentId) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::NotFoundException,
+                "Record has no parent."
+            );
+        }
+        detail::RecordSet::iterator j = _table->records.find(_data->parentId, detail::CompareRecordIdLess());
+        if (j == _table->records.end()) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::NotFoundException,
+                (boost::format("Record with id '%lld' not found.") % _data->parentId).str()
+            );
+        }
+        return RecordBase(&(*j), _table, *this);
+    }
+}
+
 TreeIteratorBase RecordBase::_beginChildren(TreeMode mode) const {
+#ifndef NDEBUG
+    if (_table->linkMode == PARENT_ID) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Tree iterators are invalidated when the link mode is set to PARENT_ID."
+        );
+    }
+#endif
     return TreeIteratorBase(_data->links.child, _table, *this, mode);
 }
 
 TreeIteratorBase RecordBase::_endChildren(TreeMode mode) const {
+#ifndef NDEBUG
+    if (_table->linkMode == PARENT_ID) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Tree iterators are invalidated when the link mode is set to PARENT_ID."
+        );
+    }
+#endif
     return TreeIteratorBase(
         (mode == NO_NESTING || _data->links.child == 0) ? 0 : _data->links.next,
         _table, *this, mode
@@ -267,13 +432,17 @@ void RecordBase::unlink() const {
 
 TableBase::~TableBase() {}
 
+LinkMode TableBase::getLinkMode() const { return _impl->linkMode; }
+
+void TableBase::setLinkMode(LinkMode mode) const { _impl->setLinkMode(mode); }
+
 Layout TableBase::getLayout() const { return _impl->layout; }
 
 bool TableBase::isConsolidated() const {
     return _impl->consolidated;
 }
 
-void TableBase::consolidate(int extraCapacity) {
+void TableBase::consolidate(int extraCapacity, LinkMode linkMode) {
     boost::shared_ptr<detail::TableImpl> newImpl =
         boost::make_shared<detail::TableImpl>(
             _impl->layout,
@@ -282,6 +451,7 @@ void TableBase::consolidate(int extraCapacity) {
             _impl->aux
         );
     newImpl->addBlock(_impl->records.size() + extraCapacity);
+    newImpl->setLinkMode(PARENT_ID);
     int const dataOffset = sizeof(detail::RecordData);
     int const dataSize = _impl->layout.getRecordSize() - dataOffset;
     for (detail::RecordSet::const_iterator i = _impl->records.begin(); i != _impl->records.end(); ++i) {
@@ -296,8 +466,7 @@ void TableBase::consolidate(int extraCapacity) {
         );
         newImpl->records.insert(newImpl->records.end(), *newRecord);
     }
-    setupPointers(newImpl->records, newImpl->back);
-    newImpl->front = &(*_impl->records.begin());
+    newImpl->setLinkMode(linkMode);
     _impl.swap(newImpl);
 }
 
@@ -323,6 +492,14 @@ IteratorBase TableBase::_unlink(IteratorBase const & iter) const {
 }
 
 TreeIteratorBase TableBase::_unlink(TreeIteratorBase const & iter) const {
+#ifndef NDEBUG
+    if (_impl->linkMode == PARENT_ID) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Tree iterators are invalidated when the link mode is set to PARENT_ID."
+        );
+    }
+#endif
     assertBit(CAN_UNLINK_RECORD);
     _impl->assertEqual(iter->_table);
     TreeIteratorBase result(iter);
@@ -333,10 +510,26 @@ TreeIteratorBase TableBase::_unlink(TreeIteratorBase const & iter) const {
 }
 
 TreeIteratorBase TableBase::_beginTree(TreeMode mode) const {
+#ifndef NDEBUG
+    if (_impl->linkMode == PARENT_ID) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Tree iterators are invalidated when the link mode is set to PARENT_ID."
+        );
+    }
+#endif
     return TreeIteratorBase(_impl->front, _impl, *this, mode);
 }
 
 TreeIteratorBase TableBase::_endTree(TreeMode mode) const {
+#ifndef NDEBUG
+    if (_impl->linkMode == PARENT_ID) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Tree iterators are invalidated when the link mode is set to PARENT_ID."
+        );
+    }
+#endif
     return TreeIteratorBase(0, _impl, *this, mode);
 }
 

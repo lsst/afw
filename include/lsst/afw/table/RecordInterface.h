@@ -19,6 +19,8 @@ namespace lsst { namespace afw { namespace table {
  *  one level of children or all recursive children, depending on the TreeMode
  *  the view was constructed with.
  *
+ *  A ChildrenView is invalidated when the table's link mode is set to PARENT_ID.
+ *
  *  @sa RecordInterface::getChildren().
  */
 template <typename Tag>
@@ -72,13 +74,19 @@ public:
     typedef boost::transform_iterator<detail::RecordConverter<Record>,IteratorBase> Iterator;
     typedef ChildrenView<Tag> Children;
 
-    /// @brief Return the record's parent, or throw NotFoundException if !hasParent().
+    /// @copydoc RecordBase::_getParent
     Record getParent() const {
         return detail::Access::makeRecord<Record>(this->_getParent());
     }
 
     /// @brief Return a container-like view into the children of this record.
     Children getChildren(TreeMode mode) const {
+        if (getLinkMode() == PARENT_ID) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LogicErrorException,
+                "Cannot iterate over children when in PARENT_ID link mode."
+            );
+        }
         return Children(*this, mode);
     }
 

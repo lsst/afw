@@ -81,7 +81,11 @@ public:
     typedef Iterator iterator;
     typedef Iterator const_iterator;
 
-    /// @brief Return a tree view into the table with the given TreeMode.
+    /**
+     *  @brief Return a tree view into the table with the given TreeMode.
+     *
+     *  TreeViews are invalidated when the link mode is set to PARENT_ID.
+     */
     Tree asTree(TreeMode mode) const { return Tree(*this, mode); }
 
     Iterator begin() const {
@@ -91,17 +95,17 @@ public:
         return Iterator(this->_end(), detail::RecordConverter<Record>());
     }
 
-    /// @brief Remove the record pointed at by the given iterator and return an iterator to the next record.
+    /// @copydoc TableBase::_unlink
     Iterator unlink(Iterator const & iter) const {
         return Iterator(this->_unlink(iter.base()), detail::RecordConverter<Record>());
     }
 
-    /// @brief Return an iterator to the record with the given ID, or end() if no such record exists.
+    /// @copydoc TableBase::_find
     Iterator find(RecordId id) const {
         return Iterator(this->_find(id), detail::RecordConverter<Record>());
     }
 
-    /// @brief Return the record with the given ID, or throw NotFoundException if no such record exists.
+    /// @copydoc TableBase::_get
     Record operator[](RecordId id) const {
         return detail::Access::makeRecord<Record>(this->_get(id));
     }

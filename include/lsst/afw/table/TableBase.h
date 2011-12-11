@@ -38,6 +38,26 @@ class LayoutMapper;
 class TableBase : protected ModificationFlags {
 public:
 
+    /**
+     *  @brief Return the table's link mode, which describes how records
+     *         are associated with their parents/children/siblings.
+     */
+    LinkMode getLinkMode() const;
+
+    /**
+     *  @brief Set the table's link mode, changing how records are associated
+     *         with their parents/children/siblings.
+     *
+     *  Setting the link mode to PARENT_ID invalidates tree views and tree
+     *  iterators, including iteration over a record's children.  Accessing
+     *  a record's parent or determining whether it has children will be
+     *  less efficient.
+     *
+     *  Switching between modes will cause the order of iteration over siblings
+     *  to revert to increasing ID order.
+     */
+    void setLinkMode(LinkMode mode) const;
+
     /// @brief Return the layout for the table's fields.  
     Layout getLayout() const;
 
@@ -57,7 +77,28 @@ public:
      *                            where N is <= extraCapacity will not cause the table
      *                            to become unconsolidated.
      */
-    void consolidate(int extraCapacity=0);
+    void consolidate(int extraCapacity=0) {
+        consolidate(extraCapacity, getLinkMode());
+    }
+
+    /**
+     *  @brief Consolidate the table in-place into a single contiguous block.
+     *
+     *  This does not invalidate any existing records or iterators, but existing
+     *  records and iterators will no longer be associated with this table.
+     *
+     *  This will also reallocate the table even if the table is already consolidated.
+     *  
+     *  @param[in] extraCapacity  Number of additional records to allocate space for
+     *                            as part of the same block.  Adding N additional records
+     *                            where N is <= extraCapacity will not cause the table
+     *                            to become unconsolidated.
+     *  @param[in] linkMode       The link mode after consolidation.  Consolidating a 
+     *                            table requires putting it in PARENT_ID link mode, at
+     *                            least temporarily.  By default it will be returned to
+     *                            the link mode in place before consolidation.
+     */
+    void consolidate(int extraCapacity, LinkMode linkMode);
 
     /**
      *  @brief Return a strided-array view into the columns of the table.
@@ -144,7 +185,7 @@ protected:
     /**
      *  @brief Remove the record pointed at by the given iterator.
      *
-     *  After unlinking, the iterator can still be dereferenced and the record will remain valid,
+     *  After unlinking, the passed iterator can still be dereferenced and the record will remain valid,
      *  but the result of incrementing the iterator is undefined.
      */
     IteratorBase _unlink(IteratorBase const & iter) const;
