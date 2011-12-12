@@ -23,8 +23,11 @@
 ## \file
 ## \brief Utilities to use with displaying images
 
+from __future__ import with_statement
+
 import math
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -135,17 +138,19 @@ class Mosaic(object):
 
         self.nx, self.ny = nx, ny
 
-        mosaic = images[0].Factory(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
+        mosaic = images[0].Factory(
+            afwGeom.Extent2I(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
+            )
         mosaic.set(self.background)
 
         for i in range(len(images)):
-            smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx))
+            smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx), afwImage.LOCAL)
             im = images[i]
 
             if smosaic.getDimensions() != im.getDimensions(): # im is smaller than smosaic
-                llc = afwImage.PointI((smosaic.getWidth() - im.getWidth())//2,
+                llc = afwGeom.Point2I((smosaic.getWidth() - im.getWidth())//2,
                                       (smosaic.getHeight() - im.getHeight())//2)
-                smosaic = smosaic.Factory(smosaic, afwImage.BBox(llc, im.getWidth(), im.getHeight()))
+                smosaic = smosaic.Factory(smosaic, afwGeom.Box2I(llc, im.getDimensions()), afwImage.LOCAL)
 
             smosaic <<= im
 
@@ -183,8 +188,8 @@ class Mosaic(object):
         if iy is None:
             ix, iy = ix % self.nx, ix/self.nx
 
-        return afwImage.BBox(afwImage.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
-                             self.xsize, self.ysize)
+        return afwGeom.Box2I(afwGeom.Point2I(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
+                            afwGeom.Extent2I(self.xsize, self.ysize))
 
     def drawLabels(self, labels=None, frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
@@ -202,22 +207,20 @@ class Mosaic(object):
         if len(labels) != self.nImage:
             raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
 
-        ds9.cmdBuffer.pushSize()
+        with ds9.Buffering():
+            for i in range(len(labels)):
+                if labels[i]:
+                    label, ctype = labels[i], None
+                    try:
+                        label, ctype = label
+                    except:
+                        pass
 
-        for i in range(len(labels)):
-            if labels[i]:
-                label, ctype = labels[i], None
-                try:
-                    label, ctype = label
-                except:
-                    pass
+                    if not label:
+                        continue
 
-                if not label:
-                    continue
-                    
-                ds9.dot(str(label), self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
-
-        ds9.cmdBuffer.popSize()
+                    ds9.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(),
+                            frame=frame, ctype=ctype)
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
@@ -225,8 +228,8 @@ If origin is present, it's Added to the BBox
 
 All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
-    x0, y0 = bbox.getX0(), bbox.getY0()
-    x1, y1 = bbox.getX1(), bbox.getY1()
+    x0, y0 = bbox.getMinX(), bbox.getMinY()
+    x1, y1 = bbox.getMaxX(), bbox.getMaxY()
 
     if origin:
         x0 += origin[0]; x1 += origin[0]
@@ -243,30 +246,46 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
               (x0 - borderWidth, y0 - borderWidth),
               ], frame=frame, ctype=ctype)
 
-def drawFootprint(foot, borderWidth=0.5, origin=None, frame=None, ctype=None, bin=1):
+def drawFootprint(foot, borderWidth=0.5, origin=None, XY0=None, frame=None, ctype=None, bin=1,
+                  peaks=False, symb="+", size=0.4, ctypePeak=None):
     """Draw an afwDetection::Footprint on a ds9 frame with the specified ctype.  Include an extra borderWidth
-pixels If origin is present, it's Added to the Footprint
+pixels If origin is present, it's Added to the Footprint; if XY0 is present is Subtracted from the Footprint
+
+If peaks is True, also show the object's Peaks using the specified symbol and size and ctypePeak
 
 All Footprint coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
 
-    ds9.cmdBuffer.pushSize()
-
-    borderWidth /= bin
-    for s in foot.getSpans():
-        y, x0, x1 = s.getY(), s.getX0(), s.getX1()
-
+    if XY0:
         if origin:
-            x0 += origin[0]; x1 += origin[0]
-            y += origin[1]
+            raise RuntimeError("You may not specify both origin and XY0")
+        origin = (-XY0[0], -XY0[1])
+
+    with ds9.Buffering():
+        borderWidth /= bin
+        for s in foot.getSpans():
+            y, x0, x1 = s.getY(), s.getX0(), s.getX1()
+
+            if origin:
+                x0 += origin[0]; x1 += origin[0]
+                y += origin[1]
 
             x0 /= bin; x1 /= bin; y /= bin
-    
-        ds9.line([(x0 - borderWidth, y - borderWidth),
-                  (x0 - borderWidth, y + borderWidth),
-                  (x1 + borderWidth, y + borderWidth),
-                  (x1 + borderWidth, y - borderWidth),
-                  (x0 - borderWidth, y - borderWidth),
-                  ], frame=frame, ctype=ctype)
 
-    ds9.cmdBuffer.popSize()
+            ds9.line([(x0 - borderWidth, y - borderWidth),
+                      (x0 - borderWidth, y + borderWidth),
+                      (x1 + borderWidth, y + borderWidth),
+                      (x1 + borderWidth, y - borderWidth),
+                      (x0 - borderWidth, y - borderWidth),
+                      ], frame=frame, ctype=ctype)
+
+        if peaks:
+            for p in foot.getPeaks():
+                x, y = p.getIx(), p.getIy()
+
+                if origin:
+                    x += origin[0]; y += origin[1]
+
+                x /= bin; y /= bin
+
+                ds9.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)

@@ -48,7 +48,7 @@ int main() {
             exit(1);
         }
         std::string afwdata(afwdataCStr);
-        const std::string inFilename(afwdata + "/small_MI");
+        const std::string inFilename(afwdata + "/data/small_MI");
 
         // Create a wcs from a fits file (so the wcs has some memory to allocate)
         std::cout << "Opening file " << inFilename << std::endl;
@@ -63,7 +63,7 @@ int main() {
         
         //Change the CTYPES so makeWcs creates an object of the base class
         metadata->set("CTYPE1", "RA---SIN");
-        metadata->set("CTYPE3", "DEC--SIN");
+        metadata->set("CTYPE2", "DEC--SIN");
         wcsPtr = lsst::afw::image::makeWcs(metadata);
         doTest(wcsPtr);
         

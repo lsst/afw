@@ -2,7 +2,7 @@ namespace lsst { namespace afw { namespace image {
 /**
  \page imageIterators Image Iterators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 This code is in \link image1.cc\endlink.
 Note that \link maskedImageIterators MaskedImage iterators\endlink work almost identically,
@@ -10,7 +10,11 @@ the main difference being how pixel values are set.
 
 If you need access to nearby pixels, see the \link imageLocators Image locator\endlink tutorial.
 
-\include image1.cc
+\dontinclude image1.cc
+\skip #include
+\until return 0
+\until }
+
 
 \example image1.cc
  */
@@ -18,7 +22,7 @@ If you need access to nearby pixels, see the \link imageLocators Image locator\e
 /**
  \page maskedImageIterators MaskedImage Iterators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 This code is in \link maskedImage2.cc\endlink.
 Note that \link imageIterators Image iterators\endlink work almost identically,
@@ -26,7 +30,10 @@ the main difference being how pixel values are set.
 
 If you need access to nearby pixels, see the \link maskedImageLocators MaskedImage locator\endlink tutorial.
 
-\include maskedImage1.cc
+\dontinclude maskedImage1.cc
+\skip #include
+\until return 0
+\until }
 
 \example maskedImage1.cc
  */
@@ -38,7 +45,7 @@ namespace lsst { namespace afw { namespace image {
 /**
  \page imageLocators Image Locators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 \link imageIterators Iterators\endlink provide access to an %image, %pixel by %pixel.  You
 often want access to neighbouring pixels (e.g. computing a gradient, or smoothing).
@@ -52,6 +59,7 @@ kernel (the code's in \link image2.cc\endlink):
 \dontinclude image2.cc
 
 Start by including Image.h defining a namespace for clarity:
+\skip #include
 \until main
 Declare an Image
 \until in(
@@ -106,7 +114,7 @@ Finally write some output files and close out \c main():
 /**
  \page maskedImageLocators MaskedImage Locators
 
-(Return to \ref secImage)
+(Return to \ref afwSecImage)
 
 (You might be interested to compare this example with the discussion
 of Image \link imageLocators locators\endlink; apart from an include
@@ -125,7 +133,8 @@ Let's consider the problem of smoothing with a
 kernel (the code's in \link maskedImage2.cc\endlink):
 \dontinclude maskedImage2.cc
 
-Start by including Image.h defining a namespace for clarity:
+Start by including MaskedImage.h, defining a namespace for clarity:
+\skip #include
 \until main
 Declare a MaskedImage
 \until in(

@@ -26,10 +26,10 @@
 Tests for Statistics
 
 Run with:
-   ./Statistics.py
+   ./statisticsOverloads.py
 or
    python
-   >>> import Statistics; Statistics.run()
+   >>> import statisticsOverloads; statisticsOverloads.run()
 """
 
 
@@ -37,9 +37,9 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
-#import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -57,21 +57,21 @@ class StatisticsTestCase(unittest.TestCase):
         self.sctrl = afwMath.StatisticsControl()
 
         # Integers
-        self.mimgI = afwImage.MaskedImageI(self.nRow, self.nCol)
+        self.mimgI = afwImage.MaskedImageI(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgI.set(self.val, 0x0, self.val)
-        self.imgI = afwImage.ImageI(self.nRow, self.nCol, self.val)
+        self.imgI = afwImage.ImageI(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
         self.vecI = afwMath.vectorI(self.nRow*self.nCol, self.val)
 
         # floats
-        self.mimgF = afwImage.MaskedImageF(self.nRow, self.nCol)
+        self.mimgF = afwImage.MaskedImageF(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgF.set(self.val, 0x0, self.val)
-        self.imgF = afwImage.ImageF(self.nRow, self.nCol, self.val)
+        self.imgF = afwImage.ImageF(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
         self.vecF = afwMath.vectorF(self.nRow*self.nCol, self.val)
 
         # doubles
-        self.mimgD = afwImage.MaskedImageD(self.nRow, self.nCol)
+        self.mimgD = afwImage.MaskedImageD(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgD.set(self.val, 0x0, self.val)
-        self.imgD = afwImage.ImageD(self.nRow, self.nCol, self.val)
+        self.imgD = afwImage.ImageD(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
         self.vecD = afwMath.vectorD(self.nRow*self.nCol, self.val)
 
         self.imgList  = [self.imgI,  self.imgF,  self.imgD]
@@ -121,6 +121,21 @@ class StatisticsTestCase(unittest.TestCase):
         for vec in self.vecList:
             self.compareMakeStatistics(vec, vec.size())
 
+    def testWeightedVector(self):
+        """Test std::vector, but with weights"""
+        sctrl = afwMath.StatisticsControl()
+
+        nval = len(self.vecList[0])
+        weight = 10
+        weights = [i*weight/float(nval - 1) for i in range(nval)]
+
+        for vec in self.vecList:
+            stats = afwMath.makeStatistics(vec, weights,
+                                           afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, sctrl)
+
+            self.assertAlmostEqual(0.5*weight*sum(vec)/stats.getValue(afwMath.SUM), 1.0)
+            self.assertAlmostEqual(sum(vec)/vec.size(), stats.getValue(afwMath.MEAN))
+
     # Try calling the Statistics constructor directly
     def testStatisticsConstructor(self):
         if False:
@@ -142,7 +157,7 @@ class StatisticsTestCase(unittest.TestCase):
             
     # Test the Mask specialization
     def testMask(self):
-        mask = afwImage.MaskU(10, 10)
+        mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)

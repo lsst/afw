@@ -33,118 +33,621 @@
 #include <iostream>
 #include <limits>
 #include <cmath>
+#include <cassert>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/utils/ieee.h"
+#include "lsst/afw/geom/Angle.h"
 
 using namespace std;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
+namespace afwGeom = lsst::afw::geom;
 namespace ex = lsst::pex::exceptions;
 
 namespace {
+    double const NaN = std::numeric_limits<double>::quiet_NaN();
+    double const MAX_DOUBLE = std::numeric_limits<double>::max();
+    double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
+
+    /**
+     * @brief A boolean functor which always returns true (for templated conditionals)
+     */
+    class AlwaysTrue {
+    public:
+        template<typename T>
+        bool operator()(T) const {
+            return true;
+        }
+        template<typename Ta, typename Tb>
+        bool operator()(Ta, Tb) const {
+            return true;
+        }
+        template<typename Ta, typename Tb, typename Tc>
+        bool operator()(Ta, Tb, Tc) const {
+            return true;
+        }
+    };
+
+    /**
+     * @brief A boolean functor which always returns false (for templated conditionals)
+     */
+    class AlwaysFalse {
+    public:
+        template<typename T>
+        bool operator()(T) const {
+            return false;
+        }
+        template<typename Ta, typename Tb>
+        bool operator()(Ta, Tb) const {
+            return false;
+        }
+        template<typename Ta, typename Tb, typename Tc>
+        bool operator()(Ta, Tb, Tc) const {
+            return false;
+        }
+    };
+
+    /**
+     * @brief A boolean functor to check for NaN (for templated conditionals)
+     */    
+    class CheckFinite {
+    public:
+        template<typename T>
+        bool operator()(T val) const {
+            return !lsst::utils::isnan(static_cast<float>(val));
+        }
+    };
+
+    /**
+     * @brief A boolean functor to test val < min (for templated conditionals)
+     */    
+    class CheckValueLtMin {
+    public:
+        template<typename Tval, typename Tmin>
+        bool operator()(Tval val, Tmin min) const {
+            return (static_cast<Tmin>(val) < min);
+        }
+    };
+
+    /**
+     * @brief A boolean functor to test val > max (for templated conditionals)
+     */    
+    class CheckValueGtMax {
+    public:
+        template<typename Tval, typename Tmax>
+        bool operator()(Tval val, Tmax max) const {
+            return (static_cast<Tmax>(val) > max);
+        }
+    };
     
-double const NaN = std::numeric_limits<double>::quiet_NaN();
-double const MAX_DOUBLE = std::numeric_limits<double>::max();
-double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
+    /**
+     * @brief A boolean functor to test |val| < cliplimit  (for templated conditionals)
+     */    
+    class CheckClipRange {
+    public:
+        template<typename Tval, typename Tcen, typename Tmax>
+        bool operator()(Tval val, Tcen center, Tmax cliplimit) const {
+            Tmax tmp = fabs(val - center);
+            return (tmp <= cliplimit);
+        }
+    };
+    
+    // define some abbreviated typenames for the test templates
+    typedef CheckFinite     ChkFin;
+    typedef CheckValueLtMin ChkMin;
+    typedef CheckValueGtMax ChkMax;
+    typedef CheckClipRange  ChkClip;    
+    typedef AlwaysTrue      AlwaysT;
+    typedef AlwaysFalse     AlwaysF;
+    
+    // Return the variance of a variance, assuming a Gaussian
+    // There is apparently an attempt to correct for bias in the factor (n - 1)/n.  RHL
+    inline double varianceError(double const variance, int const n)
+    {
+        return 2*(n - 1)*variance*variance/static_cast<double>(n*n);
+    }
+
+    /*********************************************************************************************************/
+    // return type for processPixels
+    typedef boost::tuple<int,                        // n
+                         double,                     // sum
+                         afwMath::Statistics::Value, // mean
+                         afwMath::Statistics::Value, // variance
+                         double,                     // min
+                         double,                     // max
+                         lsst::afw::image::MaskPixel // allPixelOrMask
+                         > StandardReturn;
+
+    /*
+     * Functions which convert the booleans into calls to the proper templated types, one type per
+     * recursion level
+     */
+    /*
+     * This function handles the inner summation loop, with tests templated
+     *
+     * The idea here is to allow different conditionals in the inner loop, but avoid repeating code.
+     * Each test is actually a functor which is handled through a template.  If the
+     * user requests a test (eg check for NaNs), the function is instantiated with the appropriate functor.
+     * Otherwise, an 'AlwaysTrue' or 'AlwaysFalse' object is passed in.  The compiler then compiles-out
+     * a test which is always false, or removes the conditional for a test which is always true.
+     */
+    template<typename IsFinite,
+             typename HasValueLtMin,
+             typename HasValueGtMax,
+             typename InClipRange,
+             bool useWeights,
+             typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    StandardReturn processPixels(ImageT const &img,
+                                MaskT const &msk,
+                                VarianceT const &var,
+                                WeightT const &weights,
+                                int const,
+                                int const nCrude,
+                                int const stride,
+                                double const meanCrude,
+                                double const cliplimit,
+                                bool const weightsAreMultiplicative,
+                                int const andMask,
+                                bool const calcErrorFromInputVariance
+                               )
+    {
+        int n = 0;
+        double sumw = 0.0;              // sum(weight)  (N.b. weight will be 1.0 if !useWeights)
+        double sumw2 = 0.0;             // sum(weight^2)
+        double sumx = 0;                // sum(data*weight)
+        double sumx2 = 0;               // sum(data*weight^2)
+#if 1
+        double sumvw = 0.0;             // sum(variance*weight)
+        double sumvw2 = 0.0;            // sum(variance*weight^2)
+#endif
+        double min = (nCrude) ? meanCrude : MAX_DOUBLE;
+        double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
+
+        afwImage::MaskPixel allPixelOrMask = 0x0;
+    
+        for (int iY = 0; iY < img.getHeight(); iY += stride) {
+
+            typename MaskT::x_iterator mptr = msk.row_begin(iY);
+            typename VarianceT::x_iterator vptr = var.row_begin(iY);
+            typename WeightT::x_iterator wptr = weights.row_begin(iY);
+        
+            for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
+                 ptr != end; ++ptr, ++mptr, ++vptr, ++wptr) {
+            
+                if (IsFinite()(*ptr) && !(*mptr & andMask) &&
+                    InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
+                
+                    double const delta = (*ptr - meanCrude);
+
+                    if (useWeights) {
+                        double weight = *wptr;
+                        if (weightsAreMultiplicative) {
+                            ;
+                        } else {
+                            if (*wptr <= 0) {
+                                continue;
+                            }
+                            weight = 1/weight;
+                        }
+
+                        sumw   += weight;
+                        sumw2  += weight*weight;
+                        sumx   += weight*delta;
+                        sumx2  += weight*delta*delta;
+                        
+                        if (calcErrorFromInputVariance) {
+                            double const var = *vptr;
+                            sumvw  += var*weight;
+                            sumvw2 += var*weight*weight;
+                        }
+                    } else {
+                        sumx += delta;
+                        sumx2 += delta*delta;
+                    }
+
+                    allPixelOrMask |= *mptr;
+                
+                    if (HasValueLtMin()(*ptr, min)) { min = *ptr; }
+                    if (HasValueGtMax()(*ptr, max)) { max = *ptr; }
+                    n++;
+                }
+            }
+        }
+        if (n == 0) {
+            min = NaN;
+            max = NaN;
+        }
+
+        // estimate of population mean and variance.
+        double mean, variance;
+        if (!useWeights) {
+            sumw = sumw2 = n;
+        }
+
+        // N.b. if sumw == 0 or sumw*sumw == sumw2 (e.g. n == 1) we'll get NaNs
+        // N.b. the estimator of the variance assumes that the sample points all have the same variance;
+        // otherwise, what is it that we're estimating?
+        mean = sumx/sumw;
+        variance = sumx2/sumw - ::pow(mean, 2);    // biased estimator
+        variance *= sumw*sumw/(sumw*sumw - sumw2); // debias
+
+        double meanVar;                 // (standard error of mean)^2
+        if (calcErrorFromInputVariance) {
+            meanVar = sumvw2/(sumw*sumw);
+        } else {
+            meanVar = variance*sumw2/(sumw*sumw);
+        }                
+        
+        double varVar = varianceError(variance, n); // error in variance; incorrect if useWeights is true
+
+        sumx += sumw*meanCrude;
+        mean += meanCrude;
+
+        return StandardReturn(n, sumx,
+                              afwMath::Statistics::Value(mean, meanVar),
+                              afwMath::Statistics::Value(variance, varVar), min, max, allPixelOrMask);
+    }
+
+    template<typename IsFinite,
+             typename HasValueLtMin,
+             typename HasValueGtMax,
+             typename InClipRange,
+             bool useWeights,
+             typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    StandardReturn processPixels(ImageT const &img,
+                                MaskT const &msk,
+                                VarianceT const &var,
+                                WeightT const &weights,
+                                int const flags,
+                                int const nCrude,
+                                int const stride,
+                                double const meanCrude,
+                                double const cliplimit,
+                                bool const weightsAreMultiplicative,
+                                int const andMask,
+                                bool const calcErrorFromInputVariance,
+                                bool doGetWeighted
+                               )
+    {
+        if (doGetWeighted) {
+            return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative, andMask,
+                                 calcErrorFromInputVariance);
+        } else {
+            return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, false>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative, andMask,
+                                 calcErrorFromInputVariance);
+        }
+    }
+
+    template<typename IsFinite,
+             typename HasValueLtMin,
+             typename HasValueGtMax,
+             typename InClipRange,
+             bool useWeights,
+             typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    StandardReturn processPixels(ImageT const &img,
+                                MaskT const &msk,
+                                VarianceT const &var,
+                                WeightT const &weights,
+                                int const flags,
+                                int const nCrude,
+                                int const stride,
+                                double const meanCrude,
+                                double const cliplimit,
+                                bool const weightsAreMultiplicative,
+                                int const andMask,
+                                bool const calcErrorFromInputVariance,                                
+                                bool doCheckFinite,
+                                bool doGetWeighted
+                               )
+    {
+        if (doCheckFinite) {
+            return processPixels<CheckFinite, HasValueLtMin, HasValueGtMax, InClipRange, useWeights>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 doGetWeighted);
+        } else {
+            return processPixels<AlwaysTrue, HasValueLtMin, HasValueGtMax, InClipRange, useWeights>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude, cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 doGetWeighted);
+        }
+    }
+
+    /* =========================================================================
+     * @brief Compute the standard stats: mean, variance, min, max
+     *
+     * @param img    an afw::Image to compute the stats over
+     * @param flags  an integer (bit field indicating which statistics are to be computed
+     *
+     * @note An overloaded version below is used to get clipped versions
+     */
+    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    StandardReturn getStandard(ImageT const &img,              // image
+                               MaskT const &msk,               // mask
+                               VarianceT const &var,           // variance
+                               WeightT const &weights,         // weights to apply to each pixel
+                               int const flags,                // what to measure
+                               bool const weightsAreMultiplicative,  // weights are multiplicative (not inverse)
+                               int const andMask,              // mask of bad pixels
+                               bool const calcErrorFromInputVariance, // estimate errors from variance
+                               bool doCheckFinite,             // check for NaN/Inf
+                               bool doGetWeighted              // use the weights
+                              )
+    {
+        // =====================================================
+        // a crude estimate of the mean, used for numerical stability of variance
+        int nCrude       = 0;
+        double meanCrude = 0.0;
+
+        // for small numbers of values, use a small stride
+        int const nPix = img.getWidth()*img.getHeight();
+        int strideCrude;
+        if (nPix < 100) {
+            strideCrude = 2;
+        } else {
+            strideCrude = 10;
+        }
+
+        double cliplimit = -1;              // unused
+        StandardReturn values = processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(
+                                              img, msk, var, weights,
+                                              flags, nCrude, strideCrude, meanCrude,
+                                              cliplimit,
+                                              weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                              doCheckFinite, doGetWeighted);
+        nCrude = values.get<0>();
+        double sumCrude = values.get<1>();
+        
+        meanCrude = 0.0;
+        if (nCrude > 0) {
+            meanCrude = sumCrude/nCrude;
+        }
+
+        // =======================================================
+        // Estimate the full precision variance using that crude mean
+        // - get the min and max as well
+    
+        if (flags & (afwMath::MIN | afwMath::MAX)) {
+            return processPixels<ChkFin, ChkMin, ChkMax, AlwaysT, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude,
+                                 cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 true, doGetWeighted);
+        } else {
+            return processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, 1, meanCrude,
+                                 cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 doCheckFinite, doGetWeighted);
+        }
+    }
+
+    /* ==========================================================
+     *
+     * @brief A routine to get standard stats: mean, variance, min, max with
+     *   clipping on std::pair<double,double> = center, cliplimit
+     */
+    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    StandardReturn getStandard(ImageT const &img,                        // image
+                               MaskT const &msk,                         // mask
+                               VarianceT const &var,                     // variance
+                               WeightT const &weights,                   // weights to apply to each pixel
+                               int const flags,                          // what to measure
+                               std::pair<double, double> const clipinfo, // the center and cliplimit for the
+                                                                         // first clip iteration 
+                               bool const weightsAreMultiplicative,  // weights are multiplicative (not inverse)
+                               int const andMask,              // mask of bad pixels
+                               bool const calcErrorFromInputVariance, // estimate errors from variance
+                               bool doCheckFinite,             // check for NaN/Inf
+                               bool doGetWeighted              // use the weights
+                              )
+    {
+        double const center = clipinfo.first;
+        double const cliplimit = clipinfo.second;
+
+        if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
+            return StandardReturn(0, NaN,
+                                  afwMath::Statistics::Value(NaN, NaN),
+                                  afwMath::Statistics::Value(NaN, NaN), NaN, NaN, ~0x0);
+        }
+    
+        // =======================================================
+        // Estimate the full precision variance using that crude mean
+        int const stride = 1;
+        int nCrude = 0;
+    
+        if (flags & (afwMath::MIN | afwMath::MAX)) {
+            return processPixels<ChkFin, ChkMin, ChkMax, ChkClip, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, stride,
+                                 center, cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 true, doGetWeighted);
+        } else {                            // fast loop ... just the mean & variance
+            return processPixels<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(
+                                 img, msk, var, weights,
+                                 flags, nCrude, stride,
+                                 center, cliplimit,
+                                 weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
+                                 doCheckFinite, doGetWeighted);
+        }
+    }
+
+    /* percentile()
+     *
+     * @brief A wrapper using the nth_element() built-in to compute percentiles for an image
+     *
+     * @param img       an afw::Image
+     * @param quartile  the desired percentile.
+     *
+     */
+    template<typename Pixel>
+    double percentile(std::vector<Pixel> &img,
+                      double const fraction)
+    {
+        assert (fraction >= 0.0 && fraction <= 1.0);
+
+        int const n = img.size();
+
+        if (n > 1) {
+        
+            double const idx = fraction*(n - 1);
+        
+            // interpolate linearly between the adjacent values
+            // For efficiency:
+            // - if we're asked for a fraction > 0.5,
+            //    we'll do the second partial sort on shorter (upper) portion
+            // - otherwise, the shorter portion will be the lower one, we'll partial-sort that.
+        
+            int const q1 = static_cast<int>(idx);
+            int const q2 = q1 + 1;
+
+            typename std::vector<Pixel>::iterator mid1 = img.begin() + q1;
+            typename std::vector<Pixel>::iterator mid2 = img.begin() + q2;
+            if (fraction > 0.5) {
+                std::nth_element(img.begin(), mid1, img.end());
+                std::nth_element(mid1, mid2, img.end());
+            } else {
+                std::nth_element(img.begin(), mid2, img.end());
+                std::nth_element(img.begin(), mid1, mid2);
+            }
+    
+            double val1 = static_cast<double>(*mid1);
+            double val2 = static_cast<double>(*mid2);
+            double w1 = (static_cast<double>(q2) - idx);
+            double w2 = (idx - static_cast<double>(q1));
+            return w1*val1 + w2*val2;
+        
+        } else if (n == 1) {
+            return img[0];
+        } else {
+            return NaN;
+        }
+    }
 
 
-
-/**
- * @brief A boolean functor which always returns true (for templated conditionals)
+/* medianAndQuartiles()
+ *
+ * @brief A wrapper using the nth_element() built-in to compute median and Quartiles for an image
+ *
+ * @param img       an afw::Image
+ * @param quartile  the desired percentile.
+ *
  */
-class AlwaysTrue {
-public:
-    template<typename T>
-    bool operator()(T) const {
-        return true;
-    }
-    template<typename Ta, typename Tb>
-    bool operator()(Ta, Tb) const {
-        return true;
-    }
-    template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta, Tb, Tc) const {
-        return true;
-    }
-};
+    typedef boost::tuple<double, double, double> MedianQuartileReturn;
 
-/**
- * @brief A boolean functor which always returns false (for templated conditionals)
- */
-class AlwaysFalse {
-public:
-    template<typename T>
-    bool operator()(T) const {
-        return false;
-    }
-    template<typename Ta, typename Tb>
-    bool operator()(Ta, Tb) const {
-        return false;
-    }
-    template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta, Tb, Tc) const {
-        return false;
-    }
-};
+    template<typename Pixel>
+    MedianQuartileReturn medianAndQuartiles(std::vector<Pixel> &img)
+    {
+        int const n = img.size();
 
-/**
- * @brief A boolean functor to check for NaN (for templated conditionals)
- */    
-class CheckFinite {
-public:
-    template<typename T>
-    bool operator()(T val) const {
-        return !lsst::utils::isnan(static_cast<float>(val));
-    }
-};
+        if (n > 1) {
+        
+            double const idx50 = 0.50*(n - 1);
+            double const idx25 = 0.25*(n - 1);
+            double const idx75 = 0.75*(n - 1);
+        
+            // For efficiency:
+            // - partition at 50th, then partition the two half further to get 25th and 75th
+            // - to get the adjacent points (for interpolation), partition between 25/50, 50/75, 75/end
+            //   these should be much smaller partitions
+        
+            int const q50a = static_cast<int>(idx50);
+            int const q50b = q50a + 1;
+            int const q25a = static_cast<int>(idx25);
+            int const q25b = q25a + 1;
+            int const q75a = static_cast<int>(idx75);
+            int const q75b = q75a + 1;
+        
+            typename std::vector<Pixel>::iterator mid50a = img.begin() + q50a;
+            typename std::vector<Pixel>::iterator mid50b = img.begin() + q50b;
+            typename std::vector<Pixel>::iterator mid25a = img.begin() + q25a;
+            typename std::vector<Pixel>::iterator mid25b = img.begin() + q25b;
+            typename std::vector<Pixel>::iterator mid75a = img.begin() + q75a;
+            typename std::vector<Pixel>::iterator mid75b = img.begin() + q75b;
 
-/**
- * @brief A boolean functor to test val < min (for templated conditionals)
- */    
-class CheckValueLtMin {
-public:
-    template<typename Tval, typename Tmin>
-    bool operator()(Tval val, Tmin min) const {
-        return (static_cast<Tmin>(val) < min);
-    }
-};
+            // get the 50th percentile, then get the 25th and 75th on the smaller partitions
+            std::nth_element(img.begin(), mid50a, img.end());
+            std::nth_element(mid50a, mid75a, img.end());
+            std::nth_element(img.begin(), mid25a, mid50a);
 
-/**
- * @brief A boolean functor to test val > max (for templated conditionals)
- */    
-class CheckValueGtMax {
-public:
-    template<typename Tval, typename Tmax>
-    bool operator()(Tval val, Tmax max) const {
-        return (static_cast<Tmax>(val) > max);
-    }
-};
+            // and the adjacent points for each ... use the smallest segments available.
+            std::nth_element(mid50a, mid50b, mid75a);
+            std::nth_element(mid25a, mid25b, mid50a);
+            std::nth_element(mid75a, mid75b, img.end());
 
-/**
- * @brief A boolean functor to test |val| < cliplimit  (for templated conditionals)
- */    
-class CheckClipRange {
-public:
-    template<typename Tval, typename Tcen, typename Tmax>
-    bool operator()(Tval val, Tcen center, Tmax cliplimit) const {
-        Tmax tmp = fabs(val - center);
-        return (tmp <= cliplimit);
+            // interpolate linearly between the adjacent values
+            double val50a = static_cast<double>(*mid50a);
+            double val50b = static_cast<double>(*mid50b);
+            double w50a = (static_cast<double>(q50b) - idx50);
+            double w50b = (idx50 - static_cast<double>(q50a));
+            double median = w50a*val50a + w50b*val50b;
+
+            double val25a = static_cast<double>(*mid25a);
+            double val25b = static_cast<double>(*mid25b);
+            double w25a = (static_cast<double>(q25b) - idx25);
+            double w25b = (idx25 - static_cast<double>(q25a));
+            double q1 = w25a*val25a + w25b*val25b;
+        
+            double val75a = static_cast<double>(*mid75a);
+            double val75b = static_cast<double>(*mid75b);
+            double w75a = (static_cast<double>(q75b) - idx75);
+            double w75b = (idx75 - static_cast<double>(q75a));
+            double q3 = w75a*val75a + w75b*val75b;
+
+            return MedianQuartileReturn(median, q1, q3);
+        } else if (n == 1) {
+            return MedianQuartileReturn(img[0], img[0], img[0]);
+        } else {
+            return MedianQuartileReturn(NaN, NaN, NaN);
+        }
     }
-};
-    
-// define some abbreviated typenames for the test templates
-typedef CheckFinite     ChkFin;
-typedef CheckValueLtMin ChkMin;
-typedef CheckValueGtMax ChkMax;
-typedef CheckClipRange  ChkClip;    
-typedef AlwaysTrue      AlwaysT;
-typedef AlwaysFalse     AlwaysF;
-    
+
+    /*********************************************************************************************************/
+    /**
+     * A function to copy an image into a vector
+     *
+     * This is used for percentile and iq_range as these must reorder the values.
+     * Because it loops over the pixels, it's been templated over the NaN test to avoid
+     * code repetition of the loops.
+     */
+    template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
+    boost::shared_ptr<std::vector<typename ImageT::Pixel> > makeVectorCopy(ImageT const &img,
+                                                                           MaskT const &msk,
+                                                                           VarianceT const &,
+                                                                           int const andMask
+                                                                          )
+    {
+        // Note need to keep track of allPixelOrMask here ... processPixels() does that
+        // and it always gets called
+        boost::shared_ptr<std::vector<typename ImageT::Pixel> >
+            imgcp(new std::vector<typename ImageT::Pixel>(0));
+        
+        for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
+            typename MaskT::x_iterator mptr = msk.row_begin(i_y);
+            for (typename ImageT::x_iterator ptr = img.row_begin(i_y), end = img.row_end(i_y);
+                 ptr != end; ++ptr) {
+                if (IsFinite()(*ptr) && !(*mptr & andMask)) {
+                    imgcp->push_back(*ptr);
+                }
+                ++mptr;
+            }
+        }
+        
+        return imgcp;
+    }
 }
-
 
 /**
  * @brief Conversion function to switch a string to a Property (see Statistics.h)
@@ -173,38 +676,6 @@ afwMath::Property afwMath::stringToStatisticsProperty(std::string const property
 }
 
 /**
- * @brief A private function to copy an image into a vector
- *
- * This is used for percentile and iq_range as these must reorder the values.
- * Because it loops over the pixels, it's been templated over the NaN test to avoid
- * code repetition of the loops.
- */
-template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
-boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_makeVectorCopy(
-        ImageT const &img,
-        MaskT const &msk,
-        VarianceT const &,
-        int const
-                                                                                         )
-{
-
-    // Note to self: I'm not going to keep track of allPixelOrMask here ... sumImage() does that
-    // and it always gets called
-    boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
-    for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
-        typename MaskT::x_iterator mptr = msk.row_begin(i_y);
-        for (typename ImageT::x_iterator ptr = img.row_begin(i_y), end = img.row_end(i_y); ptr != end; ++ptr) {
-            if ( IsFinite()(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
-                imgcp->push_back(*ptr);
-            }
-            ++mptr;
-        }
-    }
-    return imgcp;
-}
-
-
-/**
  * @brief Constructor for Statistics object
  *
  * @note Most of the actual work is done in this constructor; the results
@@ -213,17 +684,61 @@ boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_ma
  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwMath::Statistics::Statistics(
+        ImageT const &img,                      ///< Image whose properties we want
+        MaskT const &msk,                       ///< Mask to control which pixels are included
+        VarianceT const &var,                   ///< Variances corresponding to values in Image
+        int const flags,                        ///< Describe what we want to calculate
+        afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+                                        ) :
+    _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
+    _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
+    _sctrl(sctrl), _weightsAreMultiplicative(false)
+{
+    doStatistics(img, msk, var, var, _flags, _sctrl);
+}
+
+namespace {
+    template<typename T>
+    bool isEmpty(T const& t) { return t.empty(); }
+
+    template<typename T>
+    bool isEmpty(afwImage::Image<T> const& im) { return (im.getWidth() == 0 && im.getHeight() == 0); }
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+afwMath::Statistics::Statistics(
+        ImageT const &img,                      ///< Image whose properties we want
+        MaskT const &msk,                       ///< Mask to control which pixels are included
+        VarianceT const &var,                   ///< Variances corresponding to values in Image
+        WeightT const &weights,                 ///< Weights to use corresponding to values in Image
+        int const flags,                        ///< Describe what we want to calculate
+        afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+                                        ) :
+    _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
+    _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
+    _sctrl(sctrl), _weightsAreMultiplicative(true)
+{
+    if (!isEmpty(weights)) {
+        if (_sctrl.getWeightedIsSet() && !_sctrl.getWeighted()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "You must use the weights if you provide them");
+        }
+
+        _sctrl.setWeighted(true);
+    }
+    doStatistics(img, msk, var, weights, _flags, _sctrl);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+void afwMath::Statistics::doStatistics(
     ImageT const &img,             ///< Image whose properties we want
     MaskT const &msk,              ///< Mask to control which pixels are included
     VarianceT const &var,          ///< Variances corresponding to values in Image
+    WeightT const &weights,        ///< Weights to use corresponding to values in Image
     int const flags,               ///< Describe what we want to calculate
-    StatisticsControl const& sctrl ///< Control how things are calculated
-                               ) :
-    _flags(flags),
-    _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
-    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
-    _sctrl(sctrl) {
-    
+    afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+                               )
+{
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
@@ -233,14 +748,19 @@ afwMath::Statistics::Statistics(
     assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
 
     // get the standard statistics
-    StandardReturn standard = _getStandard(img, msk, var, flags);
+    StandardReturn standard = getStandard(img, msk, var, weights, flags,
+                                          _weightsAreMultiplicative,
+                                          _sctrl.getAndMask(),
+                                          _sctrl.getCalcErrorFromInputVariance(),
+                                          _sctrl.getNanSafe(), _sctrl.getWeighted());
 
-    _mean = standard.get<0>();
-    _variance = standard.get<1>();
-    _min = standard.get<2>();
-    _max = standard.get<3>();
-    _sum = standard.get<4>();
-    _allPixelOrMask = standard.get<5>();
+    _n = standard.get<0>();
+    _sum = standard.get<1>();
+    _mean = standard.get<2>();
+    _variance = standard.get<3>();
+    _min = standard.get<4>();
+    _max = standard.get<5>();
+    _allPixelOrMask = standard.get<6>();
 
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
@@ -251,17 +771,17 @@ afwMath::Statistics::Statistics(
         // make a vector copy of the image to get the median and quartiles (will move values)
         boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp;
         if (_sctrl.getNanSafe()) {
-            imgcp = _makeVectorCopy<ChkFin>(img, msk, var, flags);
+            imgcp = makeVectorCopy<ChkFin>(img, msk, var, _sctrl.getAndMask());
         } else {
-            imgcp = _makeVectorCopy<AlwaysT>(img, msk, var, flags);
+            imgcp = makeVectorCopy<AlwaysT>(img, msk, var, _sctrl.getAndMask());
         }
 
-        // if we *only* want the median, just use _percentile(), otherwise use _medianAndQuartiles()
+        // if we *only* want the median, just use percentile(), otherwise use medianAndQuartiles()
         if ( (flags & (MEDIAN)) && !(flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) ) {
-            _median = _percentile(*imgcp, 0.5);
+            _median = Value(percentile(*imgcp, 0.5), NaN);
         } else {
-            MedianQuartileReturn mq = _medianAndQuartiles(*imgcp);
-            _median = mq.get<0>();
+            MedianQuartileReturn mq = medianAndQuartiles(*imgcp);
+            _median = Value(mq.get<0>(), NaN);
             _iqrange = mq.get<2>() - mq.get<1>();
         }
         
@@ -269,451 +789,30 @@ afwMath::Statistics::Statistics(
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
                 
-                double const center = (i_i > 0) ? _meanclip : _median;
+                double const center = ((i_i > 0) ? _meanclip : _median).first;
                 double const hwidth = (i_i > 0 && _n > 1) ?
-                    _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) :
+                    _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip.first) :
                     _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
                 std::pair<double, double> const clipinfo(center, hwidth);
                 
-                // returns a tuple but we'll ignore clipped min, max, and sum;
-                StandardReturn clipped = _getStandard(img, msk, var, flags, clipinfo);
+                StandardReturn clipped = getStandard(img, msk, var, weights, flags, clipinfo,
+                                                     _weightsAreMultiplicative,
+                                                     _sctrl.getAndMask(),
+                                                     _sctrl.getCalcErrorFromInputVariance(),
+                                                     _sctrl.getNanSafe(), _sctrl.getWeighted());
                 
-                _meanclip = clipped.get<0>();
-                _varianceclip = clipped.get<1>();
+                int const nClip = clipped.get<0>();
+                _meanclip = clipped.get<2>();     // clipped mean
+                double const varClip = clipped.get<3>().first;  // clipped variance
+
+                _varianceclip = Value(varClip, varianceError(varClip, nClip));
+                // ... ignore other values
             }
         }
     }
 }
 
-
-/**
- * @brief This function handles the inner summation loop, with tests templated
- *
- * The idea here is to allow different conditionals in the inner loop, but avoid repeating code.
- * Each test is actually a functor which is handled through a template.  If the
- * user requests a test (eg check for NaNs), the function is instantiated with the appropriate functor.
- * Otherwise, an 'AlwaysTrue' or 'AlwaysFalse' object is passed in.  The compiler then compiles-out
- * a test which is always false, or removes the conditional for a test which is always true.
- */
-
-template<typename IsFinite,
-         typename HasValueLtMin,
-         typename HasValueGtMax,
-         typename InClipRange,
-         bool IsWeighted,
-         typename ImageT, typename MaskT, typename VarianceT>
-afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
-                                                              MaskT const &msk,
-                                                              VarianceT const &var,
-                                                              int const,
-                                                              int const nCrude,
-                                                              int const stride,
-                                                              double const meanCrude,
-                                                              double const cliplimit) {
-    int n = 0;
-    double wsum = 0.0;
-    double sum = 0, sumx2 = 0;
-    double min = (nCrude) ? meanCrude : MAX_DOUBLE;
-    double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
-
-    afwImage::MaskPixel allPixelOrMask = 0x0;
-    
-    for (int iY = 0; iY < img.getHeight(); iY += stride) {
-        
-        typename MaskT::x_iterator mptr = msk.row_begin(iY);
-        typename VarianceT::x_iterator vptr = var.row_begin(iY);
-        
-        for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
-             ptr != end; ++ptr, ++mptr, ++vptr) {
-            
-            if (IsFinite()(*ptr) &&
-                !(*mptr & _sctrl.getAndMask()) &&
-                InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
-                
-                double const delta = (*ptr - meanCrude);
-
-                if (IsWeighted) {
-                    if ( _sctrl.getMultiplyWeights()) {
-                        sum   += (*vptr)*delta;
-                        sumx2 += (*vptr)*delta*delta;
-                        wsum  += (*vptr);
-                    } else {
-                        if (*vptr > 0) {
-                            sum   += delta/(*vptr);
-                            sumx2 += delta*delta/(*vptr);
-                            wsum  += 1.0/(*vptr);
-                        }
-                    }
-                    
-                } else {
-                    sum += delta;
-                    sumx2 += delta*delta;
-                }
-
-                allPixelOrMask |= *mptr;
-                
-                if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
-                if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
-                n++;
-                
-            }
-        }
-    }
-    if (n == 0) {
-        min = NaN;
-        max = NaN;
-    }
-
-    return afwMath::Statistics::SumReturn(n, sum, sumx2, min, max, wsum, allPixelOrMask);
-}
-
-/* =========================================================================
- * _getStandard(img, flags)
- * @brief Compute the standard stats: mean, variance, min, max
- *
- * @param img    an afw::Image to compute the stats over
- * @param flags  an integer (bit field indicating which statistics are to be computed
- *
- * @note An overloaded version below is used to get clipped versions
- */
-template<typename ImageT, typename MaskT, typename VarianceT>
-afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT const &img,
-                                                                      MaskT const &msk,
-                                                                      VarianceT const &var,
-                                                                      int const flags) {
-
-
-    // =====================================================
-    // a crude estimate of the mean, used for numerical stability of variance
-    SumReturn loopValues;
-    
-    int nCrude       = 0;
-    double meanCrude = 0.0;
-
-    // for small numbers of values, use a small stride
-    int const nPix = img.getWidth()*img.getHeight();
-    int strideCrude;
-    if (nPix < 100) {
-        strideCrude = 2;
-    } else {
-        strideCrude = 10;
-    }
-    if (_sctrl.getNanSafe()) {
-        if (_sctrl.getWeighted()){
-            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(img, msk, var, flags,
-                                                                            nCrude, strideCrude, meanCrude);
-        } else {
-            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT, false>(img, msk, var, flags,
-                                                                             nCrude, strideCrude, meanCrude);
-        }
-    } else {
-        if (_sctrl.getWeighted()) {
-            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT, true>(img, msk, var, flags,
-                                                                             nCrude, strideCrude, meanCrude);
-        } else {
-            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT, false>(img, msk, var, flags,
-                                                                              nCrude, strideCrude, meanCrude);
-        }
-    }
-    nCrude = loopValues.get<0>();
-
-    double sumCrude = loopValues.get<1>();
-    meanCrude = 0.0;
-    if ( nCrude > 0 ) {
-        meanCrude = sumCrude/nCrude;
-    }
-
-    // =======================================================
-    // Estimate the full precision variance using that crude mean
-    // - get the min and max as well
-    
-    // If we want max or min (you get both)
-    if (flags & (MIN | MAX)){
-        
-        if (_sctrl.getWeighted()) {
-            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT,true>(img, msk, var,
-                                                                         flags, nCrude, 1, meanCrude);
-            // fast loop ... just the mean & variance
-        } else {
-            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT,false>(img, msk, var,
-                                                                          flags, nCrude, 1, meanCrude);
-        }
-    } else {
-        
-        if (_sctrl.getNanSafe()) {
-            if ( _sctrl.getWeighted()) {
-                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var,
-                                                                               flags, nCrude, 1, meanCrude);
-            } else {
-                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var,
-                                                                                flags, nCrude, 1, meanCrude);
-            }
-        } else {
-            if ( _sctrl.getWeighted()) {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, flags,
-                                                                                nCrude, 1, meanCrude);
-            } else {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var, flags,
-                                                                                 nCrude, 1, meanCrude);
-            }
-        }
-    }
-
-    int n        = loopValues.get<0>();
-    double sum   = loopValues.get<1>();
-    double sumx2 = loopValues.get<2>();
-    double min   = loopValues.get<3>();
-    double max   = loopValues.get<4>();
-    double wsum  = loopValues.get<5>();
-    afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-    
-    // estimate of population mean and variance
-    double mean, variance;
-    if (_sctrl.getWeighted()) {
-        mean = (wsum > 0) ? meanCrude + sum/wsum : NaN;
-        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
-        sum += meanCrude*wsum;
-    } else {
-        mean = (n) ? meanCrude + sum/n : NaN;
-        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
-        sum += n*meanCrude;
-    }
-    _n = n;
-    
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum, allPixelOrMask);
-}
-
-
-/* ==========================================================
- * *overload _getStandard(img, flags, clipinfo)
- *
- * @param img      an afw::Image to compute stats for
- * @param flags    an int (bit field indicating which stats to compute
- * @param clipinfo the center and cliplimit for the first clip iteration
- *
- * @brief A routine to get standard stats: mean, variance, min, max with
- *   clipping on std::pair<double,double> = center, cliplimit
- */
-template<typename ImageT, typename MaskT, typename VarianceT>
-afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
-    ImageT const &img,
-    MaskT const &msk,
-    VarianceT const &var,
-    int const flags,
-    std::pair<double, double> const clipinfo
-                                                                     ) {
-    
-    double const center = clipinfo.first;
-    double const cliplimit = clipinfo.second;
-
-    if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
-        //return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
-        return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN, ~0x0);
-    }
-    
-    // =======================================================
-    // Estimate the full precision variance using that crude mean
-    SumReturn loopValues;
-
-    int const stride = 1;
-    int nCrude = 0;
-    
-    // If we want max or min (you get both)
-    if (flags & (MIN | MAX)){
-        if ( _sctrl.getWeighted()) {
-            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip, true>(img, msk, var,
-                                                                          flags, nCrude, stride,
-                                                                          center, cliplimit);
-        } else {
-            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip, false>(img, msk, var,
-                                                                           flags, nCrude, stride,
-                                                                           center, cliplimit);
-        }
-    // fast loop ... just the mean & variance
-    } else {
-        if ( _sctrl.getWeighted()) {
-            
-            if (_sctrl.getNanSafe()) {
-                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(img, msk, var,
-                                                                                flags, nCrude, stride,
-                                                                                center, cliplimit);
-            } else {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip, true>(img, msk, var,
-                                                                                 flags, nCrude, stride,
-                                                                                 center, cliplimit);
-            }
-        } else {
-            
-            if (_sctrl.getNanSafe()) {
-                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip, false>(img, msk, var,
-                                                                                 flags, nCrude, stride,
-                                                                                 center, cliplimit);
-            } else {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip, false>(img, msk, var,
-                                                                                  flags, nCrude, stride,
-                                                                                  center, cliplimit);
-            }
-        }
-    }
-    
-    int n        = loopValues.get<0>();
-    double sum   = loopValues.get<1>();
-    double sumx2 = loopValues.get<2>();
-    double min   = loopValues.get<3>();
-    double max   = loopValues.get<4>();
-    double wsum  = loopValues.get<5>();
-    afwImage::MaskPixel allPixelOrMask = loopValues.get<6>();
-    
-    // estimate of population variance
-    double mean, variance;
-    if (_sctrl.getWeighted()) {
-        mean = (wsum > 0) ? center + sum/wsum : NaN;
-        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*n) : NaN;
-        sum += center*wsum;
-    } else {
-        mean = (n) ? center + sum/n : NaN;
-        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
-        sum += n*center;
-    }
-    _n = n;
-    
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum, allPixelOrMask);
-}
-
-
-/* _percentile()
- *
- * @brief A wrapper using the nth_element() built-in to compute percentiles for an image
- *
- * @param img       an afw::Image
- * @param quartile  the desired percentile.
- *
- */
-template<typename Pixel>
-double afwMath::Statistics::_percentile(std::vector<Pixel> &img,
-                                        double const percentile) {
-    
-    int const n = img.size();
-
-    if (n > 1) {
-        
-        double const idx = percentile*(n - 1);
-        
-        // interpolate linearly between the adjacent values
-        // For efficiency:
-        // - if we're asked for a percentile > 0.5,
-        //    we'll do the second partial sort on shorter (upper) portion
-        // - otherwise, the shorter portion will be the lower one, we'll partial-sort that.
-        
-        int const q1 = static_cast<int>(idx);
-        int const q2 = q1 + 1;
-
-        typename std::vector<Pixel>::iterator mid1 = img.begin() + q1;
-        typename std::vector<Pixel>::iterator mid2 = img.begin() + q2;
-        if ( percentile > 0.5 ) {
-            std::nth_element(img.begin(), mid1, img.end());
-            std::nth_element(mid1, mid2, img.end());
-        } else {
-            std::nth_element(img.begin(), mid2, img.end());
-            std::nth_element(img.begin(), mid1, mid2);
-        }
-    
-        double val1 = static_cast<double>(*mid1);
-        double val2 = static_cast<double>(*mid2);
-        double w1 = (static_cast<double>(q2) - idx);
-        double w2 = (idx - static_cast<double>(q1));
-        return w1*val1 + w2*val2;
-        
-    } else if (n == 1) {
-        return img[0];
-    } else {
-        return NaN;
-    }
-            
-
-}
-
-
-
-/* _medianAndQuartiles()
- *
- * @brief A wrapper using the nth_element() built-in to compute median and Quartiles for an image
- *
- * @param img       an afw::Image
- * @param quartile  the desired percentile.
- *
- */
-template<typename Pixel>
-afwMath::Statistics::MedianQuartileReturn afwMath::Statistics::_medianAndQuartiles(std::vector<Pixel> &img) {
-    
-    int const n = img.size();
-
-    if (n > 1) {
-        
-        double const idx50 = 0.50*(n - 1);
-        double const idx25 = 0.25*(n - 1);
-        double const idx75 = 0.75*(n - 1);
-        
-        // For efficiency:
-        // - partition at 50th, then partition the two half further to get 25th and 75th
-        // - to get the adjacent points (for interpolation), partition between 25/50, 50/75, 75/end
-        //   these should be much smaller partitions
-        
-        int const q50a = static_cast<int>(idx50);
-        int const q50b = q50a + 1;
-        int const q25a = static_cast<int>(idx25);
-        int const q25b = q25a + 1;
-        int const q75a = static_cast<int>(idx75);
-        int const q75b = q75a + 1;
-        
-        typename std::vector<Pixel>::iterator mid50a = img.begin() + q50a;
-        typename std::vector<Pixel>::iterator mid50b = img.begin() + q50b;
-        typename std::vector<Pixel>::iterator mid25a = img.begin() + q25a;
-        typename std::vector<Pixel>::iterator mid25b = img.begin() + q25b;
-        typename std::vector<Pixel>::iterator mid75a = img.begin() + q75a;
-        typename std::vector<Pixel>::iterator mid75b = img.begin() + q75b;
-
-        // get the 50th percentile, then get the 25th and 75th on the smaller partitions
-        std::nth_element(img.begin(), mid50a, img.end());
-        std::nth_element(mid50a, mid75a, img.end());
-        std::nth_element(img.begin(), mid25a, mid50a);
-
-        // and the adjacent points for each ... use the smallest segments available.
-        std::nth_element(mid50a, mid50b, mid75a);
-        std::nth_element(mid25a, mid25b, mid50a);
-        std::nth_element(mid75a, mid75b, img.end());
-
-        // interpolate linearly between the adjacent values
-        double val50a = static_cast<double>(*mid50a);
-        double val50b = static_cast<double>(*mid50b);
-        double w50a = (static_cast<double>(q50b) - idx50);
-        double w50b = (idx50 - static_cast<double>(q50a));
-        double median = w50a*val50a + w50b*val50b;
-
-        double val25a = static_cast<double>(*mid25a);
-        double val25b = static_cast<double>(*mid25b);
-        double w25a = (static_cast<double>(q25b) - idx25);
-        double w25b = (idx25 - static_cast<double>(q25a));
-        double q1 = w25a*val25a + w25b*val25b;
-        
-        double val75a = static_cast<double>(*mid75a);
-        double val75b = static_cast<double>(*mid75b);
-        double w75a = (static_cast<double>(q75b) - idx75);
-        double w75b = (idx75 - static_cast<double>(q75a));
-        double q3 = w75a*val75a + w75b*val75b;
-
-        return MedianQuartileReturn(median, q1, q3);
-    } else if (n == 1) {
-        return MedianQuartileReturn(img[0], img[0], img[0]);
-    } else {
-        return MedianQuartileReturn(NaN, NaN, NaN);
-    }
-            
-
-}
-
-
-
+/************************************************************************************************************/
 /* @brief Return the value and error in the specified statistic (e.g. MEAN)
  *
  * @param prop the property (see Statistics.h header) to retrieve.
@@ -728,7 +827,7 @@ afwMath::Statistics::MedianQuartileReturn afwMath::Statistics::_medianAndQuartil
  *
  */
 std::pair<double, double> afwMath::Statistics::getResult(
-        afwMath::Property const iProp ///< Desired property
+                                                         afwMath::Property const iProp ///< Desired property
                                                         ) const {
     
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
@@ -760,48 +859,48 @@ std::pair<double, double> afwMath::Statistics::getResult(
         
         // == means ==
       case MEAN:
-        ret.first = _mean;
+        ret.first = _mean.first;
         if (_flags & ERRORS) {
-            ret.second = sqrt(_variance/_n);
+            ret.second = ::sqrt(_mean.second);
         }
         break;
       case MEANCLIP:
-        ret.first = _meanclip;
+        ret.first = _meanclip.first;
         if ( _flags & ERRORS ) {
-            ret.second = sqrt(_varianceclip/_n);  // this is a bug ... _nClip != _n
+            ret.second = ::sqrt(_meanclip.second);
         }
         break;
         
         // == stdevs & variances ==
       case VARIANCE:
-        ret.first = _variance;
+        ret.first = _variance.first;
         if (_flags & ERRORS) {
-            ret.second = _varianceError(ret.first, _n);
+            ret.second = ::sqrt(_variance.second);
         }
         break;
       case STDEV:
-        ret.first = sqrt(_variance);
+        ret.first = sqrt(_variance.first);
         if (_flags & ERRORS) {
-            ret.second = 0.5*_varianceError(_variance, _n)/ret.first;
+            ret.second = 0.5*::sqrt(_variance.second)/ret.first;
         }
         break;
       case VARIANCECLIP:
-        ret.first = _varianceclip;
+        ret.first = _varianceclip.first;
         if (_flags & ERRORS) {
-            ret.second = _varianceError(ret.first, _n);
+            ret.second = ret.second;
         }
         break;
       case STDEVCLIP:
-        ret.first = sqrt(_varianceclip);  // bug: nClip != _n
+        ret.first = sqrt(_varianceclip.first);
         if (_flags & ERRORS) {
-            ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first;
+            ret.second = 0.5*::sqrt(_varianceclip.second)/ret.first;
         }
         break;
 
       case MEANSQUARE:
-        ret.first = (_n - 1)/static_cast<double>(_n)*_variance + _mean*_mean;
+        ret.first = (_n - 1)/static_cast<double>(_n)*_variance.first + ::pow(_mean.first, 2);
         if (_flags & ERRORS) {
-            ret.second = ::sqrt(2*ret.first*ret.first/(_n*_n)); // assumes Gaussian
+            ret.second = ::sqrt(2*::pow(ret.first/_n, 2)); // assumes Gaussian
         }
         break;
         
@@ -819,15 +918,15 @@ std::pair<double, double> afwMath::Statistics::getResult(
         }
         break;
       case MEDIAN:
-        ret.first = _median;
+        ret.first = _median.first;
         if ( _flags & ERRORS ) {
-            ret.second = sqrt(M_PI/2*_variance/_n); // assumes Gaussian
+            ret.second = sqrt(afwGeom::HALFPI*_variance.first/_n); // assumes Gaussian
         }
         break;
       case IQRANGE:
         ret.first = _iqrange;
         if ( _flags & ERRORS ) {
-            ret.second = 0;
+            ret.second = NaN;           // we're not estimating this properly
         }
         break;
 
@@ -880,8 +979,8 @@ Statistics::Statistics(
     StatisticsControl const& sctrl                  ///< Control how things are calculated
                       ) :
     _flags(flags),
-    _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),
-    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
+    _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN),
+    _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
     _sctrl(sctrl) {
     
     if ((flags & ~(NPOINT | SUM)) != 0x0) {
@@ -931,7 +1030,7 @@ Statistics makeStatistics(
  * explicit Statistics(MaskedImage const& img, int const flags,
  *                        StatisticsControl const& sctrl=StatisticsControl());
  */
-
+/// \cond
 //
 #define STAT afwMath::Statistics
 
@@ -942,87 +1041,72 @@ typedef afwImage::VariancePixel VPixel;
                               afwImage::Mask<afwImage::MaskPixel> const &msk, \
                               afwImage::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                                                     afwImage::Image<VPixel> const &var, \
-                                                     int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                                                     afwImage::Image<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo);
-
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwImage::Image<VPixel> const &var,               \
+                              afwImage::Image<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwImage::Image<VPixel> const &var,               \
+                              afwMath::ImageImposter<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
     template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
                               afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                               afwImage::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                                                     afwImage::Image<VPixel> const &var, \
-                                                     int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                                                     afwImage::Image<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo)
-
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                              afwImage::Image<VPixel> const &var,               \
+                              afwImage::Image<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(TYPE)                       \
     template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
                               afwImage::Mask<afwImage::MaskPixel> const &msk, \
                               afwMath::MaskImposter<VPixel> const &var,          \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                                                     afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                                                     afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo)
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,          \
+                              afwImage::Image<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,          \
+                              afwMath::ImageImposter<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl)
 
-
-//
 #define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE)                      \
     template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
                               afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                               afwMath::MaskImposter<VPixel> const &var, \
-                              int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                                                     afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
-                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                                                     afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo)
+                              int const flags, StatisticsControl const& sctrl)
 
-//
 #define INSTANTIATE_VECTOR_STATISTICS(TYPE)                         \
     template STAT::Statistics(afwMath::ImageImposter<TYPE> const &img,     \
                               afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                               afwMath::MaskImposter<VPixel> const &var,      \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(afwMath::ImageImposter<TYPE> const &img, \
-                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                                                     afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(afwMath::ImageImposter<TYPE> const &img, \
-                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                                                     afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo)
+    template STAT::Statistics(afwMath::ImageImposter<TYPE> const &img,     \
+                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,      \
+                              afwMath::ImageImposter<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl)
 
-
-#define INSTANTIATE_IMAGE_STATISTICS(T) \
-    INSTANTIATE_MASKEDIMAGE_STATISTICS(T); \
-    INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(T); \
+#define INSTANTIATE_IMAGE_STATISTICS(T)            \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS(T);         \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(T);  \
     INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(T); \
-    INSTANTIATE_REGULARIMAGE_STATISTICS(T); \
+    INSTANTIATE_REGULARIMAGE_STATISTICS(T);        \
     INSTANTIATE_VECTOR_STATISTICS(T)
-
 
 INSTANTIATE_IMAGE_STATISTICS(double);
 INSTANTIATE_IMAGE_STATISTICS(float);
 INSTANTIATE_IMAGE_STATISTICS(int);
 INSTANTIATE_IMAGE_STATISTICS(boost::uint16_t);
+INSTANTIATE_IMAGE_STATISTICS(boost::uint64_t);
 
+/// \endcond

@@ -26,21 +26,23 @@
 Tests for Statistics
 
 Run with:
-   ./Statistics.py
+   ./statistics.py
 or
    python
-   >>> import Statistics; Statistics.run()
+   >>> import statistics; statistics.run()
 """
 
 import sys
 import math
 import os
+import numpy as np
 import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -54,7 +56,7 @@ class StatisticsTestCase(unittest.TestCase):
     """A test case for Statistics"""
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(100, 200)
+        self.image = afwImage.ImageF(afwGeom.Extent2I(100, 200))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -86,7 +88,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
                          stats.getValue(afwMath.SUM))
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
-        #BOOST_CHECK(std::isnan(stats.getError(afwMath.MEAN))) // didn't ask for error, so it's a NaN
+        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN))) # didn't ask for error, so it's a NaN
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
     def testStats2(self):
@@ -114,7 +116,8 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(image2.getHeight()%2, 0)
         width = image2.getWidth()
         for y in range(1, image2.getHeight(), 2):
-            sim = image2.Factory(image2, afwImage.BBox(afwImage.PointI(0, y), width, 1))
+            sim = image2.Factory(image2, afwGeom.Box2I(afwGeom.Point2I(0, y), afwGeom.Extent2I(width, 1)),
+                                 afwImage.LOCAL)
             sim += 1
 
         if display:
@@ -176,6 +179,29 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
         self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
+    def testMaxWithNan(self):
+        """Test that we can handle NaNs correctly"""
+
+        x, y = 10, 10
+        for useImage in [True, False]:
+            if useImage:
+                self.image = afwImage.ImageF(100, 100)
+                self.image.set(self.val)
+                self.image.set(x, y, np.nan)
+            else:
+                self.image = afwImage.MaskedImageF(100, 100)            
+                self.image.set(self.val, 0x0, 1.0)
+                self.image.set(x, y, (np.nan, 0x0, 1.0))
+
+            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MAX).getValue(), self.val)
+            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(), self.val)
+            
+            sctrl = afwMath.StatisticsControl()
+
+            sctrl.setNanSafe(False)
+            self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MAX, sctrl).getValue()))
+            self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MEAN, sctrl).getValue()))
+
     def testSampleImageStats(self):
         """ Compare our results to known values in test data """
         
@@ -223,7 +249,7 @@ class StatisticsTestCase(unittest.TestCase):
         
         nx = 101
         ny = 64
-        img = afwImage.ImageF(nx, ny)
+        img = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
     
         z0 = 10.0
         dzdx = 1.0
@@ -243,7 +269,7 @@ class StatisticsTestCase(unittest.TestCase):
         
         self.assertEqual(stats.getValue(afwMath.NPOINT), nx*ny)
         self.assertEqual(testmean, mean)
-        self.assertEqual(teststdev, stdev )
+        self.assertAlmostEqual(teststdev, stdev)
         
         stats = afwMath.makeStatistics(img, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
         mean, meanErr = stats.getResult(afwMath.MEAN)
@@ -266,7 +292,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         
     def testMask(self):
-        mask = afwImage.MaskU(10, 10)
+        mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)
@@ -310,7 +336,7 @@ class StatisticsTestCase(unittest.TestCase):
         ctrl = afwMath.StatisticsControl()
         ctrl.setAndMask(~0x0)
         
-        mimg = afwImage.MaskedImageF(10, 10)
+        mimg = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
         mimg.set([self.val, 0x1, self.val])
 
         # test the case with no valid pixels ... both mean and stdev should be nan
@@ -339,7 +365,7 @@ class StatisticsTestCase(unittest.TestCase):
 
     def testTicket1125(self):
         """Ticket 1125 reported that the clipped routines were aborting when called with no valid pixels. """
-        mimg = afwImage.MaskedImageF(10, 10)
+        mimg = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
         mimg.set([self.val, 0x1, self.val])
 
         ctrl = afwMath.StatisticsControl()
@@ -356,7 +382,7 @@ class StatisticsTestCase(unittest.TestCase):
 
     def testWeightedSum(self):
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(10,10)
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10))
         mi.getImage().set(1.0)
         mi.getVariance().set(0.1)
         
@@ -369,6 +395,46 @@ class StatisticsTestCase(unittest.TestCase):
         # ... variance = 0.1 is stored as 0.100000001
         self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
 
+    def testWeightedSum2(self):
+        """Test using a weight image separate from the variance plane"""
+        weight, mean = 0.1, 1.0
+
+        ctrl = afwMath.StatisticsControl()
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10)); npix = 10*10
+        mi.getImage().set(mean)
+        mi.getVariance().set(np.nan)
+
+        weights = afwImage.ImageF(mi.getDimensions())
+        weights.set(weight)
+        
+        stats = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
+        self.assertEqual(stats.getValue(afwMath.SUM), mean*npix)
+        
+        weighted = afwMath.makeStatistics(mi, weights, afwMath.SUM, ctrl)
+        # precision at "4 places" as images are floats
+        # ... variance = 0.1 is stored as 0.100000001
+        self.assertAlmostEqual(weighted.getValue(afwMath.SUM), mean*npix*weight, 4) 
+        
+    def testErrorsFromVariance(self):
+        """Test that we can estimate the errors from the incoming variances"""
+        weight, mean, variance = 0.1, 1.0, 10.0
+        
+        ctrl = afwMath.StatisticsControl()
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10)); npix = 10*10
+        mi.getImage().set(mean)
+        mi.getVariance().set(variance)
+
+        weights = afwImage.ImageF(mi.getDimensions())
+        weights.set(weight)
+
+        ctrl.setCalcErrorFromInputVariance(True)
+        weighted = afwMath.makeStatistics(mi, weights,
+                                          afwMath.MEAN | afwMath.MEANCLIP | afwMath.SUM | afwMath.ERRORS, ctrl)
+
+        self.assertAlmostEqual(weighted.getValue(afwMath.SUM)/(npix*mean*weight), 1)
+        self.assertAlmostEqual(weighted.getValue(afwMath.MEAN), mean)
+        self.assertAlmostEqual(weighted.getError(afwMath.MEAN)**2, variance/npix)
+        self.assertAlmostEqual(weighted.getError(afwMath.MEANCLIP)**2, variance/npix)
         
     def testMeanClip(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
@@ -379,11 +445,10 @@ class StatisticsTestCase(unittest.TestCase):
         # With only one point, the sample variance returns NaN to avoid a divide by zero error
         # Thus, on the second iteration, the clip width (based on _variance) is NaN and corrupts
         #   all further calculations.
-        img = afwImage.ImageF(1, 1)
+        img = afwImage.ImageF(afwGeom.Extent2I(1, 1))
         img.set(0)
         stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(), 0)
-        
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

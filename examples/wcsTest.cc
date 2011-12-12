@@ -83,22 +83,22 @@ int main(int argc, char **argv) {
     
     // Testing input col, row values 
 
-    afwGeom::PointD minCoord = afwGeom::makePointD(1.0, 1.0);
-    afwGeom::PointD xy = afwGeom::makePointD(mskdImage.getWidth(), mskdImage.getHeight());
+    afwGeom::Point2D minCoord = afwGeom::Point2D(1.0, 1.0);
+    afwGeom::Point2D xy = afwGeom::Point2D(mskdImage.getWidth(), mskdImage.getHeight());
 
     afwCoord::Coord::ConstPtr sky1 = wcs->pixelToSky(minCoord);
     afwCoord::Coord::ConstPtr sky2 = wcs->pixelToSky(xy);
 
-    double miRa1 = sky1->getLongitude(afwCoord::DEGREES);
-    double miDecl1 = sky1->getLatitude(afwCoord::DEGREES);
-    double miRa2 = sky2->getLongitude(afwCoord::DEGREES);
-    double miDecl2 = sky2->getLatitude(afwCoord::DEGREES);
+    afwGeom::Angle miRa1 = sky1->getLongitude();
+    afwGeom::Angle miDecl1 = sky1->getLatitude();
+    afwGeom::Angle miRa2 = sky2->getLongitude();
+    afwGeom::Angle miDecl2 = sky2->getLatitude();
 
     std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
-              << "ra: " << miRa1 << " decl: " << miDecl1 << std::endl << std::endl;
+              << "ra: " << miRa1.asDegrees() << " decl: " << miDecl1.asDegrees() << std::endl << std::endl;
  
     std::cout << "ra, decl of " << inFilename << " at ("<< xy[0] << " " << xy[1]<<") = "
-        << "ra: " << miRa2 << " decl: " << miDecl2 << std::endl << std::endl;
+        << "ra: " << miRa2.asDegrees() << " decl: " << miDecl2.asDegrees() << std::endl << std::endl;
 
     double pixArea0 = wcs->pixArea(minCoord);
     double pixArea1 = wcs->pixArea(xy);
@@ -110,10 +110,10 @@ int main(int argc, char **argv) {
     afwGeom::Point2D pix1 = wcs->skyToPixel(miRa1, miDecl1);
     afwGeom::Point2D pix2 = wcs->skyToPixel(miRa2, miDecl2);
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = "
+    std::cout << "col, row of " << inFilename << " at ("<< miRa1.asDegrees() << " " << miDecl1.asDegrees() <<") = "
         << "col: " << pix1[0] << " row: " << pix1[1] << std::endl << std::endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa2 << " " << miDecl2<<") = "
+    std::cout << "col, row of " << inFilename << " at ("<< miRa2.asDegrees() << " " << miDecl2.asDegrees() <<") = "
         << "col: " << pix2[0] << " row: " << pix2[1] << std::endl << std::endl;
 
     afwCoord::Coord::ConstPtr raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
@@ -127,14 +127,5 @@ int main(int argc, char **argv) {
 
     std::cout << "col, row of " << inFilename << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
               << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;
-    /*
-     * Set some metadata in the Wcs
-     */
-    PTR(lsst::daf::base::PropertySet) md(new lsst::daf::base::PropertySet);
-    wcs->setMetadata(md);
-    wcs->getMetadata()->add("Hello", 1);
-    wcs->getMetadata()->add("Hello", 2);
-    wcs->getMetadata()->add("Hello", 3);
 
-    std::cout << md->toString() << std::endl;
 }

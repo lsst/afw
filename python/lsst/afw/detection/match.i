@@ -41,17 +41,15 @@ SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
 %extend lsst::afw::detection::SourceMatch {
     %pythoncode {
     def __repr__(self):
-        s1 = repr(self.first)
-        s2 = repr(self.second)
-        return "SourceMatch(%s,\n            %s,\n            %g)" % (
-               s1, s2, self.distance)
+        return "SourceMatch(%s,\n            %s,\n            %g)" % \
+        (repr(self.first), repr(self.second), self.distance)
 
     def __str__(self):
         s1, s2 = self.first, self.second
-        return "((%d, (%g,%g), (%g,%g))\n (%d, (%g,%g), (%g,%g))\n %g)" % (
-               s1.getId(), s1.getRa(), s1.getDec(), s1.getX(), s1.getY(),
-               s2.getId(), s2.getRa(), s2.getDec(), s2.getX(), s2.getY(),
-               self.distance)
+        return "((id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n (id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n dist %g [pix or radians])" % (
+            s1.getId(), s1.getRa().asDegrees(), s1.getDec().asDegrees(), s1.getXAstrom(), s1.getYAstrom(),
+            s2.getId(), s2.getRa().asDegrees(), s2.getDec().asDegrees(), s2.getXAstrom(), s2.getYAstrom(),
+            self.distance)
 
     def __getitem__(self, i):
         """Treat a SourceMatch as a tuple of length 3:

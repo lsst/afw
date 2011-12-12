@@ -23,7 +23,7 @@
 #
 
 """
-Tests for geom.BoxI, geom.BoxD
+Tests for geom.Box2I, geom.Box2D
 
 Run with:
    ./Box.py
@@ -43,20 +43,20 @@ import lsst.afw.geom as geom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class BoxITestCase(unittest.TestCase):
+class Box2ITestCase(unittest.TestCase):
 
     def testEmpty(self):
-        box = geom.BoxI()
+        box = geom.Box2I()
         self.assert_(box.isEmpty())
         self.assertEqual(box.getWidth(), 0)
         self.assertEqual(box.getHeight(), 0)
         for x in (-1,0,1):
             for y in (-1,0,1):
-                point = geom.makePointI(x,y)
+                point = geom.Point2I(x,y)
                 self.assertFalse(box.contains(point))
                 box.include(point)
                 self.assert_(box.contains(point))
-                box = geom.BoxI()
+                box = geom.Box2I()
         box.grow(3)
         self.assert_(box.isEmpty())
 
@@ -65,67 +65,84 @@ class BoxITestCase(unittest.TestCase):
             xmin, xmax, ymin, ymax = [int(i) for i in numpy.random.randint(low=-5, high=5, size=4)]
             if xmin > xmax: xmin, xmax = xmax, xmin
             if ymin > ymax: ymin, ymax = ymax, ymin
-            pmin = geom.makePointI(xmin,ymin)
-            pmax = geom.makePointI(xmax,ymax)
+            pmin = geom.Point2I(xmin,ymin)
+            pmax = geom.Point2I(xmax,ymax)
             # min/max constructor
-            box = geom.BoxI(pmin,pmax)
+            box = geom.Box2I(pmin,pmax)
             self.assertEqual(box.getMin(), pmin)
             self.assertEqual(box.getMax(), pmax)
-            box = geom.BoxI(pmax,pmin)
+            box = geom.Box2I(pmax,pmin)
             self.assertEqual(box.getMin(), pmin)
             self.assertEqual(box.getMax(), pmax)
-            box = geom.BoxI(pmin,pmax,False)
+            box = geom.Box2I(pmin,pmax,False)
             self.assertEqual(box.getMin(), pmin)
             self.assertEqual(box.getMax(), pmax)
-            box = geom.BoxI(pmax,pmin,False)
+            box = geom.Box2I(pmax,pmin,False)
             self.assert_(box.isEmpty() or pmax == pmin)
             # min/dim constructor
-            dim = geom.ExtentI(1) + pmax - pmin
+            dim = geom.Extent2I(1) + pmax - pmin
             if any(dim.eq(0)):
-                box = geom.BoxI(pmin,dim)
+                box = geom.Box2I(pmin,dim)
                 self.assert_(box.isEmpty())
-                box = geom.BoxI(pmin,dim,False)
+                box = geom.Box2I(pmin,dim,False)
                 self.assert_(box.isEmpty())
             else:
-                box = geom.BoxI(pmin,dim)
+                box = geom.Box2I(pmin,dim)
                 self.assertEqual(box.getMin(), pmin)
                 self.assertEqual(box.getDimensions(), dim)
-                box = geom.BoxI(pmin,dim,False)
+                box = geom.Box2I(pmin,dim,False)
                 self.assertEqual(box.getMin(), pmin)
                 self.assertEqual(box.getDimensions(), dim)
                 dim = -dim
-                box = geom.BoxI(pmin,dim)
-                self.assertEqual(box.getMin(), pmin + dim + geom.ExtentI(1))
+                box = geom.Box2I(pmin,dim)
+                self.assertEqual(box.getMin(), pmin + dim + geom.Extent2I(1))
                 self.assertEqual(box.getDimensions(),
-                                 geom.makeExtentI(abs(dim.getX()),abs(dim.getY())))
+                                 geom.Extent2I(abs(dim.getX()),abs(dim.getY())))
+    def testSwap(self):
+        x00, y00, x01, y01 = (0,1,2,3)
+        x10, y10, x11, y11 = (4,5,6,7)
+
+        box0 = geom.Box2I(geom.PointI(x00, y00), geom.PointI(x01, y01))
+        box1 = geom.Box2I(geom.PointI(x10, y10), geom.PointI(x11, y11))
+        box0.swap(box1)
+
+        self.assertEqual(box0.getMinX(), x10);
+        self.assertEqual(box0.getMinY(), y10);
+        self.assertEqual(box0.getMaxX(), x11);
+        self.assertEqual(box0.getMaxY(), y11);
+
+        self.assertEqual(box1.getMinX(), x00);
+        self.assertEqual(box1.getMinY(), y00);
+        self.assertEqual(box1.getMaxX(), x01);
+        self.assertEqual(box1.getMaxY(), y01);
 
     def testConversion(self):
         for n in range(10):
             xmin, xmax, ymin, ymax = numpy.random.uniform(low=-10, high=10, size=4)
             if xmin > xmax: xmin, xmax = xmax, xmin
             if ymin > ymax: ymin, ymax = ymax, ymin
-            fpMin = geom.makePointD(xmin,ymin)
-            fpMax = geom.makePointD(xmax,ymax)
+            fpMin = geom.Point2D(xmin,ymin)
+            fpMax = geom.Point2D(xmax,ymax)
             if any((fpMax-fpMin).lt(3)): continue  # avoid empty boxes
-            fpBox = geom.BoxD(fpMin, fpMax)
-            intBoxBig = geom.BoxI(fpBox, geom.BoxI.EXPAND)
-            fpBoxBig = geom.BoxD(intBoxBig)
-            intBoxSmall = geom.BoxI(fpBox, geom.BoxI.SHRINK)
-            fpBoxSmall = geom.BoxD(intBoxSmall)
+            fpBox = geom.Box2D(fpMin, fpMax)
+            intBoxBig = geom.Box2I(fpBox, geom.Box2I.EXPAND)
+            fpBoxBig = geom.Box2D(intBoxBig)
+            intBoxSmall = geom.Box2I(fpBox, geom.Box2I.SHRINK)
+            fpBoxSmall = geom.Box2D(intBoxSmall)
             self.assert_(fpBoxBig.contains(fpBox))
             self.assert_(fpBox.contains(fpBoxSmall))
             self.assert_(intBoxBig.contains(intBoxSmall))
-            self.assert_(geom.BoxD(intBoxBig))
-            self.assertEqual(geom.BoxI(fpBoxBig, geom.BoxI.EXPAND), intBoxBig)
-            self.assertEqual(geom.BoxI(fpBoxSmall, geom.BoxI.SHRINK), intBoxSmall)
+            self.assert_(geom.Box2D(intBoxBig))
+            self.assertEqual(geom.Box2I(fpBoxBig, geom.Box2I.EXPAND), intBoxBig)
+            self.assertEqual(geom.Box2I(fpBoxSmall, geom.Box2I.SHRINK), intBoxSmall)
 
     def testAccessors(self):
         xmin, xmax, ymin, ymax = [int(i) for i in numpy.random.randint(low=-5, high=5, size=4)]
         if xmin > xmax: xmin, xmax = xmax, xmin
         if ymin > ymax: ymin, ymax = ymax, ymin
-        pmin = geom.makePointI(xmin,ymin)
-        pmax = geom.makePointI(xmax,ymax)
-        box = geom.BoxI(pmin, pmax, True)
+        pmin = geom.Point2I(xmin,ymin)
+        pmax = geom.Point2I(xmax,ymax)
+        box = geom.Box2I(pmin, pmax, True)
         self.assertEqual(pmin, box.getMin())
         self.assertEqual(pmax, box.getMax())
         self.assertEqual(box.getMinX(), xmin)
@@ -133,82 +150,82 @@ class BoxITestCase(unittest.TestCase):
         self.assertEqual(box.getMaxX(), xmax)
         self.assertEqual(box.getMaxY(), ymax)
         self.assertEqual(box.getBegin(), pmin)
-        self.assertEqual(box.getEnd(), (pmax + geom.ExtentI(1)))
+        self.assertEqual(box.getEnd(), (pmax + geom.Extent2I(1)))
         self.assertEqual(box.getBeginX(), xmin)
         self.assertEqual(box.getBeginY(), ymin)
         self.assertEqual(box.getEndX(), xmax + 1)
         self.assertEqual(box.getEndY(), ymax + 1)
-        self.assertEqual(box.getDimensions(), (pmax - pmin + geom.ExtentI(1)))
+        self.assertEqual(box.getDimensions(), (pmax - pmin + geom.Extent2I(1)))
         self.assertEqual(box.getWidth(), (xmax - xmin  + 1))
         self.assertEqual(box.getHeight(), (ymax - ymin  + 1))
         self.assertAlmostEqual(box.getArea(), box.getWidth() * box.getHeight(),
                 places=14)
         
     def testRelations(self):
-        box = geom.BoxI(geom.makePointI(-2,-3), geom.makePointI(2,1), True)
-        self.assert_(box.contains(geom.makePointI(0,0)))
-        self.assert_(box.contains(geom.makePointI(-2,-3)))
-        self.assert_(box.contains(geom.makePointI(2,-3)))
-        self.assert_(box.contains(geom.makePointI(2,1)))
-        self.assert_(box.contains(geom.makePointI(-2,1)))
-        self.assertFalse(box.contains(geom.makePointI(-2,-4)))
-        self.assertFalse(box.contains(geom.makePointI(-3,-3)))
-        self.assertFalse(box.contains(geom.makePointI(2,-4)))
-        self.assertFalse(box.contains(geom.makePointI(3,-3)))
-        self.assertFalse(box.contains(geom.makePointI(3,1)))
-        self.assertFalse(box.contains(geom.makePointI(2,2)))
-        self.assertFalse(box.contains(geom.makePointI(-3,1)))
-        self.assertFalse(box.contains(geom.makePointI(-2,2)))
-        self.assert_(box.contains(geom.BoxI(geom.makePointI(-1,-2), geom.makePointI(1,0))))
+        box = geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(2,1), True)
+        self.assert_(box.contains(geom.Point2I(0,0)))
+        self.assert_(box.contains(geom.Point2I(-2,-3)))
+        self.assert_(box.contains(geom.Point2I(2,-3)))
+        self.assert_(box.contains(geom.Point2I(2,1)))
+        self.assert_(box.contains(geom.Point2I(-2,1)))
+        self.assertFalse(box.contains(geom.Point2I(-2,-4)))
+        self.assertFalse(box.contains(geom.Point2I(-3,-3)))
+        self.assertFalse(box.contains(geom.Point2I(2,-4)))
+        self.assertFalse(box.contains(geom.Point2I(3,-3)))
+        self.assertFalse(box.contains(geom.Point2I(3,1)))
+        self.assertFalse(box.contains(geom.Point2I(2,2)))
+        self.assertFalse(box.contains(geom.Point2I(-3,1)))
+        self.assertFalse(box.contains(geom.Point2I(-2,2)))
+        self.assert_(box.contains(geom.Box2I(geom.Point2I(-1,-2), geom.Point2I(1,0))))
         self.assert_(box.contains(box))
-        self.assertFalse(box.contains(geom.BoxI(geom.makePointI(-2,-3), geom.makePointI(2,2))))
-        self.assertFalse(box.contains(geom.BoxI(geom.makePointI(-2,-3), geom.makePointI(3,1))))
-        self.assertFalse(box.contains(geom.BoxI(geom.makePointI(-3,-3), geom.makePointI(2,1))))
-        self.assertFalse(box.contains(geom.BoxI(geom.makePointI(-3,-4), geom.makePointI(2,1))))
-        self.assert_(box.overlaps(geom.BoxI(geom.makePointI(-2,-3), geom.makePointI(2,2))))
-        self.assert_(box.overlaps(geom.BoxI(geom.makePointI(-2,-3), geom.makePointI(3,1))))
-        self.assert_(box.overlaps(geom.BoxI(geom.makePointI(-3,-3), geom.makePointI(2,1))))
-        self.assert_(box.overlaps(geom.BoxI(geom.makePointI(-3,-4), geom.makePointI(2,1))))
-        self.assert_(box.overlaps(geom.BoxI(geom.makePointI(-1,-2), geom.makePointI(1,0))))
+        self.assertFalse(box.contains(geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(2,2))))
+        self.assertFalse(box.contains(geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(3,1))))
+        self.assertFalse(box.contains(geom.Box2I(geom.Point2I(-3,-3), geom.Point2I(2,1))))
+        self.assertFalse(box.contains(geom.Box2I(geom.Point2I(-3,-4), geom.Point2I(2,1))))
+        self.assert_(box.overlaps(geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(2,2))))
+        self.assert_(box.overlaps(geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(3,1))))
+        self.assert_(box.overlaps(geom.Box2I(geom.Point2I(-3,-3), geom.Point2I(2,1))))
+        self.assert_(box.overlaps(geom.Box2I(geom.Point2I(-3,-4), geom.Point2I(2,1))))
+        self.assert_(box.overlaps(geom.Box2I(geom.Point2I(-1,-2), geom.Point2I(1,0))))
         self.assert_(box.overlaps(box))
-        self.assertFalse(box.overlaps(geom.BoxI(geom.makePointI(-5,-3), geom.makePointI(-3,1))))
-        self.assertFalse(box.overlaps(geom.BoxI(geom.makePointI(-2,-6), geom.makePointI(2,-4))))
-        self.assertFalse(box.overlaps(geom.BoxI(geom.makePointI(3,-3), geom.makePointI(4,1))))
-        self.assertFalse(box.overlaps(geom.BoxI(geom.makePointI(-2,2), geom.makePointI(2,2))))
+        self.assertFalse(box.overlaps(geom.Box2I(geom.Point2I(-5,-3), geom.Point2I(-3,1))))
+        self.assertFalse(box.overlaps(geom.Box2I(geom.Point2I(-2,-6), geom.Point2I(2,-4))))
+        self.assertFalse(box.overlaps(geom.Box2I(geom.Point2I(3,-3), geom.Point2I(4,1))))
+        self.assertFalse(box.overlaps(geom.Box2I(geom.Point2I(-2,2), geom.Point2I(2,2))))
 
     def testMutators(self):
-        box = geom.BoxI(geom.makePointI(-2,-3), geom.makePointI(2,1), True)
+        box = geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(2,1), True)
         box.grow(1)
-        self.assertEqual(box, geom.BoxI(geom.makePointI(-3,-4), geom.makePointI(3,2), True))
-        box.grow(geom.makeExtentI(2,3))
-        self.assertEqual(box, geom.BoxI(geom.makePointI(-5,-7), geom.makePointI(5,5), True))
-        box.shift(geom.makeExtentI(3,2))
-        self.assertEqual(box, geom.BoxI(geom.makePointI(-2,-5), geom.makePointI(8,7), True))
-        box.include(geom.makePointI(-4,2))
-        self.assertEqual(box, geom.BoxI(geom.makePointI(-4,-5), geom.makePointI(8,7), True))
-        box.include(geom.makePointI(0,-6))
-        self.assertEqual(box, geom.BoxI(geom.makePointI(-4,-6), geom.makePointI(8,7), True))
-        box.include(geom.BoxI(geom.makePointI(0,0), geom.makePointI(10,11), True))
-        self.assertEqual(box, geom.BoxI(geom.makePointI(-4,-6), geom.makePointI(10,11), True))
-        box.clip(geom.BoxI(geom.makePointI(0,0), geom.makePointI(11,12), True))
-        self.assertEqual(box, geom.BoxI(geom.makePointI(0,0), geom.makePointI(10,11), True))
-        box.clip(geom.BoxI(geom.makePointI(-1,-2), geom.makePointI(5,4), True))
-        self.assertEqual(box, geom.BoxI(geom.makePointI(0,0), geom.makePointI(5,4), True))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(-3,-4), geom.Point2I(3,2), True))
+        box.grow(geom.Extent2I(2,3))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(-5,-7), geom.Point2I(5,5), True))
+        box.shift(geom.Extent2I(3,2))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(-2,-5), geom.Point2I(8,7), True))
+        box.include(geom.Point2I(-4,2))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(-4,-5), geom.Point2I(8,7), True))
+        box.include(geom.Point2I(0,-6))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(-4,-6), geom.Point2I(8,7), True))
+        box.include(geom.Box2I(geom.Point2I(0,0), geom.Point2I(10,11), True))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(-4,-6), geom.Point2I(10,11), True))
+        box.clip(geom.Box2I(geom.Point2I(0,0), geom.Point2I(11,12), True))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(0,0), geom.Point2I(10,11), True))
+        box.clip(geom.Box2I(geom.Point2I(-1,-2), geom.Point2I(5,4), True))
+        self.assertEqual(box, geom.Box2I(geom.Point2I(0,0), geom.Point2I(5,4), True))
 
-class BoxDTestCase(unittest.TestCase):
+class Box2DTestCase(unittest.TestCase):
 
     def testEmpty(self):
-        box = geom.BoxD()
+        box = geom.Box2D()
         self.assert_(box.isEmpty())
         self.assertEqual(box.getWidth(), 0.0)
         self.assertEqual(box.getHeight(), 0.0)
         for x in (-1,0,1):
             for y in (-1,0,1):
-                point = geom.makePointD(x,y)
+                point = geom.Point2D(x,y)
                 self.assertFalse(box.contains(point))
                 box.include(point)
                 self.assert_(box.contains(point))
-                box = geom.BoxD()
+                box = geom.Box2D()
         box.grow(3)
         self.assert_(box.isEmpty())
 
@@ -217,47 +234,65 @@ class BoxDTestCase(unittest.TestCase):
             xmin, xmax, ymin, ymax = numpy.random.uniform(low=-5, high=5, size=4)
             if xmin > xmax: xmin, xmax = xmax, xmin
             if ymin > ymax: ymin, ymax = ymax, ymin
-            pmin = geom.makePointD(xmin,ymin)
-            pmax = geom.makePointD(xmax,ymax)
+            pmin = geom.Point2D(xmin,ymin)
+            pmax = geom.Point2D(xmax,ymax)
             # min/max constructor
-            box = geom.BoxD(pmin,pmax)
+            box = geom.Box2D(pmin,pmax)
             self.assertEqual(box.getMin(), pmin)
             self.assertEqual(box.getMax(), pmax)
-            box = geom.BoxD(pmax,pmin)
+            box = geom.Box2D(pmax,pmin)
             self.assertEqual(box.getMin(), pmin)
             self.assertEqual(box.getMax(), pmax)
-            box = geom.BoxD(pmin,pmax,False)
+            box = geom.Box2D(pmin,pmax,False)
             self.assertEqual(box.getMin(), pmin)
             self.assertEqual(box.getMax(), pmax)
-            box = geom.BoxD(pmax,pmin,False)
+            box = geom.Box2D(pmax,pmin,False)
             self.assert_(box.isEmpty())
             # min/dim constructor
             dim = pmax - pmin
             if any(dim.eq(0)):
-                box = geom.BoxD(pmin,dim)
+                box = geom.Box2D(pmin,dim)
                 self.assert_(box.isEmpty())
-                box = geom.BoxD(pmin,dim,False)
+                box = geom.Box2D(pmin,dim,False)
                 self.assert_(box.isEmpty())
             else:
-                box = geom.BoxD(pmin,dim)
+                box = geom.Box2D(pmin,dim)
                 self.assertEqual(box.getMin(), pmin)
                 self.assertEqual(box.getDimensions(), dim)
-                box = geom.BoxD(pmin,dim,False)
+                box = geom.Box2D(pmin,dim,False)
                 self.assertEqual(box.getMin(), pmin)
                 self.assertEqual(box.getDimensions(), dim)
                 dim = -dim
-                box = geom.BoxD(pmin,dim)
+                box = geom.Box2D(pmin,dim)
                 self.assertEqual(box.getMin(), pmin + dim)
                 self.assert_(numpy.allclose(box.getDimensions(),
-                                            geom.makeExtentD(abs(dim.getX()),abs(dim.getY()))))
+                                            geom.Extent2D(abs(dim.getX()),abs(dim.getY()))))
+
+    def testSwap(self):
+        x00, y00, x01, y01 = (0.,1.,2.,3.)
+        x10, y10, x11, y11 = (4.,5.,6.,7.)
+
+        box0 = geom.Box2D(geom.PointD(x00, y00), geom.PointD(x01, y01))
+        box1 = geom.Box2D(geom.PointD(x10, y10), geom.PointD(x11, y11))
+        box0.swap(box1)
+
+        self.assertEqual(box0.getMinX(), x10);
+        self.assertEqual(box0.getMinY(), y10);
+        self.assertEqual(box0.getMaxX(), x11);
+        self.assertEqual(box0.getMaxY(), y11);
+
+        self.assertEqual(box1.getMinX(), x00);
+        self.assertEqual(box1.getMinY(), y00);
+        self.assertEqual(box1.getMaxX(), x01);
+        self.assertEqual(box1.getMaxY(), y01);
 
     def testAccessors(self):
         xmin, xmax, ymin, ymax = numpy.random.uniform(low=-5, high=5, size=4)
         if xmin > xmax: xmin, xmax = xmax, xmin
         if ymin > ymax: ymin, ymax = ymax, ymin
-        pmin = geom.makePointD(xmin,ymin)
-        pmax = geom.makePointD(xmax,ymax)
-        box = geom.BoxD(pmin, pmax, True)
+        pmin = geom.Point2D(xmin,ymin)
+        pmax = geom.Point2D(xmax,ymax)
+        box = geom.Box2D(pmin, pmax, True)
         self.assertEqual(pmin, box.getMin())
         self.assertEqual(pmax, box.getMax())
         self.assertEqual(box.getMinX(), xmin)
@@ -274,52 +309,102 @@ class BoxDTestCase(unittest.TestCase):
         self.assertEqual(box.getCenter().getY(), box.getCenterY())
         
     def testRelations(self):
-        box = geom.BoxD(geom.makePointD(-2,-3), geom.makePointD(2,1), True)
-        self.assert_(box.contains(geom.makePointD(0,0)))
-        self.assert_(box.contains(geom.makePointD(-2,-3)))
-        self.assertFalse(box.contains(geom.makePointD(2,-3)))
-        self.assertFalse(box.contains(geom.makePointD(2,1)))
-        self.assertFalse(box.contains(geom.makePointD(-2,1)))
-        self.assert_(box.contains(geom.BoxD(geom.makePointD(-1,-2), geom.makePointD(1,0))))
+        box = geom.Box2D(geom.Point2D(-2,-3), geom.Point2D(2,1), True)
+        self.assert_(box.contains(geom.Point2D(0,0)))
+        self.assert_(box.contains(geom.Point2D(-2,-3)))
+        self.assertFalse(box.contains(geom.Point2D(2,-3)))
+        self.assertFalse(box.contains(geom.Point2D(2,1)))
+        self.assertFalse(box.contains(geom.Point2D(-2,1)))
+        self.assert_(box.contains(geom.Box2D(geom.Point2D(-1,-2), geom.Point2D(1,0))))
         self.assert_(box.contains(box))
-        self.assertFalse(box.contains(geom.BoxD(geom.makePointD(-2,-3), geom.makePointD(2,2))))
-        self.assertFalse(box.contains(geom.BoxD(geom.makePointD(-2,-3), geom.makePointD(3,1))))
-        self.assertFalse(box.contains(geom.BoxD(geom.makePointD(-3,-3), geom.makePointD(2,1))))
-        self.assertFalse(box.contains(geom.BoxD(geom.makePointD(-3,-4), geom.makePointD(2,1))))
-        self.assert_(box.overlaps(geom.BoxD(geom.makePointD(-2,-3), geom.makePointD(2,2))))
-        self.assert_(box.overlaps(geom.BoxD(geom.makePointD(-2,-3), geom.makePointD(3,1))))
-        self.assert_(box.overlaps(geom.BoxD(geom.makePointD(-3,-3), geom.makePointD(2,1))))
-        self.assert_(box.overlaps(geom.BoxD(geom.makePointD(-3,-4), geom.makePointD(2,1))))
-        self.assert_(box.overlaps(geom.BoxD(geom.makePointD(-1,-2), geom.makePointD(1,0))))
+        self.assertFalse(box.contains(geom.Box2D(geom.Point2D(-2,-3), geom.Point2D(2,2))))
+        self.assertFalse(box.contains(geom.Box2D(geom.Point2D(-2,-3), geom.Point2D(3,1))))
+        self.assertFalse(box.contains(geom.Box2D(geom.Point2D(-3,-3), geom.Point2D(2,1))))
+        self.assertFalse(box.contains(geom.Box2D(geom.Point2D(-3,-4), geom.Point2D(2,1))))
+        self.assert_(box.overlaps(geom.Box2D(geom.Point2D(-2,-3), geom.Point2D(2,2))))
+        self.assert_(box.overlaps(geom.Box2D(geom.Point2D(-2,-3), geom.Point2D(3,1))))
+        self.assert_(box.overlaps(geom.Box2D(geom.Point2D(-3,-3), geom.Point2D(2,1))))
+        self.assert_(box.overlaps(geom.Box2D(geom.Point2D(-3,-4), geom.Point2D(2,1))))
+        self.assert_(box.overlaps(geom.Box2D(geom.Point2D(-1,-2), geom.Point2D(1,0))))
         self.assert_(box.overlaps(box))
-        self.assertFalse(box.overlaps(geom.BoxD(geom.makePointD(-5,-3), geom.makePointD(-3,1))))
-        self.assertFalse(box.overlaps(geom.BoxD(geom.makePointD(-2,-6), geom.makePointD(2,-4))))
-        self.assertFalse(box.overlaps(geom.BoxD(geom.makePointD(3,-3), geom.makePointD(4,1))))
-        self.assertFalse(box.overlaps(geom.BoxD(geom.makePointD(-2,2), geom.makePointD(2,2))))
-        self.assertFalse(box.overlaps(geom.BoxD(geom.makePointD(-2,-5), geom.makePointD(2,-3))))
-        self.assertFalse(box.overlaps(geom.BoxD(geom.makePointD(-4,-3), geom.makePointD(-2,1))))
-        self.assertFalse(box.contains(geom.BoxD(geom.makePointD(-2,1), geom.makePointD(2,3))))
-        self.assertFalse(box.contains(geom.BoxD(geom.makePointD(2,-3), geom.makePointD(4,1))))
+        self.assertFalse(box.overlaps(geom.Box2D(geom.Point2D(-5,-3), geom.Point2D(-3,1))))
+        self.assertFalse(box.overlaps(geom.Box2D(geom.Point2D(-2,-6), geom.Point2D(2,-4))))
+        self.assertFalse(box.overlaps(geom.Box2D(geom.Point2D(3,-3), geom.Point2D(4,1))))
+        self.assertFalse(box.overlaps(geom.Box2D(geom.Point2D(-2,2), geom.Point2D(2,2))))
+        self.assertFalse(box.overlaps(geom.Box2D(geom.Point2D(-2,-5), geom.Point2D(2,-3))))
+        self.assertFalse(box.overlaps(geom.Box2D(geom.Point2D(-4,-3), geom.Point2D(-2,1))))
+        self.assertFalse(box.contains(geom.Box2D(geom.Point2D(-2,1), geom.Point2D(2,3))))
+        self.assertFalse(box.contains(geom.Box2D(geom.Point2D(2,-3), geom.Point2D(4,1))))
 
     def testMutators(self):
-        box = geom.BoxD(geom.makePointD(-2,-3), geom.makePointD(2,1), True)
+        box = geom.Box2D(geom.Point2D(-2,-3), geom.Point2D(2,1), True)
         box.grow(1)
-        self.assertEqual(box, geom.BoxD(geom.makePointD(-3,-4), geom.makePointD(3,2), True))
-        box.grow(geom.makeExtentD(2,3))
-        self.assertEqual(box, geom.BoxD(geom.makePointD(-5,-7), geom.makePointD(5,5), True))
-        box.shift(geom.makeExtentD(3,2))
-        self.assertEqual(box, geom.BoxD(geom.makePointD(-2,-5), geom.makePointD(8,7), True))
-        box.include(geom.makePointD(-4,2))
-        self.assertEqual(box, geom.BoxD(geom.makePointD(-4,-5), geom.makePointD(8,7), True))
-        self.assert_(box.contains(geom.makePointD(-4,2)))
-        box.include(geom.makePointD(0,-6))
-        self.assertEqual(box, geom.BoxD(geom.makePointD(-4,-6), geom.makePointD(8,7), True))
-        box.include(geom.BoxD(geom.makePointD(0,0), geom.makePointD(10,11), True))
-        self.assertEqual(box, geom.BoxD(geom.makePointD(-4,-6), geom.makePointD(10,11), True))
-        box.clip(geom.BoxD(geom.makePointD(0,0), geom.makePointD(11,12), True))
-        self.assertEqual(box, geom.BoxD(geom.makePointD(0,0), geom.makePointD(10,11), True))
-        box.clip(geom.BoxD(geom.makePointD(-1,-2), geom.makePointD(5,4), True))
-        self.assertEqual(box, geom.BoxD(geom.makePointD(0,0), geom.makePointD(5,4), True))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(-3,-4), geom.Point2D(3,2), True))
+        box.grow(geom.Extent2D(2,3))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(-5,-7), geom.Point2D(5,5), True))
+        box.shift(geom.Extent2D(3,2))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(-2,-5), geom.Point2D(8,7), True))
+        box.include(geom.Point2D(-4,2))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(-4,-5), geom.Point2D(8,7), True))
+        self.assert_(box.contains(geom.Point2D(-4,2)))
+        box.include(geom.Point2D(0,-6))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(-4,-6), geom.Point2D(8,7), True))
+        box.include(geom.Box2D(geom.Point2D(0,0), geom.Point2D(10,11), True))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(-4,-6), geom.Point2D(10,11), True))
+        box.clip(geom.Box2D(geom.Point2D(0,0), geom.Point2D(11,12), True))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(0,0), geom.Point2D(10,11), True))
+        box.clip(geom.Box2D(geom.Point2D(-1,-2), geom.Point2D(5,4), True))
+        self.assertEqual(box, geom.Box2D(geom.Point2D(0,0), geom.Point2D(5,4), True))
+
+    def testFlipI(self):
+        parentExtent = geom.Extent2I(15,20)
+        x00, y00, x11, y11 = (8,11,13,16)
+        lrx00,lry00,lrx11,lry11 = (1,11,6,16)
+        tbx00,tby00,tbx11,tby11 = (8,3,13,8)
+      
+        box0 = geom.Box2I(geom.Point2I(x00, y00),
+                geom.Point2I(x11, y11))
+        box1 = geom.Box2I(geom.Point2I(x00, y00),
+                geom.Point2I(x11, y11))
+        box0.flipLR(parentExtent[0])
+        box1.flipTB(parentExtent[1])
+
+        #test flip RL
+        self.assertEqual(box0.getMinX(), lrx00);
+        self.assertEqual(box0.getMinY(), lry00);
+        self.assertEqual(box0.getMaxX(), lrx11);
+        self.assertEqual(box0.getMaxY(), lry11);
+
+        #test flip TB 
+        self.assertEqual(box1.getMinX(), tbx00);
+        self.assertEqual(box1.getMinY(), tby00);
+        self.assertEqual(box1.getMaxX(), tbx11);
+        self.assertEqual(box1.getMaxY(), tby11);
+
+    def testFlipD(self):
+        parentExtent = geom.Extent2D(15.1,20.6)
+        x00, y00, x11, y11 = (8.3,11.4,13.2,16.9)
+        lrx00,lry00,lrx11,lry11 = (1.9,11.4,6.8,16.9)
+        tbx00,tby00,tbx11,tby11 = (8.3,3.7,13.2,9.2)
+      
+        box0 = geom.Box2D(geom.Point2D(x00, y00),
+                geom.Point2D(x11, y11))
+        box1 = geom.Box2D(geom.Point2D(x00, y00),
+                geom.Point2D(x11, y11))
+        box0.flipLR(parentExtent[0])
+        box1.flipTB(parentExtent[1])
+
+        #test flip RL
+        self.assertAlmostEqual(box0.getMinX(), lrx00, places=6);
+        self.assertAlmostEqual(box0.getMinY(), lry00, places=6);
+        self.assertAlmostEqual(box0.getMaxX(), lrx11, places=6);
+        self.assertAlmostEqual(box0.getMaxY(), lry11, places=6);
+
+        #test flip TB 
+        self.assertAlmostEqual(box1.getMinX(), tbx00, places=6);
+        self.assertAlmostEqual(box1.getMinY(), tby00, places=6);
+        self.assertAlmostEqual(box1.getMaxX(), tbx11, places=6);
+        self.assertAlmostEqual(box1.getMaxY(), tby11, places=6);
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -330,8 +415,8 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(BoxITestCase)
-    suites += unittest.makeSuite(BoxDTestCase)
+    suites += unittest.makeSuite(Box2ITestCase)
+    suites += unittest.makeSuite(Box2DTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

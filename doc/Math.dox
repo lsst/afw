@@ -20,10 +20,10 @@ And print the desired quantities.  Note that we didn't request that the error in
 so a \c NaN is returned.
 \until }
 
-Here's another way to do the same thing.  We use \c make_Statistics (cf. \c std::make_pair) to avoid having to
+Here's another way to do the same thing.  We use \c makeStatistics (cf. \c std::make_pair) to avoid having to
 specify what sort of \c Statistics we're creating (and in C++0X you'll be able to say
 \code
-auto stats = math::make_Statistics(img, math::STDEV | math::MEAN | math::ERRORS);
+auto stats = math::makeStatistics(img, math::STDEV | math::MEAN | math::ERRORS);
 \endcode
 which means that we <em>never</em> have to provide information that the compiler
 has up its sleeve --- very convenient for generic template programming)

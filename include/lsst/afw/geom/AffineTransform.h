@@ -26,7 +26,7 @@
 #define LSST_AFW_MATH_AFFINE_TRANSFORM_H
 
 #include <boost/shared_ptr.hpp>
-#include <Eigen/Geometry>
+#include "Eigen/Core"
 #include <iostream>
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
@@ -111,13 +111,13 @@ public:
     explicit AffineTransform(LinearTransform const & linear) 
       : _linear(linear), _translation() {}
 
-    /** Construct a translation-only AffineTransform from an ExtentD. */
-    explicit AffineTransform(ExtentD const & translation) 
+    /** Construct a translation-only AffineTransform from an Extent2D. */
+    explicit AffineTransform(Extent2D const & translation) 
       : _linear(), _translation(translation) {}
 
-    /** Construct an AffineTransform from a LinearTransform and ExtentD. */
+    /** Construct an AffineTransform from a LinearTransform and Extent2D. */
     explicit AffineTransform(
-        LinearTransform const & linear, ExtentD const & translation
+        LinearTransform const & linear, Extent2D const & translation
     ) : _linear(linear), _translation(translation) {}
 
 
@@ -132,8 +132,8 @@ public:
      *
      * The result is affected by the translation parameters of the transform
      */
-    PointD operator()(PointD const &p) const {         
-        return PointD(_linear(p) + _translation);
+    Point2D operator()(Point2D const &p) const {         
+        return Point2D(_linear(p) + _translation);
     }
 
     /**
@@ -141,20 +141,20 @@ public:
      *
      * The result is unaffected by the translation parameters of the transform
      */
-    ExtentD operator()(ExtentD const &p) const {         
-        return ExtentD(_linear(p));
+    Extent2D operator()(Extent2D const &p) const {         
+        return Extent2D(_linear(p));
     }
 
-    ExtentD const & getTranslation() const {return _translation;}
-    ExtentD & getTranslation() {return _translation;}
+    Extent2D const & getTranslation() const {return _translation;}
+    Extent2D & getTranslation() {return _translation;}
 
     LinearTransform const & getLinear() const {return _linear;}
     LinearTransform & getLinear() {return _linear;}
 
     Matrix const getMatrix() const;
     
-    ParameterVector const getVector() const;
-    void setVector(ParameterVector const & vector);
+    ParameterVector const getParameterVector() const;
+    void setParameterVector(ParameterVector const & vector);
 
     double & operator[](int i) { 
         return (i < 4) ? _linear[i] : _translation[i - 4]; 
@@ -240,16 +240,16 @@ public:
         return AffineTransform(translation);
     }
 
-    TransformDerivativeMatrix dTransform(PointD const & input) const;
-    TransformDerivativeMatrix dTransform(ExtentD const & input) const;
-
-    friend std::ostream & operator<<(std::ostream & os, AffineTransform const & transform);
+    TransformDerivativeMatrix dTransform(Point2D const & input) const;
+    TransformDerivativeMatrix dTransform(Extent2D const & input) const;
 
 private:
 
     LinearTransform _linear;
-    ExtentD _translation;
+    Extent2D _translation;
 };
+
+std::ostream & operator<<(std::ostream & os, lsst::afw::geom::AffineTransform const & transform);
 
 }}}
 

@@ -22,7 +22,7 @@
  
 #include "lsst/afw/geom/LinearTransform.h"
 
-#include <Eigen/LU>
+#include "Eigen/LU"
 
 #include <iostream>
 #include <iomanip>
@@ -34,7 +34,7 @@ namespace afwGeom = lsst::afw::geom;
  *
  * The elements will be ordered XX, YX, XY, YY
  */
-afwGeom::LinearTransform::ParameterVector const afwGeom::LinearTransform::getVector() const {
+afwGeom::LinearTransform::ParameterVector const afwGeom::LinearTransform::getParameterVector() const {
     ParameterVector r;
     r << (*this)[XX], (*this)[YX], (*this)[XY], (*this)[YY];
     return r;
@@ -45,7 +45,7 @@ afwGeom::LinearTransform::ParameterVector const afwGeom::LinearTransform::getVec
  *
  * The parameter vector is ordered XX, YX, XY, YY
  */
-void afwGeom::LinearTransform::setVector(
+void afwGeom::LinearTransform::setParameterVector(
     LinearTransform::ParameterVector const & vector
 ) {
     (*this)[XX] = vector[XX];  (*this)[XY] = vector[XY];
@@ -55,13 +55,13 @@ void afwGeom::LinearTransform::setVector(
 /** 
  * Return the inverse transform. 
  *
- * @throws lsst::pex::exceptions::SingularTransformException
+ * @throws lsst::afw::geom::SingularTransformException
  */
 afwGeom::LinearTransform const afwGeom::LinearTransform::invert() const {
-    Eigen::LU<Matrix> lu(getMatrix());
+    Eigen::FullPivLU<Matrix> lu(getMatrix());
     if (!lu.isInvertible()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::SingularTransformException,
+            lsst::afw::geom::SingularTransformException,
             "Could not compute LinearTransform inverse"
         );
     }
@@ -81,7 +81,7 @@ double afwGeom::LinearTransform::computeDeterminant() const {
  * Derivative of (*this)(input) with respect to the transform elements (for Point).
  */
 afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dTransform(
-    PointD const & input
+    Point2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r(0,XX) = input.getX();
@@ -93,7 +93,7 @@ afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dT
 
 std::ostream& afwGeom::operator<<(
     std::ostream& os, 
-    afwGeom::LinearTransform const & t
+    lsst::afw::geom::LinearTransform const & t
 ) {
     std::ios::fmtflags flags = os.flags();
     int prec = os.precision(7);

@@ -51,44 +51,40 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-namespace dafBase = lsst::daf::base;
-namespace pexPolicy = lsst::pex::policy;
-namespace dafPersist = lsst::daf::persistence;
-
-class KernelFormatter : public dafPersist::Formatter {
+class KernelFormatter : public lsst::daf::persistence::Formatter {
 public:
     virtual ~KernelFormatter(void);
 
-    virtual void write(dafBase::Persistable const* persistable,
-        dafPersist::Storage::Ptr storage,
-        dafBase::PropertySet::Ptr additionalData);
+    virtual void write(lsst::daf::base::Persistable const* persistable,
+        lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr additionalData);
 
-    virtual dafBase::Persistable* read(dafPersist::Storage::Ptr storage,
-        dafBase::PropertySet::Ptr additionalData);
+    virtual lsst::daf::base::Persistable* read(lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr additionalData);
 
-    virtual void update(dafBase::Persistable* persistable,
-        dafPersist::Storage::Ptr storage,
-        dafBase::PropertySet::Ptr additionalData);
+    virtual void update(lsst::daf::base::Persistable* persistable,
+        lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr additionalData);
 
     template <class Archive>
     static void delegateSerialize(Archive& ar, unsigned int const version,
-        dafBase::Persistable* persistable);
+        lsst::daf::base::Persistable* persistable);
 
 private:
-    explicit KernelFormatter(pexPolicy::Policy::Ptr policy);
+    explicit KernelFormatter(lsst::pex::policy::Policy::Ptr policy);
 
-    pexPolicy::Policy::Ptr _policy;
+    lsst::pex::policy::Policy::Ptr _policy;
 
-    static dafPersist::Formatter::Ptr
-        createInstance(pexPolicy::Policy::Ptr policy);
+    static lsst::daf::persistence::Formatter::Ptr
+        createInstance(lsst::pex::policy::Policy::Ptr policy);
 
-    static dafPersist::FormatterRegistration kernelRegistration;
-    static dafPersist::FormatterRegistration fixedKernelRegistration;
-    static dafPersist::FormatterRegistration analyticKernelRegistration;
-    static dafPersist::FormatterRegistration deltaFunctionKernelRegistration;
-    static dafPersist::FormatterRegistration
+    static lsst::daf::persistence::FormatterRegistration kernelRegistration;
+    static lsst::daf::persistence::FormatterRegistration fixedKernelRegistration;
+    static lsst::daf::persistence::FormatterRegistration analyticKernelRegistration;
+    static lsst::daf::persistence::FormatterRegistration deltaFunctionKernelRegistration;
+    static lsst::daf::persistence::FormatterRegistration
         linearCombinationKernelRegistration;
-    static dafPersist::FormatterRegistration separableKernelRegistration;
+    static lsst::daf::persistence::FormatterRegistration separableKernelRegistration;
 };
 
 }}} // namespace lsst::daf::persistence

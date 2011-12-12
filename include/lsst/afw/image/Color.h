@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <limits>
+#include "lsst/utils/ieee.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace lsst {
@@ -29,14 +30,7 @@ public :
     explicit Color(double g_r=std::numeric_limits<double>::quiet_NaN()) : _g_r(g_r) {}
 
     operator bool() const {
-#if defined(__ICC)
-#pragma warning (push)
-#pragma warning (disable: 1572)         // floating-point equality and inequality comparisons are unreliable
-#endif
-        return (_g_r == _g_r);          // i.e. not NaN
-#if defined(__ICC)
-#pragma warning (pop)
-#endif
+        return !lsst::utils::isnan(_g_r);
     }
 
     /** Return the effective wavelength for this object in the given filter

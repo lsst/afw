@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -36,15 +36,16 @@
 #include <sstream>
 #include <vector>
 
-#include "boost/cstdint.hpp" 
+#include "boost/cstdint.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/deprecated.h"
 #include "lsst/afw/math/detail/Convolve.h"
+#include "lsst/afw/math/detail/ConvCpuGpuShared.h"
+#include "lsst/afw/math/detail/ConvolveGPU.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
@@ -93,44 +94,42 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
         }
         return outPixel;
     }
-    
-    /*
-     * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
+
+    /**
+     * @brief Throws exception when trying to FORCE_GPU without GPU support
      *
-     * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dim.
-     * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or h.
-     * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
+     * If GPU support was not included at compile time, FORCE_GPU option will cause
+     * this function to throw an exception
+     *
+     * @throw lsst::pex::exceptions::RuntimeErrorException when FORCE_GPU enabled with no GPU support
+     *
+     * @ingroup afw
      */
-    template <typename OutImageT, typename InImageT>
-    void assertDimensionsOK(
-        OutImageT const &convolvedImage,
-        InImageT const &inImage,
-        lsst::afw::math::Kernel const &kernel
-    ) {
-        if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-            std::ostringstream os;
-            os << "convolvedImage dimensions = ( "
-                << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
-                << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    void CheckForceGpuOnNoGpu(afwMath::ConvolutionControl const& convolutionControl)
+    {
+        #ifndef GPU_BUILD
+        if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU) {
+            throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+                    "Gpu acceleration must be enabled at compiling for ConvolutionControl::FORCE_GPU");
         }
-        if (inImage.getDimensions() < kernel.getDimensions()) {
-            std::ostringstream os;
-            os << "inImage dimensions = ( "
-                << inImage.getWidth() << ", " << inImage.getHeight()
-                << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
-                << ") = kernel dimensions in width and/or height";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-        }
-        if ((kernel.getWidth() < 1) || (kernel.getHeight() < 1)) {
-            std::ostringstream os;
-            os << "kernel dimensions = ( "
-                << kernel.getWidth() << ", " << kernel.getHeight()
-                << ") smaller than (1, 1) in width and/or height";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        #endif
+    }
+    /**
+     * @brief Throws exception whenever trying to FORCE_GPU
+     *
+     * FORCE_GPU option will cause this function to throw an exception
+     *
+     * @throw lsst::pex::exceptions::InvalidParameterException when FORCE_GPU is selected
+     *
+     * @ingroup afw
+     */
+    void CheckForceGpuOnUnsupportedKernel(afwMath::ConvolutionControl const& convolutionControl)
+    {
+        if (convolutionControl.getDeviceSelection()==afwMath::ConvolutionControl::FORCE_GPU) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can not process this type of kernel");     
         }
     }
-    
+
 }   // anonymous namespace
 
 /**
@@ -146,6 +145,8 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
+ * @throw lsst::pex::exceptions::MemoryException when allocation of either CPU or GPU memory allocation fails
+ * @throw lsst::pex::exceptions::RuntimeErrorException when GPU code run fails
  *
  * @ingroup afw
  */
@@ -190,13 +191,14 @@ void mathDetail::basicConvolve(
     } else {
         // use brute force
         pexLog::TTrace<3>("lsst.afw.math.convolve", "generic basicConvolve: using brute force");
-        mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
-            convolutionControl.getDoNormalize());
+        mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,convolutionControl);
     }
 }
 
 /**
  * @brief A version of basicConvolve that should be used when convolving delta function kernels
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException when GPU acceleration forced
  *
  * @ingroup afw
  */
@@ -205,11 +207,13 @@ void mathDetail::basicConvolve(
         OutImageT& convolvedImage,      ///< convolved %image
         InImageT const& inImage,        ///< %image to convolve
         afwMath::DeltaFunctionKernel const &kernel, ///< convolution kernel
-        afwMath::ConvolutionControl const &)        ///< unused
+        afwMath::ConvolutionControl const &convolutionControl)       ///< convolution control parameters
 {
     assert (!kernel.isSpatiallyVarying());
     assertDimensionsOK(convolvedImage, inImage, kernel);
-    
+
+    CheckForceGpuOnUnsupportedKernel(convolutionControl);
+
     int const mImageWidth = inImage.getWidth(); // size of input region
     int const mImageHeight = inImage.getHeight();
     int const cnvWidth = mImageWidth + 1 - kernel.getWidth();
@@ -242,6 +246,8 @@ void mathDetail::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
+ * @throw lsst::pex::exceptions::MemoryException when allocation of either CPU or GPU memory allocation fails
+ * @throw lsst::pex::exceptions::RuntimeErrorException when GPU code run fails
  *
  * @ingroup afw
  */
@@ -259,6 +265,24 @@ void mathDetail::basicConvolve(
         return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
     } else {
+        CheckForceGpuOnNoGpu(convolutionControl);
+        if (IsGpuBuild()) {
+            if (convolutionControl.getDeviceSelection()==ConvolutionControl::AUTO_GPU_SAFE) {
+                try {
+                    bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
+                    if (isProcessed) return;
+                } catch(GpuMemoryException) { }
+                catch(pexExcept::MemoryException) { }
+                catch(GpuRuntimeErrorException) { }
+            } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
+                bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
+                if (isProcessed) return;
+                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU) {
+                    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
+                }
+            }
+        }
+
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
         afwMath::Kernel::Ptr refKernelPtr; // possibly refactored version of kernel
@@ -288,6 +312,8 @@ void mathDetail::basicConvolve(
 /**
  * @brief A version of basicConvolve that should be used when convolving separable kernels
  *
+ * @throw lsst::pex::exceptions::InvalidParameterException when GPU acceleration forced
+ *
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
@@ -307,21 +333,22 @@ void mathDetail::basicConvolve(
     typedef typename OutImageT::SinglePixel OutPixel;
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
-    
-    afwGeom::BoxI const fullBBox(afwGeom::makePointI(0, 0),
-        afwGeom::makeExtentI(inImage.getWidth(), inImage.getHeight()));
-    afwGeom::BoxI const goodBBox = kernel.shrinkBBox(fullBBox);
+
+    CheckForceGpuOnUnsupportedKernel(convolutionControl);
+
+    afwGeom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
+    afwGeom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
 
     KernelVector kernelXVec(kernel.getWidth());
     KernelVector kernelYVec(kernel.getHeight());
-    
+
     if (kernel.isSpatiallyVarying()) {
         pexLog::TTrace<3>("lsst.afw.math.convolve",
             "SeparableKernel basicConvolve: kernel is spatially varying");
 
         for (int cnvY = goodBBox.getMinY(); cnvY <= goodBBox.getMaxY(); ++cnvY) {
             double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
-            
+
             InXYLocator inImLoc = inImage.xy_at(0, cnvY - goodBBox.getMinY());
             OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + goodBBox.getMinX();
             for (int cnvX = goodBBox.getMinX(); cnvX <= goodBBox.getMaxX();
@@ -356,8 +383,8 @@ void mathDetail::basicConvolve(
         KernelIterator const kernelYVecBegin = kernelYVec.begin();
 
         // buffer for x-convolved data
-        OutImageT buffer(goodBBox.getWidth(), kernel.getHeight());
-        
+        OutImageT buffer(afwGeom::Extent2I(goodBBox.getWidth(), kernel.getHeight()));
+
         // pre-fill x-convolved data buffer with all but one row of data
         int yInd = 0; // during initial fill bufY = inImageY
         int const yPrefillEnd = buffer.getHeight() - 1;
@@ -390,11 +417,11 @@ void mathDetail::basicConvolve(
                 *cnvXIter = kernelDotProduct<OutPixel, OutYIterator, KernelIterator, KernelPixel>(
                     bufYIter, kernelYVecBegin, kernel.getHeight());
             }
-            
+
             // test for done now, instead of the start of the loop,
             // to avoid an unnecessary extra rotation of the kernel Y vector
             if (cnvY >= goodBBox.getMaxY()) break;
-            
+
             // update y indices, including bufY, and rotate the kernel y vector to match
             ++inY;
             bufY = (bufY + 1) % kernel.getHeight();
@@ -420,6 +447,9 @@ void mathDetail::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
+ * @throw lsst::pex::exceptions::InvalidParameterException when GPU acceleration forced on spatially varying kernel
+ * @throw lsst::pex::exceptions::MemoryException when allocation of either CPU or GPU memory allocation fails
+ * @throw lsst::pex::exceptions::RuntimeErrorException when GPU code run fails
  *
  * @ingroup afw
  */
@@ -428,8 +458,10 @@ void mathDetail::convolveWithBruteForce(
         OutImageT &convolvedImage,      ///< convolved %image
         InImageT const& inImage,        ///< %image to convolve
         afwMath::Kernel const& kernel,  ///< convolution kernel
-        bool doNormalize)               ///< if true, normalize the kernel, else use "as is"
+        afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
+    bool doNormalize=convolutionControl.getDoNormalize();
+
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
 
@@ -441,7 +473,7 @@ void mathDetail::convolveWithBruteForce(
     typedef typename OutImageT::SinglePixel OutPixel;
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
-    
+
     int const inImageWidth = inImage.getWidth();
     int const inImageHeight = inImage.getHeight();
     int const kWidth = kernel.getWidth();
@@ -460,9 +492,11 @@ void mathDetail::convolveWithBruteForce(
         pexLog::TTrace<5>("lsst.afw.math.convolve",
             "convolveWithBruteForce: kernel is spatially varying");
 
+        CheckForceGpuOnUnsupportedKernel(convolutionControl);
+
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
-            
+
             InXYLocator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
@@ -479,8 +513,27 @@ void mathDetail::convolveWithBruteForce(
     } else {
         pexLog::TTrace<5>("lsst.afw.math.convolve",
             "convolveWithBruteForce: kernel is spatially invariant");
+
+        CheckForceGpuOnNoGpu(convolutionControl);
+        if (IsGpuBuild()) {
+            if (convolutionControl.getDeviceSelection()==ConvolutionControl::AUTO_GPU_SAFE) {
+                try {
+                    bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
+                    if (isProcessed) return;
+                } catch(GpuMemoryException) { }
+                catch(pexExcept::MemoryException) { }
+                catch(GpuRuntimeErrorException) { }
+            } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
+                bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
+                if (isProcessed) return;                
+                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU) {
+                    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
+                }
+            }
+        }
+
         (void)kernel.computeImage(kernelImage, doNormalize);
-        
+
         for (int inStartY = 0, cnvY = cnvStartY; inStartY < cnvHeight; ++inStartY, ++cnvY) {
             KernelXIterator kernelXIter = kernelImage.x_at(0, 0);
             InXIterator inXIter = inImage.x_at(0, inStartY);
@@ -504,9 +557,8 @@ void mathDetail::convolveWithBruteForce(
 
 /*
  * Explicit instantiation
- *
- * Modelled on ConvolveImage.cc
  */
+/// \cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
@@ -525,7 +577,8 @@ void mathDetail::convolveWithBruteForce(
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::SeparableKernel const&, \
             afwMath::ConvolutionControl const&); NL \
     template void mathDetail::convolveWithBruteForce( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, bool);
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
+            afwMath::ConvolutionControl const&);
 // Instantiate both Image and MaskedImage versions
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
@@ -540,3 +593,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+/// \endcond

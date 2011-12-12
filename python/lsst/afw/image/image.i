@@ -25,21 +25,26 @@
 %{
 #   include "lsst/afw/image/Image.h"
 #   include "lsst/afw/image/ImagePca.h"
+#   include "lsst/afw/image/fits/fits_io.h"
 %}
 
 %ignore lsst::afw::image::ImageBase::operator();
+%ignore lsst::afw::image::ImageBase::get0;
+%ignore lsst::afw::image::ImageBase::set0;
 
 //
 // Must go Before the %include
 //
 %define %imagePtr(NAME, TYPE, PIXEL_TYPE...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Base, lsst::daf::data::LsstBase, lsst::afw::image::ImageBase<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Base, lsst::daf::base::Citizen, lsst::afw::image::ImageBase<PIXEL_TYPE>);
 SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Image<PIXEL_TYPE>);
 SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
+%declareNumPyConverters(lsst::afw::image::ImageBase<PIXEL_TYPE>::Array);
+%declareNumPyConverters(lsst::afw::image::ImageBase<PIXEL_TYPE>::ConstArray);
 %enddef
 
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::base::Citizen, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 %enddef
 
 //
@@ -80,7 +85,16 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
         return self->operator()(x, y, lsst::afw::image::CheckIndices(true));
     }
 
+    void set0(int x, int y, double val) {
+        self->set0(x, y, val, lsst::afw::image::CheckIndices(true));
+    }
+    PIXEL_TYPE get0(int x, int y) {
+        PIXEL_TYPE p = self->get0(x, y, lsst::afw::image::CheckIndices(true));
+        return p;
+    }
+
     %pythoncode {
+
     def Factory(self, *args):
         """Return an Image class of this type
         
@@ -152,6 +166,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %ignore lsst::afw::image::ImageBase::xy_at;
 
 %imagePtr(Image, U, boost::uint16_t);
+%imagePtr(Image, L, boost::uint64_t);
 %imagePtr(Image, I, int);
 %imagePtr(Image, F, float);
 %imagePtr(Image, D, double);
@@ -163,17 +178,22 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %include "lsst/afw/image/Image.h"
 %include "lsst/afw/image/ImagePca.h"
 
+%include "lsst/afw/image/fits/fits_io.h"
+%template(fits_write_imageF) lsst::afw::image::fits_write_image<lsst::afw::image::Image<float> >;
+
 %image(Image, U, boost::uint16_t);
+%image(Image, L, boost::uint64_t);
 %image(Image, I, int);
 %image(Image, F, float);
 %image(Image, D, double);
 
 %mimage(MaskedImage, U, boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%mimage(MaskedImage, L, boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %mimage(MaskedImage, I, int, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %mimage(MaskedImage, F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %mimage(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
-%template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
+%template(vectorBBox) std::vector<lsst::afw::geom::BoxI>;         
 
 %extend lsst::afw::image::Image<boost::uint16_t> {
     %newobject convertF;
@@ -185,6 +205,19 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
         """Alias for convertF"""
 
         return self.convertF(*args)
+    }
+}
+
+%extend lsst::afw::image::Image<boost::uint64_t> {
+    %newobject convertD;
+    lsst::afw::image::Image<double> convertD() {
+       return lsst::afw::image::Image<double>(*self, true);
+    }
+    %pythoncode {
+    def convertDouble(self, *args):
+        """Alias for convertD"""
+
+        return self.convertD(*args)
     }
 }
 

@@ -58,13 +58,13 @@ namespace mathDetail = lsst::afw::math::detail;
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr kernelPtr,               ///< kernel
-        lsst::afw::geom::BoxI const &bbox,      ///< bounding box of region of an image
+        lsst::afw::geom::Box2I const &bbox,      ///< bounding box of region of an image
                                                 ///< for which we want to compute kernel images
                                                 ///< (inclusive and relative to parent image)
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image for which we want to compute kernel images
         bool doNormalize)                       ///< normalize the kernel images?
 :
-    lsst::daf::data::LsstBase::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
@@ -91,7 +91,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr const kernelPtr,         ///< kernel
-        lsst::afw::geom::BoxI const &bbox,      ///< bounding box of region of an image
+        lsst::afw::geom::Box2I const &bbox,      ///< bounding box of region of an image
                                                 ///< for which we want to compute kernel images
                                                 ///< (inclusive and relative to parent image)
         lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image
@@ -101,7 +101,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         ImagePtr topLeftImagePtr,               ///< kernel image and sum at top left of region
         ImagePtr topRightImagePtr)              ///< kernel image and sum at top right of region
 :
-    lsst::daf::data::LsstBase::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
@@ -150,13 +150,13 @@ const {
             return _bbox.getMin();
             break; // paranoia
         case BOTTOM_RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX() + 1, _bbox.getMinY());
+            return afwGeom::Point2I(_bbox.getMaxX() + 1, _bbox.getMinY());
             break; // paranoia
         case TOP_LEFT:
-            return afwGeom::Point2I::make(_bbox.getMinX(), _bbox.getMaxY() + 1);
+            return afwGeom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1);
             break; // paranoia
         case TOP_RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
+            return afwGeom::Point2I(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
             break; // paranoia
         default: {
             std::ostringstream os;
@@ -209,7 +209,7 @@ const {
         ImagePtr tlImagePtr;
         ImagePtr const trImageNullPtr;
 
-        afwGeom::Point2I blCorner = afwGeom::makePointI(this->_bbox.getMinX(), startY);
+        afwGeom::Point2I blCorner = afwGeom::Point2I(this->_bbox.getMinX(), startY);
 
         int remWidth = this->_bbox.getWidth();
         int remXDiv = regionRow.getNX();
@@ -221,7 +221,7 @@ const {
             
             KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
                 _kernelPtr,
-                afwGeom::BoxI(blCorner, afwGeom::Extent2I::make(width, height)),
+                afwGeom::Box2I(blCorner, afwGeom::Extent2I(width, height)),
                 _xy0,
                 _doNormalize,
                 blImagePtr,
@@ -234,7 +234,7 @@ const {
                 regionPtr->getImage(TOP_LEFT);
             }
             
-            blCorner += afwGeom::Extent2I::make(width, 0);
+            blCorner += afwGeom::Extent2I(width, 0);
             blImagePtr = regionPtr->getImage(BOTTOM_RIGHT);
             tlImagePtr = regionPtr->getImage(TOP_RIGHT);
         }
@@ -311,9 +311,9 @@ void mathDetail::KernelImagesForRegion::_moveUp(
         int newHeight)  ///< new height of region
 {
     // move bbox up (this must be done before recomputing the top kernel images)
-    _bbox = afwGeom::BoxI(
-        afwGeom::makePointI(_bbox.getMinX(), _bbox.getMaxY() + 1),
-        afwGeom::makeExtentI(_bbox.getWidth(), newHeight));
+    _bbox = afwGeom::Box2I(
+        afwGeom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
+        afwGeom::Extent2I(_bbox.getWidth(), newHeight));
 
     // swap top and bottom image pointers
     _imagePtrList[BOTTOM_RIGHT].swap(_imagePtrList[TOP_RIGHT]);

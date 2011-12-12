@@ -45,6 +45,11 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/detection/BaseSourceAttributes.h"
+#include "lsst/afw/detection/Measurement.h"
+#include "lsst/afw/detection/Astrometry.h"
+#include "lsst/afw/detection/Shape.h"
+#include "lsst/afw/detection/Photometry.h"
+
 
 /*
  * Avoid bug in lsst/base.h; it's fixed in base 3.1.3 
@@ -66,10 +71,6 @@ namespace afw {
     
 namespace detection {
     class Footprint;
-    template<typename T> class Measurement;
-    class Astrometry;
-    class Photometry;
-    class Shape;
     
 /*! An integer id for each nullable field in Source. */
 enum SourceNullableField {
@@ -106,15 +107,17 @@ public :
     float  getPetroFluxErr() const { return _petroFluxErr; }    
     float  getSky() const { return _sky; }
     float  getSkyErr() const { return _skyErr; }
-    double getRaObject() const { return _raObject; }
-    double getDecObject() const { return _decObject; }
+    lsst::afw::geom::Angle getRaObject() const { return _raObject * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle getDecObject() const { return _decObject * lsst::afw::geom::radians; }
+
+#ifndef SWIG
     CONST_PTR(Footprint) getFootprint() const { return _footprint; }
+    void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
+#endif
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
-    // We have two setFootprint functions for swig 1.43's sake (it can't convert PTR(Foo) to CONST_PTR(Foo))
-    void setFootprint(PTR(Footprint) footprint) { _footprint = footprint; }
-    void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
+
 
     void setPetroFlux(double const petroFlux) { 
         set(_petroFlux, petroFlux, PETRO_FLUX);         
@@ -128,13 +131,27 @@ public :
     void setSkyErr (float const skyErr) {
         set(_skyErr, skyErr, SKY_ERR);
     }
-    void setRaObject(double const raObject) {
-        set(_raObject, raObject, RA_OBJECT);
+    // in radians
+    void setRaObject(lsst::afw::geom::Angle const raObject) {
+        setAngle(_raObject, raObject, RA_OBJECT);
     }
-    void setDecObject(double const decObject) {
-        set(_decObject, decObject, DEC_OBJECT);
+    // in radians
+    void setDecObject(lsst::afw::geom::Angle const decObject) {
+        setAngle(_decObject, decObject, DEC_OBJECT);
     }
-    
+
+    void setRaDecObject(lsst::afw::coord::Coord::ConstPtr radec) {
+        // Convert to LSST-decreed ICRS
+        lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+        setRaObject(icrs.getRa());
+        setDecObject(icrs.getDec());
+    }
+
+    void setAllRaDecFields(lsst::afw::coord::Coord::ConstPtr radec) {
+        setRaDecObject(radec);
+        BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::setAllRaDecFields(radec);
+    }
+
     //overloaded setters
     //Because these fields are not NULLABLE in all sources, 
     //  special behavior must be defined in the derived class
@@ -150,26 +167,91 @@ public :
     void setYAstrom(double const yAstrom) { 
         set(_yAstrom, yAstrom, Y_ASTROM);            
     }
-    void setAstrometry(PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Astrometry>) astrom) {
+    void setAstrometry(PTR(Measurement<Astrometry>) astrom) {
         _astrom = astrom;
     }
-    PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Astrometry>) getAstrometry() const {
+    PTR(Measurement<Astrometry>) getAstrometry() const {
         return _astrom;
     }
-    void setPhotometry(PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Photometry>) photom) {
+    void setPhotometry(PTR(Measurement<Photometry>) photom) {
         _photom = photom;
     }
-    PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Photometry>) getPhotometry() const {
+    PTR(Measurement<Photometry>) getPhotometry() const {
         return _photom;
     }
-    void setShape(PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Shape>) shape) {
+    void setShape(PTR(Measurement<Shape>) shape) {
         _shape = shape;
     }
-    PTR(lsst::afw::detection::Measurement<lsst::afw::detection::Shape>) getShape() const {
+    PTR(Measurement<Shape>) getShape() const {
         return _shape;
     }
     
     bool operator==(Source const & d) const;
+
+    void extractAstrometry(Astrometry const& astrom) {
+        setXAstrom(astrom.getX());
+        setXAstromErr(astrom.getXErr());
+        setYAstrom(astrom.getY());
+        setYAstromErr(astrom.getYErr());
+        // XXX flags
+    }
+
+    void extractShape(Shape const& shape) {
+        setIxx(shape.getIxx());       // <xx>
+        setIxxErr(shape.getIxxErr()); // sqrt(Var<xx>)
+        setIxy(shape.getIxy());       // <xy>
+        setIxyErr(shape.getIxyErr()); // sign(Covar(x, y))*sqrt(|Covar(x, y)|))        
+        setIyy(shape.getIyy());       // <yy>
+        setIyyErr(shape.getIyyErr()); // sqrt(Var<yy>)
+        
+        setPsfIxx(shape.getPsfIxx());       // <xx>
+        setPsfIxxErr(shape.getPsfIxxErr()); // sqrt(Var<xx>)
+        setPsfIxy(shape.getPsfIxy());       // <xy>
+        setPsfIxyErr(shape.getPsfIxyErr()); // sign(Covar(x, y))*sqrt(|Covar(x, y)|))        
+        setPsfIyy(shape.getPsfIyy());       // <yy>
+        setPsfIyyErr(shape.getPsfIyyErr()); // sqrt(Var<yy>)
+        
+        setE1(shape.getE1());
+        setE1Err(shape.getE1Err());
+        setE2(shape.getE2());
+        setE2Err(shape.getE2Err());
+        setShear1(shape.getShear1());
+        setShear1Err(shape.getShear1Err());
+        setShear2(shape.getShear2());
+        setShear2Err(shape.getShear2Err());
+        
+        setResolution(shape.getResolution());
+        setShapeStatus(shape.getShapeStatus());
+        setSigma(shape.getSigma());
+        setSigmaErr(shape.getSigmaErr());
+
+        // XXX flags
+    }
+
+    void extractPsfPhotometry(Photometry const& phot) {
+        setPsfFlux(phot.getFlux());
+        setPsfFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
+    void extractModelPhotometry(Photometry const& phot) {
+        setModelFlux(phot.getFlux());
+        setModelFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
+    void extractApPhotometry(Photometry const& phot) {
+        setApFlux(phot.getFlux());
+        setApFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
+    void extractInstPhotometry(Photometry const& phot) {
+        setInstFlux(phot.getFlux());
+        setInstFluxErr(phot.getFluxErr());
+
+        // XXX flags
+    }
 
 private :
     CONST_PTR(Footprint) _footprint;
@@ -191,8 +273,8 @@ private :
         fpSerialize(ar, _skyErr);
 
         BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
-        if (version > 0) {
-            ar & _astrom & _photom & _shape;
+        if (version == 1 || version == 2) {
+            ar & make_nvp("astrom", _astrom) & make_nvp("photom", _photom) & make_nvp("shape", _shape);
         }
     }
 
@@ -248,7 +330,7 @@ private:
 }}}  // namespace lsst::afw::detection
 
 #ifndef SWIG
-BOOST_CLASS_VERSION(lsst::afw::detection::Source, 2)
+BOOST_CLASS_VERSION(lsst::afw::detection::Source, 3)
 #endif
 
 #endif // LSST_AFW_DETECTION_SOURCE_H

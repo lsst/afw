@@ -25,14 +25,14 @@
 #include "lsst/afw/geom/AffineTransform.h"
 %}
 
+%declareNumPyConverters(lsst::afw::geom::AffineTransform::ParameterVector);
+%declareNumPyConverters(lsst::afw::geom::AffineTransform::Matrix);
+
 SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
 
 %rename(__mul__) lsst::afw::geom::AffineTransform::operator*;
 %ignore lsst::afw::geom::AffineTransform::operator[];
-%ignore lsst::afw::geom::AffineTransform::getMatrix;
 %ignore lsst::afw::geom::AffineTransform::dTransform;
-%ignore lsst::afw::geom::AffineTransform::getVector;
-%ignore lsst::afw::geom::AffineTransform::setVector;
 %ignore lsst::afw::geom::AffineTransform::operator=;
 
 %copyctor lsst::afw::geom::AffineTransform;
@@ -53,10 +53,27 @@ SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
         (*self)[lsst::afw::geom::AffineTransform::Y] = y;
     }
     
+    %feature("shadow") _setitem_nochecking %{
+        def __setitem__(self, k, v):
+            if k < 0 or k > 5: raise IndexError
+            $action(self, k, v)
+    %}
     void _setitem_nochecking(int i, double value) {
         self->operator[](i) = value;
     }
-        
+    
+    %feature("shadow") _getitem_nochecking %{
+        def __getitem__(self, k):
+            try:
+                i,j = k
+                if i < 0 or i > 2: raise IndexError
+                if j < 0 or j > 2: raise IndexError
+                return $action(self, i,j)
+            except TypeError:
+                if k < 0 or k > 5: raise IndexError
+                return $action(self, k)
+
+    %}
     double _getitem_nochecking(int row, int col) {
         return (self->getMatrix())(row, col);
     }
@@ -65,26 +82,9 @@ SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
     }   
          
     %pythoncode {
-    def getMatrix(self):
-        import numpy
-        return numpy.matrix(((self[0,0], self[0,1], self[0,2]),
-                             (self[1,0], self[1,1], self[1,2]),
-                             (      0.0,       0.0,       1.0)))
-    def __getitem__(self, k):
-        try:
-            i,j = k
-            if i < 0 or i > 2: raise IndexError
-            if j < 0 or j > 2: raise IndexError
-            return self._getitem_nochecking(i,j)
-        except TypeError:
-            if k < 0 or k > 5: raise IndexError
-            return self._getitem_nochecking(k)
-    def __setitem__(self, k, v):
-        if k < 0 or k > 5: raise IndexError
-        self._setitem_nochecking(k, v)
-    def __str__(self):
-        return str(self.getMatrix())
-    def __repr__(self):
-        return "AffineTransform(\n%r\n)" % (self.getMatrix(),)
+        def __str__(self):
+            return str(self.getMatrix())
+        def __repr__(self):
+            return "AffineTransform(\n%r\n)" % (self.getMatrix(),)
     }
 }

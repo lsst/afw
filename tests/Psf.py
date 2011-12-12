@@ -23,6 +23,7 @@ import lsst.afw.detection as afwDetect
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
+import numpy
 
 try:
     type(verbose)
@@ -49,7 +50,7 @@ class dgPsfTestCase(unittest.TestCase):
     def testComputeImage(self):
         """Test the computation of the PSF's image at a point"""
 
-        ccdXY = afwGeom.makePointD(0, 0)
+        ccdXY = afwGeom.Point2D(0, 0)
         kIm = self.psf.computeImage(ccdXY)
 
         if False:
@@ -78,8 +79,8 @@ class dgPsfTestCase(unittest.TestCase):
         """Test the computation of the PSF's image at a point"""
 
         color = afwImage.Color(1.0)
-        ccdXY = afwGeom.makePointD(0, 0)
-        dimen = afwGeom.makeExtentI(self.ksize, self.ksize)
+        ccdXY = afwGeom.Point2D(0, 0)
+        dimen = afwGeom.Extent2I(self.ksize, self.ksize)
 
         kIm = self.psf.computeImage(ccdXY)
         self.assertTrue(kIm.getWidth() == self.ksize)
@@ -94,6 +95,39 @@ class dgPsfTestCase(unittest.TestCase):
         kIm = self.psf.computeImage(ccdXY, False)
 
         self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.SUM).getValue(), 1.0)
+
+    def testComputeImage3(self):
+        """Test the computation of the PSF's image at a point for non-native sizes"""
+        #
+        # First an analytic Kernel
+        #
+        ksize = 15
+        aPsf = afwDetect.createPsf("Kernel",
+                                   afwMath.AnalyticKernel(ksize, ksize, afwMath.GaussianFunction2D(1, 1)))
+        #
+        # Then an image-based Kernel
+        #
+        iPsf = afwDetect.createPsf("Kernel", afwMath.FixedKernel(aPsf.computeImage()))
+
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                dimen = afwGeom.Extent2I(ksize + 2*dx, ksize + 2*dy)
+
+                aIm = aPsf.computeImage(dimen)
+                self.assertTrue(aIm.getDimensions() == dimen)
+
+                iIm = iPsf.computeImage(dimen)
+                self.assertTrue(iIm.getDimensions() == dimen)
+
+    def testLocalPsf(self):
+        image = self.psf.computeImage(afwGeom.Point2D(0.0, 0.0), False)
+        local = self.psf.getLocalPsf(afwGeom.Point2D(0.0, 0.0))
+        footprint = afwDetect.Footprint(image.getBBox(afwImage.PARENT))
+        vector = numpy.zeros(footprint.getArea(), dtype=float)
+        local.evaluatePointSource(footprint, vector)
+        image2 = afwImage.ImageD(image.getBBox(afwImage.PARENT))
+        afwDetect.expandArray(footprint, vector, image2.getArray(), image2.getXY0())
+        self.assert_(numpy.allclose(image.getArray(), image2.getArray(), atol=1E-8, rtol=1E-8))
 
     def testKernel(self):
         """Test the creation of the dgPsf's kernel"""
@@ -149,11 +183,11 @@ class dgPsfTestCase(unittest.TestCase):
             if fy >= 0.5:
                 fy -= 1.0
 
-            im = self.psf.computeImage(afwGeom.makePointD(x, y)).convertF()
+            im = self.psf.computeImage(afwGeom.Point2D(x, y)).convertF()
 
             stamps.append(im.Factory(im, True))
             trueCenters.append([xcen + fx, ycen + fy])
-            
+
         if display:
             mos = displayUtils.Mosaic()     # control mosaics
             ds9.mtv(mos.makeMosaic(stamps))
@@ -162,12 +196,12 @@ class dgPsfTestCase(unittest.TestCase):
                 bbox = mos.getBBox(i)
 
                 ds9.dot("+",
-                        bbox.getX0() + xcen, bbox.getY0() + ycen, ctype = ds9.RED, size = 1)
+                        bbox.getMinX() + xcen, bbox.getMinY() + ycen, ctype = ds9.RED, size = 1)
                 ds9.dot("+",
-                        bbox.getX0() + trueCenters[i][0], bbox.getY0() + trueCenters[i][1])
+                        bbox.getMinX() + trueCenters[i][0], bbox.getMinY() + trueCenters[i][1])
 
                 ds9.dot("%.2f, %.2f" % (trueCenters[i][0], trueCenters[i][1]),
-                        bbox.getX0() + xcen, bbox.getY0() + 2)
+                        bbox.getMinX() + xcen, bbox.getMinY() + 2)
 
     def testKernelPsf(self):
         """Test creating a Psf from a Kernel"""
@@ -182,12 +216,12 @@ class dgPsfTestCase(unittest.TestCase):
                                    afwMath.AnalyticKernel(ksize, ksize,
                                                           afwMath.GaussianFunction2D(sigma1, sigma1)))
 
-        kIm = kPsf.computeImage(afwGeom.makePointD(x, y))
+        kIm = kPsf.computeImage(afwGeom.Point2D(x, y))
         #
         # And now via the dgPsf model
         #
         dgPsf = afwDetect.createPsf("DoubleGaussian", ksize, ksize, sigma1)
-        dgIm = dgPsf.computeImage(afwGeom.makePointD(x, y))
+        dgIm = dgPsf.computeImage(afwGeom.Point2D(x, y))
         #
         # Check that they're the same
         #

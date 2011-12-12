@@ -42,10 +42,28 @@ public:
                                                       lsst::afw::detection::Schema::DOUBLE, 1));
     }
 
+    virtual Ptr clone() const {
+        if (empty()) {
+            return boost::make_shared<Photometry>(getFlux(), getFluxErr());
+        }
+        return Measurement<Photometry>::clone();
+    }
+
+    static Ptr null(void) {
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        return boost::make_shared<Photometry>(NaN, NaN);
+    }
+
     /// Return the number of fluxes available (> 1 iff an array)
     virtual int getNFlux() const {
         return 1;
     }
+
+    /// Return any flag from the measurement algorithm
+    virtual boost::int64_t getFlag() const {
+        return 0;
+    }
+
     /// Return the flux
     virtual double getFlux() const {
         return lsst::afw::detection::Measurement<Photometry>::get<FLUX, double>();
@@ -67,18 +85,13 @@ public:
     virtual double getFluxErr(int i) const {
         return lsst::afw::detection::Measurement<Photometry>::get<FLUX_ERR, double>(i);
     }
-    /// Return the radius used to measure the flux (if an array)
-    virtual double getRadius(int i) const {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
 
     virtual ::std::ostream &output(std::ostream &os) const;
+    virtual Photometry::Ptr average() const;
 
 private:
     LSST_SERIALIZE_PARENT(lsst::afw::detection::Measurement<Photometry>)
 };
 }}}
-
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::Photometry)
 
 #endif

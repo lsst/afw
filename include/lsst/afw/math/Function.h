@@ -43,7 +43,7 @@
 #include "boost/serialization/void_cast.hpp"
 #include "boost/serialization/export.hpp"
 
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {
@@ -71,6 +71,9 @@ using boost::serialization::make_nvp;
      *   using this->_params or this->getParams() to reference the parameters
      * - If the function is a linear combination of parameters then override the function isLinearCombination.
      *
+     * If you wish to cache any information you may use the _isCacheValid flag;
+     * this is automatically set false whenever parameters are changed.
+     *
      * Design Notes:
      * The reason these functions exist (rather than using a pre-existing function class,
      * such as Functor in VisualWorkbench) is because the Kernel class requires function
@@ -81,7 +84,7 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class Function : public lsst::daf::data::LsstBase {
+    class Function : public lsst::daf::base::Citizen {
     
     public:
         /**
@@ -92,18 +95,20 @@ using boost::serialization::make_nvp;
         explicit Function(
             unsigned int nParams)   ///< number of function parameters
         :
-            lsst::daf::data::LsstBase(typeid(this)),
-            _params(nParams)
+            lsst::daf::base::Citizen(typeid(this)),
+            _params(nParams),
+            _isCacheValid(false)
         {}
 
         /**
          * @brief Construct a Function given the function parameters.
          */
         explicit Function(
-            std::vector<double> const &params)
+            std::vector<double> const &params)   ///< function parameters
         :
-            lsst::daf::data::LsstBase(typeid(this)),
-            _params(params)   ///< function parameters
+            lsst::daf::base::Citizen(typeid(this)),
+            _params(params),
+            _isCacheValid(false)
         {}
         
         virtual ~Function() {}
@@ -144,7 +149,7 @@ using boost::serialization::make_nvp;
          *
          * @warning: subclasses must override if true.
          */
-        virtual bool isLinearCombination() const { return false; };
+        virtual bool isLinearCombination() const { return false; }
         
         /**
          * @brief Set one function parameter without range checking
@@ -153,6 +158,7 @@ using boost::serialization::make_nvp;
             unsigned int ind,   ///< index of parameter
             double newValue)    ///< new value for parameter
         {
+            _isCacheValid = false;
             _params[ind] = newValue;
         }
         
@@ -170,6 +176,7 @@ using boost::serialization::make_nvp;
                     (boost::format("params has %d entries instead of %d") % \
                     params.size() % _params.size()).str());
             }
+            _isCacheValid = false;
             _params = params;
         }
     
@@ -191,11 +198,16 @@ using boost::serialization::make_nvp;
 
     protected:
         std::vector<double> _params;
+        mutable bool _isCacheValid;
 
-    private:
+        /* Default constructor: intended only for serialization */
+        explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}   
+
+    private: // serialization support
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("params", _params);
         }
     };
 
@@ -241,7 +253,7 @@ using boost::serialization::make_nvp;
          * so one can obtain a copy of an actual function
          * instead of a useless copy of the base class.
          *
-         * Every non-virtual function must override this method.
+         * Every concrete subclass must override this method.
          *
          * @return a pointer to a deep copy of the function
          */
@@ -255,15 +267,18 @@ using boost::serialization::make_nvp;
 
         virtual void computeCache(int const n) {}
 
-    private:
+    protected:
+        /* Default constructor: intended only for serialization */
+        explicit Function1() : Function<ReturnT>() {}    
+    
+    private: // serialization
         friend class boost::serialization::access;
+#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
-            boost::serialization::void_cast_register<
-                Function1<ReturnT>, Function<ReturnT> >(
-                    static_cast< Function1<ReturnT>* >(0),
-                    static_cast< Function<ReturnT>* >(0));
+        void serialize(Archive& ar, unsigned const int version) {
+            ar & make_nvp("fn", boost::serialization::base_object<Function<ReturnT> >(*this));
         }
+#endif
     };    
     
     /**
@@ -328,15 +343,154 @@ using boost::serialization::make_nvp;
                               "getDFuncDParameters is not implemented for this class");
         }
 
+    protected:
+        /* Default constructor: intended only for serialization */
+        explicit Function2() : Function<ReturnT>() {}    
+    
     private:
         friend class boost::serialization::access;
-#ifndef SWIG
+#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned const int version) {
-            boost::serialization::void_cast_register<
-                Function2<ReturnT>, Function<ReturnT> >(
-                    static_cast< Function2<ReturnT>* >(0),
-                    static_cast< Function<ReturnT>* >(0));
+            ar & make_nvp("fn", boost::serialization::base_object<Function<ReturnT> >(*this));
+        }
+#endif
+    };
+
+
+    /**
+     * @brief Base class for 2-dimensional polynomials of the form:
+     *
+     * f(x,y) =   c0 f0(x) f0(y)                                        (0th order)
+     *          + c1 f1(x) f0(x) + c2 f0(x) f1(y)                       (1st order)
+     *          + c3 f2(x) f0(y) + c4 f1(x) f1(y) + c5 f0(x) f2(y)      (2nd order)
+     *          + ...
+     *
+     * and typically f0(x) = 1
+     *
+     * @ingroup afw
+     */
+    template<typename ReturnT>
+    class BasePolynomialFunction2: public Function2<ReturnT> {
+    public:
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
+
+        /**
+         * @brief Construct a polynomial function of specified order.
+         *
+         * The polynomial will have (order + 1) * (order + 2) / 2 coefficients
+         *
+         * The parameters are initialized to zero.
+         */
+        explicit BasePolynomialFunction2(
+            unsigned int order) ///< order of polynomial (0 for constant)
+        :
+            Function2<ReturnT>(BasePolynomialFunction2::nParametersFromOrder(order)),
+            _order(order)
+        {}
+
+        /**
+         * @brief Construct a polynomial function with specified parameters.
+         *
+         * The order of the polynomial is determined from the length of the params vector
+         * (see orderFromNParameters) and only certain lengths are suitable: 1, 3, 6, 10, 15...
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if params length is unsuitable
+         */
+        explicit BasePolynomialFunction2(
+            std::vector<double> params) ///< polynomial coefficients
+        :
+            Function2<ReturnT>(params),
+            _order(BasePolynomialFunction2::orderFromNParameters(static_cast<int>(params.size())))
+        {}
+        
+        virtual ~BasePolynomialFunction2() {}
+        
+        /**
+         * @brief Get the polynomial order
+         */
+        int getOrder() const { return _order; }
+       
+        virtual bool isLinearCombination() const { return true; }
+        
+        /**
+         * @brief Compute number of parameters from polynomial order.
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if order < 0
+         */
+        static int nParametersFromOrder(int order) {
+            if (order < 0) {
+                std::ostringstream os;
+                os << "order=" << order << " invalid: must be >= 0";
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            }
+            return (order + 1) * (order + 2) / 2;
+        }
+        
+        /**
+         * @brief Compute polynomial order from the number of parameters
+         *
+         * Only certain values of nParameters are acceptable, including:
+         * nParameters order
+         *      1        0
+         *      3        1
+         *      6        2
+         *     10        3
+         *     15        4
+         *    ...
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if nParameters is invalid
+         */
+        static int orderFromNParameters(int nParameters) {
+            int order = static_cast<int>(
+                0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(nParameters))))) / 2.0));
+            if (nParameters != BasePolynomialFunction2::nParametersFromOrder(order)) {
+                std::ostringstream os;
+                os << "nParameters=" << nParameters << " invalid: order is not an integer";
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            }
+            return order;
+        }
+        
+        /**
+         * Return the derivative of the Function with respect to its parameters
+         *
+         * Because this is a polynomial, c0 F0(x,y) + c1 F1(x,y) + c2 F2(x,y) + ...
+         * we can set ci = 0 for all i except the parameter of interest and evaluate.
+         * This isn't necessarily the most efficient algorithm, but it's general,
+         * and you can override it if it isn't suitable for your particular subclass.
+         */
+        virtual std::vector<double> getDFuncDParameters(double x, double y) const {
+            unsigned int const numParams = this->getNParameters(); // Number of parameters
+            std::vector<double> deriv(numParams); // Derivatives, to return
+
+            Function2Ptr dummy = this->clone(); // Dummy function to evaluate for derivatives
+            for (unsigned int i = 0; i < numParams; ++i) {
+                dummy->setParameter(i, 0.0);
+            }
+
+            for (unsigned int i = 0; i < numParams; ++i) {
+                dummy->setParameter(i, 1.0);
+                deriv[i] = (*dummy)(x, y);
+                dummy->setParameter(i, 0.0);
+            }
+
+            return deriv;
+        }
+
+   protected:
+        int _order; ///< order of polynomial
+
+        /* Default constructor: intended only for serialization */
+        explicit BasePolynomialFunction2() : Function2<ReturnT>(1), _order(0) {}    
+
+    private:
+        friend class boost::serialization::access;
+#ifndef SWIG // SWIG doesn't like base_object
+        template <class Archive>
+        void serialize(Archive& ar, unsigned const int version) {
+            ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
+            ar & make_nvp("order", _order);
         }
 #endif
     };
@@ -357,12 +511,12 @@ using boost::serialization::make_nvp;
 
     private:
         friend class boost::serialization::access;
+#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
-            ar & make_nvp("fn",
-                          boost::serialization::base_object<
-                          Function<ReturnT> >(*this));
+            ar & make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT> >(*this));
         }
+#endif
     };
 
     /**
@@ -380,35 +534,15 @@ using boost::serialization::make_nvp;
 
     private:
         friend class boost::serialization::access;
+#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
-            ar & make_nvp("fn",
-                          boost::serialization::base_object<
-                          Function<ReturnT> >(*this));
+            ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
         }
+#endif
     };
 
+
 }}}   // lsst::afw::math
-
-namespace boost {
-namespace serialization {
-
-template <class Archive, typename ReturnT>
-inline void save_construct_data(Archive& ar,
-                                lsst::afw::math::Function<ReturnT> const* f,
-                                unsigned int const version) {
-    ar << make_nvp("params", f->getParameters());
-}
-
-template <class Archive, typename ReturnT>
-inline void load_construct_data(Archive& ar,
-                                lsst::afw::math::Function<ReturnT>* f,
-                                unsigned int const version) {
-    std::vector<double> params;
-    ar >> make_nvp("params", params);
-    ::new(f) lsst::afw::math::Function<ReturnT>(params);
-}
-
-}}
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTION_H

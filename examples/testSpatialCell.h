@@ -25,6 +25,8 @@
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/image/Image.h"
 
 /************************************************************************************************************/
 /*
@@ -36,16 +38,16 @@ public:
     typedef lsst::afw::image::Image<float> ImageT;
 
     ExampleCandidate(float const xCenter, float const yCenter,
-                       ImageT::ConstPtr parent, lsst::afw::image::BBox bbox);
+                       ImageT::ConstPtr parent, lsst::afw::geom::Box2I bbox);
 
-    lsst::afw::image::BBox getBBox() const { return _bbox; }
+    lsst::afw::geom::Box2I getBBox() const { return _bbox; }
 
     double getCandidateRating() const;
 
     ImageT::ConstPtr getImage() const;
 private:
     ExampleCandidate::ImageT::ConstPtr _parent;
-    lsst::afw::image::BBox _bbox;
+    lsst::afw::geom::Box2I _bbox;
 };
 
 /************************************************************************************************************/
@@ -63,9 +65,8 @@ public:
     void processCandidate(lsst::afw::math::SpatialCellCandidate *candidate) {
         ++_n;
 
-        int w, h;
-        boost::tie(w, h) = dynamic_cast<ExampleCandidate *>(candidate)->getBBox().getDimensions();
-        _npix += w*h;
+        lsst::afw::geom::Box2I box = dynamic_cast<ExampleCandidate *>(candidate)->getBBox();
+        _npix += box.getArea();
     }
 
     int getN() const { return _n; }

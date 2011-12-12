@@ -31,10 +31,13 @@
 //##====----------------                                ----------------====##/
 
 #include <memory>
+#include <vector>
 
 #include "boost/format.hpp"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -43,6 +46,7 @@
 #include "lsst/afw/formatters/SourceFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/detection/Source.h"
+#include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Measurement.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
@@ -56,6 +60,7 @@ using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::DbStorage;
 using lsst::daf::persistence::DbTsvStorage;
 using lsst::daf::persistence::Storage;
+using lsst::daf::persistence::XmlStorage;
 using lsst::pex::policy::Policy;
 using lsst::afw::detection::Source;
 using lsst::afw::detection::SourceSet;
@@ -63,108 +68,10 @@ using lsst::afw::detection::PersistableSourceVector;
 using lsst::afw::image::Filter;
 
 namespace form = lsst::afw::formatters;
+namespace afwGeom = lsst::afw::geom;
 
 
 namespace lsst { namespace afw { namespace formatters { namespace {
-
-template <typename FloatT> inline FloatT _radians(FloatT degrees) {
-    return static_cast<FloatT>(degrees * (M_PI/180.0));
-}
-template <typename FloatT> inline FloatT _degrees(FloatT radians) {
-    return static_cast<FloatT>(radians * (180.0/M_PI));
-}
-
-template <typename FloatT>
-class DegreeValue {
-public:
-    DegreeValue() : _value(0.0) { }
-    DegreeValue(FloatT const & radians) : _value(_degrees(radians)) { }
-    DegreeValue & operator=(FloatT const & radians) {
-        _value = _degrees(radians);
-        return *this;
-    }
-    FloatT * operator&() { return &_value; }
-    FloatT const * operator&() const { return &_value; }
-    operator FloatT() const {
-        return _radians(_value);
-    }
-    void rangeReduce() {
-        double d = std::fmod(_value, 360.0);
-        _value = (d < 0.0) ? d + 360.0 : d;
-    }
-private:
-    FloatT _value;
-};
-
-struct FieldsToConvert {
-    DegreeValue<double> ra;
-    DegreeValue<double> raFlux;
-    DegreeValue<double> raPeak;
-    DegreeValue<double> raAstrom;
-    DegreeValue<double> raObject;
-    DegreeValue<double> dec;
-    DegreeValue<double> decFlux;
-    DegreeValue<double> decPeak;
-    DegreeValue<double> decAstrom;
-    DegreeValue<double> decObject;
-    DegreeValue<float> raErrForDetection;
-    DegreeValue<float> raErrForWcs;
-    DegreeValue<float> raFluxErr;
-    DegreeValue<float> raAstromErr;
-    DegreeValue<float> decErrForDetection;
-    DegreeValue<float> decErrForWcs;
-    DegreeValue<float> decFluxErr;
-    DegreeValue<float> decAstromErr;
-
-    FieldsToConvert() { }
-    FieldsToConvert(Source const & s) :
-        ra(s.getRa()),
-        raFlux(s.getRaFlux()),
-        raPeak(s.getRaPeak()),
-        raAstrom(s.getRaAstrom()),
-        raObject(s.getRaObject()),
-        dec(s.getDec()),
-        decFlux(s.getDecFlux()),
-        decPeak(s.getDecPeak()),
-        decAstrom(s.getDecAstrom()),
-        decObject(s.getDecObject()),
-        raErrForDetection(s.getRaErrForDetection()),
-        raErrForWcs(s.getRaErrForWcs()),
-        raFluxErr(s.getRaFluxErr()),
-        raAstromErr(s.getRaAstromErr()),
-        decErrForDetection(s.getDecErrForDetection()),
-        decErrForWcs(s.getDecErrForWcs()),
-        decFluxErr(s.getDecFluxErr()),
-        decAstromErr(s.getDecAstromErr())
-    {
-        ra.rangeReduce();
-        raFlux.rangeReduce();
-        raPeak.rangeReduce();
-        raAstrom.rangeReduce();
-        raObject.rangeReduce();
-    }
-
-    void fill(Source & s) const {
-        s.setRa(ra);
-        s.setRaFlux(raFlux);
-        s.setRaPeak(raPeak);
-        s.setRaAstrom(raAstrom);
-        s.setRaObject(raObject);
-        s.setDec(dec);
-        s.setDecFlux(decFlux);
-        s.setDecPeak(decPeak);
-        s.setDecAstrom(decAstrom);
-        s.setDecObject(decObject);
-        s.setRaErrForDetection(raErrForDetection);
-        s.setRaErrForWcs(raErrForWcs);
-        s.setRaFluxErr(raFluxErr);
-        s.setRaAstromErr(raAstromErr);
-        s.setDecErrForDetection(decErrForDetection);
-        s.setDecErrForWcs(decErrForWcs);
-        s.setDecFluxErr(decFluxErr);
-        s.setDecAstromErr(decAstromErr);
-    }
-};
 
 class Binder {
 public:
@@ -241,6 +148,23 @@ inline static void insertFp(T & db, F const & val, char const * const col, bool 
 }
 
 
+#define INSERT_RADEC(getra, getdec, raname, decname)                \
+    insertFp(db, d.getra().asDegrees(),  raname);                       \
+    insertFp(db, d.getdec().asDegrees(), decname)
+
+#define INSERT_RADEC_N(getra, getdec, raname, decname, rafield, decfield)  \
+    insertFp(db, d.getra().asDegrees(),  raname, d.isNull(det::rafield)); \
+    insertFp(db, d.getdec().asDegrees(), decname, d.isNull(det::decfield))
+
+#define INSERT_RADEC_ERR(getra, getdec, raname, decname)            \
+    insertFp(db, static_cast<float>(d.getra().asDegrees()),  raname);   \
+    insertFp(db, static_cast<float>(d.getdec().asDegrees()), decname)
+
+#define INSERT_RADEC_ERR_N(getra, getdec, raname, decname, rafield, decfield) \
+    insertFp(db, static_cast<float>(d.getra().asDegrees()),  raname, d.isNull(det::rafield)); \
+    insertFp(db, static_cast<float>(d.getdec().asDegrees()), decname, d.isNull(det::decfield))
+
+
 /*!
     Inserts a single Source into a database table using \a db
     (an instance of lsst::daf::persistence::DbStorage or subclass thereof).
@@ -248,9 +172,6 @@ inline static void insertFp(T & db, F const & val, char const * const col, bool 
 template <typename T>
 void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
 {
-    // convert from radians to degrees
-    FieldsToConvert cnv(d);
-
     db.template setColumn<boost::int64_t>("sourceId", d._id);
 
     if (!d.isNull(det::AMP_EXPOSURE_ID)) {
@@ -275,38 +196,31 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
 
     db.template setColumn<boost::int32_t>("procHistoryID", d._procHistoryId);
 
-    insertFp(db, *&cnv.ra, "ra");
-    insertFp(db, *&cnv.raErrForDetection, "raSigmaForDetection", d.isNull(det::RA_ERR_FOR_DETECTION));
-    insertFp(db, *&cnv.raErrForWcs, "raSigmaForWcs");
-    insertFp(db, *&cnv.dec, "decl");
-    insertFp(db, *&cnv.decErrForDetection, "declSigmaForDetection", d.isNull(det::DEC_ERR_FOR_DETECTION));
-    insertFp(db, *&cnv.decErrForWcs, "declSigmaForWcs");
+
+    INSERT_RADEC(getRa, getDec, "ra", "decl");
+    INSERT_RADEC_ERR_N(getRaErrForDetection, getDecErrForDetection, "raSigmaForDetection", "declSigmaForDetection", RA_ERR_FOR_DETECTION, DEC_ERR_FOR_DETECTION);
+    INSERT_RADEC_ERR(getRaErrForWcs, getDecErrForWcs, "raSigmaForWcs", "declSigmaForWcs");
+
+    INSERT_RADEC_N(getRaFlux, getDecFlux, "raFlux", "declFlux", RA_FLUX, DEC_FLUX);
+    INSERT_RADEC_ERR_N(getRaFluxErr, getDecFluxErr, "raFluxSigma", "declFluxSigma", RA_FLUX_ERR, DEC_FLUX_ERR);
+
+    INSERT_RADEC_N(getRaPeak, getDecPeak, "raPeak", "declPeak", RA_PEAK, DEC_PEAK);
+
+    INSERT_RADEC_N(getRaAstrom, getDecAstrom, "raAstrom", "declAstrom", RA_ASTROM, DEC_ASTROM);
+    INSERT_RADEC_ERR_N(getRaAstromErr, getDecAstromErr, "raAstromSigma", "declAstromSigma", RA_ASTROM_ERR, DEC_ASTROM_ERR);
+
+    INSERT_RADEC_N(getRaObject, getDecObject, "raObject", "declObject", RA_OBJECT, DEC_OBJECT);
 
     insertFp(db, d._xFlux, "xFlux", d.isNull(det::X_FLUX));
     insertFp(db, d._xFluxErr, "xFluxSigma", d.isNull(det::X_FLUX_ERR));
     insertFp(db, d._yFlux, "yFlux", d.isNull(det::Y_FLUX));
     insertFp(db, d._yFluxErr, "yFluxSigma", d.isNull(det::Y_FLUX_ERR));
-    insertFp(db, *&cnv.raFlux, "raFlux", d.isNull(det::RA_FLUX));
-    insertFp(db, *&cnv.raFluxErr, "raFluxSigma", d.isNull(det::RA_FLUX_ERR));
-    insertFp(db, *&cnv.decFlux, "declFlux", d.isNull(det::DEC_FLUX));
-    insertFp(db, *&cnv.decFluxErr, "declFluxSigma", d.isNull(det::DEC_FLUX_ERR));
-
     insertFp(db, d._xPeak, "xPeak", d.isNull(det::X_PEAK));
     insertFp(db, d._yPeak, "yPeak", d.isNull(det::Y_PEAK));
-    insertFp(db, *&cnv.raPeak, "raPeak", d.isNull(det::RA_PEAK));
-    insertFp(db, *&cnv.decPeak, "declPeak", d.isNull(det::DEC_PEAK));
-
     insertFp(db, d._xAstrom, "xAstrom", d.isNull(det::X_ASTROM));
     insertFp(db, d._xAstromErr, "xAstromSigma", d.isNull(det::X_ASTROM_ERR));
     insertFp(db, d._yAstrom, "yAstrom", d.isNull(det::Y_ASTROM));
     insertFp(db, d._yAstromErr, "yAstromSigma", d.isNull(det::Y_ASTROM_ERR));
-    insertFp(db, *&cnv.raAstrom, "raAstrom", d.isNull(det::RA_ASTROM));
-    insertFp(db, *&cnv.raAstromErr, "raAstromSigma", d.isNull(det::RA_ASTROM_ERR));
-    insertFp(db, *&cnv.decAstrom, "declAstrom", d.isNull(det::DEC_ASTROM));
-    insertFp(db, *&cnv.decAstromErr, "declAstromSigma", d.isNull(det::DEC_ASTROM_ERR));
-
-    insertFp(db, *&cnv.raObject, "raObject", d.isNull(det::RA_OBJECT));
-    insertFp(db, *&cnv.decObject, "declObject", d.isNull(det::DEC_OBJECT));
 
     insertFp(db, d._taiMidPoint, "taiMidPoint"); 
     insertFp(db, d._taiRange, "taiRange", d.isNull(det::TAI_RANGE));
@@ -387,6 +301,11 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d)
     db.insertRow();
 }
 
+#undef INSERT_RADEC
+#undef INSERT_RADEC_N
+#undef INSERT_RADEC_ERR
+#undef INSERT_RADEC_ERR_N
+
 //! \cond
 template void form::SourceVectorFormatter::insertRow<DbStorage>   (DbStorage & db,    Source const &d);
 template void form::SourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage & db, Source const &d);
@@ -401,27 +320,27 @@ void form::SourceVectorFormatter::delegateSerialize(
 ) {  
     PersistableSourceVector * p = dynamic_cast<PersistableSourceVector*>(persistable);
 
-    archive & boost::serialization::base_object<Persistable>(*p);
+    archive & make_nvp("persistable", boost::serialization::base_object<Persistable>(*p));
 
     SourceSet::size_type sz;
 
     if (Archive::is_loading::value) {        
         Source data;        
-        archive & sz;
+        archive & make_nvp("size", sz);
         p->_sources.clear();
         p->_sources.reserve(sz);
         for (; sz > 0; --sz) {
-            archive & data;
+            archive & make_nvp("data", data);
             Source::Ptr sourcePtr(new Source(data));
             p->_sources.push_back(sourcePtr);
         }
     } else {
         sz = p->_sources.size();
-        archive & sz;
+        archive & make_nvp("size", sz);
         SourceSet::iterator i = p->_sources.begin();
         SourceSet::iterator const end(p->_sources.end());
         for ( ; i != end; ++i) {
-            archive &  **i;
+            archive & make_nvp("data", **i);
         }
     }
 }
@@ -496,6 +415,41 @@ void form::SourceVectorFormatter::write(
                     "Didn't get BoostStorage");
         }
         bs->getOArchive() & *p;
+        if(additionalData && additionalData->exists("doFootprints")){
+            bool doFootprint = additionalData->getAsBool("doFootprints");
+            if(doFootprint) {
+                int n = p->getSources().size();
+                std::vector<boost::shared_ptr<const det::Footprint> > footprints;
+                footprints.reserve(n);
+
+                for(int i = 0; i<n; ++i) {
+                    footprints.push_back(p->getSources()[i]->getFootprint());
+                }
+                bs->getOArchive() & footprints;
+            }
+        }
+
+    } else if (typeid(*storage) == typeid(XmlStorage)) {
+        XmlStorage * bs = dynamic_cast<XmlStorage *>(storage.get());
+        if (bs == 0) {
+            throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                    "Didn't get XmlStorage");
+        }
+        bs->getOArchive() & make_nvp("src", *p);
+        if(additionalData && additionalData->exists("doFootprints")){
+            bool doFootprint = additionalData->getAsBool("doFootprints");
+            if(doFootprint) {
+                int n = p->getSources().size();
+                std::vector<boost::shared_ptr<const det::Footprint> > footprints;
+                footprints.reserve(n);
+
+                for(int i = 0; i<n; ++i) {
+                    footprints.push_back(p->getSources()[i]->getFootprint());
+                }
+                bs->getOArchive() & make_nvp("footprints", footprints);
+            }
+        }
+
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
 
@@ -573,6 +527,41 @@ Persistable* form::SourceVectorFormatter::read(
         }
         //calls serializeDelegate
         bs->getIArchive() & *p;
+
+        if(additionalData && additionalData->exists("doFootprints")){
+            bool doFootprint = additionalData->getAsBool("doFootprints");
+            if(doFootprint) {
+                int n = p->getSources().size();
+                std::vector<det::Footprint::Ptr> footprints;
+                bs->getIArchive() & footprints;
+
+                for(int i = 0; i<n; ++i) {
+                    (p->getSources()[i])->setFootprint((footprints[i]));
+                }
+            }
+        }
+    } else if (typeid(*storage) == typeid(XmlStorage)) {
+        //handle retrieval from BoostStorage
+        XmlStorage* bs = dynamic_cast<XmlStorage *>(storage.get());
+        if (bs == 0) { 
+            throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                    "Didn't get XmlStorage");
+        }
+        //calls serializeDelegate
+        bs->getIArchive() & make_nvp("src", *p);
+
+        if(additionalData && additionalData->exists("doFootprints")){
+            bool doFootprint = additionalData->getAsBool("doFootprints");
+            if(doFootprint) {
+                int n = p->getSources().size();
+                std::vector<det::Footprint::Ptr> footprints;
+                bs->getIArchive() & make_nvp("footprints", footprints);
+
+                for(int i = 0; i<n; ++i) {
+                    (p->getSources()[i])->setFootprint((footprints[i]));
+                }
+            }
+        }
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
         //handle retrieval from DbStorage, DbTsvStorage    
@@ -591,7 +580,6 @@ Persistable* form::SourceVectorFormatter::read(
         for (i = tables.begin(); i != end; ++i) {
             db->setTableForQuery(*i);
             Source s;
-            FieldsToConvert cnv;
             Binder b(db);
 
             //set target for query output
@@ -601,34 +589,41 @@ Persistable* form::SourceVectorFormatter::read(
             b.bind("objectId",             &(s._objectId), det::OBJECT_ID);
             b.bind("movingObjectId",       &(s._movingObjectId), det::MOVING_OBJECT_ID);
             b.bind("procHistoryId",        &(s._procHistoryId));
-            b.bind("ra",                   &(cnv.ra));
-            b.bind("raSigmaForDetection",  &(cnv.raErrForDetection), det::RA_ERR_FOR_DETECTION);
-            b.bind("raSigmaForWcs",        &(cnv.raErrForWcs));
-            b.bind("decl",                 &(cnv.dec));
-            b.bind("declSigmaForDetection",&(cnv.decErrForDetection), det::DEC_ERR_FOR_DETECTION);
-            b.bind("declSigmaForWcs",      &(cnv.decErrForWcs));
+
+            // temporary values in degrees
+            double ra, dec, raAstrom, decAstrom, raPeak, decPeak, raFlux, decFlux, raObject, decObject;
+            float raErrForDetection, decErrForDetection, raErrForWcs, decErrForWcs, raAstromErr, decAstromErr, raFluxErr, decFluxErr;
+
+            b.bind("ra", &ra);
+            b.bind("decl", &dec);
+            b.bind("raSigmaForDetection", &raErrForDetection, det::RA_ERR_FOR_DETECTION);
+            b.bind("declSigmaForDetection", &decErrForDetection, det::DEC_ERR_FOR_DETECTION);
+            b.bind("raSigmaForWcs",       &raErrForWcs);
+            b.bind("declSigmaForWcs",     &decErrForWcs);
+            b.bind("raFlux",              &raFlux, det::RA_FLUX);
+            b.bind("raFluxSigma",         &raFluxErr, det::RA_FLUX_ERR);
+            b.bind("declFlux",            &decFlux, det::DEC_FLUX);
+            b.bind("declFluxSigma",       &decFluxErr, det::DEC_FLUX_ERR);
+            b.bind("raAstrom",            &raAstrom, det::RA_ASTROM);
+            b.bind("raAstromSigma",       &raAstromErr, det::RA_ASTROM_ERR);
+            b.bind("declAstrom",          &decAstrom, det::DEC_ASTROM);
+            b.bind("declAstromSigma",     &decAstromErr, det::DEC_ASTROM_ERR);
+            b.bind("raObject",            &raObject, det::RA_OBJECT);
+            b.bind("declObject",          &decObject, det::DEC_OBJECT);
+            b.bind("raPeak",              &raPeak, det::RA_PEAK);
+            b.bind("declPeak",            &decPeak, det::DEC_PEAK);
+
             b.bind("xFlux",                &(s._xFlux), det::X_FLUX);
             b.bind("xFluxSigma",           &(s._xFluxErr), det::X_FLUX_ERR);
             b.bind("yFlux",                &(s._yFlux), det::Y_FLUX);
             b.bind("yFluxSigma",           &(s._yFluxErr), det::Y_FLUX_ERR);
-            b.bind("raFlux",               &(cnv.raFlux), det::RA_FLUX);
-            b.bind("raFluxSigma",          &(cnv.raFluxErr), det::RA_FLUX_ERR);
-            b.bind("declFlux",             &(cnv.decFlux), det::DEC_FLUX);
-            b.bind("declFluxSigma",        &(cnv.decFluxErr), det::DEC_FLUX_ERR);
             b.bind("xPeak",                &(s._xPeak), det::X_PEAK);
             b.bind("yPeak",                &(s._yPeak), det::Y_PEAK);
-            b.bind("raPeak",               &(cnv.raPeak), det::RA_PEAK);
-            b.bind("declPeak",             &(cnv.decPeak), det::DEC_PEAK);
             b.bind("xAstrom",              &(s._xAstrom), det::X_ASTROM);
             b.bind("xAstromSigma",         &(s._xAstromErr), det::X_ASTROM_ERR);
             b.bind("yAstrom",              &(s._yAstrom), det::Y_ASTROM);
             b.bind("yAstromSigma",         &(s._yAstromErr), det::Y_ASTROM_ERR);
-            b.bind("raAstrom",             &(cnv.raAstrom), det::RA_ASTROM);
-            b.bind("raAstromSigma",        &(cnv.raAstromErr), det::RA_ASTROM_ERR);
-            b.bind("declAstrom",           &(cnv.decAstrom), det::DEC_ASTROM);
-            b.bind("declAstromSigma",      &(cnv.decAstromErr), det::DEC_ASTROM_ERR);
-            b.bind("raObject",             &(cnv.raObject), det::RA_OBJECT);
-            b.bind("declObject",           &(cnv.decObject), det::DEC_OBJECT);
+
             b.bind("taiMidPoint",          &(s._taiMidPoint));
             b.bind("taiRange",             &(s._taiRange), det::TAI_RANGE);
             b.bind("psfFlux",              &(s._psfFlux));
@@ -685,8 +680,25 @@ Persistable* form::SourceVectorFormatter::read(
             //add a Source to sourceVector
             s.setNotNull();
             while (db->next()) {
-                // convert from degrees to radians for sky coords
-                cnv.fill(s);
+                s.setRa(ra * afwGeom::degrees);
+                s.setDec(dec * afwGeom::degrees);
+                s.setRaErrForDetection(raErrForDetection * afwGeom::degrees);
+                s.setDecErrForDetection(decErrForDetection * afwGeom::degrees);
+                s.setRaErrForWcs(raErrForWcs * afwGeom::degrees);
+                s.setDecErrForWcs(decErrForWcs * afwGeom::degrees);
+                s.setRaFlux(raFlux * afwGeom::degrees);
+                s.setDecFlux(decFlux * afwGeom::degrees);
+                s.setRaFluxErr(raFluxErr * afwGeom::degrees);
+                s.setDecFluxErr(decFluxErr * afwGeom::degrees);
+                s.setRaAstrom(raAstrom * afwGeom::degrees);
+                s.setDecAstrom(decAstrom * afwGeom::degrees);
+                s.setRaAstromErr(raAstromErr * afwGeom::degrees);
+                s.setDecAstromErr(decAstromErr * afwGeom::degrees);
+                s.setRaPeak(raPeak * afwGeom::degrees);
+                s.setDecPeak(decPeak * afwGeom::degrees);
+                s.setRaObject(raObject * afwGeom::degrees);
+                s.setDecObject(decObject * afwGeom::degrees);
+
                 //Handle/validate NULL values from the db. 
                 b.setNulls(s);
 

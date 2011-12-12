@@ -51,7 +51,7 @@ namespace {
      * Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::base::Citizen {
     public:
         explicit MinimizerFunctionBase1(
             afwMath::Function1<ReturnT> const &function,
@@ -83,7 +83,7 @@ namespace {
      * Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::base::Citizen {
     public:
         explicit MinimizerFunctionBase2(
             afwMath::Function2<ReturnT> const &function,
@@ -114,16 +114,16 @@ namespace {
         double _errorDef;
     };
 }
-
+/// \cond
 template<typename ReturnT>
 MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    afwMath::Function1<ReturnT> const &function,
+    lsst::afw::math::Function1<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList, 
     double errorDef)
 :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
@@ -133,14 +133,14 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
 
 template<typename ReturnT>
 MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    afwMath::Function2<ReturnT> const &function,
+    lsst::afw::math::Function2<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList,
     std::vector<double> const &yPositionList,
     double errorDef)
 :
-    lsst::daf::data::LsstBase(typeid(this)),
+    lsst::daf::base::Citizen(typeid(this)),
     _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
@@ -181,6 +181,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
     
     return chi2;
 }
+/// \endcond
 
 /**
  * Find the minimum of a function(x)
@@ -199,7 +200,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
  */
 template<typename ReturnT>
 afwMath::FitResults afwMath::minimize(
-    afwMath::Function1<ReturnT> const &function, ///< function(x) to be minimized
+    lsst::afw::math::Function1<ReturnT> const &function, ///< function(x) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList, ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -283,7 +284,7 @@ afwMath::FitResults afwMath::minimize(
  */
 template<typename ReturnT>
 afwMath::FitResults afwMath::minimize(
-    afwMath::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
+    lsst::afw::math::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList,    ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -356,6 +357,7 @@ afwMath::FitResults afwMath::minimize(
 }
 
 // Explicit instantiation
+/// \cond
 #define NL /* */
 #define minimizeFuncs(ReturnT) \
     template afwMath::FitResults afwMath::minimize( \
@@ -380,3 +382,4 @@ afwMath::FitResults afwMath::minimize(
 
 minimizeFuncs(float)
 minimizeFuncs(double)
+/// \endcond

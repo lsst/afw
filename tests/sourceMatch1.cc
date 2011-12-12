@@ -33,14 +33,16 @@
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/math/Random.h"
+#include "lsst/afw/coord/Utils.h"
+#include "lsst/afw/geom/Angle.h"
 
 
 namespace det = lsst::afw::detection;
 namespace math = lsst::afw::math;
+namespace coord = lsst::afw::coord;
+namespace afwGeom = lsst::afw::geom;
 
 namespace {
-
-double const PI = 3.14159265358979323846;
 
 math::Random & rng() {
     static math::Random * generator = 0;
@@ -50,7 +52,7 @@ math::Random & rng() {
     return *generator;
 }
 
-// iRandomly generate a set of sources that are uniformly distributed across
+// Randomly generate a set of sources that are uniformly distributed across
 // the unit sphere (ra/dec space) and the unit box (x,y space).
 void makeSources(det::SourceSet &set, int n) {
     for (int i = 0; i < n; ++i) {
@@ -59,8 +61,8 @@ void makeSources(det::SourceSet &set, int n) {
         src->setXAstrom(rng().uniform());
         src->setYAstrom(rng().uniform());
         double z = rng().flat(-1.0, 1.0);
-        src->setRa(rng().flat(0.0, 360.0));
-        src->setDec(std::asin(z)*(180.0/PI));
+        src->setRa(rng().flat(0.0, 360.) * afwGeom::degrees);
+        src->setDec(std::asin(z) * afwGeom::radians);
         set.push_back(src);
     }
 }
@@ -77,13 +79,14 @@ struct CmpSourceMatch {
 struct DistRaDec {
     double operator()(det::Source::Ptr const &s1, det::Source::Ptr const &s2) const {
         // halversine distance formula
-        double sinDeltaRa = std::sin((PI/180.0)*0.5*(s2->getRa() - s1->getRa()));
-        double sinDeltaDec = std::sin((PI/180.0)*0.5*(s2->getDec() - s1->getDec()));
-        double cosDec1CosDec2 = std::cos((PI/180.0)*s1->getDec())*std::cos((PI/180.0)*s2->getDec());
+        double sinDeltaRa = std::sin(0.5*(s2->getRa() - s1->getRa()));
+        double sinDeltaDec = std::sin(0.5*(s2->getDec() - s1->getDec()));
+        double cosDec1CosDec2 = std::cos(s1->getDec())*std::cos(s2->getDec());
         double a = sinDeltaDec*sinDeltaDec + cosDec1CosDec2*sinDeltaRa*sinDeltaRa;
         double b = std::sqrt(a);
         double c = b > 1 ? 1 : b;
-        return 3600.0*(180.0/PI)*2.0*std::asin(c);
+        // radians
+        return 2.0 * std::asin(c);
     }
 };
 
@@ -142,7 +145,7 @@ std::vector<det::SourceMatch> bruteMatch(det::SourceSet const &set1,
 void compareMatches(std::vector<det::SourceMatch> &matches,
                     std::vector<det::SourceMatch> &refMatches,
                     double radius) {
-    double const tolerance = 0.0001; // tolerance in percentage units
+    double const tolerance = 1e-6; // 1 micro arcsecond
     CmpSourceMatch lessThan;
 
     std::sort(matches.begin(), matches.end(), lessThan);
@@ -154,22 +157,22 @@ void compareMatches(std::vector<det::SourceMatch> &matches,
 
     while (i < iend && j < jend) {
         if (lessThan(*i, *j)) {
-            BOOST_CHECK_CLOSE(i->distance, radius, tolerance);
+            BOOST_CHECK(std::fabs(i->distance - radius) <= tolerance);
             ++i;
         } else if (lessThan(*j, *i)) {
-            BOOST_CHECK_CLOSE(j->distance, radius, tolerance);
+            BOOST_CHECK(std::fabs(j->distance - radius) <= tolerance);
             ++j;
         } else {
-            BOOST_CHECK_CLOSE(i->distance, j->distance, tolerance);
+            BOOST_CHECK(std::fabs(i->distance - j->distance) <= tolerance);
             ++i;
             ++j;
         }
     }
     for (; i < iend; ++i) {
-        BOOST_CHECK_CLOSE(i->distance, radius, tolerance);
+        BOOST_CHECK(std::fabs(i->distance - radius) <= tolerance);
     }
     for (; j < jend; ++j) {
-        BOOST_CHECK_CLOSE(j->distance, radius, tolerance);
+        BOOST_CHECK(std::fabs(j->distance - radius) <= tolerance);
     }
 }
 
@@ -179,7 +182,7 @@ void compareMatches(std::vector<det::SourceMatch> &matches,
 BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::acos(1.0 - 2.0*M/N)*(180.0/PI)*3600.0;
+    afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
     det::SourceSet set1, set2;
     makeSources(set1, N);
@@ -192,7 +195,7 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
 BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::acos(1.0 - 2.0*M/N)*(180.0/PI)*3600.0;
+    afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
     det::SourceSet set;
     makeSources(set, N);
@@ -204,7 +207,7 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
 BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::sqrt(M/(PI*static_cast<double>(N)));
+    double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
     det::SourceSet set1, set2;
     makeSources(set1, N);
@@ -217,7 +220,7 @@ BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
 BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
-    double const radius = std::sqrt(M/(PI*static_cast<double>(N)));
+    double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
     det::SourceSet set;
     makeSources(set, N);
@@ -225,4 +228,129 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     std::vector<det::SourceMatch> refMatches = bruteMatch(set, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
+
+
+static void normalizeRaDec(det::SourceSet ss) {
+    for (size_t i=0; i<ss.size(); i++) {
+        double r,d;
+        r = ss[i]->getRa().asRadians();
+        d = ss[i]->getDec().asRadians();
+        // wrap Dec over the (north) pole
+        if (d > afwGeom::HALFPI) {
+            d = afwGeom::PI - d;
+            r = r + afwGeom::PI;
+        }
+        ss[i]->setRa(r * afwGeom::radians);
+        ss[i]->setDec(d * afwGeom::radians);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(matchNearPole) {
+    det::SourceSet set1;
+    det::SourceSet set2;
+
+    // for each source, add a true match right on top, plus one within range
+    // and one outside range in each direction.
+
+    afwGeom::Angle rad = 0.1 * afwGeom::degrees;
+    int id1 = 0;
+    int id2 = 1000000;
+    for (double  j=0.1; j<1; j+=0.1) {
+        for (int i=0; i<360; i+=45) {
+            afwGeom::Angle ra = i * afwGeom::degrees;
+            afwGeom::Angle dec = (90 - j) * afwGeom::degrees;
+            afwGeom::Angle ddec1 = rad;
+            afwGeom::Angle dra1 = rad / cos(dec);
+            afwGeom::Angle ddec2 = 2. * rad;
+            afwGeom::Angle dra2 = 2. * rad / cos(dec);
+
+            det::Source::Ptr src1(new det::Source);
+            src1->setSourceId(id1);
+            id1++;
+            src1->setRa(ra);
+            src1->setDec(dec);
+            set1.push_back(src1);
+
+            // right on top
+            det::Source::Ptr src2(new det::Source);
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra);
+            src2->setDec(dec);
+            set2.push_back(src2);
+
+            // +Dec 1
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra);
+            src2->setDec(dec + ddec1);
+            set2.push_back(src2);
+
+            // +Dec 2
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra);
+            src2->setDec(dec + ddec2);
+            set2.push_back(src2);
+
+            // -Dec 1
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra);
+            src2->setDec(dec - ddec1);
+            set2.push_back(src2);
+
+            // -Dec 2
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra);
+            src2->setDec(dec - ddec2);
+            set2.push_back(src2);
+
+            // +RA 1
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra + dra1);
+            src2->setDec(dec);
+            set2.push_back(src2);
+            // +RA 2
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra + dra2);
+            src2->setDec(dec);
+            set2.push_back(src2);
+
+            // -RA 1
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra - dra1);
+            src2->setDec(dec);
+            set2.push_back(src2);
+            // -RA 2
+            src2 = det::Source::Ptr(new det::Source());
+            src2->setSourceId(id2);
+            id2++;
+            src2->setRa(ra - dra2);
+            src2->setDec(dec);
+            set2.push_back(src2);
+        }
+    }
+
+    normalizeRaDec(set1);
+    normalizeRaDec(set2);
+
+    std::vector<det::SourceMatch> matches = det::matchRaDec(set1, set2, rad, false);
+    std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec()); 
+    compareMatches(matches, refMatches, rad);
+
+}
+
 

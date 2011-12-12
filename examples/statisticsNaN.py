@@ -25,6 +25,7 @@
 #
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 # This code was submitted as a part of ticket #749 to demonstrate
@@ -36,13 +37,13 @@ def main():
     
     gaussFunction = afwMath.GaussianFunction2D(3, 2, 0.5)
     gaussKernel   = afwMath.AnalyticKernel(10, 10, gaussFunction)
-    inImage       = afwImage.ImageF(100, 100)
+    inImage       = afwImage.ImageF(afwGeom.Extent2I(100, 100))
     inImage.set(1)
     if disp:
         ds9.mtv(inImage, frame = 0)
     
     # works
-    outImage      = afwImage.ImageF(100, 100)
+    outImage      = afwImage.ImageF(afwGeom.Extent2I(100, 100))
     afwMath.convolve(outImage, inImage, gaussKernel, False, True)
     if disp:
         ds9.mtv(outImage, frame = 1)
@@ -50,7 +51,7 @@ def main():
     print "Should be a number: ", afwMath.makeStatistics(outImage, afwMath.STDEV).getValue()
     
     # not works ... now does work
-    outImage      = afwImage.ImageF(100, 100)
+    outImage      = afwImage.ImageF(afwGeom.Extent2I(100, 100))
     afwMath.convolve(outImage, inImage, gaussKernel, False, False)
     if disp:
         ds9.mtv(outImage, frame = 2)

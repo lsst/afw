@@ -237,7 +237,8 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     // Serialize most fields normally
     ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
-    
+    ar & ip->_coordSystem;
+
     ar & ip->_hasDistortion;
     
     if(ip->_hasDistortion) {
@@ -275,6 +276,7 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     ar & ip->_wcsInfo[0].cunit[1];
     ar & ip->_wcsInfo[0].ctype[0];
     ar & ip->_wcsInfo[0].ctype[1];
+    ar & ip->_wcsInfo[0].altlin;
 
     // If we are loading, compute intermediate values given those above
     if (Archive::is_loading::value) {

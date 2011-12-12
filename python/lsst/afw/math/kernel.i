@@ -23,8 +23,6 @@
  */
  
 %{
-#include "lsst/afw/math/FourierCutout.h"
-#include "lsst/afw/math/LocalKernel.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/formatters/KernelFormatter.h"
@@ -33,35 +31,6 @@
 %include "std_complex.i"
 %include "../boost_picklable.i"
 
-%ignore lsst::afw::math::FourierCutout::operator();
-%ignore lsst::afw::math::FourierCutout::swap;
-%ignore lsst::afw::math::FourierCutout::begin;
-%ignore lsst::afw::math::FourierCutout::end;
-%ignore lsst::afw::math::FourierCutout::at;
-%extend lsst::afw::math::FourierCutout {
-    /**
-     * Set an image to the value val
-     */
-    void set(Real val) {
-        *self = val;
-    }
-    
-    Complex get(int x, int y) {
-        return self->operator()(x,y);    
-    }
-};
-
-SWIG_SHARED_PTR(FourierCutoutPtr, lsst::afw::math::FourierCutout);
-SWIG_SHARED_PTR(FourierCutoutStackPtr, lsst::afw::math::FourierCutoutStack);
-
-
-%include "lsst/afw/math/FourierCutout.h"
-
-
-// I doubt newobject is needed; the code seems to work just as well without it.
-%newobject lsst::afw::math::convolve;
-%newobject lsst::afw::math::Kernel::getKernelParameters;
-%newobject lsst::afw::math::Kernel::getSpatialParameters;
 //
 // Kernel classes (every template of a class must have a unique name)
 //
@@ -73,7 +42,7 @@ SWIG_SHARED_PTR_DERIVED(TYPE, lsst::afw::math::Kernel, lsst::afw::math::TYPE);
 %boost_picklable(lsst::afw::math::TYPE)
 %enddef
 
-SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kernel); // the base class
+SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::base::Citizen, lsst::afw::math::Kernel); // the base class
 %lsst_persistable(lsst::afw::math::Kernel)
 %boost_picklable(lsst::afw::math::Kernel)
 
@@ -161,22 +130,3 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %dynamic_cast(FixedKernel);
 %dynamic_cast(LinearCombinationKernel);
 %dynamic_cast(SeparableKernel);
-
-SWIG_SHARED_PTR_DERIVED(
-    ImageLocalKernel, 
-    lsst::afw::math::LocalKernel, 
-    lsst::afw::math::ImageLocalKernel
-)
-
-SWIG_SHARED_PTR_DERIVED(
-    FourierLocalKernel, 
-    lsst::afw::math::LocalKernel, 
-    lsst::afw::math::FourierLocalKernel
-)
-SWIG_SHARED_PTR_DERIVED(
-    FftLocalKernel,
-    lsst::afw::math::FourierLocalKernel,
-    lsst::afw::math::FftLocalKernel
-)
-
-%include "lsst/afw/math/LocalKernel.h"

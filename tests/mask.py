@@ -33,14 +33,17 @@ or
 """
 
 import os
+import os.path
 
 import sys
 import unittest
+import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import eups
 import lsst.afw.display.ds9 as ds9
 
@@ -73,7 +76,7 @@ class MaskTestCase(unittest.TestCase):
         self.mask2 = afwImage.MaskU(self.mask1.getDimensions())
         self.mask2.set(self.val2)
 
-        dataDir = eups.productDir("afwdata")
+        dataDir = os.path.join(eups.productDir("afwdata"), "data")
         if dataDir:
             if True:
                 self.maskFile = os.path.join(dataDir, "small_MI_msk.fits")
@@ -86,13 +89,28 @@ class MaskTestCase(unittest.TestCase):
         del self.mask1
         del self.mask2
 
+    def testArrays(self):
+        image1 = afwImage.MaskU(afwGeom.ExtentI(5,6)) # could use MaskU(5, 6) but check extent(5, 6) form too
+        array1 = image1.getArray()
+        self.assertEqual(array1.shape[0], image1.getHeight())
+        self.assertEqual(array1.shape[1], image1.getWidth())
+        image2 = afwImage.MaskU(array1, False)
+        self.assertEqual(array1.shape[0], image2.getHeight())
+        self.assertEqual(array1.shape[1], image2.getWidth())
+        image3 = afwImage.makeMaskFromArray(array1)
+        self.assertEqual(array1.shape[0], image2.getHeight())
+        self.assertEqual(array1.shape[1], image2.getWidth())
+        self.assertEqual(type(image3), afwImage.MaskU)
+        array1[:,:] = numpy.random.uniform(low=0, high=10, size=array1.shape)
+        for j in range(image1.getHeight()):
+            for i in range(image1.getWidth()):
+                self.assertEqual(image1.get(i, j), array1[j, i])
+                self.assertEqual(image2.get(i, j), array1[j, i])
+
     def testInitializeMasks(self):
         val = 0x1234
-        msk = afwImage.MaskU(10, 10, val)
+        msk = afwImage.MaskU(afwGeom.ExtentI(10, 10), val)
         self.assertEqual(msk.get(0, 0), val)
-
-        msk2 = afwImage.MaskU(afwImage.pairIntInt(10, 10), val)
-        self.assertEqual(msk2.get(0, 0), val)
         
     def testSetGetMasks(self):
         self.assertEqual(self.mask1.get(0, 0), self.val1)
@@ -121,9 +139,9 @@ class MaskTestCase(unittest.TestCase):
 
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
-        i1 = afwImage.MaskU(100, 100)
+        i1 = afwImage.MaskU(afwGeom.ExtentI(100, 100))
         i1.set(100)
-        i2 = afwImage.MaskU(10, 10)
+        i2 = afwImage.MaskU(afwGeom.ExtentI(10, 10))
         i2.set(10)
         
         def tst(i1, i2): i1 |= i2
@@ -147,29 +165,10 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(dmask.get(0, 0), self.val1)
         self.assertEqual(smask.get(0, 0), self.val1 | 32767)
 
-    def testBBox(self):
-        x0, y0, width, height = 1, 2, 10, 20
-        x1, y1 = x0 + width - 1, y0 + height - 1
-        llc = afwImage.PointI(x0, y0)
-        
-        bbox = afwImage.BBox(llc, width, height)
-
-        self.assertEqual(bbox.getX0(), x0)
-        self.assertEqual(bbox.getY0(), y0)
-        self.assertEqual(bbox.getX1(), x1)
-        self.assertEqual(bbox.getY1(), y1)
-        self.assertEqual(bbox.getWidth(), width)
-        self.assertEqual(bbox.getHeight(), height)
-
-        urc = afwImage.PointI(x1, y1)
-        bbox2 = afwImage.BBox(llc, urc)
-        self.assertEqual(bbox, bbox2)
-        
-        bbox2 = afwImage.BBox(llc, width, height+1)
-        self.assertNotEqual(bbox, bbox2)
-
     def testSubmasks(self):
-        smask = afwImage.MaskU(self.mask1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
+        smask = afwImage.MaskU(self.mask1, 
+                               afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(3, 2)),
+                               afwImage.LOCAL)
         mask2 = afwImage.MaskU(smask.getDimensions())
 
         mask2.set(666)
@@ -207,7 +206,9 @@ class MaskTestCase(unittest.TestCase):
             return
         
         hdu = 0
-        mask = afwImage.MaskU(self.maskFile, hdu, None, afwImage.BBox(), True)
+        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
+
+        print mask.getArray().transpose()
 
         if False:
             import lsst.afw.display.ds9 as ds9
@@ -255,7 +256,7 @@ class MaskTestCase(unittest.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        mask = afwImage.MaskU(10, 20)
+        mask = afwImage.MaskU(afwGeom.ExtentI(10, 20))
 
         x0, y0 = 1, 2
         mask.setXY0(x0, y0)
@@ -279,7 +280,7 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(self.mask1.get(10, 10), 0)
 
         del self.mask1
-        self.mask1 = factory(20, 20)
+        self.mask1 = factory(afwGeom.ExtentI(20, 20))
         self.assertEqual(self.mask1.get(10, 10), 0)
 
     def testBoundsChecking(self):
@@ -311,7 +312,7 @@ class OldMaskTestCase(unittest.TestCase):
     and modified to run with the new (DC3) APIs"""
 
     def setUp(self):
-        self.testMask = afwImage.MaskU(300, 400, 0)
+        self.testMask = afwImage.MaskU(afwGeom.Extent2I(300, 400), 0)
         #self.testMask.set(0)
 
         self.testMask.clearMaskPlaneDict() # reset so tests will be deterministic
@@ -319,8 +320,8 @@ class OldMaskTestCase(unittest.TestCase):
         for p in ("CR", "BP"):
             self.testMask.addMaskPlane(p)
 
-        self.region = afwImage.BBox(afwImage.PointI(100, 300), 10, 40)
-        self.subTestMask = afwImage.MaskU(self.testMask, self.region)
+        self.region = afwGeom.Box2I(afwGeom.Point2I(100, 300), afwGeom.Extent2I(10, 40))
+        self.subTestMask = afwImage.MaskU(self.testMask, self.region, afwImage.LOCAL)
 
         if False:
             self.pixelList = afwImage.listPixelCoord()

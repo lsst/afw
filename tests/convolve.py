@@ -28,6 +28,7 @@ Tests convolution of various kernels with Images and MaskedImages.
 """
 import math
 import os
+import os.path
 import unittest
 import string
 
@@ -55,16 +56,16 @@ except NameError:
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 
 # input image contains a saturated star, a bad column, and a faint star
 InputMaskedImagePath = os.path.join(dataDir, "med")
-InputBBox = afwImage.BBox(afwImage.PointI(52, 574), 76, 80)
+InputBBox = afwGeom.Box2I(afwGeom.Point2I(52, 574), afwGeom.Extent2I(76, 80))
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve fully overwrites it
-ShiftedBBox = afwImage.BBox(afwImage.PointI(0, 460), 76, 80)
+ShiftedBBox = afwGeom.Box2I(afwGeom.Point2I(0, 460), afwGeom.Extent2I(76, 80))
 FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
@@ -91,14 +92,18 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
     - doCopyEdge: if True: copy edge pixels from input image to convolved image;
                 if False: set edge pixels to the standard edge pixel (image=nan, var=inf, mask=EDGE)
     """
-    image, mask, variance = imMaskVar
+    # Note: the original version of this function was written when numpy/image conversions were the
+    # transpose of what they are today.  Rather than transpose the logic in this function or put
+    # transposes throughout the rest of the file, I have transposed only the inputs and outputs.
+    #  - Jim Bosch, 3/4/2011
+    image, mask, variance = (imMaskVar[0].transpose(), imMaskVar[1].transpose(), imMaskVar[2].transpose())
     
     if doCopyEdge:
         # copy input arrays to output arrays and set EDGE bit of mask; non-edge pixels are overwritten below
-        retImage = imMaskVar[0].copy()
-        retMask = imMaskVar[1].copy()
+        retImage = image.copy()
+        retMask = mask.copy()
         retMask += EdgeMaskPixel
-        retVariance = imMaskVar[2].copy()
+        retVariance = variance.copy()
     else:
         # initialize output arrays to all edge pixels; non-edge pixels will be overwritten below
         retImage = numpy.zeros(image.shape, dtype=image.dtype)
@@ -117,11 +122,11 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
     colRange = range(numCols)
 
 
-    kImage = afwImage.ImageD(kWidth, kHeight)
+    kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
     isSpatiallyVarying = kernel.isSpatiallyVarying()
     if not isSpatiallyVarying:
         kernel.computeImage(kImage, doNormalize)
-        kImArr = imTestUtils.arrayFromImage(kImage)
+        kImArr = kImage.getArray().transpose()
 
     retRow = kernel.getCtrY()
     for inRowBeg in range(numRows):
@@ -133,7 +138,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
             if isSpatiallyVarying:
                 colPos = afwImage.indexToPosition(retCol) + xy0[0]
                 kernel.computeImage(kImage, doNormalize, colPos, rowPos)
-                kImArr = imTestUtils.arrayFromImage(kImage)
+                kImArr = kImage.getArray().transpose()
             inColEnd = inColBeg + kWidth
             subImage = image[inColBeg:inColEnd, inRowBeg:inRowEnd]
             subVariance = variance[inColBeg:inColEnd, inRowBeg:inRowEnd]
@@ -148,7 +153,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
 
             retCol += 1
         retRow += 1
-    return (retImage, retMask, retVariance)
+    return (retImage.transpose(), retMask.transpose(), retVariance.transpose())
 
 def sameMaskPlaneDicts(maskedImageA, maskedImageB):
     """Return True if the mask plane dicts are the same, False otherwise.
@@ -177,7 +182,7 @@ class ConvolveTestCase(unittest.TestCase):
             
         del tmp
         
-        self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, True)
+        self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, afwImage.LOCAL, True)
         # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
         self.maskedImage.setXY0(300, 200)
         self.xy0 = self.maskedImage.getXY0()
@@ -185,12 +190,12 @@ class ConvolveTestCase(unittest.TestCase):
         # provide destinations for the convolved MaskedImage and Image that contain junk
         # to verify that convolve overwrites all pixels;
         # make them deep copies so we can mess with them without affecting self.inImage
-        self.cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, True)
-        self.cnvImage = afwImage.ImageF(FullMaskedImage.getImage(), ShiftedBBox, True)
+        self.cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)
+        self.cnvImage = afwImage.ImageF(FullMaskedImage.getImage(), ShiftedBBox, afwImage.LOCAL, True)
 
         self.width = self.maskedImage.getWidth()
         self.height = self.maskedImage.getHeight()
-#         smask = afwImage.MaskU(self.maskedImage.getMask(), afwImage.BBox(afwImage.PointI(15, 17), 10, 5))
+#         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.Box2I(afwGeom.Point2I(15, 17), afwGeom.Extent2I(10, 5)))
 #         smask.set(0x8)
 
     def tearDown(self):
@@ -222,20 +227,20 @@ class ConvolveTestCase(unittest.TestCase):
         doCopyEdge = convControl.getDoCopyEdge()
         maxInterpDist = convControl.getMaxInterpolationDistance()
 
-        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        imMaskVar = self.maskedImage.getArrays()
         xy0 = self.maskedImage.getXY0()
         
         refCnvImMaskVarArr = refConvolve(imMaskVar, xy0, refKernel, doNormalize, doCopyEdge)
 
         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, convControl)
         self.assertEqual(self.cnvImage.getXY0(), self.xy0)
-        cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
+        cnvImArr = self.cnvImage.getArray()
 
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, convControl)
-        cnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+        cnvImMaskVarArr = self.cnvMaskedImage.getArrays()
 
         if display and False:
-            refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
             ds9.mtv(displayUtils.Mosaic().makeMosaic([
                 self.maskedImage, refMaskedImage, self.cnvMaskedImage]), frame=0)
             if False:
@@ -246,7 +251,7 @@ class ConvolveTestCase(unittest.TestCase):
         errStr = imTestUtils.imagesDiffer(cnvImArr, refCnvImMaskVarArr[0], rtol=rtol, atol=atol)
         if errStr:
             self.cnvImage.writeFits("act%s.fits" % (shortKernelDescr,))
-            refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
             refMaskedImage.getImage().writeFits("des%s.fits" % (shortKernelDescr,))
             self.fail("convolve(Image, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" % \
                 (kernelDescr, doNormalize, doCopyEdge, maxInterpDist, errStr))
@@ -255,14 +260,14 @@ class ConvolveTestCase(unittest.TestCase):
             doVariance = True, rtol=rtol, atol=atol)
         if errStr:
             self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
-            refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
             refMaskedImage.writeFits("des%s" % (shortKernelDescr,))
             self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" % \
                 (kernelDescr, doNormalize, doCopyEdge, maxInterpDist, errStr))
 
         if not sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage):
             self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
-            refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
             refMaskedImage.writeFits("des%s" % (shortKernelDescr,))
             self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" % \
                 (kernelDescr, doNormalize, doCopyEdge, maxInterpDist, "convolved mask dictionary does not match input"))
@@ -297,7 +302,7 @@ class ConvolveTestCase(unittest.TestCase):
             for inHeight in (kernel.getHeight() - 1, self.width-1, self.width, self.width + 1):
                 if (inWidth == self.width) and (inHeight == self.height):
                     continue
-                inMaskedImage = afwImage.MaskedImageF(inWidth, inHeight)
+                inMaskedImage = afwImage.MaskedImageF(afwGeom.Extent2I(inWidth, inHeight))
                 self.assertRaises(Exception, afwMath.convolve, self.cnvMaskedImage, inMaskedImage, kernel)
 
         for doNormalize in (True,): # (False, True):
@@ -313,18 +318,14 @@ class ConvolveTestCase(unittest.TestCase):
     def runBasicConvolveEdgeTest(self, kernel, kernelDescr):
         """Verify that basicConvolve does not write to edge pixels for this kind of kernel
         """
-        fullBox = afwGeom.BoxI(
-            afwGeom.makePointI(0, 0),
-            afwGeom.makeExtentI(ShiftedBBox.getWidth(), ShiftedBBox.getHeight()),
+        fullBox = afwGeom.Box2I(
+            afwGeom.Point2I(0, 0),
+            ShiftedBBox.getDimensions(),
         )
-        fullBBox = afwImage.BBox(afwImage.PointI(fullBox.getMinX(), fullBox.getMinY()),
-            fullBox.getWidth(), fullBox.getHeight())
         goodBox = kernel.shrinkBBox(fullBox)
-        goodBBox = afwImage.BBox(afwImage.PointI(goodBox.getMinX(), goodBox.getMinY()),
-            goodBox.getWidth(), goodBox.getHeight())
-        cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, True)
-        cnvMaskedImageCopy = afwImage.MaskedImageF(cnvMaskedImage, fullBBox, True)
-        cnvMaskedImageCopyViewOfGoodRegion = afwImage.MaskedImageF(cnvMaskedImageCopy, goodBBox, False)
+        cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)
+        cnvMaskedImageCopy = afwImage.MaskedImageF(cnvMaskedImage, fullBox, afwImage.LOCAL, True)
+        cnvMaskedImageCopyViewOfGoodRegion = afwImage.MaskedImageF(cnvMaskedImageCopy, goodBox, afwImage.LOCAL, False)
 
         # convolve with basicConvolve, which should leave the edge pixels alone
         convControl = afwMath.ConvolutionControl()
@@ -332,12 +333,12 @@ class ConvolveTestCase(unittest.TestCase):
 
         # reset the good region to the original convolved image;
         # this should reset the entire convolved image to its original self
-        cnvMaskedImageGoodView = afwImage.MaskedImageF(cnvMaskedImage, goodBBox, False)
+        cnvMaskedImageGoodView = afwImage.MaskedImageF(cnvMaskedImage, goodBox, afwImage.LOCAL, False)
         cnvMaskedImageGoodView <<= cnvMaskedImageCopyViewOfGoodRegion
 
         # assert that these two are equal
-        cnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
-        desCnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(cnvMaskedImageCopy)
+        cnvImMaskVarArr = cnvMaskedImage.getArrays()
+        desCnvImMaskVarArr = cnvMaskedImageCopy.getArrays()
         errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, desCnvImMaskVarArr,
             doVariance = True, rtol=0, atol=0)
         shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
@@ -376,12 +377,12 @@ class ConvolveTestCase(unittest.TestCase):
         doCopyEdge = False
 
         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, doNormalize, doCopyEdge)
-        cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
+        cnvImArr = self.cnvImage.getArray()
         
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, doNormalize, doCopyEdge)
-        cnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+        cnvImMaskVarArr = self.cnvMaskedImage.getArrays()
 
-        refCnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        refCnvImMaskVarArr = self.maskedImage.getArrays()
         
         skipMaskArr = numpy.isnan(cnvImMaskVarArr[0])
 
@@ -407,7 +408,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
         analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc)
-        kernelImage = afwImage.ImageD(kWidth, kHeight)
+        kernelImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         analyticKernel.computeImage(kernelImage, False)
         fixedKernel = afwMath.FixedKernel(kernelImage)
         
@@ -512,7 +513,7 @@ class ConvolveTestCase(unittest.TestCase):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
-                            afwImage.PointI(activeCol, activeRow))
+                            afwGeom.Point2I(activeCol, activeRow))
                         if display and False:
                             kim = afwImage.ImageD(kWidth, kHeight); kernel.computeImage(kim, False)
                             ds9.mtv(kim, frame=1)
@@ -633,17 +634,17 @@ class ConvolveTestCase(unittest.TestCase):
         kImArr = numpy.zeros([5, 5], dtype=float)
         kImArr[1:4, 1:4] = 0.5
         kImArr[2, 2] = 1.0
-        kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
+        kImage = afwImage.makeImageFromArray(kImArr)
         basisKernelList.append(afwMath.FixedKernel(kImage))
         kImArr[:, :] = 0.0
         kImArr[0:2, 0:2] = 0.125
         kImArr[3:5, 3:5] = 0.125
-        kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
+        kImage = afwImage.makeImageFromArray(kImArr)
         basisKernelList.append(afwMath.FixedKernel(kImage))
         kImArr[:, :] = 0.0
         kImArr[0:2, 3:5] = 0.125
         kImArr[3:5, 0:2] = 0.125
-        kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
+        kImage = afwImage.makeImageFromArray(kImArr)
         basisKernelList.append(afwMath.FixedKernel(kImage))
 
         kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)

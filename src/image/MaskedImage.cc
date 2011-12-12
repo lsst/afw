@@ -47,14 +47,32 @@ namespace image = lsst::afw::image;
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-                                                                         int width,                      //!< Number of columns in image
-                                                                         int height,                     //!< Number of rows in image
-                                                                         MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
-                                                                        ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    unsigned int width, ///< number of columns
+    unsigned int height, ///< number of rows
+    MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+) :
+    lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(width, height)),
     _mask(new Mask(width, height, planeDict)),
     _variance(new Variance(width, height)) {
+    *_image = 0;
+    *_mask = 0x0;
+    *_variance = 0;
+}
+
+/** Constructors
+ *
+ * \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+    geom::Extent2I const & dimensions, //!< Number of columns, rows in image
+    MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _image(new Image(dimensions)),
+    _mask(new Mask(dimensions, planeDict)),
+    _variance(new Variance(dimensions)) {
     *_image = 0;
     *_mask = 0x0;
     *_variance = 0;
@@ -70,13 +88,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-                                                                         const std::pair<int, int> dimensions, //!< dimensions of image: width x height
-                                                                         MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
-                                                                        ) :
-    lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(dimensions)),
-    _mask(new Mask(dimensions, planeDict)),
-    _variance(new Variance(dimensions)) {
+    geom::Box2I const & bbox, //!< dimensions of image: width x height
+    MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _image(new Image(bbox)),
+    _mask(new Mask(bbox, planeDict)),
+    _variance(new Variance(bbox)) {
     *_image = 0;
     *_mask = 0x0;
     *_variance = 0;
@@ -94,16 +112,16 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        std::string const& baseName,    //!< The file's baseName (e.g. foo reads foo_{img.msk.var}.fits)
-        const int hdu,                  //!< The HDU in the file (default: 1)
-        lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
-        BBox const& bbox,                           //!< Only read these pixels
-        bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
-        bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
-                                                                        ) :
-    lsst::daf::data::LsstBase(typeid(this)),
-    _image(), _mask(), _variance() {
-
+    std::string const& baseName,    //!< The file's baseName (e.g. foo reads foo_{img.msk.var}.fits)
+    const int hdu,                  //!< The HDU in the file (default: 1)
+    lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+    geom::Box2I const& bbox,                           //!< Only read these pixels
+    ImageOrigin const origin,                   //!< Coordinate system for bbox
+    bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
+    bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+) : lsst::daf::base::Citizen(typeid(this)),
+    _image(), _mask(), _variance() 
+{
     // Does it looks like an MEF file?
     static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
     bool isMef = boost::regex_search(baseName, fitsFile_RE_compiled);
@@ -139,7 +157,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             }
         }
 
-        _image = typename Image::Ptr(new Image(baseName, real_hdu, metadata, bbox));
+        _image = typename Image::Ptr(new Image(baseName, real_hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "IMAGE") {
@@ -150,14 +168,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
         try {
-            _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, conformMasks));
+            _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, origin, conformMasks));
         } catch(image::FitsException &e) {
             if (needAllHdus) {
                 LSST_EXCEPT_ADD(e, "Reading Mask");
                 throw e;
             }
 
-            _mask = typename Mask::Ptr(new Mask(_image->getDimensions()));
+            _mask = typename Mask::Ptr(new Mask(_image->getBBox(PARENT)));
         }
 
         try {
@@ -173,13 +191,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
 
         try {
-            _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox));
+            _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox, origin));
         } catch(image::FitsException &e) {
             if (needAllHdus) {
                 LSST_EXCEPT_ADD(e, "Reading Variance");
                 throw e;
             }
-            _variance = typename Variance::Ptr(new Variance(_image->getDimensions()));
+            _variance = typename Variance::Ptr(new Variance(_image->getBBox(PARENT)));
         }
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
@@ -194,7 +212,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         int real_hdu = (hdu == 0) ? 1 : hdu;
 
         _image = typename Image::Ptr(new Image(MaskedImage::imageFileName(baseName),
-                                               real_hdu, metadata, bbox));
+                                               real_hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "IMAGE") {
@@ -205,7 +223,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
         _mask = typename Mask::Ptr(new Mask(MaskedImage::maskFileName(baseName),
-                                            real_hdu, metadata, bbox, conformMasks));
+                                            real_hdu, metadata, bbox, origin, conformMasks));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "MASK") {
@@ -216,7 +234,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
         _variance = typename Variance::Ptr(new Variance(MaskedImage::varianceFileName(baseName),
-                                                        real_hdu, metadata, bbox));
+                                                        real_hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "VARIANCE") {
@@ -229,6 +247,96 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 /**
+ * \brief Construct from an HDU in a FITS RAM file.  Set metadata if it isn't a NULL pointer
+ *
+ * @note The file must be a single MEF MEF file, with data, mask, and variance in three successive HDUs
+ *
+ * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we politely interpret 0 as meaning
+ * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+    char **ramFile,                                ///< RAM buffer to receive RAM FITS file
+    size_t *ramFileLen,                            ///< RAM buffer length
+    const int hdu,                              //!< The HDU in the file (default: 1)
+    lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+    geom::Box2I const& bbox,                    //!< Only read these pixels
+    ImageOrigin const origin,                   //!< Coordinate system for bbox
+    bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
+    bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+) : lsst::daf::base::Citizen(typeid(this)),
+    _image(), _mask(), _variance() 
+{
+    /*
+     * We need to read the metadata so's to check that the EXTTYPEs are correct
+     */
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+    }
+    
+    int real_hdu = (hdu == 0) ? 2 : hdu;
+    
+    if (hdu == 0) {                 // may be an old file with no PDU
+        lsst::daf::base::PropertySet::Ptr hdr = readMetadata(ramFile, ramFileLen, 1);
+        if (hdr->get<int>("NAXIS") != 0) { // yes, an old-style file
+            real_hdu = 1;
+        }
+    }
+
+    _image = typename Image::Ptr(new Image(ramFile, ramFileLen, real_hdu, metadata, bbox, origin));
+    try {
+        std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+        if (exttype != "" && exttype != "IMAGE") {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+                               real_hdu % exttype).str());           
+        }
+    } catch(lsst::pex::exceptions::NotFoundException) {}
+
+    try {
+        _mask = typename Mask::Ptr(new Mask(ramFile, ramFileLen, real_hdu + 1, metadata, bbox, origin, conformMasks));
+    } catch(image::FitsException &e) {
+        if (needAllHdus) {
+            LSST_EXCEPT_ADD(e, "Reading Mask");
+            throw e;
+        }
+
+        _mask = typename Mask::Ptr(new Mask(_image->getBBox(PARENT)));
+    }
+
+    try {
+        std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+        if (exttype != "" && exttype != "MASK") {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+                               (real_hdu + 1) % exttype).str());
+        }
+    } catch(lsst::pex::exceptions::NotFoundException) {
+        ;
+    }
+
+    try {
+        _variance = typename Variance::Ptr(new Variance(ramFile, ramFileLen, real_hdu + 2, metadata, bbox, origin));
+    } catch(image::FitsException &e) {
+        if (needAllHdus) {
+            LSST_EXCEPT_ADD(e, "Reading Variance");
+            throw e;
+        }
+        _variance = typename Variance::Ptr(new Variance(_image->getBBox(PARENT)));
+    }
+    try {
+        std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+        if (exttype != "" && exttype != "VARIANCE") {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                       (boost::format("Reading RAM FITS (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
+                        (real_hdu + 2) % exttype).str());
+        }
+    } catch(lsst::pex::exceptions::NotFoundException) {}
+}
+
+/**
  * \brief Construct from a supplied Image and optional Mask and Variance.
  * The Mask and Variance will be set to zero if omitted
  */
@@ -237,8 +345,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         ImagePtr image,                 ///< %Image
         MaskPtr mask,                   ///< %Mask
         VariancePtr variance            ///< Variance %Mask
-                                                                        ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+) :
+    lsst::daf::base::Citizen(typeid(this)),
     _image(image),
     _mask(mask),
     _variance(variance) {
@@ -250,10 +358,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-                                                    MaskedImage const& rhs, ///< %Image to copy
-                                                    bool deep               ///< Make deep copy?
-                                                                        ) :
-    lsst::daf::data::LsstBase(typeid(this)),
+    MaskedImage const& rhs, ///< %Image to copy
+    bool deep               ///< Make deep copy?
+) :
+    lsst::daf::base::Citizen(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
         _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
@@ -267,13 +375,17 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  * \brief Copy constructor of the pixels specified by bbox;  shallow, unless deep is true.
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs,
-                                                                         const BBox& bbox,
-                                                                         bool deep) :
-    lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(*rhs.getImage(), bbox, deep)),
-    _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, deep) : static_cast<Mask *>(NULL)),
-    _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, deep) : static_cast<Variance *>(NULL)) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+    MaskedImage const& rhs,     ///< MaskedImage to copy
+    const geom::Box2I& bbox,    ///< Specify desired region
+    ImageOrigin const origin,   ///< Specify the coordinate system of the bbox
+    bool deep                   ///< If false, new ImageBase shares storage with rhs;
+                                ///< if true make a new, standalone, MaskedImage
+) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _image(new Image(*rhs.getImage(), bbox, origin, deep)),
+    _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask *>(NULL)),
+    _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, origin, deep) : static_cast<Variance *>(NULL)) {
     conformSizes();
 }
 
@@ -378,7 +490,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Ima
 
 /// Subtract a MaskedImage rhs from a MaskedImage
 ///
-/// The %images are added; the masks are ORd together; and the variances are added
+/// The %images are subtracted; the masks are ORd together; and the variances are added
 ///
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -390,7 +502,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(Mas
 
 /// Subtract a scaled MaskedImage c*rhs from a MaskedImage
 ///
-/// The %images are added; the masks are ORd together; and the variances are added
+/// The %images are subtracted; the masks are ORd together; and the variances are added
 ///
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -518,6 +630,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
     *_image /= rhs;
     *_variance /= rhs*rhs;
 }
+
 /**
  * Write \c this to a FITS file
  *
@@ -590,6 +703,66 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     }
 }
 
+/**
+ * Write \c this to a FITS RAM file
+ *
+ * \deprecated Please avoid using the interface that writes three separate files;  it may be
+ * removed in some future release.
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+        char **ramFile,        ///< RAM buffer to receive RAM FITS file
+        size_t *ramFileLen,    ///< RAM buffer length
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file
+                                                                          ///< or NULL
+        std::string const& mode,                    //!< "w" to write a new file; "a" to append
+        bool const writeMef  ///< write an MEF file,
+                             ///< even if basename doesn't look like a fully qualified FITS file
+    ) const {
+
+    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
+    }
+    
+    if (!writeMef) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
+    }
+
+    lsst::daf::base::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+    } else {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+    }
+
+    static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
+    if (writeMef) {
+        //
+        // Write the PDU
+        //
+        if (mode == "w" || mode == "wb") {
+            _image->writeFits(ramFile, ramFileLen, metadata, "pdu");
+#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
+            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+#endif
+        }
+
+        metadata->set("EXTTYPE", "IMAGE");
+        _image->writeFits(ramFile, ramFileLen, metadata, "w");    //First one can't be 'a', must be 'w'
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata->set("EXTTYPE", "MASK");
+        _mask->writeFits(ramFile, ramFileLen, metadata, "a");
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata->set("EXTTYPE", "VARIANCE");
+        _variance->writeFits(ramFile, ramFileLen, metadata, "a");
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
+
+    }
+}
+
 /************************************************************************************************************/
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions
 // as Image.  If Mask and/or Variance have non-zero dimensions that conflict with the size of Image,
@@ -597,34 +770,34 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
-    int const imageWidth = _image->getWidth();
-    int const imageHeight = _image->getHeight();
 
-    if (!_mask.get() || _mask->getWidth() == 0 || _mask->getHeight() == 0) {
-        _mask = MaskPtr(new Mask(imageWidth, imageHeight));
+    if (!_mask || _mask->getWidth() == 0 || _mask->getHeight() == 0) {
+        _mask = MaskPtr(new Mask(_image->getBBox(PARENT)));
         *_mask = 0;
     } else {
-        int const width = _mask->getWidth();
-        int const height = _mask->getHeight();
-
-        if (width != imageWidth || height != imageHeight) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
-                                  imageWidth % imageHeight % width % height).str());
+        if (_mask->getDimensions() != _image->getDimensions()) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
+                    _image->getWidth() % _image->getHeight() % 
+                    _mask->getWidth() % _mask->getHeight()
+                ).str()
+            );
         }
     }
 
-    if (!_variance.get() || _variance->getWidth() == 0 || _variance->getHeight() == 0) {
-        _variance = VariancePtr(new Variance(imageWidth, imageHeight));
+    if (!_variance || _variance->getWidth() == 0 || _variance->getHeight() == 0) {
+        _variance = VariancePtr(new Variance(_image->getDimensions()));
         *_variance = 0;
     } else {
-        int const height = _variance->getHeight();
-        int const width = _variance->getWidth();
-
-        if (width != imageWidth || height != imageHeight) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
-                                  imageWidth % imageHeight % width % height).str());
+        if (_variance->getDimensions() != _image->getDimensions()) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
+                    _image->getWidth() % _image->getHeight() % 
+                    _variance->getWidth() % _variance->getHeight()
+                ).str()
+            );
         }
     }
 }
@@ -774,3 +947,5 @@ template class image::MaskedImage<boost::uint16_t>;
 template class image::MaskedImage<int>;
 template class image::MaskedImage<float>;
 template class image::MaskedImage<double>;
+template class image::MaskedImage<boost::uint64_t>;
+

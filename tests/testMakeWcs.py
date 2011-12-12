@@ -119,27 +119,23 @@ class MakeWcsTestCase(unittest.TestCase):
         """Verify that we can make a Wcs by providing the CD matrix elements in python."""
         
         m = self.metadata
-        crval = afwGeom.makePointD(m.getDouble("CRVAL1"), m.getDouble("CRVAL2"))
-        crpix = afwGeom.makePointD(m.getDouble("CRPIX1"), m.getDouble("CRPIX2"))
+        crval = afwCoord.makeCoord(afwCoord.ICRS, m.getDouble("CRVAL1") * afwGeom.degrees, m.getDouble("CRVAL2") * afwGeom.degrees)
+        crpix = afwGeom.Point2D(m.getDouble("CRPIX1"), m.getDouble("CRPIX2"))
         cd11, cd12 = m.getDouble("CD1_1"), m.getDouble("CD1_2")
         cd21, cd22 = m.getDouble("CD2_1"), m.getDouble("CD2_2")
+        print 'CRVAL:', crval
         
         # this is defined at the c++ level in src/image/makeWcs.cc
         wcsMade = afwImage.makeWcs(crval, crpix, cd11, cd12, cd21, cd22)
         
-        # this is defined at the python/swig level in python/lsst/afw/image/imageLib.i
-        # createWcs can probably be depricated
-        wcsCreated = afwImage.createWcs(crval, crpix, cd11, cd12, cd21, cd22)
-
-
         # trivial test ... verify that we get back what we put in.
-        for wcs in [wcsMade, wcsCreated]:
-            crvalTest = wcs.getSkyOrigin().getPosition(afwCoord.DEGREES)
+        for wcs in [wcsMade]:
+            crvalTest = wcs.getSkyOrigin().getPosition(afwGeom.degrees)
             crpixTest = wcs.getPixelOrigin()
             CD = wcs.getCDMatrix()
             
-            self.assertAlmostEqual(crvalTest[0], crval[0])
-            self.assertAlmostEqual(crvalTest[1], crval[1])
+            self.assertAlmostEqual(crvalTest[0], crval.getLongitude().asDegrees())
+            self.assertAlmostEqual(crvalTest[1], crval.getLatitude().asDegrees())
             self.assertAlmostEqual(crpixTest[0], crpix[0])
             self.assertAlmostEqual(crpixTest[1], crpix[1])
             self.assertAlmostEqual(CD[0,0], cd11)

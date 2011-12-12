@@ -34,15 +34,14 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/afw/geom/Angle.h"
 
 
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
+namespace afwGeom = lsst::afw::geom;
 
 namespace lsst { namespace afw { namespace detection { namespace {
-
-    double const DEGREES_PER_RADIAN = 57.2957795130823208767981548141;
-    double const RADIANS_PER_DEGREE = 0.0174532925199432957692369076849;
 
     struct SourcePos {
         double dec;
@@ -75,22 +74,16 @@ namespace lsst { namespace afw { namespace detection { namespace {
     size_t makeSourcePositions(SourceSet const &set, SourcePos *positions) {
         size_t n = 0;
         for (SourceSet::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
-            double ra = (*i)->getRa();
-            double dec = (*i)->getDec();
-            if (ra < 0.0 || ra >= 360.0) {
-                throw LSST_EXCEPT(ex::RangeErrorException, "right ascension out of range");
-            }
-            if (dec < -90.0 || dec > 90.0) {
-                throw LSST_EXCEPT(ex::RangeErrorException, "declination out of range");
-            }
-            if (lsst::utils::isnan(ra) || lsst::utils::isnan(dec)) {
+            afwGeom::Angle ra = (*i)->getRa();
+            afwGeom::Angle dec = (*i)->getDec();
+            if (lsst::utils::isnan(ra.asRadians()) || lsst::utils::isnan(dec.asRadians())) {
                 continue;
             }
-            double cosDec    = std::cos(RADIANS_PER_DEGREE*dec);
-            positions[n].dec = RADIANS_PER_DEGREE*dec;
-            positions[n].x   = std::cos(RADIANS_PER_DEGREE*ra)*cosDec;
-            positions[n].y   = std::sin(RADIANS_PER_DEGREE*ra)*cosDec;
-            positions[n].z   = std::sin(RADIANS_PER_DEGREE*dec);
+            double cosDec    = std::cos(dec);
+            positions[n].dec = dec.asRadians();
+            positions[n].x   = std::cos(ra)*cosDec;
+            positions[n].y   = std::sin(ra)*cosDec;
+            positions[n].z   = std::sin(dec);
             positions[n].src = &(*i);
             ++n;
         }
@@ -106,30 +99,29 @@ namespace lsst { namespace afw { namespace detection { namespace {
 
 
 /** Compute all tuples (s1,s2,d) where s1 belings to @a set1, s2 belongs to @a set2 and
-  * d, the distance between s1 and s2 in arcseconds, is at most @a radius. If set1 and
+  * d, the distance between s1 and s2, is at most @a radius. If set1 and
   * set2 are identical, then this call is equivalent to @c matchRaDec(set1,radius,true).
   * The match is performed in ra, dec space.
   *
   * @param[in] set1     first set of sources
   * @param[in] set2     second set of sources
-  * @param[in] radius   match radius (arcsec)
+  * @param[in] radius   match radius
+  * @param[in] closest  if true then just return the closest match
   */
 std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set1,
                                               lsst::afw::detection::SourceSet const &set2,
-                                              double radius, bool closest) {
+                                              afwGeom::Angle radius, bool closest) {
     if (&set1 == &set2) {
         return matchRaDec(set1, radius, true);
     }
-    if (radius < 0.0 || radius > 45.0*3600.0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range");
+    if (radius < 0.0 || (radius > (45. * afwGeom::degrees))) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range (0 to 45 degrees)");
     }
     if (set1.size() == 0 || set2.size() == 0) {
         return std::vector<SourceMatch>();
     }
     // setup match parameters
-    double const radiusRad = RADIANS_PER_DEGREE * radius/3600.0;
-    double const shr = std::sin(0.5*radiusRad);
-    double const d2Limit = 4.0*shr*shr;
+    double const d2Limit = radius.toUnitSphereDistanceSquared();
 
     // Build position lists
     size_t len1 = set1.size();
@@ -141,12 +133,12 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
-        double minDec = pos1[i].dec - radiusRad;
+        double minDec = pos1[i].dec - radius.asRadians();
         while (start < len2 && pos2[start].dec < minDec) { ++start; }
         if (start == len2) {
             break;
         }
-        double maxDec = pos1[i].dec + radiusRad;
+        double maxDec = pos1[i].dec + radius.asRadians();
         size_t closestIndex = -1;          // Index of closest match (if any)
         double d2Include = d2Limit;     // Squared distance for inclusion of match
         bool found = false;             // Found anything?
@@ -162,13 +154,13 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
                     found = true;
                 } else {
                     matches.push_back(SourceMatch(*pos1[i].src, *pos2[j].src,
-                                                  DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2))));
+                                                  afwGeom::Angle::fromUnitSphereDistanceSquared(d2).asRadians()));
                 }
             }
         }
         if (closest && found) {
             matches.push_back(SourceMatch(*pos1[i].src, *pos2[closestIndex].src,
-                                          DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2Include))));
+                                          afwGeom::Angle::fromUnitSphereDistanceSquared(d2Include).asRadians()));
         }
     }
     return matches;
@@ -176,27 +168,25 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
 
 
 /** Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a set,
-  * and d, the distance between s1 and s2 in arcseconds, is at most @a radius. The
+  * and d, the distance between s1 and s2, is at most @a radius. The
   * match is performed in ra, dec space.
   *
   * @param[in] set          the set of sources to self-match
-  * @param[in] radius       match radius (arcsec)
+  * @param[in] radius       match radius
   * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
   *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
   */
 std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set,
-                                              double radius,
+                                              afwGeom::Angle radius,
                                               bool symmetric) {
-    if (radius < 0.0 || radius > 45.0*3600.0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range");
+    if (radius < 0.0 || radius > (45.0 * afwGeom::degrees)) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range (0 to 45 degrees)");
     }
     if (set.size() == 0) {
         return std::vector<SourceMatch>();
     }
     // setup match parameters
-    double const radiusRad = RADIANS_PER_DEGREE * radius/3600.0;
-    double const shr = std::sin(0.5*radiusRad);
-    double const d2Limit = 4.0*shr*shr;
+    double const d2Limit = radius.toUnitSphereDistanceSquared();
 
     // Build position list
     size_t len = set.size();
@@ -205,17 +195,17 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0; i < len; ++i) {
-        double maxDec = pos[i].dec + radiusRad;
+        double maxDec = pos[i].dec + radius.asRadians();
         for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
             double dx = pos[i].x - pos[j].x;
             double dy = pos[i].y - pos[j].y;
             double dz = pos[i].z - pos[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
             if (d2 < d2Limit) {
-                double d = DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2));
-                matches.push_back(SourceMatch(*pos[i].src, *pos[j].src, d));
+                afwGeom::Angle d = afwGeom::Angle::fromUnitSphereDistanceSquared(d2);
+                matches.push_back(SourceMatch(*pos[i].src, *pos[j].src, d.asRadians()));
                 if (symmetric) {
-                    matches.push_back(SourceMatch(*pos[j].src, *pos[i].src, d));
+                    matches.push_back(SourceMatch(*pos[j].src, *pos[i].src, d.asRadians()));
                 }
             }
         }
@@ -225,13 +215,14 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
 
 
 /** Compute all tuples (s1,s2,d) where s1 belings to @a set1, s2 belongs to @a set2 and
-  * d, the distance between s1 and s2 in arcseconds, is at most @a radius. If set1 and
-  * set2 are identical, then this call is equivalent to @c matchRaDec(set1,radius,true).
+  * d, the distance between s1 and s2, in pixels, is at most @a radius. If set1 and
+  * set2 are identical, then this call is equivalent to @c matchXy(set1,radius,true).
   * The match is performed in pixel space (2d cartesian).
   *
   * @param[in] set1     first set of sources
   * @param[in] set2     second set of sources
   * @param[in] radius   match radius (pixels)
+  * @param[in] closest  if true then just return the closest match
   */
 std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const &set1,
                                            lsst::afw::detection::SourceSet const &set2,
@@ -295,7 +286,7 @@ std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const
 
 
 /** Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a set,
-  * and d, the distance between s1 and s2 in arcseconds, is at most @a radius. The
+  * and d, the distance between s1 and s2, in pixels, is at most @a radius. The
   * match is performed in pixel space (2d cartesian).
   *
   * @param[in] set          the set of sources to self-match

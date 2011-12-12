@@ -24,6 +24,8 @@
 ## \file
 ## \brief Definitions to talk to ds9 from python
 
+from __future__ import with_statement
+
 import os, re, math, sys, time
 
 try:
@@ -32,6 +34,7 @@ except ImportError, e:
     print >> sys.stderr, "Cannot import xpa: %s" % e
 
 import displayLib
+import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
 needShow = True;                        # Used to avoid a bug in ds9 5.4
@@ -216,13 +219,28 @@ def ds9Version():
 try:
     cmdBuffer
 except NameError:
-    XPA_SZ_LINE = 4096                  # internal buffersize in xpa.  Sigh
+    XPA_SZ_LINE = 4096 - 100            # internal buffersize in xpa. Sigh; esp. as the 100 is some needed slop
 
     class Buffer(object):
         """Control buffering the sending of commands to ds9;
 annoying but necessary for anything resembling performance
 
-The usual usage pattern is probably:
+The usual usage pattern (from a module importing this file, ds9.py) is probably:
+
+   with ds9.Buffering():
+       # bunches of ds9.{dot,line} commands
+       ds9.flush()
+       # bunches more ds9.{dot,line} commands
+
+or (if you don't like "with")
+   ds9.buffer()
+   # bunches of ds9.{dot,line} commands
+   ds9.flush()
+   # bunches more ds9.{dot,line} commands
+   ds9.buffer(False)
+
+or (the old idiom):
+   
    ds9.cmdBuffer.pushSize()
    # bunches of ds9.{dot,line} commands
    ds9.cmdBuffer.flush()
@@ -264,24 +282,25 @@ The usual usage pattern is probably:
         def pushSize(self, size=-1):
             """Replace current ds9 command buffer size with size (see also popSize)
             @param:  Size of buffer (-1: largest possible given bugs in xpa)"""
+            self.flush()
             self._bufsize.append(0)
             self.set(size)
 
         def popSize(self):
             """Switch back to the previous command buffer size (see also pushSize)"""
+            self.flush()
+
             if len(self._bufsize) > 1:
                 self._bufsize.pop()
 
-            self.flush()
-
-        def flush(self):
+        def flush(self, silent=False):
             """Flush the pending commands"""
-            ds9Cmd(flush=True)
+            ds9Cmd(flush=True, silent=silent)
 
     cmdBuffer = Buffer(0)
 
 
-def ds9Cmd(cmd=None, trap=True, flush=False):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -308,7 +327,7 @@ def ds9Cmd(cmd=None, trap=True, flush=False):
     except IOError, e:
         if not trap:
             raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
-        else:
+        elif not silent:
             print >> sys.stderr, "Caught ds9 exception processing command \"%s\": %s" % (cmd, e)
 
 def initDS9(execDs9=True):
@@ -359,7 +378,7 @@ def show(frame=None):
     ds9Cmd(selectFrame(frame) + "; raise", trap=False)
 
 def setMaskColor(color=GREEN):
-    """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
+    """Set the ds9 mask colour to; eg. setMaskColor(RED)"""
     ds9Cmd("mask color %s" % color)
 
 
@@ -399,24 +418,24 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
         for setting in settings:
             ds9Cmd("%s %s" % (setting, settings[setting]))
 
-    if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
+    if re.search("::DecoratedImage<", repr(data)): # it's a DecorateImage; display it
         _mtv(data.getImage(), wcs, title, False)
-    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display Image and overlay Mask
+    elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
         _mtv(data.getImage(), wcs, title, False)
         mask = data.getMask(True)
         if mask:
-            mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title, settings=settings)
+            mtv(mask, frame, False, wcs, True, lowOrderBits=lowOrderBits, title=title, settings=settings)
             if getMaskTransparency() is not None:
                 ds9Cmd("mask transparency %d" % getMaskTransparency())
 
-    elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
+    elif re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
         if wcs:
             raise RuntimeError, "You may not specify a wcs with an Exposure"
 
         mtv(data.getMaskedImage(), frame, False, data.getWcs(),
             False, lowOrderBits=lowOrderBits, title=title, settings=settings)
 
-    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
+    elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
         nMaskPlanes = data.getNumPlanesUsed()
         maskPlanes = data.getMaskPlaneDict()
 
@@ -433,7 +452,13 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
 
         usedPlanes = long(afwMath.makeStatistics(data, afwMath.SUM).getValue())
         mask = data.Factory(data.getDimensions())
-
+        #
+        # ds9 can't display a Mask without an image; so display an Image first
+        #
+        if not isMask:
+            im = afwImage.ImageU(data.getDimensions())
+            mtv(im, frame=frame)
+        
         for p in planeList:
             if planes[p] or True:
                 if not getMaskPlaneVisibility(planes[p]):
@@ -457,10 +482,10 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 setMaskColor(color)
                 _mtv(mask, wcs, title, True)
         return
-    elif re.search("::Image<", data.__repr__()): # it's an Image; display it
+    elif re.search("::Image<", repr(data)): # it's an Image; display it
         _mtv(data, wcs, title, False)
     else:
-        raise RuntimeError, "Unsupported type %s" % data.__repr__()
+        raise RuntimeError, "Unsupported type %s" % repr(data)
 
 try:
     haveGzip
@@ -470,6 +495,7 @@ except NameError:
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
+    title = str(title)
     if True:
         if isMask:
             xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()
@@ -503,6 +529,23 @@ def _mtv(data, wcs, title, isMask):
 #
 # Graphics commands
 #
+def buffer(enable=True):
+    if enable:
+        cmdBuffer.pushSize()
+    else:
+        cmdBuffer.popSize()
+
+flush = cmdBuffer.flush(silent=True)
+
+class Buffering(object):
+    """A class intended to be used with python's with statement:
+
+    """
+    def __enter__(self):
+        buffer(True)
+    def __exit__(self, *args):
+        buffer(False)
+
 def erase(frame=None):
     """Erase the specified DS9 frame"""
     if frame is None:

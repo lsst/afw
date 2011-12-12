@@ -30,6 +30,7 @@
 #include "lsst/afw/math.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/geom/Angle.h"
 
 using namespace std;
 
@@ -39,6 +40,7 @@ using lsst::daf::base::PropertySet;
 
 namespace pexEx = lsst::pex::exceptions;
 namespace afwCoord = lsst::afw::coord;
+namespace afwGeom = lsst::afw::geom;
 
 typedef lsst::afw::coord::Coord::Ptr CoordPtr;
 
@@ -66,7 +68,7 @@ void test(char *name) {
 
     lsst::afw::image::Wcs::Ptr testWcs = lsst::afw::image::makeWcs(metadata);
 
-    lsst::afw::geom::PointD pix, sky;
+    lsst::afw::geom::Point2D pix, sky;
 
 //     pix[0] = testMasked.getCols() / 2.0;
 //     pix[1] = testMasked.getRows() / 2.0;
@@ -81,7 +83,7 @@ void test(char *name) {
     Trace("MaskedImageIO_1", 1,
           boost::format("sky: %lf %lf") % sky[0] % sky[1]);
 
-    CoordPtr coord = afwCoord::makeCoord(afwCoord::ICRS, sky, afwCoord::DEGREES);
+    CoordPtr coord = afwCoord::makeCoord(afwCoord::ICRS, sky, afwGeom::degrees);
     pix = testWcs->skyToPixel(coord);
 
     Trace("MaskedImageIO_1", 1,

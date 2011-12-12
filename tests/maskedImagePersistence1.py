@@ -23,6 +23,7 @@
 #
 
 import os
+import os.path
 
 import unittest
 import lsst.utils.tests as utilsTests
@@ -34,7 +35,7 @@ import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExceptions
 import eups
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("You must set up afwdata to run these tests")
 
@@ -92,7 +93,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
 
         miPath = os.path.join("tests", "data", "Dest")
         logicalLocation = dafPers.LogicalLocation(miPath)
-        storage = self.persistence.getPersistStorage("FitsStorage", logicalLocation)
+        storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
         try:
             self.persistence.persist(self.maskedImage, storageList, self.additionalData)

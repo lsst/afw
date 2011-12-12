@@ -28,6 +28,7 @@
 #include "lsst/afw/math/offsetImage.h"
 #include "lsst/afw/cameraGeom/Amp.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Ccd.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
@@ -45,33 +46,43 @@ cameraGeom::ElectronicParams::ElectronicParams(
 /************************************************************************************************************/
 
 cameraGeom::Amp::Amp(
-        cameraGeom::Id id,                            ///< The amplifier's ID
-        afwImage::BBox const& allPixels,           ///< Bounding box of the pixels read off this amplifier
-        afwImage::BBox const& biasSec,             ///< Bounding box of amplifier's bias section
-        afwImage::BBox const& dataSec,             ///< Bounding box of amplifier's data section
-        cameraGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
-        ElectronicParams::Ptr eParams              ///< electronic properties of Amp
-                 )
-    : Detector(id, true),
-    _biasSec(biasSec), _dataSec(dataSec), _readoutCorner(readoutCorner), _eParams(eParams)
+    cameraGeom::Id id,                            ///< The amplifier's ID
+    afwGeom::Box2I const& allPixels,           ///< Bounding box of the pixels read off this amplifier
+    afwGeom::Box2I const& biasSec,             ///< Bounding box of amplifier's bias section
+    afwGeom::Box2I const& dataSec,             ///< Bounding box of amplifier's data section
+    ElectronicParams::Ptr eParams              ///< electronic properties of Amp
+) : Detector(id, true),
+    _biasSec(biasSec), 
+    _dataSec(dataSec), 
+    _eParams(eParams)
 {
     if (biasSec.getWidth() > 0 && biasSec.getHeight() > 0 &&
-        (!allPixels.contains(biasSec.getLLC()) || !allPixels.contains(biasSec.getURC()))) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
-                          (boost::format("%||'s bias section doesn't fit in allPixels") % id).str());
+        (!allPixels.contains(biasSec))
+    ) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::OutOfRangeException,
+            (boost::format(
+                "%||'s bias section (%s) doesn't fit in allPixels (%s)") % 
+             id % biasSec.toString() % allPixels.toString()).str()
+        );
     }
     if (dataSec.getWidth() > 0 && dataSec.getHeight() > 0 &&
-        (!allPixels.contains(dataSec.getLLC()) || !allPixels.contains(dataSec.getURC()))) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
-                          (boost::format("%||'s data section doesn't fit in allPixels") % id).str());
+        (!allPixels.contains(dataSec))
+    ) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::OutOfRangeException,
+            (boost::format(
+                "%||'s data section (%s) doesn't fit in allPixels (%s)") % 
+             id % dataSec.toString() % allPixels.toString()).str()
+        );
         
     }
 
     getAllPixels() = allPixels;
 
-    _originOnDisk = afwGeom::makePointI(0, 0);
+    _originInDetector = afwGeom::Point2I(0, 0);
     _nQuarter = 0;
-    _flipLR = _flipTB = false;
+    _flipLR = false;
     
     setTrimmedGeom();
 }
@@ -84,25 +95,53 @@ void cameraGeom::Amp::setTrimmedGeom() {
     //
     // Figure out which Amp we are
     //
-    int const iX = getAllPixels().getX0()/getAllPixels().getWidth();
-    int const iY = getAllPixels().getY0()/getAllPixels().getHeight();
+    int const iX = getAllPixels().getMinX()/getAllPixels().getWidth();
+    int const iY = getAllPixels().getMinY()/getAllPixels().getHeight();
     
     int const dataHeight = _dataSec.getHeight();
     int const dataWidth = _dataSec.getWidth();
 
-    _trimmedDataSec = afwImage::BBox(afwImage::PointI(iX*dataWidth, iY*dataHeight), dataWidth, dataHeight);
+    _trimmedDataSec = afwGeom::Box2I(
+        afwGeom::Point2I(iX*dataWidth, iY*dataHeight), 
+        afwGeom::Extent2I(dataWidth, dataHeight)
+    );
     getAllTrimmedPixels() = _trimmedDataSec;
+}
+
+void cameraGeom::Amp::setElectronicToChipLayout(
+        lsst::afw::geom::Point2I pos,         // Position of Amp data (in Detector coords)
+        int nQuarter,                         // number of quarter-turns in +ve direction
+        bool flipLR,                          // Flip the Amp data left <--> right before rotation
+        DiskCoordSys sys                      // Orientation of pixel data on disk 
+                  ) {
+    _nQuarter = nQuarter;
+    _flipLR = flipLR;
+    _diskCoordSys = sys;
+
+    if (_flipLR)
+        _readoutCorner = LRC;
+    else
+        _readoutCorner = LLC;
+
+    _readoutCorner = static_cast<ReadoutCorner>((_readoutCorner + nQuarter)%4);
+    _biasSec = _mapFromElectronic(_biasSec);
+    _dataSec = _mapFromElectronic(_dataSec);
+    getAllPixels() = _mapFromElectronic(getAllPixels());
+    this->shift(pos.getX()*getAllPixels().getWidth(), pos.getY()*getAllPixels().getHeight());
+    setTrimmedGeom();
+    _originInDetector = getAllPixels().getMin();
 }
 
 /// Offset an Amp by the specified amount
 void cameraGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
                             int dy         ///< How much to offset in y (pixels)
                         ) {
-    getAllPixels().shift(dx, dy);
-    _biasSec.shift(dx, dy);
-    _dataSec.shift(dx, dy);
-    getAllTrimmedPixels().shift(dx, dy);
-    _trimmedDataSec.shift(dx, dy);
+    geom::Extent2I d(dx,dy);
+    getAllPixels().shift(d);
+    _biasSec.shift(d);
+    _dataSec.shift(d);
+    getAllTrimmedPixels().shift(d);
+    _trimmedDataSec.shift(d);
 }
 
 /// Rotate an Amp by some number of 90degree anticlockwise turns about centerPixel
@@ -124,12 +163,38 @@ void cameraGeom::Amp::rotateBy90(
     getAllPixels() = cameraGeom::detail::rotateBBoxBy90(getAllPixels(), n90, dimensions);
     _biasSec = cameraGeom::detail::rotateBBoxBy90(_biasSec, n90, dimensions);
     _dataSec = cameraGeom::detail::rotateBBoxBy90(_dataSec, n90, dimensions);
+    _nQuarter = (_nQuarter + n90)%4;
 
     setTrimmedGeom();
     //
     // Fix the readout corner
     //
     _readoutCorner = static_cast<ReadoutCorner>((_readoutCorner + n90)%4);
+}
+/**
+ * Convert an Amp's BBox assuming bounding boxes are in camera coordinates to the coordinate system 
+ * on disk as enumerated in _diskCoordSys
+ */
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapToDisk(lsst::afw::geom::Box2I bbox) const {
+    cameraGeom::Detector::Ptr pccd = getParent();
+    int n90 = 0;
+    lsst::afw::geom::Box2I allpix = lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(0,0), lsst::afw::geom::Extent2I(0,0));
+    if (pccd) {
+      n90 = pccd->getOrientation().getNQuarter();
+      allpix = pccd->getAllPixels(false);
+    }
+    switch (_diskCoordSys) {
+      case CAMERA:
+        return bbox;
+      case AMP:
+        return _mapToElectronic(bbox);
+      case SENSOR:
+        if( n90 > 0)
+          return cameraGeom::detail::rotateBBoxBy90(bbox, -n90, allpix.getDimensions());
+        else
+          return bbox;
+    }
+    abort();
 }
 
 /**
@@ -138,15 +203,35 @@ void cameraGeom::Amp::rotateBy90(
  *
  * This is intended to be used when each amp is in its separate file (or HDU) on disk
  */
-lsst::afw::image::BBox cameraGeom::Amp::_mapToDisk(lsst::afw::image::BBox bbox) const {
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapToElectronic(lsst::afw::geom::Box2I bbox) const {
     // Reset the BBox's origin within the Detector to reflect the on-disk value
-    int const x0 = _originOnDisk.getX();
-    int const y0 = _originOnDisk.getY();
-    bbox.shift(-x0, -y0);
+    bbox.shift(-geom::Extent2I(_originInDetector));
     // Rotate the BBox to reflect the on-disk orientation
-    afwGeom::Extent2I dimensions = afwGeom::makeExtentI(getAllPixels(false).getWidth(),
-                                                        getAllPixels(false).getHeight());
-    return cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
+    afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
+    afwGeom::Box2I tbbox = afwGeom::Box2I(afwGeom::Point2I(0,0), dimensions);
+    bbox = cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
+    tbbox = cameraGeom::detail::rotateBBoxBy90(tbbox, -_nQuarter, dimensions);
+    if(_flipLR){
+        bbox.flipLR(tbbox.getDimensions()[0]);
+    }
+    return bbox;
+}
+
+/**
+ * Convert a Amp's BBox from electronic coordinates where the first pixel is at (0,0)
+ * to the appropriate orientation for inclusion in a sensor in the camera
+ * coordinate system.  The origin of the amp is set in the addAmp() method on
+ * the Ccd class.
+ *
+ * This is intended to be used when each amp is in its separate file (or HDU) on disk
+ */
+lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromElectronic(lsst::afw::geom::Box2I bbox) const {
+    // Rotate the BBox to reflect the on-disk orientation
+    afwGeom::Extent2I dimensions = getAllPixels(false).getDimensions();
+    if(_flipLR){
+        bbox.flipLR(dimensions[0]);
+    }
+    return cameraGeom::detail::rotateBBoxBy90(bbox, _nQuarter, dimensions);
 }
 
 /**
@@ -155,14 +240,38 @@ lsst::afw::image::BBox cameraGeom::Amp::_mapToDisk(lsst::afw::image::BBox bbox) 
  * This is only important if the Amps are stored in separate files, rather than being assembled into
  * complete Detectors by the data acquisition system
  */
-template<typename ImageT>
-typename ImageT::Ptr cameraGeom::Amp::prepareAmpData(ImageT const& inImage)
+ template<typename ImageT>
+const ImageT cameraGeom::Amp::prepareAmpData(ImageT const inImage)
 {
-    typename ImageT::Ptr flippedImage = afwMath::flipImage(inImage, _flipLR, _flipTB);
+    cameraGeom::Detector::Ptr pccd = getParent();
+    int n90 = 0;
+    if (pccd) 
+      n90 = pccd->getOrientation().getNQuarter();
 
-    return afwMath::rotateImageBy90(*flippedImage, _nQuarter);
+    switch (_diskCoordSys) {
+        case CAMERA:
+            {
+                return inImage;
+            }
+        case AMP:
+            {
+                typename ImageT::Ptr flippedImage = afwMath::flipImage(inImage, _flipLR, false);
+                return *afwMath::rotateImageBy90(*flippedImage, _nQuarter);
+            }
+        case SENSOR:
+            {
+                if( n90 > 0)
+                    return *afwMath::rotateImageBy90(inImage, n90);
+                else
+                    return inImage;
+            }
+        default:
+            {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Invalid on disk coordinate system.");
+            }
+    }
 }
-
+ 
 /************************************************************************************************************/
 
 //
@@ -170,9 +279,9 @@ typename ImageT::Ptr cameraGeom::Amp::prepareAmpData(ImageT const& inImage)
 // \cond
 //
 #define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const&);
+    template const afwImage::Image<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const);
 #define INSTANTIATEMASK(TYPE) \
-    template afwImage::Mask<TYPE>::Ptr cameraGeom::Amp::prepareAmpData(afwImage::Mask<TYPE> const&);
+    template const afwImage::Mask<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::Mask<TYPE> const);
 
 INSTANTIATE(boost::uint16_t)
 INSTANTIATE(float)

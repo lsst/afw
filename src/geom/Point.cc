@@ -57,49 +57,69 @@ geom::Point<T,N>::Point(Point<U,N> const & other) : Super() {
     }
 }
 
+template <typename T>
+template <typename U>
+geom::Point<T,2>::Point(Point<U,2> const & other) : Super() {
+    for (register int n=0; n<2; ++n) {
+        this->_vector[n] = detail::PointSpecialized<T>::template convert<U>(other[n]);
+    }
+}
+
+template <typename T>
+template <typename U>
+geom::Point<T,3>::Point(Point<U,3> const & other) : Super() {
+    for (register int n=0; n<3; ++n) {
+        this->_vector[n] = detail::PointSpecialized<T>::template convert<U>(other[n]);
+    }
+}
+
 template <typename T, int N>
-geom::CoordinateExpr<N> geom::Point<T,N>::eq(Point const & other) const {
+geom::CoordinateExpr<N> geom::PointBase<T,N>::eq(Point<T,N> const & other) const {
     CoordinateExpr<N> r;
     for (register int n=0; n<N; ++n) r[n] = this->_vector[n] == other[n];
     return r;
 }
 
 template <typename T, int N>
-geom::CoordinateExpr<N> geom::Point<T,N>::ne(Point const & other) const {
+geom::CoordinateExpr<N> geom::PointBase<T,N>::ne(Point<T,N> const & other) const {
     CoordinateExpr<N> r;
     for (register int n=0; n<N; ++n) r[n] = this->_vector[n] != other[n];
     return r;
 }
 
 template <typename T, int N>
-geom::CoordinateExpr<N> geom::Point<T,N>::lt(Point const & other) const {
+geom::CoordinateExpr<N> geom::PointBase<T,N>::lt(Point<T,N> const & other) const {
     CoordinateExpr<N> r;
     for (register int n=0; n<N; ++n) r[n] = this->_vector[n] < other[n];
     return r;
 }
 
 template <typename T, int N>
-geom::CoordinateExpr<N> geom::Point<T,N>::le(Point const & other) const {
+geom::CoordinateExpr<N> geom::PointBase<T,N>::le(Point<T,N> const & other) const {
     CoordinateExpr<N> r;
     for (register int n=0; n<N; ++n) r[n] = this->_vector[n] <= other[n];
     return r;
 }
 
 template <typename T, int N>
-geom::CoordinateExpr<N> geom::Point<T,N>::gt(Point const & other) const {
+geom::CoordinateExpr<N> geom::PointBase<T,N>::gt(Point<T,N> const & other) const {
     CoordinateExpr<N> r;
     for (register int n=0; n<N; ++n) r[n] = this->_vector[n] > other[n];
     return r;
 }
 
 template <typename T, int N>
-geom::CoordinateExpr<N> geom::Point<T,N>::ge(Point const & other) const {
+geom::CoordinateExpr<N> geom::PointBase<T,N>::ge(Point<T,N> const & other) const {
     CoordinateExpr<N> r;
     for (register int n=0; n<N; ++n) r[n] = this->_vector[n] >= other[n];
     return r;
 }
 
 #ifndef DOXYGEN
+template class geom::PointBase<int,2>;
+template class geom::PointBase<int,3>;
+template class geom::PointBase<double,2>;
+template class geom::PointBase<double,3>;
 template class geom::Point<int,2>;
 template class geom::Point<int,3>;
 template class geom::Point<double,2>;

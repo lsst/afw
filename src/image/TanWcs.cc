@@ -32,7 +32,7 @@
 #include "wcslib/wcshdr.h"
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/pex/exceptions.h"
@@ -40,14 +40,14 @@
 #include "lsst/afw/image/TanWcs.h"    
 
 namespace except = lsst::pex::exceptions; 
-namespace afwImg = lsst::afw::image;
-namespace geom = lsst::afw::geom;
+namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 using namespace std;
 
 
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::afw::image::TanWcs TanWcs;
-typedef lsst::afw::geom::PointD GeomPoint;
+typedef lsst::afw::geom::Point2D GeomPoint;
 typedef lsst::afw::coord::Coord Coord;
 
 const int lsstToFitsPixels = +1;
@@ -62,25 +62,22 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
 TanWcs::TanWcs() : 
     Wcs(),
     _hasDistortion(false),
-    _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+    _sipA(), _sipB(), _sipAp(), _sipBp() {
 }
 
-double TanWcs::pixelScale() const {
-	// deg2arcsec(sqrt(fabs(det(cd))));
-	//return 3600. * sqrt(fabs(CD(0,0)*CD(1,1) - CD(0,1)*CD(1,0)));
-
-	// HACK -- assume "cd" elements are set...
+afwGeom::Angle TanWcs::pixelScale() const {
+	// HACK -- assume "CD" elements are set (and are in degrees)
 	double* cd = _wcsInfo->m_cd;
 	assert(cd);
-	return 3600. * sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2]));
+	return sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])) * afwGeom::degrees;
 }
 
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
 ///out which (if any) sub-class of Wcs is appropriate
-TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) : 
+TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) : 
     Wcs(fitsMetadata),
     _hasDistortion(false),
-    _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+    _sipA(), _sipB(), _sipAp(), _sipBp() {
 
     //Internal params for wcslib. These should be set via policy - but for the moment...
     _relax = 1;
@@ -138,13 +135,13 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
     }
     
     //Check that the existence of forward sip matrices <=> existence of reverse matrices
-    if( _hasDistortion) {
-        if ((_sipA.rows() == 1) || (_sipB.rows() == 1)) {
+    if (_hasDistortion) {
+        if (_sipA.rows() <= 1 || _sipB.rows() <= 1) {
                 string msg = "Existence of forward distorton matrices suggested, but not found";
                 throw LSST_EXCEPT(except::InvalidParameterException, msg);
         }
 
-        if ((_sipAp.rows() == 1) || (_sipBp.rows() == 1)) {
+        if (_sipAp.rows() <= 1 || _sipBp.rows() <= 1) {
                 string msg = "Forward distorton matrices present, but no reverse matrices";
                 throw LSST_EXCEPT(except::InvalidParameterException, msg);
         }
@@ -179,54 +176,58 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
 
 
 
-///\brief Construct a tangent plane wcs without distortion terms    
-///\param crval The sky position of the reference point
-///\param crpix The pixel position corresponding to crval in Lsst units
-///\param CD    Matrix describing transformations from pixel to sky positions
-///\param sipA Forward distortion matrix for axis 1
-///\param sipB Forward distortion matrix for axis 2
-///\param sipAp Reverse distortion matrix for axis 1
-///\param sipBp Reverse distortion matrix for axis 2
-///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
-///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
-///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
-///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-TanWcs::TanWcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD, 
-        double equinox, string raDecSys,
-        const string cunits1, const string cunits2
+/// \brief Construct a tangent plane wcs without distortion terms    
+/// \param crval The sky position of the reference point
+/// \param crpix The pixel position corresponding to crval in Lsst units
+/// \param CD    Matrix describing transformations from pixel to sky positions
+/// \param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+/// \param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+/// \param cunits1 Units of sky position. One of deg, arcmin or arcsec
+/// \param cunits2 Units of sky position. One of deg, arcmin or arcsec
+TanWcs::TanWcs(
+        const lsst::afw::geom::Point2D crval,
+        const lsst::afw::geom::Point2D crpix,
+        const Eigen::Matrix2d &CD,
+        double equinox,
+        std::string raDecSys,
+        const std::string cunits1,
+        const std::string cunits2
        ) :
        Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
        _hasDistortion(false),
-       _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+       _sipA(), _sipB(), _sipAp(), _sipBp() {
        
        //Nothing to do here
 }
 
 
-///\brief Construct a tangent plane wcs with distortion terms    
-///\param crval The sky position of the reference point
-///\param crpix The pixel position corresponding to crval
-///\param CD    Matrix describing transformations from pixel to sky positions
-///\param sipA Forward distortion matrix for axis 1
-///\param sipB Forward distortion matrix for axis 2
-///\param sipAp Reverse distortion matrix for axis 1
-///\param sipBp Reverse distortion matrix for axis 2
-///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
-///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
-///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
-///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-TanWcs::TanWcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD, 
-            Eigen::MatrixXd const & sipA, 
-            Eigen::MatrixXd const & sipB, 
-            Eigen::MatrixXd const & sipAp, 
-            Eigen::MatrixXd const & sipBp,  
-            double equinox, std::string raDecSys,
-            const std::string cunits1, const std::string cunits2
+/// \brief Construct a tangent plane wcs with distortion terms    
+/// \param crval The sky position of the reference point
+/// \param crpix The pixel position corresponding to crval
+/// \param CD    Matrix describing transformations from pixel to sky positions
+/// \param sipA Forward distortion matrix for axis 1
+/// \param sipB Forward distortion matrix for axis 2
+/// \param sipAp Reverse distortion matrix for axis 1
+/// \param sipBp Reverse distortion matrix for axis 2
+/// \param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+/// \param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+/// \param cunits1 Units of sky position. One of deg, arcmin or arcsec
+/// \param cunits2 Units of sky position. One of deg, arcmin or arcsec
+TanWcs::TanWcs(
+        const lsst::afw::geom::Point2D crval,
+        const lsst::afw::geom::Point2D crpix,
+        const Eigen::Matrix2d &CD, 
+        Eigen::MatrixXd const & sipA, 
+        Eigen::MatrixXd const & sipB, 
+        Eigen::MatrixXd const & sipAp, 
+        Eigen::MatrixXd const & sipBp,  
+        double equinox, std::string raDecSys,
+        const std::string cunits1, const std::string cunits2
            ) :
            Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
            _hasDistortion(true),
            //Sip's set by a dedicated method that does error checking
-           _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+           _sipA(), _sipB(), _sipAp(), _sipBp() {
 
     //Input checking is done constructor of base class, so don't need to do 
     //any here.
@@ -247,6 +248,14 @@ TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
     
 }
 
+bool TanWcs::operator==(const TanWcs &rhs) const {
+    return Wcs::operator==(rhs) &&
+        _hasDistortion == rhs._hasDistortion &&
+        (!_hasDistortion || (_sipA == rhs._sipA &&
+                             _sipB == rhs._sipB &&
+                             _sipAp == rhs._sipAp &&
+                             _sipBp == rhs._sipBp));
+}
 
 ///Assignment operator    
 TanWcs & TanWcs::operator = (const TanWcs & rhs){
@@ -294,22 +303,22 @@ TanWcs & TanWcs::operator = (const TanWcs & rhs){
     return *this;
 }
 
-///\brief Clone a TanWcs.
-afwImg::Wcs::Ptr TanWcs::clone(void) const {
-    return afwImg::Wcs::Ptr(new TanWcs(*this));
+/// \brief Clone a TanWcs.
+afwImage::Wcs::Ptr TanWcs::clone(void) const {
+    return afwImage::Wcs::Ptr(new TanWcs(*this));
 }
 
 //
 // Accessors
 //
-GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
-                                 double sky2  ///< Latitude  coordinate, DEGREES
+GeomPoint TanWcs::skyToPixelImpl(afwGeom::Angle sky1, // RA
+                                 afwGeom::Angle sky2  // Dec
                                 ) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
-    double const skyTmp[2] = { sky1, sky2 };
+    double skyTmp[2];
     double imgcrd[2];
     double phi, theta;
     double pixTmp[2];
@@ -317,6 +326,10 @@ GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
     //Estimate undistorted pixel coordinates
     int stat[1];
     int status = 0;
+
+    skyTmp[_wcsInfo->lng] = sky1.asDegrees();
+    skyTmp[_wcsInfo->lat] = sky2.asDegrees();
+
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
@@ -328,7 +341,7 @@ GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
     //Correct for distortion. We follow the notation of Shupe et al. here, including
     //capitalisation
     if( _hasDistortion) {
-        GeomPoint pix = geom::makePointD(pixTmp[0], pixTmp[1]);
+        GeomPoint pix = afwGeom::Point2D(pixTmp[0], pixTmp[1]);
         GeomPoint dpix = distortPixel(pix);
         pixTmp[0] = dpix[0];
         pixTmp[1] = dpix[1];
@@ -336,11 +349,11 @@ GeomPoint TanWcs::skyToPixelImpl(double sky1, ///< Longitude coordinate, DEGREES
 
     // wcslib assumes 1-indexed coords
     double offset = lsst::afw::image::PixelZeroPos + fitsToLsstPixels;
-    return geom::makePointD(pixTmp[0]+offset, pixTmp[1]+offset);
+    return afwGeom::Point2D(pixTmp[0]+offset, pixTmp[1]+offset);
 
 }
 
-GeomPoint TanWcs::undistortPixel(const GeomPoint pix) const {
+GeomPoint TanWcs::undistortPixel(const lsst::afw::geom::Point2D pix) const {
     if (!_hasDistortion) {
         return GeomPoint(pix);
     }
@@ -370,10 +383,10 @@ GeomPoint TanWcs::undistortPixel(const GeomPoint pix) const {
         }
     }
 
-    return geom::makePointD(pix[0] + f, pix[1] + g);
+    return afwGeom::Point2D(pix[0] + f, pix[1] + g);
 }
 
-GeomPoint TanWcs::distortPixel(const GeomPoint pix) const {
+GeomPoint TanWcs::distortPixel(const lsst::afw::geom::Point2D pix) const {
     if (!_hasDistortion) {
         return GeomPoint(pix);
     }
@@ -398,7 +411,7 @@ GeomPoint TanWcs::distortPixel(const GeomPoint pix) const {
             G += _sipBp(i,j)* pow(U, i) * pow(V, j);
         }
     }
-    return geom::makePointD(U + F + _wcsInfo->crpix[0],
+    return afwGeom::Point2D(U + F + _wcsInfo->crpix[0],
                             V + G + _wcsInfo->crpix[1]);
 }
 
@@ -407,7 +420,7 @@ GeomPoint TanWcs::distortPixel(const GeomPoint pix) const {
  * Worker routine for pixelToSky
  */
 void
-TanWcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
+TanWcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle sky[2]) const
 {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
@@ -421,18 +434,21 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, double skyTmp[2]) const
     
     //Correct pixel positions for distortion if necessary
     if( _hasDistortion) {
-        GeomPoint pix = geom::makePointD(pixTmp[0], pixTmp[1]);
+        GeomPoint pix = afwGeom::Point2D(pixTmp[0], pixTmp[1]);
         GeomPoint dpix = undistortPixel(pix);
         pixTmp[0] = dpix[0];
         pixTmp[1] = dpix[1];
     }
  
     int status = 0;
+	double skyTmp[2];
     if (wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status) > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of  %d. %s") %
                            status % wcs_errmsg[status]).str());
     }
+	sky[0] = skyTmp[0] * afwGeom::degrees;
+	sky[1] = skyTmp[1] * afwGeom::degrees;
 }
 
 /************************************************************************************************************/
@@ -444,7 +460,7 @@ lsst::daf::base::PropertyList::Ptr TanWcs::getFitsMetadata() const {
 
 #if 0
 //Rely on base class implementation for now, because this implementation isn't working
-lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) const {
+lsst::afw::afwGeom::AffineTransform TanWcs::linearizeAt(lsst::afw::geom::Point2D const & sky) const {
     
     Eigen::Matrix2d CD(2,2);
     CD(0,0) = _wcsInfo->cd[0];
@@ -471,7 +487,7 @@ lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) cons
     sky00v << sky.getX(), sky.getY();
     Eigen::Vector2d pix00v;
     pix00v << pix00.getX(), pix00.getY();
-    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
+    return lsst::afw::afwGeom::AffineTransform(m, lsst::afw::afwGeom::Extent2D(sky00v - m * pix00v));
 }
 #endif
 
@@ -479,7 +495,7 @@ lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) cons
 // Mutators
 //    
 
-///\brief Set the distortion matrices
+/// \brief Set the distortion matrices
 /// \param sipA Forward distortion matrix for 1st axis
 /// \param sipB Forward distortion matrix for 2nd axis
 /// \param sipAp Reverse distortion matrix for 1st axis

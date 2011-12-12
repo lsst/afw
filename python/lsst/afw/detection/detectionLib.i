@@ -38,14 +38,22 @@ Python interface to lsst::afw::detection classes
 
 %{
 #include "lsst/daf/base.h"
-#include "lsst/daf/data.h"
 #include "lsst/pex/logging/Log.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/logging/LogFormatter.h"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/image.h"
-#include "lsst/afw/detection/Psf.h"
+
+#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
+#include "numpy/arrayobject.h"
+#include "lsst/ndarray/python.h"
+#include "lsst/ndarray/python/eigen.h"
+%}
+
+%init %{
+    import_array();
 %}
 
 %inline %{
@@ -66,7 +74,11 @@ namespace boost {
 %include "lsst/daf/base/persistenceMacros.i"
 
 %import "lsst/afw/image/imageLib.i"
+%import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/geom/ellipses/ellipsesLib.i"
 %import "lsst/afw/math/mathLib.i"
+%import "lsst/afw/math/shapelets/shapeletsLib.i"
+%include "lsst/ndarray/ndarray.i"
 
 %lsst_exceptions()
 

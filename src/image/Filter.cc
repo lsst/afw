@@ -175,7 +175,14 @@ std::vector<std::string> Filter::getNames()
 
     return names;
 }
-            
+
+/**
+ * Are two filters identical?
+ */
+bool Filter::operator==(Filter const& rhs) const {
+    return _id != UNKNOWN && _id == rhs._id;
+}
+
 /************************************************************************************************************/
 /**
  * Initialise the Filter registry

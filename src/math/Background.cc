@@ -39,6 +39,7 @@
 #include "lsst/afw/math/Statistics.h"
 
 using namespace std;
+namespace geom = lsst::afw::geom;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
@@ -92,11 +93,11 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _subimgWidth = _imgWidth / _nxSample;
     _subimgHeight = _imgHeight / _nySample;
     for (int iX = 0; iX < _nxSample; ++iX) {
-        _xcen[iX] = std::floor((iX + 0.5)*_subimgWidth);
+        _xcen[iX] = (iX + 0.5)*_subimgWidth - 0.5;
         _xorig[iX] = iX * _subimgWidth;
     }
     for (int iY = 0; iY < _nySample; ++iY) {
-        _ycen[iY] = std::floor((iY + 0.5)*_subimgHeight);
+        _ycen[iY] = (iY + 0.5)*_subimgHeight - 0.5;
         _yorig[iY] = iY * _subimgHeight;
     }
 
@@ -112,9 +113,12 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         _grid[iX].resize(_nySample);
         for (int iY = 0; iY < _nySample; ++iY) {
             
-            ImageT subimg =
-                ImageT(img, image::BBox(image::PointI(_xorig[iX], _yorig[iY]),
-                                        _subimgWidth, _subimgHeight));
+            ImageT subimg = ImageT(img, geom::Box2I(
+                    geom::Point2I(_xorig[iX], _yorig[iY]),
+                    geom::Extent2I(_subimgWidth, _subimgHeight)
+                ),
+                image::LOCAL
+            );
             
             math::Statistics stats =
                 math::makeStatistics(subimg, _bctrl.getStatisticsProperty(),
@@ -186,8 +190,11 @@ template<typename PixelT>
 typename image::Image<PixelT>::Ptr math::Background::getImage() const {
 
     // create a shared_ptr to put the background image in and return to caller
-    typename image::Image<PixelT>::Ptr bg =
-        typename image::Image<PixelT>::Ptr(new typename image::Image<PixelT>(_imgWidth, _imgHeight));
+    typename image::Image<PixelT>::Ptr bg = typename image::Image<PixelT>::Ptr(
+        new typename image::Image<PixelT>(
+            geom::Extent2I(_imgWidth, _imgHeight)
+        )
+    );
 
     // need a vector of all x pixel coords to spline over
     vector<int> xpix(bg->getWidth());

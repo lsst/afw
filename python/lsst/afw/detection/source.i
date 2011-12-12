@@ -31,10 +31,13 @@
 #include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
+#include "lsst/afw/detection/AperturePhotometry.h"
 #include "lsst/afw/detection/Shape.h"
 
 #include "lsst/afw/formatters/SourceFormatter.h"
 #include "lsst/afw/formatters/DiaSourceFormatter.h"
+#include "boost/pointer_cast.hpp"
+#include "boost/shared_ptr.hpp"
 %}
 
 %include "../boost_picklable.i"
@@ -95,6 +98,11 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %MeasurementBefore(Photometry);
 %MeasurementBefore(Shape);
 
+SWIG_SHARED_PTR_DERIVED(AperturePhotometry, lsst::afw::detection::Photometry, 
+                        lsst::afw::detection::AperturePhotometry);
+SWIG_SHARED_PTR_DERIVED(MultipleAperturePhotometry, lsst::afw::detection::Photometry, 
+                        lsst::afw::detection::MultipleAperturePhotometry);
+
 %include "lsst/afw/detection/Schema.h"
 %include "lsst/afw/detection/Measurement.h"
 
@@ -105,6 +113,18 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %include "lsst/afw/detection/Astrometry.h"
 %include "lsst/afw/detection/Photometry.h"
 %include "lsst/afw/detection/Shape.h"
+%include "lsst/afw/detection/AperturePhotometry.h"
+
+%inline %{
+    lsst::afw::detection::AperturePhotometry::Ptr
+    cast_AperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::AperturePhotometry>(phot);
+    }
+    lsst::afw::detection::MultipleAperturePhotometry::Ptr
+    cast_MultipleAperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::MultipleAperturePhotometry>(phot);
+    }
+%}
 
 /************************************************************************************************************/
 
@@ -113,6 +133,34 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
     lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>;
 %template(DiaSourceBase)
     lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>;
+
+%extend lsst::afw::detection::Source {
+    std::string toString() {
+        std::ostringstream os;
+        os << "Source " << $self->getId();
+        os.precision(9);
+        os << " (" << ($self->getRa().asDegrees()) << ", " << ($self->getDec().asDegrees()) << " deg)";
+        return os.str();
+    }
+
+    %feature("shadow") _getFootprint %{
+        def getFootprint(self):
+            return $action(self)
+    %}
+    %feature("shadow") _setFootprint %{
+        def setFootprint(self, fp):
+            $action(self, fp)
+    %}
+
+    void _setFootprint(boost::shared_ptr<lsst::afw::detection::Footprint> const & fp) {
+        boost::shared_ptr<lsst::afw::detection::Footprint const> constFp(fp);
+        $self->setFootprint(constFp); 
+    }
+    boost::shared_ptr<lsst::afw::detection::Footprint> _getFootprint() {
+        return boost::const_pointer_cast<lsst::afw::detection::Footprint>($self->getFootprint());
+    }
+};
+
 
 %include "lsst/afw/detection/Source.h"
 %include "lsst/afw/detection/DiaSource.h"
@@ -125,22 +173,13 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %template(DiaSourceSet)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
 
 // Provide semi-useful printing of catalog records
-%extend lsst::afw::detection::Source {
-    std::string toString() {
-        std::ostringstream os;
-        os << "Source " << $self->getId();
-        os.precision(9);
-        os << " (" << $self->getRa() << ", " << $self->getDec() << ")";
-        return os.str();
-    }
-};
 
 %extend lsst::afw::detection::DiaSource {
     std::string toString() {
         std::ostringstream os;
         os << "DiaSource " << $self->getId();
         os.precision(9);
-        os << " (" << $self->getRa() << ", " << $self->getDec() << ")";
+        os << " (" << ($self->getRa().asDegrees()) << ", " << ($self->getDec().asDegrees()) << " deg)";
         return os.str();
     }
 };

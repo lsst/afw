@@ -23,13 +23,13 @@
 #
 
 """
-Tests for Statistics
+Tests for statisticsMasked
 
 Run with:
-   ./Statistics.py
+   ./statisticsMasked.py
 or
    python
-   >>> import Statistics; Statistics.run()
+   >>> import statisticsMasked; statisticsMasked.run()
 """
 
 
@@ -37,7 +37,8 @@ import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 
 
@@ -51,17 +52,17 @@ class StatisticsTestCase(unittest.TestCase):
         self.nRow, self.nCol = 100, 200
         self.n = self.nRow*self.nCol
 
-        self.bboxL = afwImage.BBox(afwImage.PointI(0, 0),
-                                   afwImage.PointI(self.nRow/2 - 1, self.nCol - 1))
-        self.bboxR = afwImage.BBox(afwImage.PointI(self.nRow/2, 0),
-                                   afwImage.PointI(self.nRow - 1, self.nCol - 1))
+        self.bboxL = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                                   afwGeom.Point2I(self.nRow/2 - 1, self.nCol - 1))
+        self.bboxR = afwGeom.Box2I(afwGeom.Point2I(self.nRow/2, 0),
+                                   afwGeom.Point2I(self.nRow - 1, self.nCol - 1))
 
         # create masked images and set the left side to valL, and right to valR
-        self.mimg = afwImage.MaskedImageF(self.nRow, self.nCol)
+        self.mimg = afwImage.MaskedImageF(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimg.set(0.0, 0x0, 0.0)
-        self.mimgL = afwImage.MaskedImageF(self.mimg, self.bboxL)
+        self.mimgL = afwImage.MaskedImageF(self.mimg, self.bboxL, afwImage.LOCAL)
         self.mimgL.set(self.valL, 0x0, self.valL)
-        self.mimgR = afwImage.MaskedImageF(self.mimg, self.bboxR)
+        self.mimgR = afwImage.MaskedImageF(self.mimg, self.bboxR, afwImage.LOCAL)
         self.mimgR.set(self.valR, 0x0, self.valR)
         
         
@@ -150,7 +151,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mean, 10)
 
     def testWeightedSimple(self):
-        mimg = afwImage.MaskedImageF(1, 2)
+        mimg = afwImage.MaskedImageF(afwGeom.Extent2I(1, 2))
         mimg.set(0, 0, (self.valR, 0x0, self.valR))
         mimg.set(0, 1, (self.valL, 0x0, self.valL))
 
@@ -160,9 +161,17 @@ class StatisticsTestCase(unittest.TestCase):
         vsum = 2.0
         vsum2 = self.valR + self.valL
         wsum = 1.0/self.valR + 1.0/self.valL
-        mean = 1.0*(vsum)/wsum
+        wwsum = 1.0/self.valR**2 + 1.0/self.valL**2
+        mean = vsum/wsum
+        variance = vsum2/wsum - mean**2 # biased variance
+
         n = 2
+        # original estimate; just a rewrite of the usual n/(n - 1) correction
         stddev = (1.0*(vsum2)/(wsum*(1.0-1.0/n)) - (vsum**2)/(wsum**2*(1.0-1.0/n)))**0.5
+        self.assertAlmostEqual(stddev, numpy.sqrt(variance*n/(n - 1)))
+        #
+        # The correct formula:
+        stddev = numpy.sqrt(variance*wsum**2/(wsum**2 - wwsum))
         
         # get the stats for the image with two values
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mean, 10)

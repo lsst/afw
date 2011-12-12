@@ -26,10 +26,12 @@
 Test cases to test image I/O
 """
 import os
+import os.path
 
 import unittest
 
 import eups
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
@@ -39,7 +41,7 @@ try:
 except NameError:
     verbose = 0
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 
@@ -94,7 +96,7 @@ class ReadFitsTestCase(unittest.TestCase):
             imPath = os.path.join("tests", imPath)
         imPath = os.path.join(imPath, "smallD.fits")
         
-        im = afwImage.ImageD(100, 100)
+        im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
         im.set(666)
         im.writeFits(imPath)
         newIm = afwImage.ImageD(imPath)
@@ -105,10 +107,10 @@ class ReadFitsTestCase(unittest.TestCase):
         fileName, hdu = os.path.join(dataDir, "871034p_1_MI_var.fits"), 0
         im = afwImage.ImageF(fileName)
 
-        bbox = afwImage.BBox(afwImage.PointI(110, 120), 20, 15)
-        sim = im.Factory(im, bbox) 
+        bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120), afwGeom.Extent2I(20, 15))
+        sim = im.Factory(im, bbox, afwImage.LOCAL) 
 
-        im2 = afwImage.ImageF(fileName, hdu, None, bbox)
+        im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
 
         self.assertEqual(im2.getDimensions(), sim.getDimensions())
         self.assertEqual(im2.get(1, 1), sim.get(1, 1))
@@ -124,7 +126,7 @@ class ReadFitsTestCase(unittest.TestCase):
             imPath = os.path.join("tests", imPath)
         imPath = os.path.join(imPath, "MEF.fits")
 
-        im = afwImage.ImageF(20, 20)
+        im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
 
         for hdu in range(1, 5):
             im.set(100*hdu)
@@ -150,7 +152,7 @@ class ReadFitsTestCase(unittest.TestCase):
             imPath = os.path.join("tests", imPath)
         imPath = os.path.join(imPath, "tmp.fits")
 
-        im = afwImage.ImageF(10,20)
+        im = afwImage.ImageF(afwGeom.ExtentI(10,20))
         md = dafBase.PropertySet()
         keys = {"BAD" : False,
                 "GOOD" : True,

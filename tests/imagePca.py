@@ -26,18 +26,20 @@
 Tests for PCA on Images
 
 Run with:
-   python ImagePca.py
+   python imagePca.py
 or
    python
-   >>> import ImagePca; ImagePca.run()
+   >>> import imagePca; imagePca.run()
 """
 
 
 import unittest
+import numpy as np
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
+import lsst.afw.geom as afwGeom
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.display.utils as displayUtils
 import lsst.afw.display.ds9 as ds9
@@ -62,7 +64,7 @@ class ImagePcaTestCase(unittest.TestCase):
         """Test inner products"""
         
         width, height = 10, 20
-        im1 = afwImage.ImageF(width, height)
+        im1 = afwImage.ImageF(afwGeom.Extent2I(width, height))
         val1 = 10
         im1.set(val1)
 
@@ -85,7 +87,7 @@ class ImagePcaTestCase(unittest.TestCase):
 
         nImage = 3
         for i in range(nImage):
-            im = afwImage.ImageF(21, 21)
+            im = afwImage.ImageF(afwGeom.Extent2I(21, 21))
             val = 1
             im.set(val)
 
@@ -109,7 +111,7 @@ class ImagePcaTestCase(unittest.TestCase):
         values = (100, 200, 300)
         meanVal = 0
         for val in values:
-            im = afwImage.ImageF(width, height)
+            im = afwImage.ImageF(afwGeom.Extent2I(width, height))
             im.set(val)
 
             self.ImageSet.addImage(im, 1.0)
@@ -131,11 +133,36 @@ class ImagePcaTestCase(unittest.TestCase):
 
         values = (100, 200, 300)
         for val in values:
-            im = afwImage.ImageF(width, height)
+            im = afwImage.ImageF(afwGeom.Extent2I(width, height))
             im.set(val)
 
             self.ImageSet.addImage(im, 1.0)
         
+        self.ImageSet.analyze()
+
+        eImages = []
+        for img in self.ImageSet.getEigenImages():
+            eImages.append(img)
+
+        if display:
+            mos = displayUtils.Mosaic(background=-10)
+            ds9.mtv(mos.makeMosaic(eImages), frame=1)
+
+    def testPcaNaN(self):
+        """Test calculating PCA when the images can contain NaNs"""
+
+        width, height = 20, 10
+
+        values = (100, 200, 300)
+        for i, val in enumerate(values):
+            im = afwImage.ImageF(afwGeom.Extent2I(width, height))
+            im.set(val)
+
+            if i == 1:
+                im.set(width//2, height//2, np.nan)
+
+            self.ImageSet.addImage(im, 1.0)
+
         self.ImageSet.analyze()
 
         eImages = []

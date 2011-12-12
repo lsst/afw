@@ -40,6 +40,7 @@ using namespace std;
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
+namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> Image;
 
@@ -55,9 +56,9 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2
     // make a ramp image 
     int const nx = 8192;
     int const ny = nx;
-    Image imgSimple(nx, ny);
-    Image imgNanSafe(nx, ny);
-    Image imgMinMax(nx, ny);
+    Image imgSimple(geom::Extent2I(nx, ny));
+    Image imgNanSafe(geom::Extent2I(nx, ny));
+    Image imgMinMax(geom::Extent2I(nx, ny));
     double z0 = 10.0;
     double dzdx = 1.0;
     double mean = z0 + ((nx - 1.0)/2.0)*dzdx;

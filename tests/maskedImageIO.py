@@ -40,6 +40,7 @@ import eups
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexEx
 
@@ -92,8 +93,8 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform(self):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
-        hdu, metadata, bbox, conformMasks = 0, None, afwImage.BBox(), True
-        self.mi = afwImage.MaskedImageF(self.baseName, hdu, metadata, bbox, conformMasks)
+        hdu, metadata, bbox, conformMasks = 0, None, afwGeom.Box2I(), True
+        self.mi = afwImage.MaskedImageF(self.baseName, hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         image = self.mi.getImage()
         mask = self.mi.getMask()
@@ -114,9 +115,9 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform2(self):
         """Check that conforming a mask invalidates the plane dictionary"""
 
-        hdu, metadata, bbox, conformMasks = 0, None, afwImage.BBox(), True
+        hdu, metadata, bbox, conformMasks = 0, None, afwGeom.Box2I(), True
         testMask = afwImage.MaskU(afwImage.MaskedImageF_maskFileName(self.baseName),
-                                  hdu, metadata, bbox, conformMasks)
+                                  hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         mask = self.mi.getMask()
         def tst(mask=mask):
@@ -126,13 +127,13 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testTicket617(self):
         """Test reading an F64 image and converting it to a MaskedImage"""
-        im = afwImage.ImageD(100, 100)
+        im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
         im.set(666)
         mi = afwImage.MaskedImageD(im)
 
     def testReadWriteMEF(self):
         """Test that we read and write MEF and non-MEF representions of MaskedImages correctly"""
-        im = afwImage.MaskedImageF(10, 20)
+        im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
         im.set(666, 0x10, 10)
 
         x0, y0 = 1, 2
@@ -170,7 +171,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        im = afwImage.MaskedImageF(10, 20)
+        im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
@@ -196,7 +197,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testWcs(self):
         """Test round-tripping an empty Wcs"""
-        mi = afwImage.MaskedImageF(10, 20)
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
         wcs = afwImage.Wcs()
 
         exp = afwImage.makeExposure(mi, wcs)

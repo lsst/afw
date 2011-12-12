@@ -34,7 +34,7 @@ Psf::Image::Ptr Psf::computeImage(
         bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
                                     ) const {
     lsst::afw::image::Color color;
-    afwGeom::Point2D const ccdXY = lsst::afw::geom::makePointD(0, 0);
+    afwGeom::Point2D const ccdXY = lsst::afw::geom::Point2D(0, 0);
 
     return doComputeImage(color, ccdXY, size, normalizePeak);
 }
@@ -50,7 +50,7 @@ Psf::Image::Ptr Psf::computeImage(
         bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
                                     ) const {
     lsst::afw::image::Color color;
-    afwGeom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0);
+    afwGeom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0);
 
     return doComputeImage(color, ccdXY, size, normalizePeak);
 }
@@ -113,8 +113,48 @@ Psf::Image::Ptr Psf::doComputeImage(
     int const width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
     int const height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
 
-    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(width, height);
-    kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
+    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
+        geom::Extent2I(width, height)
+    );
+    try {
+        kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
+    } catch(lsst::pex::exceptions::InvalidParameterException &e) {
+        // OK, they didn't like the size of *im.  Compute a "native" image (i.e. the size of the Kernel)
+        Psf::Image::Ptr native_im = boost::make_shared<Psf::Image>(kernel->getDimensions());
+        kernel->computeImage(*native_im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
+        // copy the native image into the requested one
+        *im = 0.0;
+
+        std::pair<int, int> x0, y0;
+        int w, h;
+        if (native_im->getWidth() > im->getWidth()) {
+            x0.first = 0;
+            x0.second = (native_im->getWidth() - im->getWidth())/2;
+            w = im->getWidth();
+        } else {
+            x0.first = (im->getWidth() - native_im->getWidth())/2;
+            x0.second = 0;
+            w = native_im->getWidth();
+        }
+        
+        if (native_im->getHeight() > im->getHeight()) {
+            y0.first = 0;
+            y0.second = (native_im->getHeight() - im->getHeight())/2;
+            h = im->getHeight();
+        } else {
+            y0.first = (im->getHeight() - native_im->getHeight())/2;
+            y0.second = 0;
+            h = native_im->getHeight();
+        }
+
+        Psf::Image sim(*im, afwGeom::Box2I(afwGeom::Point2I(x0.first, y0.first),
+                                           afwGeom::Extent2I(w, h)));
+        Psf::Image snative_im(*native_im, afwGeom::Box2I(afwGeom::Point2I(x0.second, y0.second),
+                                                         afwGeom::Extent2I(w, h)));
+        sim <<= snative_im;
+        im->setXY0(snative_im.getX0() + (x0.second - x0.first),
+                   snative_im.getY0() + (y0.second - y0.first));
+    }
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?
     //
@@ -127,7 +167,9 @@ Psf::Image::Ptr Psf::doComputeImage(
     std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true);
     
     if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
-        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, "lanczos5");
+        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
+        unsigned int const warpBuffer = 5; // Buffer to use in warping        
+        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
     }
     im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
                ir_dy.first - kernel->getCtrY() + (ir_dy.second <= 0.5 ? 0 : 1));

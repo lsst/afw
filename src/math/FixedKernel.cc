@@ -38,6 +38,7 @@
 #include "lsst/afw/math/Kernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
 
@@ -73,6 +74,21 @@ afwMath::FixedKernel::FixedKernel(
         }
     }
     this->_sum = imSum;
+}
+
+
+/**
+ * @brief Construct a FixedKernel from a generic Kernel
+ */
+afwMath::FixedKernel::FixedKernel(
+    afwMath::Kernel const& kernel,      ///< Kernel to convert to Fixed
+    afwGeom::Point2D const& pos         ///< desired position 
+                                 )
+:
+    Kernel(kernel.getWidth(), kernel.getHeight(), 0),
+    _image(kernel.getDimensions()),
+    _sum(0) {
+    _sum = kernel.computeImage(_image, false, pos[0], pos[1]);
 }
 
 //

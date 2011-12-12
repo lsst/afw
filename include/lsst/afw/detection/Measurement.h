@@ -4,31 +4,21 @@
 #include <map>
 #include "boost/format.hpp"
 #include "boost/make_shared.hpp"
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/text_iarchive.hpp"
+#include "boost/archive/binary_oarchive.hpp"
+#include "boost/archive/binary_iarchive.hpp"
+#include "boost/archive/xml_oarchive.hpp"
+#include "boost/archive/xml_iarchive.hpp"
 #include "boost/serialization/export.hpp"
 #include "boost/serialization/shared_ptr.hpp"
-#include "boost/serialization/variant.hpp"
 #include "boost/serialization/vector.hpp"
-#include "boost/variant.hpp"
 
 #include "lsst/base.h"
 #include "lsst/utils/Demangle.h"
+#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions/Runtime.h"
-#include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/detection/Schema.h"
-
-#ifndef SWIG
-namespace {
-    class VariantVisitor : public boost::static_visitor<> {
-    public:
-        VariantVisitor(boost::any& a) : _any(a) { }
-        template <typename Variant>
-        void operator()(Variant& var) const {
-            _any = var;
-        }
-        boost::any& _any;
-    };
-}
-#endif
 
 namespace lsst { namespace afw { namespace detection {
 
@@ -78,6 +68,15 @@ public:
     const_iterator end() const {
         return _measuredValues.end();
     }
+    /// Return the size of the set
+    size_t size() const {
+        return _measuredValues.size();
+    }
+
+    TPtr operator[](size_t index) {
+        return _measuredValues[index];
+    }
+
 #if 1
     /// Return an iterator to the named algorithm
     const_iterator find_iter(std::string const&name // The name of the desired algorithm
@@ -117,6 +116,18 @@ public:
         }
     }
 
+    virtual TPtr clone(void) const {
+        TPtr meas = boost::make_shared<T>();
+        for (typename Measurement::const_iterator ptr = begin(); ptr != end(); ++ptr) {
+            meas->add((*ptr)->clone());
+        }
+        return meas;
+    }
+
+    static TPtr null(void) {
+        return boost::make_shared<T>();
+    }
+
     /// Add a (shared_pointer to) an individual measurement of type T
     void add(TPtr val) {
         _measuredValues.push_back(val);
@@ -124,12 +135,14 @@ public:
 
     /// Print all the values to os;  note that this is a virtual function called by operator<<
     virtual std::ostream &output(std::ostream &os) const {
+        os << getAlgorithm() << "[";
         for (typename Measurement::const_iterator ptr = begin(); ptr != end(); ++ptr) {
             if (ptr != begin()) {
-                os << " ";
+                os << ",";
             }
-            os << "[" << **ptr << "]";
+            os << (*ptr)->output(os);
         }
+        os << "]";
 
         return os;
     }
@@ -152,6 +165,13 @@ public:
     std::string const& getAlgorithm() const {
         return getSchema()->getComponent();
     }
+    void setAlgorithm(std::string const& name) {
+        getSchema()->setComponent(name);
+        for (iterator iter = begin(); iter != end(); ++iter) {
+            (*iter)->setAlgorithm(name);
+        }
+    }
+
     /**
      * Return some Measurement's value as a double given its Schema
      *
@@ -218,7 +238,41 @@ public:
               ) const {
         return get(i, getSchema()->find(name, component));
     }             
-protected:
+
+    /**
+     * Average component measurements
+     */
+    virtual TPtr average() const {
+        if (empty()) {
+            // Has values in it; should not happen since subclasses should override
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                              "Don't know how to average values");
+        }
+
+        // Assemble list of measurements made with the same algorithm
+        typedef std::map<std::string,TPtr> AlgMap;
+        AlgMap algorithms;
+        for (const_iterator iter = begin(); iter != end(); ++iter) {
+            std::string const& name = (*iter)->getAlgorithm();
+            typename AlgMap::const_iterator algIter = algorithms.find(name);
+            if (algIter == algorithms.end()) {
+                TPtr meas(new T());
+                algorithms[name] = meas;
+            }
+            algorithms[name]->add(*iter);
+        }
+
+        // Get averages of each algorithm
+        TPtr averages(new T());
+        for (typename AlgMap::const_iterator iter = algorithms.begin(); iter != algorithms.end(); ++iter) {
+            TPtr meas = iter->second;
+            TPtr avg = meas->size() == 1 ? (*meas->begin())->clone() : meas->average();
+            averages->add(avg);
+        }
+
+        return averages;
+    }
+
     /// Fast compile-time-computed access to set the values of _data
     template<unsigned int INDEX, typename U>
     void set(U value                    ///< Desired value
@@ -291,7 +345,11 @@ private:
 #pragma warning (push)
 #pragma warning (disable: 2259)          // conversion from "long" to "double" may lose significant bits
 #endif
-            return static_cast<U>(boost::any_cast<long>(val));
+            try {                       // clang's unhappy even if sizeof(long) == sizeof(long long)
+                return static_cast<U>(boost::any_cast<long>(val));
+            } catch(boost::bad_any_cast) {
+                return static_cast<U>(boost::any_cast<long long>(val));
+            }
 #if defined(__ICC)
 #pragma warning (pop)
 #endif
@@ -320,39 +378,157 @@ private:
         }
         ar & make_nvp("dataLen", dataLen);
         if (Archive::is_loading::value) {
-            _data.reserve(dataLen);
+            _data.resize(dataLen);
         }
-        boost::variant<char, short, int, long, float, double> var;
         for (size_t i = 0; i < dataLen; ++i) {
             if (Archive::is_saving::value) {
-                if (_data[i].type() == typeid(char)) {
-                    var = boost::any_cast<char>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(short)) {
-                    var = boost::any_cast<short>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(int)) {
-                    var = boost::any_cast<int>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(long)) {
-                    var = boost::any_cast<long>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(float)) {
-                    var = boost::any_cast<float>(_data[i]);
-                }
-                else if (_data[i].type() == typeid(double)) {
-                    var = boost::any_cast<double>(_data[i]);
-                }
-                else {
+                if (_data[i].type() == typeid(void)) {
+                    int which = -1;
+                    ar & make_nvp("which", which);
+                } else if (_data[i].type() == typeid(char)) {
+                    int which = 1;
+                    char value = boost::any_cast<char>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(short)) {
+                    int which = 2;
+                    short value = boost::any_cast<short>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(int)) {
+                    int which = 3;
+                    int value = boost::any_cast<int>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(long)) {
+                    int which = 4;
+                    long value = boost::any_cast<long>(_data[i]);
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(float)) {
+                    int which = 5;
+                    float value = boost::any_cast<float>(_data[i]);
+                    int fpClass = 0;
+                    if (lsst::utils::isnan(value)) {
+                        fpClass = 1;
+                    } else if (lsst::utils::isinf(value)) {
+                        fpClass = value > 0.0 ? 2 : 3;
+                    }
+                    which += fpClass;
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else if (_data[i].type() == typeid(double)) {
+                    int which = 9;
+                    double value = boost::any_cast<double>(_data[i]);
+                    int fpClass = 0;
+                    if (lsst::utils::isnan(value)) {
+                        fpClass = 1;
+                        value = 0;
+                    } else if (lsst::utils::isinf(value)) {
+                        fpClass = value > 0.0 ? 2 : 3;
+                        value = 0;
+                    }
+                    which += fpClass;
+                    ar & make_nvp("which", which) & make_nvp("value", value);
+                } else {
                     std::ostringstream msg;
                     msg << "Unable to convert measurement for persistence: type "
                         << _data[i].type().name() << " at position " << i;
                     throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, msg.str());
                 }
             }
-            ar & make_nvp("data", var);
             if (Archive::is_loading::value) {
-                boost::apply_visitor(VariantVisitor(_data[i]), var);
+                int which;
+                ar & make_nvp("which", which);
+                switch (which) {
+                case -1:
+                    break;
+                case 1:
+                    {
+                        char value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 2:
+                    {
+                        short value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 3:
+                    {
+                        int value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 4:
+                    {
+                        long value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 5:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 6:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<float>::quiet_NaN();
+                    }
+                    break;
+                case 7:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<float>::infinity();
+                    }
+                    break;
+                case 8:
+                    {
+                        float value;
+                        ar & make_nvp("value", value);
+                        _data[i] = -std::numeric_limits<float>::infinity();
+                    }
+                    break;
+                case 9:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = value;
+                    }
+                    break;
+                case 10:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<double>::quiet_NaN();
+                    }
+                    break;
+                case 11:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = std::numeric_limits<double>::infinity();
+                    }
+                    break;
+                case 12:
+                    {
+                        double value;
+                        ar & make_nvp("value", value);
+                        _data[i] = -std::numeric_limits<double>::infinity();
+                    }
+                    break;
+                default:
+                    std::ostringstream msg;
+                    msg << "Unable to recognize type for retrieval: type "
+                        << which << " at position " << i;
+                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, msg.str());
+                    break;
+                }
             }
         }
 
@@ -379,7 +555,7 @@ private:
     friend class boost::serialization::access; \
     template <class Archive> \
     void serialize(Archive& ar, unsigned int const version) { \
-        boost::serialization::base_object< c >(*this); \
+        ar & boost::serialization::make_nvp("base", boost::serialization::base_object< c >(*this)); \
     }
 
 #ifdef SWIG
@@ -395,208 +571,6 @@ std::ostream &operator<<(std::ostream &os, Measurement<T> const& v) {
     return v.output(os);
 }
 
-/************************************************************************************************************/
-/*
- * Measure a quantity using a set of algorithms.  Each algorithm will fill one item in the returned
- * Values (a Measurement)
- */
-template<typename T, typename ImageT, typename PeakT>
-class MeasureQuantity {
-public:
-    typedef Measurement<T> Values;
-    typedef boost::shared_ptr<T> (*makeMeasureQuantityFunc)(typename ImageT::ConstPtr,
-                                                            CONST_PTR(PeakT), CONST_PTR(Source));
-    typedef bool (*configureMeasureQuantityFunc)(lsst::pex::policy::Policy const&);
-    typedef std::pair<makeMeasureQuantityFunc, configureMeasureQuantityFunc> measureQuantityFuncs;
-private:
-    typedef std::map<std::string, measureQuantityFuncs> AlgorithmList;
-public:
-
-    MeasureQuantity(typename ImageT::ConstPtr im,
-                    CONST_PTR(lsst::pex::policy::Policy) policy=CONST_PTR(lsst::pex::policy::Policy)())
-        : _im(im), _algorithms()
-    {
-        if (policy) {
-            lsst::pex::policy::Policy::StringArray names = policy->policyNames(false);
-
-            for (lsst::pex::policy::Policy::StringArray::iterator ptr = names.begin();
-                 ptr != names.end(); ++ptr) {
-                lsst::pex::policy::Policy::ConstPtr subPol = policy->getPolicy(*ptr);
-
-                if (!subPol->exists("enabled") || subPol->getBool("enabled")) {
-                    addAlgorithm(*ptr);
-                }
-            }
-
-            configure(*policy);
-        }
-    }
-    virtual ~MeasureQuantity() {}
-
-    /**
-     * Return the image data that we are measuring
-     */
-    typename ImageT::ConstPtr getImage() const {
-        return _im;
-    }
-    /**
-     * (Re)set the data that we are measuring
-     */
-    void setImage(typename ImageT::ConstPtr im) {
-        _im = im;
-    }
-
-    /// Include the algorithm called name in the list of measurement algorithms to use
-    ///
-    /// This name is looked up in the registry (\sa declare), and used as the name of the
-    /// measurement if you wish to retrieve it using the schema
-    ///
-    void addAlgorithm(std::string const& name ///< The name of the algorithm
-                     ) {
-        _algorithms[name] = _lookupAlgorithm(name);
-    }
-    /// Actually measure im using all requested algorithms, returning the result
-    PTR(Values) measure(CONST_PTR(PeakT) peak=PTR(PeakT)(), ///< approximate position of object's centre
-                        CONST_PTR(Source) src=PTR(Source)() ///< Source with Footprint and some measured params
-                       ) {
-        PTR(Values) values = boost::make_shared<Values>();
-
-        if (!_im) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              "I cannot measure a NULL image");
-        }
-
-        for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
-            boost::shared_ptr<T> val = ptr->second.first(_im, peak, src);
-            val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
-            values->add(val);
-        }
-
-        return values;
-    }
-    /// Configure the behaviour of the algorithm
-    bool configure(lsst::pex::policy::Policy const& policy ///< The Policy to configure algorithms
-                  ) {
-        bool value = true;
-
-        for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
-            if (policy.exists(ptr->first)) {
-                lsst::pex::policy::Policy::ConstPtr subPol = policy.getPolicy(ptr->first);
-                value = ptr->second.second(*subPol) && value; // don't short-circuit the call
-            }
-        }
-
-        return value;
-    }
-
-    static bool declare(std::string const& name, makeMeasureQuantityFunc makeFunc,
-                        configureMeasureQuantityFunc configFunc=_iefbr15);
-private:
-    //
-    // The data that we wish to measure
-    //
-    typename ImageT::ConstPtr _im;
-    //
-    // The list of algorithms that we wish to use
-    //
-    AlgorithmList _algorithms;
-    //
-    // A mapping from names to algorithms
-    //
-    // _registryWorker must be inline as it contains a critical static variable, _registry
-    //    
-    typedef std::map<std::string, measureQuantityFuncs> AlgorithmRegistry;
-
-    static inline measureQuantityFuncs _registryWorker(std::string const& name,
-                                                       makeMeasureQuantityFunc makeFunc,
-                                                       configureMeasureQuantityFunc configFunc
-                                                      );
-    static measureQuantityFuncs _lookupAlgorithm(std::string const& name);
-    /// The unknown algorithm; used to allow _lookupAlgorithm use _registryWorker
-    static boost::shared_ptr<T> _iefbr14(typename ImageT::ConstPtr, CONST_PTR(PeakT), CONST_PTR(Source)) {
-        return boost::shared_ptr<T>();
-    }
-    static bool _iefbr15(lsst::pex::policy::Policy const &) {
-        return true;
-    }
-    //
-    // Do the real work of measuring things
-    //
-    // Can't be pure virtual as we create a do-nothing MeasureQuantity which we then add to
-    //
-    virtual boost::shared_ptr<T> doMeasure(CONST_PTR(ImageT),
-                                           CONST_PTR(PeakT),
-                                           CONST_PTR(Source) src=PTR(Source)()
-                                          ) {
-        return boost::shared_ptr<T>();
-    }
-};
-
-/**
- * Support the algorithm registry
- */
-template<typename T, typename ImageT, typename PeakT>
-typename MeasureQuantity<T, ImageT, PeakT>::measureQuantityFuncs
-MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
-        std::string const& name,
-        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc makeFunc,
-        typename MeasureQuantity<T, ImageT, PeakT>::configureMeasureQuantityFunc configureFunc
-                                                  )
-{
-    // N.b. This is a pointer rather than an object as this helps the intel compiler generate a
-    // single copy of the _registry across multiple dynamically loaded libraries.  The intel
-    // bug ID for RHL's report is 580524
-    static typename MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry *_registry = NULL;
-
-    if (!_registry) {
-        _registry = new typename MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry;
-    }
-
-    if (makeFunc == _iefbr14) {     // lookup functions
-        typename MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry::const_iterator ptr =
-            _registry->find(name);
-        
-        if (ptr == _registry->end()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                              (boost::format("Unknown algorithm %s for image of type %s")
-                               % name % lsst::utils::demangleType(typeid(ImageT).name())).str());
-        }
-        
-        return ptr->second;
-    } else {                            // register functions
-        typename MeasureQuantity<T, ImageT, PeakT>::measureQuantityFuncs funcs = 
-            std::make_pair(makeFunc, configureFunc);            
-
-        (*_registry)[name] = funcs;
-
-        return funcs;
-    }
-}
-
-/**
- * Register the factory function for a named algorithm
- */
-template<typename T, typename ImageT, typename PeakT>
-bool MeasureQuantity<T, ImageT, PeakT>::declare(
-        std::string const& name,
-        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc makeFunc,
-        typename MeasureQuantity<T, ImageT, PeakT>::configureMeasureQuantityFunc configFunc
-                                               )
-{
-    _registryWorker(name, makeFunc, configFunc);
-
-    return true;
-}
-
-/**
- * Return the factory function for a named algorithm
- */
-template<typename T, typename ImageT, typename PeakT>
-typename MeasureQuantity<T, ImageT, PeakT>::measureQuantityFuncs
-MeasureQuantity<T, ImageT, PeakT>::_lookupAlgorithm(std::string const& name)
-{
-    return _registryWorker(name, _iefbr14, _iefbr15);
-}
 
 }}}
 #endif

@@ -33,6 +33,7 @@ or
 """
 
 import os
+import os.path
 
 import sys
 import unittest
@@ -42,8 +43,11 @@ import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import eups
 import lsst.afw.display.ds9 as ds9
+
+import numpy
 
 try:
     type(display)
@@ -56,7 +60,7 @@ class ImageTestCase(unittest.TestCase):
     """A test case for Image"""
     def setUp(self):
         self.val1, self.val2 = 10, 100
-        self.image1 = afwImage.ImageF(100, 200)
+        self.image1 = afwImage.ImageF(afwGeom.ExtentI(100, 200))
         self.image1.set(self.val1)
         self.image2 = afwImage.ImageF(self.image1.getDimensions())
         self.image2.set(self.val2)
@@ -68,18 +72,50 @@ class ImageTestCase(unittest.TestCase):
         del self.image2
         del self.function
 
+    def testArrays(self):
+        for cls in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
+            image1 = cls(afwGeom.Extent2I(5,6))
+            array1 = image1.getArray()
+            self.assertEqual(array1.shape[0], image1.getHeight())
+            self.assertEqual(array1.shape[1], image1.getWidth())
+            image2 = cls(array1, False)
+            self.assertEqual(array1.shape[0], image2.getHeight())
+            self.assertEqual(array1.shape[1], image2.getWidth())
+            image3 = afwImage.makeImageFromArray(array1)
+            self.assertEqual(array1.shape[0], image2.getHeight())
+            self.assertEqual(array1.shape[1], image2.getWidth())
+            self.assertEqual(type(image3), cls)
+            array1[:,:] = numpy.random.uniform(low=0, high=10, size=array1.shape)
+            for j in range(image1.getHeight()):
+                for i in range(image1.getWidth()):
+                    self.assertEqual(image1.get(i, j), array1[j, i])
+                    self.assertEqual(image2.get(i, j), array1[j, i])
+
     def testInitializeImages(self):
         val = 666
         for ctor in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
             im = ctor(10, 10, val)
             self.assertEqual(im.get(0, 0), val)
 
-            im2 = ctor(afwImage.pairIntInt(10, 10), val)
+            im2 = ctor(afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(10, 10)), val)
             self.assertEqual(im2.get(0, 0), val)
 
     def testSetGetImages(self):
         self.assertEqual(self.image1.get(0, 0), self.val1)
-    
+
+    def testGetSet0Images(self):
+        self.assertEqual(self.image1.get0(0, 0), self.val1)
+        self.image1.setXY0(3,4)
+        self.assertEqual(self.image1.get0(3, 4), self.val1)
+        def f1():
+            return self.image1.get0(0,0)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, f1)
+        self.image1.set(0,0, 42.)
+        self.assertEqual(self.image1.get0(3,4), 42.)
+        self.image1.set0(3,4, self.val1)
+        self.assertEqual(self.image1.get0(3,4), self.val1)
+        self.assertEqual(self.image1.get(0,0), self.val1)
+
     def testAddImages(self):
         self.image2 += self.image1
         self.image1 += self.val1
@@ -88,6 +124,7 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image2.get(0, 0), self.val1 + self.val2)
 
         self.image1.set(self.val1)
+        print type(self.image1), type(self.function)
         self.image1 += self.function
 
         for j in range(self.image1.getHeight()):
@@ -216,129 +253,6 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(imageU.get(0, 0), self.val1)
         self.assertEqual(imageF.get(0, 0), self.val1)
             
-    def testPoint(self):
-        """Test PointD and PointI"""
-        x, y = 10, 20
-        for point in (afwImage.PointD, afwImage.PointI):
-            p = point(x, y)
-            
-            self.assertEqual(x, p.getX())
-            self.assertEqual(x, p[0])
-
-            self.assertEqual(y, p.getY())
-            self.assertEqual(y, p[1])
-
-            def tst1(): p[-1]
-            self.assertRaises(IndexError, tst1)
-
-            def tst2(): p[2]
-            self.assertRaises(IndexError, tst2)
-        
-    def testBBox(self):
-        x0, y0, width, height = 1, 2, 10, 20
-        x1, y1 = x0 + width - 1, y0 + height - 1
-        llc = afwImage.PointI(x0, y0)
-        
-        bbox = afwImage.BBox()
-        self.assertEqual(bbox.getWidth(), 0)
-        self.assertEqual(bbox.getHeight(), 0)
-
-        bbox = afwImage.BBox(llc)
-        self.assertEqual(bbox.getX0(), x0)
-        self.assertEqual(bbox.getY0(), y0)
-        self.assertEqual(bbox.getX1(), bbox.getX0())
-        self.assertEqual(bbox.getY1(), bbox.getY0())
-        self.assertEqual(bbox.getWidth(), 1)
-        self.assertEqual(bbox.getHeight(), 1)
-
-        bbox = afwImage.BBox(llc, width, height)
-        self.assertEqual(bbox.getX0(), x0)
-        self.assertEqual(bbox.getY0(), y0)
-        self.assertEqual(bbox.getX1(), x1)
-        self.assertEqual(bbox.getY1(), y1)
-        self.assertEqual(bbox.getWidth(), width)
-        self.assertEqual(bbox.getHeight(), height)
-
-        urc = afwImage.PointI(x1, y1)
-        bbox2 = afwImage.BBox(llc, urc)
-        self.assertEqual(bbox, bbox2)
-        
-        bbox2 = afwImage.BBox(llc, width, height+1)
-        self.assertNotEqual(bbox, bbox2)
-
-        bbox = afwImage.BBox()
-        point = afwImage.PointI(1, 1)
-        
-        bbox.grow(point)
-
-        self.assert_(bbox.contains(point))
-        #
-        # Test changing the corners
-        #
-        bbox = afwImage.BBox(llc, width, height)
-
-        bbox.setX0(x0 - 1) 
-        self.assertEqual(bbox.getX0(), x0 - 1)
-        self.assertEqual(bbox.getX1(), x1)
-        bbox.setX1(x1 + 1) 
-        self.assertEqual(bbox.getX1(), x1 + 1)
-
-        bbox.setY0(y0 - 1) 
-        self.assertEqual(bbox.getY0(), y0 - 1)
-        self.assertEqual(bbox.getY1(), y1)
-        bbox.setY1(y1 + 1) 
-        self.assertEqual(bbox.getY1(), y1 + 1)
-        #
-        # Test clipping a BBox
-        #
-        bbox = afwImage.BBox(llc, width, height)
-        cbox = afwImage.BBox(llc, width - 1, height - 1)
-
-        bbox2 = bbox.clip(cbox)
-
-        self.assertEqual(bbox.getX0(), x0)
-        self.assertEqual(bbox.getY0(), y0)
-        self.assertEqual(bbox.getX1(), x1 - 1)
-        self.assertEqual(bbox.getY1(), y1 - 1)
-        self.assertEqual(bbox.getWidth(), width - 1)
-        self.assertEqual(bbox.getHeight(), height - 1)
-
-        bbox = afwImage.BBox(llc, width, height)
-        cbox = afwImage.BBox(afwImage.PointI(x0 + 1, y0 + 2), width + 10, height + 10)
-        bbox2 = bbox.clip(cbox)
-
-        self.assertEqual(bbox.getX0(), x0 + 1)
-        self.assertEqual(bbox.getY0(), y0 + 2)
-        self.assertEqual(bbox.getX1(), x1)
-        self.assertEqual(bbox.getY1(), y1)
-        self.assertEqual(bbox.getWidth(), width - 1)
-        self.assertEqual(bbox.getHeight(), height - 2)
-
-        bbox = afwImage.BBox(llc, width, height)
-        cbox = afwImage.BBox(afwImage.PointI(x0 - 1, y0 - 2), width + 10, height + 20)
-        bbox2 = bbox.clip(cbox)
-
-        self.assertEqual(bbox.getX0(), x0)
-        self.assertEqual(bbox.getY0(), y0)
-        self.assertEqual(bbox.getX1(), x1)
-        self.assertEqual(bbox.getY1(), y1)
-        self.assertEqual(bbox.getWidth(), width)
-        self.assertEqual(bbox.getHeight(), height)
-
-    def testBCircle(self):
-        """Check BCircle"""
-
-        x0, y0, r = 10, 20, 3.5
-        bc = afwImage.BCircle(afwImage.PointI(x0, y0), r)
-        self.assertEqual(bc.getCenter().getX(), x0)
-        self.assertEqual(bc.getCenter().getY(), y0)
-        self.assertEqual(bc.getRadius(), r)
-
-        ir = int(r + 0.5)
-        self.assertEqual(bc.getBBox().getLLC(), afwImage.PointI(x0 - ir, y0 - ir))
-        self.assertEqual(bc.getBBox().getDimensions()[0], 2*ir + 1)
-        self.assertEqual(bc.getBBox().getDimensions()[1], 2*ir + 1)
-
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
         
@@ -357,24 +271,32 @@ class ImageTestCase(unittest.TestCase):
         
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
 
         x0, y0 = 3, 5
         im.setXY0(x0, y0)
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
 
         x0, y0 = 30, 50
-        im.setXY0(afwImage.PointI(x0, y0))
+        im.setXY0(afwGeom.Point2I(x0, y0))
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
 
     def testSubimages(self):
-        simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
+        simage1 = afwImage.ImageF(
+            self.image1, 
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            afwImage.LOCAL)
         
-        simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
+        
+        simage = afwImage.ImageF(
+                simage1, 
+                afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+                afwImage.LOCAL
+        )
         self.assertEqual(simage.getX0(), 2)
         self.assertEqual(simage.getY0(), 2) # i.e. wrt self.image1
 
@@ -391,12 +313,20 @@ class ImageTestCase(unittest.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.image1.set(9, 4, 888)
-        #printImg(afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(0, 0), 10, 5))); print
+        #printImg(afwImage.ImageF(self.image1, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
-        simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
-        simage1.setXY0(afwImage.PointI(0, 0)) # reset origin; doesn't affect pixel coordinate systems
+        simage1 = afwImage.ImageF(
+            self.image1, 
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            afwImage.LOCAL
+        )
+        simage1.setXY0(afwGeom.Point2I(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
-        simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
+        simage = afwImage.ImageF(
+            simage1, 
+            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+            afwImage.LOCAL
+        )
         self.assertEqual(simage.getX0(), 1)
         self.assertEqual(simage.getY0(), 1)
 
@@ -411,7 +341,11 @@ class ImageTestCase(unittest.TestCase):
 
     def testBadSubimages(self):
         def tst():
-            simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, -1), 10, 5))
+            simage1 = afwImage.ImageF(
+                self.image1, 
+                afwGeom.Box2I(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
+                afwImage.LOCAL
+            )
 
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
 
@@ -425,9 +359,7 @@ class ImageTestCase(unittest.TestCase):
         self.image1 = factory(dims)
         self.assertEqual(self.image1.get(10, 10), 0)
 
-        del self.image1
-        self.image1 = factory(20, 20)
-        self.assertEqual(self.image1.get(10, 10), 0)
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -436,10 +368,12 @@ class DecoratedImageTestCase(unittest.TestCase):
     def setUp(self):
         self.val1, self.val2 = 10, 100
         self.width, self.height = 200, 100
-        self.dimage1 = afwImage.DecoratedImageF(self.width, self.height)
+        self.dimage1 = afwImage.DecoratedImageF(
+                afwGeom.Extent2I(self.width, self.height)
+            )
         self.dimage1.getImage().set(self.val1)
 
-        dataDir = eups.productDir("afwdata")
+        dataDir = os.path.join(eups.productDir("afwdata"), "data")
         if dataDir:
             self.fileForMetadata = os.path.join(dataDir, "small_MI_img.fits")
             self.trueMetadata = {"RELHUMID" : 10.69}
@@ -455,7 +389,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertEqual(self.dimage1.getImage().get(0, 0), self.val1)
 
     def testCreateDecoratedImageFromImage(self):
-        image = afwImage.ImageF(self.width, self.height)
+        image = afwImage.ImageF(afwGeom.Extent2I(self.width, self.height))
         image <<= self.dimage1.getImage()
 
         dimage = afwImage.DecoratedImageF(image)
@@ -475,7 +409,7 @@ class DecoratedImageTestCase(unittest.TestCase):
     def testReadFits(self):
         """Test reading FITS files"""
         
-        dataDir = eups.productDir("afwdata")
+        dataDir = os.path.join(eups.productDir("afwdata"), "data")
         if not dataDir:
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
@@ -558,7 +492,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        im = afwImage.ImageF(10, 20)
+        im = afwImage.ImageF(afwGeom.Extent2I(10, 20))
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
@@ -585,11 +519,11 @@ class DecoratedImageTestCase(unittest.TestCase):
 
     def testTicket1040(self):
         """ How to repeat from #1040"""
-        image        = afwImage.ImageD(6, 6)
+        image        = afwImage.ImageD(afwGeom.Extent2I(6, 6))
         image.set(2, 2, 100)
 
-        bbox    = afwImage.BBox(afwImage.PointI(1, 1), 5, 5)
-        subImage = image.Factory(image, bbox)
+        bbox    = afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
+        subImage = image.Factory(image, bbox, afwImage.LOCAL)
         subImageF = subImage.convertFloat()
         
         if display:

@@ -1,9 +1,11 @@
 # -*- python -*-
-import re
-Import("env")
+from lsst.sconsUtils import env, targets
 
-env.CheckSwig("python", ilang="c++", includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
-env.LoadableModuleIncomplete("_imageLib", Split("imageLib.i"),
-                             SWIGFLAGS=env['SWIGFLAGS'] + " -DIMPORT_FUNCTION_I",
-                             CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
-                             LIBS=env.getlibs("afw"))
+# We can't use BasicSConscript here because the circular dependency requires the -D option in SWIGFLAGS
+targets["python"].extend(
+    env.SwigLoadableModule(
+        "_imageLib", ["imageLib.i"],
+        SWIGFLAGS=(env["SWIGFLAGS"] + ["-DIMPORT_FUNCTION_I"]),
+        LIBS=env.getLibs("main python")
+    )
+)

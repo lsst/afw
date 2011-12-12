@@ -40,7 +40,6 @@ Basic routines to talk to lsst::afw::image classes
 #include "boost/cstdint.hpp"
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
@@ -55,12 +54,15 @@ Basic routines to talk to lsst::afw::image classes
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/afw/numpyTypemaps.h"
+#include "lsst/ndarray/python.h"
+#include "lsst/ndarray/python/eigen.h"
 
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
+
+#pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
 %include "../boost_picklable.i"
@@ -69,7 +71,6 @@ Basic routines to talk to lsst::afw::image classes
     import_array();
 %}
 
-
 namespace boost {
     namespace mpl { }
     typedef signed char  int8_t;
@@ -77,7 +78,13 @@ namespace boost {
     typedef unsigned short uint16_t;
 }
 
+%apply unsigned long long { boost::uint64_t };
+
 /************************************************************************************************************/
+
+%typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
+    $1 = PyBool_Check($input) ? 1 : 0;
+}
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
@@ -114,18 +121,29 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/pex/policy/policyLib.i"
 %import "lsst/daf/persistence/persistenceLib.i"
-%import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
-%include "lsst/afw/eigen.i"
+%include "lsst/ndarray/ndarray.i"
 
-%declareEigenMatrix(Eigen::MatrixXd);
-%declareEigenMatrix(Eigen::VectorXd);
-%declareEigenMatrix(Eigen::Matrix2d);
-%declareEigenMatrix(Eigen::Vector2d);
-%declareEigenMatrix(Eigen::Matrix3d);
-%declareEigenMatrix(Eigen::Vector3d);
+%declareNumPyConverters(Eigen::MatrixXd);
+%declareNumPyConverters(Eigen::VectorXd);
+%declareNumPyConverters(Eigen::Matrix2d);
+%declareNumPyConverters(Eigen::Vector2d);
+%declareNumPyConverters(Eigen::Matrix3d);
+%declareNumPyConverters(Eigen::Vector3d);
+
+%declareNumPyConverters(lsst::ndarray::Array<unsigned short,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<unsigned short const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<int,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<int const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<float,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<float const,2,1>);
+
+%declareNumPyConverters(lsst::ndarray::Array<double,2,1>);
+%declareNumPyConverters(lsst::ndarray::Array<double const,2,1>);
 
 %lsst_exceptions();
 
@@ -146,6 +164,7 @@ def version(HeadURL = r"$HeadURL$"):
 
 SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 %include "lsst/afw/image/Calib.h"
+%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
 
 #if defined(IMPORT_FUNCTION_I)
 %{
@@ -160,71 +179,6 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 %include "maskedImage.i"
 %include "imageSlice.i"
 
-%define %POINT(NAME, TYPE)
-%template(Point##NAME) lsst::afw::image::Point<TYPE>;
-
-%extend lsst::afw::image::Point<TYPE> {
-    %pythoncode {
-    def __repr__(self):
-        return "Point" + "NAME(%.10g, %.10g)" % (self.getX(), self.getY())
-
-    def __str__(self):
-        return "(%g, %g)" % (self.getX(), self.getY())
-
-    def __getitem__(self, i):
-        """Treat as an array of length 2: [x, y]"""
-        if i == 0:
-            return self.getX()
-        elif i == 1:
-            return self.getY()
-        elif hasattr(i, "indices"):
-            return [self[ind] for ind in range(*i.indices(2))]
-        else:
-            raise IndexError(i)
-
-    def __setitem__(self, i, val):
-        """Treat as an array of length 2: [x, y]"""
-        if i == 0:
-            self.setX(val)
-        elif i == 1:
-            self.setY(val)
-        elif hasattr(i, "indices"):
-            indexList = range(*i.indices(2))
-            if len(val) != len(indexList):
-                raise IndexError("Need %s values but got %s" % (len(indexList), len(val)))
-            for ind in indexList:
-                self[ind] = val[ind]
-        else:
-            raise IndexError(i)
-    
-    def __iter__(self):
-        return iter(self[:])
-
-    def __len__(self):
-        return 2
-                
-    def clone(self):
-        return self.__class__(self.getX(), self.getY())
-    }
-}
-%enddef
-
-%POINT(D, double);
-%POINT(I, int);
-
-%extend lsst::afw::image::BBox {
-    lsst::afw::image::BBox clone() {
-        return lsst::afw::image::BBox(*self);
-    }
-
-    %pythoncode {
-    def __repr__(self):
-        return "BBox(PointI(%d, %d), %d, %d)" % (self.getX0(), self.getY0(), self.getWidth(), self.getHeight())
-
-    def __str__(self):
-        return "(%d, %d) -- (%d, %d)" % (self.getX0(), self.getY0(), self.getX1(), self.getY1())
-    }
-}
 
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
@@ -233,6 +187,12 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
 %include "lsst/afw/image/ImageUtils.h"
 
 /************************************************************************************************************/
+%{
+namespace lsst { namespace afw { namespace image {
+    extern Wcs NoWcs;
+}}}
+using lsst::afw::image::NoWcs;
+%}
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs);
@@ -268,25 +228,6 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs)
     }
 %}
 
-
-%inline {
-    /**
-     * Create a WCS from crval, image, and the elements of CD
-     */
-    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::geom::PointD crval,
-                                         lsst::afw::geom::PointD crpix,
-                                         double CD11, double CD12, double CD21, double CD22) {
-
-    Eigen::Matrix2d CD;
-    CD(0, 0) = CD11;
-    CD(0, 1) = CD12;
-    CD(1, 0) = CD21;
-    CD(1, 1) = CD22;
-    
-    return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(crval, crpix, CD));
-}
-}
-
 /************************************************************************************************************/
 
 #if !defined(CAMERA_GEOM_LIB_I)
@@ -300,7 +241,7 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs)
 
 // Must go Before the %include
 %define %exposurePtr(TYPE, PIXEL_TYPE)
-SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::base::Citizen, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %enddef
 
 // Must go After the %include
@@ -321,6 +262,7 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %enddef
 
 %exposurePtr(U, boost::uint16_t);
+%exposurePtr(L, boost::uint64_t);
 %exposurePtr(I, int);
 %exposurePtr(F, float);
 %exposurePtr(D, double);
@@ -333,6 +275,7 @@ SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
+%exposure(L, boost::uint64_t);
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
@@ -344,6 +287,16 @@ SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
          lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
     {
         return lsst::afw::image::Exposure<float,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
+%extend lsst::afw::image::Exposure<boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertD;
+    lsst::afw::image::Exposure<double,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD()
+    {
+        return lsst::afw::image::Exposure<double,
             lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
     }
 }

@@ -40,6 +40,7 @@ import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import eups
 
@@ -62,7 +63,7 @@ class BackgroundTestCase(unittest.TestCase):
     """A test case for Background"""
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(100, 200)
+        self.image = afwImage.ImageF(afwGeom.Extent2I(100, 200))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -92,7 +93,8 @@ class BackgroundTestCase(unittest.TestCase):
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.05551471441612] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00295902395123] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.08468385712251] ) # cooked to known value
-        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00305806663295] ) # cooked to known value
+        #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00305806663295] ) # cooked to known value
+        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.0035102188698] ) # cooked to known value
         #imgfiles.append("v1_i1_g_m400_s20_u16.fits")
         #imgfiles.append("v1_i2_g_m400_s20_f.fits"
         #imgfiles.append("v1_i2_g_m400_s20_u16.fits")
@@ -146,7 +148,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make a ramping image (spline should be exact for linear increasing image
         nx = 512
         ny = 512
-        rampimg = afwImage.ImageD(nx, ny)
+        rampimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
 
         for x in range(nx):
@@ -175,7 +177,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         nx = 512
         ny = 512
-        parabimg = afwImage.ImageD(nx, ny)
+        parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
 
         for x in range(nx):
@@ -215,9 +217,8 @@ class BackgroundTestCase(unittest.TestCase):
 
         mi = afwImage.MaskedImageF(os.path.join(eups.productDir("afwdata"),
                                                 "CFHT", "D4", "cal-53535-i-797722_1"))
-        mi = mi.Factory(mi, afwImage.BBox(afwImage.PointI(32, 2), afwImage.PointI(2079, 4609)))
-        mi.setXY0(afwImage.PointI(0, 0))
-        
+        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
+
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
         bctrl.setNxSample(16)
         bctrl.setNySample(16)
@@ -241,7 +242,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make an image
         nx = 64
         ny = 64
-        img = afwImage.ImageD(nx, ny)
+        img = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         
         # make a background control object
         bctrl = afwMath.BackgroundControl()
@@ -277,7 +278,7 @@ class BackgroundTestCase(unittest.TestCase):
         # try a ramping image ... has an easy analytic solution
         nx = 64
         ny = 64
-        img = afwImage.ImageD(nx, ny, 10)
+        img = afwImage.ImageD(afwGeom.Extent2I(nx, ny), 10)
         
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
         mean = z0 + dzdx*(nx - 1)/2 + dzdy*(ny - 1)/2  # the analytic solution
@@ -301,6 +302,17 @@ class BackgroundTestCase(unittest.TestCase):
                 self.assertAlmostEqual(testval, mean, 10)
 
         
+    def testTicket1681OffByOne(self):
+        if False:                       # doesn't seem to actually test anything, and writes b?im.fits
+            im = afwImage.ImageF(40, 40); im.set(5, 6, 100);
+            nx, ny = im.getWidth()//2, im.getHeight()//2
+            print nx, ny
+            bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
+            bctrl.setStatisticsProperty(afwMath.MEAN)
+            bkd = afwMath.makeBackground(im, bctrl)
+            bim = bkd.getImageF()
+            im.writeFits("im.fits")
+            bim.writeFits("bim.fits")
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

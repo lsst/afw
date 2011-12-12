@@ -146,7 +146,7 @@ private:
        math::BackgroundControl bctrl(math::Interpolate::NATURAL_SPLINE);
        bctrl.setNxSample(7);            // number of sub-image squares in x-dimension
        bctrl.setNySample(7);            // number of sub-image squares in y-dimention
-       bctrl.sctrl.getNumSigmaClip(5.0); // use 5-sigma clipping for the sub-image means
+       bctrl.sctrl.setNumSigmaClip(5.0); // use 5-sigma clipping for the sub-image means
        math::Background backobj = math::makeBackground(img, bctrl);
        double somepoint = backobj.getPixel(i_x,i_y); // get the background at a pixel at i_x,i_y
        ImageT back = backobj.getImage();             // get a whole background image

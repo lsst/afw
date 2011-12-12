@@ -27,6 +27,7 @@
 #include "lsst/afw/image/Image.h"
 
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 
 template <typename PixelT>
 void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
@@ -116,7 +117,7 @@ void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT
 /************************************************************************************************************/
 
 int main() {
-    afwImage::Image<float> img(10, 6);
+    afwImage::Image<float> img(afwGeom::Extent2I(10, 6));
     // This is equivalent to img = 100:
     for (afwImage::Image<float>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
         (*ptr)[0] = 100;
@@ -140,7 +141,6 @@ int main() {
 
     print(img, "img");
     printT(img, "img");
-#if 1
     print(jmg, "jmg");
 
     afwImage::Image<float> kmg = jmg;
@@ -149,14 +149,12 @@ int main() {
     kmg -= 222;
     kmg += jmg;
     kmg *= 10;
-#if 1
     {
         afwImage::Image<float> tmp(kmg.getDimensions());
         tmp = 10;
         print(tmp, "tmp");
         kmg /= tmp;
     }
-#endif
     print(kmg, "kmg");
 
     afwImage::Image<float> lmg(img);
@@ -164,30 +162,31 @@ int main() {
 
     afwImage::Image<float> mmg(img, true);
     mmg = -1;                           // shouldn't modify img
-#endif
     
     printf("sub images\n");
-#if 0
-    // img will be modified
-    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2));
-#elif 0
-    // img will not be modified
-    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2), true);
-#else
-    // img will be modified
-    afwImage::Image<float> simg1(img, afwImage::BBox(afwImage::PointI(1, 1), 7, 3));
-    afwImage::Image<float> simg(simg1, afwImage::BBox(afwImage::PointI(0, 0), 5, 2));
-#endif
 
-#if 0
-    simg = 0;
-#elif 1
+    // img will be modified
+    afwImage::Image<float> simg1(
+        img, afwGeom::Box2I(
+            afwGeom::Point2I(1, 1), 
+            afwGeom::Extent2I(7, 3)
+        ),
+        afwImage::LOCAL
+    );
+    afwImage::Image<float> simg(
+        simg1, afwGeom::Box2I(
+            afwGeom::Point2I(0, 0), 
+            afwGeom::Extent2I(5, 2)
+        ),
+        afwImage::LOCAL
+    );
+
+
     {
-        afwImage::Image<float> nimg(5, 2);
+        afwImage::Image<float> nimg(afwGeom::Extent2I(5, 2));
         nimg = 1;
         simg <<= nimg;
     }
-#endif    
 
     print(simg, "simg");
     print(img, "img");

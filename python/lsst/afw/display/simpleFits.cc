@@ -368,8 +368,7 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * What sort if image is it?
      */
-    int bitpix = image::detail::fits_read_support_private<
-    typename image::detail::types_traits<typename ImageT::Pixel>::view_t>::BITPIX;
+    int bitpix = image::detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
     if (bitpix == 20) {                 // cfitsio for "Unsigned short"
         cards.push_back(Card("BZERO",  32768.0, ""));
         cards.push_back(Card("BSCALE", 1.0,     ""));
@@ -504,6 +503,7 @@ void writeBasicFits(std::string const& filename,                 // file to writ
     (void)close(fd);
 }
 
+/// \cond
 #define INSTANTIATE(IMAGET)                                            \
     template void writeBasicFits(int,                IMAGET const&, image::Wcs const *, char const *); \
     template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *, char const *)
@@ -515,7 +515,9 @@ INSTANTIATE_IMAGE(boost::uint16_t);
 INSTANTIATE_IMAGE(int);
 INSTANTIATE_IMAGE(float);
 INSTANTIATE_IMAGE(double);
+INSTANTIATE_IMAGE(boost::uint64_t);
 
 INSTANTIATE_MASK(boost::uint16_t);
+/// \endcond
             
 }}}

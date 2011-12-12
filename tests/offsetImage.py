@@ -38,8 +38,9 @@ import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.math.mathLib as afwMath
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.image.testUtils as imTestUtils
 
@@ -137,7 +138,7 @@ class offsetImageTestCase(unittest.TestCase):
         if display:
             ds9.mtv(im, frame=1)
 
-        imArr = imTestUtils.arrayFromImage(im)
+        imArr = im.getArray()
         imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
         imMean = imGoodVals.mean()
         imMax = imGoodVals.max()
@@ -226,6 +227,34 @@ class binImageTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
         self.assertEqual(stats.getValue(afwMath.MIN), 1)
         self.assertEqual(stats.getValue(afwMath.MAX), 1)
+
+    def testBin(self):
+        """Test that we can bin images anisotropically"""
+
+        inImage = afwImage.ImageF(203, 131)
+        val = 1
+        inImage.set(val)
+        binX, binY = 2, 4
+
+        outImage = afwMath.binImage(inImage, binX, binY)
+
+        self.assertEqual(outImage.getWidth(), inImage.getWidth()//binX)
+        self.assertEqual(outImage.getHeight(), inImage.getHeight()//binY)
+
+        stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
+        self.assertEqual(stats.getValue(afwMath.MIN), val)
+        self.assertEqual(stats.getValue(afwMath.MAX), val)
+
+        inImage.set(0)
+        subImg = inImage.Factory(inImage, afwGeom.BoxI(afwGeom.PointI(4, 4), afwGeom.ExtentI(4, 8)),
+                                 afwImage.LOCAL)
+        subImg.set(100)
+        del subImg
+        outImage = afwMath.binImage(inImage, binX, binY)
+
+        if display:
+            ds9.mtv(inImage, frame=2, title="unbinned")
+            ds9.mtv(outImage, frame=3, title="binned %dx%d" % (binX, binY))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

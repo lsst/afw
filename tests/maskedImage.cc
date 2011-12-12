@@ -36,6 +36,7 @@
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
+namespace geom = lsst::afw::geom;
 using namespace std;
 
 typedef float PixelT;
@@ -128,7 +129,7 @@ namespace {
 #endif
 
 ImageT make_image(int const width=5, int const height=6) {
-    ImageT img(width, height);
+    ImageT img(geom::Extent2I(width, height));
 
     int i = 0;
     for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {

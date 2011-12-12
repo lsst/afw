@@ -49,6 +49,10 @@
 namespace lsst {
 namespace afw {
 namespace math {
+
+LSST_EXCEPTION_TYPE(GpuMemoryException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuMemoryException)
+LSST_EXCEPTION_TYPE(GpuRuntimeErrorException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuRuntimeErrorException)
+
 namespace detail {
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
@@ -83,7 +87,7 @@ namespace detail {
             OutImageT &convolvedImage,
             InImageT const& inImage,
             lsst::afw::math::Kernel const& kernel,
-            bool doNormalize);
+            lsst::afw::math::ConvolutionControl const& convolutionControl);
 
     // I would prefer this to be nested in KernelImagesForRegion but SWIG doesn't support that
     class RowOfKernelImagesForRegion;
@@ -107,7 +111,7 @@ namespace detail {
      * Also note that it uses lazy evaluation: images are computed when they are wanted.
      */
     class KernelImagesForRegion :
-        public lsst::daf::data::LsstBase,
+        public lsst::daf::base::Citizen,
         public lsst::daf::base::Persistable
     {
     public:
@@ -137,12 +141,12 @@ namespace detail {
     
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
-                lsst::afw::geom::BoxI const &bbox,
+                lsst::afw::geom::Box2I const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize);
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
-                lsst::afw::geom::BoxI const &bbox,
+                lsst::afw::geom::Box2I const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize,
                 ImagePtr bottomLeftImagePtr,
@@ -153,7 +157,7 @@ namespace detail {
         /** 
          * Get the bounding box for the region
          */
-        lsst::afw::geom::BoxI getBBox() const { return _bbox; };
+        lsst::afw::geom::Box2I getBBox() const { return _bbox; };
         /**
          * Get xy0 of the image
          */
@@ -187,7 +191,7 @@ namespace detail {
 
         // member variables
         KernelConstPtr _kernelPtr;
-        lsst::afw::geom::BoxI _bbox;
+        lsst::afw::geom::Box2I _bbox;
         lsst::afw::geom::Point2I _xy0;
         bool _doNormalize;
         mutable std::vector<ImagePtr> _imagePtrList;
@@ -264,13 +268,13 @@ namespace detail {
     struct ConvolveWithInterpolationWorkingImages {
     public:
         typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
-        ConvolveWithInterpolationWorkingImages(int width, int height) :
-            leftImage(width, height),
-            rightImage(width, height),
-            leftDeltaImage(width, height),
-            rightDeltaImage(width, height),
-            deltaImage(width, height),
-            kernelImage(width, height)
+        ConvolveWithInterpolationWorkingImages(geom::Extent2I const & dimensions) :
+            leftImage(dimensions),
+            rightImage(dimensions),
+            leftDeltaImage(dimensions),
+            rightDeltaImage(dimensions),
+            deltaImage(dimensions),
+            kernelImage(dimensions)
         { }
         Image leftImage;
         Image rightImage;

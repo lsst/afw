@@ -5,6 +5,7 @@
 //
 #include "lsst/base.h"
 #include "lsst/afw/detection/Psf.h"
+#include "lsst/afw/detection/LocalPsf.h"
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/void_cast.hpp"
 
@@ -43,6 +44,16 @@ public:
      * Parameters:
      */
     explicit dgPsf(int width, int height, double sigma1, double sigma2=1, double b=0);
+    virtual Psf::Ptr clone() const {
+        return boost::make_shared<dgPsf>(
+            getKernel()->getWidth(),
+            getKernel()->getHeight(),
+            _sigma1, _sigma2, _b
+        );
+    }
+
+protected:
+    PTR(LocalPsf) doGetLocalPsf(lsst::afw::geom::Point2D const&, lsst::afw::image::Color const&) const;
 private:
     double _sigma1;                     ///< Width of inner Gaussian
     double _sigma2;                     ///< Width of outer Gaussian

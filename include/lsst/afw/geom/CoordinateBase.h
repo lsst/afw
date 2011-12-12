@@ -31,8 +31,7 @@
 
 #include <utility>
 
-#include <Eigen/Core>
-#include <Eigen/Array>
+#include "Eigen/Core"
 #include <iostream>
 #include "boost/tuple/tuple.hpp"
 
@@ -58,7 +57,6 @@ public:
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
-#endif
 
     /**
      *  \brief Return a fixed-size Eigen representation of the coordinate object.
@@ -66,7 +64,9 @@ public:
      *  The fact that this returns by const reference rather than by value should not be considered
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
-    EigenVector const & asVector() const { return _vector; }
+    EigenVector const & asEigen() const { return _vector; }
+#endif
+
 
 protected:
 
@@ -85,6 +85,7 @@ protected:
     template <typename Vector> 
     explicit CoordinateBase(Eigen::MatrixBase<Vector> const & vector) : _vector(vector) {}
 
+    void _swap(CoordinateBase & other) {_vector.swap(other._vector);}
     EigenVector _vector;
 };
 
@@ -110,12 +111,6 @@ public:
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
-#endif
-
-    T getX() const { return _vector.x(); }
-    T getY() const { return _vector.y(); }
-    void setX(T x) { _vector.x() = x; }
-    void setY(T y) { _vector.y() = y; }
 
     /**
      *  \brief Return a fixed-size Eigen representation of the coordinate object.
@@ -123,7 +118,13 @@ public:
      *  The fact that this returns by const reference rather than by value should not be considered
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
-    EigenVector const & asVector() const { return _vector; }
+    EigenVector const & asEigen() const { return _vector; }
+#endif
+
+    T getX() const { return _vector.x(); }
+    T getY() const { return _vector.y(); }
+    void setX(T x) { _vector.x() = x; }
+    void setY(T y) { _vector.y() = y; }
 
     /// \brief Return a std::pair representation of the coordinate object.
     std::pair<T,T> asPair() const { return std::make_pair(_vector.x(),_vector.y()); }
@@ -131,32 +132,13 @@ public:
     /// \brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T> asTuple() const { return boost::make_tuple(_vector.x(),_vector.y()); }
 
-    /**
-     *  @name Named constructors
-     *
-     *  While it might be nice to make these true constructors of CoordinateBase subclasses,
-     *  that would require either partial specialization of all those subclasses, or the
-     *  presence of constructors that would be invalid for certain dimensions.
-     *
-     *  And while it is slightly more verbose, having a named constructor also explicitly states
-     *  that the arguments are (x,y) rather than (y,x).
-     */
-    //@{
-    static Derived make(T x, T y) { return Derived(EigenVector(x, y)); }
-    static Derived make(T const xy[2]) { return Derived(EigenVector(xy[0], xy[1])); }
-    static Derived make(std::pair<T,T> const & xy) { return Derived(EigenVector(xy.first, xy.second)); }
-    static Derived make(boost::tuple<T,T> const & xy) {
-        return Derived(EigenVector(xy.template get<0>(), xy.template get<1>()));
-    }
-    //@}
-
 protected:
 
     explicit CoordinateBase(T val = static_cast<T>(0)) : _vector(EigenVector::Constant(val)) {}
 
     template <typename Vector>
     explicit CoordinateBase(Eigen::MatrixBase<Vector> const & vector) : _vector(vector) {}
-
+    void _swap(CoordinateBase & other) {_vector.swap(other._vector);}
     EigenVector _vector;
 };
 
@@ -175,6 +157,15 @@ public:
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
+
+    /**
+     *  \brief Return a fixed-size Eigen representation of the coordinate object.
+     *
+     *  The fact that this returns by const reference rather than by value should not be considered
+     *  part of the API; this is merely an optimization enabled by the implementation.
+     */
+    EigenVector const & asEigen() const { return _vector; }
+
 #endif
 
     T getX() const { return _vector.x(); }
@@ -184,36 +175,10 @@ public:
     void setY(T y) { _vector.y() = y; }
     void setZ(T z) { _vector.z() = z; }
 
-    /**
-     *  \brief Return a fixed-size Eigen representation of the coordinate object.
-     *
-     *  The fact that this returns by const reference rather than by value should not be considered
-     *  part of the API; this is merely an optimization enabled by the implementation.
-     */
-    EigenVector const & asVector() const { return _vector; }
-
     /// \brief Return a boost::tuple representation of the coordinate object.
     boost::tuple<T,T,T> asTuple() const {
         return boost::make_tuple(_vector.x(), _vector.y(), _vector.z()); 
     }
-
-    /**
-     *  @name Named constructors
-     *
-     *  While it might be nice to make these true constructors of CoordinateBase subclasses,
-     *  that would require either partial specialization of all those subclasses, or the
-     *  presence of constructors that would be invalid for certain dimensions.
-     *
-     *  And while it is slightly more verbose, having a named constructor also explicitly states
-     *  that the arguments are (x,y,z) rather than (z,y,x).
-     */
-    //@{
-    static Derived make(T x, T y, T z) { return Derived(EigenVector(x, y, z)); }
-    static Derived make(T const xyz[3]) { return Derived(EigenVector(xyz[0], xyz[1], xyz[2])); }
-    static Derived make(boost::tuple<T,T,T> const & xyz) {
-        return Derived(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>()));
-    }
-    //@}
 
 protected:
 
@@ -221,7 +186,7 @@ protected:
 
     template <typename Vector>
     explicit CoordinateBase(Eigen::MatrixBase<Vector> const & vector) : _vector(vector) {}
-
+    void _swap(CoordinateBase & other) {_vector.swap(other._vector);}
     EigenVector _vector;
 };
 

@@ -32,8 +32,8 @@
 #include "lsst/utils/ieee.h"
 
 #include "Eigen/Core"
-#include "Eigen/QR"
 #include "Eigen/SVD"
+#include "Eigen/Eigenvalues"
 
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/math/Statistics.h"
@@ -50,7 +50,7 @@ ImagePca<ImageT>::ImagePca(bool constantWeight ///< Should all stars be weighted
                           ) :
     _imageList(),
     _fluxList(),
-    _width(0), _height(0),
+    _dimensions(0,0),
     _constantWeight(constantWeight),
     _eigenValues(std::vector<double>()),
     _eigenImages(ImageList()) {
@@ -66,13 +66,16 @@ void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to s
                                 double flux               ///< Image's flux
                                ) {
     if (_imageList.empty()) {
-        _width = img->getWidth();
-        _height = img->getHeight();
+        _dimensions = img->getDimensions();
     } else {
         if (getDimensions() != img->getDimensions()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              (boost::format("Dimension mismatch: saw %dx%d; expected %dx%d") %
-                               img->getWidth() % img->getHeight() % _width % _height).str());
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                (boost::format("Dimension mismatch: saw %dx%d; expected %dx%d") %
+                    img->getWidth() % img->getHeight() %
+                    _dimensions.getX() % _dimensions.getY()
+                ).str()
+            );
         }
     }
 
@@ -207,7 +210,6 @@ void ImagePca<ImageT>::analyze()
         }
     }
     flux_bar /= nImage;
-   
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eVecValues(R);
     Eigen::MatrixXd const& Q = eVecValues.eigenvectors();
     Eigen::VectorXd const& lambda = eVecValues.eigenvalues();
@@ -245,7 +247,7 @@ void ImagePca<ImageT>::analyze()
 
         int const ii = lambdaAndIndex[i].second; // the index after sorting (backwards) by eigenvalue
 
-        typename ImageT::Ptr eImage(new ImageT(_width, _height));
+        typename ImageT::Ptr eImage(new ImageT(_dimensions));
         *eImage = static_cast<typename ImageT::Pixel>(0);
 
         for (int j = 0; j != nImage; ++j) {
@@ -380,7 +382,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     if (nEigen == 1) {
         x(0) = b(0)/A(0, 0);
     } else {
-        A.svd().solve(b, &x);
+        x = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
     }
     //
     // Accumulate the best-fit-image in bestFitImage
@@ -417,17 +419,17 @@ double do_updateBadPixels(
                                                                 )
 {
     int const nImage = imageList.size();
-
     if (nImage == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                           "Please provide at least one Image for me to update");
     }
-    int const height = imageList[0]->getHeight();
+    geom::Extent2I dimensions = imageList[0]->getDimensions();
+    int const height = dimensions.getY();
         
     double maxChange = 0.0;             // maximum change to the input images
 
     if (ncomp == 0) {                   // use mean of good pixels
-        typename ImageT::Image mean(imageList[0]->getDimensions()); // desired mean image
+        typename ImageT::Image mean(dimensions); // desired mean image
         image::Image<float> weight(mean.getDimensions()); // weight of each pixel
 
         for (int i = 0; i != nImage; ++i) {
@@ -438,16 +440,15 @@ double do_updateBadPixels(
                 image::Image<float>::x_iterator wptr = weight.row_begin(y);
                 for (typename ImageT::Image::x_iterator mptr = mean.row_begin(y), end = mean.row_end(y);
                      mptr != end; ++mptr, ++iptr, ++wptr) {
-                    if (!(iptr.mask() & mask)) {
+                    if (!(iptr.mask() & mask) && iptr.variance() > 0.0) {
                         typename ImageT::Image::Pixel value = iptr.image()/flux_i;
                         float const var = iptr.variance()/(flux_i*flux_i);
                         float const ivar = 1.0/var;
-                        if (!lsst::utils::isfinite(ivar)) {
-                            continue;
-                        }
 
-                        *mptr += value*ivar;
-                        *wptr += ivar;
+                        if (lsst::utils::isfinite(value*ivar)) {
+                            *mptr += value*ivar;
+                            *wptr += ivar;
+                        }
                     }
                 }
             }
@@ -459,7 +460,11 @@ double do_updateBadPixels(
             image::Image<float>::x_iterator wptr = weight.row_begin(y);
             for (typename ImageT::Image::x_iterator mptr = mean.row_begin(y), end = mean.row_end(y);
                  mptr != end; ++mptr, ++wptr) {
-                *mptr /= *wptr;
+                if (*wptr == 0.0) {     // oops, no good values
+                    ;
+                } else {
+                    *mptr /= *wptr;
+                }
             }
         }
         //
@@ -578,7 +583,9 @@ double innerProduct(Image1T const& lhs, ///< first image
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr) {
                 typename Image1T::Pixel val = *lptr;
-                sum += val*val;
+                if (lsst::utils::isfinite(val)) {
+                    sum += val*val;
+                }
             }
         }
     } else {
@@ -592,7 +599,10 @@ double innerProduct(Image1T const& lhs, ///< first image
             typename Image2T::const_x_iterator rptr = rhs.row_begin(y) + border;
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr, ++rptr) {
-                sum += (*lptr)*(*rptr);
+                double const tmp = (*lptr)*(*rptr);
+                if (lsst::utils::isfinite(tmp)) {
+                    sum += tmp;
+                }
             }
         }
     }
@@ -604,6 +614,7 @@ double innerProduct(Image1T const& lhs, ///< first image
 //
 // Explicit instantiations
 //
+/// \cond
 #define INSTANTIATE(T) \
     template class ImagePca<Image<T> >; \
     template double innerProduct(Image<T> const&, Image<T> const&, int); \
@@ -614,10 +625,12 @@ double innerProduct(Image1T const& lhs, ///< first image
     template double innerProduct(Image<U> const&, Image<T> const&, int);
 
 INSTANTIATE(boost::uint16_t)
+INSTANTIATE(boost::uint64_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
 
 INSTANTIATE2(float, double)             // the two types must be different
+/// \endcond
     
 }}}

@@ -31,6 +31,15 @@
 #include "lsst/utils/ieee.h"
 
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/geom/Angle.h"
+
+#include <boost/serialization/nvp.hpp>
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
 
 
 namespace boost {
@@ -112,6 +121,16 @@ enum SharedNullableField {
  */
 template<int numNullableFields>
 class BaseSourceAttributes {
+private:
+	static lsst::afw::coord::Coord::Ptr getcoord(lsst::afw::coord::CoordSystem sys, lsst::afw::geom::Angle ra, lsst::afw::geom::Angle dec) {
+		lsst::afw::coord::Coord::Ptr coord = lsst::afw::coord::makeCoord(sys, ra, dec);
+		//boost::shared_ptr<lsst::afw::coord::IcrsCoord>(
+		//new lsst::afw::coord::IcrsCoord(ra, dec));
+		if (sys != lsst::afw::coord::ICRS)
+			coord = coord->convert(sys);
+		return coord;
+	}
+
 public:    
     virtual ~BaseSourceAttributes(){};
     
@@ -122,32 +141,58 @@ public:
     boost::int64_t getObjectId() const { return _objectId; }
     boost::int64_t getMovingObjectId() const { return _movingObjectId; }
     boost::int32_t getProcHistoryId() const { return _procHistoryId; }
-    double getRa() const { return _ra; }
-    double getDec() const { return _dec; }
-    float  getRaErrForWcs() const { return _raErrForWcs; }
-    float  getDecErrForWcs() const { return _decErrForWcs; }
-    float  getRaErrForDetection() const { return _raErrForDetection; }
-    float  getDecErrForDetection() const { return _decErrForDetection; }
+    lsst::afw::geom::Angle getRa() const { return _ra * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle getDec() const { return _dec * lsst::afw::geom::radians; }
+
+	lsst::afw::coord::Coord::Ptr getRaDec(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
+		) const {
+		return getcoord(sys, getRa(), getDec());
+	}
+
+	// isn't copy-n-paste great?
+	lsst::afw::coord::Coord::Ptr getRaDecAstrom(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
+		) const {
+		return getcoord(sys, getRaAstrom(), getDecAstrom());
+	}
+
+	lsst::afw::coord::Coord::Ptr getRaDecPeak(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
+		) const {
+		return getcoord(sys, getRaPeak(), getDecPeak());
+	}
+
+	lsst::afw::coord::Coord::Ptr getRaDecFlux(
+		lsst::afw::coord::CoordSystem sys = lsst::afw::coord::ICRS	
+		) const {
+		return getcoord(sys, getRaFlux(), getDecFlux());
+	}
+
+    lsst::afw::geom::Angle  getRaErrForWcs() const { return _raErrForWcs * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle  getDecErrForWcs() const { return _decErrForWcs * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle  getRaErrForDetection() const { return _raErrForDetection * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle  getDecErrForDetection() const { return _decErrForDetection * lsst::afw::geom::radians; }
     double getXFlux() const { return _xFlux; }
     float  getXFluxErr() const { return _xFluxErr; }
     double getYFlux() const { return _yFlux; }
     float  getYFluxErr() const { return _yFluxErr; }
-    double getRaFlux() const { return _raFlux; }
-    float  getRaFluxErr() const { return _raFluxErr; }
-    double getDecFlux() const { return _decFlux; }
-    float  getDecFluxErr() const { return _decFluxErr; }
+    lsst::afw::geom::Angle getRaFlux() const { return _raFlux * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle  getRaFluxErr() const { return _raFluxErr * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle getDecFlux() const { return _decFlux * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle  getDecFluxErr() const { return _decFluxErr * lsst::afw::geom::radians; }
     double getXPeak() const { return _xPeak; }
     double getYPeak() const { return _yPeak; }
-    double getRaPeak() const { return _raPeak; }
-    double getDecPeak() const { return _decPeak; }
+    lsst::afw::geom::Angle getRaPeak() const { return _raPeak * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle getDecPeak() const { return _decPeak * lsst::afw::geom::radians; }
     double getXAstrom() const { return _xAstrom; }
     float  getXAstromErr() const { return _xAstromErr; }
     double getYAstrom() const { return _yAstrom; }
     float  getYAstromErr() const { return _yAstromErr; }
-    double getRaAstrom() const { return _raAstrom; }
-    float  getRaAstromErr() const { return _raAstromErr; }
-    double getDecAstrom() const { return _decAstrom; }
-    float  getDecAstromErr() const { return _decAstromErr; }
+    lsst::afw::geom::Angle getRaAstrom() const { return _raAstrom * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle  getRaAstromErr() const { return _raAstromErr * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle getDecAstrom() const { return _decAstrom * lsst::afw::geom::radians; }
+    lsst::afw::geom::Angle  getDecAstromErr() const { return _decAstromErr * lsst::afw::geom::radians; }
     double getTaiMidPoint() const { return _taiMidPoint; }
     double getTaiRange() const { return _taiRange; }
     double getPsfFlux() const { return _psfFlux; }
@@ -157,7 +202,7 @@ public:
     double getModelFlux() const { return _modelFlux; }
     float  getModelFluxErr() const { return _modelFluxErr; }
     double getInstFlux() const { return _instFlux; }
-    float  getInstFluxErr() const { return _instFluxErr; }      
+    float  getInstFluxErr() const { return _instFluxErr; }
     double getNonGrayCorrFlux() const { return _nonGrayCorrFlux; }
     float  getNonGrayCorrFluxErr() const { return _nonGrayCorrFluxErr;}
     double getAtmCorrFlux() const { return _atmCorrFlux; }
@@ -216,85 +261,155 @@ public:
     }
     void setProcHistoryId(boost::int32_t const procHistoryId) {
         set(_procHistoryId, procHistoryId);   
-    }   
-    void setRa(double const ra) {
-        set(_ra, ra);
     }
-    void setDec(double const dec) {
-        set(_dec, dec);
+    void setRa(lsst::afw::geom::Angle const ra) {
+        setAngle(_ra, ra);
     }
-    void setRaErrForWcs(float const raErrForWcs) {
-        set(_raErrForWcs, raErrForWcs);
+    void setDec(lsst::afw::geom::Angle const dec) {
+        setAngle(_dec, dec);
     }
-    void setDecErrForWcs(float const decErrForWcs) {
-        set(_decErrForWcs, decErrForWcs);
+	void setRaDec(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		setRa(icrs.getRa());
+		setDec(icrs.getDec());
+	}
+    void setAllRaDecFields(lsst::afw::coord::Coord::ConstPtr radec) {
+		setRaDec(radec);
+		setRaDecFlux(radec);
+		setRaDecPeak(radec);
+		setRaDecAstrom(radec);
+	}
+	void setAllRaDecFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecFromXy(wcs);
+		setRaDecFluxFromXy(wcs);
+		setRaDecPeakFromXy(wcs);
+	}
+	void setRaDecFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDec(wcs->pixelToSky(getXAstrom(), getYAstrom()));
+		setRaDecAstrom(wcs->pixelToSky(getXAstrom(), getYAstrom()));
+	}
+	void setRaDecAstromFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecAstrom(wcs->pixelToSky(getXAstrom(), getYAstrom()));
+	}
+	void setRaDecFluxFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecFlux(wcs->pixelToSky(getXFlux(), getYFlux()));
+	}
+	void setRaDecPeakFromXy(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setRaDecPeak(wcs->pixelToSky(getXPeak(), getYPeak()));
+	}
+
+	void setAllXyFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		setXyAstromFromRaDec(wcs);
+		setXyFluxFromRaDec(wcs);
+		setXyPeakFromRaDec(wcs);
+	}
+	void setXyAstromFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecAstrom());
+		setXAstrom(xy[0]);
+		setYAstrom(xy[1]);
+	}
+	void setXyFluxFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecFlux());
+		setXFlux(xy[0]);
+		setYFlux(xy[1]);
+	}
+	void setXyPeakFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecPeak());
+		setXPeak(xy[0]);
+		setYPeak(xy[1]);
+	}
+
+    void setRaErrForWcs(lsst::afw::geom::Angle const raErrForWcs) {
+        setAngle(_raErrForWcs, raErrForWcs);
     }
-    void setRaErrForDetection(float const raErrForDetection ) {
-        set(_raErrForDetection, raErrForDetection, RA_ERR_FOR_DETECTION);
+    void setDecErrForWcs(lsst::afw::geom::Angle const decErrForWcs) {
+        setAngle(_decErrForWcs, decErrForWcs);
     }
-    void setDecErrForDetection(float const decErrForDetection) {
-        set(_decErrForDetection, decErrForDetection, DEC_ERR_FOR_DETECTION);
+    void setRaErrForDetection(lsst::afw::geom::Angle const raErrForDetection ) {
+        setAngle(_raErrForDetection, raErrForDetection, RA_ERR_FOR_DETECTION);
+    }
+    void setDecErrForDetection(lsst::afw::geom::Angle const decErrForDetection) {
+        setAngle(_decErrForDetection, decErrForDetection, DEC_ERR_FOR_DETECTION);
     }
     void setXFlux(double const xFlux) { 
         set(_xFlux, xFlux, X_FLUX);            
     }
     void setXFluxErr(float const xFluxErr) { 
         set(_xFluxErr, xFluxErr, X_FLUX_ERR);            
-    }    
+    }
     void setYFlux(double const yFlux) { 
         set(_yFlux, yFlux, Y_FLUX);            
-    }    
+    }
     void setYFluxErr(float const yFluxErr) { 
         set(_yFluxErr, yFluxErr, Y_FLUX_ERR);            
-    }    
-    void setRaFlux(double const raFlux) { 
-        set(_raFlux, raFlux, RA_FLUX);            
     }
-    void setRaFluxErr(float const raFluxErr) { 
-        set(_raFluxErr, raFluxErr, RA_FLUX_ERR);            
-    }    
-    void setDecFlux(double const decFlux) { 
-        set(_decFlux, decFlux, DEC_FLUX);
-    }    
-    void setDecFluxErr(float const decFluxErr) { 
-        set(_decFluxErr, decFluxErr, DEC_FLUX_ERR);            
-    }    
+    void setRaFlux(lsst::afw::geom::Angle const raFlux) { 
+        setAngle(_raFlux, raFlux, RA_FLUX);            
+    }
+    void setRaFluxErr(lsst::afw::geom::Angle const raFluxErr) { 
+        setAngle(_raFluxErr, raFluxErr, RA_FLUX_ERR);            
+    }
+    void setDecFlux(lsst::afw::geom::Angle const decFlux) { 
+        setAngle(_decFlux, decFlux, DEC_FLUX);
+    }
+    void setDecFluxErr(lsst::afw::geom::Angle const decFluxErr) { 
+        setAngle(_decFluxErr, decFluxErr, DEC_FLUX_ERR);            
+    }
+	void setRaDecFlux(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS.
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		setRaFlux(icrs.getRa());
+		setDecFlux(icrs.getDec());
+	}
     void setXPeak(double const xPeak) { 
         set(_xPeak, xPeak, X_PEAK);            
     }
     void setYPeak(double const yPeak) { 
         set(_yPeak, yPeak, Y_PEAK);            
-    }    
-    void setRaPeak(double const raPeak) { 
-        set(_raPeak, raPeak, RA_PEAK);            
-    }    
-    void setDecPeak(double const decPeak) { 
-        set(_decPeak, decPeak, DEC_PEAK);            
-    }    
+    }
+    void setRaPeak(lsst::afw::geom::Angle const raPeak) { 
+        setAngle(_raPeak, raPeak, RA_PEAK);            
+    }
+    void setDecPeak(lsst::afw::geom::Angle const decPeak) { 
+        setAngle(_decPeak, decPeak, DEC_PEAK);            
+    }
+	void setRaDecPeak(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS.
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		setRaPeak(icrs.getRa());
+		setDecPeak(icrs.getDec());
+	}
     void setXAstrom(double const xAstrom) { 
         set(_xAstrom, xAstrom);            
     }
     void setXAstromErr(float const xAstromErr) { 
         set(_xAstromErr, xAstromErr, X_ASTROM_ERR);            
-    }    
+    }
     void setYAstrom(double const yAstrom) { 
         set(_yAstrom, yAstrom);            
-    }    
+    }
     void setYAstromErr(float const yAstromErr) {     
         set(_yAstromErr, yAstromErr, Y_ASTROM_ERR);            
-    }    
-    void setRaAstrom(double const raAstrom) { 
-        set(_raAstrom, raAstrom, RA_ASTROM);            
     }
-    void setRaAstromErr(float const raAstromErr) { 
-        set(_raAstromErr, raAstromErr, RA_ASTROM_ERR);            
-    }    
-    void setDecAstrom(double const decAstrom) { 
-        set(_decAstrom, decAstrom, DEC_ASTROM);            
-    }    
-    void setDecAstromErr(float const decAstromErr) { 
-        set(_decAstromErr, decAstromErr, DEC_ASTROM_ERR);            
-    }         
+    void setRaAstrom(lsst::afw::geom::Angle const raAstrom) { 
+        setAngle(_raAstrom, raAstrom, RA_ASTROM);            
+    }
+    void setRaAstromErr(lsst::afw::geom::Angle const raAstromErr) { 
+        setAngle(_raAstromErr, raAstromErr, RA_ASTROM_ERR);            
+    }
+    void setDecAstrom(lsst::afw::geom::Angle const decAstrom) { 
+        setAngle(_decAstrom, decAstrom, DEC_ASTROM);            
+    }
+    void setDecAstromErr(lsst::afw::geom::Angle const decAstromErr) { 
+        setAngle(_decAstromErr, decAstromErr, DEC_ASTROM_ERR);            
+    }
+	void setRaDecAstrom(lsst::afw::coord::Coord::ConstPtr radec) {
+		// Convert to LSST-decreed ICRS.
+		lsst::afw::coord::IcrsCoord icrs = radec->toIcrs();
+		setRaAstrom(icrs.getRa());
+		setDecAstrom(icrs.getDec());
+	}
     void setTaiMidPoint(double const taiMidPoint) {
         set(_taiMidPoint, taiMidPoint);     
     }
@@ -337,22 +452,22 @@ public:
     }
     void setAtmCorrFluxErr(float const atmCorrFluxErr) { 
         set(_atmCorrFluxErr, atmCorrFluxErr, ATM_CORR_FLUX_ERR);      
-    }     
+    }
     void setIxx(float const ixx) { 
         set(_ixx, ixx, IXX);    
     }
     void setIxxErr(float const ixxErr) {
         set(_ixxErr, ixxErr, IXX_ERR); 
-    }         
+    }
     void setIyy(float const iyy) { 
         set(_iyy, iyy, IYY);    
-    }     
+    }
     void setIyyErr(float const iyyErr) { 
         set(_iyyErr, iyyErr, IYY_ERR); 
-    }         
+    }
     void setIxy(float const ixy) { 
         set(_ixy, ixy, IXY);    
-    }      
+    }
     void setIxyErr(float const ixyErr) { 
         set(_ixyErr, ixyErr, IXY_ERR); 
     }
@@ -362,44 +477,44 @@ public:
     }
     void setPsfIxxErr(float const psfIxxErr) {
         set(_psfIxxErr, psfIxxErr, PSF_IXX_ERR); 
-    }         
+    }
     void setPsfIyy(float const psfIyy) { 
         set(_psfIyy, psfIyy, PSF_IYY);    
-    }     
+    }
     void setPsfIyyErr(float const psfIyyErr) { 
         set(_psfIyyErr, psfIyyErr, PSF_IYY_ERR); 
-    }         
+    }
     void setPsfIxy(float const psfIxy) { 
         set(_psfIxy, psfIxy, PSF_IXY);    
-    }      
+    }
     void setPsfIxyErr(float const psfIxyErr) { 
         set(_psfIxyErr, psfIxyErr, PSF_IXY_ERR); 
-    }         
+    }
 
     void setE1(float const e1) {
         set(_e1, e1, E1);    
-    }      
+    }
     void setE1Err(float const e1Err) {
         set(_e1Err, e1Err, E1_ERR);    
-    }      
+    }
     void setE2(float const e2) {
         set(_e2, e2, E2);    
-    }      
+    }
     void setE2Err(float const e2Err) {
         set(_e2Err, e2Err, E2_ERR);    
-    }      
+    }
     void setShear1(float const shear1) {
         set(_shear1, shear1, SHEAR1);    
-    }      
+    }
     void setShear1Err(float const shear1Err) {
         set(_shear1Err, shear1Err, SHEAR1_ERR);    
-    }      
+    }
     void setShear2(float const shear2) {
         set(_shear2, shear2, SHEAR2);    
-    }      
+    }
     void setShear2Err(float const shear2Err) {
         set(_shear2Err, shear2Err, SHEAR2_ERR);    
-    }      
+    }
 
     void setResolution(float const resolution) {
         set(_resolution, resolution, RESOLUTION);
@@ -423,7 +538,7 @@ public:
     }
     void setChi2(float const chi2) {
         set(_chi2, chi2);             
-    }   
+    }
     void setFlagForAssociation(boost::int16_t const flagForAssociation) {
         set(_flagForAssociation, flagForAssociation, FLAG_FOR_ASSOCIATION);
     }
@@ -432,7 +547,7 @@ public:
     }
     void setFlagForWcs(boost::int16_t const flagForWcs) {
         set(_flagForWcs, flagForWcs, FLAG_FOR_WCS);
-    }    
+    }
     
     /**
      * Test if a field is Null
@@ -467,7 +582,7 @@ public:
     /**
      * Set all NULLABLE fields to NOT NULL
      */
-    inline void setNotNull() {_nulls.reset();}   
+    inline void setNotNull() {_nulls.reset();}
 protected:
     
     std::bitset<numNullableFields> _nulls;
@@ -522,7 +637,7 @@ protected:
         _shapeStatus(-1)
     {
         setNull();
-    }    
+    }
     
     /**
      * \internal test field equality
@@ -551,6 +666,12 @@ protected:
         dest = src;
     }
 
+    template<typename T>
+	inline void setAngle(T & dest, lsst::afw::geom::Angle const & src, int const field = -1) {
+        setNotNull(field);
+        dest = src.asRadians();
+    }
+
     template <typename Archive, typename FloatT>
     static inline void fpSerialize(Archive & ar, FloatT & value) {
         int fpClass = 0;
@@ -559,7 +680,7 @@ protected:
         } else if (lsst::utils::isinf(value)) {
             fpClass = value > 0.0 ? 2 : 3;
         }
-        ar & fpClass;
+        ar & make_nvp("fpClass", fpClass);
         switch (fpClass) {
             case 1:
                 value = std::numeric_limits<FloatT>::quiet_NaN();
@@ -571,7 +692,7 @@ protected:
                 value = -std::numeric_limits<FloatT>::infinity();
                 break;
             default:
-                ar & value;
+                ar & make_nvp("value", value);
         }
     }
 
@@ -580,12 +701,12 @@ protected:
      */
     template <class Archive> 
     void serialize(Archive & ar, unsigned int const version) {
-        ar & _id;
-        ar & _ampExposureId;
-        ar & _filterId;
-        ar & _objectId;
-        ar & _movingObjectId;
-        ar & _procHistoryId;
+        ar & make_nvp("id", _id);
+        ar & make_nvp("ampExposureId", _ampExposureId);
+        ar & make_nvp("filterId", _filterId);
+        ar & make_nvp("objectId", _objectId);
+        ar & make_nvp("movingObjectId", _movingObjectId);
+        ar & make_nvp("procHistoryId", _procHistoryId);
         fpSerialize(ar, _ra);
         fpSerialize(ar, _dec);
         fpSerialize(ar, _raErrForDetection);
@@ -651,26 +772,26 @@ protected:
             fpSerialize(ar, _shear1Err);
             fpSerialize(ar, _shear2);
             fpSerialize(ar, _shear2Err);
-            ar & _shapeStatus;
+            ar & make_nvp("shapeStatus", _shapeStatus);
         }
         fpSerialize(ar, _snr);
         fpSerialize(ar, _chi2);
-        ar & _flagForAssociation;
-        ar & _flagForDetection;
-        ar & _flagForWcs;
+        ar & make_nvp("flagForAssociation", _flagForAssociation);
+        ar & make_nvp("flagForDetection", _flagForDetection);
+        ar & make_nvp("flagForWcs", _flagForWcs);
  
         bool b;
         if (Archive::is_loading::value) {
             for (int i = 0; i != numNullableFields; ++i) {
-                ar & b;
+                ar & make_nvp("null", b);
                 _nulls.set(i, b);
             }
         } else {
             for (int i = 0; i != numNullableFields; ++i) {
                 b = isNull(i);
-                ar & b;
+                ar & make_nvp("null", b);
             }
-        }    
+        }
     }
             
     
