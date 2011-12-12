@@ -87,8 +87,8 @@ struct TableImpl : private boost::noncopyable {
     RecordData * back;
     void * consolidated;
     Block::Ptr block;
-    IdFactory::Ptr idFactory;
-    AuxBase::Ptr aux;
+    PTR(IdFactory) idFactory;
+    PTR(AuxBase) aux;
     Layout layout;
     RecordSet records;
 
@@ -103,7 +103,7 @@ struct TableImpl : private boost::noncopyable {
         }
     }
 
-    RecordData * addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux);
+    RecordData * addRecord(RecordId id, RecordData * parent, PTR(AuxBase) const & aux);
 
     void setLinkMode(LinkMode newMode);
 
@@ -111,7 +111,7 @@ struct TableImpl : private boost::noncopyable {
 
     TableImpl(
         Layout const & layout_, int nRecordsPerBlock_, 
-        IdFactory::Ptr const & idFactory_, AuxBase::Ptr const & aux_
+        PTR(IdFactory) const & idFactory_, PTR(AuxBase) const & aux_
     ) :
         linkMode(POINTERS), nRecordsPerBlock(nRecordsPerBlock_), front(0), back(0), consolidated(0), 
         idFactory(idFactory_), aux(aux_), layout(layout_)
@@ -206,7 +206,7 @@ void TableImpl::addBlock(int blockRecordCount) {
     block.swap(newBlock);
 }
 
-RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, AuxBase::Ptr const & aux) {
+RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, PTR(AuxBase) const & aux) {
     RecordSet::insert_commit_data insertData;
     if (!records.insert_check(id, CompareRecordIdLess(), insertData).second) {
         throw LSST_EXCEPT(
@@ -411,14 +411,14 @@ TreeIteratorBase RecordBase::_endChildren(TreeMode mode) const {
     );
 }
 
-RecordBase RecordBase::_addChild(RecordId id, AuxBase::Ptr const & aux) const {
+RecordBase RecordBase::_addChild(RecordId id, PTR(AuxBase) const & aux) const {
     assertBit(CAN_ADD_RECORD);
     detail::RecordData * p = _table->addRecord(id, _data, aux);
     _table->idFactory->notify(id);
     return RecordBase(p, _table, *this);
 }
 
-RecordBase RecordBase::_addChild(AuxBase::Ptr const & aux) const {
+RecordBase RecordBase::_addChild(PTR(AuxBase) const & aux) const {
     return _addChild((*_table->idFactory)(), aux);
 }
 
@@ -557,12 +557,12 @@ IteratorBase TableBase::_find(RecordId id) const {
     return IteratorBase(j, _impl, *this);
 }
 
-RecordBase TableBase::_addRecord(AuxBase::Ptr const & aux) const {
+RecordBase TableBase::_addRecord(PTR(AuxBase) const & aux) const {
     assertBit(CAN_ADD_RECORD);
     return _addRecord((*_impl->idFactory)(), aux);
 }
 
-RecordBase TableBase::_addRecord(RecordId id, AuxBase::Ptr const & aux) const {
+RecordBase TableBase::_addRecord(RecordId id, PTR(AuxBase) const & aux) const {
     assertBit(CAN_ADD_RECORD);
     detail::RecordData * p = _impl->addRecord(id, 0, aux);
     _impl->idFactory->notify(id);
@@ -573,8 +573,8 @@ TableBase::TableBase(
     Layout const & layout,
     int capacity,
     int nRecordsPerBlock,
-    IdFactory::Ptr const & idFactory,
-    AuxBase::Ptr const & aux,
+    PTR(IdFactory) const & idFactory,
+    PTR(AuxBase) const & aux,
     ModificationFlags const & flags 
 ) : ModificationFlags(flags),
     _impl(boost::make_shared<detail::TableImpl>(layout, nRecordsPerBlock, idFactory, aux))

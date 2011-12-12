@@ -63,7 +63,7 @@ public:
         Layout const & layout,
         int capacity = 0,
         int nRecordsPerBlock = 256,
-        IdFactory::Ptr const & idFactory = IdFactory::Ptr()
+        PTR(IdFactory) const & idFactory = PTR(IdFactory)()
     ) : TableInterface<Simple>(layout, capacity, nRecordsPerBlock, idFactory) {}
 
     

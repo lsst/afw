@@ -2,8 +2,6 @@
 #ifndef AFW_TABLE_ModificationFlags_h_INCLUDED
 #define AFW_TABLE_ModificationFlags_h_INCLUDED
 
-
-
 #include <bitset>
 
 #include "lsst/pex/exceptions.h"

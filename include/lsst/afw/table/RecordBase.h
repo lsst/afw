@@ -182,7 +182,7 @@ public:
 protected:
 
     /// @brief Return the record's auxiliary data.
-    AuxBase::Ptr getAux() const { return _data->aux; }
+    PTR(AuxBase) getAux() const { return _data->aux; }
 
     /**
      *  @brief Return the record's parent, or throw NotFoundException if !hasParent().
@@ -224,8 +224,8 @@ protected:
      *
      *  Will throw LogicErrorException if !isLinked().
      */
-    RecordBase _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
-    RecordBase _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const;
+    RecordBase _addChild(PTR(AuxBase) const & aux = PTR(AuxBase)()) const;
+    RecordBase _addChild(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const;
     //@}
 
 private:

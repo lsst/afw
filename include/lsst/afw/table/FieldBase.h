@@ -12,11 +12,12 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/Covariance.h"
 #include "lsst/afw/table/KeyBase.h"
 
 #define AFW_TABLE_SCALAR_FIELD_TYPE_N 3
-#define AFW_TABLE_SCALAR_FIELD_TYPES              \
+#define AFW_TABLE_SCALAR_FIELD_TYPES                                    \
     int, float, double
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 

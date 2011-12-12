@@ -2,9 +2,10 @@
 #ifndef AFW_TABLE_IdFactory_h_INCLUDED
 #define AFW_TABLE_IdFactory_h_INCLUDED
 
-#include "lsst/afw/table/detail/RecordData.h"
-
 #include "boost/shared_ptr.hpp"
+
+#include "lsst/base.h"
+#include "lsst/afw/table/misc.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -18,8 +19,6 @@ namespace lsst { namespace afw { namespace table {
 class IdFactory {
 public:
 
-    typedef boost::shared_ptr<IdFactory> Ptr;
-
     /// @brief Return a new unique RecordId.
     virtual RecordId operator()() = 0;
 
@@ -27,14 +26,14 @@ public:
     virtual void notify(RecordId id) = 0;
 
     /// @brief Deep-copy the IdFactory.
-    virtual Ptr clone() const = 0;
+    virtual PTR(IdFactory) clone() const = 0;
 
     /**
      *  @brief Return a simple IdFactory that simply counts from 1.
      *
      *  This is used when an empty pointer is passed to the TableBase constructor.
      */
-    static Ptr makeSimple();
+    static PTR(IdFactory) makeSimple();
 
     virtual ~IdFactory() {}
 

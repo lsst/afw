@@ -113,11 +113,11 @@ protected:
 
     template <typename OtherTag> friend class TableInterface;
 
-    Record _addChild(AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
+    Record _addChild(PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
         return detail::Access::makeRecord<Record>(this->RecordBase::_addChild(aux));
     }
 
-    Record _addChild(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
+    Record _addChild(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
         return detail::Access::makeRecord<Record>(this->RecordBase::_addChild(id, aux));
     }
 

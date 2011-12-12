@@ -15,7 +15,7 @@ public:
 
     virtual void notify(RecordId id) { _current = id; }
 
-    virtual Ptr clone() const { return boost::make_shared<SimpleIdFactory>(*this); }
+    virtual PTR(IdFactory) clone() const { return boost::make_shared<SimpleIdFactory>(*this); }
 
     SimpleIdFactory() : _current(0) {}
 
@@ -25,7 +25,7 @@ private:
 
 } // anonymous
 
-IdFactory::Ptr IdFactory::makeSimple() {
+PTR(IdFactory) IdFactory::makeSimple() {
     return boost::make_shared<SimpleIdFactory>();
 }
 

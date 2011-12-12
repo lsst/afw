@@ -116,15 +116,15 @@ protected:
         Layout const & layout,
         int capacity,
         int nRecordsPerBlock,
-        IdFactory::Ptr const & idFactory = IdFactory::Ptr(),
-        AuxBase::Ptr const & aux = AuxBase::Ptr()
+        PTR(IdFactory) const & idFactory = PTR(IdFactory)(),
+        PTR(AuxBase) const & aux = PTR(AuxBase)()
     ) : TableBase(layout, capacity, nRecordsPerBlock, idFactory, aux) {}
 
-    Record _addRecord(RecordId id, AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
+    Record _addRecord(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
         return detail::Access::makeRecord<Record>(this->TableBase::_addRecord(id, aux));
     }
 
-    Record _addRecord(AuxBase::Ptr const & aux = AuxBase::Ptr()) const {
+    Record _addRecord(PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
         return detail::Access::makeRecord<Record>(this->TableBase::_addRecord(aux));
     }
     

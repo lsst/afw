@@ -2,13 +2,11 @@
 #ifndef AFW_TABLE_KeyBase_h_INCLUDED
 #define AFW_TABLE_KeyBase_h_INCLUDED
 
+#include "lsst/afw/table/misc.h"
+
 namespace lsst { namespace afw { namespace table { 
 
 template <typename T> class Key;
-template <typename T> class Point;
-template <typename T> class Shape;
-template <typename T> class Array;
-template <typename T> class Covariance;
 
 /// @brief A base class for Key that allows subfield keys to be extracted.
 template <typename T>
