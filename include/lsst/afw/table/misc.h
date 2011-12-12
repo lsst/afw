@@ -20,6 +20,7 @@ template <typename T> class Point;
 template <typename T> class Shape;
 template <typename T> class Array;
 template <typename T> class Covariance;
+class Flag;
 //@}
 
 /**

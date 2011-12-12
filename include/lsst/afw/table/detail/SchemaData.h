@@ -58,7 +58,7 @@ public:
     typedef boost::make_variant_over<ItemTypes>::type ItemVariant;
     typedef std::vector<ItemVariant> ItemContainer;
 
-    SchemaData() : _recordSize(sizeof(RecordData)), _items() {}
+    SchemaData() : _recordSize(sizeof(RecordData)), _lastFlagField(-1), _lastFlagBit(-1), _items() {}
 
 private:
 
@@ -82,6 +82,8 @@ private:
     friend class detail::Access;
 
     int _recordSize;
+    int _lastFlagField;
+    int _lastFlagBit;
     ItemContainer _items;
 };
 

@@ -5,8 +5,13 @@
 
 #include "lsst/afw/table/KeyBase.h"
 #include "lsst/afw/table/detail/Access.h"
+#include "lsst/afw/table/Flag.h"
 
 namespace lsst { namespace afw { namespace table {
+
+Key<FieldBase<Flag>::Element> KeyBase<Flag>::getStorage() const {
+    return detail::Access::extractElement(*this, 0);
+}
 
 template <typename U>
 Key<U> KeyBase< Point<U> >::getX() const { return detail::Access::extractElement(*this, 0); }

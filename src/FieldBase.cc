@@ -7,6 +7,7 @@
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/afw/table/FieldBase.h"
+#include "lsst/afw/table/Flag.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -17,8 +18,14 @@ template <typename T> struct TypeTraits;
 template <> struct TypeTraits<int> {
     static char const * getName() { return "int"; }
 };
+template <> struct TypeTraits<unsigned int> {
+    static char const * getName() { return "uint"; }
+};
 template <> struct TypeTraits<boost::uint64_t> {
     static char const * getName() { return "uint64"; }
+};
+template <> struct TypeTraits<boost::int64_t> {
+    static char const * getName() { return "int64"; }
 };
 template <> struct TypeTraits<float> {
     static char const * getName() { return "float"; }

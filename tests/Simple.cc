@@ -25,7 +25,7 @@ using namespace lsst::afw::table;
  */
 struct Example {
 
-    Example() : schema(), key(schema.addField(Field<double>("f", "doc"))), table(schema, 0, 10) {
+    Example() : schema(), key(schema.addField<double>("f", "doc")), table(schema, 0, 10) {
         std::list<SimpleRecord> top;
         std::list<SimpleRecord> middle;
         std::list<SimpleRecord> bottom;
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
     Schema schema;
     
-    Key<int> myInt = schema.addField(Field< int >("myIntField", "an integer scalar field."));
+    Key<int> myInt = schema.addField<int>("myIntField", "an integer scalar field.");
     
     Key< Array<double> > myArray 
         = schema.addField(Field< Array<double> >("myArrayField", "a double array field.", 5));
@@ -303,4 +303,51 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
         }
     }
     
+}
+
+BOOST_AUTO_TEST_CASE(testFlags) {
+
+    Schema schema;
+    
+    int const nFields = 70;
+    int const nRecords = 10;
+
+    std::vector< Key<double> > doubleKeys;
+    std::vector< Key<Flag> > flagKeys;
+    for (int i = 0; i < nFields; ++i) {    
+        doubleKeys.push_back(
+            schema.addField<double>(
+                (boost::format("float%d") % i).str(),
+                "an double-precision field."
+            )
+        );
+        flagKeys.push_back(
+            schema.addField<Flag>(
+                (boost::format("flag%d") % i).str(),
+                "a flag field."
+            )
+        );
+    }
+
+    int const nBitsPerStorage = sizeof(Field<Flag>::Element) * 8;
+    for (int i = 1; i < nBitsPerStorage; ++i) {
+        BOOST_CHECK( flagKeys[i].getStorage() == flagKeys[0].getStorage() );
+    }
+    for (int i = nBitsPerStorage + 1; i < nRecords; ++i) {
+        BOOST_CHECK( flagKeys[i].getStorage() == flagKeys[nBitsPerStorage].getStorage() );
+    }
+
+    SimpleTable table(schema, nRecords);
+    Eigen::ArrayXXd values = Eigen::ArrayXXd::Random(nRecords, nFields);
+    for (int j = 0; j < nRecords; ++j) {
+        SimpleRecord r = table.addRecord();
+        for (int i = 0; i < nFields; ++i) {
+            r[doubleKeys[i]] = values(j, i);
+            r.set(flagKeys[i], r[doubleKeys[i]] < 0.5);
+        }
+        for (int i = 0; i < nFields; ++i) {
+            std::cerr << i << " ";
+            BOOST_CHECK_EQUAL(r.get(flagKeys[i]), r[doubleKeys[i]] < 0.5);
+        }
+    }
 }

@@ -20,6 +20,7 @@ struct MakeRequiredHeaderStrings {
     static char const * getFormat(boost::int32_t *) { return "%dJ"; }
     static char const * getFormat(boost::uint32_t *) { return "%dV"; }
     static char const * getFormat(boost::int64_t *) { return "%dK"; }
+    static char const * getFormat(boost::uint64_t *) { return "%dK"; } // fixme
     static char const * getFormat(float *) { return "%dE"; }
     static char const * getFormat(double *) { return "%dK"; }
     static char const * getFormat(std::complex<float> *) { return "%dC"; }
@@ -31,6 +32,10 @@ struct MakeRequiredHeaderStrings {
         tform->push_back(
             (boost::format(getFormat((typename Field<T>::Element*)0)) % item.field.getElementCount()).str()
         );
+    }
+
+    void operator()(SchemaItem<Flag> const & item) const {
+        // TODO
     }
 
     std::vector<std::string> * ttype;

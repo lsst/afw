@@ -2,8 +2,6 @@
 #ifndef AFW_TABLE_Schema_h_INCLUDED
 #define AFW_TABLE_Schema_h_INCLUDED
 
-
-
 #include <set>
 
 #include "boost/shared_ptr.hpp"
@@ -12,7 +10,8 @@
 #include "lsst/ndarray.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
-#include "lsst/afw/table//detail/SchemaData.h"
+#include "lsst/afw/table/detail/SchemaData.h"
+#include "lsst/afw/table/Flag.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -66,7 +65,36 @@ public:
      *  much padding is considered an implementation detail).
      */
     template <typename T>
-    Key<T> addField(Field<T> const & field);
+    Key<T> addField(Field<T> const & field);    
+
+    /**
+     *  @brief Add a new field to the Schema, and return the associated Key.
+     *
+     *  This is simply a convenience wrapper, equivalent to:
+     *  @code
+     *  addField(Field<T>(name, doc, units, base))
+     *  @endcode
+     */
+    template <typename T>
+    Key<T> addField(
+        std::string const & name, std::string const & doc, std::string const & units = "",
+        FieldBase<T> const & base = FieldBase<T>()
+    ) {
+        return addField(Field<T>(name, doc, units, base));
+    }
+
+    /**
+     *  @brief Add a new field to the Schema, and return the associated Key.
+     *
+     *  This is simply a convenience wrapper, equivalent to:
+     *  @code
+     *  addField(Field<T>(name, doc, base))
+     *  @endcode
+     */
+    template <typename T>
+    Key<T> addField(std::string const & name, std::string const & doc, FieldBase<T> const & base) {
+        return addField(Field<T>(name, doc, base));
+    }
 
     /// @brief Replace the Field (name/description) for an existing Key.
     template <typename T>
@@ -96,6 +124,11 @@ private:
     
     /// @brief Copy on write; should be called by all mutators.
     void _edit();
+
+    template <typename T>
+    Key<T> _addField(Field<T> const & field);    
+
+    Key<Flag> _addField(Field<Flag> const & field);
 
     boost::shared_ptr<Data> _data;
 };

@@ -85,7 +85,6 @@ SchemaItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIte
     }
 };
 
-
 } // anonymous
 
 void Schema::_edit() {
@@ -95,8 +94,12 @@ void Schema::_edit() {
     }
 }
 
+// This is separate from the private implementations below to faciliate explicit instantiation.
 template <typename T>
-Key<T> Schema::addField(Field<T> const & field) {
+Key<T> Schema::addField(Field<T> const & field) { return _addField(field); }
+
+template <typename T>
+Key<T> Schema::_addField(Field<T> const & field) {
     static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
     _edit();
     int padding = ELEMENT_SIZE - _data->_recordSize % ELEMENT_SIZE;
@@ -105,6 +108,24 @@ Key<T> Schema::addField(Field<T> const & field) {
     }
     SchemaItem<T> item = { detail::Access::makeKey(field, _data->_recordSize), field };
     _data->_recordSize += field.getElementCount() * ELEMENT_SIZE;
+    _data->_items.push_back(item);
+    return item.key;
+}
+
+Key<Flag> Schema::_addField(Field<Flag> const & field) {
+    static int const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
+    _edit();
+    if (_data->_lastFlagField < 0 || _data->_lastFlagBit >= ELEMENT_SIZE * 8) {
+        int padding = ELEMENT_SIZE - _data->_recordSize % ELEMENT_SIZE;
+        if (padding != ELEMENT_SIZE) {
+            _data->_recordSize += padding;
+        }
+        _data->_lastFlagField = _data->_recordSize;
+        _data->_lastFlagBit = 0;
+        _data->_recordSize += field.getElementCount() * ELEMENT_SIZE;
+    }
+    SchemaItem<Flag> item = { Key<Flag>(_data->_lastFlagField, _data->_lastFlagBit), field };
+    ++_data->_lastFlagBit;
     _data->_items.push_back(item);
     return item.key;
 }
