@@ -149,7 +149,7 @@ struct FieldBase< Array<U> > {
      *  constructor (as if it were an int argument) without specializing Field.  In other words,
      *  it allows one to construct a 25-element array field like this:
      *  @code
-     *  Field< Array<float> >("name", "documentation", 25)
+     *  Field< Array<float> >("name", "documentation", 25);
      *  @endcode
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
@@ -223,7 +223,7 @@ struct FieldBase< Covariance<U> > {
      *  constructor (as if it were an int argument) without specializing Field.  In other words,
      *  it allows one to construct a 25x25 covariance field like this:
      *  @code
-     *  Field< Covariance<float> >("name", "documentation", 25)
+     *  Field< Covariance<float> >("name", "documentation", 25);
      *  @endcode
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
