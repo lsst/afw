@@ -13,7 +13,6 @@ setupRequired(utils >= 4.5.1.0)
 setupOptional(pyfits >= 2.2.2)
 
 setupOptional(afwdata)
-setupOptional(gcc)
 
 setupOptional(cuda_toolkit)
 
