@@ -44,7 +44,7 @@ private:
 
     IteratorBase(
         base_type const & base,
-        boost::shared_ptr<detail::TableImpl> const & table,
+        PTR(detail::TableImpl) const & table,
         ModificationFlags const & flags
     ) : IteratorBase::iterator_adaptor_(base), ModificationFlags(flags), _table(table)
     {}
@@ -57,7 +57,7 @@ private:
         return base() == other.base() && _table == other._table;
     }
 
-    boost::shared_ptr<detail::TableImpl> _table;
+    PTR(detail::TableImpl) _table;
 };
 
 }}} // namespace lsst::afw::table

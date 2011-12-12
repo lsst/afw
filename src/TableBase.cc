@@ -94,7 +94,7 @@ struct TableImpl : private boost::noncopyable {
 
     void addBlock(int blockRecordCount);
 
-    void assertEqual(boost::shared_ptr<TableImpl> const & other) const {
+    void assertEqual(PTR(TableImpl) const & other) const {
         if (other.get() != this) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
@@ -443,7 +443,7 @@ bool TableBase::isConsolidated() const {
 }
 
 void TableBase::consolidate(int extraCapacity, LinkMode linkMode) {
-    boost::shared_ptr<detail::TableImpl> newImpl =
+    PTR(detail::TableImpl) newImpl =
         boost::make_shared<detail::TableImpl>(
             _impl->layout,
             _impl->nRecordsPerBlock,

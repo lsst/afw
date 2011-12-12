@@ -21,30 +21,34 @@ class Access {
 public:
 
     template <typename T>
-    static typename Key<T>::Reference getReference(Key<T> const & key, void * buf) {
+    static typename Key<T>::Reference
+    getReference(Key<T> const & key, void * buf, PTR(TableImpl) const & table) {
         return key.getReference(
             reinterpret_cast<typename Key<T>::Element*>(
                 reinterpret_cast<char *>(buf) + key._offset
-            )
+            ),
+            table
         );
     }
 
     template <typename T>
-    static typename Key<T>::Value getValue(Key<T> const & key, void * buf) {
+    static typename Key<T>::Value getValue(Key<T> const & key, void * buf, PTR(TableImpl) const & table) {
         return key.getValue(
             reinterpret_cast<typename Key<T>::Element*>(
                 reinterpret_cast<char *>(buf) + key._offset
-            )
+            ),
+            table
         );
     }
 
     template <typename T, typename Value>
-    static void setValue(Key<T> const & key, void * buf, Value const & value) {
+    static void setValue(Key<T> const & key, void * buf, Value const & value, PTR(TableImpl) const & table) {
         key.setValue(
             reinterpret_cast<typename Key<T>::Element*>(
                 reinterpret_cast<char *>(buf) + key._offset
             ),
-            value
+            value,
+            table
         );
     }
 

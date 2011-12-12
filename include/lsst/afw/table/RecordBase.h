@@ -114,7 +114,7 @@ public:
     template <typename T> 
     typename Field<T>::Reference operator[](Key<T> const & key) const {
         assertBit(CAN_SET_FIELD);
-        return detail::Access::getReference(key, _data);
+        return detail::Access::getReference(key, _data, _table);
     }
     
     /**
@@ -124,7 +124,7 @@ public:
      */
     template <typename T>
     typename Field<T>::Value get(Key<T> const & key) const {
-        return detail::Access::getValue(key, _data);
+        return detail::Access::getValue(key, _data, _table);
     }
 
     /**
@@ -140,7 +140,7 @@ public:
     template <typename T, typename U>
     void set(Key<T> const & key, U const & value) const {
         assertBit(CAN_SET_FIELD);
-        detail::Access::setValue(key, _data, value);
+        detail::Access::setValue(key, _data, value, _table);
     }
 
     /**
@@ -239,13 +239,13 @@ private:
 
     RecordBase(
         detail::RecordData * data,
-        boost::shared_ptr<detail::TableImpl> const & table,
+        PTR(detail::TableImpl) const & table,
         ModificationFlags const & flags
     ) : ModificationFlags(flags), _data(data), _table(table)
     {}
 
     detail::RecordData * _data;
-    boost::shared_ptr<detail::TableImpl> _table;
+    PTR(detail::TableImpl) _table;
 };
 
 }}} // namespace lsst::afw::table

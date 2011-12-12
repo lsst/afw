@@ -220,7 +220,7 @@ protected:
     PTR(AuxBase) getAux() const;
 
 private:
-    boost::shared_ptr<detail::TableImpl> _impl;
+    PTR(detail::TableImpl) _impl;
 };
 
 }}} // namespace lsst::afw::table

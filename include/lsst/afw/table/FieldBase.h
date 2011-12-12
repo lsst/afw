@@ -9,6 +9,7 @@
 #include "boost/preprocessor/punctuation/paren.hpp"
 #include "Eigen/Core"
 
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
@@ -39,6 +40,12 @@
 
 namespace lsst { namespace afw { namespace table {
 
+namespace detail {
+
+class TableImpl;
+
+ } // namespace detail
+
 /**
  *  @brief Field base class specialization for scalars.
  */
@@ -57,11 +64,11 @@ struct FieldBase {
 
 protected:
 
-    Reference getReference(Element * p) const { return *p; }
+    Reference getReference(Element * p, PTR(detail::TableImpl) const & table) const { return *p; }
 
-    Value getValue(Element * p) const { return *p; }
+    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const { return *p; }
 
-    void setValue(Element * p, Value v) const { *p = v; }
+    void setValue(Element * p, Value v, PTR(detail::TableImpl) const & table) const { *p = v; }
 
 };
 
@@ -89,9 +96,9 @@ struct FieldBase< Point<U> > {
 
 protected:
 
-    Value getValue(Element * p) const { return Value(p[0], p[1]); }
+    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const { return Value(p[0], p[1]); }
 
-    void setValue(Element * p, Value const & v) const {
+    void setValue(Element * p, Value const & v, PTR(detail::TableImpl) const & table) const {
         p[0] = v.getX();
         p[1] = v.getY();
     }
@@ -114,9 +121,11 @@ struct FieldBase< Shape<U> > {
 
 protected:
 
-    Value getValue(Element * p) const { return Value(p[0], p[1], p[2]); }
+    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const {
+        return Value(p[0], p[1], p[2]);
+    }
 
-    void setValue(Element * p, Value const & v) const {
+    void setValue(Element * p, Value const & v, PTR(detail::TableImpl) const & table) const {
         p[0] = v.getIXX();
         p[1] = v.getIYY();
         p[2] = v.getIXY();
@@ -162,12 +171,18 @@ struct FieldBase< Array<U> > {
 
 protected:
 
-    Reference getReference(Element * p) const { return Reference(p, _size); }
+    Reference getReference(Element * p, PTR(detail::TableImpl) const & table) const {
+        return Reference(p, _size);
+    }
 
-    Value getValue(Element * p) const { return Value(getReference(p)); }
+    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const {
+        return Value(getReference(p, table));
+    }
 
     template <typename Derived>
-    void setValue(Element * p, Eigen::ArrayBase<Derived> const & value) const {
+    void setValue(
+        Element * p, Eigen::ArrayBase<Derived> const & value, PTR(detail::TableImpl) const & table
+    ) const {
         BOOST_STATIC_ASSERT( Derived::IsVectorAtCompileTime );
         if (value.size() != getSize()) {
             throw LSST_EXCEPT(
@@ -233,7 +248,7 @@ struct FieldBase< Covariance<U> > {
     
 protected:
 
-    Value getValue(Element * p) const {
+    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const {
         Value m(_size, _size);
         for (int i = 0; i < _size; ++i) {
             for (int j = 0; j < _size; ++j) {
@@ -244,7 +259,9 @@ protected:
     }
 
     template <typename Derived>
-    void setValue(Element * p, Eigen::MatrixBase<Derived> const & value) const {
+    void setValue(
+        Element * p, Eigen::MatrixBase<Derived> const & value, PTR(detail::TableImpl) const & table
+    ) const {
         if (value.rows() != _size || value.cols() != _size) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthErrorException,
@@ -293,7 +310,7 @@ struct FieldBase< Covariance< Point<U> > > {
 
 protected:
 
-    Value getValue(Element * p) const {
+    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
             for (int j = 0; j < SIZE; ++j) {
@@ -304,7 +321,9 @@ protected:
     }
 
     template <typename Derived>
-    static void setValue(Element * p, Eigen::MatrixBase<Derived> const & value) {
+    static void setValue(
+        Element * p, Eigen::MatrixBase<Derived> const & value, PTR(detail::TableImpl) const & table
+    ) {
         BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == SIZE);
         BOOST_STATIC_ASSERT( Derived::ColsAtCompileTime == SIZE);
         for (int i = 0; i < SIZE; ++i) {
@@ -348,7 +367,7 @@ struct FieldBase< Covariance< Shape<U> > > {
 
 protected:
 
-    Value getValue(Element * p) const {
+    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
             for (int j = 0; j < SIZE; ++j) {
@@ -359,7 +378,9 @@ protected:
     }
 
     template <typename Derived>
-    static void setValue(Element * p, Eigen::MatrixBase<Derived> const & value) {
+    static void setValue(
+        Element * p, Eigen::MatrixBase<Derived> const & value, PTR(detail::TableImpl) const & table
+    ) {
         BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == SIZE);
         BOOST_STATIC_ASSERT( Derived::ColsAtCompileTime == SIZE);
         for (int i = 0; i < SIZE; ++i) {

@@ -31,7 +31,7 @@ public:
 
     TreeIteratorBase(
         detail::RecordData * record,
-        boost::shared_ptr<detail::TableImpl> const & table, 
+        PTR(detail::TableImpl) const & table, 
         ModificationFlags const & flags,
         TreeMode mode
     ) : _record(record, table, flags), _mode(mode)
