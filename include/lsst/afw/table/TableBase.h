@@ -3,7 +3,7 @@
 #define AFW_TABLE_TableBase_h_INCLUDED
 
 #include "lsst/base.h"
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/RecordBase.h"
 #include "lsst/afw/table/TreeIteratorBase.h"
@@ -20,7 +20,7 @@ class PropertySet;
 
 namespace afw { namespace table {
 
-class LayoutMapper;
+class SchemaMapper;
 
 /**
  *  @brief Base class containing most of the implementation for tables.
@@ -58,8 +58,8 @@ public:
      */
     void setLinkMode(LinkMode mode) const;
 
-    /// @brief Return the layout for the table's fields.  
-    Layout getLayout() const;
+    /// @brief Return the schema for the table's fields.  
+    Schema getSchema() const;
 
     /// @brief Return true if all records are allocated in a single contiguous blocks.
     bool isConsolidated() const;
@@ -124,7 +124,7 @@ protected:
     /**
      *  @brief Standard constructor for TableBase.
      *
-     *  @param[in] layout            Layout that defines the fields, offsets, and record size for the table.
+     *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      *  @param[in] capacity          Number of records to pre-allocate space for in the first block.  This
      *                               overrides nRecordsPerBlock for the first block and the first block only.
      *  @param[in] nRecordsPerBlock  Number of records to allocate space for in each block.  This is almost
@@ -137,7 +137,7 @@ protected:
      *                               ModificationFlags class for more information).
      */
     TableBase(
-        Layout const & layout,
+        Schema const & schema,
         int capacity,
         int nRecordsPerBlock,
         PTR(IdFactory) const & idFactory = PTR(IdFactory)(),
@@ -168,7 +168,7 @@ protected:
     /**
      *  @brief Write the table to a FITS binary table.
      *
-     *  This version will use a LayoutMapper to write a subset of the fields to FITS,
+     *  This version will use a SchemaMapper to write a subset of the fields to FITS,
      *  and also allows the saved fields to have different names and descriptions.
      *
      *  Signature is based on the image FITS interface right now; it may be changed 
@@ -176,7 +176,7 @@ protected:
      */
     void _writeFits(
         std::string const & name,
-        LayoutMapper const & mapper,
+        SchemaMapper const & mapper,
         CONST_PTR(daf::base::PropertySet) const & metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const & mode = "w"
     ) const;

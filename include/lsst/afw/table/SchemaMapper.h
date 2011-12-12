@@ -1,30 +1,30 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_LayoutMapper_h_INCLUDED
-#define AFW_TABLE_LayoutMapper_h_INCLUDED
+#ifndef AFW_TABLE_SchemaMapper_h_INCLUDED
+#define AFW_TABLE_SchemaMapper_h_INCLUDED
 
-#include "lsst/afw/table/detail/LayoutMapperData.h"
+#include "lsst/afw/table/detail/SchemaMapperData.h"
 
 namespace lsst { namespace afw { namespace table {
 
 class RecordBase;
 
 /**
- *  @brief A mapping between the keys of two Layouts, used to copy data between them
+ *  @brief A mapping between the keys of two Schemas, used to copy data between them
  *         or read/write only certain fields during serialization.
  *
- *  LayoutMapper is initialized with its input Layout, and contains member functions
- *  to add mapped or unmapped fields to the output Layout.
+ *  SchemaMapper is initialized with its input Schema, and contains member functions
+ *  to add mapped or unmapped fields to the output Schema.
  */
-class LayoutMapper {
+class SchemaMapper {
 public:
 
-    /// @brief Return the input layout (copy-on-write).
-    Layout const getInputLayout() const { return _data->_input; }
+    /// @brief Return the input schema (copy-on-write).
+    Schema const getInputSchema() const { return _data->_input; }
 
-    /// @brief Return the output layout (copy-on-write).
-    Layout const getOutputLayout() const { return _data->_output; }
+    /// @brief Return the output schema (copy-on-write).
+    Schema const getOutputSchema() const { return _data->_output; }
 
-    /// @brief Add a new field to the output Layout that is not connected to the input Layout.
+    /// @brief Add a new field to the output Schema that is not connected to the input Schema.
     template <typename T>
     Key<T> addOutputField(Field<T> const & newField) {
         _edit();
@@ -32,16 +32,16 @@ public:
     }
 
     /**
-     *  @brief Add a new field to the output Layout that is a copy of a field in the input Layout.
+     *  @brief Add a new field to the output Schema that is a copy of a field in the input Schema.
      *
      *  If the input Key has already been mapped, the existing output Key will be reused
-     *  but the associated Field in the output Layout will be reset to a copy of the input Field.
+     *  but the associated Field in the output Schema will be reset to a copy of the input Field.
      */
     template <typename T>
     Key<T> addMapping(Key<T> const & inputKey);
 
     /**
-     *  @brief Add a new mapped field to the output Layout with a new name and/or description.
+     *  @brief Add a new mapped field to the output Schema with a new name and/or description.
      *
      *  If the input Key has already been mapped, the existing output Key will be reused
      *  but the associated Field will be replaced with the given one.
@@ -52,15 +52,15 @@ public:
     /**
      *  @brief Add mappnigs for all fields that match criteria defined by a predicate.
      *
-     *  A mapping in the output Layout will be created for each LayoutItem 'i' in the input Layout
+     *  A mapping in the output Schema will be created for each SchemaItem 'i' in the input Schema
      *  such that 'predicate(i)' is true.  Note that the predicate must have a templated
      *  and/or sufficiently overloaded operator() to match all supported field types,
-     *  not just those present in the input Layout.
+     *  not just those present in the input Schema.
      */
     template <typename Predicate>
     void addMappingsWhere(Predicate predicate);
 
-    /// @brief Swap the input and output layouts in-place.
+    /// @brief Swap the input and output schemas in-place.
     void invert();
 
     /// @brief Return true if the given input Key is mapped to an output Key.
@@ -101,8 +101,8 @@ public:
         std::for_each(_data->_map.begin(), _data->_map.end(), visitor);
     }
 
-    /// @brief Construct a mapper from the given input Layout.  
-    explicit LayoutMapper(Layout const & input);
+    /// @brief Construct a mapper from the given input Schema.  
+    explicit SchemaMapper(Schema const & input);
 
 private:
 
@@ -113,27 +113,27 @@ private:
     struct AddMappingsWhere {
 
         template <typename T>
-        void operator()(LayoutItem<T> const & item) const {
+        void operator()(SchemaItem<T> const & item) const {
             if (predicate(item)) mapper->addMapping(item.key);
         }
 
-        AddMappingsWhere(LayoutMapper * mapper_, Predicate predicate_) :
+        AddMappingsWhere(SchemaMapper * mapper_, Predicate predicate_) :
             mapper(mapper_), predicate(predicate_) {}
 
-        LayoutMapper * mapper;
+        SchemaMapper * mapper;
         Predicate predicate;
     };
 
-    typedef detail::LayoutMapperData Data;
+    typedef detail::SchemaMapperData Data;
 
     boost::shared_ptr<Data> _data;
 };
 
 template <typename Predicate>
-void LayoutMapper::addMappingsWhere(Predicate predicate) {
+void SchemaMapper::addMappingsWhere(Predicate predicate) {
     _data->_input.forEach(AddMappingsWhere<Predicate>(this, predicate));
 }
 
 }}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_LayoutMapper_h_INCLUDED
+#endif // !AFW_TABLE_SchemaMapper_h_INCLUDED

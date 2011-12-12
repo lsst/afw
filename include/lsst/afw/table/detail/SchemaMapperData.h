@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_LayoutMapperData_h_INCLUDED
-#define AFW_TABLE_DETAIL_LayoutMapperData_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_SchemaMapperData_h_INCLUDED
+#define AFW_TABLE_DETAIL_SchemaMapperData_h_INCLUDED
 
 
 
@@ -12,15 +12,15 @@
 #include "boost/type_traits/remove_const.hpp"
 #include "boost/type_traits/remove_reference.hpp"
 
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/Schema.h"
 
 namespace lsst { namespace afw { namespace table {
 
-class LayoutMapper;
+class SchemaMapper;
 
 namespace detail {
 
-class LayoutMapperData {
+class SchemaMapperData {
 private:
 
     struct MakeKeyPair {
@@ -36,11 +36,11 @@ public:
     typedef boost::make_variant_over<KeyPairTypes>::type KeyPairVariant;
     typedef std::vector<KeyPairVariant> KeyPairMap;
 
-    explicit LayoutMapperData(Layout const & input) : _input(input) {}
+    explicit SchemaMapperData(Schema const & input) : _input(input) {}
 
 private:
 
-    friend class table::LayoutMapper;
+    friend class table::SchemaMapper;
     friend class detail::Access;
 
     template <typename F>
@@ -61,11 +61,11 @@ private:
         F _func;
     };
 
-    Layout _input;
-    Layout _output;
+    Schema _input;
+    Schema _output;
     KeyPairMap _map;
 };
 
 }}}} // namespace lsst::afw::table::detail
 
-#endif // !AFW_TABLE_DETAIL_LayoutMapperData_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_SchemaMapperData_h_INCLUDED

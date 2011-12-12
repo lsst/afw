@@ -26,7 +26,7 @@ struct MakeRequiredHeaderStrings {
     static char const * getFormat(std::complex<double> *) { return "%dM"; }
 
     template <typename T>
-    void operator()(LayoutItem<T> const & item) const {
+    void operator()(SchemaItem<T> const & item) const {
         ttype->push_back(item.field.getName());
         tform->push_back(
             (boost::format(getFormat((typename Field<T>::Element*)0)) % item.field.getElementCount()).str()
@@ -40,31 +40,31 @@ struct MakeRequiredHeaderStrings {
 struct UpdateHeaderStrings {
 
     template <typename T>
-    static char const * getUnitsComment(LayoutItem<T> const & item) { return 0; }
+    static char const * getUnitsComment(SchemaItem<T> const & item) { return 0; }
 
     template <typename T>
-    static char const * getUnitsComment(LayoutItem< Point<T> > const & item) { return "{x, y}"; }
+    static char const * getUnitsComment(SchemaItem< Point<T> > const & item) { return "{x, y}"; }
 
     template <typename T>
-    static char const * getUnitsComment(LayoutItem< Shape<T> > const & item) { return "{xx, yy, xy}"; }
+    static char const * getUnitsComment(SchemaItem< Shape<T> > const & item) { return "{xx, yy, xy}"; }
 
     template <typename T>
-    static char const * getUnitsComment(LayoutItem< Covariance<T> > const & item) {
+    static char const * getUnitsComment(SchemaItem< Covariance<T> > const & item) {
         return "{[0,0], [0,1], [1,1], ...}";
     }
 
     template <typename T>
-    static char const * getUnitsComment(LayoutItem< Covariance< Point<T> > > const & item) {
+    static char const * getUnitsComment(SchemaItem< Covariance< Point<T> > > const & item) {
         return "{[x,x], [x,y], [y,y]}";
     }
 
     template <typename T>
-    static char const * getUnitsComment(LayoutItem< Covariance< Shape<T> > > const & item) {
+    static char const * getUnitsComment(SchemaItem< Covariance< Shape<T> > > const & item) {
         return "{[xx,xx], [xx,yy], [yy,yy], [xx,xy], [yy,xy], [xy,xy]}";
     }
 
     template <typename T>
-    void operator()(LayoutItem<T> const & item) const {
+    void operator()(SchemaItem<T> const & item) const {
         char ttype[9];
         std::sprintf(ttype, "ttype%d", n);
         fits_update_key_str(
@@ -90,12 +90,12 @@ struct UpdateHeaderStrings {
     fitsfile * fptr;
 };
 
-void initializeFitsTableHeader(fitsfile * fptr, Layout const & layout, int nRecords) {
+void initializeFitsTableHeader(fitsfile * fptr, Schema const & schema, int nRecords) {
     int status = 0;
     std::vector<std::string> ttypeVector;
     std::vector<std::string> tformVector;
     MakeRequiredHeaderStrings func1 = { &ttypeVector, &tformVector };
-    layout.forEach(func1);
+    schema.forEach(func1);
     int nFields = ttypeVector.size();
     if (nFields >= 1000) {
         throw LSST_EXCEPT(
@@ -112,7 +112,7 @@ void initializeFitsTableHeader(fitsfile * fptr, Layout const & layout, int nReco
     fits_create_tbl(fptr, BINARY_TBL, nRecords, nFields, ttypeArray.get(), tformArray.get(), 0, 0, &status);
     // TODO error checking
     UpdateHeaderStrings func2 = { 0, &status, fptr };
-    layout.forEach(func2);
+    schema.forEach(func2);
     // TODO error checking
 }
 
@@ -128,7 +128,7 @@ void TableBase::_writeFits(
 
 void TableBase::_writeFits(
     std::string const & name,
-    LayoutMapper const & mapper,
+    SchemaMapper const & mapper,
     CONST_PTR(daf::base::PropertySet) const & metadata,
     std::string const & mode
 ) const {

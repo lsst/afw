@@ -35,9 +35,9 @@ public:
         return _buf.get();
     }
 
-    static void padLayout(Layout & layout) {
+    static void padSchema(Schema & schema) {
         static int const MIN_RECORD_ALIGN = sizeof(AllocType);
-        Access::padLayout(layout, (MIN_RECORD_ALIGN - layout.getRecordSize() % MIN_RECORD_ALIGN));
+        Access::padSchema(schema, (MIN_RECORD_ALIGN - schema.getRecordSize() % MIN_RECORD_ALIGN));
     }
 
     static Ptr allocate(int recordSize, int recordCount) {
@@ -89,7 +89,7 @@ struct TableImpl : private boost::noncopyable {
     Block::Ptr block;
     PTR(IdFactory) idFactory;
     PTR(AuxBase) aux;
-    Layout layout;
+    Schema schema;
     RecordSet records;
 
     void addBlock(int blockRecordCount);
@@ -110,13 +110,13 @@ struct TableImpl : private boost::noncopyable {
     void unlink(RecordData * record);
 
     TableImpl(
-        Layout const & layout_, int nRecordsPerBlock_, 
+        Schema const & schema_, int nRecordsPerBlock_, 
         PTR(IdFactory) const & idFactory_, PTR(AuxBase) const & aux_
     ) :
         linkMode(POINTERS), nRecordsPerBlock(nRecordsPerBlock_), front(0), back(0), consolidated(0), 
-        idFactory(idFactory_), aux(aux_), layout(layout_)
+        idFactory(idFactory_), aux(aux_), schema(schema_)
     {
-        Block::padLayout(layout);
+        Block::padSchema(schema);
         if (!idFactory) idFactory = IdFactory::makeSimple();
     }
 
@@ -196,7 +196,7 @@ void TableImpl::setLinkMode(LinkMode newMode) {
 }
 
 void TableImpl::addBlock(int blockRecordCount) {
-    Block::Ptr newBlock = Block::allocate(layout.getRecordSize(), blockRecordCount);
+    Block::Ptr newBlock = Block::allocate(schema.getRecordSize(), blockRecordCount);
     if (block) {
         newBlock->chain.swap(block);
         consolidated = 0;
@@ -321,7 +321,7 @@ IteratorBase::~IteratorBase() {}
 
 LinkMode RecordBase::getLinkMode() const { return _table->linkMode; }
 
-Layout RecordBase::getLayout() const { return _table->layout; }
+Schema RecordBase::getSchema() const { return _table->schema; }
 
 RecordBase::~RecordBase() {}
 
@@ -436,7 +436,7 @@ LinkMode TableBase::getLinkMode() const { return _impl->linkMode; }
 
 void TableBase::setLinkMode(LinkMode mode) const { _impl->setLinkMode(mode); }
 
-Layout TableBase::getLayout() const { return _impl->layout; }
+Schema TableBase::getSchema() const { return _impl->schema; }
 
 bool TableBase::isConsolidated() const {
     return _impl->consolidated;
@@ -445,7 +445,7 @@ bool TableBase::isConsolidated() const {
 void TableBase::consolidate(int extraCapacity, LinkMode linkMode) {
     PTR(detail::TableImpl) newImpl =
         boost::make_shared<detail::TableImpl>(
-            _impl->layout,
+            _impl->schema,
             _impl->nRecordsPerBlock,
             _impl->idFactory->clone(),
             _impl->aux
@@ -453,7 +453,7 @@ void TableBase::consolidate(int extraCapacity, LinkMode linkMode) {
     newImpl->addBlock(_impl->records.size() + extraCapacity);
     newImpl->setLinkMode(PARENT_ID);
     int const dataOffset = sizeof(detail::RecordData);
-    int const dataSize = _impl->layout.getRecordSize() - dataOffset;
+    int const dataSize = _impl->schema.getRecordSize() - dataOffset;
     for (detail::RecordSet::const_iterator i = _impl->records.begin(); i != _impl->records.end(); ++i) {
         detail::RecordData * newRecord = newImpl->block->makeNextRecord();
         newRecord->id = i->id;
@@ -477,7 +477,7 @@ ColumnView TableBase::getColumnView() const {
             "getColumnView() can only be called on a consolidated table"
         );
     }
-    return ColumnView(_impl->layout, _impl->records.size(), _impl->consolidated, _impl->block);
+    return ColumnView(_impl->schema, _impl->records.size(), _impl->consolidated, _impl->block);
 }
 
 int TableBase::getRecordCount() const {
@@ -570,14 +570,14 @@ RecordBase TableBase::_addRecord(RecordId id, PTR(AuxBase) const & aux) const {
 }
 
 TableBase::TableBase(
-    Layout const & layout,
+    Schema const & schema,
     int capacity,
     int nRecordsPerBlock,
     PTR(IdFactory) const & idFactory,
     PTR(AuxBase) const & aux,
     ModificationFlags const & flags 
 ) : ModificationFlags(flags),
-    _impl(boost::make_shared<detail::TableImpl>(layout, nRecordsPerBlock, idFactory, aux))
+    _impl(boost::make_shared<detail::TableImpl>(schema, nRecordsPerBlock, idFactory, aux))
 {
     if (capacity > 0) _impl->addBlock(capacity);
 }

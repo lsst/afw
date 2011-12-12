@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
-#define AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_SchemaData_h_INCLUDED
+#define AFW_TABLE_DETAIL_SchemaData_h_INCLUDED
 
 #include <vector>
 #include <algorithm>
@@ -14,14 +14,14 @@
 
 namespace lsst { namespace afw { namespace table {
 
-class Layout;
+class Schema;
 
 /**
  *  @brief A simple pair-like struct for mapping a Field (name and description) with a Key
  *         (used for actual data access).
  */
 template <typename T>
-struct LayoutItem {
+struct SchemaItem {
     Key<T> key;
     Field<T> field;
 };
@@ -31,24 +31,24 @@ namespace detail {
 class Access;
 
 /**
- *  @brief An internals class to hide the ugliness of the Layout implementation.
+ *  @brief An internals class to hide the ugliness of the Schema implementation.
  *
  *  This can't be a full pImpl class, because some of the most important functionality
  *  is in the forEach function, a templated function we can't explicitly instantiate
  *  in a source file.  But putting all the details draws a clear line between what
- *  users should at (Layout) and what they shouldn't (this).
+ *  users should at (Schema) and what they shouldn't (this).
  *
- *  Because Layout holds LayoutData by shared pointer, one LayoutData can be shared between
- *  multiple Layouts, which use copy-on-write to create a new LayoutData if the pointer they have
+ *  Because Schema holds SchemaData by shared pointer, one SchemaData can be shared between
+ *  multiple Schemas, which use copy-on-write to create a new SchemaData if the pointer they have
  *  isn't unique.
  */
-class LayoutData {
+class SchemaData {
 private:
 
     struct MakeItem {
         template <typename T>
         struct apply {
-            typedef LayoutItem<T> type;
+            typedef SchemaItem<T> type;
         };
     };
 
@@ -58,7 +58,7 @@ public:
     typedef boost::make_variant_over<ItemTypes>::type ItemVariant;
     typedef std::vector<ItemVariant> ItemContainer;
 
-    LayoutData() : _recordSize(sizeof(RecordData)), _items() {}
+    SchemaData() : _recordSize(sizeof(RecordData)), _items() {}
 
 private:
 
@@ -66,7 +66,7 @@ private:
     struct VisitorWrapper : public boost::static_visitor<> {
 
         template <typename T>
-        void operator()(LayoutItem<T> const & x) const { _func(x); };
+        void operator()(SchemaItem<T> const & x) const { _func(x); };
     
         void operator()(ItemVariant const & v) const {
             boost::apply_visitor(*this, v);
@@ -78,7 +78,7 @@ private:
         F _func;
     };
 
-    friend class table::Layout;
+    friend class table::Schema;
     friend class detail::Access;
 
     int _recordSize;
@@ -87,4 +87,4 @@ private:
 
 }}}} // namespace lsst::afw::table::detail
 
-#endif // !AFW_TABLE_DETAIL_LayoutData_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_SchemaData_h_INCLUDED

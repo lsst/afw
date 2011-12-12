@@ -6,9 +6,9 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/Access.h"
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/Schema.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -19,13 +19,13 @@ struct Describe {
     typedef void result_type;
 
     template <typename T>
-    void operator()(LayoutItem<T> const & item) const {
+    void operator()(SchemaItem<T> const & item) const {
         result->insert(item.field.describe());
     }
 
-    explicit Describe(Layout::Description * result_) : result(result_) {}
+    explicit Describe(Schema::Description * result_) : result(result_) {}
 
-    Layout::Description * result;
+    Schema::Description * result;
 };
 
 struct ExtractOffset : public boost::static_visitor<int> {
@@ -33,11 +33,11 @@ struct ExtractOffset : public boost::static_visitor<int> {
     typedef int result_type;
 
     template <typename T>
-    result_type operator()(LayoutItem<T> const & item) const {
+    result_type operator()(SchemaItem<T> const & item) const {
         return detail::Access::getOffset(item.key);
     }
 
-    result_type operator()(detail::LayoutData::ItemVariant const & v) const {
+    result_type operator()(detail::SchemaData::ItemVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }
 
@@ -48,11 +48,11 @@ struct CompareName : public boost::static_visitor<bool> {
     typedef bool result_type;
     
     template <typename T>
-    result_type operator()(LayoutItem<T> const & item) const {
+    result_type operator()(SchemaItem<T> const & item) const {
         return item.field.getName() == _name;
     }
 
-    result_type operator()(detail::LayoutData::ItemVariant const & v) const {
+    result_type operator()(detail::SchemaData::ItemVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }
 
@@ -62,7 +62,7 @@ struct CompareName : public boost::static_visitor<bool> {
 };
 
 template <typename T, typename VariantIterator>
-LayoutItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIterator const end) {
+SchemaItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIterator const end) {
     typedef boost::transform_iterator<ExtractOffset,VariantIterator> Iterator;
     Iterator i = std::lower_bound(
         Iterator(begin),
@@ -72,11 +72,11 @@ LayoutItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIte
     if (*i != offset) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::NotFoundException,
-            "Key not found in Layout."
+            "Key not found in Schema."
         );
     }
     try {
-        return boost::get< LayoutItem<T> >(*i.base());
+        return boost::get< SchemaItem<T> >(*i.base());
     } catch (boost::bad_get & err) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
@@ -88,7 +88,7 @@ LayoutItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIte
 
 } // anonymous
 
-void Layout::_edit() {
+void Schema::_edit() {
     if (!_data.unique()) {
         boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
         _data.swap(data);
@@ -96,23 +96,23 @@ void Layout::_edit() {
 }
 
 template <typename T>
-Key<T> Layout::addField(Field<T> const & field) {
+Key<T> Schema::addField(Field<T> const & field) {
     static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
     _edit();
     int padding = ELEMENT_SIZE - _data->_recordSize % ELEMENT_SIZE;
     if (padding != ELEMENT_SIZE) {
         _data->_recordSize += padding;
     }
-    LayoutItem<T> item = { detail::Access::makeKey(field, _data->_recordSize), field };
+    SchemaItem<T> item = { detail::Access::makeKey(field, _data->_recordSize), field };
     _data->_recordSize += field.getElementCount() * ELEMENT_SIZE;
     _data->_items.push_back(item);
     return item.key;
 }
 
-Layout::Layout() : _data(boost::make_shared<Data>()) {}
+Schema::Schema() : _data(boost::make_shared<Data>()) {}
 
 template <typename T>
-LayoutItem<T> Layout::find(std::string const & name) const {
+SchemaItem<T> Schema::find(std::string const & name) const {
     Data::ItemContainer::iterator i = std::find_if(
         _data->_items.begin(),
         _data->_items.end(),
@@ -125,7 +125,7 @@ LayoutItem<T> Layout::find(std::string const & name) const {
         );
     }
     try {
-        return boost::get< LayoutItem<T> >(*i);
+        return boost::get< SchemaItem<T> >(*i);
     } catch (boost::bad_get & err) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
@@ -135,7 +135,7 @@ LayoutItem<T> Layout::find(std::string const & name) const {
 }
 
 template <typename T>
-LayoutItem<T> Layout::find(Key<T> const & key) const {
+SchemaItem<T> Schema::find(Key<T> const & key) const {
     return findByOffset<T>(
         detail::Access::getOffset(key),
         _data->_items.begin(),
@@ -144,9 +144,9 @@ LayoutItem<T> Layout::find(Key<T> const & key) const {
 }
 
 template <typename T>
-void Layout::replaceField(Key<T> const & key, Field<T> const & field) {
+void Schema::replaceField(Key<T> const & key, Field<T> const & field) {
     _edit();
-    LayoutItem<T> & item = findByOffset<T>(
+    SchemaItem<T> & item = findByOffset<T>(
         detail::Access::getOffset(key),
         _data->_items.begin(),
         _data->_items.end()
@@ -154,7 +154,7 @@ void Layout::replaceField(Key<T> const & key, Field<T> const & field) {
     item.field = field;
 }
 
-Layout::Description Layout::describe() const {
+Schema::Description Schema::describe() const {
     Description result;
     forEach(Describe(&result));
     return result;
@@ -163,10 +163,10 @@ Layout::Description Layout::describe() const {
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_LAYOUT(r, data, elem)                               \
-    template Key< elem > Layout::addField(Field< elem > const &);            \
-    template LayoutItem< elem > Layout::find(std::string const & ) const; \
-    template LayoutItem< elem > Layout::find(Key< elem > const & ) const; \
-    template void Layout::replaceField(Key< elem > const &, Field< elem > const &);
+    template Key< elem > Schema::addField(Field< elem > const &);            \
+    template SchemaItem< elem > Schema::find(std::string const & ) const; \
+    template SchemaItem< elem > Schema::find(Key< elem > const & ) const; \
+    template void Schema::replaceField(Key< elem > const &, Field< elem > const &);
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_LAYOUT, _,

@@ -20,19 +20,19 @@ class Access;
  *  know (via an internal offset) how to address and cast the internal
  *  data buffer of a record or table.
  *
- *  Keys can be obtained from a Layout by name, and are also returned
+ *  Keys can be obtained from a Schema by name, and are also returned
  *  when a new field is added.  Compound and array keys also provide
  *  accessors to retrieve scalar keys to their elements (see the
  *  documentation for the KeyBase specializations), even though these
- *  element keys do not correspond to a field that exists in any Layout.
+ *  element keys do not correspond to a field that exists in any Schema.
  *  For example:
  *  @code
- *  Layout layout;
- *  Key< Array<float> > arrayKey = layout.addField("array", "docs for array", 5);
- *  Key< Point<int> > pointKey = layout.addField("point", "docs for point");
+ *  Schema schema;
+ *  Key< Array<float> > arrayKey = schema.addField("array", "docs for array", 5);
+ *  Key< Point<int> > pointKey = schema.addField("point", "docs for point");
  *  Key<float> elementKey = arrayKey[3];
  *  Key<int> xKey = pointKey.getX();
- *  SimpleTable table(layout);
+ *  SimpleTable table(schema);
  *  SimpleRecord record = table.addRecord();
  *  assert(&record[arrayKey][3] == &record[elementKey3]);
  *  assert(record.get(pointKey).getX() == record[xKey]);
@@ -52,8 +52,8 @@ public:
      *
      *  Two keys with different types are never equal.  Keys with the same type
      *  are equal if they point to the same location in a table, regardless of
-     *  what Layout they were constructed from (for instance, if a field has a
-     *  different name in one Layout than another, but is otherwise the same,
+     *  what Schema they were constructed from (for instance, if a field has a
+     *  different name in one Schema than another, but is otherwise the same,
      *  the two keys will be equal).
      */
     template <typename OtherT> bool operator==(Key<OtherT> const & other) const { return false; }

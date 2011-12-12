@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_RecordBase_h_INCLUDED
 #define AFW_TABLE_RecordBase_h_INCLUDED
 
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/detail/RecordData.h"
 #include "lsst/afw/table/ModificationFlags.h"
@@ -15,7 +15,7 @@ struct TableImpl;
 
 } // namespace detail
 
-class LayoutMapper;
+class SchemaMapper;
 class TableBase;
 class TreeIteratorBase;
 class IteratorBase;
@@ -58,8 +58,8 @@ public:
      */
     LinkMode getLinkMode() const;
 
-    /// @brief Return the Layout that holds this record's fields and keys.
-    Layout getLayout() const;
+    /// @brief Return the Schema that holds this record's fields and keys.
+    Schema getSchema() const;
 
     /// @brief Return true if the record has a parent record.
     bool hasParent() const;
@@ -109,7 +109,7 @@ public:
      *  when the record's ModificationFlags include the CAN_SET_FIELD bit.  For these
      *  reasons, RecordBase::get should generally be preferred.
      *
-     *  No checking is done to ensure the Key belongs to the correct layout.
+     *  No checking is done to ensure the Key belongs to the correct schema.
      */
     template <typename T> 
     typename Field<T>::Reference operator[](Key<T> const & key) const {
@@ -120,7 +120,7 @@ public:
     /**
      *  @brief Return the value of a field for the given key.
      *
-     *  No checking is done to ensure the Key belongs to the correct layout.
+     *  No checking is done to ensure the Key belongs to the correct schema.
      */
     template <typename T>
     typename Field<T>::Value get(Key<T> const & key) const {
@@ -135,7 +135,7 @@ public:
      *  1-d Eigen expression can be used for Array fields, for instance,
      *  not just the exact Eigen::Array class returned by RecordBase::get.
      *
-     *  No checking is done to ensure the Key belongs to the correct layout.
+     *  No checking is done to ensure the Key belongs to the correct schema.
      */
     template <typename T, typename U>
     void set(Key<T> const & key, U const & value) const {
@@ -233,7 +233,7 @@ private:
     friend class TableBase;
     friend class IteratorBase;
     friend class TreeIteratorBase;
-    friend class LayoutMapper;
+    friend class SchemaMapper;
 
     RecordBase() : ModificationFlags(), _data(0), _table() {}
 

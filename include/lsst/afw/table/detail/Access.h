@@ -5,8 +5,8 @@
 #include <cstring>
 
 #include "lsst/afw/table/FieldBase.h"
-#include "lsst/afw/table/Layout.h"
-#include "lsst/afw/table/detail/LayoutData.h"
+#include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/detail/SchemaData.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -80,9 +80,9 @@ public:
         return Key<T>(offset, field);
     }
 
-    static void padLayout(Layout & layout, int bytes) {
-        layout._edit();
-        layout._data->_recordSize += bytes;
+    static void padSchema(Schema & schema, int bytes) {
+        schema._edit();
+        schema._data->_recordSize += bytes;
     }
 
     template <typename RecordT>

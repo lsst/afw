@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_ColumnView_h_INCLUDED
 #define AFW_TABLE_ColumnView_h_INCLUDED
 
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/Schema.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -14,8 +14,8 @@ class TableBase;
 class ColumnView {
 public:
 
-    /// @brief Return the layout that defines the fields.
-    Layout getLayout() const;
+    /// @brief Return the schema that defines the fields.
+    Schema getSchema() const;
 
     /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
@@ -33,7 +33,7 @@ private:
 
     struct Impl;
 
-    ColumnView(Layout const & layout, int recordCount, void * buf, ndarray::Manager::Ptr const & manager);
+    ColumnView(Schema const & schema, int recordCount, void * buf, ndarray::Manager::Ptr const & manager);
 
     boost::shared_ptr<Impl> _impl;
 };

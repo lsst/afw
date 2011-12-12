@@ -9,7 +9,7 @@
 
 #include "boost/assign/std/list.hpp"
 
-#include "lsst/afw/table/Layout.h"
+#include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/Simple.h"
 
 using namespace lsst::afw::table;
@@ -25,7 +25,7 @@ using namespace lsst::afw::table;
  */
 struct Example {
 
-    Example() : layout(), key(layout.addField(Field<double>("f", "doc"))), table(layout, 0, 10) {
+    Example() : schema(), key(schema.addField(Field<double>("f", "doc"))), table(schema, 0, 10) {
         std::list<SimpleRecord> top;
         std::list<SimpleRecord> middle;
         std::list<SimpleRecord> bottom;
@@ -84,7 +84,7 @@ struct Example {
         treeOrder[DEPTH_FIRST].remove(id);
     }
     
-    Layout layout;
+    Schema schema;
     Key<double> key;
     SimpleTable table;
     std::list<RecordId> tableOrder;
@@ -219,23 +219,23 @@ BOOST_AUTO_TEST_CASE(testConsolidate) {
 
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
-    Layout layout;
+    Schema schema;
     
-    Key<int> myInt = layout.addField(Field< int >("myIntField", "an integer scalar field."));
+    Key<int> myInt = schema.addField(Field< int >("myIntField", "an integer scalar field."));
     
     Key< Array<double> > myArray 
-        = layout.addField(Field< Array<double> >("myArrayField", "a double array field.", 5));
+        = schema.addField(Field< Array<double> >("myArrayField", "a double array field.", 5));
     
-    layout.addField(Field< float >("myFloatField", "a float scalar field."));
+    schema.addField(Field< float >("myFloatField", "a float scalar field."));
 
-    Key<float> myFloat = layout.find<float>("myFloatField").key;
+    Key<float> myFloat = schema.find<float>("myFloatField").key;
 
-    Layout::Description description = layout.describe();
+    Schema::Description description = schema.describe();
 
     std::ostream_iterator<FieldDescription> osi(std::cout, "\n");
     std::copy(description.begin(), description.end(), osi);
     
-    SimpleTable table(layout, 0, 16);
+    SimpleTable table(schema, 0, 16);
     
     SimpleRecord r1 = table.addRecord();
     BOOST_CHECK_EQUAL(r1.getId(), 1u);
@@ -264,11 +264,11 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
 BOOST_AUTO_TEST_CASE(testColumnView) {
 
-    Layout layout;
-    Key<float> floatKey = layout.addField(Field<float>("f1", "f1 doc"));
-    Key< Array<double> > arrayKey = layout.addField(Field< Array<double> >("f2", "f2 doc", 5));
+    Schema schema;
+    Key<float> floatKey = schema.addField(Field<float>("f1", "f1 doc"));
+    Key< Array<double> > arrayKey = schema.addField(Field< Array<double> >("f2", "f2 doc", 5));
     
-    SimpleTable table(layout, 0, 16);
+    SimpleTable table(schema, 0, 16);
     Eigen::ArrayXd r = Eigen::ArrayXd::Random(20);
     for (int i = 0; i < 20; ++i) {
         SimpleRecord record = table.addRecord();

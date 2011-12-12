@@ -31,25 +31,25 @@ typedef boost::fusion::result_of::as_map<
 struct ColumnView::Impl {
     int recordCount;
     void * buf;
-    Layout layout;
+    Schema schema;
     CoreContainer cores;
 
     template <typename T>
     void operator()(boost::fusion::pair< T, ndarray::detail::Core<1>::Ptr > & pair) const {
         pair.second = ndarray::detail::Core<1>::create(
             ndarray::makeVector(recordCount),
-            ndarray::makeVector(int(layout.getRecordSize() / sizeof(T)))
+            ndarray::makeVector(int(schema.getRecordSize() / sizeof(T)))
         );
     }
 
-    Impl(Layout const & layout_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
-        : recordCount(recordCount_), buf(buf_), layout(layout_)
+    Impl(Schema const & schema_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
+        : recordCount(recordCount_), buf(buf_), schema(schema_)
     {
         boost::fusion::for_each(cores, *this);
     }
 };
 
-Layout ColumnView::getLayout() const { return _impl->layout; }
+Schema ColumnView::getSchema() const { return _impl->schema; }
 
 template <typename T>
 typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
@@ -79,8 +79,8 @@ typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > cons
 ColumnView::~ColumnView() {}
 
 ColumnView::ColumnView(
-    Layout const & layout, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
-) : _impl(new Impl(layout, recordCount, buf, manager)) {}
+    Schema const & schema, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
+) : _impl(new Impl(schema, recordCount, buf, manager)) {}
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
 

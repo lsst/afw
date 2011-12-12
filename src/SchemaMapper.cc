@@ -1,7 +1,7 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/afw/table/LayoutMapper.h"
+#include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/RecordBase.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -15,7 +15,7 @@ struct SwapKeyPair : public boost::static_visitor<> {
         std::swap(pair.first, pair.second);
     }
 
-    void operator()(detail::LayoutMapperData::KeyPairVariant & v) const {
+    void operator()(detail::SchemaMapperData::KeyPairVariant & v) const {
         boost::apply_visitor(*this, v);
     }
 
@@ -29,7 +29,7 @@ struct KeyPairCompare : public boost::static_visitor<bool> {
         return _target == pair.first;
     }
     
-    bool operator()(detail::LayoutMapperData::KeyPairVariant const & v) const {
+    bool operator()(detail::SchemaMapperData::KeyPairVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }
 
@@ -60,7 +60,7 @@ private:
 
 } // anonymous
 
-void LayoutMapper::_edit() {
+void SchemaMapper::_edit() {
     if (!_data.unique()) {
         boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
         _data.swap(data);
@@ -68,7 +68,7 @@ void LayoutMapper::_edit() {
 }
 
 template <typename T>
-Key<T> LayoutMapper::addMapping(Key<T> const & inputKey) {
+Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
     _edit();
     typename Data::KeyPairMap::iterator i = std::find_if(
         _data->_map.begin(),
@@ -88,7 +88,7 @@ Key<T> LayoutMapper::addMapping(Key<T> const & inputKey) {
 }
 
 template <typename T>
-Key<T> LayoutMapper::addMapping(Key<T> const & inputKey, Field<T> const & field) {
+Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field) {
     _edit();
     typename Data::KeyPairMap::iterator i = std::find_if(
         _data->_map.begin(),
@@ -106,14 +106,14 @@ Key<T> LayoutMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
     }
 }
 
-void LayoutMapper::invert() {
+void SchemaMapper::invert() {
     _edit();
     std::swap(_data->_input, _data->_output);
     std::for_each(_data->_map.begin(), _data->_map.end(), SwapKeyPair());
 }
 
 template <typename T>
-bool LayoutMapper::isMapped(Key<T> const & inputKey) const {
+bool SchemaMapper::isMapped(Key<T> const & inputKey) const {
     return std::count_if(
         _data->_map.begin(),
         _data->_map.end(),
@@ -122,7 +122,7 @@ bool LayoutMapper::isMapped(Key<T> const & inputKey) const {
 }
 
 template <typename T>
-Key<T> LayoutMapper::getMapping(Key<T> const & inputKey) const {
+Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
     typename Data::KeyPairMap::iterator i = std::find_if(
         _data->_map.begin(),
         _data->_map.end(),
@@ -137,18 +137,18 @@ Key<T> LayoutMapper::getMapping(Key<T> const & inputKey) const {
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
 }
 
-void LayoutMapper::copyRecord(RecordBase const & input, RecordBase const & output) const {
+void SchemaMapper::copyRecord(RecordBase const & input, RecordBase const & output) const {
     this->forEach(CopyRecord(input._data, output._data));
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_LAYOUTMAPPER(r, data, elem)                         \
-    template Key< elem > LayoutMapper::addOutputField(Field< elem > const &);      \
-    template Key< elem > LayoutMapper::addMapping(Key< elem > const &);       \
-    template Key< elem > LayoutMapper::addMapping(Key< elem > const &, Field< elem > const &); \
-    template bool LayoutMapper::isMapped(Key< elem > const &) const;    \
-    template Key< elem > LayoutMapper::getMapping(Key< elem > const &) const;
+    template Key< elem > SchemaMapper::addOutputField(Field< elem > const &);      \
+    template Key< elem > SchemaMapper::addMapping(Key< elem > const &);       \
+    template Key< elem > SchemaMapper::addMapping(Key< elem > const &, Field< elem > const &); \
+    template bool SchemaMapper::isMapped(Key< elem > const &) const;    \
+    template Key< elem > SchemaMapper::getMapping(Key< elem > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_LAYOUTMAPPER, _,
