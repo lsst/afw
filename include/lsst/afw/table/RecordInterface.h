@@ -7,9 +7,29 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/RecordBase.h"
 #include "lsst/afw/table/IteratorBase.h"
+#include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
+
+template <typename Tag>
+class ChildView : private RecordBase {
+public:
+
+    typedef typename Tag::Record Record;
+    typedef boost::transform_iterator<detail::RecordConverter<Record>,ChildIteratorBase> Iterator;
+
+    Iterator begin() const {
+        return Iterator(this->_beginChildren(), detail::RecordConverter<Record>());
+    }
+
+    Iterator end() const {
+        return Iterator(this->_endChildren(), detail::RecordConverter<Record>());
+    }
+
+    explicit ChildView(RecordBase const & record) : RecordBase(record) {}
+
+};
 
 /**
  *  @brief A facade base class that provides most of the public interface of a record.
@@ -30,12 +50,15 @@ class RecordInterface : public RecordBase {
 public:
 
     typedef typename Tag::Record Record;
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,IteratorBase> Iterator;
+    typedef ChildView<Tag> Children;
 
     /// @copydoc RecordBase::_getParent
     Record getParent() const {
         return detail::Access::makeRecord<Record>(this->_getParent());
     }
+
+    /// @brief Return an iterator over the record's children.
+    Children getChildren() const { return Children(*this); }
 
 protected:
 

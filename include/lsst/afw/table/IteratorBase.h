@@ -11,7 +11,27 @@
 
 namespace lsst { namespace afw { namespace table {
 
+namespace detail {
+
 struct TableImpl;
+
+class ChildFilterPredicate {
+public:
+
+    typedef RecordBase const & argument_type;
+    typedef bool result_type;
+
+    bool operator()(RecordBase const & record) const {
+        return record.getParentId() == _parentId;
+    }
+
+    explicit ChildFilterPredicate(RecordId parentId) : _parentId(parentId) {}
+
+private:
+    RecordId _parentId;
+};
+
+} // namespace detail
 
 /**
  *  @brief A set-like iterator ordered by record ID.

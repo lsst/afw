@@ -148,7 +148,9 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, PTR(AuxBase)
     assert(p != 0);
     p->id = id;
     p->aux = aux;
-    detail::Access::getData(schema).getParentId(*p) = parent->id;
+    if (parent) {
+        detail::Access::getData(schema).getParentId(*p) = parent->id;
+    }
     records.insert_commit(*p, insertData);
     return p;
 }
@@ -207,6 +209,12 @@ bool RecordBase::hasParent() const {
 }
 
 bool RecordBase::hasChildren() const {
+    if (!_table->schema.hasParentId()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Record's schema has no parent ID."
+        );
+    }
     for (detail::RecordSet::iterator i = _table->records.begin(); i != _table->records.end(); ++i) {
         if (detail::Access::getData(_table->schema).getParentId(*i) == _data->id) {
             return true;
@@ -216,6 +224,12 @@ bool RecordBase::hasChildren() const {
 }
 
 RecordBase RecordBase::_getParent() const {
+    if (!_table->schema.hasParentId()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Record's schema has no parent ID."
+        );
+    }
     RecordId parentId = detail::Access::getData(_table->schema).getParentId(*_data);
     if (!parentId) {
         throw LSST_EXCEPT(
@@ -231,6 +245,34 @@ RecordBase RecordBase::_getParent() const {
         );
     }
     return RecordBase(&(*j), _table, *this);
+}
+
+ChildIteratorBase RecordBase::_beginChildren() const {
+    if (!_table->schema.hasParentId()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Record's schema has no parent ID."
+        );
+    }
+    return ChildIteratorBase(
+        detail::ChildFilterPredicate(_data->id),
+        IteratorBase(_table->records.s_iterator_to(*_data), _table, *this),
+        IteratorBase(_table->records.end(), _table, *this)
+    );
+}
+
+ChildIteratorBase RecordBase::_endChildren() const {
+    if (!_table->schema.hasParentId()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Record's schema has no parent ID."
+        );
+    }
+    return ChildIteratorBase(
+        detail::ChildFilterPredicate(_data->id),
+        IteratorBase(_table->records.end(), _table, *this),
+        IteratorBase(_table->records.end(), _table, *this)
+    );
 }
 
 void RecordBase::unlink() const {

@@ -2,6 +2,8 @@
 #ifndef AFW_TABLE_RecordBase_h_INCLUDED
 #define AFW_TABLE_RecordBase_h_INCLUDED
 
+#include "boost/iterator/filter_iterator.hpp"
+
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/detail/RecordData.h"
@@ -12,12 +14,16 @@ namespace lsst { namespace afw { namespace table {
 namespace detail {
 
 struct TableImpl;
+class ChildFilterPredicate;
 
 } // namespace detail
 
 class SchemaMapper;
 class TableBase;
 class IteratorBase;
+
+typedef boost::filter_iterator<detail::ChildFilterPredicate,IteratorBase> ChildIteratorBase;
+
 
 /**
  *  @brief Base class containing most of the implementation for records.
@@ -28,7 +34,6 @@ class IteratorBase;
  *
  *  The all-important field accessors and other member functions that do
  *  not involve the final record type are defined as public member functions.
- *
  *
  *  Final table classes should generally not inherit from RecordBase directly,
  *  and instead should inherit from RecordInterface.
@@ -57,9 +62,7 @@ public:
     /// @brief Return true if the record has a parent record.
     bool hasParent() const;
 
-    /**
-     *  @brief Return true if the record has one or more child records.
-     */
+    /// @brief Return true if the record has one or more child records.
     bool hasChildren() const;
 
     /// @brief Return the unique ID of the record.
@@ -177,12 +180,15 @@ protected:
     PTR(AuxBase) getAux() const { return _data->aux; }
 
     /**
-     *  @brief Return the record's parent, or throw NotFoundException if !hasParent().
+     *  @brief Return the record's parent.
      *
-     *  This operation is constant time when the link mode is POINTERS, and logarithmic
-     *  if it is PARENT_ID.
+     *  @throw NotFoundException if !hasParent().
+     *  @throw LogicErrorException if !getSchema().hasParentId().
      */
     RecordBase _getParent() const;
+
+    ChildIteratorBase _beginChildren() const;
+    ChildIteratorBase _endChildren() const;
 
 private:
 

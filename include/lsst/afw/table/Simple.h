@@ -2,8 +2,6 @@
 #ifndef AFW_TABLE_Simple_h_INCLUDED
 #define AFW_TABLE_Simple_h_INCLUDED
 
-
-
 #include "lsst/afw/table/RecordInterface.h"
 #include "lsst/afw/table/TableInterface.h"
 
@@ -22,18 +20,6 @@ struct Simple {
  *  @brief A bare-bones record class intended for testing and generic tabular data.
  */
 class SimpleRecord : public RecordInterface<Simple> {
-public:
-
-    //@{
-    /**
-     *  @brief Add a new child record to the same table this record belongs to.
-     *
-     *  Will throw LogicErrorException if !isLinked().
-     */
-    SimpleRecord addChild() const { return _addChild(); }
-    SimpleRecord addChild(RecordId id) const { return _addChild(id); }
-    //@}
-
 private:
 
     friend class detail::Access;

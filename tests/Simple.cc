@@ -25,7 +25,7 @@ using namespace lsst::afw::table;
  */
 struct Example {
 
-    Example() : schema(), key(schema.addField<double>("f", "doc")), table(schema, 0, 10) {
+    Example() : schema(true), key(schema.addField<double>("f", "doc")), table(schema, 0, 10) {
         std::list<SimpleRecord> top;
         std::list<SimpleRecord> middle;
         std::list<SimpleRecord> bottom;
@@ -34,11 +34,12 @@ struct Example {
             top.back()[key] = Eigen::ArrayXd::Random(1)[0];
             values.insert(std::make_pair(top.back().getId(), top.back().get(key)));
             tableOrder.push_back(top.back().getId());
-            treeOrder[NO_NESTING].push_back(top.back().getId());
+            treeOrder.push_back(top.back().getId());
         }
         for (std::list<SimpleRecord>::iterator i = top.begin(); i != top.end(); ++i) {
             for (int j = 0; j < 3; ++j) {
-                middle.push_back(i->addChild());
+                middle.push_back(table.addRecord());
+                middle.back().setParentId(i->getParentId());
                 middle.back()[key] = Eigen::ArrayXd::Random(1)[0];
                 values.insert(std::make_pair(middle.back().getId(), middle.back().get(key)));
                 tableOrder.push_back(middle.back().getId());
@@ -46,49 +47,62 @@ struct Example {
         }
         for (std::list<SimpleRecord>::iterator j = middle.begin(); j != middle.end(); ++j) {
             for (int k = 0; k < 3; ++k) {
-                bottom.push_back(j->addChild());
+                bottom.push_back(table.addRecord());
+                bottom.back().setParentId(j->getParentId());
                 bottom.back()[key] = Eigen::ArrayXd::Random(1)[0];
                 values.insert(std::make_pair(bottom.back().getId(), bottom.back().get(key)));
                 tableOrder.push_back(bottom.back().getId());
             }
         }
         using namespace boost::assign;
-        treeOrder[DEPTH_FIRST] +=   // using Boost.Assign here
+        treeOrder +=   // using Boost.Assign here
             1,  4, 13, 14, 15,  5, 16, 17, 18,  6, 19, 20, 21, 
             2,  7, 22, 23, 24,  8, 25, 26, 27,  9, 28, 29, 30,
             3, 10, 31, 32, 33, 11, 34, 35, 36, 12, 37, 38, 39;
     }
 
+    void checkChildIteration(
+        SimpleRecord const & record,
+        std::list<RecordId>::const_iterator & iter
+    ) const {
+        BOOST_CHECK_EQUAL(record.getId(), *iter);
+        ++iter;
+        SimpleRecord::Children children = record.getChildren();
+        for (SimpleRecord::Children::Iterator i = children.begin(); i != children.end(); ++i) {
+            checkChildIteration(*i, iter);
+        }
+    }
+
     template <typename Container>
     static void _checkIteration(Container const & container, std::list<RecordId> const & order) {
-        std::list<RecordId>::const_iterator o = order.begin();
-        for (typename Container::Iterator i = container.begin(); i != container.end(); ++i, ++o) {
-            BOOST_CHECK_EQUAL(i->getId(), *o);
-            if (i->hasChildren()) {
-                BOOST_CHECK_THROW(i->unlink(), lsst::pex::exceptions::LogicErrorException);
-                BOOST_CHECK_THROW(container.unlink(i), lsst::pex::exceptions::LogicErrorException);
-            }
-        }
-        BOOST_CHECK( o == order.end() );
     }
 
     void checkIteration() const {
-        _checkIteration(table, tableOrder);
-        _checkIteration(table.asTree(NO_NESTING), treeOrder[NO_NESTING]);
-        _checkIteration(table.asTree(DEPTH_FIRST), treeOrder[DEPTH_FIRST]);
+        {
+            std::list<RecordId>::const_iterator o = tableOrder.begin();
+            for (SimpleTable::Iterator i = table.begin(); i != table.end(); ++i, ++o) {
+                BOOST_CHECK_EQUAL(i->getId(), *o);
+            }
+            BOOST_CHECK( o == tableOrder.end() );
+        }
+        {
+            std::list<RecordId>::const_iterator iter = treeOrder.begin();
+            checkChildIteration(table[1], iter);
+            checkChildIteration(table[2], iter);
+            checkChildIteration(table[3], iter);
+        }
     }
-    
+
     void remove(RecordId id) {
         tableOrder.remove(id);
-        treeOrder[NO_NESTING].remove(id);
-        treeOrder[DEPTH_FIRST].remove(id);
+        treeOrder.remove(id);
     }
-    
+
     Schema schema;
     Key<double> key;
     SimpleTable table;
     std::list<RecordId> tableOrder;
-    std::list<RecordId> treeOrder[2];
+    std::list<RecordId> treeOrder;
     std::map<RecordId,double> values;
 };
 
@@ -96,32 +110,6 @@ BOOST_AUTO_TEST_CASE(testIterators) {
 
     Example example;
     example.checkIteration();
-
-    // Test record child iterators.
-    {
-        SimpleTable::Tree tree = example.table.asTree(DEPTH_FIRST);
-        SimpleTable::Tree top = example.table.asTree(NO_NESTING);
-        SimpleTable::Tree::Iterator t = tree.begin();
-        for (SimpleTable::Tree::Iterator i = top.begin(); i != top.end(); ++i) {
-            BOOST_CHECK_EQUAL(t->getId(), i->getId());
-            BOOST_CHECK_THROW(t->unlink(), lsst::pex::exceptions::LogicErrorException);
-            BOOST_CHECK_THROW(tree.unlink(t), lsst::pex::exceptions::LogicErrorException);
-            ++t;
-            SimpleRecord::Children ic = i->getChildren(NO_NESTING);
-            for (SimpleRecord::Children::Iterator j = ic.begin(); j != ic.end(); ++j) {
-                BOOST_CHECK_EQUAL(t->getId(), j->getId());
-                BOOST_CHECK_THROW(t->unlink(), lsst::pex::exceptions::LogicErrorException);
-                BOOST_CHECK_THROW(tree.unlink(t), lsst::pex::exceptions::LogicErrorException);
-                ++t;
-                SimpleRecord::Children jc = j->getChildren(NO_NESTING);
-                for (SimpleRecord::Children::Iterator k = jc.begin(); k != jc.end(); ++k) {
-                    BOOST_CHECK_EQUAL(t->getId(), k->getId());
-                    ++t;
-                }
-            }
-        }
-        BOOST_CHECK( t == tree.end() );
-    }
 
     // Test all kinds of unlinking in different places, verifying that we haven't messed up iteration.
     {
@@ -146,52 +134,9 @@ BOOST_AUTO_TEST_CASE(testIterators) {
         example.remove(23);
         example.checkIteration();
     } {
-        SimpleRecord r7 = example.table[7];
-        BOOST_CHECK(r7.hasChildren());
-        SimpleTable::Tree::Iterator i22 = r7.asTreeIterator(DEPTH_FIRST); ++i22;
-        BOOST_CHECK_EQUAL(i22->getId(), 22ul);
-        SimpleTable::Tree::Iterator i24 = example.table.asTree(DEPTH_FIRST).unlink(i22);
-        example.remove(22);
-        example.checkIteration();
-        BOOST_CHECK_EQUAL(i24->getId(), 24ul);
-        BOOST_CHECK_THROW(
-            example.table.asTree(NO_NESTING).unlink(i24), 
-            lsst::pex::exceptions::LogicErrorException
-        );
-        {
-            SimpleTable::Tree::Iterator i8 = example.table.asTree(DEPTH_FIRST).unlink(i24);
-            BOOST_CHECK_EQUAL(i8->getId(), 8ul);
-            example.remove(24);
-            example.checkIteration();
-        } {
-            BOOST_CHECK(!r7.hasChildren());
-            SimpleTable::Tree::Iterator i8 
-                = example.table.asTree(NO_NESTING).unlink(r7.asTreeIterator(NO_NESTING));
-            BOOST_CHECK_EQUAL(i8->getId(), 8ul);
-            example.remove(7);
-            example.checkIteration();
-        }
-    } {
         SimpleTable::Iterator iEnd = example.table.unlink(example.table.find(39));
         BOOST_CHECK(iEnd == example.table.end());
         example.remove(39);
-        example.checkIteration();
-    } {
-        SimpleRecord r38 = example.table[38];
-        SimpleTable::Tree::Iterator iEnd 
-            = example.table.asTree(DEPTH_FIRST).unlink(r38.asTreeIterator(DEPTH_FIRST));
-        BOOST_CHECK(iEnd == example.table.asTree(DEPTH_FIRST).end());
-        example.remove(38);
-        example.checkIteration();
-        example.table[37].unlink();
-        example.remove(37);
-        example.checkIteration();
-    } {
-        SimpleRecord r12 = example.table[12];
-        SimpleTable::Tree::Iterator iEnd
-            = example.table.asTree(NO_NESTING).unlink(r12.asTreeIterator(NO_NESTING));
-        BOOST_CHECK(iEnd == example.table.asTree(NO_NESTING).end());
-        example.remove(12);
         example.checkIteration();
     }
 }
@@ -219,7 +164,7 @@ BOOST_AUTO_TEST_CASE(testConsolidate) {
 
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
-    Schema schema;
+    Schema schema(false);
     
     Key<int> myInt = schema.addField<int>("myIntField", "an integer scalar field.");
     
@@ -264,7 +209,7 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
 
 BOOST_AUTO_TEST_CASE(testColumnView) {
 
-    Schema schema;
+    Schema schema(false);
     Key<float> floatKey = schema.addField(Field<float>("f1", "f1 doc"));
     Key< Array<double> > arrayKey = schema.addField(Field< Array<double> >("f2", "f2 doc", 5));
     
@@ -307,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
 
 BOOST_AUTO_TEST_CASE(testFlags) {
 
-    Schema schema;
+    Schema schema(false);
     
     int const nFields = 70;
     int const nRecords = 10;
