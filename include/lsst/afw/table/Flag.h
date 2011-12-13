@@ -34,6 +34,8 @@ struct FieldBase<Flag> {
 template <>
 class KeyBase< Flag > {
 public:
+    static bool const HAS_NAMED_SUBFIELDS = false;
+
     Key<FieldBase<Flag>::Element> getStorage() const;
 };
 

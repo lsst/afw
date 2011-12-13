@@ -37,6 +37,9 @@ class SchemaMapper;
 class TableBase : protected ModificationFlags {
 public:
 
+    /// @brief Number of records in each block when capacity is not given explicitly.
+    static int nRecordsPerBlock;
+
     /// @brief Return the schema for the table's fields.  
     Schema getSchema() const;
 
@@ -83,11 +86,7 @@ protected:
      *  @brief Standard constructor for TableBase.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
-     *  @param[in] capacity          Number of records to pre-allocate space for in the first block.  This
-     *                               overrides nRecordsPerBlock for the first block and the first block only.
-     *  @param[in] nRecordsPerBlock  Number of records to allocate space for in each block.  This is almost
-     *                               entirely a performance-only consideration, but it does affect whether
-     *                               a table will be remain consolidated after adding records.
+     *  @param[in] capacity          Number of records to pre-allocate space for the first block.
      *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
      *                               If empty, defaults to a simple counter that starts at 1.
      *  @param[in] aux               A pointer containing extra arbitrary data for the table.
@@ -97,7 +96,6 @@ protected:
     TableBase(
         Schema const & schema,
         int capacity,
-        int nRecordsPerBlock,
         PTR(IdFactory) const & idFactory = PTR(IdFactory)(),
         PTR(AuxBase) const & aux = PTR(AuxBase)(),
         ModificationFlags const & flags = ModificationFlags::all()

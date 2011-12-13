@@ -24,6 +24,8 @@ template <typename T>
 struct SchemaItem {
     Key<T> key;
     Field<T> field;
+
+    SchemaItem(Key<T> const & key_, Field<T> const & field_) : key(key_), field(field_) {}
 };
 
 namespace detail {
@@ -61,6 +63,9 @@ public:
     RecordId & getParentId(RecordData & record) const {
         return *reinterpret_cast<RecordId*>(&record + 1);
     }
+
+    template <typename T>
+    SchemaItem<T> find(std::string const & name) const;
 
     explicit SchemaData(bool hasTree) :
         _recordSize(sizeof(RecordData)), _lastFlagField(-1), _lastFlagBit(-1),

@@ -25,7 +25,7 @@ using namespace lsst::afw::table;
  */
 struct Example {
 
-    Example() : schema(true), key(schema.addField<double>("f", "doc")), table(schema, 0, 10) {
+    Example() : schema(true), key(schema.addField<double>("f", "doc")), table(schema) {
         std::list<SimpleRecord> top;
         std::list<SimpleRecord> middle;
         std::list<SimpleRecord> bottom;
@@ -143,6 +143,8 @@ BOOST_AUTO_TEST_CASE(testIterators) {
 
 BOOST_AUTO_TEST_CASE(testConsolidate) {
 
+    TableBase::nRecordsPerBlock = 10;
+
     Example example;
     example.checkIteration();
 
@@ -160,6 +162,8 @@ BOOST_AUTO_TEST_CASE(testConsolidate) {
     for (SimpleTable::Iterator i = example.table.begin(); i != example.table.end(); ++i) {
         BOOST_CHECK_EQUAL(example.values[i->getId()], i->get(example.key));
     }
+
+    TableBase::nRecordsPerBlock = 100;
 }
 
 BOOST_AUTO_TEST_CASE(testSimpleTable) {
@@ -180,7 +184,7 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     std::ostream_iterator<FieldDescription> osi(std::cout, "\n");
     std::copy(description.begin(), description.end(), osi);
     
-    SimpleTable table(schema, 0, 16);
+    SimpleTable table(schema);
     
     SimpleRecord r1 = table.addRecord();
     BOOST_CHECK_EQUAL(r1.getId(), 1u);
@@ -213,7 +217,9 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
     Key<float> floatKey = schema.addField(Field<float>("f1", "f1 doc"));
     Key< Array<double> > arrayKey = schema.addField(Field< Array<double> >("f2", "f2 doc", 5));
     
-    SimpleTable table(schema, 0, 16);
+    TableBase::nRecordsPerBlock = 16;
+
+    SimpleTable table(schema);
     Eigen::ArrayXd r = Eigen::ArrayXd::Random(20);
     for (int i = 0; i < 20; ++i) {
         SimpleRecord record = table.addRecord();
@@ -247,7 +253,8 @@ BOOST_AUTO_TEST_CASE(testColumnView) {
             BOOST_CHECK_EQUAL(record.get(arrayKey)[j], columns[arrayKey][n][j]);
         }
     }
-    
+
+    TableBase::nRecordsPerBlock = 100;
 }
 
 BOOST_AUTO_TEST_CASE(testFlags) {
@@ -295,4 +302,18 @@ BOOST_AUTO_TEST_CASE(testFlags) {
             BOOST_CHECK_EQUAL(r.get(flagKeys[i]), r[doubleKeys[i]] < 0.5);
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(testKeyExtraction) {
+
+    Schema schema(false);
+    Key< Point<float> > p_k = schema.addField< Point<float> >("a.p", "point");
+    SchemaItem< Point<float> > p_si = schema.find< Point<float> >("a.p");
+    BOOST_CHECK( p_si.key == p_k );
+    BOOST_CHECK_EQUAL( p_si.field.getName(), "a.p" );
+    SchemaItem<float> x_si = schema.find<float>("a.p.x");
+    BOOST_CHECK( p_k.getX() == x_si.key );
+    BOOST_CHECK_EQUAL( x_si.field.getName(), "a.p.x" );
+    BOOST_CHECK_EQUAL( x_si.field.getDoc(), "point" );
+
 }

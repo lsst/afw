@@ -63,10 +63,9 @@ protected:
     TableInterface(
         Schema const & schema,
         int capacity,
-        int nRecordsPerBlock,
         PTR(IdFactory) const & idFactory = PTR(IdFactory)(),
         PTR(AuxBase) const & aux = PTR(AuxBase)()
-    ) : TableBase(schema, capacity, nRecordsPerBlock, idFactory, aux) {}
+    ) : TableBase(schema, capacity, idFactory, aux) {}
 
     Record _addRecord(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
         return detail::Access::makeRecord<Record>(this->TableBase::_addRecord(id, aux));

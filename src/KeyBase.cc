@@ -14,6 +14,12 @@ Key<FieldBase<Flag>::Element> KeyBase<Flag>::getStorage() const {
 }
 
 template <typename U>
+char const * KeyBase< Point<U> >::subfields[] = { "x", "y" };
+
+template <typename U>
+char const * KeyBase< Shape<U> >::subfields[] = { "xx", "yy", "xy" };
+
+template <typename U>
 Key<U> KeyBase< Point<U> >::getX() const { return detail::Access::extractElement(*this, 0); }
 
 template <typename U>

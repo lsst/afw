@@ -80,9 +80,6 @@ private:
 //----- TableImpl definition --------------------------------------------------------------------------------
 
 struct TableImpl : private boost::noncopyable {
-    int nRecordsPerBlock;
-    RecordData * front;
-    RecordData * back;
     void * consolidated;
     Block::Ptr block;
     PTR(IdFactory) idFactory;
@@ -105,12 +102,8 @@ struct TableImpl : private boost::noncopyable {
 
     void unlink(RecordData * record);
 
-    TableImpl(
-        Schema const & schema_, int nRecordsPerBlock_, 
-        PTR(IdFactory) const & idFactory_, PTR(AuxBase) const & aux_
-    ) :
-        nRecordsPerBlock(nRecordsPerBlock_), front(0), back(0), consolidated(0), 
-        idFactory(idFactory_), aux(aux_), schema(schema_)
+    TableImpl(Schema const & schema_, PTR(IdFactory) const & idFactory_, PTR(AuxBase) const & aux_) :
+        consolidated(0), idFactory(idFactory_), aux(aux_), schema(schema_)
     {
         Block::padSchema(schema);
         if (!idFactory) idFactory = IdFactory::makeSimple();
@@ -142,7 +135,7 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, PTR(AuxBase)
         );
     }
     if (!block || block->isFull()) {
-        addBlock(nRecordsPerBlock);
+        addBlock(TableBase::nRecordsPerBlock);
     }
     RecordData * p = block->makeNextRecord();
     assert(p != 0);
@@ -283,6 +276,15 @@ void RecordBase::unlink() const {
 
 //----- TableBase implementation --------------------------------------------------------------------------
 
+
+/*
+ *  The author has no idea whether the default value below is sensible, or even whether
+ *  it should be expressed ultimately as an approximate size in bytes rather than a
+ *  number of records; the answer probably depends on both the typical size of
+ *  records and the typical number of records.
+ */
+int TableBase::nRecordsPerBlock = 100;
+
 TableBase::~TableBase() {}
 
 Schema TableBase::getSchema() const { return _impl->schema; }
@@ -295,7 +297,6 @@ void TableBase::consolidate(int extraCapacity) {
     PTR(detail::TableImpl) newImpl =
         boost::make_shared<detail::TableImpl>(
             _impl->schema,
-            _impl->nRecordsPerBlock,
             _impl->idFactory->clone(),
             _impl->aux
         );
@@ -378,12 +379,11 @@ RecordBase TableBase::_addRecord(RecordId id, PTR(AuxBase) const & aux) const {
 TableBase::TableBase(
     Schema const & schema,
     int capacity,
-    int nRecordsPerBlock,
     PTR(IdFactory) const & idFactory,
     PTR(AuxBase) const & aux,
     ModificationFlags const & flags 
 ) : ModificationFlags(flags),
-    _impl(boost::make_shared<detail::TableImpl>(schema, nRecordsPerBlock, idFactory, aux))
+    _impl(boost::make_shared<detail::TableImpl>(schema, idFactory, aux))
 {
     if (capacity > 0) _impl->addBlock(capacity);
 }

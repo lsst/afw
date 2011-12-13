@@ -15,6 +15,8 @@
 
 namespace lsst { namespace afw { namespace table {
 
+class SchemaProxy;
+
 /**
  *  @brief Defines the fields and offsets for a table.
  *
@@ -44,11 +46,36 @@ public:
 
     /// @brief Find a SchemaItem in the Schema by name.
     template <typename T>
-    SchemaItem<T> find(std::string const & name) const;
+    SchemaItem<T> find(std::string const & name) const {
+        return _data->find<T>(name);
+    }
 
     /// @brief Find a SchemaItem in the Schema by key.
     template <typename T>
     SchemaItem<T> find(Key<T> const & key) const;
+
+    /**
+     *  @brief Lookup a (possibly incomplete) name in the Schema.
+     *
+     *  See SchemaProxy for more information.
+     *
+     *  This member function should generally only be used on
+     *  "finished" Schemas; modifying a Schema after a SchemaProxy
+     *  to it has been constructed will not allow the proxy to track
+     *  the additions, and will invoke the copy-on-write
+     *  mechanism of the Schema itself.
+     */
+    SchemaProxy operator[](std::string const & name) const;
+
+    /**
+     *  @brief Return a vector of field names in the schema.
+     *
+     *  If topOnly==true, return a unique list of only the part
+     *  of the names before the first period.  For example,
+     *  if the full list of field names is ['a.b.c', 'a.d', 'e.f'],
+     *  topOnly==true will return ['a', 'e'].
+     */
+    std::vector<std::string> getNames(bool topOnly=false) const;
 
     /**
      *  @brief Return a set with descriptions of all the fields.
@@ -124,6 +151,7 @@ public:
 private:
 
     friend class detail::Access;
+    friend class SchemaProxy;
     
     /// @brief Copy on write; should be called by all mutators.
     void _edit();
@@ -134,6 +162,85 @@ private:
     Key<Flag> _addField(Field<Flag> const & field);
 
     boost::shared_ptr<Data> _data;
+};
+
+/**
+ *  @brief A proxy type for name lookups in a Schema.
+ *
+ *  Elements of schema names are assumed to be separated by
+ *  periods ("a.b.c.d"); an incomplete lookup is one that
+ *  does not resolve to a field.  Not that even complete
+ *  lookups can have nested names; a Point field, for instance,
+ *  has "x" and "y" nested names.
+ *
+ *  This proxy object is implicitly convertible to both
+ *  the appropriate Key type and the appropriate Field type,
+ *  if the name is a complete one, and supports additional
+ *  find() operations for nested names.  It also provides
+ *  accessors that forward to the getters of Field.
+ *
+ *  SchemaProxy is implemented as a proxy that essentially
+ *  calls Schema::find after concatenating strings.  It
+ *  does not provide any performance advantage over using
+ *  Schema::find directly.  It is also lazy, so looking up
+ *  a name prefix that does not exist within the schema
+ *  is not considered an error until the proxy is used.
+ *
+ *  Some examples:
+ *  @code
+ *  Schema schema(false);
+ *  Key<int> a_i = schema.addField<int>("a.i", "integer field");
+ *  Key< Point<double> > a_p = schema.addField< Point<double> >("a.p", "point field");
+ *  
+ *  assert(schema["a.i"] == a_i);
+ *  SchemaProxy a = schema["a"];
+ *  assert(a["i"] == a_i);
+ *  Field<int> f_a_i = schema["a.i"];
+ *  assert(f_a_i.getDoc() == "integer field");
+ *  assert(schema["a.i"].getName() == "a.i");
+ *  assert(schema.find("a.p.x") == a_p.getX());
+ *  @endcode
+ */
+class SchemaProxy {
+    typedef detail::SchemaData Data;
+public:
+    
+    /// @brief Find a nested SchemaItem by name.
+    template <typename T>
+    SchemaItem<T> find(std::string const & name) const;
+
+    /// @brief Return a nested proxy.
+    SchemaProxy operator[](std::string const & name) const;
+
+    /**
+     *  @brief Return a vector of nested names that start with the SchemaProxy's prefix.
+     *
+     *  @sa Schema::getNames
+     */
+    std::vector<std::string> getNames(bool topOnly=false) const;
+
+    template <typename T>
+    operator Key<T>() const { return _data->find<T>(_name).key; }
+
+    template <typename T>
+    operator Field<T>() const { return _data->find<T>(_name).field; }
+
+    std::string const & getName() const { return _name; }
+
+    std::string const & getDoc() const;
+
+    std::string const & getUnits() const;
+
+private:
+
+    friend class Schema;
+
+    SchemaProxy(PTR(Data) const & data, std::string const & name) :
+        _data(data), _name(name)
+    {}
+
+    boost::shared_ptr<Data> _data;
+    std::string _name;
 };
 
 }}} // namespace lsst::afw::table
