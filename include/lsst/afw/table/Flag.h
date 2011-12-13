@@ -2,8 +2,6 @@
 #ifndef LSST_AFW_TABLE_Flag_h_INCLUDED
 #define LSST_AFW_TABLE_Flag_h_INCLUDED
 
-#include "boost/dynamic_bitset.hpp"
-
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/KeyBase.h"

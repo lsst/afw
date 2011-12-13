@@ -6,50 +6,10 @@
 
 #include "lsst/base.h"
 #include "lsst/afw/table/RecordBase.h"
-#include "lsst/afw/table/TreeIteratorBase.h"
 #include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
-
-/**
- *  @brief A container-like view into the children of a particular record.
- *
- *  The iterators on a ChildrenView are tree iterators, and can either process
- *  one level of children or all recursive children, depending on the TreeMode
- *  the view was constructed with.
- *
- *  A ChildrenView is invalidated when the table's link mode is set to PARENT_ID.
- *
- *  @sa RecordInterface::getChildren().
- */
-template <typename Tag>
-class ChildrenView : private RecordBase {
-public:
-
-    typedef typename Tag::Record Record; ///< @brief Record type obtained by dereferencing iterators.
-
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,TreeIteratorBase> Iterator;    
-
-    Iterator begin() const {
-        return Iterator(this->_beginChildren(_mode), detail::RecordConverter<Record>());
-    }
-
-    Iterator end() const {
-        return Iterator(this->_endChildren(_mode), detail::RecordConverter<Record>()); 
-    }
-
-    bool empty() const { return this->hasChildren(); }
-
-private:
-
-    template <typename OtherTag> friend class RecordInterface;
-
-    ChildrenView(RecordBase const & record, TreeMode mode) : 
-        RecordBase(record), _mode(mode) {}
-
-    TreeMode _mode;
-};
 
 /**
  *  @brief A facade base class that provides most of the public interface of a record.
@@ -70,56 +30,16 @@ class RecordInterface : public RecordBase {
 public:
 
     typedef typename Tag::Record Record;
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,TreeIteratorBase> TreeIterator;
     typedef boost::transform_iterator<detail::RecordConverter<Record>,IteratorBase> Iterator;
-    typedef ChildrenView<Tag> Children;
 
     /// @copydoc RecordBase::_getParent
     Record getParent() const {
         return detail::Access::makeRecord<Record>(this->_getParent());
     }
 
-    /// @brief Return a container-like view into the children of this record.
-    Children getChildren(TreeMode mode) const {
-        if (getLinkMode() == PARENT_ID) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "Cannot iterate over children when in PARENT_ID link mode."
-            );
-        }
-        return Children(*this, mode);
-    }
-
-    //@{
-    /**
-     *  @brief Return an iterator that points at the record.
-     *
-     *  Unlike STL containers, records contain the pointers used to implement their iterators,
-     *  and hence can be turned into iterators (as long as isLinked() is true).
-     *
-     *  These are primarily useful as a way to convert between iterators; the most common use
-     *  case is to locate a record by ID using TableInterface::operator[] or TableInterface::find, and then
-     *  using asTreeIterator to switch to a different iteration order.
-     */
-    TreeIterator asTreeIterator(TreeMode mode) const {
-        return TreeIterator(this->_asTreeIterator(mode), detail::RecordConverter<Record>());
-    }
-    Iterator asIterator() const {
-        return Iterator(this->_asIterator(), detail::RecordConverter<Record>());
-    }
-    //@}
-
 protected:
 
     template <typename OtherTag> friend class TableInterface;
-
-    Record _addChild(PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
-        return detail::Access::makeRecord<Record>(this->RecordBase::_addChild(aux));
-    }
-
-    Record _addChild(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
-        return detail::Access::makeRecord<Record>(this->RecordBase::_addChild(id, aux));
-    }
 
     explicit RecordInterface(RecordBase const & other) : RecordBase(other) {}
 

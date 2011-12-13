@@ -80,6 +80,10 @@ public:
         return Key<T>(offset, field);
     }
 
+    static SchemaData const & getData(Schema const & schema) {
+        return *schema._data;
+    }
+
     static void padSchema(Schema & schema, int bytes) {
         schema._edit();
         schema._data->_recordSize += bytes;

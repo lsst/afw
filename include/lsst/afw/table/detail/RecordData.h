@@ -11,31 +11,13 @@
 namespace lsst { namespace afw { namespace table { namespace detail {
 
 struct RecordData : public boost::intrusive::set_base_hook<> {
-
-    struct Links {
-        RecordData * parent;
-        RecordData * child;
-        RecordData * previous;
-        RecordData * next;
-
-        void initialize() {
-            parent = 0;
-            child = 0;
-            previous = 0;
-            next = 0;
-        }
-    };
     
     RecordId id;
     PTR(AuxBase) aux;
-    union {
-        Links links;
-        RecordId parentId;
-    };
 
     bool operator<(RecordData const & other) const { return id < other.id; }
 
-    RecordData() : id(0), aux() { links.initialize(); }
+    RecordData() : id(0), aux() {}
 };
 
 struct CompareRecordIdLess {
@@ -48,8 +30,6 @@ struct CompareRecordIdLess {
 };
 
 typedef boost::intrusive::set<RecordData> RecordSet;
-
-void setupPointers(RecordSet & records, RecordData * & back);
 
 }}}} // namespace lsst::afw::table::detail
 

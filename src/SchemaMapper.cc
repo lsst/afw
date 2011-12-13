@@ -60,6 +60,10 @@ private:
 
 } // anonymous
 
+SchemaMapper::SchemaMapper(Schema const & input) :
+    _data(boost::make_shared<Data>(input))
+{}
+
 void SchemaMapper::_edit() {
     if (!_data.unique()) {
         boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
@@ -138,6 +142,10 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
 }
 
 void SchemaMapper::copyRecord(RecordBase const & input, RecordBase const & output) const {
+    if (_data->_input.hasParentId()) {
+        detail::Access::getData(_data->_output).getParentId(*output._data)
+            = detail::Access::getData(_data->_input).getParentId(*input._data);
+    }
     this->forEach(CopyRecord(input._data, output._data));
 }
 

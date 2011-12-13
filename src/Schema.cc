@@ -130,7 +130,7 @@ Key<Flag> Schema::_addField(Field<Flag> const & field) {
     return item.key;
 }
 
-Schema::Schema() : _data(boost::make_shared<Data>()) {}
+Schema::Schema(bool hasParentId) : _data(boost::make_shared<Data>(hasParentId)) {}
 
 template <typename T>
 SchemaItem<T> Schema::find(std::string const & name) const {

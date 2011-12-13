@@ -58,7 +58,16 @@ public:
     typedef boost::make_variant_over<ItemTypes>::type ItemVariant;
     typedef std::vector<ItemVariant> ItemContainer;
 
-    SchemaData() : _recordSize(sizeof(RecordData)), _lastFlagField(-1), _lastFlagBit(-1), _items() {}
+    RecordId & getParentId(RecordData & record) const {
+        return *reinterpret_cast<RecordId*>(&record + 1);
+    }
+
+    explicit SchemaData(bool hasParentId) :
+        _recordSize(sizeof(RecordData)), _lastFlagField(-1), _lastFlagBit(-1),
+        _hasParentId(hasParentId), _items()
+    {
+        if (hasParentId) _recordSize += sizeof(RecordId);
+    }
 
 private:
 
@@ -84,6 +93,7 @@ private:
     int _recordSize;
     int _lastFlagField;
     int _lastFlagBit;
+    bool _hasParentId;
     ItemContainer _items;
 };
 

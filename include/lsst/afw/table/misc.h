@@ -24,19 +24,6 @@ class Flag;
 //@}
 
 /**
- *  @brief Enum used to specify how a tree iterator works.
- */
-enum TreeMode {
-    NO_NESTING, ///< Iterate over records in one level of tree without descending to children.
-    DEPTH_FIRST ///< Iterate over all (recursive) children of a record before moving onto a sibling.
-};
-
-enum LinkMode {
-    POINTERS,
-    PARENT_ID
-};
-
-/**
  *  @brief Class used to attach arbitrary extra data members to table and record classes.
  *
  *  Final table and record classes that need to additional data members will generally

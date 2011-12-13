@@ -7,54 +7,10 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/RecordInterface.h"
 #include "lsst/afw/table/TableBase.h"
-#include "lsst/afw/table/TreeIteratorBase.h"
 #include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
-
-/**
- *  @brief A view into a table that provides tree-based iterators.
- *
- *  @sa TableInterface::asTree().
- */
-template <typename Tag>
-class TreeView : private TableBase {
-public:
-
-    typedef typename Tag::Table Table;   ///< @brief Table type this is a view into.
-    typedef typename Tag::Record Record; ///< @brief Record type obtained by dereferencing iterators.
-    
-    typedef boost::transform_iterator<detail::RecordConverter<Record>,TreeIteratorBase> Iterator;
-    typedef Iterator iterator;
-    typedef Iterator const_iterator;
-
-    Iterator begin() const {
-        return Iterator(this->_beginTree(_mode), detail::RecordConverter<Record>());
-    }
-    Iterator end() const {
-        return Iterator(this->_endTree(_mode), detail::RecordConverter<Record>());
-    }
-
-    /// @brief Unlink the record pointed at by the given iterator and return an iterator to the next record.
-    Iterator unlink(Iterator const & iter) const {
-        if (iter.base().getMode() != _mode) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "TreeView and iterator modes do not agree."
-            );
-        }
-        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<Record>());
-    }
-
-private:
-
-    template <typename OtherTag> friend class TableInterface;
-
-    TreeView(TableBase const & table, TreeMode mode) : TableBase(table), _mode(mode) {}
-
-    TreeMode _mode;
-};
 
 /**
  *  @brief A facade base class that provides most of the public interface of a table.
@@ -76,17 +32,9 @@ public:
 
     typedef typename Tag::Table Table;
     typedef typename Tag::Record Record;
-    typedef TreeView<Tag> Tree;
     typedef boost::transform_iterator<detail::RecordConverter<Record>,IteratorBase> Iterator;
     typedef Iterator iterator;
     typedef Iterator const_iterator;
-
-    /**
-     *  @brief Return a tree view into the table with the given TreeMode.
-     *
-     *  TreeViews are invalidated when the link mode is set to PARENT_ID.
-     */
-    Tree asTree(TreeMode mode) const { return Tree(*this, mode); }
 
     Iterator begin() const {
         return Iterator(this->_begin(), detail::RecordConverter<Record>());

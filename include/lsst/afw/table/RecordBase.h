@@ -17,7 +17,6 @@ struct TableImpl;
 
 class SchemaMapper;
 class TableBase;
-class TreeIteratorBase;
 class IteratorBase;
 
 /**
@@ -52,12 +51,6 @@ class IteratorBase;
 class RecordBase : protected ModificationFlags {
 public:
 
-    /**
-     *  @brief Return the table's link mode, which describes how records
-     *         are associated with their parents/children/siblings.
-     */
-    LinkMode getLinkMode() const;
-
     /// @brief Return the Schema that holds this record's fields and keys.
     Schema getSchema() const;
 
@@ -66,9 +59,6 @@ public:
 
     /**
      *  @brief Return true if the record has one or more child records.
-     *
-     *  This operation is in constant time if the link mode is POINTERS,
-     *  but linear time if the link mode is PARENT_ID.
      */
     bool hasChildren() const;
 
@@ -76,10 +66,12 @@ public:
     RecordId getId() const { return _data->id; }
 
     /**
+     *  @brief Get the ID of the parent of this record.
+     */
+    RecordId getParentId() const;
+
+    /**
      *  @brief Set the ID of the parent of this record.
-     *
-     *  This operation is only allowed when the link mode is PARENT_ID.
-     *  Will throw LogicErrorException if the link mode is POINTERS.
      */
     void setParentId(RecordId id) const;
 
@@ -192,47 +184,10 @@ protected:
      */
     RecordBase _getParent() const;
 
-    //@{
-    /**
-     *  @brief Return an iterator that points at the record.
-     *
-     *  Unlike STL containers, records contain the pointers used to implement their iterators,
-     *  and hence can be turned into iterators (as long as isLinked() is true).
-     *
-     *  These are primarily useful as a way to convert between iterators; the most common use
-     *  case is to locate a record by ID using TableBase::_get or TableBase::_find, and then
-     *  using _asTreeIterator to switch to a different iteration order.
-     */
-    TreeIteratorBase _asTreeIterator(TreeMode mode) const;
-    IteratorBase _asIterator() const;
-    //@}
-
-    //@{
-    /**
-     *  @brief Return begin and end iterators to the record's children.
-     *
-     *  As would be expected, if the record has no children, _beginChildren and _endChildren will be
-     *  equal (and must not be dereferenced).
-     */
-    TreeIteratorBase _beginChildren(TreeMode mode) const;
-    TreeIteratorBase _endChildren(TreeMode mode) const;
-    //@}
-
-    //@{
-    /**
-     *  @brief Add a new child record to the same table this record belongs to.
-     *
-     *  Will throw LogicErrorException if !isLinked().
-     */
-    RecordBase _addChild(PTR(AuxBase) const & aux = PTR(AuxBase)()) const;
-    RecordBase _addChild(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const;
-    //@}
-
 private:
 
     friend class TableBase;
     friend class IteratorBase;
-    friend class TreeIteratorBase;
     friend class SchemaMapper;
 
     RecordBase() : ModificationFlags(), _data(0), _table() {}

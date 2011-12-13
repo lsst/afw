@@ -39,6 +39,9 @@ public:
     /// @brief Set type returned by describe().
     typedef std::set<FieldDescription> Description;
 
+    /// @brief Return true if the schema constains space for a parent ID field.
+    bool hasParentId() const { return _data->_hasParentId; }
+
     /// @brief Find a SchemaItem in the Schema by name.
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;
@@ -116,7 +119,7 @@ public:
     }
 
     /// @brief Construct an empty Schema.
-    Schema();
+    explicit Schema(bool hasParentId);
 
 private:
 
