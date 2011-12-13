@@ -120,40 +120,26 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %extend lsst::afw::geom::Point<int,2> {
     %template(Point2I) Point<double>;
-    %template(Point2I) Point<int>;
 };
 
 %extend lsst::afw::geom::Point<int,3> {
     %template(Point3I) Point<double>;
-    %template(Point3I) Point<int>;
 };
 
 %extend lsst::afw::geom::Point<double,2> {
     %template(Point2D) Point<int>;
-    %template(Point2D) Point<double>;
 };
 
 %extend lsst::afw::geom::Point<double,3> {
     %template(Point3D) Point<int>;
-    %template(Point3D) Point<double>;
 };
 
 %extend lsst::afw::geom::Extent<double,2> {
     %template(Extent2D) Extent<int>;
-    %template(Extent2D) Extent<double>;
 };
 
 %extend lsst::afw::geom::Extent<double,3> {
     %template(Extent3D) Extent<int>;
-    %template(Extent3D) Extent<double>;
-};
-
-%extend lsst::afw::geom::Extent<int,2> {
-    %template(Extent2I) Extent<int>;
-};
-
-%extend lsst::afw::geom::Extent<int,3> {
-    %template(Extent3I) Extent<int>;
 };
 
 %include "LinearTransform.i"

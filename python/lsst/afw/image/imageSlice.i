@@ -32,7 +32,7 @@
 
 %define %slice(NAME, TYPE, PIXEL_TYPE...)
 
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::Image<PIXEL_TYPE>, lsst::afw::image::ImageSlice<PIXEL_TYPE>);
+%shared_ptr(lsst::afw::image::ImageSlice<PIXEL_TYPE>);
 %template(NAME##TYPE) lsst::afw::image::ImageSlice<PIXEL_TYPE>;
 %template(NAME##TYPE##___add__) lsst::afw::image::operator+<PIXEL_TYPE>;
 %template(NAME##TYPE##___sub__) lsst::afw::image::operator-<PIXEL_TYPE>;
