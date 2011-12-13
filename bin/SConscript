@@ -1,0 +1,5 @@
+# -*- python -*-
+
+from lsst.sconsUtils import targets
+
+targets["bin"] = Program("filter-gcc.cc")

@@ -10,6 +10,7 @@ version.py
 .sconf_temp
 .sconsign.dblite
 config.log
+bin/filter-gcc
 doc/*.tag
 doc/html
 doc/doxygen.conf
