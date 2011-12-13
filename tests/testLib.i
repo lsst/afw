@@ -50,6 +50,7 @@ Various swigged-up C++ classes for testing
 %import "lsst/afw/math/mathLib.i"
 
 %shared_ptr(TestCandidate);
+%shared_ptr(TestCandidateVisitor);
 %shared_ptr(TestImageCandidate);
 
 %inline %{

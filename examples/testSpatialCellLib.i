@@ -52,6 +52,7 @@ Various swigged-up C++ classes for testing
 %import "lsst/afw/math/mathLib.i"
 
 %shared_ptr(ExampleCandidate);
+%shared_ptr(ExampleCandidateVisitor);
 
 %include "testSpatialCell.h"
 

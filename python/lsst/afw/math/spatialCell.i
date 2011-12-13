@@ -75,6 +75,7 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 #include "lsst/afw/math/SpatialCell.h"
 %}
 
+%shared_ptr(lsst::afw::math::CandidateVisitor)
 %shared_ptr(lsst::afw::math::SpatialCellCandidate);
 %shared_ptr(lsst::afw::math::SpatialCell);
 
