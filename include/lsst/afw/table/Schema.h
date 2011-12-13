@@ -40,7 +40,7 @@ public:
     typedef std::set<FieldDescription> Description;
 
     /// @brief Return true if the schema constains space for a parent ID field.
-    bool hasParentId() const { return _data->_hasParentId; }
+    bool hasTree() const { return _data->_hasTree; }
 
     /// @brief Find a SchemaItem in the Schema by name.
     template <typename T>
@@ -119,7 +119,7 @@ public:
     }
 
     /// @brief Construct an empty Schema.
-    explicit Schema(bool hasParentId);
+    explicit Schema(bool hasTree);
 
 private:
 

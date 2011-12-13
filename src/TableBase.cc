@@ -179,7 +179,7 @@ Schema RecordBase::getSchema() const { return _table->schema; }
 RecordBase::~RecordBase() {}
 
 RecordId RecordBase::getParentId() const {
-    if (!_table->schema.hasParentId()) {
+    if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Record's schema has no parent ID."
@@ -189,7 +189,7 @@ RecordId RecordBase::getParentId() const {
 }
 
 void RecordBase::setParentId(RecordId id) const {
-    if (!_table->schema.hasParentId()) {
+    if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Record's schema has no parent ID."
@@ -199,7 +199,7 @@ void RecordBase::setParentId(RecordId id) const {
 }
 
 bool RecordBase::hasParent() const {
-    if (!_table->schema.hasParentId()) {
+    if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Record's schema has no parent ID."
@@ -209,7 +209,7 @@ bool RecordBase::hasParent() const {
 }
 
 bool RecordBase::hasChildren() const {
-    if (!_table->schema.hasParentId()) {
+    if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Record's schema has no parent ID."
@@ -224,7 +224,7 @@ bool RecordBase::hasChildren() const {
 }
 
 RecordBase RecordBase::_getParent() const {
-    if (!_table->schema.hasParentId()) {
+    if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Record's schema has no parent ID."
@@ -248,7 +248,7 @@ RecordBase RecordBase::_getParent() const {
 }
 
 ChildIteratorBase RecordBase::_beginChildren() const {
-    if (!_table->schema.hasParentId()) {
+    if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Record's schema has no parent ID."
@@ -262,7 +262,7 @@ ChildIteratorBase RecordBase::_beginChildren() const {
 }
 
 ChildIteratorBase RecordBase::_endChildren() const {
-    if (!_table->schema.hasParentId()) {
+    if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Record's schema has no parent ID."

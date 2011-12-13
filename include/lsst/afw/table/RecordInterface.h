@@ -57,7 +57,11 @@ public:
         return detail::Access::makeRecord<Record>(this->_getParent());
     }
 
-    /// @brief Return an iterator over the record's children.
+    /**
+     *  @brief Return an iterator over the record's children.
+     *
+     *  @throw LogicErrorException if !getSchema().hasTree().
+     */
     Children getChildren() const { return Children(*this); }
 
 protected:

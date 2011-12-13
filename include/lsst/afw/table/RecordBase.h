@@ -183,7 +183,7 @@ protected:
      *  @brief Return the record's parent.
      *
      *  @throw NotFoundException if !hasParent().
-     *  @throw LogicErrorException if !getSchema().hasParentId().
+     *  @throw LogicErrorException if !getSchema().hasTree().
      */
     RecordBase _getParent() const;
 

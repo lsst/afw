@@ -62,11 +62,11 @@ public:
         return *reinterpret_cast<RecordId*>(&record + 1);
     }
 
-    explicit SchemaData(bool hasParentId) :
+    explicit SchemaData(bool hasTree) :
         _recordSize(sizeof(RecordData)), _lastFlagField(-1), _lastFlagBit(-1),
-        _hasParentId(hasParentId), _items()
+        _hasTree(hasTree), _items()
     {
-        if (hasParentId) _recordSize += sizeof(RecordId);
+        if (hasTree) _recordSize += sizeof(RecordId);
     }
 
 private:
@@ -93,7 +93,7 @@ private:
     int _recordSize;
     int _lastFlagField;
     int _lastFlagBit;
-    bool _hasParentId;
+    bool _hasTree;
     ItemContainer _items;
 };
 
