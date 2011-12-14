@@ -80,6 +80,10 @@ public:
         return Key<T>(offset, field);
     }
 
+    static Key<Flag> makeKey(int offset, int bit) {
+        return Key<Flag>(offset, bit);
+    }
+
     static SchemaData const & getData(Schema const & schema) {
         return *schema._data;
     }

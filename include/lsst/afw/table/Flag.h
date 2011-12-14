@@ -70,7 +70,6 @@ public:
 private:
 
     friend class detail::Access;
-    friend class Schema;
 
     Value getValue(Element * p, PTR(detail::TableImpl) const & table) const {
         return (*p) & (Element(1) << _bit);

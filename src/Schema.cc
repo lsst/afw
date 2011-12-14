@@ -17,6 +17,8 @@
 
 namespace lsst { namespace afw { namespace table {
 
+//----- Miscellaneous Utilities -----------------------------------------------------------------------------
+
 namespace {
 
 std::string join(std::string const & a, std::string const & b) {
@@ -40,6 +42,33 @@ struct Describe {
     explicit Describe(Schema::Description * result_) : result(result_) {}
 
     Schema::Description * result;
+};
+
+struct ExtractDoc : public boost::static_visitor<std::string const &> {
+
+    template <typename T>
+    std::string const & operator()(SchemaItem<T> const & item) const {
+        return item.field.getDoc();
+    }
+
+};
+
+struct ExtractUnits : public boost::static_visitor<std::string const &> {
+
+    template <typename T>
+    std::string const & operator()(SchemaItem<T> const & item) const {
+        return item.field.getUnits();
+    }
+
+};
+
+struct ExtractDescription : public boost::static_visitor<FieldDescription> {
+
+    template <typename T>
+    FieldDescription operator()(SchemaItem<T> const & item) const {
+        return item.field.describe();
+    }
+
 };
 
 struct ExtractOffset : public boost::static_visitor<int> {
@@ -102,12 +131,6 @@ struct ExtractSubItem<T,U,U,true> {
 
 template <typename U>
 struct ExtractItem : public boost::static_visitor<> {
-
-    void operator()(SchemaItem<U> const & item) const {
-        if (name == item.field.getName()) {
-            result.reset(new SchemaItem<U>(item));
-        }
-    }
     
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
@@ -146,22 +169,117 @@ SchemaItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIte
 
 } // anonymous
 
+//----- SchemaData implementation ---------------------------------------------------------------------------
+
 namespace detail {
 
 template <typename T>
 SchemaItem<T> SchemaData::find(std::string const & name) const {
-    ExtractItem<T> extractor(name);
-    for (ItemContainer::const_iterator i = _items.begin(); i != _items.end(); ++i) {
-        boost::apply_visitor(extractor, *i);
-        if (extractor.result) return *extractor.result;
+    NameMap::const_iterator i = _names.lower_bound(name);
+    if (i != _names.end()) {
+        if (i->first == name) {
+            try {
+                return boost::get< SchemaItem<T> >(_items[i->second]);
+            } catch (boost::bad_get & err) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::InvalidParameterException,
+                    (boost::format("Field '%s' does not have the given type.") % name).str()
+                );
+            }
+        }
     }
+    ExtractItem<T> extractor(name);
+    do {
+        --i;
+        boost::apply_visitor(extractor, _items[i->second]);
+        if (extractor.result) return *extractor.result;
+    } while (i != _names.begin());
     throw LSST_EXCEPT(
         lsst::pex::exceptions::NotFoundException,
-        (boost::format("Field with name '%s' not found with the given type.") % name).str()
+        (boost::format("Field or subfield with name '%s' not found with the given type.") % name).str()
     );
 }
 
+template <typename T>
+Key<T> SchemaData::addField(Field<T> const & field) {
+    static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
+    if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
+        );
+    }
+    int padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
+    if (padding != ELEMENT_SIZE) {
+        _recordSize += padding;
+    }
+    SchemaItem<T> item(detail::Access::makeKey(field, _recordSize), field);
+    _recordSize += field.getElementCount() * ELEMENT_SIZE;
+    _items.push_back(item);
+    return item.key;
+}
+
+Key<Flag> SchemaData::addField(Field<Flag> const & field) {
+    static int const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
+    if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
+        );
+    }
+    if (_lastFlagField < 0 || _lastFlagBit >= ELEMENT_SIZE * 8) {
+        int padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
+        if (padding != ELEMENT_SIZE) {
+            _recordSize += padding;
+        }
+        _lastFlagField = _recordSize;
+        _lastFlagBit = 0;
+        _recordSize += field.getElementCount() * ELEMENT_SIZE;
+    }
+    SchemaItem<Flag> item(detail::Access::makeKey(_lastFlagField, _lastFlagBit), field);
+    ++_lastFlagBit;
+    _items.push_back(item);
+    return item.key;
+}
+
+template <typename T>
+void SchemaData::replaceField(Key<T> const & key, Field<T> const & field) {
+    if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
+        );
+    }
+    SchemaItem<T> & item = findByOffset<T>(
+        detail::Access::getOffset(key),
+        _items.begin(),
+        _items.end()
+    );
+    item.field = field;
+}
+
 } // namespace detail
+
+//----- Schema implementation -------------------------------------------------------------------------------
+
+std::set<std::string> Schema::getNames(bool topOnly) const {
+    std::set<std::string> result;
+    if (topOnly) {
+        for (Data::NameMap::iterator i = _data->_names.begin(); i != _data->_names.end(); ++i) {
+            std::size_t dot = i->first.find('.');
+            if (dot == std::string::npos) {
+                result.insert(result.end(), i->first);
+            } else {
+                result.insert(result.end(), i->first.substr(0, dot));
+            }
+        }
+    } else {
+        for (Data::NameMap::iterator i = _data->_names.begin(); i != _data->_names.end(); ++i) {
+            result.insert(result.end(), i->first);
+        }
+    }
+    return result;
+}
 
 void Schema::_edit() {
     if (!_data.unique()) {
@@ -170,40 +288,10 @@ void Schema::_edit() {
     }
 }
 
-// This is separate from the private implementations below to faciliate explicit instantiation.
 template <typename T>
-Key<T> Schema::addField(Field<T> const & field) { return _addField(field); }
-
-template <typename T>
-Key<T> Schema::_addField(Field<T> const & field) {
-    static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
+Key<T> Schema::addField(Field<T> const & field) {
     _edit();
-    int padding = ELEMENT_SIZE - _data->_recordSize % ELEMENT_SIZE;
-    if (padding != ELEMENT_SIZE) {
-        _data->_recordSize += padding;
-    }
-    SchemaItem<T> item(detail::Access::makeKey(field, _data->_recordSize), field);
-    _data->_recordSize += field.getElementCount() * ELEMENT_SIZE;
-    _data->_items.push_back(item);
-    return item.key;
-}
-
-Key<Flag> Schema::_addField(Field<Flag> const & field) {
-    static int const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
-    _edit();
-    if (_data->_lastFlagField < 0 || _data->_lastFlagBit >= ELEMENT_SIZE * 8) {
-        int padding = ELEMENT_SIZE - _data->_recordSize % ELEMENT_SIZE;
-        if (padding != ELEMENT_SIZE) {
-            _data->_recordSize += padding;
-        }
-        _data->_lastFlagField = _data->_recordSize;
-        _data->_lastFlagBit = 0;
-        _data->_recordSize += field.getElementCount() * ELEMENT_SIZE;
-    }
-    SchemaItem<Flag> item(Key<Flag>(_data->_lastFlagField, _data->_lastFlagBit), field);
-    ++_data->_lastFlagBit;
-    _data->_items.push_back(item);
-    return item.key;
+    return _data->addField(field);
 }
 
 Schema::Schema(bool hasTree) : _data(boost::make_shared<Data>(hasTree)) {}
@@ -220,17 +308,53 @@ SchemaItem<T> Schema::find(Key<T> const & key) const {
 template <typename T>
 void Schema::replaceField(Key<T> const & key, Field<T> const & field) {
     _edit();
-    SchemaItem<T> & item = findByOffset<T>(
-        detail::Access::getOffset(key),
-        _data->_items.begin(),
-        _data->_items.end()
-    );
-    item.field = field;
+    _data->replaceField(key, field);
 }
 
 Schema::Description Schema::describe() const {
     Description result;
     forEach(Describe(&result));
+    return result;
+}
+
+//----- SubSchema implementation ----------------------------------------------------------------------------
+
+template <typename T>
+SchemaItem<T> SubSchema::find(std::string const & name) const {
+    return _data->find<T>(join(_name, name));
+}
+
+SubSchema SubSchema::operator[](std::string const & name) const {
+    return SubSchema(_data, join(_name, name));
+}
+
+std::set<std::string> SubSchema::getNames(bool topOnly) const {
+    std::set<std::string> result;
+    if (topOnly) {
+        for (Data::NameMap::iterator i = _data->_names.lower_bound(_name); i != _data->_names.end(); ++i) {
+            if (i->first.compare(0, _name.size(), _name) != 0) break;
+            std::size_t dot = i->first.find('.', _name.size() + 1);
+            if (dot == std::string::npos) {
+                result.insert(
+                    result.end(),
+                    i->first.substr(_name.size() + 1, i->first.size() - _name.size())
+                );
+            } else {
+                result.insert(
+                    result.end(),
+                    i->first.substr(_name.size() + 1, dot - _name.size() - 1)
+                );
+            }
+        }
+    } else {
+        for (Data::NameMap::iterator i = _data->_names.lower_bound(_name); i != _data->_names.end(); ++i) {
+            if (i->first.compare(0, _name.size(), _name) != 0) break;
+            result.insert(
+                result.end(),
+                i->first.substr(_name.size() + 1, i->first.size() - _name.size() - 1)
+            );
+        }
+    }
     return result;
 }
 

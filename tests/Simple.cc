@@ -1,5 +1,5 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE catalog-table
+#define BOOST_TEST_MODULE table-simple
 #include "boost/test/unit_test.hpp"
 
 #include <iostream>
@@ -298,22 +298,7 @@ BOOST_AUTO_TEST_CASE(testFlags) {
             r.set(flagKeys[i], r[doubleKeys[i]] < 0.5);
         }
         for (int i = 0; i < nFields; ++i) {
-            std::cerr << i << " ";
             BOOST_CHECK_EQUAL(r.get(flagKeys[i]), r[doubleKeys[i]] < 0.5);
         }
     }
-}
-
-BOOST_AUTO_TEST_CASE(testKeyExtraction) {
-
-    Schema schema(false);
-    Key< Point<float> > p_k = schema.addField< Point<float> >("a.p", "point");
-    SchemaItem< Point<float> > p_si = schema.find< Point<float> >("a.p");
-    BOOST_CHECK( p_si.key == p_k );
-    BOOST_CHECK_EQUAL( p_si.field.getName(), "a.p" );
-    SchemaItem<float> x_si = schema.find<float>("a.p.x");
-    BOOST_CHECK( p_k.getX() == x_si.key );
-    BOOST_CHECK_EQUAL( x_si.field.getName(), "a.p.x" );
-    BOOST_CHECK_EQUAL( x_si.field.getDoc(), "point" );
-
 }
