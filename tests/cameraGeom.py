@@ -478,6 +478,24 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(amp.getId().getName(), "ID7")
         self.assertEqual(amp.getParent().getId().getName(), ccdName)
 
+        if display:
+            for raft in camera:
+                raft = cameraGeom.cast_Raft(raft)
+                for ccd in raft:
+                    ccd = cameraGeom.cast_Ccd(ccd)
+
+                    width, height = ccd.getAllPixels(True).getDimensions()
+                    llc = afwGeom.PointD(0,0)
+                    lrc = afwGeom.PointD(width, 0)
+                    ulc = afwGeom.PointD(0, height)
+                    urc = afwGeom.PointD(width, height)
+                    transform = ccd.getGlobalTransform()
+
+                    print (raft.getId().getName(), ccd.getId().getName(),
+                           transform(llc), transform(lrc), transform(ulc), transform(urc))
+
+
+
     def testDefectBase(self):
         """Test DefectBases"""
 
