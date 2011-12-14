@@ -175,6 +175,17 @@ void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
     _trimmedAllPixels.shift(offset);
 }
 
+/// Return the transformation used to transform pixel coordinates to
+afwGeom::AffineTransform cameraGeom::Detector::getGlobalTransform() const
+{
+    double angle = getOrientation().getNQuarter() * afwGeom::HALFPI;
+    return afwGeom::AffineTransform::makeTranslation(afwGeom::Extent2D(getCenter())) *
+        afwGeom::AffineTransform::makeScaling(getPixelSize()) *
+        afwGeom::AffineTransform::makeRotation(angle) *
+        afwGeom::AffineTransform::makeTranslation(afwGeom::Extent2D(getAllPixels(true).getDimensions()) / -2);
+}
+
+
 /************************************************************************************************************/
 /**
  * We're rotating an Image through an integral number of quarter turns,

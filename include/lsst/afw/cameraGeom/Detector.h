@@ -48,12 +48,12 @@ namespace cameraGeom {
 /**
  * Describe a detector (e.g. a CCD)
  */
-    class Detector
+class Detector
 #if !defined(SWIG)
         : public lsst::daf::base::Citizen,
           public boost::enable_shared_from_this<Detector>
 #endif
-    {
+{
 public:
     typedef boost::shared_ptr<Detector> Ptr;
     typedef boost::shared_ptr<const Detector> ConstPtr;
@@ -163,6 +163,8 @@ public:
     lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
     virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
     virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
+
+    lsst::afw::geom::AffineTransform getGlobalTransform() const;
     
     virtual void shift(int dx, int dy);
     //
