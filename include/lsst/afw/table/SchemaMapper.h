@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_SchemaMapper_h_INCLUDED
 #define AFW_TABLE_SchemaMapper_h_INCLUDED
 
-#include "lsst/afw/table/detail/SchemaMapperData.h"
+#include "lsst/afw/table/detail/SchemaMapperImpl.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -19,16 +19,16 @@ class SchemaMapper {
 public:
 
     /// @brief Return the input schema (copy-on-write).
-    Schema const getInputSchema() const { return _data->_input; }
+    Schema const getInputSchema() const { return _impl->_input; }
 
     /// @brief Return the output schema (copy-on-write).
-    Schema const getOutputSchema() const { return _data->_output; }
+    Schema const getOutputSchema() const { return _impl->_output; }
 
     /// @brief Add a new field to the output Schema that is not connected to the input Schema.
     template <typename T>
     Key<T> addOutputField(Field<T> const & newField) {
         _edit();
-        return _data->_output.addField(newField);
+        return _impl->_output.addField(newField);
     }
 
     /**
@@ -97,8 +97,8 @@ public:
      */
     template <typename F>
     void forEach(F func) const {
-        Data::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
-        std::for_each(_data->_map.begin(), _data->_map.end(), visitor);
+        Impl::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
+        std::for_each(_impl->_map.begin(), _impl->_map.end(), visitor);
     }
 
     /// @brief Construct a mapper from the given input Schema.  
@@ -124,14 +124,14 @@ private:
         Predicate predicate;
     };
 
-    typedef detail::SchemaMapperData Data;
+    typedef detail::SchemaMapperImpl Impl;
 
-    boost::shared_ptr<Data> _data;
+    boost::shared_ptr<Impl> _impl;
 };
 
 template <typename Predicate>
 void SchemaMapper::addMappingsWhere(Predicate predicate) {
-    _data->_input.forEach(AddMappingsWhere<Predicate>(this, predicate));
+    _impl->_input.forEach(AddMappingsWhere<Predicate>(this, predicate));
 }
 
 }}} // namespace lsst::afw::table

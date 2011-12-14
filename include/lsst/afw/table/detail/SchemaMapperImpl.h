@@ -1,8 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_SchemaMapperData_h_INCLUDED
-#define AFW_TABLE_DETAIL_SchemaMapperData_h_INCLUDED
-
-
+#ifndef AFW_TABLE_DETAIL_SchemaMapperImpl_h_INCLUDED
+#define AFW_TABLE_DETAIL_SchemaMapperImpl_h_INCLUDED
 
 #include <map>
 #include <algorithm>
@@ -20,7 +18,7 @@ class SchemaMapper;
 
 namespace detail {
 
-class SchemaMapperData {
+class SchemaMapperImpl {
 private:
 
     struct MakeKeyPair {
@@ -36,7 +34,7 @@ public:
     typedef boost::make_variant_over<KeyPairTypes>::type KeyPairVariant;
     typedef std::vector<KeyPairVariant> KeyPairMap;
 
-    explicit SchemaMapperData(Schema const & input) : _input(input), _output(input.hasTree()) {}
+    explicit SchemaMapperImpl(Schema const & input) : _input(input), _output(input.hasTree()) {}
 
 private:
 
@@ -68,4 +66,4 @@ private:
 
 }}}} // namespace lsst::afw::table::detail
 
-#endif // !AFW_TABLE_DETAIL_SchemaMapperData_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_SchemaMapperImpl_h_INCLUDED

@@ -15,7 +15,7 @@ struct SwapKeyPair : public boost::static_visitor<> {
         std::swap(pair.first, pair.second);
     }
 
-    void operator()(detail::SchemaMapperData::KeyPairVariant & v) const {
+    void operator()(detail::SchemaMapperImpl::KeyPairVariant & v) const {
         boost::apply_visitor(*this, v);
     }
 
@@ -29,7 +29,7 @@ struct KeyPairCompare : public boost::static_visitor<bool> {
         return _target == pair.first;
     }
     
-    bool operator()(detail::SchemaMapperData::KeyPairVariant const & v) const {
+    bool operator()(detail::SchemaMapperImpl::KeyPairVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }
 
@@ -61,32 +61,32 @@ private:
 } // anonymous
 
 SchemaMapper::SchemaMapper(Schema const & input) :
-    _data(boost::make_shared<Data>(input))
+    _impl(boost::make_shared<Impl>(input))
 {}
 
 void SchemaMapper::_edit() {
-    if (!_data.unique()) {
-        boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
-        _data.swap(data);
+    if (!_impl.unique()) {
+        boost::shared_ptr<Impl> impl(boost::make_shared<Impl>(*_impl));
+        _impl.swap(impl);
     }
 }
 
 template <typename T>
 Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
     _edit();
-    typename Data::KeyPairMap::iterator i = std::find_if(
-        _data->_map.begin(),
-        _data->_map.end(),
+    typename Impl::KeyPairMap::iterator i = std::find_if(
+        _impl->_map.begin(),
+        _impl->_map.end(),
         KeyPairCompare<T>(inputKey)
     );
-    Field<T> inputField = _data->_input.find(inputKey).field;
-    if (i != _data->_map.end()) {
+    Field<T> inputField = _impl->_input.find(inputKey).field;
+    if (i != _impl->_map.end()) {
         Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
-        _data->_output.replaceField(outputKey, inputField);
+        _impl->_output.replaceField(outputKey, inputField);
         return outputKey;
     } else {
-        Key<T> outputKey = _data->_output.addField(inputField);
-        _data->_map.insert(i, std::make_pair(inputKey, outputKey));
+        Key<T> outputKey = _impl->_output.addField(inputField);
+        _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
 }
@@ -94,45 +94,45 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
 template <typename T>
 Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field) {
     _edit();
-    typename Data::KeyPairMap::iterator i = std::find_if(
-        _data->_map.begin(),
-        _data->_map.end(),
+    typename Impl::KeyPairMap::iterator i = std::find_if(
+        _impl->_map.begin(),
+        _impl->_map.end(),
         KeyPairCompare<T>(inputKey)
     );
-    if (i != _data->_map.end()) {
+    if (i != _impl->_map.end()) {
         Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
-        _data->_output.replaceField(outputKey, field);
+        _impl->_output.replaceField(outputKey, field);
         return outputKey;
     } else {
-        Key<T> outputKey = _data->_output.addField(field);
-        _data->_map.insert(i, std::make_pair(inputKey, outputKey));
+        Key<T> outputKey = _impl->_output.addField(field);
+        _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
 }
 
 void SchemaMapper::invert() {
     _edit();
-    std::swap(_data->_input, _data->_output);
-    std::for_each(_data->_map.begin(), _data->_map.end(), SwapKeyPair());
+    std::swap(_impl->_input, _impl->_output);
+    std::for_each(_impl->_map.begin(), _impl->_map.end(), SwapKeyPair());
 }
 
 template <typename T>
 bool SchemaMapper::isMapped(Key<T> const & inputKey) const {
     return std::count_if(
-        _data->_map.begin(),
-        _data->_map.end(),
+        _impl->_map.begin(),
+        _impl->_map.end(),
         KeyPairCompare<T>(inputKey)
     );
 }
 
 template <typename T>
 Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
-    typename Data::KeyPairMap::iterator i = std::find_if(
-        _data->_map.begin(),
-        _data->_map.end(),
+    typename Impl::KeyPairMap::iterator i = std::find_if(
+        _impl->_map.begin(),
+        _impl->_map.end(),
         KeyPairCompare<T>(inputKey)
     );
-    if (i == _data->_map.end()) {
+    if (i == _impl->_map.end()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::NotFoundException,
             "Input Key is not mapped."
@@ -142,9 +142,9 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
 }
 
 void SchemaMapper::copyRecord(RecordBase const & input, RecordBase const & output) const {
-    if (_data->_input.hasTree()) {
-        detail::Access::getParentId(_data->_output, *output._data)
-            = detail::Access::getParentId(_data->_input, *input._data);
+    if (_impl->_input.hasTree()) {
+        detail::Access::getParentId(_impl->_output, *output._data)
+            = detail::Access::getParentId(_impl->_input, *input._data);
     }
     this->forEach(CopyRecord(input._data, output._data));
 }
