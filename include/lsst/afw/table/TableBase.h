@@ -137,6 +137,45 @@ protected:
         std::string const & mode = "w"
     ) const;
 
+    /**
+     *  @brief Insert a range of existing records into the table.
+     *
+     *  The Schema of the records obtained through the iterator must be equal to the 
+     *  Schema of the table.
+     *
+     *  The records will be deep-copied.  If non-unique IDs are encountered, the existing record
+     *  with that ID will be overwritten.
+     */
+    template <typename IterT>
+    void _insert(IterT first, IterT last) const;
+
+    /**
+     *  @brief Insert a range of records into the table, using a SchemaMapper to only copy certain fields.
+     *
+     *  The records will be deep-copied.  If non-unique IDs are encountered, the existing record
+     *  with that ID will be overwritten.
+     */
+    template <typename IterT>
+    void _insert(IterT first, IterT last, SchemaMapper const & mapper) const;
+
+    /**
+     *  @brief Insert an existing record into the table.
+     *
+     *  The Schema of the given record must be equal to the Schema of the table.
+     *
+     *  The record will be deep-copied.  If non-unique IDs are encountered, the existing record
+     *  with that ID will be overwritten.
+     */
+    void _insert(RecordBase const & record) const;
+
+    /**
+     *  @brief Insert an existing record into the table, using a SchemaMapper to only copy certain fields.
+     *
+     *  The record will be deep-copied.  If non-unique IDs are encountered, the existing record
+     *  with that ID will be overwritten.
+     */
+    void _insert(RecordBase const & record, SchemaMapper const & mapper) const;
+
     //@{
     /**
      *  @brief Remove the record pointed at by the given iterator.

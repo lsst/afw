@@ -51,4 +51,17 @@ BOOST_AUTO_TEST_CASE(testSchema) {
     names.insert("c");
     BOOST_CHECK( schema["a"].getNames(true) == names );
 
+    Schema schema2(schema);
+    BOOST_CHECK( schema == schema2 );
+    schema2.addField<double>("q", "another double");
+    BOOST_CHECK( schema != schema2 );
+
+    Schema schema3(false);
+    schema3.addField<int>("i", "int");
+    schema3.addField<float>("f", "float");
+    schema3.addField<double>("d", "double");
+    schema3.addField< Point<float> >("p", "point");
+
+    BOOST_CHECK( schema3 == schema );
+
 }

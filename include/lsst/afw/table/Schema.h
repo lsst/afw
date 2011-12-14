@@ -162,6 +162,17 @@ public:
         std::for_each(_impl->getItems().begin(), _impl->getItems().end(), visitor);
     }
 
+    //@{
+    /**
+     *  @brief Equality comparison
+     *
+     *  Schemas are considered equal if they sequence of keys are identical (same types
+     *  with the same offsets); names and descriptions of fields are not considered.
+     */
+    bool operator==(Schema const & other) const;
+    bool operator!=(Schema const & other) const { return !this->operator==(other); }
+    //@}
+
     /// @brief Construct an empty Schema.
     explicit Schema(bool hasTree);
 

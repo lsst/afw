@@ -44,15 +44,6 @@ struct Describe {
     Schema::Description * result;
 };
 
-struct ExtractDescription : public boost::static_visitor<FieldDescription> {
-
-    template <typename T>
-    FieldDescription operator()(SchemaItem<T> const & item) const {
-        return item.field.describe();
-    }
-
-};
-
 struct ExtractOffset : public boost::static_visitor<int> {
 
     typedef int result_type;
@@ -64,6 +55,32 @@ struct ExtractOffset : public boost::static_visitor<int> {
 
     result_type operator()(detail::SchemaImpl::ItemVariant const & v) const {
         return boost::apply_visitor(*this, v);
+    }
+
+};
+
+struct CompareItemKeys {
+
+    typedef bool result_type;
+
+    struct Helper : public boost::static_visitor<bool> {
+        
+        template <typename T>
+        bool operator()(SchemaItem<T> const & a) const {
+            SchemaItem<T> const * b = boost::get< SchemaItem<T> >(other);
+            return (b) && a.key == b->key;
+        }
+
+        explicit Helper(detail::SchemaImpl::ItemVariant const * other_) : other(other_) {}
+
+        detail::SchemaImpl::ItemVariant const * other;
+    };
+
+    result_type operator()(
+        detail::SchemaImpl::ItemVariant const & a,
+        detail::SchemaImpl::ItemVariant const & b
+    ) const {
+        return boost::apply_visitor(Helper(&b), a);
     }
 
 };
@@ -410,6 +427,16 @@ Schema::Description Schema::describe() const {
     Description result;
     forEach(Describe(&result));
     return result;
+}
+
+bool Schema::operator==(Schema const & other) const {
+    if (_impl == other._impl) return true;
+    if (_impl->getItems().size() != other._impl->getItems().size()) return false;
+    return std::equal(
+        _impl->getItems().begin(), _impl->getItems().end(),
+        other._impl->getItems().begin(),
+        CompareItemKeys()
+    );
 }
 
 Schema::Schema(bool hasTree) : _impl(boost::make_shared<Impl>(hasTree)) {}
