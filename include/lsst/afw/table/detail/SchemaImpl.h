@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_DETAIL_SchemaData_h_INCLUDED
-#define AFW_TABLE_DETAIL_SchemaData_h_INCLUDED
+#ifndef AFW_TABLE_DETAIL_SchemaImpl_h_INCLUDED
+#define AFW_TABLE_DETAIL_SchemaImpl_h_INCLUDED
 
 #include <vector>
 #include <algorithm>
@@ -42,11 +42,11 @@ class Access;
  *  in a source file.  But putting all the details here draws a clear line between what
  *  users should look at (Schema) and what they shouldn't (this).
  *
- *  Because Schema holds SchemaData by shared pointer, one SchemaData can be shared between
- *  multiple Schemas (and SchemaProxys), which use copy-on-write to create a new SchemaData
+ *  Because Schema holds SchemaImpl by shared pointer, one SchemaImpl can be shared between
+ *  multiple Schemas (and SchemaProxys), which use copy-on-write to create a new SchemaImpl
  *  if the pointer they have isn't unique.
  */
-class SchemaData {
+class SchemaImpl {
 private:
 
     struct MakeItem {
@@ -63,12 +63,23 @@ public:
     typedef std::vector<ItemVariant> ItemContainer;
     typedef std::map<std::string,int> NameMap;
 
+    bool hasTree() const { return _hasTree; }
+
+    int getRecordSize() const { return _recordSize; }
+
     RecordId & getParentId(RecordData & record) const {
         return *reinterpret_cast<RecordId*>(&record + 1);
     }
 
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;
+
+    template <typename T>
+    SchemaItem<T> find(Key<T> const & key) const;
+
+    std::set<std::string> getNames(bool topOnly) const;
+
+    std::set<std::string> getNames(bool topOnly, std::string const & prefix) const;
 
     template <typename T>
     Key<T> addField(Field<T> const & field);
@@ -78,7 +89,9 @@ public:
     template <typename T>
     void replaceField(Key<T> const & key, Field<T> const & field);
 
-    explicit SchemaData(bool hasTree) :
+    ItemContainer const & getItems() const { return _items; }
+
+    explicit SchemaImpl(bool hasTree) :
         _recordSize(sizeof(RecordData)), _lastFlagField(-1), _lastFlagBit(-1),
         _hasTree(hasTree), _items()
     {
@@ -86,6 +99,8 @@ public:
     }
 
 private:
+
+    friend class detail::Access;
 
     template <typename F>
     struct VisitorWrapper : public boost::static_visitor<> {
@@ -103,10 +118,6 @@ private:
         F _func;
     };
 
-    friend class table::Schema;
-    friend class table::SubSchema;
-    friend class detail::Access;
-
     int _recordSize;
     int _lastFlagField;
     int _lastFlagBit;
@@ -117,4 +128,4 @@ private:
 
 }}}} // namespace lsst::afw::table::detail
 
-#endif // !AFW_TABLE_DETAIL_SchemaData_h_INCLUDED
+#endif // !AFW_TABLE_DETAIL_SchemaImpl_h_INCLUDED

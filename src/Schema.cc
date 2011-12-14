@@ -44,24 +44,6 @@ struct Describe {
     Schema::Description * result;
 };
 
-struct ExtractDoc : public boost::static_visitor<std::string const &> {
-
-    template <typename T>
-    std::string const & operator()(SchemaItem<T> const & item) const {
-        return item.field.getDoc();
-    }
-
-};
-
-struct ExtractUnits : public boost::static_visitor<std::string const &> {
-
-    template <typename T>
-    std::string const & operator()(SchemaItem<T> const & item) const {
-        return item.field.getUnits();
-    }
-
-};
-
 struct ExtractDescription : public boost::static_visitor<FieldDescription> {
 
     template <typename T>
@@ -80,28 +62,53 @@ struct ExtractOffset : public boost::static_visitor<int> {
         return detail::Access::getOffset(item.key);
     }
 
-    result_type operator()(detail::SchemaData::ItemVariant const & v) const {
+    result_type operator()(detail::SchemaImpl::ItemVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }
 
 };
 
+/*
+ * This template class provides the implementation for the ExtractItemByX functors,
+ * which construct SchemaItems on the fly for subfields.  The default implementation
+ * does nothing and always fails.
+ */
 template <typename T, typename U, typename V=typename Field<T>::Element,
           bool HasSubfields = KeyBase<T>::HAS_NAMED_SUBFIELDS>
-struct ExtractSubItem {
-    static void apply(
-        std::string const & name, boost::scoped_ptr< SchemaItem<U> > & result, SchemaItem<T> const & item
-    ) {}
+struct ExtractItem {
+
+    static void finish(int index, boost::scoped_ptr< SchemaItem<U> > & result, SchemaItem<T> const & item) {}
+
+    static int apply(std::string const & name, SchemaItem<T> const & item) { return -1; }
+
+    static int apply(int offset, SchemaItem<T> const & item) { return -1; }
+
 };
 
-// This specialization only matches when U is the Element type of T and T has named subfields.
+/*
+ * This specialization of ExtractItem, which is the only one that can succeed, only matches
+ * when U is the Element type of T and T has named subfields.
+ */
 template <typename T, typename U>
-struct ExtractSubItem<T,U,U,true> {
+struct ExtractItem<T,U,U,true> {
 
-    static void apply(
-        std::string const & name, boost::scoped_ptr< SchemaItem<U> > & result, SchemaItem<T> const & item
+    static void finish(int index, boost::scoped_ptr< SchemaItem<U> > & result, SchemaItem<T> const & item) {
+        result.reset(
+            new SchemaItem<U>(
+                detail::Access::extractElement(item.key, index),
+                Field<U>(
+                    join(item.field.getName(), Key<T>::subfields[index]),
+                    item.field.getDoc(),
+                    item.field.getUnits()
+                )
+            )
+        );
+    }
+
+    static int apply(
+        std::string const & name, SchemaItem<T> const & item
     ) {
-        if (name.size() <= item.field.getName().size()) return;
+        if (name.size() <= item.field.getName().size()) return -1;
 
         if ( // compare invocation is equivalent to "name.startswith(item.field.getName())" in Python
             name.compare(0, item.field.getName().size(), item.field.getName()) == 0
@@ -112,74 +119,68 @@ struct ExtractSubItem<T,U,U,true> {
             int const nElements = item.field.getElementCount();
             for (int i = 0; i < nElements; ++i) {
                 if (name.compare(position, size, Key<T>::subfields[i]) == 0) {
-                    result.reset(
-                        new SchemaItem<U>(
-                            detail::Access::extractElement(item.key, i),
-                            Field<U>(
-                                join(item.field.getName(), Key<T>::subfields[i]),
-                                item.field.getDoc(),
-                                item.field.getUnits()
-                            )
-                        )
-                    );
+                    return i;
                 }
             }
         }
+        return -1;
+    }
+
+    static int apply(
+        int offset, SchemaItem<T> const & item
+    ) {
+        int n = (offset - detail::Access::getOffset(item.key)) / sizeof(U);
+        if (n >= 0 && n < item.key.getElementCount()) {
+            return n;
+        }
+        return -1;
     }
 
 };
 
 template <typename U>
-struct ExtractItem : public boost::static_visitor<> {
+struct ExtractItemByName : public boost::static_visitor<> {
     
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
-        ExtractSubItem<T,U>::apply(name, result, item);
+        int n = ExtractItem<T,U>::apply(name, item);
+        if (n >= 0) ExtractItem<T,U>::finish(n, result, item);
     }
 
-    explicit ExtractItem(std::string const & name_) : name(name_) {}
+    explicit ExtractItemByName(std::string const & name_) : name(name_) {}
 
     std::string name;
     mutable boost::scoped_ptr< SchemaItem<U> > result;
 };
 
-template <typename T, typename VariantIterator>
-SchemaItem<T> & findByOffset(int offset, VariantIterator const begin, VariantIterator const end) {
-    typedef boost::transform_iterator<ExtractOffset,VariantIterator> Iterator;
-    Iterator i = std::lower_bound(
-        Iterator(begin),
-        Iterator(end), 
-        offset
-    );
-    if (*i != offset) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::NotFoundException,
-            "Key not found in Schema."
-        );
+template <typename U>
+struct ExtractItemByOffset : public boost::static_visitor<> {
+    
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        int n = ExtractItem<T,U>::apply(offset, item);
+        if (n >= 0) ExtractItem<T,U>::finish(n, result, item);
     }
-    try {
-        return boost::get< SchemaItem<T> >(*i.base());
-    } catch (boost::bad_get & err) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            "Field with the given key offset does not have the given type."
-        );
-    }
+
+    explicit ExtractItemByOffset(int offset_) : offset(offset_) {}
+
+    int offset;
+    mutable boost::scoped_ptr< SchemaItem<U> > result;
 };
 
 } // anonymous
 
-//----- SchemaData implementation ---------------------------------------------------------------------------
+//----- SchemaImpl implementation ---------------------------------------------------------------------------
 
 namespace detail {
 
 template <typename T>
-SchemaItem<T> SchemaData::find(std::string const & name) const {
+SchemaItem<T> SchemaImpl::find(std::string const & name) const {
     NameMap::const_iterator i = _names.lower_bound(name);
     if (i != _names.end()) {
         if (i->first == name) {
             try {
-                return boost::get< SchemaItem<T> >(_items[i->second]);
+                return boost::get< SchemaItem<T> const >(_items[i->second]);
             } catch (boost::bad_get & err) {
                 throw LSST_EXCEPT(
                     lsst::pex::exceptions::InvalidParameterException,
@@ -188,12 +189,12 @@ SchemaItem<T> SchemaData::find(std::string const & name) const {
             }
         }
     }
-    ExtractItem<T> extractor(name);
-    do {
+    ExtractItemByName<T> extractor(name);
+    if (i != _names.begin()) {
         --i;
         boost::apply_visitor(extractor, _items[i->second]);
         if (extractor.result) return *extractor.result;
-    } while (i != _names.begin());
+    }
     throw LSST_EXCEPT(
         lsst::pex::exceptions::NotFoundException,
         (boost::format("Field or subfield with name '%s' not found with the given type.") % name).str()
@@ -201,7 +202,89 @@ SchemaItem<T> SchemaData::find(std::string const & name) const {
 }
 
 template <typename T>
-Key<T> SchemaData::addField(Field<T> const & field) {
+SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
+    typedef boost::transform_iterator<ExtractOffset,ItemContainer::const_iterator> Iterator;
+    int const offset = detail::Access::getOffset(key);
+    Iterator i = std::lower_bound(
+        Iterator(_items.begin()),
+        Iterator(_items.end()), 
+        offset
+    );
+    if (*i == offset) {
+        try {
+            return boost::get< SchemaItem<T> const >(*i.base());
+        } catch (boost::bad_get & err) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                "Field with the given key does not have the given type."
+            );
+        }
+    }
+    ExtractItemByOffset<T> extractor(offset);
+    if (i.base() != _items.begin()) {
+        --i;
+        boost::apply_visitor(extractor, *i.base());
+        if (extractor.result) return *extractor.result;
+    }
+    throw LSST_EXCEPT(
+        lsst::pex::exceptions::NotFoundException,
+        "Field or subfield with the given key not found with the given type."
+    );
+
+    // TODO
+}
+
+std::set<std::string> SchemaImpl::getNames(bool topOnly) const {
+    std::set<std::string> result;
+    if (topOnly) {
+        for (NameMap::const_iterator i = _names.begin(); i != _names.end(); ++i) {
+            std::size_t dot = i->first.find('.');
+            if (dot == std::string::npos) {
+                result.insert(result.end(), i->first);
+            } else {
+                result.insert(result.end(), i->first.substr(0, dot));
+            }
+        }
+    } else {
+        for (NameMap::const_iterator i = _names.begin(); i != _names.end(); ++i) {
+            result.insert(result.end(), i->first);
+        }
+    }
+    return result;
+}
+
+std::set<std::string> SchemaImpl::getNames(bool topOnly, std::string const & prefix) const {
+    std::set<std::string> result;
+    if (topOnly) {
+        for (NameMap::const_iterator i = _names.lower_bound(prefix); i != _names.end(); ++i) {
+            if (i->first.compare(0, prefix.size(), prefix) != 0) break;
+            std::size_t dot = i->first.find('.', prefix.size() + 1);
+            if (dot == std::string::npos) {
+                result.insert(
+                    result.end(),
+                    i->first.substr(prefix.size() + 1, i->first.size() - prefix.size())
+                );
+            } else {
+                result.insert(
+                    result.end(),
+                    i->first.substr(prefix.size() + 1, dot - prefix.size() - 1)
+                );
+            }
+        }
+    } else {
+        for (NameMap::const_iterator i = _names.lower_bound(prefix); i != _names.end(); ++i) {
+            if (i->first.compare(0, prefix.size(), prefix) != 0) break;
+            result.insert(
+                result.end(),
+                i->first.substr(prefix.size() + 1, i->first.size() - prefix.size() - 1)
+            );
+        }
+    }
+    return result;
+}
+
+template <typename T>
+Key<T> SchemaImpl::addField(Field<T> const & field) {
     static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
     if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
         throw LSST_EXCEPT(
@@ -219,7 +302,7 @@ Key<T> SchemaData::addField(Field<T> const & field) {
     return item.key;
 }
 
-Key<Flag> SchemaData::addField(Field<Flag> const & field) {
+Key<Flag> SchemaImpl::addField(Field<Flag> const & field) {
     static int const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
     if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
         throw LSST_EXCEPT(
@@ -243,72 +326,84 @@ Key<Flag> SchemaData::addField(Field<Flag> const & field) {
 }
 
 template <typename T>
-void SchemaData::replaceField(Key<T> const & key, Field<T> const & field) {
-    if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
-        );
+void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
+    NameMap::iterator j = _names.find(field.getName());
+    SchemaItem<T> * item = 0;
+    if (j != _names.end()) {
+        // The field name is already present in the Schema; see if it's the one we're replacing.
+        // If we can get the old item with this, we don't need to update the name map at all.
+        item = boost::get< SchemaItem<T> >(&_items[j->second]);
+        if (!item || key != item->key) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                (boost::format("Field with name '%s' already present in schema with a different key.")
+                 % field.getName()).str()
+            );
+        }
     }
-    SchemaItem<T> & item = findByOffset<T>(
-        detail::Access::getOffset(key),
-        _items.begin(),
-        _items.end()
-    );
-    item.field = field;
+    if (!item) { // Need to find the original item by key, since it's a new name.
+        typedef boost::transform_iterator<ExtractOffset,ItemContainer::iterator> Iterator;
+        int const offset = detail::Access::getOffset(key);
+        Iterator i = std::lower_bound(
+            Iterator(_items.begin()),
+            Iterator(_items.end()),
+            offset
+        );
+        if (*i != offset) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::NotFoundException,
+                "Key not found in Schema."
+            );
+        }
+        item = boost::get< SchemaItem<T> >(&(*i.base()));
+        if (!item) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                "Field with the given key does not have the given type."
+            );
+        }
+        j = _names.find(item->field.getName());
+        _names.insert(j, std::pair<std::string,int>(field.getName(), j->second));
+        _names.erase(j);
+    }
+    item->field = field;
 }
 
 } // namespace detail
 
 //----- Schema implementation -------------------------------------------------------------------------------
 
-std::set<std::string> Schema::getNames(bool topOnly) const {
-    std::set<std::string> result;
-    if (topOnly) {
-        for (Data::NameMap::iterator i = _data->_names.begin(); i != _data->_names.end(); ++i) {
-            std::size_t dot = i->first.find('.');
-            if (dot == std::string::npos) {
-                result.insert(result.end(), i->first);
-            } else {
-                result.insert(result.end(), i->first.substr(0, dot));
-            }
-        }
-    } else {
-        for (Data::NameMap::iterator i = _data->_names.begin(); i != _data->_names.end(); ++i) {
-            result.insert(result.end(), i->first);
-        }
+void Schema::_edit() {
+    if (!_impl.unique()) {
+        boost::shared_ptr<Impl> data(boost::make_shared<Impl>(*_impl));
+        _impl.swap(data);
     }
-    return result;
 }
 
-void Schema::_edit() {
-    if (!_data.unique()) {
-        boost::shared_ptr<Data> data(boost::make_shared<Data>(*_data));
-        _data.swap(data);
-    }
+std::set<std::string> Schema::getNames(bool topOnly) const {
+    return _impl->getNames(topOnly);
+}
+
+template <typename T>
+SchemaItem<T> Schema::find(std::string const & name) const {
+    return _impl->find<T>(name);
+}
+
+template <typename T>
+SchemaItem<T> Schema::find(Key<T> const & key) const {
+    return _impl->find(key);
 }
 
 template <typename T>
 Key<T> Schema::addField(Field<T> const & field) {
     _edit();
-    return _data->addField(field);
-}
-
-Schema::Schema(bool hasTree) : _data(boost::make_shared<Data>(hasTree)) {}
-
-template <typename T>
-SchemaItem<T> Schema::find(Key<T> const & key) const {
-    return findByOffset<T>(
-        detail::Access::getOffset(key),
-        _data->_items.begin(),
-        _data->_items.end()
-    );
+    return _impl->addField(field);
 }
 
 template <typename T>
 void Schema::replaceField(Key<T> const & key, Field<T> const & field) {
     _edit();
-    _data->replaceField(key, field);
+    _impl->replaceField(key, field);
 }
 
 Schema::Description Schema::describe() const {
@@ -317,45 +412,21 @@ Schema::Description Schema::describe() const {
     return result;
 }
 
+Schema::Schema(bool hasTree) : _impl(boost::make_shared<Impl>(hasTree)) {}
+
 //----- SubSchema implementation ----------------------------------------------------------------------------
 
 template <typename T>
 SchemaItem<T> SubSchema::find(std::string const & name) const {
-    return _data->find<T>(join(_name, name));
+    return _impl->find<T>(join(_name, name));
 }
 
 SubSchema SubSchema::operator[](std::string const & name) const {
-    return SubSchema(_data, join(_name, name));
+    return SubSchema(_impl, join(_name, name));
 }
 
 std::set<std::string> SubSchema::getNames(bool topOnly) const {
-    std::set<std::string> result;
-    if (topOnly) {
-        for (Data::NameMap::iterator i = _data->_names.lower_bound(_name); i != _data->_names.end(); ++i) {
-            if (i->first.compare(0, _name.size(), _name) != 0) break;
-            std::size_t dot = i->first.find('.', _name.size() + 1);
-            if (dot == std::string::npos) {
-                result.insert(
-                    result.end(),
-                    i->first.substr(_name.size() + 1, i->first.size() - _name.size())
-                );
-            } else {
-                result.insert(
-                    result.end(),
-                    i->first.substr(_name.size() + 1, dot - _name.size() - 1)
-                );
-            }
-        }
-    } else {
-        for (Data::NameMap::iterator i = _data->_names.lower_bound(_name); i != _data->_names.end(); ++i) {
-            if (i->first.compare(0, _name.size(), _name) != 0) break;
-            result.insert(
-                result.end(),
-                i->first.substr(_name.size() + 1, i->first.size() - _name.size() - 1)
-            );
-        }
-    }
-    return result;
+    return _impl->getNames(topOnly, _name);
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

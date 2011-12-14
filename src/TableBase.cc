@@ -142,7 +142,7 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, PTR(AuxBase)
     p->id = id;
     p->aux = aux;
     if (parent) {
-        detail::Access::getData(schema).getParentId(*p) = parent->id;
+        detail::Access::getParentId(schema, *p) = parent->id;
     }
     records.insert_commit(*p, insertData);
     return p;
@@ -155,7 +155,7 @@ void TableImpl::unlink(RecordData * record) {
             "Record has already been unlinked."
         );
     }
-    detail::Access::getData(schema).getParentId(*record) = 0;
+    detail::Access::getParentId(schema, *record) = 0;
     consolidated = 0;
 }
 
@@ -178,7 +178,7 @@ RecordId RecordBase::getParentId() const {
             "Record's schema has no parent ID."
         );
     }
-    return detail::Access::getData(_table->schema).getParentId(*_data);
+    return detail::Access::getParentId(_table->schema, *_data);
 }
 
 void RecordBase::setParentId(RecordId id) const {
@@ -188,7 +188,7 @@ void RecordBase::setParentId(RecordId id) const {
             "Record's schema has no parent ID."
         );
     }
-    detail::Access::getData(_table->schema).getParentId(*_data) = id;
+    detail::Access::getParentId(_table->schema, *_data) = id;
 }
 
 bool RecordBase::hasParent() const {
@@ -198,7 +198,7 @@ bool RecordBase::hasParent() const {
             "Record's schema has no parent ID."
         );
     }
-    return detail::Access::getData(_table->schema).getParentId(*_data) != 0;
+    return detail::Access::getParentId(_table->schema, *_data) != 0;
 }
 
 bool RecordBase::hasChildren() const {
@@ -209,7 +209,7 @@ bool RecordBase::hasChildren() const {
         );
     }
     for (detail::RecordSet::iterator i = _table->records.begin(); i != _table->records.end(); ++i) {
-        if (detail::Access::getData(_table->schema).getParentId(*i) == _data->id) {
+        if (detail::Access::getParentId(_table->schema, *i) == _data->id) {
             return true;
         }
     }
@@ -223,7 +223,7 @@ RecordBase RecordBase::_getParent() const {
             "Record's schema has no parent ID."
         );
     }
-    RecordId parentId = detail::Access::getData(_table->schema).getParentId(*_data);
+    RecordId parentId = detail::Access::getParentId(_table->schema, *_data);
     if (!parentId) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::NotFoundException,
@@ -307,8 +307,8 @@ void TableBase::consolidate(int extraCapacity) {
         detail::RecordData * newRecord = newImpl->block->makeNextRecord();
         newRecord->id = i->id;
         newRecord->aux = i->aux;
-        detail::Access::getData(_impl->schema).getParentId(*newRecord)
-            = detail::Access::getData(_impl->schema).getParentId(*i);
+        detail::Access::getParentId(_impl->schema, *newRecord)
+            = detail::Access::getParentId(_impl->schema, *i);
         std::memcpy(
             reinterpret_cast<char *>(newRecord) + dataOffset,
             reinterpret_cast<char const *>(&(*i)) + dataOffset,

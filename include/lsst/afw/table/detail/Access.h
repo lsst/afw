@@ -6,7 +6,7 @@
 
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/Schema.h"
-#include "lsst/afw/table/detail/SchemaData.h"
+#include "lsst/afw/table/detail/SchemaImpl.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -84,13 +84,13 @@ public:
         return Key<Flag>(offset, bit);
     }
 
-    static SchemaData const & getData(Schema const & schema) {
-        return *schema._data;
+    static RecordId & getParentId(Schema const & schema, RecordData & record) {
+        return schema._impl->getParentId(record);
     }
 
     static void padSchema(Schema & schema, int bytes) {
         schema._edit();
-        schema._data->_recordSize += bytes;
+        schema._impl->_recordSize += bytes;
     }
 
     template <typename RecordT>

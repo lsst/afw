@@ -143,8 +143,8 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
 
 void SchemaMapper::copyRecord(RecordBase const & input, RecordBase const & output) const {
     if (_data->_input.hasTree()) {
-        detail::Access::getData(_data->_output).getParentId(*output._data)
-            = detail::Access::getData(_data->_input).getParentId(*input._data);
+        detail::Access::getParentId(_data->_output, *output._data)
+            = detail::Access::getParentId(_data->_input, *input._data);
     }
     this->forEach(CopyRecord(input._data, output._data));
 }

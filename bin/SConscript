@@ -1,5 +1,5 @@
 # -*- python -*-
 
-from lsst.sconsUtils import targets
+from lsst.sconsUtils import targets, env
 
-targets["bin"] = Program("filter-gcc.cc")
+targets["bin"] = env.Program("filter-gcc.cc", LIBS=["boost_regex"])

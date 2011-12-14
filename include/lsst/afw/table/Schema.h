@@ -10,7 +10,7 @@
 #include "lsst/ndarray.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
-#include "lsst/afw/table/detail/SchemaData.h"
+#include "lsst/afw/table/detail/SchemaImpl.h"
 #include "lsst/afw/table/Flag.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -25,7 +25,13 @@ class SubSchema;
  *  important ingredient in creating a table.
  *
  *  Because offsets for fields are assigned when the field is added to the Schema, 
- *  Schemas do not support removing fields.
+ *  Schemas do not support removing fields, though they do allow renaming.
+ *
+ *  Field names in Schemas are expected to be dot-separated names (e.g. 'a.b.c').  The SubSchema
+ *  class and Schema::operator[] provide a heirarchical interface to these names, but are
+ *  implemented entirely as string splitting/joining operations that ultimately forward to
+ *  member functions that operate on the fully-qualified field name, so there is no requirement
+ *  that names be separated by periods, and no performance advantage to using a SubSchema.
  *
  *  A SchemaMapper object can be used to define a relationship between two Schemas to be used
  *  when copying values from one table to another or loading/saving selected fields to disk.
@@ -35,22 +41,33 @@ class SubSchema;
  *  converted to return by value to ensure proper memory management and encapsulation.
  */
 class Schema {
-    typedef detail::SchemaData Data;
+    typedef detail::SchemaImpl Impl;
 public:
 
     /// @brief Set type returned by describe().
     typedef std::set<FieldDescription> Description;
 
     /// @brief Return true if the schema constains space for a parent ID field.
-    bool hasTree() const { return _data->_hasTree; }
+    bool hasTree() const { return _impl->hasTree(); }
 
-    /// @brief Find a SchemaItem in the Schema by name.
+    /**
+     *  @brief Find a SchemaItem in the Schema by name.
+     *
+     *  Names corresponding to named subfields are accepted, and will
+     *  return a SchemaItem whose field is copied from the parent field
+     *  with only the name changed.
+     */
     template <typename T>
-    SchemaItem<T> find(std::string const & name) const {
-        return _data->find<T>(name);
-    }
+    SchemaItem<T> find(std::string const & name) const;
 
-    /// @brief Find a SchemaItem in the Schema by key.
+    /**
+     *  @brief Find a SchemaItem in the Schema by name.
+     *
+     *  Keys corresponding to named subfields are accepted, and will
+     *  return a SchemaItem whose field is copied from the parent field
+     *  with only the name changed.  Keys corresponding to unnamed
+     *  subfields (such as array elements) are not accepted.
+     */
     template <typename T>
     SchemaItem<T> find(Key<T> const & key) const;
 
@@ -85,7 +102,7 @@ public:
     Description describe() const;
 
     /// @brief Return the raw size of a record in bytes.
-    int getRecordSize() const { return _data->_recordSize; }
+    int getRecordSize() const { return _impl->getRecordSize(); }
 
     /**
      *  @brief Add a new field to the Schema, and return the associated Key.
@@ -141,8 +158,8 @@ public:
      */
     template <typename F>
     void forEach(F func) const {
-        Data::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
-        std::for_each(_data->_items.begin(), _data->_items.end(), visitor);
+        Impl::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
+        std::for_each(_impl->getItems().begin(), _impl->getItems().end(), visitor);
     }
 
     /// @brief Construct an empty Schema.
@@ -156,12 +173,7 @@ private:
     /// @brief Copy on write; should be called by all mutators.
     void _edit();
 
-    template <typename T>
-    Key<T> _addField(Field<T> const & field);    
-
-    Key<Flag> _addField(Field<Flag> const & field);
-
-    boost::shared_ptr<Data> _data;
+    boost::shared_ptr<Impl> _impl;
 };
 
 /**
@@ -198,7 +210,7 @@ private:
  *  @endcode
  */
 class SubSchema {
-    typedef detail::SchemaData Data;
+    typedef detail::SchemaImpl Impl;
 public:
     
     /// @brief Find a nested SchemaItem by name.
@@ -216,25 +228,23 @@ public:
     std::set<std::string> getNames(bool topOnly=false) const;
 
     template <typename T>
-    operator Key<T>() const { return _data->find<T>(_name).key; }
+    operator Key<T>() const { return _impl->find<T>(_name).key; }
 
     template <typename T>
-    operator Field<T>() const { return _data->find<T>(_name).field; }
+    operator Field<T>() const { return _impl->find<T>(_name).field; }
 
 private:
 
     friend class Schema;
 
-    SubSchema(PTR(Data) const & data, std::string const & name) :
-        _data(data), _name(name)
-    {}
+    SubSchema(PTR(Impl) const & data, std::string const & name) : _impl(data), _name(name) {}
 
-    boost::shared_ptr<Data> _data;
+    boost::shared_ptr<Impl> _impl;
     std::string _name;
 };
 
 inline SubSchema Schema::operator[](std::string const & name) const {
-    return SubSchema(_data, name);
+    return SubSchema(_impl, name);
 }
 
 }}} // namespace lsst::afw::table
