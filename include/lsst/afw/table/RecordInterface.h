@@ -8,9 +8,17 @@
 #include "lsst/afw/table/RecordBase.h"
 #include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/detail/Access.h"
 
+
 namespace lsst { namespace afw { namespace table {
+
+template <typename RecordT>
+struct MappedRecordProxy {
+    RecordT record;
+    SchemaMapper mapper;
+};
 
 template <typename Tag>
 class ChildView : private RecordBase {
@@ -64,6 +72,38 @@ public:
      */
     Children getChildren() const { return Children(*this); }
 
+    /**
+     *  @brief Deep assignment.
+     *
+     *  The record ID is not copied.
+     *
+     *  @throw lsst::pex::exceptions::LogicErrorException if other.getSchema() != this->getSchema().
+     *
+     *  Syntax is intended to mimic afw::Image::operator<<=.
+     *
+     *  The fact that this is a const member function is admittedly weird, but it makes sense
+     *  if you think about it (see the docs for RecordBase).
+     */
+    Record const & operator<<=(Record const & other) const {
+        if (other != *this)
+            this->_copyFrom(other);
+        return static_cast<Record const &>(*this);
+    }
+
+    /**
+     *  @brief Deep assignment through a SchemaMapper.
+     *
+     *  The MappedRecordProxy is a bit of syntactic sugar that allows assignment through
+     *  a SchemaMapper to be written as:
+     *  @code
+     *  outputRecord <<= mapper << inputRecord;
+     *  @endcode
+     *
+     *  The fact that this is a const member function is admittedly weird, but it makes sense
+     *  if you think about it (see the docs for RecordBase).
+     */
+    Record const & operator<<=(MappedRecordProxy<Record> const & other) const;
+
 protected:
 
     template <typename OtherTag> friend class TableInterface;
@@ -75,6 +115,20 @@ protected:
     void operator=(RecordInterface const & other) { RecordBase::operator=(other); }
 
 };
+
+template <typename Tag>
+inline MappedRecordProxy<typename Tag::Record>
+operator<<(SchemaMapper const & mapper, RecordInterface<Tag> const & record) {
+    MappedRecordProxy<typename Tag::Record> proxy = { mapper, record };
+    return proxy;
+}
+
+template <typename Tag>
+inline typename Tag::Record const &
+RecordInterface<Tag>::operator<<=(MappedRecordProxy<typename Tag::Record> const & proxy) const {
+    this->_copyFrom(proxy.record, proxy.mapper);
+    return static_cast<Record const &>(*this);
+}
 
 }}} // namespace lsst::afw::table
 

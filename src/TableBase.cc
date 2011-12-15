@@ -8,13 +8,43 @@
 #include "lsst/afw/table/RecordBase.h"
 #include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/IteratorBase.h"
+#include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table { namespace detail {
 
-//----- Block definition and implementation -----------------------------------------------------------------
-
 namespace {
+
+//----- Copy functor for copying with mapper ----------------------------------------------------------------
+
+void copyRecord(RecordData const * inputRecord, RecordData * outputRecord, Schema const & schema) {
+    std::memcpy(
+        reinterpret_cast<char *>(outputRecord) + sizeof(RecordData),
+        reinterpret_cast<char const*>(inputRecord) + sizeof(RecordData),
+        schema.getRecordSize() - sizeof(RecordData)
+    );  
+}
+
+struct CopyValue {
+
+    template <typename U>
+    void operator()(Key<U> const & inputKey, Key<U> const & outputKey) const {
+        Access::copyValue(
+            inputKey, _inputRecord,
+            outputKey, _outputRecord
+        );
+    }
+
+    CopyValue(RecordData const * inputRecord, RecordData * outputRecord) :
+        _inputRecord(inputRecord), _outputRecord(outputRecord)
+    {}
+
+private:
+    RecordData const * _inputRecord;
+    RecordData * _outputRecord;
+};
+
+//----- Block definition and implementation -----------------------------------------------------------------
 
 class Block : public ndarray::Manager {
 public:
@@ -98,7 +128,12 @@ struct TableImpl : private boost::noncopyable {
         }
     }
 
-    RecordData * addRecord(RecordId id, RecordData * parent, PTR(AuxBase) const & aux);
+    RecordData * addRecord(
+        RecordSet::iterator const & hint,
+        RecordId id,
+        PTR(AuxBase) const & aux,
+        bool returnExisting
+    );
 
     void unlink(RecordData * record);
 
@@ -126,9 +161,16 @@ void TableImpl::addBlock(int blockRecordCount) {
     block.swap(newBlock);
 }
 
-RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, PTR(AuxBase) const & aux) {
+RecordData * TableImpl::addRecord(
+    RecordSet::iterator const & hint,
+    RecordId id,
+    PTR(AuxBase) const & aux,
+    bool returnExisting
+) {
     RecordSet::insert_commit_data insertData;
-    if (!records.insert_check(id, CompareRecordIdLess(), insertData).second) {
+    std::pair<RecordSet::iterator,bool> i = records.insert_check(hint, id, CompareRecordIdLess(), insertData);
+    if (!i.second) {
+        if (returnExisting) return &*i.first;
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
             (boost::format("Record ID '%lld' is not unique.") % id).str()
@@ -141,9 +183,6 @@ RecordData * TableImpl::addRecord(RecordId id, RecordData * parent, PTR(AuxBase)
     assert(p != 0);
     p->id = id;
     p->aux = aux;
-    if (parent) {
-        detail::Access::getParentId(schema, *p) = parent->id;
-    }
     records.insert_commit(*p, insertData);
     return p;
 }
@@ -254,6 +293,40 @@ ChildIteratorBase RecordBase::_beginChildren() const {
     );
 }
 
+void RecordBase::_copyFrom(RecordBase const & other) const {
+    assertBit(CAN_SET_FIELD);
+    if (other.getSchema() != _table->schema) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Input record's schema does not match output record's Schema."
+        );
+    }
+    _data->aux = other._data->aux;
+    detail::copyRecord(other._data, _data, _table->schema);
+}
+
+void RecordBase::_copyFrom(RecordBase const & other, SchemaMapper const & mapper) const {
+    assertBit(CAN_SET_FIELD);
+    if (other.getSchema() != mapper.getInputSchema()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Input record's schema does not match mapper's input Schema."
+        );
+    }
+    if (_table->schema != mapper.getOutputSchema()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Output record's schema does not match mapper's output Schema."
+        );
+    }
+    if (_table->schema.hasTree() && other.getSchema().hasTree()) {
+        detail::Access::getParentId(_table->schema, *_data)
+            = detail::Access::getParentId(_table->schema, *other._data);
+    }
+    _data->aux = other._data->aux;
+    mapper.forEach(detail::CopyValue(other._data, _data));
+}
+
 ChildIteratorBase RecordBase::_endChildren() const {
     if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
@@ -301,19 +374,11 @@ void TableBase::consolidate(int extraCapacity) {
             _impl->aux
         );
     newImpl->addBlock(_impl->records.size() + extraCapacity);
-    int const dataOffset = sizeof(detail::RecordData);
-    int const dataSize = _impl->schema.getRecordSize() - dataOffset;
     for (detail::RecordSet::iterator i = _impl->records.begin(); i != _impl->records.end(); ++i) {
         detail::RecordData * newRecord = newImpl->block->makeNextRecord();
         newRecord->id = i->id;
         newRecord->aux = i->aux;
-        detail::Access::getParentId(_impl->schema, *newRecord)
-            = detail::Access::getParentId(_impl->schema, *i);
-        std::memcpy(
-            reinterpret_cast<char *>(newRecord) + dataOffset,
-            reinterpret_cast<char const *>(&(*i)) + dataOffset,
-            dataSize
-        );
+        detail::copyRecord(&*i, newRecord, _impl->schema);
         newImpl->records.insert(newImpl->records.end(), *newRecord);
     }
     _impl.swap(newImpl);
@@ -371,9 +436,29 @@ RecordBase TableBase::_addRecord(PTR(AuxBase) const & aux) const {
 
 RecordBase TableBase::_addRecord(RecordId id, PTR(AuxBase) const & aux) const {
     assertBit(CAN_ADD_RECORD);
-    detail::RecordData * p = _impl->addRecord(id, 0, aux);
+    detail::RecordData * p = _impl->addRecord(_impl->records.end(), id, aux, false);
     _impl->idFactory->notify(id);
     return RecordBase(p, _impl, *this);
+}
+
+IteratorBase TableBase::_insert(IteratorBase const & hint, RecordBase const & record) const {
+    assertBit(CAN_ADD_RECORD);
+    assertBit(CAN_SET_FIELD);
+    detail::RecordData * p = _impl->addRecord(hint.base(), record._data->id, record._data->aux, true);
+    IteratorBase result(_impl->records.s_iterator_to(*p), _impl, *this);
+    result->_copyFrom(record);
+    return result;
+}
+
+IteratorBase TableBase::_insert(
+    IteratorBase const & hint, RecordBase const & record, SchemaMapper const & mapper
+) const {
+    assertBit(CAN_ADD_RECORD);
+    assertBit(CAN_SET_FIELD);
+    detail::RecordData * p = _impl->addRecord(hint.base(), record._data->id, record._data->aux, true);
+    IteratorBase result(_impl->records.s_iterator_to(*p), _impl, *this);
+    result->_copyFrom(record, mapper);
+    return result;
 }
 
 TableBase::TableBase(

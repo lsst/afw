@@ -109,7 +109,7 @@ public:
     template <typename T> 
     typename Field<T>::Reference operator[](Key<T> const & key) const {
         assertBit(CAN_SET_FIELD);
-        return detail::Access::getReference(key, _data, _table);
+        return detail::Access::getReference(key, _data);
     }
     
     /**
@@ -119,7 +119,7 @@ public:
      */
     template <typename T>
     typename Field<T>::Value get(Key<T> const & key) const {
-        return detail::Access::getValue(key, _data, _table);
+        return detail::Access::getValue(key, _data);
     }
 
     /**
@@ -135,7 +135,7 @@ public:
     template <typename T, typename U>
     void set(Key<T> const & key, U const & value) const {
         assertBit(CAN_SET_FIELD);
-        detail::Access::setValue(key, _data, value, _table);
+        detail::Access::setValue(key, _data, value);
     }
 
     /**
@@ -190,11 +190,33 @@ protected:
     ChildIteratorBase _beginChildren() const;
     ChildIteratorBase _endChildren() const;
 
+    /**
+     *  @brief Copy all field values from another record to this.
+     *
+     *  The assignment operator for records are shallow; this is essentially a deep assignment
+     *  implementation, used by RecordInterface::operator<<=.
+     *
+     *  The record ID is not copied.
+     *
+     *  @throw lsst::pex::exceptions::LogicErrorException if other.getSchema() != this->getSchema().
+     */
+    void _copyFrom(RecordBase const & other) const;
+
+    /**
+     *  @brief Copy selected field values from another record to this, using a mapper.
+     *
+     *  The assignment operator for records are shallow; this is essentially a deep assignment
+     *  implementation, used by RecordInterface::operator<<=.
+     *
+     *  @throw lsst::pex::exceptions::LogicErrorException if the mapper's input and output
+     *         Schemas do not match the schemas of this and other.
+     */
+    void _copyFrom(RecordBase const & other, SchemaMapper const & mapper) const;
+
 private:
 
     friend class TableBase;
     friend class IteratorBase;
-    friend class SchemaMapper;
 
     RecordBase() : ModificationFlags(), _data(0), _table() {}
 

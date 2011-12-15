@@ -39,29 +39,10 @@ private:
     Key<T> const & _target;
 };
 
-struct CopyRecord {
-
-    template <typename U>
-    void operator()(Key<U> const & inputKey, Key<U> const & outputKey) const {
-        detail::Access::copyValue(
-            inputKey, _inputRecord,
-            outputKey, _outputRecord
-        );
-    }
-
-    CopyRecord(detail::RecordData * inputRecord, detail::RecordData * outputRecord) :
-        _inputRecord(inputRecord), _outputRecord(outputRecord)
-    {}
-
-private:
-    detail::RecordData * _inputRecord;
-    detail::RecordData * _outputRecord;
-};
-
 } // anonymous
 
-SchemaMapper::SchemaMapper(Schema const & input) :
-    _impl(boost::make_shared<Impl>(input))
+SchemaMapper::SchemaMapper(Schema const & input, bool outputHasTree) :
+    _impl(boost::make_shared<Impl>(input, outputHasTree))
 {}
 
 void SchemaMapper::_edit() {
@@ -139,14 +120,6 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
         );
     }
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
-}
-
-void SchemaMapper::copyRecord(RecordBase const & input, RecordBase const & output) const {
-    if (_impl->_input.hasTree()) {
-        detail::Access::getParentId(_impl->_output, *output._data)
-            = detail::Access::getParentId(_impl->_input, *input._data);
-    }
-    this->forEach(CopyRecord(input._data, output._data));
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

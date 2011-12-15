@@ -71,12 +71,11 @@ private:
 
     friend class detail::Access;
 
-    Value getValue(Element * p, PTR(detail::TableImpl) const & table) const {
+    Value getValue(Element const * p) const {
         return (*p) & (Element(1) << _bit);
     }
 
-    void setValue(Element * p, Value v, PTR(detail::TableImpl) const & table) const { 
-
+    void setValue(Element * p, Value v) const { 
         if (v) {
             *p |= (Element(1) << _bit);
         } else {

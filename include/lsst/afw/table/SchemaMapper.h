@@ -72,16 +72,6 @@ public:
     Key<T> getMapping(Key<T> const & inputKey) const;
 
     /**
-     *  @brief Copy values from one record according to the mapping.
-     *
-     *  IDs, parent/child relationships and auxiliary data are not copied.
-     *
-     *  @note the fact that the output record is passed by const reference is weird but intentional;
-     *  see the documentation for RecordBase for more information.
-     */
-    void copyRecord(RecordBase const & input, RecordBase const & output) const;
-
-    /**
      *  @brief Call the given functor for each key pair in the mapper.
      *
      *  Function objects should have a template and/or overloaded operator()
@@ -102,7 +92,7 @@ public:
     }
 
     /// @brief Construct a mapper from the given input Schema.  
-    explicit SchemaMapper(Schema const & input);
+    explicit SchemaMapper(Schema const & input, bool outputHasTree);
 
 private:
 

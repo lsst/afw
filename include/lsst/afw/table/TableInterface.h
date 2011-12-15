@@ -2,7 +2,11 @@
 #ifndef AFW_TABLE_TableInterface_h_INCLUDED
 #define AFW_TABLE_TableInterface_h_INCLUDED
 
+#include <iterator>
+
 #include "boost/iterator/transform_iterator.hpp"
+#include "boost/type_traits/is_convertible.hpp"
+#include "boost/mpl/assert.hpp"
 
 #include "lsst/base.h"
 #include "lsst/afw/table/RecordInterface.h"
@@ -51,6 +55,63 @@ public:
     /// @copydoc TableBase::_find
     Iterator find(RecordId id) const {
         return Iterator(this->_find(id), detail::RecordConverter<Record>());
+    }
+
+    /// @copydoc TableBase::_insert(IteratorBase const &, RecordBase const & record) const
+    Iterator insert(Iterator const & hint, Record const & record) const {
+        return Iterator(this->_insert(hint.base(), record), detail::RecordConverter<Record>());
+    }
+
+    /// @copydoc TableBase::_insert(IteratorBase const &, RecordBase const & record) const
+    Iterator insert(Record const & record) const {
+        return insert(end(), record);
+    }
+
+    /// @copydoc TableBase::_insert(IteratorBase const &, RecordBase const &, SchemaMapper const &) const
+    Iterator insert(Iterator const & hint, Record const & record, SchemaMapper const & mapper) const {
+        return Iterator(this->_insert(hint.base(), record, mapper), detail::RecordConverter<Record>());
+    }
+
+    /// @copydoc TableBase::_insert(IteratorBase const &, RecordBase const & record) const
+    Iterator insert(Record const & record, SchemaMapper const & mapper) const {
+        return insert(end(), record, mapper);
+    }
+
+    /**
+     *  @brief Insert a range of existing records into the table.
+     *
+     *  The Schema of the records obtained through the iterator must be equal to the 
+     *  Schema of the table.
+     *
+     *  The record will be deep-copied, aside from auxiliary data (which will be shallow-copied).
+     *  If non-unique IDs are encountered, the existing record with that ID will be overwritten.
+     */
+    template <typename IterT>
+    void insert(IterT first, IterT const & last) const {
+        // must dereference to Record, not RecordBase
+        BOOST_MPL_ASSERT(
+            (boost::is_convertible<typename std::iterator_traits<IterT>::value_type*, Record const *>)
+        );
+        for (IteratorBase hint = this->_end(); first != last; ++first) {
+            hint = _insert(hint, *first);
+        }
+    }
+
+    /**
+     *  @brief Insert a range of records into the table, using a SchemaMapper to only copy certain fields.
+     *
+     *  The record will be deep-copied, aside from auxiliary data (which will be shallow-copied).
+     *  If non-unique IDs are encountered, the existing record with that ID will be overwritten.
+     */
+    template <typename IterT>
+    void insert(IterT first, IterT const & last, SchemaMapper const & mapper) const {
+        // must dereference to Record, not RecordBase
+        BOOST_MPL_ASSERT(
+            (boost::is_convertible<typename std::iterator_traits<IterT>::value_type*, Record const *>)
+        );
+        for (IteratorBase hint = this->_end(); first != last; ++first) {
+            hint = _insert(hint, *first, mapper);
+        }
     }
 
     /// @copydoc TableBase::_get

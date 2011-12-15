@@ -138,43 +138,39 @@ protected:
     ) const;
 
     /**
-     *  @brief Insert a range of existing records into the table.
-     *
-     *  The Schema of the records obtained through the iterator must be equal to the 
-     *  Schema of the table.
-     *
-     *  The records will be deep-copied.  If non-unique IDs are encountered, the existing record
-     *  with that ID will be overwritten.
-     */
-    template <typename IterT>
-    void _insert(IterT first, IterT last) const;
-
-    /**
-     *  @brief Insert a range of records into the table, using a SchemaMapper to only copy certain fields.
-     *
-     *  The records will be deep-copied.  If non-unique IDs are encountered, the existing record
-     *  with that ID will be overwritten.
-     */
-    template <typename IterT>
-    void _insert(IterT first, IterT last, SchemaMapper const & mapper) const;
-
-    /**
      *  @brief Insert an existing record into the table.
+     *
+     *  The optional initial "hint" argument is analogous to the hint argument in std::set::insert
+     *  or std::map::insert; a good hint makes insertion a constant-time operation rather than
+     *  logarithmic.
      *
      *  The Schema of the given record must be equal to the Schema of the table.
      *
-     *  The record will be deep-copied.  If non-unique IDs are encountered, the existing record
-     *  with that ID will be overwritten.
+     *  The record will be deep-copied, aside from auxiliary data (which will be shallow-copied).
+     *  If non-unique IDs are encountered, the existing record with that ID will be overwritten.
+     *
+     *  @return an iterator to the record just added (or overwritten).
      */
-    void _insert(RecordBase const & record) const;
+    IteratorBase _insert(IteratorBase const & hint, RecordBase const & record) const;
 
     /**
      *  @brief Insert an existing record into the table, using a SchemaMapper to only copy certain fields.
      *
-     *  The record will be deep-copied.  If non-unique IDs are encountered, the existing record
-     *  with that ID will be overwritten.
+     *  The optional initial "hint" argument is analogous to the hint argument in std::set::insert
+     *  or std::map::insert; a good hint makes insertion a constant-time operation rather than
+     *  logarithmic.
+     *
+     *  The mapper's input Schema must match that of the given record, while the output Schema must match
+     *  the input record.
+     *
+     *  The record will be deep-copied, aside from auxiliary data (which will be shallow-copied).
+     *  If non-unique IDs are encountered, the existing record with that ID will be overwritten.
+     *
+     *  @return an iterator to the record just added (or overwritten).
      */
-    void _insert(RecordBase const & record, SchemaMapper const & mapper) const;
+    IteratorBase _insert(
+        IteratorBase const & hint, RecordBase const & record, SchemaMapper const & mapper
+    ) const;
 
     //@{
     /**

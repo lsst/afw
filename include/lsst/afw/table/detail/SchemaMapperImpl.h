@@ -34,7 +34,7 @@ public:
     typedef boost::make_variant_over<KeyPairTypes>::type KeyPairVariant;
     typedef std::vector<KeyPairVariant> KeyPairMap;
 
-    explicit SchemaMapperImpl(Schema const & input) : _input(input), _output(input.hasTree()) {}
+    SchemaMapperImpl(Schema const & input, bool outputHasTree) : _input(input), _output(outputHasTree) {}
 
 private:
 

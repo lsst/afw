@@ -22,47 +22,51 @@ public:
 
     template <typename T>
     static typename Key<T>::Reference
-    getReference(Key<T> const & key, void * buf, PTR(TableImpl) const & table) {
+    getReference(Key<T> const & key, void * buf) {
         return key.getReference(
             reinterpret_cast<typename Key<T>::Element*>(
                 reinterpret_cast<char *>(buf) + key._offset
-            ),
-            table
+            )
         );
     }
 
     template <typename T>
-    static typename Key<T>::Value getValue(Key<T> const & key, void * buf, PTR(TableImpl) const & table) {
+    static typename Key<T>::Value getValue(Key<T> const & key, void const * buf) {
         return key.getValue(
-            reinterpret_cast<typename Key<T>::Element*>(
-                reinterpret_cast<char *>(buf) + key._offset
-            ),
-            table
+            reinterpret_cast<typename Key<T>::Element const*>(
+                reinterpret_cast<char const *>(buf) + key._offset
+            )
         );
     }
 
     template <typename T, typename Value>
-    static void setValue(Key<T> const & key, void * buf, Value const & value, PTR(TableImpl) const & table) {
+    static void setValue(Key<T> const & key, void * buf, Value const & value) {
         key.setValue(
             reinterpret_cast<typename Key<T>::Element*>(
                 reinterpret_cast<char *>(buf) + key._offset
             ),
-            value,
-            table
+            value
         );
     }
 
     template <typename T>
     static void copyValue(
-        Key<T> const & inputKey, void * inputBuf,
+        Key<T> const & inputKey, void const * inputBuf,
         Key<T> const & outputKey, void * outputBuf
     ) {
         assert(inputKey.getElementCount() == outputKey.getElementCount());
         std::memcpy(
             reinterpret_cast<char*>(outputBuf) + outputKey._offset,
-            reinterpret_cast<char*>(inputBuf) + inputKey._offset,
+            reinterpret_cast<char const*>(inputBuf) + inputKey._offset,
             inputKey.getElementCount() * sizeof(typename Key<T>::Element)
         );
+    }
+
+    static void copyValue(
+        Key<Flag> const & inputKey, void const * inputBuf,
+        Key<Flag> const & outputKey, void * outputBuf
+    ) {
+        setValue(outputKey, outputBuf, getValue(inputKey, inputBuf));
     }
 
     template <typename T>
