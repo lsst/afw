@@ -208,28 +208,6 @@ void cameraGeom::Ccd::shift(int dx,     ///< How much to offset in x (pixels)
 }
 
 /************************************************************************************************************/
-///
-/// Set the Ccd's Orientation
-///
-/// We also have to fix the amps, of course
-///
-void cameraGeom::Ccd::setOrientation(
-        cameraGeom::Orientation const& orientation // the detector's new Orientation
-                                    )
-{
-    int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
-    afwGeom::Extent2I const dimensions = getAllPixels(false).getDimensions();
-    cameraGeom::Detector::setOrientation(orientation);
-    //std::for_each(_amps.begin(), _amps.end(),
-    //              boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
-    for (std::vector<cameraGeom::Amp::Ptr>::const_iterator ptr = _amps.begin(), end = _amps.end();
-         ptr != end; ++ptr) {
-        cameraGeom::Amp::Ptr amp = *ptr;
-        amp->rotateBy90(dimensions, n90);
-    }
-}
-
-/************************************************************************************************************/
 
 static void clipDefectsToAmplifier(
         cameraGeom::Amp::Ptr amp,                             // the Amp in question

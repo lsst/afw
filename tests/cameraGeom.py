@@ -95,7 +95,7 @@ def trimCcd(ccd, ccdImage=""):
     ccd.setTrimmed(True)
 
     if ccdImage is not None:
-        trimmedImage = ccdImage.Factory(ccd.getAllPixels())
+        trimmedImage = ccdImage.Factory(ccd.getAllPixelsNoRotation())
         for a in ccd:
             data = ccdImage.Factory(ccdImage, a.getDataSec(False), afwImage.LOCAL)
             tdata = trimmedImage.Factory(trimmedImage, a.getDataSec(), afwImage.LOCAL)

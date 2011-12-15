@@ -91,7 +91,6 @@ public:
                                                           bool const isTrimmed) const;
     virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
 
-    virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);
 
     virtual void setDefects(std::vector<lsst::afw::image::DefectBase::Ptr> const& defects);

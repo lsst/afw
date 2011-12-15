@@ -502,7 +502,7 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     imageSource.setTrimmed(isTrimmed)
 
     if amp:
-        ampImage = imageFactory(amp.getAllPixels(isTrimmed).getDimensions())
+        ampImage = imageFactory(amp.getAllPixelsNoRotation(isTrimmed).getDimensions())
         ampImage <<= imageSource.getImage(ccd, amp, imageFactory=imageFactory)
 
         if bin > 1:
@@ -515,10 +515,10 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     # information is held in camera coordinates, there is no need to rotate the image after assembly.
     #
     if imageSource.isRaw:
-        ccdImage = imageFactory(ccd.getAllPixels(isTrimmed))
+        ccdImage = imageFactory(ccd.getAllPixelsNoRotation(isTrimmed))
         for a in ccd:
-            im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
-            im <<= imageSource.getImage(ccd, a, imageFactory=imageFactory)
+            im = ccdImage.Factory(ccdImage, a.getAllPixelsNoRotation(isTrimmed), afwImage.LOCAL)
+            im <<= a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
     else:
         ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
 
