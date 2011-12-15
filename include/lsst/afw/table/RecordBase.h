@@ -213,6 +213,9 @@ protected:
      */
     void _copyFrom(RecordBase const & other, SchemaMapper const & mapper) const;
 
+    // Shallow assignment, but requires matching Schemas.
+    void operator=(RecordBase const & other);
+
 private:
 
     friend class TableBase;

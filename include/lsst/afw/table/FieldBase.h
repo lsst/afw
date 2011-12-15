@@ -17,9 +17,9 @@
 #include "lsst/afw/table/Covariance.h"
 #include "lsst/afw/table/KeyBase.h"
 
-#define AFW_TABLE_SCALAR_FIELD_TYPE_N 4
+#define AFW_TABLE_SCALAR_FIELD_TYPE_N 3
 #define AFW_TABLE_SCALAR_FIELD_TYPES                                    \
-    boost::uint64_t, int, float, double
+    int, float, double
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
 #define AFW_TABLE_ARRAY_FIELD_TYPE_N 2
@@ -27,7 +27,7 @@
     float, double
 #define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
 
-#define AFW_TABLE_FIELD_TYPE_N 18
+#define AFW_TABLE_FIELD_TYPE_N 17
 #define AFW_TABLE_FIELD_TYPES                                   \
     AFW_TABLE_SCALAR_FIELD_TYPES,                               \
     Flag,                                                       \

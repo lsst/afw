@@ -347,6 +347,17 @@ void RecordBase::unlink() const {
     _table->records.erase(_table->records.s_iterator_to(*_data));
 }
 
+void RecordBase::operator=(RecordBase const & other) {
+    if (_table && _table->schema != other._table->schema) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Invalid record assignment: schemas are not equal."
+        );
+    }
+    _data = other._data;
+    _table = other._table;
+}
+
 //----- TableBase implementation --------------------------------------------------------------------------
 
 
