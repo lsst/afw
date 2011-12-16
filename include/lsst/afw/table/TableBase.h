@@ -9,15 +9,7 @@
 #include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/IdFactory.h"
 
-namespace lsst {
-
-namespace daf { namespace base {
-
-class PropertySet;
-
-}} // namespace daf::base
-
-namespace afw { namespace table {
+namespace lsst { namespace afw { namespace table {
 
 class SchemaMapper;
 
@@ -108,34 +100,6 @@ protected:
      *  The modification flags will be copied as well, but can then be changed separately.
      */
     TableBase(TableBase const & other) : ModificationFlags(other), _impl(other._impl) {}
-
-    /**
-     *  @brief Write the table to a FITS binary table.
-     *
-     *  Signature is based on the image FITS interface right now; it may be changed 
-     *  as I learn what's possible in the implementation.
-     */
-    void _writeFits(
-        std::string const & name,
-        CONST_PTR(daf::base::PropertySet) const & metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const & mode = "w"
-    ) const;
-
-    /**
-     *  @brief Write the table to a FITS binary table.
-     *
-     *  This version will use a SchemaMapper to write a subset of the fields to FITS,
-     *  and also allows the saved fields to have different names and descriptions.
-     *
-     *  Signature is based on the image FITS interface right now; it may be changed 
-     *  as I learn what's possible in the implementation.
-     */
-    void _writeFits(
-        std::string const & name,
-        SchemaMapper const & mapper,
-        CONST_PTR(daf::base::PropertySet) const & metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const & mode = "w"
-    ) const;
 
     /**
      *  @brief Insert an existing record into the table.

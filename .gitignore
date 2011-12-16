@@ -17,3 +17,5 @@ doc/doxygen.conf
 tests/.tests
 tests/Simple
 tests/Schema
+tests/Fits
+testTable.fits

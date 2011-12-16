@@ -1,5 +1,7 @@
 # -*- python -*-
 
-from lsst.sconsUtils import scripts
+from lsst.sconsUtils import scripts, env, targets
 
 scripts.BasicSConscript.tests()
+
+env.Clean(targets["tests"], "#testTable.fits")

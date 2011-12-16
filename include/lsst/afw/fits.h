@@ -53,28 +53,32 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
  */
 struct Fits {
 
-    Fits & updateKey(char const * key, char const * value, char const * comment=0);
+    void updateKey(char const * key, char const * value, char const * comment=0);
 
-    Fits & writeKey(char const * key, char const * value, char const * comment=0);
-
-    template <typename T>
-    Fits & updateKey(char const * key, T value, char const * comment=0);
+    void writeKey(char const * key, char const * value, char const * comment=0);
 
     template <typename T>
-    Fits & writeKey(char const * key, T value, char const * comment=0);
+    void updateKey(char const * key, T value, char const * comment=0);
 
-    Fits & createTable(
-        long nRows,
-        std::vector<std::string> const & ttype,
-        std::vector<std::string> const & tform,
-        char const * extname = 0
-    );
+    template <typename T>
+    void writeKey(char const * key, T value, char const * comment=0);
+
+    template <typename T>
+    void updateColumnKey(char const * prefix, int n, T value, char const * comment=0);
+
+    template <typename T>
+    void writeColumnKey(char const * prefix, int n, T value, char const * comment=0);
+
+    template <typename T>
+    int addColumn(char const * ttype, int size, char const * comment=0);
 
     static Fits createFile(char const * filename);
 
     static Fits openFile(char const * filename, bool writeable);
 
-    Fits & closeFile();
+    void createTable();
+
+    void closeFile();
 
     void checkStatus() const {
         if (status != 0) throw LSST_EXCEPT(FitsError, makeErrorMessage(fptr, status));
