@@ -409,22 +409,22 @@ int TableBase::getRecordCount() const {
     return _impl->records.size();
 }
 
-IteratorBase TableBase::_unlink(IteratorBase const & iter) const {
+IteratorBase TableBase::unlink(IteratorBase const & iter) const {
     assertBit(CAN_UNLINK_RECORD);
     _impl->assertEqual(iter._table);
     _impl->unlink(iter->_data);
     return IteratorBase(_impl->records.erase(iter.base()), _impl, iter);
 }
 
-IteratorBase TableBase::_begin() const {
+IteratorBase TableBase::begin() const {
     return IteratorBase(_impl->records.begin(), _impl, *this);
 }
 
-IteratorBase TableBase::_end() const {
+IteratorBase TableBase::end() const {
     return IteratorBase(_impl->records.end(), _impl, *this);
 }
 
-RecordBase TableBase::_get(RecordId id) const {
+RecordBase TableBase::operator[](RecordId id) const {
     detail::RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
     if (j == _impl->records.end()) {
         throw LSST_EXCEPT(
@@ -435,7 +435,7 @@ RecordBase TableBase::_get(RecordId id) const {
     return RecordBase(&(*j), _impl, *this);
 }
 
-IteratorBase TableBase::_find(RecordId id) const {
+IteratorBase TableBase::find(RecordId id) const {
     detail::RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
     return IteratorBase(j, _impl, *this);
 }

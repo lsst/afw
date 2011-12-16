@@ -9,10 +9,11 @@ extern "C" {
 
 #include "boost/cstdint.hpp"
 
-#include "lsst/afw/fits.h"
-#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/fits.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst { namespace afw { namespace table { namespace fits {
+
+//----- createFitsHeader implementation ---------------------------------------------------------------------
 
 namespace {
 
@@ -32,7 +33,7 @@ struct CountFlags {
     mutable int n;
 };
 
-struct ProcessSchemaFields {
+struct ProcessSchema {
 
     template <typename T>
     void specialize(SchemaItem<T> const & item, int n) const {
@@ -107,19 +108,19 @@ struct ProcessSchemaFields {
         ++nFlags;
     }
 
-    static void apply(afw::fits::Fits & fits, Schema const & schema, bool sanitizeNames) {
-        ProcessSchemaFields f = { &fits, sanitizeNames, 0 };
+    static void apply(Fits & fits, Schema const & schema, bool sanitizeNames) {
+        ProcessSchema f = { &fits, sanitizeNames, 0 };
         schema.forEach(boost::ref(f));
     }
 
-    afw::fits::Fits * fits;
+    Fits * fits;
     bool sanitizeNames;
     mutable int nFlags;
 };
 
 } // anonymous
 
-void createFitsHeader(afw::fits::Fits & fits, Schema const & schema, bool sanitizeNames) {
+void createFitsHeader(Fits & fits, Schema const & schema, bool sanitizeNames) {
     fits.createTable();
     fits.checkStatus();
     fits.addColumn<RecordId>("id", 1, "unique ID for the record");
@@ -129,7 +130,75 @@ void createFitsHeader(afw::fits::Fits & fits, Schema const & schema, bool saniti
     if (nFlags > 0)
         fits.addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
     fits.checkStatus();
-    ProcessSchemaFields::apply(fits, schema, sanitizeNames);
+    ProcessSchema::apply(fits, schema, sanitizeNames);
 }
 
-}}} // namespace lsst::afw::table
+//----- writeFitsRecords implementation ---------------------------------------------------------------------
+
+namespace {
+
+struct ProcessData {
+    
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        this->operator()(item.key, item.key);
+    }
+    
+    template <typename T>
+    void operator()(Key<T> const & input, Key<T> const & output) const {
+        fits->writeTableArray(row, col, input.getElementCount(), iter->getElementConstPtr(input));
+        ++col;
+    }
+
+    void operator()(Key<Flag> const & input, Key<Flag> const & output) const {
+        flags[bit] = iter->get(input);
+        ++bit;
+    }
+
+    template <typename SchemaIterable>
+    static void apply(
+        Fits & fits, TableBase const & table, Schema const & schema, SchemaIterable const & iterable
+    ) {
+        bool hasTree = schema.hasTree();
+        int nFlags = CountFlags::apply(schema);
+        boost::scoped_array<bool> flags;
+        if (nFlags)
+            flags.reset(new bool[nFlags]);
+        IteratorBase const end = table.end();
+        ProcessData f = { 0, 0, 0, &fits, flags.get(), table.begin() };
+        while (f.iter != end) {
+            f.col = 0;
+            f.bit = 0;
+            fits.writeTableScalar(f.row, f.col++, f.iter->getId());
+            if (hasTree) fits.writeTableScalar(f.row, f.col++, f.iter->getId());
+            if (nFlags) ++f.col;
+            iterable.forEach(boost::ref(f));
+            if (nFlags) fits.writeTableArray(f.row, 1 + hasTree, nFlags, f.flags);
+            ++f.row;
+            ++f.iter;
+        }
+    }
+
+    int row;
+    mutable int col;
+    mutable int bit;
+    Fits * fits;
+    bool * flags;
+    IteratorBase iter;
+};
+
+} // anonymous
+
+void writeFitsRecords(Fits & fits, TableBase const & table) {
+    ProcessData::apply(fits, table, table.getSchema(), table.getSchema());
+    fits.checkStatus();
+}
+
+void writeFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper) {
+    SchemaMapper mapperCopy(mapper);
+    mapperCopy.sort(SchemaMapper::OUTPUT);
+    ProcessData::apply(fits, table, mapperCopy.getOutputSchema(), mapperCopy);
+    fits.checkStatus();
+}
+
+}}}} // namespace lsst::afw::table::fits

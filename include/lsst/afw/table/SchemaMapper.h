@@ -17,6 +17,8 @@ class RecordBase;
  */
 class SchemaMapper {
 public:
+    
+    enum SortOrder { INPUT, OUTPUT };
 
     /// @brief Return the input schema (copy-on-write).
     Schema const getInputSchema() const { return _impl->_input; }
@@ -71,6 +73,9 @@ public:
     template <typename T>
     Key<T> getMapping(Key<T> const & inputKey) const;
 
+    /// @brief Sort the mapping according to either the input or the output schema.
+    void sort(SortOrder order);
+
     /**
      *  @brief Call the given functor for each key pair in the mapper.
      *
@@ -83,7 +88,8 @@ public:
      *  };
      *  @endcode
      *
-     *  The order of the key pairs is the same as the order in which they were added.
+     *  The order of iteration is the same as the order in which mappings were added,
+     *  unless sort() has been used to modify it.
      */
     template <typename F>
     void forEach(F func) const {

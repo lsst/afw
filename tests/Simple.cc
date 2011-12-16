@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(testIterators) {
         SimpleTable::Iterator i24 = example.table.unlink(i23);
         BOOST_CHECK(!r23.isLinked());
         BOOST_CHECK(!r23.hasParent());
-        BOOST_CHECK_EQUAL(i24->getId(), 24ul);
+        BOOST_CHECK_EQUAL(i24->getId(), 24);
         example.remove(23);
         example.checkIteration();
     } {

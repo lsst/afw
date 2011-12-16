@@ -72,6 +72,15 @@ struct Fits {
     template <typename T>
     int addColumn(char const * ttype, int size, char const * comment=0);
 
+    /// @brief Append rows to a table, and return the index of the first new row.
+    int addRows(int nRows);
+
+    template <typename T>
+    void writeTableArray(int row, int col, int nElements, T const * value);
+
+    template <typename T>
+    void writeTableScalar(int row, int col, T value) { writeTableArray(row, col, 1, &value); }
+    
     static Fits createFile(char const * filename);
 
     static Fits openFile(char const * filename, bool writeable);

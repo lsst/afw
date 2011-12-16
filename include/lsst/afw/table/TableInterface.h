@@ -41,20 +41,25 @@ public:
     typedef Iterator const_iterator;
 
     Iterator begin() const {
-        return Iterator(this->_begin(), detail::RecordConverter<Record>());
+        return Iterator(this->TableBase::begin(), detail::RecordConverter<Record>());
     }
     Iterator end() const {
-        return Iterator(this->_end(), detail::RecordConverter<Record>());
+        return Iterator(this->TableBase::end(), detail::RecordConverter<Record>());
     }
 
-    /// @copydoc TableBase::_unlink
+    /// @copydoc TableBase::unlink
     Iterator unlink(Iterator const & iter) const {
-        return Iterator(this->_unlink(iter.base()), detail::RecordConverter<Record>());
+        return Iterator(this->TableBase::unlink(iter.base()), detail::RecordConverter<Record>());
     }
 
-    /// @copydoc TableBase::_find
+    /// @copydoc TableBase::find
     Iterator find(RecordId id) const {
-        return Iterator(this->_find(id), detail::RecordConverter<Record>());
+        return Iterator(this->TableBase::find(id), detail::RecordConverter<Record>());
+    }
+
+    /// @copydoc TableBase::operator[]
+    Record operator[](RecordId id) const {
+        return detail::Access::makeRecord<Record>(this->TableBase::operator[](id));
     }
 
     /// @copydoc TableBase::_insert(IteratorBase const &, RecordBase const & record) const
@@ -112,11 +117,6 @@ public:
         for (IteratorBase hint = this->_end(); first != last; ++first) {
             hint = _insert(hint, *first, mapper);
         }
-    }
-
-    /// @copydoc TableBase::_get
-    Record operator[](RecordId id) const {
-        return detail::Access::makeRecord<Record>(this->_get(id));
     }
 
 protected:

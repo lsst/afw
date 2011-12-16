@@ -139,6 +139,35 @@ public:
     }
 
     /**
+     *  @brief Return a pointer to the underlying elements of a field (const).
+     *
+     *  This low-level access is intended mostly for use with serialization
+     *  users should generally prefer the safer get(), set() and operator[]
+     *  member functions.
+     */
+    template <typename T>
+    typename Field<T>::Element const * getElementConstPtr(Key<T> const & key) const {
+        return reinterpret_cast<typename Field<T>::Element const *>(
+            reinterpret_cast<char const*>(_data) + detail::Access::getOffset(key)
+        );
+    }
+
+    /**
+     *  @brief Return a pointer to the underlying elements of a field (non-const).
+     *
+     *  This low-level access is intended mostly for use with serialization
+     *  users should generally prefer the safer get(), set() and operator[]
+     *  member functions.
+     */
+    template <typename T>
+    typename Field<T>::Element * getElementPtr(Key<T> const & key) const {
+        assertBit(CAN_SET_FIELD);
+        return reinterpret_cast<typename Field<T>::Element*>(
+            reinterpret_cast<char*>(_data) + detail::Access::getOffset(key)
+        );
+    }
+
+    /**
      *  @brief Shallow equality comparison.
      *
      *  Returns true only if the records point at the same underlying data.

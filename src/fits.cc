@@ -22,7 +22,6 @@ namespace {
 
 char getFormatCode(bool*) { return 'X'; }
 char getFormatCode(boost::uint8_t*) { return 'B'; }
-char getFormatCode(boost::int8_t*) { return 'S'; }
 char getFormatCode(boost::int16_t*) { return 'I'; }
 char getFormatCode(boost::uint16_t*) { return 'U'; }
 char getFormatCode(boost::int32_t*) { return 'J'; }
@@ -84,6 +83,7 @@ int addColumnImpl(Fits & fits, char const * ttype, int size, char const * commen
 
 template <typename T> struct FitsType;
 
+template <> struct FitsType<bool> { static int const CONSTANT = TBIT; };
 template <> struct FitsType<unsigned char> { static int const CONSTANT = TBYTE; };
 template <> struct FitsType<short> { static int const CONSTANT = TSHORT; };
 template <> struct FitsType<unsigned short> { static int const CONSTANT = TUSHORT; };
@@ -188,6 +188,34 @@ int Fits::addColumn(char const * ttype, int size, char const * comment) {
     return addColumnImpl(*this, ttype, size, comment, (T*)0);
 }
 
+int Fits::addRows(int nRows) {
+    long first = 0;
+    fits_get_num_rows(
+        reinterpret_cast<fitsfile*>(fptr),
+        &first,
+        &status
+    );
+    fits_insert_rows(
+        reinterpret_cast<fitsfile*>(fptr),
+        first,
+        nRows,
+        &status
+    );
+    return first;
+}
+
+template <typename T>
+void Fits::writeTableArray(int row, int col, int nElements, T const * value) {
+    fits_write_col(
+        reinterpret_cast<fitsfile*>(fptr), 
+        FitsType<T>::CONSTANT, 
+        col + 1, row + 1, 
+        1, nElements,
+        const_cast<T*>(value),
+        &status
+    );
+}
+
 void Fits::createTable() {
     char * ttype = 0;
     char * tform = 0;
@@ -228,17 +256,21 @@ void Fits::closeFile() {
 #define INSTANTIATE_ADD_COLUMN(r, data, T)                              \
     template int Fits::addColumn<T>(char const * ttype, int size, char const * comment);
 
+#define INSTANTIATE_WRITE_TABLE_ARRAY(r, data, T)    \
+    template void Fits::writeTableArray(int row, int col, int nElements, T const * value);
+
 #define KEY_TYPES                                                       \
     (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
     (float)(double)(std::complex<float>)(std::complex<double>)
 
 #define COLUMN_TYPES                            \
-    (boost::int8_t)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
+    (boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
     (boost::int64_t)(boost::uint64_t)(float)(double)(std::complex<float>)(std::complex<double>)(bool)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_COLUMN_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_ADD_COLUMN, _, COLUMN_TYPES)
+BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_WRITE_TABLE_ARRAY, _, COLUMN_TYPES)
 
 INSTANTIATE_EDIT_COLUMN_KEY(_, _, char const *)
 

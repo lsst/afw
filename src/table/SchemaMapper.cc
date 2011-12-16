@@ -22,7 +22,7 @@ struct SwapKeyPair : public boost::static_visitor<> {
 };
 
 template <typename T>
-struct KeyPairCompare : public boost::static_visitor<bool> {
+struct KeyPairCompareEqual : public boost::static_visitor<bool> {
 
     template <typename U>
     bool operator()(std::pair< Key<U>, Key<U> > const & pair) const {
@@ -33,10 +33,42 @@ struct KeyPairCompare : public boost::static_visitor<bool> {
         return boost::apply_visitor(*this, v);
     }
 
-    KeyPairCompare(Key<T> const & target) : _target(target) {}
+    KeyPairCompareEqual(Key<T> const & target) : _target(target) {}
 
 private:
     Key<T> const & _target;
+};
+
+struct KeyPairCompareFirst : public boost::static_visitor<int> {
+
+    template <typename U>
+    int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
+        return detail::Access::getOffset(pair.first);
+    }
+    
+    bool operator()(
+        detail::SchemaMapperImpl::KeyPairVariant const & a,
+        detail::SchemaMapperImpl::KeyPairVariant const & b
+    ) const {
+        return boost::apply_visitor(*this, a) < boost::apply_visitor(*this, b);
+    }
+
+};
+
+struct KeyPairCompareSecond: public boost::static_visitor<int> {
+
+    template <typename U>
+    int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
+        return detail::Access::getOffset(pair.second);
+    }
+    
+    bool operator()(
+        detail::SchemaMapperImpl::KeyPairVariant const & a,
+        detail::SchemaMapperImpl::KeyPairVariant const & b
+    ) const {
+        return boost::apply_visitor(*this, a) < boost::apply_visitor(*this, b);
+    }
+
 };
 
 } // anonymous
@@ -58,7 +90,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
-        KeyPairCompare<T>(inputKey)
+        KeyPairCompareEqual<T>(inputKey)
     );
     Field<T> inputField = _impl->_input.find(inputKey).field;
     if (i != _impl->_map.end()) {
@@ -78,7 +110,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
-        KeyPairCompare<T>(inputKey)
+        KeyPairCompareEqual<T>(inputKey)
     );
     if (i != _impl->_map.end()) {
         Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
@@ -102,7 +134,7 @@ bool SchemaMapper::isMapped(Key<T> const & inputKey) const {
     return std::count_if(
         _impl->_map.begin(),
         _impl->_map.end(),
-        KeyPairCompare<T>(inputKey)
+        KeyPairCompareEqual<T>(inputKey)
     );
 }
 
@@ -111,7 +143,7 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
-        KeyPairCompare<T>(inputKey)
+        KeyPairCompareEqual<T>(inputKey)
     );
     if (i == _impl->_map.end()) {
         throw LSST_EXCEPT(
@@ -120,6 +152,18 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
         );
     }
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
+}
+
+void SchemaMapper::sort(SortOrder order) {
+    _edit();
+    switch (order) {
+    case INPUT:
+        std::sort(_impl->_map.begin(), _impl->_map.end(), KeyPairCompareFirst());
+        break;
+    case OUTPUT:
+        std::sort(_impl->_map.begin(), _impl->_map.end(), KeyPairCompareSecond());
+        break;
+    }
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

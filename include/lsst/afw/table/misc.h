@@ -6,8 +6,13 @@
 
 namespace lsst { namespace afw { namespace table {
 
-/// @brief Type used for unique IDs for records.
-typedef boost::uint64_t RecordId;
+/**
+ *  @brief Type used for unique IDs for records.
+ *
+ *  FITS isn't fond of uint64, so we can save a lot of pain by using signed ints here unless
+ *  we really need unsigned.
+ */
+typedef boost::int64_t RecordId;
 
 //@{
 /**

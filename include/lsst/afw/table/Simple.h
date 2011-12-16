@@ -55,6 +55,27 @@ public:
     /// @brief Create and add a new record with an explicit RecordId.
     Record addRecord(RecordId id) const { return _addRecord(id); }
 
+    /**
+     *  @brief Write a FITS binary table.
+     *
+     *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
+     *                               to cfitsio, so all of its extended filename syntaxes should
+     *                               work here.
+     *  @param[in]   sanitizeNames   If true, periods in names will be converted to underscores.
+     */
+    void writeFits(std::string const & filename, bool sanitizeNames=true);
+
+    /**
+     *  @brief Write a FITS binary table using only fields defined by a mapper.
+     *
+     *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
+     *                               to cfitsio, so all of its extended filename syntaxes should
+     *                               work here.
+     *  @param[in]   mapper          A mapper whose output Schema is used to define the FITS table.
+     *  @param[in]   sanitizeNames   If true, periods in names will be converted to underscores.
+     */
+    void writeFits(std::string const & filename, SchemaMapper const & mapper, bool sanitizeNames=true);
+    
 };
 
 }}} // namespace lsst::afw::table
