@@ -46,4 +46,10 @@ BOOST_AUTO_TEST_CASE(testFits) {
     }
 
     table.writeFits("!testTable.fits");
+
+    lsst::afw::fits::Fits file = lsst::afw::fits::Fits::openFile("testTable.fits[1]", true);
+    file.checkStatus();
+    lsst::afw::table::fits::readFitsHeader(file, true);
+    file.closeFile();
+    file.checkStatus();
 }

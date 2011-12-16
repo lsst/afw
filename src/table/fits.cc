@@ -7,13 +7,14 @@ extern "C" {
 #include "fitsio2.h"
 }
 
+#include "boost/lexical_cast.hpp"
 #include "boost/cstdint.hpp"
 
 #include "lsst/afw/table/fits.h"
 
 namespace lsst { namespace afw { namespace table { namespace fits {
 
-//----- createFitsHeader implementation ---------------------------------------------------------------------
+//----- writeFitsHeader implementation ---------------------------------------------------------------------
 
 namespace {
 
@@ -120,15 +121,20 @@ struct ProcessSchema {
 
 } // anonymous
 
-void createFitsHeader(Fits & fits, Schema const & schema, bool sanitizeNames) {
+void writeFitsHeader(Fits & fits, Schema const & schema, bool sanitizeNames) {
     fits.createTable();
     fits.checkStatus();
-    fits.addColumn<RecordId>("id", 1, "unique ID for the record");
-    if (schema.hasTree())
-        fits.addColumn<RecordId>("parent", 1, "ID for the record's parent");
+    int n = fits.addColumn<RecordId>("id", 1, "unique ID for the record");
+    fits.writeKey("ID_COL", n+1, "Number of the column with a unique ID.");
+    if (schema.hasTree()) {
+        n = fits.addColumn<RecordId>("parent", 1, "ID for the record's parent");
+        fits.writeKey("TREE_COL", n + 1, "Number of the column with tree IDs.");
+    }
     int nFlags = CountFlags::apply(schema);
-    if (nFlags > 0)
-        fits.addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
+    if (nFlags > 0) {
+        n = fits.addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
+        fits.writeKey("FLAG_COL", n + 1, "Number of the column bitflags.");
+    }
     fits.checkStatus();
     ProcessSchema::apply(fits, schema, sanitizeNames);
 }
@@ -199,6 +205,60 @@ void writeFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const &
     mapperCopy.sort(SchemaMapper::OUTPUT);
     ProcessData::apply(fits, table, mapperCopy.getOutputSchema(), mapperCopy);
     fits.checkStatus();
+}
+
+//----- readFitsHeader implementation -----------------------------------------------------------------------
+
+namespace {
+
+std::string strip(std::string const & s) {
+    std::size_t i1 = s.find_first_not_of(" '");
+    std::size_t i2 = s.find_last_not_of(" '");
+    return s.substr(i1, (i1 == std::string::npos) ? 0 : 1 + i2 - i1);
+}
+
+struct HeaderParser : public afw::fits::HeaderIterationFunctor {
+
+    virtual void operator()(char const * key, char const * value, char const * comment) {
+        if (std::strncmp(key, "TTYPE", 5) == 0) {
+            int n = boost::lexical_cast<int>(key + 5) - 1;
+            if (n != col) {
+                throw LSST_EXCEPT(
+                    afw::fits::FitsError,
+                    afw::fits::makeErrorMessage(
+                        fits->fptr, 0,
+                        boost::format("Out of sequence TTYPE%d key (should be TTYPE%d).") % (n+1) % (col+1)
+                    )
+                );
+            }
+            if (n == idCol || n == treeCol || n == flagCol) return; // these are handled specially
+            std::string name = strip(value);
+            ++col;
+        } else if (std::strncmp(key, "TFLAG", 5) == 0) {
+            int n = boost::lexical_cast<int>(key + 5) - 1;
+            std::string name = strip(value);
+            ++bit;
+        }
+    }
+
+    int idCol;
+    int treeCol;
+    int flagCol;
+    mutable int col;
+    mutable int bit;
+    Schema * schema;
+    Fits * fits;
+};
+
+} // anonymous
+
+Schema readFitsHeader(Fits & fits, bool unsanitizeNames) {
+
+
+    HeaderParser headerParser;
+    fits.forEachKey(headerParser);
+    Schema schema(false);    
+    return schema;
 }
 
 }}}} // namespace lsst::afw::table::fits

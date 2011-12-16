@@ -9,6 +9,7 @@ extern "C" {
 #include "fitsio2.h"
 }
 
+#include "boost/regex.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/cstdint.hpp"
 #include "boost/format.hpp"
@@ -97,6 +98,12 @@ template <> struct FitsType<double> { static int const CONSTANT = TDOUBLE; };
 template <> struct FitsType< std::complex<float> > { static int const CONSTANT = TCOMPLEX; };
 template <> struct FitsType< std::complex<double> > { static int const CONSTANT = TDBLCOMPLEX; };
 
+std::string strip(std::string const & s) {
+    std::size_t i1 = s.find_first_not_of(" '");
+    std::size_t i2 = s.find_last_not_of(" '");
+    return s.substr(i1, (i1 == std::string::npos) ? 0 : 1 + i2 - i1);
+}
+
 } // anonymous
 
 std::string makeErrorMessage(std::string const & fileName, int status, std::string const & msg) {
@@ -171,16 +178,52 @@ void Fits::writeKey(char const * key, T value, char const * comment) {
 
 template <typename T>
 void Fits::updateColumnKey(char const * prefix, int n, T value, char const * comment) {
-    char keyBuf[9];
-    std::sprintf(keyBuf, "%s%d", prefix, n + 1);
-    return updateKey(keyBuf, value, comment);
+    char keyBuf[9] = { 0 };
+    std::snprintf(keyBuf, 8, "%s%d", prefix, n + 1);
+    updateKey(keyBuf, value, comment);
 }
 
 template <typename T>
 void Fits::writeColumnKey(char const * prefix, int n, T value, char const * comment) {
-    char keyBuf[9];
-    std::sprintf(keyBuf, "%s%d", prefix, n + 1);
-    return writeKey(keyBuf, value, comment);
+    char keyBuf[9] = { 0 };
+    std::snprintf(keyBuf, 8, "%s%d", prefix, n + 1);
+    writeKey(keyBuf, value, comment);
+}
+
+template <typename T>
+void Fits::readKey(char const * key, T & value) {
+    fits_read_key(
+        reinterpret_cast<fitsfile*>(fptr), 
+        FitsType<T>::CONSTANT,
+        const_cast<char*>(key),
+        &value,
+        0,
+        &status
+    );
+}
+
+void Fits::readKey(char const * key, std::string & value) {
+    std::string buf(80, '\0');
+    fits_read_keyword(
+        reinterpret_cast<fitsfile*>(fptr), 
+        const_cast<char*>(key),
+        &buf[0],
+        0,
+        &status
+    );
+    value = strip(buf);
+}
+
+void Fits::forEachKey(HeaderIterationFunctor & functor) {
+    char key[80];
+    char value[80];
+    char comment[80];
+    int nKeys = 0;
+    fits_get_hdrspace(reinterpret_cast<fitsfile*>(fptr), &nKeys, 0, &status);
+    for (int i = 1; i <= nKeys; ++i) {
+        fits_read_keyn(reinterpret_cast<fitsfile*>(fptr), i, key, value, comment, &status);
+        functor(key, value, comment);
+    }
 }
 
 template <typename T>

@@ -3,13 +3,46 @@
 #define LSST_AFW_fits_h_INCLUDED
 
 #include <string>
-#include <vector>
 
 #include <boost/format.hpp>
 
 #include "lsst/pex/exceptions.h"
 
 namespace lsst { namespace afw { namespace fits {
+
+class HeaderIterationFunctor {
+public:
+
+    virtual void operator()(char const * key, char const * value, char const * comment) = 0;
+
+    virtual ~HeaderIterationFunctor() {}
+};
+
+#if 0
+/**
+ *  @brief A Boost.Variant type that can be a pointer to any of the datatypes managed by FITS.
+ *
+ *  This is used to convert between the typecode + void pointer FITS representation and a
+ *  template-friend generic in C++.
+ */
+typedef boost::variant<
+    boost::blank,
+    bool*,                 // TBIT
+    unsigned char*,        // TBYTE
+    short*,                // TSHORT
+    unsigned short*,       // TUSHORT
+    int*,                  // TINT
+    unsigned int*,         // TUINT
+    long*,                 // TLONG
+    unsigned long*,        // TULONG
+    boost::int64_t*,       // TLONGLONG
+    float*,                // TFLOAT
+    double*,               // TDOUBLE
+    std::complex<float>*,  // TCOMPLEX
+    std::complex<double>*, // TDBLCOMPLEX
+    char **,               // TSTRING
+> FitsVariant;
+#endif
 
 /**
  * @brief An exception thrown when problems are found when reading or writing FITS files.
@@ -68,6 +101,13 @@ struct Fits {
 
     template <typename T>
     void writeColumnKey(char const * prefix, int n, T value, char const * comment=0);
+
+    template <typename T>
+    void readKey(char const * key, T & value);
+
+    void readKey(char const * key, std::string & value);
+
+    void forEachKey(HeaderIterationFunctor & functor);
 
     template <typename T>
     int addColumn(char const * ttype, int size, char const * comment=0);
