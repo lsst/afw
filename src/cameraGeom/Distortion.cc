@@ -137,8 +137,11 @@ typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::_warp(
     afwImage::Image<PixelT> const &img, ///< Image to be (un)distorted                   
     afwGeom::Point2D const &pix,        ///< Pixel corresponding to location of transform
     bool forward                        ///< is this forward (undistorted to distorted) or reverse
-                                                                   ) { 
-    typename afwImage::Image<PixelT>::Ptr warpImg(new afwImage::Image<PixelT>(img, true));
+                                                                   ) {
+
+    int nx = img.getWidth();
+    int ny = img.getHeight();
+    typename afwImage::Image<PixelT>::Ptr warpImg(new afwImage::Image<PixelT>(nx, ny, 0.0));
     afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
     afwGeom::LinearTransform linTran = this->computeQuadrupoleTransform(p, forward);
     afwMath::warpCenteredImage(*warpImg, img, kernel, linTran, pix);
