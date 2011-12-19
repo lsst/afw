@@ -104,18 +104,7 @@ class DistortionTestCase(unittest.TestCase):
 	    else:
 		drTest = 0.0
 	    
-	    if hasattr(dist, 'transformR'):
-		dr = dist.transformR(r0, dist.getDCoeffs())
-		if r0 > 0:
-		    ror = dist.transformR(r0, dist.getCoeffs())/r0
-		else:
-		    ror = 1.0
-	    else:
-		dr = 1.0
-		ror = 1.0
-	    
 	    if self.prynt:
-		print "r,dr:  %.12f,%.12f %.12f"       % (ror, dr, drTest)
 		print "m:     %.12f %.12f %.12f" % (m.getIXX(), m.getIYY(), m.getIXY())
 		print "mDist: %.12f %.12f %.12f" % (mDist.getIXX(), mDist.getIYY(), mDist.getIXY())
 		print "mp:    %.12f %.12f %.12f" % (mm.getIXX(), mm.getIYY(), mm.getIXY())
@@ -184,10 +173,6 @@ class DistortionTestCase(unittest.TestCase):
 	
 	nDist = cameraGeom.NullDistortion()
 	rDist = cameraGeom.RadialPolyDistortion(self.coeffs)
-
-	if self.prynt:
-	    print rDist.getCoeffs()
-	    print rDist.getICoeffs()
 
 	for moment in moments:
 	    self.tryAFewCoords(rDist, moment)

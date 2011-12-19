@@ -34,17 +34,20 @@
 
 
 /**
- * @file
+ * @file Distortion.cc
+ * @brief Provide Classes to handle coordinate/moment distortion due to camera optics
+ * @ingroup afw
+ * @author Steve Bickerton
  *
- * Describe the Distortion for a Detector
  */
+
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
     
 /**
- * Describe a set of Detectors that are physically closely related (e.g. on the same invar support)
+ * @class Distort/Undistort coordinates, moments, and images according to camera optical distortion
  */
 class Distortion {
 public:
@@ -55,17 +58,18 @@ public:
     virtual ~Distortion() {}
 
     //virtual Distortion::Ptr clone() const { return Distortion::Ptr(new Distortion(*this)); }
-    
-    virtual lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p); // = 0;
-    virtual lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p); // = 0;
 
-    virtual lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
-                                                      lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
-    virtual lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
-                                                        lsst::afw::geom::ellipses::Quadrupole const &Iqq);
+    // distort a point
+    lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p); // = 0;
+    lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p); // = 0;
 
-    virtual lsst::afw::geom::LinearTransform computeLinearTransform(lsst::afw::geom::Point2D const &p,
-                                                                    bool forward);
+    // distort an adaptive moment ... ie. a Quadrupole object
+    lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
+                                                  lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
+    lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
+                                                    lsst::afw::geom::ellipses::Quadrupole const &Iqq);
+
+    // distort an image locally (ie. using the Quadrupole Linear Transform)
     template<typename PixelT>
     typename lsst::afw::image::Image<PixelT>::Ptr distort(lsst::afw::geom::Point2D const &p,
                                                  lsst::afw::image::Image<PixelT> const &img,
@@ -74,88 +78,54 @@ public:
     typename lsst::afw::image::Image<PixelT>::Ptr undistort(lsst::afw::geom::Point2D const &p,
                                                    lsst::afw::image::Image<PixelT> const &img,
                                                    lsst::afw::geom::Point2D const &pix);
-protected:
+
+
+    // all derived classes must define these two public methods
+    virtual lsst::afw::geom::LinearTransform computePointTransform(lsst::afw::geom::Point2D const &p,
+                                                                   bool forward);
+    virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
+                                                                        bool forward);
+    
+private: 
     template<typename PixelT>
     typename lsst::afw::image::Image<PixelT>::Ptr _warp(lsst::afw::geom::Point2D const &p,
                                                         lsst::afw::image::Image<PixelT> const &img,
                                                         lsst::afw::geom::Point2D const &pix,
                                                         bool forward);
-    
-private:
     int _lanczosOrder;
-    
 };
 
 
+/**
+ * @class Offer a derived 'no-op' class with identity operators for all transforms
+ */
 class NullDistortion : public Distortion {
 public:
-
-    using Distortion::distort;
-    using Distortion::undistort;
-    
     NullDistortion() :  Distortion() {}
-    
-    lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p);
-    lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p);
-
-    lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
-                                              lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
-    lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
-                                                lsst::afw::geom::ellipses::Quadrupole const &Iqq);
-
-    virtual lsst::afw::geom::LinearTransform computeLinearTransform(lsst::afw::geom::Point2D const &p,
-                                                                    bool forward);
-
-    template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr distort(lsst::afw::geom::Point2D const &p,
-                                                 lsst::afw::image::Image<PixelT> const &img,
-                                                 lsst::afw::geom::Point2D const &pix);
-    template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr undistort(lsst::afw::geom::Point2D const &p,
-                                                   lsst::afw::image::Image<PixelT> const &img,
-                                                   lsst::afw::geom::Point2D const &pix);
-    
+    virtual lsst::afw::geom::LinearTransform computePointTransform(lsst::afw::geom::Point2D const &p,
+                                                                   bool forward);
+    virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
+                                                                        bool forward);
 };
 
-
+/**
+ * @class Handle optical distortions described by a polynomial function of radius
+ */
 class RadialPolyDistortion : public Distortion {
 public:
-
-    using Distortion::distort;
-    using Distortion::undistort;
-
     RadialPolyDistortion(std::vector<double> const &coeffs);
 
-    lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p);
-    lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p);
-    
-    double transformR(double r, std::vector<double> const &coeffs);
-    double iTransformR(double rp); 
-    double iTransformDr(double rp);
-    
-    lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
-                                              lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
-    lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
-                                                lsst::afw::geom::ellipses::Quadrupole const &Iqq);
-
-
-    virtual lsst::afw::geom::LinearTransform computeLinearTransform(lsst::afw::geom::Point2D const &p,
-                                                                    bool forward);
-
+#if 0
+    // these may be useful for debugging
     std::vector<double> getCoeffs()   {return _coeffs;   }
     std::vector<double> getICoeffs()  {return _icoeffs;  }
     std::vector<double> getDCoeffs()  {return _dcoeffs;  }
-
-    template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr distort(lsst::afw::geom::Point2D const &p,
-                                                 lsst::afw::image::Image<PixelT> const &img,
-                                                 lsst::afw::geom::Point2D const &pix);
-    template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr undistort(lsst::afw::geom::Point2D const &p,
-                                                   lsst::afw::image::Image<PixelT> const &img,
-                                                   lsst::afw::geom::Point2D const &pix);
-
+#endif
     
+    virtual lsst::afw::geom::LinearTransform computePointTransform(lsst::afw::geom::Point2D const &p,
+                                                                   bool forward);
+    virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
+                                                                        bool forward);
 private:
     int _maxN;
     std::vector<double> _coeffs;
@@ -165,9 +135,10 @@ private:
     std::vector<double> _invert(std::vector<double> const &coeffs);
     std::vector<double> _deriv(std::vector<double> const &coeffs);
     lsst::afw::geom::Point2D _transform(lsst::afw::geom::Point2D const &p, bool forward=true);
-    lsst::afw::geom::ellipses::Quadrupole _transform(lsst::afw::geom::Point2D const &p,
-                                                     lsst::afw::geom::ellipses::Quadrupole const &iqq,
-                                                     bool forward=true);
+
+    double _transformR(double r, std::vector<double> const &coeffs);
+    double _iTransformR(double rp); 
+    double _iTransformDr(double rp);
 };
 
 
