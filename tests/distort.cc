@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <string>
+#include <cmath>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Distort
@@ -41,10 +42,13 @@
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/image.h"
+#include "lsst/afw/geom.h"
 
 using namespace std;
 namespace cameraGeom = lsst::afw::cameraGeom;
 namespace afwGeom    = lsst::afw::geom;
+namespace afwImage   = lsst::afw::image;
 namespace geomEllip  = lsst::afw::geom::ellipses;
 
 BOOST_AUTO_TEST_CASE(roundTrip) {
@@ -104,5 +108,27 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     BOOST_CHECK_CLOSE(qq.getIXX(), q.getIXX(), 1.0e-7);
     BOOST_CHECK_CLOSE(qq.getIYY(), q.getIYY(), 1.0e-7);
 
+
+    int nx = 31, ny = 31;
+    float rad0 = 3.0;
+    int x0 = 15, y0 = 15;
+    afwGeom::Point2D p0(x0, y0);
+    float cx0 = 300.0, cy0 = 500.0;
+    afwGeom::Point2D cp0(cx0, cy0);
+
+    afwImage::Image<float> img(nx, ny, 0);
+    for (int i=0; i<ny; ++i) {
+        for (int j=0; j<nx; ++j) {
+            float ic = i - y0;
+            float jc = j - x0;
+            float r = sqrt(ic*ic + jc*jc);
+            img(j, i) = 1.0*std::exp(-r*r/(2.0*rad0*rad0));
+
+        }
+    }
+    
+    afwImage::Image<float>::Ptr wimg = rdist.distort(p0, img, cp0);
+    wimg->writeFits("ccwimg.fits");
+    
 }
 

@@ -45,6 +45,8 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
 
+#include "lsst/afw/geom.h"
+
 namespace lsst {
 namespace afw {
 namespace image {
@@ -197,6 +199,23 @@ namespace math {
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel, int const interpLength=0);
 
+    template<typename DestImageT, typename SrcImageT>
+    int warpImage(
+        DestImageT &destImage,
+        SrcImageT const &srcImage,
+        SeparableKernel &warpingKernel,
+        lsst::afw::geom::AffineTransform const &affineTransform,
+        int const interpLength=0);
+
+
+    template<typename DestImageT, typename SrcImageT>
+    int warpCenteredImage(
+                          DestImageT &destImage,
+                          SrcImageT const &srcImage,
+                          SeparableKernel &warpingKernel,
+                          lsst::afw::geom::LinearTransform const &linearTransform,
+                          lsst::afw::geom::Point2D const &centerPixel);
+    
     namespace details {
         template <typename A, typename B>
         bool isSameObject(A const&, B const&) { return false; }

@@ -51,6 +51,9 @@ SWIG_SHARED_PTR_DERIVED(NearestWarpingKernel, lsst::afw::math::SeparableKernel,
 %template(warpImage) lsst::afw::math::warpImage<
     lsst::afw::image::Image<DESTIMAGEPIXEL>,
     lsst::afw::image::Image<SRCIMAGEPIXEL> >;
+%template(warpCenteredImage) lsst::afw::math::warpCenteredImage<
+    lsst::afw::image::Image<DESTIMAGEPIXEL>,
+    lsst::afw::image::Image<SRCIMAGEPIXEL> >;
 %enddef
 
 %WarpFuncsByType(float, boost::uint16_t);

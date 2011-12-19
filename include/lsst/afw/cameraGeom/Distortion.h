@@ -28,6 +28,7 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/tuple/tuple.hpp"
 
+#include "lsst/afw/image.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 
@@ -41,24 +42,7 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-/*    
-class Moment { //: public boost::tuple<double, double, double> {
-public:
-    Moment(double ixx, double iyy, double ixy) : _ixx(ixx), _iyy(iyy), _ixy(ixy) {} //boost::tuple<double, double, double>(ixx, iyy, ixy) {}
-    //Moment(Moment const &iqq) : boost::tuple<double, double, double>(iqq.get<0>(), iqq.get<1>(), iqq.get<2>()) {};
-    //iqq.getIxx(), iqq.getIyy, iqq.getIxy()) {}
-    Moment(Moment const &iqq) : _ixx(iqq.getIxx()), _iyy(iqq.getIyy()), _ixy(iqq.getIxy()) {} //boost::tuple<double, double, double>(iqq.getIxx(), iqq.getIyy(), iqq.getIxy()) {}; //iqq.getIxx(), iqq.getIyy, iqq.getIxy()) {}
-    //double setIxx(double ixx) { this->set<0>(ixx); }
-    //double setIyy(double iyy) { this->set<1>(iyy); }
-    //double setIxy(double ixy) { this->set<2>(ixy); }
-    double getIxx() const { return _ixx; } //this->get<0>(); }
-    double getIyy() const { return _iyy; } //this->get<1>(); }
-    double getIxy() const { return _ixy; } //this->get<2>(); }
-private:
-    double _ixx, _iyy, _ixy;
-};
-*/
-
+    
 /**
  * Describe a set of Detectors that are physically closely related (e.g. on the same invar support)
  */
@@ -67,7 +51,7 @@ public:
     typedef boost::shared_ptr<Distortion> Ptr;
     typedef boost::shared_ptr<const Distortion> ConstPtr;
 
-    Distortion() {}
+    Distortion(int lanczosOrder=5) : _lanczosOrder(lanczosOrder) {}
     virtual ~Distortion() {}
 
     //virtual Distortion::Ptr clone() const { return Distortion::Ptr(new Distortion(*this)); }
@@ -79,12 +63,36 @@ public:
                                                       lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
     virtual lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
                                                         lsst::afw::geom::ellipses::Quadrupole const &Iqq);
+
+    virtual lsst::afw::geom::LinearTransform computeLinearTransform(lsst::afw::geom::Point2D const &p,
+                                                                    bool forward);
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr distort(lsst::afw::geom::Point2D const &p,
+                                                 lsst::afw::image::Image<PixelT> const &img,
+                                                 lsst::afw::geom::Point2D const &pix);
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr undistort(lsst::afw::geom::Point2D const &p,
+                                                   lsst::afw::image::Image<PixelT> const &img,
+                                                   lsst::afw::geom::Point2D const &pix);
+protected:
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr _warp(lsst::afw::geom::Point2D const &p,
+                                                        lsst::afw::image::Image<PixelT> const &img,
+                                                        lsst::afw::geom::Point2D const &pix,
+                                                        bool forward);
+    
+private:
+    int _lanczosOrder;
     
 };
 
 
 class NullDistortion : public Distortion {
 public:
+
+    using Distortion::distort;
+    using Distortion::undistort;
+    
     NullDistortion() :  Distortion() {}
     
     lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p);
@@ -94,11 +102,28 @@ public:
                                               lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
     lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
                                                 lsst::afw::geom::ellipses::Quadrupole const &Iqq);
+
+    virtual lsst::afw::geom::LinearTransform computeLinearTransform(lsst::afw::geom::Point2D const &p,
+                                                                    bool forward);
+
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr distort(lsst::afw::geom::Point2D const &p,
+                                                 lsst::afw::image::Image<PixelT> const &img,
+                                                 lsst::afw::geom::Point2D const &pix);
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr undistort(lsst::afw::geom::Point2D const &p,
+                                                   lsst::afw::image::Image<PixelT> const &img,
+                                                   lsst::afw::geom::Point2D const &pix);
+    
 };
 
 
 class RadialPolyDistortion : public Distortion {
 public:
+
+    using Distortion::distort;
+    using Distortion::undistort;
+
     RadialPolyDistortion(std::vector<double> const &coeffs);
 
     lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p);
@@ -113,9 +138,23 @@ public:
     lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
                                                 lsst::afw::geom::ellipses::Quadrupole const &Iqq);
 
+
+    virtual lsst::afw::geom::LinearTransform computeLinearTransform(lsst::afw::geom::Point2D const &p,
+                                                                    bool forward);
+
     std::vector<double> getCoeffs()   {return _coeffs;   }
     std::vector<double> getICoeffs()  {return _icoeffs;  }
     std::vector<double> getDCoeffs()  {return _dcoeffs;  }
+
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr distort(lsst::afw::geom::Point2D const &p,
+                                                 lsst::afw::image::Image<PixelT> const &img,
+                                                 lsst::afw::geom::Point2D const &pix);
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr undistort(lsst::afw::geom::Point2D const &p,
+                                                   lsst::afw::image::Image<PixelT> const &img,
+                                                   lsst::afw::geom::Point2D const &pix);
+
     
 private:
     int _maxN;

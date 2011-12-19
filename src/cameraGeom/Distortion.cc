@@ -34,16 +34,22 @@
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/math/warpExposure.h"
+#include "lsst/afw/image.h"
 
 #include "lsst/pex/exceptions.h"
 #include "boost/format.hpp"
 
 namespace pexEx      = lsst::pex::exceptions;
+namespace afwImage   = lsst::afw::image;
 namespace afwGeom    = lsst::afw::geom;
+namespace afwMath    = lsst::afw::math;
 namespace geomEllip  = lsst::afw::geom::ellipses;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
+/* ========================================================================================*/
 /* Distortion ... have it be a null distortion*/
+/* ========================================================================================*/
 
 afwGeom::Point2D cameraGeom::Distortion::distort(afwGeom::Point2D const &p) {
     return afwGeom::Point2D(p.getX(), p.getY());
@@ -62,7 +68,43 @@ geomEllip::Quadrupole cameraGeom::Distortion::undistort(afwGeom::Point2D const &
 }
 
 
+afwGeom::LinearTransform cameraGeom::Distortion::computeLinearTransform(
+                                                                        afwGeom::Point2D const &p,
+                                                                        bool forward
+                                                                       ) {
+    return afwGeom::LinearTransform(); // no args means an identity transform
+}
+
+template<typename PixelT>
+typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::_warp(afwGeom::Point2D const &p,
+                                                                    afwImage::Image<PixelT> const &img,
+                                                                    afwGeom::Point2D const &pix,
+                                                                    bool forward) {
+    typename afwImage::Image<PixelT>::Ptr warpImg(new afwImage::Image<PixelT>(img, true));
+    afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
+    afwGeom::LinearTransform linTran = this->computeLinearTransform(p, forward);
+    afwMath::warpCenteredImage(*warpImg, img, kernel, linTran, pix);
+    return warpImg;
+}
+
+template<typename PixelT>
+typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::distort(afwGeom::Point2D const &p,
+                                                             afwImage::Image<PixelT> const &img,
+                                                             afwGeom::Point2D const &pix) {
+    return _warp(p, img, pix, true);
+}
+
+template<typename PixelT>
+typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::undistort(afwGeom::Point2D const &p,
+                                                               afwImage::Image<PixelT> const &img,
+                                                               afwGeom::Point2D const &pix) {
+    return _warp(p, img, pix, false);
+}
+
+
+/* ========================================================================================*/
 /* NullDistortion  */
+/* ========================================================================================*/
 
 afwGeom::Point2D cameraGeom::NullDistortion::distort(afwGeom::Point2D const &p) {
     return afwGeom::Point2D(p.getX(), p.getY());
@@ -78,10 +120,31 @@ geomEllip::Quadrupole cameraGeom::NullDistortion::undistort(afwGeom::Point2D con
                                                          geomEllip::Quadrupole const &Iqq) {
     return geomEllip::Quadrupole(Iqq);
 }
+afwGeom::LinearTransform cameraGeom::NullDistortion::computeLinearTransform(
+                                                                            afwGeom::Point2D const &p,
+                                                                            bool forward
+                                                                           ) {
+    return afwGeom::LinearTransform(); // no args means an identity transform
+}
+
+template<typename PixelT>
+typename afwImage::Image<PixelT>::Ptr cameraGeom::NullDistortion::distort(afwGeom::Point2D const &p,
+                                                             afwImage::Image<PixelT> const &img,
+                                                             afwGeom::Point2D const &pix) {
+    return cameraGeom::Distortion::distort(p, img, pix);
+}
+
+template<typename PixelT>
+typename afwImage::Image<PixelT>::Ptr cameraGeom::NullDistortion::undistort(afwGeom::Point2D const &p,
+                                                               afwImage::Image<PixelT> const &img,
+                                                               afwGeom::Point2D const &pix) {
+    return cameraGeom::Distortion::undistort(p, img, pix);
+}
 
 
-
+/* ========================================================================================*/
 /* RadialPolyDistortion  */
+/* ========================================================================================*/
 
 cameraGeom::RadialPolyDistortion::RadialPolyDistortion(std::vector<double> const &coeffs) :
     Distortion(), _maxN(7) {
@@ -227,10 +290,10 @@ afwGeom::Point2D cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D c
 }
 
 
-
-geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p,
-                                                                geomEllip::Quadrupole const &iqq,
-                                                                bool forward) {
+afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeLinearTransform(
+                                                                                  afwGeom::Point2D const &p,
+                                                                                  bool forward
+                                                                                 ) {
 
     double x = p.getX();
     double y = p.getY();
@@ -246,6 +309,15 @@ geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::_transform(afwGeom::Poin
     R    << cost,  sint, -sint, cost;  // rotate from theta to along x-axis
     Rinv = R.inverse();
     Eigen::Matrix2d Mp = Rinv*M*R;
+    
+    return afwGeom::LinearTransform(Mp);
+    
+}
+
+
+geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::_transform(afwGeom::Point2D const &p,
+                                                                geomEllip::Quadrupole const &iqq,
+                                                                bool forward) {
 
 #if 0
     double ixx = iqq.getIXX();
@@ -256,6 +328,7 @@ geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::_transform(afwGeom::Poin
     I << ixx, 0.5*ixy, 0.5*ixy, iyy;
     
     //Eigen::Matrix2d Inew = Mp.inverse()*I*(Mp.transpose()).inverse();
+    Eigen::Matrix2d Mp = computeLinearTransform(p, forward).getEigen();
     Eigen::Matrix2d Inew = Mp*I*Mp.transpose();
     
     double iuu = Inew(0,0);
@@ -264,7 +337,7 @@ geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::_transform(afwGeom::Poin
     
     return geomEllip::Quadrupole(iuu, ivv, iuv);
 #else
-    return iqq.transform(afwGeom::LinearTransform(Mp));
+    return iqq.transform(computeLinearTransform(p, forward));
 #endif
     
 }
@@ -283,3 +356,50 @@ geomEllip::Quadrupole cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point
                                                                geomEllip::Quadrupole const &Iqq) {
     return this->_transform(p, Iqq, false);
 }
+
+
+template<typename PixelT>
+typename afwImage::Image<PixelT>::Ptr cameraGeom::RadialPolyDistortion::distort(afwGeom::Point2D const &p,
+                                                             afwImage::Image<PixelT> const &img,
+                                                             afwGeom::Point2D const &pix) {
+    return cameraGeom::Distortion::distort(p, img, pix);
+}
+
+template<typename PixelT>
+typename afwImage::Image<PixelT>::Ptr cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point2D const &p,
+                                                               afwImage::Image<PixelT> const &img,
+                                                               afwGeom::Point2D const &pix) {
+    return cameraGeom::Distortion::undistort(p, img, pix);
+}
+
+
+// explicit instantiations
+/*
+ */
+#define INSTANTIATE(TYPE)                                               \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::Distortion::_warp(afwGeom::Point2D const &p, \
+                                                                      afwImage::Image<TYPE> const &img, \
+                                                                      afwGeom::Point2D const &pix, \
+                                                                      bool forward); \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::Distortion::distort(afwGeom::Point2D const &p, \
+                                                                        afwImage::Image<TYPE> const &img, \
+                                                                        afwGeom::Point2D const &pix); \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::Distortion::undistort(afwGeom::Point2D const &p, \
+                                                                          afwImage::Image<TYPE> const &img, \
+                                                                          afwGeom::Point2D const &pix); \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::NullDistortion::distort(afwGeom::Point2D const &p, \
+                                                                        afwImage::Image<TYPE> const &img, \
+                                                                        afwGeom::Point2D const &pix); \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::NullDistortion::undistort(afwGeom::Point2D const &p, \
+                                                                          afwImage::Image<TYPE> const &img, \
+                                                                          afwGeom::Point2D const &pix); \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::RadialPolyDistortion::distort(afwGeom::Point2D const &p, \
+                                                                                  afwImage::Image<TYPE> const &img, \
+                                                                                  afwGeom::Point2D const &pix); \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::RadialPolyDistortion::undistort(afwGeom::Point2D const &p, \
+                                                                                    afwImage::Image<TYPE> const &img, \
+                                                                                    afwGeom::Point2D const &pix);
+
+
+INSTANTIATE(float);
+INSTANTIATE(double);
