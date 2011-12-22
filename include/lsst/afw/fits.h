@@ -115,11 +115,19 @@ struct Fits {
     /// @brief Append rows to a table, and return the index of the first new row.
     int addRows(int nRows);
 
+    int countRows();
+
     template <typename T>
     void writeTableArray(int row, int col, int nElements, T const * value);
 
     template <typename T>
     void writeTableScalar(int row, int col, T value) { writeTableArray(row, col, 1, &value); }
+
+    template <typename T>
+    void readTableArray(int row, int col, int nElements, T * value);
+
+    template <typename T>
+    void readTableScalar(int row, int col, T & value) { readTableArray(row, col, 1, &value); }
     
     static Fits createFile(char const * filename);
 

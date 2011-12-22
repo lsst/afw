@@ -34,8 +34,6 @@ typedef afw::fits::Fits Fits;
  */
 void writeFitsHeader(Fits & fits, Schema const & schema, bool sanitizeNames);
 
-Schema readFitsHeader(Fits & fits, bool unsanitizeNames);
-
 /**
  *  @brief Write the records of a table to a FITS binary table.
  *
@@ -65,6 +63,35 @@ void writeFitsRecords(Fits & fits, TableBase const & table);
  *                                 define the FITS output.
  */
 void writeFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper);
+
+/**
+ *  @brief Read the header of FITS binary table, returning a Schema.
+ *
+ *  Fully general FITS tables are not supported; some FITS column types (mostly
+ *  various-sized integers) have no afw::table counterpart, and only float and
+ *  double arrays.  In addition, only one bit array column may be present, the FLAG_COL
+ *  key must contain the number of this column, and all bits must be labeled using
+ *  TFLAGn keys.  The TCCLSn keys will be read to determine the type of multi-element
+ *  fields; if these are not set, multi-element columns will be loaded into array fields
+ *  and single element columns will be loaded into scalar fields.
+ *
+ *  @param[in,out]  fits             An afw cfitsio wrapper object corresponding to a FITS
+ *                                   binary table.
+ *  @param[in]      unsanitizeNames  If True, underscores in names will be converted to periods.
+ *  @param[in]      nCols            Number of FITS columns to read; any columns after
+ *                                   this will be ignored (allowing them to have unsupported
+ *                                   types and/or store auxiliary data to be loaded separately).
+ *                                   Ignored if < 0.
+ */
+Schema readFitsHeader(Fits & fits, bool unsanitizeNames, int nCols=-1);
+
+/**
+ *  @brief Read the rows of a FITS binary table into a table.
+ *
+ *  The table's Schema must be equal to the Schema produced by calling readFitsHeader
+ *  on the FITS table; this should almost always be done to initialize the table.
+ */
+void readFitsRecords(Fits & fits, TableBase const & table);
 
 }}}} // namespace lsst::afw::table::fits
 

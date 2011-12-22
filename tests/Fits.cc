@@ -49,7 +49,34 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     lsst::afw::fits::Fits file = lsst::afw::fits::Fits::openFile("testTable.fits[1]", true);
     file.checkStatus();
-    lsst::afw::table::fits::readFitsHeader(file, true);
+    Schema readSchema = lsst::afw::table::fits::readFitsHeader(file, true);
+    BOOST_CHECK_EQUAL( schema, readSchema );
+    SimpleTable readTable(readSchema);
+    lsst::afw::table::fits::readFitsRecords(file, readTable);
     file.closeFile();
     file.checkStatus();
+
+    {
+        SimpleRecord a1 = table[1];
+        SimpleRecord b1 = readTable[1];
+        BOOST_CHECK_EQUAL( a1.get(a_b_i), b1.get(a_b_i) );
+        BOOST_CHECK_EQUAL( a1.get(a_b_i_valid), b1.get(a_b_i_valid) );
+        BOOST_CHECK_CLOSE( a1.get(a_c_f), b1.get(a_c_f), 1E-8 );
+        BOOST_CHECK_CLOSE( a1.get(e_g_d), b1.get(e_g_d), 1E-16 );
+        BOOST_CHECK_EQUAL( a1.get(e_g_d_flag1), b1.get(e_g_d_flag1) );
+        BOOST_CHECK_EQUAL( a1.get(e_g_d_flag2), b1.get(e_g_d_flag2) );
+        BOOST_CHECK_CLOSE( a1.get(a_b_p.getX()), b1.get(a_b_p.getX()), 1E-8 );
+        BOOST_CHECK_CLOSE( a1.get(a_b_p.getY()), b1.get(a_b_p.getY()), 1E-8 );
+
+        SimpleRecord a2 = table[2];
+        SimpleRecord b2 = readTable[2];
+        BOOST_CHECK_EQUAL( a2.get(a_b_i), b2.get(a_b_i) );
+        BOOST_CHECK_EQUAL( a2.get(a_b_i_valid), b2.get(a_b_i_valid) );
+        BOOST_CHECK_CLOSE( a2.get(a_c_f), b2.get(a_c_f), 1E-8 );
+        BOOST_CHECK_CLOSE( a2.get(e_g_d), b2.get(e_g_d), 1E-16 );
+        BOOST_CHECK_EQUAL( a2.get(e_g_d_flag1), b2.get(e_g_d_flag1) );
+        BOOST_CHECK_EQUAL( a2.get(e_g_d_flag2), b2.get(e_g_d_flag2) );
+        BOOST_CHECK_CLOSE( a2.get(a_b_p.getX()), b2.get(a_b_p.getX()), 1E-8 );
+        BOOST_CHECK_CLOSE( a2.get(a_b_p.getY()), b2.get(a_b_p.getY()), 1E-8 );
+    }
 }

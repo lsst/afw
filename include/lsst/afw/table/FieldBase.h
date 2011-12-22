@@ -17,9 +17,9 @@
 #include "lsst/afw/table/Covariance.h"
 #include "lsst/afw/table/KeyBase.h"
 
-#define AFW_TABLE_SCALAR_FIELD_TYPE_N 3
+#define AFW_TABLE_SCALAR_FIELD_TYPE_N 4
 #define AFW_TABLE_SCALAR_FIELD_TYPES                                    \
-    int, float, double
+    RecordId, boost::int32_t, float, double
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
 #define AFW_TABLE_ARRAY_FIELD_TYPE_N 2
@@ -27,7 +27,7 @@
     float, double
 #define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
 
-#define AFW_TABLE_FIELD_TYPE_N 17
+#define AFW_TABLE_FIELD_TYPE_N 18
 #define AFW_TABLE_FIELD_TYPES                                   \
     AFW_TABLE_SCALAR_FIELD_TYPES,                               \
     Flag,                                                       \
@@ -65,6 +65,8 @@ struct FieldBase {
 
 protected:
 
+    void stream(std::ostream & os) const {}
+
     Reference getReference(Element * p) const { return *p; }
 
     Value getValue(Element const * p) const { return *p; }
@@ -97,6 +99,8 @@ struct FieldBase< Point<U> > {
 
 protected:
 
+    void stream(std::ostream & os) const {}
+
     Value getValue(Element const * p) const { return Value(p[0], p[1]); }
 
     void setValue(Element * p, Value const & v) const {
@@ -121,6 +125,8 @@ struct FieldBase< Shape<U> > {
     std::string getTypeString() const;
 
 protected:
+
+    void stream(std::ostream & os) const {}
 
     Value getValue(Element const * p) const {
         return Value(p[0], p[1], p[2]);
@@ -171,6 +177,8 @@ struct FieldBase< Array<U> > {
     int getSize() const { return _size; }
 
 protected:
+
+    void stream(std::ostream & os) const { os << ", " << _size; }
 
     Reference getReference(Element * p) const {
         return Reference(p, _size);
@@ -249,6 +257,8 @@ struct FieldBase< Covariance<U> > {
     
 protected:
 
+    void stream(std::ostream & os) const { os << ", " << _size; }
+
     Value getValue(Element * p) const {
         Value m(_size, _size);
         for (int i = 0; i < _size; ++i) {
@@ -311,6 +321,8 @@ struct FieldBase< Covariance< Point<U> > > {
 
 protected:
 
+    void stream(std::ostream & os) const {}
+
     Value getValue(Element * p) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
@@ -367,6 +379,8 @@ struct FieldBase< Covariance< Shape<U> > > {
     int getPackedSize() const { return PACKED_SIZE; }
 
 protected:
+
+    void stream(std::ostream & os) const {}
 
     Value getValue(Element * p) const {
         Value m;

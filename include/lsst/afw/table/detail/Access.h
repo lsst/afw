@@ -11,6 +11,7 @@
 namespace lsst { namespace afw { namespace table {
 
 class RecordBase;
+class TableBase;
 
 namespace detail {
 
@@ -101,6 +102,10 @@ public:
     static RecordT makeRecord(RecordBase const & base) {
         return RecordT(base);
     }
+
+    static RecordBase addRecord(TableBase const & table, RecordId id);
+
+    static RecordBase addRecord(TableBase const & table);
 
 };
 

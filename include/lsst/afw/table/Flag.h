@@ -26,6 +26,10 @@ struct FieldBase<Flag> {
     /// @brief Return a string description of the field type.
     std::string getTypeString() const { return "Flag"; }
 
+protected:
+
+    void stream(std::ostream & os) const {}
+
 };
 
 /**

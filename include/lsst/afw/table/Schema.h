@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_Schema_h_INCLUDED
 #define AFW_TABLE_Schema_h_INCLUDED
 
-#include <set>
+#include <vector>
 
 #include "boost/shared_ptr.hpp"
 #include "boost/ref.hpp"
@@ -46,7 +46,7 @@ class Schema {
 public:
 
     /// @brief Set type returned by describe().
-    typedef std::set<FieldDescription> Description;
+    typedef std::vector<FieldDescription> Description;
 
     /// @brief Return true if the schema constains space for a parent ID field.
     bool hasTree() const { return _impl->hasTree(); }
@@ -176,6 +176,8 @@ public:
 
     /// @brief Construct an empty Schema.
     explicit Schema(bool hasTree);
+
+    friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
 private:
 

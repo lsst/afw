@@ -36,12 +36,26 @@ struct Describe {
 
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
-        result->insert(item.field.describe());
+        result->push_back(item.field.describe());
     }
 
     explicit Describe(Schema::Description * result_) : result(result_) {}
 
     Schema::Description * result;
+};
+
+struct Stream {
+    
+    typedef void result_type;
+   
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        *os << "    " << item.field << ",\n";
+    }
+
+    explicit Stream(std::ostream * os_) : os(os_) {}
+
+    std::ostream * os;
 };
 
 struct ExtractOffset : public boost::static_visitor<int> {
@@ -440,6 +454,12 @@ bool Schema::operator==(Schema const & other) const {
 }
 
 Schema::Schema(bool hasTree) : _impl(boost::make_shared<Impl>(hasTree)) {}
+
+std::ostream & operator<<(std::ostream & os, Schema const & schema) {
+    os << "Schema(\n";
+    schema.forEach(Stream(&os));
+    return os << ")\n";
+}
 
 //----- SubSchema implementation ----------------------------------------------------------------------------
 

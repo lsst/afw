@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_Field_h_INCLUDED
 #define AFW_TABLE_Field_h_INCLUDED
 
+#include <iostream>
 
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/FieldDescription.h"
@@ -44,6 +45,17 @@ struct Field : public FieldBase<T> {
 
     FieldDescription describe() const {
         return FieldDescription(getName(), getDoc(), getUnits(), this->getTypeString());
+    }
+
+    inline friend std::ostream & operator<<(std::ostream & os, Field<T> const & field) {
+        os << "Field< " << field.getTypeString()
+           << " >(\"" << field.getName()
+           << "\", \"" << field.getDoc()
+           << "\"";
+        if (!field.getUnits().empty())
+            os << ", \"" << field.getUnits() << "\"";
+        field.stream(os);
+        return os << ")";
     }
 
 private:

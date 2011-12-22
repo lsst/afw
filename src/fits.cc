@@ -247,6 +247,16 @@ int Fits::addRows(int nRows) {
     return first;
 }
 
+int Fits::countRows() {
+    long r = 0;
+    fits_get_num_rows(
+        reinterpret_cast<fitsfile*>(fptr),
+        &r,
+        &status
+    );
+    return r;
+}
+
 template <typename T>
 void Fits::writeTableArray(int row, int col, int nElements, T const * value) {
     fits_write_col(
@@ -255,6 +265,21 @@ void Fits::writeTableArray(int row, int col, int nElements, T const * value) {
         col + 1, row + 1, 
         1, nElements,
         const_cast<T*>(value),
+        &status
+    );
+}
+
+template <typename T>
+void Fits::readTableArray(int row, int col, int nElements, T * value) {
+    int anynul = false;
+    fits_read_col(
+        reinterpret_cast<fitsfile*>(fptr), 
+        FitsType<T>::CONSTANT, 
+        col + 1, row + 1, 
+        1, nElements,
+        0,
+        value,
+        &anynul,
         &status
     );
 }
@@ -290,7 +315,8 @@ void Fits::closeFile() {
 
 #define INSTANTIATE_EDIT_KEY(r, data, T)                                \
     template void Fits::updateKey(char const * key, T value, char const * comment); \
-    template void Fits::writeKey(char const * key, T value, char const * comment);
+    template void Fits::writeKey(char const * key, T value, char const * comment); \
+    template void Fits::readKey(char const * key, T & value);
     
 #define INSTANTIATE_EDIT_COLUMN_KEY(r, data, T)                         \
     template void Fits::updateColumnKey(char const * prefix, int n, T value, char const * comment); \
@@ -299,8 +325,9 @@ void Fits::closeFile() {
 #define INSTANTIATE_ADD_COLUMN(r, data, T)                              \
     template int Fits::addColumn<T>(char const * ttype, int size, char const * comment);
 
-#define INSTANTIATE_WRITE_TABLE_ARRAY(r, data, T)    \
-    template void Fits::writeTableArray(int row, int col, int nElements, T const * value);
+#define INSTANTIATE_EDIT_TABLE_ARRAY(r, data, T)    \
+    template void Fits::writeTableArray(int row, int col, int nElements, T const * value); \
+    template void Fits::readTableArray(int row, int col, int nElements, T * value);
 
 #define KEY_TYPES                                                       \
     (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
@@ -313,7 +340,7 @@ void Fits::closeFile() {
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_COLUMN_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_ADD_COLUMN, _, COLUMN_TYPES)
-BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_WRITE_TABLE_ARRAY, _, COLUMN_TYPES)
+BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_TABLE_ARRAY, _, COLUMN_TYPES)
 
 INSTANTIATE_EDIT_COLUMN_KEY(_, _, char const *)
 

@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <set>
 
 #include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"

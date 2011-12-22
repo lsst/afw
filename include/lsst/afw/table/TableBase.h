@@ -171,8 +171,23 @@ protected:
     PTR(AuxBase) getAux() const;
 
 private:
+
+    friend class detail::Access;
+
     PTR(detail::TableImpl) _impl;
 };
+
+namespace detail {
+
+inline RecordBase Access::addRecord(TableBase const & table, RecordId id) {
+    return table._addRecord(id);
+}
+
+inline RecordBase Access::addRecord(TableBase const & table) {
+    return table._addRecord();
+}
+
+} // namespace detail
 
 }}} // namespace lsst::afw::table
 
