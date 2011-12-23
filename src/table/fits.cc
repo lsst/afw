@@ -153,23 +153,17 @@ struct ProcessWriteData {
     
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
-        this->operator()(item.key, item.key);
-    }
-    
-    template <typename T>
-    void operator()(Key<T> const & input, Key<T> const & output) const {
-        fits->writeTableArray(row, col, input.getElementCount(), iter->getElementConstPtr(input));
+        fits->writeTableArray(row, col, item.key.getElementCount(), iter->getElementConstPtr(item.key));
         ++col;
     }
-
-    void operator()(Key<Flag> const & input, Key<Flag> const & output) const {
-        flags[bit] = iter->get(input);
+    
+    void operator()(SchemaItem<Flag> const & item) const {
+        flags[bit] = iter->get(item.key);
         ++bit;
     }
 
-    template <typename SchemaIterable>
     static void apply(
-        Fits & fits, TableBase const & table, Schema const & schema, SchemaIterable const & iterable
+        Fits & fits, TableBase const & table, Schema const & schema
     ) {
         bool hasTree = schema.hasTree();
         int nFlags = CountFlags::apply(schema);
@@ -184,7 +178,7 @@ struct ProcessWriteData {
             fits.writeTableScalar(f.row, f.col++, f.iter->getId());
             if (hasTree) fits.writeTableScalar(f.row, f.col++, f.iter->getParentId());
             if (nFlags) ++f.col;
-            iterable.forEach(boost::ref(f));
+            schema.forEach(boost::ref(f));
             if (nFlags) fits.writeTableArray(f.row, 1 + hasTree, nFlags, f.flags);
             ++f.row;
             ++f.iter;
@@ -202,14 +196,7 @@ struct ProcessWriteData {
 } // anonymous
 
 void writeFitsRecords(Fits & fits, TableBase const & table) {
-    ProcessWriteData::apply(fits, table, table.getSchema(), table.getSchema());
-    fits.checkStatus();
-}
-
-void writeFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper) {
-    SchemaMapper mapperCopy(mapper);
-    mapperCopy.sort(SchemaMapper::OUTPUT);
-    ProcessWriteData::apply(fits, table, mapperCopy.getOutputSchema(), mapperCopy);
+    ProcessWriteData::apply(fits, table, table.getSchema());
     fits.checkStatus();
 }
 
@@ -479,23 +466,17 @@ struct ProcessReadData {
     
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
-        this->operator()(item.key, item.key);
-    }
-
-    template <typename T>
-    void operator()(Key<T> const & input, Key<T> const & output) const {
         while (col == idCol || col == treeCol || col == flagCol) ++col;
-        fits->readTableArray(row, col, input.getElementCount(), record->getElementPtr(input));
+        fits->readTableArray(row, col, item.key.getElementCount(), record->getElementPtr(item.key));
         ++col;
     }
 
-    void operator()(Key<Flag> const & input, Key<Flag> const & output) const {
-        record->set(input, flags[bit]);
+    void operator()(SchemaItem<Flag> const & item) const {
+        record->set(item.key, flags[bit]);
         ++bit;
     }
 
-    template <typename SchemaIterable>
-    void doRecord(SchemaIterable const & iterable, int nFlags) {
+    void doRecord(Schema const & schema, int nFlags) {
         if (treeCol >= 0) {
             RecordId parentId;
             fits->readTableScalar(row, treeCol, parentId);
@@ -504,13 +485,12 @@ struct ProcessReadData {
         if (flagCol >= 0) {
             fits->readTableArray<bool>(row, flagCol, nFlags, flags);
         }
-        iterable.forEach(*this);
+        schema.forEach(*this);
     }
 
-    template <typename SchemaIterable>
     static void apply(
         Fits & fits, TableBase const & table,
-        Schema const & schema, SchemaIterable const & iterable,
+        Schema const & schema,
         int idCol, int treeCol, int flagCol
     ) {
         int nFlags = CountFlags::apply(schema);
@@ -527,11 +507,11 @@ struct ProcessReadData {
                 fits.readTableScalar(f.row, idCol, recordId);
                 RecordBase record = detail::Access::addRecord(table, recordId);
                 f.record = &record;
-                f.doRecord(iterable, nFlags);
+                f.doRecord(schema, nFlags);
             } else {
                 RecordBase record = detail::Access::addRecord(table);
                 f.record = &record;
-                f.doRecord(iterable, nFlags);
+                f.doRecord(schema, nFlags);
             }
             ++f.row;
         }
@@ -573,36 +553,7 @@ void readFitsRecords(Fits & fits, TableBase const & table) {
         fits.status = 0;
         treeCol = -1;
     }    
-    ProcessReadData::apply(fits, table, table.getSchema(), table.getSchema(), idCol, treeCol, flagCol);
-    fits.checkStatus();
-}
-
-void readFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper) {
-    int idCol = -1, treeCol = -1, flagCol = -1;
-    fits.readKey("ID_COL", idCol);
-    if (fits.status == 0) {
-        --idCol;
-    } else {
-        fits.status = 0;
-        idCol = -1;
-    }
-    fits.readKey("FLAG_COL", flagCol);
-    if (fits.status == 0) {
-        --flagCol;
-    } else {
-        fits.status = 0;
-        flagCol = -1;
-    }
-    fits.readKey("TREE_COL", treeCol);
-    if (fits.status == 0) {
-        --treeCol;
-    } else {
-        fits.status = 0;
-        treeCol = -1;
-    }
-    SchemaMapper mapperCopy(mapper);
-    mapperCopy.sort(SchemaMapper::INPUT);
-    ProcessReadData::apply(fits, table, mapperCopy.getInputSchema(), mapperCopy, idCol, treeCol, flagCol);
+    ProcessReadData::apply(fits, table, table.getSchema(), idCol, treeCol, flagCol);
     fits.checkStatus();
 }
 

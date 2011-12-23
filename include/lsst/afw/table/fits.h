@@ -48,23 +48,6 @@ void writeFitsHeader(Fits & fits, Schema const & schema, bool sanitizeNames);
 void writeFitsRecords(Fits & fits, TableBase const & table);
 
 /**
- *  @brief Write the records of a table to a FITS binary table, using a mapper.
- *
- *  The binary table must have already been created with writeFitsHeader, using the output
- *  Schema of the SchemaMapper, and the table's Schema must be the same as the mapper's input
- *  Schema.  Additional FITS columns may be present in addition to those created by
- *  writeFitsHeader (these will be ignored).  The table and record auxiliary data is not
- *  written.
- *
- *  @param[in,out]  fits           An afw cfitsio wrapper object already processed by writeFitsHeader.
- *  @param[in]      table          Table to write to disk.
- *  @param[in]      mapper         Mapper to select which fields to write; mapper's input Schema
- *                                 must match the table's schema, and the output Schema will
- *                                 define the FITS output.
- */
-void writeFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper);
-
-/**
  *  @brief Read the header of FITS binary table, returning a Schema.
  *
  *  Fully general FITS tables are not supported; some FITS column types (mostly
@@ -96,20 +79,6 @@ Schema readFitsHeader(Fits & fits, bool unsanitizeNames, int nCols=-1);
  *  @param[in,out]  table            Table to append records to.
  */
 void readFitsRecords(Fits & fits, TableBase const & table);
-
-/**
- *  @brief Read the rows of a FITS binary table into a table, using a mapper.
- *
- *  The mapper's output schema must match the table's schema, while the mapper's input
- *  schema must match the schema produced by calling readFitsRecords on the FITS
- *  file.
- *
- *  @param[in,out]  fits             An afw cfitsio wrapper object corresponding to a FITS
- *                                   binary table.
- *  @param[in,out]  table            Table to append records to.
- *  @param[in]      mapper           Mapper that specifies which fields to read.
- */
-void readFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper);
 
 }}}} // namespace lsst::afw::table::fits
 
