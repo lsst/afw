@@ -47,14 +47,8 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     table.writeFits("!testTable.fits");
 
-    lsst::afw::fits::Fits file = lsst::afw::fits::Fits::openFile("testTable.fits[1]", true);
-    file.checkStatus();
-    Schema readSchema = lsst::afw::table::fits::readFitsHeader(file, true);
-    BOOST_CHECK_EQUAL( schema, readSchema );
-    SimpleTable readTable(readSchema);
-    lsst::afw::table::fits::readFitsRecords(file, readTable);
-    file.closeFile();
-    file.checkStatus();
+    SimpleTable readTable = table.readFits("testTable.fits[1]");
+    BOOST_CHECK_EQUAL( schema, readTable.getSchema() );
 
     {
         SimpleRecord a1 = table[1];

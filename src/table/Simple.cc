@@ -22,4 +22,16 @@ void SimpleTable::writeFits(std::string const & filename, SchemaMapper const & m
     file.checkStatus();
 }
 
+SimpleTable SimpleTable::readFits(std::string const & filename, bool unsanitizeNames) {
+    fits::Fits file = fits::Fits::openFile(filename.c_str(), true);
+    Schema schema = fits::readFitsHeader(file, unsanitizeNames);
+    int nRecords = 0;
+    file.readKey("NAXIS2", nRecords);
+    SimpleTable table(schema, nRecords);
+    fits::readFitsRecords(file, table);
+    file.closeFile();
+    file.checkStatus();
+    return table;
+}
+
 }}} // namespace lsst::afw::table

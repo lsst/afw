@@ -90,8 +90,26 @@ Schema readFitsHeader(Fits & fits, bool unsanitizeNames, int nCols=-1);
  *
  *  The table's Schema must be equal to the Schema produced by calling readFitsHeader
  *  on the FITS table; this should almost always be done to initialize the table.
+ *
+ *  @param[in,out]  fits             An afw cfitsio wrapper object corresponding to a FITS
+ *                                   binary table.
+ *  @param[in,out]  table            Table to append records to.
  */
 void readFitsRecords(Fits & fits, TableBase const & table);
+
+/**
+ *  @brief Read the rows of a FITS binary table into a table, using a mapper.
+ *
+ *  The mapper's output schema must match the table's schema, while the mapper's input
+ *  schema must match the schema produced by calling readFitsRecords on the FITS
+ *  file.
+ *
+ *  @param[in,out]  fits             An afw cfitsio wrapper object corresponding to a FITS
+ *                                   binary table.
+ *  @param[in,out]  table            Table to append records to.
+ *  @param[in]      mapper           Mapper that specifies which fields to read.
+ */
+void readFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper);
 
 }}}} // namespace lsst::afw::table::fits
 

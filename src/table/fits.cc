@@ -577,4 +577,33 @@ void readFitsRecords(Fits & fits, TableBase const & table) {
     fits.checkStatus();
 }
 
+void readFitsRecords(Fits & fits, TableBase const & table, SchemaMapper const & mapper) {
+    int idCol = -1, treeCol = -1, flagCol = -1;
+    fits.readKey("ID_COL", idCol);
+    if (fits.status == 0) {
+        --idCol;
+    } else {
+        fits.status = 0;
+        idCol = -1;
+    }
+    fits.readKey("FLAG_COL", flagCol);
+    if (fits.status == 0) {
+        --flagCol;
+    } else {
+        fits.status = 0;
+        flagCol = -1;
+    }
+    fits.readKey("TREE_COL", treeCol);
+    if (fits.status == 0) {
+        --treeCol;
+    } else {
+        fits.status = 0;
+        treeCol = -1;
+    }
+    SchemaMapper mapperCopy(mapper);
+    mapperCopy.sort(SchemaMapper::INPUT);
+    ProcessReadData::apply(fits, table, mapperCopy.getInputSchema(), mapperCopy, idCol, treeCol, flagCol);
+    fits.checkStatus();
+}
+
 }}}} // namespace lsst::afw::table::fits

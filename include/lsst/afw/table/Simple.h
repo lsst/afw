@@ -76,6 +76,8 @@ public:
      */
     void writeFits(std::string const & filename, SchemaMapper const & mapper, bool sanitizeNames=true);
     
+    static SimpleTable readFits(std::string const & filename, bool unsanitizeNames=true);
+
 };
 
 }}} // namespace lsst::afw::table
