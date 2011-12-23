@@ -75,8 +75,36 @@ public:
      *  @param[in]   sanitizeNames   If true, periods in names will be converted to underscores.
      */
     void writeFits(std::string const & filename, SchemaMapper const & mapper, bool sanitizeNames=true);
-    
+
+    /**
+     *  @brief Load a Schema from a FITS binary table header.
+     *
+     *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
+     *                               to cfitsio, so all of its extended filename syntaxes should
+     *                               work here.
+     *  @param[in]   sanitizeNames   If true, underscores in names will be converted to periods.
+     */
+    static Schema readFitsHeader(std::string const & filename, bool unsanitizeNames=true);
+
+    /**
+     *  @brief Load a table from a FITS binary table.
+     *
+     *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
+     *                               to cfitsio, so all of its extended filename syntaxes should
+     *                               work here.
+     *  @param[in]   unsanitizeNames If true, underscores in names will be converted to periods.
+     */
     static SimpleTable readFits(std::string const & filename, bool unsanitizeNames=true);
+
+    /**
+     *  @brief Load a table from a FITS binary table using only fields defined by a mapper.
+     *
+     *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
+     *                               to cfitsio, so all of its extended filename syntaxes should
+     *                               work here.
+     *  @param[in]   mapper          A mapper whose output Schema is used to define the table.
+     */
+    static SimpleTable readFits(std::string const & filename, SchemaMapper const & mapper);
 
 };
 
