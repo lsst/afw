@@ -91,7 +91,10 @@ SWIG_SHARED_PTR_DERIVED(RadialPolyDistortionPtr, lsst::afw::cameraGeom::Distorti
 %include "lsst/afw/cameraGeom/Distortion.h"
 
 %define DistortInstantiate(PIXEL)
-%template(distort) lsst::afw::cameraGeom::Distortion::distort<PIXEL>;
+%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::Image<PIXEL> >;
+%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::MaskedImage<PIXEL> >;
+%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::Image<PIXEL> >;
+%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::MaskedImage<PIXEL> >;
 %enddef
 
 DistortInstantiate(float);

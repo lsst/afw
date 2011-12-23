@@ -658,20 +658,21 @@ int afwMath::warpCenteredImage(
 {
 
     // pretend the star is at pixel 0,0
-    afwGeom::Point2D negCenterPixel(afwGeom::Point2D(0.0, 0.0) - centerPixel);
-    afwGeom::Point2I negCenterPixelI(negCenterPixel);
+    afwGeom::Point2D xy0correction(afwGeom::Point2D(srcImage.getXY0()) - centerPixel);
+    afwGeom::Point2I xy0correctionI(xy0correction);
     SrcImageT srcImageCopy(srcImage, true);
-    srcImageCopy.setXY0(negCenterPixelI);
+    srcImageCopy.setXY0(xy0correctionI);
     
     // use the inverse transform (we do the transform wrt the output image coordinates)
     afwGeom::LinearTransform linTran = linearTransform.invert();
     // make an affine transform
     //
-    afwGeom::Extent2D translation(linTran(negCenterPixel));
+    afwGeom::Extent2D translation(linTran(xy0correction));
     afwGeom::AffineTransform affTran(linTran, translation);
         
     // now compute the tranform
-    return warpImage(destImage, srcImageCopy, warpingKernel, affTran);
+    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran);
+    return n;
 }
 
 

@@ -34,6 +34,7 @@
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 
+
 /**
  * @file
  *
@@ -46,6 +47,7 @@ namespace cameraGeom {
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/Defect.h"
 
+ 
 class Distortion;
     
 /**

@@ -59,6 +59,10 @@ public:
 
     //virtual Distortion::Ptr clone() const { return Distortion::Ptr(new Distortion(*this)); }
 
+    // accessors
+    void setLanczosOrder(int lanczosOrder) { _lanczosOrder = lanczosOrder; }
+    int getLanczosOrder() { return _lanczosOrder; }
+
     // distort a point
     lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p); // = 0;
     lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p); // = 0;
@@ -70,14 +74,14 @@ public:
                                                     lsst::afw::geom::ellipses::Quadrupole const &Iqq);
 
     // distort an image locally (ie. using the Quadrupole Linear Transform)
-    template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr distort(lsst::afw::geom::Point2D const &p,
-                                                 lsst::afw::image::Image<PixelT> const &img,
-                                                 lsst::afw::geom::Point2D const &pix);
-    template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr undistort(lsst::afw::geom::Point2D const &p,
-                                                   lsst::afw::image::Image<PixelT> const &img,
-                                                   lsst::afw::geom::Point2D const &pix);
+    template<typename ImageT>
+    typename ImageT::Ptr distort(lsst::afw::geom::Point2D const &p,
+                                 ImageT const &img,
+                                 lsst::afw::geom::Point2D const &pix);
+    template<typename ImageT>
+    typename ImageT::Ptr undistort(lsst::afw::geom::Point2D const &p,
+                                   ImageT const &img,
+                                   lsst::afw::geom::Point2D const &pix);
 
 
     // all derived classes must define these two public methods
@@ -87,11 +91,11 @@ public:
                                                                         bool forward);
     
 private: 
-    template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr _warp(lsst::afw::geom::Point2D const &p,
-                                                        lsst::afw::image::Image<PixelT> const &img,
-                                                        lsst::afw::geom::Point2D const &pix,
-                                                        bool forward);
+    template<typename ImageT>
+    typename ImageT::Ptr _warp(lsst::afw::geom::Point2D const &p,
+                               ImageT const &img,
+                               lsst::afw::geom::Point2D const &pix,
+                               bool forward);
     int _lanczosOrder;
 };
 

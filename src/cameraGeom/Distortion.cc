@@ -131,20 +131,21 @@ afwGeom::LinearTransform cameraGeom::Distortion::computeQuadrupoleTransform(
  * - the point 'p' corresponds to pixel 'pix' in the input image
  *
  */
-template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::_warp(
+template<typename ImageT>
+typename ImageT::Ptr cameraGeom::Distortion::_warp(
     afwGeom::Point2D const &p,          ///< Location of transform                       
-    afwImage::Image<PixelT> const &img, ///< Image to be (un)distorted                   
+    ImageT const &img, ///< Image to be (un)distorted                   
     afwGeom::Point2D const &pix,        ///< Pixel corresponding to location of transform
     bool forward                        ///< is this forward (undistorted to distorted) or reverse
                                                                    ) {
 
     int nx = img.getWidth();
     int ny = img.getHeight();
-    typename afwImage::Image<PixelT>::Ptr warpImg(new afwImage::Image<PixelT>(nx, ny, 0.0));
+    typename ImageT::Ptr warpImg(new ImageT(nx, ny));
     afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
     afwGeom::LinearTransform linTran = this->computeQuadrupoleTransform(p, forward);
     afwMath::warpCenteredImage(*warpImg, img, kernel, linTran, pix);
+    warpImg->setXY0(img.getXY0());
     return warpImg;
 }
 
@@ -153,10 +154,10 @@ typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::_warp(
  * - the transform is computed at point 'p'
  * - the point 'p' corresponds to pixel 'pix' in the input image
  */
-template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::distort(
+template<typename ImageT>
+typename ImageT::Ptr cameraGeom::Distortion::distort(
     afwGeom::Point2D const &p,          ///< Location of transform                       
-    afwImage::Image<PixelT> const &img, ///< Image to be distorted                       
+    ImageT const &img, ///< Image to be distorted                       
     afwGeom::Point2D const &pix         ///< Pixel corresponding to location of transform
                                                                      ) {
     return _warp(p, img, pix, true);
@@ -167,10 +168,10 @@ typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::distort(
  * - the transform is computed at point 'p'
  * - the point 'p' corresponds to pixel 'pix' in the input image
  */
-template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr cameraGeom::Distortion::undistort(
+template<typename ImageT>
+typename ImageT::Ptr cameraGeom::Distortion::undistort(
     afwGeom::Point2D const &p,           ///< Location of transform                       
-    afwImage::Image<PixelT> const &img,  ///< Image to be distorted                       
+    ImageT const &img,  ///< Image to be distorted                       
     afwGeom::Point2D const &pix          ///< Pixel corresponding to location of transform
                                                                        ) {
     return _warp(p, img, pix, false);
@@ -422,17 +423,19 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeQuadrupoleTran
 // explicit instantiations
 /*
  */
-#define INSTANTIATE(TYPE)                                               \
-    template afwImage::Image<TYPE>::Ptr cameraGeom::Distortion::_warp(afwGeom::Point2D const &p, \
-                                                                      afwImage::Image<TYPE> const &img, \
-                                                                      afwGeom::Point2D const &pix, \
-                                                                      bool forward); \
-    template afwImage::Image<TYPE>::Ptr cameraGeom::Distortion::distort(afwGeom::Point2D const &p, \
-                                                                        afwImage::Image<TYPE> const &img, \
+#define INSTANTIATE(IMTYPE, TYPE)                                        \
+    template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::_warp(afwGeom::Point2D const &p, \
+                                                                       afwImage::IMTYPE<TYPE> const &img, \
+                                                                       afwGeom::Point2D const &pix, \
+                                                                       bool forward); \
+    template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::distort(afwGeom::Point2D const &p, \
+                                                                        afwImage::IMTYPE<TYPE> const &img, \
                                                                         afwGeom::Point2D const &pix); \
-    template afwImage::Image<TYPE>::Ptr cameraGeom::Distortion::undistort(afwGeom::Point2D const &p, \
-                                                                          afwImage::Image<TYPE> const &img, \
-                                                                          afwGeom::Point2D const &pix);
+    template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::undistort(afwGeom::Point2D const &p, \
+                                                                          afwImage::IMTYPE<TYPE> const &img, \
+                                                                           afwGeom::Point2D const &pix);
 
-INSTANTIATE(float);
-INSTANTIATE(double);
+INSTANTIATE(Image, float);
+INSTANTIATE(Image, double);
+INSTANTIATE(MaskedImage, float);
+INSTANTIATE(MaskedImage, double);
