@@ -1,0 +1,49 @@
+// -*- lsst-c++ -*-
+#ifndef AFW_TABLE_IdFactory_h_INCLUDED
+#define AFW_TABLE_IdFactory_h_INCLUDED
+
+#include "boost/shared_ptr.hpp"
+
+#include "lsst/base.h"
+#include "lsst/afw/table/misc.h"
+
+namespace lsst { namespace afw { namespace table {
+
+/**
+ *  @brief A polymorphic functor base class for generating record IDs for a table.
+ *
+ *  The IDs produced by an IdFactory need not be sequential, but they must be unique and nonotonically 
+ *  increasing, both with respect to the IDs it generates itself and those passed to it via the
+ *  notify() member function.  Valid IDs must be nonzero, as zero is used to indicate null in some contexts.
+ */
+class IdFactory {
+public:
+
+    /// @brief Return a new unique RecordId.
+    virtual RecordId operator()() = 0;
+
+    /// @brief Notify the IdFactory that the given ID has been used and must not be returned by operator().
+    virtual void notify(RecordId id) = 0;
+
+    /// @brief Deep-copy the IdFactory.
+    virtual PTR(IdFactory) clone() const = 0;
+
+    /**
+     *  @brief Return a simple IdFactory that simply counts from 1.
+     *
+     *  This is used when an empty pointer is passed to the TableBase constructor.
+     */
+    static PTR(IdFactory) makeSimple();
+
+    virtual ~IdFactory() {}
+
+protected:
+
+    /// Protected to prevent slicing.
+    void operator=(IdFactory const & other) {}
+
+};
+
+}}} // namespace lsst::afw::table
+
+#endif // !AFW_TABLE_IdFactory_h_INCLUDED
