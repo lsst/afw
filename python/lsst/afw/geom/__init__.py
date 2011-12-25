@@ -23,7 +23,6 @@
 """Application Framework geometry code including Point, Extent, and ellipses
 """
 from .geomLib import (
-    version,
     LinearTransform,
     AffineTransform,
     Angle, radians, hours, degrees, arcminutes, arcseconds,
