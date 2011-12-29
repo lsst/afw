@@ -460,7 +460,7 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
             mtv(im, frame=frame)
         
         for p in planeList:
-            if planes[p] or True:
+            if planes.get(p):
                 if not getMaskPlaneVisibility(planes[p]):
                     continue
 
@@ -495,7 +495,8 @@ except NameError:
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
-    title = str(title)
+    title = str(title) if title else ""
+
     if True:
         if isMask:
             xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()
