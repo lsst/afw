@@ -278,10 +278,12 @@ public:
                   bool normalize=true,
                   lsst::afw::geom::Angle const defaultLongitude= lsst::afw::geom::Angle(0.)) :
         Coord(p3d, epoch, normalize, defaultLongitude) {}
-    EclipticCoord(lsst::afw::geom::Angle const lambda, lsst::afw::geom::Angle const beta, double const epoch = 2000.0) : 
-        Coord(lambda, beta, epoch) {}
-    EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
-        Coord(lambda, beta, epoch) {}
+    EclipticCoord(lsst::afw::geom::Angle const ecliptic_lambda,
+                  lsst::afw::geom::Angle const ecliptic_beta, double const epoch = 2000.0) : 
+        Coord(ecliptic_lambda, ecliptic_beta, epoch) {}
+    EclipticCoord(std::string const ecliptic_lambda, std::string const ecliptic_beta,
+                  double const epoch = 2000.0) : 
+        Coord(ecliptic_lambda, ecliptic_beta, epoch) {}
     EclipticCoord() : Coord() {}
     
     virtual Coord::Ptr clone() const { return EclipticCoord::Ptr(new EclipticCoord(*this)); }
