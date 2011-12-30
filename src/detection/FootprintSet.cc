@@ -83,13 +83,18 @@ namespace {
     // option to define a value for e.g. image::MaskPixel or int
     //
     template<typename T>
-    inline bool isBadPixel(T val) {
+    inline bool isBadPixel(T) {
+        return false;
+    }
+
+    template<>
+    inline bool isBadPixel(float val) {
         return std::isnan(val);
     }
 
     template<>
-    inline bool isBadPixel(image::MaskPixel) {
-        return false;
+    inline bool isBadPixel(double val) {
+        return std::isnan(val);
     }
 
     /*
