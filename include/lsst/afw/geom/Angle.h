@@ -6,9 +6,9 @@
 #include <boost/math/constants/constants.hpp>
 #include <cmath>
 
-#if 1
+#if __cplusplus < 201103L
 #   include <boost/static_assert.hpp>
-#   define static_assert(EXPR, MSG) BOOST_STATIC_ASSERT(EXPR) // in C++0x
+#   define static_assert(EXPR, MSG) BOOST_STATIC_ASSERT(EXPR) // not in C++98
 #endif
 
 namespace lsst { namespace afw { namespace geom {
