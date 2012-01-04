@@ -779,6 +779,11 @@ Mask<MaskPixelT>::getMaskPlaneDict() const
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::removeMaskPlane(const std::string& name)
 {
+    if (detail::MaskDict::makeMaskDict()->getMaskPlane(name) < 0) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                          str(boost::format("Plane %s doesn't exist in the default Mask") % name));
+    }
+
     detail::MaskDict::incrDefaultVersion(); // leave current Masks alone
     _maskPlaneDict()->erase(name);
 }
@@ -805,7 +810,7 @@ void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, ///< nam
 
     _maskDict->erase(name);
 
-    if (removeFromDefault) {
+    if (removeFromDefault && detail::MaskDict::makeMaskDict()->getMaskPlane(name) >= 0) {
         removeMaskPlane(name);
     }
 }

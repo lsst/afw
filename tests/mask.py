@@ -421,6 +421,11 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.removeMaskPlane("BP") # remove from default mask too
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, checkPlaneBP)
+
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                                       lambda: self.Mask.removeMaskPlane("BP")) # Plane is already removed
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                                       lambda: self.testMask.removeMaskPlane("RHL gets names right"))
         #
         self.Mask.clearMaskPlaneDict()
         p0 = self.Mask.addMaskPlane("P0")
