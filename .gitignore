@@ -138,3 +138,10 @@ tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageRamOut.fit
 tests/data/*
 ups/*.cfgc
 extensions/
+
+# Output of tests
+doc/htmlDir
+im.fits
+bim.fits
+tmp-False.fits
+tmp-True.fits
