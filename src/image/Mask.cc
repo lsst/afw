@@ -76,6 +76,13 @@ namespace pexLog = lsst::pex::logging;
 /************************************************************************************************************/
 
 namespace lsst { namespace afw { namespace image {
+            class MaskDict;
+}}}
+namespace {
+    void setInitMaskBits(PTR(afwImage::MaskDict) dict);
+}
+
+namespace lsst { namespace afw { namespace image {
 namespace {
     /*
      * A std::map that maintains a hash value of its contents
@@ -114,7 +121,7 @@ namespace {
             _dict.clear();
         }
         
-        std::size_t size() {
+        std::size_t size() const {
             return _dict.size();
         }
 
@@ -154,7 +161,10 @@ namespace {
 
     class DictState;                   // forward declaration
 }
-
+/*
+ * A MaskDict is a MapWithHash, but additionally maintains a list of all live MaskDicts (the list is
+ * actually kept in a singleton instance of DictState)
+ */
 class MaskDict : public MapWithHash {
     friend class DictState;
 
@@ -164,7 +174,7 @@ public:
     static boost::shared_ptr<MaskDict> makeMaskDict(detail::MaskPlaneDict const& = detail::MaskPlaneDict());
     static boost::shared_ptr<MaskDict> setDefaultDict(boost::shared_ptr<MaskDict> dict);
 
-    boost::shared_ptr<MaskDict> copyMaskDict();
+    boost::shared_ptr<MaskDict> clone() const;
 
     ~MaskDict();
 
@@ -272,14 +282,7 @@ MaskDict::makeMaskDict(detail::MaskPlaneDict const& mpd)
 
     boost::shared_ptr<MaskDict> dict = _state.getDefaultDict();
     if (first) {
-        int i = -1;
-        dict->add("BAD", ++i);
-        dict->add("SAT", ++i);           // should be SATURATED
-        dict->add("INTRP", ++i);         // should be INTERPOLATED
-        dict->add("CR", ++i);            // 
-        dict->add("EDGE", ++i);          // 
-        dict->add("DETECTED", ++i);      // 
-        dict->add("DETECTED_NEGATIVE", ++i);
+        setInitMaskBits(_state.getDefaultDict());
 
         first = false;
     }
@@ -299,12 +302,12 @@ MaskDict::setDefaultDict(boost::shared_ptr<MaskDict> dict)
     return _state.setDefaultDict(dict);
 }
             
-boost::shared_ptr<MaskDict> MaskDict::copyMaskDict() {
-    boost::shared_ptr<MaskDict> ndh(new MaskDict(*this));
+boost::shared_ptr<MaskDict> MaskDict::clone() const {
+    boost::shared_ptr<MaskDict> dict(new MaskDict(*this));
     
-    _state.addDict(ndh.get());
+    _state.addDict(dict.get());
 
-    return ndh;
+    return dict;
 }
 
 MaskDict::~MaskDict() {
@@ -356,6 +359,24 @@ int MaskDict::getId() {
 }
 
 }}}
+
+namespace {
+    /*
+     * Definition of the default mask bits
+     */
+    void
+    setInitMaskBits(PTR(afwImage::MaskDict) dict)
+    {
+        int i = -1;
+        dict->add("BAD", ++i);
+        dict->add("SAT", ++i);           // should be SATURATED
+        dict->add("INTRP", ++i);         // should be INTERPOLATED
+        dict->add("CR", ++i);            // 
+        dict->add("EDGE", ++i);          // 
+        dict->add("DETECTED", ++i);      // 
+        dict->add("DETECTED_NEGATIVE", ++i);
+    }
+}
 
 /**
  * \brief Initialise mask planes; called by constructors
@@ -777,7 +798,7 @@ void afwImage::Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name
     if (_maskDict->getId() == MaskDict::makeMaskDict()->getId() && removeFromDefault) { // we are the default
         ;
     } else {
-        _maskDict = _maskDict->copyMaskDict();
+        _maskDict = _maskDict->clone();
     }
 
     _maskDict->erase(name);
