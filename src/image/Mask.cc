@@ -89,6 +89,10 @@ namespace {
         }
         ~MapWithHash() { }
 
+        bool operator==(MapWithHash const& rhs) const {
+            return _hash == rhs._hash;
+        }
+
         const_iterator begin() const { return _dict.begin(); }
         const_iterator end() const { return _dict.end(); }
         const_iterator find(detail::MaskPlaneDict::key_type const& name) const { return _dict.find(name); }
@@ -139,6 +143,10 @@ namespace {
             return _hash;
         }        
     };
+
+    bool operator!=(MapWithHash const& lhs, MapWithHash const& rhs) {
+        return !(lhs == rhs);
+    }
 
     class DictState;                   // forward declaration
 }
@@ -233,7 +241,7 @@ namespace {
             _dicts.clear();
         }
 
-        int getId(MapWithHash * dict) const {
+        int getId(MapWithHash *dict) const {
             HandleList::const_iterator pair = _dicts.find(dict);
             return (pair == _dicts.end()) ? -1 : pair->second;
         }
@@ -258,8 +266,8 @@ namespace {
             _dicts[dict] = _dictCounter++;
         }
             
-        void eraseDict(MapWithHash *_dict) {
-            _dicts.erase(_dict);
+        void eraseDict(MapWithHash *dict) {
+            _dicts.erase(dict);
         }
         
         boost::shared_ptr<MaskDict> incrDefaultVersion() {
@@ -270,7 +278,7 @@ namespace {
         }
 
         boost::shared_ptr<MaskDict> _defaultMaskDict; // default MaskDict to use
-        HandleList _dicts;                                // all the live MaskDicts
+        HandleList _dicts;                            // all the live MaskDicts
         int _dictCounter;
     };
 
@@ -372,7 +380,6 @@ MaskDict::getMaskPlane(const std::string& name) const
     
     return (i == _dict->end()) ? -1 : i->second;
 }
-            
 
 int MaskDict::getId() const {
     return _state.getId(_dict);

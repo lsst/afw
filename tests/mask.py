@@ -80,9 +80,9 @@ class MaskTestCase(unittest.TestCase):
         for p in ("BAD", "SAT", "INTRP", "CR", "EDGE"):
             self.Mask.addMaskPlane(p)
 
-        self.BAD  = afwImage.MaskU_getPlaneBitMask("BAD")
-        self.CR   = afwImage.MaskU_getPlaneBitMask("CR")
-        self.EDGE = afwImage.MaskU_getPlaneBitMask("EDGE")
+        self.BAD  = self.Mask.getPlaneBitMask("BAD")
+        self.CR   = self.Mask.getPlaneBitMask("CR")
+        self.EDGE = self.Mask.getPlaneBitMask("EDGE")
 
         self.val1 = self.BAD | self.CR
         self.val2 = self.val1 | self.EDGE
@@ -208,12 +208,8 @@ class MaskTestCase(unittest.TestCase):
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
 
-        nMaskPlanes0 = afwImage.MaskU_getNumPlanesUsed()
-        mask = afwImage.MaskU(self.maskFile) # will shift any unrecognised mask planes into unused slots
-
-        if False:
-            for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
-                print k, v
+        nMaskPlanes0 = self.Mask.getNumPlanesUsed()
+        mask = self.Mask(self.maskFile) # will shift any unrecognised mask planes into unused slots
 
         self.assertEqual(mask.get(32, 1), 0)
         self.assertEqual(mask.get(50, 50), 0)
@@ -231,10 +227,6 @@ class MaskTestCase(unittest.TestCase):
             import lsst.afw.display.ds9 as ds9
             ds9.mtv(mask)
 
-        if False:
-            for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
-                print k, v
-
         self.assertEqual(mask.get(32, 1), 0)
         self.assertEqual(mask.get(50, 50), 0)
         self.assertEqual(mask.get(0, 0), 1)
@@ -244,8 +236,8 @@ class MaskTestCase(unittest.TestCase):
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
 
-        nMaskPlanes0 = afwImage.MaskU_getNumPlanesUsed()
-        mask = afwImage.MaskU(self.maskFile)
+        nMaskPlanes0 = self.Mask.getNumPlanesUsed()
+        mask = self.Mask(self.maskFile)
 
         self.assertEqual(mask.get(32, 1), 0)
         self.assertEqual(mask.get(50, 50), 0)
@@ -388,9 +380,9 @@ class OldMaskTestCase(unittest.TestCase):
         # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
         #
-        metadata.addInt("MP_" + "Whatever", afwImage.MaskU_getNumPlanesUsed())
+        metadata.addInt("MP_" + "Whatever", self.Mask.getNumPlanesUsed())
 
-        self.testMask.conformMaskPlanes(afwImage.MaskU_parseMaskPlaneMetadata(metadata))
+        self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
         for (k, v) in self.Mask().getMaskPlaneDict().items():
             self.assertEqual(metadata.getInt("MP_%s" % k), v)
 
