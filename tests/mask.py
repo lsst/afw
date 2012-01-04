@@ -421,8 +421,10 @@ class OldMaskTestCase(unittest.TestCase):
         self.testMask = self.Mask(self.testMask.getDimensions())
         self.testMask.removeAndClearMaskPlane("BP")
 
+        d = testMask2.getMaskPlaneDict()
+        
         checkPlaneBP                    # still present in default mask
-        self.assertTrue("BP" in [k for k, v in testMask2.getMaskPlaneDict()]) # should still be in testMask2
+        self.assertTrue("BP" in testMask2.getMaskPlaneDict()) # should still be in testMask2
 
         self.Mask.removeMaskPlane("BP") # remove from default mask too
 
@@ -443,7 +445,7 @@ class OldMaskTestCase(unittest.TestCase):
         name = "Great Timothy"
         self.Mask.addMaskPlane(name)
         testMask3.removeAndClearMaskPlane(name)
-        
+
         self.Mask.getMaskPlane(name)    # should be fine
         self.assertRaises(IndexError, lambda : testMask3.getMaskPlaneDict()[name])
             
