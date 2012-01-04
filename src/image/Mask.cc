@@ -941,47 +941,50 @@ void Mask<MaskPixelT>::conformMaskPlanes(
     PTR(detail::MaskDict) currentMD = detail::MaskDict::makeMaskDict(currentPlaneDict);
 
     if (*_maskDict == *currentMD) {
-        return;   // nothing to do
-    }
-    //
-    // Find out which planes need to be permuted
-    //
-    MaskPixelT keepBitmask = 0;       // mask of bits to keep
-    MaskPixelT canonicalMask[sizeof(MaskPixelT)*8]; // bits in lsst::afw::image::Mask that should be
-    MaskPixelT currentMask[sizeof(MaskPixelT)*8];   //           mapped to these bits
-    int numReMap = 0;
-
-    for (MaskPlaneDict::const_iterator i = currentPlaneDict.begin(); i != currentPlaneDict.end() ; i++) {
-        std::string const name = i->first; // name of mask plane
-        int const currentPlaneNumber = i->second; // plane number currently in use
-        int canonicalPlaneNumber = getMaskPlaneNoThrow(name); // plane number in lsst::afw::image::Mask
-
-        if (canonicalPlaneNumber < 0) {                  // no such plane; add it
-            canonicalPlaneNumber = addMaskPlane(name);
+        if (*detail::MaskDict::makeMaskDict() == *_maskDict) {
+            return;   // nothing to do
         }
+    } else {
+        //
+        // Find out which planes need to be permuted
+        //
+        MaskPixelT keepBitmask = 0;       // mask of bits to keep
+        MaskPixelT canonicalMask[sizeof(MaskPixelT)*8]; // bits in lsst::afw::image::Mask that should be
+        MaskPixelT currentMask[sizeof(MaskPixelT)*8];   //           mapped to these bits
+        int numReMap = 0;
+
+        for (MaskPlaneDict::const_iterator i = currentPlaneDict.begin(); i != currentPlaneDict.end() ; i++) {
+            std::string const name = i->first; // name of mask plane
+            int const currentPlaneNumber = i->second; // plane number currently in use
+            int canonicalPlaneNumber = getMaskPlaneNoThrow(name); // plane number in lsst::afw::image::Mask
+
+            if (canonicalPlaneNumber < 0) {                  // no such plane; add it
+                canonicalPlaneNumber = addMaskPlane(name);
+            }
         
-        if (canonicalPlaneNumber == currentPlaneNumber) {
-            keepBitmask |= getBitMask(canonicalPlaneNumber); // bit is unchanged, so preserve it
-        } else {
-            canonicalMask[numReMap] = getBitMask(canonicalPlaneNumber);
-            currentMask[numReMap]   = getBitMaskNoThrow(currentPlaneNumber);
-            numReMap++;
+            if (canonicalPlaneNumber == currentPlaneNumber) {
+                keepBitmask |= getBitMask(canonicalPlaneNumber); // bit is unchanged, so preserve it
+            } else {
+                canonicalMask[numReMap] = getBitMask(canonicalPlaneNumber);
+                currentMask[numReMap]   = getBitMaskNoThrow(currentPlaneNumber);
+                numReMap++;
+            }
         }
-    }
 
-    // Now loop over all pixels in Mask
-    if (numReMap > 0) {
-        for (int r = 0; r != this->getHeight(); ++r) { // "this->": Meyers, Effective C++, Item 43
-            for (typename Mask::x_iterator ptr = this->row_begin(r), end = this->row_end(r);
-                 ptr != end; ++ptr) {
-                MaskPixelT const pixel = *ptr;
+        // Now loop over all pixels in Mask
+        if (numReMap > 0) {
+            for (int r = 0; r != this->getHeight(); ++r) { // "this->": Meyers, Effective C++, Item 43
+                for (typename Mask::x_iterator ptr = this->row_begin(r), end = this->row_end(r);
+                     ptr != end; ++ptr) {
+                    MaskPixelT const pixel = *ptr;
 
-                MaskPixelT newPixel = pixel & keepBitmask; // value of invariant mask bits
-                for (int i = 0; i < numReMap; i++) {
-                    if (pixel & currentMask[i]) newPixel |= canonicalMask[i];
+                    MaskPixelT newPixel = pixel & keepBitmask; // value of invariant mask bits
+                    for (int i = 0; i < numReMap; i++) {
+                        if (pixel & currentMask[i]) newPixel |= canonicalMask[i];
+                    }
+
+                    *ptr = newPixel;
                 }
-
-                *ptr = newPixel;
             }
         }
     }

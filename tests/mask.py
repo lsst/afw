@@ -422,6 +422,20 @@ class OldMaskTestCase(unittest.TestCase):
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, checkPlaneBP)
         #
+        self.Mask.clearMaskPlaneDict()
+        p0 = self.Mask.addMaskPlane("P0")
+        p1 = self.Mask.addMaskPlane("P1")
+        p1 = self.Mask.addMaskPlane("P1")		# a no-op -- readding a plane has no effect
+        #
+        # Check that removing default mask planes doesn't affect pre-existing planes
+        #
+        msk = self.Mask()
+        nmask = len(msk.getMaskPlaneDict())
+        self.Mask.removeMaskPlane("P0")
+        self.Mask.removeMaskPlane("P1")
+        self.assertEqual(len(msk.getMaskPlaneDict()), nmask)
+        del msk
+        #
         # Check that removeAndClearMaskPlane can clear the default too
         #
         self.Mask.addMaskPlane("BP")
@@ -467,8 +481,7 @@ class OldMaskTestCase(unittest.TestCase):
         oldDict = testMask3.getMaskPlaneDict() # a description of the Mask's current dictionary
 
         for n in (name, name2):
-            self.testMask.removeAndClearMaskPlane(n)
-            self.Mask.removeMaskPlane(n)
+            self.testMask.removeAndClearMaskPlane(n, True)
 
         self.Mask.addMaskPlane(name2)        # added in opposite order to the planes in testMask3
         self.Mask.addMaskPlane(name)
