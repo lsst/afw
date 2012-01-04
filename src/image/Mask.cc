@@ -79,6 +79,10 @@ namespace lsst { namespace afw { namespace image {
 namespace {
     /*
      * A std::map that maintains a hash value of its contents
+     *
+     * We don't simply inherit from the std::map as we need to force the user to use add and remove;
+     * we could inherit, make operator[] private, and never use MapWithHash via a base-class pointer
+     * but it seemed simpler to only forward the functions we wish to support
      */
     struct MapWithHash {
         typedef detail::MaskPlaneDict::value_type value_type;
@@ -151,11 +155,11 @@ namespace {
     class DictState;                   // forward declaration
 }
 
-class MaskDict {
+class MaskDict : public MapWithHash {
     friend class DictState;
 
-    MaskDict() : _dict(new MapWithHash) {}
-    MaskDict(MapWithHash const* dict) : _dict(new MapWithHash(*dict)) {}
+    MaskDict() : MapWithHash() {}
+    MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
 public:
     static boost::shared_ptr<MaskDict> makeMaskDict(detail::MaskPlaneDict const& = detail::MaskPlaneDict());
     static void setDefaultDict(boost::shared_ptr<MaskDict> dict);
@@ -164,54 +168,20 @@ public:
 
     ~MaskDict();
 
-    void add(std::string const& str, int val) {
-        _dict->add(str, val);
-    }
-
-    bool empty() const {
-        return _dict->empty();
-    }
-
-    void erase(std::string const& str) {
-        _dict->erase(str);
-    }
-
-    void clear() {
-        _dict->clear();
-    }
-
-    std::size_t size() {
-        return _dict->size();
-    }
-
-    detail::MaskPlaneDict const& getMaskPlaneDict() const {
-        return _dict->getMaskPlaneDict();
-    }
-
-    int getId() const;
+    int getId();
 
     int getUnusedPlane() const;
     int getMaskPlane(const std::string& name) const;
 
     void print() const {
-        for (MapWithHash::const_iterator ptr = _dict->begin(); ptr != _dict->end(); ++ptr) {
+        for (MapWithHash::const_iterator ptr = begin(); ptr != end(); ++ptr) {
             std::cout << "Plane " << ptr->second << " -> " << ptr->first << std::endl;
         }
     }
 
-    bool operator==(MaskDict const& rhs) const {
-        return _dict->getHash() == rhs._dict->getHash();
-    }
-
     static boost::shared_ptr<MaskDict> incrDefaultVersion();
     static void listMaskDicts();
-private:
-    MapWithHash *_dict;
 };
-
-bool operator!=(MaskDict const& lhs, MaskDict const& rhs) {
-    return !(lhs == rhs);
-}
 
 /************************************************************************************************************/
 
@@ -229,7 +199,7 @@ namespace {
         DictState() {
             _dictCounter = 0;
             _defaultMaskDict = boost::shared_ptr<MaskDict>(new MaskDict);
-            _dicts[_defaultMaskDict->_dict] = _dictCounter++;
+            _dicts[_defaultMaskDict.get()] = _dictCounter++;
         }
 
         ~DictState() {
@@ -271,8 +241,8 @@ namespace {
         }
         
         boost::shared_ptr<MaskDict> incrDefaultVersion() {
-            _defaultMaskDict = boost::shared_ptr<MaskDict>(new MaskDict(_defaultMaskDict->_dict));
-            addDict(_defaultMaskDict->_dict);
+            _defaultMaskDict = boost::shared_ptr<MaskDict>(new MaskDict(*_defaultMaskDict.get()));
+            addDict(_defaultMaskDict.get());
 
             return _defaultMaskDict;
         }
@@ -327,16 +297,15 @@ MaskDict::setDefaultDict(boost::shared_ptr<MaskDict> dict)
 }
             
 boost::shared_ptr<MaskDict> MaskDict::copyMaskDict() {
-    boost::shared_ptr<MaskDict> ndh(new MaskDict(_dict));
+    boost::shared_ptr<MaskDict> ndh(new MaskDict(*this));
     
-    _state.addDict(ndh->_dict);
+    _state.addDict(ndh.get());
 
     return ndh;
 }
 
 MaskDict::~MaskDict() {
-    delete _dict;
-    _state.eraseDict(_dict);
+    _state.eraseDict(this);
 }
 
 boost::shared_ptr<MaskDict> MaskDict::incrDefaultVersion() {
@@ -346,26 +315,24 @@ boost::shared_ptr<MaskDict> MaskDict::incrDefaultVersion() {
 int
 MaskDict::getUnusedPlane() const
 {
-    if (_dict->empty()) {
+    if (empty()) {
         return 0;
     }
 
     MapWithHash::const_iterator const it =
-        std::max_element(_dict->begin(), _dict->end(),
-                         std::bind(std::less<int>(),
-                                   std::bind(&MapWithHash::value_type::second, _1),
-                                   std::bind(&MapWithHash::value_type::second, _2)
-                                  )
+        std::max_element(begin(), end(), std::bind(std::less<int>(),
+                                                   std::bind(&MapWithHash::value_type::second, _1),
+                                                   std::bind(&MapWithHash::value_type::second, _2)
+                                                  )
                         );
-    assert(it != _dict->end());
+    assert(it != end());
     int id = it->second + 1;        // The maskPlane to use if there are no gaps
         
     for (int i = 0; i < id; ++i) {
         MapWithHash::const_iterator const it = // is i already used in this Mask?
-            std::find_if(_dict->begin(), _dict->end(),
-                         std::bind(std::equal_to<int>(),
-                                   std::bind(&MapWithHash::value_type::second, _1), i));
-        if (it == _dict->end()) {          // Not used; so we'll use it
+            std::find_if(begin(), end(), std::bind(std::equal_to<int>(),
+                                                   std::bind(&MapWithHash::value_type::second, _1), i));
+        if (it == end()) {              // Not used; so we'll use it
             return i;
         }
     }
@@ -376,13 +343,13 @@ MaskDict::getUnusedPlane() const
 int
 MaskDict::getMaskPlane(const std::string& name) const
 {
-    MapWithHash::const_iterator i = _dict->find(name);
+    MapWithHash::const_iterator i = find(name);
     
-    return (i == _dict->end()) ? -1 : i->second;
+    return (i == end()) ? -1 : i->second;
 }
 
-int MaskDict::getId() const {
-    return _state.getId(_dict);
+int MaskDict::getId() {
+    return _state.getId(static_cast<MaskDict *>(this));
 }
 
 }}}
