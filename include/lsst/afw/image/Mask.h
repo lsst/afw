@@ -53,7 +53,9 @@ namespace afw {
     }
 namespace image {
 
-class MaskDict;                         // forward declaration
+namespace detail {
+    class MaskDict;                     // forward declaration
+}
 
 // all masks will initially be instantiated with the same pixel type
 namespace detail {
@@ -207,9 +209,9 @@ public:
         
 private:
     //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)
-    PTR(MaskDict) _maskDict;            // our bitplane dictionary
+    PTR(detail::MaskDict) _maskDict;    // our bitplane dictionary
     
-    static PTR(lsst::afw::image::MaskDict) _maskPlaneDict();
+    static PTR(detail::MaskDict) _maskPlaneDict();
     static int _setMaskPlaneDict(MaskPlaneDict const& mpd);
     static const std::string maskPlanePrefix;
     
