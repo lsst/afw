@@ -162,7 +162,7 @@ class MaskDict : public MapWithHash {
     MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
 public:
     static boost::shared_ptr<MaskDict> makeMaskDict(detail::MaskPlaneDict const& = detail::MaskPlaneDict());
-    static void setDefaultDict(boost::shared_ptr<MaskDict> dict);
+    static boost::shared_ptr<MaskDict> setDefaultDict(boost::shared_ptr<MaskDict> dict);
 
     boost::shared_ptr<MaskDict> copyMaskDict();
 
@@ -228,8 +228,10 @@ namespace {
             return _defaultMaskDict;
         }
 
-        void setDefaultDict(boost::shared_ptr<MaskDict> newDefaultMaskDict) {
+        boost::shared_ptr<MaskDict> setDefaultDict(boost::shared_ptr<MaskDict> newDefaultMaskDict) {
             _defaultMaskDict = newDefaultMaskDict;
+
+            return _defaultMaskDict;
         }
 
         void addDict(MapWithHash *dict) {
@@ -285,15 +287,16 @@ MaskDict::makeMaskDict(detail::MaskPlaneDict const& mpd)
     if (!mpd.empty()) {
         MapWithHash mwh(mpd);
         dict = boost::shared_ptr<MaskDict>(new MaskDict(&mwh));
+        _state.addDict(dict.get());
     }
 
     return dict;
 }
 
-void
+boost::shared_ptr<MaskDict>
 MaskDict::setDefaultDict(boost::shared_ptr<MaskDict> dict)
 {
-    _state.setDefaultDict(dict);
+    return _state.setDefaultDict(dict);
 }
             
 boost::shared_ptr<MaskDict> MaskDict::copyMaskDict() {
@@ -553,12 +556,12 @@ afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file 
     MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
     PTR(MaskDict) fileMD = MaskDict::makeMaskDict(fileMaskDict);
 
-    if (fileMD == MaskDict::makeMaskDict()) { // file is already consistent with Mask
+    if (*fileMD == *MaskDict::makeMaskDict()) { // file is already consistent with Mask
         return;
     }
     
     if (conformMasks) {                 // adopt the definitions in the file
-        _maskDict = fileMD;
+        _maskDict = MaskDict::setDefaultDict(fileMD);
     }
 
     conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
@@ -607,12 +610,12 @@ afwImage::Mask<MaskPixelT>::Mask(
     MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
     PTR(MaskDict) fileMD = MaskDict::makeMaskDict(fileMaskDict);
 
-    if (fileMD == MaskDict::makeMaskDict()) { // file is already consistent with Mask
+    if (*fileMD == *MaskDict::makeMaskDict()) { // file is already consistent with Mask
         return;
     }
     
     if (conformMasks) {                 // adopt the definitions in the file
-        MaskDict::setDefaultDict(fileMD);
+        _maskDict = MaskDict::setDefaultDict(fileMD);
     }
 
     conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
@@ -914,7 +917,6 @@ void afwImage::Mask<MaskPixelT>::conformMaskPlanes(
     PTR(MaskDict) currentMD = MaskDict::makeMaskDict(currentPlaneDict);
 
     if (*_maskDict == *currentMD) {
-        _maskDict = MaskDict::makeMaskDict();
         return;   // nothing to do
     }
     //
