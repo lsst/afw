@@ -57,31 +57,6 @@ Python interface to lsst::afw::math::shapelets classes and functions
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1>);
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1>);
 
-%pythoncode %{
-import lsst.utils
-
-def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/python/lsst/afw/math/shapelets/shapeletsLib.i $"):
-    """Return a version given a HeadURL string. If a different version is setup, return that too"""
-
-    version_svn = lsst.utils.guessSvnVersion(HeadURL)
-
-    try:
-        import eups
-    except ImportError:
-        return version_svn
-    else:
-        try:
-            version_eups = eups.setup("afw")
-        except AttributeError:
-            return version_svn
-
-    if version_eups == version_svn:
-        return version_svn
-    else:
-        return "%s (setup: %s)" % (version_svn, version_eups)
-
-%}
-
 %feature(valuewrapper) lsst::afw::math::shapelets::ShapeletFunction;
 %feature(valuewrapper) lsst::afw::math::shapelets::MultiShapeletFunction;
 %template(MultiShapeletElementList) std::list<lsst::afw::math::shapelets::ShapeletFunction>;

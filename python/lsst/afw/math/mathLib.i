@@ -45,32 +45,6 @@ Python interface to lsst::afw::math classes
 
 %include "lsst/p_lsstSwig.i"
 
-
-%pythoncode %{
-import lsst.utils
-
-def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/python/lsst/afw/math/mathLib.i $"):
-    """Return a version given a HeadURL string. If a different version is setup, return that too"""
-
-    version_svn = lsst.utils.guessSvnVersion(HeadURL)
-
-    try:
-        import eups
-    except ImportError:
-        return version_svn
-    else:
-        try:
-            version_eups = eups.setup("afw")
-        except AttributeError:
-            return version_svn
-
-    if version_eups == version_svn:
-        return version_svn
-    else:
-        return "%s (setup: %s)" % (version_svn, version_eups)
-
-%}
-
 // vectors of plain old types; template vectors of more complex types in objectVectors.i
 %template(vectorF) std::vector<float>;
 %template(vectorD) std::vector<double>;
