@@ -9,6 +9,7 @@
 
 #include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"
+#include "boost/mpl/push_front.hpp"
 #include "boost/type_traits/remove_const.hpp"
 #include "boost/type_traits/remove_reference.hpp"
 
@@ -62,7 +63,9 @@ private:
 public:
 
     typedef boost::mpl::transform<FieldTypes,MakeItem>::type ItemTypes;
-    typedef boost::make_variant_over<ItemTypes>::type ItemVariant;
+    typedef boost::make_variant_over< 
+        boost::mpl::push_front< ItemTypes, boost::blank >::type
+        >::type ItemVariant;
     typedef std::vector<ItemVariant> ItemContainer;
     typedef std::map<std::string,int> NameMap;
 
@@ -111,6 +114,8 @@ private:
         template <typename T>
         void operator()(SchemaItem<T> const & x) const { _func(x); };
     
+        void operator()(boost::blank const &) const {}
+
         void operator()(ItemVariant const & v) const {
             boost::apply_visitor(*this, v);
         }

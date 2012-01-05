@@ -15,6 +15,8 @@ struct SwapKeyPair : public boost::static_visitor<> {
         std::swap(pair.first, pair.second);
     }
 
+    void operator()(boost::blank const &) const {}
+
     void operator()(detail::SchemaMapperImpl::KeyPairVariant & v) const {
         boost::apply_visitor(*this, v);
     }
@@ -23,6 +25,8 @@ struct SwapKeyPair : public boost::static_visitor<> {
 
 template <typename T>
 struct KeyPairCompareEqual : public boost::static_visitor<bool> {
+
+    bool operator()(boost::blank const &) const { return 0; }
 
     template <typename U>
     bool operator()(std::pair< Key<U>, Key<U> > const & pair) const {
@@ -45,6 +49,8 @@ struct KeyPairCompareFirst : public boost::static_visitor<int> {
     int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
         return pair.first.getOffset();
     }
+
+    int operator()(boost::blank const &) const { return 0;}
     
     bool operator()(
         detail::SchemaMapperImpl::KeyPairVariant const & a,
@@ -62,6 +68,8 @@ struct KeyPairCompareSecond: public boost::static_visitor<int> {
         return pair.second.getOffset();
     }
     
+    int operator()(boost::blank const &) const { return 0;}
+
     bool operator()(
         detail::SchemaMapperImpl::KeyPairVariant const & a,
         detail::SchemaMapperImpl::KeyPairVariant const & b
@@ -152,18 +160,6 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
         );
     }
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
-}
-
-void SchemaMapper::sort(SortOrder order) {
-    _edit();
-    switch (order) {
-    case INPUT:
-        std::sort(_impl->_map.begin(), _impl->_map.end(), KeyPairCompareFirst());
-        break;
-    case OUTPUT:
-        std::sort(_impl->_map.begin(), _impl->_map.end(), KeyPairCompareSecond());
-        break;
-    }
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

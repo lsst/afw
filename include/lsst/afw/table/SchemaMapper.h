@@ -18,8 +18,6 @@ class RecordBase;
 class SchemaMapper {
 public:
     
-    enum SortOrder { INPUT, OUTPUT };
-
     /// @brief Return the input schema (copy-on-write).
     Schema const getInputSchema() const { return _impl->_input; }
 
@@ -52,7 +50,7 @@ public:
     Key<T> addMapping(Key<T> const & inputKey, Field<T> const & outputField);
 
     /**
-     *  @brief Add mappnigs for all fields that match criteria defined by a predicate.
+     *  @brief Add mappings for all fields that match criteria defined by a predicate.
      *
      *  A mapping in the output Schema will be created for each SchemaItem 'i' in the input Schema
      *  such that 'predicate(i)' is true.  Note that the predicate must have a templated
@@ -73,9 +71,6 @@ public:
     template <typename T>
     Key<T> getMapping(Key<T> const & inputKey) const;
 
-    /// @brief Sort the mapping according to either the input or the output schema.
-    void sort(SortOrder order);
-
     /**
      *  @brief Call the given functor for each key pair in the mapper.
      *
@@ -88,8 +83,7 @@ public:
      *  };
      *  @endcode
      *
-     *  The order of iteration is the same as the order in which mappings were added,
-     *  unless sort() has been used to modify it.
+     *  The order of iteration is the same as the order in which mappings were added.
      */
     template <typename F>
     void forEach(F func) const {

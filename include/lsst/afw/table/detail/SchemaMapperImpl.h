@@ -7,6 +7,7 @@
 
 #include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"
+#include "boost/mpl/push_front.hpp"
 #include "boost/type_traits/remove_const.hpp"
 #include "boost/type_traits/remove_reference.hpp"
 
@@ -31,7 +32,9 @@ private:
 public:
 
     typedef boost::mpl::transform<FieldTypes,MakeKeyPair>::type KeyPairTypes;
-    typedef boost::make_variant_over<KeyPairTypes>::type KeyPairVariant;
+    typedef boost::make_variant_over<
+        boost::mpl::push_front< KeyPairTypes, boost::blank >::type
+        >::type KeyPairVariant;
     typedef std::vector<KeyPairVariant> KeyPairMap;
 
     SchemaMapperImpl(Schema const & input, bool outputHasTree) : _input(input), _output(outputHasTree) {}
@@ -48,6 +51,8 @@ private:
         void operator()(std::pair< Key<T>, Key<T> > const & pair) const {
             _func(pair.first, pair.second);
         }
+
+        void operator()(boost::blank const &) const {}
         
         void operator()(KeyPairVariant const & v) const {
             boost::apply_visitor(*this, v);
