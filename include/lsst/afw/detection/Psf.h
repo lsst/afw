@@ -11,6 +11,8 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/image/Color.h"
+#include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Distortion.h"
 
 namespace lsst {
 namespace afw {
@@ -45,26 +47,35 @@ public:
     typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by computeImage
 
     /// ctor
-    Psf() : lsst::daf::base::Citizen(typeid(this)) {}
+    Psf() : lsst::daf::base::Citizen(typeid(this)), _detector() {}
     virtual ~Psf() {}
 
     virtual Ptr clone() const = 0;
 
+    // accessors for distortion
+    void setDetector(lsst::afw::cameraGeom::Detector::Ptr det) { _detector = det; }
+    lsst::afw::cameraGeom::Detector::Ptr getDetector() { return _detector; }
+
+    
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }
 
-    Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
+    Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true,
+                            bool distort=true) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
+    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak,
+                            bool distort=true) const;
 
     Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
-                            bool normalizePeak=true) const;
+                            bool normalizePeak=true,
+                            bool distort=true) const;
 
     Image::Ptr computeImage(lsst::afw::image::Color const& color,
                             lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
-                            bool normalizePeak=true) const;
+                            bool normalizePeak=true,
+                            bool distort=true) const;
    
     PTR(LocalPsf) getLocalPsf(
         lsst::afw::geom::Point2D const & ccdXY,
@@ -120,10 +131,14 @@ public:
         return true;
     }
 protected:
+    lsst::afw::cameraGeom::Detector::Ptr _detector;
+    
     virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
                                       lsst::afw::geom::Point2D const& ccdXY,
                                       lsst::afw::geom::Extent2I const& size,
-                                      bool normalizePeak) const;
+                                      bool normalizePeak,
+                                      bool distort
+                                     ) const;
 
     virtual lsst::afw::math::Kernel::Ptr doGetKernel(lsst::afw::image::Color const&) {
         return lsst::afw::math::Kernel::Ptr();
