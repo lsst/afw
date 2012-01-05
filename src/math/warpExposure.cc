@@ -657,21 +657,36 @@ int afwMath::warpCenteredImage(
                       )
 {
 
-    // pretend the star is at pixel 0,0
-    afwGeom::Point2D xy0correction(afwGeom::Point2D(srcImage.getXY0()) - centerPixel);
-    afwGeom::Point2I xy0correctionI(xy0correction);
-    SrcImageT srcImageCopy(srcImage, true);
-    srcImageCopy.setXY0(xy0correctionI);
+    // force src and dest to be the same size and xy0
+    if (
+        (destImage.getWidth() != srcImage.getWidth()) ||
+        (destImage.getHeight() != srcImage.getHeight()) ||
+        (destImage.getXY0() != srcImage.getXY0())
+       ) {
+        std::ostringstream errStream;
+        errStream << "src and dest images must have same size and xy0.";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
+    }
     
-    // use the inverse transform (we do the transform wrt the output image coordinates)
-    afwGeom::LinearTransform linTran = linearTransform.invert();
-    // make an affine transform
-    //
-    afwGeom::Extent2D translation(linTran(xy0correction));
-    afwGeom::AffineTransform affTran(linTran, translation);
-        
+    // set the xy0 coords to 0,0 to make life easier
+    SrcImageT srcImageCopy(srcImage, true);
+    srcImageCopy.setXY0(0, 0);
+    destImage.setXY0(0, 0);
+    afwGeom::Extent2D cLocal = afwGeom::Extent2D(centerPixel) - afwGeom::Extent2D(srcImage.getXY0());
+
+    // for the affine transform, the centerPixel will not only get sheared, but also
+    // moved slightly.  So we'll include a translation to move it back by an amount
+    // centerPixel - translatedCenterPixel
+    afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
+    
     // now compute the tranform
-    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran);
+    // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
+    // ... so we actually want to pass in the inverse transform.
+    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran.invert());
+
+    // fix the origin and we're done.
+    destImage.setXY0(srcImage.getXY0());
+    
     return n;
 }
 

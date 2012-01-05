@@ -142,10 +142,11 @@ typename ImageT::Ptr cameraGeom::Distortion::_warp(
     int nx = img.getWidth();
     int ny = img.getHeight();
     typename ImageT::Ptr warpImg(new ImageT(nx, ny));
+    warpImg->setXY0(img.getXY0());
     afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
     afwGeom::LinearTransform linTran = this->computeQuadrupoleTransform(p, forward);
     afwMath::warpCenteredImage(*warpImg, img, kernel, linTran, pix);
-    warpImg->setXY0(img.getXY0());
+
     return warpImg;
 }
 
