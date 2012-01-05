@@ -20,6 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import sys
+import lsst.pex.config as pexConfig
 import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -47,10 +48,37 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     destBBox = afwGeom.Box2I(destPosBox, afwGeom.Box2I.EXPAND)
     return destBBox
 
+DefaultInterpLength = 10
+DefaultCacheSize = 0
+
+class WarperConfig(pexConfig.Config):
+    warpingKernelName = pexConfig.ChoiceField(
+        dtype = string,
+        doc = "Warping kernel",
+        default = "lanczos4",
+        allowed = {
+            "bilinear": "bilinear interpolation",
+            "lanczos3": "Lanczos kernel of order 3",
+            "lanczos4": "Lanczos kernel of order 4",
+            "lanczos5": "Lanczos kernel of order 5",
+        }
+    )
+    interpLength = pexConfig.Field(
+        dtype = int,
+        doc = "interpLength argument to lsst.afw.math.warpExposure",
+        default = DefaultInterpLength,
+    )
+    cacheSize = pexConfig.Field(
+        dtype = int,
+        doc = "cacheSize argument to lsst.afw.math.SeparableKernel.computeCache",
+        default = DefaultCacheSize,
+    )
+
 class Warper(object):
     """Warp images
     """
-    def __init__(self, warpingKernelName, interpLength=10, cacheSize=0):
+    ConfigClass = WarperConfig
+    def __init__(self, warpingKernelName, interpLength=DefaultInterpLength, cacheSize=DefaultCacheSize):
         """Create a Warper
         
         Inputs:
@@ -63,15 +91,15 @@ class Warper(object):
         self._interpLength = int(interpLength)
 
     @classmethod
-    def fromPolicy(cls, policy):
-        """Create a Warper from a policy
+    def fromConfig(cls, config):
+        """Create a Warper from a config
         
-        @param policy: see policy/WarpDictionary.paf
+        @param config: an instance of Warper.ConfigClass
         """
         return cls(
-            warpingKernelName = policy.getString("warpingKernelName"),
-            interpLength = policy.getInt("interpLength"),
-            cacheSize = policy.getInt("cacheSize"),
+            warpingKernelName = policy.warpingKernelName,
+            interpLength = policy.interpLength,
+            cacheSize = policy.cacheSize,
         )
     
     def getWarpingKernel(self):
