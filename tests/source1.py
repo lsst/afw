@@ -40,7 +40,6 @@ import time
 import os
 
 import lsst.daf.base as dafBase
-import lsst.pex.policy as dafPolicy
 import lsst.pex.policy as pexPolicy
 import lsst.daf.persistence as dafPers
 import lsst.utils.tests as utilsTests
@@ -243,7 +242,7 @@ class SourceTestCase(unittest.TestCase):
 
     def testPersistence(self):
         if dafPers.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
-            pol  = dafPolicy.Policy()
+            pol  = pexPolicy.Policy()
             pol.set("Formatter.PersistableSourceVector.Source.templateTableName", "Source")
             pol.set("Formatter.PersistableSourceVector.Source.tableNamePattern", "_tmp_v%(visitId)_Source")
             pers = dafPers.Persistence.getPersistence(pol)
@@ -326,7 +325,7 @@ class SourceTestCase(unittest.TestCase):
             s.setDecObject(vd * R)
             ss.append(s)
             psv = afwDet.PersistableSourceVector(ss) 
-            pol = dafPolicy.Policy()
+            pol = pexPolicy.Policy()
             pers = dafPers.Persistence.getPersistence(pol)
             dp = dafBase.PropertySet()
             dp.setInt("visitId", 0)

@@ -16,7 +16,6 @@ import eups
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExceptions
 import lsst.pex.logging as logging
-import lsst.pex.policy as policy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
