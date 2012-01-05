@@ -55,7 +55,7 @@ template <typename T>
 typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
     return ndarray::detail::ArrayAccess< ndarray::Array<T const,1> >::construct(
         reinterpret_cast<T *>(
-            reinterpret_cast<char *>(_impl->buf) + detail::Access::getOffset(key)
+            reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
         boost::fusion::at_key<T>(_impl->cores)
     );
@@ -66,7 +66,7 @@ typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > cons
     ndarray::detail::Core<1>::Ptr scalarCore = boost::fusion::at_key<T>(_impl->cores);
     return ndarray::detail::ArrayAccess< ndarray::Array<T const,2,1> >::construct(
         reinterpret_cast<T *>(
-            reinterpret_cast<char *>(_impl->buf) + detail::Access::getOffset(key)
+            reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
         ndarray::detail::Core<2>::create(
             ndarray::makeVector(scalarCore->getSize(), key.getSize()),

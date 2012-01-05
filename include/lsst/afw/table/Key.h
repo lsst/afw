@@ -59,9 +59,18 @@ public:
     template <typename OtherT> bool operator==(Key<OtherT> const & other) const { return false; }
     template <typename OtherT> bool operator!=(Key<OtherT> const & other) const { return true; }
 
-    bool operator==(Key const & other) const { return _offset == other._offset; }
-    bool operator!=(Key const & other) const { return _offset == other._offset; }
+    bool operator==(Key const & other) const {
+        return _offset == other._offset && this->getElementCount() == other.getElementCount();
+    }
+    bool operator!=(Key const & other) const { return !this->operator==(other); }
     //@}
+
+    int getOffset() const { return _offset; }
+
+    inline friend std::ostream & operator<<(std::ostream & os, Key<T> const & key) {
+        return os << "Key<" << Key<T>::getTypeString() << ">(offset=" << key.getOffset()
+                  << ", nElements=" << key.getElementCount() << ")";
+    }
 
 private:
 

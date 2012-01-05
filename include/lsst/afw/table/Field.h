@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include "lsst/afw/table/FieldBase.h"
-#include "lsst/afw/table/FieldDescription.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -43,17 +42,13 @@ struct Field : public FieldBase<T> {
 
     std::string const & getUnits() const { return _units; }
 
-    FieldDescription describe() const {
-        return FieldDescription(getName(), getDoc(), getUnits(), this->getTypeString());
-    }
-
     inline friend std::ostream & operator<<(std::ostream & os, Field<T> const & field) {
-        os << "Field< " << field.getTypeString()
-           << " >(\"" << field.getName()
-           << "\", \"" << field.getDoc()
-           << "\"";
+        os << "Field['" << Field<T>::getTypeString()
+           << "'](name=\"" << field.getName() << "\"";
+        if (!field.getDoc().empty())
+            os << ", doc=\"" << field.getUnits() << "\"";
         if (!field.getUnits().empty())
-            os << ", \"" << field.getUnits() << "\"";
+            os << ", units=\"" << field.getUnits() << "\"";
         field.stream(os);
         return os << ")";
     }

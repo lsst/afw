@@ -45,9 +45,6 @@ class Schema {
     typedef detail::SchemaImpl Impl;
 public:
 
-    /// @brief Set type returned by describe().
-    typedef std::vector<FieldDescription> Description;
-
     /// @brief Return true if the schema constains space for a parent ID field.
     bool hasTree() const { return _impl->hasTree(); }
 
@@ -94,13 +91,6 @@ public:
      *  topOnly==true will return ['a', 'e'].
      */
     std::set<std::string> getNames(bool topOnly=false) const;
-
-    /**
-     *  @brief Return a set with descriptions of all the fields.
-     *
-     *  The set will be ordered by field name, not by Key.
-     */
-    Description describe() const;
 
     /// @brief Return the raw size of a record in bytes.
     int getRecordSize() const { return _impl->getRecordSize(); }

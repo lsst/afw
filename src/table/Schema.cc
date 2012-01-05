@@ -30,20 +30,6 @@ std::string join(std::string const & a, std::string const & b) {
     return full;
 }
 
-struct Describe {
-
-    typedef void result_type;
-
-    template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
-        result->push_back(item.field.describe());
-    }
-
-    explicit Describe(Schema::Description * result_) : result(result_) {}
-
-    Schema::Description * result;
-};
-
 struct Stream {
     
     typedef void result_type;
@@ -64,7 +50,7 @@ struct ExtractOffset : public boost::static_visitor<int> {
 
     template <typename T>
     result_type operator()(SchemaItem<T> const & item) const {
-        return detail::Access::getOffset(item.key);
+        return item.key.getOffset();
     }
 
     result_type operator()(detail::SchemaImpl::ItemVariant const & v) const {
@@ -160,7 +146,7 @@ struct ExtractItem<T,U,U,true> {
     static int apply(
         int offset, SchemaItem<T> const & item
     ) {
-        int n = (offset - detail::Access::getOffset(item.key)) / sizeof(U);
+        int n = (offset - item.key.getOffset()) / sizeof(U);
         if (n >= 0 && n < item.key.getElementCount()) {
             return n;
         }
@@ -235,7 +221,7 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
 template <typename T>
 SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
     typedef boost::transform_iterator<ExtractOffset,ItemContainer::const_iterator> Iterator;
-    int const offset = detail::Access::getOffset(key);
+    int const offset = key.getOffset();
     Iterator i = std::lower_bound(
         Iterator(_items.begin()),
         Iterator(_items.end()), 
@@ -374,7 +360,7 @@ void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
     }
     if (!item) { // Need to find the original item by key, since it's a new name.
         typedef boost::transform_iterator<ExtractOffset,ItemContainer::iterator> Iterator;
-        int const offset = detail::Access::getOffset(key);
+        int const offset = key.getOffset();
         Iterator i = std::lower_bound(
             Iterator(_items.begin()),
             Iterator(_items.end()),
@@ -435,12 +421,6 @@ template <typename T>
 void Schema::replaceField(Key<T> const & key, Field<T> const & field) {
     _edit();
     _impl->replaceField(key, field);
-}
-
-Schema::Description Schema::describe() const {
-    Description result;
-    forEach(Describe(&result));
-    return result;
 }
 
 bool Schema::operator==(Schema const & other) const {

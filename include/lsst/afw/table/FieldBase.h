@@ -61,7 +61,7 @@ struct FieldBase {
     int getElementCount() const { return 1; }
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const;
+    static std::string getTypeString();
 
 #ifndef SWIG_BUG_3465431_FIXED
     // SWIG uses this template to define the interface for the other specializations.
@@ -108,7 +108,7 @@ struct FieldBase< Point<U> > {
     int getElementCount() const { return 2; }
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const;
+    static std::string getTypeString();
 
 #ifndef SWIG_BUG_3465431_FIXED
     // SWIG uses this template to define the interface for the other specializations.
@@ -148,7 +148,7 @@ struct FieldBase< Shape<U> > {
     int getElementCount() const { return 3; }
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const;
+    static std::string getTypeString();
 
 #ifndef SWIG_BUG_3465431_FIXED
     // SWIG uses this template to define the interface for the other specializations.
@@ -207,7 +207,7 @@ struct FieldBase< Array<U> > {
     }
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const;
+    static std::string getTypeString();
 
     /// @brief Return the number of subfield elements (equal to the size of the array).
     int getElementCount() const { return _size; }
@@ -217,7 +217,7 @@ struct FieldBase< Array<U> > {
 
 protected:
 
-    void stream(std::ostream & os) const { os << ", " << _size; }
+    void stream(std::ostream & os) const { os << ", size=" << _size; }
 
     Reference getReference(Element * p) const {
         return Reference(p, _size);
@@ -283,7 +283,7 @@ struct FieldBase< Covariance<U> > {
     }
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const;
+    static std::string getTypeString();
 
     /// @brief Return the number of subfield elements (the packed size of the covariance matrix).
     int getElementCount() const { return getPackedSize(); }
@@ -296,7 +296,7 @@ struct FieldBase< Covariance<U> > {
     
 protected:
 
-    void stream(std::ostream & os) const { os << ", " << _size; }
+    void stream(std::ostream & os) const { os << ", size=" << _size; }
 
     Value getValue(Element * p) const {
         Value m(_size, _size);
@@ -347,7 +347,7 @@ struct FieldBase< Covariance< Point<U> > > {
     typedef U Element; ///< @brief the type of subfields and matrix elements
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const;
+    static std::string getTypeString();
 
     /// @brief Return the number of subfield elements (the packed size of the covariance matrix).
     int getElementCount() const { return getPackedSize(); }
@@ -419,7 +419,7 @@ struct FieldBase< Covariance< Shape<U> > > {
     typedef U Element; ///< @brief the type of subfields and matrix elements
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const;
+    static std::string getTypeString();
 
     /// @brief Return the number of subfield elements (the packed size of the covariance matrix).
     int getElementCount() const { return getPackedSize(); }

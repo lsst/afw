@@ -148,7 +148,7 @@ public:
     template <typename T>
     typename Field<T>::Element const * getElementConstPtr(Key<T> const & key) const {
         return reinterpret_cast<typename Field<T>::Element const *>(
-            reinterpret_cast<char const*>(_data) + detail::Access::getOffset(key)
+            reinterpret_cast<char const*>(_data) + key.getOffset()
         );
     }
 
@@ -163,7 +163,7 @@ public:
     typename Field<T>::Element * getElementPtr(Key<T> const & key) const {
         assertBit(CAN_SET_FIELD);
         return reinterpret_cast<typename Field<T>::Element*>(
-            reinterpret_cast<char*>(_data) + detail::Access::getOffset(key)
+            reinterpret_cast<char*>(_data) + key.getOffset()
         );
     }
 

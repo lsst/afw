@@ -24,7 +24,20 @@ struct FieldBase<Flag> {
     int getElementCount() const { return 1; }
 
     /// @brief Return a string description of the field type.
-    std::string getTypeString() const { return "Flag"; }
+    static std::string getTypeString() { return "Flag"; }
+
+#ifndef SWIG_BUG_3465431_FIXED
+    // SWIG uses this template to define the interface for the other specializations.
+    // We can add other methods to full specializations using %extend, but we can't add
+    // constructors that way.
+    FieldBase() {}
+    FieldBase(int) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+        );
+    }
+#endif
 
 protected:
 
@@ -67,9 +80,17 @@ public:
     template <typename OtherT> bool operator==(Key<OtherT> const & other) const { return false; }
     template <typename OtherT> bool operator!=(Key<OtherT> const & other) const { return true; }
 
-    bool operator==(Key const & other) const { return _offset == other._offset; }
-    bool operator!=(Key const & other) const { return _offset == other._offset; }
+    bool operator==(Key const & other) const { return _offset == other._offset && _bit == other._bit; }
+    bool operator!=(Key const & other) const { return !this->operator==(other); }
     //@}
+
+    int getOffset() const { return _offset; }
+    int getBit() const { return _bit; }
+
+    inline friend std::ostream & operator<<(std::ostream & os, Key<Flag> const & key) {
+        return os << "Key['" << Key<Flag>::getTypeString() << "'](offset=" << key.getOffset() 
+                  << ", bit=" << key.getBit() << ")";
+    }
 
 private:
 

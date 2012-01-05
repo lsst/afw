@@ -49,6 +49,21 @@ except NameError:
 
 class SchemaTestCase(unittest.TestCase):
 
+    def testInspection(self):
+        schema = lsst.afw.table.Schema(False)
+        keys = []
+        keys.append(schema.addField("a", type="I4"))
+        keys.append(schema.addField("b", type="F8"))
+        keys.append(schema.addField("c", type="Array<F4>", size=3))
+        keys.append(schema.addField("d", type="Cov<Point<F4>>"))
+        for key, name in zip(keys, schema.getNames()):
+            self.assertEqual(schema.find(key).field.getName(), name)
+            item = schema.find(name)
+            print item.field
+            
+            self.assertEqual(item.key, key)
+        self.assertNotEqual(keys[0], keys[1])
+
     def testKeyAccessors(self):
         schema = lsst.afw.table.Schema(False)
         arrayKey = schema.addField("a", type="Array<F4>", doc="doc for array field", size=5)
@@ -60,7 +75,7 @@ class SchemaTestCase(unittest.TestCase):
         pointKey = schema.addField("p", type="Point<F4>", doc="doc for point field")
         pointElementKey = pointKey.getX()
         self.assertEqual(lsst.afw.table.Key["F4"], type(pointElementKey))
-        shapeKey = schema.addField("p", type="Shape<F4>", doc="doc for shape field")
+        shapeKey = schema.addField("s", type="Shape<F4>", doc="doc for shape field")
         shapeElementKey = shapeKey.getIXX()
         self.assertEqual(lsst.afw.table.Key["F4"], type(shapeElementKey))
 

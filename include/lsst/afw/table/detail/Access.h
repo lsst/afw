@@ -78,9 +78,6 @@ public:
     }
 
     template <typename T>
-    static int getOffset(Key<T> const & key) { return key._offset; }
-
-    template <typename T>
     static Key<T> makeKey(Field<T> const & field, int offset) {
         return Key<T>(offset, field);
     }

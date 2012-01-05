@@ -43,7 +43,7 @@ struct KeyPairCompareFirst : public boost::static_visitor<int> {
 
     template <typename U>
     int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
-        return detail::Access::getOffset(pair.first);
+        return pair.first.getOffset();
     }
     
     bool operator()(
@@ -59,7 +59,7 @@ struct KeyPairCompareSecond: public boost::static_visitor<int> {
 
     template <typename U>
     int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
-        return detail::Access::getOffset(pair.second);
+        return pair.second.getOffset();
     }
     
     bool operator()(
