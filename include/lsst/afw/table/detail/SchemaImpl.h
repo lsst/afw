@@ -33,6 +33,8 @@ struct SchemaItem {
 
 namespace detail {
 
+#ifndef SWIG
+
 class Access;
 
 /**
@@ -126,6 +128,8 @@ private:
     ItemContainer _items;
     NameMap _names;
 };
+
+#endif
 
 }}}} // namespace lsst::afw::table::detail
 

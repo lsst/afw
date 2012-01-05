@@ -251,7 +251,7 @@ private:
 
     friend class Schema;
 
-    SubSchema(PTR(Impl) const & data, std::string const & name) : _impl(data), _name(name) {}
+    SubSchema(boost::shared_ptr<Impl> const & data, std::string const & name) : _impl(data), _name(name) {}
 
     boost::shared_ptr<Impl> _impl;
     std::string _name;

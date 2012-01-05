@@ -13,6 +13,7 @@ template <typename T>
 class KeyBase {
 public:
     static bool const HAS_NAMED_SUBFIELDS = false;
+
 };
 
 /// @brief A base class for Key that allows subfield keys to be extracted.

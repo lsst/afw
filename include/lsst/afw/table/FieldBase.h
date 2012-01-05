@@ -63,6 +63,19 @@ struct FieldBase {
     /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
+#ifndef SWIG_BUG_3465431_FIXED
+    // SWIG uses this template to define the interface for the other specializations.
+    // We can add other methods to full specializations using %extend, but we can't add
+    // constructors that way.
+    FieldBase() {}
+    FieldBase(int) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+        );
+    }
+#endif
+
 protected:
 
     void stream(std::ostream & os) const {}
@@ -97,6 +110,19 @@ struct FieldBase< Point<U> > {
     /// @brief Return a string description of the field type.
     std::string getTypeString() const;
 
+#ifndef SWIG_BUG_3465431_FIXED
+    // SWIG uses this template to define the interface for the other specializations.
+    // We can add other methods to full specializations using %extend, but we can't add
+    // constructors that way.
+    FieldBase() {}
+    FieldBase(int) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+        );
+    }
+#endif
+
 protected:
 
     void stream(std::ostream & os) const {}
@@ -123,6 +149,19 @@ struct FieldBase< Shape<U> > {
 
     /// @brief Return a string description of the field type.
     std::string getTypeString() const;
+
+#ifndef SWIG_BUG_3465431_FIXED
+    // SWIG uses this template to define the interface for the other specializations.
+    // We can add other methods to full specializations using %extend, but we can't add
+    // constructors that way.
+    FieldBase() {}
+    FieldBase(int) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+        );
+    }
+#endif
 
 protected:
 
@@ -319,6 +358,19 @@ struct FieldBase< Covariance< Point<U> > > {
     /// @brief Return the packed size of the covariance matrix.
     int getPackedSize() const { return PACKED_SIZE; }
 
+#ifndef SWIG_BUG_3465431_FIXED
+    // SWIG uses this template to define the interface for the other specializations.
+    // We can add other methods to full specializations using %extend, but we can't add
+    // constructors that way.
+    FieldBase() {}
+    FieldBase(int) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+        );
+    }
+#endif
+
 protected:
 
     void stream(std::ostream & os) const {}
@@ -377,6 +429,19 @@ struct FieldBase< Covariance< Shape<U> > > {
 
     /// @brief Return the packed size of the covariance matrix.
     int getPackedSize() const { return PACKED_SIZE; }
+
+#ifndef SWIG_BUG_3465431_FIXED
+    // SWIG uses this template to define the interface for the other specializations.
+    // We can add other methods to full specializations using %extend, but we can't add
+    // constructors that way.
+    FieldBase() {}
+    FieldBase(int) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+        );
+    }
+#endif
 
 protected:
 
