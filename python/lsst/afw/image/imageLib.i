@@ -86,31 +86,6 @@ namespace boost {
 
 %include "lsst/base.h"
 
-%pythoncode %{
-import lsst.utils
-
-def version(HeadURL = r"$HeadURL$"):
-    """Return a version given a HeadURL string. If a different version is setup, return that too"""
-
-    version_svn = lsst.utils.guessSvnVersion(HeadURL)
-
-    try:
-        import eups
-    except ImportError:
-        return version_svn
-    else:
-        try:
-            version_eups = eups.getSetupVersion("afw")
-        except AttributeError:
-            return version_svn
-
-    if version_eups == version_svn:
-        return version_svn
-    else:
-        return "%s (setup: %s)" % (version_svn, version_eups)
-
-%}
-
 /******************************************************************************/
 
 %import "lsst/daf/base/baseLib.i"
