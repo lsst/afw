@@ -367,9 +367,10 @@ namespace image {
             setXY0(geom::Point2I(x0,y0));
         }
 
-        geom::Box2I getBBox(ImageOrigin origin) const {
-            if(origin==PARENT) 
+        geom::Box2I getBBox(ImageOrigin origin=LOCAL) const {
+            if (origin == PARENT) {
                 return geom::Box2I(_origin, getDimensions());
+            }
             else return geom::Box2I(geom::Point2I(0,0), getDimensions());
         }
     private:
