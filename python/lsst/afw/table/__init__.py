@@ -2,5 +2,12 @@ from .tableLib import (
     Key,
     Field,
     SchemaItem,
-    Schema
+    Schema,
+    SchemaMapper,
+    ModificationFlags,
+    RecordBase,
+    TableBase,
+    ColumnView,
+    SimpleRecord,
+    SimpleTable,
 )

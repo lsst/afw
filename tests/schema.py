@@ -52,15 +52,11 @@ class SchemaTestCase(unittest.TestCase):
     def testInspection(self):
         schema = lsst.afw.table.Schema(False)
         keys = []
-        keys.append(schema.addField("a", type="I4"))
-        keys.append(schema.addField("b", type="F8"))
-        keys.append(schema.addField("c", type="Array<F4>", size=3))
-        keys.append(schema.addField("d", type="Cov<Point<F4>>"))
-        for key, name in zip(keys, schema.getNames()):
-            self.assertEqual(schema.find(key).field.getName(), name)
-            item = schema.find(name)
-            print item.field
-            
+        keys.append(schema.addField("d", type="I4"))
+        keys.append(schema.addField("c", type="F8"))
+        keys.append(schema.addField("b", type="Array<F4>", size=3))
+        keys.append(schema.addField("a", type="Cov<Point<F4>>"))
+        for key, item in zip(keys, schema):
             self.assertEqual(item.key, key)
         self.assertNotEqual(keys[0], keys[1])
 

@@ -11,7 +11,6 @@
 #include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/detail/Access.h"
 
-
 namespace lsst { namespace afw { namespace table {
 
 template <typename RecordT>
@@ -90,6 +89,9 @@ public:
         return static_cast<Record const &>(*this);
     }
 
+    /// @brief Python-friendly deep assignment.
+    void copyFrom(Record const & other) const { if (other != *this) this->_copyFrom(other); }
+
     /**
      *  @brief Deep assignment through a SchemaMapper.
      *
@@ -103,6 +105,11 @@ public:
      *  if you think about it (see the docs for RecordBase).
      */
     Record const & operator<<=(MappedRecordProxy<Record> const & other) const;
+
+    /// @brief Python-friendly deep assignment.
+    void copyFrom(Record const & other, SchemaMapper const & mapper) const {
+        if (other != *this) this->_copyFrom(other, mapper);
+    }
 
 protected:
 
@@ -119,7 +126,7 @@ protected:
 template <typename Tag>
 inline MappedRecordProxy<typename Tag::Record>
 operator<<(SchemaMapper const & mapper, RecordInterface<Tag> const & record) {
-    MappedRecordProxy<typename Tag::Record> proxy = { mapper, record };
+    MappedRecordProxy<typename Tag::Record> proxy = { record, mapper };
     return proxy;
 }
 

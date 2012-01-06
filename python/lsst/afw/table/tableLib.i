@@ -51,9 +51,16 @@ Python interface to lsst::afw::table classes
 
 %lsst_exceptions();
 
+%import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/geom/ellipses/ellipsesLib.i"
+
+// ------------------ General purpose stuff that maybe should go in p_lsstSwig.i ---------------------------
+
 %{
 #include <sstream>
 %}
+%include "std_container.i"
+
 %define %addStreamRepr(CLASS)
 %extend CLASS {
     std::string __repr__() const {
@@ -69,8 +76,41 @@ Python interface to lsst::afw::table classes
 }
 %enddef
 
+%define %returnNone(FUNC)
+%feature("pythonappend") FUNC %{ val = None %}
+%enddef
+
+%define %makeIterable(CLASS, VALUE)
+%fragment("SwigPyIterator_T");
+%fragment("StdTraits");
+%newobject __iter__(PyObject **PYTHON_SELF);
+%{
+namespace swig {
+template <> struct traits< VALUE > {
+    typedef value_category category;
+    static const char * type_name() { return # VALUE; }
+};
+} // namespace swig
+%}
+%extend CLASS {
+    swig::SwigPyIterator * __iter__(PyObject** PYTHON_SELF) {
+        return swig::make_output_iterator(self->begin(), self->begin(), self->end(), *PYTHON_SELF);
+    }
+}
+%enddef
+
+// ---------------------------------------------------------------------------------------------------------
+
 %include "lsst/ndarray/ndarray.i"
 
+%shared_ptr(lsst::afw::table::AuxBase);
+%shared_ptr(lsst::afw::table::IdFactory);
+%ignore lsst::afw::table::IdFactory::operator=;
+
+%include "lsst/base.h"
+%include "lsst/afw/table/misc.h"
+%include "lsst/afw/table/ModificationFlags.h"
+%include "lsst/afw/table/IdFactory.h"
 %include "lsst/afw/table/FieldBase.h"
 %include "lsst/afw/table/Field.h"
 %include "lsst/afw/table/KeyBase.h"
@@ -82,76 +122,27 @@ Python interface to lsst::afw::table classes
 
 %include "lsst/afw/table/Schema.h"
 
-%pythoncode %{
-Field = {}
-Key = {}
-SchemaItem = {}
-_suffixes = {}
-%}
-
-%define %declareFieldType(CNAME, PYNAME)
-%rename("_eq_impl") lsst::afw::table::Key< CNAME >::operator==;
-%extend lsst::afw::table::Key< CNAME > {
-    %pythoncode %{
-         def __eq__(self, other):
-             if type(other) != type(self): return NotImplemented
-             return self._eq_impl(other)
-         def __ne__(self, other): return not self == other
-    %}
-}
-%template(FieldBase_ ## PYNAME) lsst::afw::table::FieldBase< CNAME >;
-%template(Field_ ## PYNAME) lsst::afw::table::Field< CNAME >;
-%template(KeyBase_ ## PYNAME) lsst::afw::table::KeyBase< CNAME >;
-%template(Key_ ## PYNAME) lsst::afw::table::Key< CNAME >;
-%template(SchemaItem_ ## PYNAME) lsst::afw::table::SchemaItem< CNAME >;
-%addStreamRepr(lsst::afw::table::Field< CNAME >);
-%addStreamRepr(lsst::afw::table::Key< CNAME >);
-%pythoncode %{
-Field[FieldBase_ ## PYNAME.getTypeString()] = Field_ ## PYNAME
-Key[FieldBase_ ## PYNAME.getTypeString()] = Key_ ## PYNAME
-SchemaItem[FieldBase_ ## PYNAME.getTypeString()] = SchemaItem_ ## PYNAME
-_suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
-%}
-%extend lsst::afw::table::Schema {
-    %template(_find_ ## PYNAME) find< CNAME >;
-    %template(_addField_ ## PYNAME) addField< CNAME >;
-    %template(replaceField) replaceField< CNAME >;
-}
-%implicitconv FieldBase_ ## PYNAME;
-%enddef
-
-%declareFieldType(boost::int32_t, I4)
-%declareFieldType(boost::int64_t, I8)
-%declareFieldType(float, F4)
-%declareFieldType(double, F8)
-%declareFieldType(lsst::afw::table::Flag, Flag)
-
-%declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI4)
-%declareFieldType(lsst::afw::table::Point<float>, PointF4)
-%declareFieldType(lsst::afw::table::Point<double>, PointF8)
-
-%declareFieldType(lsst::afw::table::Shape<float>, ShapeF4)
-%declareFieldType(lsst::afw::table::Shape<double>, ShapeF8)
-
-%declareFieldType(lsst::afw::table::Array<float>, ArrayF4)
-%declareFieldType(lsst::afw::table::Array<double>, ArrayF8)
-
-%declareFieldType(lsst::afw::table::Covariance<float>, CovF4)
-%declareFieldType(lsst::afw::table::Covariance<double>, CovF8)
-
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF4)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointF8)
-
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<float> >, CovShapeF4)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<double> >, CovShapeF8)
-
-%include "bug3465431.i"
-
-%template(NameSet) std::set<std::string>;
-
 %extend lsst::afw::table::Schema {
 
 %pythoncode %{
+
+def asList(self):
+    # This should be replaced by an implementation that uses Schema::forEach
+    # if/when SWIG gets better at handling templates or we switch to Boost.Python.
+    result = []
+    def extractSortKey(item):
+        key = item.key
+        if type(key) == Key_Flag:
+            return (key.getOffset(), get.getBit())
+        else:
+            return (key.getOffset(), None)
+    for name in self.getNames():
+        result.append(self.find(name))
+    result.sort(key=extractSortKey)
+    return result
+
+def __iter__(self):
+    return iter(self.asList())
 
 def find(self, k):
     if not isinstance(k, basestring):
@@ -195,5 +186,119 @@ def addField(self, field, type=None, doc="", units="", size=None):
 
 %}
 
-
 }
+
+%include "lsst/afw/table/SchemaMapper.h"
+
+%ignore lsst::afw::table::RecordBase::operator=;
+%rename("__eq__") lsst::afw::table::RecordBase::operator==;
+%rename("__ne__") lsst::afw::table::RecordBase::operator!=;
+
+%include "lsst/afw/table/RecordBase.h"
+
+%include "lsst/afw/table/ColumnView.h"
+
+%ignore lsst::afw::table::TableBase::begin;
+%ignore lsst::afw::table::TableBase::end;
+%ignore lsst::afw::table::TableBase::find;
+%nodefaultctor lsst::afw::table::TableBase;
+%rename(__getitem__) lsst::afw::tableTableBase::operator[];
+%returnNone(lsst::afw::table::TableBase::unlink)
+%makeIterable(lsst::afw::table::TableBase, lsst::afw::table::RecordBase)
+%include "lsst/afw/table/TableBase.h"
+
+%ignore lsst::afw::table::RecordInterface::operator<<=;
+%ignore lsst::afw::table::RecordInterface::operator=;
+%ignore lsst::afw::table::ChildView::begin;
+%ignore lsst::afw::table::ChildView::end;
+%ignore lsst::afw::table::TableInterface::begin;
+%ignore lsst::afw::table::TableInterface::end;
+%ignore lsst::afw::table::TableInterface::find;
+%ignore lsst::afw::table::TableInterface::insert;
+%nodefaultctor lsst::afw::table::TableInterface;
+%rename(__getitem__) lsst::afw::table::TableInterface::operator[];
+%returnNone(lsst::afw::table::TableInterface::unlink)
+
+%include "lsst/afw/table/RecordInterface.h"
+%include "lsst/afw/table/TableInterface.h"
+
+%define %declareTag(TAG)
+%template(TAG ## RecordInterface) lsst::afw::table::RecordInterface< lsst::afw::table::TAG >;
+%template(TAG ## TableInterface) lsst::afw::table::TableInterface< lsst::afw::table::TAG >;
+%template(TAG ## ChildView) lsst::afw::table::ChildView< lsst::afw::table::TAG >;
+%enddef
+
+%declareTag(Simple)
+%include "lsst/afw/table/Simple.h"
+
+%pythoncode %{
+Field = {}
+Key = {}
+SchemaItem = {}
+_suffixes = {}
+%}
+
+%define %declareFieldType(CNAME, PYNAME)
+%rename("_eq_impl") lsst::afw::table::Key< CNAME >::operator==;
+%extend lsst::afw::table::Key< CNAME > {
+    %pythoncode %{
+         def __eq__(self, other):
+             if type(other) != type(self): return NotImplemented
+             return self._eq_impl(other)
+         def __ne__(self, other): return not self == other
+    %}
+}
+%template(FieldBase_ ## PYNAME) lsst::afw::table::FieldBase< CNAME >;
+%template(Field_ ## PYNAME) lsst::afw::table::Field< CNAME >;
+%template(KeyBase_ ## PYNAME) lsst::afw::table::KeyBase< CNAME >;
+%template(Key_ ## PYNAME) lsst::afw::table::Key< CNAME >;
+%template(SchemaItem_ ## PYNAME) lsst::afw::table::SchemaItem< CNAME >;
+%addStreamRepr(lsst::afw::table::Field< CNAME >);
+%addStreamRepr(lsst::afw::table::Key< CNAME >);
+%pythoncode %{
+Field[FieldBase_ ## PYNAME.getTypeString()] = Field_ ## PYNAME
+Key[FieldBase_ ## PYNAME.getTypeString()] = Key_ ## PYNAME
+SchemaItem[FieldBase_ ## PYNAME.getTypeString()] = SchemaItem_ ## PYNAME
+_suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
+%}
+%extend lsst::afw::table::Schema {
+    %template(_find_ ## PYNAME) find< CNAME >;
+    %template(_addField_ ## PYNAME) addField< CNAME >;
+    %template(replaceField) replaceField< CNAME >;
+}
+%extend lsst::afw::table::SchemaMapper {
+    %template(addOutputField) addOutputField< CNAME >;
+    %template(addMapping) addMapping< CNAME >;
+    %template(getMapping) getMapping< CNAME >;
+}
+%implicitconv FieldBase_ ## PYNAME;
+%enddef
+
+%declareFieldType(boost::int32_t, I4)
+%declareFieldType(boost::int64_t, I8)
+%declareFieldType(float, F4)
+%declareFieldType(double, F8)
+%declareFieldType(lsst::afw::table::Flag, Flag)
+
+%declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI4)
+%declareFieldType(lsst::afw::table::Point<float>, PointF4)
+%declareFieldType(lsst::afw::table::Point<double>, PointF8)
+
+%declareFieldType(lsst::afw::table::Shape<float>, ShapeF4)
+%declareFieldType(lsst::afw::table::Shape<double>, ShapeF8)
+
+%declareFieldType(lsst::afw::table::Array<float>, ArrayF4)
+%declareFieldType(lsst::afw::table::Array<double>, ArrayF8)
+
+%declareFieldType(lsst::afw::table::Covariance<float>, CovF4)
+%declareFieldType(lsst::afw::table::Covariance<double>, CovF8)
+
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF4)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointF8)
+
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<float> >, CovShapeF4)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<double> >, CovShapeF8)
+
+%include "bug3465431.i"
+
+%template(NameSet) std::set<std::string>;

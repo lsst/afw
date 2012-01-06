@@ -72,6 +72,9 @@ public:
                   << ", nElements=" << key.getElementCount() << ")";
     }
 
+    /// @brief Construct an invalid key.  Only present to appease SWIG.
+    Key() : FieldBase<T>(), _offset() {}
+
 private:
 
     friend class detail::Access;
