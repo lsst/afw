@@ -240,13 +240,16 @@ namespace {
 
     class AffineTransformSrcPosFunctor : public SrcPosFunctor {
     public:
+        // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
+        // ... so we actually want to use the *inverse* transform of the affineTransform we we're given.
+        // Thus _affineTransform is initialized to affineTransform.invert()
         AffineTransformSrcPosFunctor(
                                      afwGeom::Point2D const &destXY0,    ///< xy0 of destination image 
                                      afwGeom::AffineTransform const &affineTransform
                                      ) :
             SrcPosFunctor(),
             _destXY0(destXY0),
-            _affineTransform(affineTransform) {}
+            _affineTransform(affineTransform.invert()) {}
 
         virtual afwGeom::Point2D operator()(int destCol, int destRow) const {
             double const col = afwImage::indexToPosition(destCol + _destXY0[0]);
@@ -679,10 +682,8 @@ int afwMath::warpCenteredImage(
     // centerPixel - translatedCenterPixel
     afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
     
-    // now compute the tranform
-    // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
-    // ... so we actually want to pass in the inverse transform.
-    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran.invert());
+    // now warp
+    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran);
 
     // fix the origin and we're done.
     destImage.setXY0(srcImage.getXY0());
