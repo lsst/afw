@@ -72,6 +72,29 @@ class BackgroundTestCase(unittest.TestCase):
 
         #self.assertAlmostEqual(mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
+    def testOddSize(self):
+        W,H = 2,99
+        image = afwImage.ImageF(afwGeom.Extent2I(W,H))
+        bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.LINEAR)
+        bgCtrl.setNxSample(1)
+        bgCtrl.setNySample(10)
+        for y in range(H):
+            for x in range(W):
+                if y > 90:
+                    image.set(x,y) = 180 - y
+                else:
+                    image.set(x,y) = y
+        back = afwMath.makeBackground(image, bgCtrl)
+        
+        import pylab as plt
+        plt.clf()
+        IY = [image.get(0,y) for y in range(H)]
+        BY = [ back.get(0,y) for y in range(H)]
+        plt.plot(IY, 'b-', lw=3, alpha=0.5)
+        plt.plot(BY, 'r-')
+        plt.savefig('bg.png')
+        
+
     def testgetPixel(self):
         """Test the getPixel() function"""
 
