@@ -43,7 +43,7 @@
 #include "boost/serialization/void_cast.hpp"
 #include "boost/serialization/export.hpp"
 
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {
@@ -84,7 +84,7 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class Function : public lsst::daf::data::LsstBase {
+    class Function : public lsst::daf::base::Citizen {
     
     public:
         /**
@@ -95,7 +95,7 @@ using boost::serialization::make_nvp;
         explicit Function(
             unsigned int nParams)   ///< number of function parameters
         :
-            lsst::daf::data::LsstBase(typeid(this)),
+            lsst::daf::base::Citizen(typeid(this)),
             _params(nParams),
             _isCacheValid(false)
         {}
@@ -106,7 +106,7 @@ using boost::serialization::make_nvp;
         explicit Function(
             std::vector<double> const &params)   ///< function parameters
         :
-            lsst::daf::data::LsstBase(typeid(this)),
+            lsst::daf::base::Citizen(typeid(this)),
             _params(params),
             _isCacheValid(false)
         {}
@@ -201,7 +201,7 @@ using boost::serialization::make_nvp;
         mutable bool _isCacheValid;
 
         /* Default constructor: intended only for serialization */
-        explicit Function() : lsst::daf::data::LsstBase(typeid(this)), _params(0), _isCacheValid(false) {}   
+        explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}   
 
     private: // serialization support
         friend class boost::serialization::access;

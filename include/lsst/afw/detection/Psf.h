@@ -8,7 +8,7 @@
 #include <typeinfo>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/daf/data.h"
+#include "lsst/daf/base.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/image/Color.h"
 
@@ -36,7 +36,7 @@ template<typename PsfT, typename PsfFactorySignatureT> class PsfFactory;
  *
  * \note A polymorphic base class for Psf%s
  */
-class Psf : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
+class Psf : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
 public:
     typedef boost::shared_ptr<Psf> Ptr;            ///< shared_ptr to a Psf
     typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
@@ -45,7 +45,7 @@ public:
     typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by computeImage
 
     /// ctor
-    Psf() : lsst::daf::data::LsstBase(typeid(this)) {}
+    Psf() : lsst::daf::base::Citizen(typeid(this)) {}
     virtual ~Psf() {}
 
     virtual Ptr clone() const = 0;
@@ -53,15 +53,15 @@ public:
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }
 
-    Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
+    PTR(Image) computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
 
-    Image::Ptr computeImage(lsst::afw::image::Color const& color,
+    PTR(Image) computeImage(lsst::afw::image::Color const& color,
                             lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
@@ -201,16 +201,16 @@ protected:
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
                                                           lsst::afw::image::Color const&) {
-        return _kernel;
+        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
     }
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
                                                                lsst::afw::image::Color const&) const {
-        return lsst::afw::math::Kernel::ConstPtr(_kernel);
+        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
     }
 
     /// Clone a KernelPsf

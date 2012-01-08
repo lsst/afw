@@ -35,13 +35,20 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+/// Pixel type for FootprintSet::insertIntoImage()
+///
+/// This is independent of the template parameters for FootprintSet, and
+/// including it within FootprintSet makes it difficult for SWIG to interpret
+/// the type.
+typedef boost::uint64_t FootprintIdPixel;
+
 /************************************************************************************************************/
 /*!
  * \brief A set of Footprints, associated with a MaskedImage
  *
  */
 template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel>
-class FootprintSet : public lsst::daf::data::LsstBase {
+class FootprintSet : public lsst::daf::base::Citizen {
 public:
     typedef boost::shared_ptr<FootprintSet> Ptr;
     /// The FootprintSet's set of Footprint%s
@@ -101,9 +108,9 @@ public:
      */
     geom::Box2I const getRegion() const { return _region; } 
 
-    typename image::Image<boost::uint16_t>::Ptr insertIntoImage(
+    PTR(image::Image<FootprintIdPixel>) insertIntoImage(
         const bool relativeIDs
-    );
+        ) const;
     void setMask(
         image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
         std::string const& planeName   ///< Here's the name of the mask plane to fit
@@ -123,6 +130,10 @@ public:
     }
 
     void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
+
+    void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
+                   HeavyFootprintCtrl const* ctrl=NULL
+                  );
 private:
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in

@@ -29,9 +29,29 @@
 #ifndef LSST_AFW_GEOM_EXTENT_H
 #define LSST_AFW_GEOM_EXTENT_H
 
+#include <boost/type_traits/is_integral.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/type_traits/is_same.hpp>
+
 #include "lsst/afw/geom/CoordinateExpr.h"
 
 namespace lsst { namespace afw { namespace geom {
+
+// These are present to avoid a static assertion for instantiating computeNorm() on integer types.
+namespace detail {
+
+template <int N>
+double computeExtentNorm(Extent<double,N> const & s) {
+    return s.asEigen().norm();
+}
+
+template <int N>
+int computeExtentNorm(Extent<int,N> const & s) {
+    assert(false);
+}
+
+} // namespace detail
+
 
 template<typename T, int N>
 class ExtentBase : public CoordinateBase<Extent<T,N>,T,N> {
@@ -42,7 +62,7 @@ public:
     T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
     /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
-    T computeNorm() const { return this->asEigen().norm(); }
+    T computeNorm() const { return detail::computeExtentNorm(static_cast<Extent<T,N> const &>(*this)); }
 
     /**
      *  @brief Standard equality comparison.
@@ -122,6 +142,19 @@ public:
     Extent<T,N> & operator/=(T scalar) { this->_vector /= scalar; return static_cast<Extent<T,N>&>(*this); }
     //@}
 
+    std::string toString() const {
+        std::stringstream out;
+        out << "Extent(";
+        for (size_t i = 0; i < N; ++i) {
+            if (i != 0) {
+                out << ",";
+            }
+            out << (*this)[i];
+        }
+        out << ")";
+        return out.str();
+    }
+
 protected:
 
     /// \brief Construct an Extent<T,N> with all elements set to the same scalar value.
@@ -157,6 +190,12 @@ public:
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,N> const & other);
 
+    /// \brief Explicit constructor from Extent of different type (if allowed)
+    template<typename U>
+    explicit Extent(Extent<U,N> const & other);
+    template<typename U>
+    explicit Extent(Point<U,N> const & other);
+
     /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
     T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
@@ -183,6 +222,12 @@ public:
 
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,2> const & other);
+
+    /// \brief Explicit constructor from Extent of different type (if allowed)
+    template<typename U>
+    explicit Extent(Extent<U,2> const & other);
+    template<typename U>
+    explicit Extent(Point<U,2> const & other);
 
     /// @brief Construct from two scalars.
     explicit Extent(T x, T y) : Super(EigenVector(x, y)) {}
@@ -229,6 +274,12 @@ public:
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,3> const & other);
 
+    /// \brief Explicit constructor from Extent of different type (if allowed)
+    template<typename U>
+    explicit Extent(Extent<U,3> const & other);
+    template<typename U>
+    explicit Extent(Point<U,3> const & other);
+
     /// @brief Construct from three scalars.
     explicit Extent(T x, T y, T z) : Super(EigenVector(x, y, z)) {}
 
@@ -252,6 +303,47 @@ public:
     }
 
     void swap(Extent & other) { this->_swap(other); }
+};
+
+// Constructor for any 2D type from 2I type
+template<typename T>
+template<typename U>
+Extent<T, 2>::Extent(Extent<U, 2> const & other) 
+{
+    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    setX((T) other.getX());
+    setY((T) other.getY());
+};
+
+template<typename T>
+template<typename U>
+Extent<T, 2>::Extent(Point<U, 2> const & other) 
+{
+    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    setX((T) other.getX());
+    setY((T) other.getY());
+};
+
+// Constructor for any 3D type from 3I type
+template<typename T>
+template<typename U>
+Extent<T, 3>::Extent(Extent<U, 3> const & other) 
+{
+    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    setX((T) other.getX());
+    setY((T) other.getY());
+    setZ((T) other.getZ());
+};
+
+// Constructor for any 3D type from 3I type
+template<typename T>
+template<typename U>
+Extent<T, 3>::Extent(Point<U, 3> const & other) 
+{
+    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    setX((T) other.getX());
+    setY((T) other.getY());
+    setZ((T) other.getZ());
 };
 
 typedef Extent<int,2> ExtentI;

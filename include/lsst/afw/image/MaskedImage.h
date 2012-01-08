@@ -39,7 +39,7 @@
 #include "boost/mpl/at.hpp"
 #include "boost/iterator/zip_iterator.hpp"
 
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/image/Image.h"
@@ -73,9 +73,9 @@ namespace image {
 
 /// A class to manipulate images, masks, and variance as a single object
 template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
-         typename VariancePixelT=VariancePixel>
+         typename VariancePixelT=lsst::afw::image::VariancePixel>
 class MaskedImage : public lsst::daf::base::Persistable,
-                    public lsst::daf::data::LsstBase {
+                    public lsst::daf::base::Citizen {
 public:
     /// shared pointer to the Image
     typedef typename Image<ImagePixelT>::Ptr ImagePtr;
@@ -657,7 +657,7 @@ public:
         
         const bool deep     //!< Must be true; needed to disambiguate
     ) :
-        lsst::daf::data::LsstBase(typeid(this)), _image(), _mask(), _variance() {
+        lsst::daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
         if (!deep) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                 "Only deep copies are permitted for MaskedImages with different pixel types");

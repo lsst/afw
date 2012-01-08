@@ -26,6 +26,7 @@
 Test cases to test image I/O
 """
 import os
+import os.path
 
 import unittest
 
@@ -40,7 +41,7 @@ try:
 except NameError:
     verbose = 0
 
-dataDir = eups.productDir("afwdata")
+dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 

@@ -76,26 +76,40 @@ namespace dafPersist = lsst::daf::persistence;
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class ExposureFormatterTraits {
 public:
-    static std::string name;
+    static std::string name();
 };
 
 template<>
-std::string ExposureFormatterTraits<boost::uint16_t,
-                                    afwImg::MaskPixel,
-                                    afwImg::VariancePixel>::name("ExposureU");
+std::string ExposureFormatterTraits<boost::uint16_t, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+    static std::string name = "ExposureU";
+    return name;
+}
 template<>
-std::string ExposureFormatterTraits<int, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureI");
+std::string ExposureFormatterTraits<int, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+    static std::string name = "ExposureI";
+    return name;
+}
 template<>
-std::string ExposureFormatterTraits<float, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureF");
+std::string ExposureFormatterTraits<float, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+    static std::string name = "ExposureF";
+    return name;
+}
 template<>
-std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureD");
-
+std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+    static std::string name = "ExposureD";
+    return name;
+}
+template<>
+std::string ExposureFormatterTraits<boost::uint64_t, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+    static std::string name = "ExposureL";
+    return name;
+}
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 lsst::daf::persistence::FormatterRegistration afwForm::ExposureFormatter<ImagePixelT,
                                                                          MaskPixelT,
                                                                          VariancePixelT>::registration(
-    ExposureFormatterTraits<ImagePixelT, MaskPixelT, VariancePixelT>::name,
+    ExposureFormatterTraits<ImagePixelT, MaskPixelT, VariancePixelT>::name(),
     typeid(afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>),
     createInstance);
 
@@ -478,4 +492,5 @@ INSTANTIATE(uint16_t, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(int, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(float, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(double, afwImg::MaskPixel, afwImg::VariancePixel)
+INSTANTIATE(uint64_t, afwImg::MaskPixel, afwImg::VariancePixel)
 /// \endcond

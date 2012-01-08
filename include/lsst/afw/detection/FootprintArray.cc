@@ -36,12 +36,45 @@
  */
 
 #include "lsst/afw/detection/FootprintArray.h"
+#include "lsst/afw/detection/Footprint.h"
 #include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
 
 namespace lsst{
 namespace afw{
 namespace detection{
+
+namespace {
+    /*
+     * Check that the Footprint is consistent with the src and dest arrays
+     *
+     * \note The names @c src and @c dest are appropriate when checking expandArrays's arguments, but
+     * are switched when checking flattenArray
+     */
+    template <typename T, typename U, int N, int C, int D>
+    void checkConvertArray(Footprint const & fp,
+                          ndarray::Array<T, N, C> const & src,
+                          ndarray::Array<U, N+1, D> const & dest,
+                          geom::Point2I const & xy0
+                         )
+    {
+        geom::Box2I fpBox = fp.getBBox();
+        geom::Box2I imBox(xy0, geom::Extent2I(dest.template getSize<1>(), dest.template getSize<0>()));
+        
+        if (src.template getSize<0>() != fp.getArea()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              str(boost::format("Array outer size (%d) does not match"
+                                                " footprint area (%d)."
+                                               ) % dest.template getSize<0>() % fp.getArea()));
+        }
+
+        if (!imBox.contains(fpBox)) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              str(boost::format("Array bounding box (%d) does not contain footprint "
+                                                "bounding box (%d)") % imBox % fpBox));
+        }
+    }
+}
 
 /**
  * @brief Flatten the first two dimensions of an array
@@ -54,54 +87,84 @@ namespace detection{
  * @param[in]  src     array to copy from.  The first two dimensions are (height, width).
  * @param[out] dest    array to copy to. The dimensions of the dest must be area of
  *                     the footprint, inner N-1 dimensions of the source
- * @param[in]  origin  origin of the src array in the footprint's coordinate system
+ * @param[in]  xy0     xy0 of the src array in the footprint's coordinate system
+ *
+ * For example,
+ \code
+ flattenArray(foot, image.getArray(), array, image.getXY0()); 
+ \endcode
  */
 template <typename T, typename U, int N, int C, int D>
 void flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
     ndarray::Array<U, N-1, D> const & dest,
-    geom::Point2I const & origin
+    geom::Point2I const & xy0
 ) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N-1, D> DestT; 
     BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
 
-    geom::Box2I fpBox = fp.getBBox();
-    geom::Box2I imBox(origin, geom::Extent2I(src.template getSize<1>(), src.template getSize<0>()));
-
-    if (dest.template getSize<0>() != fp.getArea()) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Destination array outer size (%d) does not match"
-                           " footprint area (%d)."
-                           ) % dest.template getSize<0>() % fp.getArea()
-            ).str()
-        );
-    }
-
-    if (!imBox.contains(fpBox)) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Source bounding box (%d) does not contain footprint bounding box (%d)")
-             % imBox % fpBox).str()
-        );
-    }
+    checkConvertArray(fp, dest, src, xy0);
 
     typename DestT::Iterator destIter(dest.begin());
-    for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); 
-         s != fp.getSpans().end(); ++s
-    ) {
+    for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); s != fp.getSpans().end(); ++s) {
         Span const & span = **s;
-        typename SourceT::Reference row(src[span.getY() - origin.getY()]);
+        typename SourceT::Reference row(src[span.getY() - xy0.getY()]);
+
         std::copy(
-            row.begin() + span.getX0() - origin.getX(),
-            row.begin() + span.getX1() + 1 - origin.getX(), 
+            row.begin() + span.getX0() - xy0.getX(),
+            row.begin() + span.getX1() + 1 - xy0.getX(), 
             destIter
         );
         destIter += span.getWidth();
     }
+}
 
+/**
+ * @brief Flatten the first two dimensions of an array
+ *
+ * Use this footprint to map 2-D points in the source to 1-D position in
+ * the destination. This forces a deep copy of the relevant parts of the 
+ * source.
+ *
+ * @param[in]  fp      footprint to operate on
+ * @param[in]  src     array to copy from.  The first two dimensions are (height, width).
+ * @param[out] dest    array to copy to. The dimensions of the dest must be area of
+ *                     the footprint, inner N-1 dimensions of the source
+ * @param[in]  pixelOp Functor taking src's pixel value, and returning the value of dest
+ * @param[in]  xy0     xy0 of the src array in the footprint's coordinate system
+ *
+ * For example,
+ \code
+ flattenArray(foot, image.getArray(), array, pixelOp(), image.getXY0()); 
+ \endcode 
+ */
+template <typename T, typename U, int N, int C, int D, typename PixelOpT>
+void flattenArray(
+    Footprint const & fp,
+    ndarray::Array<T,N,C> const & src,
+    ndarray::Array<U, N-1, D> const & dest,
+    PixelOpT const& pixelOp,
+    geom::Point2I const & xy0
+) {
+    typedef ndarray::Array<T, N, C> SourceT; 
+    typedef ndarray::Array<U, N-1, D> DestT; 
+    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
+
+    checkConvertArray(fp, dest, src, xy0);
+
+    typename DestT::Iterator destIter(dest.begin());
+    for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); s != fp.getSpans().end(); ++s) {
+        Span const & span = **s;
+        typename SourceT::Reference row(src[span.getY() - xy0.getY()]);
+        typename SourceT::Reference::Iterator rowIter = row.begin() + span.getX0() - xy0.getX();
+        for (typename DestT::Iterator destEnd = destIter + span.getWidth(); destIter != destEnd;
+             ++destIter, ++rowIter) {
+            *destIter = *rowIter;
+            *rowIter = pixelOp(*rowIter);
+        }
+    }
 }
 
 /**
@@ -113,19 +176,24 @@ void flattenArray(
  * @param[in]  fp      footprint to operate on
  * @param[in]  src     array to copy from.  The first two dimensions are (height, width);
  *                     the remainder are copied exactly.
- * @param[in]  origin  origin of the src array in the footprint's coordinate system
+ * @param[in]  xy0  xy0 of the src array in the footprint's coordinate system
+ *
+ * For example,
+ \code
+ array = flattenArray(foot, image.getArray(), image.getXY0()); 
+ \endcode
  */     
 template <typename T, int N, int C>
 ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
-    geom::Point2I const & origin
+    geom::Point2I const & xy0
 ) {
     ndarray::Vector<int,N-1> shape 
-        = ndarray::concatenate(fp.getArea(), src.template getShape().template last<N-2>());
+        = ndarray::concatenate(fp.getArea(), src.getShape().template last<N-2>());
     std::cerr << "shape: " << shape << "\n";
     ndarray::Array<typename boost::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
-    flattenArray(fp, src, dest, origin);
+    flattenArray(fp, src, dest, xy0);
     return dest;
 }
 
@@ -141,48 +209,76 @@ ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
  *                     the area of the footprint.
  * @param[out] dest    array to copy to. The dimensions of the array must be height,
  *                     width, inner N-1 dimensions of the source.
- * @param[in]  origin  origin of the src array in the footprint's coordinate system
+ * @param[in]  xy0  xy0 of the src array in the footprint's coordinate system
+ *
+ * For example,
+ \code
+ expandArray(foot, array, image.getArray(), image.getXY0()); 
+ \endcode
  */
 template <typename T, typename U, int N, int C, int D>
 void expandArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
     ndarray::Array<U, N+1, D> const & dest,
-    geom::Point2I const & origin
-) {
+    geom::Point2I const & xy0
+                )
+{
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N+1, D> DestT; 
     BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
 
-    geom::Box2I fpBox(fp.getBBox());
-    geom::Box2I imBox(origin, geom::Extent2I(dest.template getSize<1>(), dest.template getSize<0>()));
-
-    if (src.template getSize<0>() != fp.getArea()) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Source array outer size (%d) does not match"
-                           " footprint area (%d)."
-                           ) % dest.template getSize<0>() % fp.getArea()
-            ).str()
-        );
-    }
-
-    if (!imBox.contains(fpBox)) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Destination bounding box (%d) does not contain footprint bounding box (%d)")
-             % imBox % fpBox).str()
-        );
-    }
+    checkConvertArray(fp, src, dest, xy0);
 
     typename SourceT::Iterator srcIter(src.begin());
-    for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); 
-        s != fp.getSpans().end(); ++s
-    ) {
+    for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); s != fp.getSpans().end(); ++s) {
         Span const & span = **s;
-        typename DestT::Reference row(dest[span.getY() - origin.getY()]);
-        std::copy(srcIter, srcIter + span.getWidth(), row.begin() + span.getX0() - origin.getX());
+        typename DestT::Reference row(dest[span.getY() - xy0.getY()]);
+        std::copy(srcIter, srcIter + span.getWidth(), row.begin() + span.getX0() - xy0.getX());
         srcIter += span.getWidth();
+    }
+}
+
+/**
+ * @brief expand the first dimension of an array, applying a functor to each pixel
+ *
+ * Use this footprint to map 1-D positions in the source to 2-D points in
+ * the destination. This forces a deep copy of the relevant parts of the
+ * source.
+ *
+ * @param[in]  fp      footprint to operate on
+ * @param[in]  src     array to copy from. The size of the outer dimension must match
+ *                     the area of the footprint.
+ * @param[out] dest    array to copy to. The dimensions of the array must be height,
+ *                     width, inner N-1 dimensions of the source.
+ * @param[in]  pixelOp Functor taking src's pixel value, and returning the value of dest
+ * @param[in]  xy0  xy0 of the src array in the footprint's coordinate system
+ */
+template <typename T, typename U, int N, int C, int D, typename PixelOpT>
+void expandArray(
+    Footprint const & fp,
+    ndarray::Array<T,N,C> const & src,
+    ndarray::Array<U, N+1, D> const & dest,
+    PixelOpT const& pixelOp,
+    geom::Point2I const & xy0
+                )
+{
+    typedef ndarray::Array<T, N, C> SourceT; 
+    typedef ndarray::Array<U, N+1, D> DestT; 
+    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
+
+    checkConvertArray(fp, src, dest, xy0);
+
+    typename SourceT::Iterator srcIter(src.begin());
+    for (Footprint::SpanList::const_iterator s = fp.getSpans().begin(); s != fp.getSpans().end(); ++s) {
+        Span const & span = **s;
+        typename DestT::Reference row(dest[span.getY() - xy0.getY()]);
+
+        typename DestT::Reference::Iterator rowIter = row.begin() + span.getX0() - xy0.getX();
+        for (typename SourceT::Iterator srcEnd = srcIter + span.getWidth(); srcIter != srcEnd;
+             ++srcIter, ++rowIter) {
+            *rowIter = pixelOp(*srcIter);
+        }
     }
 }
 
@@ -212,7 +308,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
             ndarray::makeVector(box.getHeight(), box.getWidth()), 
-            src.template getShape().template last<N-1>()
+            src.getShape().template last<N-1>()
         )
     );
     dest.deep() = 0.0;

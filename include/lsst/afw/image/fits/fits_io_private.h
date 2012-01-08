@@ -138,6 +138,16 @@ struct fits_read_support_private<unsigned int> {
     BOOST_STATIC_CONSTANT(int , BITPIX=ULONG_IMG); // value is from fitsio.h
 };
 template <>
+struct fits_read_support_private<boost::int64_t> {
+    BOOST_STATIC_CONSTANT(bool,is_supported=true);
+    BOOST_STATIC_CONSTANT(int , BITPIX=LONGLONG_IMG); // value is from fitsio.h
+};
+template <>
+struct fits_read_support_private<boost::uint64_t> {
+    BOOST_STATIC_CONSTANT(bool,is_supported=true);
+    BOOST_STATIC_CONSTANT(int , BITPIX=LONGLONG_IMG); // value is from fitsio.h
+};
+template <>
 struct fits_read_support_private<float> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int,BITPIX=FLOAT_IMG); // value is from fitsio.h
@@ -183,6 +193,11 @@ template <>
 struct cfitsio_traits<32> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     typedef types_traits<int>::view_t view_t;
+};
+template <>
+struct cfitsio_traits<64> {
+    BOOST_STATIC_CONSTANT(bool,is_supported=true);
+    typedef types_traits<boost::int64_t>::view_t view_t;
 };
 template <>
 struct cfitsio_traits<-32> {

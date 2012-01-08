@@ -28,7 +28,7 @@
 %declareNumPyConverters(lsst::afw::geom::AffineTransform::ParameterVector);
 %declareNumPyConverters(lsst::afw::geom::AffineTransform::Matrix);
 
-SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
+%shared_ptr(lsst::afw::geom::AffineTransform);
 
 %rename(__mul__) lsst::afw::geom::AffineTransform::operator*;
 %ignore lsst::afw::geom::AffineTransform::operator[];

@@ -120,6 +120,75 @@ public:
         
     }
     
+    virtual Ptr clone() const {
+        if (empty()) {
+            Ptr shape = boost::make_shared<Shape>();
+            shape->set<X, double>(get<X, double>());
+            shape->set<X_ERR, double>(get<X_ERR, double>());
+            shape->set<Y, double>(get<Y, double>());
+            shape->set<Y_ERR>(get<Y_ERR, double>());
+            shape->set<IXX, double>(get<IXX, double>());
+            shape->set<IXX_ERR, double>(get<IXX_ERR, double>());
+            shape->set<IXY, double>(get<IXY, double>());
+            shape->set<IXY_ERR, double>(get<IXY_ERR, double>());
+            shape->set<IYY, double>(get<IYY, double>());
+            shape->set<IYY_ERR, double>(get<IYY_ERR, double>());
+            shape->set<SIGMA, double>(get<SIGMA, double>());
+            shape->set<SIGMA_ERR, double>(get<SIGMA_ERR, double>());
+            shape->set<E1, double>(get<E1, double>());
+            shape->set<E1_ERR, double>(get<E1_ERR, double>());
+            shape->set<E2, double>(get<E2, double>());
+            shape->set<E2_ERR, double>(get<E2_ERR, double>());
+            shape->set<SHEAR1, double>(get<SHEAR1, double>());
+            shape->set<SHEAR2, double>(get<SHEAR2, double>());
+            shape->set<SHEAR1_ERR, double>(get<SHEAR1_ERR, double>());
+            shape->set<SHEAR2_ERR, double>(get<SHEAR2_ERR, double>());
+            shape->set<RESOLUTION, double>(get<RESOLUTION, double>());
+            shape->set<PSF_IXX, double>(get<PSF_IXX, double>());
+            shape->set<PSF_IXX_ERR, double>(get<PSF_IXX_ERR, double>());
+            shape->set<PSF_IXY, double>(get<PSF_IXY, double>());
+            shape->set<PSF_IXY_ERR, double>(get<PSF_IXY_ERR, double>());
+            shape->set<PSF_IYY, double>(get<PSF_IYY, double>());
+            shape->set<PSF_IYY_ERR, double>(get<PSF_IYY_ERR, double>());
+            shape->set<SHAPE_STATUS, short>(get<SHAPE_STATUS, short>());
+            return shape;
+        }
+        return Measurement<Shape>::clone();
+    }
+
+    static Ptr null(void) {
+        Ptr shape = boost::make_shared<Shape>();
+        shape->set<X>(NaN);
+        shape->set<X_ERR>(NaN);
+        shape->set<Y>(NaN);
+        shape->set<Y_ERR>(NaN);
+        shape->set<IXX>(NaN);
+        shape->set<IXX_ERR>(NaN);
+        shape->set<IXY>(NaN);
+        shape->set<IXY_ERR>(NaN);
+        shape->set<IYY>(NaN);
+        shape->set<IYY_ERR>(NaN);
+        shape->set<SIGMA>(NaN);
+        shape->set<SIGMA_ERR>(NaN);
+        shape->set<E1>(NaN);
+        shape->set<E1_ERR>(NaN);
+        shape->set<E2>(NaN);
+        shape->set<E2_ERR>(NaN);
+        shape->set<SHEAR1>(NaN);
+        shape->set<SHEAR2>(NaN);
+        shape->set<SHEAR1_ERR>(NaN);
+        shape->set<SHEAR2_ERR>(NaN);
+        shape->set<RESOLUTION>(NaN);
+        shape->set<PSF_IXX>(NaN);
+        shape->set<PSF_IXX_ERR>(NaN);
+        shape->set<PSF_IXY>(NaN);
+        shape->set<PSF_IXY_ERR>(NaN);
+        shape->set<PSF_IYY>(NaN);
+        shape->set<PSF_IYY_ERR>(NaN);
+        shape->set<SHAPE_STATUS, short>(-1);
+        return shape;
+    }
+
     /// Return the x-moment
     double getX() const {
         return Measurement<Shape>::get<Shape::X, double>();
@@ -243,15 +312,110 @@ public:
         return Measurement<Shape>::get<Shape::SHAPE_STATUS, short>();
     }
     
+    /// Modifiers
+    /// These are required because boost::make_shared limits us to 9 arguments for the constructor.
+    /// We therefore need a way of setting values
+
+    /// Return the e1 ellipticity
+    void setE1(double value) {
+        Measurement<Shape>::set<Shape::E1, double>(value);
+    }
+    /// Return the error in the e1 ellipticity
+    void setE1Err(double value) {
+        Measurement<Shape>::set<Shape::E1_ERR, double>(value);
+    }
+    /// Return the e2 ellipticity
+    void setE2(double value) {
+        Measurement<Shape>::set<Shape::E2, double>(value);
+    }
+    /// Return the error in the e2 ellipticity
+    void setE2Err(double value) {
+        Measurement<Shape>::set<Shape::E2_ERR, double>(value);
+    }
+
+
+    /// Return the shear1
+    void setShear1(double value) {
+        Measurement<Shape>::set<Shape::SHEAR1, double>(value);
+    }
+    /// Return the error in the shear1
+    void setShear1Err(double value) {
+        Measurement<Shape>::set<Shape::SHEAR1_ERR, double>(value);
+    }
+    /// Return the shear2
+    void setShear2(double value) {
+        Measurement<Shape>::set<Shape::SHEAR2, double>(value);
+    }
+    /// Return the error in the shear2
+    void setShear2Err(double value) {
+        Measurement<Shape>::set<Shape::SHEAR2_ERR, double>(value);
+    }
+
+
+    /// set the resolution
+    void setResolution(double value) {
+        Measurement<Shape>::set<Shape::RESOLUTION, double>(value);
+    }
+    
+    /// Return the width
+    void setSigma(double value) {
+        Measurement<Shape>::set<Shape::SIGMA, double>(value);
+    }
+    /// Return the error in the width
+    void setSigmaErr(double value) {
+        Measurement<Shape>::set<Shape::SIGMA_ERR, double>(value);
+    }
+
+
+    /// Return the xx-moment for the PSF
+    void setPsfIxx(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXX, double>(value);
+    }
+    /// Return the error in the xx-moment for the PSF
+    void setPsfIxxErr(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXX_ERR, double>(value);
+    }
+    /// Return the xx-moment for the PSF
+    void setPsfIxy(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXY, double>(value);
+    }
+    /// Return the error in the xy-moment for the PSF
+    void setPsfIxyErr(double value) {
+        Measurement<Shape>::set<Shape::PSF_IXY_ERR, double>(value);
+    }
+    /// Return the yy-moment for the PSF
+    void setPsfIyy(double value) {
+        Measurement<Shape>::set<Shape::PSF_IYY, double>(value);
+    }
+    /// Return the error in the yy-moment for the PSF
+    void setPsfIyyErr(double value) {
+        Measurement<Shape>::set<Shape::PSF_IYY_ERR, double>(value);
+    }
+
+    /// Return the status of the routine which performed the calculation
+    // This should be a boost::int16_t, but Schema doesn't support that.
+    void setShapeStatus(short status) {
+        Measurement<Shape>::set<Shape::SHAPE_STATUS, short>(status);
+    }
+    
     virtual ::std::ostream &output(std::ostream &os) const {
+        if (size() > 0) {
+            return os << "[" << Measurement<Shape>::output(os) << "]";
+        }
         return os << "(" << getX() << "+-" << getXErr() << ", " << getY() << "+-" << getYErr() << ")";
+    }
+
+    virtual Shape::Ptr average() const {
+        if (size() == 1) {
+            return (*begin())->clone();
+        }
+        // It's not clear how shapes should be averaged.
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Shape.average() not implemented.");
     }
 
 private:
     LSST_SERIALIZE_PARENT(lsst::afw::detection::Measurement<Shape>)
 };
 }}}
-
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::Shape)
 
 #endif

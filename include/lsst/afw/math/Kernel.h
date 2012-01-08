@@ -48,7 +48,7 @@
 #include "boost/serialization/export.hpp"
 
 #include "lsst/daf/base/Persistable.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Utils.h"
@@ -133,7 +133,7 @@ class FourierLocalKernel;
      *
      * @ingroup afw
      */
-    class Kernel : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
+    class Kernel : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
 
     public:
         typedef double Pixel;
@@ -398,6 +398,11 @@ class FourierLocalKernel;
 
         explicit FixedKernel(
             lsst::afw::image::Image<Pixel> const &image
+        );
+
+        explicit FixedKernel(
+            lsst::afw::math::Kernel const& kernel,
+            lsst::afw::geom::Point2D const& pos
         );
 
         virtual ~FixedKernel() {}

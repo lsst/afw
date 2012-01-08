@@ -28,11 +28,13 @@
 #include <sstream>
 #include <stdexcept>
 #include "boost/shared_ptr.hpp"
+#include "boost/filesystem.hpp"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
 
 using namespace std;
 
+namespace dafBase = lsst::daf::base;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
@@ -271,10 +273,14 @@ void test5()
 	
 	//Write the RAM FITS file to disk
 	ofstream ofs;
-	ofs.open(string(gFilename + "_fitsRamOut.fit").c_str());
+        std::string oFilename = boost::filesystem::path(gFilename).filename().stem().native();
+        oFilename += "_fitsRamOut.fit";
+
+	ofs.open(oFilename.c_str());
 	if (ofs)
 		ofs.write(ramFile, ramFileLen);
 	ofs.close();
+        ::unlink(oFilename.c_str());
 	
 	cout << "ramFile: " << (long)ramFile << endl;
 	cout << "ramFileLen: " << ramFileLen << endl;

@@ -40,12 +40,11 @@ Basic routines to talk to lsst::afw::image classes
 #include "boost/cstdint.hpp"
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/pex/logging.h"
 #include "lsst/pex/policy.h"
-#include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/coord/Coord.h"
@@ -62,6 +61,8 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
+
+#pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
 %include "../boost_picklable.i"
@@ -72,9 +73,6 @@ Basic routines to talk to lsst::afw::image classes
 
 namespace boost {
     namespace mpl { }
-    typedef signed char  int8_t;
-    typedef int int32_t;
-    typedef unsigned short uint16_t;
 }
 
 /************************************************************************************************************/
@@ -88,37 +86,11 @@ namespace boost {
 
 %include "lsst/base.h"
 
-%pythoncode %{
-import lsst.utils
-
-def version(HeadURL = r"$HeadURL$"):
-    """Return a version given a HeadURL string. If a different version is setup, return that too"""
-
-    version_svn = lsst.utils.guessSvnVersion(HeadURL)
-
-    try:
-        import eups
-    except ImportError:
-        return version_svn
-    else:
-        try:
-            version_eups = eups.getSetupVersion("afw")
-        except AttributeError:
-            return version_svn
-
-    if version_eups == version_svn:
-        return version_svn
-    else:
-        return "%s (setup: %s)" % (version_svn, version_eups)
-
-%}
-
 /******************************************************************************/
 
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/pex/policy/policyLib.i"
 %import "lsst/daf/persistence/persistenceLib.i"
-%import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
@@ -160,7 +132,7 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
 
-SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
+%shared_ptr(lsst::afw::image::Calib);
 %include "lsst/afw/image/Calib.h"
 %template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
 
@@ -192,8 +164,8 @@ namespace lsst { namespace afw { namespace image {
 using lsst::afw::image::NoWcs;
 %}
 
-SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
-SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs);
+%shared_ptr(lsst::afw::image::Wcs);
+%shared_ptr(lsst::afw::image::TanWcs);
 
 %ignore lsst::afw::image::NoWcs;
 
@@ -232,21 +204,23 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs)
 %import "lsst/afw/cameraGeom/cameraGeomLib.i"
 #endif
 
+
 /************************************************************************************************************/
 %{
+#include "lsst/afw/detection.h"
 #include "lsst/afw/image/Exposure.h"
 %}
 
 // Must go Before the %include
-%define %exposurePtr(TYPE, PIXEL_TYPE)
-SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+%define %exposurePtr(PIXEL_TYPE)
+%shared_ptr(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %enddef
 
 // Must go After the %include
 %define %exposure(TYPE, PIXEL_TYPE)
 %newobject makeExposure;
 %template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
-%template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+%template(makeExposure) lsst::afw::image::makeExposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
 %lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %boost_picklable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 
@@ -259,19 +233,21 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 }
 %enddef
 
-%exposurePtr(U, boost::uint16_t);
-%exposurePtr(I, int);
-%exposurePtr(F, float);
-%exposurePtr(D, double);
+%exposurePtr(boost::uint16_t);
+%exposurePtr(boost::uint64_t);
+%exposurePtr(int);
+%exposurePtr(float);
+%exposurePtr(double);
 
 namespace lsst { namespace afw { namespace detection {
     class Psf;
 }}}
-SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
+%shared_ptr(lsst::afw::detection::Psf);
 
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
+%exposure(L, boost::uint64_t);
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
@@ -287,13 +263,23 @@ SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
     }
 }
 
+%extend lsst::afw::image::Exposure<boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertD;
+    lsst::afw::image::Exposure<double,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD()
+    {
+        return lsst::afw::image::Exposure<double,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
 /************************************************************************************************************/
 
 %include "lsst/afw/image/Color.h"
 
 /************************************************************************************************************/
 
-SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
+%shared_ptr(lsst::afw::image::DefectBase);
 
 %include "lsst/afw/image/Defect.h"
 

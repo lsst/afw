@@ -23,7 +23,7 @@
  */
  
 #include "boost/make_shared.hpp"
-// #include "Eigen/Core.h"
+#include "Eigen/Core"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 

@@ -98,16 +98,23 @@ double math::Interpolate::interpolate(double const x) {
     // New GSL versions refuse to extrapolate.
     // gsl_interp_init() requires x to be ordered, so can just check
     // the array endpoints for out-of-bounds.
-    if ((x < _x[0]) || (x > _x[_x.size()-1])) {
+    if ((x < _x.front() || (x > _x.back()))) {
         // do our own quadratic extrapolation.
         // (GSL only provides first and second derivative functions)
+        /* could also just fail via:
+         throw LSST_EXCEPT(
+         lsst::pex::exceptions::InvalidParameterException,
+         (boost::format("Interpolation point %f outside range [%f, %f]")
+         % x % _x.front() % _x.back()).str()
+         );
+         */
         double x0, y0;
-        if (x < _x[0]) {
-            x0 = _x[0];
-            y0 = _y[0];
+        if (x < _x.front()) {
+            x0 = _x.front();
+            y0 = _y.front();
         } else {
-            x0 = _x[_x.size()-1];
-            y0 = _y[_x.size()-1];
+            x0 = _x.back();
+            y0 = _y.back();
         }
         // first derivative at endpoint
         double d = ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], x0, _acc);
@@ -115,8 +122,8 @@ double math::Interpolate::interpolate(double const x) {
         double d2 = ::gsl_interp_eval_deriv2(_interp, &_x[0], &_y[0], x0, _acc);
         return y0 + (x - x0)*d + (x - x0)*(x - x0)*d2;
     }
-    assert(x >= _x[0]);
-    assert(x <= _x[_x.size()-1]);
+    assert(x >= _x.front());
+    assert(x <= _x.back());
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], x, _acc);
 }
 

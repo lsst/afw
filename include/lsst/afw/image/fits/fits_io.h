@@ -50,9 +50,11 @@ namespace lsst { namespace afw { namespace image {
 /// \brief Determines whether the given view type is supported for reading
 template <typename PixelT>
 struct fits_read_support {
+#if !defined(SWIG)
     BOOST_STATIC_CONSTANT(bool, is_supported = detail::fits_read_support_private<PixelT>::is_supported);
     BOOST_STATIC_CONSTANT(int,  BITPIX = detail::fits_read_support_private<PixelT>::BITPIX);
     BOOST_STATIC_CONSTANT(bool, value = is_supported);
+#endif
 };
 
 /// \ingroup FITS_IO

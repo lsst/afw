@@ -37,15 +37,12 @@
 // These definitions must go Before you include Kernel.h; the %templates must go After
 //
 %define %kernelPtr(TYPE...)
-SWIG_SHARED_PTR_DERIVED(TYPE, lsst::afw::math::Kernel, lsst::afw::math::TYPE);
+%shared_ptr(lsst::afw::math::TYPE);
 %lsst_persistable(lsst::afw::math::TYPE)
 %boost_picklable(lsst::afw::math::TYPE)
 %enddef
 
-SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kernel); // the base class
-%lsst_persistable(lsst::afw::math::Kernel)
-%boost_picklable(lsst::afw::math::Kernel)
-
+%kernelPtr(Kernel);
 %kernelPtr(AnalyticKernel);
 %kernelPtr(DeltaFunctionKernel);
 %kernelPtr(FixedKernel);

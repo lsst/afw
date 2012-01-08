@@ -324,15 +324,16 @@ class BackgroundTestCase(unittest.TestCase):
 
         
     def testTicket1681OffByOne(self):
-        im = afwImage.ImageF(40, 40); im.set(5, 6, 100);
-        nx, ny = im.getWidth()//2, im.getHeight()//2
-        print nx, ny
-        bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
-        bctrl.setStatisticsProperty(afwMath.MEAN)
-        bkd = afwMath.makeBackground(im, bctrl)
-        bim = bkd.getImageF()
-        im.writeFits("im.fits")
-        bim.writeFits("bim.fits")
+        if False:                       # doesn't seem to actually test anything, and writes b?im.fits
+            im = afwImage.ImageF(40, 40); im.set(5, 6, 100);
+            nx, ny = im.getWidth()//2, im.getHeight()//2
+            print nx, ny
+            bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
+            bctrl.setStatisticsProperty(afwMath.MEAN)
+            bkd = afwMath.makeBackground(im, bctrl)
+            bim = bkd.getImageF()
+            im.writeFits("im.fits")
+            bim.writeFits("bim.fits")
 
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

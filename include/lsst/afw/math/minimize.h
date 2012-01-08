@@ -38,7 +38,7 @@
 #include "boost/shared_ptr.hpp"
 #include "Minuit2/FCNBase.h"
 
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/math/Function.h"
 
 namespace lsst {

@@ -31,6 +31,7 @@
 #include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
+#include "lsst/afw/detection/AperturePhotometry.h"
 #include "lsst/afw/detection/Shape.h"
 
 #include "lsst/afw/formatters/SourceFormatter.h"
@@ -42,22 +43,12 @@
 %include "../boost_picklable.i"
 
 //shared_ptr declarations
-SWIG_SHARED_PTR(SourceBase, lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>);
-SWIG_SHARED_PTR(DiaSourceBase, lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>); 
- 
-SWIG_SHARED_PTR_DERIVED(SourceP, 
-    lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>, 
-    lsst::afw::detection::Source);
-SWIG_SHARED_PTR_DERIVED(DiaSourceP,
-    lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>,
-    lsst::afw::detection::DiaSource);  
-
-SWIG_SHARED_PTR_DERIVED(PersistableSourceVector,
-    lsst::daf::base::Persistable,
-    lsst::afw::detection::PersistableSourceVector);
-SWIG_SHARED_PTR_DERIVED(PersistableDiaSourceVector,
-    lsst::daf::base::Persistable,
-    lsst::afw::detection::PersistableDiaSourceVector);
+%shared_ptr(lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>);
+%shared_ptr(lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>); 
+%shared_ptr(lsst::afw::detection::Source);
+%shared_ptr(lsst::afw::detection::DiaSource);  
+%shared_ptr(lsst::afw::detection::PersistableSourceVector);
+%shared_ptr(lsst::afw::detection::PersistableDiaSourceVector);
 
 %include "lsst/afw/formatters/Utils.h"
 %include "lsst/afw/detection/BaseSourceAttributes.h"    
@@ -67,11 +58,8 @@ SWIG_SHARED_PTR_DERIVED(PersistableDiaSourceVector,
  * Must go before the includes
  */
 %define %MeasurementBefore(WHAT)
-SWIG_SHARED_PTR(Measurement##WHAT, lsst::afw::detection::Measurement<lsst::afw::detection::WHAT>);
-SWIG_SHARED_PTR_DERIVED(WHAT,
-                        lsst::afw::detection::Measurement<lsst::afw::detection::WHAT>,
-                        lsst::afw::detection::WHAT);
-
+%shared_ptr(lsst::afw::detection::Measurement<lsst::afw::detection::WHAT>);
+%shared_ptr(lsst::afw::detection::WHAT);
 %template(WHAT##Set) std::vector<boost::shared_ptr<lsst::afw::detection::WHAT> >;
 %enddef
 /*
@@ -85,17 +73,17 @@ SWIG_SHARED_PTR_DERIVED(WHAT,
 
 /************************************************************************************************************/
 
-SWIG_SHARED_PTR(Schema, lsst::afw::detection::Schema);
-SWIG_SHARED_PTR_DERIVED(SchemaEntry, 
-                        lsst::afw::detection::Schema,
-                        lsst::afw::detection::SchemaEntry);
-
+%shared_ptr(lsst::afw::detection::Schema);
+%shared_ptr(lsst::afw::detection::SchemaEntry);
 %template(SchemaVector) std::vector<boost::shared_ptr<lsst::afw::detection::Schema> >;
 %definePythonIterator(lsst::afw::detection::Schema);
 
 %MeasurementBefore(Astrometry);
 %MeasurementBefore(Photometry);
 %MeasurementBefore(Shape);
+
+%shared_ptr(lsst::afw::detection::AperturePhotometry);
+%shared_ptr(lsst::afw::detection::MultipleAperturePhotometry);
 
 %include "lsst/afw/detection/Schema.h"
 %include "lsst/afw/detection/Measurement.h"
@@ -107,6 +95,18 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %include "lsst/afw/detection/Astrometry.h"
 %include "lsst/afw/detection/Photometry.h"
 %include "lsst/afw/detection/Shape.h"
+%include "lsst/afw/detection/AperturePhotometry.h"
+
+%inline %{
+    lsst::afw::detection::AperturePhotometry::Ptr
+    cast_AperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::AperturePhotometry>(phot);
+    }
+    lsst::afw::detection::MultipleAperturePhotometry::Ptr
+    cast_MultipleAperturePhotometry(lsst::afw::detection::Photometry::Ptr phot) {
+        return boost::shared_dynamic_cast<lsst::afw::detection::MultipleAperturePhotometry>(phot);
+    }
+%}
 
 /************************************************************************************************************/
 
@@ -151,8 +151,8 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 %boost_picklable(lsst::afw::detection::DiaSource)
 
 //Explicit STL container instantiation
-%template(SourceSet) std::vector<lsst::afw::detection::Source::Ptr>;
-%template(DiaSourceSet)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
+%template(SourceSet) std::vector<boost::shared_ptr<lsst::afw::detection::Source> >;
+%template(DiaSourceSet) std::vector<boost::shared_ptr<lsst::afw::detection::DiaSource> >;
 
 // Provide semi-useful printing of catalog records
 
@@ -181,4 +181,4 @@ DiaSource.__str__ = DiaSource.toString
 %boost_picklable(lsst::afw::detection::PersistableSourceVector);
 %boost_picklable(lsst::afw::detection::PersistableDiaSourceVector);
 
-%template(PersistableSourceVectorVector) std::vector<lsst::afw::detection::PersistableSourceVector::Ptr>;
+%template(PersistableSourceVectorVector) std::vector<boost::shared_ptr<lsst::afw::detection::PersistableSourceVector> >;

@@ -1,20 +1,61 @@
 import gdb
 import math, re
-import argparse
 
 try:
     debug
 except:
     debug = False
 
-class GdbArgumentParser(argparse.ArgumentParser):
-    def parse_args(self, args=None, namespace=None):
-        if args:
+import optparse
+
+class GdbOptionParser(optparse.OptionParser):
+    """A subclass of the standard optparse OptionParser for gdb
+
+GdbOptionParser raises GdbError rather than exiting when asked for help, or
+when given an illegal value. E.g.
+
+parser = gdb.printing.GdbOptionParser("show image")
+parser.add_option("-a", "--all", action="store_true",
+                  help="Display the whole image")
+parser.add_option("-w", "--width", type="int", default=8,
+                  help="Field width for pixels")
+
+opts, args =  parser.parse_args(args)
+"""
+
+    def __init__(self, prog, *args, **kwargs):
+        """
+Like optparse.OptionParser's API, but with an initial command name argument
+"""
+        # OptionParser is an old-style class, so no super
+        if not kwargs.get("prog"):
+            kwargs["prog"] = prog
+        optparse.OptionParser.__init__(self, *args, **kwargs)
+
+    def parse_args(self, args, values=None):
+        """Call OptionParser.parse_args after running gdb.string_to_argv"""
+        if args is None:            # defaults to sys.argv
+            args = ""
+        try:
             args = gdb.string_to_argv(args)
-        return argparse.ArgumentParser.parse_args(self, args, namespace)
-        
-    def exit(self, status=0, msg=None):
-        raise gdb.GdbError(msg)
+        except TypeError:
+            pass
+
+        help = ("-h" in args or "--help" in args)
+        opts, args = optparse.OptionParser.parse_args(self, args, values)
+        opts.help = help
+        if help:
+            args = []
+    
+        return opts, args
+
+    def exit(self, status=0, msg=""):
+        """Raise GdbError rather than exiting"""
+        if status == 0:
+            if msg:
+                print >> sys.stderr, msg
+        else:
+            raise gdb.GdbError(msg)
 
 try:
     import gdb.printing
@@ -49,7 +90,7 @@ try:
             nx, ny = m_storage["m_cols"], m_storage["m_rows"]
         except gdb.error:           # only available for dynamic Matrices
             try:
-                nx, ny = m_storage.type.template_argument(1), m_storage.type.template_argument(2)
+                nx, ny = val.type.template_argument(1), val.type.template_argument(2)
             except RuntimeError:
                 # should get dimens from template, but that's gdb bug #11060
                 size = m_storage["m_data"]["array"].type.sizeof
@@ -64,28 +105,42 @@ try:
         if re.search(r"Matrix", str(var.type)):
             if False:
                 return var["operator()(int, int)"](x, y)
-            else:
-                NX, NY = getEigenMatrixDimensions(var)
 
-                if x < 0 or x >= NX or y < 0 or y >= NY:
-                    raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
-                                       (x, y, NX - 1, NY - 1))
+            NX, NY = getEigenMatrixDimensions(var)
 
-                m_data = var["m_storage"]["m_data"]
-                if False:
-                    # convert to a pointer to the start of the array
-                    import pdb; pdb.set_trace() 
-                    m_data = m_data.address.cast(m_data.type)
+            if x < 0 or x >= NX or y < 0 or y >= NY:
+                raise gdb.GdbError("Element (%d, %d) is out of range 0:%d, 0:%d" %
+                                   (x, y, NX - 1, NY - 1))
 
-                try:
-                    val = m_data[x + y*NX]
-                except:
-                    val = m_data["array"][x + y*NX]
+            m_data = var["m_storage"]["m_data"]
+            if False:
+                # convert to a pointer to the start of the array
+                import pdb; pdb.set_trace() 
+                m_data = m_data.address.cast(m_data.type)
+
+            try:
+                val = m_data[x + y*NX]
+            except:
+                val = m_data["array"][x + y*NX]
         else:                       # Vector
-            if x < 0 or x >= m_storage["m_cols"]:
-                raise gdb.GdbError("Element %d is out of range 0:%d" % (x, m_storage["m_cols"] - 1))
+            if False:
+                return var["operator()(int)"](x)
 
-            val = m_storage["m_data"][x]
+            NX = getEigenMatrixDimensions(var)[0]
+
+            if x < 0 or x >= NX:
+                raise gdb.GdbError("Element (%d) is out of range 0:%d" % (x, NX - 1))
+
+            m_data = var["m_storage"]["m_data"]
+
+            if False:
+                # convert to a pointer to the start of the array
+                m_data = m_data.address.cast(m_data.type)
+
+            try:
+                val = m_data[x]
+            except:
+                val = m_data["array"][x]
 
         if val.type.code == gdb.TYPE_CODE_INT:
             val = int(val)
@@ -148,20 +203,40 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            parser = GdbArgumentParser("show eigen")
-            parser.add_argument("-d", "--dataFmt", default="%.2f", help="Format for values")
-            parser.add_argument("-f", "--formatWidth", type=int, default=8, help="Field width for values")
-            parser.add_argument("-o", "--origin", type=str, nargs="+",
+            parser = GdbOptionParser("show eigen")
+            parser.add_option("-d", "--dataFmt", default="%.2f", help="Format for values")
+            parser.add_option("-f", "--formatWidth", type="int", default=8, help="Field width for values")
+            parser.add_option("-o", "--origin", type="str", nargs="+",
                                 help="Origin of the part of the object to print")
-            parser.add_argument("eigenObject", help="Expression giving Eigen::Matrix/Vector to show")
-            parser.add_argument("nx", help="Width of patch to print", type=int, default=0, nargs="?")
-            parser.add_argument("ny", help="Height of patch to print", type=int, default=0, nargs="?")
+            if False:
+                parser.add_option("eigenObject", help="Expression giving Eigen::Matrix/Vector to show")
+                parser.add_option("nx", help="Width of patch to print", type="int", default=0, nargs="?")
+                parser.add_option("ny", help="Height of patch to print", type="int", default=0, nargs="?")
+                
+                opts =  parser.parse_args(args)
+                if opts.help:
+                    return
+            else:
+                (opts, args) = parser.parse_args(args)
+                if opts.help:
+                    return
+                
+                if not args:
+                    raise gdb.GdbError("Please specify an object")
+                opts.eigenObject = args.pop(0)
 
-            opts =  parser.parse_args(args)
+                opts.nx, opts.ny = 0, 0
+                if args:
+                    opts.nx = int(args.pop(0))
+                if args:
+                    opts.ny = int(args.pop(0))
+
+                if args:
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
 
             var = gdb.parse_and_eval(opts.eigenObject)
 
-            if not re.search(r"^Eigen::(Matrix|Vector)", str(var.type)):
+            if not re.search(r"Eigen::(Matrix|Vector)", str(var.type)):
                 raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
                 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -257,11 +332,25 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            parser = GdbArgumentParser("show citizen")
-            parser.add_argument("object", help="The object in question")
+            parser = GdbOptionParser("show citizen")
+            if False:
+                parser.add_option("object", help="The object in question")
 
-            opts =  parser.parse_args(args)
+                opts =  parser.parse_args(args)
+                if opts.help:
+                    return
+            else:
+                opts, args =  parser.parse_args(args)
+                if opts.help:
+                    return
+                
+                if not args:
+                    raise gdb.GdbError("Please specify an object")
+                opts.object = args.pop(0)
 
+                if args:
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
+            
             var = gdb.parse_and_eval(opts.object)
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"]
@@ -269,10 +358,12 @@ try:
             if var.type.code != gdb.TYPE_CODE_PTR:
                 var = var.address
 
-            try:
-                citizen = var.dynamic_cast(gdb.lookup_type("lsst::daf::base::Citizen").pointer()).dereference()
-            except gdb.error:
-                raise gdb.GdbError("Failed to cast %s to Citizen *" % opts.object)
+            citizen = var.dynamic_cast(gdb.lookup_type("lsst::daf::base::Citizen").pointer())
+
+            if not citizen:
+                raise gdb.GdbError("Failed to cast %s to Citizen -- is it a subclass?" % opts.object)
+            
+            citizen = citizen.dereference()
 
             print citizen
 
@@ -308,7 +399,7 @@ try:
 
         def to_string(self):
             if False:
-                nspan = self.val["_spans"]["size"]() # Fails (as it's type is METHOD, not CODE)
+                nspan = self.val["_spans"]["size"]() # Fails (as its type is METHOD, not CODE)
             else:
                 vec_impl = self.val["_spans"]["_M_impl"]
                 nspan = vec_impl["_M_finish"] - vec_impl["_M_start"]
@@ -334,6 +425,12 @@ try:
         def to_string(self):
             return "Peak{%d, (%.2f, %.2f)}" % (self.val["_id"], self.val["_fx"], self.val["_fy"])
 
+    class PsfPrinter(object):
+        "Print a Psf"
+
+        def to_string(self):
+            return "%s" % (self.typeName())
+
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     class Box2Printer(object):
@@ -348,11 +445,11 @@ try:
             if type.code == gdb.TYPE_CODE_REF:
                 type = type.target ()
 
-            llc = [getEigenValue(self.val["_minimum"]["_vector"], 0, i) for i in range(2)]
-            dims = [getEigenValue(self.val["_dimensions"]["_vector"], 0, i) for i in range(2)]
+            llc = [getEigenValue(self.val["_minimum"]["_vector"], i) for i in range(2)]
+            dims = [getEigenValue(self.val["_dimensions"]["_vector"], i) for i in range(2)]
 
             return "Box2{(%s,%s)--(%s,%s)}" % (llc[0], llc[1],
-                                                 llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
+                                               llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
 
         def display_hint (self):
             return "array"
@@ -364,15 +461,37 @@ try:
             self.val = val
 
         def to_string(self):
-            # Make sure &foo works, too.
-            type = self.val.type
-            if type.code == gdb.TYPE_CODE_REF:
-                type = type.target ()
-
             return self.val["_vector"]["m_storage"]["m_data"]["array"]
 
         def display_hint (self):
             return "array"
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class AxesPrinter(object):
+        "Print an ellipse::Axes"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            vec = self.val["_vector"]
+            return "[%g, %g, %g]" % (getEigenValue(vec, 0), getEigenValue(vec, 1), getEigenValue(vec, 2))
+
+    class QuadrupolePrinter(object):
+        "Print an ellipse::Quadrupole"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            mat = self.val["_matrix"]
+
+            if False:
+                return mat
+            else:
+                return "[[%g, %g], [%g, %g]]" % (getEigenValue(mat, 0, 0), getEigenValue(mat, 0, 1),
+                                                 getEigenValue(mat, 1, 0), getEigenValue(mat, 1, 1))
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -448,24 +567,44 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            parser = GdbArgumentParser("show image")
-            parser.add_argument("-a", "--all", action="store_true", help="Display the whole image/mask")
-            parser.add_argument("-c", "--center", action="store_true", help="Center the output at (x, y)")
-            parser.add_argument("-o", "--origin", type=str, nargs=2, default=("0", "0"),
+            parser = GdbOptionParser("show image")
+            parser.add_option("-a", "--all", action="store_true", help="Display the whole image/mask")
+            parser.add_option("-c", "--center", action="store_true", help="Center the output at (x, y)")
+            parser.add_option("-o", "--origin", type="str", nargs=2, default=("0", "0"),
                                 help="Print the region starting at (x, y)")
-            parser.add_argument("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
-            parser.add_argument("-f", "--formatWidth", type=int, default=8, help="Field width for values")
-            parser.add_argument("image", help="Expression giving image to show")
-            parser.add_argument("width", help="Width of patch to print", default=1, nargs="?")
-            parser.add_argument("height", help="Height of patch to print", default=1, nargs="?")
+            parser.add_option("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
+            parser.add_option("-f", "--formatWidth", type="int", default=8, help="Field width for values")
+            parser.add_option("-d", "--dataFmt", default="%.2f", help="Format for values")
 
-            opts =  parser.parse_args(args)
+            if False:
+                parser.add_option("image", help="Expression giving image to show")
+                parser.add_option("width", help="Width of patch to print", default=1, nargs="?")
+                parser.add_option("height", help="Height of patch to print", default=1, nargs="?")
+
+                opts =  parser.parse_args(args)
+                if opts.help:
+                    return
+            else:
+                opts, args =  parser.parse_args(args)
+                if opts.help:
+                    return
+
+                if not args:
+                    raise gdb.GdbError("Please specify an image")
+
+                opts.image = args.pop(0)
+
+                opts.width, opts.height = 1, 1
+                if args:
+                    opts.width = int(args.pop(0))
+                if args:
+                    opts.height = int(args.pop(0))
+
+                if args:
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
 
             x0 = gdb.parse_and_eval(opts.origin[0])
             y0 = gdb.parse_and_eval(opts.origin[1])
-
-            if len(args) < 1:
-                raise gdb.GdbError("Please specify an image")
 
             if opts.all:
                 nx, ny = 0, 0
@@ -477,10 +616,11 @@ try:
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
-            if not re.search(r"^lsst::afw::image::(Image|Mask|MaskedImage)", str(var.type)):
+            if not re.search(r"(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type.unqualified())):
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
-            if re.search(r"MaskedImage", str(var.type)):
+            if re.search(r"MaskedImage", str(var.type)) and \
+                    not re.search(r"::Image(\s*&)?$", str(var.type)):
                 print "N.b. %s is a MaskedImage; showing image" % (opts.image)
                 var = var["_image"]
 
@@ -491,7 +631,9 @@ try:
                 var = var.dereference()     # be nice
 
             pixelTypeName = str(var.type.template_argument(0))
-            if pixelTypeName in ["short", "unsigned short"]:
+            if opts.dataFmt:
+                dataFmt = opts.dataFmt
+            elif pixelTypeName in ["short", "unsigned short"]:
                 dataFmt = "0x%x"
             elif pixelTypeName in ["int", "unsigned int"]:
                 dataFmt = "%d"
@@ -530,6 +672,15 @@ try:
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+    class KernelPrinter(object):
+        "Print a Kernel"
+
+        def to_string(self):
+            return "%s(%dx%d)" % (self.typeName(),
+                                  self.val["_width"], self.val["_height"])
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
     printers = []
 
     def register(obj):
@@ -551,7 +702,7 @@ try:
         printer.add_printer('boost::shared_ptr',
                             '^(boost|tr1|std)::shared_ptr', SharedPtrPrinter)
         printer.add_printer('boost::gil::pixel',
-                            'boost::gil::.*_pixel_t', GilPixelPrinter)
+                            'boost::gil::.*pixel_t', GilPixelPrinter)
 
         return printer
 
@@ -582,6 +733,8 @@ try:
                             '^lsst::afw::detection::FootprintSet', FootprintSetPrinter)
         printer.add_printer('lsst::afw::detection::Peak',
                             '^lsst::afw::detection::Peak$', PeakPrinter)
+        printer.add_printer('lsst::afw::detection::Psf',
+                            '^lsst::afw::detection::Psf$', PsfPrinter)
         printer.add_printer('lsst::afw::detection::Source',
                             '^lsst::afw::detection::Source$', SourcePrinter)
         printer.add_printer('lsst::afw::detection::BaseSourceAttributes',
@@ -594,6 +747,11 @@ try:
         printer.add_printer('lsst::afw::geom::Point',
                             '^lsst::afw::geom::Point', CoordinateBasePrinter)
 
+        printer.add_printer('lsst::afw::geom::ellipses::Axes',
+                            '^lsst::afw::geom::ellipses::Axes', AxesPrinter)
+        printer.add_printer('lsst::afw::geom::ellipses::Quadrupole',
+                            '^lsst::afw::geom::ellipses::Quadrupole', QuadrupolePrinter)
+
         printer.add_printer('lsst::afw::image::ImageBase',
                             'lsst::afw::image::ImageBase<[^>]+>$', ImagePrinter)
         printer.add_printer('lsst::afw::image::Image',
@@ -604,6 +762,9 @@ try:
                             '^lsst::afw::image::MaskedImage<[^>]+>$', MaskedImagePrinter)
         printer.add_printer('lsst::afw::image::Exposure',
                             '^lsst::afw::image::Exposure', ExposurePrinter)
+
+        printer.add_printer('lsst::afw::math::Kernel',
+                            '^lsst::afw::math::Kernel', KernelPrinter)
 
         return printer
 

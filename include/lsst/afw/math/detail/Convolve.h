@@ -49,6 +49,10 @@
 namespace lsst {
 namespace afw {
 namespace math {
+
+LSST_EXCEPTION_TYPE(GpuMemoryException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuMemoryException)
+LSST_EXCEPTION_TYPE(GpuRuntimeErrorException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuRuntimeErrorException)
+
 namespace detail {
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
@@ -83,7 +87,7 @@ namespace detail {
             OutImageT &convolvedImage,
             InImageT const& inImage,
             lsst::afw::math::Kernel const& kernel,
-            bool doNormalize);
+            lsst::afw::math::ConvolutionControl const& convolutionControl);
 
     // I would prefer this to be nested in KernelImagesForRegion but SWIG doesn't support that
     class RowOfKernelImagesForRegion;
@@ -107,7 +111,7 @@ namespace detail {
      * Also note that it uses lazy evaluation: images are computed when they are wanted.
      */
     class KernelImagesForRegion :
-        public lsst::daf::data::LsstBase,
+        public lsst::daf::base::Citizen,
         public lsst::daf::base::Persistable
     {
     public:

@@ -31,7 +31,8 @@
 // Must go Before the %include
 //
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+    %shared_ptr(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+    %template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::MaskedImage<PIXEL_TYPES> > >;
 %enddef
 
 //
@@ -165,7 +166,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %maskedImagePtr(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, I, int,    lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
-%maskedImagePtr(MaskedImage, U, boost::uint16_t,lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, U, boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %include "lsst/afw/image/MaskedImage.h"
 

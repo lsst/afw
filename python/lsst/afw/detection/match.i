@@ -27,16 +27,13 @@
 #include "lsst/afw/detection/SourceMatch.h"
 %}
 
-SWIG_SHARED_PTR(PersistableSourceMatchVector,
-                lsst::afw::detection::PersistableSourceMatchVector);
+%shared_ptr(lsst::afw::detection::PersistableSourceMatchVector);
 
 %include "lsst/afw/detection/SourceMatch.h"
 
 %template(SourceMatchVector) std::vector<lsst::afw::detection::SourceMatch>;
 
-SWIG_SHARED_PTR_DERIVED(PersistableSourceMatchVector,
-                        lsst::daf::base::Persistable,
-                        lsst::afw::detection::PersistableSourceMatchVector);
+%shared_ptr(lsst::afw::detection::PersistableSourceMatchVector);
 
 %extend lsst::afw::detection::SourceMatch {
     %pythoncode {

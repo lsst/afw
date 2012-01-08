@@ -1,16 +1,11 @@
 # -*- python -*-
-import glob, os, re
+from lsst.sconsUtils import scripts, targets, env
 
-Import('env')
-#
-# Here's a way to to build the files in the list noOptFiles without optimisation
-#
-ccFiles = glob.glob("../src/*/*.cc") + glob.glob("../src/*/*/*.cc") + glob.glob("../src/*/*/*/*.cc")
-try:
-    ccFiles = env.SourcesForSharedLibrary(ccFiles)
-except AttributeError:                  # requires sconsUtils > 3.3
-    pass
+objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glob("#src/*/*/*.cc") + Glob("#src/*/*/*/*.cc"))
 
-env.SharedLibrary(
-    'afw', ccFiles, LIBS=[x for x in env.getlibs("afw") if x != "afw"]
-)
+import eups
+if eups.productDir("cuda_toolkit"):
+    gpuObj = env.SharedObject('#src/math/detail/convGPU', ['#src/math/detail/convGPU.cu'])
+    objs.append("#src/math/detail/convGPU.os")
+
+targets["lib"].extend(env.SharedLibrary(env["packageName"], objs, LIBS=env.getLibs("self")))

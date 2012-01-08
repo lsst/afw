@@ -45,7 +45,7 @@ dataDir = eups.productDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 InputImagePath = os.path.join(dataDir, "871034p_1_MI")
-InputSmallImagePath = os.path.join(dataDir, "small_img.fits")
+InputSmallImagePath = os.path.join(dataDir, "data", "small_img.fits")
 InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
 InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)

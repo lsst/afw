@@ -46,7 +46,7 @@
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/ndarray.h"
 
@@ -106,7 +106,7 @@ namespace image {
     //
     template<typename PixelT>
     class ImageBase : public lsst::daf::base::Persistable,
-                      public lsst::daf::data::LsstBase {
+                      public lsst::daf::base::Citizen {
     private:
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
@@ -184,7 +184,7 @@ namespace image {
         /// ImageBase types.
         template<typename OtherPixelT>
         ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
-            lsst::daf::data::LsstBase(typeid(this)) {
+            lsst::daf::base::Citizen(typeid(this)) {
             if (!deep) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                     "Only deep copies are permitted for ImageBases with different pixel types");
@@ -212,6 +212,19 @@ namespace image {
         PixelReference operator()(int x, int y, CheckIndices const&);
         PixelConstReference operator()(int x, int y) const;
         PixelConstReference operator()(int x, int y, CheckIndices const&) const;
+
+        PixelConstReference get0(int x, int y) const {
+            return operator()(x-getX0(), y-getY0());
+        }
+        PixelConstReference get0(int x, int y, CheckIndices const& check) const {
+            return operator()(x-getX0(), y-getY0(), check);
+        }
+        void set0(int x, int y, const PixelT v) {
+            operator()(x-getX0(), y-getY0()) = v;
+        }
+        void set0(int x, int y, const PixelT v, CheckIndices const& check) {
+            operator()(x-getX0(), y-getY0(), check) = v;
+        }
 
         /// Return the number of columns in the %image
         int getWidth() const { return _gilView.width(); }
@@ -354,9 +367,10 @@ namespace image {
             setXY0(geom::Point2I(x0,y0));
         }
 
-        geom::Box2I getBBox(ImageOrigin origin) const {
-            if(origin==PARENT) 
+        geom::Box2I getBBox(ImageOrigin origin=LOCAL) const {
+            if (origin == PARENT) {
                 return geom::Box2I(_origin, getDimensions());
+            }
             else return geom::Box2I(geom::Point2I(0,0), getDimensions());
         }
     private:
@@ -393,6 +407,7 @@ namespace image {
     template<typename PixelT>
     class Image : public ImageBase<PixelT> {
     public:
+        template<typename, typename, typename> friend class MaskedImage;
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
 
@@ -493,7 +508,7 @@ namespace image {
      */
     template<typename PixelT>
     class DecoratedImage : public lsst::daf::base::Persistable,
-                           public lsst::daf::data::LsstBase {
+                           public lsst::daf::base::Citizen {
     public:
         /// shared_ptr to a DecoratedImage
         typedef boost::shared_ptr<DecoratedImage> Ptr;
@@ -516,6 +531,9 @@ namespace image {
         );
 
         DecoratedImage& operator=(const DecoratedImage& image);
+
+        lsst::daf::base::PropertySet::Ptr getMetadata() const { return _metadata; }
+        void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _metadata = metadata; }
 
         /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
@@ -555,6 +573,8 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
         typename Image<PixelT>::Ptr _image;
+        daf::base::PropertySet::Ptr _metadata;
+        
         double _gain;
 
         void init();

@@ -29,6 +29,7 @@
 #ifndef LSST_AFW_GEOM_BOX_H
 #define LSST_AFW_GEOM_BOX_H
 
+#include "boost/format.hpp"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/ndarray.h"
@@ -123,7 +124,7 @@ public:
     //@}
 
     lsst::ndarray::View< 
-        boost::fusion::vector< lsst::ndarray::detail::RangeDim, lsst::ndarray::detail::RangeDim > 
+        boost::fusion::vector2< lsst::ndarray::index::Range, lsst::ndarray::index::Range > 
         >
     getSlices() const;
 
@@ -139,12 +140,18 @@ public:
     void grow(int buffer) { grow(Extent2I(buffer)); }
     void grow(Extent2I const & buffer);
     void shift(Extent2I const & offset);
+    void flipLR(int xextent);
+    void flipTB(int yextent);
     void include(Point2I const & point);
     void include(Box2I const & other);
     void clip(Box2I const & other);
 
     bool operator==(Box2I const & other) const;
     bool operator!=(Box2I const & other) const;
+
+    std::string toString() const {
+        return (boost::format("Box2I(%s,%s)") % _minimum.toString() % _dimensions.toString()).str();
+    }
 
 private:
     Point2I _minimum;
@@ -255,12 +262,18 @@ public:
     void grow(double buffer) { grow(Extent2D(buffer)); }
     void grow(Extent2D const & buffer);
     void shift(Extent2D const & offset);
+    void flipLR(float xextent);
+    void flipTB(float yextent);
     void include(Point2D const & point);
     void include(Box2D const & other);
     void clip(Box2D const & other);
 
     bool operator==(Box2D const & other) const;
     bool operator!=(Box2D const & other) const;
+
+    std::string toString() const {
+        return (boost::format("Box2D(%s,%s)") % _minimum.toString() % _maximum.toString()).str();
+    }
 
 private:
     void _tweakMax(int n) {

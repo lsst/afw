@@ -22,35 +22,47 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-%ignore lsst::afw::detection::FootprintFunctor::operator();
-
 %{
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 %}
 
+%shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
+
+
+%ignore lsst::afw::detection::FootprintFunctor::operator();
+
 // already in image.i.
 // %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
-SWIG_SHARED_PTR(Peak,      lsst::afw::detection::Peak);
-SWIG_SHARED_PTR(Footprint, lsst::afw::detection::Footprint);
-SWIG_SHARED_PTR(Span,      lsst::afw::detection::Span);
-SWIG_SHARED_PTR(FootprintSetU, lsst::afw::detection::FootprintSet<boost::uint16_t, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintSetI, lsst::afw::detection::FootprintSet<int, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintSetF, lsst::afw::detection::FootprintSet<float, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr >);
+%shared_ptr(lsst::afw::detection::Peak);
+%shared_ptr(lsst::afw::detection::Footprint);
+%shared_ptr(lsst::afw::detection::Span);
+%shared_ptr(lsst::afw::detection::FootprintSet<boost::uint16_t, lsst::afw::image::MaskPixel>);
+%shared_ptr(lsst::afw::detection::FootprintSet<int, lsst::afw::image::MaskPixel>);
+%shared_ptr(lsst::afw::detection::FootprintSet<float, lsst::afw::image::MaskPixel>);
+%shared_ptr(lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
+%shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
+
+%define %HeavyFootprintPtr(TYPE)
+   %shared_ptr(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+%enddef
+
+%HeavyFootprintPtr(int);
+%HeavyFootprintPtr(float);
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
 %include "lsst/afw/detection/Threshold.h"
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
+%include "lsst/afw/detection/FootprintCtrl.h"
 %include "lsst/afw/detection/FootprintSet.h"
 %include "lsst/afw/detection/FootprintFunctor.h"
 
@@ -63,13 +75,44 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
     }
 %enddef
 
+%define %footprintOperations(PIXEL)
+%template(insertIntoImage) lsst::afw::detection::Footprint::insertIntoImage<PIXEL>;
+%enddef
+
 %extend lsst::afw::detection::Footprint {
     %template(intersectMask) intersectMask<lsst::afw::image::MaskPixel>;
+    %footprintOperations(unsigned short)
+    %footprintOperations(int)
+    %footprintOperations(boost::uint64_t)
 }
 
-%template(PeakContainerT)      std::vector<lsst::afw::detection::Peak::Ptr>;
-%template(SpanContainerT)      std::vector<lsst::afw::detection::Span::Ptr>;
-%template(FootprintContainerT) std::vector<lsst::afw::detection::Footprint::Ptr>;
+%template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
+%template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Span> >;
+%template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
+
+%define %heavyFootprints(NAME, PIXEL_TYPE...)
+    %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>;
+    %template(makeHeavyFootprint) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE>;
+
+    %inline %{
+        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>)
+            /**
+             * Cast a Footprint to a HeavyFootprint of a specified type
+             */
+            cast_HeavyFootprint##NAME(PTR(lsst::afw::detection::Footprint) foot) {
+            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE> >(foot);
+        }
+
+        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>)
+            /**
+             * Cast a Footprint to a HeavyFootprint; the MaskedImage disambiguates the type
+             */
+            cast_HeavyFootprint(PTR(lsst::afw::detection::Footprint) foot,
+                                lsst::afw::image::MaskedImage<PIXEL_TYPE> const&) {
+            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE> >(foot);
+        }
+    %}
+%enddef
 
 %define %imageOperations(NAME, PIXEL_TYPE)
     %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;
@@ -90,6 +133,9 @@ SWIG_SHARED_PTR(FootprintList, std::vector<lsst::afw::detection::Footprint::Ptr 
 %template(FootprintSet##NAME) lsst::afw::detection::FootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
 %template(makeFootprintSet) lsst::afw::detection::makeFootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
 %enddef
+
+%heavyFootprints(I, int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+%heavyFootprints(F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 
 %thresholdOperations(lsst::afw::image::Image);
 %thresholdOperations(lsst::afw::image::MaskedImage);

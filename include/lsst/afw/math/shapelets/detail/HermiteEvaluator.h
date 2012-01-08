@@ -38,7 +38,7 @@
 #include "lsst/ndarray.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/shapelets/constants.h"
-#include <Eigen/Core>
+#include "Eigen/Core"
 
 namespace lsst {
 namespace afw {

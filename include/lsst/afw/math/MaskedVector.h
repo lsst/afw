@@ -95,7 +95,7 @@ public:
 
     // Make some std::vector methods
     int size() { return this->getWidth(0); }
-    bool empty() { return this->getWidth(0) > 0; }
+    bool empty() { return this->getWidth(0) == 0; }
     
     class iterator : public lsst::afw::image::MaskedImage<EntryT>::x_iterator {
     public:

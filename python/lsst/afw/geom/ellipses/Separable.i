@@ -105,9 +105,7 @@
 %rename(assign) lsst::afw::geom::ellipses::Separable::operator=;
 
 %define %Separable_PREINCLUDE(ELLIPTICITY, RADIUS)
-SWIG_SHARED_PTR_DERIVED(
-    Separable ## ELLIPTICITY ## RADIUS ## Ptr,
-    lsst::afw::geom::ellipses::BaseCore,
+%shared_ptr(
     lsst::afw::geom::ellipses::Separable<
         lsst::afw::geom::ellipses::ELLIPTICITY, 
         lsst::afw::geom::ellipses::RADIUS

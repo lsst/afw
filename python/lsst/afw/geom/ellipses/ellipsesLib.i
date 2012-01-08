@@ -90,18 +90,14 @@ def version(HeadURL = r"$HeadURL$"):
 %declareNumPyConverters(lsst::afw::geom::ellipses::BaseCore::Jacobian);
 %declareNumPyConverters(lsst::afw::geom::ellipses::BaseCore::ParameterVector);
 
-SWIG_SHARED_PTR(BaseCorePtr, lsst::afw::geom::ellipses::BaseCore);
+%shared_ptr(lsst::afw::geom::ellipses::BaseCore);
 
 %include "lsst/afw/geom/ellipses/BaseCore.h"
 
 %define %EllipseCore_PREINCLUDE(NAME)
 %feature(notabstract) lsst::afw::geom::ellipses::NAME;
 %implicitconv lsst::afw::geom::ellipses::NAME;
-SWIG_SHARED_PTR_DERIVED(
-    NAME##Ptr,
-    lsst::afw::geom::ellipses::BaseCore,
-    lsst::afw::geom::ellipses::NAME 
-);
+%shared_ptr(lsst::afw::geom::ellipses::NAME);
 %ignore lsst::afw::geom::ellipses::NAME::writeParameters;
 %ignore lsst::afw::geom::ellipses::NAME::readParameters;
 %rename(assign) lsst::afw::geom::ellipses::NAME::operator=;
@@ -195,7 +191,7 @@ SWIG_SHARED_PTR_DERIVED(
 
 %rename(assign) lsst::afw::geom::ellipses::Ellipse::operator=;
 
-SWIG_SHARED_PTR(EllipsePtr, lsst::afw::geom::ellipses::Ellipse);
+%shared_ptr(lsst::afw::geom::ellipses::Ellipse);
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::ParameterVector);
 
 %extend lsst::afw::geom::ellipses::Ellipse {

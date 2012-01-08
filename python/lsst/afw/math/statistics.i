@@ -26,7 +26,7 @@
 #include "lsst/afw/math/Statistics.h"
 %}
 
-SWIG_SHARED_PTR(StatisticsControlPtr, lsst::afw::math::StatisticsControl);
+%shared_ptr(lsst::afw::math::StatisticsControl);
 
 %include "lsst/afw/math/Statistics.h"
 
@@ -42,6 +42,6 @@ SWIG_SHARED_PTR(StatisticsControlPtr, lsst::afw::math::StatisticsControl);
 %declareStats(int, I)
 
 // We also support Mask<MaskPixel>
-%rename(makeStatisticsMU) lsst::afw::math::makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, int, StatisticsControl const&);
+%rename(makeStatisticsMU) lsst::afw::math::makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, int, lsst::afw::math::StatisticsControl const&);
 %template(StatisticsMU) lsst::afw::math::Statistics::Statistics<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, lsst::afw::image::Mask<lsst::afw::image::MaskPixel> >;
 

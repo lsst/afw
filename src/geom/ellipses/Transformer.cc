@@ -23,7 +23,7 @@
  */
 #include "lsst/afw/geom/ellipses/Transformer.h"
 
-#include <Eigen/LU>
+#include "Eigen/LU"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
