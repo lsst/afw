@@ -81,7 +81,7 @@ void math::Interpolate::initialize(std::vector<double> const &x, std::vector<dou
     // The &(x[0]) here is valid because std::vector guarantees that the values are
     // stored contiguously in memory (for types other than bool); C++0X 23.3.6.1 for
     // those of you reading along.
-    int const status = ::gsl_interp_init(_interp, &(x[0]), &y([0]), y.size());
+    int const status = ::gsl_interp_init(_interp, &(x[0]), &(y[0]), y.size());
     if (status != 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           str(boost::format("gsl_interp_init failed: %s [%d]")
