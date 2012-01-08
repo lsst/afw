@@ -73,26 +73,54 @@ class BackgroundTestCase(unittest.TestCase):
         #self.assertAlmostEqual(mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
     def testOddSize(self):
+        '''
+        Test for ticket #1781 -- without it, in oddly-sized images
+        there is a chunk of pixels on the right/bottom that do not go
+        into the fit and are extrapolated.  After this ticket, the
+        subimage boundaries are spread more evenly so the last pixels
+        get fit as well.  This slightly strange test case checks that
+        the interpolant is close to the function at the end.  I could
+        not think of an interpolant that would fit exactly, so this
+        just puts a limit on the errors.
+        '''
         W,H = 2,99
         image = afwImage.ImageF(afwGeom.Extent2I(W,H))
         bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.LINEAR)
-        bgCtrl.setNxSample(1)
-        bgCtrl.setNySample(10)
+        bgCtrl.setNxSample(2)
+        NY = 10
+        bgCtrl.setNySample(NY)
         for y in range(H):
             for x in range(W):
-                if y > 90:
-                    image.set(x,y) = 180 - y
+                B = 89
+                if y < B:
+                    image.set(x,y,y)
                 else:
-                    image.set(x,y) = y
-        back = afwMath.makeBackground(image, bgCtrl)
+                    image.set(x,y,B+(y-B)*-1.) #0.5)
+        bobj = afwMath.makeBackground(image, bgCtrl)
+        back = bobj.getImageD()
         
-        import pylab as plt
-        plt.clf()
-        IY = [image.get(0,y) for y in range(H)]
-        BY = [ back.get(0,y) for y in range(H)]
-        plt.plot(IY, 'b-', lw=3, alpha=0.5)
-        plt.plot(BY, 'r-')
-        plt.savefig('bg.png')
+        for iy,by in zip([image.get(0,y) for y in range(H)],
+                         [ back.get(0,y) for y in range(H)]):
+            self.assertTrue( abs(iy - by) < 5 )
+
+        if False:
+            import matplotlib
+            matplotlib.use('Agg')
+            import pylab as plt
+            import numpy as np
+            plt.clf()
+            IY = [image.get(0,y) for y in range(H)]
+            BY = [ back.get(0,y) for y in range(H)]
+            for iy,by in zip(IY,BY):
+                print 'diff', iy-by
+            b = np.linspace(0, H-1, NY+1)
+            plt.plot(IY, 'b-', lw=3, alpha=0.5)
+            plt.plot(BY, 'r-')
+            for y in b:
+                plt.axvline(y)
+            plt.savefig('bg.png')
+
+
         
 
     def testgetPixel(self):
