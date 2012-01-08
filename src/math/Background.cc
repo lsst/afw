@@ -96,10 +96,6 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     int sum = 0;
     //printf("nxsample = %i, imgwidth = %i\n", _nxSample, _imgWidth);
     for (int iX = 0; iX < _nxSample; ++iX) {
-        /*
-         int endx = std::min(bm::iround((iX+1) * _imgWidth  / static_cast<double>(_nxSample)),
-         _imgWidth) - 1;
-         */
         const int endx = std::min(((iX+1)*_imgWidth + _nxSample/2) / _nxSample, _imgWidth);
         _xorig[iX] = (iX == 0) ? 0 : _xorig[iX-1] + _xsize[iX-1];
         _xsize[iX] = endx - _xorig[iX];
@@ -111,10 +107,6 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     sum = 0;
     //printf("nysample = %i, imgheight = %i\n", _nySample, _imgHeight);
     for (int iY = 0; iY < _nySample; ++iY) {
-        /*
-         const int endy = std::min(bm::iround((iY+1) * _imgHeight  / static_cast<double>(_nySample)),
-         _imgHeight) - 1;
-         */
         const int endy = std::min(((iY+1)*_imgHeight + _nySample/2) / _nySample, _imgHeight);
         _yorig[iY] = (iY == 0) ? 0 : _yorig[iY-1] + _ysize[iY-1];
         _ysize[iY] = endy - _yorig[iY];
