@@ -48,12 +48,12 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     destBBox = afwGeom.Box2I(destPosBox, afwGeom.Box2I.EXPAND)
     return destBBox
 
-DefaultInterpLength = 10
-DefaultCacheSize = 0
+_DefaultInterpLength = 10
+_DefaultCacheSize = 0
 
 class WarperConfig(pexConfig.Config):
     warpingKernelName = pexConfig.ChoiceField(
-        dtype = string,
+        dtype = str,
         doc = "Warping kernel",
         default = "lanczos4",
         allowed = {
@@ -66,19 +66,19 @@ class WarperConfig(pexConfig.Config):
     interpLength = pexConfig.Field(
         dtype = int,
         doc = "interpLength argument to lsst.afw.math.warpExposure",
-        default = DefaultInterpLength,
+        default = _DefaultInterpLength,
     )
     cacheSize = pexConfig.Field(
         dtype = int,
         doc = "cacheSize argument to lsst.afw.math.SeparableKernel.computeCache",
-        default = DefaultCacheSize,
+        default = _DefaultCacheSize,
     )
 
 class Warper(object):
     """Warp images
     """
     ConfigClass = WarperConfig
-    def __init__(self, warpingKernelName, interpLength=DefaultInterpLength, cacheSize=DefaultCacheSize):
+    def __init__(self, warpingKernelName, interpLength=_DefaultInterpLength, cacheSize=_DefaultCacheSize):
         """Create a Warper
         
         Inputs:
