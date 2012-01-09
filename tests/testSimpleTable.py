@@ -115,10 +115,13 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkCovAccessors(record, k17, makeRandom((k17.getSize(), k17.getSize()), dtype=numpy.float64))
 
     def testColumnView(self):
-        schema = lsst.afw.table.Schema(False)
+        schema = lsst.afw.table.Schema(True)
         k1 = schema.addField("f1", type="I4")
+        kb1 = schema.addField("fb1", type="Flag")
         k2 = schema.addField("f2", type="F4")
+        kb2 = schema.addField("fb2", type="Flag")
         k3 = schema.addField("f3", type="F8")
+        kb3 = schema.addField("fb3", type="Flag")
         k4 = schema.addField("f4", type="Array<F4>", size=2)
         k5 = schema.addField("f5", type="Array<F8>", size=3)
         table = lsst.afw.table.SimpleTable(schema, 2)
@@ -128,19 +131,31 @@ class SimpleTableTestCase(unittest.TestCase):
         records[0].set(k1, 2)
         records[0].set(k2, 0.5)
         records[0].set(k3, 0.25)
+        records[0].set(kb1, False)
+        records[0].set(kb2, True)
+        records[0].set(kb3, False)
         records[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
         records[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
         records[1].set(k1, 3)
         records[1].set(k2, 2.5)
         records[1].set(k3, 0.75)
+        records[1].set(kb1, True)
+        records[1].set(kb2, False)
+        records[1].set(kb3, True)
         records[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
         records[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
+        records[1].setParentId(1)
         self.assert_(table.isConsolidated())
         columns = table.getColumnView()
-        for key in [k1, k2, k3]:
+        for key in [k1, k2, k3, kb1, kb2, kb3]:
             array = columns[key]
             for i in [0, 1]:
                 self.assertEqual(array[i], records[i].get(key))
+        ids = columns.getId()
+        parentIds = columns.getParentId();
+        for i in [0, 1]:
+            self.assertEqual(ids[i], records[i].getId())
+            self.assertEqual(parentIds[i], records[i].getParentId())
 
     def testIteration(self):
         schema = lsst.afw.table.Schema(False)

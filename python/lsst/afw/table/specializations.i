@@ -1,7 +1,7 @@
 // This file contains workarounds for SWIG's lack of complete support
 // for partial specialization of templates in C++, reported as SWIG
 // bug #3465431.  If/when that bug is fixed, this should be simplifed
-// quite a bit.
+// by replacing many of the get/set implementations with %template lines.
 
 %define %specializeScalar(U)
 %extend lsst::afw::table::RecordBase {
@@ -51,7 +51,10 @@
     Eigen::Array<U,Eigen::Dynamic,1> get(lsst::afw::table::Key< Array< U > > const & key) const {
         return self->get(key);
     }
-    void set(lsst::afw::table::Key< Array< U > > const & key, Eigen::Array<U,Eigen::Dynamic,1> const & v) {
+    void set(
+        lsst::afw::table::Key< Array< U > > const & key,
+        Eigen::Array<U,Eigen::Dynamic,1> const & v
+    ) const {
         self->set(key, v);
     }
 }
@@ -81,7 +84,7 @@
     void set(
         lsst::afw::table::Key< Covariance< U > > const & key,
         Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> const & v
-    ) {
+    ) const {
         self->set(key, v);
     }
 }
@@ -99,7 +102,10 @@
     Eigen::Matrix<U,2,2> get(lsst::afw::table::Key< Covariance< Point< U > > > const & key) const {
         return self->get(key);
     }
-    void set(lsst::afw::table::Key< Covariance< Point< U > > > const & key, Eigen::Matrix<U,2,2> const & v) {
+    void set(
+        lsst::afw::table::Key< Covariance< Point< U > > > const & key,
+        Eigen::Matrix<U,2,2> const & v
+    ) const {
         self->set(key, v);
     }
 }
@@ -117,11 +123,31 @@
     Eigen::Matrix<U,3,3> get(lsst::afw::table::Key< Covariance< Shape< U > > > const & key) const {
         return self->get(key);
     }
-    void set(lsst::afw::table::Key< Covariance< Shape< U > > > const & key, Eigen::Matrix<U,3,3> const & v) {
+    void set(
+        lsst::afw::table::Key< Covariance< Shape< U > > > const & key,
+        Eigen::Matrix<U,3,3> const & v
+    ) const {
         self->set(key, v);
     }
 }
 %enddef
+
+%extend lsst::afw::table::RecordBase {
+    bool get(lsst::afw::table::Key< Flag > const & key) const {
+        return self->get(key);
+    }
+    void set(lsst::afw::table::Key< Flag > const & key, bool value) const {
+        self->set(key, value);
+    }
+}
+%extend lsst::afw::table::ColumnView {
+    lsst::ndarray::Array<bool const,1> __getitem__(
+        lsst::afw::table::Key< lsst::afw::table::Flag > const & key
+    ) const {
+        return lsst::ndarray::copy((*self)[key]);
+    }
+}
+
 
 %specializeScalar(boost::int32_t)
 %specializeScalar(boost::int64_t)

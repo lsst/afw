@@ -45,7 +45,11 @@ Python interface to lsst::afw::table classes
 %init %{
     import_array();
 %}
+
+%declareNumPyConverters(lsst::ndarray::Array<bool const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::table::RecordId const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<boost::int32_t const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<boost::int64_t const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<float const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<double const,1>);
 %declareNumPyConverters(Eigen::Array<float,Eigen::Dynamic,1>);
@@ -207,7 +211,6 @@ def addField(self, field, type=None, doc="", units="", size=None):
 %ignore lsst::afw::table::RecordBase::operator=;
 %rename("__eq__") lsst::afw::table::RecordBase::operator==;
 %rename("__ne__") lsst::afw::table::RecordBase::operator!=;
-
 %include "lsst/afw/table/RecordBase.h"
 
 %include "lsst/afw/table/ColumnView.h"
@@ -247,8 +250,6 @@ def addField(self, field, type=None, doc="", units="", size=None):
 
 %declareTag(Source)
 %include "lsst/afw/table/Source.h"
-
-%include "lsst/afw/table/ColumnView.h"
 
 %pythoncode %{
 import numpy

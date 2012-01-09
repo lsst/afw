@@ -1,5 +1,3 @@
-
-
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
@@ -51,6 +49,26 @@ struct ColumnView::Impl {
 
 Schema ColumnView::getSchema() const { return _impl->schema; }
 
+ndarray::Array<RecordId const,1> ColumnView::getId() const {
+    return ndarray::detail::ArrayAccess< ndarray::Array<RecordId const,1> >::construct(
+        &reinterpret_cast<detail::RecordData const*>(_impl->buf)->id,
+        boost::fusion::at_key<RecordId>(_impl->cores)
+    );
+}
+
+ndarray::Array<RecordId const,1> ColumnView::getParentId() const {
+    if (!_impl->schema.hasTree()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "ColumnView's schema has no tree information, and hence no parent IDs."
+        );
+    }
+    return ndarray::detail::ArrayAccess< ndarray::Array<RecordId const,1> >::construct(
+        &detail::Access::getParentId(_impl->schema, *reinterpret_cast<detail::RecordData *>(_impl->buf)),
+        boost::fusion::at_key<RecordId>(_impl->cores)
+    );
+}
+
 template <typename T>
 typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
     return ndarray::detail::ArrayAccess< ndarray::Array<T const,1> >::construct(
@@ -72,6 +90,19 @@ typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > cons
             ndarray::makeVector(scalarCore->getSize(), key.getSize()),
             ndarray::makeVector(scalarCore->getStride(), 1),
             scalarCore->getManager()
+        )
+    );
+}
+
+ndarray::result_of::vectorize< detail::FlagBitExtractor, ndarray::Array< Field<Flag>::Element const,1> >::type
+ColumnView::operator[](Key<Flag> const & key) const {
+    return ndarray::vectorize(
+        detail::FlagBitExtractor(key),
+        ndarray::detail::ArrayAccess< ndarray::Array<Field<Flag>::Element const,1> >::construct(
+            reinterpret_cast<Field<Flag>::Element *>(
+                reinterpret_cast<char *>(_impl->buf) + key.getOffset()
+            ),
+            boost::fusion::at_key<Field<Flag>::Element>(_impl->cores)
         )
     );
 }

@@ -18,7 +18,7 @@ template <>
 struct FieldBase<Flag> {
 
     typedef bool Value;        ///< @brief the type returned by RecordBase::get
-    typedef boost::uint64_t Element;   ///< @brief the actual storage type (shared by multiple flag fields)
+    typedef boost::int64_t Element;   ///< @brief the actual storage type (shared by multiple flag fields)
 
     /// @brief Return the number of subfield elements (always one for scalars).
     int getElementCount() const { return 1; }
