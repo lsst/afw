@@ -26,10 +26,10 @@
 Tests for table.Schema
 
 Run with:
-   ./schema.py
+   ./testSchema.py
 or
    python
-   >>> import schema; schema.run()
+   >>> import testSchema; testSchema.run()
 """
 
 import sys
@@ -52,8 +52,8 @@ class SchemaTestCase(unittest.TestCase):
     def testInspection(self):
         schema = lsst.afw.table.Schema(False)
         keys = []
-        keys.append(schema.addField("d", type="I4"))
-        keys.append(schema.addField("c", type="F8"))
+        keys.append(schema.addField("d", type=int))
+        keys.append(schema.addField("c", type=float))
         keys.append(schema.addField("b", type="Array<F4>", size=3))
         keys.append(schema.addField("a", type="Cov<Point<F4>>"))
         for key, item in zip(keys, schema):

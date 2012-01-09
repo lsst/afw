@@ -18,12 +18,14 @@ struct Source {
     typedef SourceRecord Record;
     typedef SourceTable Table;
 
+#ifndef SWIG
     class RecordAux : public AuxBase {
     public:
         Footprint footprint;
         
         explicit RecordAux(Footprint const & fp) : footprint(fp) {}
     };
+#endif
 
 };
 

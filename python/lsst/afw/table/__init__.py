@@ -10,4 +10,6 @@ from .tableLib import (
     ColumnView,
     SimpleRecord,
     SimpleTable,
+    SourceRecord,
+    SourceTable,
 )

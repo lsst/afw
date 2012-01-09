@@ -92,8 +92,6 @@ public:
                   << ", bit=" << key.getBit() << ")";
     }
 
-    Key() {}
-
 private:
 
     friend class detail::Access;

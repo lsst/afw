@@ -41,9 +41,21 @@ Python interface to lsst::afw::table classes
 #include "lsst/ndarray/python.h"
 %}
 
+%include "lsst/ndarray/ndarray.i"
 %init %{
     import_array();
 %}
+%declareNumPyConverters(lsst::ndarray::Array<boost::int32_t const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<float const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<double const,1>);
+%declareNumPyConverters(Eigen::Array<float,Eigen::Dynamic,1>);
+%declareNumPyConverters(Eigen::Array<double,Eigen::Dynamic,1>);
+%declareNumPyConverters(Eigen::Matrix<float,2,2>);
+%declareNumPyConverters(Eigen::Matrix<double,2,2>);
+%declareNumPyConverters(Eigen::Matrix<float,3,3>);
+%declareNumPyConverters(Eigen::Matrix<double,3,3>);
+%declareNumPyConverters(Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic>);
+%declareNumPyConverters(Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>);
 
 %include "std_set.i"
 
@@ -175,6 +187,8 @@ def addField(self, field, type=None, doc="", units="", size=None):
         attr = "_addField_" + suffix
         method = getattr(self, attr)
         return method(field)
+    if not isinstance(type, basestring):
+        type = aliases[type]
     suffix = _suffixes[type]
     attr = "_addField_" + suffix
     method = getattr(self, attr)
@@ -231,11 +245,26 @@ def addField(self, field, type=None, doc="", units="", size=None):
 %declareTag(Simple)
 %include "lsst/afw/table/Simple.h"
 
+%declareTag(Source)
+%include "lsst/afw/table/Source.h"
+
+%include "lsst/afw/table/ColumnView.h"
+
 %pythoncode %{
+import numpy
 Field = {}
 Key = {}
 SchemaItem = {}
 _suffixes = {}
+aliases = {
+    int: "I4",
+    long: "I8",
+    float: "F8",
+    numpy.int32: "I4",
+    numpy.int64: "I8",
+    numpy.float32: "F4",
+    numpy.float64: "F8",
+}
 %}
 
 %define %declareFieldType(CNAME, PYNAME)
@@ -299,6 +328,6 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<float> >, CovShapeF4)
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<double> >, CovShapeF8)
 
-%include "bug3465431.i"
+%include "specializations.i"
 
 %template(NameSet) std::set<std::string>;

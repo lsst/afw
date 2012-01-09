@@ -298,7 +298,7 @@ protected:
 
     void stream(std::ostream & os) const { os << ", size=" << _size; }
 
-    Value getValue(Element * p) const {
+    Value getValue(Element const * p) const {
         Value m(_size, _size);
         for (int i = 0; i < _size; ++i) {
             for (int j = 0; j < _size; ++j) {
@@ -375,7 +375,7 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Value getValue(Element * p) const {
+    Value getValue(Element const * p) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
             for (int j = 0; j < SIZE; ++j) {
@@ -447,7 +447,7 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Value getValue(Element * p) const {
+    Value getValue(Element const * p) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
             for (int j = 0; j < SIZE; ++j) {

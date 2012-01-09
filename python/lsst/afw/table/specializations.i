@@ -10,6 +10,9 @@
     U __getitem__(lsst::afw::table::Key< U > const & key) const { return (*self)[key]; }
     void __setitem__(lsst::afw::table::Key< U > const & key, U value) { (*self)[key] = value; }
 }
+%extend lsst::afw::table::ColumnView {
+    lsst::ndarray::Array<U const,1> __getitem__(Key<U> const & key) const { return (*self)[key]; }
+}
 %enddef
 
 %define %specializePoint(U, VALUE...)
@@ -44,6 +47,19 @@
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Array< U > > {
     int getSize() const { return self->getSize(); }
 }
+%extend lsst::afw::table::RecordBase {
+    Eigen::Array<U,Eigen::Dynamic,1> get(lsst::afw::table::Key< Array< U > > const & key) const {
+        return self->get(key);
+    }
+    void set(lsst::afw::table::Key< Array< U > > const & key, Eigen::Array<U,Eigen::Dynamic,1> const & v) {
+        self->set(key, v);
+    }
+}
+%extend lsst::afw::table::ColumnView {
+    lsst::ndarray::Array<U const,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
+        return (*self)[key];
+    }
+}
 %enddef
 
 %define %specializeCovariance(U)
@@ -57,6 +73,18 @@
     int getSize() const { return self->getSize(); }
     int getPackedSize() const { return self->getPackedSize(); }
 }
+%extend lsst::afw::table::RecordBase {
+    Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic>
+    get(lsst::afw::table::Key< Covariance< U > > const & key) const {
+        return self->get(key);
+    }
+    void set(
+        lsst::afw::table::Key< Covariance< U > > const & key,
+        Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> const & v
+    ) {
+        self->set(key, v);
+    }
+}
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< lsst::afw::table::Point< U > > > {
     lsst::afw::table::Key<U> _getitem_impl(int i, int j) const { return (*self)(i, j); }
     %pythoncode %{
@@ -67,6 +95,14 @@
     int getSize() const { return self->getSize(); }
     int getPackedSize() const { return self->getPackedSize(); }
 }
+%extend lsst::afw::table::RecordBase {
+    Eigen::Matrix<U,2,2> get(lsst::afw::table::Key< Covariance< Point< U > > > const & key) const {
+        return self->get(key);
+    }
+    void set(lsst::afw::table::Key< Covariance< Point< U > > > const & key, Eigen::Matrix<U,2,2> const & v) {
+        self->set(key, v);
+    }
+}
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< lsst::afw::table::Shape< U > > > {
     lsst::afw::table::Key<U> _getitem_impl(int i, int j) const { return (*self)(i, j); }
     %pythoncode %{
@@ -76,6 +112,14 @@
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Covariance< lsst::afw::table::Shape< U > > > {
     int getSize() const { return self->getSize(); }
     int getPackedSize() const { return self->getPackedSize(); }
+}
+%extend lsst::afw::table::RecordBase {
+    Eigen::Matrix<U,3,3> get(lsst::afw::table::Key< Covariance< Shape< U > > > const & key) const {
+        return self->get(key);
+    }
+    void set(lsst::afw::table::Key< Covariance< Shape< U > > > const & key, Eigen::Matrix<U,3,3> const & v) {
+        self->set(key, v);
+    }
 }
 %enddef
 
@@ -89,8 +133,8 @@
 %specializePoint(double, lsst::afw::geom::Point<double,2>)
 %specializeShape(float, lsst::afw::geom::ellipses::Quadrupole)
 %specializeShape(double, lsst::afw::geom::ellipses::Quadrupole)
-%specializeCovariance(float)
-%specializeCovariance(double)
 
 %specializeArray(float)
 %specializeArray(double)
+%specializeCovariance(float)
+%specializeCovariance(double)

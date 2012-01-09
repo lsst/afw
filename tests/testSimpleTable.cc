@@ -178,11 +178,6 @@ BOOST_AUTO_TEST_CASE(testSimpleTable) {
     schema.addField(Field< float >("myFloatField", "a float scalar field."));
 
     Key<float> myFloat = schema.find<float>("myFloatField").key;
-
-    Schema::Description description = schema.describe();
-
-    std::ostream_iterator<FieldDescription> osi(std::cout, "\n");
-    std::copy(description.begin(), description.end(), osi);
     
     SimpleTable table(schema);
     

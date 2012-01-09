@@ -82,7 +82,7 @@ std::string FieldBase< Covariance< Point<U> > >::getTypeString() {
 
 template <typename U>
 std::string FieldBase< Covariance< Shape<U> > >::getTypeString() {
-    return (boost::format("Cov<Point<%s>>") % TypeTraits<U>::getName()).str();
+    return (boost::format("Cov<Shape<%s>>") % TypeTraits<U>::getName()).str();
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
