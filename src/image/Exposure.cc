@@ -55,6 +55,7 @@
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 
 namespace afwGeom = lsst::afw::geom;
@@ -100,11 +101,11 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     unsigned int width,                 ///< number of columns
     unsigned int height,                ///< number of rows
-    afwImage::Wcs const & wcs           ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs        ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())
@@ -118,11 +119,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Extent2I const & dimensions, ///< desired image width/height
-    afwImage::Wcs const & wcs   ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs          ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())
@@ -136,11 +137,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
-    afwImage::Wcs const & wcs   ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())
@@ -153,11 +154,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage, ///< the MaskedImage
-    afwImage::Wcs const& wcs   ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs  ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib()),
@@ -176,10 +177,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), deep),
-    _wcs(src._wcs->clone()),
+    _wcs(_cloneWcs(src.getWcs())),
     _detector(src._detector),
     _filter(src._filter),
-    _calib(new lsst::afw::image::Calib(*src.getCalib())),
+    _calib(_cloneCalib(src.getCalib())),
     _psf(_clonePsf(src.getPsf()))
 {
 /*
@@ -203,10 +204,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, origin, deep),
-    _wcs(src._wcs->clone()),
+    _wcs(_cloneWcs(src.getWcs())),
     _detector(src._detector),
     _filter(src._filter),
-    _calib(new lsst::afw::image::Calib(*src.getCalib())),
+    _calib(_cloneCalib(src.getCalib())),
     _psf(_clonePsf(src.getPsf()))
 {
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
@@ -322,7 +323,9 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
     CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
 ) {
-    return (psf) ? psf->clone() : PTR(afwDetection::Psf)();
+    if (psf)
+        return psf->clone();
+    return PTR(afwDetection::Psf)();
 }
 
 /**
@@ -332,7 +335,9 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 PTR(afwImage::Calib) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneCalib(
     CONST_PTR(afwImage::Calib) calib    // the Calib to clone
 ) {
-    return PTR(afwImage::Calib)(calib ? new afwImage::Calib(*calib) : NULL);
+    if (calib)
+        return PTR(afwImage::Calib)(new afwImage::Calib(*calib));
+    return PTR(afwImage::Calib)();
 }
 
 /**
@@ -356,17 +361,10 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
     _maskedImage = maskedImage; 
 }
 
-// defined here (rather than in the header) so that Wcs can be
-// forward-declared.
-template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const& wcs) {
-    _wcs = wcs.clone();
-}
-
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const& origin) {
     afwGeom::Point2I old(_maskedImage.getXY0());
-    if (hasWcs())
+    if (_wcs)
         _wcs->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
     _maskedImage.setXY0(origin);
 }

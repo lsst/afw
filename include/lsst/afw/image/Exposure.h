@@ -50,7 +50,6 @@
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace lsst {
@@ -70,9 +69,8 @@ namespace formatters {
 
 namespace image {
 
-class Calib;
-//class Wcs;
-
+    class Calib;
+    class Wcs;
 
 /// A class to contain the data, WCS, and other information needed to describe an %image of the sky
 template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
@@ -87,20 +85,21 @@ public:
     // Class Constructors and Destructor
     explicit Exposure(
         unsigned int width, unsigned int height, 
-        Wcs const& wcs=NoWcs
+        CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
     );
 
     explicit Exposure(
         lsst::afw::geom::Extent2I const & dimensions=lsst::afw::geom::Extent2I(),
-        Wcs const& wcs=NoWcs
+        CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
     );
 
     explicit Exposure(
         lsst::afw::geom::Box2I const & bbox,
-        Wcs const & wcs=NoWcs
+        CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
     );
 
-    explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=NoWcs);
+    explicit Exposure(MaskedImageT & maskedImage,
+                      CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)());
 
     explicit Exposure(
         std::string const &baseName, 
@@ -218,7 +217,7 @@ public:
 
     // Set Members
     void setMaskedImage(MaskedImageT &maskedImage);
-    void setWcs(Wcs const& wcs);
+    void setWcs(PTR(Wcs) wcs) { _wcs = wcs; }
     /// Set the Exposure's Detector information
     void setDetector(PTR(lsst::afw::cameraGeom::Detector) detector) { _detector = detector; }
     /// Set the Exposure's filter
@@ -273,7 +272,7 @@ private:
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename Exposure<ImagePixelT, MaskPixelT, VariancePixelT>::Ptr makeExposure(
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage, ///< the Exposure's image
-    Wcs const & wcs=NoWcs ///< the Exposure's WCS
+    CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)() ///< the Exposure's WCS
 ) {
     return typename Exposure<ImagePixelT, MaskPixelT, VariancePixelT>::Ptr(
         new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));
