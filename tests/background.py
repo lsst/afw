@@ -145,7 +145,8 @@ class BackgroundTestCase(unittest.TestCase):
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00295902395123] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.08468385712251] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00305806663295] ) # cooked to known value
-        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.0035102188698] ) # cooked to known value
+        #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.0035102188698] ) # cooked to known value
+        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 399.9912966583894] ) # cooked to known value
         #imgfiles.append("v1_i1_g_m400_s20_u16.fits")
         #imgfiles.append("v1_i2_g_m400_s20_f.fits"
         #imgfiles.append("v1_i2_g_m400_s20_u16.fits")
