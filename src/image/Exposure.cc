@@ -35,10 +35,6 @@
   * Contact: nms@astro.washington.edu
   *
   * Created on: Mon Apr 23 13:01:15 2007
-  *
-  * @version 
-  *
-  * LSST Legalese here... 
   */
 
 #include <stdexcept>
@@ -61,6 +57,7 @@
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwDetection = lsst::afw::detection;
+namespace cameraGeom = lsst::afw::cameraGeom;
 
 /** @brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a Wcs.
@@ -351,6 +348,24 @@ PTR(afwImage::Wcs) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneWcs(
         return wcs->clone();
     return PTR(afwImage::Wcs)();
 }
+
+/**
+ * Clone a Detector; defined here so that we don't have to expose the insides of Detector in Exposure.h
+ */
+template<typename ImageT, typename MaskT, typename VarianceT> 
+PTR(cameraGeom::Detector) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneDetector(
+    CONST_PTR(cameraGeom::Detector) det    // the Det to clone
+) {
+    if (det) {
+        //return det->clone();
+        assert(0);
+        // FIXME -- base class copy constructor!
+        return PTR(cameraGeom::Detector)(new cameraGeom::Detector(*det));
+    }
+
+    return PTR(cameraGeom::Detector)();
+}
+
 
 // SET METHODS
 

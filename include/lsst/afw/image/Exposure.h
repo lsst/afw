@@ -252,6 +252,8 @@ private:
     /// Finish initialization after constructing from a FITS file
     void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
+    lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
+
     MaskedImageT _maskedImage;             
     PTR(Wcs) _wcs;
     PTR(lsst::afw::cameraGeom::Detector) _detector;
@@ -260,8 +262,8 @@ private:
     PTR(lsst::afw::detection::Psf) _psf;
     lsst::daf::base::PropertySet::Ptr _metadata;
 
-    lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
     static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
+    static PTR(lsst::afw::cameraGeom::Detector) _cloneDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) det);
     static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
     static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
 };
