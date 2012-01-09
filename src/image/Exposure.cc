@@ -55,6 +55,7 @@
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/Calib.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
@@ -280,11 +281,9 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
     lsst::daf::base::PropertySet::Ptr metadata
 ) {
-    _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
-    //
-    // Strip keywords from the input metadata that are related to the generated Wcs
-    //
-    detail::stripWcsKeywords(metadata, _wcs);
+    // true: strip keywords that are related to the created WCS from the input
+    // metadata
+    _wcs = afwImage::makeWcs(metadata, true);
     /*
      * Filter
      */
@@ -336,13 +335,16 @@ PTR(afwImage::Calib) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneCalib(
     return PTR(afwImage::Calib)(calib ? new afwImage::Calib(*calib) : NULL);
 }
 
-/** @brief Get the Wcs of an Exposure.
-  *
-  * @return a boost::shared_ptr to the Wcs.
-  */
+/**
+ * Clone a Wcs; defined here so that we don't have to expose the insides of Wcs in Exposure.h
+ */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-afwImage::Wcs::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::getWcs() const { 
-    return _wcs;
+PTR(afwImage::Wcs) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneWcs(
+    CONST_PTR(afwImage::Wcs) wcs    // the Wcs to clone
+) {
+    if (wcs)
+        return wcs->clone();
+    return PTR(afwImage::Wcs)();
 }
 
 // SET METHODS
@@ -354,12 +356,19 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
     _maskedImage = maskedImage; 
 }
 
-
-/** @brief Set the Wcs of the Exposure.  
- */   
+// defined here (rather than in the header) so that Wcs can be
+// forward-declared.
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &wcs){
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const& wcs) {
     _wcs = wcs.clone();
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const& origin) {
+    afwGeom::Point2I old(_maskedImage.getXY0());
+    if (hasWcs())
+        _wcs->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
+    _maskedImage.setXY0(origin);
 }
 
 

@@ -38,8 +38,6 @@
   * Created on: Mon Apr 23 1:01:14 2007
   *
   * @version 
-  *
-  * LSST Legalese here...
   */
 
 #ifndef LSST_AFW_IMAGE_EXPOSURE_H
@@ -53,12 +51,15 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
-#include "lsst/afw/image/TanWcs.h"
-#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace lsst {
 namespace afw {
+
+namespace cameraGeom {
+    class Detector;
+}
+
 namespace detection {
     class Psf;
 }
@@ -70,6 +71,8 @@ namespace formatters {
 namespace image {
 
 class Calib;
+//class Wcs;
+
 
 /// A class to contain the data, WCS, and other information needed to describe an %image of the sky
 template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
@@ -138,7 +141,7 @@ public:
     ) :
         lsst::daf::base::Citizen(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
-        _wcs(rhs.getWcs()->clone()),
+        _wcs(_cloneWcs(rhs.getWcs())),
         _detector(rhs.getDetector()),
         _filter(rhs.getFilter()),
         _calib(_cloneCalib(rhs.getCalib())),
@@ -159,9 +162,12 @@ public:
     MaskedImageT getMaskedImage() { return _maskedImage; }
     /// Return the MaskedImage
     MaskedImageT getMaskedImage() const { return _maskedImage; }
-    Wcs::Ptr getWcs() const;
+
+    CONST_PTR(Wcs) getWcs() const { return _wcs; }
     /// Return the Exposure's Detector information
-    lsst::afw::cameraGeom::Detector::Ptr getDetector() const { return _detector; }
+    //FIXME
+    //CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
+    PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
     /// Return the Exposure's filter
     Filter getFilter() const { return _filter; }
     /// Return flexible metadata
@@ -208,17 +214,13 @@ public:
      * \note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::Point2I const & origin) {
-        geom::Point2I old(_maskedImage.getXY0());
-        _wcs->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
-        _maskedImage.setXY0(origin);
-    }
+    void setXY0(geom::Point2I const & origin);
 
     // Set Members
     void setMaskedImage(MaskedImageT &maskedImage);
     void setWcs(Wcs const& wcs);
     /// Set the Exposure's Detector information
-    void setDetector(lsst::afw::cameraGeom::Detector::Ptr detector) { _detector = detector; }
+    void setDetector(PTR(lsst::afw::cameraGeom::Detector) detector) { _detector = detector; }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _filter = filter; }
     /// Set the Exposure's Calib object
@@ -239,7 +241,7 @@ public:
     bool hasPsf() const { return static_cast<bool>(_psf); }
 
     /// Does this Exposure have a Wcs?
-    bool hasWcs() const { return *_wcs ? true : false; }
+    bool hasWcs() const { return static_cast<bool>(*_wcs); }
     
     // FITS
     void writeFits(std::string const &expOutFile) const;
@@ -252,8 +254,8 @@ private:
     void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
     MaskedImageT _maskedImage;             
-    Wcs::Ptr _wcs;
-    cameraGeom::Detector::Ptr _detector;
+    PTR(Wcs) _wcs;
+    PTR(lsst::afw::cameraGeom::Detector) _detector;
     Filter _filter;
     PTR(Calib) _calib;
     PTR(lsst::afw::detection::Psf) _psf;
@@ -262,6 +264,7 @@ private:
     lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
     static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
     static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
+    static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
 };
 
 /**
