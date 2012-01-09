@@ -83,12 +83,14 @@ public:
     SubSchema operator[](std::string const & name) const;
 
     /**
-     *  @brief Return a vector of field names in the schema.
+     *  @brief Return a set of field names in the schema.
      *
      *  If topOnly==true, return a unique list of only the part
      *  of the names before the first period.  For example,
      *  if the full list of field names is ['a.b.c', 'a.d', 'e.f'],
      *  topOnly==true will return ['a', 'e'].
+     *
+     *  Returns an instance of Python's builtin set in Python.
      */
     std::set<std::string> getNames(bool topOnly=false) const;
 
@@ -167,6 +169,8 @@ public:
     /// @brief Construct an empty Schema.
     explicit Schema(bool hasTree);
 
+    Schema(Schema const & other) : _impl(other._impl) {}
+
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
 private:
@@ -225,15 +229,28 @@ public:
     SubSchema operator[](std::string const & name) const;
 
     /**
-     *  @brief Return a vector of nested names that start with the SubSchema's prefix.
+     *  @brief Return a set of nested names that start with the SubSchema's prefix.
      *
+     *  Returns an instance of Python's builtin set in Python.
      *  @sa Schema::getNames
      */
     std::set<std::string> getNames(bool topOnly=false) const;
 
+    /**
+     *  @brief Implicit conversion to the appropriate Key type.
+     *
+     *  Implicit conversion operators cannot be translated to Python.  Instead, the SWIG
+     *  wrappers provide an equivalent asKey() method.
+     */
     template <typename T>
     operator Key<T>() const { return _impl->find<T>(_name).key; }
 
+    /**
+     *  @brief Implicit conversion to the appropriate Key type.
+     *
+     *  Implicit conversion operators cannot be translated to Python.  Instead, the SWIG
+     *  wrappers provide an equivalent asField() method.
+     */
     template <typename T>
     operator Field<T>() const { return _impl->find<T>(_name).field; }
 

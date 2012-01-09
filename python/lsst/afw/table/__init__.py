@@ -4,6 +4,7 @@ from .tableLib import (
     SchemaItem,
     Schema,
     SchemaMapper,
+    SubSchema,
     ModificationFlags,
     RecordBase,
     TableBase,

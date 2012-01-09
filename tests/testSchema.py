@@ -35,7 +35,7 @@ or
 import sys
 import os
 import unittest
-
+import numpy
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
@@ -49,6 +49,36 @@ except NameError:
 
 class SchemaTestCase(unittest.TestCase):
 
+    def testSchema(self):
+        schema = lsst.afw.table.Schema(False);
+        abi_k = schema.addField("a.b.i", type=int, doc="int")
+        acf_k = schema.addField("a.c.f", type=numpy.float32, doc="float")
+        egd_k = schema.addField("e.g.d", type="F8", doc="double")
+        abp_k = schema.addField("a.b.p", type="Point<F4>", doc="point")
+        abp_si = schema.find("a.b.p")
+        self.assertEqual(abp_si.key, abp_k)
+        self.assertEqual(abp_si.field.getName(), "a.b.p")
+        abpx_si = schema.find("a.b.p.x")
+        self.assertEqual(abp_k.getX(), abpx_si.key);
+        self.assertEqual(abpx_si.field.getName(), "a.b.p.x")
+        self.assertEqual(abpx_si.field.getDoc(), "point")
+        self.assertEqual(abp_k, schema["a.b.p"].asKey())
+        self.assertEqual(abp_k.getX(), schema["a.b.p.x"].asKey());
+        self.assertEqual(schema.getNames(), ("a.b.i", "a.b.p", "a.c.f", "e.g.d"))
+        self.assertEqual(schema.getNames(True), ("a", "e"))
+        self.assertEqual(schema["a"].getNames(), ("b.i", "b.p", "c.f"))
+        self.assertEqual(schema["a"].getNames(True), ("b", "c"))
+        schema2 = lsst.afw.table.Schema(schema)
+        self.assertEqual(schema, schema2)
+        schema2.addField("q", type=float, doc="another double")
+        self.assertNotEqual(schema, schema2)
+        schema3 = lsst.afw.table.Schema(False)
+        schema3.addField("i", type="I4", doc="int")
+        schema3.addField("f", type="F4", doc="float")
+        schema3.addField("d", type="F8", doc="double")
+        schema3.addField("p", type="Point<F4>", doc="point")
+        self.assertEqual(schema3, schema)
+        
     def testInspection(self):
         schema = lsst.afw.table.Schema(False)
         keys = []

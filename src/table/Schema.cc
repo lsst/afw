@@ -470,7 +470,8 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const {
     template Key< elem > Schema::addField(Field< elem > const &);            \
     template SchemaItem< elem > Schema::find(std::string const & ) const; \
     template SchemaItem< elem > Schema::find(Key< elem > const & ) const; \
-    template void Schema::replaceField(Key< elem > const &, Field< elem > const &);
+    template void Schema::replaceField(Key< elem > const &, Field< elem > const &); \
+    template SchemaItem< elem > SubSchema::find(std::string const & ) const; \
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_LAYOUT, _,

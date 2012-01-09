@@ -27,6 +27,11 @@ class TableBase;
 
 /**
  *  @brief Column-wise view into a consolidated table.
+ *
+ *  A ColumnView can be constructed from a table using TableBase::getColumnView().
+ *
+ *  Geometric (point and shape) fields cannot be accessed through a ColumnView, but their
+ *  scalar components can be.
  */
 class ColumnView {
 public:

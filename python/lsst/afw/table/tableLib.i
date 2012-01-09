@@ -34,6 +34,8 @@ Python interface to lsst::afw::table classes
 #pragma SWIG nowarn=389                 // operator[]  ignored
 #pragma SWIG nowarn=503                 // comparison operators ignored
 
+%lsst_exceptions();
+
 %{
 #include "lsst/afw/table.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
@@ -61,40 +63,42 @@ Python interface to lsst::afw::table classes
 %declareNumPyConverters(Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic>);
 %declareNumPyConverters(Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>);
 
-%include "std_set.i"
-
 %include "lsst/p_lsstSwig.i"
-
-%lsst_exceptions();
 
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
+// We prefer to convert std::set<std::string> to a Python tuple, because SWIG's std::set wrapper
+// doesn't do many of the things a we want it do (pretty printing, comparison operators, ...),
+// and the expense of a deep copy shouldn't matter in this case.
+%{
+    inline PyObject * convertNameSet(std::set<std::string> const & input) {
+        lsst::ndarray::PyPtr result(PyTuple_New(input.size()));
+        if (!result) return 0;
+        Py_ssize_t n = 0;
+        for (std::set<std::string>::const_iterator i = input.begin(); i != input.end(); ++i, ++n) {
+            PyObject * s = PyString_FromStringAndSize(i->data(), i->size());
+            if (!s) return 0;
+            PyTuple_SET_ITEM(result.get(), n, s);
+        }
+        Py_INCREF(result.get());
+        return result.get();
+    }
+%}
+
+%typemap(out) std::set<std::string> {
+    $result = convertNameSet($1);
+}
+
+%typemap(out)
+std::set<std::string> const &, std::set<std::string> &, std::set<std::string> const*, std::set<std::string>*
+{
+    $result = convertNameSet(*$1);
+}
+
 // ------------------ General purpose stuff that maybe should go in p_lsstSwig.i ---------------------------
 
-%{
-#include <sstream>
-%}
 %include "std_container.i"
-
-%define %addStreamRepr(CLASS)
-%extend CLASS {
-    std::string __repr__() const {
-        std::ostringstream os;
-        os << (*self);
-        return os.str();
-    }
-    std::string __str__() const {
-        std::ostringstream os;
-        os << (*self);
-        return os.str();        
-    }
-}
-%enddef
-
-%define %returnNone(FUNC)
-%feature("pythonappend") FUNC %{ val = None %}
-%enddef
 
 %define %makeIterable(CLASS, VALUE)
 %fragment("SwigPyIterator_T");
@@ -117,8 +121,6 @@ template <> struct traits< VALUE > {
 
 // ---------------------------------------------------------------------------------------------------------
 
-%include "lsst/ndarray/ndarray.i"
-
 %shared_ptr(lsst::afw::table::AuxBase);
 %shared_ptr(lsst::afw::table::IdFactory);
 %ignore lsst::afw::table::IdFactory::operator=;
@@ -135,7 +137,8 @@ template <> struct traits< VALUE > {
 
 %rename("__eq__") lsst::afw::table::Schema::operator==;
 %rename("__ne__") lsst::afw::table::Schema::operator!=;
-
+%rename("__getitem__") lsst::afw::table::Schema::operator[];
+%rename("__getitem__") lsst::afw::table::SubSchema::operator[];
 %include "lsst/afw/table/Schema.h"
 
 %extend lsst::afw::table::Schema {
@@ -204,6 +207,38 @@ def addField(self, field, type=None, doc="", units="", size=None):
 
 %}
 
+}
+
+%extend lsst::afw::table::SubSchema {
+%pythoncode %{
+def find(self, k):
+    for suffix in _suffixes.itervalues():
+         attr = "_find_" + suffix
+         method = getattr(self, attr)
+         try:
+             return method(k)
+         except Exception:
+             pass
+    raise KeyError("Field '%s' not found in Schema." % k)    
+def asField(self):
+    for suffix in _suffixes.itervalues():
+         attr = "_asField_" + suffix
+         method = getattr(self, attr)
+         try:
+             return method()
+         except Exception:
+             pass
+    raise KeyError("Field '%s' not found in Schema." % k)    
+def asKey(self):
+    for suffix in _suffixes.itervalues():
+         attr = "_asKey_" + suffix
+         method = getattr(self, attr)
+         try:
+             return method()
+         except Exception:
+             pass
+    raise KeyError("Field '%s' not found in Schema." % k)    
+%}
 }
 
 %include "lsst/afw/table/SchemaMapper.h"
@@ -296,6 +331,11 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
     %template(_addField_ ## PYNAME) addField< CNAME >;
     %template(replaceField) replaceField< CNAME >;
 }
+%extend lsst::afw::table::SubSchema {
+    %template(_find_ ## PYNAME) find< CNAME >;
+    lsst::afw::table::Field< CNAME > _asField_ ## PYNAME() const { return *self; }
+    lsst::afw::table::Key< CNAME > _asKey_ ## PYNAME() const { return *self; }
+}
 %extend lsst::afw::table::SchemaMapper {
     %template(addOutputField) addOutputField< CNAME >;
     %template(addMapping) addMapping< CNAME >;
@@ -330,5 +370,3 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<double> >, CovShapeF8)
 
 %include "specializations.i"
-
-%template(NameSet) std::set<std::string>;
