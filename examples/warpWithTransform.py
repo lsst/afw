@@ -30,31 +30,31 @@ def main(useDistort=True):
             img.set(j, i, 1.0*math.exp(-r**2/(2.0*rad0**2)))
 
     if useDistort: #False:
-	# try the suprimecam numbers
-	coeffs = [0.0, 1.0, 7.16417e-04, 3.03146e-10, 5.69338e-14, -6.61572e-18]
+        # try the suprimecam numbers
+        coeffs = [0.0, 1.0, 7.16417e-04, 3.03146e-10, 5.69338e-14, -6.61572e-18]
         dist = cameraGeom.RadialPolyDistortion(coeffs)
-	linTran = dist.computeQuadrupoleTransform(p0, True)
-	print linTran
+        linTran = dist.computeQuadrupoleTransform(p0, True)
+        print linTran
         #dist = cameraGeom.Distortion()
-	p2 = dist.distort(cp0)
+        p2 = dist.distort(cp0)
         wimg = dist.distort(cp0, img, p0)
-	uwimg = dist.undistort(cp0, wimg, p0)
+        uwimg = dist.undistort(cp0, wimg, p0)
 
-	settings = {'scale': 'minmax', 'zoom':"to fit", 'mask':'transparency 80'}
-	ds9.mtv(img, frame=1, title='img', settings=settings)
-	ds9.mtv(wimg, frame=2, title='wimg', settings=settings)
-	ds9.mtv(uwimg, frame=3, title='uwimg', settings=settings)
+        settings = {'scale': 'minmax', 'zoom':"to fit", 'mask':'transparency 80'}
+        ds9.mtv(img, frame=1, title='img', settings=settings)
+        ds9.mtv(wimg, frame=2, title='wimg', settings=settings)
+        ds9.mtv(uwimg, frame=3, title='uwimg', settings=settings)
         
     else:
         wimg = afwImage.ImageF(nx, ny, 0)
         linTran = afwGeom.LinearTransform().makeScaling(1.2)
         linTran[0] *= 1.2
-	#linTran[0] = 2.51975
-	#linTran[1] = 1.51975
-	#linTran[2] = 1.51975
-	#linTran[3] = 2.51975
-	print linTran
-	kernel = afwMath.LanczosWarpingKernel(5)
+        #linTran[0] = 2.51975
+        #linTran[1] = 1.51975
+        #linTran[2] = 1.51975
+        #linTran[3] = 2.51975
+        print linTran
+        kernel = afwMath.LanczosWarpingKernel(5)
         afwMath.warpCenteredImage(wimg, img, kernel, linTran, p0)
 
         
@@ -65,9 +65,9 @@ def main(useDistort=True):
 if __name__ == '__main__':
     useDistort = True
     if len(sys.argv) > 1:
-	useDistort = int(sys.argv[1])
-	if useDistort == 0:
-	    useDistort = False
+        useDistort = int(sys.argv[1])
+        if useDistort == 0:
+            useDistort = False
     print useDistort
     main(useDistort)
     
