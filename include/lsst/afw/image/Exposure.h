@@ -238,7 +238,7 @@ public:
     bool hasPsf() const { return static_cast<bool>(_psf); }
 
     /// Does this Exposure have a Wcs?
-    bool hasWcs() const { return static_cast<bool>(*_wcs); }
+    bool hasWcs() const { return static_cast<bool>(_wcs); }
     
     // FITS
     void writeFits(std::string const &expOutFile) const;
