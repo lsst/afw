@@ -396,14 +396,13 @@ class ExposureTestCase(unittest.TestCase):
         self.cmpExposure(exposureF, nexp)
 
         # Ensure that the copy was deep.
-        cen0 = exposureU.getDetector().getCenterPixel()
-        x0,y0 = cen0
-
-        det = exposureF.getDetector()
-        det.setCenterPixel(afwGeom.Point2D(999.0, 437.8))
-
-        self.assertEqual(exposureU.getDetector().getCenterPixel()[0], x0)
-        self.assertEqual(exposureU.getDetector().getCenterPixel()[1], y0)
+        # (actually this test is invalid since getDetector() returns a CONST_PTR)
+        # cen0 = exposureU.getDetector().getCenterPixel()
+        # x0,y0 = cen0
+        # det = exposureF.getDetector()
+        # det.setCenterPixel(afwGeom.Point2D(999.0, 437.8))
+        # self.assertEqual(exposureU.getDetector().getCenterPixel()[0], x0)
+        # self.assertEqual(exposureU.getDetector().getCenterPixel()[1], y0)
 
 
     def testMakeExposureLeaks(self):

@@ -349,24 +349,6 @@ PTR(afwImage::Wcs) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneWcs(
     return PTR(afwImage::Wcs)();
 }
 
-/**
- * Clone a Detector; defined here so that we don't have to expose the insides of Detector in Exposure.h
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(cameraGeom::Detector) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneDetector(
-    CONST_PTR(cameraGeom::Detector) det    // the Det to clone
-) {
-    if (det) {
-        //return det->clone();
-        assert(0);
-        // FIXME -- base class copy constructor!
-        return PTR(cameraGeom::Detector)(new cameraGeom::Detector(*det));
-    }
-
-    return PTR(cameraGeom::Detector)();
-}
-
-
 // SET METHODS
 
 /** @brief Set the MaskedImage of the Exposure.

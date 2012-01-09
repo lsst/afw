@@ -217,7 +217,7 @@ public:
     void setMaskedImage(MaskedImageT &maskedImage);
     void setWcs(PTR(Wcs) wcs) { _wcs = wcs; }
     /// Set the Exposure's Detector information
-    void setDetector(PTR(lsst::afw::cameraGeom::Detector) detector) { _detector = detector; }
+    void setDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) detector) { _detector = detector; }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _filter = filter; }
     /// Set the Exposure's Calib object
@@ -261,7 +261,6 @@ private:
     lsst::daf::base::PropertySet::Ptr _metadata;
 
     static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
-    static PTR(lsst::afw::cameraGeom::Detector) _cloneDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) det);
     static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
     static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
 };
