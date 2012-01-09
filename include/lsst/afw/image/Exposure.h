@@ -164,9 +164,7 @@ public:
 
     CONST_PTR(Wcs) getWcs() const { return _wcs; }
     /// Return the Exposure's Detector information
-    //FIXME
-    //CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
-    PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
+    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
     /// Return the Exposure's filter
     Filter getFilter() const { return _filter; }
     /// Return flexible metadata
@@ -256,7 +254,7 @@ private:
 
     MaskedImageT _maskedImage;             
     PTR(Wcs) _wcs;
-    PTR(lsst::afw::cameraGeom::Detector) _detector;
+    CONST_PTR(lsst::afw::cameraGeom::Detector) _detector;
     Filter _filter;
     PTR(Calib) _calib;
     PTR(lsst::afw::detection::Psf) _psf;
