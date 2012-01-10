@@ -198,8 +198,8 @@ Psf::Image::Ptr Psf::doComputeImage(
     // distort the image according to the camera distortion
     if (distort && _detector && _detector->getDistortion()) {
         afwGeom::Point2D pBoreSight = _detector->getPositionFromPixel(ccdXY);
-        typename cameraGeom::Distortion::Ptr distortion = _detector->getDistortion();
-        typename Psf::Image::Ptr overSizeImg = distortion->distort(pBoreSight, *im, ccdXY);
+        cameraGeom::Distortion::Ptr distortion = _detector->getDistortion();
+        Psf::Image::Ptr overSizeImg = distortion->distort(pBoreSight, *im, ccdXY);
         return overSizeImg;
         //afwGeom::Box2I bbox(afwGeom::Point2I(edge, edge), afwGeom::Extent2I(width-2*edge, height-2*edge));
         //return typename Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
