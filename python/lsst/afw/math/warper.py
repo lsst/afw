@@ -97,9 +97,9 @@ class Warper(object):
         @param config: an instance of Warper.ConfigClass
         """
         return cls(
-            warpingKernelName = policy.warpingKernelName,
-            interpLength = policy.interpLength,
-            cacheSize = policy.cacheSize,
+            warpingKernelName = config.warpingKernelName,
+            interpLength = config.interpLength,
+            cacheSize = config.cacheSize,
         )
     
     def getWarpingKernel(self):
