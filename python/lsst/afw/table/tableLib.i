@@ -370,3 +370,9 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<double> >, CovShapeF8)
 
 %include "specializations.i"
+
+%pythoncode %{
+for d in (Field, Key, SchemaItem, _suffixes):
+    for k, v in aliases.iteritems():
+        d[k] = d[v]
+%}
