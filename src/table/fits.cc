@@ -131,15 +131,15 @@ void writeFitsHeader(Fits & fits, Schema const & schema, bool sanitizeNames) {
     fits.createTable();
     fits.checkStatus();
     int n = fits.addColumn<RecordId>("id", 1, "unique ID for the record");
-    fits.writeKey("ID_COL", n+1, "Number of the column with a unique ID.");
+    fits.writeKey("IDCOL", n+1, "Number of the column with a unique ID.");
     if (schema.hasTree()) {
         n = fits.addColumn<RecordId>("parent", 1, "ID for the record's parent");
-        fits.writeKey("TREE_COL", n + 1, "Number of the column with tree IDs.");
+        fits.writeKey("TREECOL", n + 1, "Number of the column with tree IDs.");
     }
     int nFlags = CountFlags::apply(schema);
     if (nFlags > 0) {
         n = fits.addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
-        fits.writeKey("FLAG_COL", n + 1, "Number of the column bitflags.");
+        fits.writeKey("FLAGCOL", n + 1, "Number of the column bitflags.");
     }
     fits.checkStatus();
     ProcessSchema::apply(fits, schema, sanitizeNames);
@@ -420,11 +420,11 @@ struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
                 i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
             schema.asColSet().modify(i, FitsSchema::SetFormat(strip(value)));
-        } else if (std::strncmp(key, "ID_COL", 6) == 0) {
+        } else if (std::strncmp(key, "IDCOL", 6) == 0) {
             idCol = boost::lexical_cast<int>(value) - 1;
-        } else if (std::strncmp(key, "TREE_COL", 8) == 0) {
+        } else if (std::strncmp(key, "TREECOL", 8) == 0) {
             treeCol = boost::lexical_cast<int>(value) - 1;
-        } else if (std::strncmp(key, "FLAG_COL", 8) == 0) {
+        } else if (std::strncmp(key, "FLAGCOL", 8) == 0) {
             flagCol = boost::lexical_cast<int>(value) - 1;
         }
     }
@@ -532,21 +532,21 @@ struct ProcessReadData {
 
 void readFitsRecords(Fits & fits, TableBase const & table) {
     int idCol = -1, treeCol = -1, flagCol = -1;
-    fits.readKey("ID_COL", idCol);
+    fits.readKey("IDCOL", idCol);
     if (fits.status == 0) {
         --idCol;
     } else {
         fits.status = 0;
         idCol = -1;
     }
-    fits.readKey("FLAG_COL", flagCol);
+    fits.readKey("FLAGCOL", flagCol);
     if (fits.status == 0) {
         --flagCol;
     } else {
         fits.status = 0;
         flagCol = -1;
     }
-    fits.readKey("TREE_COL", treeCol);
+    fits.readKey("TREECOL", treeCol);
     if (fits.status == 0) {
         --treeCol;
     } else {

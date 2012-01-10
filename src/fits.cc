@@ -35,51 +35,15 @@ char getFormatCode(std::complex<double>*) { return 'M'; }
 
 template <typename T>
 std::string makeColumnFormat(int size = 1) {
-    return (boost::format("%d%c") % size % getFormatCode((T*)0)).str();
-}
-
-template <typename T>
-int addColumnImpl(Fits & fits, char const * ttype, int size, char const * comment, T *) {
-    int nCols = 0;
-    fits_get_num_cols(
-        reinterpret_cast<fitsfile*>(fits.fptr),
-        &nCols,
-        &fits.status
-    );
-    std::string tform = makeColumnFormat<T>(size);
-    fits_insert_col(
-        reinterpret_cast<fitsfile*>(fits.fptr),
-        nCols + 1,
-        const_cast<char*>(ttype),
-        const_cast<char*>(tform.c_str()),
-        &fits.status
-    );
-    if (comment)
-        fits.updateColumnKey("TTYPE", nCols, ttype, comment);
-    return nCols;
-}
-
-int addColumnImpl(Fits & fits, char const * ttype, int size, char const * comment, boost::uint64_t *) {
-    static char const * UINT64_ZERO = "9223372036854775808"; // used to fake uint64 fields in FITS.
-    int nCols = 0;
-    fits_get_num_cols(
-        reinterpret_cast<fitsfile*>(fits.fptr),
-        &nCols,
-        &fits.status
-    );
-    std::string tform = makeColumnFormat<boost::int64_t>(size);
-    fits_insert_col(
-        reinterpret_cast<fitsfile*>(fits.fptr),
-        nCols + 1,
-        const_cast<char*>(ttype),
-        const_cast<char*>(tform.c_str()),
-        &fits.status
-    );
-    fits.updateColumnKey("TSCAL", nCols, 1);
-    fits.updateColumnKey("TZERO", nCols, UINT64_ZERO);
-    if (comment) 
-        fits.updateColumnKey("TTYPE", nCols, ttype, comment);
-    return nCols;
+    if (size > 0) {
+        return (boost::format("%d%c") % size % getFormatCode((T*)0)).str();
+    } else if (size < 0) {
+        // variable length, max size given as -size
+        return (boost::format("1P%c(%d)") % getFormatCode((T*)0) % (-size)).str();
+    } else {
+        // variable length, max size unknown
+        return (boost::format("1P%c") % getFormatCode((T*)0)).str();
+    }
 }
 
 template <typename T> struct FitsType;
@@ -228,7 +192,23 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
 
 template <typename T>
 int Fits::addColumn(char const * ttype, int size, char const * comment) {
-    return addColumnImpl(*this, ttype, size, comment, (T*)0);
+    int nCols = 0;
+    fits_get_num_cols(
+        reinterpret_cast<fitsfile*>(fptr),
+        &nCols,
+        &status
+    );
+    std::string tform = makeColumnFormat<T>(size);
+    fits_insert_col(
+        reinterpret_cast<fitsfile*>(fptr),
+        nCols + 1,
+        const_cast<char*>(ttype),
+        const_cast<char*>(tform.c_str()),
+        &status
+    );
+    if (comment)
+        updateColumnKey("TTYPE", nCols, ttype, comment);
+    return nCols;
 }
 
 int Fits::addRows(int nRows) {
@@ -284,6 +264,20 @@ void Fits::readTableArray(int row, int col, int nElements, T * value) {
     );
 }
 
+long Fits::getTableArraySize(int row, int col) {
+    long result = 0;
+    long offset = 0;
+    fits_read_descript(
+        reinterpret_cast<fitsfile*>(fptr),
+        col + 1,
+        row + 1,
+        &result,
+        &offset,
+        &status
+    );
+    return result;
+}
+
 void Fits::createTable() {
     char * ttype = 0;
     char * tform = 0;
@@ -335,7 +329,7 @@ void Fits::closeFile() {
 
 #define COLUMN_TYPES                            \
     (boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
-    (boost::int64_t)(boost::uint64_t)(float)(double)(std::complex<float>)(std::complex<double>)(bool)
+    (boost::int64_t)(float)(double)(std::complex<float>)(std::complex<double>)(bool)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_COLUMN_KEY, _, KEY_TYPES)

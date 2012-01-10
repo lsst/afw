@@ -109,6 +109,12 @@ struct Fits {
 
     void forEachKey(HeaderIterationFunctor & functor);
 
+    /**
+     *  @brief Add a column to a table
+     *
+     *  If size <= 0, the field will be a variable length array, with max set by (-size),
+     *  or left unknown if size == 0.
+     */
     template <typename T>
     int addColumn(char const * ttype, int size, char const * comment=0);
 
@@ -129,6 +135,8 @@ struct Fits {
     template <typename T>
     void readTableScalar(int row, int col, T & value) { readTableArray(row, col, 1, &value); }
     
+    long getTableArraySize(int row, int col);
+
     static Fits createFile(char const * filename);
 
     static Fits openFile(char const * filename, bool writeable);

@@ -206,7 +206,7 @@ public:
 protected:
 
     /// @brief Return the record's auxiliary data.
-    PTR(AuxBase) getAux() const { return _data->aux; }
+    PTR(AuxBase) & getAux() const { return _data->aux; }
 
     /**
      *  @brief Return the record's parent.

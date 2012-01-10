@@ -41,6 +41,10 @@ public:
         return boost::static_pointer_cast<Source::RecordAux>(getAux())->footprint;
     }
 
+    void setFootprint(Footprint const & footprint) const {
+        getAux() = boost::make_shared<Source::RecordAux>(footprint);
+    }
+
 private:
 
     friend class detail::Access;
