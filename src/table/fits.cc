@@ -64,10 +64,10 @@ struct ProcessSchema {
     }
 
     template <typename T>
-    void specialize(SchemaItem< Shape<T> > const & item, int n) const {
+    void specialize(SchemaItem< Moments<T> > const & item, int n) const {
         if (!item.field.getUnits().empty())
             fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(), "{xx, yy, xy}");
-        fits->writeColumnKey("TCCLS", n, "Shape", "Field template used by lsst.afw.table");
+        fits->writeColumnKey("TCCLS", n, "Moments", "Field template used by lsst.afw.table");
     }
 
     template <typename T>
@@ -87,11 +87,11 @@ struct ProcessSchema {
     }
 
     template <typename T>
-    void specialize(SchemaItem< Covariance< Shape<T> > > const & item, int n) const {
+    void specialize(SchemaItem< Covariance< Moments<T> > > const & item, int n) const {
         if (!item.field.getUnits().empty())
             fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(),
                                  "{(xx,xx), (xx,yy), (yy,yy), (xx,xy), (yy,xy), (xy,xy)}");
-        fits->writeColumnKey("TCCLS", n, "Covariance(Shape)", "Field template used by lsst.afw.table");
+        fits->writeColumnKey("TCCLS", n, "Covariance(Moments)", "Field template used by lsst.afw.table");
     }
 
     template <typename T>
@@ -242,8 +242,8 @@ struct FitsSchemaItem {
                 return;
             }
         } else if (size == 3) {
-            if (cls == "Shape") {
-                schema.addField< Shape<U> >(name, doc, units);
+            if (cls == "Moments") {
+                schema.addField< Moments<U> >(name, doc, units);
                 return;
             }
             if (cls == "Covariance(Point)") {
@@ -251,8 +251,8 @@ struct FitsSchemaItem {
                 return;
             }
         } else if (size == 6) {
-            if (cls == "Covariance(Shape)") {
-                schema.addField< Covariance< Shape<U> > >(name, doc, units);
+            if (cls == "Covariance(Moments)") {
+                schema.addField< Covariance< Moments<U> > >(name, doc, units);
                 return;
             }
         }

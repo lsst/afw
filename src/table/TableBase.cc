@@ -255,6 +255,8 @@ bool RecordBase::hasChildren() const {
     return false;
 }
 
+PTR(AuxBase) RecordBase::getTableAux() const { return _table->aux; }
+
 RecordBase RecordBase::_getParent() const {
     if (!_table->schema.hasTree()) {
         throw LSST_EXCEPT(
@@ -439,6 +441,8 @@ IteratorBase TableBase::find(RecordId id) const {
     detail::RecordSet::iterator j = _impl->records.find(id, detail::CompareRecordIdLess());
     return IteratorBase(j, _impl, *this);
 }
+
+PTR(AuxBase) & TableBase::getAux() const { return _impl->aux; }
 
 RecordBase TableBase::_addRecord(PTR(AuxBase) const & aux) const {
     assertBit(CAN_ADD_RECORD);

@@ -59,6 +59,9 @@ public:
     /// @brief Return the Schema that holds this record's fields and keys.
     Schema getSchema() const;
 
+    /// @brief Return the table this record belongs to.
+    TableBase getTable() const;
+
     /// @brief Return true if the record has a parent record.
     bool hasParent() const;
 
@@ -207,6 +210,9 @@ protected:
 
     /// @brief Return the record's auxiliary data.
     PTR(AuxBase) & getAux() const { return _data->aux; }
+
+    /// @brief Return the table's auxiliary data.
+    PTR(AuxBase) getTableAux() const;
 
     /**
      *  @brief Return the record's parent.

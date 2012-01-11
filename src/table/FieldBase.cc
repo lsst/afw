@@ -50,11 +50,11 @@ std::string FieldBase< Point<U> >::getTypeString() {
     return (boost::format("Point<%s>") % TypeTraits<U>::getName()).str();
 }
 
-//----- Shape scalar ----------------------------------------------------------------------------------------
+//----- Moments scalar ----------------------------------------------------------------------------------------
 
 template <typename U>
-std::string FieldBase< Shape<U> >::getTypeString() {
-    return (boost::format("Shape<%s>") % TypeTraits<U>::getName()).str();
+std::string FieldBase< Moments<U> >::getTypeString() {
+    return (boost::format("Moments<%s>") % TypeTraits<U>::getName()).str();
 }
 
 //----- POD array -------------------------------------------------------------------------------------------
@@ -78,11 +78,11 @@ std::string FieldBase< Covariance< Point<U> > >::getTypeString() {
     return (boost::format("Cov<Point<%s>>") % TypeTraits<U>::getName()).str();
 }
 
-//----- Shape covariance ------------------------------------------------------------------------------------
+//----- Moments covariance ------------------------------------------------------------------------------------
 
 template <typename U>
-std::string FieldBase< Covariance< Shape<U> > >::getTypeString() {
-    return (boost::format("Cov<Shape<%s>>") % TypeTraits<U>::getName()).str();
+std::string FieldBase< Covariance< Moments<U> > >::getTypeString() {
+    return (boost::format("Cov<Moments<%s>>") % TypeTraits<U>::getName()).str();
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

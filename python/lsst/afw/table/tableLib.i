@@ -65,6 +65,7 @@ Python interface to lsst::afw::table classes
 
 %include "lsst/p_lsstSwig.i"
 
+%import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
@@ -125,7 +126,6 @@ template <> struct traits< VALUE > {
 %shared_ptr(lsst::afw::table::IdFactory);
 %ignore lsst::afw::table::IdFactory::operator=;
 
-%include "lsst/base.h"
 %include "lsst/afw/table/misc.h"
 %include "lsst/afw/table/ModificationFlags.h"
 %include "lsst/afw/table/IdFactory.h"
@@ -219,7 +219,7 @@ def find(self, k):
              return method(k)
          except Exception:
              pass
-    raise KeyError("Field '%s' not found in Schema." % k)    
+    raise KeyError("Field '%s' not found in Schema." % self.getPrefix())    
 def asField(self):
     for suffix in _suffixes.itervalues():
          attr = "_asField_" + suffix
@@ -228,7 +228,7 @@ def asField(self):
              return method()
          except Exception:
              pass
-    raise KeyError("Field '%s' not found in Schema." % k)    
+    raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 def asKey(self):
     for suffix in _suffixes.itervalues():
          attr = "_asKey_" + suffix
@@ -237,7 +237,7 @@ def asKey(self):
              return method()
          except Exception:
              pass
-    raise KeyError("Field '%s' not found in Schema." % k)    
+    raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 %}
 }
 
@@ -283,7 +283,32 @@ def asKey(self):
 %declareTag(Simple)
 %include "lsst/afw/table/Simple.h"
 
+// Workarounds for SWIG's failure to parse the Measurement template correctly.
+// Otherwise we'd have one place in the code that controls all the canonical measurement types.
+namespace lsst { namespace afw { namespace table {
+     struct Photometry {
+         typedef Key< double > MeasKey;
+         typedef Key< double > ErrKey;
+         typedef double MeasValue;
+         typedef double ErrValue;
+     };
+     struct Astrometry {
+         typedef Key< Point<double> > MeasKey;
+         typedef Key< Covariance< Point<double> > > ErrKey;
+         typedef lsst::afw::geom::Point<double,2> MeasValue;
+         typedef Eigen::Matrix<double,2,2> ErrValue;
+     };
+     struct Shape {
+         typedef Key< Moments<double> > MeasKey;
+         typedef Key< Covariance< Moments<double> > > ErrKey;
+         typedef lsst::afw::geom::ellipses::Quadrupole MeasValue;
+         typedef Eigen::Matrix<double,3,3> ErrValue;
+     };
+}}}
+
+
 %declareTag(Source)
+%returnCopy(SourceRecord::getFootprint)
 %include "lsst/afw/table/Source.h"
 
 %pythoncode %{
@@ -354,8 +379,8 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Point<float>, PointF4)
 %declareFieldType(lsst::afw::table::Point<double>, PointF8)
 
-%declareFieldType(lsst::afw::table::Shape<float>, ShapeF4)
-%declareFieldType(lsst::afw::table::Shape<double>, ShapeF8)
+%declareFieldType(lsst::afw::table::Moments<float>, MomentsF4)
+%declareFieldType(lsst::afw::table::Moments<double>, MomentsF8)
 
 %declareFieldType(lsst::afw::table::Array<float>, ArrayF4)
 %declareFieldType(lsst::afw::table::Array<double>, ArrayF8)
@@ -366,7 +391,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF4)
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointF8)
 
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<float> >, CovShapeF4)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Shape<double> >, CovShapeF8)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF4)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsF8)
 
 %include "specializations.i"

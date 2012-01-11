@@ -94,6 +94,14 @@ public:
     /// @brief Return an iterator to the record with the given ID or throw NotFoundException.
     IteratorBase find(RecordId id) const;
 
+    /**
+     *  @brief Shared copy constructor.
+     *
+     *  All aspects of the table except the modification flags are shared between the two tables.
+     *  The modification flags will be copied as well, but can then be changed separately.
+     */
+    TableBase(TableBase const & other) : ModificationFlags(other), _impl(other._impl) {}
+
     /// Destructor is explicit because class holds a shared_ptr to an incomplete class.
     ~TableBase();
 
@@ -118,13 +126,7 @@ protected:
         ModificationFlags const & flags = ModificationFlags::all()
     );
 
-    /**
-     *  @brief Shared copy constructor.
-     *
-     *  All aspects of the table except the modification flags are shared between the two tables.
-     *  The modification flags will be copied as well, but can then be changed separately.
-     */
-    TableBase(TableBase const & other) : ModificationFlags(other), _impl(other._impl) {}
+    TableBase(PTR(detail::TableImpl) const & impl) : _impl(impl) {}
 
     /**
      *  @brief Insert an existing record into the table.
@@ -168,14 +170,17 @@ protected:
     RecordBase _addRecord(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const;
 
     /// @brief Return the table's auxiliary data.
-    PTR(AuxBase) getAux() const;
+    PTR(AuxBase) & getAux() const;
 
 private:
 
     friend class detail::Access;
+    friend class RecordBase;
 
     PTR(detail::TableImpl) _impl;
 };
+
+inline TableBase RecordBase::getTable() const { return TableBase(_table); }
 
 namespace detail {
 

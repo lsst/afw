@@ -49,8 +49,12 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeRandom(shape, dtype):
-    return numpy.array(numpy.random.randn(*shape), dtype=dtype)
+def makeArray(size, dtype):
+    return numpy.array(numpy.random.randn(*size), dtype=dtype)
+
+def makeCov(size, dtype):
+    m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
+    return numpy.dot(m, m.transpose())
 
 class SimpleTableTestCase(unittest.TestCase):
 
@@ -70,11 +74,6 @@ class SimpleTableTestCase(unittest.TestCase):
         record.set(key, value)
         self.assert_(numpy.all(record.get(key) == value))
 
-    def checkCovAccessors(self, record, key, value):
-        matrix = numpy.dot(value.transpose(), value)
-        record.set(key, matrix)
-        self.assert_(numpy.all(record.get(key) == matrix))
-
     def testRecordAccess(self):
         schema = lsst.afw.table.Schema(False)
         k1 = schema.addField("f1", type="I4")
@@ -84,16 +83,16 @@ class SimpleTableTestCase(unittest.TestCase):
         k5 = schema.addField("f5", type="Point<I4>")
         k6 = schema.addField("f6", type="Point<F4>")
         k7 = schema.addField("f7", type="Point<F8>")
-        k8 = schema.addField("f8", type="Shape<F4>")
-        k9 = schema.addField("f9", type="Shape<F8>")
+        k8 = schema.addField("f8", type="Moments<F4>")
+        k9 = schema.addField("f9", type="Moments<F8>")
         k10 = schema.addField("f10", type="Array<F4>", size=4)
         k11 = schema.addField("f11", type="Array<F8>", size=5)
         k12 = schema.addField("f12", type="Cov<F4>", size=3)
         k13 = schema.addField("f13", type="Cov<F8>", size=4)
         k14 = schema.addField("f14", type="Cov<Point<F4>>")
         k15 = schema.addField("f15", type="Cov<Point<F8>>")
-        k16 = schema.addField("f16", type="Cov<Shape<F4>>")
-        k17 = schema.addField("f17", type="Cov<Shape<F8>>")
+        k16 = schema.addField("f16", type="Cov<Moments<F4>>")
+        k17 = schema.addField("f17", type="Cov<Moments<F8>>")
         table = lsst.afw.table.SimpleTable(schema)
         record = table.addRecord()
         self.checkScalarAccessors(record, k1, 2, 3)
@@ -105,14 +104,14 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkGeomAccessors(record, k7, lsst.afw.geom.Point2D(5.5, 3.5))
         self.checkGeomAccessors(record, k8, lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
         self.checkGeomAccessors(record, k9, lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
-        self.checkArrayAccessors(record, k10, makeRandom((k10.getSize(),), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k11, makeRandom((k11.getSize(),), dtype=numpy.float64))
-        self.checkCovAccessors(record, k12, makeRandom((k12.getSize(), k12.getSize()), dtype=numpy.float32))
-        self.checkCovAccessors(record, k13, makeRandom((k13.getSize(), k13.getSize()), dtype=numpy.float64))
-        self.checkCovAccessors(record, k14, makeRandom((k14.getSize(), k14.getSize()), dtype=numpy.float32))
-        self.checkCovAccessors(record, k15, makeRandom((k15.getSize(), k15.getSize()), dtype=numpy.float64))
-        self.checkCovAccessors(record, k16, makeRandom((k16.getSize(), k16.getSize()), dtype=numpy.float32))
-        self.checkCovAccessors(record, k17, makeRandom((k17.getSize(), k17.getSize()), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k10, makeArray(k10.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k11, makeArray(k11.getSize(), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k12, makeCov(k12.getSize()), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k13, makeCov(k13.getSize()), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k14, makeCov(k14.getSize()), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k15, makeCov(k15.getSize()), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k16, makeCov(k16.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k17, makeCov(k17.getSize(), dtype=numpy.float64))
 
     def testColumnView(self):
         schema = lsst.afw.table.Schema(True)

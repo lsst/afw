@@ -33,10 +33,10 @@
     Flag,                                                       \
     Array<float>, Array<double>,                                \
     Point<int>, Point<float>, Point<double>,                    \
-    Shape<float>, Shape<double>,                                \
+    Moments<float>, Moments<double>,                                \
     Covariance<float>, Covariance<double>,                      \
     Covariance< Point<float> >, Covariance< Point<double> >,    \
-    Covariance< Shape<float> >, Covariance< Shape<double> >
+    Covariance< Moments<float> >, Covariance< Moments<double> >
 #define AFW_TABLE_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_FIELD_TYPES BOOST_PP_RPAREN()
 
 namespace lsst { namespace afw { namespace table {
@@ -77,6 +77,8 @@ struct FieldBase {
 #endif
 
 protected:
+
+    static FieldBase makeDefault() { return FieldBase(); }
 
     void stream(std::ostream & os) const {}
 
@@ -125,6 +127,8 @@ struct FieldBase< Point<U> > {
 
 protected:
 
+    static FieldBase makeDefault() { return FieldBase(); }
+
     void stream(std::ostream & os) const {}
 
     Value getValue(Element const * p) const { return Value(p[0], p[1]); }
@@ -139,7 +143,7 @@ protected:
  *  @brief Field base class specialization for shapes.
  */
 template <typename U>
-struct FieldBase< Shape<U> > {
+struct FieldBase< Moments<U> > {
 
     typedef afw::geom::ellipses::Quadrupole Value; ///< @brief the type returned by RecordBase::get
     typedef U Element; /// @brief the type of subfields
@@ -164,6 +168,8 @@ struct FieldBase< Shape<U> > {
 #endif
 
 protected:
+
+    static FieldBase makeDefault() { return FieldBase(); }
 
     void stream(std::ostream & os) const {}
 
@@ -216,6 +222,8 @@ struct FieldBase< Array<U> > {
     int getSize() const { return _size; }
 
 protected:
+
+    static FieldBase makeDefault() { return FieldBase(0); }
 
     void stream(std::ostream & os) const { os << ", size=" << _size; }
 
@@ -296,6 +304,8 @@ struct FieldBase< Covariance<U> > {
     
 protected:
 
+    static FieldBase makeDefault() { return FieldBase(0); }
+
     void stream(std::ostream & os) const { os << ", size=" << _size; }
 
     Value getValue(Element const * p) const {
@@ -373,6 +383,8 @@ struct FieldBase< Covariance< Point<U> > > {
 
 protected:
 
+    static FieldBase makeDefault() { return FieldBase(); }
+
     void stream(std::ostream & os) const {}
 
     Value getValue(Element const * p) const {
@@ -410,7 +422,7 @@ protected:
  *  the field.
  */
 template <typename U>
-struct FieldBase< Covariance< Shape<U> > > {
+struct FieldBase< Covariance< Moments<U> > > {
 
     static int const SIZE = 3;
     static int const PACKED_SIZE = 6;
@@ -444,6 +456,8 @@ struct FieldBase< Covariance< Shape<U> > > {
 #endif
 
 protected:
+
+    static FieldBase makeDefault() { return FieldBase(); }
 
     void stream(std::ostream & os) const {}
 

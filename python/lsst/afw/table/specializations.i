@@ -26,15 +26,15 @@
 }
 %enddef
 
-%define %specializeShape(U, VALUE...)
-%extend lsst::afw::table::KeyBase< lsst::afw::table::Shape< U > > {
+%define %specializeMoments(U, VALUE...)
+%extend lsst::afw::table::KeyBase< lsst::afw::table::Moments< U > > {
     lsst::afw::table::Key<U> getIXX() const { return self->getIXX(); }
     lsst::afw::table::Key<U> getIYY() const { return self->getIYY(); }
     lsst::afw::table::Key<U> getIXY() const { return self->getIXY(); }
 }
 %extend lsst::afw::table::RecordBase {
-    VALUE get(lsst::afw::table::Key< Shape< U > > const & key) const { return self->get(key); }
-    void set(lsst::afw::table::Key< Shape< U > > const & key, VALUE const & v) const { self->set(key, v); }
+    VALUE get(lsst::afw::table::Key< Moments< U > > const & key) const { return self->get(key); }
+    void set(lsst::afw::table::Key< Moments< U > > const & key, VALUE const & v) const { self->set(key, v); }
 }
 %enddef
 
@@ -109,22 +109,22 @@
         self->set(key, v);
     }
 }
-%extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< lsst::afw::table::Shape< U > > > {
+%extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< lsst::afw::table::Moments< U > > > {
     lsst::afw::table::Key<U> _getitem_impl(int i, int j) const { return (*self)(i, j); }
     %pythoncode %{
         def __getitem__(self, args): return self._getitem_impl(*args)
     %}
 }
-%extend lsst::afw::table::FieldBase< lsst::afw::table::Covariance< lsst::afw::table::Shape< U > > > {
+%extend lsst::afw::table::FieldBase< lsst::afw::table::Covariance< lsst::afw::table::Moments< U > > > {
     int getSize() const { return self->getSize(); }
     int getPackedSize() const { return self->getPackedSize(); }
 }
 %extend lsst::afw::table::RecordBase {
-    Eigen::Matrix<U,3,3> get(lsst::afw::table::Key< Covariance< Shape< U > > > const & key) const {
+    Eigen::Matrix<U,3,3> get(lsst::afw::table::Key< Covariance< Moments< U > > > const & key) const {
         return self->get(key);
     }
     void set(
-        lsst::afw::table::Key< Covariance< Shape< U > > > const & key,
+        lsst::afw::table::Key< Covariance< Moments< U > > > const & key,
         Eigen::Matrix<U,3,3> const & v
     ) const {
         self->set(key, v);
@@ -157,8 +157,8 @@
 %specializePoint(boost::int32_t, lsst::afw::geom::Point<int,2>)
 %specializePoint(float, lsst::afw::geom::Point<double,2>)
 %specializePoint(double, lsst::afw::geom::Point<double,2>)
-%specializeShape(float, lsst::afw::geom::ellipses::Quadrupole)
-%specializeShape(double, lsst::afw::geom::ellipses::Quadrupole)
+%specializeMoments(float, lsst::afw::geom::ellipses::Quadrupole)
+%specializeMoments(double, lsst::afw::geom::ellipses::Quadrupole)
 
 %specializeArray(float)
 %specializeArray(double)

@@ -67,6 +67,8 @@ public:
 
     int getOffset() const { return _offset; }
 
+    Key() : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(0) {}
+
     inline friend std::ostream & operator<<(std::ostream & os, Key<T> const & key) {
         return os << "Key<" << Key<T>::getTypeString() << ">(offset=" << key.getOffset()
                   << ", nElements=" << key.getElementCount() << ")";

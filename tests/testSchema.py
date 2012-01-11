@@ -51,10 +51,15 @@ class SchemaTestCase(unittest.TestCase):
 
     def testSchema(self):
         schema = lsst.afw.table.Schema(False);
+        ab_k = schema.addField("a.b", type="Point<I4>", doc="parent point")
         abi_k = schema.addField("a.b.i", type=int, doc="int")
         acf_k = schema.addField("a.c.f", type=numpy.float32, doc="float")
         egd_k = schema.addField("e.g.d", type="F8", doc="double")
         abp_k = schema.addField("a.b.p", type="Point<F4>", doc="point")
+        ab_si = schema.find("a.b")
+        self.assertEqual(ab_si.key, ab_k)
+        self.assertEqual(ab_si.field.getName(), "a.b")
+        self.assertEqual(ab_k.getX(), schema["a.b.x"].asKey());
         abp_si = schema.find("a.b.p")
         self.assertEqual(abp_si.key, abp_k)
         self.assertEqual(abp_si.field.getName(), "a.b.p")
@@ -64,15 +69,16 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(abpx_si.field.getDoc(), "point")
         self.assertEqual(abp_k, schema["a.b.p"].asKey())
         self.assertEqual(abp_k.getX(), schema["a.b.p.x"].asKey());
-        self.assertEqual(schema.getNames(), ("a.b.i", "a.b.p", "a.c.f", "e.g.d"))
+        self.assertEqual(schema.getNames(), ("a.b", "a.b.i", "a.b.p", "a.c.f", "e.g.d"))
         self.assertEqual(schema.getNames(True), ("a", "e"))
-        self.assertEqual(schema["a"].getNames(), ("b.i", "b.p", "c.f"))
+        self.assertEqual(schema["a"].getNames(), ("b", "b.i", "b.p", "c.f"))
         self.assertEqual(schema["a"].getNames(True), ("b", "c"))
         schema2 = lsst.afw.table.Schema(schema)
         self.assertEqual(schema, schema2)
         schema2.addField("q", type=float, doc="another double")
         self.assertNotEqual(schema, schema2)
         schema3 = lsst.afw.table.Schema(False)
+        schema3.addField("j", type="Point<I4>", doc="point")
         schema3.addField("i", type="I4", doc="int")
         schema3.addField("f", type="F4", doc="float")
         schema3.addField("d", type="F8", doc="double")
@@ -101,7 +107,7 @@ class SchemaTestCase(unittest.TestCase):
         pointKey = schema.addField("p", type="Point<F4>", doc="doc for point field")
         pointElementKey = pointKey.getX()
         self.assertEqual(lsst.afw.table.Key["F4"], type(pointElementKey))
-        shapeKey = schema.addField("s", type="Shape<F4>", doc="doc for shape field")
+        shapeKey = schema.addField("s", type="Moments<F4>", doc="doc for shape field")
         shapeElementKey = shapeKey.getIXX()
         self.assertEqual(lsst.afw.table.Key["F4"], type(shapeElementKey))
 

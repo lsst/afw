@@ -30,7 +30,7 @@ public:
 
 /// @brief A base class for Key that allows subfield keys to be extracted.
 template <typename U>
-class KeyBase< Shape<U> > {
+class KeyBase< Moments<U> > {
 public:
     static bool const HAS_NAMED_SUBFIELDS = true;
 
@@ -72,7 +72,7 @@ public:
 
 /// @brief A base class for Key that allows subfield keys to be extracted.
 template <typename U>
-class KeyBase< Covariance< Shape<U> > > {
+class KeyBase< Covariance< Moments<U> > > {
 public:
     static bool const HAS_NAMED_SUBFIELDS = false;
 

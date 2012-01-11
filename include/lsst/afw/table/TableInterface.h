@@ -128,6 +128,8 @@ protected:
         PTR(AuxBase) const & aux = PTR(AuxBase)()
     ) : TableBase(schema, capacity, idFactory, aux) {}
 
+    explicit TableInterface(TableBase const & base) : TableBase(base) {}
+
     Record _addRecord(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const {
         return detail::Access::makeRecord<Record>(this->TableBase::_addRecord(id, aux));
     }

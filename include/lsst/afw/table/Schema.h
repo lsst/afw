@@ -228,6 +228,9 @@ public:
     /// @brief Return a nested proxy.
     SubSchema operator[](std::string const & name) const;
 
+    /// @brief Return the prefix that defines this SubSchema relative to its parent Schema.
+    std::string const & getPrefix() const { return _name; }
+
     /**
      *  @brief Return a set of nested names that start with the SubSchema's prefix.
      *

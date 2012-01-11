@@ -56,8 +56,12 @@ template <typename Tag>
 class RecordInterface : public RecordBase {
 public:
 
+    typedef typename Tag::Table Table;
     typedef typename Tag::Record Record;
     typedef ChildView<Tag> Children;
+
+    /// @copydoc RecordBase::getTable
+    Table getTable() const { return Table(RecordBase::getTable()); }
 
     /// @copydoc RecordBase::_getParent
     Record getParent() const {

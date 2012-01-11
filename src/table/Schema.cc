@@ -215,7 +215,7 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
         }
     }
     ExtractItemByName<T> extractor(name);
-    if (i != _names.begin()) {
+    while (i != _names.begin()) {
         --i;
         boost::apply_visitor(extractor, _items[i->second]);
         if (extractor.result) return *extractor.result;
@@ -255,8 +255,6 @@ SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
         lsst::pex::exceptions::NotFoundException,
         "Field or subfield with the given key not found with the given type."
     );
-
-    // TODO
 }
 
 std::set<std::string> SchemaImpl::getNames(bool topOnly) const {

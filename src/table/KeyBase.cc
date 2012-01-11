@@ -17,7 +17,7 @@ template <typename U>
 char const * KeyBase< Point<U> >::subfields[] = { "x", "y" };
 
 template <typename U>
-char const * KeyBase< Shape<U> >::subfields[] = { "xx", "yy", "xy" };
+char const * KeyBase< Moments<U> >::subfields[] = { "xx", "yy", "xy" };
 
 template <typename U>
 Key<U> KeyBase< Point<U> >::getX() const { return detail::Access::extractElement(*this, 0); }
@@ -26,13 +26,13 @@ template <typename U>
 Key<U> KeyBase< Point<U> >::getY() const { return detail::Access::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> KeyBase< Shape<U> >::getIXX() const { return detail::Access::extractElement(*this, 0); }
+Key<U> KeyBase< Moments<U> >::getIXX() const { return detail::Access::extractElement(*this, 0); }
 
 template <typename U>
-Key<U> KeyBase< Shape<U> >::getIYY() const { return detail::Access::extractElement(*this, 1); }
+Key<U> KeyBase< Moments<U> >::getIYY() const { return detail::Access::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> KeyBase< Shape<U> >::getIXY() const { return detail::Access::extractElement(*this, 2); }
+Key<U> KeyBase< Moments<U> >::getIXY() const { return detail::Access::extractElement(*this, 2); }
 
 template <typename U>
 Key<U> KeyBase< Array<U> >::operator[](int i) const {
@@ -71,8 +71,8 @@ Key<U> KeyBase< Covariance< Point<U> > >::operator()(int i, int j) const {
 }
 
 template <typename U>
-Key<U> KeyBase< Covariance< Shape<U> > >::operator()(int i, int j) const {
-    Key< Covariance< Shape<U> > > const * self = static_cast<Key< Covariance< Shape<U> > > const *>(this);
+Key<U> KeyBase< Covariance< Moments<U> > >::operator()(int i, int j) const {
+    Key< Covariance< Moments<U> > > const * self = static_cast<Key< Covariance< Moments<U> > > const *>(this);
     if (i >= self->getSize() || j >= self->getSize() || i < 0 || j < 0) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,

@@ -22,7 +22,7 @@ typedef boost::int64_t RecordId;
  *  for more information.
  */
 template <typename T> class Point;
-template <typename T> class Shape;
+template <typename T> class Moments;
 template <typename T> class Array;
 template <typename T> class Covariance;
 class Flag;
