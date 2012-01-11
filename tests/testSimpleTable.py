@@ -50,7 +50,7 @@ except NameError:
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def makeArray(size, dtype):
-    return numpy.array(numpy.random.randn(*size), dtype=dtype)
+    return numpy.array(numpy.random.randn(size), dtype=dtype)
 
 def makeCov(size, dtype):
     m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
@@ -106,10 +106,10 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkGeomAccessors(record, k9, lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
         self.checkArrayAccessors(record, k10, makeArray(k10.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k11, makeArray(k11.getSize(), dtype=numpy.float64))
-        self.checkArrayAccessors(record, k12, makeCov(k12.getSize()), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k13, makeCov(k13.getSize()), dtype=numpy.float64))
-        self.checkArrayAccessors(record, k14, makeCov(k14.getSize()), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k15, makeCov(k15.getSize()), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k12, makeCov(k12.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k13, makeCov(k13.getSize(), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k14, makeCov(k14.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k15, makeCov(k15.getSize(), dtype=numpy.float64))
         self.checkArrayAccessors(record, k16, makeCov(k16.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k17, makeCov(k17.getSize(), dtype=numpy.float64))
 
