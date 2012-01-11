@@ -251,7 +251,6 @@ public:
      *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
      *                               to cfitsio, so all of its extended filename syntaxes should
      *                               work here.
-     *  @param[in]   sanitizeNames   If true, periods in names will be converted to underscores.
      */
     void writeFits(std::string const & filename);
     

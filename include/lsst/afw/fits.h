@@ -2,6 +2,15 @@
 #ifndef LSST_AFW_fits_h_INCLUDED
 #define LSST_AFW_fits_h_INCLUDED
 
+/**
+ *  @file lsst/afw/fits.h
+ *
+ *  Utilities for working with FITS files.
+ *  This was written as part of implementing the afw/table library.  Someday
+ *  the afw/image FITS I/O should be modified to use some of these with the goal
+ *  of sharing code between the two.
+ */
+
 #include <string>
 
 #include <boost/format.hpp>
@@ -18,32 +27,6 @@ public:
     virtual ~HeaderIterationFunctor() {}
 };
 
-#if 0
-/**
- *  @brief A Boost.Variant type that can be a pointer to any of the datatypes managed by FITS.
- *
- *  This is used to convert between the typecode + void pointer FITS representation and a
- *  template-friend generic in C++.
- */
-typedef boost::variant<
-    boost::blank,
-    bool*,                 // TBIT
-    unsigned char*,        // TBYTE
-    short*,                // TSHORT
-    unsigned short*,       // TUSHORT
-    int*,                  // TINT
-    unsigned int*,         // TUINT
-    long*,                 // TLONG
-    unsigned long*,        // TULONG
-    boost::int64_t*,       // TLONGLONG
-    float*,                // TFLOAT
-    double*,               // TDOUBLE
-    std::complex<float>*,  // TCOMPLEX
-    std::complex<double>*, // TDBLCOMPLEX
-    char **,               // TSTRING
-> FitsVariant;
-#endif
-
 /**
  * @brief An exception thrown when problems are found when reading or writing FITS files.
  */
@@ -58,22 +41,30 @@ LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::
 /**
  *  @brief Return an error message reflecting FITS I/O errors.
  *
- *  These are intended as replacements for afw::image::cfitsio::err_msg.
- *
  *  @param[in] fileName   FITS filename to be included in the error message.
+ *  @param[in] status     The last status value returned by the cfitsio library; if nonzero,
+ *                        the error message will include a description from cfitsio.
+ *  @param[in] msg        An additional custom message to include.
+ */
+std::string makeErrorMessage(std::string const & fileName="", int status=0, std::string const & msg="");
+inline std::string makeErrorMessage(std::string const & fileName, int status, boost::format const & msg) {
+    return makeErrorMessage(fileName, status, msg.str());
+}
+//@}
+
+//@{
+/**
+ *  @brief Return an error message reflecting FITS I/O errors.
+ *
  *  @param[in] fptr       A cfitsio fitsfile pointer to be inspected for a filename.
  *                        Passed as void* to avoid including fitsio.h in the header file.
  *  @param[in] status     The last status value returned by the cfitsio library; if nonzero,
  *                        the error message will include a description from cfitsio.
  *  @param[in] msg        An additional custom message to include.
  */
-std::string makeErrorMessage(std::string const & fileName="", int status=0, std::string const & msg="");
 std::string makeErrorMessage(void * fptr, int status=0, std::string const & msg="");
-inline std::string makeErrorMessage(std::string const & fileName, int status, boost::format const & fmt) {
-    return makeErrorMessage(fileName, status, fmt.str());
-}
-inline std::string makeErrorMessage(void * fptr, int status, boost::format const & fmt) {
-    return makeErrorMessage(fptr, status, fmt.str());
+inline std::string makeErrorMessage(void * fptr, int status, boost::format const & msg) {
+    return makeErrorMessage(fptr, status, msg.str());
 }
 //@}
 

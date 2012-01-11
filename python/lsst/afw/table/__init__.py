@@ -13,4 +13,5 @@ from .tableLib import (
     SimpleTable,
     SourceRecord,
     SourceTable,
+    aliases,
 )

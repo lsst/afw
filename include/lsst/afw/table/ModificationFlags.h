@@ -18,6 +18,11 @@ namespace lsst { namespace afw { namespace table {
  *  Most objects will use protected inheritance to hold these flags, as this allows this class to
  *  be totally optimized-away when we compile with NDEBUG, while allowing derived classes to
  *  use the assert() member function.
+ *
+ *  @sa TableBase::disable
+ *  @sa TableBase::makeReadOnly
+ *  @sa RecordBase::disable
+ *  @sa RecordBase::makeReadOnly
  */
 struct ModificationFlags {
 
