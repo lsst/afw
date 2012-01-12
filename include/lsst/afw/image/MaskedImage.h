@@ -73,7 +73,7 @@ namespace image {
 
 /// A class to manipulate images, masks, and variance as a single object
 template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
-         typename VariancePixelT=VariancePixel>
+         typename VariancePixelT=lsst::afw::image::VariancePixel>
 class MaskedImage : public lsst::daf::base::Persistable,
                     public lsst::daf::base::Citizen {
 public:

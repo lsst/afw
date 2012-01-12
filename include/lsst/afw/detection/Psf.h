@@ -53,15 +53,15 @@ public:
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }
 
-    Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
+    PTR(Image) computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;
 
-    Image::Ptr computeImage(lsst::afw::image::Color const& color,
+    PTR(Image) computeImage(lsst::afw::image::Color const& color,
                             lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true) const;

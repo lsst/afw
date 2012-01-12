@@ -38,12 +38,12 @@ Python interface to lsst::afw::detection classes
 
 %{
 #include "lsst/daf/base.h"
-#include "lsst/pex/logging/Log.h"
+#include "lsst/pex/logging.h"
 #include "lsst/daf/persistence.h"
-#include "lsst/pex/logging/LogFormatter.h"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
@@ -54,15 +54,6 @@ Python interface to lsst::afw::detection classes
 
 %init %{
     import_array();
-%}
-
-%inline %{
-namespace boost {
-    typedef short int16_t;
-    typedef unsigned short uint16_t;
-    typedef int int32_t;
-    typedef signed char int8_t;
-}
 %}
 
 %include "std_string.i"
@@ -86,3 +77,4 @@ namespace boost {
 %include "footprints.i"
 %include "match.i"
 %include "psf.i"
+

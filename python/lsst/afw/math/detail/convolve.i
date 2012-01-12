@@ -26,8 +26,7 @@
 #include "lsst/afw/math/detail/Convolve.h"
 %}
 
-SWIG_SHARED_PTR_DERIVED(KernelImagesForRegion,
-    lsst::daf::base::Citizen, lsst::afw::math::detail::KernelImagesForRegion);
+%shared_ptr(lsst::afw::math::detail::KernelImagesForRegion);
 
 %include "lsst/afw/math/detail/Convolve.h"
 

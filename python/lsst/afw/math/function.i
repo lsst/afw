@@ -32,16 +32,15 @@
 %}
 
 // Must be used before %include
-%define %baseFunctionPtrs(TYPE, CTYPE)
-SWIG_SHARED_PTR_DERIVED(Function##TYPE, lsst::daf::base::Citizen, lsst::afw::math::Function<CTYPE>);
-SWIG_SHARED_PTR_DERIVED(Function1##TYPE, lsst::afw::math::Function<CTYPE>, lsst::afw::math::Function1<CTYPE>);
-SWIG_SHARED_PTR_DERIVED(Function2##TYPE, lsst::afw::math::Function<CTYPE>, lsst::afw::math::Function2<CTYPE>);
-SWIG_SHARED_PTR_DERIVED(BasePolynomialFunction2##TYPE, lsst::afw::math::Function2<CTYPE>,
-    lsst::afw::math::BasePolynomialFunction2<CTYPE>);
+%define %baseFunctionPtrs(CTYPE)
+%shared_ptr(lsst::afw::math::Function<CTYPE>);
+%shared_ptr(lsst::afw::math::Function1<CTYPE>);
+%shared_ptr(lsst::afw::math::Function2<CTYPE>);
+%shared_ptr(lsst::afw::math::BasePolynomialFunction2<CTYPE>);
 %enddef
 
-%define %functionPtr(NAME, N, TYPE, CTYPE)
-SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst::afw::math::NAME##N<CTYPE>);
+%define %functionPtr(NAME, N, CTYPE)
+%shared_ptr(lsst::afw::math::NAME##N<CTYPE>);
 %enddef
 
 // Must be used after %include
@@ -58,22 +57,22 @@ SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst
 //
 // Macros to define float or double versions of things
 //
-%define %definePointers(NAME, TYPE)
+%define %definePointers(TYPE)
     // Must be called BEFORE %include
-    %baseFunctionPtrs(NAME, TYPE);
+    %baseFunctionPtrs(TYPE);
 
-    %functionPtr(Chebyshev1Function, 1, NAME, TYPE);
-    %functionPtr(Chebyshev1Function, 2, NAME, TYPE);
-    %functionPtr(DoubleGaussianFunction, 2, NAME, TYPE);
-    %functionPtr(GaussianFunction, 1, NAME, TYPE);
-    %functionPtr(GaussianFunction, 2, NAME, TYPE);
-    %functionPtr(IntegerDeltaFunction, 2, NAME, TYPE);
-    %functionPtr(LanczosFunction, 1, NAME, TYPE);
-    %functionPtr(LanczosFunction, 2, NAME, TYPE);
-    %functionPtr(NullFunction, 1, NAME, TYPE);
-    %functionPtr(NullFunction, 2, NAME, TYPE);
-    %functionPtr(PolynomialFunction, 1, NAME, TYPE);
-    %functionPtr(PolynomialFunction, 2, NAME, TYPE);
+    %functionPtr(Chebyshev1Function, 1, TYPE);
+    %functionPtr(Chebyshev1Function, 2, TYPE);
+    %functionPtr(DoubleGaussianFunction, 2, TYPE);
+    %functionPtr(GaussianFunction, 1, TYPE);
+    %functionPtr(GaussianFunction, 2, TYPE);
+    %functionPtr(IntegerDeltaFunction, 2, TYPE);
+    %functionPtr(LanczosFunction, 1, TYPE);
+    %functionPtr(LanczosFunction, 2, TYPE);
+    %functionPtr(NullFunction, 1, TYPE);
+    %functionPtr(NullFunction, 2, TYPE);
+    %functionPtr(PolynomialFunction, 1, TYPE);
+    %functionPtr(PolynomialFunction, 2, TYPE);
 %enddef
 
 %define %defineTemplates(NAME, TYPE)
@@ -96,8 +95,8 @@ SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst
 
 /************************************************************************************************************/
 
-%definePointers(D, double);
-%definePointers(F, float);
+%definePointers(double);
+%definePointers(float);
 
 %include "lsst/afw/math/Function.h"
 %include "lsst/afw/math/FunctionLibrary.h"

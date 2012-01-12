@@ -37,15 +37,9 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 // Must go BEFORE the include
 //
-%define %SpatialCellImageCandidatePtr_(NAME, TYPE, ...)
-SWIG_SHARED_PTR_DERIVED(SpatialCellImageCandidate##NAME,
-                        lsst::afw::math::SpatialCellCandidate,
-                        lsst::afw::math::SpatialCellImageCandidate<TYPE >);
-%enddef
-
-%define %SpatialCellImageCandidatePtr(NAME, TYPE, ...)
-   %SpatialCellImageCandidatePtr_(NAME, %IMAGE(TYPE))
-   %SpatialCellImageCandidatePtr_(M##NAME, %MASKEDIMAGE(TYPE))
+%define %SpatialCellImageCandidatePtr(TYPE, ...)
+   %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<%IMAGE(TYPE) >);
+   %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<%MASKEDIMAGE(TYPE) >);
 %enddef
 //
 // Must go AFTER the include (N.b. %SpatialCellImageCandidate_ is internal)
@@ -60,8 +54,8 @@ SWIG_SHARED_PTR_DERIVED(SpatialCellImageCandidate##NAME,
 // We therefore provide a cast to SpatialCellImageCandidate<> and swig can go from there
 //
 %inline %{
-    lsst::afw::math::SpatialCellImageCandidate<TYPE>::Ptr
-    cast_SpatialCellImageCandidate##NAME(lsst::afw::math::SpatialCellCandidate::Ptr candidate) {
+    boost::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
+    cast_SpatialCellImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
         return boost::shared_dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
     }
 %}
@@ -81,11 +75,12 @@ SWIG_SHARED_PTR_DERIVED(SpatialCellImageCandidate##NAME,
 #include "lsst/afw/math/SpatialCell.h"
 %}
 
-SWIG_SHARED_PTR(SpatialCellCandidate, lsst::afw::math::SpatialCellCandidate);
-SWIG_SHARED_PTR(SpatialCell, lsst::afw::math::SpatialCell);
+%shared_ptr(lsst::afw::math::CandidateVisitor)
+%shared_ptr(lsst::afw::math::SpatialCellCandidate);
+%shared_ptr(lsst::afw::math::SpatialCell);
 
-%SpatialCellImageCandidatePtr(F, float);
-%SpatialCellImageCandidatePtr(D, double);
+%SpatialCellImageCandidatePtr(float);
+%SpatialCellImageCandidatePtr(double);
 
 %rename(__incr__) lsst::afw::math::SpatialCellCandidateIterator::operator++;
 %rename(__deref__) lsst::afw::math::SpatialCellCandidateIterator::operator*;
@@ -94,8 +89,8 @@ SWIG_SHARED_PTR(SpatialCell, lsst::afw::math::SpatialCell);
 
 %include "lsst/afw/math/SpatialCell.h"
 
-%template(SpatialCellCandidateList) std::vector<lsst::afw::math::SpatialCellCandidate::Ptr>;
-%template(SpatialCellList) std::vector<lsst::afw::math::SpatialCell::Ptr>;
+%template(SpatialCellCandidateList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> >;
+%template(SpatialCellList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCell> >;
 
 %SpatialCellImageCandidate(F, float);
 %SpatialCellImageCandidate(D, double);
