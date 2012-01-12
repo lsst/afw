@@ -182,7 +182,8 @@ afwGeom::AffineTransform cameraGeom::Detector::getGlobalTransform() const
     return afwGeom::AffineTransform::makeTranslation(afwGeom::Extent2D(getCenter())) *
         afwGeom::AffineTransform::makeScaling(getPixelSize()) *
         afwGeom::AffineTransform::makeRotation(angle) *
-        afwGeom::AffineTransform::makeTranslation(afwGeom::Extent2D(getAllPixels(true).getDimensions()) / -2);
+        afwGeom::AffineTransform::makeTranslation(
+            afwGeom::Extent2D(getAllPixelsNoRotation(true).getDimensions()) / -2.0);
 }
 
 
