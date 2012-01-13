@@ -48,6 +48,9 @@ public:
         PTR(IdFactory) const & idFactory = PTR(IdFactory)()
     ) : TableInterface<Simple>(schema, capacity, idFactory) {}
 
+    /// @copydoc TableBase::TableBase()
+    SimpleTable() {}
+
     /// @brief Create a table from a base-class table.  Required to implement RecordBase::getTable().
     explicit SimpleTable(TableBase const & base) : TableInterface<Simple>(base) {}
     

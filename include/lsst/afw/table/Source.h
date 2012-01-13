@@ -83,7 +83,7 @@ struct Source {
 };
 
 /**
- *  @brief A bare-bones record class intended for testing and generic tabular data.
+ *  @brief Record class that contains measurements made on a single exposure.
  */
 class SourceRecord : public RecordInterface<Source> {
 public:
@@ -132,7 +132,7 @@ private:
 };
 
 /**
- *  @brief A bare-bones record class intended for testing and generic tabular data.
+ *  @brief Table class that contains measurements made on a single exposure.
  */
 class SourceTable : public TableInterface<Source> {
 public:
@@ -143,6 +143,8 @@ public:
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      *  @param[in] capacity          Number of records to pre-allocate space for in the first block.  This
      *                               overrides nRecordsPerBlock for the first block and the first block only.
+     *  @param[in] metadata          Flexible metadata for the table.  An empty PropertyList will be used
+     *                               if an empty pointer is passed.
      *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
      *                               If empty, defaults to a simple counter that starts at 1.
      */
@@ -154,6 +156,9 @@ public:
     ) : TableInterface<Source>(schema, capacity, idFactory) {
         TableBase::getAux() = boost::make_shared<Source::TableAux>(metadata);
     }
+
+    /// @copydoc TableBase::TableBase()
+    SourceTable() {}
 
     /// @brief Return the flexible metadata associated with the source table.
     PTR(daf::base::PropertyList) getMetadata() const { return getAux()->metadata; }

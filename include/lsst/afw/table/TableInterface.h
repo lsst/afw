@@ -121,6 +121,8 @@ public:
 
 protected:
 
+    TableInterface() {}
+
     TableInterface(
         Schema const & schema,
         int capacity,

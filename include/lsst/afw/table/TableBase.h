@@ -108,6 +108,15 @@ public:
 protected:
 
     /**
+     *  @brief Construct a null table.
+     *
+     *  A null table is completely unusable; a default constructor is only provided so classes
+     *  that hold a table data member do not have to initialize the table in the member
+     *  initialization list.  To make the null table usable, assign a valid table to it.
+     */
+    TableBase() : _impl() {}
+
+    /**
      *  @brief Standard constructor for TableBase.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
