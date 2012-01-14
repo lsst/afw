@@ -679,6 +679,14 @@ class FootprintSetTestCase(unittest.TestCase):
             ds9.mtv(self.ms, frame=0)
             ds9.mtv(idImage, frame=1)
 
+    def testFootprintPeaks(self):
+        """Test that we can extract the peaks from a Footprint"""
+        fs = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
+
+        foot = fs.getFootprints()[0]
+
+        self.assertEqual(len(foot.getPeaks()), 5)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class MaskFootprintSetTestCase(unittest.TestCase):
