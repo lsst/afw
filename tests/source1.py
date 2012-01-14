@@ -122,8 +122,10 @@ class SourceTestCase(unittest.TestCase):
         perPol = pexPolicy.Policy()
         per = Persistence.getPersistence(perPol)
         additionalData = dafBase.PropertySet()
-        storageName = 'BoostStorage'
-        f,loc = tempfile.mkstemp(suffix='.boost', dir=os.path.join("tests", "data"))
+        dirName, storageName = os.path.join("tests", "data"), "BoostStorage"
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        f,loc = tempfile.mkstemp(suffix='.boost', dir=dirName)
         os.close(f)
         print 'Writing to temp file', loc
         try:
@@ -370,6 +372,9 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-if __name__ == "__main__":
-    utilsTests.run(suite())
+def run(shouldExit=False):
+    """Run the tests"""
+    utilsTests.run(suite(), shouldExit)
 
+if __name__ == "__main__":
+    run(True)
