@@ -334,7 +334,7 @@ void test7()
 	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, 0, miMetadata));
 	MaskedImageF maskedImage(image);
 	afwImage::Wcs::Ptr wcsFromFITS = afwImage::makeWcs(miMetadata); 
-	ExposureF exposure(maskedImage, *wcsFromFITS);
+	ExposureF exposure(maskedImage, wcsFromFITS);
 	
 	//Write the Exposure to a RAM FITS file
 	exposure.writeFits(&ramFile, &ramFileLen);
