@@ -21,6 +21,7 @@
 #
 
 import re
+import lsst.pex.config as pexConfig
 import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as detection
 from . import imageLib as afwImage
@@ -50,8 +51,8 @@ def defineFilters(filterSetConfig, reset=False):
         afwImage.FilterProperty.reset()
 
     for f in filterSetConfig.filters:
-        afwImage.Filter.define(afwImage.FilterProperty(f.name, f))
-        if 'alias' in f:
+        afwImage.Filter.define(afwImage.FilterProperty(f.name, pexConfig.makePropertySet(f)))
+        if f.alias is not None:
             for a in f.alias:
                 afwImage.Filter.defineAlias(f.name, a)
                                                       
