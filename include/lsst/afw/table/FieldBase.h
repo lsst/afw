@@ -13,13 +13,14 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/coord.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/Covariance.h"
 #include "lsst/afw/table/KeyBase.h"
 
-#define AFW_TABLE_SCALAR_FIELD_TYPE_N 4
+#define AFW_TABLE_SCALAR_FIELD_TYPE_N 5
 #define AFW_TABLE_SCALAR_FIELD_TYPES                                    \
-    RecordId, boost::int32_t, float, double
+    RecordId, boost::int32_t, float, double, Angle
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
 #define AFW_TABLE_ARRAY_FIELD_TYPE_N 2
@@ -27,13 +28,13 @@
     float, double
 #define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
 
-#define AFW_TABLE_FIELD_TYPE_N 18
+#define AFW_TABLE_FIELD_TYPE_N 20
 #define AFW_TABLE_FIELD_TYPES                                   \
     AFW_TABLE_SCALAR_FIELD_TYPES,                               \
-    Flag,                                                       \
+    Flag, Coord,  \
     Array<float>, Array<double>,                                \
     Point<int>, Point<float>, Point<double>,                    \
-    Moments<float>, Moments<double>,                                \
+    Moments<float>, Moments<double>,                            \
     Covariance<float>, Covariance<double>,                      \
     Covariance< Point<float> >, Covariance< Point<double> >,    \
     Covariance< Moments<float> >, Covariance< Moments<double> >
@@ -88,6 +89,57 @@ protected:
 
     void setValue(Element * p, Value v) const { *p = v; }
 
+};
+
+/**
+ *  @brief Field base class specialization for Coord.
+ *
+ *  Coord fields are always stored in the ICRS system.  You can assign Coords in other
+ *  systems to a record, but this will result in a conversion to ICRS, and returned
+ *  values will always be IcrsCoords.
+ */
+template <>
+struct FieldBase< Coord > {
+
+    /// @brief the type returned by RecordBase::get (coord::IcrsCoord, in this case).
+    typedef lsst::afw::coord::IcrsCoord Value;
+
+    /// @brief the type of subfields
+    typedef lsst::afw::geom::Angle Element;
+
+    /// @brief Return the number of subfield elements (always two for points).
+    int getElementCount() const { return 2; }
+
+    /// @brief Return a string description of the field type.
+    static std::string getTypeString();
+
+#ifndef SWIG_BUG_3465431_FIXED
+    // SWIG uses this template to define the interface for the other specializations.
+    // We can add other methods to full specializations using %extend, but we can't add
+    // constructors that way.
+    FieldBase() {}
+    FieldBase(int) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+        );
+    }
+#endif
+
+protected:
+
+    static FieldBase makeDefault() { return FieldBase(); }
+
+    void stream(std::ostream & os) const {}
+
+    Value getValue(Element const * p) const { return Value(p[0], p[1]); }
+
+    void setValue(Element * p, Value const & v) const {
+        p[0] = v.getRa();
+        p[1] = v.getDec();
+    }
+
+    void setValue(Element * p, afw::coord::Coord const & v) const { setValue(p, v.toIcrs()); }
 };
 
 /**

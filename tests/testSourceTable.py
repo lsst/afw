@@ -76,10 +76,10 @@ class SourceTableTestCase(unittest.TestCase):
         self.record.set(self.shapeCovKey, makeCov(3, float))
 
     def checkCanonical(self):
-        self.assertEqual(self.table.getPsfPhotometryDefinition(), "a")
+        self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
         self.assertEqual(self.record.get(self.fluxErrKey), self.record.getPsfFluxErr())
-        self.assertEqual(self.table.getAstrometryDefinition(), "b")
+        self.assertEqual(self.table.getCentroidDefinition(), "b")
         self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
         self.assert_(numpy.all(self.record.get(self.centroidCovKey) == self.record.getCentroidCov()))
         self.assertEqual(self.table.getShapeDefinition(), "c")
@@ -87,14 +87,14 @@ class SourceTableTestCase(unittest.TestCase):
         self.assert_(numpy.all(self.record.get(self.shapeCovKey) == self.record.getShapeCov()))
 
     def testCanonical1(self):
-        self.table.definePsfPhotometry(self.fluxKey, self.fluxErrKey)
-        self.table.defineAstrometry(self.centroidKey, self.centroidCovKey)
+        self.table.definePsfFlux(self.fluxKey, self.fluxErrKey)
+        self.table.defineCentroid(self.centroidKey, self.centroidCovKey)
         self.table.defineShape(self.shapeKey, self.shapeCovKey)
         self.checkCanonical()
 
     def testCanonical2(self):
-        self.table.definePsfPhotometry("a")
-        self.table.defineAstrometry("b")
+        self.table.definePsfFlux("a")
+        self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.checkCanonical()
 

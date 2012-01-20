@@ -4,6 +4,22 @@
 
 namespace lsst { namespace afw { namespace table {
 
+Source::BaseSchema::BaseSchema() : schema(true) {}
+
+Source::BaseSchema Source::BaseSchema::make() {
+    BaseSchema r;
+    r.sky = r.schema.addField<float>("sky", "sky background at location of source", "DN/pix");
+    r.skyErr = r.schema.addField<float>("sky.err", "sky background uncertainty at location of source",
+                                        "DN/pix");
+    r.coord = r.schema.addField< Point<double> >("coord", "position of source in ra/dec", "radians");
+    return r;
+}
+
+Source::BaseSchema & Source::BaseSchema::get() {
+    static BaseSchema instance = make();
+    return instance;
+}
+
 void SourceTable::writeFits(std::string const & filename) {
     fits::Fits file = fits::Fits::createFile(filename.c_str());
     file.checkStatus();

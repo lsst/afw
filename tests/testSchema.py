@@ -39,6 +39,8 @@ import numpy
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
+import lsst.afw.geom
+import lsst.afw.coord
 
 try:
     type(display)
@@ -51,15 +53,15 @@ class SchemaTestCase(unittest.TestCase):
 
     def testSchema(self):
         schema = lsst.afw.table.Schema(False);
-        ab_k = schema.addField("a.b", type="Point<I4>", doc="parent point")
+        ab_k = schema.addField("a.b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a.b.i", type=int, doc="int")
         acf_k = schema.addField("a.c.f", type=numpy.float32, doc="float")
-        egd_k = schema.addField("e.g.d", type="F8", doc="double")
+        egd_k = schema.addField("e.g.d", type=lsst.afw.geom.Angle, doc="angle")
         abp_k = schema.addField("a.b.p", type="Point<F4>", doc="point")
         ab_si = schema.find("a.b")
         self.assertEqual(ab_si.key, ab_k)
         self.assertEqual(ab_si.field.getName(), "a.b")
-        self.assertEqual(ab_k.getX(), schema["a.b.x"].asKey());
+        self.assertEqual(ab_k.getRa(), schema["a.b.ra"].asKey());
         abp_si = schema.find("a.b.p")
         self.assertEqual(abp_si.key, abp_k)
         self.assertEqual(abp_si.field.getName(), "a.b.p")
@@ -78,10 +80,10 @@ class SchemaTestCase(unittest.TestCase):
         schema2.addField("q", type=float, doc="another double")
         self.assertNotEqual(schema, schema2)
         schema3 = lsst.afw.table.Schema(False)
-        schema3.addField("j", type="Point<I4>", doc="point")
+        schema3.addField("j", type=lsst.afw.coord.Coord, doc="coord")
         schema3.addField("i", type="I4", doc="int")
         schema3.addField("f", type="F4", doc="float")
-        schema3.addField("d", type="F8", doc="double")
+        schema3.addField("d", type="Angle", doc="angle")
         schema3.addField("p", type="Point<F4>", doc="point")
         self.assertEqual(schema3, schema)
         

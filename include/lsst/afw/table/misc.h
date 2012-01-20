@@ -3,6 +3,8 @@
 #define AFW_TABLE_misc_h_INCLUDED
 
 #include "boost/cstdint.hpp"
+#include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/coord/Coord.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -26,6 +28,8 @@ template <typename T> class Moments;
 template <typename T> class Array;
 template <typename T> class Covariance;
 class Flag;
+typedef lsst::afw::coord::Coord Coord;
+typedef lsst::afw::geom::Angle Angle;
 //@}
 
 /**

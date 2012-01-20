@@ -15,8 +15,6 @@ struct SwapKeyPair : public boost::static_visitor<> {
         std::swap(pair.first, pair.second);
     }
 
-    void operator()(boost::blank const &) const {}
-
     void operator()(detail::SchemaMapperImpl::KeyPairVariant & v) const {
         boost::apply_visitor(*this, v);
     }
@@ -25,8 +23,6 @@ struct SwapKeyPair : public boost::static_visitor<> {
 
 template <typename T>
 struct KeyPairCompareEqual : public boost::static_visitor<bool> {
-
-    bool operator()(boost::blank const &) const { return 0; }
 
     template <typename U>
     bool operator()(std::pair< Key<U>, Key<U> > const & pair) const {
@@ -49,8 +45,6 @@ struct KeyPairCompareFirst : public boost::static_visitor<int> {
     int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
         return pair.first.getOffset();
     }
-
-    int operator()(boost::blank const &) const { return 0;}
     
     bool operator()(
         detail::SchemaMapperImpl::KeyPairVariant const & a,
@@ -68,8 +62,6 @@ struct KeyPairCompareSecond: public boost::static_visitor<int> {
         return pair.second.getOffset();
     }
     
-    int operator()(boost::blank const &) const { return 0;}
-
     bool operator()(
         detail::SchemaMapperImpl::KeyPairVariant const & a,
         detail::SchemaMapperImpl::KeyPairVariant const & b

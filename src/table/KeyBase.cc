@@ -13,11 +13,17 @@ Key<FieldBase<Flag>::Element> KeyBase<Flag>::getStorage() const {
     return detail::Access::extractElement(*this, 0);
 }
 
+char const * KeyBase< Coord >::subfields[] = { "ra", "dec" };
+
 template <typename U>
 char const * KeyBase< Point<U> >::subfields[] = { "x", "y" };
 
 template <typename U>
 char const * KeyBase< Moments<U> >::subfields[] = { "xx", "yy", "xy" };
+
+Key<Angle> KeyBase< Coord >::getRa() const { return detail::Access::extractElement(*this, 0); }
+
+Key<Angle> KeyBase< Coord >::getDec() const { return detail::Access::extractElement(*this, 1); }
 
 template <typename U>
 Key<U> KeyBase< Point<U> >::getX() const { return detail::Access::extractElement(*this, 0); }

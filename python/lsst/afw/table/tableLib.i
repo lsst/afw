@@ -41,6 +41,13 @@ Python interface to lsst::afw::table classes
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "lsst/ndarray/python.h"
+#include "lsst/afw/geom/Angle.h"
+
+// This enables numpy array conversion for Angle, converting it to a regular array of double.
+namespace lsst { namespace ndarray { namespace detail {
+template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<double> {};
+}}}
+
 %}
 
 %include "lsst/ndarray/ndarray.i"
@@ -54,6 +61,9 @@ Python interface to lsst::afw::table classes
 %declareNumPyConverters(lsst::ndarray::Array<boost::int64_t const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<float const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<double const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<float const,2>);
+%declareNumPyConverters(lsst::ndarray::Array<double const,2>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::geom::Angle const,1>);
 %declareNumPyConverters(Eigen::Array<float,Eigen::Dynamic,1>);
 %declareNumPyConverters(Eigen::Array<double,Eigen::Dynamic,1>);
 %declareNumPyConverters(Eigen::Matrix<float,2,2>);
@@ -67,6 +77,7 @@ Python interface to lsst::afw::table classes
 
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 // We prefer to convert std::set<std::string> to a Python tuple, because SWIG's std::set wrapper
@@ -286,13 +297,13 @@ def asKey(self):
 // Workarounds for SWIG's failure to parse the Measurement template correctly.
 // Otherwise we'd have one place in the code that controls all the canonical measurement types.
 namespace lsst { namespace afw { namespace table {
-     struct Photometry {
+     struct Flux {
          typedef Key< double > MeasKey;
          typedef Key< double > ErrKey;
          typedef double MeasValue;
          typedef double ErrValue;
      };
-     struct Astrometry {
+     struct Centroid {
          typedef Key< Point<double> > MeasKey;
          typedef Key< Covariance< Point<double> > > ErrKey;
          typedef lsst::afw::geom::Point<double,2> MeasValue;
@@ -312,6 +323,8 @@ namespace lsst { namespace afw { namespace table {
 %include "lsst/afw/table/Source.h"
 
 %pythoncode %{
+from .. import geom
+from .. import coord
 import numpy
 Field = {}
 Key = {}
@@ -325,6 +338,8 @@ aliases = {
     numpy.int64: "I8",
     numpy.float32: "F4",
     numpy.float64: "F8",
+    geom.Angle: "Angle",
+    coord.Coord: "Coord",
 }
 %}
 
@@ -374,6 +389,8 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(float, F4)
 %declareFieldType(double, F8)
 %declareFieldType(lsst::afw::table::Flag, Flag)
+%declareFieldType(lsst::afw::geom::Angle, Angle)
+%declareFieldType(lsst::afw::coord::Coord, Coord)
 
 %declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI4)
 %declareFieldType(lsst::afw::table::Point<float>, PointF4)

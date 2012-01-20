@@ -251,12 +251,13 @@ protected:
     // Shallow assignment, but requires matching Schemas.
     void operator=(RecordBase const & other);
 
+    /// @brief Construct a null record.  Unusable until a valid record is assigned to it.
+    RecordBase() : ModificationFlags(), _data(0), _table() {}
+
 private:
 
     friend class TableBase;
     friend class IteratorBase;
-
-    RecordBase() : ModificationFlags(), _data(0), _table() {}
 
     RecordBase(
         detail::RecordData * data,

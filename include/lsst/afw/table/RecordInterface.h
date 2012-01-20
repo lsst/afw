@@ -119,6 +119,8 @@ protected:
 
     template <typename OtherTag> friend class TableInterface;
 
+    RecordInterface() : RecordBase() {}
+
     explicit RecordInterface(RecordBase const & other) : RecordBase(other) {}
 
     RecordInterface(RecordInterface const & other) : RecordBase(other) {}

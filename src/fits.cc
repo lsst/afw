@@ -16,6 +16,7 @@ extern "C" {
 #include "boost/scoped_array.hpp"
 
 #include "lsst/afw/fits.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace lsst { namespace afw { namespace fits {
 
@@ -32,6 +33,7 @@ char getFormatCode(float*) { return 'E'; }
 char getFormatCode(double*) { return 'D'; }
 char getFormatCode(std::complex<float>*) { return 'C'; }
 char getFormatCode(std::complex<double>*) { return 'M'; }
+char getFormatCode(lsst::afw::geom::Angle*) { return 'D'; }
 
 template <typename T>
 std::string makeColumnFormat(int size = 1) {
@@ -59,6 +61,7 @@ template <> struct FitsType<unsigned long> { static int const CONSTANT = TULONG;
 template <> struct FitsType<LONGLONG> { static int const CONSTANT = TLONGLONG; };
 template <> struct FitsType<float> { static int const CONSTANT = TFLOAT; };
 template <> struct FitsType<double> { static int const CONSTANT = TDOUBLE; };
+template <> struct FitsType<lsst::afw::geom::Angle> { static int const CONSTANT = TDOUBLE; };
 template <> struct FitsType< std::complex<float> > { static int const CONSTANT = TCOMPLEX; };
 template <> struct FitsType< std::complex<double> > { static int const CONSTANT = TDBLCOMPLEX; };
 
@@ -329,7 +332,7 @@ void Fits::closeFile() {
 
 #define COLUMN_TYPES                            \
     (boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
-    (boost::int64_t)(float)(double)(std::complex<float>)(std::complex<double>)(bool)
+    (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)(bool)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_COLUMN_KEY, _, KEY_TYPES)

@@ -53,8 +53,6 @@ struct ExtractOffset : public boost::static_visitor<int> {
         return item.key.getOffset();
     }
 
-    result_type operator()(boost::blank const &) const { return 0; }
-
     result_type operator()(detail::SchemaImpl::ItemVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }
@@ -67,8 +65,6 @@ struct CompareItemKeys {
 
     struct Helper : public boost::static_visitor<bool> {
         
-        result_type operator()(boost::blank const &) const { return false; }
-
         template <typename T>
         bool operator()(SchemaItem<T> const & a) const {
             SchemaItem<T> const * b = boost::get< SchemaItem<T> >(other);
@@ -168,8 +164,6 @@ struct ExtractItemByName : public boost::static_visitor<> {
         if (n >= 0) ExtractItem<T,U>::finish(n, result, item);
     }
 
-    void operator()(boost::blank const &) const {}
-
     explicit ExtractItemByName(std::string const & name_) : name(name_) {}
 
     std::string name;
@@ -184,8 +178,6 @@ struct ExtractItemByOffset : public boost::static_visitor<> {
         int n = ExtractItem<T,U>::apply(offset, item);
         if (n >= 0) ExtractItem<T,U>::finish(n, result, item);
     }
-
-    void operator()(boost::blank const &) const {}
 
     explicit ExtractItemByOffset(int offset_) : offset(offset_) {}
 

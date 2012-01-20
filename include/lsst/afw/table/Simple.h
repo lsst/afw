@@ -24,6 +24,10 @@ private:
 
     friend class detail::Access;
 
+    /// @brief Construct a null record, which is unusable until a valid record is assigned to it.
+    SimpleRecord() : RecordInterface<Simple>() {}
+
+private:
     SimpleRecord(RecordBase const & other) : RecordInterface<Simple>(other) {}
 };
 

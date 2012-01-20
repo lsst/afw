@@ -33,6 +33,12 @@ template <> struct TypeTraits<float> {
 template <> struct TypeTraits<double> {
     static char const * getName() { return "F8"; }
 };
+template <> struct TypeTraits<lsst::afw::geom::Angle> {
+    static char const * getName() { return "Angle"; }
+};
+template <> struct TypeTraits<lsst::afw::coord::Coord> {
+    static char const * getName() { return "Coord"; }
+};
 
 } // anonyomous
 
@@ -49,6 +55,10 @@ template <typename U>
 std::string FieldBase< Point<U> >::getTypeString() {
     return (boost::format("Point<%s>") % TypeTraits<U>::getName()).str();
 }
+
+//----- Point scalar ----------------------------------------------------------------------------------------
+
+std::string FieldBase< Coord >::getTypeString() { return "Coord"; }
 
 //----- Moments scalar ----------------------------------------------------------------------------------------
 

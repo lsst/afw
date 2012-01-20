@@ -41,6 +41,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
+import lsst.afw.coord
 
 try:
     type(display)
@@ -93,6 +94,8 @@ class SimpleTableTestCase(unittest.TestCase):
         k15 = schema.addField("f15", type="Cov<Point<F8>>")
         k16 = schema.addField("f16", type="Cov<Moments<F4>>")
         k17 = schema.addField("f17", type="Cov<Moments<F8>>")
+        k18 = schema.addField("f18", type="Angle")
+        k19 = schema.addField("f19", type="Coord")
         table = lsst.afw.table.SimpleTable(schema)
         record = table.addRecord()
         self.checkScalarAccessors(record, k1, 2, 3)
@@ -112,6 +115,11 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkArrayAccessors(record, k15, makeCov(k15.getSize(), dtype=numpy.float64))
         self.checkArrayAccessors(record, k16, makeCov(k16.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k17, makeCov(k17.getSize(), dtype=numpy.float64))
+        self.checkGeomAccessors(record, k18, lsst.afw.geom.Angle(1.2))
+        self.checkGeomAccessors(
+            record, k19, 
+            lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
+            )
 
     def testColumnView(self):
         schema = lsst.afw.table.Schema(True)
@@ -123,6 +131,7 @@ class SimpleTableTestCase(unittest.TestCase):
         kb3 = schema.addField("fb3", type="Flag")
         k4 = schema.addField("f4", type="Array<F4>", size=2)
         k5 = schema.addField("f5", type="Array<F8>", size=3)
+        k6 = schema.addField("f6", type="Angle")
         table = lsst.afw.table.SimpleTable(schema, 2)
         records = []
         records.append(table.addRecord())
@@ -135,6 +144,7 @@ class SimpleTableTestCase(unittest.TestCase):
         records[0].set(kb3, False)
         records[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
         records[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
+        records[0].set(k6, lsst.afw.geom.Angle(0.25))
         records[1].set(k1, 3)
         records[1].set(k2, 2.5)
         records[1].set(k3, 0.75)
@@ -143,6 +153,7 @@ class SimpleTableTestCase(unittest.TestCase):
         records[1].set(kb3, True)
         records[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
         records[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
+        records[1].set(k6, lsst.afw.geom.Angle(0.15))
         records[1].setParentId(1)
         self.assert_(table.isConsolidated())
         columns = table.getColumnView()
@@ -150,6 +161,14 @@ class SimpleTableTestCase(unittest.TestCase):
             array = columns[key]
             for i in [0, 1]:
                 self.assertEqual(array[i], records[i].get(key))
+        for key in [k4, k5]:
+            array = columns[key]
+            for i in [0, 1]:
+                self.assert_(numpy.all(array[i] == records[i].get(key)))
+        for key in [k6]:
+            array = columns[key]
+            for i in [0, 1]:
+                self.assertEqual(lsst.afw.geom.Angle(array[i]), records[i].get(key))
         ids = columns.getId()
         parentIds = columns.getParentId();
         for i in [0, 1]:

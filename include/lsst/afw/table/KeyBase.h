@@ -17,6 +17,20 @@ public:
 };
 
 /// @brief A base class for Key that allows subfield keys to be extracted.
+template <>
+class KeyBase< Coord > {
+public:
+    static bool const HAS_NAMED_SUBFIELDS = true;
+
+    Key<Angle> getRa() const; ///< @brief Return a subfield key for the 'ra' coordinate.
+    Key<Angle> getDec() const; ///< @brief Return a subfield key for the 'dec' coordinate.
+
+#ifndef SWIG
+    static char const * subfields[];
+#endif
+};
+
+/// @brief A base class for Key that allows subfield keys to be extracted.
 template <typename U>
 class KeyBase< Point<U> > {
 public:

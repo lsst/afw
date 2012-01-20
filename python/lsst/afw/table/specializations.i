@@ -148,11 +148,25 @@
     }
 }
 
+%extend lsst::afw::table::KeyBase< lsst::afw::coord::Coord > {
+    lsst::afw::table::Key<lsst::afw::geom::Angle> getRa() const { return self->getRa(); }
+    lsst::afw::table::Key<lsst::afw::geom::Angle> getDec() const { return self->getDec(); }
+}
+%extend lsst::afw::table::RecordBase {
+    lsst::afw::coord::IcrsCoord get(lsst::afw::table::Key< lsst::afw::coord::Coord > const & key) const {
+        return self->get(key);
+    }
+    void set(lsst::afw::table::Key< lsst::afw::coord::Coord > const & key,
+             lsst::afw::coord::Coord const & v) const {
+        self->set(key, v);
+    }
+}
 
 %specializeScalar(boost::int32_t)
 %specializeScalar(boost::int64_t)
 %specializeScalar(float)
 %specializeScalar(double)
+%specializeScalar(lsst::afw::geom::Angle)
 
 %specializePoint(boost::int32_t, lsst::afw::geom::Point<int,2>)
 %specializePoint(float, lsst::afw::geom::Point<double,2>)
