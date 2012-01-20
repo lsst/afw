@@ -29,7 +29,6 @@ import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
-import lsst.pex.policy as pexPolicy
 import eups
 
 class ImageIoTestCase(unittest.TestCase):

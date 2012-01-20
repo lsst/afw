@@ -143,3 +143,10 @@ testTable.fits
 tests/data/*
 ups/*.cfgc
 extensions/
+
+# Output of tests
+doc/htmlDir
+im.fits
+bim.fits
+tmp-False.fits
+tmp-True.fits
