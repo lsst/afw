@@ -39,8 +39,8 @@ import unittest
 import lsst.utils.tests as tests
 import lsst.daf.base as dafBase
 import lsst.pex.logging as logging
+import lsst.pex.config as pexConfig
 import lsst.pex.exceptions as pexExcept
-import lsst.pex.policy as pexPolicy
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 import lsst.afw.math as afwMath
@@ -194,10 +194,9 @@ class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):
         # Initialise our filters
-        filterPolicy = pexPolicy.Policy.createPolicy(
-            os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
-
-        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
+        filterConfigFile = os.path.join(eups.productDir("afw"), "tests", "SdssFilters.config")
+        filterConfig = afwImage.FilterSetConfig.load(filterConfigFile)
+        imageUtils.defineFilters(filterConfig, reset=True)
 
     def tearDown(self):
         pass
@@ -226,20 +225,18 @@ class FilterTestCase(unittest.TestCase):
         #
         # Start by forgetting that we may already have defined filters
         #
-        filterPolicy = pexPolicy.Policy.createPolicy(
-            os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
-        self.filters = tuple(sorted([f.get("name") for f in filterPolicy.getArray("Filter")]))
+        filterConfigFile = os.path.join(eups.productDir("afw"), "tests", "SdssFilters.config")
+        filterConfig = afwImage.FilterSetConfig.load(filterConfigFile)
+        self.filters = tuple(sorted([f.name for f in filterConfig.filters]))
+        imageUtils.defineFilters(filterConfig, reset=True)
 
-        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
-
-        self.g_lambdaEff = [p.get("lambdaEff") for p in filterPolicy.getArray("Filter")
-                            if p.get("name") == "g"][0] # used for tests
+        self.g_lambdaEff = [f.lambdaEff for f in filterConfig.filters if f.name == "g"][0] # used for tests
 
     def defineFilterProperty(self, name, lambdaEff, force=False):
-        filterPolicy = pexPolicy.Policy()
-        filterPolicy.add("lambdaEff", lambdaEff)
-
-        return afwImage.FilterProperty(name, filterPolicy, force);
+        filterConfig = afwImage.FilterConfig()
+        filterConfig.name = name
+        filterConfig.lambdaEff = lambdaEff
+        return afwImage.FilterProperty(name, pexConfig.makePropertySet(filterConfig), force);
 
     def testListFilters(self):
         self.assertEqual(afwImage.Filter_getNames(), self.filters)
