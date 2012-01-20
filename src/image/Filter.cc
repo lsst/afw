@@ -41,6 +41,20 @@ namespace pexEx = lsst::pex::exceptions;
 namespace lsst { namespace afw { namespace image {
 
 FilterProperty::PropertyMap *FilterProperty::_propertyMap = NULL;
+
+FilterProperty::FilterProperty(
+    std::string const& name, ///< name of filter
+    lsst::daf::base::PropertySet const& prop, ///< values describing the Filter
+    bool force        ///< Allow this name to replace a previous one
+    ) : _name(name), _lambdaEff(-1)
+{
+    if (prop.exists("lambdaEff")) {
+        _lambdaEff = prop.getAsDouble("lambdaEff");
+    }
+    _insert(force);
+}
+
+
 /**
  * Create a new FilterProperty, setting values from a Policy
  */
@@ -49,15 +63,24 @@ FilterProperty::FilterProperty(std::string const& name, ///< name of filter
                                bool force        ///< Allow this name to replace a previous one
                               ) : _name(name), _lambdaEff(-1)
 {
+    if (pol.exists("lambdaEff")) {
+        _lambdaEff = pol.getDouble("lambdaEff");
+    }
+    _insert(force);
+}
+
+/**
+ * Insert FilterProperty into registry
+ */
+void FilterProperty::_insert(
+    bool force                   ///< Allow this name to replace a previous one?
+    )
+{
     if (!_propertyMap) {
         _initRegistry();
     }
 
-    if (pol.exists("lambdaEff")) {
-        _lambdaEff = pol.getDouble("lambdaEff");
-    }
-
-    PropertyMap::iterator keyVal = _propertyMap->find(name);
+    PropertyMap::iterator keyVal = _propertyMap->find(getName());
 
     if (keyVal != _propertyMap->end()) {
         if (keyVal->second == *this) {
@@ -65,12 +88,12 @@ FilterProperty::FilterProperty(std::string const& name, ///< name of filter
         }
 
         if (!force) {
-            throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + name + " is already defined");
+            throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + getName() + " is already defined");
         }
         _propertyMap->erase(keyVal);
     }
     
-    _propertyMap->insert(std::make_pair(name, *this));
+    _propertyMap->insert(std::make_pair(getName(), *this));
 }
 
 /**

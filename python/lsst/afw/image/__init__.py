@@ -23,6 +23,7 @@
 """Application Framework image-related classes including Image, Mask and MaskedImage
 """
 from imageLib import *
+from filterConfig import *
 import numpy
 
 suffixes = {str(numpy.uint16): "U", str(numpy.int32): "I", str(numpy.float32): "F", str(numpy.float64): "D"}

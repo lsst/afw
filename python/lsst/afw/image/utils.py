@@ -24,6 +24,7 @@ import re
 import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as detection
 from . import imageLib as afwImage
+from filterConfig import FilterSetConfig
 import numpy
 
 def clipImage(im, minClip, maxClip):
@@ -41,6 +42,19 @@ def clipImage(im, minClip, maxClip):
     if maxclip is not None:
         ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(maxclip))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxclip)
+
+def defineFilters(filterSetConfig, reset=False):
+    """Define filters from a FilterSetConfig"""
+    if reset:
+        afwImage.Filter.reset()
+        afwImage.FilterProperty.reset()
+
+    for f in filterSetConfig.filters:
+        afwImage.Filter.define(afwImage.FilterProperty(f.name, f))
+        if 'alias' in f:
+            for a in f.alias:
+                afwImage.Filter.defineAlias(f.name, a)
+                                                      
 
 def defineFiltersFromPolicy(filterPolicy, reset=False):
     """Process a Policy and define the filters"""
