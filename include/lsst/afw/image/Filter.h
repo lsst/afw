@@ -57,12 +57,12 @@ public:
     boost::shared_ptr<FilterProperty> Ptr;
     boost::shared_ptr<FilterProperty const> ConstPtr;
     
-    FilterProperty(
+    explicit FilterProperty(
         std::string const& name,
         lsst::daf::base::PropertySet const& prop=lsst::daf::base::PropertySet(),
         bool force=false
         );
-    FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol, bool force=false);
+    explicit FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol, bool force=false);
     /**
      * Return a filter's name
      */
