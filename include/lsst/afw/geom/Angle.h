@@ -108,6 +108,8 @@ public:
     /** Construct an Angle with the specified value (interpreted in the given units) */
     explicit Angle(double val, AngleUnit units=radians) : _val(val*units._val) {}
 	Angle() : _val(0) {}
+    /** Copy constructor. */
+    Angle(Angle const& other) : _val(other._val) {}
     /** Convert an Angle to a double in radians*/
     operator double() const { return _val; }
     /** Convert an Angle to a float in radians*/

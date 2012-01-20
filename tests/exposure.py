@@ -395,6 +395,16 @@ class ExposureTestCase(unittest.TestCase):
         nexp = exposureF.Factory(exposureF, False)
         self.cmpExposure(exposureF, nexp)
 
+        # Ensure that the copy was deep.
+        # (actually this test is invalid since getDetector() returns a CONST_PTR)
+        # cen0 = exposureU.getDetector().getCenterPixel()
+        # x0,y0 = cen0
+        # det = exposureF.getDetector()
+        # det.setCenterPixel(afwGeom.Point2D(999.0, 437.8))
+        # self.assertEqual(exposureU.getDetector().getCenterPixel()[0], x0)
+        # self.assertEqual(exposureU.getDetector().getCenterPixel()[1], y0)
+
+
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
         m = afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
