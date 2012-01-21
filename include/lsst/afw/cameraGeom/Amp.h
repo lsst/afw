@@ -28,6 +28,7 @@
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/image/Wcs.h"
 
 /**
  * @file
@@ -112,6 +113,7 @@ public:
 
     void shift(int dx, int dy);
     void rotateBy90(lsst::afw::geom::Extent2I const& dimensions, int n90);
+    void prepareWcsData(lsst::afw::image::Wcs::Ptr wcs);
 
     /// Return Amp's electronic properties
     ElectronicParams::Ptr getElectronicParams() const { return _eParams; }
