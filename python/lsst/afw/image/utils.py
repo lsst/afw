@@ -21,7 +21,6 @@
 #
 
 import re
-import lsst.pex.config as pexConfig
 import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as detection
 from . import imageLib as afwImage
