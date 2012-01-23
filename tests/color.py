@@ -190,13 +190,24 @@ class CalibTestCase(unittest.TestCase):
         tests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                                   lambda : afwImage.Calib(calibs))
 
+def defineSdssFilters():
+    # Initialise filters as used for our tests
+    imageUtils.resetFilters()
+    wavelengths = dict()
+    for name, lambdaEff, aliases in (('u', 355.1, []),
+                                     ('g', 468.6, []),
+                                     ('r', 616.5, []),
+                                     ('i', 748.1, []),
+                                     ('z', 893.1, ['zprime', "z'"]),
+                                     ):
+        wavelengths[name] = lambdaEff
+        imageUtils.defineFilter(name, lambdaEff, alias=aliases)
+    return wavelengths
+
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):
-        # Initialise our filters
-        filterConfigFile = os.path.join(eups.productDir("afw"), "tests", "SdssFilters.config")
-        filterConfig = afwImage.FilterSetConfig.load(filterConfigFile)
-        imageUtils.defineFilters(filterConfig, reset=True)
+        defineSdssFilters()
 
     def tearDown(self):
         pass
@@ -225,18 +236,12 @@ class FilterTestCase(unittest.TestCase):
         #
         # Start by forgetting that we may already have defined filters
         #
-        filterConfigFile = os.path.join(eups.productDir("afw"), "tests", "SdssFilters.config")
-        filterConfig = afwImage.FilterSetConfig.load(filterConfigFile)
-        self.filters = tuple(sorted([f.name for f in filterConfig.filters]))
-        imageUtils.defineFilters(filterConfig, reset=True)
-
-        self.g_lambdaEff = [f.lambdaEff for f in filterConfig.filters if f.name == "g"][0] # used for tests
+        wavelengths = defineSdssFilters()
+        self.filters = tuple(sorted(wavelengths.keys()))
+        self.g_lambdaEff = [lambdaEff for name, lambdaEff in wavelengths.items() if name == "g"][0] # for tests
 
     def defineFilterProperty(self, name, lambdaEff, force=False):
-        filterConfig = afwImage.FilterConfig()
-        filterConfig.name = name
-        filterConfig.lambdaEff = lambdaEff
-        return afwImage.FilterProperty(name, pexConfig.makePropertySet(filterConfig), force);
+        return afwImage.FilterProperty(name, lambdaEff, force);
 
     def testListFilters(self):
         self.assertEqual(afwImage.Filter_getNames(), self.filters)

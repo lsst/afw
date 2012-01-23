@@ -44,18 +44,20 @@ def clipImage(im, minClip, maxClip):
         ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(maxclip))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxclip)
 
-def defineFilters(filterSetConfig, reset=False):
-    """Define filters from a FilterSetConfig"""
-    if reset:
-        afwImage.Filter.reset()
-        afwImage.FilterProperty.reset()
+def resetFilters():
+    """Reset registry of filters and filter properties"""
+    afwImage.Filter.reset()
+    afwImage.FilterProperty.reset()
 
-    for f in filterSetConfig.filters:
-        afwImage.Filter.define(afwImage.FilterProperty(f.name, pexConfig.makePropertySet(f)))
-        if f.alias is not None:
-            for a in f.alias:
-                afwImage.Filter.defineAlias(f.name, a)
-                                                      
+def defineFilter(name, lambdaEff, alias=[], force=False):
+    """Define a filter and its properties in the filter registry"""
+    prop = afwImage.FilterProperty(name, lambdaEff, force)
+    afwImage.Filter.define(prop)
+    if isinstance(alias, basestring):
+        afwImage.Filter.defineAlias(name, alias)
+    else:
+        for a in alias:
+            afwImage.Filter.defineAlias(name, a)
 
 def defineFiltersFromPolicy(filterPolicy, reset=False):
     """Process a Policy and define the filters"""
