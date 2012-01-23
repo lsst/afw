@@ -77,6 +77,7 @@ public:
 private:
 
     friend class detail::Access;
+    friend class RecordBase;
 
     explicit Key(int offset, FieldBase<T> const & fb = FieldBase<T>())
         : FieldBase<T>(fb), _offset(offset) {}

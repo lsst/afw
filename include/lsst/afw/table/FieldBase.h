@@ -11,6 +11,7 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/ndarray.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/coord.h"
@@ -55,7 +56,8 @@ template <typename T>
 struct FieldBase {
 
     typedef T Value;        ///< @brief the type returned by RecordBase::get
-    typedef T & Reference;  ///< @brief the type returned by RecordBase::operator[]
+    typedef T & Reference;  ///< @brief the type returned by RecordBase::operator[] (non-const)
+    typedef T const & ConstReference;  ///< @brief the type returned by RecordBase::operator[] (const)
     typedef T Element;      ///< @brief the type of subfields (the same as the type itself for scalars)
 
     /// @brief Return the number of subfield elements (always one for scalars).
@@ -83,11 +85,13 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Reference getReference(Element * p) const { return *p; }
+    Reference getReference(Element * p, ndarray::Manager::Ptr const &) const { return *p; }
 
-    Value getValue(Element const * p) const { return *p; }
+    ConstReference getConstReference(Element const * p, ndarray::Manager::Ptr const &) const { return *p; }
 
-    void setValue(Element * p, Value v) const { *p = v; }
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const { return *p; }
+
+    void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const { *p = v; }
 
 };
 
@@ -132,14 +136,18 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Value getValue(Element const * p) const { return Value(p[0], p[1]); }
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
+        return Value(p[0], p[1]);
+    }
 
-    void setValue(Element * p, Value const & v) const {
+    void setValue(Element * p, ndarray::Manager::Ptr const &, Value const & v) const {
         p[0] = v.getRa();
         p[1] = v.getDec();
     }
 
-    void setValue(Element * p, afw::coord::Coord const & v) const { setValue(p, v.toIcrs()); }
+    void setValue(Element * p, ndarray::Manager::Ptr const & m, afw::coord::Coord const & v) const {
+        setValue(p, m, v.toIcrs());
+    }
 };
 
 /**
@@ -183,9 +191,9 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Value getValue(Element const * p) const { return Value(p[0], p[1]); }
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const { return Value(p[0], p[1]); }
 
-    void setValue(Element * p, Value const & v) const {
+    void setValue(Element * p, ndarray::Manager::Ptr const &, Value const & v) const {
         p[0] = v.getX();
         p[1] = v.getY();
     }
@@ -225,11 +233,11 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Value getValue(Element const * p) const {
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         return Value(p[0], p[1], p[2]);
     }
 
-    void setValue(Element * p, Value const & v) const {
+    void setValue(Element * p, ndarray::Manager::Ptr const &, Value const & v) const {
         p[0] = v.getIXX();
         p[1] = v.getIYY();
         p[2] = v.getIXY();
@@ -242,8 +250,14 @@ protected:
 template <typename U>
 struct FieldBase< Array<U> > {
 
-    typedef Eigen::Array<U,Eigen::Dynamic,1> Value; ///< @brief the type returned by RecordBase::get
-    typedef Eigen::Map<Value> Reference; ///< @brief the type returned by RecordBase::operator[]
+    typedef lsst::ndarray::Array<U const,1,1> Value; ///< @brief the type returned by RecordBase::get
+
+    /// @brief the type returned by RecordBase::operator[]
+    typedef lsst::ndarray::ArrayRef<U,1,1> Reference;
+
+    /// @brief the type returned by RecordBase::operator[] (const)
+    typedef lsst::ndarray::ArrayRef<U const,1,1> ConstReference;
+
     typedef U Element;  ///< @brief the type of subfields and array elements
 
     /**
@@ -279,28 +293,35 @@ protected:
 
     void stream(std::ostream & os) const { os << ", size=" << _size; }
 
-    Reference getReference(Element * p) const {
-        return Reference(p, _size);
+    Reference getReference(Element * p, ndarray::Manager::Ptr const & m) const {
+        return ndarray::detail::ArrayAccess< Reference >::construct(p, makeCore(m));
     }
 
-    Eigen::Map<Value const> getValue(Element const * p) const {
-        return Eigen::Map<Value const>(p, _size);
+    ConstReference getConstReference(Element const * p, ndarray::Manager::Ptr const & m) const {
+        return ndarray::detail::ArrayAccess< ConstReference >::construct(p, makeCore(m));
     }
 
-    template <typename Derived>
+    Value getValue(Element const * p, ndarray::Manager::Ptr const & m) const {
+        return ndarray::detail::ArrayAccess< Value >::construct(p, makeCore(m));
+    }
+
+    template <typename T, typename Derived>
     void setValue(
-        Element * p, Eigen::ArrayBase<Derived> const & value
+        Element * p, ndarray::Manager::Ptr const &, ndarray::ExpressionBase<Derived> const & value
     ) const {
-        BOOST_STATIC_ASSERT( Derived::IsVectorAtCompileTime );
-        if (value.size() != getSize()) {
+        if (value.template getShape<0>() != _size) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthErrorException,
                 "Incorrect size in array field assignment."
             );
         }
-        for (int i = 0; i < getSize(); ++i) {
-            p[i] = value[i];
-        }
+        for (int i = 0; i < _size; ++i) p[i] = value[i];
+    }
+
+private:
+
+    ndarray::detail::Core<1> makeCore(ndarray::Manager::Ptr const & manager) {
+        return ndarray::detail::Core<1>(ndarray::makeVector(_size), manager);
     }
 
     int _size;
@@ -360,7 +381,7 @@ protected:
 
     void stream(std::ostream & os) const { os << ", size=" << _size; }
 
-    Value getValue(Element const * p) const {
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         Value m(_size, _size);
         for (int i = 0; i < _size; ++i) {
             for (int j = 0; j < _size; ++j) {
@@ -372,7 +393,7 @@ protected:
 
     template <typename Derived>
     void setValue(
-        Element * p, Eigen::MatrixBase<Derived> const & value
+        Element * p, ndarray::Manager::Ptr const &, Eigen::MatrixBase<Derived> const & value
     ) const {
         if (value.rows() != _size || value.cols() != _size) {
             throw LSST_EXCEPT(
@@ -439,7 +460,7 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Value getValue(Element const * p) const {
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
             for (int j = 0; j < SIZE; ++j) {
@@ -451,7 +472,7 @@ protected:
 
     template <typename Derived>
     static void setValue(
-        Element * p, Eigen::MatrixBase<Derived> const & value
+        Element * p, ndarray::Manager::Ptr const &, Eigen::MatrixBase<Derived> const & value
     ) {
         BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == SIZE);
         BOOST_STATIC_ASSERT( Derived::ColsAtCompileTime == SIZE);
@@ -513,7 +534,7 @@ protected:
 
     void stream(std::ostream & os) const {}
 
-    Value getValue(Element const * p) const {
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
             for (int j = 0; j < SIZE; ++j) {
@@ -525,7 +546,7 @@ protected:
 
     template <typename Derived>
     static void setValue(
-        Element * p, Eigen::MatrixBase<Derived> const & value
+        Element * p, ndarray::Manager::Ptr const &, Eigen::MatrixBase<Derived> const & value
     ) {
         BOOST_STATIC_ASSERT( Derived::RowsAtCompileTime == SIZE);
         BOOST_STATIC_ASSERT( Derived::ColsAtCompileTime == SIZE);

@@ -97,12 +97,13 @@ public:
 private:
 
     friend class detail::Access;
+    friend class RecordBase;
 
-    Value getValue(Element const * p) const {
+    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         return (*p) & (Element(1) << _bit);
     }
 
-    void setValue(Element * p, Value v) const { 
+    void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const { 
         if (v) {
             *p |= (Element(1) << _bit);
         } else {

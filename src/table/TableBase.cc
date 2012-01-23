@@ -1,48 +1,61 @@
 // -*- lsst-c++ -*-
 
-#include <cstring>
-
-#include "boost/noncopyable.hpp"
-#include "boost/make_shared.hpp"
-
 #include "lsst/afw/table/RecordBase.h"
 #include "lsst/afw/table/TableBase.h"
-#include "lsst/afw/table/IteratorBase.h"
-#include "lsst/afw/table/SchemaMapper.h"
-#include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace afw { namespace table { namespace detail {
+namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-//----- Copy functor for copying with mapper ----------------------------------------------------------------
+class Block : public ndarray::Manager {
+public:
+    typedef boost::intrusive_ptr<Block> Ptr;
 
-void copyRecord(RecordData const * inputRecord, RecordData * outputRecord, Schema const & schema) {
-    std::memcpy(
-        reinterpret_cast<char *>(outputRecord) + sizeof(RecordData),
-        reinterpret_cast<char const*>(inputRecord) + sizeof(RecordData),
-        schema.getRecordSize() - sizeof(RecordData)
-    );  
-}
-
-struct CopyValue {
-
-    template <typename U>
-    void operator()(Key<U> const & inputKey, Key<U> const & outputKey) const {
-        Access::copyValue(
-            inputKey, _inputRecord,
-            outputKey, _outputRecord
-        );
+    static void * allocate(std::size_t recordSize, ndarray::Manager::Ptr & manager) {
+        Ptr block = boost::static_pointer_cast<Block>(manager);
+        if (!block || block->_next == block->_end) {
+            block = Ptr(new Block(recordSize, TableBase::nRecordsPerBlock));
+            block->_chain = manager;
+            manager = block;
+        }
+        void * r = block->_next;
+        block->_next += recordSize;
+        return r;
     }
 
-    CopyValue(RecordData const * inputRecord, RecordData * outputRecord) :
-        _inputRecord(inputRecord), _outputRecord(outputRecord)
-    {}
-
 private:
-    RecordData const * _inputRecord;
-    RecordData * _outputRecord;
+
+    struct AllocType {
+        double element[2];
+    };
+
+    explicit Block(std::size_t recordSize, std::size_t recordCount) :
+        _mem(new AllocType[(recordSize * recordCount) / sizeof(AllocType)]),
+        _next(reinterpret_cast<char*>(_mem.get())),
+        _end(_next + recordSize * recordCount),
+        _chain()
+    {
+        assert((recordSize * recordCount) % sizeof(AllocType) == 0);
+    }
+
+    boost::scoped_array<AllocType> _mem;
+    char * _next;
+    char * _end;
+    ndarray::Manager::Ptr _chain;
 };
+
+} // anonymous
+
+void TableBase::_initialize(RecordBase & record) const {
+    record._data = Block::allocate(_schema.getRecordSize(), _manager);
+    record._manager = _manager; // manager always points to the most recently-used block.
+}
+
+#if 0
+
+namespace detail {
+
+namespace {
 
 //----- Block definition and implementation -----------------------------------------------------------------
 
@@ -94,13 +107,14 @@ private:
         _recordSize(recordSize),
         _buf(new AllocType[(recordSize * recordCount) / sizeof(AllocType)]),
         _nextLocation(reinterpret_cast<char*>(_buf.get())),
-        _end(_nextLocation + recordSize * recordCount)
+        _end(_nextLocation + recordSize * recordCount),
     {
         assert((recordSize * recordCount) % sizeof(AllocType) == 0);
     }
 
     int _recordSize;
-    boost::scoped_array<AllocType> _buf;
+    boost::scoped_array<AllocType> _buffer;
+    boost::scoped_array<RecordBase*> _records;
     char * _nextLocation;
     char * _end;
 };
@@ -487,5 +501,7 @@ TableBase::TableBase(
 {
     if (capacity > 0) _impl->addBlock(capacity);
 }
+
+#endif
 
 }}} // namespace lsst::afw::table

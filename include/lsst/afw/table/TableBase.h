@@ -3,58 +3,30 @@
 #define AFW_TABLE_TableBase_h_INCLUDED
 
 #include "lsst/base.h"
+#include "lsst/ndarray/Manager.h"
 #include "lsst/afw/table/Schema.h"
-#include "lsst/afw/table/ColumnView.h"
-#include "lsst/afw/table/RecordBase.h"
-#include "lsst/afw/table/IteratorBase.h"
 #include "lsst/afw/table/IdFactory.h"
 
 namespace lsst { namespace afw { namespace table {
 
-class SchemaMapper;
-
-/**
- *  @brief Base class containing most of the implementation for tables.
- *
- *  Final table classes should generally not inherit from TableBase directly,
- *  and instead should inherit from TableInterface.
- *
- *  Most of the implementation of derived table classes is provided here
- *  in the form of protected member functions that will need to be wrapped
- *  into public member functions by derived classes.
- *
- *  Data is shared between records and tables, but the assertion-based
- *  modification flags are not shared.
- */
-class TableBase : protected ModificationFlags {
+class TableBase {
 public:
-
-    typedef IteratorBase Iterator;
-    typedef RecordBase Record;
 
     /// @brief Number of records in each block when capacity is not given explicitly.
     static int nRecordsPerBlock;
 
-    /// @brief Return the schema for the table's fields.  
-    Schema getSchema() const;
-
-    /// @brief Return true if all records are allocated in a single contiguous blocks.
-    bool isConsolidated() const;
-
     /**
-     *  @brief Consolidate the table in-place into a single contiguous block.
+     *  @brief Return a polymorphic deep copy.
      *
-     *  This does not invalidate any existing records or iterators, but existing
-     *  records and iterators will no longer be associated with this table.
-     *
-     *  This will also reallocate the table even if the table is already consolidated.
-     *  
-     *  @param[in] extraCapacity  Number of additional records to allocate space for
-     *                            as part of the same block.  Adding N additional records
-     *                            where N is <= extraCapacity will not cause the table
-     *                            to become unconsolidated.
+     *  Derived classes should reimplement by static-casting the output of _clone to a
+     *  pointer-to-derived.
      */
-    void consolidate(int extraCapacity=0);
+    PTR(TableBase) clone() const { return _clone(); }
+    
+    /// @brief Return the table's schema.
+    Schema const & getSchema() const { return _schema; }
+
+#if 0
 
     /**
      *  @brief Return a strided-array view into the columns of the table.
@@ -63,145 +35,34 @@ public:
      */
     ColumnView getColumnView() const;
 
-    /// @brief Return the number of records in the table.
-    int getRecordCount() const;
+#endif
 
-    /// @brief Disable modifications of the sort defined by the given bit.
-    void disable(ModificationFlags::Bit n) { unsetBit(n); }
-
-    /// @brief Disable all modifications.
-    void makeReadOnly() { unsetAll(); }
-
-    //@{
-    /**
-     *  @brief Remove the record pointed at by the given iterator.
-     *
-     *  After unlinking, the passed iterator can still be dereferenced and the record will remain valid,
-     *  but the result of incrementing the iterator is undefined.
-     */
-    IteratorBase unlink(IteratorBase const & iter) const;
-    //@}
-
-    //@{
-    /// @brief Return begin and end iterators that go through the table in ID order.
-    IteratorBase begin() const;
-    IteratorBase end() const;
-    //@}
-
-    /// @brief Return the record with the given ID or throw NotFoundException.
-    RecordBase operator[](RecordId id) const;
-
-    /// @brief Return an iterator to the record with the given ID or throw NotFoundException.
-    IteratorBase find(RecordId id) const;
-
-    /**
-     *  @brief Shared copy constructor.
-     *
-     *  All aspects of the table except the modification flags are shared between the two tables.
-     *  The modification flags will be copied as well, but can then be changed separately.
-     */
-    TableBase(TableBase const & other) : ModificationFlags(other), _impl(other._impl) {}
-
-    /// Destructor is explicit because class holds a shared_ptr to an incomplete class.
-    ~TableBase();
+    virtual ~TableBase() {}
 
 protected:
 
-    /**
-     *  @brief Construct a null table.
-     *
-     *  A null table is completely unusable; a default constructor is only provided so classes
-     *  that hold a table data member do not have to initialize the table in the member
-     *  initialization list.  To make the null table usable, assign a valid table to it.
-     */
-    TableBase() : _impl() {}
+    /// @brief Clone implementation with noncovariant return types.
+    virtual PTR(TableBase) _clone() const = 0;
 
-    /**
-     *  @brief Standard constructor for TableBase.
-     *
-     *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
-     *  @param[in] capacity          Number of records to pre-allocate space for the first block.
-     *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
-     *                               If empty, defaults to a simple counter that starts at 1.
-     *  @param[in] aux               A pointer containing extra arbitrary data for the table.
-     *  @param[in] flags             Bitflags for assertion-based modification protection (see the
-     *                               ModificationFlags class for more information).
-     */
-    TableBase(
-        Schema const & schema,
-        int capacity,
-        PTR(IdFactory) const & idFactory = PTR(IdFactory)(),
-        PTR(AuxBase) const & aux = PTR(AuxBase)(),
-        ModificationFlags const & flags = ModificationFlags::all()
-    );
+    explicit TableBase(Schema const & schema) : _schema(schema) {}
 
-    TableBase(PTR(detail::TableImpl) const & impl) : _impl(impl) {}
-
-    /**
-     *  @brief Insert an existing record into the table.
-     *
-     *  The optional initial "hint" argument is analogous to the hint argument in std::set::insert
-     *  or std::map::insert; a good hint makes insertion a constant-time operation rather than
-     *  logarithmic.
-     *
-     *  The Schema of the given record must be equal to the Schema of the table.
-     *
-     *  The record will be deep-copied, aside from auxiliary data (which will be shallow-copied).
-     *  If non-unique IDs are encountered, the existing record with that ID will be overwritten.
-     *
-     *  @return an iterator to the record just added (or overwritten).
-     */
-    IteratorBase _insert(IteratorBase const & hint, RecordBase const & record) const;
-
-    /**
-     *  @brief Insert an existing record into the table, using a SchemaMapper to only copy certain fields.
-     *
-     *  The optional initial "hint" argument is analogous to the hint argument in std::set::insert
-     *  or std::map::insert; a good hint makes insertion a constant-time operation rather than
-     *  logarithmic.
-     *
-     *  The mapper's input Schema must match that of the given record, while the output Schema must match
-     *  the input record.
-     *
-     *  The record will be deep-copied, aside from auxiliary data (which will be shallow-copied).
-     *  If non-unique IDs are encountered, the existing record with that ID will be overwritten.
-     *
-     *  @return an iterator to the record just added (or overwritten).
-     */
-    IteratorBase _insert(
-        IteratorBase const & hint, RecordBase const & record, SchemaMapper const & mapper
-    ) const;
-
-    /// @brief Create and add a new record with an ID generated by the table's IdFactory.
-    RecordBase _addRecord(PTR(AuxBase) const & aux = PTR(AuxBase)()) const;
-
-    /// @brief Create and add a new record with an explicit RecordId.
-    RecordBase _addRecord(RecordId id, PTR(AuxBase) const & aux = PTR(AuxBase)()) const;
-
-    /// @brief Return the table's auxiliary data.
-    PTR(AuxBase) & getAux() const;
+    TableBase(TableBase const & other) : _schema(other._schema) {}
 
 private:
-
-    friend class detail::Access;
+    
     friend class RecordBase;
 
-    PTR(detail::TableImpl) _impl;
+    // Called by RecordBase ctor to fill in its _data and _manager members.
+    void _initialize(RecordBase & record) const;
+
+    // Tables may be copy-constructable (and are definitely cloneable), but are not assignable.
+    void operator=(TableBase const & other) {
+        _schema = other._schema;
+    }
+
+    Schema _schema;
+    mutable ndarray::Manager::Ptr _manager;
 };
-
-inline TableBase RecordBase::getTable() const { return TableBase(_table); }
-
-namespace detail {
-
-inline RecordBase Access::addRecord(TableBase const & table, RecordId id) {
-    return table._addRecord(id);
-}
-
-inline RecordBase Access::addRecord(TableBase const & table) {
-    return table._addRecord();
-}
-
-} // namespace detail
 
 }}} // namespace lsst::afw::table
 
