@@ -568,14 +568,12 @@ void Wcs::flipImage(int flipLR, int flipTB) const {
     //If naxis != 2, I'm not sure if any of what follows is correct
     assert(naxis == 2);
     if (flipLR) {
-        for (int i=0; i<naxis; ++i){
-            _wcsInfo->cd[i*naxis] = -_wcsInfo->cd[i*naxis];
-        }
+        _wcsInfo->cd[0] = -_wcsInfo->cd[0];
+        _wcsInfo->cd[2] = -_wcsInfo->cd[2];
     }
     if (flipTB) {
-        for (int i=0; i<naxis; ++i){
-            _wcsInfo->cd[i*naxis + naxis-1] = -_wcsInfo->cd[i*naxis + naxis-1];
-        }
+        _wcsInfo->cd[1] = -_wcsInfo->cd[1];
+        _wcsInfo->cd[3] = -_wcsInfo->cd[3];
     }
 }
 
@@ -600,10 +598,10 @@ void Wcs::rotateImageBy90(int nQuarter) const {
         case 0:
             break;
         case 1:
-            _wcsInfo->cd[0] = c;
-            _wcsInfo->cd[1] = d;
-            _wcsInfo->cd[2] = -a;
-            _wcsInfo->cd[3] = -b;
+            _wcsInfo->cd[0] = -b;
+            _wcsInfo->cd[1] = a;
+            _wcsInfo->cd[2] = -d;
+            _wcsInfo->cd[3] = c;
             break;
         case 2:
             _wcsInfo->cd[0] = -a;
@@ -612,10 +610,10 @@ void Wcs::rotateImageBy90(int nQuarter) const {
             _wcsInfo->cd[3] = -d;
             break;
         case 3:
-            _wcsInfo->cd[0] = -c;
-            _wcsInfo->cd[1] = -d;
-            _wcsInfo->cd[2] = a;
-            _wcsInfo->cd[3] = b;
+            _wcsInfo->cd[0] = b;
+            _wcsInfo->cd[1] = -a;
+            _wcsInfo->cd[2] = d;
+            _wcsInfo->cd[3] = -c;
             break;
     }
 }

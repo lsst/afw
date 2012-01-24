@@ -57,7 +57,6 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
     filterPolicy.mergeDefaults(defPolicy.getDictionary())
 
     for p in filterPolicy.getArray("Filter"):
-        print p.get("name"), p
         afwImage.Filter.define(afwImage.FilterProperty(p.get("name"), p))
         if p.exists("alias"):
             for a in p.getArray("alias"):

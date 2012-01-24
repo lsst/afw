@@ -252,11 +252,13 @@ void cameraGeom::Amp::prepareWcsData(afwImage::Wcs::Ptr wcs) {
             {
                 wcs->flipImage(_flipLR, false);
                 wcs->rotateImageBy90(_nQuarter);
+                break;
             }
         case SENSOR:
             {
                 if( n90 > 0)
                     wcs->rotateImageBy90(n90);
+                break;
             }
         default:
             {
