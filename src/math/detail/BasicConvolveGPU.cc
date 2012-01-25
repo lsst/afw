@@ -50,6 +50,7 @@
 #include "lsst/afw/math/detail/Convolve.h"
 
 #include "lsst/afw/math/detail/ConvolveGPU.h"
+#include "lsst/afw/math/detail/convCUDA.h"
 #include "lsst/afw/math/detail/ImageBuffer.h"
 #include "lsst/afw/math/detail/cudaConvWrapper.h"
 

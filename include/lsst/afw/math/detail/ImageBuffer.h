@@ -32,8 +32,6 @@
  * @ingroup afw
  */
 
-#include "convCUDA.h"
-
 namespace lsst {
 namespace afw {
 namespace math {

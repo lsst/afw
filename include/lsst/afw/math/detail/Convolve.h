@@ -43,15 +43,13 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/ConvolveImage.h"
+#include "lsst/afw/math/detail/GpuExceptions.h"
 
 #define IS_INSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
 
 namespace lsst {
 namespace afw {
 namespace math {
-
-LSST_EXCEPTION_TYPE(GpuMemoryException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuMemoryException)
-LSST_EXCEPTION_TYPE(GpuRuntimeErrorException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuRuntimeErrorException)
 
 namespace detail {
     template <typename OutImageT, typename InImageT>
