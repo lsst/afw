@@ -24,7 +24,6 @@ import re
 import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as detection
 from . import imageLib as afwImage
-from filterConfig import FilterSetConfig
 import numpy
 
 def clipImage(im, minClip, maxClip):
