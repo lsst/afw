@@ -189,7 +189,13 @@ namespace math {
     int warpExposure(
         DestExposureT &destExposure,
         SrcExposureT const &srcExposure,
-        SeparableKernel &warpingKernel, int const interpLength=0);
+        SeparableKernel &warpingKernel, int const interpLength=0,
+        typename DestExposureT::MaskedImageT::SinglePixel padValue=
+            typename DestExposureT::MaskedImageT::SinglePixel(
+                std::numeric_limits<typename DestExposureT::MaskedImageT::SinglePixel>::has_quiet_NaN ?
+                std::numeric_limits<typename DestExposureT::MaskedImageT::SinglePixel>::quiet_NaN() : 0
+                                                    )
+                    );
 
     template<typename DestImageT, typename SrcImageT>
     int warpImage(
@@ -197,7 +203,13 @@ namespace math {
         lsst::afw::image::Wcs const &destWcs,
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,
-        SeparableKernel &warpingKernel, int const interpLength=0);
+        SeparableKernel &warpingKernel, int const interpLength=0,
+        typename DestImageT::SinglePixel padValue=
+            typename DestImageT::SinglePixel(
+                std::numeric_limits<typename DestImageT::SinglePixel>::has_quiet_NaN ?
+                std::numeric_limits<typename DestImageT::SinglePixel>::quiet_NaN() : 0
+                                                    )
+                 );
 
     template<typename DestImageT, typename SrcImageT>
     int warpImage(
@@ -205,16 +217,29 @@ namespace math {
         SrcImageT const &srcImage,
         SeparableKernel &warpingKernel,
         lsst::afw::geom::AffineTransform const &affineTransform,
-        int const interpLength=0);
+        int const interpLength=0,
+        typename DestImageT::SinglePixel padValue=
+            typename DestImageT::SinglePixel(
+                std::numeric_limits<typename DestImageT::SinglePixel>::has_quiet_NaN ?
+                std::numeric_limits<typename DestImageT::SinglePixel>::quiet_NaN() : 0
+                                   )
+                 );
 
 
     template<typename DestImageT, typename SrcImageT>
     int warpCenteredImage(
-                          DestImageT &destImage,
-                          SrcImageT const &srcImage,
-                          SeparableKernel &warpingKernel,
-                          lsst::afw::geom::LinearTransform const &linearTransform,
-                          lsst::afw::geom::Point2D const &centerPixel);
+        DestImageT &destImage,
+        SrcImageT const &srcImage,
+        SeparableKernel &warpingKernel,
+        lsst::afw::geom::LinearTransform const &linearTransform,
+        lsst::afw::geom::Point2D const &centerPixel,
+        int const interpLength=0,
+        typename DestImageT::SinglePixel padValue=
+            typename DestImageT::SinglePixel(
+                std::numeric_limits<typename DestImageT::SinglePixel>::has_quiet_NaN ?
+                std::numeric_limits<typename DestImageT::SinglePixel>::quiet_NaN() : 0
+                                   )
+                         );
     
     namespace details {
         template <typename A, typename B>

@@ -38,7 +38,7 @@
 
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/ellipses.h" 
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/image.h"
 
@@ -113,6 +113,60 @@ afwGeom::LinearTransform cameraGeom::Distortion::computePointTransform(
     return afwGeom::LinearTransform(); // no args means an identity transform
 }
 
+/**
+ * @brief compute the maximum fractional shear expected for a pixel anywhere in a bbox
+ *
+ */
+double cameraGeom::Distortion::computeMaxShear(
+                                               cameraGeom::Detector const &det
+                                              ) {
+
+    afwGeom::Box2I box = det.getAllPixels(); // in pixels
+    // convert center - 1/2width (in mm) to pixels
+    afwGeom::Extent2D xy0mm = afwGeom::Extent2D(det.getCenter()) - det.getSize()*0.5;
+    afwGeom::Extent2D xy0pix = xy0mm/det.getPixelSize();
+    afwGeom::Extent2I xy0 = afwGeom::Extent2I(xy0pix.getX(), xy0pix.getY());
+    
+    box.shift(xy0); // this should be the xy0 of 0,0 pixel in the focal plane in pixel coordinates.
+
+
+    // don't recompute it if we already have it (it was initialized to NaN)
+    if ( isnan(_maxShear) ) {
+        
+        // go to each corner of the box
+        std::vector<afwGeom::Point2I> corners(4);
+        corners[0] = afwGeom::Point2I(box.getMinX(), box.getMinY());
+        corners[1] = afwGeom::Point2I(box.getMinX(), box.getMaxY());
+        corners[2] = afwGeom::Point2I(box.getMaxX(), box.getMinY());
+        corners[3] = afwGeom::Point2I(box.getMaxX(), box.getMaxY());
+
+        double maxShear = 0.0;
+        for (std::vector<afwGeom::Point2I>::iterator it=corners.begin(); it != corners.end(); ++it) {
+        
+            // put a unit circle Quadrupole there
+            geomEllip::Quadrupole q;
+        
+            // shear it with distort() method
+            geomEllip::Quadrupole qShear = this->distort(afwGeom::Point2D(*it), q);
+            geomEllip::Axes axes(qShear);
+            
+            // compute A for the sheared Quad
+            double a = axes.getA();
+        
+            // get the max A
+            if (a > maxShear) {
+                maxShear = a;
+            }
+        }
+        
+        // cache maxShear
+        _maxShear = maxShear;
+    }
+    
+    // return
+    return _maxShear;
+}
+
 /*
  * @brief virtual method computePointTransform to compute the LinearTransform object
  * to transform a Quadrupole
@@ -136,8 +190,9 @@ typename ImageT::Ptr cameraGeom::Distortion::_warp(
     afwGeom::Point2D const &p,          ///< Location of transform                       
     ImageT const &img, ///< Image to be (un)distorted                   
     afwGeom::Point2D const &pix,        ///< Pixel corresponding to location of transform
-    bool forward                        ///< is this forward (undistorted to distorted) or reverse
-                                                                   ) {
+    bool forward,                        ///< is this forward (undistorted to distorted) or reverse
+    typename ImageT::SinglePixel padValue  ///< Set unspecified pixels to this value
+                                                  ) {
 
     int nx = img.getWidth();
     int ny = img.getHeight();
@@ -145,7 +200,8 @@ typename ImageT::Ptr cameraGeom::Distortion::_warp(
     warpImg->setXY0(img.getXY0());
     afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
     afwGeom::LinearTransform linTran = this->computeQuadrupoleTransform(p, forward);
-    afwMath::warpCenteredImage(*warpImg, img, kernel, linTran, pix);
+    int const interpLength = 1;
+    afwMath::warpCenteredImage(*warpImg, img, kernel, linTran, pix, interpLength, padValue);
 
     return warpImg;
 }
@@ -159,9 +215,10 @@ template<typename ImageT>
 typename ImageT::Ptr cameraGeom::Distortion::distort(
     afwGeom::Point2D const &p,          ///< Location of transform                       
     ImageT const &img, ///< Image to be distorted                       
-    afwGeom::Point2D const &pix         ///< Pixel corresponding to location of transform
+    afwGeom::Point2D const &pix,         ///< Pixel corresponding to location of transform
+    typename ImageT::SinglePixel padValue   ///< Set unspecified pixels to this value
                                                                      ) {
-    return _warp(p, img, pix, true);
+    return _warp(p, img, pix, true, padValue);
 }
 
 /*
@@ -173,9 +230,10 @@ template<typename ImageT>
 typename ImageT::Ptr cameraGeom::Distortion::undistort(
     afwGeom::Point2D const &p,           ///< Location of transform                       
     ImageT const &img,  ///< Image to be distorted                       
-    afwGeom::Point2D const &pix          ///< Pixel corresponding to location of transform
+    afwGeom::Point2D const &pix,          ///< Pixel corresponding to location of transform
+    typename ImageT::SinglePixel padValue                ///< Set unspecified pixels to this value
                                                                        ) {
-    return _warp(p, img, pix, false);
+    return _warp(p, img, pix, false, padValue);
 }
 
 
@@ -385,7 +443,7 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computePointTransform
     double x = p.getX();
     double y = p.getY();
     double r = std::sqrt(x*x + y*y);
-    double t = std::atan2(y, x);
+    //double t = std::atan2(y, x);
 
     double rp = (forward) ? _transformR(r, _coeffs) : _iTransformR(r);
 
@@ -411,13 +469,15 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeQuadrupoleTran
 
     double dr = (forward) ? _transformR(r, _dcoeffs) : _iTransformDr(r); 
 
-    Eigen::Matrix2d M, R, Rinv;
+    afwGeom::LinearTransform::Matrix M, R, Rinv;
     M    <<   dr,  0.0,   0.0,  1.0;  // scaling matrix to stretch along x-axis
     R    << cost,  sint, -sint, cost;  // rotate from theta to along x-axis
     Rinv = R.inverse();
-    Eigen::Matrix2d Mp = Rinv*M*R;
+    afwGeom::LinearTransform::Matrix Mp = Rinv*M*R;
+
+    afwGeom::LinearTransform lintran(Mp);
     
-    return afwGeom::LinearTransform(Mp);
+    return lintran;
 }
 
 
@@ -428,13 +488,16 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeQuadrupoleTran
     template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::_warp(afwGeom::Point2D const &p, \
                                                                        afwImage::IMTYPE<TYPE> const &img, \
                                                                        afwGeom::Point2D const &pix, \
-                                                                       bool forward); \
+                                                                       bool foward, \
+                                                                       afwImage::IMTYPE<TYPE>::SinglePixel padValue); \
     template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::distort(afwGeom::Point2D const &p, \
                                                                         afwImage::IMTYPE<TYPE> const &img, \
-                                                                        afwGeom::Point2D const &pix); \
+                                                                         afwGeom::Point2D const &pix, \
+                                                                         afwImage::IMTYPE<TYPE>::SinglePixel padValue); \
     template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::undistort(afwGeom::Point2D const &p, \
                                                                           afwImage::IMTYPE<TYPE> const &img, \
-                                                                           afwGeom::Point2D const &pix);
+                                                                           afwGeom::Point2D const &pix,\
+                                                                           afwImage::IMTYPE<TYPE>::SinglePixel padValue);
 
 INSTANTIATE(Image, float);
 INSTANTIATE(Image, double);

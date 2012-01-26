@@ -53,8 +53,12 @@ public:
     virtual Ptr clone() const = 0;
 
     // accessors for distortion
-    void setDetector(lsst::afw::cameraGeom::Detector::Ptr det) { _detector = det; }
-    lsst::afw::cameraGeom::Detector::Ptr getDetector() { return _detector; }
+    void setDetector(lsst::afw::cameraGeom::Detector::Ptr det) {
+        _detector = det;
+    }
+    lsst::afw::cameraGeom::Detector::Ptr getDetector() {
+        return _detector;
+    }
 
     
     /// Return true iff Psf is valid

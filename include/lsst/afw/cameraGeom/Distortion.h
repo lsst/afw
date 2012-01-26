@@ -54,7 +54,10 @@ public:
     typedef boost::shared_ptr<Distortion> Ptr;
     typedef boost::shared_ptr<const Distortion> ConstPtr;
 
-    Distortion(int lanczosOrder=5) : _lanczosOrder(lanczosOrder) {}
+    Distortion(int lanczosOrder=3) :
+        _lanczosOrder(lanczosOrder),
+        _maxShear(std::numeric_limits<double>::quiet_NaN()) {}
+    
     virtual ~Distortion() {}
 
     //virtual Distortion::Ptr clone() const { return Distortion::Ptr(new Distortion(*this)); }
@@ -77,26 +80,52 @@ public:
     template<typename ImageT>
     typename ImageT::Ptr distort(lsst::afw::geom::Point2D const &p,
                                  ImageT const &img,
-                                 lsst::afw::geom::Point2D const &pix);
+                                 lsst::afw::geom::Point2D const &pix,
+                                 typename ImageT::SinglePixel padValue=
+                                 typename ImageT::SinglePixel(
+                                     std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
+                                     std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
+                                                                 )
+                                );
     template<typename ImageT>
     typename ImageT::Ptr undistort(lsst::afw::geom::Point2D const &p,
                                    ImageT const &img,
-                                   lsst::afw::geom::Point2D const &pix);
+                                   lsst::afw::geom::Point2D const &pix,
+                                   typename ImageT::SinglePixel padValue=
+                                   typename ImageT::SinglePixel(
+                                       std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
+                                       std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
+                                                                   )
+                                  );
 
-
+    double computeMaxShear(Detector const &det);
+    
     // all derived classes must define these two public methods
     virtual lsst::afw::geom::LinearTransform computePointTransform(lsst::afw::geom::Point2D const &p,
                                                                    bool forward);
     virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
                                                                         bool forward);
+
+    virtual std::string prynt() { return std::string("Distortion Base Class"); }
+
+    virtual std::vector<double> getCoeffs() { return std::vector<double>(0); }
+    //std::vector<double> getICoeffs()  {return _icoeffs;  }
+    //std::vector<double> getDCoeffs()  {return _dcoeffs;  }
     
 private: 
     template<typename ImageT>
     typename ImageT::Ptr _warp(lsst::afw::geom::Point2D const &p,
                                ImageT const &img,
                                lsst::afw::geom::Point2D const &pix,
-                               bool forward);
+                               bool forard,
+                               typename ImageT::SinglePixel padValue=
+                               typename ImageT::SinglePixel(
+                                   std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
+                                   std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
+                                                           )
+                               );
     int _lanczosOrder;
+    double _maxShear;
 };
 
 
@@ -110,6 +139,10 @@ public:
                                                                    bool forward);
     virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
                                                                         bool forward);
+    virtual std::string prynt() { return std::string("NullDistortion Derived Class"); }
+    virtual std::vector<double> getCoeffs()   {return std::vector<double>(0);  }
+    //std::vector<double> getICoeffs()  {return _icoeffs;  }
+    //std::vector<double> getDCoeffs()  {return _dcoeffs;  }
 };
 
 /**
@@ -119,7 +152,7 @@ class RadialPolyDistortion : public Distortion {
 public:
     RadialPolyDistortion(std::vector<double> const &coeffs);
 
-#if 0
+#if 1
     // these may be useful for debugging
     std::vector<double> getCoeffs()   {return _coeffs;   }
     std::vector<double> getICoeffs()  {return _icoeffs;  }
@@ -130,6 +163,7 @@ public:
                                                                    bool forward);
     virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
                                                                         bool forward);
+    virtual std::string prynt() { return std::string("RadialPolyDistortion Derived Class"); }
 private:
     int _maxN;
     std::vector<double> _coeffs;

@@ -182,8 +182,8 @@ int afwMath::warpExposure(
                                         ///< All other attributes are left alone (including Detector and Psf)
     SrcExposureT const &srcExposure,    ///< Source exposure
     SeparableKernel &warpingKernel,     ///< Warping kernel; determines warping algorithm
-    int const interpLength              ///< Distance over which WCS can be linearily interpolated    
-    )
+    int const interpLength,              ///< Distance over which WCS can be linearily interpolated    
+    typename DestExposureT::MaskedImageT::SinglePixel padValue) ///< use this value for undefined pixels)
 {
     if (!destExposure.hasWcs()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "destExposure has no Wcs");
@@ -196,7 +196,8 @@ int afwMath::warpExposure(
     destExposure.setCalib(calibCopy);
     destExposure.setFilter(srcExposure.getFilter());
     return warpImage(mi, *destExposure.getWcs(),
-                     srcExposure.getMaskedImage(), *srcExposure.getWcs(), warpingKernel, interpLength);
+                     srcExposure.getMaskedImage(), *srcExposure.getWcs(), warpingKernel, interpLength,
+                     padValue);
 }
 
 
@@ -249,16 +250,19 @@ namespace {
                                      ) :
             SrcPosFunctor(),
             _destXY0(destXY0),
-            _affineTransform(affineTransform.invert()) {}
+            _affineTransform() {
+            _affineTransform = affineTransform.invert();
+        }
 
         virtual afwGeom::Point2D operator()(int destCol, int destRow) const {
             double const col = afwImage::indexToPosition(destCol + _destXY0[0]);
             double const row = afwImage::indexToPosition(destRow + _destXY0[1]);
-            return _affineTransform(afwGeom::Point2D(col, row));
+            afwGeom::Point2D p = _affineTransform(afwGeom::Point2D(col, row));
+            return p;
         }
     private:
         afwGeom::Point2D const &_destXY0;
-        afwGeom::AffineTransform const &_affineTransform;
+        afwGeom::AffineTransform _affineTransform;
     };
 
 
@@ -299,9 +303,10 @@ namespace {
         SrcImageT const &srcImage,          ///< source %image
         afwMath::SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
         SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
-        int const interpLength              ///< Distance over which WCS can be linearily interpolated
+        int const interpLength,              ///< Distance over which WCS can be linearily interpolated
             ///< 0 means no interpolation and uses an optimized branch of the code
             ///< 1 also performs no interpolation but it runs the interpolation code branch
+        typename DestImageT::SinglePixel padValue ///< value to use for undefined pixels
         )
     {
     
@@ -328,10 +333,14 @@ namespace {
         int const destHeight = destImage.getHeight();
         
         pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
-    
-        typename DestImageT::SinglePixel const edgePixel = afwMath::edgePixel<DestImageT>(
-            typename afwImage::detail::image_traits<DestImageT>::image_category()
-        );
+
+        typename DestImageT::SinglePixel edgePixel = padValue;
+        //if ( isnan(padValue.image()) ) {
+        //    edgePixel = afwMath::edgePixel<DestImageT>(
+        //                                               typename afwImage::detail::image_traits<DestImageT>::image_category());
+        //} else {
+        //    edgePixel = padValue;
+        //}
         
         std::vector<double> kernelXList(kernelWidth);
         std::vector<double> kernelYList(kernelHeight);
@@ -621,14 +630,15 @@ int afwMath::warpImage(
     SrcImageT const &srcImage,          ///< source %image
     afwImage::Wcs const &srcWcs,        ///< WCS of source %image
     SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
-    int const interpLength              ///< Distance over which WCS can be linearily interpolated
+    int const interpLength,             ///< Distance over which WCS can be linearily interpolated
         ///< 0 means no interpolation and uses an optimized branch of the code
         ///< 1 also performs no interpolation but it runs the interpolation code branch
+    typename DestImageT::SinglePixel padValue          ///< Set undefined pixels to this value
     )
 {
     afwGeom::Point2D const destXY0(destImage.getXY0());
     WcsSrcPosFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
-    return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength);
+    return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength, padValue);
 }
 
 
@@ -638,14 +648,15 @@ int afwMath::warpImage(
     SrcImageT const &srcImage,                  ///< source %image
     SeparableKernel &warpingKernel,             ///< warping kernel; determines warping algorithm
     afwGeom::AffineTransform const &affineTransform, ///< affine transformation to apply
-    int const interpLength                      ///< Distance over which WCS can be linearily interpolated
-        ///< 0 means no interpolation and uses an optimized branch of the code
-        ///< 1 also performs no interpolation but it runs the interpolation code branch
+    int const interpLength,                      ///< Distance over which WCS can be linearily interpolated
+    ///< 0 means no interpolation and uses an optimized branch of the code
+    ///< 1 also performs no interpolation but it runs the interpolation code branch
+    typename DestImageT::SinglePixel padValue          ///< Set undefined pixels to this value
                       )
 {
     afwGeom::Point2D const destXY0(destImage.getXY0());
     AffineTransformSrcPosFunctor const computeSrcPos(destXY0, affineTransform);
-    return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength);
+    return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength, padValue);
 }
 
 
@@ -655,7 +666,9 @@ int afwMath::warpCenteredImage(
     SrcImageT const &srcImage,                  ///< source %image
     SeparableKernel &warpingKernel,             ///< warping kernel; determines warping algorithm
     afwGeom::LinearTransform const &linearTransform, ///< linear transformation to apply
-    afwGeom::Point2D const &centerPixel         ///< pixel corresponding to location of linearTransform
+    afwGeom::Point2D const &centerPixel,         ///< pixel corresponding to location of linearTransform
+    int const interpLength,
+    typename DestImageT::SinglePixel padValue                  ///< set undefined pixels to this value
                       )
 {
 
@@ -682,8 +695,8 @@ int afwMath::warpCenteredImage(
     afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
     
     // now warp
-    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran);
-
+    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran, interpLength, padValue);
+    
     // fix the origin and we're done.
     destImage.setXY0(srcImage.getXY0());
     
@@ -707,39 +720,48 @@ int afwMath::warpCenteredImage(
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         SeparableKernel &warpingKernel,                                 \
         afwGeom::LinearTransform const &linearTransform,                \
-        afwGeom::Point2D const &centerPixel); NL \
+        afwGeom::Point2D const &centerPixel,                            \
+        int const interpLength,                                         \
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpCenteredImage(                                    \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         SeparableKernel &warpingKernel,                                 \
         afwGeom::LinearTransform const &linearTransform,                \
-        afwGeom::Point2D const &centerPixel); NL \
+        afwGeom::Point2D const &centerPixel,                            \
+        int const interpLength,                                         \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         SeparableKernel &warpingKernel,                                 \
-        afwGeom::AffineTransform const &affineTransform,  int const interpLength); NL \
+        afwGeom::AffineTransform const &affineTransform,  int const interpLength,\
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL               \
     template int afwMath::warpImage(                                    \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         SeparableKernel &warpingKernel,                                 \
-        afwGeom::AffineTransform const &affineTransform,  int const interpLength); NL \
+        afwGeom::AffineTransform const &affineTransform,  int const interpLength, \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL         \
     template int afwMath::warpImage(                                    \
         IMAGE(DESTIMAGEPIXELT) &destImage,  \
         afwImage::Wcs const &destWcs,          \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        SeparableKernel &warpingKernel, int const interpLength); NL    \
+        SeparableKernel &warpingKernel, int const interpLength,\
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL      \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        SeparableKernel &warpingKernel, int const interpLength); NL    \
+        SeparableKernel &warpingKernel, int const interpLength,        \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL        \
     template int afwMath::warpExposure(                                \
         EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
-        SeparableKernel &warpingKernel, int const interpLength);
+        SeparableKernel &warpingKernel, int const interpLength,\
+        EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue);
 
 
 

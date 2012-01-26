@@ -9,6 +9,7 @@
 #include <limits>
 #include <typeinfo>
 #include <cmath>
+#include "boost/pointer_cast.hpp"
 #include "lsst/afw/detection/Psf.h"
 
 /************************************************************************************************************/
@@ -112,26 +113,15 @@ Psf::Image::Ptr Psf::doComputeImage(
         bool normalizePeak,                    ///< normalize the image to have a maximum value of 1.0
         bool distort                           ///< Distort the PSF according the Distortion object
                                            ) const {
+
     afwMath::Kernel::ConstPtr kernel = getKernel(color);
+    
     if (!kernel) {
         throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
     }
+    
     int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
     int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
-
-    // we'll need some extra edge buffer to pull in pixels outside width,height
-    int edge = 0;
-    if (false) { //distort && _detector && _detector->getDistortion()) {
-        cameraGeom::Distortion::Ptr distortion = _detector->getDistortion();
-        afwGeom::Point2D diagonal(ccdXY.getX()+width/2, ccdXY.getY()+height/2);
-        afwGeom::Extent2D warpedDiagonal(distortion->distort(diagonal) - distortion->distort(ccdXY));
-        int dx = abs(warpedDiagonal.getX() - width/2);
-        int dy = abs(warpedDiagonal.getY() - height/2);
-        edge = (dx > dy) ? dx : dy;
-        edge += distortion->getLanczosOrder() + 1;
-        width += 2*edge;
-        height += 2*edge;
-    }
     
     Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
         geom::Extent2I(width, height)
@@ -139,8 +129,9 @@ Psf::Image::Ptr Psf::doComputeImage(
     try {
         kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
     } catch(lsst::pex::exceptions::InvalidParameterException &e) {
+
         // OK, they didn't like the size of *im.  Compute a "native" image (i.e. the size of the Kernel)
-        afwGeom::Extent2I kwid = kernel->getDimensions(); // + afwGeom::Extent2I(2*edge, 2*edge);
+        afwGeom::Extent2I kwid = kernel->getDimensions();
         Psf::Image::Ptr native_im = boost::make_shared<Psf::Image>(kwid);
         kernel->computeImage(*native_im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
         // copy the native image into the requested one
@@ -176,6 +167,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         im->setXY0(snative_im.getX0() + (x0.second - x0.first),
                    snative_im.getY0() + (y0.second - y0.first));
     }
+    
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?
     //
@@ -188,21 +180,31 @@ Psf::Image::Ptr Psf::doComputeImage(
     std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true);
     
     if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
-        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
-        unsigned int const warpBuffer = 5; // Buffer to use in warping        
+        std::string const warpAlgorithm = "lanczos3"; // Algorithm to use in warping
+        unsigned int const warpBuffer = 3; // Buffer to use in warping        
         im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
     }
     im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
                ir_dy.first - kernel->getCtrY() + (ir_dy.second <= 0.5 ? 0 : 1));
 
+            
     // distort the image according to the camera distortion
     if (distort && _detector && _detector->getDistortion()) {
-        afwGeom::Point2D pBoreSight = _detector->getPositionFromPixel(ccdXY);
+        
         cameraGeom::Distortion::Ptr distortion = _detector->getDistortion();
-        Psf::Image::Ptr overSizeImg = distortion->distort(pBoreSight, *im, ccdXY);
-        return overSizeImg;
-        //afwGeom::Box2I bbox(afwGeom::Point2I(edge, edge), afwGeom::Extent2I(width-2*edge, height-2*edge));
-        //return typename Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
+        int lanc = distortion->getLanczosOrder();
+        int edge = abs(0.5*((height > width) ? height : width) *
+                       (1.0 - distortion->computeMaxShear(*_detector)));
+        edge += lanc;
+        
+        afwGeom::Extent2D eBoreSight(_detector->getPositionFromPixel(ccdXY));
+        eBoreSight /= _detector->getPixelSize();
+        afwGeom::Point2D pBoreSight(eBoreSight);
+        Psf::Image::SinglePixel padValue(0.0);
+        Psf::Image::Ptr overSizeImg = distortion->distort(pBoreSight, *im, ccdXY, padValue);
+        afwGeom::Box2I bbox(afwGeom::Point2I(edge, edge), afwGeom::Extent2I(width-2*edge, height-2*edge));
+        
+        return Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
     } else {
         return im;
     }

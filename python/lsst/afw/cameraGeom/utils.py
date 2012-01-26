@@ -176,7 +176,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
     if not ccdPol:
         raise("No valid CCD policy found")
     pixelSize = ccdPol.get("pixelSize")
-
+    
     nCol = ccdPol.get("nCol")
     nRow = ccdPol.get("nRow")
     ccdType = ccdPol.get("ptype")
