@@ -7,21 +7,23 @@
 
 #include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/lexical_cast.hpp"
-#include "boost/compressed_pair.hpp"
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/table/io.h"
 #include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/io/FitsWriter.h"
+#include "lsst/afw/table/io/FitsReader.h"
 
 namespace lsst { namespace afw { namespace table {
 
 template <typename BaseT>
-class SetIterator : public boost::iterator<SetIterator,BaseT,typename BaseT::value_type::element_type> {
+class SetIterator : public boost::iterator_adaptor<SetIterator<BaseT>, BaseT,
+                                                   typename BaseT::value_type::second_type::element_type>
+{
 public:
 
-    typedef typename BaseT::value_type::second_type pointer;
+    typedef typename BaseT::value_type::second_type::element_type pointer;
 
     SetIterator() {}
 
@@ -30,7 +32,8 @@ public:
 
     explicit SetIterator(BaseT const & base) : SetIterator::iterator_adaptor_(base) {}
 
-    operator pointer() const { return this->base()->second; }
+    template <typename RecordT>
+    operator PTR(RecordT) () const { return this->base()->second; }
 
     template <typename RecordT>
     SetIterator & operator=(PTR(RecordT) const & other) const {
@@ -46,13 +49,15 @@ public:
 
 private:
     friend class boost::iterator_core_access;
-    typename BaseT::value_type::element_type & dereference() const { return *this->base()->second; }
+    typename BaseT::value_type::second_type::element_type & dereference() const {
+        return *this->base()->second;
+    }
 };
 
 template <typename RecordT, typename TableT = typename RecordT::Table,
           typename KeyT = RecordId, typename CompareT = std::less<KeyT> >
 class Set {
-    typedef std::map<KeyT,PTR(RecordT),KeyT,CompareT> Internal;
+    typedef std::map<KeyT,PTR(RecordT),CompareT> Internal;
 public:
 
     typedef RecordT Record;
@@ -68,12 +73,11 @@ public:
     typedef SetIterator<typename Internal::iterator> iterator;
     typedef SetIterator<typename Internal::const_iterator> const_iterator;
 
-    typedef RecordSourceT<Set> RecordSource;
-    typedef RecordSinkT<Set> RecordSource;
-
     PTR(TableT) getTable() const { return _table; }
 
-    explicit Set(PTR(TableT) const & table, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
+    Schema const getSchema() const { return _table->getSchema(); }
+
+    Set(PTR(TableT) const & table, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
         _key(key), _table(table), _internal(compare)
     {}
 
@@ -81,10 +85,10 @@ public:
     Set(
         PTR(TableT) const & table, Key<KeyT> const & key,
         InputIterator first, InputIterator last,
-        bool deep=false, CompareT const & compare = CompareT()
+        bool deep = false, CompareT const & compare = CompareT()
     ) : _key(key), _table(table), _internal(compare)
     {
-        // TODO
+        insert(this->end(), first, last, deep);
     } 
 
     Set(Set const & other) : _key(other._key), _table(other._table), _internal(other._internal) {}
@@ -98,18 +102,26 @@ public:
         return *this;
     }
 
+    void writeFits(std::string const & filename) const {
+        io::FitsWriter::apply(filename, *this);
+    }
+
+    static Set readFits(std::string const & filename) {
+        return io::FitsReader::apply<Set>(filename);
+    }
+
     iterator begin() { return iterator(_internal.begin()); }
     iterator end() { return iterator(_internal.end()); }
 
-    const_iterator begin() const { const_iterator(_internal.begin()); }
-    const_iterator end() const { const_iterator(_internal.end()); }
+    const_iterator begin() const { return const_iterator(_internal.begin()); }
+    const_iterator end() const { return const_iterator(_internal.end()); }
 
     bool empty() const { return _internal.empty(); }
     size_type size() const { return _internal.size(); }
     size_type max_size() const { return _internal.max_size(); }
 
     reference operator[](key_type k) const {
-        Internal::const_iterator i = _internal.find(k);
+        typename Internal::const_iterator i = _internal.find(k);
         if (i == _internal.end()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::NotFoundException,
@@ -121,16 +133,16 @@ public:
 
     PTR(RecordT) const get(key_type k) const {
         PTR(RecordT) p;
-        Internal::const_iterator i = _internal.find(k);
+        typename Internal::const_iterator i = _internal.find(k);
         if (i != _internal.end()) p = i->second;
         return p;
     }
 
     std::pair<iterator,bool> insert(Record const & r) {
         PTR(RecordT) p = r._clone(_table);
-        key_type k = p->get(_key.first);
+        key_type k = p->get(_key);
         std::pair<typename Internal::iterator, bool> t = _internal.insert(std::make_pair(k, p));
-        return std::pair<iterator,bool>(iterator(t.first), t.second)
+        return std::pair<iterator,bool>(iterator(t.first), t.second);
     }
 
     std::pair<iterator,bool> insert(PTR(RecordT) const & p) {
@@ -140,14 +152,14 @@ public:
                 "Record to insert must be associated with the container's table."
             );
         }
-        key_type k = p->get(_key.first);
+        key_type k = p->get(_key);
         std::pair<typename Internal::iterator, bool> t = _internal.insert(std::make_pair(k, p));
-        return std::pair<iterator,bool>(iterator(t.first), t.second)
+        return std::pair<iterator,bool>(iterator(t.first), t.second);
     }
 
     iterator insert(iterator pos, Record const & r) {
         PTR(RecordT) p = r._clone(_table);
-        key_type k = p->get(_key.first);
+        key_type k = p->get(_key);
         return iterator(_internal.insert(pos.base(), std::make_pair(k, p)));
     }
 
@@ -158,7 +170,7 @@ public:
                 "Record to insert must be associated with the container's table."
             );
         }
-        key_type k = p->get(_key.first);
+        key_type k = p->get(_key);
         return iterator(_internal.insert(pos.base(), std::make_pair(k, p)));
     }
 

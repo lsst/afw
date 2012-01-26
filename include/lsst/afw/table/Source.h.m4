@@ -34,11 +34,11 @@ m4def(`DECLARE_CENTROID_GETTERS', `DECLARE_SLOT_GETTERS(`', `Centroid', `Cov')')
 m4def(`DECLARE_SHAPE_GETTERS', `DECLARE_SLOT_GETTERS(`', `Shape', `Cov')')dnl
 m4def(`DEFINE_SLOT_GETTERS',
 `inline $2::MeasValue SourceRecord::get$1$2() const {
-    return get(getTable()->get$1$2Key());
+    return this->get(getTable()->get$1$2Key());
 }
 
 inline $2::ErrValue SourceRecord::get$1$2$3() const {
-    return get(getTable()->get$1$2$3Key());
+    return this->get(getTable()->get$1$2$3Key());
 }
 ')dnl
 m4def(`DEFINE_FLUX_GETTERS', `DEFINE_SLOT_GETTERS($1, `Flux', `Err')')dnl
@@ -48,7 +48,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
 `/**
      * @brief Set the measurement used for the $1$2 slot using Keys.
      */
-    void define$1$2($2::MeasKey const & meas, $2::ErrKey const & err)  const {
+    void define$1$2($2::MeasKey const & meas, $2::ErrKey const & err) {
         _slot$2$4 = KeyPair<$2>(meas, err);
     }
 
@@ -58,7 +58,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *  This requires that the measurement adhere to the convention of having
      *  "<name>" and "<name>.translit($3, `A-Z', `a-z')" fields.
      */
-    void define$1$2(std::string const & name) const {
+    void define$1$2(std::string const & name) {
         Schema schema = getSchema();
         _slot$2$4 = KeyPair<$2>(schema[name], schema[name]["translit($3, `A-Z', `a-z')"]);
     }
@@ -68,24 +68,10 @@ m4def(`DECLARE_SLOT_DEFINERS',
         return getSchema().find(_slot$2$4.meas).field.getName();
     }
 
-    /**
-     *  @brief Return the key used for the $1$2 slot.
-     *
-     *  If performance is critical it may be faster to get and cache this
-     *  key locally rather than use the SourceRecord getters; looking up
-     *  the key each time requires an additional function call that
-     *  cannot be inlined.
-     */
+    /// @brief Return the key used for the $1$2 slot.
     $2::MeasKey get$1$2Key() const { return _slot$2$4.meas; }
 
-    /**
-     *  @brief Return the key used for $1$2 slot error or covariance.
-     *
-     *  If performance is critical it may be faster to get and cache this
-     *  key locally rather than use the SourceRecord getters, as looking up
-     *  the key each time requires an additional function call that
-     *  cannot be inlined.
-     */
+    /// @brief Return the key used for $1$2 slot error or covariance.
     $2::ErrKey get$1$2$3Key() const { return _slot$2$4.err; }
 ')dnl
 m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `Err', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
@@ -93,11 +79,17 @@ m4def(`DECLARE_CENTROID_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Centroid', `Cov',
 m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `Cov', `')')dnl
 #ifndef AFW_TABLE_Source_h_INCLUDED
 #define AFW_TABLE_Source_h_INCLUDED
+
+#include "boost/array.hpp"
+#include "boost/type_traits/is_convertible.hpp"
+
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/RecordBase.h"
 #include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/IdFactory.h"
+#include "lsst/afw/table/Set.h"
+#include "lsst/afw/table/io/FitsWriter.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -166,8 +158,8 @@ public:
     RecordId getId() const;
     void setId(RecordId id);
 
-    RecordId getParentId() const;
-    void setParentId(RecordId id);
+    RecordId getParent() const;
+    void setParent(RecordId id);
 
     float getSky() const;
     void setSky(float v);
@@ -195,12 +187,12 @@ public:
 
 protected:
 
-    SourceRecord(PTR(SourceTable) const & table) : RecordBase(table) {}
+    SourceRecord(PTR(SourceTable) const & table);
 
     virtual void _assign(RecordBase const & other);
 
 private:
-    PTR(footprint) _footprint;
+    PTR(Footprint) _footprint;
 };
 
 /**
@@ -244,7 +236,9 @@ public:
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
-    static bool checkSchema(Schema const & other)
+    static bool checkSchema(Schema const & other) {
+        return other.contains(getMinimalSchema().schema);
+    }
 
     //@{
     /**
@@ -257,7 +251,7 @@ public:
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
 
     /// @brief Key for the parent ID.
-    static Key<RecordId> getParentIdKey() { return getMinimalSchema().parentId; }
+    static Key<RecordId> getParentKey() { return getMinimalSchema().parent; }
 
     /// @brief Key for the sky background at the location of the source.
     static Key<float> getSkyKey() { return getMinimalSchema().sky; }
@@ -270,11 +264,17 @@ public:
 
     //@}
 
+    /// @brief Return the object that generates IDs for the table.
+    IdFactory & getIdFactory() { return *_idFactory; }
+
+    /// @brief Return the object that generates IDs for the table.
+    IdFactory const & getIdFactory() const { return *_idFactory; }
+
     /// @brief Return the flexible metadata associated with the source table.
     PTR(daf::base::PropertyList) getMetadata() const { return _metadata; }
 
     /// @brief Set the flexible metadata associated with the source table.
-    void setMetadata(PTR(daf::base::PropertyList) const & metadata) const { _metadata = metadata; }
+    void setMetadata(PTR(daf::base::PropertyList) const & metadata) { _metadata = metadata; }
 
     /// @copydoc TableBase::clone
     PTR(SourceTable) clone() const { return boost::static_pointer_cast<SourceTable>(_clone()); }
@@ -298,13 +298,12 @@ public:
     DECLARE_FLUX_DEFINERS(`Inst')
     DECLARE_CENTROID_DEFINERS
     DECLARE_SHAPE_DEFINERS
-
 protected:
 
     SourceTable(
         Schema const & schema,
-        PTR(daf::base::PropertyList) const & metadata = PTR(daf::base::PropertyList)(),
-        PTR(IdFactory) const & idFactory = PTR(IdFactory)()
+        PTR(daf::base::PropertyList) const & metadata,
+        PTR(IdFactory) const & idFactory
     );
 
     SourceTable(SourceTable const & other);
@@ -314,27 +313,43 @@ private:
     struct MinimalSchema {
         Schema schema;
         Key<RecordId> id;
-        Key<RecordId> parentId;
+        Key<RecordId> parent;
         Key<float> sky;
         Key<float> skyErr;
         Key<Coord> coord;
+
+        MinimalSchema();
     };
     
     static MinimalSchema & getMinimalSchema();
 
-    friend class detail::Access; // to expose FITS I/O to container classes
+    friend class io::FitsWriter;
 
-    template <typename ContainerT>
-    static void readFits(std::string const & filename, ContainerT & container);
-
-    template <typename ContainerT>
-    static void writeFits(std::string const & filename, ContainerT const & container);
+    virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
 
     PTR(daf::base::PropertyList) _metadata;
     PTR(IdFactory) _idFactory;
-    KeyPair<Flux> _slotFlux[N_FLUX_SLOTS];
+    boost::array< KeyPair<Flux>, N_FLUX_SLOTS > _slotFlux;
     KeyPair<Centroid> _slotCentroid;
     KeyPair<Shape> _slotShape;
+};
+
+template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table>
+class SourceSet : public Set<RecordT,TableT> {
+    BOOST_STATIC_ASSERT( (boost::is_convertible<RecordT*,SourceRecord const*>::value) );
+public:
+    
+    explicit SourceSet(PTR(TableT) const & table) : Set<RecordT,TableT>(table, SourceTable::getIdKey()) {}
+
+    template <typename InputIterator>
+    SourceSet(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
+        Set<RecordT,TableT>(table, SourceTable::getIdKey(), first, last, deep)
+    {}
+
+    static SourceSet readFits(std::string const & filename) {
+        return io::FitsReader::apply<SourceSet>(filename);
+    }
+
 };
 
 DEFINE_FLUX_GETTERS(`Psf')
@@ -347,21 +362,21 @@ DEFINE_SHAPE_GETTERS
 inline RecordId SourceRecord::getId() const { return get(SourceTable::getIdKey()); }
 inline void SourceRecord::setId(RecordId id) { set(SourceTable::getIdKey(), id); }
 
-inline RecordId getParentId() const { return get(SourceTable::getParentIdKey()); }
-inline void setParentId(RecordId id) { set(SourceTable::getParentIdKey(), id); }
+inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
+inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
 
-inline float getSky() const { return get(SourceTable::getSkyKey()); }
-inline void setSky(float v) { set(SourceTable::getSkyKey(), v); }
+inline float SourceRecord::getSky() const { return get(SourceTable::getSkyKey()); }
+inline void SourceRecord::setSky(float v) { set(SourceTable::getSkyKey(), v); }
 
-inline float getSkyErr() const { return get(SourceTable::getSkyErrKey()); }
-inline void setSkyErr(float v) { set(SourceTable::getSkyErrKey(), v); }
+inline float SourceRecord::getSkyErr() const { return get(SourceTable::getSkyErrKey()); }
+inline void SourceRecord::setSkyErr(float v) { set(SourceTable::getSkyErrKey(), v); }
 
-inline IcrsCoord getCoord() const { return get(SourceTable::getCoordKey()); }
-inline void setCoord(IcrsCoord const & coord) { set(SourceTable::getCoordKey(), coord); }
-inline void setCoord(Coord const & coord) { set(SourceTable::getCoordKey(), coord); }
+inline IcrsCoord SourceRecord::getCoord() const { return get(SourceTable::getCoordKey()); }
+inline void SourceRecord::setCoord(IcrsCoord const & coord) { set(SourceTable::getCoordKey(), coord); }
+inline void SourceRecord::setCoord(Coord const & coord) { set(SourceTable::getCoordKey(), coord); }
 
-inline Angle getRa() const { return get(SourceTable::getCoordKey().getRa()); }
-inline Angle getDec() const { return get(SourceTable::getCoordKey().getDec()); }
+inline Angle SourceRecord::getRa() const { return get(SourceTable::getCoordKey().getRa()); }
+inline Angle SourceRecord::getDec() const { return get(SourceTable::getCoordKey().getDec()); }
 
 }}} // namespace lsst::afw::table
 

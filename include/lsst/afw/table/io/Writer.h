@@ -3,11 +3,11 @@
 #define AFW_TABLE_IO_Writer_h_INCLUDED
 
 #include "lsst/base.h"
-#include "lsst/afw/table/io/RecordSource.h"
 
 namespace lsst { namespace afw { namespace table {
 
 class TableBase;
+class RecordBase;
 
 namespace io {
 
@@ -17,14 +17,17 @@ public:
     /// @brief Load an on-disk table into a container.
     template <typename ContainerT>
     void write(ContainerT const & container) {
-        detail::RecordSourceT<ContainerT> source(container);
-        _write(container.getTable(), source);
+        _writeTable(container.getTable());
+        for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
+            _writeRecord(*i);
+        }
     }
     
     virtual ~Writer() {}
 
 protected:
-    virtual void _write(CONST_PTR(TableBase) const & table, RecordSource & source) = 0;
+    virtual void _writeTable(CONST_PTR(TableBase) const & table) = 0;
+    virtual void _writeRecord(RecordBase const & record) = 0;
 };
 
 }}}} // namespace lsst::afw::table::io

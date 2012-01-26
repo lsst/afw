@@ -65,13 +65,19 @@ public:
 
 protected:
 
-    Schema _readSchema(int nCols=-1) const;
+    virtual Schema _readSchema(int nCols=-1);
 
-    virtual PTR(TableBase) _readTable();
+    virtual PTR(TableBase) _readTable(Schema const & schema);
 
-    virtual void _readRecords(PTR(TableBase) const & table, RecordSink & sink);
+    virtual PTR(RecordBase) _readRecord(PTR(TableBase) const & table);
+
+    struct ProcessRecords;
 
     Fits * _fits;
+    std::size_t _row;
+private:
+    std::size_t _nRows;
+    boost::shared_ptr<ProcessRecords> _processor;
 };
 
 }}}} // namespace lsst::afw::table::io

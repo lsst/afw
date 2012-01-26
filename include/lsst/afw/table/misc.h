@@ -33,6 +33,7 @@ template <typename T> class Array;
 template <typename T> class Covariance;
 class Flag;
 typedef lsst::afw::coord::Coord Coord;
+typedef lsst::afw::coord::IcrsCoord IcrsCoord;
 typedef lsst::afw::geom::Angle Angle;
 //@}
 

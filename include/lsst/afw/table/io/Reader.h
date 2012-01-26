@@ -3,7 +3,6 @@
 #define AFW_TABLE_IO_Reader_h_INCLUDED
 
 #include "lsst/base.h"
-#include "lsst/afw/table/io/RecordSink.h"
 
 namespace lsst { namespace afw { namespace table { 
 
@@ -17,8 +16,9 @@ public:
     /// @brief Load an on-disk table into a container.
     template <typename ContainerT>
     ContainerT read() {
+        Schema schema = _readSchema();
         PTR(typename ContainerT::Table) table 
-            = boost::dynamic_pointer_cast<typename ContainerT::Table>(_readTable());
+            = boost::dynamic_pointer_cast<typename ContainerT::Table>(_readTable(schema));
         if (!table) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::RuntimeErrorException,
@@ -26,8 +26,14 @@ public:
             );
         }
         ContainerT container(table);
-        detail::RecordSinkT<ContainerT> sink(container);
-        _readRecords(table, sink);
+        PTR(RecordBase) record = _readRecord(table);
+        while (record) {
+            container.insert(
+                container.end(),
+                boost::static_pointer_cast<typename ContainerT::Record>(record)
+            );
+            record = _readRecord(table);
+        }
         return container;
     }
     
@@ -35,9 +41,11 @@ public:
 
 protected:
     
-    virtual PTR(TableBase) _readTable() = 0;
+    virtual Schema _readSchema(int nCols=-1) = 0;
 
-    virtual void _readRecords(PTR(TableBase) const & table, RecordSink & sink) = 0;
+    virtual PTR(TableBase) _readTable(Schema const & schema) = 0;
+
+    virtual PTR(RecordBase) _readRecord(PTR(TableBase) const & table) = 0;
 };
 
 }}}} // namespace lsst::afw::table::io

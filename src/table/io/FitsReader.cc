@@ -21,8 +21,6 @@ namespace {
 
 typedef FitsReader::Fits Fits;
 
-//----- code for reading FITS headers -----------------------------------------------------------------------
-
 /*
  *  We read FITS headers in two stages - first we read all the information we care about into
  *  a temporary structure (FitsSchema) we can access more easily than a raw FITS header,
@@ -256,56 +254,6 @@ struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
     int flagCol;
 };
 
-//----- code to read FITS records ---------------------------------------------------------------------------
-
-struct ProcessReadData {
-
-    template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
-        if (col == flagCol) ++col;
-        fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
-        ++col;
-    }
-
-    void operator()(SchemaItem<Flag> const & item) const {
-        record->set(item.key, flags[bit]);
-        ++bit;
-    }
-
-    void doRecord(Schema const & schema, int nFlags) {
-        if (flagCol >= 0) {
-            fits->readTableArray<bool>(row, flagCol, nFlags, flags);
-        }
-        schema.forEach(*this);
-    }
-
-    static void apply(Fits & fits, PTR(TableBase) const & table, RecordSink & sink, int flagCol) {
-        Schema schema = table->getSchema();
-        int nFlags = fits.getTableArraySize(flagCol);
-        boost::scoped_array<bool> flags;
-        if (nFlags)
-            flags.reset(new bool[nFlags]);
-        std::size_t nRows = fits.countRows();
-        ProcessReadData f = { 0, 0, 0, &fits, flags.get(), PTR(RecordBase)(), flagCol };
-        while (f.row < nRows) {
-            f.col = 0;
-            f.bit = 0;
-            f.record = table->makeRecord();
-            f.doRecord(schema, nFlags);
-            sink(f.record);
-            ++f.row;
-        }
-    }
-
-    std::size_t row;
-    mutable int col;
-    mutable int bit;
-    Fits * fits;
-    bool * flags;
-    PTR(RecordBase) record;
-    int flagCol;
-};
-
 typedef std::map<std::string,FitsReader::Factory*> Registry;
 
 Registry & getRegistry() {
@@ -338,7 +286,54 @@ PTR(FitsReader) FitsReader::make(Fits * fits) {
     return (*i->second)(fits);
 }
 
-Schema FitsReader::_readSchema(int nCols) const {
+struct FitsReader::ProcessRecords {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        if (col == flagCol) ++col;
+        fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        ++col;
+    }
+
+    void operator()(SchemaItem<Flag> const & item) const {
+        record->set(item.key, flags[bit]);
+        ++bit;
+    }
+
+    void apply(Schema const & schema) {
+        col = 0;
+        bit = 0;
+        if (flagCol >= 0) {
+            fits->readTableArray<bool>(row, flagCol, nFlags, flags.get());
+        }
+        schema.forEach(boost::ref(*this));
+    }
+
+    ProcessRecords(Fits * fits_, std::size_t const & row_) :
+        row(row_), col(0), bit(0), flagCol(-1), fits(fits_)
+    {
+        fits->readKey("FLAGCOL", flagCol);
+        if (fits->status == 0) {
+            --flagCol;
+        } else {
+            fits->status = 0;
+            flagCol = -1;
+        }
+        nFlags = fits->getTableArraySize(flagCol);
+        if (nFlags) flags.reset(new bool[nFlags]);
+    }
+
+    std::size_t const & row;
+    mutable int col;
+    mutable int bit;
+    int nFlags;
+    int flagCol;
+    Fits * fits;
+    boost::scoped_array<bool> flags;
+    RecordBase * record;
+};
+
+Schema FitsReader::_readSchema(int nCols) {
     ProcessHeader f;
     _fits->forEachKey(f);
     Schema schema;
@@ -354,24 +349,23 @@ Schema FitsReader::_readSchema(int nCols) const {
             i->addField(*_fits, schema);
         }
     }
+    _row = -1;
+    _nRows = _fits->countRows();
+    _processor = boost::make_shared<ProcessRecords>(_fits, _row);
     return schema;
 }
 
-PTR(TableBase) FitsReader::_readTable() {
-    Schema schema = _readSchema();
+PTR(TableBase) FitsReader::_readTable(Schema const & schema) {
     return TableBase::make(schema);
 }
 
-void FitsReader::_readRecords(PTR(TableBase) const & table, RecordSink & sink) {
-    int flagCol = -1;
-    _fits->readKey("FLAGCOL", flagCol);
-    if (_fits->status == 0) {
-        --flagCol;
-    } else {
-        _fits->status = 0;
-        flagCol = -1;
-    }
-    ProcessReadData::apply(*_fits, table, sink, flagCol);
+PTR(RecordBase) FitsReader::_readRecord(PTR(TableBase) const & table) {
+    PTR(RecordBase) record;
+    if (++_row == _nRows) return record;
+    record = table->makeRecord();
+    _processor->record = record.get();
+    _processor->apply(table->getSchema());
+    return record;
 }
 
 }}}} // namespace lsst::afw::table::io

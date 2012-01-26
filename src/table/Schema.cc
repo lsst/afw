@@ -388,6 +388,8 @@ void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
 
 //----- Schema implementation -------------------------------------------------------------------------------
 
+Schema::Schema() : _impl(boost::make_shared<Impl>()) {};
+
 void Schema::_edit() {
     if (!_impl.unique()) {
         boost::shared_ptr<Impl> data(boost::make_shared<Impl>(*_impl));
@@ -419,6 +421,16 @@ template <typename T>
 void Schema::replaceField(Key<T> const & key, Field<T> const & field) {
     _edit();
     _impl->replaceField(key, field);
+}
+
+bool Schema::contains(Schema const & other) const {
+    if (_impl == other._impl) return true;
+    if (_impl->getItems().size() < other._impl->getItems().size()) return false;
+    return std::equal(
+        other._impl->getItems().begin(), other._impl->getItems().end(),
+        _impl->getItems().begin(),
+        CompareItemKeys()
+    );    
 }
 
 bool Schema::operator==(Schema const & other) const {

@@ -2,6 +2,8 @@
 #ifndef AFW_TABLE_IO_FitsWriter_h_INCLUDED
 #define AFW_TABLE_IO_FitsWriter_h_INCLUDED
 
+#include "boost/shared_ptr.hpp"
+
 #include "lsst/afw/fits.h"
 #include "lsst/afw/table/io/Writer.h"
 
@@ -27,9 +29,18 @@ public:
 
 protected:
 
-    virtual void _write(CONST_PTR(TableBase) const & table, RecordSource & source);
+    virtual void _writeTable(CONST_PTR(TableBase) const & table);
+    virtual void _writeRecord(RecordBase const & source);
 
     Fits * _fits;
+    std::size_t _row;
+
+private:
+    
+    struct ProcessRecords;
+
+    boost::shared_ptr<ProcessRecords> _processor;
+
 };
 
 }}}} // namespace lsst::afw::table::io

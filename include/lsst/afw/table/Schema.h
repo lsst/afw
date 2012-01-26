@@ -91,6 +91,9 @@ public:
      */
     std::set<std::string> getNames(bool topOnly=false) const;
 
+    /// @brief Return true if all of the keys in the given schema are also valid keys in this.
+    bool contains(Schema const & schema) const;
+
     /// @brief Return the raw size of a record in bytes.
     int getRecordSize() const { return _impl->getRecordSize(); }
 

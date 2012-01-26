@@ -170,7 +170,7 @@ void Fits::readKey(char const * key, T & value) {
 }
 
 void Fits::readKey(char const * key, std::string & value) {
-    std::string buf(80, '\0');
+    char buf[80] = { 0 };
     fits_read_keyword(
         reinterpret_cast<fitsfile*>(fptr), 
         const_cast<char*>(key),

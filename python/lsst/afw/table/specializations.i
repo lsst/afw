@@ -22,7 +22,7 @@
 }
 %extend lsst::afw::table::RecordBase {
     VALUE get(lsst::afw::table::Key< Point< U > > const & key) const { return self->get(key); }
-    void set(lsst::afw::table::Key< Point< U > > const & key, VALUE const & v) const { self->set(key, v); }
+    void set(lsst::afw::table::Key< Point< U > > const & key, VALUE const & v) { self->set(key, v); }
 }
 %enddef
 
@@ -34,7 +34,7 @@
 }
 %extend lsst::afw::table::RecordBase {
     VALUE get(lsst::afw::table::Key< Moments< U > > const & key) const { return self->get(key); }
-    void set(lsst::afw::table::Key< Moments< U > > const & key, VALUE const & v) const { self->set(key, v); }
+    void set(lsst::afw::table::Key< Moments< U > > const & key, VALUE const & v) { self->set(key, v); }
 }
 %enddef
 
@@ -48,14 +48,17 @@
     int getSize() const { return self->getSize(); }
 }
 %extend lsst::afw::table::RecordBase {
-    Eigen::Array<U,Eigen::Dynamic,1> get(lsst::afw::table::Key< Array< U > > const & key) const {
+    lsst::ndarray::Array<U const,1,1> get(lsst::afw::table::Key< Array< U > > const & key) const {
         return self->get(key);
     }
     void set(
         lsst::afw::table::Key< Array< U > > const & key,
-        Eigen::Array<U,Eigen::Dynamic,1> const & v
-    ) const {
+        lsst::ndarray::Array<U const,1,0> const & v
+    ) {
         self->set(key, v);
+    }
+    lsst::ndarray::Array<U,1,1> __getitem__(lsst::afw::table::Key< Array< U > > const & key) {
+        return (*self)[key];
     }
 }
 %extend lsst::afw::table::ColumnView {
@@ -84,7 +87,7 @@
     void set(
         lsst::afw::table::Key< Covariance< U > > const & key,
         Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> const & v
-    ) const {
+    ) {
         self->set(key, v);
     }
 }
@@ -105,7 +108,7 @@
     void set(
         lsst::afw::table::Key< Covariance< Point< U > > > const & key,
         Eigen::Matrix<U,2,2> const & v
-    ) const {
+    ) {
         self->set(key, v);
     }
 }
@@ -126,7 +129,7 @@
     void set(
         lsst::afw::table::Key< Covariance< Moments< U > > > const & key,
         Eigen::Matrix<U,3,3> const & v
-    ) const {
+    ) {
         self->set(key, v);
     }
 }
@@ -136,7 +139,7 @@
     bool get(lsst::afw::table::Key< Flag > const & key) const {
         return self->get(key);
     }
-    void set(lsst::afw::table::Key< Flag > const & key, bool value) const {
+    void set(lsst::afw::table::Key< Flag > const & key, bool value) {
         self->set(key, value);
     }
 }
@@ -157,7 +160,7 @@
         return self->get(key);
     }
     void set(lsst::afw::table::Key< lsst::afw::coord::Coord > const & key,
-             lsst::afw::coord::Coord const & v) const {
+             lsst::afw::coord::Coord const & v) {
         self->set(key, v);
     }
 }

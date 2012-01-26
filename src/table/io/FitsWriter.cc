@@ -129,7 +129,9 @@ struct ProcessSchema {
 
 //----- code for writing FITS records -----------------------------------------------------------------------
 
-struct ProcessWriteData {
+} // anonymous
+
+struct FitsWriter::ProcessRecords {
     
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
@@ -142,48 +144,48 @@ struct ProcessWriteData {
         ++bit;
     }
 
-    static void apply(
-        Fits & fits, RecordSource & source, Schema const & schema
-    ) {
-        int nFlags = CountFlags::apply(schema);
-        boost::scoped_array<bool> flags;
-        if (nFlags)
-            flags.reset(new bool[nFlags]);
-        ProcessWriteData f = { 0, 0, 0, &fits, flags.get(), source() };
-        while (f.record) {
-            f.col = 0;
-            f.bit = 0;
-            if (nFlags) ++f.col;
-            schema.forEach(boost::ref(f));
-            if (nFlags) fits.writeTableArray(f.row, 0, nFlags, f.flags);
-            ++f.row;
-            f.record = source();
-        }
+    ProcessRecords(Fits * fits_, Schema const & schema_, int nFlags_, std::size_t const & row_) :
+        row(row_), col(0), bit(0), nFlags(nFlags_), fits(fits_), schema(schema_)
+    {
+        if (nFlags) flags.reset(new bool[nFlags]);
     }
 
-    std::size_t row;
+    void apply(RecordBase const * r) {
+        record = r;
+        col = 0;
+        bit = 0;
+        if (nFlags) ++col;
+        schema.forEach(boost::ref(*this));
+        if (nFlags) fits->writeTableArray(row, 0, nFlags, flags.get());
+    }
+
+    std::size_t const & row;
     mutable int col;
     mutable int bit;
+    int nFlags;
     Fits * fits;
-    bool * flags;
-    CONST_PTR(RecordBase) record;
+    boost::scoped_array<bool> flags;
+    RecordBase const * record;
+    Schema const schema;
 };
 
-} // anonymous
-
-void FitsWriter::_write(CONST_PTR(TableBase) const & table, RecordSource & source) {
+void FitsWriter::_writeTable(CONST_PTR(TableBase) const & table) {
     Schema const & schema = table->getSchema();
     _fits->createTable();
     _fits->checkStatus();
     int nFlags = CountFlags::apply(schema);
     if (nFlags > 0) {
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
-        _fits->writeKey("FLAGCOL", n, "Column number for the bitflags.");
+        _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
     ProcessSchema::apply(*_fits, schema, true);
-    ProcessWriteData::apply(*_fits, source, schema);
-    _fits->checkStatus();
-    _fits->checkStatus();
+    _row = -1;
+    _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
+}
+
+void FitsWriter::_writeRecord(RecordBase const & record) {
+    ++_row;
+    _processor->apply(&record);
 }
 
 }}}} // namespace lsst::afw::table::io

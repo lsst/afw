@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "boost/iterator/iterator_adaptor.hpp"
-#include "boost/utility/enable_if.hpp"
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
@@ -17,26 +16,26 @@
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename RecordT, typename BaseT>
-class VectorIterator : public boost::iterator_adaptor<VectorIterator<RecordT,BaseT>,BaseT,RecordT> {
+template <typename BaseT>
+class VectorIterator
+    : public boost::iterator_adaptor<VectorIterator<BaseT>,BaseT,typename BaseT::value_type::element_type>
+{
 public:
-
-    typedef PTR(RecordT) pointer;
 
     VectorIterator() {}
 
-    template <typename OtherRecordT, typename OtherBaseT>
-    VectorIterator(VectorIterator<OtherRecordT,OtherBaseT> const & other) :
+    template <typename OtherBaseT>
+    VectorIterator(VectorIterator<OtherBaseT> const & other) :
         VectorIterator::iterator_adaptor_(other.base())
     {}
 
     explicit VectorIterator(BaseT const & base) : VectorIterator::iterator_adaptor_(base) {}
 
-    template <typename RecordU>
-    operator PTR(RecordU) () const { return *this->base(); }
+    template <typename RecordT>
+    operator PTR(RecordT) () const { return *this->base(); }
 
-    template <typename RecordU>
-    VectorIterator & operator=(PTR(RecordU) const & other) const {
+    template <typename RecordT>
+    VectorIterator & operator=(PTR(RecordT) const & other) const {
         if (other->getTable() != dereference().getTable()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LogicErrorException,
@@ -65,10 +64,12 @@ public:
     typedef PTR(RecordT) pointer;
     typedef typename Internal::size_type size_type;
     typedef typename Internal::difference_type difference_type;
-    typedef VectorIterator<RecordT,typename Internal::iterator> iterator;
-    typedef VectorIterator<RecordT,typename Internal::const_iterator> const_iterator;
+    typedef VectorIterator<typename Internal::iterator> iterator;
+    typedef VectorIterator<typename Internal::const_iterator> const_iterator;
 
     PTR(TableT) getTable() const { return _table; }
+
+    Schema const getSchema() const { return _table->getSchema(); }
 
     explicit Vector(PTR(TableT) const & table = PTR(TableT)()) : _table(table), _internal() {}
 
@@ -101,7 +102,6 @@ public:
     static Vector readFits(std::string const & filename) {
         return io::FitsReader::apply<Vector>(filename);
     }
-
 
     iterator begin() { return iterator(_internal.begin()); }
     iterator end() { return iterator(_internal.end()); }

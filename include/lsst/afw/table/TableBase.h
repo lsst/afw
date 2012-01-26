@@ -85,8 +85,8 @@ public:
      *
      *  Hiding concrete table and record classes in anonymous namespaces is not required, but it
      *  makes it easier to ensure instances are always created within shared_ptrs,
-     *  and it eliminates a lot of multilateral friending that would otherwise be necessary.
-     *  In some cases it may also serve as a form of pimpl, in keeping class implementation details
+     *  and it eliminates some multilateral friending that would otherwise be necessary.
+     *  In some cases it may also serve as a form of pimpl, keeping class implementation details
      *  out of header files.
      */
     static PTR(TableBase) make(Schema const & schema);
@@ -94,6 +94,18 @@ public:
     virtual ~TableBase() {}
 
 protected:
+
+    /// @brief Convenience functions for static-casting shared_from_this for use by derived classes.
+    template <typename Derived>
+    PTR(Derived) getSelf() {
+        return boost::static_pointer_cast<Derived>(shared_from_this());
+    }
+
+    /// @brief Convenience functions for static-casting shared_from_this for use by derived classes.
+    template <typename Derived>
+    CONST_PTR(Derived) getSelf() const {
+        return boost::static_pointer_cast<Derived const>(shared_from_this());
+    }
 
     /// @brief Clone implementation with noncovariant return types.
     virtual PTR(TableBase) _clone() const = 0;

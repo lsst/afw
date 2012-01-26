@@ -33,6 +33,8 @@ Python interface to lsst::afw::table classes
 
 #pragma SWIG nowarn=389                 // operator[]  ignored
 #pragma SWIG nowarn=503                 // comparison operators ignored
+#pragma SWIG nowarn=520                 // base class not similarly marked as smart pointer
+#pragma SWIG nowarn=401                 // nothing known about base class
 
 %lsst_exceptions();
 
@@ -59,13 +61,19 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::table::RecordId const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<boost::int32_t const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<boost::int64_t const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<boost::int32_t,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<boost::int64_t,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<boost::int32_t const,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<boost::int64_t const,1,1>);
 %declareNumPyConverters(lsst::ndarray::Array<float const,1>);
 %declareNumPyConverters(lsst::ndarray::Array<double const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<float,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<double,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<float const,1,1>);
+%declareNumPyConverters(lsst::ndarray::Array<double const,1,1>);
 %declareNumPyConverters(lsst::ndarray::Array<float const,2>);
 %declareNumPyConverters(lsst::ndarray::Array<double const,2>);
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::geom::Angle const,1>);
-%declareNumPyConverters(Eigen::Array<float,Eigen::Dynamic,1>);
-%declareNumPyConverters(Eigen::Array<double,Eigen::Dynamic,1>);
 %declareNumPyConverters(Eigen::Matrix<float,2,2>);
 %declareNumPyConverters(Eigen::Matrix<double,2,2>);
 %declareNumPyConverters(Eigen::Matrix<float,3,3>);
@@ -108,7 +116,7 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
     $result = convertNameSet(*$1);
 }
 
-// ------------------ General purpose stuff that maybe should go in p_lsstSwig.i ---------------------------
+// ------------------ General purpose stuff for iteration over containers -----------------------------------
 
 %include "std_container.i"
 
@@ -133,12 +141,12 @@ template <> struct traits< VALUE > {
 
 // ---------------------------------------------------------------------------------------------------------
 
-%shared_ptr(lsst::afw::table::AuxBase);
+%shared_ptr(lsst::afw::table::TableBase);
+%shared_ptr(lsst::afw::table::RecordBase);
 %shared_ptr(lsst::afw::table::IdFactory);
 %ignore lsst::afw::table::IdFactory::operator=;
 
 %include "lsst/afw/table/misc.h"
-%include "lsst/afw/table/ModificationFlags.h"
 %include "lsst/afw/table/IdFactory.h"
 %include "lsst/afw/table/FieldBase.h"
 %include "lsst/afw/table/Field.h"
@@ -218,7 +226,7 @@ def addField(self, field, type=None, doc="", units="", size=None):
 
 %}
 
-}
+} // %extend Schema
 
 %extend lsst::afw::table::SubSchema {
 %pythoncode %{
@@ -250,50 +258,20 @@ def asKey(self):
              pass
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 %}
-}
+} // %extend SubSchema
 
 %include "lsst/afw/table/SchemaMapper.h"
+
+%include "lsst/afw/table/TableBase.h"
 
 %ignore lsst::afw::table::RecordBase::operator=;
 %rename("__eq__") lsst::afw::table::RecordBase::operator==;
 %rename("__ne__") lsst::afw::table::RecordBase::operator!=;
 %include "lsst/afw/table/RecordBase.h"
 
-%include "lsst/afw/table/ColumnView.h"
+ //%include "lsst/afw/table/ColumnView.h"
 
-%ignore lsst::afw::table::TableBase::begin;
-%ignore lsst::afw::table::TableBase::end;
-%ignore lsst::afw::table::TableBase::find;
-%nodefaultctor lsst::afw::table::TableBase;
-%rename(__getitem__) lsst::afw::tableTableBase::operator[];
-%returnNone(lsst::afw::table::TableBase::unlink)
-%makeIterable(lsst::afw::table::TableBase, lsst::afw::table::RecordBase)
-%include "lsst/afw/table/TableBase.h"
-
-%ignore lsst::afw::table::RecordInterface::operator<<=;
-%ignore lsst::afw::table::RecordInterface::operator=;
-%ignore lsst::afw::table::ChildView::begin;
-%ignore lsst::afw::table::ChildView::end;
-%ignore lsst::afw::table::TableInterface::begin;
-%ignore lsst::afw::table::TableInterface::end;
-%ignore lsst::afw::table::TableInterface::find;
-%ignore lsst::afw::table::TableInterface::insert;
-%nodefaultctor lsst::afw::table::TableInterface;
-%rename(__getitem__) lsst::afw::table::TableInterface::operator[];
-%returnNone(lsst::afw::table::TableInterface::unlink)
-
-%include "lsst/afw/table/RecordInterface.h"
-%include "lsst/afw/table/TableInterface.h"
-
-%define %declareTag(TAG)
-%template(TAG ## RecordInterface) lsst::afw::table::RecordInterface< lsst::afw::table::TAG >;
-%template(TAG ## TableInterface) lsst::afw::table::TableInterface< lsst::afw::table::TAG >;
-%template(TAG ## ChildView) lsst::afw::table::ChildView< lsst::afw::table::TAG >;
-%enddef
-
-%declareTag(Simple)
-%include "lsst/afw/table/Simple.h"
-
+#if 0
 // Workarounds for SWIG's failure to parse the Measurement template correctly.
 // Otherwise we'd have one place in the code that controls all the canonical measurement types.
 namespace lsst { namespace afw { namespace table {
@@ -317,10 +295,9 @@ namespace lsst { namespace afw { namespace table {
      };
 }}}
 
-
-%declareTag(Source)
-%returnCopy(SourceRecord::getFootprint)
 %include "lsst/afw/table/Source.h"
+
+#endif
 
 %pythoncode %{
 from .. import geom

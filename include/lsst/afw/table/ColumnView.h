@@ -37,26 +37,15 @@ class ColumnView {
 public:
 
     /// @brief Return the schema that defines the fields.
-    Schema getSchema() const;
-
-    /// @brief Return an array of record IDs.
-    lsst::ndarray::Array<RecordId const,1> getId() const;
-
-    /**
-     *  @brief Return an array of parent IDs.
-     *  
-     *  Records with no parent will have a parent ID of zero.
-     *  @throw lsst::pex::exceptions::LogicErrorException if !getSchema().hasTree().
-     */
-    lsst::ndarray::Array<RecordId const,1> getParentId() const;
+    Schema const getSchema() const;
 
     /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
-    typename ndarray::Array<T const,1> operator[](Key<T> const & key) const;
+    ndarray::Array<T const,1> operator[](Key<T> const & key) const;
 
     /// @brief Return a 2-d array corresponding to an array field.
     template <typename T>
-    typename ndarray::Array<T const,2,1> operator[](Key< Array<T> > const & key) const;
+    ndarray::Array<T const,2,1> operator[](Key< Array<T> > const & key) const;
 
     /**
      *  @brief Return a 1-d array expression corresponding to a flag bit.
@@ -98,7 +87,7 @@ ColumnView ColumnView::make(InputIterator first, InputIterator last) {
     std::size_t recordCount = 1;
     void * buf = first->_data;
     ndarray::Manager::Ptr manager = first->_manager;
-    char * expected = boost::reinterpret_cast<char*>(buf) + recordSize;
+    char * expected = reinterpret_cast<char*>(buf) + recordSize;
     for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
         if (first->_data != expected || first->_manager != manager || first->getSchema() != schema) {
             throw LSST_EXCEPT(

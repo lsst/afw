@@ -106,10 +106,10 @@ template <>
 struct FieldBase< Coord > {
 
     /// @brief the type returned by RecordBase::get (coord::IcrsCoord, in this case).
-    typedef lsst::afw::coord::IcrsCoord Value;
+    typedef IcrsCoord Value;
 
     /// @brief the type of subfields
-    typedef lsst::afw::geom::Angle Element;
+    typedef Angle Element;
 
     /// @brief Return the number of subfield elements (always two for points).
     int getElementCount() const { return 2; }
@@ -145,7 +145,7 @@ protected:
         p[1] = v.getDec();
     }
 
-    void setValue(Element * p, ndarray::Manager::Ptr const & m, afw::coord::Coord const & v) const {
+    void setValue(Element * p, ndarray::Manager::Ptr const & m, Coord const & v) const {
         setValue(p, m, v.toIcrs());
     }
 };
@@ -305,11 +305,11 @@ protected:
         return ndarray::detail::ArrayAccess< Value >::construct(p, makeCore(m));
     }
 
-    template <typename T, typename Derived>
+    template <typename Derived>
     void setValue(
         Element * p, ndarray::Manager::Ptr const &, ndarray::ExpressionBase<Derived> const & value
     ) const {
-        if (value.template getShape<0>() != _size) {
+        if (value.template getSize<0>() != _size) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthErrorException,
                 "Incorrect size in array field assignment."
@@ -320,8 +320,8 @@ protected:
 
 private:
 
-    ndarray::detail::Core<1> makeCore(ndarray::Manager::Ptr const & manager) {
-        return ndarray::detail::Core<1>(ndarray::makeVector(_size), manager);
+    ndarray::detail::Core<1>::Ptr makeCore(ndarray::Manager::Ptr const & manager) const {
+        return ndarray::detail::Core<1>::create(ndarray::makeVector(_size), ndarray::ROW_MAJOR, manager);
     }
 
     int _size;

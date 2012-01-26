@@ -73,8 +73,8 @@ struct KeyPairCompareSecond: public boost::static_visitor<int> {
 
 } // anonymous
 
-SchemaMapper::SchemaMapper(Schema const & input, bool outputHasTree) :
-    _impl(boost::make_shared<Impl>(input, outputHasTree))
+SchemaMapper::SchemaMapper(Schema const & input) :
+    _impl(boost::make_shared<Impl>(input))
 {}
 
 void SchemaMapper::_edit() {

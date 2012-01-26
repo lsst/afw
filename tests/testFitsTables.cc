@@ -8,7 +8,6 @@
 #include <map>
 
 #include "lsst/utils/ieee.h"
-#include "lsst/afw/table/fits.h"
 #include "lsst/afw/table/Source.h"
 
 struct EqualityCompare {
@@ -39,7 +38,7 @@ struct EqualityCompare {
 BOOST_AUTO_TEST_CASE(testFits) {
     using namespace lsst::afw::table;
 
-    lsst::afw::table::Schema schema(false);
+    Schema schema = SourceTable::makeMinimalSchema();
     Key<int> a_b_i = schema.addField<int>("a.b.i", "int");
     Key<Flag> a_b_i_valid = schema.addField<Flag>("a.b.i.valid", "is field a.b.i valid?");
     Key<float> a_c_f = schema.addField<float>("a.c.f", "float", "femtoseamonkeys");
@@ -48,49 +47,53 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e.g.d.flag2", "flag2 for e.g.d");
     Key< Point<float> > a_b_p = schema.addField< Point<float> >("a.b.p", "point", "pixels");
 
-    SourceTable table(schema);
+    SourceSet<> set(SourceTable::make(schema));
     {
-        Footprint fp1;
-        fp1.addSpan(0, 5, 8);
-        fp1.addSpan(1, 4, 9);
-        fp1.addSpan(2, 6, 7);
-        fp1.getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.5f, 1.2f, 25.6f));
-        fp1.getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(6.8f, 0.8f, 23.2f));
-        SourceRecord r1 = table.addRecord(fp1);
-        r1.set(a_b_i, 314);
-        r1.set(a_b_i_valid, true);
-        r1.set(a_c_f, 3.14f);
-        r1.set(e_g_d, 3.14E12);
-        r1.set(e_g_d_flag1, false);
-        r1.set(e_g_d_flag2, true);
-        r1.set(a_b_p, lsst::afw::geom::Point2D(1.2, 0.5));
+        PTR(Footprint) fp1 = boost::make_shared<Footprint>();
+        fp1->addSpan(0, 5, 8);
+        fp1->addSpan(1, 4, 9);
+        fp1->addSpan(2, 6, 7);
+        fp1->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.5f, 1.2f, 25.6f));
+        fp1->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(6.8f, 0.8f, 23.2f));
+        PTR(SourceRecord) r1 = set.getTable()->makeRecord();
+        r1->setFootprint(fp1);
+        
+        r1->set(a_b_i, 314);
+        r1->set(a_b_i_valid, true);
+        r1->set(a_c_f, 3.14f);
+        r1->set(e_g_d, 3.14E12);
+        r1->set(e_g_d_flag1, false);
+        r1->set(e_g_d_flag2, true);
+        r1->set(a_b_p, lsst::afw::geom::Point2D(1.2, 0.5));
+        set.insert(r1);
 
-        SourceRecord r2 = table.addRecord();
-        r2.set(a_b_i, 5123);
-        r2.set(a_b_i_valid, true);
-        r2.set(a_c_f, 44.8f);
-        r2.set(e_g_d, 12.2E-3);
-        r2.set(e_g_d_flag1, true);
-        r2.set(e_g_d_flag2, false);
-        r2.set(a_b_p, lsst::afw::geom::Point2D(-32.1, 63.2));
-        Footprint fp2;
-        fp2.addSpan(3, 2, 7);
-        fp2.addSpan(4, 3, 5);
-        fp2.getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.2f, 3.3f, 32.1f));
-        r2.setFootprint(fp2);
+        PTR(SourceRecord) r2 = set.getTable()->makeRecord();
+        r2->set(a_b_i, 5123);
+        r2->set(a_b_i_valid, true);
+        r2->set(a_c_f, 44.8f);
+        r2->set(e_g_d, 12.2E-3);
+        r2->set(e_g_d_flag1, true);
+        r2->set(e_g_d_flag2, false);
+        r2->set(a_b_p, lsst::afw::geom::Point2D(-32.1, 63.2));
+        PTR(Footprint) fp2 = boost::make_shared<Footprint>();
+        fp2->addSpan(3, 2, 7);
+        fp2->addSpan(4, 3, 5);
+        fp2->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.2f, 3.3f, 32.1f));
+        r2->setFootprint(fp2);
+        set.insert(r2);
 
-        BOOST_CHECK_EQUAL( r2.get(e_g_d_flag1), true );
-        BOOST_CHECK_EQUAL( r2.get(e_g_d_flag2), false );
+        BOOST_CHECK_EQUAL( r2->get(e_g_d_flag1), true );
+        BOOST_CHECK_EQUAL( r2->get(e_g_d_flag2), false );
     }
 
-    table.writeFits("!testTable.fits");
+    set.writeFits("!testTable.fits");
 
-    SourceTable readTable = table.readFits("testTable.fits[1]");
-    BOOST_CHECK_EQUAL( schema, readTable.getSchema() );
+    SourceSet<> readSet = SourceSet<>::readFits("testTable.fits[1]");
+    BOOST_CHECK_EQUAL( schema, readSet.getSchema() );
 
     {
-        SourceRecord a1 = table[1];
-        SourceRecord b1 = readTable[1];
+        SourceRecord const & a1 = set[1];
+        SourceRecord const & b1 = readSet[1];
         BOOST_CHECK_EQUAL( a1.get(a_b_i), b1.get(a_b_i) );
         BOOST_CHECK_EQUAL( a1.get(a_b_i_valid), b1.get(a_b_i_valid) );
         BOOST_CHECK_CLOSE_FRACTION( a1.get(a_c_f), b1.get(a_c_f), 1E-8 );
@@ -99,16 +102,16 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_EQUAL( a1.get(e_g_d_flag2), b1.get(e_g_d_flag2) );
         BOOST_CHECK_CLOSE_FRACTION( a1.get(a_b_p.getX()), b1.get(a_b_p.getX()), 1E-8 );
         BOOST_CHECK_CLOSE_FRACTION( a1.get(a_b_p.getY()), b1.get(a_b_p.getY()), 1E-8 );
-        Footprint const & fp1a = a1.getFootprint();
-        Footprint const & fp1b = b1.getFootprint();
+        Footprint const & fp1a = *a1.getFootprint();
+        Footprint const & fp1b = *b1.getFootprint();
         BOOST_CHECK( std::equal(fp1a.getSpans().begin(), fp1a.getSpans().end(), fp1b.getSpans().begin(),
                                 EqualityCompare()) );
         BOOST_CHECK( std::equal(fp1a.getPeaks().begin(), fp1a.getPeaks().end(), fp1b.getPeaks().begin(),
                                 EqualityCompare()) );
         BOOST_CHECK_EQUAL( fp1a.getBBox(), fp1b.getBBox() );
 
-        SourceRecord a2 = table[2];
-        SourceRecord b2 = readTable[2];
+        SourceRecord const & a2 = set[2];
+        SourceRecord const & b2 = readSet[2];
         BOOST_CHECK_EQUAL( a2.get(a_b_i), b2.get(a_b_i) );
         BOOST_CHECK_EQUAL( a2.get(a_b_i_valid), b2.get(a_b_i_valid) );
         BOOST_CHECK_CLOSE_FRACTION( a2.get(a_c_f), b2.get(a_c_f), 1E-8 );
@@ -117,8 +120,8 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_EQUAL( a2.get(e_g_d_flag2), b2.get(e_g_d_flag2) );
         BOOST_CHECK_CLOSE_FRACTION( a2.get(a_b_p.getX()), b2.get(a_b_p.getX()), 1E-8 );
         BOOST_CHECK_CLOSE_FRACTION( a2.get(a_b_p.getY()), b2.get(a_b_p.getY()), 1E-8 );
-        Footprint const & fp2a = a2.getFootprint();
-        Footprint const & fp2b = b2.getFootprint();
+        Footprint const & fp2a = *a2.getFootprint();
+        Footprint const & fp2b = *b2.getFootprint();
         BOOST_CHECK( std::equal(fp2a.getSpans().begin(), fp2a.getSpans().end(), fp2b.getSpans().begin(),
                                 EqualityCompare()) );
         BOOST_CHECK( std::equal(fp2a.getPeaks().begin(), fp2a.getPeaks().end(), fp2b.getPeaks().begin(),

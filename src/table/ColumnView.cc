@@ -47,27 +47,7 @@ struct ColumnView::Impl {
     }
 };
 
-Schema ColumnView::getSchema() const { return _impl->schema; }
-
-ndarray::Array<RecordId const,1> ColumnView::getId() const {
-    return ndarray::detail::ArrayAccess< ndarray::Array<RecordId const,1> >::construct(
-        &reinterpret_cast<detail::RecordData const*>(_impl->buf)->id,
-        boost::fusion::at_key<RecordId>(_impl->cores)
-    );
-}
-
-ndarray::Array<RecordId const,1> ColumnView::getParentId() const {
-    if (!_impl->schema.hasTree()) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
-            "ColumnView's schema has no tree information, and hence no parent IDs."
-        );
-    }
-    return ndarray::detail::ArrayAccess< ndarray::Array<RecordId const,1> >::construct(
-        &detail::Access::getParentId(_impl->schema, *reinterpret_cast<detail::RecordData *>(_impl->buf)),
-        boost::fusion::at_key<RecordId>(_impl->cores)
-    );
-}
+Schema const ColumnView::getSchema() const { return _impl->schema; }
 
 template <typename T>
 typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
