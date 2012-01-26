@@ -13,10 +13,12 @@ class SchemaMapper;
 class RecordBase : private boost::noncopyable {
 public:
 
+    typedef TableBase Table;
+
     /// @brief Return the Schema that holds this record's fields and keys.
     Schema const & getSchema() const { return _table->getSchema(); }
 
-    /// @brief Return the table this record belongs to.
+    /// @brief Return the table this record is associated with.
     CONST_PTR(TableBase) getTable() const { return _table; }
 
     /**
@@ -90,62 +92,29 @@ public:
         key.setValue(getElement(key), _manager, value);
     }
 
-protected:
-
-    /// @brief Construct a record with uninitialized data.
-    RecordBase(CONST_PTR(TableBase) const & table) : _table(table) { _table->_initialize(*this); }
-
-    /// @brief Construct a record as a deep copy of another with an identical schema.
-    RecordBase(CONST_PTR(TableBase) const & table, RecordBase const & other) :
-        _table(table)
-    {
-        _table->_initialize(*this);
-        _assign(other);
-    }
-
-    /// @brief Construct a record as a deep copy of another with fields mapped between different schemas.
-    RecordBase(CONST_PTR(TableBase) const & table, RecordBase const & other, SchemaMapper const & mapper) :
-        _table(table)
-    {
-        _table->_initialize(*this);
-        _assign(other, mapper);
-    }
-
     /// @brief Copy all field values from other to this, requiring that they have equal schemas.
-    void _assign(RecordBase const & other);
+    void assign(RecordBase const & other);
 
     /// @brief Copy field values from other to this, using a mapper.
-    void _assign(RecordBase const & other, SchemaMapper const & mapper);
+    void assign(RecordBase const & other, SchemaMapper const & mapper);
 
-    /**
-     *  @brief Polymorphic deep-copy with identical schemas.
-     *
-     *  Public access to this is not provided because some RecordBase subclasses may want to restrict
-     *  the table classes they can be associated with.  Record container classes (Vector, Set) use
-     *  this implementation.
-     *
-     *  Callers must guarantee that table->getSchema() == this->getSchema().
-     */
-    virtual PTR(RecordBase) _clone(CONST_PTR(TableBase) const & table) const = 0;
+    virtual ~RecordBase() { _table->_destroy(*this); }
 
-    /**
-     *  @brief Polymorphic deep-copy with a schema mapper.
-     *
-     *  Public access to this is not provided because some RecordBase subclasses may want to restrict
-     *  the table classes they can be associated with.  Record container classes (Vector, Set) use
-     *  this implementation.
-     *
-     *  Callers must guarantee that table->getSchema() == mapper.getOutputSchema() and 
-     *  this->getSchema() == mapper.getInputSchema().
-     */
-    virtual PTR(RecordBase) _clone(CONST_PTR(TableBase) const & table, SchemaMapper const & mapper) const = 0;
+protected:
+
+    /// @brief Called by assign() after transferring fields to allow subclass data members to be copied.
+    virtual void _assign(RecordBase const & other) {}
+
+    /// @brief Construct a record with uninitialized data.
+    RecordBase(PTR(TableBase) const & table) : _table(table) { table->_initialize(*this); }
 
 private:
 
     friend class TableBase;
 
+    // All these are definitely private, not protected - we don't want derived classes mucking with them.
     void * _data;
-    CONST_PTR(TableBase) _table;
+    PTR(TableBase) _table;
     ndarray::Manager::Ptr _manager;
 };
 

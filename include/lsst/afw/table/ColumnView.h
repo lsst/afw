@@ -69,6 +69,9 @@ public:
                                    ndarray::Array< Field<Flag>::Element const,1> >::type
     operator[](Key<Flag> const & key) const;
 
+    template <typename InputIterator>
+    static ColumnView make(InputIterator first, InputIterator last);
+
     ~ColumnView();
 
 private:
@@ -81,6 +84,31 @@ private:
 
     boost::shared_ptr<Impl> _impl;
 };
+
+template <typename InputIterator>
+ColumnView ColumnView::make(InputIterator first, InputIterator last) {
+    if (first == last) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LengthErrorException,
+            "Cannot create zero-length ColumnView."
+        );
+    }
+    Schema schema = first->getSchema();
+    std::size_t recordSize = schema.getRecordSize();
+    std::size_t recordCount = 1;
+    void * buf = first->_data;
+    ndarray::Manager::Ptr manager = first->_manager;
+    char * expected = boost::reinterpret_cast<char*>(buf) + recordSize;
+    for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
+        if (first->_data != expected || first->_manager != manager || first->getSchema() != schema) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::RuntimeErrorException,
+                "Record data is not contiguous in memory."
+            );
+        }
+    }
+    return ColumnView(schema, recordCount, buf, manager);
+}
 
 }}} // namespace lsst::afw::table
 

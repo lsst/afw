@@ -45,9 +45,6 @@ class Schema {
     typedef detail::SchemaImpl Impl;
 public:
 
-    /// @brief Return true if the schema constains space for a parent ID field.
-    bool hasTree() const { return _impl->hasTree(); }
-
     /**
      *  @brief Find a SchemaItem in the Schema by name.
      *
@@ -167,7 +164,7 @@ public:
     //@}
 
     /// @brief Construct an empty Schema.
-    explicit Schema(bool hasTree);
+    explicit Schema();
 
     Schema(Schema const & other) : _impl(other._impl) {}
 

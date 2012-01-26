@@ -5,12 +5,13 @@
 #include <map>
 #include <string>
 
-#include "boost/iterator_adaptor.hpp"
+#include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/compressed_pair.hpp"
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/table/io.h"
 #include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/RecordBase.h"
 
@@ -66,6 +67,9 @@ public:
     typedef typename Internal::difference_type difference_type;
     typedef SetIterator<typename Internal::iterator> iterator;
     typedef SetIterator<typename Internal::const_iterator> const_iterator;
+
+    typedef RecordSourceT<Set> RecordSource;
+    typedef RecordSinkT<Set> RecordSource;
 
     PTR(TableT) getTable() const { return _table; }
 

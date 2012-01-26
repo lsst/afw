@@ -214,7 +214,7 @@ int Fits::addColumn(char const * ttype, int size, char const * comment) {
     return nCols;
 }
 
-int Fits::addRows(int nRows) {
+std::size_t Fits::addRows(std::size_t nRows) {
     long first = 0;
     fits_get_num_rows(
         reinterpret_cast<fitsfile*>(fptr),
@@ -230,7 +230,7 @@ int Fits::addRows(int nRows) {
     return first;
 }
 
-int Fits::countRows() {
+std::size_t Fits::countRows() {
     long r = 0;
     fits_get_num_rows(
         reinterpret_cast<fitsfile*>(fptr),
@@ -241,7 +241,7 @@ int Fits::countRows() {
 }
 
 template <typename T>
-void Fits::writeTableArray(int row, int col, int nElements, T const * value) {
+void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value) {
     fits_write_col(
         reinterpret_cast<fitsfile*>(fptr), 
         FitsType<T>::CONSTANT, 
@@ -253,7 +253,7 @@ void Fits::writeTableArray(int row, int col, int nElements, T const * value) {
 }
 
 template <typename T>
-void Fits::readTableArray(int row, int col, int nElements, T * value) {
+void Fits::readTableArray(std::size_t row, int col, int nElements, T * value) {
     int anynul = false;
     fits_read_col(
         reinterpret_cast<fitsfile*>(fptr), 
@@ -267,7 +267,22 @@ void Fits::readTableArray(int row, int col, int nElements, T * value) {
     );
 }
 
-long Fits::getTableArraySize(int row, int col) {
+long Fits::getTableArraySize(int col) {
+    int typecode = 0;
+    long result = 0;
+    long width = 0;
+    fits_get_coltype(
+        reinterpret_cast<fitsfile*>(fptr),
+        col + 1,
+        &typecode,
+        &result,
+        &width,
+        &status
+    );
+    return result;
+}
+
+long Fits::getTableArraySize(std::size_t row, int col) {
     long result = 0;
     long offset = 0;
     fits_read_descript(
@@ -323,8 +338,8 @@ void Fits::closeFile() {
     template int Fits::addColumn<T>(char const * ttype, int size, char const * comment);
 
 #define INSTANTIATE_EDIT_TABLE_ARRAY(r, data, T)    \
-    template void Fits::writeTableArray(int row, int col, int nElements, T const * value); \
-    template void Fits::readTableArray(int row, int col, int nElements, T * value);
+    template void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value); \
+    template void Fits::readTableArray(std::size_t row, int col, int nElements, T * value);
 
 #define KEY_TYPES                                                       \
     (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \

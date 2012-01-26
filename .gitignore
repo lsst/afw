@@ -15,6 +15,7 @@ doc/doxygen.conf
 examples/maskIo2
 examples/transform
 include/lsst/afw/image/ImageExceptions.h
+include/lsst/afw/table/Source.h
 examples/.tests
 examples/*.fits
 examples/analyticKernel

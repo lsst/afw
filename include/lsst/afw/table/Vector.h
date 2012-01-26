@@ -4,32 +4,39 @@
 
 #include <vector>
 
-#include "boost/iterator_adaptor.hpp"
+#include "boost/iterator/iterator_adaptor.hpp"
+#include "boost/utility/enable_if.hpp"
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/io/FitsWriter.h"
+#include "lsst/afw/table/io/FitsReader.h"
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename BaseT>
-class VectorIterator : public boost::iterator<VectorIterator,BaseT,typename BaseT::value_type::element_type> {
+template <typename RecordT, typename BaseT>
+class VectorIterator : public boost::iterator_adaptor<VectorIterator<RecordT,BaseT>,BaseT,RecordT> {
 public:
 
-    typedef typename BaseT::value_type pointer;
+    typedef PTR(RecordT) pointer;
 
     VectorIterator() {}
 
-    template <typename OtherT>
-    VectorIterator(VectorIterator<OtherT> const & other) : VectorIterator::iterator_adaptor_(other.base()) {}
+    template <typename OtherRecordT, typename OtherBaseT>
+    VectorIterator(VectorIterator<OtherRecordT,OtherBaseT> const & other) :
+        VectorIterator::iterator_adaptor_(other.base())
+    {}
 
     explicit VectorIterator(BaseT const & base) : VectorIterator::iterator_adaptor_(base) {}
 
-    operator pointer() const { return *this->base(); }
+    template <typename RecordU>
+    operator PTR(RecordU) () const { return *this->base(); }
 
-    template <typename RecordT>
-    VectorIterator & operator=(PTR(RecordT) const & other) const {
+    template <typename RecordU>
+    VectorIterator & operator=(PTR(RecordU) const & other) const {
         if (other->getTable() != dereference().getTable()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LogicErrorException,
@@ -45,7 +52,7 @@ private:
     typename BaseT::value_type::element_type & dereference() const { return **this->base(); }
 };
 
-template <typename RecordT, typename TableT = typename RecordT::Table>
+template <typename RecordT, typename TableT>
 class Vector {
     typedef std::vector<PTR(RecordT)> Internal;
 public:
@@ -58,21 +65,26 @@ public:
     typedef PTR(RecordT) pointer;
     typedef typename Internal::size_type size_type;
     typedef typename Internal::difference_type difference_type;
-    typedef VectorIterator<typename Internal::iterator> iterator;
-    typedef VectorIterator<typename Internal::const_iterator> const_iterator;
+    typedef VectorIterator<RecordT,typename Internal::iterator> iterator;
+    typedef VectorIterator<RecordT,typename Internal::const_iterator> const_iterator;
 
     PTR(TableT) getTable() const { return _table; }
 
-    explicit Vector(PTR(TableT) const & table) : _table(table), _internal() {}
+    explicit Vector(PTR(TableT) const & table = PTR(TableT)()) : _table(table), _internal() {}
 
     template <typename InputIterator>
     Vector(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
         _table(table), _internal()
     {
         insert(first, last, deep);
-    } 
+    }
 
     Vector(Vector const & other) : _table(other._table), _internal(other._internal) {}
+
+    template <typename OtherRecordT, typename OtherTableT>
+    Vector(Vector<OtherRecordT,OtherTableT> const & other) :
+        _table(other.getTable()), _internal(other.begin().base(), other.end().base())
+    {}
 
     Vector & operator=(Vector const & other) {
         if (&other != this) {
@@ -82,11 +94,20 @@ public:
         return *this;
     }
 
+    void writeFits(std::string const & filename) const {
+        io::FitsWriter::apply(filename, *this);
+    }
+
+    static Vector readFits(std::string const & filename) {
+        return io::FitsReader::apply<Vector>(filename);
+    }
+
+
     iterator begin() { return iterator(_internal.begin()); }
     iterator end() { return iterator(_internal.end()); }
 
-    const_iterator begin() const { const_iterator(_internal.begin()); }
-    const_iterator end() const { const_iterator(_internal.end()); }
+    const_iterator begin() const { return const_iterator(_internal.begin()); }
+    const_iterator end() const { return const_iterator(_internal.end()); }
 
     bool empty() const { return _internal.empty(); }
     size_type size() const { return _internal.size(); }
@@ -94,12 +115,12 @@ public:
 
     void resize(size_type n) { _internal.resize(n); }
     size_type capacity() const { return _internal.capacity(); }
-    void reserve(size_type n) { _table->reserve(n - size()); _internal.reserve(n); }
+    void reserve(size_type n) { _table->preallocate(n - size()); _internal.reserve(n); }
 
     reference operator[](size_type i) const { return *_internal[i]; }
     reference at(size_type i) const { return *_internal.at(i); }
-    reference front() const { *_internal.front(); }
-    reference back() const { *_internal.back(); }
+    reference front() const { return *_internal.front(); }
+    reference back() const { return *_internal.back(); }
 
     PTR(RecordT) const get(size_type i) const { return _internal[i]; }
 
@@ -120,7 +141,7 @@ public:
     }
 
     void push_back(Record const & r) {
-        PTR(RecordT) p = r._clone(_table);
+        PTR(RecordT) p = _table->copyRecord(r);
         _internal.push_back(p);
     }
 
@@ -137,7 +158,7 @@ public:
     void pop_back() { _internal.pop_back(); }
 
     iterator insert(iterator pos, Record const & r) {
-        PTR(RecordT) p = r._clone(_table);
+        PTR(RecordT) p = _table->copyRecord(r);
         return iterator(_internal.insert(pos.base(), p));
     }
 
@@ -169,7 +190,6 @@ public:
 
     void clear() { _internal.clear(); }
     
-
 private:
 
     template <typename InputIterator>
@@ -177,7 +197,7 @@ private:
         iterator pos, InputIterator first, InputIterator last, bool deep,
         std::random_access_iterator_tag *
     ) {
-        _vector.reserve(_vector.size() + last - first);
+        _internal.reserve(_internal.size() + last - first);
         _insert(pos, first, last, deep, (std::input_iterator_tag *)0);
     }
 

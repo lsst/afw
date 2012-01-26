@@ -25,6 +25,7 @@ public:
     virtual void operator()(char const * key, char const * value, char const * comment) = 0;
 
     virtual ~HeaderIterationFunctor() {}
+
 };
 
 /**
@@ -110,23 +111,25 @@ struct Fits {
     int addColumn(char const * ttype, int size, char const * comment=0);
 
     /// @brief Append rows to a table, and return the index of the first new row.
-    int addRows(int nRows);
+    std::size_t addRows(std::size_t nRows);
 
-    int countRows();
-
-    template <typename T>
-    void writeTableArray(int row, int col, int nElements, T const * value);
+    std::size_t countRows();
 
     template <typename T>
-    void writeTableScalar(int row, int col, T value) { writeTableArray(row, col, 1, &value); }
+    void writeTableArray(std::size_t row, int col, int nElements, T const * value);
 
     template <typename T>
-    void readTableArray(int row, int col, int nElements, T * value);
+    void writeTableScalar(std::size_t row, int col, T value) { writeTableArray(row, col, 1, &value); }
 
     template <typename T>
-    void readTableScalar(int row, int col, T & value) { readTableArray(row, col, 1, &value); }
+    void readTableArray(std::size_t row, int col, int nElements, T * value);
+
+    template <typename T>
+    void readTableScalar(std::size_t row, int col, T & value) { readTableArray(row, col, 1, &value); }
     
-    long getTableArraySize(int row, int col);
+    long getTableArraySize(int col);
+
+    long getTableArraySize(std::size_t row, int col);
 
     static Fits createFile(char const * filename);
 

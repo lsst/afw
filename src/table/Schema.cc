@@ -431,8 +431,6 @@ bool Schema::operator==(Schema const & other) const {
     );
 }
 
-Schema::Schema(bool hasTree) : _impl(boost::make_shared<Impl>(hasTree)) {}
-
 std::ostream & operator<<(std::ostream & os, Schema const & schema) {
     os << "Schema(\n";
     schema.forEach(Stream(&os));

@@ -2,11 +2,6 @@
 
 #include <cstdio>
 
-#include "fitsio.h"
-extern "C" {
-#include "fitsio2.h"
-}
-
 #include "boost/regex.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/cstdint.hpp"
@@ -16,199 +11,23 @@ extern "C" {
 #include "boost/multi_index/member.hpp"
 #include "boost/math/special_functions/round.hpp"
 
-#include "lsst/afw/table/fits.h"
+#include "lsst/afw/table/io/FitsReader.h"
+#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/TableBase.h"
 
-namespace lsst { namespace afw { namespace table { namespace fits {
-
-//----- writeFitsHeader implementation ---------------------------------------------------------------------
-
-namespace {
-
-struct CountFlags {
-
-    template <typename T>
-    void operator()(SchemaItem<T> const &) const {}
-
-    void operator()(SchemaItem<Flag> const &) const { ++n; }
-
-    static int apply(Schema const & schema) {
-        CountFlags counter = { 0 };
-        schema.forEach(boost::ref(counter));
-        return counter.n;
-    }
-
-    mutable int n;
-};
-
-struct ProcessSchema {
-
-    template <typename T>
-    void specialize(SchemaItem<T> const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str());
-        fits->writeColumnKey("TCCLS", n, "Scalar", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Array<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str());
-        fits->writeColumnKey("TCCLS", n, "Array", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Point<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(), "{x, y}");
-        fits->writeColumnKey("TCCLS", n, "Point", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Moments<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(), "{xx, yy, xy}");
-        fits->writeColumnKey("TCCLS", n, "Moments", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(),
-                                 "{(0,0), (0,1), (1,1), (0,2), (1,2), (2,2), ...}");
-        fits->writeColumnKey("TCCLS", n, "Covariance", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance< Point<T> > > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(),
-                                 "{(x,x), (x,y), (y,y)}");
-        fits->writeColumnKey("TCCLS", n, "Covariance(Point)", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance< Moments<T> > > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(),
-                                 "{(xx,xx), (xx,yy), (yy,yy), (xx,xy), (yy,xy), (xy,xy)}");
-        fits->writeColumnKey("TCCLS", n, "Covariance(Moments)", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
-        std::string name = item.field.getName();
-        if (sanitizeNames)
-            std::replace(name.begin(), name.end(), '.', '_');
-        int n = fits->addColumn<typename Field<T>::Element>(
-            name.c_str(),
-            item.field.getElementCount(),
-            item.field.getDoc().c_str()
-        );
-        specialize(item, n);
-    }
-
-    void operator()(SchemaItem<Flag> const & item) const {
-        std::string name = item.field.getName();
-        if (sanitizeNames)
-            std::replace(name.begin(), name.end(), '.', '_');
-        fits->writeColumnKey("TFLAG", nFlags, name.c_str(), item.field.getDoc().c_str());
-        ++nFlags;
-    }
-
-    static void apply(Fits & fits, Schema const & schema, bool sanitizeNames) {
-        ProcessSchema f = { &fits, sanitizeNames, 0 };
-        schema.forEach(boost::ref(f));
-    }
-
-    Fits * fits;
-    bool sanitizeNames;
-    mutable int nFlags;
-};
-
-} // anonymous
-
-void writeFitsHeader(Fits & fits, Schema const & schema, bool sanitizeNames) {
-    fits.createTable();
-    fits.checkStatus();
-    int n = fits.addColumn<RecordId>("id", 1, "unique ID for the record");
-    fits.writeKey("IDCOL", n+1, "Number of the column with a unique ID.");
-    if (schema.hasTree()) {
-        n = fits.addColumn<RecordId>("parent", 1, "ID for the record's parent");
-        fits.writeKey("TREECOL", n + 1, "Number of the column with tree IDs.");
-    }
-    int nFlags = CountFlags::apply(schema);
-    if (nFlags > 0) {
-        n = fits.addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
-        fits.writeKey("FLAGCOL", n + 1, "Number of the column bitflags.");
-    }
-    fits.checkStatus();
-    ProcessSchema::apply(fits, schema, sanitizeNames);
-}
-
-//----- writeFitsRecords implementation ---------------------------------------------------------------------
+namespace lsst { namespace afw { namespace table { namespace io {
 
 namespace {
 
-struct ProcessWriteData {
-    
-    template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
-        fits->writeTableArray(row, col, item.key.getElementCount(), iter->getElementConstPtr(item.key));
-        ++col;
-    }
-    
-    void operator()(SchemaItem<Flag> const & item) const {
-        flags[bit] = iter->get(item.key);
-        ++bit;
-    }
+typedef FitsReader::Fits Fits;
 
-    static void apply(
-        Fits & fits, TableBase const & table, Schema const & schema
-    ) {
-        bool hasTree = schema.hasTree();
-        int nFlags = CountFlags::apply(schema);
-        boost::scoped_array<bool> flags;
-        if (nFlags)
-            flags.reset(new bool[nFlags]);
-        IteratorBase const end = table.end();
-        ProcessWriteData f = { 0, 0, 0, &fits, flags.get(), table.begin() };
-        while (f.iter != end) {
-            f.col = 0;
-            f.bit = 0;
-            fits.writeTableScalar(f.row, f.col++, f.iter->getId());
-            if (hasTree) fits.writeTableScalar(f.row, f.col++, f.iter->getParentId());
-            if (nFlags) ++f.col;
-            schema.forEach(boost::ref(f));
-            if (nFlags) fits.writeTableArray(f.row, 1 + hasTree, nFlags, f.flags);
-            ++f.row;
-            ++f.iter;
-        }
-    }
-
-    int row;
-    mutable int col;
-    mutable int bit;
-    Fits * fits;
-    bool * flags;
-    IteratorBase iter;
-};
-
-} // anonymous
-
-void writeFitsRecords(Fits & fits, TableBase const & table) {
-    ProcessWriteData::apply(fits, table, table.getSchema());
-    fits.checkStatus();
-}
-
-//----- readFitsHeader implementation -----------------------------------------------------------------------
+//----- code for reading FITS headers -----------------------------------------------------------------------
 
 /*
  *  We read FITS headers in two stages - first we read all the information we care about into
  *  a temporary structure (FitsSchema) we can access more easily than a raw FITS header,
  *  and then we iterate through that to fill the actual Schema object.
  */
-
-namespace {
 
 std::string strip(std::string const & s) {
     std::size_t i1 = s.find_first_not_of(" '");
@@ -228,7 +47,9 @@ struct FitsSchemaItem {
     template <typename U>
     void addFloatField(Fits & fits, Schema & schema, int size) const {
         if (size == 1) {
-            if (cls == "Array") {
+            if (cls == "Angle") {
+                schema.addField< Angle >(name, doc, units);
+            } else if (cls == "Array") {
                 schema.addField< Array<U> >(name, doc, units, 1);
             } else if (cls == "Covariance") {
                 schema.addField< Covariance<U> >(name, doc, units, 1);
@@ -239,6 +60,10 @@ struct FitsSchemaItem {
         } else if (size == 2) {
             if (cls == "Point") {
                 schema.addField< Point<U> >(name, doc, units);
+                return;
+            }
+            if (cls == "Coord") {
+                schema.addField< Coord >(name, doc, units);
                 return;
             }
         } else if (size == 3) {
@@ -420,54 +245,25 @@ struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
                 i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
             schema.asColSet().modify(i, FitsSchema::SetFormat(strip(value)));
-        } else if (std::strncmp(key, "IDCOL", 6) == 0) {
-            idCol = boost::lexical_cast<int>(value) - 1;
-        } else if (std::strncmp(key, "TREECOL", 8) == 0) {
-            treeCol = boost::lexical_cast<int>(value) - 1;
         } else if (std::strncmp(key, "FLAGCOL", 8) == 0) {
             flagCol = boost::lexical_cast<int>(value) - 1;
         }
     }
 
-    explicit ProcessHeader() : schema(), idCol(-1), treeCol(-1), flagCol(-1) {}
+    explicit ProcessHeader() : schema(), flagCol(-1) {}
 
     FitsSchema schema;
-    int idCol;
-    int treeCol;
     int flagCol;
 };
 
-} // anonymous
-
-Schema readFitsHeader(Fits & fits, bool unsanitizeNames, int nCols) {
-    ProcessHeader f;
-    fits.forEachKey(f);
-    Schema schema(f.treeCol >= 0);
-    for (
-        FitsSchema::List::const_iterator i = f.schema.asList().begin();
-        i != f.schema.asList().end();
-        ++i
-    ) {
-        if (nCols >= 0 && i->col >= nCols) continue;
-        if (i->bit >= 0) {
-            schema.addField<Flag>(i->name, i->doc);
-        } else if (i->col != f.idCol && i->col != f.treeCol && i->col != f.flagCol) {
-            i->addField(fits, schema);
-        }
-    }
-    return schema;
-}
-
-//----- readFitsRecords implementation ----------------------------------------------------------------------
-
-namespace {
+//----- code to read FITS records ---------------------------------------------------------------------------
 
 struct ProcessReadData {
-    
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
-        while (col == idCol || col == treeCol || col == flagCol) ++col;
-        fits->readTableArray(row, col, item.key.getElementCount(), record->getElementPtr(item.key));
+        if (col == flagCol) ++col;
+        fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
         ++col;
     }
 
@@ -477,84 +273,105 @@ struct ProcessReadData {
     }
 
     void doRecord(Schema const & schema, int nFlags) {
-        if (treeCol >= 0) {
-            RecordId parentId;
-            fits->readTableScalar(row, treeCol, parentId);
-            record->setParentId(parentId);
-        }
         if (flagCol >= 0) {
             fits->readTableArray<bool>(row, flagCol, nFlags, flags);
         }
         schema.forEach(*this);
     }
 
-    static void apply(
-        Fits & fits, TableBase const & table,
-        Schema const & schema,
-        int idCol, int treeCol, int flagCol
-    ) {
-        int nFlags = CountFlags::apply(schema);
+    static void apply(Fits & fits, PTR(TableBase) const & table, RecordSink & sink, int flagCol) {
+        Schema schema = table->getSchema();
+        int nFlags = fits.getTableArraySize(flagCol);
         boost::scoped_array<bool> flags;
         if (nFlags)
             flags.reset(new bool[nFlags]);
-        int nRows = fits.countRows();
-        ProcessReadData f = { 0, 0, 0, &fits, flags.get(), 0, idCol, treeCol, flagCol };
+        std::size_t nRows = fits.countRows();
+        ProcessReadData f = { 0, 0, 0, &fits, flags.get(), PTR(RecordBase)(), flagCol };
         while (f.row < nRows) {
-            RecordId recordId = 0;
             f.col = 0;
             f.bit = 0;
-            if (idCol >= 0) {
-                fits.readTableScalar(f.row, idCol, recordId);
-                RecordBase record = detail::Access::addRecord(table, recordId);
-                f.record = &record;
-                f.doRecord(schema, nFlags);
-            } else {
-                RecordBase record = detail::Access::addRecord(table);
-                f.record = &record;
-                f.doRecord(schema, nFlags);
-            }
+            f.record = table->makeRecord();
+            f.doRecord(schema, nFlags);
+            sink(f.record);
             ++f.row;
         }
     }
 
-    int row;
+    std::size_t row;
     mutable int col;
     mutable int bit;
     Fits * fits;
     bool * flags;
-    RecordBase * record;
-    int idCol;
-    int treeCol;
+    PTR(RecordBase) record;
     int flagCol;
 };
 
-} // anonymous
+typedef std::map<std::string,FitsReader::Factory*> Registry;
 
-void readFitsRecords(Fits & fits, TableBase const & table) {
-    int idCol = -1, treeCol = -1, flagCol = -1;
-    fits.readKey("IDCOL", idCol);
-    if (fits.status == 0) {
-        --idCol;
-    } else {
-        fits.status = 0;
-        idCol = -1;
-    }
-    fits.readKey("FLAGCOL", flagCol);
-    if (fits.status == 0) {
-        --flagCol;
-    } else {
-        fits.status = 0;
-        flagCol = -1;
-    }
-    fits.readKey("TREECOL", treeCol);
-    if (fits.status == 0) {
-        --treeCol;
-    } else {
-        fits.status = 0;
-        treeCol = -1;
-    }    
-    ProcessReadData::apply(fits, table, table.getSchema(), idCol, treeCol, flagCol);
-    fits.checkStatus();
+Registry & getRegistry() {
+    static Registry it;
+    return it;
 }
 
-}}}} // namespace lsst::afw::table::fits
+static FitsReader::FactoryT<FitsReader> baseReaderFactory("BASE");
+
+} // anonymous
+
+FitsReader::Factory::Factory(std::string const & name) {
+    getRegistry()[name] = this;
+}
+
+PTR(FitsReader) FitsReader::make(Fits * fits) {
+    std::string name;
+    fits->readKey("AFW_TYPE", name);
+    if (fits->status != 0) {
+        name = "BASE";
+        fits->status = 0;
+    }
+    Registry::iterator i = getRegistry().find(name);
+    if (i == getRegistry().end()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::NotFoundException,
+            (boost::format("FitsReader with name '%s' does not exist; check AFW_TYPE keyword.") % name).str()
+        );
+    }
+    return (*i->second)(fits);
+}
+
+Schema FitsReader::_readSchema(int nCols) const {
+    ProcessHeader f;
+    _fits->forEachKey(f);
+    Schema schema;
+    for (
+        FitsSchema::List::const_iterator i = f.schema.asList().begin();
+        i != f.schema.asList().end();
+        ++i
+    ) {
+        if (nCols >= 0 && i->col >= nCols) continue;
+        if (i->bit >= 0) {
+            schema.addField<Flag>(i->name, i->doc);
+        } else if (i->col != f.flagCol) {
+            i->addField(*_fits, schema);
+        }
+    }
+    return schema;
+}
+
+PTR(TableBase) FitsReader::_readTable() {
+    Schema schema = _readSchema();
+    return TableBase::make(schema);
+}
+
+void FitsReader::_readRecords(PTR(TableBase) const & table, RecordSink & sink) {
+    int flagCol = -1;
+    _fits->readKey("FLAGCOL", flagCol);
+    if (_fits->status == 0) {
+        --flagCol;
+    } else {
+        _fits->status = 0;
+        flagCol = -1;
+    }
+    ProcessReadData::apply(*_fits, table, sink, flagCol);
+}
+
+}}}} // namespace lsst::afw::table::io

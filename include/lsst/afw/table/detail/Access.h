@@ -35,14 +35,16 @@ public:
         return Key<Flag>(offset, bit);
     }
 
-    static RecordId & getParentId(Schema const & schema, RecordData & record) {
-        return schema._impl->getParentId(record);
-    }
-
     static void padSchema(Schema & schema, int bytes) {
         schema._edit();
         schema._impl->_recordSize += bytes;
     }
+
+    template <typename ContainerT>
+    static void readFits(std::string const & filename, ContainerT & container);
+
+    template <typename ContainerT>
+    static void writeFits(std::string const & filename, ContainerT const & container);
 
 };
 

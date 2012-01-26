@@ -3,6 +3,10 @@
 #define AFW_TABLE_misc_h_INCLUDED
 
 #include "boost/cstdint.hpp"
+#include "boost/mpl/if.hpp"
+#include "boost/type_traits/is_const.hpp"
+#include "boost/type_traits/add_const.hpp"
+
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord/Coord.h"
 
@@ -32,17 +36,11 @@ typedef lsst::afw::coord::Coord Coord;
 typedef lsst::afw::geom::Angle Angle;
 //@}
 
-/**
- *  @brief Class used to attach arbitrary extra data members to table and record classes.
- *
- *  Final table and record classes that need to additional data members will generally
- *  create new subclasses of AuxBase that holds these additional members, and then static_cast
- *  the return value of TableBase::getAux and RecordBase::getAux to the subclass type.
- */
-class AuxBase {
-public:
-    virtual ~AuxBase() {}
-};
+template <
+    typename RecordT,
+    typename TableT = typename RecordT::Table
+    >
+class Vector;
 
 }}} // namespace lsst::afw::table
 

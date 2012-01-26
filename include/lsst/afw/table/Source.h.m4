@@ -1,3 +1,4 @@
+changecom(`###')dnl
 // -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
@@ -20,24 +21,35 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-changecom(`###')dnl
 define(`m4def', defn(`define'))dnl
-m4def(`ADD_SLOT_GETTERS',
-`$2::MeasValue get$1$2() const {
-        return get(getTableAux()->translit($2, `A-Z', `a-z')$4.meas);
-    }
-    $2::ErrValue get$1$2$3() const {
-        return get(getTableAux()->translit($2, `A-Z', `a-z')$4.err);
-    }')dnl
-m4def(`ADD_FLUX_GETTERS', `ADD_SLOT_GETTERS($1, `Flux', `Err', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
-m4def(`ADD_CENTROID_GETTERS', `ADD_SLOT_GETTERS(`', `Centroid', `Cov', `')')dnl
-m4def(`ADD_SHAPE_GETTERS', `ADD_SLOT_GETTERS(`', `Shape', `Cov', `')')dnl
-m4def(`ADD_SLOT_DEFINERS',
+m4def(`DECLARE_SLOT_GETTERS',
+`/// @brief Get the value of the $1$2 slot measurement.
+    $2::MeasValue get$1$2() const;
+
+    /// @brief Get the uncertainty on the $1$2 slot measurement.
+    $2::ErrValue get$1$2$3() const;
+')dnl
+m4def(`DECLARE_FLUX_GETTERS', `DECLARE_SLOT_GETTERS($1, `Flux', `Err')')dnl
+m4def(`DECLARE_CENTROID_GETTERS', `DECLARE_SLOT_GETTERS(`', `Centroid', `Cov')')dnl
+m4def(`DECLARE_SHAPE_GETTERS', `DECLARE_SLOT_GETTERS(`', `Shape', `Cov')')dnl
+m4def(`DEFINE_SLOT_GETTERS',
+`inline $2::MeasValue SourceRecord::get$1$2() const {
+    return get(getTable()->get$1$2Key());
+}
+
+inline $2::ErrValue SourceRecord::get$1$2$3() const {
+    return get(getTable()->get$1$2$3Key());
+}
+')dnl
+m4def(`DEFINE_FLUX_GETTERS', `DEFINE_SLOT_GETTERS($1, `Flux', `Err')')dnl
+m4def(`DEFINE_CENTROID_GETTERS', `DEFINE_SLOT_GETTERS(`', `Centroid', `Cov')')dnl
+m4def(`DEFINE_SHAPE_GETTERS', `DEFINE_SLOT_GETTERS(`', `Shape', `Cov')')dnl
+m4def(`DECLARE_SLOT_DEFINERS',
 `/**
      * @brief Set the measurement used for the $1$2 slot using Keys.
      */
     void define$1$2($2::MeasKey const & meas, $2::ErrKey const & err)  const {
-        getAux()->translit($2, `A-Z', `a-z')$4 = KeyPair<$2>(meas, err);
+        _slot$2$4 = KeyPair<$2>(meas, err);
     }
 
     /**
@@ -48,12 +60,12 @@ m4def(`ADD_SLOT_DEFINERS',
      */
     void define$1$2(std::string const & name) const {
         Schema schema = getSchema();
-        getAux()->translit($2, `A-Z', `a-z')$4 = KeyPair<$2>(schema[name], schema[name]["translit($3, `A-Z', `a-z')"]);
+        _slot$2$4 = KeyPair<$2>(schema[name], schema[name]["translit($3, `A-Z', `a-z')"]);
     }
 
     /// @brief Return the name of the field used for the $1$2 slot.
     std::string get$1$2Definition() const {
-        return getSchema().find(getAux()->translit($2, `A-Z', `a-z')$4.meas).field.getName();
+        return getSchema().find(_slot$2$4.meas).field.getName();
     }
 
     /**
@@ -64,9 +76,7 @@ m4def(`ADD_SLOT_DEFINERS',
      *  the key each time requires an additional function call that
      *  cannot be inlined.
      */
-    $2::MeasKey get$1$2Key() const {
-         return getAux()->translit($2, `A-Z', `a-z')$4.meas;
-     }
+    $2::MeasKey get$1$2Key() const { return _slot$2$4.meas; }
 
     /**
      *  @brief Return the key used for $1$2 slot error or covariance.
@@ -76,19 +86,18 @@ m4def(`ADD_SLOT_DEFINERS',
      *  the key each time requires an additional function call that
      *  cannot be inlined.
      */
-    $2::ErrKey get$1$2$3() const {
-        return getAux()->translit($2, `A-Z', `a-z')$4.err;
-    }
+    $2::ErrKey get$1$2$3Key() const { return _slot$2$4.err; }
 ')dnl
-m4def(`ADD_FLUX_DEFINERS', `ADD_SLOT_DEFINERS($1, `Flux', `Err', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
-m4def(`ADD_CENTROID_DEFINERS', `ADD_SLOT_DEFINERS(`', `Centroid', `Cov', `')')dnl
-m4def(`ADD_SHAPE_DEFINERS', `ADD_SLOT_DEFINERS(`', `Shape', `Cov', `')')dnl
+m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `Err', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
+m4def(`DECLARE_CENTROID_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Centroid', `Cov', `')')dnl
+m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `Cov', `')')dnl
 #ifndef AFW_TABLE_Source_h_INCLUDED
 #define AFW_TABLE_Source_h_INCLUDED
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/detection/Footprint.h"
-#include "lsst/afw/table/RecordInterface.h"
-#include "lsst/afw/table/TableInterface.h"
+#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/IdFactory.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -136,32 +145,86 @@ struct KeyPair {
 
 #endif // !SWIG
 
-/// @brief A tag class for SourceTable and SourceRecord to be used with the interface classes.
-struct Source {
-    typedef SourceRecord Record;
+/**
+ *  @brief Record class that contains measurements made on a single exposure.
+ */
+class SourceRecord : public RecordBase {
+public:
+
     typedef SourceTable Table;
-    
-#ifndef SWIG
 
-    class RecordAux : public AuxBase {
-    public:
-        Footprint footprint;
-        
-        explicit RecordAux(Footprint const & fp) : footprint(fp) {}
-    };
+    PTR(Footprint) getFootprint() const { return _footprint; }
 
-    class TableAux : public AuxBase {
-    public:
-        PTR(daf::base::PropertyList) metadata;
+    void setFootprint(PTR(Footprint) const & footprint) { _footprint = footprint; }
 
-        KeyPair<Flux> flux[N_FLUX_SLOTS];
-        KeyPair<Centroid> centroid;
-        KeyPair<Shape> shape;
+    CONST_PTR(SourceTable) getTable() const {
+        return boost::static_pointer_cast<SourceTable const>(RecordBase::getTable());
+    }
 
-        TableAux(PTR(daf::base::PropertyList) const & metadata_) : metadata(metadata_) {}
-    };
+    //@{
+    /// @brief Convenience accessors for the keys in the minimal source schema.
+    RecordId getId() const;
+    void setId(RecordId id);
 
-#endif
+    RecordId getParentId() const;
+    void setParentId(RecordId id);
+
+    float getSky() const;
+    void setSky(float v);
+
+    float getSkyErr() const;
+    void setSkyErr(float v);
+
+    IcrsCoord getCoord() const;
+    void setCoord(IcrsCoord const & coord);
+    void setCoord(Coord const & coord);
+    //@}
+
+    /// @brief Equivalent to getCoord().getRa() (but possibly faster if only ra is needed).
+    Angle getRa() const;
+
+    /// @brief Equivalent to getCoord().getDec() (but possibly faster if only dec is needed).
+    Angle getDec() const;
+
+    DECLARE_FLUX_GETTERS(`Psf')
+    DECLARE_FLUX_GETTERS(`Model')
+    DECLARE_FLUX_GETTERS(`Ap')
+    DECLARE_FLUX_GETTERS(`Inst')
+    DECLARE_CENTROID_GETTERS
+    DECLARE_SHAPE_GETTERS
+
+protected:
+
+    SourceRecord(PTR(SourceTable) const & table) : RecordBase(table) {}
+
+    virtual void _assign(RecordBase const & other);
+
+private:
+    PTR(footprint) _footprint;
+};
+
+/**
+ *  @brief Table class that contains measurements made on a single exposure.
+ */
+class SourceTable : public TableBase {
+public:
+
+    typedef SourceRecord Record;
+
+    /**
+     *  @brief Construct a new table.
+     *
+     *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
+     *  @param[in] metadata          Flexible metadata for the table.  An empty PropertyList will be used
+     *                               if an empty pointer is passed.
+     *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
+     *                               If empty, defaults to a simple counter that starts at 1.
+     */
+    static PTR(SourceTable) make(
+        Schema const & schema,
+        PTR(daf::base::PropertyList) const & metadata = PTR(daf::base::PropertyList)(),
+        PTR(IdFactory) const & idFactory = PTR(IdFactory)()
+    );
 
     /**
      *  @brief Return a minimal schema for Source tables and records.
@@ -173,174 +236,132 @@ struct Source {
      *  Keys for the standard fields added by this routine can be obtained
      *  from other static member functions of the Source tag class.
      */
-    static Schema makeBasicSchema() { return getBasicSchema().schema; }
+    static Schema makeMinimalSchema() { return getMinimalSchema().schema; }
+
+    /**
+     *  @brief Return true if the given schema is a valid SourceTable schema.
+     *  
+     *  This will always be true if the given schema was originally constructed
+     *  using makeMinimalSchema(), and will rarely be true otherwise.
+     */
+    static bool checkSchema(Schema const & other)
 
     //@{
     /**
      *  Get keys for standard fields shared by all sources.
      *
      *  These keys are used to implement getters and setters on SourceRecord.
-     *  If performance is critical, it may be faster to get and cache these
-     *  keys locally rather than use the SourceRecord getters, as looking up
-     *  the keys each time requires an additional function call that
-     *  cannot be inlined.
      */
+
+    /// @brief Key for the source ID.
+    static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
+
+    /// @brief Key for the parent ID.
+    static Key<RecordId> getParentIdKey() { return getMinimalSchema().parentId; }
+
     /// @brief Key for the sky background at the location of the source.
-    static Key<float> getSkyKey() { return getBasicSchema().sky; }
+    static Key<float> getSkyKey() { return getMinimalSchema().sky; }
+
     /// @brief Key for the sky background uncertainty at the location of the source.
-    static Key<float> getSkyErrKey() { return getBasicSchema().skyErr; }
+    static Key<float> getSkyErrKey() { return getMinimalSchema().skyErr; }
+
     /// @brief Key for the ra/dec of the source.
-    static Key< Point<double> > getCoordKey() { return getBasicSchema().coord; }
+    static Key<Coord> getCoordKey() { return getMinimalSchema().coord; }
+
     //@}
-
-private:
-    
-    struct BasicSchema {
-        Schema schema;
-        Key<float> sky;
-        Key<float> skyErr;
-        Key< Point<double> > coord;
-    };
-    
-    static BasicSchema & getBasicSchema();
-
-};
-
-/**
- *  @brief Record class that contains measurements made on a single exposure.
- */
-class SourceRecord : public RecordInterface<Source> {
-public:
-
-    bool hasFootprint() const { return getAux(); }
-
-    Footprint const & getFootprint() const {
-        return boost::static_pointer_cast<Source::RecordAux>(getAux())->footprint;
-    }
-
-    void setFootprint(Footprint const & footprint) const {
-        assertBit(CAN_SET_FIELD);
-        getAux() = boost::make_shared<Source::RecordAux>(footprint);
-    }
-
-    //@{
-    /**
-     *  @brief Return canonical measurements and errors defined by "slots" in the table.
-     *
-     *  When performance is critical, it may be faster to obtain the keys that correspond
-     *  to these slots from the SourceTable and cache these locally; key lookup involves
-     *  a function call that cannot be inlined.
-     */
-    ADD_FLUX_GETTERS(`Psf')
-    ADD_FLUX_GETTERS(`Model')
-    ADD_FLUX_GETTERS(`Ap')
-    ADD_FLUX_GETTERS(`Inst')
-    ADD_CENTROID_GETTERS
-    ADD_SHAPE_GETTERS
-    //@}
-
-    /// @brief Construct a null record, which is unusable until a valid record is assigned to it.
-    SourceRecord() : RecordInterface<Source>() {}
-    
-private:
-
-    PTR(Source::TableAux) getTableAux() const {
-        return boost::static_pointer_cast<Source::TableAux>(RecordBase::getTableAux());
-    }
-
-    friend class detail::Access;
-
-    SourceRecord(RecordBase const & other) : RecordInterface<Source>(other) {}
-};
-
-/**
- *  @brief Table class that contains measurements made on a single exposure.
- */
-class SourceTable : public TableInterface<Source> {
-public:
-
-    /**
-     *  @brief Construct a new table.
-     *
-     *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
-     *  @param[in] capacity          Number of records to pre-allocate space for in the first block.  This
-     *                               overrides nRecordsPerBlock for the first block and the first block only.
-     *  @param[in] metadata          Flexible metadata for the table.  An empty PropertyList will be used
-     *                               if an empty pointer is passed.
-     *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
-     *                               If empty, defaults to a simple counter that starts at 1.
-     */
-    SourceTable(
-        Schema const & schema,
-        int capacity = 0,
-        PTR(daf::base::PropertyList) const & metadata = PTR(daf::base::PropertyList)(),
-        PTR(IdFactory) const & idFactory = PTR(IdFactory)()
-    ) : TableInterface<Source>(schema, capacity, idFactory) {
-        TableBase::getAux() = boost::make_shared<Source::TableAux>(metadata);
-    }
-
-    /// @copydoc TableBase::TableBase()
-    SourceTable() {}
 
     /// @brief Return the flexible metadata associated with the source table.
-    PTR(daf::base::PropertyList) getMetadata() const { return getAux()->metadata; }
+    PTR(daf::base::PropertyList) getMetadata() const { return _metadata; }
 
     /// @brief Set the flexible metadata associated with the source table.
-    void setMetadata(PTR(daf::base::PropertyList) const & metadata) const { getAux()->metadata = metadata; }
+    void setMetadata(PTR(daf::base::PropertyList) const & metadata) const { _metadata = metadata; }
 
-    ADD_FLUX_DEFINERS(Psf, CANONICAL_PSF)
-    ADD_FLUX_DEFINERS(Model, CANONICAL_MODEL)
-    ADD_FLUX_DEFINERS(Ap, CANONICAL_AP)
-    ADD_FLUX_DEFINERS(Inst, CANONICAL_INST)
-    ADD_CENTROID_DEFINERS
-    ADD_SHAPE_DEFINERS
+    /// @copydoc TableBase::clone
+    PTR(SourceTable) clone() const { return boost::static_pointer_cast<SourceTable>(_clone()); }
 
-    /// @brief Create and add a new record with an ID generated by the table's IdFactory.
-    Record addRecord() const { return _addRecord(); }
-    
-    /// @brief Create and add a new record with an ID generated by the table's IdFactory.
-    Record addRecord(Footprint const & footprint) const {
-        return _addRecord(boost::make_shared<Source::RecordAux>(footprint));
+    /// @copydoc TableBase::makeRecord
+    PTR(SourceRecord) makeRecord() { return boost::static_pointer_cast<SourceRecord>(_makeRecord()); }
+
+    /// @copydoc TableBase::copyRecord
+    PTR(SourceRecord) copyRecord(RecordBase const & other) {
+        return boost::static_pointer_cast<SourceRecord>(TableBase::copyRecord(other));
     }
 
-    /// @brief Create and add a new record with an explicit RecordId.
-    Record addRecord(RecordId id) const { return _addRecord(id); }
-
-    /// @brief Create and add a new record with an explicit RecordId.
-    Record addRecord(RecordId id, Footprint const & footprint) const {
-        return _addRecord(id, boost::make_shared<Source::RecordAux>(footprint));
+    /// @copydoc TableBase::copyRecord
+    PTR(SourceRecord) copyRecord(RecordBase const & other, SchemaMapper const & mapper) {
+        return boost::static_pointer_cast<SourceRecord>(TableBase::copyRecord(other, mapper));
     }
 
-    /**
-     *  @brief Write a FITS binary table.
-     *
-     *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
-     *                               to cfitsio, so all of its extended filename syntaxes should
-     *                               work here.
-     */
-    void writeFits(std::string const & filename);
-    
-    /**
-     *  @brief Load a table from a FITS binary table.
-     *
-     *  @param[in]   filename        Name of the FITS file to open.  This will be passed directly
-     *                               to cfitsio, so all of its extended filename syntaxes should
-     *                               work here.
-     */
-    static SourceTable readFits(std::string const & filename);
+    DECLARE_FLUX_DEFINERS(`Psf')
+    DECLARE_FLUX_DEFINERS(`Model')
+    DECLARE_FLUX_DEFINERS(`Ap')
+    DECLARE_FLUX_DEFINERS(`Inst')
+    DECLARE_CENTROID_DEFINERS
+    DECLARE_SHAPE_DEFINERS
+
+protected:
+
+    SourceTable(
+        Schema const & schema,
+        PTR(daf::base::PropertyList) const & metadata = PTR(daf::base::PropertyList)(),
+        PTR(IdFactory) const & idFactory = PTR(IdFactory)()
+    );
+
+    SourceTable(SourceTable const & other);
 
 private:
 
-    template <typename Tag> friend class RecordInterface;
-
-    PTR(Source::TableAux) getAux() const {
-        return boost::static_pointer_cast<Source::TableAux>(TableBase::getAux());
-    }
+    struct MinimalSchema {
+        Schema schema;
+        Key<RecordId> id;
+        Key<RecordId> parentId;
+        Key<float> sky;
+        Key<float> skyErr;
+        Key<Coord> coord;
+    };
     
-    /// @brief Create a table from a base-class table.  Required to implement RecordBase::getTable().
-    explicit SourceTable(TableBase const & base) : TableInterface<Source>(base) {}
+    static MinimalSchema & getMinimalSchema();
 
+    friend class detail::Access; // to expose FITS I/O to container classes
+
+    template <typename ContainerT>
+    static void readFits(std::string const & filename, ContainerT & container);
+
+    template <typename ContainerT>
+    static void writeFits(std::string const & filename, ContainerT const & container);
+
+    PTR(daf::base::PropertyList) _metadata;
+    PTR(IdFactory) _idFactory;
+    KeyPair<Flux> _slotFlux[N_FLUX_SLOTS];
+    KeyPair<Centroid> _slotCentroid;
+    KeyPair<Shape> _slotShape;
 };
+
+DEFINE_FLUX_GETTERS(`Psf')
+DEFINE_FLUX_GETTERS(`Model')
+DEFINE_FLUX_GETTERS(`Ap')
+DEFINE_FLUX_GETTERS(`Inst')
+DEFINE_CENTROID_GETTERS
+DEFINE_SHAPE_GETTERS
+
+inline RecordId SourceRecord::getId() const { return get(SourceTable::getIdKey()); }
+inline void SourceRecord::setId(RecordId id) { set(SourceTable::getIdKey(), id); }
+
+inline RecordId getParentId() const { return get(SourceTable::getParentIdKey()); }
+inline void setParentId(RecordId id) { set(SourceTable::getParentIdKey(), id); }
+
+inline float getSky() const { return get(SourceTable::getSkyKey()); }
+inline void setSky(float v) { set(SourceTable::getSkyKey(), v); }
+
+inline float getSkyErr() const { return get(SourceTable::getSkyErrKey()); }
+inline void setSkyErr(float v) { set(SourceTable::getSkyErrKey(), v); }
+
+inline IcrsCoord getCoord() const { return get(SourceTable::getCoordKey()); }
+inline void setCoord(IcrsCoord const & coord) { set(SourceTable::getCoordKey(), coord); }
+inline void setCoord(Coord const & coord) { set(SourceTable::getCoordKey(), coord); }
+
+inline Angle getRa() const { return get(SourceTable::getCoordKey().getRa()); }
+inline Angle getDec() const { return get(SourceTable::getCoordKey().getDec()); }
 
 }}} // namespace lsst::afw::table
 

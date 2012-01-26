@@ -12,8 +12,6 @@
 #include "boost/type_traits/remove_const.hpp"
 #include "boost/type_traits/remove_reference.hpp"
 
-#include "lsst/afw/table/detail/RecordData.h"
-
 namespace lsst { namespace afw { namespace table {
 
 class Schema;
@@ -66,13 +64,7 @@ public:
     typedef std::vector<ItemVariant> ItemContainer;
     typedef std::map<std::string,int> NameMap;
 
-    bool hasTree() const { return _hasTree; }
-
     int getRecordSize() const { return _recordSize; }
-
-    RecordId & getParentId(RecordData & record) const {
-        return *reinterpret_cast<RecordId*>(&record + 1);
-    }
 
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;
@@ -94,12 +86,10 @@ public:
 
     ItemContainer const & getItems() const { return _items; }
 
-    explicit SchemaImpl(bool hasTree) :
-        _recordSize(sizeof(RecordData)), _lastFlagField(-1), _lastFlagBit(-1),
-        _hasTree(hasTree), _items()
-    {
-        if (hasTree) _recordSize += sizeof(RecordId);
-    }
+    explicit SchemaImpl() :
+        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1),
+        _items()
+    {}
 
 private:
 
@@ -124,7 +114,6 @@ private:
     int _recordSize;
     int _lastFlagField;
     int _lastFlagBit;
-    bool _hasTree;
     ItemContainer _items;
     NameMap _names;
 };

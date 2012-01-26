@@ -87,7 +87,7 @@ public:
     int getOffset() const { return _offset; }
     int getBit() const { return _bit; }
 
-    Key() : FieldBase<Flag>(), _offset(0), _bit(0) {}
+    Key() : FieldBase<Flag>(), _offset(-1), _bit(0) {}
 
     inline friend std::ostream & operator<<(std::ostream & os, Key<Flag> const & key) {
         return os << "Key['" << Key<Flag>::getTypeString() << "'](offset=" << key.getOffset() 

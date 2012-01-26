@@ -35,7 +35,7 @@ private:
 
 } // anonymous
 
-void RecordBase::_assign(RecordBase const & other) {
+void RecordBase::assign(RecordBase const & other) {
     if (this->getSchema() != other.getSchema()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
@@ -43,9 +43,10 @@ void RecordBase::_assign(RecordBase const & other) {
         );
     }
     std::memcpy(_data, other._data, this->getSchema().getRecordSize());
+    this->_assign(other);
 }
 
-void RecordBase::_assign(RecordBase const & other, SchemaMapper const & mapper) {
+void RecordBase::assign(RecordBase const & other, SchemaMapper const & mapper) {
     if (other.getSchema() != mapper.getInputSchema()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
@@ -59,6 +60,7 @@ void RecordBase::_assign(RecordBase const & other, SchemaMapper const & mapper) 
         );
     }
     mapper.forEach(CopyValue(&other, this));
+    this->_assign(other);
 }
 
 

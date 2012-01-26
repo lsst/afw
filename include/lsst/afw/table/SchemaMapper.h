@@ -92,7 +92,7 @@ public:
     }
 
     /// @brief Construct a mapper from the given input Schema.  
-    explicit SchemaMapper(Schema const & input, bool outputHasTree);
+    explicit SchemaMapper(Schema const & input);
 
 private:
 
