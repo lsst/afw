@@ -3,8 +3,8 @@
 #include "boost/cstdint.hpp"
 
 #include "lsst/afw/table/io/FitsWriter.h"
-#include "lsst/afw/table/TableBase.h"
-#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/BaseTable.h"
+#include "lsst/afw/table/BaseRecord.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -150,7 +150,7 @@ struct FitsWriter::ProcessRecords {
         if (nFlags) flags.reset(new bool[nFlags]);
     }
 
-    void apply(RecordBase const * r) {
+    void apply(BaseRecord const * r) {
         record = r;
         col = 0;
         bit = 0;
@@ -165,11 +165,11 @@ struct FitsWriter::ProcessRecords {
     int nFlags;
     Fits * fits;
     boost::scoped_array<bool> flags;
-    RecordBase const * record;
+    BaseRecord const * record;
     Schema const schema;
 };
 
-void FitsWriter::_writeTable(CONST_PTR(TableBase) const & table) {
+void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
     Schema const & schema = table->getSchema();
     _fits->createTable();
     _fits->checkStatus();
@@ -183,7 +183,7 @@ void FitsWriter::_writeTable(CONST_PTR(TableBase) const & table) {
     _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
 }
 
-void FitsWriter::_writeRecord(RecordBase const & record) {
+void FitsWriter::_writeRecord(BaseRecord const & record) {
     ++_row;
     _processor->apply(&record);
 }

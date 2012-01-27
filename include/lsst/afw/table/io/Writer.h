@@ -6,8 +6,8 @@
 
 namespace lsst { namespace afw { namespace table {
 
-class TableBase;
-class RecordBase;
+class BaseTable;
+class BaseRecord;
 
 namespace io {
 
@@ -26,8 +26,8 @@ public:
     virtual ~Writer() {}
 
 protected:
-    virtual void _writeTable(CONST_PTR(TableBase) const & table) = 0;
-    virtual void _writeRecord(RecordBase const & record) = 0;
+    virtual void _writeTable(CONST_PTR(BaseTable) const & table) = 0;
+    virtual void _writeRecord(BaseRecord const & record) = 0;
 };
 
 }}}} // namespace lsst::afw::table::io

@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_TableBase_h_INCLUDED
-#define AFW_TABLE_TableBase_h_INCLUDED
+#ifndef AFW_TABLE_BaseTable_h_INCLUDED
+#define AFW_TABLE_BaseTable_h_INCLUDED
 
 #include "boost/enable_shared_from_this.hpp"
 
@@ -12,13 +12,13 @@
 
 namespace lsst { namespace afw { namespace table {
 
-class RecordBase;
+class BaseRecord;
 class SchemaMapper;
 
-class TableBase : public boost::enable_shared_from_this<TableBase> {
+class BaseTable : public boost::enable_shared_from_this<BaseTable> {
 public:
 
-    typedef RecordBase Record;
+    typedef BaseRecord Record;
 
     /// @brief Number of records in each block when capacity is not given explicitly.
     static int nRecordsPerBlock;
@@ -32,15 +32,15 @@ public:
      *  Cloning a table does not clone its associated records; the table produced by clone()
      *  does not have any associated records.
      */
-    PTR(TableBase) clone() const { return _clone(); }
+    PTR(BaseTable) clone() const { return _clone(); }
 
     /**
      *  @brief Default-construct an associated record.
      *
      *  Derived classes should reimplement by static-casting the output of _makeRecord to the
-     *  appropriate RecordBase subclass to simulate covariant return types.
+     *  appropriate BaseRecord subclass to simulate covariant return types.
      */
-    PTR(RecordBase) makeRecord() { return _makeRecord(); }
+    PTR(BaseRecord) makeRecord() { return _makeRecord(); }
 
     /**
      *  @brief Deep copy a record, requiring that it have the same schema as this table.
@@ -48,20 +48,20 @@ public:
      *  Regardless of the type of the input record, the type of the output record will be the type
      *  associated with this table.
      *
-     *  Derived classes should reimplement by static-casting the output of TableBase::copyRecord to the
-     *  appropriate RecordBase subclass.
+     *  Derived classes should reimplement by static-casting the output of BaseTable::copyRecord to the
+     *  appropriate BaseRecord subclass.
      *
      *  This is implemented using makeRecord and calling record.assign on the results; override those
      *  to change the behavior.
      */
-    PTR(RecordBase) copyRecord(RecordBase const & input);
+    PTR(BaseRecord) copyRecord(BaseRecord const & input);
 
     /**
      *  @brief Deep copy a record, using a mapper to relate two schemas.
      *
-     *  @copydetails TableBase::copyRecord(RecordBase const &)
+     *  @copydetails BaseTable::copyRecord(BaseRecord const &)
      */
-    PTR(RecordBase) copyRecord(RecordBase const & input, SchemaMapper const & mapper);
+    PTR(BaseRecord) copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
     
     /// @brief Return the table's schema.
     Schema const & getSchema() const { return _schema; }
@@ -80,8 +80,8 @@ public:
     /**
      *  @brief Construct a new table.
      *
-     *  Because TableBase is an abstract class, this actually returns a hidden trivial subclass
-     *  (which is associated with a hidden trivial subclass of RecordBase).
+     *  Because BaseTable is an abstract class, this actually returns a hidden trivial subclass
+     *  (which is associated with a hidden trivial subclass of BaseRecord).
      *
      *  Hiding concrete table and record classes in anonymous namespaces is not required, but it
      *  makes it easier to ensure instances are always created within shared_ptrs,
@@ -89,9 +89,9 @@ public:
      *  In some cases it may also serve as a form of pimpl, keeping class implementation details
      *  out of header files.
      */
-    static PTR(TableBase) make(Schema const & schema);
+    static PTR(BaseTable) make(Schema const & schema);
 
-    virtual ~TableBase() {}
+    virtual ~BaseTable() {}
 
 protected:
 
@@ -108,34 +108,34 @@ protected:
     }
 
     /// @brief Clone implementation with noncovariant return types.
-    virtual PTR(TableBase) _clone() const = 0;
+    virtual PTR(BaseTable) _clone() const = 0;
 
     /// @brief Default-construct an associated record (protected implementation).
-    virtual PTR(RecordBase) _makeRecord() = 0;
+    virtual PTR(BaseRecord) _makeRecord() = 0;
 
-    explicit TableBase(Schema const & schema);
+    explicit BaseTable(Schema const & schema);
 
-    TableBase(TableBase const & other) : _schema(other._schema) {}
+    BaseTable(BaseTable const & other) : _schema(other._schema) {}
 
 private:
     
-    friend class RecordBase;
+    friend class BaseRecord;
     friend class io::FitsWriter;
 
-    // Called by RecordBase ctor to fill in its _data and _manager members.
-    void _initialize(RecordBase & record);
+    // Called by BaseRecord ctor to fill in its _data and _manager members.
+    void _initialize(BaseRecord & record);
 
     /*
-     *  Called by RecordBase dtor to notify the table when it is about to be destroyed.
+     *  Called by BaseRecord dtor to notify the table when it is about to be destroyed.
      *
      *  This could allow the table to reclaim that space, but presently that requires
      *  more bookkeeping than it's worth unless this was the most recently allocated record.
      *  It does tell the table that it isn't contiguous anymore, preventing ColumnView access.
      */
-    void _destroy(RecordBase & record);
+    void _destroy(BaseRecord & record);
 
     // Tables may be copy-constructable (and are definitely cloneable), but are not assignable.
-    void operator=(TableBase const & other) { assert(false); }
+    void operator=(BaseTable const & other) { assert(false); }
 
     // Return a writer object that knows how to save in FITS format.
     virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
@@ -147,4 +147,4 @@ private:
 
 }}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_TableBase_h_INCLUDED
+#endif // !AFW_TABLE_BaseTable_h_INCLUDED

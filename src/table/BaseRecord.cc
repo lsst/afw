@@ -3,7 +3,7 @@
 #include <cstring>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/SchemaMapper.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -24,18 +24,18 @@ struct CopyValue {
         _outputRecord->set(outputKey, _inputRecord->get(inputKey));
     }
 
-    CopyValue(RecordBase const * inputRecord, RecordBase * outputRecord) :
+    CopyValue(BaseRecord const * inputRecord, BaseRecord * outputRecord) :
         _inputRecord(inputRecord), _outputRecord(outputRecord)
     {}
 
 private:
-    RecordBase const * _inputRecord;
-    RecordBase * _outputRecord;
+    BaseRecord const * _inputRecord;
+    BaseRecord * _outputRecord;
 };
 
 } // anonymous
 
-void RecordBase::assign(RecordBase const & other) {
+void BaseRecord::assign(BaseRecord const & other) {
     if (this->getSchema() != other.getSchema()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
@@ -46,7 +46,7 @@ void RecordBase::assign(RecordBase const & other) {
     this->_assign(other);
 }
 
-void RecordBase::assign(RecordBase const & other, SchemaMapper const & mapper) {
+void BaseRecord::assign(BaseRecord const & other, SchemaMapper const & mapper) {
     if (other.getSchema() != mapper.getInputSchema()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,

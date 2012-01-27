@@ -55,9 +55,9 @@ class TableImpl;
 template <typename T>
 struct FieldBase {
 
-    typedef T Value;        ///< @brief the type returned by RecordBase::get
-    typedef T & Reference;  ///< @brief the type returned by RecordBase::operator[] (non-const)
-    typedef T const & ConstReference;  ///< @brief the type returned by RecordBase::operator[] (const)
+    typedef T Value;        ///< @brief the type returned by BaseRecord::get
+    typedef T & Reference;  ///< @brief the type returned by BaseRecord::operator[] (non-const)
+    typedef T const & ConstReference;  ///< @brief the type returned by BaseRecord::operator[] (const)
     typedef T Element;      ///< @brief the type of subfields (the same as the type itself for scalars)
 
     /// @brief Return the number of subfield elements (always one for scalars).
@@ -105,7 +105,7 @@ protected:
 template <>
 struct FieldBase< Coord > {
 
-    /// @brief the type returned by RecordBase::get (coord::IcrsCoord, in this case).
+    /// @brief the type returned by BaseRecord::get (coord::IcrsCoord, in this case).
     typedef IcrsCoord Value;
 
     /// @brief the type of subfields
@@ -157,7 +157,7 @@ template <typename U>
 struct FieldBase< Point<U> > {
 
     /**
-     *  @brief the type returned by RecordBase::get
+     *  @brief the type returned by BaseRecord::get
      *
      *  This will be geom::Point2I when U is an integer, and geom::Point2D when U is float or double.
      */
@@ -205,7 +205,7 @@ protected:
 template <typename U>
 struct FieldBase< Moments<U> > {
 
-    typedef afw::geom::ellipses::Quadrupole Value; ///< @brief the type returned by RecordBase::get
+    typedef afw::geom::ellipses::Quadrupole Value; ///< @brief the type returned by BaseRecord::get
     typedef U Element; /// @brief the type of subfields
 
     /// @brief Return the number of subfield elements (always three for shapes).
@@ -250,12 +250,12 @@ protected:
 template <typename U>
 struct FieldBase< Array<U> > {
 
-    typedef lsst::ndarray::Array<U const,1,1> Value; ///< @brief the type returned by RecordBase::get
+    typedef lsst::ndarray::Array<U const,1,1> Value; ///< @brief the type returned by BaseRecord::get
 
-    /// @brief the type returned by RecordBase::operator[]
+    /// @brief the type returned by BaseRecord::operator[]
     typedef lsst::ndarray::ArrayRef<U,1,1> Reference;
 
-    /// @brief the type returned by RecordBase::operator[] (const)
+    /// @brief the type returned by BaseRecord::operator[] (const)
     typedef lsst::ndarray::ArrayRef<U const,1,1> ConstReference;
 
     typedef U Element;  ///< @brief the type of subfields and array elements
@@ -340,7 +340,7 @@ private:
 template <typename U>
 struct FieldBase< Covariance<U> > {
 
-    /// @brief the type returned by RecordBase::get
+    /// @brief the type returned by BaseRecord::get
     typedef Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> Value; 
 
     typedef U Element;    ///< @brief the type of subfields and matrix elements
@@ -426,7 +426,7 @@ struct FieldBase< Covariance< Point<U> > > {
     static int const SIZE = 2;
     static int const PACKED_SIZE = 3;
 
-    typedef Eigen::Matrix<U,SIZE,SIZE> Value; ///< @brief the type returned by RecordBase::get
+    typedef Eigen::Matrix<U,SIZE,SIZE> Value; ///< @brief the type returned by BaseRecord::get
     typedef U Element; ///< @brief the type of subfields and matrix elements
 
     /// @brief Return a string description of the field type.
@@ -500,7 +500,7 @@ struct FieldBase< Covariance< Moments<U> > > {
     static int const SIZE = 3;
     static int const PACKED_SIZE = 6;
 
-    typedef Eigen::Matrix<U,SIZE,SIZE> Value; ///< @brief the type returned by RecordBase::get
+    typedef Eigen::Matrix<U,SIZE,SIZE> Value; ///< @brief the type returned by BaseRecord::get
     typedef U Element; ///< @brief the type of subfields and matrix elements
 
     /// @brief Return a string description of the field type.

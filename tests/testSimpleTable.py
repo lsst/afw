@@ -96,7 +96,7 @@ class SimpleTableTestCase(unittest.TestCase):
         k17 = schema.addField("f17", type="Cov<Moments<F8>>")
         k18 = schema.addField("f18", type="Angle")
         k19 = schema.addField("f19", type="Coord")
-        table = lsst.afw.table.TableBase.make(schema)
+        table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
         self.checkScalarAccessors(record, k1, 2, 3)
         self.checkScalarAccessors(record, k2, 2, 3)

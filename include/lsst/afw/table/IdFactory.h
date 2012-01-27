@@ -31,7 +31,7 @@ public:
     /**
      *  @brief Return a simple IdFactory that simply counts from 1.
      *
-     *  This is used when an empty pointer is passed to the TableBase constructor.
+     *  This is used when an empty pointer is passed to the BaseTable constructor.
      */
     static PTR(IdFactory) makeSimple();
 

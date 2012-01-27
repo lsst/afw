@@ -6,7 +6,7 @@
 
 namespace lsst { namespace afw { namespace table {
 
-class RecordBase;
+class BaseRecord;
 
 /**
  *  @brief A mapping between the keys of two Schemas, used to copy data between them

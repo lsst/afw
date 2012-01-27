@@ -4,7 +4,7 @@
 // by replacing many of the get/set implementations with %template lines.
 
 %define %specializeScalar(U)
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     %template(get) get< U >;
     %template(set) set< U, U >;
     U __getitem__(lsst::afw::table::Key< U > const & key) const { return (*self)[key]; }
@@ -20,7 +20,7 @@
     lsst::afw::table::Key<U> getX() const { return self->getX(); }
     lsst::afw::table::Key<U> getY() const { return self->getY(); }
 }
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     VALUE get(lsst::afw::table::Key< Point< U > > const & key) const { return self->get(key); }
     void set(lsst::afw::table::Key< Point< U > > const & key, VALUE const & v) { self->set(key, v); }
 }
@@ -32,7 +32,7 @@
     lsst::afw::table::Key<U> getIYY() const { return self->getIYY(); }
     lsst::afw::table::Key<U> getIXY() const { return self->getIXY(); }
 }
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     VALUE get(lsst::afw::table::Key< Moments< U > > const & key) const { return self->get(key); }
     void set(lsst::afw::table::Key< Moments< U > > const & key, VALUE const & v) { self->set(key, v); }
 }
@@ -47,7 +47,7 @@
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Array< U > > {
     int getSize() const { return self->getSize(); }
 }
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     lsst::ndarray::Array<U const,1,1> get(lsst::afw::table::Key< Array< U > > const & key) const {
         return self->get(key);
     }
@@ -79,7 +79,7 @@
     int getSize() const { return self->getSize(); }
     int getPackedSize() const { return self->getPackedSize(); }
 }
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic>
     get(lsst::afw::table::Key< Covariance< U > > const & key) const {
         return self->get(key);
@@ -101,7 +101,7 @@
     int getSize() const { return self->getSize(); }
     int getPackedSize() const { return self->getPackedSize(); }
 }
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     Eigen::Matrix<U,2,2> get(lsst::afw::table::Key< Covariance< Point< U > > > const & key) const {
         return self->get(key);
     }
@@ -122,7 +122,7 @@
     int getSize() const { return self->getSize(); }
     int getPackedSize() const { return self->getPackedSize(); }
 }
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     Eigen::Matrix<U,3,3> get(lsst::afw::table::Key< Covariance< Moments< U > > > const & key) const {
         return self->get(key);
     }
@@ -135,7 +135,7 @@
 }
 %enddef
 
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     bool get(lsst::afw::table::Key< Flag > const & key) const {
         return self->get(key);
     }
@@ -155,7 +155,7 @@
     lsst::afw::table::Key<lsst::afw::geom::Angle> getRa() const { return self->getRa(); }
     lsst::afw::table::Key<lsst::afw::geom::Angle> getDec() const { return self->getDec(); }
 }
-%extend lsst::afw::table::RecordBase {
+%extend lsst::afw::table::BaseRecord {
     lsst::afw::coord::IcrsCoord get(lsst::afw::table::Key< lsst::afw::coord::Coord > const & key) const {
         return self->get(key);
     }

@@ -67,9 +67,9 @@ protected:
 
     virtual Schema _readSchema(int nCols=-1);
 
-    virtual PTR(TableBase) _readTable(Schema const & schema);
+    virtual PTR(BaseTable) _readTable(Schema const & schema);
 
-    virtual PTR(RecordBase) _readRecord(PTR(TableBase) const & table);
+    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
     struct ProcessRecords;
 

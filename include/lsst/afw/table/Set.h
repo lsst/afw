@@ -10,8 +10,8 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/table/TableBase.h"
-#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/BaseTable.h"
+#include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"

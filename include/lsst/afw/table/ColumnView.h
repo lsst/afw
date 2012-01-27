@@ -23,12 +23,12 @@ private:
 
 } // namespace detail
 
-class TableBase;
+class BaseTable;
 
 /**
  *  @brief Column-wise view into a consolidated table.
  *
- *  A ColumnView can be constructed from a table using TableBase::getColumnView().
+ *  A ColumnView can be constructed from a table using BaseTable::getColumnView().
  *
  *  Geometric (point and shape) fields cannot be accessed through a ColumnView, but their
  *  scalar components can be.
@@ -65,7 +65,7 @@ public:
 
 private:
 
-    friend class TableBase;
+    friend class BaseTable;
 
     struct Impl;
 

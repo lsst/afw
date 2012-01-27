@@ -11,8 +11,8 @@
 
 namespace lsst { namespace afw { namespace table {
 
-class RecordBase;
-class TableBase;
+class BaseRecord;
+class BaseTable;
 
 namespace detail {
 

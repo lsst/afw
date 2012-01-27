@@ -6,7 +6,7 @@
 
 namespace lsst { namespace afw { namespace table { 
 
-class TableBase;
+class BaseTable;
 
 namespace io {
 
@@ -26,7 +26,7 @@ public:
             );
         }
         ContainerT container(table);
-        PTR(RecordBase) record = _readRecord(table);
+        PTR(BaseRecord) record = _readRecord(table);
         while (record) {
             container.insert(
                 container.end(),
@@ -43,9 +43,9 @@ protected:
     
     virtual Schema _readSchema(int nCols=-1) = 0;
 
-    virtual PTR(TableBase) _readTable(Schema const & schema) = 0;
+    virtual PTR(BaseTable) _readTable(Schema const & schema) = 0;
 
-    virtual PTR(RecordBase) _readRecord(PTR(TableBase) const & table) = 0;
+    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table) = 0;
 };
 
 }}}} // namespace lsst::afw::table::io

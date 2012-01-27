@@ -17,7 +17,7 @@ class Access;
 template <>
 struct FieldBase<Flag> {
 
-    typedef bool Value;        ///< @brief the type returned by RecordBase::get
+    typedef bool Value;        ///< @brief the type returned by BaseRecord::get
     typedef boost::int64_t Element;   ///< @brief the actual storage type (shared by multiple flag fields)
 
     /// @brief Return the number of subfield elements (always one for scalars).
@@ -97,7 +97,7 @@ public:
 private:
 
     friend class detail::Access;
-    friend class RecordBase;
+    friend class BaseRecord;
 
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         return (*p) & (Element(1) << _bit);

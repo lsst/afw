@@ -144,6 +144,6 @@ public:
 
 }}}
 
-%template (BaseVector) lsst::afw::table::Vector<lsst::afw::table::RecordBase,lsst::afw::table::TableBase>;
+%template (BaseVector) lsst::afw::table::Vector<lsst::afw::table::BaseRecord,lsst::afw::table::BaseTable>;
 %template (SourceVector) lsst::afw::table::Vector<lsst::afw::table::SourceRecord,lsst::afw::table::SourceTable>;
 %template (SourceSet) lsst::afw::table::SourceSet<lsst::afw::table::SourceRecord,lsst::afw::table::SourceTable>;

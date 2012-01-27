@@ -2,8 +2,8 @@
 
 #include "boost/make_shared.hpp"
 
-#include "lsst/afw/table/RecordBase.h"
-#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Vector.h"
 #include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/detail/Access.h"
@@ -14,28 +14,28 @@ namespace {
 
 class SimpleRecord;
 
-class SimpleTable : public TableBase {
+class SimpleTable : public BaseTable {
 public:
 
-    explicit SimpleTable(Schema const & schema) : TableBase(schema) {}
+    explicit SimpleTable(Schema const & schema) : BaseTable(schema) {}
 
-    SimpleTable(SimpleTable const & other) : TableBase(other) {}
+    SimpleTable(SimpleTable const & other) : BaseTable(other) {}
 
 private:
-    virtual PTR(TableBase) _clone() const;
-    virtual PTR(RecordBase) _makeRecord();
+    virtual PTR(BaseTable) _clone() const;
+    virtual PTR(BaseRecord) _makeRecord();
 };
 
-class SimpleRecord : public RecordBase {
+class SimpleRecord : public BaseRecord {
 public:
-    explicit SimpleRecord(PTR(TableBase) const & table) : RecordBase(table) {}
+    explicit SimpleRecord(PTR(BaseTable) const & table) : BaseRecord(table) {}
 };
 
-PTR(TableBase) SimpleTable::_clone() const {
+PTR(BaseTable) SimpleTable::_clone() const {
     return boost::make_shared<SimpleTable>(*this);
 }
 
-PTR(RecordBase) SimpleTable::_makeRecord() {
+PTR(BaseRecord) SimpleTable::_makeRecord() {
     return boost::make_shared<SimpleRecord>(shared_from_this());
 }
 
@@ -65,7 +65,7 @@ public:
     static void * get(std::size_t recordSize, ndarray::Manager::Ptr & manager) {
         Ptr block = boost::static_pointer_cast<Block>(manager);
         if (!block || block->_next == block->_end) {
-            block = Ptr(new Block(recordSize, TableBase::nRecordsPerBlock));
+            block = Ptr(new Block(recordSize, BaseTable::nRecordsPerBlock));
             manager = block;
         }
         void * r = block->_next;
@@ -102,40 +102,40 @@ private:
 
 } // anonymous
 
-void TableBase::preallocate(std::size_t n) {
+void BaseTable::preallocate(std::size_t n) {
     Block::preallocate(_schema.getRecordSize(), n, _manager);
 }
 
-PTR(TableBase) TableBase::make(Schema const & schema) {
+PTR(BaseTable) BaseTable::make(Schema const & schema) {
     return boost::make_shared<SimpleTable>(schema);
 }
 
-PTR(RecordBase) TableBase::copyRecord(RecordBase const & input) {
-    PTR(RecordBase) output = makeRecord();
+PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input) {
+    PTR(BaseRecord) output = makeRecord();
     output->assign(input);
     return output;
 }
 
-PTR(RecordBase) TableBase::copyRecord(RecordBase const & input, SchemaMapper const & mapper) {
-    PTR(RecordBase) output = makeRecord();
+PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input, SchemaMapper const & mapper) {
+    PTR(BaseRecord) output = makeRecord();
     output->assign(input, mapper);
     return output;
 }
 
-PTR(io::FitsWriter) TableBase::makeFitsWriter(io::FitsWriter::Fits * fits) const {
+PTR(io::FitsWriter) BaseTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
     return boost::make_shared<io::FitsWriter>(fits);
 }
 
-TableBase::TableBase(Schema const & schema) : _schema(schema) {
+BaseTable::BaseTable(Schema const & schema) : _schema(schema) {
     Block::padSchema(_schema);
 }
 
-void TableBase::_initialize(RecordBase & record) {
+void BaseTable::_initialize(BaseRecord & record) {
     record._data = Block::get(_schema.getRecordSize(), _manager);
     record._manager = _manager; // manager always points to the most recently-used block.
 }
 
-void TableBase::_destroy(RecordBase & record) {
+void BaseTable::_destroy(BaseRecord & record) {
     assert(record._table.get() == this);
     if (record._manager == _manager) Block::reclaim(_schema.getRecordSize(), record._data, _manager);
 }
@@ -146,9 +146,9 @@ void TableBase::_destroy(RecordBase & record) {
  *  number of records; the answer probably depends on both the typical size of
  *  records and the typical number of records.
  */
-int TableBase::nRecordsPerBlock = 100;
+int BaseTable::nRecordsPerBlock = 100;
 
-template class Vector<RecordBase>;
-template class Vector<RecordBase const>;
+template class Vector<BaseRecord>;
+template class Vector<BaseRecord const>;
 
 }}} // namespace lsst::afw::table

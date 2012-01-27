@@ -141,8 +141,8 @@ template <> struct traits< VALUE > {
 
 // ---------------------------------------------------------------------------------------------------------
 
-%shared_ptr(lsst::afw::table::TableBase);
-%shared_ptr(lsst::afw::table::RecordBase);
+%shared_ptr(lsst::afw::table::BaseTable);
+%shared_ptr(lsst::afw::table::BaseRecord);
 %shared_ptr(lsst::afw::table::IdFactory);
 %ignore lsst::afw::table::IdFactory::operator=;
 
@@ -262,12 +262,12 @@ def asKey(self):
 
 %include "lsst/afw/table/SchemaMapper.h"
 
-%include "lsst/afw/table/TableBase.h"
+%include "lsst/afw/table/BaseTable.h"
 
-%ignore lsst::afw::table::RecordBase::operator=;
-%rename("__eq__") lsst::afw::table::RecordBase::operator==;
-%rename("__ne__") lsst::afw::table::RecordBase::operator!=;
-%include "lsst/afw/table/RecordBase.h"
+%ignore lsst::afw::table::BaseRecord::operator=;
+%rename("__eq__") lsst::afw::table::BaseRecord::operator==;
+%rename("__ne__") lsst::afw::table::BaseRecord::operator!=;
+%include "lsst/afw/table/BaseRecord.h"
 
 %include "lsst/afw/table/ColumnView.h"
 

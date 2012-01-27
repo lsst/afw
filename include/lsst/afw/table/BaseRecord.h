@@ -1,26 +1,26 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_RecordBase_h_INCLUDED
-#define AFW_TABLE_RecordBase_h_INCLUDED
+#ifndef AFW_TABLE_BaseRecord_h_INCLUDED
+#define AFW_TABLE_BaseRecord_h_INCLUDED
 
 #include "lsst/base.h"
 #include "lsst/afw/table/Schema.h"
-#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/BaseTable.h"
 
 namespace lsst { namespace afw { namespace table {
 
 class SchemaMapper;
 class ColumnView;
 
-class RecordBase : private boost::noncopyable {
+class BaseRecord : private boost::noncopyable {
 public:
 
-    typedef TableBase Table;
+    typedef BaseTable Table;
 
     /// @brief Return the Schema that holds this record's fields and keys.
     Schema const & getSchema() const { return _table->getSchema(); }
 
     /// @brief Return the table this record is associated with.
-    CONST_PTR(TableBase) getTable() const { return _table; }
+    CONST_PTR(BaseTable) getTable() const { return _table; }
 
     /**
      *  @brief Return a pointer to the underlying elements of a field (non-const).
@@ -94,32 +94,32 @@ public:
     }
 
     /// @brief Copy all field values from other to this, requiring that they have equal schemas.
-    void assign(RecordBase const & other);
+    void assign(BaseRecord const & other);
 
     /// @brief Copy field values from other to this, using a mapper.
-    void assign(RecordBase const & other, SchemaMapper const & mapper);
+    void assign(BaseRecord const & other, SchemaMapper const & mapper);
 
-    virtual ~RecordBase() { _table->_destroy(*this); }
+    virtual ~BaseRecord() { _table->_destroy(*this); }
 
 protected:
 
     /// @brief Called by assign() after transferring fields to allow subclass data members to be copied.
-    virtual void _assign(RecordBase const & other) {}
+    virtual void _assign(BaseRecord const & other) {}
 
     /// @brief Construct a record with uninitialized data.
-    RecordBase(PTR(TableBase) const & table) : _table(table) { table->_initialize(*this); }
+    BaseRecord(PTR(BaseTable) const & table) : _table(table) { table->_initialize(*this); }
 
 private:
 
-    friend class TableBase;
+    friend class BaseTable;
     friend class ColumnView;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     void * _data;
-    PTR(TableBase) _table;
+    PTR(BaseTable) _table;
     ndarray::Manager::Ptr _manager;
 };
 
 }}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_RecordBase_h_INCLUDED
+#endif // !AFW_TABLE_BaseRecord_h_INCLUDED

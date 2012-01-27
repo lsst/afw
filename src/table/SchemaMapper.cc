@@ -2,7 +2,7 @@
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/afw/table/SchemaMapper.h"
-#include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/BaseRecord.h"
 
 namespace lsst { namespace afw { namespace table {
 

@@ -30,11 +30,11 @@ public:
 
 private:
 
-    virtual PTR(TableBase) _clone() const {
+    virtual PTR(BaseTable) _clone() const {
         return boost::make_shared<SourceTableImpl>(*this);
     }
 
-    virtual PTR(RecordBase) _makeRecord() {
+    virtual PTR(BaseRecord) _makeRecord() {
         PTR(SourceRecord) record = boost::make_shared<SourceRecordImpl>(getSelf<SourceTableImpl>());
         record->setId((*getIdFactory())());
         return record;
@@ -49,9 +49,9 @@ public:
 
 protected:
     
-    virtual void _writeTable(CONST_PTR(TableBase) const & table);
+    virtual void _writeTable(CONST_PTR(BaseTable) const & table);
 
-    virtual void _writeRecord(RecordBase const & record);
+    virtual void _writeRecord(BaseRecord const & record);
 
 private:
     int _spanCol;
@@ -67,16 +67,16 @@ protected:
 
     virtual Schema _readSchema(int nCols=-1);
 
-    virtual PTR(TableBase) _readTable(Schema const & schema);
+    virtual PTR(BaseTable) _readTable(Schema const & schema);
 
-    virtual PTR(RecordBase) _readRecord(PTR(TableBase) const & table);
+    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
 private:
     int _spanCol;
     int _peakCol;
 };
 
-void SourceFitsWriter::_writeTable(CONST_PTR(TableBase) const & t) {
+void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
     CONST_PTR(SourceTable) table = boost::dynamic_pointer_cast<SourceTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
@@ -93,7 +93,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(TableBase) const & t) {
     // TODO: stuff metadata, slots in header
 }
 
-void SourceFitsWriter::_writeRecord(RecordBase const & r) {
+void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
     SourceRecord const & record = static_cast<SourceRecord const &>(r);
     io::FitsWriter::_writeRecord(record);
     if (record.getFootprint()) {
@@ -140,11 +140,11 @@ Schema SourceFitsReader::_readSchema(int nCols) {
     return io::FitsReader::_readSchema(maxCol);
 }
 
-PTR(TableBase) SourceFitsReader::_readTable(Schema const & schema) {
+PTR(BaseTable) SourceFitsReader::_readTable(Schema const & schema) {
     return SourceTable::make(schema);
 }
 
-PTR(RecordBase) SourceFitsReader::_readRecord(PTR(TableBase) const & table) {
+PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
     PTR(SourceRecord) record = boost::static_pointer_cast<SourceRecord>(io::FitsReader::_readRecord(table));
     if (!record) return record;
     boost::static_pointer_cast<SourceTable>(table)->getIdFactory()->notify(record->getId());
@@ -203,9 +203,9 @@ static io::FitsReader::FactoryT<SourceFitsReader> sourceFitsReaderFactory("SOURC
 
 } // anonymous
 
-SourceRecord::SourceRecord(PTR(SourceTable) const & table) : RecordBase(table) {}
+SourceRecord::SourceRecord(PTR(SourceTable) const & table) : BaseRecord(table) {}
 
-void SourceRecord::_assign(RecordBase const & other) {
+void SourceRecord::_assign(BaseRecord const & other) {
     try {
         SourceRecord const & s = dynamic_cast<SourceRecord const &>(other);
         _footprint = s._footprint;
@@ -230,14 +230,14 @@ SourceTable::SourceTable(
     Schema const & schema,
     PTR(daf::base::PropertyList) const & metadata,
     PTR(IdFactory) const & idFactory
-) : TableBase(schema), _metadata(metadata), _idFactory(idFactory)
+) : BaseTable(schema), _metadata(metadata), _idFactory(idFactory)
 {
     if (!_idFactory) _idFactory = IdFactory::makeSimple();
     if (!_metadata) _metadata = boost::make_shared<daf::base::PropertyList>();
 }
 
 SourceTable::SourceTable(SourceTable const & other) :
-    TableBase(other),
+    BaseTable(other),
     _metadata(boost::static_pointer_cast<daf::base::PropertyList>(other._metadata->deepCopy())),
     _idFactory(other._idFactory->clone()),
     _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)

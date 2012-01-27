@@ -16,7 +16,7 @@
 namespace lsst { namespace afw { namespace table {
 
 class SubSchema;
-class RecordBase;
+class BaseRecord;
 
 /**
  *  @brief Defines the fields and offsets for a table.

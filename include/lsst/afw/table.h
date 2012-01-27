@@ -56,7 +56,7 @@ namespace lsst { namespace afw { namespace table {
  *  
  *  Record and table classes are defined in pairs; each record class has a 1-to-1
  *  correspondence with a table class.  A final table class inherits from the TableInterface
- *  template class, which inherits from the TableBase class (records have a parallel inheritance
+ *  template class, which inherits from the BaseTable class (records have a parallel inheritance
  *  structure).  This inheritance is purely for implementation purposes; tables and records are
  *  not polymorphic and should always be passed by value.  Much of the public interface for
  *  tables and records is provided by these base classes.  SimpleRecord and SimpleTable are
@@ -72,7 +72,7 @@ namespace lsst { namespace afw { namespace table {
  *
  *  All copy constructors and assignment operators for records and tables are shallow - they
  *  affect what memory blocks the objects refer to, but do not modify the values of those memory
- *  blocks.  As in afw::image, RecordBase::operator<<= is overloaded to perform deep assignment of
+ *  blocks.  As in afw::image, BaseRecord::operator<<= is overloaded to perform deep assignment of
  *  records.  Because this operator is not available in Python, so a "copyFrom" method is provided
  *  instead.
  *
@@ -80,13 +80,13 @@ namespace lsst { namespace afw { namespace table {
  *  When the capacity of the most recent block is exhausted, a new block will be allocated for future
  *  records.  This means most - but not all - records will be close to their neighbors in memory.
  *  Unlike std::vector, the whole table is never silently reallocated.  This can be done explicitly,
- *  however, using TableBase::consolidate().  Columns of a table may be accessed as strided ndarray
+ *  however, using BaseTable::consolidate().  Columns of a table may be accessed as strided ndarray
  *  objects (and hency NumPy arrays in Python) using ColumnView, but a ColumnView can only be
  *  constructed from a consolidated table.
  *
  *  Because records and tables thus behave somewhat like "smart reference" objects, the usual
  *  constness semantics don't work for them.  Instead, only shallow mutators (like the regular
- *  assignment operators or TableBase::consolidate()) that change the pointer to the underlying
+ *  assignment operators or BaseTable::consolidate()) that change the pointer to the underlying
  *  memory are marked as non-const; accessors that modify the data itself are NOT marked as const.
  *  That means there is no convential way to prevent a user from modifying a table or record
  *  when passing it as an argument to another field.  To address this problem, tables and records
@@ -105,7 +105,7 @@ namespace lsst { namespace afw { namespace table {
  *  while this size can be set at compile time, all records must have the same size.
  *
  *  Not all field types support all types of data access.  All field types support atomic access to
- *  the entire field at once through RecordBase::get and RecordBase::set.  Some field types support
+ *  the entire field at once through BaseRecord::get and BaseRecord::set.  Some field types support
  *  square bracket access to mutable references as well.  Only scalar and array fields support column
  *  access through ColumnView.
  *

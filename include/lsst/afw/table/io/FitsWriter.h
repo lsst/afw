@@ -19,7 +19,7 @@ public:
         Fits fits = Fits::createFile(filename.c_str());
         fits.checkStatus();
         PTR(FitsWriter) writer 
-            = boost::static_pointer_cast<TableBase const>(container.getTable())->makeFitsWriter(&fits);
+            = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits);
         writer->write(container);
         fits.closeFile();
         fits.checkStatus();
@@ -29,8 +29,8 @@ public:
 
 protected:
 
-    virtual void _writeTable(CONST_PTR(TableBase) const & table);
-    virtual void _writeRecord(RecordBase const & source);
+    virtual void _writeTable(CONST_PTR(BaseTable) const & table);
+    virtual void _writeRecord(BaseRecord const & source);
 
     Fits * _fits;
     std::size_t _row;

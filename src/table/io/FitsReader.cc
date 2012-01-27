@@ -12,8 +12,8 @@
 #include "boost/math/special_functions/round.hpp"
 
 #include "lsst/afw/table/io/FitsReader.h"
-#include "lsst/afw/table/RecordBase.h"
-#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseTable.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -330,7 +330,7 @@ struct FitsReader::ProcessRecords {
     int flagCol;
     Fits * fits;
     boost::scoped_array<bool> flags;
-    RecordBase * record;
+    BaseRecord * record;
 };
 
 Schema FitsReader::_readSchema(int nCols) {
@@ -355,12 +355,12 @@ Schema FitsReader::_readSchema(int nCols) {
     return schema;
 }
 
-PTR(TableBase) FitsReader::_readTable(Schema const & schema) {
-    return TableBase::make(schema);
+PTR(BaseTable) FitsReader::_readTable(Schema const & schema) {
+    return BaseTable::make(schema);
 }
 
-PTR(RecordBase) FitsReader::_readRecord(PTR(TableBase) const & table) {
-    PTR(RecordBase) record;
+PTR(BaseRecord) FitsReader::_readRecord(PTR(BaseTable) const & table) {
+    PTR(BaseRecord) record;
     if (++_row == _nRows) return record;
     record = table->makeRecord();
     _processor->record = record.get();
