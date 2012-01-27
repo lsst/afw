@@ -6,6 +6,9 @@ __all__ = ("Registry", "makeRegistry", "registerConfig", "registerFactory")
 class FactoryConfigPair(object):
     """A simple structure with two fields: factory and ConfigClass
     """
+    
+    __slots__ = "factory", "ConfigClass"
+
     def __init__(self, factory, ConfigClass):
         self.factory = factory
         self.ConfigClass = ConfigClass
@@ -39,6 +42,7 @@ class Registry(collections.Mapping):
     foo = fooItem.factory(fooItem.ConfigClass())
     foo.addVal(5) # returns config.val + 5
     """
+
     def __init__(self, configBaseType=pexConfig.Config):
         """Construct a registry of name: FactoryConfigPair objects
         
@@ -76,6 +80,12 @@ class Registry(collections.Mapping):
     def __iter__(self):
         return iter(self._dict)
 
+    def __contains__(self, key):
+        return key in self._dict
+
+    def makeField(doc, default=None, optional=False, multi=False):
+        return RegistryField(doc, self, default, optional, multi)
+
 class RegistryAdaptor(object):
     """Private class that makes a Registry behave like the thing a ConfigChoiceField expects."""
 
@@ -85,10 +95,10 @@ class RegistryAdaptor(object):
     def __getitem__(self, k):
         return self.registry[k].ConfigClass
 
-class FactoryConfigInstanceDict(lsst.pex.config.ConfigInstanceDict):
+class FactoryConfigInstanceDict(pexConfig.ConfigInstanceDict):
 
     def __init__(self, fullname, typemap, multi, history=None):
-        lsst.pex.config.ConfigInstanceDict.__init__(self, fullname, typemap, multi, history)
+        pexConfig.ConfigInstanceDict.__init__(self, fullname, typemap, multi, history)
 
     def _getFactory(self):
         if self._multi:
@@ -115,13 +125,12 @@ class FactoryConfigInstanceDict(lsst.pex.config.ConfigInstanceDict):
         else:
             return self.factory(self.active, *args, **kwds)
 
-class RegistryField(lsst.pex.config.ConfigChoiceField):
+class RegistryField(pexConfig.ConfigChoiceField):
 
     def __init__(self, doc, registry, default=None, optional=False, multi=False,
                  instanceDictClass=FactoryConfigInstanceDict):
         typemap = RegistryAdaptor(registry)
-        lsst.pex.config.ConfigChoiceField.__init__(self, doc, typemap, default, optional, multi,
-                                                   instanceDictClass)
+        pexConfig.ConfigChoiceField.__init__(self, doc, typemap, default, optional, multi, instanceDictClass)
 
 def makeRegistry(doc, configBaseType=pexConfig.Config):
     """A convenience function to create a new registry.

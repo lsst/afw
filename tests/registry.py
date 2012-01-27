@@ -34,7 +34,7 @@ class ConfigTest(unittest.TestCase):
         class ParentConfig(pexConfig.Config):
             pass
         
-        self.registry = afwReg.makeRegistry(doc="unit test configs", baseType=ParentConfig)
+        self.registry = afwReg.makeRegistry(doc="unit test configs", configBaseType=ParentConfig)
         
         class FooConfig1(ParentConfig):
             pass
@@ -52,7 +52,7 @@ class ConfigTest(unittest.TestCase):
             pass
         self.config2Class = Config2
         
-        @pexConfig.registerFactory("foo1", self.registry)
+        @afwReg.registerFactory("foo1", self.registry)
         class FooAlg1(object):
             ConfigClass = FooConfig1
             def foo(self):
@@ -81,8 +81,8 @@ class ConfigTest(unittest.TestCase):
     def testReplace(self):
         """Test replacement in registry (should always fail)
         """
-        self.assertRaises(Exception, self.configRegistry.register, "foo1", self.fooAlg2Class)
-        self.assertEqual(self.configRegistry["foo1"].factory, self.fooConfig1Class)
+        self.assertRaises(Exception, self.registry.register, "foo1", self.fooAlg2Class)
+        self.assertEqual(self.registry["foo1"].factory, self.fooAlg1Class)
 
 def  suite():
     utilsTests.init()
