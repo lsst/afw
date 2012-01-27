@@ -85,8 +85,8 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `Cov', `')')
 
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/detection/Footprint.h"
-#include "lsst/afw/table/RecordBase.h"
-#include "lsst/afw/table/TableBase.h"
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Set.h"
 #include "lsst/afw/table/io/FitsWriter.h"
@@ -140,7 +140,7 @@ struct KeyPair {
 /**
  *  @brief Record class that contains measurements made on a single exposure.
  */
-class SourceRecord : public RecordBase {
+class SourceRecord : public BaseRecord {
 public:
 
     typedef SourceTable Table;
@@ -150,7 +150,7 @@ public:
     void setFootprint(PTR(Footprint) const & footprint) { _footprint = footprint; }
 
     CONST_PTR(SourceTable) getTable() const {
-        return boost::static_pointer_cast<SourceTable const>(RecordBase::getTable());
+        return boost::static_pointer_cast<SourceTable const>(BaseRecord::getTable());
     }
 
     //@{
@@ -189,7 +189,7 @@ protected:
 
     SourceRecord(PTR(SourceTable) const & table);
 
-    virtual void _assign(RecordBase const & other);
+    virtual void _assign(BaseRecord const & other);
 
 private:
     PTR(Footprint) _footprint;
@@ -198,7 +198,7 @@ private:
 /**
  *  @brief Table class that contains measurements made on a single exposure.
  */
-class SourceTable : public TableBase {
+class SourceTable : public BaseTable {
 public:
 
     typedef SourceRecord Record;
@@ -276,20 +276,20 @@ public:
     /// @brief Set the flexible metadata associated with the source table.
     void setMetadata(PTR(daf::base::PropertyList) const & metadata) { _metadata = metadata; }
 
-    /// @copydoc TableBase::clone
+    /// @copydoc BaseTable::clone
     PTR(SourceTable) clone() const { return boost::static_pointer_cast<SourceTable>(_clone()); }
 
-    /// @copydoc TableBase::makeRecord
+    /// @copydoc BaseTable::makeRecord
     PTR(SourceRecord) makeRecord() { return boost::static_pointer_cast<SourceRecord>(_makeRecord()); }
 
-    /// @copydoc TableBase::copyRecord
-    PTR(SourceRecord) copyRecord(RecordBase const & other) {
-        return boost::static_pointer_cast<SourceRecord>(TableBase::copyRecord(other));
+    /// @copydoc BaseTable::copyRecord
+    PTR(SourceRecord) copyRecord(BaseRecord const & other) {
+        return boost::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other));
     }
 
-    /// @copydoc TableBase::copyRecord
-    PTR(SourceRecord) copyRecord(RecordBase const & other, SchemaMapper const & mapper) {
-        return boost::static_pointer_cast<SourceRecord>(TableBase::copyRecord(other, mapper));
+    /// @copydoc BaseTable::copyRecord
+    PTR(SourceRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+        return boost::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other, mapper));
     }
 
     DECLARE_FLUX_DEFINERS(`Psf')
