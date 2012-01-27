@@ -5,6 +5,7 @@
 #include "boost/enable_shared_from_this.hpp"
 
 #include "lsst/base.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/ndarray/Manager.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/Schema.h"
@@ -15,7 +16,12 @@ namespace lsst { namespace afw { namespace table {
 class BaseRecord;
 class SchemaMapper;
 
-class BaseTable : public boost::enable_shared_from_this<BaseTable> {
+class BaseTable 
+#ifndef SWIG
+: public boost::enable_shared_from_this<BaseTable>,
+  private daf::base::Citizen
+#endif
+{
 public:
 
     typedef BaseRecord Record;
@@ -115,7 +121,7 @@ protected:
 
     explicit BaseTable(Schema const & schema);
 
-    BaseTable(BaseTable const & other) : _schema(other._schema) {}
+    BaseTable(BaseTable const & other) : daf::base::Citizen(other), _schema(other._schema) {}
 
 private:
     

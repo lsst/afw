@@ -11,7 +11,12 @@ namespace lsst { namespace afw { namespace table {
 class SchemaMapper;
 class ColumnView;
 
-class BaseRecord : private boost::noncopyable {
+class BaseRecord
+#ifndef SWIG
+    : private daf::base::Citizen,
+      private boost::noncopyable
+#endif
+{
 public:
 
     typedef BaseTable Table;
@@ -107,7 +112,9 @@ protected:
     virtual void _assign(BaseRecord const & other) {}
 
     /// @brief Construct a record with uninitialized data.
-    BaseRecord(PTR(BaseTable) const & table) : _table(table) { table->_initialize(*this); }
+    BaseRecord(PTR(BaseTable) const & table) : daf::base::Citizen(typeid(this)), _table(table) {
+        table->_initialize(*this);
+    }
 
 private:
 

@@ -126,7 +126,7 @@ PTR(io::FitsWriter) BaseTable::makeFitsWriter(io::FitsWriter::Fits * fits) const
     return boost::make_shared<io::FitsWriter>(fits);
 }
 
-BaseTable::BaseTable(Schema const & schema) : _schema(schema) {
+BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), _schema(schema) {
     Block::padSchema(_schema);
 }
 
