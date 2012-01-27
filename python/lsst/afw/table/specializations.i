@@ -53,7 +53,7 @@
     }
     void set(
         lsst::afw::table::Key< Array< U > > const & key,
-        lsst::ndarray::Array<U const,1,0> const & v
+        lsst::ndarray::Array<U const,1> const & v
     ) {
         self->set(key, v);
     }

@@ -36,7 +36,7 @@ private:
 
     virtual PTR(RecordBase) _makeRecord() {
         PTR(SourceRecord) record = boost::make_shared<SourceRecordImpl>(getSelf<SourceTableImpl>());
-        record->setId(getIdFactory()());
+        record->setId((*getIdFactory())());
         return record;
     }
 
@@ -147,7 +147,7 @@ PTR(TableBase) SourceFitsReader::_readTable(Schema const & schema) {
 PTR(RecordBase) SourceFitsReader::_readRecord(PTR(TableBase) const & table) {
     PTR(SourceRecord) record = boost::static_pointer_cast<SourceRecord>(io::FitsReader::_readRecord(table));
     if (!record) return record;
-    boost::static_pointer_cast<SourceTable>(table)->getIdFactory().notify(record->getId());
+    boost::static_pointer_cast<SourceTable>(table)->getIdFactory()->notify(record->getId());
     int spanElementCount = (_spanCol >= 0) ? _fits->getTableArraySize(_row, _spanCol) : 0;
     int peakElementCount = (_peakCol >= 0) ? _fits->getTableArraySize(_row, _peakCol) : 0;
     if (spanElementCount || peakElementCount) {

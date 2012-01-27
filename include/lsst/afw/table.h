@@ -5,6 +5,7 @@
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/ColumnView.h"
 
 namespace lsst { namespace afw { namespace table {
 

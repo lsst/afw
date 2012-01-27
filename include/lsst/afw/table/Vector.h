@@ -11,6 +11,7 @@
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
 
@@ -73,6 +74,8 @@ public:
 
     explicit Vector(PTR(TableT) const & table = PTR(TableT)()) : _table(table), _internal() {}
 
+    explicit Vector(Schema const & schema) : _table(TableT::make(schema)), _internal() {}
+
     template <typename InputIterator>
     Vector(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
         _table(table), _internal()
@@ -102,6 +105,8 @@ public:
     static Vector readFits(std::string const & filename) {
         return io::FitsReader::apply<Vector>(filename);
     }
+
+    ColumnView getColumnView() const { return ColumnView::make(begin(), end()); }
 
     iterator begin() { return iterator(_internal.begin()); }
     iterator end() { return iterator(_internal.end()); }
@@ -153,6 +158,12 @@ public:
             );
         }
         _internal.push_back(p);
+    }
+
+    PTR(RecordT) addNew() {
+        PTR(RecordT) r = _table->makeRecord();
+        _internal.push_back(r);
+        return r;
     }
 
     void pop_back() { _internal.pop_back(); }

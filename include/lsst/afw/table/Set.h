@@ -12,6 +12,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/TableBase.h"
 #include "lsst/afw/table/RecordBase.h"
+#include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
 
@@ -81,6 +82,10 @@ public:
         _key(key), _table(table), _internal(compare)
     {}
 
+    Set(Schema const & schema, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
+        _key(key), _table(TableT::make(schema)), _internal(compare)
+    {}
+
     template <typename InputIterator>
     Set(
         PTR(TableT) const & table, Key<KeyT> const & key,
@@ -110,6 +115,8 @@ public:
         return io::FitsReader::apply<Set>(filename);
     }
 
+    ColumnView getColumnView() const { return ColumnView::make(begin(), end()); }
+
     iterator begin() { return iterator(_internal.begin()); }
     iterator end() { return iterator(_internal.end()); }
 
@@ -136,6 +143,12 @@ public:
         typename Internal::const_iterator i = _internal.find(k);
         if (i != _internal.end()) p = i->second;
         return p;
+    }
+
+    PTR(RecordT) addNew() {
+        PTR(RecordT) r = _table->makeRecord();
+        _internal.push_back(r);
+        return r;
     }
 
     std::pair<iterator,bool> insert(Record const & r) {

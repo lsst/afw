@@ -93,7 +93,7 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `Cov', `')')
 
 namespace lsst { namespace afw { namespace table {
 
-typedef detection::Footprint Footprint;
+typedef lsst::afw::detection::Footprint Footprint;
 
 class SourceRecord;
 class SourceTable;
@@ -265,10 +265,10 @@ public:
     //@}
 
     /// @brief Return the object that generates IDs for the table.
-    IdFactory & getIdFactory() { return *_idFactory; }
+    PTR(IdFactory) getIdFactory() { return _idFactory; }
 
     /// @brief Return the object that generates IDs for the table.
-    IdFactory const & getIdFactory() const { return *_idFactory; }
+    CONST_PTR(IdFactory) getIdFactory() const { return _idFactory; }
 
     /// @brief Return the flexible metadata associated with the source table.
     PTR(daf::base::PropertyList) getMetadata() const { return _metadata; }
@@ -334,12 +334,16 @@ private:
     KeyPair<Shape> _slotShape;
 };
 
+#ifndef SWIG
+
 template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table>
 class SourceSet : public Set<RecordT,TableT> {
     BOOST_STATIC_ASSERT( (boost::is_convertible<RecordT*,SourceRecord const*>::value) );
 public:
     
     explicit SourceSet(PTR(TableT) const & table) : Set<RecordT,TableT>(table, SourceTable::getIdKey()) {}
+
+    explicit SourceSet(Schema const & schema) : Set<RecordT,TableT>(schema, SourceTable::getIdKey()) {}
 
     template <typename InputIterator>
     SourceSet(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
@@ -377,6 +381,8 @@ inline void SourceRecord::setCoord(Coord const & coord) { set(SourceTable::getCo
 
 inline Angle SourceRecord::getRa() const { return get(SourceTable::getCoordKey().getRa()); }
 inline Angle SourceRecord::getDec() const { return get(SourceTable::getCoordKey().getDec()); }
+
+#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

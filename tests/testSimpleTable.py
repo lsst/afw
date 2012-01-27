@@ -76,7 +76,7 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assert_(numpy.all(record.get(key) == value))
 
     def testRecordAccess(self):
-        schema = lsst.afw.table.Schema(False)
+        schema = lsst.afw.table.Schema()
         k1 = schema.addField("f1", type="I4")
         k2 = schema.addField("f2", type="I8")
         k3 = schema.addField("f3", type="F4")
@@ -96,8 +96,8 @@ class SimpleTableTestCase(unittest.TestCase):
         k17 = schema.addField("f17", type="Cov<Moments<F8>>")
         k18 = schema.addField("f18", type="Angle")
         k19 = schema.addField("f19", type="Coord")
-        table = lsst.afw.table.SimpleTable(schema)
-        record = table.addRecord()
+        table = lsst.afw.table.TableBase.make(schema)
+        record = table.makeRecord()
         self.checkScalarAccessors(record, k1, 2, 3)
         self.checkScalarAccessors(record, k2, 2, 3)
         self.checkScalarAccessors(record, k3, 2.5, 3.5)
@@ -122,7 +122,7 @@ class SimpleTableTestCase(unittest.TestCase):
             )
 
     def testColumnView(self):
-        schema = lsst.afw.table.Schema(True)
+        schema = lsst.afw.table.Schema()
         k1 = schema.addField("f1", type="I4")
         kb1 = schema.addField("fb1", type="Flag")
         k2 = schema.addField("f2", type="F4")
@@ -132,58 +132,50 @@ class SimpleTableTestCase(unittest.TestCase):
         k4 = schema.addField("f4", type="Array<F4>", size=2)
         k5 = schema.addField("f5", type="Array<F8>", size=3)
         k6 = schema.addField("f6", type="Angle")
-        table = lsst.afw.table.SimpleTable(schema, 2)
-        records = []
-        records.append(table.addRecord())
-        records.append(table.addRecord())
-        records[0].set(k1, 2)
-        records[0].set(k2, 0.5)
-        records[0].set(k3, 0.25)
-        records[0].set(kb1, False)
-        records[0].set(kb2, True)
-        records[0].set(kb3, False)
-        records[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
-        records[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
-        records[0].set(k6, lsst.afw.geom.Angle(0.25))
-        records[1].set(k1, 3)
-        records[1].set(k2, 2.5)
-        records[1].set(k3, 0.75)
-        records[1].set(kb1, True)
-        records[1].set(kb2, False)
-        records[1].set(kb3, True)
-        records[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
-        records[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
-        records[1].set(k6, lsst.afw.geom.Angle(0.15))
-        records[1].setParentId(1)
-        self.assert_(table.isConsolidated())
-        columns = table.getColumnView()
+        vector = lsst.afw.table.BaseVector(schema)
+        vector.addNew()
+        vector.addNew()
+        vector[0].set(k1, 2)
+        vector[0].set(k2, 0.5)
+        vector[0].set(k3, 0.25)
+        vector[0].set(kb1, False)
+        vector[0].set(kb2, True)
+        vector[0].set(kb3, False)
+        vector[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
+        vector[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
+        vector[0].set(k6, lsst.afw.geom.Angle(0.25))
+        vector[1].set(k1, 3)
+        vector[1].set(k2, 2.5)
+        vector[1].set(k3, 0.75)
+        vector[1].set(kb1, True)
+        vector[1].set(kb2, False)
+        vector[1].set(kb3, True)
+        vector[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
+        vector[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
+        vector[1].set(k6, lsst.afw.geom.Angle(0.15))
+        columns = vector.getColumnView()
         for key in [k1, k2, k3, kb1, kb2, kb3]:
             array = columns[key]
             for i in [0, 1]:
-                self.assertEqual(array[i], records[i].get(key))
+                self.assertEqual(array[i], vector[i].get(key))
         for key in [k4, k5]:
             array = columns[key]
             for i in [0, 1]:
-                self.assert_(numpy.all(array[i] == records[i].get(key)))
+                self.assert_(numpy.all(array[i] == vector[i].get(key)))
         for key in [k6]:
             array = columns[key]
             for i in [0, 1]:
-                self.assertEqual(lsst.afw.geom.Angle(array[i]), records[i].get(key))
-        ids = columns.getId()
-        parentIds = columns.getParentId();
-        for i in [0, 1]:
-            self.assertEqual(ids[i], records[i].getId())
-            self.assertEqual(parentIds[i], records[i].getParentId())
+                self.assertEqual(lsst.afw.geom.Angle(array[i]), vector[i].get(key))
 
     def testIteration(self):
-        schema = lsst.afw.table.Schema(False)
-        table = lsst.afw.table.SimpleTable(schema)
-        table.addRecord()
-        table.addRecord()
-        table.addRecord()
-        table.addRecord()
-        for n, record in enumerate(table):
-            self.assertEqual(n+1, record.getId())
+        schema = lsst.afw.table.Schema()
+        k = schema.addField("a", type=int)
+        vector = lsst.afw.table.BaseVector(schema)
+        for n in range(5):
+            record = vector.addNew()
+            record[k] = n
+        for n, r in enumerate(vector):
+            self.assertEqual(n, r[k])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -59,21 +59,26 @@ def makeCov(size, dtype):
 class SourceTableTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.schema = lsst.afw.table.Schema(True)
+        self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.fluxKey = self.schema.addField("a", type="F8")
         self.fluxErrKey = self.schema.addField("a.err", type="F8")
         self.centroidKey = self.schema.addField("b", type="Point<F8>")
         self.centroidCovKey = self.schema.addField("b.cov", type="Cov<Point<F8>>")
         self.shapeKey = self.schema.addField("c", type="Moments<F8>")
         self.shapeCovKey = self.schema.addField("c.cov", type="Cov<Moments<F8>>")
-        self.table = lsst.afw.table.SourceTable(self.schema)
-        self.record = self.table.addRecord()
+        self.table = lsst.afw.table.SourceTable.make(self.schema)
+        self.record = self.table.makeRecord()
         self.record.set(self.fluxKey, numpy.random.randn())
         self.record.set(self.fluxErrKey, numpy.random.randn())
         self.record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
         self.record.set(self.centroidCovKey, makeCov(2, float))
         self.record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
         self.record.set(self.shapeCovKey, makeCov(3, float))
+
+    def tearDown(self):
+        del self.record
+        del self.table
+        del self.schema
 
     def checkCanonical(self):
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")

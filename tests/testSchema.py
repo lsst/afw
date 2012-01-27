@@ -52,7 +52,7 @@ except NameError:
 class SchemaTestCase(unittest.TestCase):
 
     def testSchema(self):
-        schema = lsst.afw.table.Schema(False);
+        schema = lsst.afw.table.Schema();
         ab_k = schema.addField("a.b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a.b.i", type=int, doc="int")
         acf_k = schema.addField("a.c.f", type=numpy.float32, doc="float")
@@ -79,7 +79,7 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(schema, schema2)
         schema2.addField("q", type=float, doc="another double")
         self.assertNotEqual(schema, schema2)
-        schema3 = lsst.afw.table.Schema(False)
+        schema3 = lsst.afw.table.Schema()
         schema3.addField("j", type=lsst.afw.coord.Coord, doc="coord")
         schema3.addField("i", type="I4", doc="int")
         schema3.addField("f", type="F4", doc="float")
@@ -88,7 +88,7 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(schema3, schema)
         
     def testInspection(self):
-        schema = lsst.afw.table.Schema(False)
+        schema = lsst.afw.table.Schema()
         keys = []
         keys.append(schema.addField("d", type=int))
         keys.append(schema.addField("c", type=float))
@@ -99,7 +99,7 @@ class SchemaTestCase(unittest.TestCase):
         self.assertNotEqual(keys[0], keys[1])
 
     def testKeyAccessors(self):
-        schema = lsst.afw.table.Schema(False)
+        schema = lsst.afw.table.Schema()
         arrayKey = schema.addField("a", type="Array<F4>", doc="doc for array field", size=5)
         arrayElementKey = arrayKey[1]
         self.assertEqual(lsst.afw.table.Key["F4"], type(arrayElementKey))

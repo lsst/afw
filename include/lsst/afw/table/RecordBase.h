@@ -9,6 +9,7 @@
 namespace lsst { namespace afw { namespace table {
 
 class SchemaMapper;
+class ColumnView;
 
 class RecordBase : private boost::noncopyable {
 public:
@@ -111,6 +112,7 @@ protected:
 private:
 
     friend class TableBase;
+    friend class ColumnView;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     void * _data;

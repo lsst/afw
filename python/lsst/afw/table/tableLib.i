@@ -269,35 +269,7 @@ def asKey(self):
 %rename("__ne__") lsst::afw::table::RecordBase::operator!=;
 %include "lsst/afw/table/RecordBase.h"
 
- //%include "lsst/afw/table/ColumnView.h"
-
-#if 0
-// Workarounds for SWIG's failure to parse the Measurement template correctly.
-// Otherwise we'd have one place in the code that controls all the canonical measurement types.
-namespace lsst { namespace afw { namespace table {
-     struct Flux {
-         typedef Key< double > MeasKey;
-         typedef Key< double > ErrKey;
-         typedef double MeasValue;
-         typedef double ErrValue;
-     };
-     struct Centroid {
-         typedef Key< Point<double> > MeasKey;
-         typedef Key< Covariance< Point<double> > > ErrKey;
-         typedef lsst::afw::geom::Point<double,2> MeasValue;
-         typedef Eigen::Matrix<double,2,2> ErrValue;
-     };
-     struct Shape {
-         typedef Key< Moments<double> > MeasKey;
-         typedef Key< Covariance< Moments<double> > > ErrKey;
-         typedef lsst::afw::geom::ellipses::Quadrupole MeasValue;
-         typedef Eigen::Matrix<double,3,3> ErrValue;
-     };
-}}}
-
-%include "lsst/afw/table/Source.h"
-
-#endif
+%include "lsst/afw/table/ColumnView.h"
 
 %pythoncode %{
 from .. import geom
@@ -395,3 +367,32 @@ for d in (Field, Key, SchemaItem, _suffixes):
     for k, v in aliases.iteritems():
         d[k] = d[v]
 %}
+
+%shared_ptr(lsst::afw::table::SourceTable)
+%shared_ptr(lsst::afw::table::SourceRecord)
+// Workarounds for SWIG's failure to parse the Measurement template correctly.
+// Otherwise we'd have one place in the code that controls all the canonical measurement types.
+namespace lsst { namespace afw { namespace table {
+     struct Flux {
+         typedef Key< double > MeasKey;
+         typedef Key< double > ErrKey;
+         typedef double MeasValue;
+         typedef double ErrValue;
+     };
+     struct Centroid {
+         typedef Key< Point<double> > MeasKey;
+         typedef Key< Covariance< Point<double> > > ErrKey;
+         typedef lsst::afw::geom::Point<double,2> MeasValue;
+         typedef Eigen::Matrix<double,2,2> ErrValue;
+     };
+     struct Shape {
+         typedef Key< Moments<double> > MeasKey;
+         typedef Key< Covariance< Moments<double> > > ErrKey;
+         typedef lsst::afw::geom::ellipses::Quadrupole MeasValue;
+         typedef Eigen::Matrix<double,3,3> ErrValue;
+     };
+}}}
+
+%include "lsst/afw/table/Source.h"
+
+%include "containers.i"
