@@ -1,7 +1,7 @@
 import lsst.pex.config as pexConfig
 import collections
 
-__all__ = ("Registry", "registerConfig", "registerFactory")
+__all__ = ("Registry", "makeRegistry", "registerConfig", "registerFactory")
 
 class FactoryConfigPair(object):
     """A simple structure with two fields: factory and ConfigClass
