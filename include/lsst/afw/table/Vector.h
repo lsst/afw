@@ -70,7 +70,7 @@ public:
 
     PTR(TableT) getTable() const { return _table; }
 
-    Schema const getSchema() const { return _table->getSchema(); }
+    Schema getSchema() const { return _table->getSchema(); }
 
     explicit Vector(PTR(TableT) const & table = PTR(TableT)()) : _table(table), _internal() {}
 

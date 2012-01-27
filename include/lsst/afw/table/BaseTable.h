@@ -70,7 +70,7 @@ public:
     PTR(BaseRecord) copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
     
     /// @brief Return the table's schema.
-    Schema const & getSchema() const { return _schema; }
+    Schema getSchema() const { return _schema; }
 
     /**
      *  @brief Allocate contiguous space for new records in advance.

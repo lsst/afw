@@ -47,7 +47,7 @@ struct ColumnView::Impl {
     }
 };
 
-Schema const ColumnView::getSchema() const { return _impl->schema; }
+Schema ColumnView::getSchema() const { return _impl->schema; }
 
 template <typename T>
 typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {

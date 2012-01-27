@@ -76,7 +76,7 @@ public:
 
     PTR(TableT) getTable() const { return _table; }
 
-    Schema const getSchema() const { return _table->getSchema(); }
+    Schema getSchema() const { return _table->getSchema(); }
 
     Set(PTR(TableT) const & table, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
         _key(key), _table(table), _internal(compare)

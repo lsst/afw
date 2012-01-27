@@ -166,11 +166,11 @@ struct FitsWriter::ProcessRecords {
     Fits * fits;
     boost::scoped_array<bool> flags;
     BaseRecord const * record;
-    Schema const schema;
+    Schema schema;
 };
 
 void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
-    Schema const & schema = table->getSchema();
+    Schema schema = table->getSchema();
     _fits->createTable();
     _fits->checkStatus();
     int nFlags = CountFlags::apply(schema);

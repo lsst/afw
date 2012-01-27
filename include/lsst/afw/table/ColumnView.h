@@ -37,7 +37,7 @@ class ColumnView {
 public:
 
     /// @brief Return the schema that defines the fields.
-    Schema const getSchema() const;
+    Schema getSchema() const;
 
     /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>

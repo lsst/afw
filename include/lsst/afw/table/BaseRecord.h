@@ -22,7 +22,7 @@ public:
     typedef BaseTable Table;
 
     /// @brief Return the Schema that holds this record's fields and keys.
-    Schema const & getSchema() const { return _table->getSchema(); }
+    Schema getSchema() const { return _table->getSchema(); }
 
     /// @brief Return the table this record is associated with.
     CONST_PTR(BaseTable) getTable() const { return _table; }
