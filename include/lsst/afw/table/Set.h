@@ -146,9 +146,8 @@ public:
     }
 
     PTR(RecordT) addNew() {
-        PTR(RecordT) r = _table->makeRecord();
-        _internal.push_back(r);
-        return r;
+        std::pair<iterator,bool> r = insert(_table->makeRecord());
+        return r.first;
     }
 
     std::pair<iterator,bool> insert(Record const & r) {
@@ -215,12 +214,12 @@ public:
         insert(i, p);
     }
 
-    iterator erase(iterator pos) { return iterator(_internal.erase(pos.base())); }
+    void erase(iterator pos) { _internal.erase(pos.base()); }
 
     size_type erase(key_type const & k) { return _internal.erase(k); }
 
-    iterator erase(iterator first, iterator last) {
-        return iterator(_internal.erase(first.base(), last.base()));
+    void erase(iterator first, iterator last) {
+        _internal.erase(first.base(), last.base());
     }
 
     void swap(Set & other) {

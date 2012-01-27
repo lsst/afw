@@ -20,6 +20,8 @@ class BaseRecord
 public:
 
     typedef BaseTable Table;
+    typedef VectorT<BaseRecord,Table> Vector;
+    typedef VectorT<BaseRecord const,Table> ConstVector;
 
     /// @brief Return the Schema that holds this record's fields and keys.
     Schema getSchema() const { return _table->getSchema(); }

@@ -261,56 +261,7 @@ PTR(io::FitsWriter) SourceTable::makeFitsWriter(io::FitsWriter::Fits * fits) con
     return boost::make_shared<SourceFitsWriter>(fits);
 }
 
-template class SourceSet<SourceRecord>;
-template class SourceSet<SourceRecord const>;
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if 0
-
-SourceTable SourceTable::readFits(std::string const & filename) {
-    fits::Fits file = fits::Fits::openFile(filename.c_str(), true);
-    int spanCol = -1, peakCol = -1;
-    file.readKey("SPANCOL", spanCol);
-    if (file.status == 0) {
-        --spanCol;
-    } else {
-        file.status = 0;
-        spanCol = -1;
-    }
-    file.readKey("PEAKCOL", peakCol);
-    if (file.status == 0) {
-        --peakCol;
-    } else {
-        file.status = 0;
-        peakCol = -1;
-    }
-    int maxCol = std::min(spanCol, peakCol);
-    Schema schema = fits::readFitsHeader(file, true, maxCol);
-    int nRecords = 0;
-    file.readKey("NAXIS2", nRecords);
-    SourceTable table(schema, nRecords);
-    fits::readFitsRecords(file, table);
-    if (spanCol >= 0 || peakCol >= 0) {
-        int row = 0;
-        for (SourceTable::Iterator i = table.begin(); i != table.end(); ++i, ++row) {
-        }
-    }
-    file.closeFile();
-    file.checkStatus();
-    return table;
-}
-
-#endif
+template class SourceSetT<SourceRecord>;
+template class SourceSetT<SourceRecord const>;
 
 }}} // namespace lsst::afw::table

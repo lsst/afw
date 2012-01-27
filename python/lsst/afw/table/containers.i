@@ -2,25 +2,78 @@
 #include "lsst/afw/table/Vector.h"
 %}
 
+%inline {
+
 namespace lsst { namespace afw { namespace table {
 
+// Custom iterator for Sets.  It holds a PyObject reference to its container to ensure its iterators
+// don't get invalidated while it's alive.
+// Of course, you can still invalidate iterators by erasing the elements that they point to, but
+// that's something that the user would expect to cause problems, even in Python.
+template <typename ContainerT>
+class PythonIterator {
+public:
+    
+    typedef typename ContainerT::Record Record;
+
+    PTR(Record) _next() {
+        if (_current == _end) return PTR(Record)();
+        PTR(Record) r = _current;
+        ++_current;
+        return r;
+    }
+
+    PythonIterator(PyObject * py, ContainerT & c) : _py(py), _current(c.begin()), _end(c.end()) {
+        Py_INCREF(_py);
+    }
+
+    ~PythonIterator() { Py_DECREF(_py); }
+
+private:
+
+    typedef typename ContainerT::iterator Iter;
+
+    PyObject * _py;
+    Iter _current;
+    Iter _end;
+};
+
+ }}} // namespace lsst::afw::table
+
+} // %inline
+
+namespace lsst { namespace afw { namespace table {
+
+%extend PythonIterator {
+
+    %pythoncode %{
+    def __iter__(self):
+        return self
+    def next(self):
+        r = self._next()
+        if r is None: raise StopIteration()
+        return r
+    %}
+
+}
+
 template <typename RecordT, typename TableT>
-class Vector {
+class VectorT {
 public:
     
     PTR(TableT) getTable() const;
 
     Schema const getSchema() const;
 
-    explicit Vector(PTR(TableT) const & table = PTR(TableT)());
+    explicit VectorT(PTR(TableT) const & table = PTR(TableT)());
 
-    explicit Vector(Schema const & table);
+    explicit VectorT(Schema const & table);
 
-    Vector(Vector const & other);
+    VectorT(VectorT const & other);
 
     void writeFits(std::string const & filename) const;
 
-    static Vector readFits(std::string const & filename);
+    static VectorT readFits(std::string const & filename);
 
     ColumnView getColumnView() const;
 
@@ -29,20 +82,20 @@ public:
 };
 
 template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table>
-class SourceSet {
+class SourceSetT {
 public:
 
     PTR(TableT) getTable() const;
 
     Schema const getSchema() const;
 
-    explicit SourceSet(PTR(TableT) const & table = PTR(TableT)());
+    explicit SourceSetT(PTR(TableT) const & table = PTR(TableT)());
 
-    explicit SourceSet(Schema const & table);
+    explicit SourceSetT(Schema const & table);
 
     void writeFits(std::string const & filename) const;
 
-    static SourceSet readFits(std::string const & filename);
+    static SourceSetT readFits(std::string const & filename);
 
     ColumnView getColumnView() const;
 
@@ -50,7 +103,7 @@ public:
  
 };
 
-%extend Vector {
+%extend VectorT {
     std::size_t __len__() const {
         return self->size();
     }
@@ -109,7 +162,7 @@ public:
     %}
 }
 
-%extend SourceSet {
+%extend SourceSetT {
     std::size_t __len__() const {
         return self->size();
     }
@@ -124,8 +177,8 @@ public:
         return r;
     }
     void __delitem__(RecordId id) {
-        const_iterator iter = self->find(id);
-        if (i1 == self->end()) {
+        lsst::afw::table::SourceSetT< RecordT, TableT >::iterator iter = self->find(id);
+        if (iter == self->end()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::NotFoundException,
                 (boost::format("Source with ID %ld not found in set.") % id).str()
@@ -137,13 +190,18 @@ public:
         self->insert(p);
     }
     %pythoncode %{
-        table = property(getTable)
-        schema = property(getSchema)
+    table = property(getTable)
+    schema = property(getSchema)
+    def __iter__(self):
+        return SourceSetIterator(self, self)
     %}
 }
 
+%template (BaseVector) VectorT<BaseRecord,BaseTable>;
+%template (SourceVector) VectorT<SourceRecord,SourceTable>;
+%template (SourceSet) SourceSetT<SourceRecord,SourceTable>;
+
+%template (SourceSetIterator) PythonIterator<SourceSetT<SourceRecord,SourceTable> >;
+
 }}}
 
-%template (BaseVector) lsst::afw::table::Vector<lsst::afw::table::BaseRecord,lsst::afw::table::BaseTable>;
-%template (SourceVector) lsst::afw::table::Vector<lsst::afw::table::SourceRecord,lsst::afw::table::SourceTable>;
-%template (SourceSet) lsst::afw::table::SourceSet<lsst::afw::table::SourceRecord,lsst::afw::table::SourceTable>;

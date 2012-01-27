@@ -35,6 +35,7 @@ Python interface to lsst::afw::table classes
 #pragma SWIG nowarn=503                 // comparison operators ignored
 #pragma SWIG nowarn=520                 // base class not similarly marked as smart pointer
 #pragma SWIG nowarn=401                 // nothing known about base class
+#pragma SWIG nowarn=302                 // redefine identifier (SourceSet<> -> SourceSet)
 
 %lsst_exceptions();
 

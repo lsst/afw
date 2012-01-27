@@ -53,7 +53,7 @@ private:
 };
 
 template <typename RecordT, typename TableT>
-class Vector {
+class VectorT {
     typedef std::vector<PTR(RecordT)> Internal;
 public:
 
@@ -72,25 +72,25 @@ public:
 
     Schema getSchema() const { return _table->getSchema(); }
 
-    explicit Vector(PTR(TableT) const & table = PTR(TableT)()) : _table(table), _internal() {}
+    explicit VectorT(PTR(TableT) const & table = PTR(TableT)()) : _table(table), _internal() {}
 
-    explicit Vector(Schema const & schema) : _table(TableT::make(schema)), _internal() {}
+    explicit VectorT(Schema const & schema) : _table(TableT::make(schema)), _internal() {}
 
     template <typename InputIterator>
-    Vector(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    VectorT(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
         _table(table), _internal()
     {
         insert(first, last, deep);
     }
 
-    Vector(Vector const & other) : _table(other._table), _internal(other._internal) {}
+    VectorT(VectorT const & other) : _table(other._table), _internal(other._internal) {}
 
     template <typename OtherRecordT, typename OtherTableT>
-    Vector(Vector<OtherRecordT,OtherTableT> const & other) :
+    VectorT(VectorT<OtherRecordT,OtherTableT> const & other) :
         _table(other.getTable()), _internal(other.begin().base(), other.end().base())
     {}
 
-    Vector & operator=(Vector const & other) {
+    VectorT & operator=(VectorT const & other) {
         if (&other != this) {
             _table = other._table;
             _internal = other._internal;
@@ -102,8 +102,8 @@ public:
         io::FitsWriter::apply(filename, *this);
     }
 
-    static Vector readFits(std::string const & filename) {
-        return io::FitsReader::apply<Vector>(filename);
+    static VectorT readFits(std::string const & filename) {
+        return io::FitsReader::apply<VectorT>(filename);
     }
 
     ColumnView getColumnView() const { return ColumnView::make(begin(), end()); }
@@ -194,7 +194,7 @@ public:
         return iterator(_internal.erase(first.base(), last.base()));
     }
 
-    void swap(Vector & other) {
+    void swap(VectorT & other) {
         _table.swap(other._table);
         _internal.swap(other._internal);
     }
@@ -233,6 +233,9 @@ private:
     PTR(TableT) _table;
     Internal _internal;
 };
+
+typedef VectorT<BaseRecord,BaseTable> BaseVector;
+typedef VectorT<BaseRecord const,BaseTable> ConstBaseVector;
 
 }}} // namespace lsst::afw::table
 

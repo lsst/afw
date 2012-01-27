@@ -41,7 +41,7 @@ template <
     typename RecordT,
     typename TableT = typename RecordT::Table
     >
-class Vector;
+class VectorT;
 
 }}} // namespace lsst::afw::table
 

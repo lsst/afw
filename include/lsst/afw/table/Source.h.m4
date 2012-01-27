@@ -89,6 +89,7 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `Cov', `')')
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Set.h"
+#include "lsst/afw/table/Vector.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -97,6 +98,8 @@ typedef lsst::afw::detection::Footprint Footprint;
 
 class SourceRecord;
 class SourceTable;
+
+template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table> class SourceSetT;
 
 template <typename MeasTagT, typename ErrTagT>
 struct Measurement {
@@ -144,6 +147,10 @@ class SourceRecord : public BaseRecord {
 public:
 
     typedef SourceTable Table;
+    typedef VectorT<SourceRecord,Table> Vector;
+    typedef VectorT<SourceRecord const,Table> ConstVector;
+    typedef SourceSetT<SourceRecord,Table> Set;
+    typedef SourceSetT<SourceRecord const,Table> ConstSet;
 
     PTR(Footprint) getFootprint() const { return _footprint; }
 
@@ -202,6 +209,10 @@ class SourceTable : public BaseTable {
 public:
 
     typedef SourceRecord Record;
+    typedef VectorT<Record,SourceTable> Vector;
+    typedef VectorT<Record const,SourceTable> ConstVector;
+    typedef SourceSetT<Record,SourceTable> Set;
+    typedef SourceSetT<Record const,SourceTable> ConstSet;
 
     /**
      *  @brief Construct a new table.
@@ -336,25 +347,32 @@ private:
 
 #ifndef SWIG
 
-template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table>
-class SourceSet : public Set<RecordT,TableT> {
+template <typename RecordT, typename TableT>
+class SourceSetT : public Set<RecordT,TableT> {
     BOOST_STATIC_ASSERT( (boost::is_convertible<RecordT*,SourceRecord const*>::value) );
 public:
     
-    explicit SourceSet(PTR(TableT) const & table) : Set<RecordT,TableT>(table, SourceTable::getIdKey()) {}
+    explicit SourceSetT(PTR(TableT) const & table = PTR(TableT)()) :
+       Set<RecordT,TableT>(table, SourceTable::getIdKey()) {}
 
-    explicit SourceSet(Schema const & schema) : Set<RecordT,TableT>(schema, SourceTable::getIdKey()) {}
+    explicit SourceSetT(Schema const & schema) : Set<RecordT,TableT>(schema, SourceTable::getIdKey()) {}
 
     template <typename InputIterator>
-    SourceSet(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    SourceSetT(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
         Set<RecordT,TableT>(table, SourceTable::getIdKey(), first, last, deep)
     {}
 
-    static SourceSet readFits(std::string const & filename) {
-        return io::FitsReader::apply<SourceSet>(filename);
+    static SourceSetT readFits(std::string const & filename) {
+        return io::FitsReader::apply<SourceSetT>(filename);
     }
 
 };
+
+typedef SourceSetT<SourceRecord,SourceTable> SourceSet;
+typedef SourceSetT<SourceRecord const,SourceTable> ConstSourceSet;
+
+typedef VectorT<SourceRecord,SourceTable> SourceVector;
+typedef VectorT<SourceRecord const,SourceTable> ConstSourceVector;
 
 DEFINE_FLUX_GETTERS(`Psf')
 DEFINE_FLUX_GETTERS(`Model')

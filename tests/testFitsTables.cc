@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e.g.d.flag2", "flag2 for e.g.d");
     Key< Point<float> > a_b_p = schema.addField< Point<float> >("a.b.p", "point", "pixels");
 
-    SourceSet<> set(SourceTable::make(schema));
+    SourceSet set(SourceTable::make(schema));
     {
         PTR(Footprint) fp1 = boost::make_shared<Footprint>();
         fp1->addSpan(0, 5, 8);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     set.writeFits("!testTable.fits");
 
-    SourceSet<> readSet = SourceSet<>::readFits("testTable.fits[1]");
+    SourceSet readSet = SourceSet::readFits("testTable.fits[1]");
     BOOST_CHECK_EQUAL( schema, readSet.getSchema() );
 
     {

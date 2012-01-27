@@ -25,6 +25,8 @@ class BaseTable
 public:
 
     typedef BaseRecord Record;
+    typedef VectorT<Record,BaseTable> Vector;
+    typedef VectorT<Record const,BaseTable> ConstVector;
 
     /// @brief Number of records in each block when capacity is not given explicitly.
     static int nRecordsPerBlock;

@@ -148,7 +148,7 @@ void BaseTable::_destroy(BaseRecord & record) {
  */
 int BaseTable::nRecordsPerBlock = 100;
 
-template class Vector<BaseRecord>;
-template class Vector<BaseRecord const>;
+template class VectorT<BaseRecord>;
+template class VectorT<BaseRecord const>;
 
 }}} // namespace lsst::afw::table
