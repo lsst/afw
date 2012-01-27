@@ -40,6 +40,53 @@ class Registry(object):
         """
         return self._dict.keys()
 
+class RegistryAdaptor(object):
+    """Private class that makes a Registry behave like the thing a ConfigChoiceField expects."""
+
+    def __init__(self, registry):
+        self.registry = registry
+
+    def __getitem__(self, k):
+        return self.registry[k].ConfigClass
+
+class FactoryConfigInstanceDict(lsst.pex.config.ConfigInstanceDict):
+
+    def __init__(self, fullname, typemap, multi, history=None):
+        lsst.pex.config.ConfigInstanceDict.__init__(self, fullname, typemap, multi, history)
+
+    def _getFactory(self):
+        if self._multi:
+            raise AttributeError("Multi-selection field %s has no attribute 'factory'" % self._fullname)
+        return self.typemap.registry[self._selection].factory
+    factory = property(_getFactory)
+
+    def _getFactories(self):
+        if not self._multi:
+            raise AttributeError("Single-selection field %s has no attribute 'factories'" % self._fullname)
+        return [self.typemap.registry[c].factory for c in self._selection]
+    factories = property(_getFactories)
+
+    def apply(self, *args, **kwds):
+        """Call the active factory with the active config as the first argument.
+
+        If this is a multi-selection field, return a list obtained by calling each active
+        factories with its corresponding active config as its first argument.
+
+        Additional arguments will be passed on to the factory or factories.
+        """
+        if self._multi:
+            return [self.typemap.registry[c].factory(self[c], *args, **kwds) for c in self._selection]
+        else:
+            return self.factory(self.active, *args, **kwds)
+
+class RegistryField(lsst.pex.config.ConfigChoiceField):
+
+    def __init__(self, doc, registry, default=None, optional=False, multi=False,
+                 instanceDictClass=FactoryConfigInstanceDict):
+        typemap = RegistryAdaptor(registry)
+        lsst.pex.config.ConfigChoiceField.__init__(self, doc, typemap, default, optional, multi,
+                                                   instanceDictClass)
+
 def makeRegistry(doc):
     """A convenience function to create a new registry.
     
@@ -55,8 +102,6 @@ def registerFactory(name, registry, config=None):
     If the 'config' argument is None, the class's ConfigClass attribute will be used.
     """
     def decorate(cls):
-        if config is None:
-            config = cls.ConfigClass
         registry.register(name, factory=cls, config=config)
         return cls
     return decorate
