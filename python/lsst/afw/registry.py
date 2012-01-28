@@ -3,28 +3,33 @@ import collections
 
 __all__ = ("Registry", "makeRegistry", "registerConfig", "registerFactory")
 
-class FactoryConfigPair(object):
-    """A simple structure with two fields: factory and ConfigClass
-    """
+class FactoryWrapper(object):
+    """A wrapper for factories
     
-    __slots__ = "factory", "ConfigClass"
-
+    Used for factories that don't contain a ConfigClass attribute,
+    or contain one that is being overridden.
+    """
     def __init__(self, factory, ConfigClass):
-        self.factory = factory
         self.ConfigClass = ConfigClass
+        self._factory = factory
+
+    def __call__(self, *args, **kwargs):
+        return self._factory(*args, **kwargs)
+    
 
 class Registry(collections.Mapping):
-    """A base class for global registries, mapping names to factory/ConfigClass pairs.
+    """A base class for global registries, mapping names to factories.
 
-    There are no hard requirements on factory, but typical usage is as follows:
+    There are no hard requirements on factory, but they typically create an algorithm
+    or are themselves the algorithm, and typical usage is as follows:
     - factory is a callable whose call signature is (config, ...extra arguments...)
     - All factories added to a particular registry will have the same call signature
     - All factories in a registry will typical share something important in common.
-      For instance if factory is an algorithm registry (a common case), then the
-      API of the returned algorithm should be the same for all items in the registry.
+      For example all factories in psfMatchingRegistry return a psf matching
+      class that has a psfMatch method with a particular call signature.
 
     A registry acts like a read-only dictionary with an additional register method to add items.
-    The dict contains instances of FactoryConfigPair: an object with two attributes: factory and ConfigClass
+    The dict contains factories and each factory has an instance ConfigClass.
 
     Example:
     registry = Registry()
@@ -38,13 +43,14 @@ class Registry(collections.Mapping):
             return self.config.val + num
     registry.register("foo", Foo)
     names = registry.keys() # returns ("foo",)
-    fooItem = registry["foo"]
-    foo = fooItem.factory(fooItem.ConfigClass())
+    fooFactory = registry["foo"]
+    fooConfig = fooItem.ConfigClass()
+    foo = fooFactory(fooConfig)
     foo.addVal(5) # returns config.val + 5
     """
 
     def __init__(self, configBaseType=pexConfig.Config):
-        """Construct a registry of name: FactoryConfigPair objects
+        """Construct a registry of name: factories
         
         @param configBaseType: base class for config classes in registry
         """
@@ -60,16 +66,21 @@ class Registry(collections.Mapping):
                           be a Python type, but is not required to be.
         @param ConfigClass  A subclass of pex_config Config used to configure the factory;
                           if None then factory.ConfigClass is used.
+                          
+        @note: if ConfigClass is provided then the supplied factory is wrapped in a new object.
+        Otherwise the original factory is stored.
         
         @raise AttributeError if ConfigClass is None and factory does not have attribute ConfigClass
         """
         if name in self._dict:
             raise RuntimeError("An item with name %r already exists" % (name,))
         if ConfigClass is None:
-            ConfigClass = factory.ConfigClass
-        if not issubclass(ConfigClass, pexConfig.Config):
+           wrapper = factory
+        else:
+            wrapper = FactoryWrapper(factory, ConfigClass)
+        if not issubclass(wrapper.ConfigClass, self._configBaseType):
             raise TypeError("ConfigClass=%r is not a subclass of %r" % (self._configBaseType,))
-        self._dict[name] = FactoryConfigPair(factory=factory, ConfigClass=ConfigClass)
+        self._dict[name] = wrapper
     
     def __getitem__(self, key):
         return self._dict[key]
@@ -103,27 +114,27 @@ class FactoryConfigInstanceDict(pexConfig.ConfigInstanceDict):
     def _getFactory(self):
         if self._multi:
             raise AttributeError("Multi-selection field %s has no attribute 'factory'" % self._fullname)
-        return self.types.registry[self._selection].factory
+        return self.types.registry[self._selection]
     factory = property(_getFactory)
 
     def _getFactories(self):
         if not self._multi:
             raise AttributeError("Single-selection field %s has no attribute 'factories'" % self._fullname)
-        return [self.types.registry[c].factory for c in self._selection]
+        return [self.types.registry[c] for c in self._selection]
     factories = property(_getFactories)
 
     def applyFactory(self, *args, **kwds):
         """Call the active factory with the active config as the first argument.
 
         If this is a multi-selection field, return a list obtained by calling each active
-        factories with its corresponding active config as its first argument.
+        factory with its corresponding active config as its first argument.
 
         Additional arguments will be passed on to the factory or factories.
         """
         if self._multi:
-            return [self.types.registry[c].factory(self[c], *args, **kwds) for c in self._selection]
+            return [self.types.registry[c](self[c], *args, **kwds) for c in self._selection]
         else:
-            return self.factory(self.active, *args, **kwds)
+            return self(self.active, *args, **kwds)
 
 class RegistryField(pexConfig.ConfigChoiceField):
 

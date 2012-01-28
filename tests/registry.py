@@ -55,16 +55,23 @@ class ConfigTest(unittest.TestCase):
         @afwReg.registerFactory("foo1", self.registry)
         class FooAlg1(object):
             ConfigClass = FooConfig1
+            def __init__(self, config):
+                self.config = config
             def foo(self):
                 pass
         self.fooAlg1Class = FooAlg1
         
         class FooAlg2(object):
             ConfigClass = FooConfig2
+            def __init__(self, config):
+                self.config = config
             def foo(self):
                 pass
         self.registry.register("foo2", FooAlg2, FooConfig2)
         self.fooAlg2Class = FooAlg2
+        
+        # override Foo2 with FooConfig1
+        self.registry.register("foo21", FooAlg2, FooConfig1)
     
     def tearDown(self):
         del self.registry
@@ -74,15 +81,22 @@ class ConfigTest(unittest.TestCase):
         del self.fooAlg2Class
         
     def testBasics(self):
-        self.assertEqual(self.registry.get("foo1").factory, self.fooAlg1Class)
-        self.assertEqual(self.registry.get("foo2").ConfigClass, self.fooConfig2Class)
-        self.assertEqual(set(self.registry.keys()), set(("foo1", "foo2")))
+        self.assertEqual(self.registry["foo1"], self.fooAlg1Class)
+        self.assertEqual(self.registry["foo2"].ConfigClass, self.fooConfig2Class)
+        self.assertEqual(self.registry["foo21"].ConfigClass, self.fooConfig1Class)
+        
+        self.assertEqual(set(self.registry.keys()), set(("foo1", "foo2", "foo21")))
 
+    def testWrapper(self):
+        wrapper21 = self.registry["foo21"]
+        foo21 = wrapper21(wrapper21.ConfigClass())
+        self.assertTrue(isinstance(foo21, self.fooAlg2Class))
+        
     def testReplace(self):
         """Test replacement in registry (should always fail)
         """
         self.assertRaises(Exception, self.registry.register, "foo1", self.fooAlg2Class)
-        self.assertEqual(self.registry["foo1"].factory, self.fooAlg1Class)
+        self.assertEqual(self.registry["foo1"], self.fooAlg1Class)
 
 def  suite():
     utilsTests.init()
