@@ -83,7 +83,7 @@ class Registry(collections.Mapping):
     def __contains__(self, key):
         return key in self._dict
 
-    def makeField(doc, default=None, optional=False, multi=False):
+    def makeField(self, doc, default=None, optional=False, multi=False):
         return RegistryField(doc, self, default, optional, multi)
 
 class RegistryAdaptor(object):
@@ -103,16 +103,16 @@ class FactoryConfigInstanceDict(pexConfig.ConfigInstanceDict):
     def _getFactory(self):
         if self._multi:
             raise AttributeError("Multi-selection field %s has no attribute 'factory'" % self._fullname)
-        return self.typemap.registry[self._selection].factory
+        return self.types.registry[self._selection].factory
     factory = property(_getFactory)
 
     def _getFactories(self):
         if not self._multi:
             raise AttributeError("Single-selection field %s has no attribute 'factories'" % self._fullname)
-        return [self.typemap.registry[c].factory for c in self._selection]
+        return [self.types.registry[c].factory for c in self._selection]
     factories = property(_getFactories)
 
-    def apply(self, *args, **kwds):
+    def applyFactory(self, *args, **kwds):
         """Call the active factory with the active config as the first argument.
 
         If this is a multi-selection field, return a list obtained by calling each active
@@ -121,7 +121,7 @@ class FactoryConfigInstanceDict(pexConfig.ConfigInstanceDict):
         Additional arguments will be passed on to the factory or factories.
         """
         if self._multi:
-            return [self.typemap.registry[c].factory(self[c], *args, **kwds) for c in self._selection]
+            return [self.types.registry[c].factory(self[c], *args, **kwds) for c in self._selection]
         else:
             return self.factory(self.active, *args, **kwds)
 
@@ -129,8 +129,8 @@ class RegistryField(pexConfig.ConfigChoiceField):
 
     def __init__(self, doc, registry, default=None, optional=False, multi=False,
                  instanceDictClass=FactoryConfigInstanceDict):
-        typemap = RegistryAdaptor(registry)
-        pexConfig.ConfigChoiceField.__init__(self, doc, typemap, default, optional, multi, instanceDictClass)
+        types = RegistryAdaptor(registry)
+        pexConfig.ConfigChoiceField.__init__(self, doc, types, default, optional, multi, instanceDictClass)
 
 def makeRegistry(doc, configBaseType=pexConfig.Config):
     """A convenience function to create a new registry.
