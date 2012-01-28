@@ -117,29 +117,6 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
     $result = convertNameSet(*$1);
 }
 
-// ------------------ General purpose stuff for iteration over containers -----------------------------------
-
-%include "std_container.i"
-
-%define %makeIterable(CLASS, VALUE)
-%fragment("SwigPyIterator_T");
-%fragment("StdTraits");
-%newobject __iter__(PyObject **PYTHON_SELF);
-%{
-namespace swig {
-template <> struct traits< VALUE > {
-    typedef value_category category;
-    static const char * type_name() { return # VALUE; }
-};
-} // namespace swig
-%}
-%extend CLASS {
-    swig::SwigPyIterator * __iter__(PyObject** PYTHON_SELF) {
-        return swig::make_output_iterator(self->begin(), self->begin(), self->end(), *PYTHON_SELF);
-    }
-}
-%enddef
-
 // ---------------------------------------------------------------------------------------------------------
 
 %shared_ptr(lsst::afw::table::BaseTable);
@@ -269,6 +246,9 @@ def asKey(self):
 %rename("__eq__") lsst::afw::table::BaseRecord::operator==;
 %rename("__ne__") lsst::afw::table::BaseRecord::operator!=;
 %include "lsst/afw/table/BaseRecord.h"
+
+%usePointerEquality(lsst::afw::table::BaseRecord)
+%usePointerEquality(lsst::afw::table::BaseTable)
 
 %include "lsst/afw/table/ColumnView.h"
 

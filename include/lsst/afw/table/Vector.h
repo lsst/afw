@@ -85,6 +85,9 @@ public:
 
     VectorT(VectorT const & other) : _table(other._table), _internal(other._internal) {}
 
+    template <typename OtherRecordT, typename OtherTableT, typename KeyT, typename CompareT>
+    explicit VectorT(SetT<OtherRecordT,OtherTableT,KeyT,CompareT> const & other);
+
     template <typename OtherRecordT, typename OtherTableT>
     VectorT(VectorT<OtherRecordT,OtherTableT> const & other) :
         _table(other.getTable()), _internal(other.begin().base(), other.end().base())
@@ -220,11 +223,13 @@ private:
         if (deep) {
             while (first != last) {
                 pos = insert(pos, *first);
+                ++pos;
                 ++first;
             }
         } else {
             while (first != last) {
                 pos = insert(pos, first);
+                ++pos;
                 ++first;
             }
         }

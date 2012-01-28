@@ -59,14 +59,14 @@ def makeCov(size, dtype):
 class SourceTableTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.fluxKey = self.schema.addField("a", type="F8")
-        self.fluxErrKey = self.schema.addField("a.err", type="F8")
-        self.centroidKey = self.schema.addField("b", type="Point<F8>")
-        self.centroidCovKey = self.schema.addField("b.cov", type="Cov<Point<F8>>")
-        self.shapeKey = self.schema.addField("c", type="Moments<F8>")
-        self.shapeCovKey = self.schema.addField("c.cov", type="Cov<Moments<F8>>")
-        self.table = lsst.afw.table.SourceTable.make(self.schema)
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        self.fluxKey = schema.addField("a", type="F8")
+        self.fluxErrKey = schema.addField("a.err", type="F8")
+        self.centroidKey = schema.addField("b", type="Point<F8>")
+        self.centroidCovKey = schema.addField("b.cov", type="Cov<Point<F8>>")
+        self.shapeKey = schema.addField("c", type="Moments<F8>")
+        self.shapeCovKey = schema.addField("c.cov", type="Cov<Moments<F8>>")
+        self.table = lsst.afw.table.SourceTable.make(schema)
         self.record = self.table.makeRecord()
         self.record.set(self.fluxKey, numpy.random.randn())
         self.record.set(self.fluxErrKey, numpy.random.randn())
@@ -78,7 +78,6 @@ class SourceTableTestCase(unittest.TestCase):
     def tearDown(self):
         del self.record
         del self.table
-        del self.schema
 
     def checkCanonical(self):
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
@@ -103,6 +102,42 @@ class SourceTableTestCase(unittest.TestCase):
         self.table.defineShape("c")
         self.checkCanonical()
 
+class SourceSetTestCase(unittest.TestCase):
+    
+    def setUp(self):
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        self.set = lsst.afw.table.SourceSet(schema)
+        self.set.addNew()
+        self.set.addNew()
+        self.set.addNew()
+        r = self.set.table.makeRecord()
+        r.setId(15)
+        self.set.add(r)
+
+    def tearDown(self):
+        del self.set
+
+    def testConversion(self):
+        vector = lsst.afw.table.SourceVector(self.set)
+        for r1, r2 in zip(self.set, vector):
+            self.assertEqual(r1.getId(), r2.getId())
+
+    def testInsertion(self):
+        r = self.set.addNew()
+        for r1, i2 in zip(self.set, (1, 2, 3, r.getId(), 15)):
+            self.assertEqual(r1.getId(), i2)
+
+    def testDeletion(self):
+        del self.set[3]
+        for r1, i2 in zip(self.set, (1, 2, 15)):
+            self.assertEqual(r1.getId(), i2)
+
+    def testLookup(self):
+        r = self.set[2]
+        self.assertEqual(r.getId(), 2)
+        self.assert_(3 in self.set)
+        self.assertEqual(r, self.set[2])
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -112,6 +147,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SourceTableTestCase)
+    suites += unittest.makeSuite(SourceSetTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

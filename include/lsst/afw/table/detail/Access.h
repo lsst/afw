@@ -46,6 +46,10 @@ public:
     template <typename ContainerT>
     static void writeFits(std::string const & filename, ContainerT const & container);
 
+    static void markPersistent(Schema const & schema) {
+        schema._impl->markPersistent();
+    }
+
 };
 
 }}}} // namespace lsst::afw::table::detail

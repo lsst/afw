@@ -43,6 +43,12 @@ template <
     >
 class VectorT;
 
+template <
+    typename RecordT, typename TableT = typename RecordT::Table,
+    typename KeyT = RecordId, typename CompareT = std::less<KeyT>
+    >
+class SetT;
+
 }}} // namespace lsst::afw::table
 
 #endif // !AFW_TABLE_misc_h_INCLUDED

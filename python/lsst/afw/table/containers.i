@@ -10,15 +10,15 @@ namespace lsst { namespace afw { namespace table {
 // don't get invalidated while it's alive.
 // Of course, you can still invalidate iterators by erasing the elements that they point to, but
 // that's something that the user would expect to cause problems, even in Python.
-template <typename ContainerT>
+template <typename ContainerT, typename RecordT>
 class PythonIterator {
 public:
     
-    typedef typename ContainerT::Record Record;
-
-    PTR(Record) _next() {
-        if (_current == _end) return PTR(Record)();
-        PTR(Record) r = _current;
+    PTR(RecordT) _next() {
+        if (_current == _end) {
+            return PTR(RecordT)();
+        }
+        PTR(RecordT) r = _current;
         ++_current;
         return r;
     }
@@ -57,28 +57,85 @@ namespace lsst { namespace afw { namespace table {
 
 }
 
+%define %VectorBody(Record,Table)
+PTR(Table) getTable() const;
+Schema getSchema() const;
+explicit VectorT(PTR(Table) const & table = PTR(Table)());
+explicit VectorT(Schema const & table);
+VectorT(VectorT const & other);
+void writeFits(std::string const & filename) const;
+static VectorT readFits(std::string const & filename);
+ColumnView getColumnView() const;
+PTR(Record) addNew();
+%enddef
+
+%define %VectorExtend(Record,Table)
+std::size_t __len__() const { return self->size(); }
+PTR(Record) __getitem__(std::ptrdiff_t i) const {
+    if (i < 0) i = self->size() - i;
+    if (std::size_t(i) >= self->size()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Vector index %d out of range.") % i).str()
+        );
+    }
+    return self->get(i);
+}
+void __setitem__(std::ptrdiff_t i, PTR(Record) const & p) {
+    if (i < 0) i = self->size() - i;
+    if (std::size_t(i) >= self->size()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Vector index %d out of range.") % i).str()
+        );
+    }
+    self->set(i, p);
+}
+void __delitem__(std::ptrdiff_t i) {
+    if (i < 0) i = self->size() - i;
+    if (std::size_t(i) >= self->size()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Vector index %d out of range.") % i).str()
+        );
+    }
+    self->erase(self->begin() + i);
+}
+void append(PTR(Record) const & p) { self->push_back(p); }
+void insert(std::ptrdiff_t i, PTR(Record) const & p) {
+    if (i < 0) i = self->size() - i;
+    if (std::size_t(i) > self->size()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Vector index %d out of range.") % i).str()
+        );
+    }
+    self->insert(self->begin() + i, p);
+}
+%pythoncode %{
+def extend(self, iterable):
+    for e in iterable:
+        self.append(e)
+def __iter__(self):
+    for i in xrange(len(self)):
+        yield self[i]
+table = property(getTable)
+schema = property(getSchema)
+%}
+%enddef
+
 template <typename RecordT, typename TableT>
 class VectorT {
 public:
-    
-    PTR(TableT) getTable() const;
+    %VectorBody(RecordT, TableT);
+};
 
-    Schema const getSchema() const;
-
-    explicit VectorT(PTR(TableT) const & table = PTR(TableT)());
-
-    explicit VectorT(Schema const & table);
-
-    VectorT(VectorT const & other);
-
-    void writeFits(std::string const & filename) const;
-
-    static VectorT readFits(std::string const & filename);
-
-    ColumnView getColumnView() const;
-
-    PTR(RecordT) addNew();
-
+/// Pretend VectorT is specialized for Source to get SWIG to add conversion constructor.
+template <>
+class VectorT<SourceRecord,SourceTable> {
+public:
+    %VectorBody(SourceRecord,SourceTable);
+    explicit VectorT(SourceSetT<SourceRecord,SourceTable> const & other);
 };
 
 template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table>
@@ -87,11 +144,13 @@ public:
 
     PTR(TableT) getTable() const;
 
-    Schema const getSchema() const;
+    Schema getSchema() const;
 
     explicit SourceSetT(PTR(TableT) const & table = PTR(TableT)());
 
     explicit SourceSetT(Schema const & table);
+
+    explicit SourceSetT(VectorT<RecordT,TableT> const & other);
 
     void writeFits(std::string const & filename) const;
 
@@ -99,67 +158,18 @@ public:
 
     ColumnView getColumnView() const;
 
+    PTR(RecordT) get(RecordId id) const;
+
     PTR(RecordT) addNew();
  
 };
 
 %extend VectorT {
-    std::size_t __len__() const {
-        return self->size();
-    }
-    PTR(RecordT) __getitem__(std::ptrdiff_t i) const {
-        if (i < 0) i = self->size() - i;
-        if (std::size_t(i) >= self->size()) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
-            );
-        }
-        return self->get(i);
-    }
-    void __setitem__(std::ptrdiff_t i, PTR(RecordT) const & p) {
-        if (i < 0) i = self->size() - i;
-        if (std::size_t(i) >= self->size()) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
-            );
-        }
-        self->set(i, p);
-    }
-    void __delitem__(std::ptrdiff_t i) {
-        if (i < 0) i = self->size() - i;
-        if (std::size_t(i) >= self->size()) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
-            );
-        }
-        self->erase(self->begin() + i);
-    }
-    void append(PTR(RecordT) const & p) {
-        self->push_back(p);
-    }
-    void insert(std::ptrdiff_t i, PTR(RecordT) const & p) {
-        if (i < 0) i = self->size() - i;
-        if (std::size_t(i) > self->size()) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
-            );
-        }
-        self->insert(self->begin() + i, p);
-    }
-    %pythoncode %{
-        def extend(self, iterable):
-            for e in iterable:
-                self.append(e)
-        def __iter__(self):
-            for i in xrange(len(self)):
-                yield self[i]
-        table = property(getTable)
-        schema = property(getSchema)
-    %}
+    %VectorExtend(RecordT,TableT)
+}
+
+%extend VectorT <SourceRecord,SourceTable> {
+    %VectorExtend(SourceRecord,SourceTable)
 }
 
 %extend SourceSetT {
@@ -194,6 +204,8 @@ public:
     schema = property(getSchema)
     def __iter__(self):
         return SourceSetIterator(self, self)
+    def __contains__(self, id):
+        return bool(self.get(id))
     %}
 }
 
@@ -201,7 +213,6 @@ public:
 %template (SourceVector) VectorT<SourceRecord,SourceTable>;
 %template (SourceSet) SourceSetT<SourceRecord,SourceTable>;
 
-%template (SourceSetIterator) PythonIterator<SourceSetT<SourceRecord,SourceTable> >;
+ %template (SourceSetIterator) PythonIterator<SourceSetT<SourceRecord,SourceTable>,SourceRecord>;
 
 }}}
-

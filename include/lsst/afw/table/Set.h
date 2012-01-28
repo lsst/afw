@@ -15,6 +15,7 @@
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
+#include "lsst/afw/table/Vector.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -55,9 +56,8 @@ private:
     }
 };
 
-template <typename RecordT, typename TableT = typename RecordT::Table,
-          typename KeyT = RecordId, typename CompareT = std::less<KeyT> >
-class Set {
+template <typename RecordT, typename TableT, typename KeyT, typename CompareT>
+class SetT {
     typedef std::map<KeyT,PTR(RecordT),CompareT> Internal;
 public:
 
@@ -78,16 +78,16 @@ public:
 
     Schema getSchema() const { return _table->getSchema(); }
 
-    Set(PTR(TableT) const & table, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
+    SetT(PTR(TableT) const & table, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
         _key(key), _table(table), _internal(compare)
     {}
 
-    Set(Schema const & schema, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
+    SetT(Schema const & schema, Key<KeyT> const & key, CompareT const & compare = CompareT()) :
         _key(key), _table(TableT::make(schema)), _internal(compare)
     {}
 
     template <typename InputIterator>
-    Set(
+    SetT(
         PTR(TableT) const & table, Key<KeyT> const & key,
         InputIterator first, InputIterator last,
         bool deep = false, CompareT const & compare = CompareT()
@@ -96,9 +96,9 @@ public:
         insert(this->end(), first, last, deep);
     } 
 
-    Set(Set const & other) : _key(other._key), _table(other._table), _internal(other._internal) {}
+    SetT(SetT const & other) : _key(other._key), _table(other._table), _internal(other._internal) {}
 
-    Set & operator=(Set const & other) {
+    SetT & operator=(SetT const & other) {
         if (&other != this) {
             _key = other._key;
             _table = other._table;
@@ -111,8 +111,8 @@ public:
         io::FitsWriter::apply(filename, *this);
     }
 
-    static Set readFits(std::string const & filename) {
-        return io::FitsReader::apply<Set>(filename);
+    static SetT readFits(std::string const & filename) {
+        return io::FitsReader::apply<SetT>(filename);
     }
 
     ColumnView getColumnView() const { return ColumnView::make(begin(), end()); }
@@ -159,7 +159,7 @@ public:
                 "Record with key '" + boost::lexical_cast<std::string>(k) + "' already present in Set."
             );
         }
-        *t.first->second = r._clone(_table);
+        *t.first->second = _table->copyRecord(r);
         return iterator(t.first);
     }
 
@@ -182,7 +182,7 @@ public:
     }
 
     iterator insert(iterator pos, Record const & r) {
-        PTR(RecordT) p = r._clone(_table);
+        PTR(RecordT) p = _table->copyRecord(r);
         key_type k = p->get(_key); 
         typename Internal::iterator i = _internal.insert(pos.base(), std::make_pair(k, p));
         if (i->second != p) {
@@ -248,7 +248,7 @@ public:
         _internal.erase(first.base(), last.base());
     }
 
-    void swap(Set & other) {
+    void swap(SetT & other) {
         std::swap(_key, other._key);
         _table.swap(other._table);
         _internal.swap(other._internal);
@@ -286,6 +286,15 @@ private:
     PTR(TableT) _table;
     Internal _internal;
 };
+
+template <typename RecordT, typename TableT>
+template <typename OtherRecordT, typename OtherTableT, typename KeyT, typename CompareT>
+VectorT<RecordT,TableT>::VectorT(SetT<OtherRecordT,OtherTableT,KeyT,CompareT> const & other) :
+    _table(other.getTable()), _internal() 
+{
+    _internal.reserve(other.size());
+    insert(end(), other.begin(), other.end(), false);
+}
 
 }}} // namespace lsst::afw::table
 

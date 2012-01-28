@@ -3,6 +3,7 @@
 
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -244,6 +245,7 @@ SourceTable::SourceTable(SourceTable const & other) :
 {}
 
 SourceTable::MinimalSchema::MinimalSchema() {
+    detail::Access::markPersistent(schema);
     id = schema.addField<RecordId>("id", "unique ID for source");
     parent = schema.addField<RecordId>("parent", "unique ID of parent source");
     sky = schema.addField<float>("sky", "sky background at location of source", "DN/pix");

@@ -348,18 +348,23 @@ private:
 #ifndef SWIG
 
 template <typename RecordT, typename TableT>
-class SourceSetT : public Set<RecordT,TableT> {
+class SourceSetT : public SetT<RecordT,TableT> {
     BOOST_STATIC_ASSERT( (boost::is_convertible<RecordT*,SourceRecord const*>::value) );
 public:
     
     explicit SourceSetT(PTR(TableT) const & table = PTR(TableT)()) :
-       Set<RecordT,TableT>(table, SourceTable::getIdKey()) {}
+       SetT<RecordT,TableT>(table, SourceTable::getIdKey()) {}
 
-    explicit SourceSetT(Schema const & schema) : Set<RecordT,TableT>(schema, SourceTable::getIdKey()) {}
+    explicit SourceSetT(Schema const & schema) : SetT<RecordT,TableT>(schema, SourceTable::getIdKey()) {}
 
     template <typename InputIterator>
     SourceSetT(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
-        Set<RecordT,TableT>(table, SourceTable::getIdKey(), first, last, deep)
+        SetT<RecordT,TableT>(table, SourceTable::getIdKey(), first, last, deep)
+    {}
+
+    template <typename OtherRecordT, typename OtherTableT>
+    explicit SourceSetT(VectorT<OtherRecordT,OtherTableT> const & other) : 
+        SetT<RecordT,TableT>(other.getTable(), SourceTable::getIdKey(), other.begin(), other.end(), false)
     {}
 
     static SourceSetT readFits(std::string const & filename) {

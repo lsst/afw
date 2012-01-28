@@ -12,6 +12,8 @@
 #include "boost/type_traits/remove_const.hpp"
 #include "boost/type_traits/remove_reference.hpp"
 
+#include "lsst/daf/base/Citizen.h"
+
 namespace lsst { namespace afw { namespace table {
 
 class Schema;
@@ -44,10 +46,10 @@ class Access;
  *  users should look at (Schema) and what they shouldn't (this).
  *
  *  Because Schema holds SchemaImpl by shared pointer, one SchemaImpl can be shared between
- *  multiple Schemas (and SchemaProxys), which use copy-on-write to create a new SchemaImpl
+ *  multiple Schemas (and SubSchemas), which use copy-on-write to create a new SchemaImpl
  *  if the pointer they have isn't unique.
  */
-class SchemaImpl {
+class SchemaImpl : public daf::base::Citizen {
 private:
 
     struct MakeItem {
@@ -86,9 +88,9 @@ public:
 
     ItemContainer const & getItems() const { return _items; }
 
-    explicit SchemaImpl() :
-        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1),
-        _items()
+    explicit SchemaImpl() : 
+        daf::base::Citizen(typeid(this)), 
+        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items()
     {}
 
 private:
