@@ -146,18 +146,24 @@ public:
     }
 
     PTR(RecordT) addNew() {
-        std::pair<iterator,bool> r = insert(_table->makeRecord());
-        return r.first;
+        return insert(_table->makeRecord());
     }
 
-    std::pair<iterator,bool> insert(Record const & r) {
-        PTR(RecordT) p = r._clone(_table);
-        key_type k = p->get(_key);
+    iterator insert(Record const & r) {
+        key_type k = r.get(_key);
+        PTR(RecordT) p;
         std::pair<typename Internal::iterator, bool> t = _internal.insert(std::make_pair(k, p));
-        return std::pair<iterator,bool>(iterator(t.first), t.second);
+        if (!t.second) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::NotFoundException,
+                "Record with key '" + boost::lexical_cast<std::string>(k) + "' already present in Set."
+            );
+        }
+        *t.first->second = r._clone(_table);
+        return iterator(t.first);
     }
 
-    std::pair<iterator,bool> insert(PTR(RecordT) const & p) {
+    iterator insert(PTR(RecordT) const & p) {
         if (p->getTable() != _table) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LogicErrorException,
@@ -166,14 +172,27 @@ public:
         }
         key_type k = p->get(_key);
         std::pair<typename Internal::iterator, bool> t = _internal.insert(std::make_pair(k, p));
-        return std::pair<iterator,bool>(iterator(t.first), t.second);
+        if (!t.second) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                "Record with key '" + boost::lexical_cast<std::string>(k) + "' already present in Set."
+            );
+        }
+        return iterator(t.first);
     }
 
     iterator insert(iterator pos, Record const & r) {
         PTR(RecordT) p = r._clone(_table);
-        key_type k = p->get(_key);
-        return iterator(_internal.insert(pos.base(), std::make_pair(k, p)));
-    }
+        key_type k = p->get(_key); 
+        typename Internal::iterator i = _internal.insert(pos.base(), std::make_pair(k, p));
+        if (i->second != p) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                "Record with key '" + boost::lexical_cast<std::string>(k) + "' already present in Set."
+            );
+        }
+        return iterator(i);
+   }
 
     iterator insert(iterator pos, PTR(RecordT) const & p) {
         if (p->getTable() != _table) {
@@ -183,7 +202,14 @@ public:
             );
         }
         key_type k = p->get(_key);
-        return iterator(_internal.insert(pos.base(), std::make_pair(k, p)));
+        typename Internal::iterator i = _internal.insert(pos.base(), std::make_pair(k, p));
+        if (i->second != p) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                "Record with key '" + boost::lexical_cast<std::string>(k) + "' already present in Set."
+            );
+        }
+        return iterator(i);
     }
 
     template <typename InputIterator>
