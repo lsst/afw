@@ -392,7 +392,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdDescription=ccdPol, ccdId=ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
         raft.addDetector(afwGeom.Point2I(Col, Row),
-                         afwGeom.Point2D(xc, yc),
+                         cameraGeom.FpPosition(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
 
         if raftInfo is not None:
@@ -403,12 +403,12 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 if nCol == 1:
                     xGutter = 0.0
                 else:
-                    xGutter = (xc - xGutter)/float(nCol - 1) - ccd.getSize()[0]
+                    xGutter = (xc - xGutter)/float(nCol - 1) - ccd.getSize().getMm()[0]
 
                 if nRow == 1:
                     yGutter = 0.0
                 else:
-                    yGutter = (yc - yGutter)/float(nRow - 1) - ccd.getSize()[1]
+                    yGutter = (yc - yGutter)/float(nRow - 1) - ccd.getSize().getMm()[1]
 
     if raftInfo is not None:
         raftInfo.clear()
@@ -417,8 +417,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raftInfo["pixelSize"] = ccd.getPixelSize()
         raftInfo["width"] =  nCol*ccd.getAllPixels(True).getWidth()
         raftInfo["height"] = nRow*ccd.getAllPixels(True).getHeight()
-        raftInfo["widthMm"] =  nCol*ccd.getSize()[0] + (nCol - 1)*xGutter
-        raftInfo["heightMm"] = nRow*ccd.getSize()[1] + (nRow - 1)*yGutter
+        raftInfo["widthMm"] =  nCol*ccd.getSize().getMm()[0] + (nCol - 1)*xGutter
+        raftInfo["heightMm"] = nRow*ccd.getSize().getMm()[1] + (nRow - 1)*yGutter
 
     return raft
 
@@ -452,7 +452,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         raft = makeRaft(geomPolicy, raftId, raftInfo, defectDict=defDict)
         camera.addDetector(afwGeom.Point2I(Col, Row),
-                           afwGeom.Point2D(xc, yc), cameraGeom.Orientation(), raft)
+                           cameraGeom.FpPosition(afwGeom.Point2D(xc, yc)),
+                           cameraGeom.Orientation(), raft)
 
         if cameraInfo is not None:
             # Guess the gutter between detectors
@@ -462,12 +463,12 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 if nCol == 1:
                     xGutter = 0.0
                 else:
-                    xGutter = (xc - xGutter)/float(nCol - 1) - raft.getSize()[0]
+                    xGutter = (xc - xGutter)/float(nCol - 1) - raft.getSize().getMm()[0]
                     
                 if nRow == 1:
                     yGutter = 0.0
                 else:
-                    yGutter = (yc - yGutter)/float(nRow - 1) - raft.getSize()[1]
+                    yGutter = (yc - yGutter)/float(nRow - 1) - raft.getSize().getMm()[1]
 
 
     #######################
@@ -492,8 +493,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         cameraInfo["width"] =  nCol*raft.getAllPixels().getWidth()
         cameraInfo["height"] = nRow*raft.getAllPixels().getHeight()
         cameraInfo["pixelSize"] = raft.getPixelSize()
-        cameraInfo["widthMm"] =  nCol*raft.getSize()[0] + (nCol - 1)*xGutter
-        cameraInfo["heightMm"] = nRow*raft.getSize()[1] + (nRow - 1)*yGutter
+        cameraInfo["widthMm"] =  nCol*raft.getSize().getMm()[0] + (nCol - 1)*xGutter
+        cameraInfo["heightMm"] = nRow*raft.getSize().getMm()[1] + (nRow - 1)*yGutter
 
     return camera
 
@@ -862,13 +863,13 @@ def describeRaft(raft, indent=""):
     """Describe an entire Raft"""
     descrip = []
 
-    size = raft.getSize()
+    size = raft.getSize().getMm()
     descrip.append("%sRaft \"%s\",  %gx%g  BBox %s" % (indent, raft.getId(),
                                                         size[0], size[1], raft.getAllPixels()))
     
     for d in cameraGeom.cast_Raft(raft):
         cenPixel = d.getCenterPixel()
-        cen = d.getCenter()
+        cen = d.getCenter().getMm()
 
         descrip.append("%sCcd: %s (%5d, %5d) %s  (%7.1f, %7.1f)" % \
                        ((indent + "    "),
@@ -881,7 +882,7 @@ def describeCamera(camera):
     """Describe an entire Camera"""
     descrip = []
 
-    size = camera.getSize()
+    size = camera.getSize().getMm()
     descrip.append("Camera \"%s\",  %gx%g  BBox %s" % \
                    (camera.getId(), size[0], size[1], camera.getAllPixels()))
 

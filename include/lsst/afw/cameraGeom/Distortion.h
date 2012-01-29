@@ -27,11 +27,12 @@
 #include <vector>
 #include "boost/shared_ptr.hpp"
 #include "boost/tuple/tuple.hpp"
+#include <map>
 
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
-
+#include "lsst/afw/cameraGeom/Id.h"
 
 /**
  * @file Distortion.cc
@@ -54,9 +55,9 @@ public:
     typedef boost::shared_ptr<Distortion> Ptr;
     typedef boost::shared_ptr<const Distortion> ConstPtr;
 
-    Distortion(int lanczosOrder=3) :
+    Distortion(int lanczosOrder=5) :
         _lanczosOrder(lanczosOrder),
-        _maxShear(std::numeric_limits<double>::quiet_NaN()) {}
+        _maxShear(std::map<Id,double>()) {} 
     
     virtual ~Distortion() {}
 
@@ -67,20 +68,22 @@ public:
     int getLanczosOrder() { return _lanczosOrder; }
 
     // distort a point
-    lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p); // = 0;
-    lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p); // = 0;
+    lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p, Detector const &det);
+    lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p, Detector const &det);
 
     // distort an adaptive moment ... ie. a Quadrupole object
     lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
-                                                  lsst::afw::geom::ellipses::Quadrupole const &Iqq); 
+                                                  lsst::afw::geom::ellipses::Quadrupole const &Iqq,
+                                                  Detector const &det); 
     lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
-                                                    lsst::afw::geom::ellipses::Quadrupole const &Iqq);
+                                                    lsst::afw::geom::ellipses::Quadrupole const &Iqq,
+                                                    Detector const &det); 
 
     // distort an image locally (ie. using the Quadrupole Linear Transform)
     template<typename ImageT>
     typename ImageT::Ptr distort(lsst::afw::geom::Point2D const &p,
                                  ImageT const &img,
-                                 lsst::afw::geom::Point2D const &pix,
+                                 Detector const &det,
                                  typename ImageT::SinglePixel padValue=
                                  typename ImageT::SinglePixel(
                                      std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
@@ -90,7 +93,7 @@ public:
     template<typename ImageT>
     typename ImageT::Ptr undistort(lsst::afw::geom::Point2D const &p,
                                    ImageT const &img,
-                                   lsst::afw::geom::Point2D const &pix,
+                                   Detector const &det,
                                    typename ImageT::SinglePixel padValue=
                                    typename ImageT::SinglePixel(
                                        std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
@@ -113,10 +116,17 @@ public:
     //std::vector<double> getDCoeffs()  {return _dcoeffs;  }
     
 private: 
+
+    lsst::afw::geom::Point2D _distort(lsst::afw::geom::Point2D const &p, Detector const &det, bool foward);
+    lsst::afw::geom::ellipses::Quadrupole _distort(lsst::afw::geom::Point2D const &p,
+                                                   lsst::afw::geom::ellipses::Quadrupole const &Iqq,
+                                                   Detector const &det,
+                                                   bool forward);
+
     template<typename ImageT>
     typename ImageT::Ptr _warp(lsst::afw::geom::Point2D const &p,
                                ImageT const &img,
-                               lsst::afw::geom::Point2D const &pix,
+                               Detector const &det, 
                                bool forard,
                                typename ImageT::SinglePixel padValue=
                                typename ImageT::SinglePixel(
@@ -125,7 +135,7 @@ private:
                                                            )
                                );
     int _lanczosOrder;
-    double _maxShear;
+    std::map<Id,double> _maxShear;
 };
 
 
@@ -150,7 +160,7 @@ public:
  */
 class RadialPolyDistortion : public Distortion {
 public:
-    RadialPolyDistortion(std::vector<double> const &coeffs);
+    RadialPolyDistortion(std::vector<double> const &coeffs, int lanczosOrder=5);
 
 #if 1
     // these may be useful for debugging

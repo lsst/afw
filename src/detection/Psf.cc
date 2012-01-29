@@ -115,6 +115,16 @@ Psf::Image::Ptr Psf::doComputeImage(
                                            ) const {
 
     afwMath::Kernel::ConstPtr kernel = getKernel(color);
+
+    // if they want it distorted, assume they want the PSF as it would appear
+    // at ccdXY.  We'll undistort ccdXY to figure out where that point started
+    // ... that's where it's really being distorted from!
+    afwGeom::Point2D ccdXYundist;
+    if (distort && _detector && _detector->getDistortion()) {
+        ccdXYundist = _detector->getDistortion()->undistort(ccdXY, *_detector);
+    } else {
+        ccdXYundist = ccdXY;
+    }
     
     if (!kernel) {
         throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
@@ -127,13 +137,13 @@ Psf::Image::Ptr Psf::doComputeImage(
         geom::Extent2I(width, height)
     );
     try {
-        kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
+        kernel->computeImage(*im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
     } catch(lsst::pex::exceptions::InvalidParameterException &e) {
 
         // OK, they didn't like the size of *im.  Compute a "native" image (i.e. the size of the Kernel)
         afwGeom::Extent2I kwid = kernel->getDimensions();
         Psf::Image::Ptr native_im = boost::make_shared<Psf::Image>(kwid);
-        kernel->computeImage(*native_im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
+        kernel->computeImage(*native_im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
         // copy the native image into the requested one
         *im = 0.0;
 
@@ -176,12 +186,12 @@ Psf::Image::Ptr Psf::doComputeImage(
         *im /= centralPixelValue;
     }
     // "ir" : (integer, residual)
-    std::pair<int, double> const ir_dx = lsst::afw::image::positionToIndex(ccdXY.getX(), true);
-    std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true);
+    std::pair<int, double> const ir_dx = lsst::afw::image::positionToIndex(ccdXYundist.getX(), true);
+    std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXYundist.getY(), true);
     
     if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
-        std::string const warpAlgorithm = "lanczos3"; // Algorithm to use in warping
-        unsigned int const warpBuffer = 3; // Buffer to use in warping        
+        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
+        unsigned int const warpBuffer = 5; // Buffer to use in warping        
         im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
     }
     im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
@@ -192,19 +202,30 @@ Psf::Image::Ptr Psf::doComputeImage(
     if (distort && _detector && _detector->getDistortion()) {
         
         cameraGeom::Distortion::Ptr distortion = _detector->getDistortion();
+
+#if 0
         int lanc = distortion->getLanczosOrder();
         int edge = abs(0.5*((height > width) ? height : width) *
                        (1.0 - distortion->computeMaxShear(*_detector)));
         edge += lanc;
-        
-        afwGeom::Extent2D eBoreSight(_detector->getPositionFromPixel(ccdXY));
-        eBoreSight /= _detector->getPixelSize();
-        afwGeom::Point2D pBoreSight(eBoreSight);
         Psf::Image::SinglePixel padValue(0.0);
-        Psf::Image::Ptr overSizeImg = distortion->distort(pBoreSight, *im, ccdXY, padValue);
+        Psf::Image::Ptr overSizeImg = distortion->distort(ccdXYundist, *im, *_detector, padValue);
         afwGeom::Box2I bbox(afwGeom::Point2I(edge, edge), afwGeom::Extent2I(width-2*edge, height-2*edge));
         
         return Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
+#endif
+        
+        Psf::Image::SinglePixel padValue(0.0);
+        // distort as though we're where ccdXY was before it got distorted
+        Psf::Image::Ptr imDist = distortion->distort(ccdXYundist, *im, *_detector, padValue);
+        // distort() keeps *im centered at ccdXYundist, so now shift to ccdXY
+        afwGeom::Point2D shift = ccdXY - afwGeom::Extent2D(ccdXYundist);
+        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
+        unsigned int const warpBuffer = 5; // Buffer to use in warping
+        Psf::Image::Ptr psfIm = afwMath::offsetImage(*imDist, shift.getX(), shift.getY(),
+                                                     warpAlgorithm, warpBuffer);
+        return psfIm;
+        
     } else {
         return im;
     }

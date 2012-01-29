@@ -81,6 +81,7 @@ SWIG_SHARED_PTR_DERIVED(RadialPolyDistortionPtr, lsst::afw::cameraGeom::Distorti
     }
 }
 
+%include "lsst/afw/cameraGeom/FpPosition.h"
 %include "lsst/afw/cameraGeom/Orientation.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 %include "lsst/afw/cameraGeom/Amp.h"

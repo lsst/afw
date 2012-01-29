@@ -108,6 +108,8 @@ public:
 
     /// @brief Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
+
+    void scale(double factor) { this->_vector *= factor; }
     
     std::string toString() const {
         std::stringstream out;

@@ -39,7 +39,8 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/cameraGeom.h"
+
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/image.h"
@@ -58,6 +59,8 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     double ixx = 1.0;
     double iyy = 1.0;
     double ixy = 0.0;
+
+    cameraGeom::Detector detector(cameraGeom::Id(1), false, 1.0);
     
     afwGeom::Point2D p(x, y);
     afwGeom::Point2D pDist; // distorted
@@ -68,8 +71,8 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     
     // try NullDistortion
     cameraGeom::NullDistortion ndist;
-    pDist = ndist.distort(p);
-    pp    = ndist.undistort(pDist);
+    pDist = ndist.distort(p, detector);
+    pp    = ndist.undistort(pDist, detector);
 
     printf("%.12f %.12f\n", p.getX(),     p.getY());
     printf("%.12f %.12f\n", pDist.getX(), pDist.getY());
@@ -90,10 +93,10 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     coeffs.push_back(5.5e-15);
     
     cameraGeom::RadialPolyDistortion rdist(coeffs);
-    pDist = rdist.distort(p);
-    qDist = rdist.distort(p, q);
-    pp    = rdist.undistort(pDist);
-    qq    = rdist.undistort(pDist, qDist);
+    pDist = rdist.distort(p, detector);
+    qDist = rdist.distort(p, q, detector);
+    pp    = rdist.undistort(pDist, detector);
+    qq    = rdist.undistort(pDist, qDist, detector);
     
     printf("r: %.12f %.12f\n", p.getX(),     p.getY());
     printf("r: %.12f %.12f\n", pDist.getX(), pDist.getY());
@@ -127,7 +130,7 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
         }
     }
     
-    afwImage::Image<float>::Ptr wimg = rdist.distort(p0, img, cp0);
+    afwImage::Image<float>::Ptr wimg = rdist.distort(cp0, img, detector);
     wimg->writeFits("ccwimg.fits");
     
 }

@@ -335,12 +335,6 @@ namespace {
         pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
 
         typename DestImageT::SinglePixel edgePixel = padValue;
-        //if ( isnan(padValue.image()) ) {
-        //    edgePixel = afwMath::edgePixel<DestImageT>(
-        //                                               typename afwImage::detail::image_traits<DestImageT>::image_category());
-        //} else {
-        //    edgePixel = padValue;
-        //}
         
         std::vector<double> kernelXList(kernelWidth);
         std::vector<double> kernelYList(kernelHeight);
@@ -404,7 +398,6 @@ namespace {
                 int const prevEndCol = edgeColList[colBand-1];
                 int const endCol = edgeColList[colBand];
                 afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
-                //afwGeom::Point2D rightSrcPos = computeSrcPos(endCol, -1, destXY0, destWcs, srcWcs);
                 afwGeom::Point2D rightSrcPos = computeSrcPos(endCol, -1);
                 afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand]; 
     
@@ -428,7 +421,6 @@ namespace {
                 // Set yDeltaSrcPosList for this horizontal interpolation band
                 for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
                     int endCol = edgeColList[colBand];
-                    //afwGeom::Point2D bottomSrcPos = computeSrcPos(endCol, endRow, destXY0, destWcs, srcWcs);
                     afwGeom::Point2D bottomSrcPos = computeSrcPos(endCol, endRow);
                     yDeltaSrcPosList[colBand] = (bottomSrcPos - srcPosView[endCol]) * interpInvHeight;
                 }
@@ -505,18 +497,15 @@ namespace {
             // the first value is not needed, but it's safer to compute it
             std::vector<afwGeom::Point2D>::iterator srcPosView = _srcPosList.begin() + 1;
             for (int col = -1; col < destWidth; ++col) {
-                //srcPosView[col] = computeSrcPos(col, -1, destXY0, destWcs, srcWcs);
                 srcPosView[col] = computeSrcPos(col, -1);
             }
             
             for (int row = 0; row < destHeight; ++row) {
                 typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
                 
-                //srcPosView[-1] = computeSrcPos(-1, row, destXY0, destWcs, srcWcs);
                 srcPosView[-1] = computeSrcPos(-1, row);
                 
                 for (int col = 0; col < destWidth; ++col, ++destXIter) {
-                    //afwGeom::Point2D srcPos = computeSrcPos(col, row, destXY0, destWcs, srcWcs);
                     afwGeom::Point2D srcPos = computeSrcPos(col, row);
                     double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
                     srcPosView[col] = srcPos;

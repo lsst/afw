@@ -191,10 +191,8 @@ namespace math {
         SrcExposureT const &srcExposure,
         SeparableKernel &warpingKernel, int const interpLength=0,
         typename DestExposureT::MaskedImageT::SinglePixel padValue=
-            typename DestExposureT::MaskedImageT::SinglePixel(
-                std::numeric_limits<typename DestExposureT::MaskedImageT::SinglePixel>::has_quiet_NaN ?
-                std::numeric_limits<typename DestExposureT::MaskedImageT::SinglePixel>::quiet_NaN() : 0
-                                                    )
+          lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
+          typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category())
                     );
 
     template<typename DestImageT, typename SrcImageT>
@@ -204,11 +202,8 @@ namespace math {
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel, int const interpLength=0,
-        typename DestImageT::SinglePixel padValue=
-            typename DestImageT::SinglePixel(
-                std::numeric_limits<typename DestImageT::SinglePixel>::has_quiet_NaN ?
-                std::numeric_limits<typename DestImageT::SinglePixel>::quiet_NaN() : 0
-                                                    )
+        typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
                  );
 
     template<typename DestImageT, typename SrcImageT>
@@ -218,11 +213,8 @@ namespace math {
         SeparableKernel &warpingKernel,
         lsst::afw::geom::AffineTransform const &affineTransform,
         int const interpLength=0,
-        typename DestImageT::SinglePixel padValue=
-            typename DestImageT::SinglePixel(
-                std::numeric_limits<typename DestImageT::SinglePixel>::has_quiet_NaN ?
-                std::numeric_limits<typename DestImageT::SinglePixel>::quiet_NaN() : 0
-                                   )
+        typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
                  );
 
 
@@ -234,11 +226,8 @@ namespace math {
         lsst::afw::geom::LinearTransform const &linearTransform,
         lsst::afw::geom::Point2D const &centerPixel,
         int const interpLength=0,
-        typename DestImageT::SinglePixel padValue=
-            typename DestImageT::SinglePixel(
-                std::numeric_limits<typename DestImageT::SinglePixel>::has_quiet_NaN ?
-                std::numeric_limits<typename DestImageT::SinglePixel>::quiet_NaN() : 0
-                                   )
+        typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
                          );
     
     namespace details {

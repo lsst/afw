@@ -50,6 +50,8 @@ class DistortionTestCase(unittest.TestCase):
     def setUp(self):
 	self.prynt = False
 
+	self.det = cameraGeom.Detector(cameraGeom.Id(1), False, 1.0)
+        
 	# try the suprimecam numbers
 	self.coeffs = [0.0, 1.0, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]
 
@@ -57,7 +59,7 @@ class DistortionTestCase(unittest.TestCase):
 	self.ys = [0.0, 1000.0, 4000.0]
 	
     def tearDown(self):
-        pass
+        del self.det
 
 
         
@@ -66,16 +68,16 @@ class DistortionTestCase(unittest.TestCase):
 	if len(args) == 2:
 	    x, y = args
 	    p = afwGeom.Point2D(x, y)
-	    pDist = dist.distort(p)
-	    pp    = dist.undistort(pDist)
+	    pDist = dist.distort(p, self.det)
+	    pp    = dist.undistort(pDist, self.det)
 
 	    if self.prynt:
 		print "p:     %.12f %.12f" % (p.getX(),     p.getY())
 		print "pDist: %.12f %.12f" % (pDist.getX(), pDist.getY())
 		print "pp:    %.12f %.12f" % (pp.getX(),    pp.getY())
 		
-	    self.assertAlmostEqual(pp.getX(), p.getX(), 6)
-	    self.assertAlmostEqual(pp.getY(), p.getY(), 6)
+	    self.assertAlmostEqual(pp.getX(), p.getX())
+	    self.assertAlmostEqual(pp.getY(), p.getY())
 
 
 	if len(args) == 3:
@@ -83,10 +85,10 @@ class DistortionTestCase(unittest.TestCase):
 	    ixx, iyy, ixy = m
 
 	    p = afwGeom.Point2D(x, y)
-	    pDist = dist.distort(p)
+	    pDist = dist.distort(p, self.det)
 	    m = geomEllip.Quadrupole(ixx, iyy, ixy)
-            mDist = dist.distort(p, m)
-	    mm    = dist.undistort(pDist, mDist)
+            mDist = dist.distort(p, m, self.det)
+	    mm    = dist.undistort(pDist, mDist, self.det)
 	    r0 = math.sqrt(x*x + y*y)
 
 	    theta = math.atan2(y,x)
@@ -95,7 +97,7 @@ class DistortionTestCase(unittest.TestCase):
 	    #dr = math.sqrt(dx*dx+dy*dy)
 	    scale = 1.0000001
 	    p2 = afwGeom.Point2D(scale*x, scale*y)
-	    p2Dist = dist.distort(p2)
+	    p2Dist = dist.distort(p2, self.det)
 
 	    r1 = math.sqrt(pDist.getX()*pDist.getX() + pDist.getY()*pDist.getY())
 	    r2 = math.sqrt(p2Dist.getX()*p2Dist.getX() + p2Dist.getY()*p2Dist.getY())
@@ -116,9 +118,9 @@ class DistortionTestCase(unittest.TestCase):
 		    (m.getIXY()-mm.getIXY())/ixyTmp,
 		    )
 		
-	    self.assertAlmostEqual(mm.getIXX(), m.getIXX(), 2)
-	    self.assertAlmostEqual(mm.getIYY(), m.getIYY(), 2)
-	    self.assertAlmostEqual(mm.getIXY(), m.getIXY(), 2)
+	    self.assertAlmostEqual(mm.getIXX(), m.getIXX()) 
+	    self.assertAlmostEqual(mm.getIYY(), m.getIYY()) 
+	    self.assertAlmostEqual(mm.getIXY(), m.getIXY()) 
 	    
 
 
@@ -137,12 +139,10 @@ class DistortionTestCase(unittest.TestCase):
 
     def testDistortionPointerInDetector(self):
 
-	det = cameraGeom.Detector(cameraGeom.Id(1))
-
 	# default to No distortion
-	dist = det.getDistortion()
+	dist = self.det.getDistortion()
 	x, y = 1.0, 1.0
-	p = dist.distort(afwGeom.Point2D(x, y))
+	p = dist.distort(afwGeom.Point2D(x, y), self.det)
 
 	if self.prynt:
 	    print "%.12f %.12f" % (p.getX(), p.getY())
@@ -152,8 +152,8 @@ class DistortionTestCase(unittest.TestCase):
 
 
 	# make sure we can set a radialpoly and round-trip it.
-	det.setDistortion(cameraGeom.RadialPolyDistortion(self.coeffs))
-	self.roundTrip(det.getDistortion(), x, y)
+	self.det.setDistortion(cameraGeom.RadialPolyDistortion(self.coeffs))
+	self.roundTrip(self.det.getDistortion(), x, y)
 
 
     def tryAFewCoords(self, dist, moment):
@@ -227,7 +227,7 @@ class DistortionTestCase(unittest.TestCase):
             scale = scalings[i]
 
             # check the point
-	    p2 = rDist.distort(p)
+	    p2 = rDist.distort(p, self.det)
 	    x, y = p2.getX(), p2.getY()
 	    r2Calc = numpy.sqrt(x*x+y*y)
 	    if self.prynt:
@@ -235,7 +235,7 @@ class DistortionTestCase(unittest.TestCase):
 	    self.assertAlmostEqual(r2Known, r2Calc)
 
             # check the moment
-            iqq2 = rDist.distort(p, iqq)
+            iqq2 = rDist.distort(p, iqq, self.det)
             iqqList = [iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()]
             if self.prynt:
                 print "scale: ", scale, iqqList[i]
