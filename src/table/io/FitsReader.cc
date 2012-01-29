@@ -212,7 +212,9 @@ struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
             if (i == schema.asColSet().end() || i->col != col) {
                 i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
-            schema.asColSet().modify(i, FitsSchema::SetName(strip(value)));
+            std::string v = strip(value);
+            std::replace(v.begin(), v.end(), '_', '.');
+            schema.asColSet().modify(i, FitsSchema::SetName(v));
             schema.asColSet().modify(i, FitsSchema::SetDoc(comment));
         } else if (std::strncmp(key, "TFLAG", 5) == 0) {
             int bit = boost::lexical_cast<int>(key + 5) - 1;
@@ -220,7 +222,9 @@ struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
             if (i == schema.asBitSet().end() || i->bit != bit) {
                 i = schema.asBitSet().insert(i, FitsSchemaItem(-1, bit));
             }
-            schema.asBitSet().modify(i, FitsSchema::SetName(strip(value)));
+            std::string v = strip(value);
+            std::replace(v.begin(), v.end(), '_', '.');
+            schema.asBitSet().modify(i, FitsSchema::SetName(v));
             schema.asBitSet().modify(i, FitsSchema::SetDoc(comment));
         } else if (std::strncmp(key, "TUNIT", 5) == 0) {
             int col = boost::lexical_cast<int>(key + 5) - 1;

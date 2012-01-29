@@ -99,8 +99,7 @@ struct ProcessSchema {
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         std::string name = item.field.getName();
-        if (sanitizeNames)
-            std::replace(name.begin(), name.end(), '.', '_');
+        std::replace(name.begin(), name.end(), '.', '_');
         int n = fits->addColumn<typename Field<T>::Element>(
             name.c_str(),
             item.field.getElementCount(),
@@ -111,19 +110,17 @@ struct ProcessSchema {
 
     void operator()(SchemaItem<Flag> const & item) const {
         std::string name = item.field.getName();
-        if (sanitizeNames)
-            std::replace(name.begin(), name.end(), '.', '_');
+        std::replace(name.begin(), name.end(), '.', '_');
         fits->writeColumnKey("TFLAG", nFlags, name.c_str(), item.field.getDoc().c_str());
         ++nFlags;
     }
 
-    static void apply(Fits & fits, Schema const & schema, bool sanitizeNames) {
-        ProcessSchema f = { &fits, sanitizeNames, 0 };
+    static void apply(Fits & fits, Schema const & schema) {
+        ProcessSchema f = { &fits, 0 };
         schema.forEach(boost::ref(f));
     }
 
     Fits * fits;
-    bool sanitizeNames;
     mutable int nFlags;
 };
 
@@ -178,7 +175,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
-    ProcessSchema::apply(*_fits, schema, true);
+    ProcessSchema::apply(*_fits, schema);
     _row = -1;
     _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
 }

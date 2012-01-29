@@ -66,6 +66,7 @@ template <> struct FitsType< std::complex<float> > { static int const CONSTANT =
 template <> struct FitsType< std::complex<double> > { static int const CONSTANT = TDBLCOMPLEX; };
 
 std::string strip(std::string const & s) {
+    if (s.empty()) return s;
     std::size_t i1 = s.find_first_not_of(" '");
     std::size_t i2 = s.find_last_not_of(" '");
     return s.substr(i1, (i1 == std::string::npos) ? 0 : 1 + i2 - i1);

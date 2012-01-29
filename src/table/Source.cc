@@ -5,6 +5,42 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/detail/Access.h"
 
+#define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type, ERR, Err)                \
+    if (table->get ## Name ## Type ## Key().getOffset() >= 0) {              \
+        std::string s = table->getSchema().find(table->get ## Name ## Type ## Key()).field.getName(); \
+        std::replace(s.begin(), s.end(), '.', '_');                     \
+        _fits->writeKey(#NAME "_" # TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
+    }                                                                   \
+    if (table->get ## Name ## Type ## Err ## Key().getOffset() >= 0) {           \
+        std::string s = table->getSchema().find(table->get ## Name ## Type ## Err ## Key()).field.getName(); \
+        std::replace(s.begin(), s.end(), '.', '_');                     \
+        _fits->writeKey(#NAME "_" # TYPE "_" # ERR "_SLOT", s.c_str(),  \
+                        "Defines the " #Name #Type #Err " slot");       \
+    }
+
+#define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME, Name, FLUX, Flux, ERR, Err)
+#define SAVE_CENTROID_SLOT() SAVE_MEAS_SLOT(, , CENTROID, Centroid, COV, Cov)
+#define SAVE_SHAPE_SLOT() SAVE_MEAS_SLOT(, , SHAPE, Shape, COV, Cov)
+
+#define LOAD_MEAS_SLOT(NAME, Name, TYPE, Type, ERR, Err)                \
+    {                                                                   \
+        std::string s, sErr;                                            \
+        _fits->readKey(#NAME "_" #TYPE "_SLOT", s);                     \
+        _fits->readKey(#NAME "_" #TYPE "_" #ERR "_SLOT", sErr);         \
+        if (_fits->status == 0) {                                       \
+            std::replace(s.begin(), s.end(), '_', '.');                 \
+            std::replace(sErr.begin(), sErr.end(), '_', '.');           \
+            table->define ## Name ## Type(schema[s], schema[sErr]); \
+        } else {                                                        \
+            _fits->status = 0;                                          \
+        }                                                               \
+    }
+    
+
+#define LOAD_FLUX_SLOT(NAME, Name) LOAD_MEAS_SLOT(NAME, Name, FLUX, Flux, ERR, Err)
+#define LOAD_CENTROID_SLOT() LOAD_MEAS_SLOT(, , CENTROID, Centroid, COV, Cov)
+#define LOAD_SHAPE_SLOT() LOAD_MEAS_SLOT(, , SHAPE, Shape, COV, Cov)
+
 namespace lsst { namespace afw { namespace table {
 
 namespace {
@@ -91,7 +127,12 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
     _fits->writeKey("SPANCOL", _spanCol + 1, "Column with footprint spans.");
     _fits->writeKey("PEAKCOL", _peakCol + 1, "Column with footprint peaks (float values).");
     _fits->writeKey("AFW_TYPE", "SOURCE", "Tells lsst::afw to load this as a Source table.");
-    // TODO: stuff metadata, slots in header
+    SAVE_FLUX_SLOT(PSF, Psf);
+    SAVE_FLUX_SLOT(MODEL, Model);
+    SAVE_FLUX_SLOT(AP, Ap);
+    SAVE_FLUX_SLOT(INST, Inst);
+    SAVE_CENTROID_SLOT();
+    SAVE_SHAPE_SLOT();
 }
 
 void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
@@ -142,7 +183,14 @@ Schema SourceFitsReader::_readSchema(int nCols) {
 }
 
 PTR(BaseTable) SourceFitsReader::_readTable(Schema const & schema) {
-    return SourceTable::make(schema);
+    PTR(SourceTable) table =  SourceTable::make(schema);
+    LOAD_FLUX_SLOT(PSF, Psf);
+    LOAD_FLUX_SLOT(MODEL, Model);
+    LOAD_FLUX_SLOT(AP, Ap);
+    LOAD_FLUX_SLOT(INST, Inst);
+    LOAD_CENTROID_SLOT();
+    LOAD_SHAPE_SLOT();
+    return table;
 }
 
 PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
