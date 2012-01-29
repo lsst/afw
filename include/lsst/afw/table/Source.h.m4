@@ -215,14 +215,11 @@ public:
      *  @brief Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
-     *  @param[in] metadata          Flexible metadata for the table.  An empty PropertyList will be used
-     *                               if an empty pointer is passed.
      *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
      *                               If empty, defaults to a simple counter that starts at 1.
      */
     static PTR(SourceTable) make(
         Schema const & schema,
-        PTR(daf::base::PropertyList) const & metadata = PTR(daf::base::PropertyList)(),
         PTR(IdFactory) const & idFactory = PTR(IdFactory)()
     );
 
@@ -278,12 +275,6 @@ public:
     /// @brief Return the object that generates IDs for the table.
     CONST_PTR(IdFactory) getIdFactory() const { return _idFactory; }
 
-    /// @brief Return the flexible metadata associated with the source table.
-    PTR(daf::base::PropertyList) getMetadata() const { return _metadata; }
-
-    /// @brief Set the flexible metadata associated with the source table.
-    void setMetadata(PTR(daf::base::PropertyList) const & metadata) { _metadata = metadata; }
-
     /// @copydoc BaseTable::clone
     PTR(SourceTable) clone() const { return boost::static_pointer_cast<SourceTable>(_clone()); }
 
@@ -310,7 +301,6 @@ protected:
 
     SourceTable(
         Schema const & schema,
-        PTR(daf::base::PropertyList) const & metadata,
         PTR(IdFactory) const & idFactory
     );
 
@@ -335,7 +325,6 @@ private:
 
     virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
 
-    PTR(daf::base::PropertyList) _metadata;
     PTR(IdFactory) _idFactory;
     boost::array< KeyPair<Flux>, N_FLUX_SLOTS > _slotFlux;
     KeyPair<Centroid> _slotCentroid;

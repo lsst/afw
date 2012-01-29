@@ -59,9 +59,8 @@ public:
 
     explicit SourceTableImpl(
         Schema const & schema,
-        PTR(daf::base::PropertyList) const & metadata,
         PTR(IdFactory) const & idFactory
-    ) : SourceTable(schema, metadata, idFactory) {}
+    ) : SourceTable(schema, idFactory) {}
 
     SourceTableImpl(SourceTableImpl const & other) : SourceTable(other) {}
 
@@ -263,7 +262,6 @@ void SourceRecord::_assign(BaseRecord const & other) {
 
 PTR(SourceTable) SourceTable::make(
     Schema const & schema,
-    PTR(daf::base::PropertyList) const & metadata,
     PTR(IdFactory) const & idFactory
 ) {
     if (!checkSchema(schema)) {
@@ -272,22 +270,19 @@ PTR(SourceTable) SourceTable::make(
             "Schema for Source must contain at least the keys defined by getMinimalSchema()."
         );
     }
-    return boost::make_shared<SourceTableImpl>(schema, metadata, idFactory);
+    return boost::make_shared<SourceTableImpl>(schema, idFactory);
 }
 
 SourceTable::SourceTable(
     Schema const & schema,
-    PTR(daf::base::PropertyList) const & metadata,
     PTR(IdFactory) const & idFactory
-) : BaseTable(schema), _metadata(metadata), _idFactory(idFactory)
+) : BaseTable(schema), _idFactory(idFactory)
 {
     if (!_idFactory) _idFactory = IdFactory::makeSimple();
-    if (!_metadata) _metadata = boost::make_shared<daf::base::PropertyList>();
 }
 
 SourceTable::SourceTable(SourceTable const & other) :
     BaseTable(other),
-    _metadata(boost::static_pointer_cast<daf::base::PropertyList>(other._metadata->deepCopy())),
     _idFactory(other._idFactory->clone()),
     _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
 {}
