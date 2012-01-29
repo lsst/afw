@@ -1,3 +1,4 @@
+//  -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -30,6 +31,7 @@
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/table/Source.h"
 
 namespace lsst {
 namespace afw {
@@ -93,16 +95,21 @@ public:
      * Return the Footprint%s of detected objects
      */
     PTR(FootprintList) getFootprints() { return _footprints; } 
+
     /**:
      * Set the Footprint%s of detected objects
      */
     void setFootprints(PTR(FootprintList) footprints) { _footprints = footprints; }
+
     /**
      * Retun the Footprint%s of detected objects
      */
     CONST_PTR(FootprintList) const getFootprints() const { return _footprints; }
     
+    afw::table::SourceVector makeSources(PTR(afw::table::SourceTable) const & table) const;
+
     void setRegion(geom::Box2I const& region);
+
     /**
      * Return the corners of the MaskedImage
      */
@@ -191,7 +198,7 @@ typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
 }
 
 template<typename ImagePixelT, typename MaskPixelT>
-typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
+typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
         FootprintSet<ImagePixelT, MaskPixelT> const& rhs, //!< the input FootprintSet
         int r,                          //!< Grow Footprints by r pixels
         bool isotropic=true             //!< Grow isotropically (as opposed to a Manhattan metric)
@@ -200,6 +207,17 @@ typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
     return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
         new FootprintSet<ImagePixelT, MaskPixelT>(rhs, r, isotropic)
     );
+}
+
+template<typename ImagePixelT, typename MaskPixelT>
+afw::table::SourceVector
+FootprintSet<ImagePixelT,MaskPixelT>::makeSources(PTR(afw::table::SourceTable) const & table) const {
+    afw::table::SourceVector v(table);
+    for (typename FootprintList::const_iterator i = _footprints->begin(); i != _footprints->end(); ++i) {
+        PTR(afw::table::SourceRecord) r = v.addNew();
+        r->setFootprint(*i);
+    }
+    return v;
 }
 
 }}}
