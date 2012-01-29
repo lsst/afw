@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e.g.d.flag2", "flag2 for e.g.d");
     Key< Point<float> > a_b_p = schema.addField< Point<float> >("a.b.p", "point", "pixels");
 
-    SourceSet set(SourceTable::make(schema));
+    SourceVector vector(SourceTable::make(schema));
     {
         PTR(Footprint) fp1 = boost::make_shared<Footprint>();
         fp1->addSpan(0, 5, 8);
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         fp1->addSpan(2, 6, 7);
         fp1->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.5f, 1.2f, 25.6f));
         fp1->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(6.8f, 0.8f, 23.2f));
-        PTR(SourceRecord) r1 = set.getTable()->makeRecord();
+        PTR(SourceRecord) r1 = vector.getTable()->makeRecord();
         r1->setFootprint(fp1);
         
         r1->set(a_b_i, 314);
@@ -65,9 +65,9 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r1->set(e_g_d_flag1, false);
         r1->set(e_g_d_flag2, true);
         r1->set(a_b_p, lsst::afw::geom::Point2D(1.2, 0.5));
-        set.insert(r1);
+        vector.push_back(r1);
 
-        PTR(SourceRecord) r2 = set.getTable()->makeRecord();
+        PTR(SourceRecord) r2 = vector.getTable()->makeRecord();
         r2->set(a_b_i, 5123);
         r2->set(a_b_i_valid, true);
         r2->set(a_c_f, 44.8f);
@@ -80,20 +80,20 @@ BOOST_AUTO_TEST_CASE(testFits) {
         fp2->addSpan(4, 3, 5);
         fp2->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.2f, 3.3f, 32.1f));
         r2->setFootprint(fp2);
-        set.insert(r2);
+        vector.push_back(r2);
 
         BOOST_CHECK_EQUAL( r2->get(e_g_d_flag1), true );
         BOOST_CHECK_EQUAL( r2->get(e_g_d_flag2), false );
     }
 
-    set.writeFits("!testTable.fits");
+    vector.writeFits("!testTable.fits");
 
-    SourceSet readSet = SourceSet::readFits("testTable.fits[1]");
-    BOOST_CHECK_EQUAL( schema, readSet.getSchema() );
+    SourceVector readVector = SourceVector::readFits("testTable.fits[1]");
+    BOOST_CHECK_EQUAL( schema, readVector.getSchema() );
 
     {
-        SourceRecord const & a1 = set[1];
-        SourceRecord const & b1 = readSet[1];
+        SourceRecord const & a1 = vector[0];
+        SourceRecord const & b1 = readVector[0];
         BOOST_CHECK_EQUAL( a1.get(a_b_i), b1.get(a_b_i) );
         BOOST_CHECK_EQUAL( a1.get(a_b_i_valid), b1.get(a_b_i_valid) );
         BOOST_CHECK_CLOSE_FRACTION( a1.get(a_c_f), b1.get(a_c_f), 1E-8 );
@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(testFits) {
                                 EqualityCompare()) );
         BOOST_CHECK_EQUAL( fp1a.getBBox(), fp1b.getBBox() );
 
-        SourceRecord const & a2 = set[2];
-        SourceRecord const & b2 = readSet[2];
+        SourceRecord const & a2 = vector[1];
+        SourceRecord const & b2 = readVector[1];
         BOOST_CHECK_EQUAL( a2.get(a_b_i), b2.get(a_b_i) );
         BOOST_CHECK_EQUAL( a2.get(a_b_i_valid), b2.get(a_b_i_valid) );
         BOOST_CHECK_CLOSE_FRACTION( a2.get(a_c_f), b2.get(a_c_f), 1E-8 );

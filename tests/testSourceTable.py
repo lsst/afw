@@ -102,42 +102,6 @@ class SourceTableTestCase(unittest.TestCase):
         self.table.defineShape("c")
         self.checkCanonical()
 
-class SourceSetTestCase(unittest.TestCase):
-    
-    def setUp(self):
-        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.set = lsst.afw.table.SourceSet(schema)
-        self.set.addNew()
-        self.set.addNew()
-        self.set.addNew()
-        r = self.set.table.makeRecord()
-        r.setId(15)
-        self.set.add(r)
-
-    def tearDown(self):
-        del self.set
-
-    def testConversion(self):
-        vector = lsst.afw.table.SourceVector(self.set)
-        for r1, r2 in zip(self.set, vector):
-            self.assertEqual(r1.getId(), r2.getId())
-
-    def testInsertion(self):
-        r = self.set.addNew()
-        for r1, i2 in zip(self.set, (1, 2, 3, r.getId(), 15)):
-            self.assertEqual(r1.getId(), i2)
-
-    def testDeletion(self):
-        del self.set[3]
-        for r1, i2 in zip(self.set, (1, 2, 15)):
-            self.assertEqual(r1.getId(), i2)
-
-    def testLookup(self):
-        r = self.set[2]
-        self.assertEqual(r.getId(), 2)
-        self.assert_(3 in self.set)
-        self.assertEqual(r, self.set[2])
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -147,7 +111,6 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SourceTableTestCase)
-    suites += unittest.makeSuite(SourceSetTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

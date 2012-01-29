@@ -88,7 +88,6 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `Cov', `')')
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/IdFactory.h"
-#include "lsst/afw/table/Set.h"
 #include "lsst/afw/table/Vector.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
@@ -211,8 +210,6 @@ public:
     typedef SourceRecord Record;
     typedef VectorT<Record,SourceTable> Vector;
     typedef VectorT<Record const,SourceTable> ConstVector;
-    typedef SourceSetT<Record,SourceTable> Set;
-    typedef SourceSetT<Record const,SourceTable> ConstSet;
 
     /**
      *  @brief Construct a new table.
@@ -346,35 +343,6 @@ private:
 };
 
 #ifndef SWIG
-
-template <typename RecordT, typename TableT>
-class SourceSetT : public SetT<RecordT,TableT> {
-    BOOST_STATIC_ASSERT( (boost::is_convertible<RecordT*,SourceRecord const*>::value) );
-public:
-    
-    explicit SourceSetT(PTR(TableT) const & table = PTR(TableT)()) :
-       SetT<RecordT,TableT>(table, SourceTable::getIdKey()) {}
-
-    explicit SourceSetT(Schema const & schema) : SetT<RecordT,TableT>(schema, SourceTable::getIdKey()) {}
-
-    template <typename InputIterator>
-    SourceSetT(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
-        SetT<RecordT,TableT>(table, SourceTable::getIdKey(), first, last, deep)
-    {}
-
-    template <typename OtherRecordT, typename OtherTableT>
-    explicit SourceSetT(VectorT<OtherRecordT,OtherTableT> const & other) : 
-        SetT<RecordT,TableT>(other.getTable(), SourceTable::getIdKey(), other.begin(), other.end(), false)
-    {}
-
-    static SourceSetT readFits(std::string const & filename) {
-        return io::FitsReader::apply<SourceSetT>(filename);
-    }
-
-};
-
-typedef SourceSetT<SourceRecord,SourceTable> SourceSet;
-typedef SourceSetT<SourceRecord const,SourceTable> ConstSourceSet;
 
 typedef VectorT<SourceRecord,SourceTable> SourceVector;
 typedef VectorT<SourceRecord const,SourceTable> ConstSourceVector;

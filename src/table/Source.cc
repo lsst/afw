@@ -263,7 +263,7 @@ PTR(io::FitsWriter) SourceTable::makeFitsWriter(io::FitsWriter::Fits * fits) con
     return boost::make_shared<SourceFitsWriter>(fits);
 }
 
-template class SourceSetT<SourceRecord>;
-template class SourceSetT<SourceRecord const>;
+template class VectorT<SourceRecord>;
+template class VectorT<SourceRecord const>;
 
 }}} // namespace lsst::afw::table

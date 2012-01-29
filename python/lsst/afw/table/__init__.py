@@ -12,7 +12,6 @@ from .tableLib import (
     SourceTable,
     BaseVector,
     SourceVector,
-    SourceSet,
     ColumnView,
     aliases,
 )
