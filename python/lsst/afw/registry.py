@@ -131,10 +131,13 @@ class FactoryConfigInstanceDict(pexConfig.ConfigInstanceDict):
 
         Additional arguments will be passed on to the factory or factories.
         """
+        if self.active is None:
+            raise RuntimeError("No selection has been made for %s.  Options: %s" % \
+                               (self._fullname, " ".join(self.types.registry.keys())))
         if self._multi:
             return [self.types.registry[c](self[c], *args, **kwds) for c in self._selection]
         else:
-            return self(self.active, *args, **kwds)
+            return self.types.registry[self.name](self[self.name], *args, **kwds)
 
 class RegistryField(pexConfig.ConfigChoiceField):
 
