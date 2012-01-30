@@ -55,7 +55,7 @@ public:
     typedef boost::shared_ptr<Distortion> Ptr;
     typedef boost::shared_ptr<const Distortion> ConstPtr;
 
-    Distortion(int lanczosOrder=5) :
+    Distortion(int lanczosOrder=3) :
         _lanczosOrder(lanczosOrder),
         _maxShear(std::map<Id,double>()) {} 
     

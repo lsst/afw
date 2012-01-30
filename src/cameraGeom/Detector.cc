@@ -303,13 +303,13 @@ PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() {
     if (_distortion) {
         return _distortion;
         
-        // otherwise, return our parent's ... no parent? return a Distortion() object
+        // otherwise, return our parent's ... no parent? return Null 
     } else {
         PTR(Detector) parent = this->getParent();
         if (parent) {
             return parent->getDistortion();
         } else {
-            return PTR(Distortion)(new Distortion());
+            return PTR(Distortion)(); //new Distortion());
         }
     }
     
