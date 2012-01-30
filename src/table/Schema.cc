@@ -8,6 +8,7 @@
 #include "boost/mpl/bool.hpp"
 #include "boost/scoped_ptr.hpp"
 #include "boost/iterator/transform_iterator.hpp"
+#include "boost/iterator/filter_iterator.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
@@ -36,7 +37,7 @@ struct Stream {
    
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
-        *os << "    " << item.field << ",\n";
+        *os << "    (" << item.field << ", " << item.key << "),\n";
     }
 
     explicit Stream(std::ostream * os_) : os(os_) {}
@@ -53,11 +54,79 @@ struct ExtractOffset : public boost::static_visitor<int> {
         return item.key.getOffset();
     }
 
+    result_type operator()(SchemaItem<Flag> const & item) const {
+        return -1;
+    }
+
     result_type operator()(detail::SchemaImpl::ItemVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }
-
 };
+
+struct ExtractFlagKeys : public boost::static_visitor< Key<Flag> > {
+
+    typedef Key<Flag> result_type;
+
+    template <typename T>
+    result_type operator()(SchemaItem<T> const & item) const {
+        return Key<Flag>();
+    }
+
+    result_type operator()(SchemaItem<Flag> const & item) const {
+        return item.key;
+    }
+
+    result_type operator()(detail::SchemaImpl::ItemVariant const & v) const {
+        return boost::apply_visitor(*this, v);
+    }
+};
+
+struct IsNonNegative {
+    bool operator()(int i) const { return i >= 0; }
+};
+
+struct IsValidKey {
+    template <typename T>
+    bool operator()(Key<T> const & key) const { return key.isValid(); }
+};
+
+struct FlagKeyLess {
+    bool operator()(Key<Flag> const & a, Key<Flag> const & b) const {
+        return (a.getOffset() == b.getOffset()) ?
+            (a.getBit() < b.getBit()) : (a.getOffset() < b.getOffset());
+    }
+};
+
+template <typename BaseIterator, typename T>
+BaseIterator findKey(BaseIterator first, BaseIterator last, Key<T> const & key, bool & exact) {
+    typedef boost::transform_iterator<ExtractOffset,BaseIterator> TransformIter;
+    typedef boost::filter_iterator<IsNonNegative,TransformIter> FilterIter;
+    TransformIter begin(first);
+    TransformIter end(last);
+    FilterIter r = std::lower_bound(
+        FilterIter(begin, end),
+        FilterIter(end, end),
+        key.getOffset()
+    );
+    exact = (r.base() != end) && (*r == key.getOffset());
+    return r.base().base();
+}
+
+template <typename BaseIterator>
+BaseIterator findKey(BaseIterator first, BaseIterator last, Key<Flag> const & key, bool & exact) {
+    typedef boost::transform_iterator<ExtractFlagKeys,BaseIterator> TransformIter;
+    typedef boost::filter_iterator<IsValidKey,TransformIter> FilterIter;
+    TransformIter begin(first);
+    TransformIter end(last);
+    FilterIter r = std::lower_bound(
+        FilterIter(begin, end),
+        FilterIter(end, end),
+        key,
+        FlagKeyLess()
+    );
+    exact = (r.base() != end) && (*r == key);
+    return r.base().base();
+}
 
 struct CompareItemKeys {
 
@@ -220,14 +289,9 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
 
 template <typename T>
 SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
-    typedef boost::transform_iterator<ExtractOffset,ItemContainer::const_iterator> Iterator;
-    int const offset = key.getOffset();
-    Iterator i = std::lower_bound(
-        Iterator(_items.begin()),
-        Iterator(_items.end()), 
-        offset
-    );
-    if (*i == offset) {
+    bool exact = false;
+    ItemContainer::const_iterator i = findKey(_items.begin(), _items.end(), key, exact);
+    if (exact) {
         try {
             return boost::get< SchemaItem<T> const >(*i.base());
         } catch (boost::bad_get & err) {
@@ -237,10 +301,10 @@ SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
             );
         }
     }
-    ExtractItemByOffset<T> extractor(offset);
-    if (i.base() != _items.begin()) {
+    ExtractItemByOffset<T> extractor(key.getOffset());
+    while (i != _items.begin()) {
         --i;
-        boost::apply_visitor(extractor, *i.base());
+        boost::apply_visitor(extractor, *i);
         if (extractor.result) return *extractor.result;
     }
     throw LSST_EXCEPT(
@@ -357,20 +421,15 @@ void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
         }
     }
     if (!item) { // Need to find the original item by key, since it's a new name.
-        typedef boost::transform_iterator<ExtractOffset,ItemContainer::iterator> Iterator;
-        int const offset = key.getOffset();
-        Iterator i = std::lower_bound(
-            Iterator(_items.begin()),
-            Iterator(_items.end()),
-            offset
-        );
-        if (*i != offset) {
+        bool exact = false;
+        ItemContainer::iterator i = findKey(_items.begin(), _items.end(), key, exact);
+        if (exact) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::NotFoundException,
                 "Key not found in Schema."
             );
         }
-        item = boost::get< SchemaItem<T> >(&(*i.base()));
+        item = boost::get< SchemaItem<T> >(&(*i));
         if (!item) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,

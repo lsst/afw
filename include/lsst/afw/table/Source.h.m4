@@ -27,56 +27,66 @@ m4def(`DECLARE_SLOT_GETTERS',
     $2::MeasValue get$1$2() const;
 
     /// @brief Get the uncertainty on the $1$2 slot measurement.
-    $2::ErrValue get$1$2$3() const;
+    $2::ErrValue get$1$2Err() const;
+
+    /// @brief Return true if the measurement in the $1$2 slot was successful.
+    bool get$1$2Flag() const;
 ')dnl
-m4def(`DECLARE_FLUX_GETTERS', `DECLARE_SLOT_GETTERS($1, `Flux', `Err')')dnl
-m4def(`DECLARE_CENTROID_GETTERS', `DECLARE_SLOT_GETTERS(`', `Centroid', `Cov')')dnl
-m4def(`DECLARE_SHAPE_GETTERS', `DECLARE_SLOT_GETTERS(`', `Shape', `Cov')')dnl
+m4def(`DECLARE_FLUX_GETTERS', `DECLARE_SLOT_GETTERS($1, `Flux')')dnl
+m4def(`DECLARE_CENTROID_GETTERS', `DECLARE_SLOT_GETTERS(`', `Centroid')')dnl
+m4def(`DECLARE_SHAPE_GETTERS', `DECLARE_SLOT_GETTERS(`', `Shape')')dnl
 m4def(`DEFINE_SLOT_GETTERS',
 `inline $2::MeasValue SourceRecord::get$1$2() const {
     return this->get(getTable()->get$1$2Key());
 }
 
-inline $2::ErrValue SourceRecord::get$1$2$3() const {
-    return this->get(getTable()->get$1$2$3Key());
+inline $2::ErrValue SourceRecord::get$1$2Err() const {
+    return this->get(getTable()->get$1$2ErrKey());
+}
+
+inline bool SourceRecord::get$1$2Flag() const {
+    return this->get(getTable()->get$1$2FlagKey());
 }
 ')dnl
-m4def(`DEFINE_FLUX_GETTERS', `DEFINE_SLOT_GETTERS($1, `Flux', `Err')')dnl
-m4def(`DEFINE_CENTROID_GETTERS', `DEFINE_SLOT_GETTERS(`', `Centroid', `Cov')')dnl
-m4def(`DEFINE_SHAPE_GETTERS', `DEFINE_SLOT_GETTERS(`', `Shape', `Cov')')dnl
+m4def(`DEFINE_FLUX_GETTERS', `DEFINE_SLOT_GETTERS($1, `Flux')')dnl
+m4def(`DEFINE_CENTROID_GETTERS', `DEFINE_SLOT_GETTERS(`', `Centroid')')dnl
+m4def(`DEFINE_SHAPE_GETTERS', `DEFINE_SLOT_GETTERS(`', `Shape')')dnl
 m4def(`DECLARE_SLOT_DEFINERS',
 `/**
      * @brief Set the measurement used for the $1$2 slot using Keys.
      */
-    void define$1$2($2::MeasKey const & meas, $2::ErrKey const & err) {
-        _slot$2$4 = KeyPair<$2>(meas, err);
+    void define$1$2($2::MeasKey const & meas, $2::ErrKey const & err, Key<Flag> const & flag) {
+        _slot$2$3 = KeyTuple<$2>(meas, err, flag);
     }
 
     /**
      *  @brief Set the measurement used for the $1$2 slot with a field name.
      *
      *  This requires that the measurement adhere to the convention of having
-     *  "<name>" and "<name>.translit($3, `A-Z', `a-z')" fields.
+     *  "<name>", "<name>.err", and "<name>.flag" fields.
      */
     void define$1$2(std::string const & name) {
         Schema schema = getSchema();
-        _slot$2$4 = KeyPair<$2>(schema[name], schema[name]["translit($3, `A-Z', `a-z')"]);
+        _slot$2$3 = KeyTuple<$2>(schema[name], schema[name]["err"], schema[name]["flag"]);
     }
 
     /// @brief Return the name of the field used for the $1$2 slot.
     std::string get$1$2Definition() const {
-        return getSchema().find(_slot$2$4.meas).field.getName();
+        return getSchema().find(_slot$2$3.meas).field.getName();
     }
 
     /// @brief Return the key used for the $1$2 slot.
-    $2::MeasKey get$1$2Key() const { return _slot$2$4.meas; }
+    $2::MeasKey get$1$2Key() const { return _slot$2$3.meas; }
 
     /// @brief Return the key used for $1$2 slot error or covariance.
-    $2::ErrKey get$1$2$3Key() const { return _slot$2$4.err; }
+    $2::ErrKey get$1$2ErrKey() const { return _slot$2$3.err; }
+
+    /// @brief Return the key used for the $1$2 slot success flag.
+    Key<Flag> get$1$2FlagKey() const { return _slot$2$3.flag; }
 ')dnl
-m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `Err', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
-m4def(`DECLARE_CENTROID_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Centroid', `Cov', `')')dnl
-m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `Cov', `')')dnl
+m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
+m4def(`DECLARE_CENTROID_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Centroid', `')')dnl
+m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `')')dnl
 #ifndef AFW_TABLE_Source_h_INCLUDED
 #define AFW_TABLE_Source_h_INCLUDED
 
@@ -125,17 +135,29 @@ enum FluxSlotEnum {
 };
 
 template <typename MeasurementT>
-struct KeyPair {
+struct KeyTuple {
     typename MeasurementT::MeasKey meas;
     typename MeasurementT::ErrKey err;
+    Key<Flag> flag;
 
-    KeyPair() {}
+    KeyTuple() {}
 
-    KeyPair(
+    KeyTuple(
         typename MeasurementT::MeasKey const & meas_,
-        typename MeasurementT::ErrKey const & err_
-    ) : meas(meas_), err(err_) {}
+        typename MeasurementT::ErrKey const & err_,
+        Key<Flag> const & flag_
+    ) : meas(meas_), err(err_), flag(flag_) {}
+
 };
+
+/// Convenience function to setup fields for centroid measurement algorithms.
+KeyTuple<Centroid> addCentroidFields(Schema & schema, std::string const & name, std::string const & doc);
+
+/// Convenience function to setup fields for shape measurement algorithms.
+KeyTuple<Shape> addShapeFields(Schema & schema, std::string const & name, std::string const & doc);
+
+/// Convenience function to setup fields for flux measurement algorithms.
+KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::string const & doc);
 
 #endif // !SWIG
 
@@ -190,6 +212,12 @@ public:
     DECLARE_FLUX_GETTERS(`Inst')
     DECLARE_CENTROID_GETTERS
     DECLARE_SHAPE_GETTERS
+
+    /// @brief Return the centroid slot x coordinate.
+    double getX() const;
+
+    /// @brief Return the centroid slot y coordinate.
+    double getY() const;
 
 protected:
 
@@ -326,9 +354,9 @@ private:
     virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
 
     PTR(IdFactory) _idFactory;
-    boost::array< KeyPair<Flux>, N_FLUX_SLOTS > _slotFlux;
-    KeyPair<Centroid> _slotCentroid;
-    KeyPair<Shape> _slotShape;
+    boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux;
+    KeyTuple<Centroid> _slotCentroid;
+    KeyTuple<Shape> _slotShape;
 };
 
 #ifndef SWIG
@@ -361,6 +389,9 @@ inline void SourceRecord::setCoord(Coord const & coord) { set(SourceTable::getCo
 
 inline Angle SourceRecord::getRa() const { return get(SourceTable::getCoordKey().getRa()); }
 inline Angle SourceRecord::getDec() const { return get(SourceTable::getCoordKey().getDec()); }
+
+inline double SourceRecord::getX() const { return get(getTable()->getCentroidKey().getX()); }
+inline double SourceRecord::getY() const { return get(getTable()->getCentroidKey().getY()); }
 
 #endif // !SWIG
 

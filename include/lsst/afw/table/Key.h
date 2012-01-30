@@ -67,6 +67,8 @@ public:
 
     int getOffset() const { return _offset; }
 
+    bool isValid() const { return _offset >= 0; }
+
     Key() : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
 
     inline friend std::ostream & operator<<(std::ostream & os, Key<T> const & key) {

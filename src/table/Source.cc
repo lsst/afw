@@ -5,41 +5,49 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/detail/Access.h"
 
-#define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type, ERR, Err)                \
-    if (table->get ## Name ## Type ## Key().getOffset() >= 0) {              \
+#define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
+    if (table->get ## Name ## Type ## Key().isValid()) {                \
         std::string s = table->getSchema().find(table->get ## Name ## Type ## Key()).field.getName(); \
         std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME "_" # TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
+        _fits->writeKey(#NAME "_" #TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
     }                                                                   \
-    if (table->get ## Name ## Type ## Err ## Key().getOffset() >= 0) {           \
-        std::string s = table->getSchema().find(table->get ## Name ## Type ## Err ## Key()).field.getName(); \
+    if (table->get ## Name ## Type ## ErrKey().isValid()) {             \
+        std::string s = table->getSchema().find(table->get ## Name ## Type ## ErrKey()).field.getName(); \
         std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME "_" # TYPE "_" # ERR "_SLOT", s.c_str(),  \
-                        "Defines the " #Name #Type #Err " slot");       \
+        _fits->writeKey(#NAME "_" #TYPE "_ERR_SLOT", s.c_str(),         \
+                        "Defines the " #Name #Type "Err slot");         \
+    }                                                                   \
+    if (table->get ## Name ## Type ## Flag ## Key().isValid()) {        \
+        std::string s = table->getSchema().find(table->get ## Name ## Type ## FlagKey()).field.getName(); \
+        std::replace(s.begin(), s.end(), '.', '_');                     \
+        _fits->writeKey(#NAME "_" #TYPE "_FLAG_SLOT", s.c_str(),        \
+                        "Defines the " #Name #Type "Flag slot");        \
     }
 
-#define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME, Name, FLUX, Flux, ERR, Err)
-#define SAVE_CENTROID_SLOT() SAVE_MEAS_SLOT(, , CENTROID, Centroid, COV, Cov)
-#define SAVE_SHAPE_SLOT() SAVE_MEAS_SLOT(, , SHAPE, Shape, COV, Cov)
+#define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME, Name, FLUX, Flux)
+#define SAVE_CENTROID_SLOT() SAVE_MEAS_SLOT(, , CENTROID, Centroid)
+#define SAVE_SHAPE_SLOT() SAVE_MEAS_SLOT(, , SHAPE, Shape)
 
-#define LOAD_MEAS_SLOT(NAME, Name, TYPE, Type, ERR, Err)                \
+#define LOAD_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
     {                                                                   \
-        std::string s, sErr;                                            \
+        std::string s, sErr, sFlag;                                     \
         _fits->readKey(#NAME "_" #TYPE "_SLOT", s);                     \
-        _fits->readKey(#NAME "_" #TYPE "_" #ERR "_SLOT", sErr);         \
+        _fits->readKey(#NAME "_" #TYPE "_ERR_SLOT", sErr);              \
+        _fits->readKey(#NAME "_" #TYPE "_FLAG_SLOT", sFlag);            \
         if (_fits->status == 0) {                                       \
             std::replace(s.begin(), s.end(), '_', '.');                 \
             std::replace(sErr.begin(), sErr.end(), '_', '.');           \
-            table->define ## Name ## Type(schema[s], schema[sErr]); \
+            std::replace(sFlag.begin(), sFlag.end(), '_', '.');           \
+            table->define ## Name ## Type(schema[s], schema[sErr], schema[sFlag]); \
         } else {                                                        \
             _fits->status = 0;                                          \
         }                                                               \
     }
     
 
-#define LOAD_FLUX_SLOT(NAME, Name) LOAD_MEAS_SLOT(NAME, Name, FLUX, Flux, ERR, Err)
-#define LOAD_CENTROID_SLOT() LOAD_MEAS_SLOT(, , CENTROID, Centroid, COV, Cov)
-#define LOAD_SHAPE_SLOT() LOAD_MEAS_SLOT(, , SHAPE, Shape, COV, Cov)
+#define LOAD_FLUX_SLOT(NAME, Name) LOAD_MEAS_SLOT(NAME, Name, FLUX, Flux)
+#define LOAD_CENTROID_SLOT() LOAD_MEAS_SLOT(, , CENTROID, Centroid)
+#define LOAD_SHAPE_SLOT() LOAD_MEAS_SLOT(, , SHAPE, Shape)
 
 namespace lsst { namespace afw { namespace table {
 
@@ -304,6 +312,52 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
 
 PTR(io::FitsWriter) SourceTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
     return boost::make_shared<SourceFitsWriter>(fits);
+}
+
+KeyTuple<Centroid> addCentroidFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    KeyTuple<Centroid> keys;
+    keys.meas = schema.addField<Centroid::MeasTag>(name, doc, "pixels");
+    keys.err = schema.addField<Centroid::ErrTag>(
+        name + ".cov", "covariance matrix for " + name, "pixels^2"
+    );
+    keys.flag = schema.addField<Flag>(name + ".flag", "success flag for " + name);
+    return keys;
+}
+
+KeyTuple<Shape> addShapeFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    KeyTuple<Shape> keys;
+    keys.meas = schema.addField<Shape::MeasTag>(
+        name, doc, "pixels^2"
+    );
+    keys.err = schema.addField<Shape::ErrTag>(
+        name + ".cov", "covariance matrix for " + name, "pixels^4"
+    );
+    keys.flag = schema.addField<Flag>(name + ".flag", "success flag for " + name);
+    return keys;
+}
+
+KeyTuple<Flux> addFluxFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    KeyTuple<Flux> keys;
+    keys.meas = schema.addField<Flux::MeasTag>(
+        name, doc, "dn"
+    );
+    keys.err = schema.addField<Flux::ErrTag>(
+        name + ".err", "uncertainty for " + name, "dn"
+    );
+    keys.flag = schema.addField<Flag>(name + ".flag", "success flag for " + name);
+    return keys;
 }
 
 template class VectorT<SourceRecord>;

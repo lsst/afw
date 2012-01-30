@@ -62,18 +62,21 @@ class SourceTableTestCase(unittest.TestCase):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.fluxKey = schema.addField("a", type="F8")
         self.fluxErrKey = schema.addField("a.err", type="F8")
+        self.fluxFlagKey = schema.addField("a.flag", type="Flag")
         self.centroidKey = schema.addField("b", type="Point<F8>")
-        self.centroidCovKey = schema.addField("b.cov", type="Cov<Point<F8>>")
+        self.centroidErrKey = schema.addField("b.err", type="Cov<Point<F8>>")
+        self.centroidFlagKey = schema.addField("b.flag", type="Flag")
         self.shapeKey = schema.addField("c", type="Moments<F8>")
-        self.shapeCovKey = schema.addField("c.cov", type="Cov<Moments<F8>>")
+        self.shapeErrKey = schema.addField("c.err", type="Cov<Moments<F8>>")
+        self.shapeFlagKey = schema.addField("c.flag", type="Flag")
         self.table = lsst.afw.table.SourceTable.make(schema)
         self.record = self.table.makeRecord()
         self.record.set(self.fluxKey, numpy.random.randn())
         self.record.set(self.fluxErrKey, numpy.random.randn())
         self.record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
-        self.record.set(self.centroidCovKey, makeCov(2, float))
+        self.record.set(self.centroidErrKey, makeCov(2, float))
         self.record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
-        self.record.set(self.shapeCovKey, makeCov(3, float))
+        self.record.set(self.shapeErrKey, makeCov(3, float))
 
     def tearDown(self):
         del self.record
@@ -82,18 +85,18 @@ class SourceTableTestCase(unittest.TestCase):
     def checkCanonical(self):
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
-        self.assertEqual(self.record.get(self.fluxErrKey), self.record.getPsfFluxErr())
+        self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
         self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
-        self.assert_(numpy.all(self.record.get(self.centroidCovKey) == self.record.getCentroidCov()))
+        self.assert_(numpy.all(self.record.get(self.centroidErrKey) == self.record.getCentroidErr()))
         self.assertEqual(self.table.getShapeDefinition(), "c")
         self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
-        self.assert_(numpy.all(self.record.get(self.shapeCovKey) == self.record.getShapeCov()))
+        self.assert_(numpy.all(self.record.get(self.shapeErrKey) == self.record.getShapeErr()))
 
     def testCanonical1(self):
-        self.table.definePsfFlux(self.fluxKey, self.fluxErrKey)
-        self.table.defineCentroid(self.centroidKey, self.centroidCovKey)
-        self.table.defineShape(self.shapeKey, self.shapeCovKey)
+        self.table.definePsfFlux(self.fluxKey, self.fluxErrKey, self.fluxFlagKey)
+        self.table.defineCentroid(self.centroidKey, self.centroidErrKey, self.centroidFlagKey)
+        self.table.defineShape(self.shapeKey, self.shapeErrKey, self.shapeFlagKey)
         self.checkCanonical()
 
     def testCanonical2(self):

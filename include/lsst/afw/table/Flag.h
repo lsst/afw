@@ -87,6 +87,8 @@ public:
     int getOffset() const { return _offset; }
     int getBit() const { return _bit; }
 
+    bool isValid() const { return _offset >= 0; }
+
     Key() : FieldBase<Flag>(), _offset(-1), _bit(0) {}
 
     inline friend std::ostream & operator<<(std::ostream & os, Key<Flag> const & key) {

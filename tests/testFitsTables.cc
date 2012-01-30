@@ -47,17 +47,12 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e.g.d.flag2", "flag2 for e.g.d");
     Key< Point<float> > a_b_p = schema.addField< Point<float> >("a.b.p", "point", "pixels");
 
-    Key<double> flux = schema.addField<double>("flux", "flux doc");
-    Key<double> fluxErr = schema.addField<double>("flux.err", "flux err doc");
-    Key< Point<double> > centroid = schema.addField< Point<double> >("centroid", "centroid doc");
-    Key< Covariance< Point<double> > > centroidCov = schema.addField< Covariance< Point<double> > >(
-        "centroid.cov", "centroid covariance doc"
-    );
-
+    KeyTuple<Flux> flux = addFluxFields(schema, "flux", "flux doc");
+    KeyTuple<Centroid> centroid = addCentroidFields(schema, "centroid", "centroid doc");
     SourceVector vector(SourceTable::make(schema));
 
-    vector.getTable()->defineModelFlux(flux, fluxErr);
-    vector.getTable()->defineCentroid(centroid, centroidCov);
+    vector.getTable()->defineModelFlux(flux.meas, flux.err, flux.flag);
+    vector.getTable()->defineCentroid(centroid.meas, centroid.err, centroid.flag);
 
     {
         PTR(Footprint) fp1 = boost::make_shared<Footprint>();
@@ -106,7 +101,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxErrKey(), readVector.getTable()->getModelFluxErrKey() );
 
     BOOST_CHECK_EQUAL( vector.getTable()->getCentroidKey(), readVector.getTable()->getCentroidKey() );
-    BOOST_CHECK_EQUAL( vector.getTable()->getCentroidCovKey(), readVector.getTable()->getCentroidCovKey() );
+    BOOST_CHECK_EQUAL( vector.getTable()->getCentroidErrKey(), readVector.getTable()->getCentroidErrKey() );
 
     {
         SourceRecord const & a1 = vector[0];
@@ -145,4 +140,5 @@ BOOST_AUTO_TEST_CASE(testFits) {
                                 EqualityCompare()) );
         BOOST_CHECK_EQUAL( fp2a.getBBox(), fp2b.getBBox() );
     }
+
 }
