@@ -34,7 +34,7 @@
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 
-#include "lsst/afw/cameraGeom/FpPosition.h"
+#include "lsst/afw/cameraGeom/FpPoint.h"
 
 /**
  * @file
@@ -124,7 +124,7 @@ public:
     /// Return the pixel size, mm/pixel
     double getPixelSize() const { return _pixelSize; }
 
-    virtual FpPosition getSize() const;
+    virtual FpExtent getSize() const;
 
     /// Return Detector's total footprint
     virtual lsst::afw::geom::Box2I& getAllPixels() {
@@ -157,16 +157,16 @@ public:
     Orientation const& getOrientation() const { return _orientation;}
 
     /// Set the Detector's center
-    virtual void setCenter(FpPosition const& center) { _center = center; }
+    virtual void setCenter(FpPoint const& center) { _center = center; }
 
     /// Return the Detector's center
-    FpPosition getCenter() const { return _center; }
+    FpPoint getCenter() const { return _center; }
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2D getPixelFromPosition(FpPosition const& pos) const;
-    FpPosition getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
-    FpPosition getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
+    virtual lsst::afw::geom::Point2D getPixelFromPosition(FpPoint const& pos) const;
+    FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
+    FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
 
     
     virtual void shift(int dx, int dy);
@@ -207,7 +207,7 @@ private:
     double _pixelSize;                  // Size of a pixel in mm
     lsst::afw::geom::Point2D _centerPixel;      // the pixel defined to be the centre of the Detector
     Orientation _orientation;           // orientation of this Detector
-    FpPosition _center;           // position of _centerPixel (mm)
+    FpPoint _center;           // position of _centerPixel (mm)
     lsst::afw::geom::Extent2D _size;            // Size in mm of this Detector
     lsst::afw::geom::Box2I _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
     boost::weak_ptr<Detector> _parent;  // Parent Detector in the hierarchy

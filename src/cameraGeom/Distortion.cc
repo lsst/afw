@@ -75,7 +75,7 @@ afwGeom::Point2D cameraGeom::Distortion::_distort(
     // transform fpPixels and convert to mm
     afwGeom::Extent2D posTrans = afwGeom::Extent2D(linTran(pixPos))*det.getPixelSize();
     // compute the new pixel coord
-    afwGeom::Point2D pix = det.getPixelFromPosition(cameraGeom::FpPosition(posTrans));
+    afwGeom::Point2D pix = det.getPixelFromPosition(cameraGeom::FpPoint(posTrans));
     
     return pix;
 }

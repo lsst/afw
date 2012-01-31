@@ -307,8 +307,8 @@ class CameraGeomTestCase(unittest.TestCase):
         # Test mapping pixel <--> mm.  Use a pixel at the middle of the top of the CCD
         #
         pix = afwGeom.Point2D(99.5, 203.5)            # wrt bottom left
-        pos = cameraGeom.FpPosition(0.00, 1.02)             # pixel center wrt CCD center
-        posll = cameraGeom.FpPosition(0.00, 1.02)           # llc of pixel wrt CCD center
+        pos = cameraGeom.FpPoint(0.00, 1.02)             # pixel center wrt CCD center
+        posll = cameraGeom.FpPoint(0.00, 1.02)           # llc of pixel wrt CCD center
         #
         # Map pix into untrimmed coordinates
         #
@@ -340,8 +340,8 @@ class CameraGeomTestCase(unittest.TestCase):
         # Test mapping pixel <--> mm
         #
         pix = afwGeom.Point2D(99.5, 203.5)            # wrt bottom left
-        pos = cameraGeom.FpPosition(0.00, 1.02)             # pixel center wrt CCD center
-        posll = cameraGeom.FpPosition(0.00, 1.02)           # llc of pixel wrt CCD center
+        pos = cameraGeom.FpPoint(0.00, 1.02)             # pixel center wrt CCD center
+        posll = cameraGeom.FpPoint(0.00, 1.02)           # llc of pixel wrt CCD center
         
         self.assertEqual(ccd.getPixelFromPosition(pos), pix)
         self.assertEqual(ccd.getPositionFromPixel(pix).getMm(), posll.getMm())
@@ -354,7 +354,7 @@ class CameraGeomTestCase(unittest.TestCase):
         Col = 0
         for serial in [7, 0, 1, 3, 2, 6, 5, 4]:
             ccd = cameraGeom.Ccd(cameraGeom.Id(serial))
-            raft.addDetector(afwGeom.Point2I(Col, 0), cameraGeom.FpPosition(afwGeom.Point2D(0, 0)),
+            raft.addDetector(afwGeom.Point2I(Col, 0), cameraGeom.FpPoint(afwGeom.Point2D(0, 0)),
                              cameraGeom.Orientation(0), ccd)
             Col += 1
         #
@@ -414,13 +414,13 @@ class CameraGeomTestCase(unittest.TestCase):
                              ]:
             pix = afwGeom.Point2I(ix, iy) # wrt raft LLC
             #position of pixel center
-            pos = cameraGeom.FpPosition(x+ps/2., y+ps/2.) # wrt raft center
+            pos = cameraGeom.FpPoint(x+ps/2., y+ps/2.) # wrt raft center
             #position of pixel lower left corner which is returned by getPositionFromPixel()
-            posll = cameraGeom.FpPosition(x, y) # wrt raft center
+            posll = cameraGeom.FpPoint(x, y) # wrt raft center
 
             rpos = raft.getPixelFromPosition(pos)
             rpos = afwGeom.PointI(int(rpos.getX()), int(rpos.getY()))
-            # need to rework cameraGeom since FpPosition changes.  disable this for now
+            # need to rework cameraGeom since FpPoint changes.  disable this for now
             if False:
                 self.assertEqual(rpos, pix)
 
@@ -475,10 +475,10 @@ class CameraGeomTestCase(unittest.TestCase):
                              (714, 500,  3.12, 2.02),
                              ]:
             pix = afwGeom.PointD(ix, iy) # wrt raft LLC
-            pos = cameraGeom.FpPosition(x, y) # center of pixel wrt raft center
-            posll = cameraGeom.FpPosition(x, y) # llc of pixel wrt raft center
+            pos = cameraGeom.FpPoint(x, y) # center of pixel wrt raft center
+            posll = cameraGeom.FpPoint(x, y) # llc of pixel wrt raft center
 
-            # may need to restructure this since adding FpPosition
+            # may need to restructure this since adding FpPoint
             if False:
                 self.assertEqual(camera.getPixelFromPosition(pos), pix)
 

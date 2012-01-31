@@ -25,7 +25,7 @@
  */
 #include <algorithm>
 #include "lsst/afw/cameraGeom/DetectorMosaic.h"
-#include "lsst/afw/cameraGeom/FpPosition.h"
+#include "lsst/afw/cameraGeom/FpPoint.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
@@ -33,7 +33,7 @@ namespace afwImage = lsst::afw::image;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
 /// Set the DetectorMosaic's center
-void cameraGeom::DetectorMosaic::setCenter(cameraGeom::FpPosition const& center) {
+void cameraGeom::DetectorMosaic::setCenter(cameraGeom::FpPoint const& center) {
     cameraGeom::Detector::setCenter(center);
     //
     // Update the centers for all children too
@@ -47,7 +47,7 @@ void cameraGeom::DetectorMosaic::setCenter(cameraGeom::FpPosition const& center)
 /**
  * Return a DetectorMosaic's size in mm
  */
-cameraGeom::FpPosition cameraGeom::DetectorMosaic::getSize() const {
+cameraGeom::FpExtent cameraGeom::DetectorMosaic::getSize() const {
     afwGeom::Extent2D size(0.0);        // the desired size
     // This code can probably use afwGeom's bounding boxes when they are available
     afwGeom::Point2D LLC, URC;          // corners of DetectorMosaic
@@ -87,7 +87,7 @@ cameraGeom::FpPosition cameraGeom::DetectorMosaic::getSize() const {
         }
     }
 
-    return cameraGeom::FpPosition(URC - LLC);
+    return cameraGeom::FpExtent(URC - LLC);
 }
 
 /**
@@ -98,7 +98,7 @@ cameraGeom::FpPosition cameraGeom::DetectorMosaic::getSize() const {
  */
 void cameraGeom::DetectorMosaic::addDetector(
         afwGeom::Point2I const& index, ///< index of this Detector in DetectorMosaic thought of as a grid
-        cameraGeom::FpPosition const& center, ///< center of this Detector wrt center of DetectorMosaic
+        cameraGeom::FpPoint const& center, ///< center of this Detector wrt center of DetectorMosaic
         cameraGeom::Orientation const& orient, ///< orientation of this Detector
         cameraGeom::Detector::Ptr det   ///< The detector to add to the DetectorMosaic's manifest.
                                             )
@@ -206,7 +206,7 @@ namespace {
 
     struct findByMm {
         findByMm(
-                 cameraGeom::FpPosition point
+                 cameraGeom::FpPoint point
                  )
             :
             _point(point)
@@ -235,7 +235,7 @@ namespace {
             return true;
         }
     private:
-        cameraGeom::FpPosition _point;
+        cameraGeom::FpPoint _point;
     };
 }
 
@@ -282,7 +282,7 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetectorPixel(
  * Find an Detector given a physical position in mm
  */
 cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetectorMm(
-        cameraGeom::FpPosition const& pos     ///< the desired position; mm from the centre
+        cameraGeom::FpPoint const& pos     ///< the desired position; mm from the centre
 ) const {
     DetectorSet::const_iterator result = 
         std::find_if(_detectors.begin(), _detectors.end(), findByMm(pos));
@@ -299,7 +299,7 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetectorMm(
 
  */
 afwGeom::Point2D cameraGeom::DetectorMosaic::getPixelFromPosition(
-        cameraGeom::FpPosition const& pos     ///< Offset from mosaic centre, mm
+        cameraGeom::FpPoint const& pos     ///< Offset from mosaic centre, mm
                                                                  ) const
 {
     cameraGeom::Detector::ConstPtr det = findDetectorMm(pos);

@@ -28,7 +28,7 @@
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
-#include "lsst/afw/cameraGeom/FpPosition.h"
+#include "lsst/afw/cameraGeom/FpPoint.h"
 
 /**
  * @file
@@ -70,23 +70,23 @@ public:
     //
     // Geometry of Detector --- i.e. mm not pixels
     //
-    virtual void setCenter(FpPosition const& center);
-    virtual FpPosition getSize() const;
+    virtual void setCenter(FpPoint const& center);
+    virtual FpExtent getSize() const;
     //
     // Add a Detector to the DetectorMosaic
     //
-    void addDetector(lsst::afw::geom::Point2I const& index, lsst::afw::cameraGeom::FpPosition const& center,
+    void addDetector(lsst::afw::geom::Point2I const& index, lsst::afw::cameraGeom::FpPoint const& center,
                      Orientation const& orient, Detector::Ptr det);
     //
     // Find a Detector given an Id or pixel position
     //
     Detector::Ptr findDetector(Id const id) const;
     Detector::Ptr findDetectorPixel(lsst::afw::geom::Point2D const& pixel, bool const fromCenter=false) const;
-    Detector::Ptr findDetectorMm(lsst::afw::cameraGeom::FpPosition const& posMm) const;
+    Detector::Ptr findDetectorMm(lsst::afw::cameraGeom::FpPoint const& posMm) const;
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2D getPixelFromPosition(lsst::afw::cameraGeom::FpPosition const& pos) const;
+    virtual lsst::afw::geom::Point2D getPixelFromPosition(lsst::afw::cameraGeom::FpPoint const& pos) const;
 
 private:
     DetectorSet _detectors;             // The Detectors that make up this DetectorMosaic
