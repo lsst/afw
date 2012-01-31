@@ -1019,3 +1019,52 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
 
     return defectsDict
 
+
+
+def makeDefaultCcd(box, **kwargs):
+    """
+    Make a Ccd object for a Box2I object suitable to be used as Detector in an Exposure
+    **kwargs may specify params needed to construct ElectronicParams, Amp, and Ccd.
+    Defaults are:
+       ElectronicParams: gain (1.0), rdnoise (5.0), saturation (60000)
+       Amp:              detId (1), biasSec (empty Box2I), dataSec (Box2I(img.xy0, img.getDimentions()))
+       Ccd:              pixelSize (1.0)
+    This is only intented to be a useful factory for Detectors needed to test simple images.
+    """
+    
+    # build the Electronics
+    gain          = kwargs.get("gain", 1.0)
+    rdnoise       = kwargs.get("rdnoise", 5.0)
+    saturation    = kwargs.get("saturation", 60000)
+    elec = cameraGeom.ElectronicParams(gain, rdnoise, saturation)
+
+    # build the Amp
+    detId         = kwargs.get("detId", cameraGeom.Id(1))
+    allPixels     = box
+    biasSec       = kwargs.get("biasSec", afwGeom.Box2I())
+    dataSec       = kwargs.get("dataSec", box)
+    amp = cameraGeom.Amp(detId, allPixels, biasSec, dataSec, elec)
+
+    # build the Ccd
+    pixelSize     = kwargs.get("pixelSize", 1.0)
+    ccd = cameraGeom.Ccd(detId, pixelSize)
+    ccd.addAmp(amp)
+
+    return ccd
+
+            
+
+def makeCcdFromImage(img, **kwargs):
+    """
+    Make a Ccd object for an afw::Image object suitable to be used as Detector in an Exposure
+    **kwargs may specify params needed to construct Electronics, Amp, and Ccd.  Defaults are:
+       Electronics: gain (1.0), rdnoise (5.0), saturation (60000)
+       Amp:         detId (1), biasSec (empty Box2I), dataSec (Box2I(img.xy0, img.getDimentions()))
+       Ccd:         pixelSize (1.0)
+    This is only intented to be a useful factory for Detectors needed to test simple images.
+    """
+    
+    allPixels     = afwGeom.Box2I(img.getXY0(), img.getDimensions())
+
+    return makeDefaultCcd(allPixels, **kwargs)
+    

@@ -201,15 +201,19 @@ class PsfDistortionTestCase(unittest.TestCase):
 
         # make a plain one and distort it ourselves
         # --> note that we use the undistorted pOrig ... that's where p was before the optics
-        psfImgOrig = psf.computeImage(pOrig, True, doDistort)
-        psfImgDistByUs       = distorter.distort(pOrig, psfImgOrig, detector, 0.0)
-        shift = p - afwGeom.Extent2D(pOrig)
-        afwMath.offsetImage(psfImgDistByUs, shift.getX(), shift.getY(), "lanczos5", 5) 
-        
-        
-        ds9.mtv(psfImg, frame=1, title="psf", settings=settings)
+        #psfImgOrig = psf.computeImage(pOrig, True, doDistort)
+        #psfImgDistByUs       = distorter.distort(pOrig, psfImgOrig, detector, 0.0)
+        #shift = p - afwGeom.Extent2D(pOrig)
+        #afwMath.offsetImage(psfImgDistByUs, shift.getX(), shift.getY(), "lanczos5", 5) 
+        psfImgDistByUs       = distorter.distort(p, psfImg, detector, 0.0)
+
+        # to display, we'll trim off the edge of the original so it's the same size as the distorted.
+        wid2 = psfImgDistInternally.getWidth()
+        edge = (psfImg.getWidth() - wid2)/2
+        box = afwGeom.Box2I(afwGeom.Point2I(edge, edge), afwGeom.Extent2I(wid2,wid2))
+        ds9.mtv(afwImage.ImageD(psfImg, box), frame=1, title="psf", settings=settings)
         ds9.mtv(psfImgDistInternally, frame=2, title="psfDist", settings=settings)
-        ds9.mtv(psfImgDistByUs, frame=3, title="psfDist2", settings=settings)
+        ds9.mtv(afwImage.ImageD(psfImgDistByUs, box), frame=3, title="psfDist2", settings=settings)
 
         # first make sure we can plant a known quantity and measure it
         # quickAndDirtyShape() must be tested to be used itself as a tester
@@ -248,7 +252,7 @@ class PsfDistortionTestCase(unittest.TestCase):
         self.assertTrue(abs(b/psfSigma - bKnown) < 0.01)
         self.assertTrue(abs(theta - thetaKnown) < 0.5) # half a degree
 
-        a, b, theta, ixx, iyy, ixy = quickAndDirtyShape(psfImgDistByUs, pOrig)
+        a, b, theta, ixx, iyy, ixy = quickAndDirtyShape(psfImgDistByUs, p)
         print "warpExtern:", a/psfSigma, b/psfSigma, theta, ixx/psfSigma**2, iyy/psfSigma**2, ixy/psfSigma**2
         self.assertTrue(abs(a/psfSigma - aKnown) < 0.01)
         self.assertTrue(abs(b/psfSigma - bKnown) < 0.01)

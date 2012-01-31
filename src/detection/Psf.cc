@@ -115,23 +115,24 @@ Psf::Image::Ptr Psf::doComputeImage(
                                            ) const {
 
     afwMath::Kernel::ConstPtr kernel = getKernel(color);
-
+    if (!kernel) {
+        throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
+    }
+    int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
+    int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
+    
+    
     // if they want it distorted, assume they want the PSF as it would appear
     // at ccdXY.  We'll undistort ccdXY to figure out where that point started
     // ... that's where it's really being distorted from!
-    afwGeom::Point2D ccdXYundist;
+    afwGeom::Point2D ccdXYundist = ccdXY;
+#if 0
     if (distort && _detector && _detector->getDistortion()) {
         ccdXYundist = _detector->getDistortion()->undistort(ccdXY, *_detector);
     } else {
         ccdXYundist = ccdXY;
     }
-    
-    if (!kernel) {
-        throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
-    }
-    
-    int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
-    int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
+#endif
     
     Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
         geom::Extent2I(width, height)
@@ -191,7 +192,7 @@ Psf::Image::Ptr Psf::doComputeImage(
     
     if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
         std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
-        unsigned int const warpBuffer = 0; // Buffer to use in warping        
+        unsigned int const warpBuffer = 5; // Buffer to use in warping        
         im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
     }
     im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
@@ -203,7 +204,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         
         cameraGeom::Distortion::Ptr distortion = _detector->getDistortion();
 
-#if 0
+#if 1
         int lanc = distortion->getLanczosOrder();
         int edge = abs(0.5*((height > width) ? height : width) *
                        (1.0 - distortion->computeMaxShear(*_detector)));
@@ -214,7 +215,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         
         return Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
 #endif
-        
+#if 0        
         Psf::Image::SinglePixel padValue(0.0);
         // distort as though we're where ccdXY was before it got distorted
         Psf::Image::Ptr imDist = distortion->distort(ccdXYundist, *im, *_detector, padValue);
@@ -225,6 +226,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         Psf::Image::Ptr psfIm = afwMath::offsetImage(*imDist, shift.getX(), shift.getY(),
                                                      warpAlgorithm, warpBuffer);
         return psfIm;
+#endif
         
     } else {
         return im;
