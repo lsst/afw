@@ -139,19 +139,13 @@ class DistortionTestCase(unittest.TestCase):
 
     def testDistortionPointerInDetector(self):
 
-	# default to No distortion
+	# no distortion object present by default
 	dist = self.det.getDistortion()
-	x, y = 1.0, 1.0
-	p = dist.distort(afwGeom.Point2D(x, y), self.det)
-
-	if self.prynt:
-	    print "%.12f %.12f" % (p.getX(), p.getY())
-	
-	self.assertEqual(p.getX(), x)
-	self.assertEqual(p.getY(), y)
-
+        self.assertTrue(dist is None)
 
 	# make sure we can set a radialpoly and round-trip it.
+	x, y = 1.0, 1.0
+	p = afwGeom.Point2D(x, y)
 	self.det.setDistortion(cameraGeom.RadialPolyDistortion(self.coeffs))
 	self.roundTrip(self.det.getDistortion(), x, y)
 
