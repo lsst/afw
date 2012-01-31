@@ -243,8 +243,6 @@ def asKey(self):
 %include "lsst/afw/table/BaseTable.h"
 
 %ignore lsst::afw::table::BaseRecord::operator=;
-%rename("__eq__") lsst::afw::table::BaseRecord::operator==;
-%rename("__ne__") lsst::afw::table::BaseRecord::operator!=;
 %include "lsst/afw/table/BaseRecord.h"
 
 %usePointerEquality(lsst::afw::table::BaseRecord)
