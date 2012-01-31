@@ -71,6 +71,11 @@ class CoordinateTestCase(unittest.TestCase):
             p1 = cls(*vector1)
             p2 = cls(*vector2)
 
+            self.assertEqual(p1 == p2, all(p1.eq(p2)))
+            self.assertEqual(p1 != p2, any(p1.ne(p2)))
+            self.assertNotEqual(p1, None) # should not throw
+            self.assertNotEqual(p1, tuple(p1)) # should not throw
+
             self.assertEqual(tuple(p1.eq(p2)), tuple([v1 == v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(tuple(p1.ne(p2)), tuple([v1 != v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(tuple(p1.lt(p2)), tuple([v1 <  v2 for v1, v2 in zip(vector1, vector2)]))

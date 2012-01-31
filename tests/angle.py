@@ -112,6 +112,13 @@ class AngleTestCase(unittest.TestCase):
         self.assertEqual(a2 <  a1, False)
         self.assertEqual(a2 <= a1, False)
 
+        self.assertEqual(a1 == None, False)
+        self.assertEqual(None == a1, False)
+        self.assertEqual(a1 != None, True)
+        self.assertEqual(None != a1, True)
+        self.assertEqual(a1 == float(a1), True)
+        self.assertEqual(float(a1) == a1, True)
+
     def testTrig(self):
         self.assertEqual(math.cos(self.d), -1.0)
         self.assertAlmostEqual(math.sin(self.d),  0.0, places=15)
