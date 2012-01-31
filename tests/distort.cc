@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     }
     
     afwImage::Image<float>::Ptr wimg = rdist.distort(cp0, img, detector);
-    wimg->writeFits("ccwimg.fits");
+    //wimg->writeFits("ccwimg.fits");
     
 }
 
