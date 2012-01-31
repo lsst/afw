@@ -37,6 +37,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <ctime>
 
 #include "boost/shared_ptr.hpp"
 #include "boost/cstdint.hpp" 
@@ -552,6 +553,116 @@ namespace {
     
         return numGoodPixels;
     }
+
+
+
+    /*
+     * This is a nearly identical version of doWarpImage() (literally copied and edited).
+     * The difference is that it makes no effort to interpolate and assumes constant area.
+     * The intention was to try to remove as much as possible from the inner-most loop
+     * in order to buy speed for the warping needed by Distortion.
+     * Almost no speed-up was found, but I've left it in for the time-being.
+     */
+    template<typename DestImageT, typename SrcImageT>
+    int doLinearWarpImage(
+        DestImageT &destImage,              ///< remapped %image
+        SrcImageT const &srcImage,          ///< source %image
+        afwMath::SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
+        SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
+        typename DestImageT::SinglePixel padValue ///< value to use for undefined pixels
+                         )
+    {
+    
+        if (afwMath::details::isSameObject(destImage, srcImage)) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                "destImage is srcImage; cannot warp in place");
+        }
+        int numGoodPixels = 0;
+    
+        typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
+        
+        // Compute borders; use to prevent applying kernel outside of srcImage
+        int const kernelWidth = warpingKernel.getWidth();
+        int const kernelHeight = warpingKernel.getHeight();
+        int const kernelCtrX = warpingKernel.getCtrX();
+        int const kernelCtrY = warpingKernel.getCtrY();
+    
+        // Get the source MaskedImage and a pixel accessor to it.
+        int const srcWidth = srcImage.getWidth();
+        int const srcHeight = srcImage.getHeight();
+        pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+    
+        int const destWidth = destImage.getWidth();
+        int const destHeight = destImage.getHeight();
+        
+        pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
+
+        typename DestImageT::SinglePixel edgePixel = padValue;
+        
+        std::vector<double> kernelXList(kernelWidth);
+        std::vector<double> kernelYList(kernelHeight);
+        
+        afwGeom::Box2I srcGoodBBox = warpingKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+    
+        // Set each pixel of destExposure's MaskedImage
+        pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
+        
+        // pre-compute the relative area.  it's constant across the field.
+        // use the center pixel
+        afwGeom::Point2D srcPosCenter = computeSrcPos(destWidth/2, destHeight/2);
+        afwGeom::Point2D srcPosLeft   = computeSrcPos(destWidth/2-1, destHeight/2);
+        afwGeom::Point2D srcPosUp     = computeSrcPos(destWidth/2, destHeight/2+1);
+        double relativeArea           = computeRelativeArea(srcPosCenter, srcPosLeft, srcPosUp);
+            
+        for (int row = 0; row < destHeight; ++row) {
+            typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+                
+            for (int col = 0; col < destWidth; ++col, ++destXIter) {
+                afwGeom::Point2D srcPos = computeSrcPos(col, row);
+                
+                // Compute associated source pixel index as integer and nonnegative fractional parts;
+                // the latter is used to compute the remapping kernel.
+                std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
+                std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
+                if (srcIndFracX.second < 0) {
+                    ++srcIndFracX.second;
+                    --srcIndFracX.first;
+                }
+                if (srcIndFracY.second < 0) {
+                    ++srcIndFracY.second;
+                    --srcIndFracY.first;
+                }
+                
+                if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+                    ++numGoodPixels;
+    
+                    // Offset source pixel index from kernel center to kernel corner (0, 0)
+                    // so we can convolveAtAPoint the pixels that overlap between source and kernel
+                    srcIndFracX.first -= kernelCtrX;
+                    srcIndFracY.first -= kernelCtrY;
+                            
+                    // Compute warped pixel
+                    std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
+                    warpingKernel.setKernelParameters(srcFracInd);
+                    double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+        
+                    typename SrcImageT::const_xy_locator srcLoc =
+                        srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
+                        
+                    *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(srcLoc,
+                                                                                 kernelXList, kernelYList);
+                    *destXIter *= relativeArea/kSum;
+                } else {
+                    // Edge pixel pixel
+                    *destXIter = edgePixel;
+                }
+            }   // for col
+        }   // for row
+    
+        return numGoodPixels;
+    }
+
+
 } // namespace
 
 /**
@@ -645,7 +756,8 @@ int afwMath::warpImage(
 {
     afwGeom::Point2D const destXY0(destImage.getXY0());
     AffineTransformSrcPosFunctor const computeSrcPos(destXY0, affineTransform);
-    return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength, padValue);
+    //return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength, padValue);
+    return doLinearWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, padValue);
 }
 
 
@@ -684,8 +796,18 @@ int afwMath::warpCenteredImage(
     afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
     
     // now warp
+#if 0
+    static float t = 0.0;
+    float t_before = 1.0*clock()/CLOCKS_PER_SEC;
     int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran, interpLength, padValue);
-    
+    float t_after = 1.0*clock()/CLOCKS_PER_SEC;
+    float dt = t_after - t_before;
+    t += dt;
+    std::cout <<srcImage.getWidth()<<"x"<<srcImage.getHeight()<<": "<< dt <<" "<< t <<std::endl;
+#else
+    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran, interpLength, padValue);
+#endif        
+        
     // fix the origin and we're done.
     destImage.setXY0(srcImage.getXY0());
     

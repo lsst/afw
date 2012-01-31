@@ -243,10 +243,14 @@ typename ImageT::Ptr cameraGeom::Distortion::_warp(
     warpImg->setXY0(img.getXY0());
     
     // call the warp code 
-    afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
+    //afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
     afwGeom::LinearTransform linTran = this->computeQuadrupoleTransform(pos, forward);
     int const interpLength = 0;
-    afwMath::warpCenteredImage(*warpImg, img, kernel, linTran, p, interpLength, padValue);
+    if (! _lanczosInitialized) {
+        _lanczosKernel.computeCache(10000);
+        _lanczosInitialized = true;
+    }
+    afwMath::warpCenteredImage(*warpImg, img, _lanczosKernel, linTran, p, interpLength, padValue);
 
     return warpImg;
 }
