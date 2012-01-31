@@ -66,7 +66,7 @@ def run(frame=6):
     # Detect the objects at 10 counts or above
     #
     level = 10
-    fs = afwDetect.makeFootprintSet(im, afwDetect.Threshold(level), "DETECTED")
+    fs = afwDetect.FootprintSet(im, afwDetect.Threshold(level), "DETECTED")
 
     showPeaks(im, fs, frame=frame)
     #
@@ -74,15 +74,15 @@ def run(frame=6):
     #
     polarity = False                     # look for objects below background
     threshold = afwDetect.Threshold(level, afwDetect.Threshold.VALUE, polarity)
-    fs2 = afwDetect.makeFootprintSet(im, threshold, "DETECTED_NEGATIVE")
+    fs2 = afwDetect.FootprintSet(im, threshold, "DETECTED_NEGATIVE")
     print "Detected %d objects below background" % len(fs2.getFootprints())
     #
     # Search in S/N (n.b. the peak's -10sigma)
     #
     threshold = afwDetect.Threshold(level, afwDetect.Threshold.PIXEL_STDEV, polarity)
-    fs2 = afwDetect.makeFootprintSet(im, threshold)
+    fs2 = afwDetect.FootprintSet(im, threshold)
     #
-    # Here's another way to set a mask plane (we chose not to do so in the makeFootprintSet call)
+    # Here's another way to set a mask plane (we chose not to do so in the FootprintSet call)
     #
     msk = im.getMask()
     afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))

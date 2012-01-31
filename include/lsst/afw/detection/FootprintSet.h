@@ -49,42 +49,52 @@ typedef boost::uint64_t FootprintIdPixel;
  * \brief A set of Footprints, associated with a MaskedImage
  *
  */
-template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel>
 class FootprintSet : public lsst::daf::base::Citizen {
 public:
-    typedef boost::shared_ptr<FootprintSet> Ptr;
+
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<Footprint::Ptr> FootprintList;
 
+    template <typename ImagePixelT>
     FootprintSet(image::Image<ImagePixelT> const& img,
                  Threshold const& threshold,
                  int const npixMin=1, bool const setPeaks=true);
+
+#ifndef SWIG
+    template <typename MaskPixelT>
     FootprintSet(image::Mask<MaskPixelT> const& img,
                  Threshold const& threshold,
                  int const npixMin=1);
+#else // SWIG can't disambiguate this from the Image version when doing %template.
+    FootprintSet(image::Mask<image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1);
+#endif
+
+    template <typename ImagePixelT, typename MaskPixelT>
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
+
+    template <typename ImagePixelT, typename MaskPixelT>
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  int x,
                  int y,
                  std::vector<PTR(Peak)> const* peaks = NULL);
+
     FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
     FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, 
                  FootprintSet const& footprints2,
                  bool const includePeaks);
-    ~FootprintSet();
 
     FootprintSet& operator=(FootprintSet const& rhs);
 
-    template<typename RhsImagePixelT, typename RhsMaskPixelT>
-    void swap(FootprintSet<RhsImagePixelT, RhsMaskPixelT>& rhs) {
-        using std::swap;                    // See Meyers, Effective C++, Item 25
-        
+    void swap(FootprintSet& rhs) {
+        using std::swap;                    // See Meyers, Effective C++, Item 25        
         swap(*_footprints, *rhs.getFootprints());
         geom::Box2I rhsRegion = rhs.getRegion();
         rhs.setRegion(getRegion());
@@ -118,6 +128,8 @@ public:
     PTR(image::Image<FootprintIdPixel>) insertIntoImage(
         const bool relativeIDs
         ) const;
+
+    template <typename MaskPixelT>
     void setMask(
         image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
         std::string const& planeName   ///< Here's the name of the mask plane to fit
@@ -129,8 +141,9 @@ public:
         );        
     }
 
+    template <typename MaskPixelT>
     void setMask(
-        typename image::Mask<MaskPixelT>::Ptr mask, ///< Set bits in the mask
+        PTR(image::Mask<MaskPixelT>) mask, ///< Set bits in the mask
         std::string const& planeName   ///< Here's the name of the mask plane to fit
     ) {
         setMask(mask.get(), planeName);
@@ -138,6 +151,7 @@ public:
 
     void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
 
+    template <typename ImagePixelT, typename MaskPixelT>
     void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
                    HeavyFootprintCtrl const* ctrl=NULL
                   );
@@ -145,80 +159,6 @@ private:
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in
 };
-
-template<typename ImagePixelT, typename MaskPixelT>
-typename FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
-        image::Image<ImagePixelT> const& img,
-        Threshold const& threshold,
-        std::string const& = "",
-        int const npixMin=1
-) {
-    return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
-        new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, npixMin)
-    );
-}
-
-template<typename MaskPixelT>
-typename FootprintSet<MaskPixelT, MaskPixelT>::Ptr makeFootprintSet(
-        image::Mask<MaskPixelT> const& msk,
-        Threshold const& threshold,
-        std::string const& = "",
-        int const npixMin=1
-) {
-    return typename FootprintSet<MaskPixelT, MaskPixelT>::Ptr(
-        new FootprintSet<MaskPixelT, MaskPixelT>(msk, threshold, npixMin)
-    );
-}
-
-template<typename ImagePixelT, typename MaskPixelT>
-typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
-        image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
-        Threshold const& threshold,
-        std::string const& planeName = "",
-        int const npixMin=1
-) {
-    return typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
-        new FootprintSet<ImagePixelT, MaskPixelT>(
-            img, threshold, planeName, npixMin
-        )
-    );
-}
-
-template<typename ImagePixelT, typename MaskPixelT>
-typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
-        image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
-        Threshold const& threshold,
-        int x,
-        int y,
-        std::vector<PTR(Peak)> const* peaks = NULL
-) {
-    return PTR(FootprintSet<ImagePixelT, MaskPixelT>)(
-        new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks)
-    );
-}
-
-template<typename ImagePixelT, typename MaskPixelT>
-typename FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
-        FootprintSet<ImagePixelT, MaskPixelT> const& rhs, //!< the input FootprintSet
-        int r,                          //!< Grow Footprints by r pixels
-        bool isotropic=true             //!< Grow isotropically (as opposed to a Manhattan metric)
-                                        //!< @note Isotropic grows are significantly slower
-) {
-    return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(
-        new FootprintSet<ImagePixelT, MaskPixelT>(rhs, r, isotropic)
-    );
-}
-
-template<typename ImagePixelT, typename MaskPixelT>
-afw::table::SourceVector
-FootprintSet<ImagePixelT,MaskPixelT>::makeSources(PTR(afw::table::SourceTable) const & table) const {
-    afw::table::SourceVector v(table);
-    for (typename FootprintList::const_iterator i = _footprints->begin(); i != _footprints->end(); ++i) {
-        PTR(afw::table::SourceRecord) r = v.addNew();
-        r->setFootprint(*i);
-    }
-    return v;
-}
 
 }}}
 

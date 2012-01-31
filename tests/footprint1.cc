@@ -44,19 +44,19 @@ BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3
     image::MaskedImage<ImagePixelT> img(geom::Extent2I(10,20));
     *img.getImage() = 100;
 
-    detection::FootprintSet<ImagePixelT> ds_by_value1(img, 0);
+    detection::FootprintSet ds_by_value1(img, 0);
     BOOST_CHECK(ds_by_value1.getFootprints()->size() == 1);
 
-    detection::FootprintSet<ImagePixelT> ds_by_value2(img,
-                                                  detection::Threshold(0, detection::Threshold::VALUE));
+    detection::FootprintSet ds_by_value2(img,
+                                         detection::Threshold(0, detection::Threshold::VALUE));
     BOOST_CHECK(ds_by_value2.getFootprints()->size() == 1);
 
-    BOOST_CHECK_THROW(detection::FootprintSet<ImagePixelT>(img,         \
-                                                  detection::Threshold(0, detection::Threshold::STDEV)), \
+    BOOST_CHECK_THROW(detection::FootprintSet(img,         \
+                                              detection::Threshold(0, detection::Threshold::STDEV)), \
                       lsst::pex::exceptions::Exception);
     
-    BOOST_CHECK_THROW(detection::FootprintSet<ImagePixelT>(img, \
-                                                  detection::Threshold(0, detection::Threshold::VARIANCE)), \
+    BOOST_CHECK_THROW(detection::FootprintSet(img, \
+                                              detection::Threshold(0, detection::Threshold::VARIANCE)), \
                       lsst::pex::exceptions::Exception);
 }
 
@@ -97,12 +97,12 @@ BOOST_AUTO_TEST_CASE(FootprintFunctor) { /* parasoft-suppress  LsstDm-3-2a LsstD
     img(5, 5) = 100;
     img(5, 10) = 100;
 
-    detection::FootprintSet<ImagePixelT> ds(mimg, 10);
+    detection::FootprintSet ds(mimg, 10);
 
     BOOST_CHECK(ds.getFootprints()->size() == 2);
 
     PixelSum<image::Image<ImagePixelT> > countDN(img);
-    for (detection::FootprintSet<ImagePixelT>::FootprintList::iterator ptr = ds.getFootprints()->begin(),
+    for (detection::FootprintSet::FootprintList::iterator ptr = ds.getFootprints()->begin(),
              end = ds.getFootprints()->end(); ptr != end; ++ptr) {
         countDN.apply(**ptr);
         BOOST_CHECK_CLOSE(countDN.getCounts(), 100.0, 1e-10);

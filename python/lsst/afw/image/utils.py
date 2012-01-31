@@ -35,11 +35,11 @@ def clipImage(im, minClip, maxClip):
         mi = afwImage.makeMaskedImage(im, afwImage.MaskU(im.getDimensions()))
 
     if minClip is not None:
-        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), minClip)
 
     if maxclip is not None:
-        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(maxclip))
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxclip))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxclip)
 
 def resetFilters():

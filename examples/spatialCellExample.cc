@@ -42,7 +42,7 @@ namespace afwMath = lsst::afw::math;
 namespace afwGeom = lsst::afw::geom;
 typedef float PixelT;
 
-std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetect::FootprintSet<PixelT>::Ptr> readImage();
+std::pair<afwImage::MaskedImage<PixelT>::Ptr, PTR(afwDetect::FootprintSet)> readImage();
 
 /************************************************************************************************************/
 /*
@@ -50,7 +50,7 @@ std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetect::FootprintSet<PixelT>::P
  */
 void SpatialCellSetDemo() {
     afwImage::MaskedImage<PixelT>::Ptr im;
-    afwDetect::FootprintSet<PixelT>::Ptr fs;
+    PTR(afwDetect::FootprintSet) fs;
     boost::tie(im, fs) = readImage();
     /*
      * Create an (empty) SpatialCellSet
@@ -62,7 +62,7 @@ void SpatialCellSetDemo() {
     /*
      * Populate the cellSet using the detected object in the FootprintSet
      */
-    for (afwDetect::FootprintSet<PixelT>::FootprintList::iterator ptr = fs->getFootprints()->begin(),
+    for (afwDetect::FootprintSet::FootprintList::iterator ptr = fs->getFootprints()->begin(),
              end = fs->getFootprints()->end(); ptr != end; ++ptr) {
         afwGeom::Box2I const bbox = (*ptr)->getBBox();
         float const xc = (bbox.getMinX() + bbox.getMaxX())/2.0;
@@ -122,7 +122,7 @@ void SpatialCellSetDemo() {
 /*
  * Read an image and background subtract it
  */
-std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetect::FootprintSet<PixelT>::Ptr>
+std::pair<afwImage::MaskedImage<PixelT>::Ptr, PTR(afwDetect::FootprintSet)>
 readImage() {
     afwImage::MaskedImage<PixelT>::Ptr mi;
 
@@ -165,11 +165,10 @@ readImage() {
      */
     afwDetect::Threshold threshold(5, afwDetect::Threshold::STDEV);
     int npixMin = 5;                    // we didn't smooth
-    afwDetect::FootprintSet<PixelT>::Ptr fs =
-        afwDetect::makeFootprintSet(*mi, threshold, "DETECTED", npixMin);
+    PTR(afwDetect::FootprintSet) fs(new afwDetect::FootprintSet(*mi, threshold, "DETECTED", npixMin));
     int const grow = 1;
     bool const isotropic = false;
-    afwDetect::FootprintSet<PixelT>::Ptr grownFs = afwDetect::makeFootprintSet(*fs, grow, isotropic);
+    PTR(afwDetect::FootprintSet) grownFs(new afwDetect::FootprintSet(*fs, grow, isotropic));
     grownFs->setMask(mi->getMask(), "DETECTED");
 
     return std::make_pair(mi, grownFs);
@@ -180,7 +179,7 @@ readImage() {
  * Run the example
  */
 int main() {
-    std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetect::FootprintSet<PixelT>::Ptr> data = readImage();
+    std::pair<afwImage::MaskedImage<PixelT>::Ptr, PTR(afwDetect::FootprintSet)> data = readImage();
     assert (data.first != NULL);        // stop compiler complaining about data being unused
 
     SpatialCellSetDemo();
