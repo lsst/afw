@@ -122,7 +122,7 @@ def quickAndDirtyShape(img, p):
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-display = False
+
 class PsfDistortionTestCase(unittest.TestCase):
     """Test the distortion of the PSF."""
 
@@ -211,9 +211,10 @@ class PsfDistortionTestCase(unittest.TestCase):
         wid2 = psfImgDistInternally.getWidth()
         edge = (psfImg.getWidth() - wid2)/2
         box = afwGeom.Box2I(afwGeom.Point2I(edge, edge), afwGeom.Extent2I(wid2,wid2))
-        ds9.mtv(afwImage.ImageD(psfImg, box), frame=1, title="psf", settings=settings)
-        ds9.mtv(psfImgDistInternally, frame=2, title="psfDist", settings=settings)
-        ds9.mtv(afwImage.ImageD(psfImgDistByUs, box), frame=3, title="psfDist2", settings=settings)
+        if display:
+            ds9.mtv(afwImage.ImageD(psfImg, box), frame=1, title="psf", settings=settings)
+            ds9.mtv(psfImgDistInternally, frame=2, title="psfDist", settings=settings)
+            ds9.mtv(afwImage.ImageD(psfImgDistByUs, box), frame=3, title="psfDist2", settings=settings)
 
         # first make sure we can plant a known quantity and measure it
         # quickAndDirtyShape() must be tested to be used itself as a tester
