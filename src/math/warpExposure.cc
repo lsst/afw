@@ -43,10 +43,12 @@
 
 #include "lsst/pex/logging/Trace.h" 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/image.h"
-#include "lsst/afw/geom.h"
-#include "lsst/afw/math.h"
+#include "lsst/afw/math/warpExposure.h"
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/Wcs.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
