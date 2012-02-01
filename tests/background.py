@@ -245,8 +245,8 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.makeBackground(parabimg, bctrl)
 
-        parabimg.writeFits('in.fits')
-        backobj.getImageF().writeFits('out.fits')
+        #parabimg.writeFits('in.fits')
+        #backobj.getImageF().writeFits('out.fits')
 
 
     def testParabola(self):

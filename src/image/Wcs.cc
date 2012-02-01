@@ -1114,21 +1114,6 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-/*
- * A Wcs object used to indicate a default argument
- */
-Wcs NoWcs;
-
-namespace {
-    struct InitWcs {
-        InitWcs() {
-            NoWcs.markPersistent();
-        }
-    };
-
-    InitWcs initWcs;                    // Call the ctor to label NoWcs as a persistent object
-}
-    
 namespace detail {
 
 /**

@@ -132,10 +132,6 @@ namespace boost {
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
 
-%shared_ptr(lsst::afw::image::Calib);
-%include "lsst/afw/image/Calib.h"
-%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
-
 #if defined(IMPORT_FUNCTION_I)
 %{
 #include "lsst/afw/math.h"
@@ -206,6 +202,11 @@ using lsst::afw::image::NoWcs;
 
 
 /************************************************************************************************************/
+
+%shared_ptr(lsst::afw::image::Calib);
+%include "lsst/afw/image/Calib.h"
+%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
+
 %{
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image/Exposure.h"

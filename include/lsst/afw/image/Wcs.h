@@ -263,8 +263,7 @@ namespace detail {
                          CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
                         );
 }
-    
-extern Wcs NoWcs;
+
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H
