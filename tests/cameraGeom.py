@@ -141,7 +141,8 @@ class CameraGeomTestCase(unittest.TestCase):
         ccdId = cameraGeom.Id(1, "Rot. CCD")
         ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
-        ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
+        zero = 0.0*afwGeom.radians
+        ccd.setOrientation(cameraGeom.Orientation(1, zero, zero, zero))
         if display:
             cameraGeomUtils.showCcd(ccd)
             ds9.incrDefaultFrame()
@@ -475,6 +476,7 @@ class CameraGeomTestCase(unittest.TestCase):
         # Check that we can find an Amp in the bowels of the camera
         ccdName = "C:1,0"
         amp = cameraGeomUtils.findAmp(camera, cameraGeom.Id(ccdName), 1, 2)
+        self.assertFalse(amp is None)
         self.assertEqual(amp.getId().getName(), "ID7")
         self.assertEqual(amp.getParent().getId().getName(), ccdName)
 

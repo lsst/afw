@@ -25,7 +25,7 @@
 
 #include <string>
 #include <cmath>
-#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/image/Utils.h"
 
 /**
@@ -36,17 +36,23 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-    
+#if defined(SWIG)
+    using lsst::afw::geom::radians;
+    #define AFW_GEOM_RADIANS radians
+#else
+    #define AFW_GEOM_RADIANS lsst::afw::geom::radians
+#endif
 /**
  * Describe a detector's orientation with respect to the nominal position
  */
 class Orientation {
 public:
     explicit Orientation(int nQuarter = 0, ///< Nominal rotation of device in units of pi/2
-                         double pitch=0.0, ///< pitch (rotation in YZ), radians
-                         double roll=0.0,  ///< roll (rotation in XZ), radians
-                         double yaw=0.0 ///< yaw (rotation in XY), radians
+                         lsst::afw::geom::Angle pitch=0*AFW_GEOM_RADIANS, ///< pitch (rotation in YZ)
+                         lsst::afw::geom::Angle roll=0*AFW_GEOM_RADIANS,  ///< roll (rotation in XZ)
+                         lsst::afw::geom::Angle yaw=0*AFW_GEOM_RADIANS    ///< yaw (rotation in XY)
                         )
+#undef GEOM_RADIANS
         :
         _nQuarter(nQuarter % 4),
         _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
@@ -58,21 +64,21 @@ public:
     int getNQuarter() const { return _nQuarter; }
 
     /// Return the pitch angle
-    double getPitch() const { return _pitch; }
+    lsst::afw::geom::Angle getPitch() const { return _pitch; }
     /// Return cos(pitch)
     double getCosPitch() const { return _cosPitch; }
     /// Return sin(pitch)
     double getSinPitch() const { return _sinPitch; }
 
     /// Return the roll angle
-    double getRoll() const { return _roll; }
+    lsst::afw::geom::Angle getRoll() const { return _roll; }
     /// Return cos(roll)
     double getCosRoll() const { return _cosRoll; }
     /// Return sin(roll)
     double getSinRoll() const { return _sinRoll; }
 
     /// Return the yaw angle
-    double getYaw() const { return _yaw; }
+    lsst::afw::geom::Angle getYaw() const { return _yaw; }
     /// Return cos(yaw)
     double getCosYaw() const { return _cosYaw; }
     /// Return sin(yaw)
@@ -80,15 +86,15 @@ public:
 private:
     int _nQuarter;                      // number of quarter-turns in +ve direction
 
-    double _pitch;                      // pitch
+    lsst::afw::geom::Angle _pitch;      // pitch
     double _cosPitch;                   // cos(pitch)
     double _sinPitch;                   // sin(pitch)
 
-    double _roll;                       // roll
+    lsst::afw::geom::Angle _roll;       // roll
     double _cosRoll;                    // cos(roll)
     double _sinRoll;                    // sin(roll)
 
-    double _yaw;                        // yaw
+    lsst::afw::geom::Angle _yaw;        // yaw
     double _cosYaw;                     // cos(yaw)
     double _sinYaw;                     // sin(yaw)
 };

@@ -379,7 +379,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         xc, yc = ccdPol.getArray("offset")
 
         nQuarter = ccdPol.get("nQuarter")
-        pitch, roll, yaw = [float(math.radians(a)) for a in ccdPol.getArray("orientation")]
+        pitch, roll, yaw = [afwGeom.Angle(a, afwGeom.degrees) for a in ccdPol.getArray("orientation")]
 
         if Col not in range(nCol) or Row not in range(nRow):
             msg = "Ccd location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow)
