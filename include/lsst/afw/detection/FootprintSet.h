@@ -116,7 +116,15 @@ public:
      */
     CONST_PTR(FootprintList) const getFootprints() const { return _footprints; }
     
-    afw::table::SourceVector makeSources(PTR(afw::table::SourceTable) const & table) const;
+    /**
+     *  @brief Add a new record corresponding to each footprint to a SourceVector.
+     *
+     *  @param[in,out]  vector     Vector to append new sources to.
+     *
+     *  The new sources will have their footprints set to point to the footprints in the
+     *  footprint set; they will not be deep-copied.
+     */
+    void makeSources(afw::table::SourceVector & vector) const;
 
     void setRegion(geom::Box2I const& region);
 

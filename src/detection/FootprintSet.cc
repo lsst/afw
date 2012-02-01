@@ -1462,16 +1462,13 @@ detection::FootprintSet::makeHeavy(
     }
 }
 
-lsst::afw::table::SourceVector
-detection::FootprintSet::makeSources(
-    PTR(afw::table::SourceTable) const & table
+void detection::FootprintSet::makeSources(
+    lsst::afw::table::SourceVector & vector
 ) const {
-    afw::table::SourceVector v(table);
     for (FootprintList::const_iterator i = _footprints->begin(); i != _footprints->end(); ++i) {
-        PTR(afw::table::SourceRecord) r = v.addNew();
+        PTR(afw::table::SourceRecord) r = vector.addNew();
         r->setFootprint(*i);
     }
-    return v;
 }
 
 
