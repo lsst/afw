@@ -24,6 +24,7 @@
 #define LSST_AFW_CAMERAGEOM_CCD_H
 
 #include <string>
+#include "lsst/base.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -75,8 +76,6 @@ public:
         addAmp(lsst::afw::geom::Point2I(iX, iY), amp);
     }
 
-
-
     virtual void setTrimmed(bool isTrimmed);
     //
     // Find an Amp given an Id or pixel position
@@ -94,7 +93,7 @@ public:
     virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);
 
-    virtual void setDefects(std::vector<lsst::afw::image::DefectBase::Ptr> const& defects);
+    virtual void setDefects(std::vector<PTR(lsst::afw::image::DefectBase)> const& defects);
 private:
     AmpSet _amps;                       // the Amps that make up this Ccd
 };

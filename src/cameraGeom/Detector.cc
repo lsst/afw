@@ -26,6 +26,7 @@
 #include <algorithm>
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Orientation.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;

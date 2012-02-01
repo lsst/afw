@@ -54,11 +54,14 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
-#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace lsst {
 namespace afw {
+namespace cameraGeom {
+    class Detector;
+}
+
 namespace detection {
     class Psf;
 }
@@ -161,7 +164,7 @@ public:
     MaskedImageT getMaskedImage() const { return _maskedImage; }
     Wcs::Ptr getWcs() const;
     /// Return the Exposure's Detector information
-    lsst::afw::cameraGeom::Detector::Ptr getDetector() const { return _detector; }
+    PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
     /// Return the Exposure's filter
     Filter getFilter() const { return _filter; }
     /// Return flexible metadata
@@ -218,7 +221,7 @@ public:
     void setMaskedImage(MaskedImageT &maskedImage);
     void setWcs(Wcs const& wcs);
     /// Set the Exposure's Detector information
-    void setDetector(lsst::afw::cameraGeom::Detector::Ptr detector) { _detector = detector; }
+    void setDetector(PTR(lsst::afw::cameraGeom::Detector) detector) { _detector = detector; }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _filter = filter; }
     /// Set the Exposure's Calib object
@@ -253,7 +256,7 @@ private:
 
     MaskedImageT _maskedImage;             
     Wcs::Ptr _wcs;
-    cameraGeom::Detector::Ptr _detector;
+    PTR(cameraGeom::Detector) _detector;
     Filter _filter;
     PTR(Calib) _calib;
     PTR(lsst::afw::detection::Psf) _psf;

@@ -233,7 +233,7 @@ void cameraGeom::Ccd::setOrientation(
 
 static void clipDefectsToAmplifier(
         cameraGeom::Amp::Ptr amp,                             // the Amp in question
-        std::vector<afwImage::DefectBase::Ptr> const& defects // Defects in this detector
+        std::vector<PTR(afwImage::DefectBase)> const& defects // Defects in this detector
                                   )
 {
     amp->getDefects().clear();
