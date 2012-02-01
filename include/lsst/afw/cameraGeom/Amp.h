@@ -138,11 +138,6 @@ public:
         return getTrimmed ? _trimmedDataSec : _dataSec;
     }
 
-    /// Return amplifier's data section
-    lsst::afw::geom::Box2I& getDataSec(bool getTrimmed=false) {
-        return getTrimmed ? _trimmedDataSec : _dataSec;
-    }
-
     /// Return the corner that's read first
     ReadoutCorner getReadoutCorner() const { return _readoutCorner; }
 

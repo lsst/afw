@@ -557,7 +557,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
     return C;
 }
 ///Flip CD matrix around the y-axis
-void Wcs::flipImage(int flipLR, int flipTB) const {
+void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const {
     if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -570,14 +570,16 @@ void Wcs::flipImage(int flipLR, int flipTB) const {
     if (flipLR) {
         _wcsInfo->cd[0] = -_wcsInfo->cd[0];
         _wcsInfo->cd[2] = -_wcsInfo->cd[2];
+        _wcsInfo->crpix[0] = -_wcsInfo->crpix[0] + dimensions.getX();
     }
     if (flipTB) {
         _wcsInfo->cd[1] = -_wcsInfo->cd[1];
         _wcsInfo->cd[3] = -_wcsInfo->cd[3];
+        _wcsInfo->crpix[1] = -_wcsInfo->crpix[1]+dimensions.getY();
     }
 }
 
-void Wcs::rotateImageBy90(int nQuarter) const {
+void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
     if(! isInitialized()) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -594,6 +596,8 @@ void Wcs::rotateImageBy90(int nQuarter) const {
     double b = _wcsInfo->cd[1];
     double c = _wcsInfo->cd[2];
     double d = _wcsInfo->cd[3];
+    double crpx = _wcsInfo->crpix[0];
+    double crpy = _wcsInfo->crpix[1];
     switch (nQuarter%4) {
         case 0:
             break;
@@ -602,18 +606,24 @@ void Wcs::rotateImageBy90(int nQuarter) const {
             _wcsInfo->cd[1] = a;
             _wcsInfo->cd[2] = -d;
             _wcsInfo->cd[3] = c;
+            _wcsInfo->crpix[0] = -crpy + dimensions.getY();
+            _wcsInfo->crpix[1] = crpx;
             break;
         case 2:
             _wcsInfo->cd[0] = -a;
             _wcsInfo->cd[1] = -b;
             _wcsInfo->cd[2] = -c;
             _wcsInfo->cd[3] = -d;
+            _wcsInfo->crpix[0] = -crpx + dimensions.getX();
+            _wcsInfo->crpix[1] = -crpy + dimensions.getY();
             break;
         case 3:
             _wcsInfo->cd[0] = b;
             _wcsInfo->cd[1] = -a;
             _wcsInfo->cd[2] = d;
             _wcsInfo->cd[3] = -c;
+            _wcsInfo->crpix[0] = crpy;
+            _wcsInfo->crpix[1] = -crpx + dimensions.getX();
             break;
     }
 }
