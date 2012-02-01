@@ -445,11 +445,11 @@ try:
             if type.code == gdb.TYPE_CODE_REF:
                 type = type.target ()
 
-            llc = [getEigenValue(self.val["_minimum"]["_vector"], 0, i) for i in range(2)]
-            dims = [getEigenValue(self.val["_dimensions"]["_vector"], 0, i) for i in range(2)]
+            llc = [getEigenValue(self.val["_minimum"]["_vector"], i) for i in range(2)]
+            dims = [getEigenValue(self.val["_dimensions"]["_vector"], i) for i in range(2)]
 
             return "Box2{(%s,%s)--(%s,%s)}" % (llc[0], llc[1],
-                                                 llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
+                                               llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
 
         def display_hint (self):
             return "array"
@@ -616,10 +616,11 @@ try:
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
-            if not re.search(r"^(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type.unqualified())):
+            if not re.search(r"(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type.unqualified())):
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
-            if re.search(r"MaskedImage", str(var.type)):
+            if re.search(r"MaskedImage", str(var.type)) and \
+                    not re.search(r"::Image(\s*&)?$", str(var.type)):
                 print "N.b. %s is a MaskedImage; showing image" % (opts.image)
                 var = var["_image"]
 

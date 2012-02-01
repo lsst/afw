@@ -41,6 +41,7 @@ import os
 
 import lsst.daf.base as dafBase
 import lsst.pex.policy as pexPolicy
+import lsst.pex.exceptions as pexExcept
 import lsst.daf.persistence as dafPers
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDet
@@ -121,8 +122,10 @@ class SourceTestCase(unittest.TestCase):
         perPol = pexPolicy.Policy()
         per = Persistence.getPersistence(perPol)
         additionalData = dafBase.PropertySet()
-        storageName = 'BoostStorage'
-        f,loc = tempfile.mkstemp(suffix='.boost', dir=os.path.join("tests", "data"))
+        dirName, storageName = os.path.join("tests", "data"), "BoostStorage"
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        f,loc = tempfile.mkstemp(suffix='.boost', dir=dirName)
         os.close(f)
         print 'Writing to temp file', loc
         try:
@@ -357,6 +360,14 @@ class SourceTestCase(unittest.TestCase):
         s = afwDet.Source()
         s.setId(2355928297481L)         # ... but we can set the ID
 
+    def testFootprintPeaks(self):
+        """Test that we can extract the peaks from a Source"""
+        s = afwDet.Source()
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, lambda: s.getFootprint())
+
+        s.setFootprint(afwDet.Footprint())
+        self.assertEqual(len(s.getFootprint().getPeaks()), 0)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -369,6 +380,9 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-if __name__ == "__main__":
-    utilsTests.run(suite())
+def run(shouldExit=False):
+    """Run the tests"""
+    utilsTests.run(suite(), shouldExit)
 
+if __name__ == "__main__":
+    run(True)

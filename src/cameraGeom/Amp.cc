@@ -235,6 +235,39 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromElectronic(lsst::afw::geom::Box2
 }
 
 /**
+ * Prepare the Wcs of an amp based on the orientation for assembly
+ */
+void cameraGeom::Amp::prepareWcsData(afwImage::Wcs::Ptr wcs) {
+    cameraGeom::Detector::Ptr pccd = getParent();
+    int n90 = 0;
+    if (pccd) 
+      n90 = pccd->getOrientation().getNQuarter();
+
+    switch (_diskCoordSys) {
+        case CAMERA:
+            {
+                break;
+            }
+        case AMP:
+            {
+                wcs->flipImage(_flipLR, false);
+                wcs->rotateImageBy90(_nQuarter);
+                break;
+            }
+        case SENSOR:
+            {
+                if( n90 > 0)
+                    wcs->rotateImageBy90(n90);
+                break;
+            }
+        default:
+            {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Invalid on disk coordinate system.");
+            }
+    }
+}
+
+/**
  * Prepare an Amp that's just been read from disk to be copied into the image of the complete Detector
  *
  * This is only important if the Amps are stored in separate files, rather than being assembled into
