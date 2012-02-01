@@ -39,18 +39,20 @@ Various swigged-up C++ classes for testing
 %lsst_exceptions()
 
 %{
+#include "lsst/pex/logging.h"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/cameraGeom.h"
+#include "lsst/afw/image.h"
 #include "testSpatialCell.h"
 %}
 
 %import "lsst/afw/image/imageLib.i"
 %import "lsst/afw/math/mathLib.i"
 
-SWIG_SHARED_PTR_DERIVED(ExampleCandidate,
-                        lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> >,
-                        ExampleCandidate);
+%shared_ptr(ExampleCandidate);
+%shared_ptr(ExampleCandidateVisitor);
 
 %include "testSpatialCell.h"
 

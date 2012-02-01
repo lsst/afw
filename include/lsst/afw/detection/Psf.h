@@ -64,18 +64,18 @@ public:
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }
 
-    Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true,
+    PTR(Image) computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true,
                             bool distort=true) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak,
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak,
                             bool distort=true) const;
 
-    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
+    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true,
                             bool distort=true) const;
 
-    Image::Ptr computeImage(lsst::afw::image::Color const& color,
+    PTR(Image) computeImage(lsst::afw::image::Color const& color,
                             lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true,
@@ -220,16 +220,16 @@ protected:
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
                                                           lsst::afw::image::Color const&) {
-        return _kernel;
+        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
     }
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
                                                                lsst::afw::image::Color const&) const {
-        return lsst::afw::math::Kernel::ConstPtr(_kernel);
+        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
     }
 
     /// Clone a KernelPsf

@@ -126,7 +126,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // make sure it can be copied.
     afwImage::Wcs::Ptr myWcsPtr = afwImage::makeWcs(mData); 
 
-    afwImage::Exposure<ImagePixel> miWcsExpImage(mImage, *myWcsPtr);
+    afwImage::Exposure<ImagePixel> miWcsExpImage(mImage, myWcsPtr);
              
     afwImage::Wcs::Ptr wcsCopy = myWcsPtr->clone(); 
 
@@ -136,7 +136,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     int miHeight = 5;
     afwImage::Exposure<ImagePixel> regWcsExpImage(
         afwGeom::Extent2I(miWidth, miHeight), 
-        *myWcsPtr
+        myWcsPtr
     );
        
     // (5) Construct an Exposure from a given region (col, row) with no Wcs.
@@ -149,7 +149,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
        
     // try to get the Wcs when there isn't one
     try {
-        afwImage::Wcs::Ptr noWcs = regExpImage.getWcs();
+        afwImage::Wcs::ConstPtr noWcs = regExpImage.getWcs();
     } catch (lsst::pex::exceptions::Exception &e) {
         pexLog::Trace("lsst.afw.Exposure", 5, "Caught Exception for getting a null Wcs: %s", e.what());
     }
@@ -161,7 +161,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
         
     // (7) Get a Wcs. 
          
-    afwImage::Wcs::Ptr newWcs = miWcsExpImage.getWcs();
+    afwImage::Wcs::ConstPtr newWcs = miWcsExpImage.getWcs();
 
     // try to get a Wcs from an image where I have corrupted the Wcs
     // information (removed the CRPIX1/2 header keywords/values.  Lets see
@@ -174,7 +174,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
                                                     mCorData); // CFHT MI with corrupt header
         afwImage::Wcs::Ptr wcsPtr = afwImage::makeWcs(mCorData);
             
-        afwImage::Exposure<ImagePixel> newCorExposure(mCorruptImage, *wcsPtr);
+        afwImage::Exposure<ImagePixel> newCorExposure(mCorruptImage, wcsPtr);
        
     } catch (lsst::pex::exceptions::Exception &e) {
         pexLog::Trace("lsst.afw.Exposure", 1,

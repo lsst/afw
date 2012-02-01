@@ -83,9 +83,10 @@ public:
         // Current position of the locator (in the SpanList loop)
         int ox1 = 0, oy = 0;            
         
-        typename ImageT::xy_locator loc = _image.xy_at(
-            -_image.getX0(), -_image.getY0()
-        ); // Origin of the Image's pixels
+        int const x0 = _image.getX0();
+        int const y0 = _image.getY0();
+
+        typename ImageT::xy_locator loc = _image.xy_at(-x0, -y0); // Origin of the Image's pixels
 
         int const width = _image.getWidth();
         int const height = _image.getHeight();
@@ -94,25 +95,25 @@ public:
             Span::Ptr const span = *siter;
 
             int const y = span->getY();
-            if (y < margin || y >= height - margin) {
+            if (y - y0 < margin || y - y0 >= height - margin) {
                 continue;
             }
-            int x0 = span->getX0();
-            int x1 = span->getX1();
-            if (x0 < margin) {
-                x0 = margin;
+            int sx0 = span->getX0();
+            int sx1 = span->getX1();
+            if (sx0 - x0 < margin) {
+                sx0 = margin + x0;
             }
-            if (x1 >= width - margin) {
-                x1 = width - margin - 1;
+            if (sx1 - x0 >= width - margin) {
+                sx1 = width + x0 - margin - 1;
             }
 
-            loc += lsst::afw::image::pair2I(x0 - ox1, y - oy);
+            loc += lsst::afw::image::pair2I(sx0 - ox1, y - oy);
 
-            for (int x = x0; x <= x1; ++x, ++loc.x()) {
+            for (int x = sx0; x <= sx1; ++x, ++loc.x()) {
                 operator()(loc, x, y);
             }
 
-            ox1 = x1 + 1; oy = y;
+            ox1 = sx1 + 1; oy = y;
         }
     }
     /// Return the image

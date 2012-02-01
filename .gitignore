@@ -63,6 +63,7 @@ examples/integratePolar
 examples/forEachPixel
 examples/spatialCellExample
 examples/simpleStacker
+examples/timeConvolveGpu
 examples/Spline
 lib/libafw.*
 python/lsst/*.pyc
@@ -96,6 +97,7 @@ tests/SourceMatchIo
 tests/bBox1
 tests/background
 tests/checkTypeConversions
+tests/convolveGPU
 tests/coord
 tests/decoratedImage
 tests/distort
@@ -137,3 +139,12 @@ tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageRamOut.fit
 tests/data/*
 ups/*.cfgc
 extensions/
+
+# Output of tests
+doc/htmlDir
+im.fits
+bim.fits
+tmp-False.fits
+tmp-True.fits
+in.fits
+out.fits

@@ -308,6 +308,52 @@ bool Footprint::contains(
     return false;
 }
 
+void Footprint::clipTo(geom::Box2I const& bbox) {
+	Footprint::SpanList::iterator it = _spans.begin();
+	for (; it != _spans.end();) {
+		Span *sp = it->get();
+		//printf("span: y=%i (x=[%i,%i]), vs bbox [%i,%i]\n", sp->getY(), sp->getX0(), sp->getX1(), bbox.getMinY(), bbox.getMaxY());
+		if ((sp->getY() < bbox.getMinY()) ||
+			(sp->getY() > bbox.getMaxY())) {
+			//printf("  --> out of bounds in y; erasing.\n");
+			it = _spans.erase(it);
+			continue;
+		}
+		//printf("span: x=[%i,%i], vs bbox [%i,%i]\n", sp->getX0(), sp->getX1(), bbox.getMinX(), bbox.getMaxX());
+		if ((sp->getX0() > bbox.getMaxX()) ||
+			(sp->getX1() < bbox.getMinX())) {
+			//printf("  --> out of bounds in x; erasing.\n");
+			it = _spans.erase(it);
+			continue;
+		}
+
+		// clip
+		if (sp->getX0() < bbox.getMinX()) {
+			//printf("  -> clipped span x0 to bbox\n");
+			sp->_x0 = bbox.getMinX();
+		}
+		if (sp->getX1() > bbox.getMaxX()) {
+			//printf("  -> clipped span x1 to bbox\n");
+			sp->_x1 = bbox.getMaxX();
+		}
+		it++;
+	}
+
+	Footprint::PeakList::iterator pit = _peaks.begin();
+	for (; pit != _peaks.end();) {
+		Peak *pk = pit->get();
+		if (!bbox.contains(geom::Point2I(pk->getIx(), pk->getIy()))) {
+			pit = _peaks.erase(pit);
+			continue;
+		}
+		pit++;
+	}
+	if (!_spans.empty()) {
+		_normalized = false;
+		normalize();
+	}
+}
+
 /**
  * Normalise a Footprint, sorting spans and setting the BBox
  */

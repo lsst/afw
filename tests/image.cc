@@ -110,6 +110,55 @@ ImageT make_image(int const width=5, int const height=6) {
 
 /************************************************************************************************************/
 
+BOOST_AUTO_TEST_CASE(getset0) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+    ImageT img = make_image();
+
+	image::CheckIndices docheck(true);
+	// operator() as getter
+	BOOST_CHECK_EQUAL(img(3,3), 303);
+	BOOST_CHECK_EQUAL(*(img.x_at(3,3)), 303);
+	BOOST_CHECK_EQUAL(img(3,3, docheck), 303);
+	BOOST_CHECK_EQUAL(img(3,4), 304);
+	BOOST_CHECK_EQUAL(*(img.x_at(3,4)), 304);
+
+	// operator() as setter
+	img(3,4) = 3004;
+	BOOST_CHECK_EQUAL(img(3,4), 3004);
+
+	// get0 / set0 on a (0,0)-referenced image
+	img.set0(3,4, 3004);
+	BOOST_CHECK_EQUAL(img(3,4), 3004);
+	BOOST_CHECK_EQUAL(img.get0(3,4,docheck), 3004);
+	BOOST_CHECK_EQUAL(img.get0(3,4), 3004);
+	img.set0(3, 4, 304, docheck);
+	BOOST_CHECK_EQUAL(img(3,4), 304);
+	img.set0(3, 4, 3004, docheck);
+	BOOST_CHECK_EQUAL(img(3,4), 3004);
+	img.set0(3, 4, 304);
+	BOOST_CHECK_EQUAL(img(3,4), 304);
+
+	// create a subimage:   x in [1,3], y in [2,4]
+	ImageT subimg(img, geom::Box2I(geom::Point2I(1,2), geom::Extent2I(3,3)));
+	BOOST_CHECK_EQUAL(subimg.getWidth(), 3);
+	BOOST_CHECK_EQUAL(subimg.getHeight(), 3);
+	BOOST_CHECK_EQUAL(subimg.getX0(), 1);
+	BOOST_CHECK_EQUAL(subimg.getY0(), 2);
+
+	BOOST_CHECK_EQUAL(subimg(0,0), 102);
+	BOOST_CHECK_EQUAL(subimg(2,2), 304);
+	BOOST_CHECK_EQUAL(subimg.get0(1, 2, docheck), 102);
+	// (0,0) in the subimage is (1,2) in the parent image
+	BOOST_CHECK_EQUAL(subimg.get0(1, 2), 102);
+	// subimage can't reference parent coord 0,0
+	BOOST_CHECK_THROW(subimg.get0(0, 0, docheck), lsst::pex::exceptions::LengthErrorException);
+
+	subimg.set0(3, 4, 1000000, docheck);
+	BOOST_CHECK_EQUAL(subimg.get0(3, 4, docheck), 1000000);
+	BOOST_CHECK_EQUAL(subimg(2,2), 1000000);
+	BOOST_CHECK_THROW(subimg.set0(0, 0, 1000000, docheck), lsst::pex::exceptions::LengthErrorException);
+}
+
+
 BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
     MaskT mask(geom::Extent2I(1, 1));

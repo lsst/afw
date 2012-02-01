@@ -33,16 +33,12 @@
 
 
 // The shared pointer declarations must precede the #inlude statement for Coord.h
-SWIG_SHARED_PTR(Coord, lsst::afw::coord::Coord);
-%define %declareDerived(COORDTYPE)
-SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::coord::COORDTYPE##Coord);
-%enddef
-
-%declareDerived(Fk5);
-%declareDerived(Icrs);
-%declareDerived(Galactic);
-%declareDerived(Ecliptic);
-%declareDerived(Topocentric);
+%shared_ptr(lsst::afw::coord::Coord);
+%shared_ptr(lsst::afw::coord::Fk5Coord);
+%shared_ptr(lsst::afw::coord::IcrsCoord);
+%shared_ptr(lsst::afw::coord::GalacticCoord);
+%shared_ptr(lsst::afw::coord::EclipticCoord);
+%shared_ptr(lsst::afw::coord::TopocentricCoord);
 
 
 %rename(__getitem__) lsst::afw::coord::Coord::operator[];
@@ -70,3 +66,22 @@ SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::co
 %include "lsst/afw/coord/Utils.h"
 %include "lsst/afw/coord/Coord.h"
 
+%define extendCoord(TYPE)
+%extend lsst::afw::coord::TYPE {
+    %pythoncode {
+    def __repr__(self):
+        return "afwCoord.TYPE(%g*afwGeom.radians, %g*afwGeom.radians)" % \
+                (self[0].asRadians(), self[1].asRadians())
+
+    def __str__(self):
+        return "(%s, %s)" % (self[0], self[1])
+
+    }
+}
+%enddef
+
+extendCoord(Coord);
+extendCoord(Fk5Coord);
+extendCoord(IcrsCoord);
+extendCoord(GalacticCoord);
+extendCoord(EclipticCoord);
