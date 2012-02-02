@@ -1,50 +1,22 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "boost/mpl/transform.hpp"
-#include "boost/fusion/algorithm/iteration/for_each.hpp"
-#include "boost/fusion/adapted/mpl.hpp"
-#include "boost/fusion/container/map/convert.hpp"
-#include "boost/fusion/sequence/intrinsic/at_key.hpp"
-
 #include "lsst/afw/table/ColumnView.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
 
-namespace {
-
-struct MakeCorePair {
-    template <typename T> struct apply {
-        typedef boost::fusion::pair< T, ndarray::detail::Core<1>::Ptr > type;
-    };
-};
-
-typedef boost::fusion::result_of::as_map<
-    boost::mpl::transform< detail::ScalarFieldTypes, MakeCorePair >::type
-    >::type CoreContainer;
-
-} // anonymous
-
 struct ColumnView::Impl {
     int recordCount;
+    int recordSize;
     void * buf;
     Schema schema;
-    CoreContainer cores;
-
-    template <typename T>
-    void operator()(boost::fusion::pair< T, ndarray::detail::Core<1>::Ptr > & pair) const {
-        pair.second = ndarray::detail::Core<1>::create(
-            ndarray::makeVector(recordCount),
-            ndarray::makeVector(int(schema.getRecordSize() / sizeof(T)))
-        );
-    }
+    ndarray::Manager::Ptr manager;
 
     Impl(Schema const & schema_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
-        : recordCount(recordCount_), buf(buf_), schema(schema_)
-    {
-        boost::fusion::for_each(cores, *this);
-    }
+        : recordCount(recordCount_), recordSize(schema_.getRecordSize()), buf(buf_), schema(schema_),
+          manager(manager_)
+    {}
 };
 
 Schema ColumnView::getSchema() const { return _impl->schema; }
@@ -55,21 +27,24 @@ typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) co
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
-        boost::fusion::at_key<T>(_impl->cores)
+        ndarray::detail::Core<1>::create(
+            ndarray::makeVector(_impl->recordCount),
+            ndarray::makeVector(int(_impl->recordSize / sizeof(T))),
+            _impl->manager
+        )
     );
 }
 
 template <typename T>
 typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > const & key) const {
-    ndarray::detail::Core<1>::Ptr scalarCore = boost::fusion::at_key<T>(_impl->cores);
     return ndarray::detail::ArrayAccess< ndarray::Array<T const,2,1> >::construct(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
         ndarray::detail::Core<2>::create(
-            ndarray::makeVector(scalarCore->getSize(), key.getSize()),
-            ndarray::makeVector(scalarCore->getStride(), 1),
-            scalarCore->getManager()
+            ndarray::makeVector(_impl->recordCount, key.getSize()),
+            ndarray::makeVector(int(_impl->recordSize / sizeof(T)), 1),
+            _impl->manager
         )
     );
 }
@@ -82,7 +57,11 @@ ColumnView::operator[](Key<Flag> const & key) const {
             reinterpret_cast<Field<Flag>::Element *>(
                 reinterpret_cast<char *>(_impl->buf) + key.getOffset()
             ),
-            boost::fusion::at_key<Field<Flag>::Element>(_impl->cores)
+            ndarray::detail::Core<1>::create(
+                ndarray::makeVector(_impl->recordCount),
+                ndarray::makeVector(int(_impl->recordSize / sizeof(Field<Flag>::Element))),
+                _impl->manager
+            )
         )
     );
 }
@@ -91,7 +70,7 @@ ColumnView::~ColumnView() {}
 
 ColumnView::ColumnView(
     Schema const & schema, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
-) : _impl(new Impl(schema, recordCount, buf, manager)) {}
+) : _impl(boost::make_shared<Impl>(schema, recordCount, buf, manager)) {}
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
