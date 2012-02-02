@@ -59,21 +59,39 @@ def makeCov(size, dtype):
 
 class SimpleTableTestCase(unittest.TestCase):
 
-    def checkScalarAccessors(self, record, key, value1, value2):
+    def checkScalarAccessors(self, record, key, name, value1, value2):
         record[key] = value1
         self.assertEqual(record[key], value1)
         self.assertEqual(record.get(key), value1)
+        self.assertEqual(record[name], value1)   
+        self.assertEqual(record.get(name), value1)   
         record.set(key, value2)
         self.assertEqual(record[key], value2)
         self.assertEqual(record.get(key), value2)
+        self.assertEqual(record[name], value2)   
+        self.assertEqual(record.get(name), value2)
+        record[name] = value1
+        self.assertEqual(record[key], value1)
+        self.assertEqual(record.get(key), value1)
+        self.assertEqual(record[name], value1)   
+        self.assertEqual(record.get(name), value1)
+        record.set(name, value2)   
+        self.assertEqual(record[key], value2)
+        self.assertEqual(record.get(key), value2)
+        self.assertEqual(record[name], value2)   
+        self.assertEqual(record.get(name), value2)
 
-    def checkGeomAccessors(self, record, key, value):
+    def checkGeomAccessors(self, record, key, name, value):
         record.set(key, value)
         self.assertEqual(record.get(key), value)
+        record.set(name, value)
+        self.assertEqual(record.get(name), value)
 
-    def checkArrayAccessors(self, record, key, value):
+    def checkArrayAccessors(self, record, name, key, value):
         record.set(key, value)
         self.assert_(numpy.all(record.get(key) == value))
+        record.set(name, value)
+        self.assert_(numpy.all(record.get(name) == value))
 
     def testRecordAccess(self):
         schema = lsst.afw.table.Schema()
@@ -98,26 +116,26 @@ class SimpleTableTestCase(unittest.TestCase):
         k19 = schema.addField("f19", type="Coord")
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
-        self.checkScalarAccessors(record, k1, 2, 3)
-        self.checkScalarAccessors(record, k2, 2, 3)
-        self.checkScalarAccessors(record, k3, 2.5, 3.5)
-        self.checkScalarAccessors(record, k4, 2.5, 3.5)
-        self.checkGeomAccessors(record, k5, lsst.afw.geom.Point2I(5, 3))
-        self.checkGeomAccessors(record, k6, lsst.afw.geom.Point2D(5.5, 3.5))
-        self.checkGeomAccessors(record, k7, lsst.afw.geom.Point2D(5.5, 3.5))
-        self.checkGeomAccessors(record, k8, lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
-        self.checkGeomAccessors(record, k9, lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
-        self.checkArrayAccessors(record, k10, makeArray(k10.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k11, makeArray(k11.getSize(), dtype=numpy.float64))
-        self.checkArrayAccessors(record, k12, makeCov(k12.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k13, makeCov(k13.getSize(), dtype=numpy.float64))
-        self.checkArrayAccessors(record, k14, makeCov(k14.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k15, makeCov(k15.getSize(), dtype=numpy.float64))
-        self.checkArrayAccessors(record, k16, makeCov(k16.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k17, makeCov(k17.getSize(), dtype=numpy.float64))
-        self.checkGeomAccessors(record, k18, lsst.afw.geom.Angle(1.2))
+        self.checkScalarAccessors(record, k1, "f1", 2, 3)
+        self.checkScalarAccessors(record, k2, "f2", 2, 3)
+        self.checkScalarAccessors(record, k3, "f3", 2.5, 3.5)
+        self.checkScalarAccessors(record, k4, "f4", 2.5, 3.5)
+        self.checkGeomAccessors(record, k5, "f5", lsst.afw.geom.Point2I(5, 3))
+        self.checkGeomAccessors(record, k6, "f6", lsst.afw.geom.Point2D(5.5, 3.5))
+        self.checkGeomAccessors(record, k7, "f7", lsst.afw.geom.Point2D(5.5, 3.5))
+        self.checkGeomAccessors(record, k8, "f8", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
+        self.checkGeomAccessors(record, k9, "f9", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
+        self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k12, "f12", makeCov(k12.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k13, "f13", makeCov(k13.getSize(), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k14, "f14", makeCov(k14.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k15, "f15", makeCov(k15.getSize(), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k16, "f16", makeCov(k16.getSize(), dtype=numpy.float32))
+        self.checkArrayAccessors(record, k17, "f17", makeCov(k17.getSize(), dtype=numpy.float64))
+        self.checkGeomAccessors(record, k18, "f18", lsst.afw.geom.Angle(1.2))
         self.checkGeomAccessors(
-            record, k19, 
+            record, k19, "f19", 
             lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
             )
 

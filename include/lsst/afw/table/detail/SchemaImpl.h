@@ -25,9 +25,10 @@ class SubSchema;
  */
 template <typename T>
 struct SchemaItem {
+#ifndef SWIG  // see comment block in tableLib.i; workaround to avoid dangling references
     Key<T> key;
     Field<T> field;
-
+#endif 
     SchemaItem(Key<T> const & key_, Field<T> const & field_) : key(key_), field(field_) {}
 };
 

@@ -322,7 +322,7 @@ KeyTuple<Centroid> addCentroidFields(
     KeyTuple<Centroid> keys;
     keys.meas = schema.addField<Centroid::MeasTag>(name, doc, "pixels");
     keys.err = schema.addField<Centroid::ErrTag>(
-        name + ".cov", "covariance matrix for " + name, "pixels^2"
+        name + ".err", "covariance matrix for " + name, "pixels^2"
     );
     keys.flag = schema.addField<Flag>(
         name + ".flags", "set if the " + name + " measurement did not fully succeed"
@@ -340,7 +340,7 @@ KeyTuple<Shape> addShapeFields(
         name, doc, "pixels^2"
     );
     keys.err = schema.addField<Shape::ErrTag>(
-        name + ".cov", "covariance matrix for " + name, "pixels^4"
+        name + ".err", "covariance matrix for " + name, "pixels^4"
     );
     keys.flag = schema.addField<Flag>(
         name + ".flags", "set if the " + name + " measurement failed"

@@ -63,11 +63,11 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *  @brief Set the measurement used for the $1$2 slot with a field name.
      *
      *  This requires that the measurement adhere to the convention of having
-     *  "<name>", "<name>.err", and "<name>.flag" fields.
+     *  "<name>", "<name>.err", and "<name>.flags" fields.
      */
     void define$1$2(std::string const & name) {
         Schema schema = getSchema();
-        _slot$2$3 = KeyTuple<$2>(schema[name], schema[name]["err"], schema[name]["flag"]);
+        _slot$2$3 = KeyTuple<$2>(schema[name], schema[name]["err"], schema[name]["flags"]);
     }
 
     /// @brief Return the name of the field used for the $1$2 slot.

@@ -46,7 +46,7 @@ struct Field : public FieldBase<T> {
         os << "Field['" << Field<T>::getTypeString()
            << "'](name=\"" << field.getName() << "\"";
         if (!field.getDoc().empty())
-            os << ", doc=\"" << field.getUnits() << "\"";
+            os << ", doc=\"" << field.getDoc() << "\"";
         if (!field.getUnits().empty())
             os << ", units=\"" << field.getUnits() << "\"";
         field.stream(os);

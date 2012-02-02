@@ -89,9 +89,13 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
+// ---------------------------------------------------------------------------------------------------------
+
 // We prefer to convert std::set<std::string> to a Python tuple, because SWIG's std::set wrapper
 // doesn't do many of the things a we want it do (pretty printing, comparison operators, ...),
-// and the expense of a deep copy shouldn't matter in this case.
+// and the expense of a deep copy shouldn't matter in this case.  And it's easier to just do
+// the conversion than get involved in the internals's of SWIG's set wrapper to fix it.
+
 %{
     inline PyObject * convertNameSet(std::set<std::string> const & input) {
         lsst::ndarray::PyPtr result(PyTuple_New(input.size()));
@@ -114,7 +118,30 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %typemap(out)
 std::set<std::string> const &, std::set<std::string> &, std::set<std::string> const*, std::set<std::string>*
 {
+    // I'll never understand why swig passes pointers to reference typemaps, but it does.
     $result = convertNameSet(*$1);
+}
+
+// ---------------------------------------------------------------------------------------------------------
+
+// SchemaItem objects will often be temporaries, where we only want one of their members, as in
+// schema.find("field.name").key.  That causes problems, because swig returns members by pointer
+// or by reference, and that reference dangles since the SchemaItem is a temporary.
+// In C++ it's safe, because the language guarantees that the temporaries won't be destroyed until the
+// end of the statement, but in Python it's guaranteed undefined behavior.
+
+// To get around this, we don't let swig see the innards of the SchemaItem definition (it's #ifdef'd out),
+// and we replace it with the following:
+
+%extend lsst::afw::table::SchemaItem {
+    // these force return-by-value
+    lsst::afw::table::Field< T > getField() const { return self->field; }
+    lsst::afw::table::Key< T > getKey() const { return self->key; }
+    // now some properties to make the Python interface look like the C++ one
+    %pythoncode %{
+        field = property(getField)
+        key = property(getKey)
+    %}
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -136,6 +163,7 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 %rename("__ne__") lsst::afw::table::Schema::operator!=;
 %rename("__getitem__") lsst::afw::table::Schema::operator[];
 %rename("__getitem__") lsst::afw::table::SubSchema::operator[];
+%addStreamRepr(lsst::afw::table::Schema)
 %include "lsst/afw/table/Schema.h"
 
 %extend lsst::afw::table::Schema {
@@ -244,6 +272,32 @@ def asKey(self):
 
 %ignore lsst::afw::table::BaseRecord::operator=;
 %include "lsst/afw/table/BaseRecord.h"
+
+%extend lsst::afw::table::BaseRecord {
+    %pythoncode %{
+        table = property(lambda self: self.getTable()) # extra lambda allows for polymorphism in property
+        schema = property(getSchema)
+    %}
+    // Allow field name strings be used in place of keys (but only in Python)
+    %pythonprepend __getitem__ %{
+        if isinstance(args[0], basestring):
+            return self[self.schema.find(args[0]).key]
+    %}
+    %pythonprepend __setitem__ %{
+        if isinstance(args[0], basestring):
+            self[self.schema.find(args[0]).key] = args[1]
+            return
+    %}
+    %pythonprepend get %{
+        if isinstance(args[0], basestring):
+            return self.get(self.schema.find(args[0]).key)
+    %}
+    %pythonprepend set %{
+        if isinstance(args[0], basestring):
+            self.set(self.schema.find(args[0]).key, args[1])
+            return
+    %}
+}
 
 %usePointerEquality(lsst::afw::table::BaseRecord)
 %usePointerEquality(lsst::afw::table::BaseTable)

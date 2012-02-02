@@ -94,6 +94,10 @@
 %template(setMask) setMask<lsst::afw::image::MaskPixel>;
 %enddef
 
+namespace lsst { namespace afw { namespace table {
+     typedef VectorT< lsst::afw::table::SourceRecord, lsst::afw::table::SourceTable > SourceVector;
+}}}
+
 %extend lsst::afw::detection::FootprintSet {
 %footprintSetOperations(boost::uint16_t)
 %footprintSetOperations(int)
