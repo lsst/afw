@@ -48,9 +48,9 @@ class KeyBase< Moments<U> > {
 public:
     static bool const HAS_NAMED_SUBFIELDS = true;
 
-    Key<U> getIXX() const; ///< @brief Return a subfield key for the 'xx' value.
-    Key<U> getIYY() const; ///< @brief Return a subfield key for the 'yy' value.
-    Key<U> getIXY() const; ///< @brief Return a subfield key for the 'xy' value.
+    Key<U> getIxx() const; ///< @brief Return a subfield key for the 'xx' value.
+    Key<U> getIyy() const; ///< @brief Return a subfield key for the 'yy' value.
+    Key<U> getIxy() const; ///< @brief Return a subfield key for the 'xy' value.
 
     static char const * subfields[];
 };

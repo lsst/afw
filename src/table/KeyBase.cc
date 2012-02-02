@@ -32,13 +32,13 @@ template <typename U>
 Key<U> KeyBase< Point<U> >::getY() const { return detail::Access::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> KeyBase< Moments<U> >::getIXX() const { return detail::Access::extractElement(*this, 0); }
+Key<U> KeyBase< Moments<U> >::getIxx() const { return detail::Access::extractElement(*this, 0); }
 
 template <typename U>
-Key<U> KeyBase< Moments<U> >::getIYY() const { return detail::Access::extractElement(*this, 1); }
+Key<U> KeyBase< Moments<U> >::getIyy() const { return detail::Access::extractElement(*this, 1); }
 
 template <typename U>
-Key<U> KeyBase< Moments<U> >::getIXY() const { return detail::Access::extractElement(*this, 2); }
+Key<U> KeyBase< Moments<U> >::getIxy() const { return detail::Access::extractElement(*this, 2); }
 
 template <typename U>
 Key<U> KeyBase< Array<U> >::operator[](int i) const {

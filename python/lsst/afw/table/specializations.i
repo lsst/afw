@@ -28,9 +28,9 @@
 
 %define %specializeMoments(U, VALUE...)
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Moments< U > > {
-    lsst::afw::table::Key<U> getIXX() const { return self->getIXX(); }
-    lsst::afw::table::Key<U> getIYY() const { return self->getIYY(); }
-    lsst::afw::table::Key<U> getIXY() const { return self->getIXY(); }
+    lsst::afw::table::Key<U> getIxx() const { return self->getIxx(); }
+    lsst::afw::table::Key<U> getIyy() const { return self->getIyy(); }
+    lsst::afw::table::Key<U> getIxy() const { return self->getIxy(); }
 }
 %extend lsst::afw::table::BaseRecord {
     VALUE get(lsst::afw::table::Key< Moments< U > > const & key) const { return self->get(key); }

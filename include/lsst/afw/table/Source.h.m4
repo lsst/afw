@@ -219,6 +219,15 @@ public:
     /// @brief Return the centroid slot y coordinate.
     double getY() const;
 
+    /// @brief Return the shape slot Ixx value.
+    double getIxx() const;
+
+    /// @brief Return the shape slot Iyy value.
+    double getIyy() const;
+
+    /// @brief Return the shape slot Ixy value.
+    double getIxy() const;
+
 protected:
 
     SourceRecord(PTR(SourceTable) const & table);
@@ -392,6 +401,10 @@ inline Angle SourceRecord::getDec() const { return get(SourceTable::getCoordKey(
 
 inline double SourceRecord::getX() const { return get(getTable()->getCentroidKey().getX()); }
 inline double SourceRecord::getY() const { return get(getTable()->getCentroidKey().getY()); }
+
+inline double SourceRecord::getIxx() const { return get(getTable()->getShapeKey().getIxx()); }
+inline double SourceRecord::getIyy() const { return get(getTable()->getShapeKey().getIyy()); }
+inline double SourceRecord::getIxy() const { return get(getTable()->getShapeKey().getIxy()); }
 
 #endif // !SWIG
 

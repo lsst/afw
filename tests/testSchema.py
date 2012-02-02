@@ -110,7 +110,7 @@ class SchemaTestCase(unittest.TestCase):
         pointElementKey = pointKey.getX()
         self.assertEqual(lsst.afw.table.Key["F4"], type(pointElementKey))
         shapeKey = schema.addField("s", type="Moments<F4>", doc="doc for shape field")
-        shapeElementKey = shapeKey.getIXX()
+        shapeElementKey = shapeKey.getIxx()
         self.assertEqual(lsst.afw.table.Key["F4"], type(shapeElementKey))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

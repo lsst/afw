@@ -238,9 +238,9 @@ protected:
     }
 
     void setValue(Element * p, ndarray::Manager::Ptr const &, Value const & v) const {
-        p[0] = v.getIXX();
-        p[1] = v.getIYY();
-        p[2] = v.getIXY();
+        p[0] = v.getIxx();
+        p[1] = v.getIyy();
+        p[2] = v.getIxy();
     }
 };
 
