@@ -38,8 +38,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 // Must go BEFORE the include
 //
 %define %SpatialCellImageCandidatePtr(TYPE, ...)
-   %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<%IMAGE(TYPE) >);
-   %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<%MASKEDIMAGE(TYPE) >);
+%shared_ptr(lsst::afw::math::SpatialCellImageCandidate<TYPE>);
+//   %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<%MASKEDIMAGE(TYPE) >);
 %enddef
 //
 // Must go AFTER the include (N.b. %SpatialCellImageCandidate_ is internal)
@@ -62,8 +62,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %enddef
 
 %define %SpatialCellImageCandidate(NAME, TYPE, ...)
-    %SpatialCellImageCandidate_(NAME, %IMAGE(TYPE))
-    %SpatialCellImageCandidate_(M##NAME, %MASKEDIMAGE(TYPE))
+    %SpatialCellImageCandidate_(NAME, TYPE)
+    %SpatialCellImageCandidate_(M##NAME, TYPE)
 %enddef
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

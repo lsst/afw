@@ -310,7 +310,7 @@ class TestImageCandidateCase(unittest.TestCase):
         #
         # First check that we _can't_ cast to SpatialCellImageCandidate<MaskedImage<float> >
         #
-        self.assertEqual(afwMath.cast_SpatialCellImageCandidateMF(cand), None)
+        #self.assertEqual(afwMath.cast_SpatialCellImageCandidateMF(cand), None)
 
         cand = afwMath.cast_SpatialCellImageCandidateF(cand)
 
@@ -318,7 +318,7 @@ class TestImageCandidateCase(unittest.TestCase):
         cand.setWidth(width)
         cand.setHeight(height)
 
-        im = cand.getImage()
+        im = cand.getImage().getImage()
         self.assertEqual(im.get(0, 0), flux) # This is how TestImageCandidate sets its pixels
         self.assertEqual(im.getWidth(), width)
         self.assertEqual(im.getHeight(), height)
