@@ -10,6 +10,12 @@
 
 namespace lsst { namespace afw { namespace table {
 
+// =============== SimpleTable and SimpleRecord ============================================================
+
+//  These are a private table/record pair -- they're what you actually get when you do TableBase::make(),
+//  but we hide them here to avoid a giant nest of friending that would be necessary if they had to make
+//  their constructors private or protected.
+
 namespace {
 
 class SimpleRecord;
@@ -39,10 +45,32 @@ PTR(BaseRecord) SimpleTable::_makeRecord() {
     return boost::make_shared<SimpleRecord>(shared_from_this());
 }
 
+} // anonymous
+
+// =============== Block ====================================================================================
+
+//  This is a block of memory that doles out record-sized chunks when a table asks for them.
+//  It inherits from ndarray::Manager so we can return ndarrays that refer to the memory in the
+//  block with correct reference counting (ndarray::Manager is just an empty base class with an
+//  internal reference count).
+//
+//  Records are allocated in Blocks for two reasons:
+//    - it allows tables to be either totally contiguous in memory (enabling column views) or
+//      not (enabling dynamic addition of records) without needing separate classes.
+//    - it saves us from ever having to reallocate all the records associated with a table
+//      when we run out of space (what a std::vector-like model would require).  That keeps
+//      records and/or iterators to them from being invalidated, and keeps tables from having
+//      to track all the records whose data it owns.
+
+namespace {
+
 class Block : public ndarray::Manager {
 public:
     typedef boost::intrusive_ptr<Block> Ptr;
 
+    // If the last chunk allocated isn't needed after all (usually because of an exception in a constructor)
+    // we reuse it immediately.  If it wasn't the last chunk allocated, it can't be reclaimed until
+    // the entire block goes out of scope.
     static void reclaim(std::size_t recordSize, void * data, ndarray::Manager::Ptr const & manager) {
         Ptr block = boost::static_pointer_cast<Block>(manager);
         if (reinterpret_cast<char*>(data) + recordSize == block->_next) {
@@ -50,6 +78,8 @@ public:
         }
     }
 
+    // Ensure we have space for at least the given number of records as a contiguous block.
+    // May not actually allocate anything if we already do.
     static void preallocate(
         std::size_t recordSize,
         std::size_t recordCount,
@@ -62,6 +92,8 @@ public:
         }
     }
 
+    // Get the next chunk from the block, making a new block and installing it into the table
+    // if we're all out of space.
     static void * get(std::size_t recordSize, ndarray::Manager::Ptr & manager) {
         Ptr block = boost::static_pointer_cast<Block>(manager);
         if (!block || block->_next == block->_end) {
@@ -73,6 +105,9 @@ public:
         return r;
     }
 
+    // Block is also keeper of the special number that says what alignment boundaries are needed for
+    // schemas.  Before we start using a schema, we need to first ensure it meets that requirement,
+    // and pad it if not.
     static void padSchema(Schema & schema) {
         static int const MIN_RECORD_ALIGN = sizeof(AllocType);
         int remainder = schema.getRecordSize() % MIN_RECORD_ALIGN;
@@ -93,6 +128,7 @@ private:
         _end(_next + recordSize * recordCount)
     {
         assert((recordSize * recordCount) % sizeof(AllocType) == 0);
+        std::fill(_next, _end, 0); // initialize to zero; we'll later initialize floats to NaN.
     }
 
     boost::scoped_array<AllocType> _mem;
@@ -101,6 +137,8 @@ private:
 };
 
 } // anonymous
+
+// =============== BaseTable implementation (see header for docs) ===========================================
 
 void BaseTable::preallocate(std::size_t n) {
     Block::preallocate(_schema.getRecordSize(), n, _manager);
@@ -130,8 +168,45 @@ BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), 
     Block::padSchema(_schema);
 }
 
+namespace {
+
+// A Schema Functor used to set floating point-fields to NaN.  All others are left 0.
+struct RecordInitializer {
+    
+    template <typename T>
+    static void fill(T * element, int size) {} // this matches all non-floating-point-element fields.
+
+    static void fill(float * element, int size) {
+        std::fill(element, element + size, std::numeric_limits<float>::quiet_NaN());
+    }
+
+    static void fill(double * element, int size) {
+        std::fill(element, element + size, std::numeric_limits<double>::quiet_NaN());
+    }
+
+    static void fill(Angle * element, int size) {
+        fill(reinterpret_cast<double*>(element), size);
+    }
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        fill(
+            reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
+            item.key.getElementCount()
+        );
+    }
+
+    void operator()(SchemaItem<Flag> const & item) const {} // do nothing for Flag fields; already 0
+
+    char * data;
+};
+
+} // anonymous
+
 void BaseTable::_initialize(BaseRecord & record) {
     record._data = Block::get(_schema.getRecordSize(), _manager);
+    RecordInitializer f = { reinterpret_cast<char*>(record._data) };
+    _schema.forEach(f);
     record._manager = _manager; // manager always points to the most recently-used block.
 }
 
@@ -147,6 +222,8 @@ void BaseTable::_destroy(BaseRecord & record) {
  *  records and the typical number of records.
  */
 int BaseTable::nRecordsPerBlock = 100;
+
+// =============== BaseVector instantiation =================================================================
 
 template class VectorT<BaseRecord>;
 template class VectorT<BaseRecord const>;
