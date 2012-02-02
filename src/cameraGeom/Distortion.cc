@@ -67,7 +67,7 @@ afwGeom::Point2D cameraGeom::Distortion::_distort(
                                                  afwGeom::Point2D const &p, ///< point to distort (pixels)
                                                  cameraGeom::Detector const &det, ///< detector containing p
                                                  bool forward  ///< is this a forward transform
-                                                ) {
+                                                ) const {
     // convert p to focal plane pixels
     afwGeom::Point2D pixPos = det.getPositionFromPixel(p).getPixels(det.getPixelSize());
     // get the linear transform
@@ -87,7 +87,7 @@ afwGeom::Point2D cameraGeom::Distortion::_distort(
 afwGeom::Point2D cameraGeom::Distortion::distort(
                                                  afwGeom::Point2D const &p, ///< point to distort (pixels)
                                                  cameraGeom::Detector const &det ///< detector containing p
-                                                ) {
+                                                ) const {
     return _distort(p, det, true);
 }
 /*
@@ -96,7 +96,7 @@ afwGeom::Point2D cameraGeom::Distortion::distort(
 afwGeom::Point2D cameraGeom::Distortion::undistort(
                                                    afwGeom::Point2D const &p, ///< point to undistort
                                                    cameraGeom::Detector const &det ///<detector containing p
-                                                  )  {
+                                                  ) const  {
     // convert 
     return _distort(p, det, false);
 }
@@ -113,7 +113,7 @@ geomEllip::Quadrupole cameraGeom::Distortion::_distort(
     geomEllip::Quadrupole const &Iqq,    ///< quad to distort
     cameraGeom::Detector const &det,     ///< detector wherein lives the point
     bool forward                        ///< forward transform?
-                                                     ) {
+                                                     ) const {
     // convert p to focal plane pixels
     afwGeom::Point2D pixPos = det.getPositionFromPixel(p).getPixels(det.getPixelSize());
     // get the linear transform
@@ -130,7 +130,7 @@ geomEllip::Quadrupole cameraGeom::Distortion::distort(
     afwGeom::Point2D const &p,          ///< location of quadrupole (pixels)
     geomEllip::Quadrupole const &Iqq,    ///< quad to distort
     cameraGeom::Detector const &det     ///< detector wherein lives the point
-                                                     ) {
+                                                     ) const {
     return _distort(p, Iqq, det, true);
 }
 /*
@@ -140,7 +140,7 @@ geomEllip::Quadrupole cameraGeom::Distortion::undistort(
     afwGeom::Point2D const &p,         ///< location of distorted quad
     geomEllip::Quadrupole const &Iqq,   ///< distorted quad to be undistorted
     cameraGeom::Detector const &det     ///< detector wherein lives the point
-                                                       ) {
+                                                       ) const {
     return _distort(p, Iqq, det, false);
 }
 
@@ -152,7 +152,7 @@ geomEllip::Quadrupole cameraGeom::Distortion::undistort(
 afwGeom::LinearTransform cameraGeom::Distortion::computePointTransform(
     afwGeom::Point2D const &p, ///< Location of transform                                
     bool forward               ///< is this forward (undistorted to distorted) or reverse
-                                                                      ) {
+                                                                      ) const {
     return afwGeom::LinearTransform(); // no args means an identity transform
 }
 
@@ -167,7 +167,7 @@ afwGeom::LinearTransform cameraGeom::Distortion::computePointTransform(
  */
 double cameraGeom::Distortion::computeMaxShear(
                                                cameraGeom::Detector const &det
-                                              ) {
+                                              ) const {
 
     
     // don't recompute it if we already have it (it was initialized to NaN)
@@ -216,7 +216,7 @@ double cameraGeom::Distortion::computeMaxShear(
 afwGeom::LinearTransform cameraGeom::Distortion::computeQuadrupoleTransform(
     afwGeom::Point2D const &p, ///< Location of transform                                
     bool forward               ///< is this forward (undistorted to distorted) or reverse
-                                                                       ) {
+                                                                       ) const {
     return afwGeom::LinearTransform(); // no args means an identity transform
 }
 
@@ -231,7 +231,7 @@ typename ImageT::Ptr cameraGeom::Distortion::_warp(
     Detector const &det,                   ///< Detector describing location of image in focal plane
     bool forward,                          ///< is this forward (distorting) or reverse (undistorting)
     typename ImageT::SinglePixel padValue  ///< Set unspecified pixels to this value
-                                                  ) {
+                                                  ) const {
 
     // location of p in the focal plane ... in units of pixels
     afwGeom::Point2D pos = det.getPositionFromPixel(p).getPixels(det.getPixelSize());
@@ -265,7 +265,7 @@ typename ImageT::Ptr cameraGeom::Distortion::distort(
     ImageT const &img,                      ///< Image to be distorted                       
     cameraGeom::Detector const &det,        ///< Detector describing location of image in focal plane
     typename ImageT::SinglePixel padValue   ///< Set unspecified pixels to this value
-                                                                     ) {
+                                                                     ) const {
     return _warp(p, img, det, true, padValue);
 }
 
@@ -279,7 +279,7 @@ typename ImageT::Ptr cameraGeom::Distortion::undistort(
     ImageT const &img,                    ///< Image to be distorted                       
     cameraGeom::Detector const &det,      ///< Detector describing location of image in focal plane
     typename ImageT::SinglePixel padValue                ///< Set unspecified pixels to this value
-                                                                       ) {
+                                                                       ) const {
     return _warp(p, img, det, false, padValue);
 }
 
@@ -295,7 +295,7 @@ typename ImageT::Ptr cameraGeom::Distortion::undistort(
 afwGeom::LinearTransform cameraGeom::NullDistortion::computePointTransform(
     afwGeom::Point2D const &p,  ///< Focal plane location of transform in pixels
     bool forward                ///< is this forward (undistorted to distorted) or reverse
-                                                                           ) {
+                                                                           ) const {
     return afwGeom::LinearTransform(); // no args means an identity transform
 }
 
@@ -307,7 +307,7 @@ afwGeom::LinearTransform cameraGeom::NullDistortion::computePointTransform(
 afwGeom::LinearTransform cameraGeom::NullDistortion::computeQuadrupoleTransform(
     afwGeom::Point2D const &p,   ///< Focal plane location of transform in pixels
     bool forward                 ///< is this forward (undistorted to distorted) or reverse
-                                                                           ) {
+                                                                           ) const {
     return afwGeom::LinearTransform(); // no args means an identity transform
 }
 
@@ -360,7 +360,7 @@ cameraGeom::RadialPolyDistortion::RadialPolyDistortion(
  */
 std::vector<double> cameraGeom::RadialPolyDistortion::_invert(
     std::vector<double> const &c ///< polynomial coefficients a_i corresponding to r^i terms
-                                                             ) {
+                                                             ) const {
     
     std::vector<double> ic(_maxN, 0.0);
 
@@ -409,7 +409,7 @@ std::vector<double> cameraGeom::RadialPolyDistortion::_invert(
  */
 std::vector<double> cameraGeom::RadialPolyDistortion::_deriv(
     std::vector<double> const &coeffs ///< polynomial coefficients a_i corresponding to r^i terms
-                                                            ) {
+                                                            ) const {
     std::vector<double> dcoeffs(_maxN, 0.0);
     for (int i=0; i<_maxN-1; i++) {
         dcoeffs[i] = (i + 1.0)*coeffs[i+1];
@@ -426,7 +426,7 @@ std::vector<double> cameraGeom::RadialPolyDistortion::_deriv(
 double cameraGeom::RadialPolyDistortion::_transformR(
     double r,                          ///< radius to transform
     std::vector<double> const &coeffs  ///< coeffs to use for the polynomial
-                                                    ) {
+                                                    ) const {
     
     double rp = 0.0;
     for (std::vector<double>::size_type i = coeffs.size() - 1; i > 0; i--) {
@@ -443,7 +443,7 @@ double cameraGeom::RadialPolyDistortion::_transformR(
  */
 double cameraGeom::RadialPolyDistortion::_iTransformR(
                                                       double rp ///< radius to un-transform
-                                                     ) { 
+                                                     ) const { 
 
     double tolerance = 1.0e-10;
 
@@ -468,7 +468,7 @@ double cameraGeom::RadialPolyDistortion::_iTransformR(
  */
 double cameraGeom::RadialPolyDistortion::_iTransformDr(
                                                        double rp ///< r' radius where you want dr'
-                                                      ) {
+                                                      ) const {
 
     // The inverse function is a reflection in y=x
     // If r' = f(r), and r = g(r') is its inverse, then the derivative dg(r') = 1.0/df(g(r'))
@@ -484,7 +484,7 @@ double cameraGeom::RadialPolyDistortion::_iTransformDr(
 afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computePointTransform(
     afwGeom::Point2D const &p,   ///< Location of transform                                
     bool forward                 ///< is this forward (undistorted to distorted) or reverse
-                                                                                ) {
+                                                                                ) const {
     double x = p.getX();
     double y = p.getY();
     double r = std::sqrt(x*x + y*y);
@@ -502,7 +502,7 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computePointTransform
 afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeQuadrupoleTransform(
     afwGeom::Point2D const &p,   ///< Location of transform                                
     bool forward                 ///< is this forward (undistorted to distorted) or reverse
-                                                                                     ) {
+                                                                                     ) const {
 
     double x = p.getX();
     double y = p.getY();
@@ -533,15 +533,15 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeQuadrupoleTran
                                                                        afwImage::IMTYPE<TYPE> const &img, \
                                                                        cameraGeom::Detector const &det, \
                                                                        bool foward, \
-                                                                       afwImage::IMTYPE<TYPE>::SinglePixel padValue); \
+                                                                       afwImage::IMTYPE<TYPE>::SinglePixel padValue) const; \
     template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::distort(afwGeom::Point2D const &p, \
                                                                         afwImage::IMTYPE<TYPE> const &img, \
                                                                          cameraGeom::Detector const &det, \
-                                                                         afwImage::IMTYPE<TYPE>::SinglePixel padValue); \
+                                                                         afwImage::IMTYPE<TYPE>::SinglePixel padValue) const; \
     template afwImage::IMTYPE<TYPE>::Ptr cameraGeom::Distortion::undistort(afwGeom::Point2D const &p, \
                                                                           afwImage::IMTYPE<TYPE> const &img, \
                                                                            cameraGeom::Detector const &det, \
-                                                                           afwImage::IMTYPE<TYPE>::SinglePixel padValue);
+                                                                           afwImage::IMTYPE<TYPE>::SinglePixel padValue) const;
 
 INSTANTIATE(Image, float);
 INSTANTIATE(Image, double);

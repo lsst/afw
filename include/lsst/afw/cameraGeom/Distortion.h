@@ -68,7 +68,7 @@ public:
     //virtual Distortion::Ptr clone() const { return Distortion::Ptr(new Distortion(*this)); }
 
     // accessors
-    int getLanczosOrder() { return _lanczosOrder; }
+    int getLanczosOrder() const { return _lanczosOrder; }
     // Cannot do this.  We cache the kernel.  If you need a different lanczos order
     // you must create a new Distortion object. (note that Kernel cannot be assigned-to
     // as operator=() is private. So we can't assign to a new _lanczosKernel())
@@ -85,16 +85,16 @@ public:
     }
     
     // distort a point
-    lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p, Detector const &det);
-    lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p, Detector const &det);
+    lsst::afw::geom::Point2D distort(lsst::afw::geom::Point2D const &p, Detector const &det) const;
+    lsst::afw::geom::Point2D undistort(lsst::afw::geom::Point2D const &p, Detector const &det) const;
 
     // distort an adaptive moment ... ie. a Quadrupole object
     lsst::afw::geom::ellipses::Quadrupole distort(lsst::afw::geom::Point2D const &p,
                                                   lsst::afw::geom::ellipses::Quadrupole const &Iqq,
-                                                  Detector const &det); 
+                                                  Detector const &det) const;  
     lsst::afw::geom::ellipses::Quadrupole undistort(lsst::afw::geom::Point2D const &p,
                                                     lsst::afw::geom::ellipses::Quadrupole const &Iqq,
-                                                    Detector const &det); 
+                                                    Detector const &det) const; 
 
     // distort an image locally (ie. using the Quadrupole Linear Transform)
     template<typename ImageT>
@@ -106,7 +106,7 @@ public:
                                      std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
                                      std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
                                                                  )
-                                );
+                                ) const;
     template<typename ImageT>
     typename ImageT::Ptr undistort(lsst::afw::geom::Point2D const &p,
                                    ImageT const &img,
@@ -116,29 +116,30 @@ public:
                                        std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
                                        std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
                                                                    )
-                                  );
+                                  ) const;
 
-    double computeMaxShear(Detector const &det);
+    double computeMaxShear(Detector const &det) const;
     
     // all derived classes must define these two public methods
     virtual lsst::afw::geom::LinearTransform computePointTransform(lsst::afw::geom::Point2D const &p,
-                                                                   bool forward);
+                                                                   bool forward) const;
     virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
-                                                                        bool forward);
+                                                                        bool forward) const;
 
-    virtual std::string prynt() { return std::string("Distortion Base Class"); }
+    virtual std::string prynt() const { return std::string("Distortion Base Class"); }
 
-    virtual std::vector<double> getCoeffs() { return std::vector<double>(0); }
+    virtual std::vector<double> getCoeffs() const { return std::vector<double>(0); }
     //std::vector<double> getICoeffs()  {return _icoeffs;  }
     //std::vector<double> getDCoeffs()  {return _dcoeffs;  }
     
 private: 
 
-    lsst::afw::geom::Point2D _distort(lsst::afw::geom::Point2D const &p, Detector const &det, bool foward);
+    lsst::afw::geom::Point2D _distort(lsst::afw::geom::Point2D const &p,
+                                      Detector const &det, bool foward) const;
     lsst::afw::geom::ellipses::Quadrupole _distort(lsst::afw::geom::Point2D const &p,
                                                    lsst::afw::geom::ellipses::Quadrupole const &Iqq,
                                                    Detector const &det,
-                                                   bool forward);
+                                                   bool forward) const;
 
     template<typename ImageT>
     typename ImageT::Ptr _warp(lsst::afw::geom::Point2D const &p,
@@ -150,12 +151,12 @@ private:
                                    std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
                                    std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
                                                            )
-                               );
-    bool _lanczosInitialized;
+                               ) const;
+    mutable bool _lanczosInitialized;
     int _lanczosOrder;
-    int _kernelCacheSize;
-    std::map<Id,double> _maxShear;
-    lsst::afw::math::LanczosWarpingKernel _lanczosKernel;
+    mutable int _kernelCacheSize;
+    mutable std::map<Id,double> _maxShear;
+    mutable lsst::afw::math::LanczosWarpingKernel _lanczosKernel;
 };
 
 
@@ -166,11 +167,11 @@ class NullDistortion : public Distortion {
 public:
     NullDistortion() :  Distortion() {}
     virtual lsst::afw::geom::LinearTransform computePointTransform(lsst::afw::geom::Point2D const &p,
-                                                                   bool forward);
+                                                                   bool forward) const;
     virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
-                                                                        bool forward);
-    virtual std::string prynt() { return std::string("NullDistortion Derived Class"); }
-    virtual std::vector<double> getCoeffs()   {return std::vector<double>(0);  }
+                                                                        bool forward) const;
+    virtual std::string prynt() const { return std::string("NullDistortion Derived Class"); }
+    virtual std::vector<double> getCoeffs() const {return std::vector<double>(0);  }
     //std::vector<double> getICoeffs()  {return _icoeffs;  }
     //std::vector<double> getDCoeffs()  {return _dcoeffs;  }
 };
@@ -184,29 +185,29 @@ public:
 
 #if 1
     // these may be useful for debugging
-    std::vector<double> getCoeffs()   {return _coeffs;   }
-    std::vector<double> getICoeffs()  {return _icoeffs;  }
-    std::vector<double> getDCoeffs()  {return _dcoeffs;  }
+    std::vector<double> getCoeffs() const  {return _coeffs;   }
+    std::vector<double> getICoeffs() const {return _icoeffs;  }
+    std::vector<double> getDCoeffs() const {return _dcoeffs;  }
 #endif
     
     virtual lsst::afw::geom::LinearTransform computePointTransform(lsst::afw::geom::Point2D const &p,
-                                                                   bool forward);
+                                                                   bool forward) const;
     virtual lsst::afw::geom::LinearTransform computeQuadrupoleTransform(lsst::afw::geom::Point2D const &p,
-                                                                        bool forward);
-    virtual std::string prynt() { return std::string("RadialPolyDistortion Derived Class"); }
+                                                                        bool forward) const;
+    virtual std::string prynt() const { return std::string("RadialPolyDistortion Derived Class"); }
 private:
     int _maxN;
     std::vector<double> _coeffs;
     std::vector<double> _icoeffs;
     std::vector<double> _dcoeffs;
     
-    std::vector<double> _invert(std::vector<double> const &coeffs);
-    std::vector<double> _deriv(std::vector<double> const &coeffs);
-    lsst::afw::geom::Point2D _transform(lsst::afw::geom::Point2D const &p, bool forward=true);
+    std::vector<double> _invert(std::vector<double> const &coeffs) const;
+    std::vector<double> _deriv(std::vector<double> const &coeffs) const;
+    lsst::afw::geom::Point2D _transform(lsst::afw::geom::Point2D const &p, bool forward=true) const;
 
-    double _transformR(double r, std::vector<double> const &coeffs);
-    double _iTransformR(double rp); 
-    double _iTransformDr(double rp);
+    double _transformR(double r, std::vector<double> const &coeffs) const;
+    double _iTransformR(double rp) const; 
+    double _iTransformDr(double rp) const;
 };
 
 

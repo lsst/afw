@@ -183,8 +183,8 @@ public:
     std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> > const& getDefects() const { return _defects; }
     std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >& getDefects() { return _defects; }
 
-    void setDistortion(PTR(Distortion) distortion);
-    PTR(Distortion) getDistortion();
+    void setDistortion(CONST_PTR(Distortion) distortion);
+    CONST_PTR(Distortion) getDistortion() const;
     
     
 protected:
@@ -214,7 +214,7 @@ private:
 
     std::vector<lsst::afw::image::DefectBase::Ptr> _defects; // Defects in this detector
     
-    PTR(Distortion) _distortion;
+    CONST_PTR(Distortion) _distortion;
 };
 
 namespace detail {

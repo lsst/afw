@@ -202,7 +202,7 @@ Psf::Image::Ptr Psf::doComputeImage(
     // distort the image according to the camera distortion
     if (distort && _detector && _detector->getDistortion()) {
         
-        cameraGeom::Distortion::Ptr distortion = _detector->getDistortion();
+        cameraGeom::Distortion::ConstPtr distortion = _detector->getDistortion();
 
 #if 1
         int lanc = distortion->getLanczosOrder();

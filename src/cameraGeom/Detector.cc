@@ -293,11 +293,11 @@ void cameraGeom::Detector::setOrientation(
 }
 
 
-void cameraGeom::Detector::setDistortion(PTR(Distortion) distortion) {
+void cameraGeom::Detector::setDistortion(CONST_PTR(Distortion) distortion) {
     _distortion = distortion;
 }
 
-PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() {
+CONST_PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() const {
     
     // if we have a distortion ... return it
     if (_distortion) {
@@ -305,13 +305,13 @@ PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() {
         
         // otherwise, return our parent's ... no parent? return Null 
     } else {
-        PTR(Detector) parent = this->getParent();
+        CONST_PTR(Detector) parent = this->getParent();
         if (parent) {
             return parent->getDistortion();
         } else {
-            return PTR(Distortion)(); //new Distortion());
+            return CONST_PTR(Distortion)(); //new Distortion());
         }
     }
     
-    return PTR(Distortion)(); //new Distortion());
+    return CONST_PTR(Distortion)(); //new Distortion());
 }

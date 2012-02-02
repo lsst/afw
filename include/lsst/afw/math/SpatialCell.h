@@ -38,6 +38,7 @@
 #include <string>
 
 #include "boost/shared_ptr.hpp"
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 
@@ -136,7 +137,7 @@ namespace math {
         virtual ~SpatialCellImageCandidate() {}
 
         /// Return the Candidate's Image
-        virtual typename ImageT::ConstPtr getImage() const = 0;
+        virtual CONST_PTR(ImageT) getImage() const = 0;
 
         /// Set the width of the image that getImage should return
         static void setWidth(int width) {
@@ -156,7 +157,7 @@ namespace math {
         void setChi2(double chi2) { _chi2 = chi2; }
 
     protected:
-        typename ImageT::Ptr mutable _image; ///< a pointer to the %image, for the use of the base class
+        PTR(ImageT) mutable _image; ///< a pointer to the %image, for the use of the base class
     private:
         static int _width;              // the width of images to return; may be ignored by subclasses
         static int _height;             // the height of images to return; may be ignored by subclasses
@@ -261,13 +262,13 @@ namespace math {
             return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad, true);
         }
         //
-        void insertCandidate(SpatialCellCandidate::Ptr candidate);
+        void insertCandidate(PTR(SpatialCellCandidate) candidate);
         /// Set whether we should omit BAD candidates from candidate list when traversing
         void setIgnoreBad(bool ignoreBad) { _ignoreBad = ignoreBad; }
         /// Get whether we are omitting BAD candidates from candidate list when traversing
         bool getIgnoreBad() const { return _ignoreBad; }
 
-        SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
+        PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
         /**
          * Get SpatialCell's label
          */
@@ -322,7 +323,7 @@ namespace math {
          */
         lsst::afw::geom::Box2I getBBox() const { return _region; };
 
-        void insertCandidate(SpatialCellCandidate::Ptr candidate);
+        void insertCandidate(PTR(SpatialCellCandidate) candidate);
 
         void sortCandidates();
 
@@ -333,7 +334,7 @@ namespace math {
         void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false);
         void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false) const;
 
-        SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
+        PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
 
         void setIgnoreBad(bool ignoreBad);
 
