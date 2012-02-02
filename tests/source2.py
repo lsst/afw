@@ -38,7 +38,7 @@ import tempfile
 import time
 
 import lsst.daf.base as dafBase
-import lsst.pex.policy as dafPolicy
+import lsst.pex.policy as pexPolicy
 import lsst.daf.persistence as dafPers
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDet
@@ -143,7 +143,7 @@ class DiaSourceTestCase(unittest.TestCase):
 
     def testPersistence(self):
         if dafPers.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
-            pol  = dafPolicy.Policy()
+            pol  = pexPolicy.Policy()
             pol.set("Formatter.PersistableDiaSourceVector.DiaSource.templateTableName", "DIASource")
             pol.set("Formatter.PersistableDiaSourceVector.DiaSource.tableNamePattern",
                     "_tmp_v%(visitId)_DiaSource")
@@ -207,7 +207,7 @@ class DiaSourceTestCase(unittest.TestCase):
             ds.setChi2(vf)
             dss.append(ds)
             pdsv = afwDet.PersistableDiaSourceVector(dss)
-            pol = dafPolicy.Policy()
+            pol = pexPolicy.Policy()
             pers = dafPers.Persistence.getPersistence(pol)
             dp = dafBase.PropertySet()
             dp.setInt("visitId", 0)

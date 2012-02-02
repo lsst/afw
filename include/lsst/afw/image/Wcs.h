@@ -123,6 +123,8 @@ public:
     lsst::afw::geom::Point2D getPixelOrigin() const;
     // Returns CD matrix.  You would never have guessed that from the name.
     Eigen::Matrix2d getCDMatrix() const;
+    virtual void flipImage(int flipLR, int flipTB) const;
+    virtual void rotateImageBy90(int nQuarter) const;
     
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
     
