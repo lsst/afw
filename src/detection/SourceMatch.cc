@@ -1,3 +1,4 @@
+#if 0
 // -*- lsst-c++ -*-
 
 /* 
@@ -331,3 +332,4 @@ std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const
     return matches;
 }
 
+#endif

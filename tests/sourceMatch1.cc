@@ -30,6 +30,8 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
+#if 0
+
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/math/Random.h"
@@ -354,3 +356,4 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
 }
 
 
+#endif

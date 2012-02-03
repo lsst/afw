@@ -1,5 +1,5 @@
 // -*- lsst-c++ -*-
-
+#if 0
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -91,3 +91,4 @@
 }
 
 %lsst_persistable(lsst::afw::detection::PersistableSourceMatchVector);
+#endif

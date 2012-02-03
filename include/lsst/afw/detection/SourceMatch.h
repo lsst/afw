@@ -1,3 +1,4 @@
+#if 0
 // -*- lsst-c++ -*-
 
 /* 
@@ -93,3 +94,4 @@ private:
 
 #endif // #ifndef LSST_AFW_DETECTION_SOURCEMATCH_H
 
+#endif

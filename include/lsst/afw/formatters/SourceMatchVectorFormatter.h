@@ -1,3 +1,4 @@
+#if 0
 // -*- lsst-c++ -*-
 
 /* 
@@ -102,3 +103,4 @@ public:
 
 #endif
 
+#endif
