@@ -225,7 +225,4 @@ private:
 
 }}}
 
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::AperturePhotometry)
-LSST_REGISTER_SERIALIZER(lsst::afw::detection::MultipleAperturePhotometry)
-
 #endif

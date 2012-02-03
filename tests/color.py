@@ -39,8 +39,8 @@ import unittest
 import lsst.utils.tests as tests
 import lsst.daf.base as dafBase
 import lsst.pex.logging as logging
+import lsst.pex.config as pexConfig
 import lsst.pex.exceptions as pexExcept
-import lsst.pex.policy as pexPolicy
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 import lsst.afw.math as afwMath
@@ -189,14 +189,24 @@ class CalibTestCase(unittest.TestCase):
         tests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                                   lambda : afwImage.Calib(calibs))
 
+def defineSdssFilters():
+    # Initialise filters as used for our tests
+    imageUtils.resetFilters()
+    wavelengths = dict()
+    for name, lambdaEff, aliases in (('u', 355.1, []),
+                                     ('g', 468.6, []),
+                                     ('r', 616.5, []),
+                                     ('i', 748.1, []),
+                                     ('z', 893.1, ['zprime', "z'"]),
+                                     ):
+        wavelengths[name] = lambdaEff
+        imageUtils.defineFilter(name, lambdaEff, alias=aliases)
+    return wavelengths
+
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):
-        # Initialise our filters
-        filterPolicy = pexPolicy.Policy.createPolicy(
-            os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
-
-        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
+        defineSdssFilters()
 
     def tearDown(self):
         pass
@@ -225,20 +235,12 @@ class FilterTestCase(unittest.TestCase):
         #
         # Start by forgetting that we may already have defined filters
         #
-        filterPolicy = pexPolicy.Policy.createPolicy(
-            os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
-        self.filters = tuple(sorted([f.get("name") for f in filterPolicy.getArray("Filter")]))
-
-        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
-
-        self.g_lambdaEff = [p.get("lambdaEff") for p in filterPolicy.getArray("Filter")
-                            if p.get("name") == "g"][0] # used for tests
+        wavelengths = defineSdssFilters()
+        self.filters = tuple(sorted(wavelengths.keys()))
+        self.g_lambdaEff = [lambdaEff for name, lambdaEff in wavelengths.items() if name == "g"][0] # for tests
 
     def defineFilterProperty(self, name, lambdaEff, force=False):
-        filterPolicy = pexPolicy.Policy()
-        filterPolicy.add("lambdaEff", lambdaEff)
-
-        return afwImage.FilterProperty(name, filterPolicy, force);
+        return afwImage.FilterProperty(name, lambdaEff, force);
 
     def testListFilters(self):
         self.assertEqual(afwImage.Filter_getNames(), self.filters)
