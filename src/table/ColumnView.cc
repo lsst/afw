@@ -6,15 +6,15 @@
 
 namespace lsst { namespace afw { namespace table {
 
+// Private implementation class for ColumnView
 struct ColumnView::Impl {
-    int recordCount;
-    int recordSize;
-    void * buf;
-    Schema schema;
-    ndarray::Manager::Ptr manager;
+    int recordCount;                  // number of records
+    void * buf;                       // pointer to the beginning of the first record's data
+    Schema schema;                    // schema that defines the fields
+    ndarray::Manager::Ptr manager;    // manages lifetime of 'buf'
 
     Impl(Schema const & schema_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
-        : recordCount(recordCount_), recordSize(schema_.getRecordSize()), buf(buf_), schema(schema_),
+        : recordCount(recordCount_), buf(buf_), schema(schema_),
           manager(manager_)
     {}
 };
@@ -23,29 +23,25 @@ Schema ColumnView::getSchema() const { return _impl->schema; }
 
 template <typename T>
 typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
-    return ndarray::detail::ArrayAccess< ndarray::Array<T const,1> >::construct(
+    return ndarray::external(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
-        ndarray::detail::Core<1>::create(
-            ndarray::makeVector(_impl->recordCount),
-            ndarray::makeVector(int(_impl->recordSize / sizeof(T))),
-            _impl->manager
-        )
+        ndarray::makeVector(_impl->recordCount),
+        ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(T))),
+        _impl->manager
     );
 }
 
 template <typename T>
 typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > const & key) const {
-    return ndarray::detail::ArrayAccess< ndarray::Array<T const,2,1> >::construct(
+    return ndarray::external(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
-        ndarray::detail::Core<2>::create(
-            ndarray::makeVector(_impl->recordCount, key.getSize()),
-            ndarray::makeVector(int(_impl->recordSize / sizeof(T)), 1),
-            _impl->manager
-        )
+        ndarray::makeVector(_impl->recordCount, key.getSize()),
+        ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(T)), 1),
+        _impl->manager
     );
 }
 
@@ -53,15 +49,13 @@ ndarray::result_of::vectorize< detail::FlagBitExtractor, ndarray::Array< Field<F
 ColumnView::operator[](Key<Flag> const & key) const {
     return ndarray::vectorize(
         detail::FlagBitExtractor(key),
-        ndarray::detail::ArrayAccess< ndarray::Array<Field<Flag>::Element const,1> >::construct(
+        ndarray::external(
             reinterpret_cast<Field<Flag>::Element *>(
                 reinterpret_cast<char *>(_impl->buf) + key.getOffset()
             ),
-            ndarray::detail::Core<1>::create(
-                ndarray::makeVector(_impl->recordCount),
-                ndarray::makeVector(int(_impl->recordSize / sizeof(Field<Flag>::Element))),
-                _impl->manager
-            )
+            ndarray::makeVector(_impl->recordCount),
+            ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(Field<Flag>::Element))),
+            _impl->manager
         )
     );
 }
