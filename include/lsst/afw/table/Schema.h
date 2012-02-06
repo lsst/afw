@@ -39,7 +39,7 @@ class BaseRecord;
  *
  *  Schema uses copy-on-write, and hence should always be held by value rather than smart pointer.
  *  When creating a Python interface, functions that return Schema by const reference should be
- *  converted to return by value to ensure proper memory management and encapsulation.
+ *  converted to return by value (%returnCopy) to ensure proper memory management and encapsulation.
  */
 class Schema {
     typedef detail::SchemaImpl Impl;
@@ -97,6 +97,15 @@ public:
     /// @brief Return the raw size of a record in bytes.
     int getRecordSize() const { return _impl->getRecordSize(); }
 
+    /// The total number of fields.
+    int getFieldCount() const { return _impl->getFieldCount(); }
+
+    /// The number of Flag fields.
+    int getFlagFieldCount() const { return _impl->getFlagFieldCount(); }
+
+    /// The number of non-Flag fields.
+    int getNonFlagFieldCount() const { return _impl->getNonFlagFieldCount(); }
+
     /**
      *  @brief Add a new field to the Schema, and return the associated Key.
      *
@@ -148,6 +157,8 @@ public:
      *  particular Schema.
      *
      *  The functor will be passed by value by default; use boost::ref to pass it by reference.
+     *
+     *  Fields will be processed in the order they were added to the schema.
      */
     template <typename F>
     void forEach(F func) const {
@@ -169,8 +180,10 @@ public:
     /// @brief Construct an empty Schema.
     explicit Schema();
 
+    /// @brief Copy constructor.
     Schema(Schema const & other) : _impl(other._impl) {}
 
+    /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
 private:

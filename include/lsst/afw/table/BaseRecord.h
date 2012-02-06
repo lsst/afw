@@ -11,16 +11,35 @@ namespace lsst { namespace afw { namespace table {
 class SchemaMapper;
 class ColumnView;
 
+/**
+ *  @brief Base class for all records.
+ *
+ *  BaseRecord is a polymorphic base class that provides the core record interface: access to fields
+ *  and links back to the table it is associated with.  Field access is provided by the templated
+ *  get, set, and operator[] member functions.  As templates they are nonvirtual and cannot be overridden
+ *  by subclasses.  The implementations for these accessors is in the FieldBase template specializations.
+ *
+ *  Each subclass of BaseRecord should be paired with a subclass of BaseTable.  All record creation
+ *  goes through a table, as the table allocates the memory used to store a record's fields and
+ *  holds the Schema instance that defines those fields.
+ *
+ *  Records are noncopyable, and are hence usually passed by shared_ptr or [const-]reference.
+ */
 class BaseRecord
-#ifndef SWIG
+#ifndef SWIG // swig complains about these not being %shared_ptr, and it doesn't need to know about them
     : private daf::base::Citizen,
       private boost::noncopyable
 #endif
 {
 public:
 
+    /// The associated table class.
     typedef BaseTable Table;
+
+    /// Template of VectorT used to hold records of this type.
     typedef VectorT<BaseRecord,Table> Vector;
+
+    /// Template of VectorT used to hold const records of this type.
     typedef VectorT<BaseRecord const,Table> ConstVector;
 
     /// @brief Return the Schema that holds this record's fields and keys.
@@ -60,6 +79,8 @@ public:
     /**
      *  @brief Return a reference (or reference-like type) to the field's value.
      *
+     *  Some field types (Point, Moments, Flag, Covariance, and Coord) do not support reference access.
+     *
      *  No checking is done to ensure the Key belongs to the correct schema.
      */
     template <typename T> 
@@ -69,6 +90,8 @@ public:
 
     /**
      *  @brief Return a const reference (or const-reference-like type) to the field's value.
+     *
+     *  Some field types (Point, Moments, Flag, Covariance, and Coord) do not support reference access.
      *
      *  No checking is done to ensure the Key belongs to the correct schema.
      */
@@ -124,9 +147,9 @@ private:
     friend class ColumnView;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
-    void * _data;
-    PTR(BaseTable) _table;
-    ndarray::Manager::Ptr _manager;
+    void * _data;                   // pointer to field data
+    PTR(BaseTable) _table;          // the associated table
+    ndarray::Manager::Ptr _manager; // shared manager for lifetime of _data (like shared_ptr with no pointer)
 };
 
 }}} // namespace lsst::afw::table

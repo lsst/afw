@@ -14,6 +14,15 @@ class Access;
 
 } // namespace detail
 
+/**
+ *  @brief Specialization for Flag fields.
+ *
+ *  Flag fields are handled specially in many places, because their keys have both an offset into an
+ *  integer element and the bit in that element; while other fields have one or more elements per field,
+ *  Flags have multiple fields per element.  This means we can't put all the custom code for Flag in
+ *  FieldBase, and because Flags have an explicit Key specialization, we put the record access
+ *  implementation in Key.
+ */
 template <>
 struct FieldBase<Flag> {
 
@@ -41,6 +50,7 @@ struct FieldBase<Flag> {
 
 protected:
 
+    /// Defines how fields are printed.
     void stream(std::ostream & os) const {}
 
 };
@@ -53,6 +63,7 @@ class KeyBase< Flag > {
 public:
     static bool const HAS_NAMED_SUBFIELDS = false;
 
+    /// Return a key corresponding to the integer element where this field's bit is packed.
     Key<FieldBase<Flag>::Element> getStorage() const;
 };
 
@@ -60,8 +71,12 @@ public:
  *  @brief Key specialization for Flag.
  *
  *  Flag fields are special; their keys need to contain not only the offset to the
- *  integer field they share with other Flag fields, but also their position
+ *  integer element they share with other Flag fields, but also their position
  *  in that shared field.
+ *
+ *  Flag fields operate mostly like a bool field, but they do not support reference
+ *  access, and internally they are packed into an integer shared by multiple fields
+ *  so the marginal cost of each Flag field is only one bit.
  */
 template <>
 class Key<Flag> : public KeyBase<Flag>, public FieldBase<Flag> {
@@ -84,13 +99,30 @@ public:
     bool operator!=(Key const & other) const { return !this->operator==(other); }
     //@}
 
+    /// @brief Return the offset in bytes of the integer element that holds this field's bit.
     int getOffset() const { return _offset; }
+
+    /// @brief The index of this field's bit within the integer it shares with other Flag fields.
     int getBit() const { return _bit; }
 
+    /**
+     *  @brief Return true if the key was initialized to valid offset.
+     *
+     *  This does not guarantee that a key is valid with any particular schema, or even
+     *  that any schemas still exist in which this key is valid.
+     *
+     *  A key that is default constructed will always be invalid.
+     */
     bool isValid() const { return _offset >= 0; }
 
+    /**
+     *  @brief Default construct a field.
+     *
+     *  The new field will be invalid until a valid Key is assigned to it.
+     */
     Key() : FieldBase<Flag>(), _offset(-1), _bit(0) {}
 
+    /// Stringification.
     inline friend std::ostream & operator<<(std::ostream & os, Key<Flag> const & key) {
         return os << "Key['" << Key<Flag>::getTypeString() << "'](offset=" << key.getOffset() 
                   << ", bit=" << key.getBit() << ")";
@@ -101,10 +133,12 @@ private:
     friend class detail::Access;
     friend class BaseRecord;
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         return (*p) & (Element(1) << _bit);
     }
 
+    /// Used to implement RecordBase::set.
     void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const { 
         if (v) {
             *p |= (Element(1) << _bit);

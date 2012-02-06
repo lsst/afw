@@ -14,6 +14,10 @@ typedef FitsWriter::Fits Fits;
 
 //----- Code to write FITS headers --------------------------------------------------------------------------
 
+// The driver code is at the bottom of this section; it's easier to understand if you start there
+// and work your way up.
+
+// A Schema::forEach functor that simply counts the number of Flag fields in a Schema
 struct CountFlags {
 
     template <typename T>
@@ -30,7 +34,33 @@ struct CountFlags {
     mutable int n;
 };
 
+// A Schema::forEach functor that writes FITS header keys for a field when it is called.
 struct ProcessSchema {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        std::string name = item.field.getName();
+        std::replace(name.begin(), name.end(), '.', '_');
+        int n = fits->addColumn<typename Field<T>::Element>(
+            name.c_str(),
+            item.field.getElementCount(),
+            item.field.getDoc().c_str()
+        );
+        specialize(item, n); // delegate to other member functions that are specialized on field tag types
+    }
+
+    void operator()(SchemaItem<Flag> const & item) const {
+        std::string name = item.field.getName();
+        std::replace(name.begin(), name.end(), '.', '_');
+        fits->writeColumnKey("TFLAG", nFlags, name.c_str(), item.field.getDoc().c_str());
+        ++nFlags;
+    }
+
+    // Create and apply the functor to a schema.
+    static void apply(Fits & fits, Schema const & schema) {
+        ProcessSchema f = { &fits, 0 };
+        schema.forEach(boost::ref(f));
+    }
 
     template <typename T>
     void specialize(SchemaItem<T> const & item, int n) const {
@@ -96,38 +126,35 @@ struct ProcessSchema {
         fits->writeColumnKey("TCCLS", n, "Covariance(Moments)", "Field template used by lsst.afw.table");
     }
 
-    template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
-        std::string name = item.field.getName();
-        std::replace(name.begin(), name.end(), '.', '_');
-        int n = fits->addColumn<typename Field<T>::Element>(
-            name.c_str(),
-            item.field.getElementCount(),
-            item.field.getDoc().c_str()
-        );
-        specialize(item, n);
-    }
-
-    void operator()(SchemaItem<Flag> const & item) const {
-        std::string name = item.field.getName();
-        std::replace(name.begin(), name.end(), '.', '_');
-        fits->writeColumnKey("TFLAG", nFlags, name.c_str(), item.field.getDoc().c_str());
-        ++nFlags;
-    }
-
-    static void apply(Fits & fits, Schema const & schema) {
-        ProcessSchema f = { &fits, 0 };
-        schema.forEach(boost::ref(f));
-    }
-
     Fits * fits;
     mutable int nFlags;
 };
 
-//----- code for writing FITS records -----------------------------------------------------------------------
-
 } // anonymous
 
+// the driver for all the above machinery
+void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
+    Schema schema = table->getSchema();
+    _fits->createTable();
+    _fits->checkStatus();
+    int nFlags = CountFlags::apply(schema);
+    if (nFlags > 0) {
+        int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
+        _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
+    }
+    ProcessSchema::apply(*_fits, schema);
+    _row = -1;
+    _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
+}
+
+//----- Code for writing FITS records -----------------------------------------------------------------------
+
+// The driver code is at the bottom of this section; it's easier to understand if you start there
+// and work your way up.
+
+// A Schema::forEach functor that writes table data for a single record when it is called.
+// We instantiate one of these, then reuse it on all the records after updating the data
+// members that tell it which record and row number it's on.
 struct FitsWriter::ProcessRecords {
     
     template <typename T>
@@ -165,20 +192,6 @@ struct FitsWriter::ProcessRecords {
     BaseRecord const * record;
     Schema schema;
 };
-
-void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
-    Schema schema = table->getSchema();
-    _fits->createTable();
-    _fits->checkStatus();
-    int nFlags = CountFlags::apply(schema);
-    if (nFlags > 0) {
-        int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
-        _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
-    }
-    ProcessSchema::apply(*_fits, schema);
-    _row = -1;
-    _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
-}
 
 void FitsWriter::_writeRecord(BaseRecord const & record) {
     ++_row;

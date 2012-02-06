@@ -28,12 +28,12 @@ class Access;
  *  For example:
  *  @code
  *  Schema schema;
- *  Key< Array<float> > arrayKey = schema.addField("array", "docs for array", 5);
- *  Key< Point<int> > pointKey = schema.addField("point", "docs for point");
+ *  Key< Array<float> > arrayKey = schema.addField< Array<float> >("array", "docs for array", 5);
+ *  Key< Point<int> > pointKey = schema.addField< Point<int> >("point", "docs for point");
  *  Key<float> elementKey = arrayKey[3];
  *  Key<int> xKey = pointKey.getX();
- *  SimpleTable table(schema);
- *  SimpleRecord record = table.addRecord();
+ *  PTR(BaseTable) table = BaseTable::make(schema);
+ *  PTR(BaseRecord) record = table.makeRecord();
  *  assert(&record[arrayKey][3] == &record[elementKey3]);
  *  assert(record.get(pointKey).getX() == record[xKey]);
  *  @endcode
@@ -65,12 +65,27 @@ public:
     bool operator!=(Key const & other) const { return !this->operator==(other); }
     //@}
 
+    /// @brief Return the offset (in bytes) of this field within a record.
     int getOffset() const { return _offset; }
 
+    /**
+     *  @brief Return true if the key was initialized to valid offset.
+     *
+     *  This does not guarantee that a key is valid with any particular schema, or even
+     *  that any schemas still exist in which this key is valid.
+     *
+     *  A key that is default constructed will always be invalid.
+     */
     bool isValid() const { return _offset >= 0; }
 
+    /**
+     *  @brief Default construct a field.
+     *
+     *  The new field will be invalid until a valid Key is assigned to it.
+     */
     Key() : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
 
+    /// Stringification.
     inline friend std::ostream & operator<<(std::ostream & os, Key<T> const & key) {
         return os << "Key<" << Key<T>::getTypeString() << ">(offset=" << key.getOffset()
                   << ", nElements=" << key.getElementCount() << ")";

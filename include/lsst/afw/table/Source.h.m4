@@ -110,22 +110,29 @@ class SourceTable;
 
 template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table> class SourceSetT;
 
+/// @brief A collection of types that correspond to common measurements.
 template <typename MeasTagT, typename ErrTagT>
 struct Measurement {
-    typedef MeasTagT MeasTag;
-    typedef ErrTagT ErrTag;
-    typedef typename Field<MeasTag>::Value MeasValue;
-    typedef typename Field<ErrTag>::Value ErrValue;
-    typedef Key<MeasTag> MeasKey;
-    typedef Key<ErrTag> ErrKey;
+    typedef MeasTagT MeasTag;  ///< the tag (template parameter) type used for the measurement
+    typedef ErrTagT ErrTag;    ///< the tag (template parameter) type used for the uncertainty
+    typedef typename Field<MeasTag>::Value MeasValue; ///< the value type used for the measurement
+    typedef typename Field<ErrTag>::Value ErrValue;   ///< the value type used for the uncertainty
+    typedef Key<MeasTag> MeasKey;  ///< the Key type for the actual measurement
+    typedef Key<ErrTag> ErrKey;    ///< the Key type for the error on the measurement
 };
 
 #ifndef SWIG
 
+/// A collection of types useful for flux measurement algorithms.
 struct Flux : public Measurement<double,double> {};
+
+/// A collection of types useful for centroid measurement algorithms.
 struct Centroid : public Measurement< Point<double>, Covariance< Point<double> > > {};
+
+/// A collection of types useful for shape measurement algorithms.
 struct Shape : public Measurement< Moments<double>, Covariance< Moments<double> > > {};
 
+/// An enum for all the special flux aliases in Source.
 enum FluxSlotEnum {
     FLUX_SLOT_PSF=0,
     FLUX_SLOT_MODEL,
@@ -133,15 +140,23 @@ enum FluxSlotEnum {
     FLUX_SLOT_INST,
     N_FLUX_SLOTS
 };
-
+/**
+ *  @brief A three-element tuple of measurement, uncertainty, and flag keys.
+ *
+ *  Most measurement should have more than one flag key to indicate different kinds of failures.
+ *  This flag key should usually be set to be a logical OR of all of them, so it is set whenever
+ *  a measurement cannot be fully trusted.
+ */
 template <typename MeasurementT>
 struct KeyTuple {
-    typename MeasurementT::MeasKey meas;
-    typename MeasurementT::ErrKey err;
-    Key<Flag> flag;
+    typename MeasurementT::MeasKey meas; ///< Key used for the measured value.
+    typename MeasurementT::ErrKey err;   ///< Key used for the uncertainty.
+    Key<Flag> flag;                      ///< Failure bit; set if the measurement did not fully succeed.
 
+    /// Default-constructor; all keys will be invalid.
     KeyTuple() {}
 
+    /// Main constructor.
     KeyTuple(
         typename MeasurementT::MeasKey const & meas_,
         typename MeasurementT::ErrKey const & err_,
@@ -163,6 +178,18 @@ KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::str
 
 /**
  *  @brief Record class that contains measurements made on a single exposure.
+ *
+ *  Sources provide four additions to BaseRecord/BaseRecord:
+ *   - Specific fields that must always be present, with specialized getters on source (e.g. getId()).
+ *     The schema for a SourceTable should always be constructed by starting with the result of
+ *     SourceTable::makeMinimalSchema.
+ *   - A shared_ptr to a Footprint for each record.
+ *   - A system of aliases (called slots) in which a SourceTable instance stores keys for particular
+ *     measurements (a centroid, a shape, and a number of different fluxes) and SourceRecord uses
+ *     this keys to provide custom getters and setters.  These are not separate fields, but rather
+ *     aliases that can point to custom fields.
+ *   - SourceTables hold an ID factory, which is used to initialize the unique ID field when a 
+ *     new SourceRecord is created.
  */
 class SourceRecord : public BaseRecord {
 public:
@@ -240,6 +267,8 @@ private:
 
 /**
  *  @brief Table class that contains measurements made on a single exposure.
+ *
+ *  @copydetails SourceRecord
  */
 class SourceTable : public BaseTable {
 public:
@@ -345,6 +374,7 @@ protected:
 
 private:
 
+    // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         Schema schema;
         Key<RecordId> id;
@@ -356,16 +386,18 @@ private:
         MinimalSchema();
     };
     
+    // Return the singleton minimal schema.
     static MinimalSchema & getMinimalSchema();
 
     friend class io::FitsWriter;
 
+     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
 
-    PTR(IdFactory) _idFactory;
-    boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux;
-    KeyTuple<Centroid> _slotCentroid;
-    KeyTuple<Shape> _slotShape;
+    PTR(IdFactory) _idFactory;        // generates IDs for new records
+    boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux; // aliases for flux measurements
+    KeyTuple<Centroid> _slotCentroid;  // alias for a centroid measurement
+    KeyTuple<Shape> _slotShape;  // alias for a shape measurement
 };
 
 #ifndef SWIG

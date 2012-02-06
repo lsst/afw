@@ -8,6 +8,7 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
+// Variant visitation functor used in SchemaMapper::invert()
 struct SwapKeyPair : public boost::static_visitor<> {
 
     template <typename T>
@@ -21,6 +22,8 @@ struct SwapKeyPair : public boost::static_visitor<> {
 
 };
 
+// Variant visitation functor that returns true if the input key in a KeyPairVariant matches a
+// the Key the functor was initialized with.
 template <typename T>
 struct KeyPairCompareEqual : public boost::static_visitor<bool> {
 
@@ -37,38 +40,6 @@ struct KeyPairCompareEqual : public boost::static_visitor<bool> {
 
 private:
     Key<T> const & _target;
-};
-
-struct KeyPairCompareFirst : public boost::static_visitor<int> {
-
-    template <typename U>
-    int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
-        return pair.first.getOffset();
-    }
-    
-    bool operator()(
-        detail::SchemaMapperImpl::KeyPairVariant const & a,
-        detail::SchemaMapperImpl::KeyPairVariant const & b
-    ) const {
-        return boost::apply_visitor(*this, a) < boost::apply_visitor(*this, b);
-    }
-
-};
-
-struct KeyPairCompareSecond: public boost::static_visitor<int> {
-
-    template <typename U>
-    int operator()(std::pair< Key<U>, Key<U> > const & pair) const {
-        return pair.second.getOffset();
-    }
-    
-    bool operator()(
-        detail::SchemaMapperImpl::KeyPairVariant const & a,
-        detail::SchemaMapperImpl::KeyPairVariant const & b
-    ) const {
-        return boost::apply_visitor(*this, a) < boost::apply_visitor(*this, b);
-    }
-
 };
 
 } // anonymous

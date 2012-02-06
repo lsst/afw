@@ -49,13 +49,15 @@ ndarray::result_of::vectorize< detail::FlagBitExtractor, ndarray::Array< Field<F
 ColumnView::operator[](Key<Flag> const & key) const {
     return ndarray::vectorize(
         detail::FlagBitExtractor(key),
-        ndarray::external(
-            reinterpret_cast<Field<Flag>::Element *>(
-                reinterpret_cast<char *>(_impl->buf) + key.getOffset()
-            ),
-            ndarray::makeVector(_impl->recordCount),
-            ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(Field<Flag>::Element))),
-            _impl->manager
+        ndarray::Array<Field<Flag>::Element const,1>(
+            ndarray::external(
+                reinterpret_cast<Field<Flag>::Element *>(
+                    reinterpret_cast<char *>(_impl->buf) + key.getOffset()
+                ),
+                ndarray::makeVector(_impl->recordCount),
+                ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(Field<Flag>::Element))),
+                _impl->manager
+            )
         )
     );
 }

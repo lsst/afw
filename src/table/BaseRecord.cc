@@ -10,8 +10,7 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-//----- Copy functor for copying with mapper ----------------------------------------------------------------
-
+// A SchemaMapper::forEach functor that copies data from one record to another.
 struct CopyValue {
 
     template <typename U>
@@ -42,8 +41,9 @@ void BaseRecord::assign(BaseRecord const & other) {
             "Unequal schemas in record assignment."
         );
     }
+    // Schemas are identical and they're all POD, so we can just copy the raw data.
     std::memcpy(_data, other._data, this->getSchema().getRecordSize());
-    this->_assign(other);
+    this->_assign(other); // let derived classes assign their own stuff
 }
 
 void BaseRecord::assign(BaseRecord const & other, SchemaMapper const & mapper) {
@@ -59,9 +59,8 @@ void BaseRecord::assign(BaseRecord const & other, SchemaMapper const & mapper) {
             "Unequal schemas between output record and mapper."
         );
     }
-    mapper.forEach(CopyValue(&other, this));
-    this->_assign(other);
+    mapper.forEach(CopyValue(&other, this)); // use the functor we defined above
+    this->_assign(other); // let derived classes assign their own stuff
 }
-
 
 }}} // namespace lsst::afw::table

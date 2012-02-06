@@ -24,7 +24,7 @@ typedef boost::int64_t RecordId;
 /**
  *  @brief Tag types used to declare specialized field types.
  *
- *  The documentation for specializations of FieldBase and KeyBase
+ *  See the documentation for specializations of FieldBase and KeyBase
  *  for more information.
  */
 template <typename T> class Point;
@@ -42,12 +42,6 @@ template <
     typename TableT = typename RecordT::Table
     >
 class VectorT;
-
-template <
-    typename RecordT, typename TableT = typename RecordT::Table,
-    typename KeyT = RecordId, typename CompareT = std::less<KeyT>
-    >
-class SetT;
 
 }}} // namespace lsst::afw::table
 

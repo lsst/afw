@@ -5,6 +5,9 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/detail/Access.h"
 
+// Some boilerplate macros for saving/loading Source slot aliases to/from FITS headers.
+// Didn't seem to be quite enough to give the file the full M4 treatment.
+
 #define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
     if (table->get ## Name ## Type ## Key().isValid()) {                \
         std::string s = table->getSchema().find(table->get ## Name ## Type ## Key()).field.getName(); \
@@ -51,6 +54,14 @@
 
 namespace lsst { namespace afw { namespace table {
 
+//-----------------------------------------------------------------------------------------------------------
+//----- Private SourceTable/Record classes ------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+
+// These private derived classes are what you actually get when you do SourceTable::make; like the
+// private classes in BaseTable.cc, it's more convenient to have an extra set of trivial derived
+// classes than to do a lot of friending.
+
 namespace {
 
 class SourceTableImpl;
@@ -86,6 +97,21 @@ private:
 
 };
 
+} // anonymous
+
+//-----------------------------------------------------------------------------------------------------------
+//----- SourceFitsWriter ------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+
+// A custom FitsWriter for Sources - this saves footprints as variable-length arrays, and adds header
+// keys that define the slots.  It also sets the AFW_TYPE key to SOURCE, which should ensure we use
+// SourceFitsReader to read it.
+
+// The only public access point to this class is SourceTable::makeFitsWriter.  If we subclass SourceTable
+// someday, it may be necessary to put SourceFitsWriter in a header file so we can subclass it too.
+
+namespace {
+
 class SourceFitsWriter : public io::FitsWriter {
 public:
 
@@ -96,24 +122,6 @@ protected:
     virtual void _writeTable(CONST_PTR(BaseTable) const & table);
 
     virtual void _writeRecord(BaseRecord const & record);
-
-private:
-    int _spanCol;
-    int _peakCol;
-};
-
-class SourceFitsReader : public io::FitsReader {
-public:
-
-    explicit SourceFitsReader(Fits * fits) : io::FitsReader(fits), _spanCol(-1), _peakCol(-1) {}
-
-protected:
-
-    virtual Schema _readSchema(int nCols=-1);
-
-    virtual PTR(BaseTable) _readTable(Schema const & schema);
-
-    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
 private:
     int _spanCol;
@@ -169,6 +177,39 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
         }
     }
 }
+
+} // anonymous
+
+//-----------------------------------------------------------------------------------------------------------
+//----- SourceFitsReader ------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+
+// A custom FitsReader for Sources - this reads footprints as variable-length arrays, and adds header
+// keys that define the slots.  It gets registered with name SOURCE, so it should get used whenever
+// we read a table with AFW_TYPE set to that value.
+
+// The only public access point to this class is through the registry.  If we subclass SourceTable
+// someday, it may be necessary to put SourceFitsReader in a header file so we can subclass it too.
+
+namespace {
+
+class SourceFitsReader : public io::FitsReader {
+public:
+
+    explicit SourceFitsReader(Fits * fits) : io::FitsReader(fits), _spanCol(-1), _peakCol(-1) {}
+
+protected:
+
+    virtual Schema _readSchema(int nCols=-1);
+
+    virtual PTR(BaseTable) _readTable(Schema const & schema);
+
+    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
+
+private:
+    int _spanCol;
+    int _peakCol;
+};
 
 Schema SourceFitsReader::_readSchema(int nCols) {
     _fits->readKey("SPANCOL", _spanCol);
@@ -255,9 +296,14 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
     return record;
 }
 
+// registers the reader so FitsReader::make can use it.
 static io::FitsReader::FactoryT<SourceFitsReader> sourceFitsReaderFactory("SOURCE");
 
 } // anonymous
+
+//-----------------------------------------------------------------------------------------------------------
+//----- SourceTable/Record member function implementations --------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
 
 SourceRecord::SourceRecord(PTR(SourceTable) const & table) : BaseRecord(table) {}
 
@@ -313,6 +359,10 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
 PTR(io::FitsWriter) SourceTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
     return boost::make_shared<SourceFitsWriter>(fits);
 }
+
+//-----------------------------------------------------------------------------------------------------------
+//----- Convenience functions for adding common measurements to Schemas -------------------------------------
+//-----------------------------------------------------------------------------------------------------------
 
 KeyTuple<Centroid> addCentroidFields(
     Schema & schema,

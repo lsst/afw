@@ -20,7 +20,13 @@ extern "C" {
 
 namespace lsst { namespace afw { namespace fits {
 
+// ----------------------------------------------------------------------------------------------------------
+// ---- Miscellaneous utilities -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
 namespace {
+
+// ---- FITS binary table format codes for various C++ types. -----------------------------------------------
 
 char getFormatCode(bool*) { return 'X'; }
 char getFormatCode(boost::uint8_t*) { return 'B'; }
@@ -35,6 +41,8 @@ char getFormatCode(std::complex<float>*) { return 'C'; }
 char getFormatCode(std::complex<double>*) { return 'M'; }
 char getFormatCode(lsst::afw::geom::Angle*) { return 'D'; }
 
+// ---- Create a TFORM value for the given type and size ----------------------------------------------------
+
 template <typename T>
 std::string makeColumnFormat(int size = 1) {
     if (size > 0) {
@@ -47,6 +55,8 @@ std::string makeColumnFormat(int size = 1) {
         return (boost::format("1P%c") % getFormatCode((T*)0)).str();
     }
 }
+
+// ---- Traits class to get cfitsio type constants from templates -------------------------------------------
 
 template <typename T> struct FitsType;
 
@@ -65,6 +75,7 @@ template <> struct FitsType<lsst::afw::geom::Angle> { static int const CONSTANT 
 template <> struct FitsType< std::complex<float> > { static int const CONSTANT = TCOMPLEX; };
 template <> struct FitsType< std::complex<double> > { static int const CONSTANT = TDBLCOMPLEX; };
 
+// Strip leading and trailing single quotes and whitespace from a string.
 std::string strip(std::string const & s) {
     if (s.empty()) return s;
     std::size_t i1 = s.find_first_not_of(" '");
@@ -73,6 +84,10 @@ std::string strip(std::string const & s) {
 }
 
 } // anonymous
+
+// ----------------------------------------------------------------------------------------------------------
+// ---- Implementations for stuff in fits.h -----------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
 
 std::string makeErrorMessage(std::string const & fileName, int status, std::string const & msg) {
     std::ostringstream os;
@@ -341,6 +356,10 @@ void Fits::closeFile() {
 #define INSTANTIATE_EDIT_TABLE_ARRAY(r, data, T)    \
     template void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value); \
     template void Fits::readTableArray(std::size_t row, int col, int nElements, T * value);
+
+// ----------------------------------------------------------------------------------------------------------
+// ---- Explicit instantiation ------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
 
 #define KEY_TYPES                                                       \
     (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \

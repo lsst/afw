@@ -8,7 +8,7 @@ namespace lsst { namespace afw { namespace table {
 
 template <typename T> class Key;
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief A base class for Key that allows subfield keys to be extracted for some field types.
 template <typename T>
 class KeyBase {
 public:
@@ -16,7 +16,7 @@ public:
 
 };
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief KeyBase specialization for Coord.
 template <>
 class KeyBase< Coord > {
 public:
@@ -30,7 +30,7 @@ public:
 #endif
 };
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief KeyBase specialization for Point.
 template <typename U>
 class KeyBase< Point<U> > {
 public:
@@ -42,7 +42,7 @@ public:
     static char const * subfields[];
 };
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief KeyBase specialization for Moments.
 template <typename U>
 class KeyBase< Moments<U> > {
 public:
@@ -55,7 +55,7 @@ public:
     static char const * subfields[];
 };
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief KeyBase specialization for Arrays.
 template <typename U>
 class KeyBase< Array<U> > {
 public:
@@ -64,7 +64,7 @@ public:
     Key<U> operator[](int i) const; ///< @brief Return a subfield key for the i-th element of the array.
 };
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief KeyBase specialization for arbitrarily-size covariance matrices.
 template <typename U>
 class KeyBase< Covariance<U> > {
 public:
@@ -74,7 +74,7 @@ public:
     Key<U> operator()(int i, int j) const;
 };
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief KeyBase specialization for point covariance matrices.
 template <typename U>
 class KeyBase< Covariance< Point<U> > > {
 public:
@@ -84,7 +84,7 @@ public:
     Key<U> operator()(int i, int j) const;
 };
 
-/// @brief A base class for Key that allows subfield keys to be extracted.
+/// @brief KeyBase specialization for moments covariance matrices.
 template <typename U>
 class KeyBase< Covariance< Moments<U> > > {
 public:

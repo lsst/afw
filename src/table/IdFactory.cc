@@ -1,5 +1,3 @@
-
-
 #include "boost/make_shared.hpp"
 
 #include "lsst/afw/table/IdFactory.h"

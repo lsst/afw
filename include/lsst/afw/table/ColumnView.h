@@ -8,7 +8,7 @@ namespace lsst { namespace afw { namespace table {
 
 namespace detail {
 
-/// Functor to compute a flag bit, used to create an ndarray expression template.
+/// Functor to compute a flag bit, used to create an ndarray expression template for flag columns.
 struct FlagBitExtractor {
     typedef Field<Flag>::Element argument_type;
     typedef bool result_type;
@@ -26,12 +26,18 @@ private:
 class BaseTable;
 
 /**
- *  @brief Column-wise view into a consolidated table.
+ *  @brief Column-wise view into a sequence of records that have been allocated contiguously.
  *
- *  A ColumnView can be constructed from a table using BaseTable::getColumnView().
+ *  A ColumnView can be created from any iterator range that dereferences to records, as long
+ *  as those records' field data is contiguous in memory.  In practice, that means they must
+ *  have been created from the same table, and be in the same order they were created (with
+ *  no deletions).  It also requires that those records be allocated in the same block,
+ *  which can be guaranteed with BaseTable::preallocate().
  *
  *  Geometric (point and shape) fields cannot be accessed through a ColumnView, but their
  *  scalar components can be.
+ *
+ *  ColumnViews do not allow table data to be modified.
  */
 class ColumnView {
 public:
@@ -51,13 +57,19 @@ public:
      *  @brief Return a 1-d array expression corresponding to a flag bit.
      *
      *  In C++, the return value is a lazy ndarray expression template that performs the bitwise
-     *  AND on every element when that element is requested.  In Python,
-     *  the result will be copied into a bool NumPy array.
+     *  & operation on every element when that element is requested.  In Python, the result will
+     *  be copied into a bool NumPy array.
      */
     ndarray::result_of::vectorize< detail::FlagBitExtractor,
                                    ndarray::Array< Field<Flag>::Element const,1> >::type
     operator[](Key<Flag> const & key) const;
 
+    /**
+     *  @brief Construct a ColumnView from an iterator range.
+     *
+     *  The iterators must dereference to a reference or const reference to a record.
+     *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeErrorException.
+     */
     template <typename InputIterator>
     static ColumnView make(InputIterator first, InputIterator last);
 

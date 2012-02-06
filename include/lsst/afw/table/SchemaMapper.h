@@ -9,8 +9,7 @@ namespace lsst { namespace afw { namespace table {
 class BaseRecord;
 
 /**
- *  @brief A mapping between the keys of two Schemas, used to copy data between them
- *         or read/write only certain fields during serialization.
+ *  @brief A mapping between the keys of two Schemas, used to copy data between them.
  *
  *  SchemaMapper is initialized with its input Schema, and contains member functions
  *  to add mapped or unmapped fields to the output Schema.

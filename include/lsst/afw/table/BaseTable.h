@@ -16,28 +16,54 @@ namespace lsst { namespace afw { namespace table {
 class BaseRecord;
 class SchemaMapper;
 
+/**
+ *  @brief Base class for all tables.
+ *
+ *  Tables have two largely distinct purposes:
+ *   - They serve as factories for records, allocating their field data in blocks.
+ *   - They carry additional information (such as the schema) that should be shared by multiple records.
+ *
+ *  It's mostly a matter of convenience that we use the same class to serve both needs.
+ *
+ *  Tables do not actually maintain a list of all the records they have allocated - but those records
+ *  hold a pointer back to the table.  This allows the work of holding and iterating over records to
+ *  be delegated to templated container classes (such as VectorT) while allowing tables to be polymorphic,
+ *  non-template classes.  In some sense, then, it may make more sense to think of a table as a combination
+ *  factory and "container header".
+ *
+ *  Tables are always created in shared_ptrs (a requirement of enable_shared_from_this).  BaseTable provides
+ *  a make static member function to create a new table, and most derived table classes should do the same.
+ *
+ *  Each table class should be associated with a particular record class (1-to-1).  Each table instance may
+ *  be associated with many record instances.
+ */
 class BaseTable 
-#ifndef SWIG
+#ifndef SWIG // swig complains about these not being %shared_ptrs, but it doesn't need to know about them
 : public boost::enable_shared_from_this<BaseTable>,
   private daf::base::Citizen
 #endif
 {
 public:
 
+    /// The associated record class.
     typedef BaseRecord Record;
+
+    /// Template of VectorT used to hold records of the associated type.
     typedef VectorT<Record,BaseTable> Vector;
+
+    /// Template of VectorT used to hold const records of the associated type.
     typedef VectorT<Record const,BaseTable> ConstVector;
 
-    /// @brief Number of records in each block when capacity is not given explicitly.
+    /// @brief Number of records in each memory block.
     static int nRecordsPerBlock;
 
     /**
-     *  @brief Return a polymorphic deep copy.
+     *  @brief Return a polymorphic deep copy of the table.
      *
      *  Derived classes should reimplement by static-casting the output of _clone to a
      *  pointer-to-derived to simulate covariant return types.
      *
-     *  Cloning a table does not clone its associated records; the table produced by clone()
+     *  Cloning a table does not clone its associated records; the new table produced by clone()
      *  does not have any associated records.
      */
     PTR(BaseTable) clone() const { return _clone(); }
@@ -51,10 +77,15 @@ public:
     PTR(BaseRecord) makeRecord() { return _makeRecord(); }
 
     /**
-     *  @brief Deep copy a record, requiring that it have the same schema as this table.
+     *  @brief Deep-copy a record, requiring that it have the same schema as this table.
      *
-     *  Regardless of the type of the input record, the type of the output record will be the type
-     *  associated with this table.
+     *  Regardless of the type or associated table of the input record, the type of the output record
+     *  will be the type associated with this table and the record instance will be associated with
+     *  this table.
+     *
+     *  Allowing derived-class records to be constructed from base-class records could be considered
+     *  a form of type-slicing, but because we already demand that all records be constructable from
+     *  nothing but a table, this isn't anything new.
      *
      *  Derived classes should reimplement by static-casting the output of BaseTable::copyRecord to the
      *  appropriate BaseRecord subclass.
@@ -65,7 +96,7 @@ public:
     PTR(BaseRecord) copyRecord(BaseRecord const & input);
 
     /**
-     *  @brief Deep copy a record, using a mapper to relate two schemas.
+     *  @brief Deep-copy a record, using a mapper to relate two schemas.
      *
      *  @copydetails BaseTable::copyRecord(BaseRecord const &)
      */
@@ -79,11 +110,14 @@ public:
      *
      *  If a contiguous memory block for at least n additional records has already been allocated,
      *  this is a no-op.  If not, a new block will be allocated, and any remaining space on the old
-     *  block will go to waste; this ensures the new records will be allocated contiguously.
+     *  block will go to waste; this ensures the new records will be allocated contiguously.  Note
+     *  that "wasted" memory is not leaked; it will be deallocated along with any records
+     *  created from that block when those records go out of scope.
      *
-     *  Note that unlike std::vector::reserve, this does not factor in existing records in any way.
+     *  Note that unlike std::vector::reserve, this does not factor in existing records in any way;
+     *  nRecords refers to a number of new records to reserve space for.
      */
-    void preallocate(std::size_t n);
+    void preallocate(std::size_t nRecords);
 
     /**
      *  @brief Construct a new table.
@@ -103,13 +137,13 @@ public:
 
 protected:
 
-    /// @brief Convenience functions for static-casting shared_from_this for use by derived classes.
+    /// @brief Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
     PTR(Derived) getSelf() {
         return boost::static_pointer_cast<Derived>(shared_from_this());
     }
 
-    /// @brief Convenience functions for static-casting shared_from_this for use by derived classes.
+    /// @brief Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
     CONST_PTR(Derived) getSelf() const {
         return boost::static_pointer_cast<Derived const>(shared_from_this());
@@ -121,8 +155,10 @@ protected:
     /// @brief Default-construct an associated record (protected implementation).
     virtual PTR(BaseRecord) _makeRecord() = 0;
 
+    /// @brief Construct from a schema.
     explicit BaseTable(Schema const & schema);
 
+    /// @brief Copy construct.
     BaseTable(BaseTable const & other) : daf::base::Citizen(other), _schema(other._schema) {}
 
 private:
@@ -130,27 +166,30 @@ private:
     friend class BaseRecord;
     friend class io::FitsWriter;
 
-    // Called by BaseRecord ctor to fill in its _data and _manager members.
+    // Called by BaseRecord ctor to fill in its _data, _table, and _manager members.
     void _initialize(BaseRecord & record);
 
     /*
      *  Called by BaseRecord dtor to notify the table when it is about to be destroyed.
      *
-     *  This could allow the table to reclaim that space, but presently that requires
-     *  more bookkeeping than it's worth unless this was the most recently allocated record.
-     *  It does tell the table that it isn't contiguous anymore, preventing ColumnView access.
+     *  This could allow the table to reclaim that space, but that requires more bookkeeping than
+     *  it's presently worth unless this was the most recently allocated record.
+     *
+     *  The motivation for attempting to reclaim even some memory is not because we're paranoid
+     *  about using every last bit of allocated memory efficiently - it's so we can keep
+     *  records contiguous as much as possible to allow ColumnView to be used.
      */
     void _destroy(BaseRecord & record);
 
-    // Tables may be copy-constructable (and are definitely cloneable), but are not assignable.
+    // Tables are not assignable to prevent type slicing.
     void operator=(BaseTable const & other) { assert(false); }
 
-    // Return a writer object that knows how to save in FITS format.
+    // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
-    Schema _schema;
-    ndarray::Manager::Ptr _manager;
+    Schema _schema;                 // schema that defines the table's fields
+    ndarray::Manager::Ptr _manager; // current memory block to use for new records
 };
 
 }}} // namespace lsst::afw::table

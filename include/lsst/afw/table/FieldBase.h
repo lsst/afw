@@ -16,30 +16,8 @@
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/coord.h"
 #include "lsst/afw/table/misc.h"
-#include "lsst/afw/table/Covariance.h"
 #include "lsst/afw/table/KeyBase.h"
-
-#define AFW_TABLE_SCALAR_FIELD_TYPE_N 5
-#define AFW_TABLE_SCALAR_FIELD_TYPES                                    \
-    RecordId, boost::int32_t, float, double, Angle
-#define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
-
-#define AFW_TABLE_ARRAY_FIELD_TYPE_N 2
-#define AFW_TABLE_ARRAY_FIELD_TYPES             \
-    float, double
-#define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
-
-#define AFW_TABLE_FIELD_TYPE_N 20
-#define AFW_TABLE_FIELD_TYPES                                   \
-    AFW_TABLE_SCALAR_FIELD_TYPES,                               \
-    Flag, Coord,  \
-    Array<float>, Array<double>,                                \
-    Point<int>, Point<float>, Point<double>,                    \
-    Moments<float>, Moments<double>,                            \
-    Covariance<float>, Covariance<double>,                      \
-    Covariance< Point<float> >, Covariance< Point<double> >,    \
-    Covariance< Moments<float> >, Covariance< Moments<double> >
-#define AFW_TABLE_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_FIELD_TYPES BOOST_PP_RPAREN()
+#include "lsst/afw/table/types.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -47,10 +25,26 @@ namespace detail {
 
 class TableImpl;
 
- } // namespace detail
+/**
+ *  @brief Defines the ordering of packed covariance matrices.
+ *
+ *  This storage is equivalent to LAPACK 'UPLO=U'.
+ */
+inline int indexCovariance(int i, int j) {
+    return (i < j) ? (i + j*(j+1)/2) : (j + i*(i+1)/2);
+}
+
+/// Defines the packed size of a covariance matrices.
+inline int computeCovariancePackedSize(int size) {
+    return size * (size + 1) / 2;
+}
+
+} // namespace detail
 
 /**
- *  @brief Field base class specialization for scalars.
+ *  @brief Field base class default implementation (used for numeric scalars and Angle).
+ *
+ *  FieldBase is where all the implementation
  */
 template <typename T>
 struct FieldBase {
@@ -81,16 +75,22 @@ struct FieldBase {
 
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const {}
 
+    /// Used to implement RecordBase::operator[] (non-const).
     Reference getReference(Element * p, ndarray::Manager::Ptr const &) const { return *p; }
 
+    /// Used to implement RecordBase::operator[] (const).
     ConstReference getConstReference(Element const * p, ndarray::Manager::Ptr const &) const { return *p; }
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const { return *p; }
 
+    /// Used to implement RecordBase::set.
     void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const { *p = v; }
 
 };
@@ -101,6 +101,8 @@ protected:
  *  Coord fields are always stored in the ICRS system.  You can assign Coords in other
  *  systems to a record, but this will result in a conversion to ICRS, and returned
  *  values will always be IcrsCoords.
+ *
+ *  Coord fields do not support reference or const reference (operator[]) access.
  */
 template <>
 struct FieldBase< Coord > {
@@ -132,19 +134,24 @@ struct FieldBase< Coord > {
 
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const {}
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         return Value(p[0], p[1]);
     }
 
+    /// Used to implement RecordBase::set.
     void setValue(Element * p, ndarray::Manager::Ptr const &, Value const & v) const {
         p[0] = v.getRa();
         p[1] = v.getDec();
     }
 
+    /// Used to implement RecordBase::set.
     void setValue(Element * p, ndarray::Manager::Ptr const & m, Coord const & v) const {
         setValue(p, m, v.toIcrs());
     }
@@ -152,6 +159,8 @@ protected:
 
 /**
  *  @brief Field base class specialization for points.
+ *
+ *  Point fields do not support reference or const reference (operator[]) access.
  */
 template <typename U>
 struct FieldBase< Point<U> > {
@@ -187,12 +196,16 @@ struct FieldBase< Point<U> > {
 
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const {}
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const { return Value(p[0], p[1]); }
 
+    /// Used to implement RecordBase::set.
     void setValue(Element * p, ndarray::Manager::Ptr const &, Value const & v) const {
         p[0] = v.getX();
         p[1] = v.getY();
@@ -200,7 +213,11 @@ protected:
 };
 
 /**
- *  @brief Field base class specialization for shapes.
+ *  @brief Field base class specialization for second moments.
+ *
+ *  Moments are ordered (xx, yy, xy), matching the order in geom::ellipses::Quadrupole.
+ *
+ *  Moments fields do not support reference or const reference (operator[]) access.
  */
 template <typename U>
 struct FieldBase< Moments<U> > {
@@ -229,14 +246,18 @@ struct FieldBase< Moments<U> > {
 
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const {}
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         return Value(p[0], p[1], p[2]);
     }
 
+    /// Used to implement RecordBase::set.
     void setValue(Element * p, ndarray::Manager::Ptr const &, Value const & v) const {
         p[0] = v.getIxx();
         p[1] = v.getIyy();
@@ -289,22 +310,28 @@ struct FieldBase< Array<U> > {
 
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(0); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const { os << ", size=" << _size; }
 
+    /// Used to implement RecordBase::operator[] (non-const).
     Reference getReference(Element * p, ndarray::Manager::Ptr const & m) const {
-        return ndarray::detail::ArrayAccess< Reference >::construct(p, makeCore(m));
+        return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
+    /// Used to implement RecordBase::operator[] (const).
     ConstReference getConstReference(Element const * p, ndarray::Manager::Ptr const & m) const {
-        return ndarray::detail::ArrayAccess< ConstReference >::construct(p, makeCore(m));
+        return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const & m) const {
-        return ndarray::detail::ArrayAccess< Value >::construct(p, makeCore(m));
+        return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
+    /// Used to implement RecordBase::set; accepts any ndarray expression.
     template <typename Derived>
     void setValue(
         Element * p, ndarray::Manager::Ptr const &, ndarray::ExpressionBase<Derived> const & value
@@ -319,11 +346,6 @@ protected:
     }
 
 private:
-
-    ndarray::detail::Core<1>::Ptr makeCore(ndarray::Manager::Ptr const & manager) const {
-        return ndarray::detail::Core<1>::create(ndarray::makeVector(_size), ndarray::ROW_MAJOR, manager);
-    }
-
     int _size;
 };
 
@@ -336,6 +358,8 @@ private:
  *
  *  These elements are packed and unpacked into a dense Eigen matrix when getting and setting
  *  the field.
+ *
+ *  Covariance fields do not support reference (operator[]) access.
  */
 template <typename U>
 struct FieldBase< Covariance<U> > {
@@ -377,10 +401,13 @@ struct FieldBase< Covariance<U> > {
     
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(0); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const { os << ", size=" << _size; }
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         Value m(_size, _size);
         for (int i = 0; i < _size; ++i) {
@@ -391,6 +418,7 @@ protected:
         return m;
     }
 
+    /// Used to implement RecordBase::set.
     template <typename Derived>
     void setValue(
         Element * p, ndarray::Manager::Ptr const &, Eigen::MatrixBase<Derived> const & value
@@ -456,10 +484,13 @@ struct FieldBase< Covariance< Point<U> > > {
 
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const {}
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
@@ -470,6 +501,7 @@ protected:
         return m;
     }
 
+    /// Used to implement RecordBase::set.
     template <typename Derived>
     static void setValue(
         Element * p, ndarray::Manager::Ptr const &, Eigen::MatrixBase<Derived> const & value
@@ -530,10 +562,13 @@ struct FieldBase< Covariance< Moments<U> > > {
 
 protected:
 
+    /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(); }
 
+    /// Defines how Fields are printed.
     void stream(std::ostream & os) const {}
 
+    /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
         Value m;
         for (int i = 0; i < SIZE; ++i) {
@@ -544,6 +579,7 @@ protected:
         return m;
     }
 
+    /// Used to implement RecordBase::set.
     template <typename Derived>
     static void setValue(
         Element * p, ndarray::Manager::Ptr const &, Eigen::MatrixBase<Derived> const & value
@@ -558,13 +594,6 @@ protected:
     }
 
 };
-
-namespace detail {
-
-typedef boost::mpl::vector< AFW_TABLE_SCALAR_FIELD_TYPES > ScalarFieldTypes;
-typedef boost::mpl::vector< AFW_TABLE_FIELD_TYPES > FieldTypes;
-
-} // namespace detail
 
 }}} // namespace lsst::afw::table
 

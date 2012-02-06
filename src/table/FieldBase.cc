@@ -60,7 +60,7 @@ std::string FieldBase< Point<U> >::getTypeString() {
 
 std::string FieldBase< Coord >::getTypeString() { return "Coord"; }
 
-//----- Moments scalar ----------------------------------------------------------------------------------------
+//----- Moments scalar --------------------------------------------------------------------------------------
 
 template <typename U>
 std::string FieldBase< Moments<U> >::getTypeString() {

@@ -52,14 +52,14 @@ PTR(BaseRecord) SimpleTable::_makeRecord() {
 //  This is a block of memory that doles out record-sized chunks when a table asks for them.
 //  It inherits from ndarray::Manager so we can return ndarrays that refer to the memory in the
 //  block with correct reference counting (ndarray::Manager is just an empty base class with an
-//  internal reference count).
+//  internal reference count - it's like a shared_ptr without the pointer and template parameter.
 //
 //  Records are allocated in Blocks for two reasons:
 //    - it allows tables to be either totally contiguous in memory (enabling column views) or
-//      not (enabling dynamic addition of records) without needing separate classes.
+//      not (enabling dynamic addition of records) all in one class.
 //    - it saves us from ever having to reallocate all the records associated with a table
-//      when we run out of space (what a std::vector-like model would require).  That keeps
-//      records and/or iterators to them from being invalidated, and keeps tables from having
+//      when we run out of space (that's what a std::vector-like model would require).  This keeps
+//      records and/or iterators to them from being invalidated, and it keeps tables from having
 //      to track all the records whose data it owns.
 
 namespace {
