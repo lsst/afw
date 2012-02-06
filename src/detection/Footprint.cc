@@ -57,6 +57,24 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+bool Span::operator<(const Span& b) const {
+	if (_y < b._y)
+		return true;
+	if (_y > b._y)
+		return false;
+	// y equal...
+	if (_x0 < b._x0)
+		return true;
+	if (_x0 > b._x0)
+		return false;
+	if (_x1 < b._x1)
+		return true;
+	// if (_x1 > b._x1)
+	// return false;
+    // they're equal.
+	return false;
+}
+
 namespace {
 /*
  * Compare two Span%s by y, then x0, then x1

@@ -90,6 +90,31 @@ class Object(object):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class SpanTestCase(unittest.TestCase):
+    def testLessThan(self):
+        span1 = afwDetect.Span(42, 0, 100);
+        span2 = afwDetect.Span(41, 0, 100);
+        span3 = afwDetect.Span(43, 0, 100);
+        span4 = afwDetect.Span(42, -100, 100);
+        span5 = afwDetect.Span(42, 100, 200);
+        span6 = afwDetect.Span(42, 0, 10);
+        span7 = afwDetect.Span(42, 0, 200);
+        span8 = afwDetect.Span(42, 0, 100);
+
+        def assertOrder(x1, x2):
+            self.assertTrue(x1 < x2)
+            self.assertFalse(x2 < x1)
+
+        assertOrder(span2, span1)
+        assertOrder(span1, span3)
+        assertOrder(span4, span1)
+        assertOrder(span1, span5)
+        assertOrder(span6, span1)
+        assertOrder(span1, span7)
+        self.assertFalse(span1 < span8)
+        self.assertFalse(span8 < span1)
+
+
 class ThresholdTestCase(unittest.TestCase):
     def testThresholdFactory(self):
         """
@@ -794,6 +819,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(ThresholdTestCase)
+    suites += unittest.makeSuite(SpanTestCase)
     suites += unittest.makeSuite(FootprintTestCase)
     suites += unittest.makeSuite(FootprintSetTestCase)
     suites += unittest.makeSuite(NaNFootprintSetTestCase)

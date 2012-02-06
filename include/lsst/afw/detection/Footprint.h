@@ -76,10 +76,19 @@ public:
     int getY()  const { return _y; }          ///< Return the y-value
     int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
 
+	bool contains(int x) { return (x >= _x0) && (x <= _x1); }
+	bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
+
     std::string toString() const;    
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
 
+	/* Required to make Span "LessThanComparable" so they can be used
+	 * in sorting, binary search, etc.
+	 * http://www.sgi.com/tech/stl/LessThanComparable.html
+	 */
+	bool operator<(const Span& b) const;
+	
     friend class Footprint;
 private:
     Span() {}
