@@ -40,7 +40,7 @@ class SchemaMapper;
 class BaseTable 
 #ifndef SWIG // swig complains about these not being %shared_ptrs, but it doesn't need to know about them
 : public boost::enable_shared_from_this<BaseTable>,
-  private daf::base::Citizen
+  public daf::base::Citizen
 #endif
 {
 public:

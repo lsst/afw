@@ -32,8 +32,9 @@ public:
     /// @internal @brief Return a sub-field key corresponding to the nth element.
     template <typename T>
     static Key<typename Key<T>::Element> extractElement(KeyBase<T> const & kb, int n) {
+        assert(static_cast<Key<T> const &>(kb).isValid());
         return Key<typename Key<T>::Element>(
-            static_cast<Key<T> const &>(kb)._offset + n * sizeof(typename Key<T>::Element)
+            static_cast<Key<T> const &>(kb).getOffset() + n * sizeof(typename Key<T>::Element)
         );
     }
 

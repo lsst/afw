@@ -27,7 +27,7 @@ class ColumnView;
  */
 class BaseRecord
 #ifndef SWIG // swig complains about these not being %shared_ptr, and it doesn't need to know about them
-    : private daf::base::Citizen,
+    : public daf::base::Citizen,
       private boost::noncopyable
 #endif
 {
@@ -57,6 +57,7 @@ public:
      */
     template <typename T>
     typename Field<T>::Element * getElement(Key<T> const & key) {
+        assert(key.isValid());
         return reinterpret_cast<typename Field<T>::Element*>(
             reinterpret_cast<char*>(_data) + key.getOffset()
         );
@@ -71,6 +72,7 @@ public:
      */
     template <typename T>
     typename Field<T>::Element const * getElement(Key<T> const & key) const {
+        assert(key.isValid());
         return reinterpret_cast<typename Field<T>::Element const *>(
             reinterpret_cast<char const *>(_data) + key.getOffset()
         );
