@@ -32,7 +32,11 @@ namespace lsst { namespace afw { namespace fits {
 class HeaderIterationFunctor {
 public:
 
-    virtual void operator()(char const * key, char const * value, char const * comment) = 0;
+    virtual void operator()(
+        std::string const & key,
+        std::string const & value,
+        std::string const & comment
+    ) = 0;
 
     virtual ~HeaderIterationFunctor() {}
 
@@ -92,34 +96,84 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
  */
 struct Fits {
 
+    //@{
     /// @brief Set a FITS header key, editing if it already exists and appending it if not.
-    void updateKey(char const * key, char const * value, char const * comment=0);
 
+    template <typename T>
+    void updateKey(std::string const & key, T const & value, std::string const & comment);
+
+    void updateKey(std::string const & key, char const * value, std::string const & comment) {
+        updateKey(key, std::string(value), comment);
+    }
+
+    template <typename T>
+    void updateKey(std::string const & key, T const & value);
+
+    void updateKey(std::string const & key, char const * value) {
+        updateKey(key, std::string(value));
+    }
+
+    //@}
+
+    //@{
     /// @brief Add a FITS header key to the bottom of the header.
-    void writeKey(char const * key, char const * value, char const * comment=0);
-
-    /// @brief Set a FITS header key, editing if it already exists and appending it if not.
     template <typename T>
-    void updateKey(char const * key, T value, char const * comment=0);
+    void writeKey(std::string const & key, T const & value, std::string const & comment);
 
-    /// @brief Add a FITS header key to the bottom of the header.
-    template <typename T>
-    void writeKey(char const * key, T value, char const * comment=0);
+    void writeKey(std::string const & key, char const * value, std::string const & comment) {
+        updateKey(key, std::string(value), comment);
+    }
 
-    /// @brief Update a key of the form XXXXnnn, where XXXX is the prefix and nnn is a column number.
     template <typename T>
-    void updateColumnKey(char const * prefix, int n, T value, char const * comment=0);
+    void writeKey(std::string const & key, T const & value);
 
-    /// @brief Write a key of the form XXXXnnn, where XXXX is the prefix and nnn is a column number.
+    void writeKey(std::string const & key, char const * value) {
+        updateKey(key, std::string(value));
+    }
+
+    //@}
+
+    //@{
+    /// @brief Update a key of the form XXXXXnnn, where XXXXX is the prefix and nnn is a column number.
+
     template <typename T>
-    void writeColumnKey(char const * prefix, int n, T value, char const * comment=0);
+    void updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment);
+
+    void updateColumnKey(std::string const & prefix, int n, char const * value, std::string const & comment) {
+        updateColumnKey(prefix, n, std::string(value), comment);
+    }
+
+    template <typename T>
+    void updateColumnKey(std::string const & prefix, int n, T const & value);
+
+    void updateColumnKey(std::string const & prefix, int n, char const * value) {
+        updateColumnKey(prefix, n, std::string(value));
+    }
+
+    //@}
+
+    //@{
+    /// @brief Write a key of the form XXXXXnnn, where XXXXX is the prefix and nnn is a column number.
+
+    template <typename T>
+    void writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment);
+
+    void writeColumnKey(std::string const & prefix, int n, char const * value, std::string const & comment) {
+        writeColumnKey(prefix, n, std::string(value), comment);
+    }
+
+    template <typename T>
+    void writeColumnKey(std::string const & prefix, int n, T const & value);
+
+    void writeColumnKey(std::string const & prefix, int n, char const * value) {
+        writeColumnKey(prefix, n, std::string(value));
+    }
+
+    //@}
 
     /// @brief Read a FITS header key into the given reference.
     template <typename T>
-    void readKey(char const * key, T & value);
-
-    /// @brief Read a FITS header key into the given reference.
-    void readKey(char const * key, std::string & value);
+    void readKey(std::string const & key, T & value);
 
     /// @brief Call a polymorphic functor for every key in the header.
     void forEachKey(HeaderIterationFunctor & functor);
@@ -131,7 +185,16 @@ struct Fits {
      *  or left unknown if size == 0.
      */
     template <typename T>
-    int addColumn(char const * ttype, int size, char const * comment=0);
+    int addColumn(std::string const & ttype, int size, std::string const & comment);
+
+    /**
+     *  @brief Add a column to a table
+     *
+     *  If size <= 0, the field will be a variable length array, with max set by (-size),
+     *  or left unknown if size == 0.
+     */
+    template <typename T>
+    int addColumn(std::string const & ttype, int size);
 
     /// @brief Append rows to a table, and return the index of the first new row.
     std::size_t addRows(std::size_t nRows);
@@ -162,10 +225,10 @@ struct Fits {
     long getTableArraySize(std::size_t row, int col);
 
     /// @brief Create a new FITS file.
-    static Fits createFile(char const * filename);
+    static Fits createFile(std::string const & filename);
 
     /// @brief Open a an existing FITS file.
-    static Fits openFile(char const * filename, bool writeable);
+    static Fits openFile(std::string const & filename, bool writeable);
 
     /// @brief Create a new binary table extension.
     void createTable();

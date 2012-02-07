@@ -115,86 +115,136 @@ std::string makeErrorMessage(void * fptr, int status, std::string const & msg) {
     return makeErrorMessage(fileName, status, msg);
 }
 
-void Fits::updateKey(char const * key, char const * value, char const * comment) {
-    fits_update_key_str(
-        reinterpret_cast<fitsfile*>(fptr),
-        const_cast<char*>(key),
-        const_cast<char*>(value),
-        const_cast<char*>(comment),
-        &status
-    );
-}
+// ---- Writing and updating header keys --------------------------------------------------------------------
 
-void Fits::writeKey(char const * key, char const * value, char const * comment) {
-    fits_write_key_str(
-        reinterpret_cast<fitsfile*>(fptr),
-        const_cast<char*>(key),
-        const_cast<char*>(value),
-        const_cast<char*>(comment),
-        &status
-    );
-}
+namespace {
+
+// Impl functions in the anonymous namespace do special handling for strings and make sure calling
+// them with a C string invokes the std::string version not the arbitrary-template version.
 
 template <typename T>
-void Fits::updateKey(char const * key, T value, char const * comment) {
+void updateKeyImpl(Fits & fits, char const * key, T const & value, char const * comment) {
     fits_update_key(
-        reinterpret_cast<fitsfile*>(fptr),
+        reinterpret_cast<fitsfile*>(fits.fptr),
         FitsType<T>::CONSTANT,
         const_cast<char*>(key),
-        &value,
+        const_cast<T *>(&value),
         const_cast<char*>(comment),
-        &status
-    );
+        &fits.status
+    );    
 }
 
+void updateKeyImpl(Fits & fits, char const * key, std::string const & value, char const * comment) {
+    fits_update_key_str(
+        reinterpret_cast<fitsfile*>(fits.fptr),
+        const_cast<char*>(key),
+        const_cast<char*>(value.c_str()),
+        const_cast<char*>(comment),
+        &fits.status
+    );    
+}
+
+
 template <typename T>
-void Fits::writeKey(char const * key, T value, char const * comment) {
+void writeKeyImpl(Fits & fits, char const * key, T const & value, char const * comment) {
     fits_write_key(
-        reinterpret_cast<fitsfile*>(fptr),
+        reinterpret_cast<fitsfile*>(fits.fptr),
         FitsType<T>::CONSTANT,
         const_cast<char*>(key),
-        &value,
+        const_cast<T *>(&value),
         const_cast<char*>(comment),
-        &status
-    );
+        &fits.status
+    );    
+}
+
+void writeKeyImpl(Fits & fits, char const * key, std::string const & value, char const * comment) {
+    fits_write_key_str(
+        reinterpret_cast<fitsfile*>(fits.fptr),
+        const_cast<char*>(key),
+        const_cast<char*>(value.c_str()),
+        const_cast<char*>(comment),
+        &fits.status
+    );    
+}
+
+} // anonymous
+
+template <typename T>
+void Fits::updateKey(std::string const & key, T const & value, std::string const & comment) {
+    updateKeyImpl(*this, key.c_str(), value, comment.c_str());
 }
 
 template <typename T>
-void Fits::updateColumnKey(char const * prefix, int n, T value, char const * comment) {
-    char keyBuf[9] = { 0 };
-    std::snprintf(keyBuf, 8, "%s%d", prefix, n + 1);
-    updateKey(keyBuf, value, comment);
+void Fits::writeKey(std::string const & key, T const & value, std::string const & comment) {
+    writeKeyImpl(*this, key.c_str(), value, comment.c_str());
 }
 
 template <typename T>
-void Fits::writeColumnKey(char const * prefix, int n, T value, char const * comment) {
-    char keyBuf[9] = { 0 };
-    std::snprintf(keyBuf, 8, "%s%d", prefix, n + 1);
-    writeKey(keyBuf, value, comment);
+void Fits::updateKey(std::string const & key, T const & value) {
+    updateKeyImpl(*this, key.c_str(), value, 0);
 }
 
 template <typename T>
-void Fits::readKey(char const * key, T & value) {
+void Fits::writeKey(std::string const & key, T const & value) {
+    writeKeyImpl(*this, key.c_str(), value, 0);
+}
+
+template <typename T>
+void Fits::updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
+    updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
+}
+
+template <typename T>
+void Fits::writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
+    writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
+}
+
+template <typename T>
+void Fits::updateColumnKey(std::string const & prefix, int n, T const & value) {
+    updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
+}
+
+template <typename T>
+void Fits::writeColumnKey(std::string const & prefix, int n, T const & value) {
+    writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
+}
+
+// ---- Reading header keys ---------------------------------------------------------------------------------
+
+namespace {
+
+template <typename T>
+void readKeyImpl(Fits & fits, char const * key, T & value) {
     fits_read_key(
-        reinterpret_cast<fitsfile*>(fptr), 
+        reinterpret_cast<fitsfile*>(fits.fptr), 
         FitsType<T>::CONSTANT,
         const_cast<char*>(key),
         &value,
         0,
-        &status
+        &fits.status
     );
 }
 
-void Fits::readKey(char const * key, std::string & value) {
-    char buf[80] = { 0 };
-    fits_read_keyword(
-        reinterpret_cast<fitsfile*>(fptr), 
+void readKeyImpl(Fits & fits, char const * key, std::string & value) {
+    char * buf = 0;
+    fits_read_key_longstr(
+        reinterpret_cast<fitsfile*>(fits.fptr),
         const_cast<char*>(key),
-        &buf[0],
+        &buf,
         0,
-        &status
+        &fits.status
     );
-    value = strip(buf);
+    if (buf) {
+        value = strip(buf);
+        free(buf);
+    }
+}
+
+} // anonymous
+
+template <typename T>
+void Fits::readKey(std::string const & key, T & value) {
+    readKeyImpl(*this, key.c_str(), value);
 }
 
 void Fits::forEachKey(HeaderIterationFunctor & functor) {
@@ -203,14 +253,34 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
     char comment[80];
     int nKeys = 0;
     fits_get_hdrspace(reinterpret_cast<fitsfile*>(fptr), &nKeys, 0, &status);
+    std::string keyStr;
+    std::string valueStr;
+    std::string commentStr;
+    bool inContinue = false;
     for (int i = 1; i <= nKeys; ++i) {
         fits_read_keyn(reinterpret_cast<fitsfile*>(fptr), i, key, value, comment, &status);
-        functor(key, value, comment);
+        if (inContinue && strncmp(key, "CONTINUE", 8) == 0) {
+            valueStr += strip(value);
+            commentStr += comment;
+        } else {
+            keyStr = key;
+            valueStr = strip(value);
+            commentStr = comment;
+        }
+        if (valueStr[valueStr.size() - 1] == '&') {
+            inContinue = true;
+            valueStr.erase(valueStr.size() - 1);
+        } else {
+            inContinue = false;
+            functor(keyStr, valueStr, commentStr);
+        }
     }
 }
 
+// ---- Manipulating tables ---------------------------------------------------------------------------------
+
 template <typename T>
-int Fits::addColumn(char const * ttype, int size, char const * comment) {
+int Fits::addColumn(std::string const & ttype, int size) {
     int nCols = 0;
     fits_get_num_cols(
         reinterpret_cast<fitsfile*>(fptr),
@@ -221,12 +291,17 @@ int Fits::addColumn(char const * ttype, int size, char const * comment) {
     fits_insert_col(
         reinterpret_cast<fitsfile*>(fptr),
         nCols + 1,
-        const_cast<char*>(ttype),
+        const_cast<char*>(ttype.c_str()),
         const_cast<char*>(tform.c_str()),
         &status
     );
-    if (comment)
-        updateColumnKey("TTYPE", nCols, ttype, comment);
+    return nCols;
+}
+
+template <typename T>
+int Fits::addColumn(std::string const & ttype, int size, std::string const & comment) {
+    int nCols = addColumn<T>(ttype, size);
+    updateColumnKey("TTYPE", nCols, ttype, comment);
     return nCols;
 }
 
@@ -318,19 +393,22 @@ void Fits::createTable() {
     fits_create_tbl(reinterpret_cast<fitsfile*>(fptr), BINARY_TBL, 0, 0, &ttype, &tform, 0, 0, &status);
 }
 
-Fits Fits::createFile(char const * filename) {
+// ---- Manipulating files ----------------------------------------------------------------------------------
+
+Fits Fits::createFile(std::string const & filename) {
     Fits result;
     result.status = 0;
-    fits_create_file(reinterpret_cast<fitsfile**>(&result.fptr), const_cast<char*>(filename), &result.status);
+    fits_create_file(reinterpret_cast<fitsfile**>(&result.fptr), 
+                     const_cast<char*>(filename.c_str()), &result.status);
     return result;
 }
 
-Fits Fits::openFile(char const * filename, bool writeable) {
+Fits Fits::openFile(std::string const & filename, bool writeable) {
     Fits result;
     result.status = 0;
     fits_open_file(
         reinterpret_cast<fitsfile**>(&result.fptr),
-        const_cast<char*>(filename), 
+        const_cast<char*>(filename.c_str()), 
         writeable ? READWRITE : READONLY,
         &result.status
     );
@@ -342,16 +420,21 @@ void Fits::closeFile() {
 }
 
 #define INSTANTIATE_EDIT_KEY(r, data, T)                                \
-    template void Fits::updateKey(char const * key, T value, char const * comment); \
-    template void Fits::writeKey(char const * key, T value, char const * comment); \
-    template void Fits::readKey(char const * key, T & value);
-    
-#define INSTANTIATE_EDIT_COLUMN_KEY(r, data, T)                         \
-    template void Fits::updateColumnKey(char const * prefix, int n, T value, char const * comment); \
-    template void Fits::writeColumnKey(char const * prefix, int n, T value, char const * comment);
+    template void Fits::updateKey(std::string const &, T const &, std::string const &); \
+    template void Fits::writeKey(std::string const &, T const &, std::string const &); \
+    template void Fits::updateKey(std::string const &, T const &);      \
+    template void Fits::writeKey(std::string const &, T const &);       \
+    template void Fits::updateColumnKey(std::string const &, int, T const &, std::string const &); \
+    template void Fits::writeColumnKey(std::string const &, int, T const &, std::string const &); \
+    template void Fits::updateColumnKey(std::string const &, int, T const &); \
+    template void Fits::writeColumnKey(std::string const &, int, T const &);
+
+#define INSTANTIATE_READ_KEY(r, data, T)                        \
+    template void Fits::readKey(std::string const &, T &);
 
 #define INSTANTIATE_ADD_COLUMN(r, data, T)                              \
-    template int Fits::addColumn<T>(char const * ttype, int size, char const * comment);
+    template int Fits::addColumn<T>(std::string const & ttype, int size); \
+    template int Fits::addColumn<T>(std::string const & ttype, int size, std::string const & comment);
 
 #define INSTANTIATE_EDIT_TABLE_ARRAY(r, data, T)    \
     template void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value); \
@@ -363,17 +446,15 @@ void Fits::closeFile() {
 
 #define KEY_TYPES                                                       \
     (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
-    (float)(double)(std::complex<float>)(std::complex<double>)
+    (float)(double)(std::complex<float>)(std::complex<double>)(std::string)
 
 #define COLUMN_TYPES                            \
     (boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
     (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)(bool)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_KEY, _, KEY_TYPES)
-BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_COLUMN_KEY, _, KEY_TYPES)
+BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_READ_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_ADD_COLUMN, _, COLUMN_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_TABLE_ARRAY, _, COLUMN_TYPES)
-
-INSTANTIATE_EDIT_COLUMN_KEY(_, _, char const *)
 
 }}} // namespace lsst::afw::fits

@@ -39,13 +39,6 @@ typedef FitsReader::Fits Fits;
  *
  */
 
-// A convenience function use on FITS header key strings, to strip out the single-quotes and spaces.
-std::string strip(std::string const & s) {
-    std::size_t i1 = s.find_first_not_of(" '");
-    std::size_t i2 = s.find_last_not_of(" '");
-    return s.substr(i1, (i1 == std::string::npos) ? 0 : 1 + i2 - i1);
-}
-
 // A structure that describes a field as a bunch of strings read from the FITS header.
 struct FitsSchemaItem {
     int col;             // column number (0-indexed)
@@ -243,49 +236,49 @@ struct FitsSchema {
 // key in the FITS header.  We use it to fill the FitsSchema multi-index container.
 struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
 
-    virtual void operator()(char const * key, char const * value, char const * comment) {
-        if (std::strncmp(key, "TTYPE", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
+    virtual void operator()(std::string const & key, std::string const & value, std::string const & comment) {
+        if (key.compare(0, 5, "TTYPE") == 0) {
+            int col = boost::lexical_cast<int>(key.substr(5)) - 1;
             FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
             if (i == schema.asColSet().end() || i->col != col) {
                 i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
-            std::string v = strip(value);
+            std::string v = value;
             std::replace(v.begin(), v.end(), '_', '.');
             schema.asColSet().modify(i, FitsSchema::SetName(v));
             schema.asColSet().modify(i, FitsSchema::SetDoc(comment));
-        } else if (std::strncmp(key, "TFLAG", 5) == 0) {
-            int bit = boost::lexical_cast<int>(key + 5) - 1;
+        } else if (key.compare(0, 5, "TFLAG") == 0) {
+            int bit = boost::lexical_cast<int>(key.substr(5)) - 1;
             FitsSchema::BitSet::iterator i = schema.asBitSet().lower_bound(bit);
             if (i == schema.asBitSet().end() || i->bit != bit) {
                 i = schema.asBitSet().insert(i, FitsSchemaItem(-1, bit));
             }
-            std::string v = strip(value);
+            std::string v = value;
             std::replace(v.begin(), v.end(), '_', '.');
             schema.asBitSet().modify(i, FitsSchema::SetName(v));
             schema.asBitSet().modify(i, FitsSchema::SetDoc(comment));
-        } else if (std::strncmp(key, "TUNIT", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
+        } else if (key.compare(0, 5, "TUNIT") == 0) {
+            int col = boost::lexical_cast<int>(key.substr(5)) - 1;
             FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
             if (i == schema.asColSet().end() || i->col != col) {
                 i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
-            schema.asColSet().modify(i, FitsSchema::SetUnits(strip(value)));
-        } else if (std::strncmp(key, "TCCLS", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
+            schema.asColSet().modify(i, FitsSchema::SetUnits(value));
+        } else if (key.compare(0, 5, "TCCLS") == 0) {
+            int col = boost::lexical_cast<int>(key.substr(5)) - 1;
             FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
             if (i == schema.asColSet().end() || i->col != col) {
                 i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
-            schema.asColSet().modify(i, FitsSchema::SetCls(strip(value)));
-        } else if (std::strncmp(key, "TFORM", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
+            schema.asColSet().modify(i, FitsSchema::SetCls(value));
+        } else if (key.compare(0, 5, "TFORM") == 0) {
+            int col = boost::lexical_cast<int>(key.substr(5)) - 1;
             FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
             if (i == schema.asColSet().end() || i->col != col) {
                 i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
-            schema.asColSet().modify(i, FitsSchema::SetFormat(strip(value)));
-        } else if (std::strncmp(key, "FLAGCOL", 8) == 0) {
+            schema.asColSet().modify(i, FitsSchema::SetFormat(value));
+        } else if (key.compare(0, 8, "FLAGCOL") == 0) {
             flagCol = boost::lexical_cast<int>(value) - 1;
         }
     }
