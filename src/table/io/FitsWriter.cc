@@ -17,23 +17,6 @@ typedef FitsWriter::Fits Fits;
 // The driver code is at the bottom of this section; it's easier to understand if you start there
 // and work your way up.
 
-// A Schema::forEach functor that simply counts the number of Flag fields in a Schema
-struct CountFlags {
-
-    template <typename T>
-    void operator()(SchemaItem<T> const &) const {}
-
-    void operator()(SchemaItem<Flag> const &) const { ++n; }
-
-    static int apply(Schema const & schema) {
-        CountFlags counter = { 0 };
-        schema.forEach(boost::ref(counter));
-        return counter.n;
-    }
-
-    mutable int n;
-};
-
 // A Schema::forEach functor that writes FITS header keys for a field when it is called.
 struct ProcessSchema {
 
@@ -137,7 +120,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
     Schema schema = table->getSchema();
     _fits->createTable();
     _fits->checkStatus();
-    int nFlags = CountFlags::apply(schema);
+    int nFlags = schema.getFlagFieldCount();
     if (nFlags > 0) {
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
