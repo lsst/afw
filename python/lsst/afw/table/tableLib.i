@@ -305,8 +305,9 @@ def asKey(self):
 %include "lsst/afw/table/ColumnView.h"
 
 %pythoncode %{
-from .. import geom
-from .. import coord
+from ..geom import Angle, Point2D, Point2I
+from ..geom.ellipses import Quadrupole
+from ..coord import Coord, IcrsCoord
 import numpy
 Field = {}
 Key = {}
@@ -320,8 +321,13 @@ aliases = {
     numpy.int64: "I8",
     numpy.float32: "F4",
     numpy.float64: "F8",
-    geom.Angle: "Angle",
-    coord.Coord: "Coord",
+    Angle: "Angle",
+    Quadrupole: "Angle",
+    Coord: "Coord",
+    IcrsCoord: "Coord",
+    Point2I: "Point<I4>",
+    Point2D: "Point<F8",
+    Quadrupole: "Moments<F8>",
 }
 %}
 

@@ -18,30 +18,31 @@ namespace lsst { namespace afw { namespace table {
  *  @code
  *  #include "lsst/afw/table.h"
  *  using namespace lsst::afw::table;
- *  Schema schema(false); // Or true to add parent/child tree to table.
+ *  Schema schema;
  *  Key<int> k1 = schema.addField<int>("f1", "doc for f1");
- *  Key<float> k2 = schema.addField<float>("f2", "doc for f2", "units for f2);
+ *  Key<float> k2 = schema.addField<float>("f2", "doc for f2", "units for f2");
  *  Key< Array<double> > k3 = schema.addField< Array<double> >("f3", "doc for f3", "units for f2", 5);
- *  SimpleTable table(schema, 15); // initial capacity for 15 rows.
- *  SimpleRecord record = table.addRecord();
- *  record.set(k1, 2);
- *  record.set(k2, 3.14);
- *  record[k3].setRandom(); // operator[] for arrays returns an Eigen::Map for in-place editing.
- *  std::cout << record.get(k1) << ", " << record.get(k2) << ", " << record.get(k3);
+ *  PTR(BaseTable) table(schema);
+ *  PTR(BaseRecord) record = table->makeRecord();
+ *  record->set(k1, 2);
+ *  record->set(k2, 3.14);
+ *  ndarray::Array<double,1> a3 = (*record)[k3]; // operator[] allows in-place edits for some fields
+ *  a3[2] = 5.2;
+ *  std::cout << record->get(k1) << ", " << record->get(k2) << ", " << record->get(k3);
  *  @endcode
  *
  *  In Python:
  *  @code
  *  from lsst.afw.table import *
- *  schema = Schema(False) # Or True to add parent/child tree to table.
+ *  schema = Schema()
  *  k1 = schema.addField("f1", type=int, doc="doc for f1")
  *  k2 = schema.addField("f2", type=numpy.float32, "doc for f2", units="units for f2")
  *  k3 = schema.addField("f3", type="Array<F8>", doc="doc for f3", units="units for f2", size=5)
- *  table = SimpleTable(schema, 15) # initial capacity for 15 rows.
- *  record = table.addRecord()
+ *  table = BaseTable.make(schema)
+ *  record = table.makeRecord()
  *  record.set(k1, 2)
  *  record.set(k2, 3.14)
- *  record.set(k3, numpy.random.randn(5)) # no reference array access in Python.
+ *  record[k3] = numpy.random.randn(5) # ndarray::Array == numpy.ndarray in Python
  *  print "%d, %f, %s" % (record.get(k1), record.get(k2), record.get(k3))
  *  @endcode
  *
@@ -51,65 +52,103 @@ namespace lsst { namespace afw { namespace table {
  *  like a heterogeneous container of SchemaItem<T> objects, which are in turn composed of Field
  *  and Key objects.  A Field contains name, documentation, and units, while the Key object is
  *  a lightweight opaque object used to actually access elements of the table.  Using keys for
- *  access allows reads and writes to compile down to little (if any more) than a pointer
- *  offset and dereference.
+ *  access allows reads and writes to compile down to little (if any) more than a pointer
+ *  offset and dereference.  String field names can be used instead of keys in Python (though 
+ *  this is less efficient), but this is not possible in C++.
  *  
  *  Record and table classes are defined in pairs; each record class has a 1-to-1
- *  correspondence with a table class.  A final table class inherits from the TableInterface
- *  template class, which inherits from the BaseTable class (records have a parallel inheritance
- *  structure).  This inheritance is purely for implementation purposes; tables and records are
- *  not polymorphic and should always be passed by value.  Much of the public interface for
- *  tables and records is provided by these base classes.  SimpleRecord and SimpleTable are
- *  simple, general-purpose classes.  SourceRecord and SourceTable are designed to represent
- *  astronomical sources detected on an individual exposure, and contain a per-record Footprint
- *  in addition to the tabular data.  Additional record/table class pairs may be added in the
- *  future.
+ *  correspondence with a table class.  A record at its simplest is just a row in a table,
+ *  though both classes are polymorphic and derived classes can add additional functionality
+ *  (such as the SourceRecord and SourceTable classes, for instance).  A table acts as a factory
+ *  for records; all record creating (even cloning) goes through a table member function.  This
+ *  is because the underlying data for records is allocated in multi-record blocks by the table.
+ *  Records thus hold a shared_ptr back to their table, as well as a pointer to their memory block,
+ *  and data members that are shared by multiple records (such as the Schema) are accessed through
+ *  the table rather than held separately in each record.  A table does not hold a pointer back to
+ *  all of the records it is associated with, however, or provide ways to iterate over records.
+ *  Instead, we have a separate concept of a container class, which holds a single table pointer
+ *  and multiple records, and is usually just a wrapper around an STL container of record shared_ptrs.
+ *  The only container class provided by the library at present is VectorT, which is a wrapper around
+ *  std::vector.
  *
  *  @section afwTableMemory Memory and Copy Semantics
- *  Tables and records share data through an internal shared_ptr.  Multiple records and tables
- *  will often refer to the same underlying data, and records cannot be constructed apart
- *  from the tables they belong to.
- *
- *  All copy constructors and assignment operators for records and tables are shallow - they
- *  affect what memory blocks the objects refer to, but do not modify the values of those memory
- *  blocks.  As in afw::image, BaseRecord::operator<<= is overloaded to perform deep assignment of
- *  records.  Because this operator is not available in Python, so a "copyFrom" method is provided
- *  instead.
+ *  Tables and records are noncopyable, and are always allocated in shared_ptrs.  Both can be
+ *  deep copied, however - tables have a clone() member function, and records can be copied
+ *  by calling copyRecord() on the table.  Records are also default constructable, in the sense
+ *  that a table must always be able to create a record with no additional arguments besides
+ *  what the table itself can provide (SourceTable, for instance, sets the ID of default-constructed
+ *  records using an internal IdFactory object).
  *
  *  The memory in a table is allocated in blocks, as in most implementations of the C++ STL's deque.
  *  When the capacity of the most recent block is exhausted, a new block will be allocated for future
- *  records.  This means most - but not all - records will be close to their neighbors in memory.
- *  Unlike std::vector, the whole table is never silently reallocated.  This can be done explicitly,
- *  however, using BaseTable::consolidate().  Columns of a table may be accessed as strided ndarray
- *  objects (and hency NumPy arrays in Python) using ColumnView, but a ColumnView can only be
- *  constructed from a consolidated table.
+ *  records.  The pointers to records themselves are not pointers into these blocks (record instances
+ *  are allocated as usual with new or make_shared) - the block memory is accessed via a void pointer
+ *  in the BaseRecord class, and derived record classes shouldn't have to deal with it at all.
  *
- *  Because records and tables thus behave somewhat like "smart reference" objects, the usual
- *  constness semantics don't work for them.  Instead, only shallow mutators (like the regular
- *  assignment operators or BaseTable::consolidate()) that change the pointer to the underlying
- *  memory are marked as non-const; accessors that modify the data itself are NOT marked as const.
- *  That means there is no convential way to prevent a user from modifying a table or record
- *  when passing it as an argument to another field.  To address this problem, tables and records
- *  (and iterators to records) carry ModificationFlags, which provide a runtime/assertion-based
- *  way of preventing code from modifications from happening in unexpected places.
+ *  One of the advantages of this approach is that most - but not all - records will be close to
+ *  their neighbors in memory.  More importantly, unlike std::vector, the whole table is never
+ *  silently reallocated.  Finally, if a sequence of records have been allocated from the same block,
+ *  their columns may be accessed as strided ndarray objects (and hency NumPy arrays in Python) using
+ *  ColumnView.
+ *
+ *  @section afwTableFits FITS I/O
+ *  Records can be saved/loaded to/from FITS binary tables using the writeFits and readFits member
+ *  functions on the library's container classes.  Not all FITS binary table column types are supported,
+ *  but the most common ones are (notable exceptions are strings, complex numbers, and variable-length
+ *  arrays).  As long as a FIT binary table contains only allowed column types, it should be possible
+ *  to read it into an afw/table container, though FITS tables from external sources will not be able
+ *  to tell our FITS reader to use specialized field types like Point or Covariance - any multi-element
+ *  column will be read in as an array unless special keys are present in the FITS header.
+ *
+ *  The FITS I/O functionally is implemented in the io::FitsReader and io::FitsWriter classes, which inherit
+ *  from the more general io::Reader and io::Writer classes.  New types of serialization for tables
+ *  should follow the same pattern and create new subclasses of io::Reader and io::Writer.  In addition,
+ *  new table/record types will usually want to implement a new FitsWriter and FitsReader subclass
+ *  (which can delegate most of the work to the base classes) to save derived-class data members and
+ *  ensure loaded objects have the correct type.
+ *
+ *  @section afwTableSchema Schemas
+ *  Schema objects are append-only objects - you can add new fields, but you can never remove them.
+ *  This is because the schema creates and returns keys to fields as they are added, and removing
+ *  a field from the schema would invalidate not only the key for that field, but also keys for any
+ *  fields that were added after it.  Copying a schema and adding new records to the copy will
+ *  allow keys created from the original to work with tables and records that use the copy; we can
+ *  consider the original in this case to be a subset of the original schema, and we can test for this
+ *  using Schema::contains.  Containment tests and the Schema equality comparison operators only
+ *  consider the position, type and length of fields (in other words, in the information contained
+ *  in a Key) - you can renam a field in a schema without invalidating keys or changing how it is
+ *  compared to other schemas.  (Note that one schema being a subset or superset of another is
+ *  completely unrelated to the SubSchema class, which is used to implement the dotted namespaces
+ *  discussed below).
+ *
+ *  @section afwTableFieldNames Field Names
+ *  By convention, field names are all lowercase and have '.'-separated elements.  Only letters, numbers
+ *  and periods should be used.  These rules are not enforced, but names that do not meet these requirements
+ *  may not round-trip correctly in FITS (periods are converted to underscores in the FITS persistence
+ *  layer, so we cannot distinguish between the two when we read tables from FITS).
+ *  Schema provides extra functionality for names with period-separated elements; these elements can
+ *  be accessed separately individually with the bracket operators.  More information on schema namespaces
+ *  can be found in the Schema and SubSchema class documentation, and the testSchema.py unit test may
+ *  also be a useful example.
  *
  *  @section afwTableFieldTypes Field Types
  *  In C++, field types are defined by the template arguments to Key and Field (among others).  Empty
- *  tag templates (Array, Point, Shape, Covariance) are used for compound fields.  In Python, strings
+ *  tag templates (Array, Point, Moments, Covariance) are used for compound fields.  In Python, strings
  *  are used to set field types.  The Key and Field classes for each type can be accessed through
  *  dictionaries (e.g. Key["F4"]), but usually these type strings are only explicitly written
- *  when passed as the 'type' argument of Schema.addField.  Aliases can also be used
- *  in place of type strings for scalar fields.
+ *  when passed as the 'type' argument of Schema.addField.  Some Python types can also be used
+ *  in place of type strings for fields (e.g. int, afw.coord.Coord).  Note that Python type strings
+ *  with angle brackets do not have the extra spaces that are necessary when writing templates in C++98.
  *
  *  Some field types require a size argument to be passed to the Field constructor or Schema::addField;
  *  while this size can be set at compile time, all records must have the same size.
  *
  *  Not all field types support all types of data access.  All field types support atomic access to
  *  the entire field at once through BaseRecord::get and BaseRecord::set.  Some field types support
- *  square bracket access to mutable references as well.  Only scalar and array fields support column
- *  access through ColumnView.
+ *  square bracket access to references or reference-like objects (i.e. ndarray::ArrayRef) as well.
+ *  Only scalar and array fields support column access through ColumnView.
  *
- *  A Key for an individual element of a compound fields can also be obtained from the compound Key
+ *  A Key for an individual element of a compound field can also be obtained from the compound Key
  *  object or (for 'named subfields') from the Schema directly (see Schema and the KeyBase specializations).
  *  Element keys can be used just like any other scalar Key, and hence provide access to column views.
  *
@@ -117,11 +156,11 @@ namespace lsst { namespace afw { namespace table {
  *  <tr>
  *  <th>C++ Type</th>
  *  <th>Python Type String</th>
- *  <th>Python Aliases</th>
+ *  <th>Python Aliases Types</th>
  *  <th>C++ Value (get/set) Type</th>
- *  <th>operator[]?</th>
- *  <th>Columns?</th>
- *  <th>Requires Size?</th>
+ *  <th>Reference Access</th>
+ *  <th>ColumnView Support</th>
+ *  <th>Dynamic Size</th>
  *  <th>Named Subfields</th>
  *  <th>Notes</th>
  *  </tr>
@@ -146,32 +185,44 @@ namespace lsst { namespace afw { namespace table {
  *  <td>Yes</td> <td>Yes</td> <td>No</td> <td></td> <td></td>
  *  </tr>
  *  <tr>
- *  <td>Point<int></td> <td>"Point<I4>"</td> <td></td> <td>afw::geom::Point2i</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>x,y</td> <td></td>
+ *  <td>Angle</td> <td>"Angle"</td> <td>afw.geom.Angle</td> <td>afw::geom::Angle</td>
+ *  <td>Yes</td> <td>Yes</td> <td>No</td> <td></td>
+ *  <td>ColumnView access in Python returns an array of numpy.float64 (in radians).</td>
+ *  </tr>
+ *  <tr>
+ *  <td>Coord</td> <td>"Coord"</td> <td>afw.coord.Coord, afw.coord.IcrsCoord</td> 
+ *  <td>afw::coord::IcrsCoord</td>
+ *  <td>No</td> <td>No</td> <td>No</td> <td>ra, dec</td>
+ *  <td> Can assign any Coord, but always converted to ICRS </td>
+ *  </tr>
+ *  <tr>
+ *  <td>Point<int></td> <td>"Point<I4>"</td> <td>afw.geom.Point2I</td> <td>afw::geom::Point2I</td>
+ *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
  *  </tr>
  *  <tr>
  *  <td>Point<float></td> <td>"Point<F4>"</td> <td></td> <td>afw::geom::Point2D</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>x,y</td> <td></td>
+ *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
  *  </tr>
  *  <tr>
- *  <td>Point<double></td> <td>"Point<F8>"</td> <td></td> <td>afw::geom::Point2D</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>x,y</td> <td></td>
+ *  <td>Point<double></td> <td>"Point<F8>"</td> <td>afw.geom.Point2D</td> <td>afw::geom::Point2D</td>
+ *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
  *  </tr>
  *  <tr>
- *  <td>Shape<float></td> <td>"Shape<F4>"</td> <td></td> <td>afw::geom::ellipses::Quadrupole</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>xx,yy,xy</td> <td></td>
+ *  <td>Moments<float></td> <td>"Moments<F4>"</td> <td></td> <td>afw::geom::ellipses::Quadrupole</td>
+ *  <td>No</td> <td>No</td> <td>No</td> <td>xx, yy, xy</td> <td></td>
  *  </tr>
  *  <tr>
- *  <td>Shape<double></td> <td>"Shape<F8>"</td> <td></td> <td>afw::geom::ellipses::Quadrupole</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>xx,yy,xy</td> <td></td>
+ *  <td>Moments<double></td> <td>"Moments<F8>"</td> <td>afw.geom.ellipses.Quadrupole</td>
+ *  <td>afw::geom::ellipses::Quadrupole</td>
+ *  <td>No</td> <td>No</td> <td>No</td> <td>xx, yy, xy</td> <td></td>
  *  </tr>
  *  <tr>
- *  <td>Array<float></td> <td>"Array<F4>"</td> <td></td> <td>Eigen::ArrayXf</td>
- *  <td>C++ only</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an Eigen::Map</td>
+ *  <td>Array<float></td> <td>"Array<F4>"</td> <td></td> <td>ndarray::Array<float,1></td>
+ *  <td>Yes</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an ndarray::ArrayRef</td>
  *  </tr>
  *  <tr>
- *  <td>Array<double></td> <td>"Array<F8>"</td> <td></td> <td>Eigen::ArrayXd</td>
- *  <td>C++ only</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an Eigen::Map</td>
+ *  <td>Array<double></td> <td>"Array<F8>"</td> <td></td> <td>ndarray::Array<double,1></td>
+ *  <td>Yes</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an ndarray::ArrayRef</td>
  *  </tr>
  *  <tr>
  *  <td>Covariance<float></td> <td>"Cov<F4>"</td> <td></td> <td>Eigen::MatrixXf</td>
@@ -184,20 +235,24 @@ namespace lsst { namespace afw { namespace table {
  *  <td>symmetric matrix is stored packed (size*(size+1)/2 elements)</td>
  *  </tr>
  *  <tr>
- *  <td>Covariance< Point<float> ></td> <td>"Cov<Point<F4>>"</td> <td></td> <td>Eigen::Matrix2f</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (3 elements)</td>
+ *   <td>Covariance<&nbsp;Point<float>&nbsp;></td> <td>"Cov<Point<F4>>"</td> <td></td>
+ *   <td>Eigen::Matrix2f</td>
+ *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (3 elements)</td>
  *  </tr>
  *  <tr>
- *  <td>Covariance< Point<double> ></td> <td>"Cov<Point<F8>>"</td> <td></td> <td>Eigen::Matrix2d</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (3 elements)</td>
+ *   <td>Covariance<&nbsp;Point<double>&nbsp;></td> <td>"Cov<Point<F8>>"</td> <td></td>
+ *   <td>Eigen::Matrix2d</td>
+ *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (3 elements)</td>
  *  </tr>
  *  <tr>
- *  <td>Covariance< Shape<float> ></td> <td>"Cov<Shape<F4>>"</td> <td></td> <td>Eigen::Matrix3f</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (6 elements)</td>
+ *   <td>Covariance<&nbsp;Moments<float>&nbsp;></td> <td>"Cov<Moments<F4>>"</td> <td></td>
+ *   <td>Eigen::Matrix3f</td>
+ *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (6 elements)</td>
  *  </tr>
  *  <tr>
- *  <td>Covariance< Shape<double> ></td> <td>"Cov<Shape<F8>>"</td> <td></td> <td>Eigen::Matrix3d</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (6 elements)</td>
+ *   <td>Covariance<&nbsp;Moments<double>&nbsp;></td> <td>"Cov<Moments<F8>>"</td> <td></td>
+ *   <td>Eigen::Matrix3d</td>
+ *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (6 elements)</td>
  *  </tr>
  *  </table>
  */

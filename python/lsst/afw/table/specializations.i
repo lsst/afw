@@ -60,6 +60,12 @@
     lsst::ndarray::Array<U,1,1> __getitem__(lsst::afw::table::Key< Array< U > > const & key) {
         return (*self)[key];
     }
+    void __setitem__(
+        lsst::afw::table::Key< Array< U > > const & key,
+        lsst::ndarray::Array<U const,1> const & v
+    ) {
+        (*self)[key] = v;
+    }
 }
 %extend lsst::afw::table::ColumnView {
     lsst::ndarray::Array<U const,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
