@@ -1477,6 +1477,8 @@ void detection::FootprintSet::makeSources(
 // Explicit instantiations
 //
 
+#ifndef DOXYGEN
+
 #define INSTANTIATE(PIXEL)                      \
     template detection::FootprintSet::FootprintSet(                     \
         image::Image<PIXEL> const &, Threshold const &, int const, bool const); \
@@ -1499,3 +1501,5 @@ INSTANTIATE(boost::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
+
+#endif // !DOXYGEN
