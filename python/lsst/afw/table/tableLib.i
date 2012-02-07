@@ -326,7 +326,7 @@ aliases = {
     Coord: "Coord",
     IcrsCoord: "Coord",
     Point2I: "Point<I4>",
-    Point2D: "Point<F8",
+    Point2D: "Point<F8>",
     Quadrupole: "Moments<F8>",
 }
 %}
