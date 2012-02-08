@@ -130,7 +130,7 @@ struct ProcessSchema {
 void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
     Schema schema = table->getSchema();
     _fits->createTable();
-    LSST_FITS_CHECK_STATUS(*_fits);
+    LSST_FITS_CHECK_STATUS(*_fits, "creating table");
     int nFlags = schema.getFlagFieldCount();
     if (nFlags > 0) {
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");

@@ -15,7 +15,9 @@ extern "C" {
 #include "boost/format.hpp"
 #include "boost/scoped_array.hpp"
 
+#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Log.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
 
@@ -61,7 +63,7 @@ std::string makeColumnFormat(int size = 1) {
 
 template <typename T> struct FitsType;
 
-template <> struct FitsType<bool> { static int const CONSTANT = TBIT; };
+template <> struct FitsType<bool> { static int const CONSTANT = TLOGICAL; };
 template <> struct FitsType<unsigned char> { static int const CONSTANT = TBYTE; };
 template <> struct FitsType<short> { static int const CONSTANT = TSHORT; };
 template <> struct FitsType<unsigned short> { static int const CONSTANT = TUSHORT; };
@@ -75,6 +77,10 @@ template <> struct FitsType<double> { static int const CONSTANT = TDOUBLE; };
 template <> struct FitsType<lsst::afw::geom::Angle> { static int const CONSTANT = TDOUBLE; };
 template <> struct FitsType< std::complex<float> > { static int const CONSTANT = TCOMPLEX; };
 template <> struct FitsType< std::complex<double> > { static int const CONSTANT = TDBLCOMPLEX; };
+
+// We use TBIT when writing booleans to table cells, but TLOGICAL in headers.
+template <typename T> struct FitsTableType : public FitsType<T> {};
+template <> struct FitsTableType<bool> { static int const CONSTANT = TBIT; };
 
 // Strip leading and trailing single quotes and whitespace from a string.
 std::string strip(std::string const & s) {
@@ -120,8 +126,7 @@ std::string makeErrorMessage(void * fptr, int status, std::string const & msg) {
 
 namespace {
 
-// Impl functions in the anonymous namespace do special handling for strings and make sure calling
-// them with a C string invokes the std::string version not the arbitrary-template version.
+// Impl functions in the anonymous namespace do special handling for strings, bools, and IEEE fp values.
 
 template <typename T>
 void updateKeyImpl(Fits & fits, char const * key, T const & value, char const * comment) {
@@ -145,6 +150,17 @@ void updateKeyImpl(Fits & fits, char const * key, std::string const & value, cha
     );    
 }
 
+void updateKeyImpl(Fits & fits, char const * key, bool const & value, char const * comment) {
+    int v = value;
+    fits_update_key(
+        reinterpret_cast<fitsfile*>(fits.fptr),
+        TLOGICAL,
+        const_cast<char*>(key),
+        &v,
+        const_cast<char*>(comment),
+        &fits.status
+    );
+}
 
 template <typename T>
 void writeKeyImpl(Fits & fits, char const * key, T const & value, char const * comment) {
@@ -159,13 +175,39 @@ void writeKeyImpl(Fits & fits, char const * key, T const & value, char const * c
 }
 
 void writeKeyImpl(Fits & fits, char const * key, std::string const & value, char const * comment) {
-    fits_write_key_longstr(
+    if (strncmp(key, "COMMENT", 7) == 0) {
+        fits_write_comment(
+            reinterpret_cast<fitsfile*>(fits.fptr),
+            const_cast<char*>(value.c_str()),
+            &fits.status
+        );
+    } else if (strncmp(key, "HISTORY", 7) == 0) {
+        fits_write_history(
+            reinterpret_cast<fitsfile*>(fits.fptr),
+            const_cast<char*>(value.c_str()),
+            &fits.status
+        );
+    } else {
+        fits_write_key_longstr(
+            reinterpret_cast<fitsfile*>(fits.fptr),
+            const_cast<char*>(key),
+            const_cast<char*>(value.c_str()),
+            const_cast<char*>(comment),
+            &fits.status
+        );
+    }
+}
+
+void writeKeyImpl(Fits & fits, char const * key, bool const & value, char const * comment) {
+    int v = value;
+    fits_write_key(
         reinterpret_cast<fitsfile*>(fits.fptr),
+        TLOGICAL,
         const_cast<char*>(key),
-        const_cast<char*>(value.c_str()),
+        &v,
         const_cast<char*>(comment),
         &fits.status
-    );    
+    );
 }
 
 } // anonymous
@@ -173,41 +215,53 @@ void writeKeyImpl(Fits & fits, char const * key, std::string const & value, char
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value, std::string const & comment) {
     updateKeyImpl(*this, key.c_str(), value, comment.c_str());
+    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value, std::string const & comment) {
     writeKeyImpl(*this, key.c_str(), value, comment.c_str());
+    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value) {
     updateKeyImpl(*this, key.c_str(), value, 0);
+    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value) {
     writeKeyImpl(*this, key.c_str(), value, 0);
+    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
+    if (alwaysCheck)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
+    if (alwaysCheck)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
+    if (alwaysCheck)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
+    if (alwaysCheck)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
 // ---- Reading header keys ---------------------------------------------------------------------------------
@@ -246,6 +300,7 @@ void readKeyImpl(Fits & fits, char const * key, std::string & value) {
 template <typename T>
 void Fits::readKey(std::string const & key, T & value) {
     readKeyImpl(*this, key.c_str(), value);
+    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % key);
 }
 
 void Fits::forEachKey(HeaderIterationFunctor & functor) {
@@ -300,7 +355,191 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
             }
             ++i;
         }
+        if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
         functor(keyStr, valueStr, commentStr);
+    }
+}
+
+// ---- Reading and writing PropertySet/PropertyList --------------------------------------------------------
+
+namespace {
+
+bool isKeyIgnored(std::string const & key) {
+    return key == "SIMPLE" || key == "BITPIX" || key == "EXTEND" ||
+        key == "GCOUNT" || key == "PCOUNT" || key == "XTENSION" ||
+        key == "BSCALE" || key == "BZERO" || key.compare(0, 4, "NAXIS") == 0;
+}
+
+class MetadataIterationFunctor : public HeaderIterationFunctor {
+public:
+
+    virtual void operator()(
+        std::string const & key,
+        std::string const & value,
+        std::string const & comment
+    );
+
+    template <typename T>
+    void add(std::string const & key, T value, std::string const & comment) {
+        if (list) {
+            list->add(key, value, comment);
+        } else {
+            set->add(key, value);
+        }
+    }
+
+    bool strip;
+    daf::base::PropertySet * set;
+    daf::base::PropertyList * list;
+};
+
+void MetadataIterationFunctor::operator()(
+    std::string const & key,
+    std::string const & value,
+    std::string const & comment
+) {
+    static boost::regex const boolRegex("[tTfF]");
+    static boost::regex const intRegex("[+-]?[0-9]+");
+    static boost::regex const doubleRegex("[+-]?([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)([eE][+-]?[0-9]+)?");
+    static boost::regex const fitsStringRegex("'(.*)'");
+    boost::smatch matchStrings;
+
+    if (strip && isKeyIgnored(key))
+        return;
+
+    std::istringstream converter(value);
+    if (boost::regex_match(value, boolRegex)) {
+        // convert the string to an bool
+        add(key, bool(value == "T" || value == "t"), comment);
+    } else if (boost::regex_match(value, intRegex)) {
+        // convert the string to an int
+        boost::int64_t val;
+        converter >> val;
+        if (val < (1LL << 31) && val > -(1LL << 31)) {
+            add(key, static_cast<int>(val), comment);
+        } else {
+            add(key, val, comment);
+        }
+    } else if (boost::regex_match(value, doubleRegex)) {
+        // convert the string to a double
+        double val;
+        converter >> val;
+        add(key, val, comment);
+    } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
+        // strip off the enclosing single quotes and return the string
+        add(key, matchStrings[1].str(), comment);
+    } else if (key == "HISTORY" ||
+               (key == "COMMENT" &&
+                comment != "  FITS (Flexible Image Transport System) format is defined in 'Astronomy" &&
+                comment != "  and Astrophysics', volume 376, page 359; bibcode: 2001A&A...376..359H")) {
+        if (list) {
+            list->add(key, comment);
+        } else {
+            set->add(key, comment);
+        }
+    }
+}
+
+void writeKeyFromProperty(
+    Fits & fits, daf::base::PropertySet const & metadata, std::string const & key, char const * comment=0
+) {
+    std::type_info const & valueType = metadata.typeOf(key); 
+    if (valueType == typeid(bool)) {
+        if (metadata.isArray(key)) {
+            std::vector<bool> tmp = metadata.getArray<bool>(key);
+            // work around unfortunate specialness of std::vector<bool>
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), static_cast<bool>(tmp[i]), comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<bool>(key), comment);
+        }
+    } else if (valueType == typeid(int)) {
+        if (metadata.isArray(key)) {
+            std::vector<int> tmp = metadata.getArray<int>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<int>(key), comment);
+        }
+    } else if (valueType == typeid(long)) {
+        if (metadata.isArray(key)) {
+            std::vector<long> tmp = metadata.getArray<long>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<long>(key), comment);
+        }
+    } else if (valueType == typeid(boost::int64_t)) {
+        if (metadata.isArray(key)) {
+            std::vector<boost::int64_t> tmp = metadata.getArray<boost::int64_t>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<boost::int64_t>(key), comment);
+        }
+    } else if (valueType == typeid(double)) {
+        if (metadata.isArray(key)) {
+            std::vector<double> tmp = metadata.getArray<double>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<double>(key), comment);
+        }
+    } else if (valueType == typeid(std::string)) {
+        if (metadata.isArray(key)) {
+            std::vector<std::string> tmp = metadata.getArray<std::string>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
+        }
+    } else {
+        // FIXME: inherited this error handling from fitsIo.cc; need a better option.
+        pex::logging::Log::getDefaultLog().log(
+            pex::logging::Log::WARN,
+            makeErrorMessage(
+                fits.fptr, fits.status,
+                boost::format("In %s, unknown type '%s' for key '%s'.")
+                % BOOST_CURRENT_FUNCTION % valueType.name() % key
+            )
+        );
+    }
+    if (fits.alwaysCheck) LSST_FITS_CHECK_STATUS(fits, boost::format("Writing key '%s'") % key);
+}
+
+} // anonymous
+
+void Fits::readMetadata(daf::base::PropertySet & metadata, bool strip) {
+    MetadataIterationFunctor f;
+    f.strip = strip;
+    f.set = &metadata;
+    f.list = dynamic_cast<daf::base::PropertyList*>(&metadata);
+    forEachKey(f);
+}
+
+void Fits::writeMetadata(daf::base::PropertySet const & metadata) {
+    typedef std::vector<std::string> NameList;
+    daf::base::PropertyList const * pl = dynamic_cast<daf::base::PropertyList const*>(&metadata);
+    NameList paramNames;
+    if (pl) {
+        paramNames = pl->getOrderedNames();
+    } else {
+        paramNames = metadata.paramNames(false);
+    }
+    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
+        if (!isKeyIgnored(*i)) {
+            if (pl) {
+                writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
+            }
+        } else {
+            if (pl) writeKeyFromProperty(*this, metadata, *i);
+        }
     }
 }
 
@@ -362,7 +601,7 @@ template <typename T>
 void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value) {
     fits_write_col(
         reinterpret_cast<fitsfile*>(fptr), 
-        FitsType<T>::CONSTANT, 
+        FitsTableType<T>::CONSTANT, 
         col + 1, row + 1, 
         1, nElements,
         const_cast<T*>(value),
@@ -375,7 +614,7 @@ void Fits::readTableArray(std::size_t row, int col, int nElements, T * value) {
     int anynul = false;
     fits_read_col(
         reinterpret_cast<fitsfile*>(fptr), 
-        FitsType<T>::CONSTANT, 
+        FitsTableType<T>::CONSTANT, 
         col + 1, row + 1, 
         1, nElements,
         0,
@@ -472,12 +711,12 @@ void Fits::closeFile() {
 // ----------------------------------------------------------------------------------------------------------
 
 #define KEY_TYPES                                                       \
-    (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
+    (bool)(unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
     (float)(double)(std::complex<float>)(std::complex<double>)(std::string)
 
 #define COLUMN_TYPES                            \
-    (boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
-    (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)(bool)
+    (bool)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
+    (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_EDIT_KEY, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_READ_KEY, _, KEY_TYPES)

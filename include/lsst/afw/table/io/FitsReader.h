@@ -84,7 +84,7 @@ public:
     template <typename ContainerT>
     static ContainerT apply(std::string const & filename) {
         Fits fits = fits::Fits::openFile(filename.c_str(), true);
-        LSST_FITS_CHECK_STATUS(fits);
+        fits.alwaysCheck = true;
         PTR(FitsReader) reader = make(&fits);
         return reader->template read<ContainerT>();
     }

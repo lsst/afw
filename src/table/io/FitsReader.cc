@@ -55,12 +55,10 @@ struct FitsSchemaItem {
         // start by parsing the format; this tells the element type of the field and the number of elements
         boost::smatch m;
         if (!boost::regex_match(format, m, regex)) {
-            throw LSST_EXCEPT(
+            throw LSST_FITS_EXCEPT(
                 afw::fits::FitsError,
-                afw::fits::makeErrorMessage(
-                    fits.fptr, fits.status,
-                    boost::format("Could not parse TFORM value for field '%s': '%s'.") % name % format
-                )
+                fits,
+                boost::format("Could not parse TFORM value for field '%s': '%s'.") % name % format
             );
         }
         int size = 1;
@@ -75,23 +73,19 @@ struct FitsSchemaItem {
             } else if (size == 2) {
                 schema.addField< Point<boost::int32_t> >(name, doc, units);
             } else {
-                throw LSST_EXCEPT(
+                throw LSST_FITS_EXCEPT(
                     afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr, fits.status,
-                        boost::format("Unsupported FITS column type: '%s'.") % format
-                    )
+                    fits,
+                    boost::format("Unsupported FITS column type: '%s'.") % format
                 );
             }
             break;
         case 'K': // 64-bit integers - can only be scalars.
             if (size != 1) {
-                throw LSST_EXCEPT(
+                throw LSST_FITS_EXCEPT(
                     afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr, fits.status,
-                        boost::format("Unsupported FITS column type: '%s'.") % format
-                    )
+                    fits,
+                    boost::format("Unsupported FITS column type: '%s'.") % format
                 );
             }
             schema.addField<boost::int64_t>(name, doc, units);
@@ -107,12 +101,10 @@ struct FitsSchemaItem {
             // This raises probem when we want to save footprints as variable length arrays
             // later, so we add the nCols argument to Reader::_readSchema to allow SourceFitsReader
             // to call FitsReader::_readSchema in a way that prevents it from ever getting here.
-            throw LSST_EXCEPT(
+            throw LSST_FITS_EXCEPT(
                 afw::fits::FitsError,
-                afw::fits::makeErrorMessage(
-                    fits.fptr, fits.status,
-                    boost::format("Unsupported FITS column type: '%s'.") % format
-                )
+                fits,
+                boost::format("Unsupported FITS column type: '%s'.") % format
             );
         }
     }
@@ -159,13 +151,10 @@ struct FitsSchemaItem {
             double v = 0.5 * (std::sqrt(1 + 8 * size) - 1);
             int n = boost::math::iround(v);
             if (n * (n + 1) != size * 2) {
-                throw LSST_EXCEPT(
+                throw LSST_FITS_EXCEPT(
                     afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr,
-                        fits.status,
-                        boost::format("Covariance field has invalid size.")
-                    )
+                    fits,
+                    boost::format("Covariance field has invalid size.")
                 );
             }
             schema.addField< Covariance<U> >(name, doc, units, n);
@@ -372,6 +361,7 @@ struct FitsReader::ProcessRecords {
     ProcessRecords(Fits * fits_, std::size_t const & row_) :
         row(row_), col(0), bit(0), flagCol(-1), fits(fits_)
     {
+        fits->alwaysCheck = false; // temporarily disable automatic FITS exceptions
         fits->readKey("FLAGCOL", flagCol);
         if (fits->status == 0) {
             --flagCol; // we want 0-indexed column numbers, not FITS' 1-indexed numbers
@@ -379,6 +369,7 @@ struct FitsReader::ProcessRecords {
             fits->status = 0;
             flagCol = -1;
         }
+        fits->alwaysCheck = true;
         nFlags = fits->getTableArraySize(flagCol);
         if (nFlags) flags.reset(new bool[nFlags]);
     }
@@ -424,11 +415,13 @@ FitsReader::Factory::Factory(std::string const & name) {
 
 PTR(FitsReader) FitsReader::make(Fits * fits) {
     std::string name;
+    fits->alwaysCheck = false; // temporarily disable automatic FITS exceptions
     fits->readKey("AFW_TYPE", name);
     if (fits->status != 0) {
         name = "BASE";
         fits->status = 0;
     }
+    fits->alwaysCheck = true;
     Registry::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(

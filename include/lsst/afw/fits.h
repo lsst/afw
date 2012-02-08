@@ -20,6 +20,7 @@
 #include <boost/format.hpp>
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/daf/base.h"
 
 namespace lsst { namespace afw { namespace fits {
 
@@ -89,8 +90,8 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
 /**
  *  Throw a FitsError exception if the status of the given Fits object is nonzero.
  */
-#define LSST_FITS_CHECK_STATUS(fitsObj)                                 \
-    if ((fitsObj).status != 0) LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, "")
+#define LSST_FITS_CHECK_STATUS(fitsObj, ...)                            \
+    if ((fitsObj).status != 0) LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
 
 /**
  *  @brief A simple struct that combines the two arguments that must be passed to most cfitsio routines
@@ -107,78 +108,87 @@ struct Fits {
 
     //@{
     /// @brief Set a FITS header key, editing if it already exists and appending it if not.
-
     template <typename T>
     void updateKey(std::string const & key, T const & value, std::string const & comment);
-
     void updateKey(std::string const & key, char const * value, std::string const & comment) {
         updateKey(key, std::string(value), comment);
     }
-
     template <typename T>
     void updateKey(std::string const & key, T const & value);
-
     void updateKey(std::string const & key, char const * value) {
         updateKey(key, std::string(value));
     }
-
     //@}
 
     //@{
-    /// @brief Add a FITS header key to the bottom of the header.
+    /**
+     *  @brief Add a FITS header key to the bottom of the header.
+     *
+     *  If the key is HISTORY or COMMENT and the value is a std::string or C-string, 
+     *  a special HISTORY or COMMENT key will be appended (and the comment argument 
+     *  will be ignored if present).
+     */
     template <typename T>
     void writeKey(std::string const & key, T const & value, std::string const & comment);
-
     void writeKey(std::string const & key, char const * value, std::string const & comment) {
         updateKey(key, std::string(value), comment);
     }
-
     template <typename T>
     void writeKey(std::string const & key, T const & value);
-
     void writeKey(std::string const & key, char const * value) {
         updateKey(key, std::string(value));
     }
-
     //@}
 
     //@{
     /// @brief Update a key of the form XXXXXnnn, where XXXXX is the prefix and nnn is a column number.
-
     template <typename T>
     void updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment);
-
     void updateColumnKey(std::string const & prefix, int n, char const * value, std::string const & comment) {
         updateColumnKey(prefix, n, std::string(value), comment);
     }
-
     template <typename T>
     void updateColumnKey(std::string const & prefix, int n, T const & value);
-
     void updateColumnKey(std::string const & prefix, int n, char const * value) {
         updateColumnKey(prefix, n, std::string(value));
     }
-
     //@}
 
     //@{
     /// @brief Write a key of the form XXXXXnnn, where XXXXX is the prefix and nnn is a column number.
-
     template <typename T>
     void writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment);
-
     void writeColumnKey(std::string const & prefix, int n, char const * value, std::string const & comment) {
         writeColumnKey(prefix, n, std::string(value), comment);
     }
-
     template <typename T>
     void writeColumnKey(std::string const & prefix, int n, T const & value);
-
     void writeColumnKey(std::string const & prefix, int n, char const * value) {
         writeColumnKey(prefix, n, std::string(value));
     }
-
     //@}
+
+    /**
+     *  @brief Read a FITS header into a PropertySet or PropertyList.
+     *
+     *  @param[in]     metadata  A PropertySet or PropertyList whose items will be appended
+     *                           to the FITS header.
+     *
+     *  All keys will be appended to the FITS header rather than used to update existing keys.  Order of keys
+     *  will be preserved if and only if the metadata object is actually a PropertyList.
+     */
+    void writeMetadata(daf::base::PropertySet const & metadata);
+
+    /**
+     *  @brief Read a FITS header into a PropertySet or PropertyList.
+     *
+     *  @param[in,out] metadata  A PropertySet or PropertyList that FITS header items will be added to.
+     *  @param[in]     strip     If true, common FITS keys that usually have non-metadata intepretations
+     *                           (e.g. NAXIS, BITPIX) will be ignored.
+     *
+     *  Order will preserved if and only if the metadata object is actually a PropertyList.
+     */
+    void readMetadata(daf::base::PropertySet & metadata, bool strip=false);
 
     /// @brief Read a FITS header key into the given reference.
     template <typename T>
@@ -245,8 +255,11 @@ struct Fits {
     /// @brief Close a FITS file.
     void closeFile();
 
+    Fits() : fptr(0), status(0), alwaysCheck(false) {}
+
     void * fptr;  // the actual cfitsio fitsfile pointer; void to avoid including fitsio.h here.
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
+    bool alwaysCheck; // if true, member functions will check status and throw exceptions on failure
 }; 
 
 }}} /// namespace lsst::afw::fits
