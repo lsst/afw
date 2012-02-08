@@ -193,6 +193,14 @@ class FourierLocalKernel;
         geom::Extent2I const getDimensions() const {
             return geom::Extent2I(_width, _height); }
 
+        void setDimensions(geom::Extent2I dims) {
+            _width = dims.getX();
+            _height = dims.getY();
+            
+        }
+        inline void setWidth(int width) { _width = width; }
+        inline void setHeight(int height) { _height = height; }
+
         /**
          * @brief Return the Kernel's width
          */

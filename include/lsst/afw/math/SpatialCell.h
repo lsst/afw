@@ -38,11 +38,19 @@
 #include <string>
 
 #include "boost/shared_ptr.hpp"
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 
 namespace lsst {
 namespace afw {
+
+// forward declarations    
+namespace image {
+    template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> class MaskedImage;
+}
+
 namespace math {
 
     /********************************************************************************************************/
@@ -120,7 +128,7 @@ namespace math {
      * Base class for candidate objects in a SpatialCell that are able to return an %image of some sort
      * (e.g. a PSF or a DIA kernel)
      */
-    template<typename ImageT>
+    template<typename PixelT>
     class SpatialCellImageCandidate : public SpatialCellCandidate {
     public:
         typedef boost::shared_ptr<SpatialCellImageCandidate> Ptr;
@@ -130,13 +138,16 @@ namespace math {
         SpatialCellImageCandidate(float const xCenter, ///< The object's column-centre
                                   float const yCenter  ///< The object's row-centre
                                  ) : SpatialCellCandidate(xCenter, yCenter),
-                                     _image(typename ImageT::Ptr()),
+                                     _image(PTR(lsst::afw::image::MaskedImage<PixelT,
+                                                lsst::afw::image::MaskPixel,
+                                                lsst::afw::image::VariancePixel>)()),
                                      _chi2(std::numeric_limits<double>::max()) {
         }
         virtual ~SpatialCellImageCandidate() {}
 
         /// Return the Candidate's Image
-        virtual typename ImageT::ConstPtr getImage() const = 0;
+        virtual CONST_PTR(lsst::afw::image::MaskedImage<PixelT,lsst::afw::image::MaskPixel,
+                          lsst::afw::image::VariancePixel>) getImage() const = 0;
 
         /// Set the width of the image that getImage should return
         static void setWidth(int width) {
@@ -156,7 +167,8 @@ namespace math {
         void setChi2(double chi2) { _chi2 = chi2; }
 
     protected:
-        typename ImageT::Ptr mutable _image; ///< a pointer to the %image, for the use of the base class
+        PTR(lsst::afw::image::MaskedImage<PixelT,lsst::afw::image::MaskPixel,
+            lsst::afw::image::VariancePixel>) mutable _image; ///< a pointer to the %image, for the use of the base class
     private:
         static int _width;              // the width of images to return; may be ignored by subclasses
         static int _height;             // the height of images to return; may be ignored by subclasses
@@ -164,12 +176,12 @@ namespace math {
     };
 
     /// The width of images that SpatialCellImageCandidate should return; may be ignored by subclasses
-    template<typename ImageT>
-    int SpatialCellImageCandidate<ImageT>::_width = 0;
+    template<typename PixelT>
+    int SpatialCellImageCandidate<PixelT>::_width = 0;
 
     /// The height of images that SpatialCellImageCandidate should return; may be ignored by subclasses
-    template<typename ImageT>
-    int SpatialCellImageCandidate<ImageT>::_height = 0;
+    template<typename PixelT>
+    int SpatialCellImageCandidate<PixelT>::_height = 0;
 
     /************************************************************************************************************/
     /**
@@ -177,15 +189,15 @@ namespace math {
      */
     class SpatialCellCandidateIterator {
         friend class SpatialCell;
-        typedef std::vector<SpatialCellCandidate::Ptr> CandidateList;
+        typedef std::vector<PTR(SpatialCellCandidate)> CandidateList;
 
     public:
         // ctors are protected
         void operator++();
         size_t operator-(SpatialCellCandidateIterator const& rhs) const;
 
-        SpatialCellCandidate::ConstPtr operator*() const;
-        SpatialCellCandidate::Ptr      operator*();
+        CONST_PTR(SpatialCellCandidate) operator*() const;
+        PTR(SpatialCellCandidate)       operator*();
 
         /// Are two SpatialCellCandidateIterator%s equal?
         bool operator==(SpatialCellCandidateIterator const& rhs) const {
@@ -222,7 +234,7 @@ namespace math {
     public:
         typedef boost::shared_ptr<SpatialCell> Ptr;
         typedef boost::shared_ptr<const SpatialCell> ConstPtr;
-        typedef std::vector<SpatialCellCandidate::Ptr> CandidateList;
+        typedef std::vector<PTR(SpatialCellCandidate)> CandidateList;
         typedef SpatialCellCandidateIterator iterator;
         /**
          * Constructor
@@ -261,13 +273,13 @@ namespace math {
             return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad, true);
         }
         //
-        void insertCandidate(SpatialCellCandidate::Ptr candidate);
+        void insertCandidate(PTR(SpatialCellCandidate) candidate);
         /// Set whether we should omit BAD candidates from candidate list when traversing
         void setIgnoreBad(bool ignoreBad) { _ignoreBad = ignoreBad; }
         /// Get whether we are omitting BAD candidates from candidate list when traversing
         bool getIgnoreBad() const { return _ignoreBad; }
 
-        SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
+        PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
         /**
          * Get SpatialCell's label
          */
@@ -303,7 +315,7 @@ namespace math {
         typedef boost::shared_ptr<SpatialCellSet> Ptr;
         typedef boost::shared_ptr<const SpatialCellSet> ConstPtr;
         
-        typedef std::vector<SpatialCell::Ptr> CellList;
+        typedef std::vector<PTR(SpatialCell)> CellList;
 
         SpatialCellSet(lsst::afw::geom::Box2I const& region, int xSize, int ySize=0);
         
@@ -322,7 +334,7 @@ namespace math {
          */
         lsst::afw::geom::Box2I getBBox() const { return _region; };
 
-        void insertCandidate(SpatialCellCandidate::Ptr candidate);
+        void insertCandidate(PTR(SpatialCellCandidate) candidate);
 
         void sortCandidates();
 
@@ -333,7 +345,7 @@ namespace math {
         void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false);
         void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false) const;
 
-        SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
+        PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
 
         void setIgnoreBad(bool ignoreBad);
 

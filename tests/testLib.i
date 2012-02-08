@@ -45,6 +45,7 @@ Various swigged-up C++ classes for testing
 #include "lsst/afw/math.h"
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
+#include "lsst/afw/math/SpatialCell.h"
 %}
 
 %import "lsst/afw/math/mathLib.i"
@@ -99,15 +100,15 @@ Various swigged-up C++ classes for testing
     /*
      * Test class for SpatialCellImageCandidate
      */
-    class TestImageCandidate : public lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> > {
+    class TestImageCandidate : public lsst::afw::math::SpatialCellImageCandidate<float> {
     public:
-        typedef lsst::afw::image::Image<float> ImageT;
+        typedef lsst::afw::image::MaskedImage<float> MaskedImageT;
 
         TestImageCandidate(float const xCenter, ///< The object's column-centre
                            float const yCenter, ///< The object's row-centre
                            float const flux     ///< The object's flux
                     ) :
-            lsst::afw::math::SpatialCellImageCandidate<ImageT>(xCenter, yCenter), _flux(flux) {
+            lsst::afw::math::SpatialCellImageCandidate<float>(xCenter, yCenter), _flux(flux) {
         }
 
         /// Return candidates rating
@@ -116,10 +117,10 @@ Various swigged-up C++ classes for testing
         }
 
         /// Return the %image
-        ImageT::ConstPtr getImage() const {
+        MaskedImageT::ConstPtr getImage() const {
             if (_image.get() == NULL) {
-                _image = ImageT::Ptr(new ImageT(lsst::afw::geom::ExtentI(getWidth(), getHeight())));
-                *_image = _flux;
+                _image = MaskedImageT::Ptr(new MaskedImageT(lsst::afw::geom::ExtentI(getWidth(), getHeight())));
+                *_image->getImage() = _flux;
             }
 
             return _image;

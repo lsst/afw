@@ -176,7 +176,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
     if not ccdPol:
         raise("No valid CCD policy found")
     pixelSize = ccdPol.get("pixelSize")
-
+    
     nCol = ccdPol.get("nCol")
     nRow = ccdPol.get("nRow")
     ccdType = ccdPol.get("ptype")
@@ -392,7 +392,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdDescription=ccdPol, ccdId=ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
         raft.addDetector(afwGeom.Point2I(Col, Row),
-                         afwGeom.Point2D(xc, yc),
+                         cameraGeom.FpPoint(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
 
         if raftInfo is not None:
@@ -403,12 +403,12 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 if nCol == 1:
                     xGutter = 0.0
                 else:
-                    xGutter = (xc - xGutter)/float(nCol - 1) - ccd.getSize()[0]
+                    xGutter = (xc - xGutter)/float(nCol - 1) - ccd.getSize().getMm()[0]
 
                 if nRow == 1:
                     yGutter = 0.0
                 else:
-                    yGutter = (yc - yGutter)/float(nRow - 1) - ccd.getSize()[1]
+                    yGutter = (yc - yGutter)/float(nRow - 1) - ccd.getSize().getMm()[1]
 
     if raftInfo is not None:
         raftInfo.clear()
@@ -417,8 +417,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raftInfo["pixelSize"] = ccd.getPixelSize()
         raftInfo["width"] =  nCol*ccd.getAllPixels(True).getWidth()
         raftInfo["height"] = nRow*ccd.getAllPixels(True).getHeight()
-        raftInfo["widthMm"] =  nCol*ccd.getSize()[0] + (nCol - 1)*xGutter
-        raftInfo["heightMm"] = nRow*ccd.getSize()[1] + (nRow - 1)*yGutter
+        raftInfo["widthMm"] =  nCol*ccd.getSize().getMm()[0] + (nCol - 1)*xGutter
+        raftInfo["heightMm"] = nRow*ccd.getSize().getMm()[1] + (nRow - 1)*yGutter
 
     return raft
 
@@ -452,7 +452,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         raft = makeRaft(geomPolicy, raftId, raftInfo, defectDict=defDict)
         camera.addDetector(afwGeom.Point2I(Col, Row),
-                           afwGeom.Point2D(xc, yc), cameraGeom.Orientation(), raft)
+                           cameraGeom.FpPoint(afwGeom.Point2D(xc, yc)),
+                           cameraGeom.Orientation(), raft)
 
         if cameraInfo is not None:
             # Guess the gutter between detectors
@@ -462,12 +463,28 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 if nCol == 1:
                     xGutter = 0.0
                 else:
-                    xGutter = (xc - xGutter)/float(nCol - 1) - raft.getSize()[0]
+                    xGutter = (xc - xGutter)/float(nCol - 1) - raft.getSize().getMm()[0]
                     
                 if nRow == 1:
                     yGutter = 0.0
                 else:
-                    yGutter = (yc - yGutter)/float(nRow - 1) - raft.getSize()[1]
+                    yGutter = (yc - yGutter)/float(nRow - 1) - raft.getSize().getMm()[1]
+
+
+    #######################
+    # get the distortion
+    distortPolicy = cameraPol.get('Distortion')
+    distortActive = distortPolicy.get('active')
+    activePolicy  = distortPolicy.get(distortActive)
+
+    distort = None
+    if distortActive == "NullDistortion":
+	distort = cameraGeom.NullDistortion()
+    elif distortActive == "RadialPolyDistortion":
+	coeffs = activePolicy.getArray('coeffs')
+	distort = cameraGeom.RadialPolyDistortion(coeffs)
+    camera.setDistortion(distort)
+
 
     if cameraInfo is not None:
         cameraInfo.clear()
@@ -476,8 +493,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         cameraInfo["width"] =  nCol*raft.getAllPixels().getWidth()
         cameraInfo["height"] = nRow*raft.getAllPixels().getHeight()
         cameraInfo["pixelSize"] = raft.getPixelSize()
-        cameraInfo["widthMm"] =  nCol*raft.getSize()[0] + (nCol - 1)*xGutter
-        cameraInfo["heightMm"] = nRow*raft.getSize()[1] + (nRow - 1)*yGutter
+        cameraInfo["widthMm"] =  nCol*raft.getSize().getMm()[0] + (nCol - 1)*xGutter
+        cameraInfo["heightMm"] = nRow*raft.getSize().getMm()[1] + (nRow - 1)*yGutter
 
     return camera
 
@@ -846,13 +863,13 @@ def describeRaft(raft, indent=""):
     """Describe an entire Raft"""
     descrip = []
 
-    size = raft.getSize()
+    size = raft.getSize().getMm()
     descrip.append("%sRaft \"%s\",  %gx%g  BBox %s" % (indent, raft.getId(),
                                                         size[0], size[1], raft.getAllPixels()))
     
     for d in cameraGeom.cast_Raft(raft):
         cenPixel = d.getCenterPixel()
-        cen = d.getCenter()
+        cen = d.getCenter().getMm()
 
         descrip.append("%sCcd: %s (%5d, %5d) %s  (%7.1f, %7.1f)" % \
                        ((indent + "    "),
@@ -865,7 +882,7 @@ def describeCamera(camera):
     """Describe an entire Camera"""
     descrip = []
 
-    size = camera.getSize()
+    size = camera.getSize().getMm()
     descrip.append("Camera \"%s\",  %gx%g  BBox %s" % \
                    (camera.getId(), size[0], size[1], camera.getAllPixels()))
 
@@ -1002,3 +1019,52 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
 
     return defectsDict
 
+
+
+def makeDefaultCcd(box, **kwargs):
+    """
+    Make a Ccd object for a Box2I object suitable to be used as Detector in an Exposure
+    **kwargs may specify params needed to construct ElectronicParams, Amp, and Ccd.
+    Defaults are:
+       ElectronicParams: gain (1.0), rdnoise (5.0), saturation (60000)
+       Amp:              detId (1), biasSec (empty Box2I), dataSec (Box2I(img.xy0, img.getDimentions()))
+       Ccd:              pixelSize (1.0)
+    This is only intented to be a useful factory for Detectors needed to test simple images.
+    """
+    
+    # build the Electronics
+    gain          = kwargs.get("gain", 1.0)
+    rdnoise       = kwargs.get("rdnoise", 5.0)
+    saturation    = kwargs.get("saturation", 60000)
+    elec = cameraGeom.ElectronicParams(gain, rdnoise, saturation)
+
+    # build the Amp
+    detId         = kwargs.get("detId", cameraGeom.Id(1))
+    allPixels     = box
+    biasSec       = kwargs.get("biasSec", afwGeom.Box2I())
+    dataSec       = kwargs.get("dataSec", box)
+    amp = cameraGeom.Amp(detId, allPixels, biasSec, dataSec, elec)
+
+    # build the Ccd
+    pixelSize     = kwargs.get("pixelSize", 1.0)
+    ccd = cameraGeom.Ccd(detId, pixelSize)
+    ccd.addAmp(amp)
+
+    return ccd
+
+            
+
+def makeCcdFromImage(img, **kwargs):
+    """
+    Make a Ccd object for an afw::Image object suitable to be used as Detector in an Exposure
+    **kwargs may specify params needed to construct Electronics, Amp, and Ccd.  Defaults are:
+       Electronics: gain (1.0), rdnoise (5.0), saturation (60000)
+       Amp:         detId (1), biasSec (empty Box2I), dataSec (Box2I(img.xy0, img.getDimentions()))
+       Ccd:         pixelSize (1.0)
+    This is only intented to be a useful factory for Detectors needed to test simple images.
+    """
+    
+    allPixels     = afwGeom.Box2I(img.getXY0(), img.getDimensions())
+
+    return makeDefaultCcd(allPixels, **kwargs)
+    

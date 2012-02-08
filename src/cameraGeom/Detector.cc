@@ -26,10 +26,13 @@
 #include <algorithm>
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/cameraGeom/FpPoint.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace cameraGeom = lsst::afw::cameraGeom;
+
 
 /************************************************************************************************************/
 /// Test for equality of two Ids; ignore serial if < 0 and name if == ""
@@ -86,83 +89,50 @@ cameraGeom::Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/ov
 /**
  * Return size in mm of this Detector
  */
-afwGeom::Extent2D cameraGeom::Detector::getSize() const {
+cameraGeom::FpExtent cameraGeom::Detector::getSize() const {
     bool const isTrimmed = true;
 
-    return afwGeom::Extent2D(getAllPixels(isTrimmed).getWidth()*_pixelSize,
-                                getAllPixels(isTrimmed).getHeight()*_pixelSize);
+    return cameraGeom::FpExtent(afwGeom::Extent2D(getAllPixels(isTrimmed).getWidth()*_pixelSize,
+                                                  getAllPixels(isTrimmed).getHeight()*_pixelSize));
 }
 
 /**
  * Return the offset from the mosaic centre, in mm, given a pixel position
  * \sa getPositionFromIndex
  */
-afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
-        lsst::afw::geom::Point2D const& pix,    ///< Pixel coordinates wrt bottom left of Detector
-        bool const isTrimmed            ///< Is this detector trimmed?
-                                                           ) const
-{
-    afwGeom::Extent2D cen(getCenterPixel());
-    return getPositionFromIndex(pix - cen, isTrimmed);
-}    
-
-/**
- * Return the offset from the mosaic centre, in mm, given a pixel position
- * \sa getPositionFromIndex
- */
-afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
-        lsst::afw::geom::Point2D const& pix     ///< Pixel coordinates wrt bottom left of Detector
-                                                           ) const
+cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
+        lsst::afw::geom::Point2D const& pix    ///< Pixel coordinates wrt bottom left of Detector
+                                                               ) const
 {
     return getPositionFromPixel(pix, isTrimmed());
 }    
 
 /**
- * Return the offset in pixels from the detector centre, given an offset from the detector centre in mm
- *
- * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
+ * Return the offset from the mosaic centre, in mm, given a pixel position
  */
-afwGeom::Point2D cameraGeom::Detector::getIndexFromPosition(
-        lsst::afw::geom::Point2D const& pos     ///< Offset from chip centre, mm
+cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
+        lsst::afw::geom::Point2D const& pix,     ///< Pixel coordinates wrt bottom left of Detector
+        bool const isTrimmed            ///< Is this detector trimmed?
                                                            ) const
 {
-    return afwGeom::Point2D(pos[0]/_pixelSize, pos[1]/_pixelSize);
-}
+    afwGeom::Extent2D pixWrtCenter = afwGeom::Extent2D(pix - afwGeom::Extent2D(getCenterPixel()));
+    pixWrtCenter *= getPixelSize();
+    return _center + FpPoint(pixWrtCenter);
+}    
+
 
 /**
  * Return the pixel position given an offset from the mosaic centre in mm
- * \sa getIndexFromPosition
  */
 afwGeom::Point2D cameraGeom::Detector::getPixelFromPosition(
-        lsst::afw::geom::Point2D const& pos     ///< Offset from mosaic centre, mm
-                                                                 ) const
+             FpPoint const &pos     ///< Offset from mosaic centre, mm
+                                                           ) const
 {
     afwGeom::Extent2D cen(getCenterPixel());
-    return cen + getIndexFromPosition(pos - afwGeom::Extent2D(getCenter()));
+    FpPoint posWrtCenter = pos - getCenter();
+    return posWrtCenter.getPixels(getPixelSize()) + cen;
 }
 
-/**
- * Return the offset from the Detector centre, in mm, given a pixel position wrt Detector's centre
- * \sa getPositionFromPixel
- */
-afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-    lsst::afw::geom::Point2D const& pix     ///< Pixel coordinates wrt centre of Detector
-) const {
-    return getPositionFromIndex(pix, isTrimmed());
-}
-
-/**
- * Return the offset from the Detector centre, in mm, given a pixel position wrt Detector's centre
- *
- * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
- * \sa getPositionFromPixel
- */
-afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-    lsst::afw::geom::Point2D const& pix,    ///< Pixel coordinates wrt centre of Detector
-    bool const                      ///< Unused
-) const {
-    return _center + afwGeom::Extent2D(pix)*_pixelSize;
-}    
 
 /// Offset a Detector by the specified amount
 void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
@@ -320,4 +290,28 @@ void cameraGeom::Detector::setOrientation(
     if (n90 == 1 || n90 == 3) {
         _size = afwGeom::Extent2D(_size[1], _size[0]);
     }
+}
+
+
+void cameraGeom::Detector::setDistortion(CONST_PTR(Distortion) distortion) {
+    _distortion = distortion;
+}
+
+CONST_PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() const {
+    
+    // if we have a distortion ... return it
+    if (_distortion) {
+        return _distortion;
+        
+        // otherwise, return our parent's ... no parent? return Null 
+    } else {
+        CONST_PTR(Detector) parent = this->getParent();
+        if (parent) {
+            return parent->getDistortion();
+        } else {
+            return CONST_PTR(Distortion)(); //new Distortion());
+        }
+    }
+    
+    return CONST_PTR(Distortion)(); //new Distortion());
 }

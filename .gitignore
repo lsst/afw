@@ -100,6 +100,7 @@ tests/checkTypeConversions
 tests/convolveGPU
 tests/coord
 tests/decoratedImage
+tests/distort
 tests/ellipse
 tests/footprint1
 tests/footprintArray
