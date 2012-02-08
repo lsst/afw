@@ -274,8 +274,17 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
             std::string card = key;
             valueStr.erase(valueStr.size() - 1);
             std::size_t firstQuote = card.find('\'');
-            std::size_t lastQuote = card.rfind('\'');
-            if (firstQuote == lastQuote) {
+            if (firstQuote == std::string::npos) {
+                throw LSST_EXCEPT(
+                    FitsError,
+                    makeErrorMessage(
+                        fptr, status,
+                        boost::format("Invalid CONTINUE at header key %d: \"%s\".") % i % card
+                    )
+                );
+            }
+            std::size_t lastQuote = card.find('\'', firstQuote + 1);
+            if (lastQuote == std::string::npos) {
                 throw LSST_EXCEPT(
                     FitsError,
                     makeErrorMessage(
