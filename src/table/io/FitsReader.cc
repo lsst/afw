@@ -94,7 +94,7 @@ struct FitsSchemaItem {
                     )
                 );
             }
-            schema.addField<boost::int64_t>(name, units, doc);
+            schema.addField<boost::int64_t>(name, doc, units);
             break;
         case 'E': // floats and doubles can be any number of things; delegate to a separate function
             addFloatField<float>(fits, schema, size);
@@ -246,7 +246,8 @@ struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
             std::string v = value;
             std::replace(v.begin(), v.end(), '_', '.');
             schema.asColSet().modify(i, FitsSchema::SetName(v));
-            schema.asColSet().modify(i, FitsSchema::SetDoc(comment));
+            if (i->doc.empty()) // don't overwrite if already set with TDOCn
+                schema.asColSet().modify(i, FitsSchema::SetDoc(comment));
         } else if (key.compare(0, 5, "TFLAG") == 0) {
             int bit = boost::lexical_cast<int>(key.substr(5)) - 1;
             FitsSchema::BitSet::iterator i = schema.asBitSet().lower_bound(bit);
@@ -256,7 +257,22 @@ struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
             std::string v = value;
             std::replace(v.begin(), v.end(), '_', '.');
             schema.asBitSet().modify(i, FitsSchema::SetName(v));
-            schema.asBitSet().modify(i, FitsSchema::SetDoc(comment));
+            if (i->doc.empty()) // don't overwrite if already set with TFDOCn
+                schema.asBitSet().modify(i, FitsSchema::SetDoc(comment));
+        } else if (key.compare(0, 4, "TDOC") == 0) {
+            int col = boost::lexical_cast<int>(key.substr(4)) - 1;
+            FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
+            if (i == schema.asColSet().end() || i->col != col) {
+                i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
+            }
+            schema.asColSet().modify(i, FitsSchema::SetDoc(value));
+        } else if (key.compare(0, 5, "TFDOC") == 0) {
+            int bit = boost::lexical_cast<int>(key.substr(5)) - 1;
+            FitsSchema::BitSet::iterator i = schema.asBitSet().lower_bound(bit);
+            if (i == schema.asBitSet().end() || i->bit != bit) {
+                i = schema.asBitSet().insert(i, FitsSchemaItem(-1, bit));
+            }
+            schema.asBitSet().modify(i, FitsSchema::SetDoc(value));
         } else if (key.compare(0, 5, "TUNIT") == 0) {
             int col = boost::lexical_cast<int>(key.substr(5)) - 1;
             FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);

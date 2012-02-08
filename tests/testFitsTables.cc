@@ -34,6 +34,20 @@ struct EqualityCompare {
 
 };
 
+struct ExtractSchemaStrings {
+
+    template <typename T>
+    void operator()(lsst::afw::table::SchemaItem<T> const & item) const {
+        names.push_back(item.field.getName());
+        docs.push_back(item.field.getDoc());
+        units.push_back(item.field.getUnits());
+    }
+    
+    mutable std::vector<std::string> names;
+    mutable std::vector<std::string> docs;
+    mutable std::vector<std::string> units;
+};
+
 
 BOOST_AUTO_TEST_CASE(testFits) {
     using namespace lsst::afw::table;
@@ -95,7 +109,13 @@ BOOST_AUTO_TEST_CASE(testFits) {
     vector.writeFits("!testTable.fits");
 
     SourceVector readVector = SourceVector::readFits("testTable.fits[1]");
-    BOOST_CHECK_EQUAL( schema, readVector.getSchema() );
+    BOOST_CHECK_EQUAL( schema, readVector.getSchema() ); // only checks equality of keys
+
+    ExtractSchemaStrings func1;  schema.forEach(boost::ref(func1));
+    ExtractSchemaStrings func2;  readVector.getSchema().forEach(boost::ref(func2));
+    BOOST_CHECK( func1.names == func2.names );
+    BOOST_CHECK( func1.docs == func2.docs );
+    BOOST_CHECK( func1.units == func2.units );
 
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxKey(), readVector.getTable()->getModelFluxKey() );
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxErrKey(), readVector.getTable()->getModelFluxErrKey() );
