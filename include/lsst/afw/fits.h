@@ -52,7 +52,6 @@ LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::Exception, lsst::afw::fits
  */
 LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::FitsTypeError)
 
-//@{
 /**
  *  @brief Return an error message reflecting FITS I/O errors.
  *
@@ -65,9 +64,7 @@ std::string makeErrorMessage(std::string const & fileName="", int status=0, std:
 inline std::string makeErrorMessage(std::string const & fileName, int status, boost::format const & msg) {
     return makeErrorMessage(fileName, status, msg.str());
 }
-//@}
 
-//@{
 /**
  *  @brief Return an error message reflecting FITS I/O errors.
  *
@@ -81,7 +78,19 @@ std::string makeErrorMessage(void * fptr, int status=0, std::string const & msg=
 inline std::string makeErrorMessage(void * fptr, int status, boost::format const & msg) {
     return makeErrorMessage(fptr, status, msg.str());
 }
-//@}
+
+/**
+ *  A FITS-related replacement for LSST_EXCEPT that takes an additional Fits object
+ *  and uses makeErrorMessage(fitsObj.fptr, fitsObj.status, ...) to construct the message.
+ */
+#define LSST_FITS_EXCEPT(type, fitsObj, ...) \
+    type(LSST_EXCEPT_HERE, lsst::afw::fits::makeErrorMessage((fitsObj).fptr, (fitsObj).status, __VA_ARGS__))
+
+/**
+ *  Throw a FitsError exception if the status of the given Fits object is nonzero.
+ */
+#define LSST_FITS_CHECK_STATUS(fitsObj)                                 \
+    if ((fitsObj).status != 0) LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, "")
 
 /**
  *  @brief A simple struct that combines the two arguments that must be passed to most cfitsio routines
@@ -235,11 +244,6 @@ struct Fits {
 
     /// @brief Close a FITS file.
     void closeFile();
-
-    /// @brief Throw a reasonably informative exception if the status is nonzero.
-    void checkStatus() const {
-        if (status != 0) throw LSST_EXCEPT(FitsError, makeErrorMessage(fptr, status));
-    }
 
     void * fptr;  // the actual cfitsio fitsfile pointer; void to avoid including fitsio.h here.
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.

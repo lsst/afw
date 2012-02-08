@@ -32,12 +32,12 @@ public:
     template <typename ContainerT>
     static void apply(std::string const & filename, ContainerT const & container) {
         Fits fits = Fits::createFile(filename.c_str());
-        fits.checkStatus();
+        LSST_FITS_CHECK_STATUS(fits);
         PTR(FitsWriter) writer 
             = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits);
         writer->write(container);
         fits.closeFile();
-        fits.checkStatus();
+        LSST_FITS_CHECK_STATUS(fits);
     }
 
     /// @brief Construct from a wrapped cfitsio pointer. 
