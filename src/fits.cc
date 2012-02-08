@@ -15,6 +15,7 @@ extern "C" {
 #include "boost/format.hpp"
 #include "boost/scoped_array.hpp"
 
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
 
@@ -135,7 +136,7 @@ void updateKeyImpl(Fits & fits, char const * key, T const & value, char const * 
 }
 
 void updateKeyImpl(Fits & fits, char const * key, std::string const & value, char const * comment) {
-    fits_update_key_str(
+    fits_update_key_longstr(
         reinterpret_cast<fitsfile*>(fits.fptr),
         const_cast<char*>(key),
         const_cast<char*>(value.c_str()),
@@ -158,7 +159,7 @@ void writeKeyImpl(Fits & fits, char const * key, T const & value, char const * c
 }
 
 void writeKeyImpl(Fits & fits, char const * key, std::string const & value, char const * comment) {
-    fits_write_key_str(
+    fits_write_key_longstr(
         reinterpret_cast<fitsfile*>(fits.fptr),
         const_cast<char*>(key),
         const_cast<char*>(value.c_str()),
@@ -256,24 +257,41 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
     std::string keyStr;
     std::string valueStr;
     std::string commentStr;
-    bool inContinue = false;
-    for (int i = 1; i <= nKeys; ++i) {
+    int i = 1;
+    while (i <= nKeys) {
         fits_read_keyn(reinterpret_cast<fitsfile*>(fptr), i, key, value, comment, &status);
-        if (inContinue && strncmp(key, "CONTINUE", 8) == 0) {
-            valueStr += strip(value);
-            commentStr += comment;
-        } else {
-            keyStr = key;
-            valueStr = strip(value);
-            commentStr = comment;
-        }
-        if (valueStr[valueStr.size() - 1] == '&') {
-            inContinue = true;
+        keyStr = key;
+        valueStr = strip(value);
+        commentStr = comment;
+        ++i;
+        while (valueStr[valueStr.size() - 1] == '&' && i <= nKeys) {
+            // we're using key to hold the entire record here; the actual key is safe in keyStr
+            fits_read_record(reinterpret_cast<fitsfile*>(fptr), i, key, &status);
+            if (!strncmp(key, "CONTINUE", 8) == 0) {
+                // require both trailing '&' and CONTINUE to invoke long-string handling
+                break;
+            }
+            std::string card = key;
             valueStr.erase(valueStr.size() - 1);
-        } else {
-            inContinue = false;
-            functor(keyStr, valueStr, commentStr);
+            std::size_t firstQuote = card.find('\'');
+            std::size_t lastQuote = card.rfind('\'');
+            if (firstQuote == lastQuote) {
+                throw LSST_EXCEPT(
+                    FitsError,
+                    makeErrorMessage(
+                        fptr, status,
+                        boost::format("Invalid CONTINUE at header key %d: \"%s\".") % i % card
+                    )
+                );
+            }
+            valueStr += card.substr(firstQuote + 1, lastQuote - firstQuote - 1);
+            std::size_t slash = card.find('/', lastQuote + 1);
+            if (slash != std::string::npos) {
+                commentStr += strip(card.substr(slash + 1));
+            }
+            ++i;
         }
+        functor(keyStr, valueStr, commentStr);
     }
 }
 
