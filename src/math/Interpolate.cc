@@ -120,7 +120,7 @@ double math::Interpolate::interpolate(double const x) {
         double d = ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], x0, _acc);
         // second derivative at endpoint
         double d2 = ::gsl_interp_eval_deriv2(_interp, &_x[0], &_y[0], x0, _acc);
-        return y0 + (x - x0)*d + (x - x0)*(x - x0)*d2;
+        return y0 + (x - x0)*d + 0.5*(x - x0)*(x - x0)*d2;
     }
     assert(x >= _x.front());
     assert(x <= _x.back());
