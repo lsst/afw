@@ -13,6 +13,7 @@ import lsst.pex.logging as logging
 import lsst.pex.policy as policy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+import lsst.afw.table as afwTable
 import lsst.afw.detection as afwDet
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
@@ -59,13 +60,14 @@ class matchlistTestCase(unittest.TestCase):
         #self.refids = [int(random.random() * 2**64) for i in range(Nmatch)]
         self.refids = [int(random.random() * 2**31) for i in range(Nmatch)]
         print 'refids:', self.refids
+        table = afwTable.SourceTable.make(afwTable.SourceTable.makeMinimalSchema())
         for m in range(Nmatch):
             sm = afwDet.SourceMatch()
-            s1 = afwDet.Source()
-            s1.setSourceId(self.refids[m])
+            s1 = table.makeRecord()
+            s1.setId(self.refids[m])
             sm.first = s1
-            s2 = afwDet.Source()
-            s2.setSourceId(m)
+            s2 = table.makeRecord()
+            s2.setId(m)
             sm.second = s2
             sm.distance = 0
             self.smv.push_back(sm)

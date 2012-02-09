@@ -87,6 +87,4 @@
     }
 }
 
-#if 0
 %lsst_persistable(lsst::afw::detection::PersistableSourceMatchVector);
-#endif

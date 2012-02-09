@@ -7,8 +7,6 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#if 0
-
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/persistence.h"
@@ -21,7 +19,8 @@ using lsst::daf::persistence::LogicalLocation;
 using lsst::daf::persistence::Persistence;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
-using lsst::afw::detection::Source;
+using lsst::afw::table::SourceRecord;
+using lsst::afw::table::SourceTable;
 using lsst::afw::detection::SourceMatch;
 using lsst::afw::detection::SourceMatchVector;
 using lsst::afw::detection::PersistableSourceMatchVector;
@@ -34,18 +33,20 @@ BOOST_AUTO_TEST_CASE(persistUnpersistMatchList) {
 	vector<boost::int64_t> srcids;
 	vector<boost::int64_t> refids;
 
+    PTR(SourceTable) table = SourceTable::make(SourceTable::makeMinimalSchema());
+
 	for (int i=0; i<20; i++) {
 		boost::int64_t theid;
 
 		theid = 1000 + i;
 		refids.push_back(theid);
-		Source::Ptr s1(new Source());
-		s1->setSourceId(theid);
+		PTR(SourceRecord) s1 = table->makeRecord();
+		s1->setId(theid);
 
 		theid = 1000000 + 1000*i;
 		srcids.push_back(theid);
-		Source::Ptr s2(new Source());
-		s2->setSourceId(theid);
+		PTR(SourceRecord) s2 = table->makeRecord();
+		s2->setId(theid);
 
 		// By convention, "first" is the reference catalog object, and "second" is the source object.
 		SourceMatch m;
@@ -82,9 +83,7 @@ BOOST_AUTO_TEST_CASE(persistUnpersistMatchList) {
 	BOOST_CHECK_MESSAGE(smv2.size() == smv.size(), "unpersisted SourceMatchVector has the wrong size.");
 
 	for (unsigned int i = 0; i != smv.size(); i++) {
-            BOOST_CHECK_MESSAGE(smv2[i].first->getSourceId() == refids[i], "Reference id is wrong");
-            BOOST_CHECK_MESSAGE(smv2[i].second->getSourceId() == srcids[i], "Source id is wrong");
+            BOOST_CHECK_MESSAGE(smv2[i].first->getId() == refids[i], "Reference id is wrong");
+            BOOST_CHECK_MESSAGE(smv2[i].second->getId() == srcids[i], "Source id is wrong");
 	}
 }
-
-#endif

@@ -1,5 +1,4 @@
 // -*- lsst-c++ -*-
-#if 0
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -39,7 +38,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/detection/Source.h"
+#include "lsst/afw/table/Source.h"
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/formatters/SourceMatchVectorFormatter.h"
 #include "lsst/afw/image/fits/fits_io_private.h"
@@ -56,13 +55,13 @@ LSST_EXCEPTION_TYPE(FitsException,
 
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
+namespace afwTable = lsst::afw::table;
 
 using lsst::daf::base::Persistable;
 using lsst::daf::base::PropertySet;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
-using lsst::afw::detection::Source;
 using lsst::afw::detection::SourceMatch;
 using lsst::afw::detection::SourceMatchVector;
 using lsst::afw::detection::PersistableSourceMatchVector;
@@ -161,15 +160,17 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
         throw LSST_EXCEPT(FitsException, (boost::format("Expected %i columns; got %i") % NCOLS % ncols).str());
     }
 
+    PTR(afwTable::SourceTable) table
+        = afwTable::SourceTable::make(afwTable::SourceTable::makeMinimalSchema());
     SourceMatchVector smv;
     for (int i=0; i<nrows; i++) {
-		Source::Ptr s1(new Source());
-		Source::Ptr s2(new Source());
-		SourceMatch m;
-		m.first = s1;
-		m.second = s2;
-		m.distance = 0.0;
-		smv.push_back(m);
+        PTR(afwTable::SourceRecord) s1 = table->makeRecord();
+        PTR(afwTable::SourceRecord) s2 = table->makeRecord();
+        SourceMatch m;
+        m.first = s1;
+        m.second = s2;
+        m.distance = 0.0;
+        smv.push_back(m);
     }
 
     for (int i=0; i<NCOLS; i++) {
@@ -211,9 +212,9 @@ void form::SourceMatchVectorFormatter::readFits(PersistableSourceMatchVector* p,
             if (i == 0) {
                 // pass
             } else if (i == 1) {
-                smv[j].first->setSourceId(ids[j]);
+                smv[j].first->setId(ids[j]);
             } else if (i == 2) {
-                smv[j].second->setSourceId(ids[j]);
+                smv[j].second->setId(ids[j]);
             }
         }
         //printf("  %li  =>  %li\n", (long)refids[i], (long)srcids[i]);
@@ -238,8 +239,8 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
      printf("Persisting a list of %i sources to file \"%s\"\n",
      (int)matches.size(), fs->getPath().c_str());
      for (size_t i=0; i<matches.size(); i++) {
-     printf("  %i: %li ==> %li\n", (int)i, (long)matches[i].first->getSourceId(),
-     (long)matches[i].second->getSourceId());
+     printf("  %i: %li ==> %li\n", (int)i, (long)matches[i].first->getId(),
+     (long)matches[i].second->getId());
      }
      */
 
@@ -329,11 +330,11 @@ void form::SourceMatchVectorFormatter::writeFits(const PersistableSourceMatchVec
         } else if (j == 1) {
             // Grab the "first" object IDs -- by convention, "first" is the reference catalog object.
             for (int i=0; i<nrows; i++)
-                values[i] = matches[i].first->getSourceId();
+                values[i] = matches[i].first->getId();
         } else if (j == 2) {
             // Grab the "second" object IDs -- by convention, "second" is the image source.
             for (int i=0; i<nrows; i++)
-                values[i] = matches[i].second->getSourceId();
+                values[i] = matches[i].second->getId();
         }
 
         // In cfitsio's bizarro world, most things are 1-indexed (row, column, element)
@@ -409,5 +410,3 @@ void form::SourceMatchVectorFormatter::update(Persistable*,
     throw LSST_EXCEPT(ex::RuntimeErrorException, 
                       "SourceMatchVectorFormatter: updates not supported");
 }
-
-#endif

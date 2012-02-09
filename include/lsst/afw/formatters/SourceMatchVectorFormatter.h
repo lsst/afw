@@ -1,4 +1,3 @@
-#if 0
 // -*- lsst-c++ -*-
 
 /* 
@@ -100,7 +99,5 @@ public:
 
 
 }}} // namespace lsst::afw::formatters
-
-#endif
 
 #endif
