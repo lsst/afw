@@ -194,7 +194,14 @@ struct Fits {
     template <typename T>
     void readKey(std::string const & key, T & value);
 
-    /// @brief Call a polymorphic functor for every key in the header.
+    /**
+     *  @brief Call a polymorphic functor for every key in the header.
+     *
+     *  Each value is passed in as a string, and the single quotes that mark an actual
+     *  string value are not removed (neither are extra spaces).  However, long strings
+     *  that make use of the CONTINUE keyword are concatenated to look as if they were
+     *  on a single line.
+     */
     void forEachKey(HeaderIterationFunctor & functor);
 
     /**

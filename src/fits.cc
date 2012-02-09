@@ -316,10 +316,10 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
     while (i <= nKeys) {
         fits_read_keyn(reinterpret_cast<fitsfile*>(fptr), i, key, value, comment, &status);
         keyStr = key;
-        valueStr = strip(value);
+        valueStr = value;
         commentStr = comment;
         ++i;
-        while (valueStr[valueStr.size() - 1] == '&' && i <= nKeys) {
+        while (valueStr.size() > 2 && valueStr[valueStr.size() - 2] == '&' && i <= nKeys) {
             // we're using key to hold the entire record here; the actual key is safe in keyStr
             fits_read_record(reinterpret_cast<fitsfile*>(fptr), i, key, &status);
             if (!strncmp(key, "CONTINUE", 8) == 0) {
@@ -327,7 +327,7 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
                 break;
             }
             std::string card = key;
-            valueStr.erase(valueStr.size() - 1);
+            valueStr.erase(valueStr.size() - 2);
             std::size_t firstQuote = card.find('\'');
             if (firstQuote == std::string::npos) {
                 throw LSST_EXCEPT(
@@ -348,7 +348,7 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
                     )
                 );
             }
-            valueStr += card.substr(firstQuote + 1, lastQuote - firstQuote - 1);
+            valueStr += card.substr(firstQuote + 1, lastQuote - firstQuote);
             std::size_t slash = card.find('/', lastQuote + 1);
             if (slash != std::string::npos) {
                 commentStr += strip(card.substr(slash + 1));
@@ -401,11 +401,12 @@ void MetadataIterationFunctor::operator()(
     static boost::regex const boolRegex("[tTfF]");
     static boost::regex const intRegex("[+-]?[0-9]+");
     static boost::regex const doubleRegex("[+-]?([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)([eE][+-]?[0-9]+)?");
-    static boost::regex const fitsStringRegex("'(.*)'");
+    static boost::regex const fitsStringRegex("'(.*?) *'");
     boost::smatch matchStrings;
 
-    if (strip && isKeyIgnored(key))
+    if (strip && isKeyIgnored(key)) {
         return;
+    }
 
     std::istringstream converter(value);
     if (boost::regex_match(value, boolRegex)) {
@@ -437,6 +438,11 @@ void MetadataIterationFunctor::operator()(
         } else {
             set->add(key, comment);
         }
+    } else {
+        throw LSST_EXCEPT(
+            afw::fits::FitsError,
+            (boost::format("Could not parse header value for key '%s': '%s'") % key % value).str()
+        );
     }
 }
 

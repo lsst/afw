@@ -94,20 +94,31 @@ public:
 
 protected:
 
-    /// @copydoc Reader::_readSchema
-    virtual Schema _readSchema(int nCols=-1);
-
     /// @copydoc Reader::_readTable
-    virtual PTR(BaseTable) _readTable(Schema const & schema);
+    virtual PTR(BaseTable) _readTable();
 
     /// @copydoc Reader::_readRecord
     virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
+
+    /// @brief Should be called by any reimplementation of _readTable.
+    void _startRecords();
 
     struct ProcessRecords;
 
     Fits * _fits;         // cfitsio pointer in a conveniencer wrapper
     std::size_t _row;     // which row we're currently reading
 private:
+
+    friend class afw::table::Schema;
+
+    // Implementation for Schema's constructors that take PropertyLists;
+    // it's here to keep FITS-related code a little more centralized.
+    static void _readSchema(
+        Schema & schema,
+        daf::base::PropertyList & metadata,
+        bool stripMetadata
+    );
+
     std::size_t _nRows;   // how many total records there are in the FITS table
     boost::shared_ptr<ProcessRecords> _processor; // a private Schema::forEach functor that reads records
 };

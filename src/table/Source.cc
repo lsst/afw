@@ -200,9 +200,7 @@ public:
 
 protected:
 
-    virtual Schema _readSchema(int nCols=-1);
-
-    virtual PTR(BaseTable) _readTable(Schema const & schema);
+    virtual PTR(BaseTable) _readTable();
 
     virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
@@ -211,26 +209,26 @@ private:
     int _peakCol;
 };
 
-Schema SourceFitsReader::_readSchema(int nCols) {
-    _fits->readKey("SPANCOL", _spanCol);
-    if (_fits->status == 0) {
-        --_spanCol;
-    } else {
-        _fits->status = 0;
-        _spanCol = -1;
+PTR(BaseTable) SourceFitsReader::_readTable() {
+    daf::base::PropertyList metadata;
+    _fits->readMetadata(metadata, true);
+    _spanCol = metadata.get("SPANCOL", 0);
+    if (_spanCol > 0) { 
+        // we remove these from the metadata so the Schema constructor doesn't try to parse
+        // the footprint columns
+        metadata.remove("SPANCOL");
+        metadata.remove((boost::format("TTYPE%d") % _spanCol).str());
+        metadata.remove((boost::format("TFORM%d") % _spanCol).str());
     }
-    _fits->readKey("PEAKCOL", _peakCol);
-    if (_fits->status == 0) {
-        --_peakCol;
-    } else {
-        _fits->status = 0;
-        _peakCol = -1;
+    _peakCol = metadata.get("PEAKCOL", 0);
+    if (_peakCol >= 0) {
+        metadata.remove("PEAKCOL");
+        metadata.remove((boost::format("TTYPE%d") % _peakCol).str());
+        metadata.remove((boost::format("TFORM%d") % _peakCol).str());
     }
-    int maxCol = std::min(_spanCol, _peakCol);
-    return io::FitsReader::_readSchema(maxCol);
-}
-
-PTR(BaseTable) SourceFitsReader::_readTable(Schema const & schema) {
+    --_spanCol; // switch to 0-indexed rather than 1-indexed convention.
+    --_peakCol;
+    Schema schema(metadata, true);
     PTR(SourceTable) table =  SourceTable::make(schema);
     LOAD_FLUX_SLOT(PSF, Psf);
     LOAD_FLUX_SLOT(MODEL, Model);
@@ -238,6 +236,7 @@ PTR(BaseTable) SourceFitsReader::_readTable(Schema const & schema) {
     LOAD_FLUX_SLOT(INST, Inst);
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
+    _startRecords();
     return table;
 }
 
