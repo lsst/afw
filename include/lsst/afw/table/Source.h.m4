@@ -402,6 +402,54 @@ private:
 
 #ifndef SWIG
 
+/**
+ *  @brief A CRTP base class used to inject source-specific functionality into VectorT.
+ *
+ *  This class will serve as a base class for VectorT only when its TableT template
+ *  parameter is SourceTable, allowing us to add the sort() and find() member functions
+ *  that are aware of the Source ID field.
+ */
+template <typename RecordT>
+class CustomVectorOps<RecordT,SourceTable> {
+    typedef std::vector<PTR(RecordT)> Internal;
+    typedef VectorT<RecordT,SourceTable> Base;
+    Base & self() { return static_cast<Base &>(*this); }
+    Base const & self() const { return static_cast<Base const &>(*this); }
+public:
+
+    typedef VectorIterator<typename Internal::iterator> iterator;
+    typedef VectorIterator<typename Internal::const_iterator> const_iterator;
+
+    /// @brief Return true if the vector is in ascending ID order.
+    bool isSorted() const;
+
+    /// @brief Sort the vector in-place by ID.
+    void sort();
+
+    /**
+     *  @brief Return true if all records in the vector have unique IDs.
+     *
+     *  @note The vector must be sorted in ascending ID order before calling find (i.e. 
+     *        isSorted() must be true).
+     */
+    bool hasUniqueIds() const;
+
+    //@{
+    /**
+     *  @brief Return an iterator to the record with the given ID.
+     *
+     *  @note The vector must be sorted in ascending ID order before calling find (i.e. 
+     *        isSorted() must be true).
+     *
+     *  Returns end() if the Record cannot be found.
+     */
+    iterator find(RecordId id);
+    const_iterator find(RecordId id) const;
+    //@}
+
+};
+
+
 typedef VectorT<SourceRecord,SourceTable> SourceVector;
 typedef VectorT<SourceRecord const,SourceTable> ConstSourceVector;
 

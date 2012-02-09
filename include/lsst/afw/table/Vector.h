@@ -18,6 +18,16 @@
 namespace lsst { namespace afw { namespace table {
 
 /**
+ *  @brief An empty base class that VectorT will inherit from.
+ *
+ *  This class can be specialized to inject extra functionality into the VectorT template
+ *  for tables of that type.  See the SourceTable specialization for an example.
+ *
+ *  CustomVectorOps is friended by VectorT, so it can access the latters Internal vector.
+ */
+template <typename RecordT, typename TableT> class CustomVectorOps {};
+
+/**
  *  @brief Iterator class for VectorT.
  *
  *  Iterators dereference to record references or const references, even though the VectorT container
@@ -95,7 +105,7 @@ private:
  *  between references and shared_ptrs to records.
  */
 template <typename RecordT, typename TableT>
-class VectorT {
+class VectorT : public CustomVectorOps<RecordT,TableT> {
     typedef std::vector<PTR(RecordT)> Internal;
 public:
 
@@ -335,6 +345,8 @@ public:
     void clear() { _internal.clear(); }
     
 private:
+
+    template <typename RecordU, typename TableU> friend class CustomVectorOps;
 
     template <typename InputIterator>
     void _insert(

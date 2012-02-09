@@ -84,6 +84,16 @@ public:
 }
 
 %template (BaseVector) VectorT<BaseRecord,BaseTable>;
+
+%extend VectorT<lsst::afw::table::SourceRecord,lsst::afw::table::SourceTable> {
+    bool isSorted() const { return self->isSorted(); }
+    void sort() { return self->sort(); }
+    bool hasUniqueIds() const { return self->hasUniqueIds(); }
+    PTR(SourceRecord) find(RecordId id) {
+        return self->find(id);
+    }
+}
+
 %template (SourceVector) VectorT<SourceRecord,SourceTable>;
 
 typedef VectorT<BaseRecord,BaseTable> BaseVector;

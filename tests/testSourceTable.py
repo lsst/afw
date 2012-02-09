@@ -105,6 +105,27 @@ class SourceTableTestCase(unittest.TestCase):
         self.table.defineShape("c")
         self.checkCanonical()
 
+class SourceVectorTestCase(unittest.TestCase):
+
+    def setUp(self):
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        self.vector = lsst.afw.table.SourceVector(schema)
+        self.vector.addNew().setId(50)
+        self.vector.addNew()
+        self.vector.addNew()
+
+    def tearDown(self):
+        del self.vector
+
+    def testCustomization(self):
+        self.assertFalse(self.vector.isSorted())
+        self.vector.sort()
+        self.assert_(self.vector.isSorted())
+        self.assert_(self.vector.hasUniqueIds())
+        self.vector.addNew().setId(50)
+        self.vector.sort()
+        self.assert_(not self.vector.hasUniqueIds())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -114,6 +135,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SourceTableTestCase)
+    suites += unittest.makeSuite(SourceVectorTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

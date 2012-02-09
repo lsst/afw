@@ -29,7 +29,6 @@
 #include <cmath>
 
 #include "boost/scoped_array.hpp"
-#include "boost/iterator/transform_iterator.hpp"
 
 #include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
@@ -352,27 +351,6 @@ BaseVector makeSourceMatchTable(SourceMatchVector const & matches) {
     return result;
 }
 
-namespace {
-
-struct ExtractId {
-    typedef RecordId result_type;
-    typedef SourceRecord const & argument_type;
-    RecordId operator()(SourceRecord const & s) const { return s.getId(); } 
-};
-
-PTR(SourceRecord) findSourceById(SourceVector const & vector, RecordId id) {
-    
-    // Iterator type that makes a SourceVector iterator look like an iterator over IDs.
-    typedef boost::transform_iterator<ExtractId,SourceVector::const_iterator> SearchIter;
-
-    SearchIter i = std::lower_bound(SearchIter(vector.begin()), SearchIter(vector.end()), id);
-    if (i.base() != vector.end() && *i == id) return i.base();
-    return PTR(SourceRecord)();
-}
-
-
-} // anonymous
-
 SourceMatchVector makeSourceMatchVector(
     BaseVector const & matches, 
     SourceVector const & first,
@@ -381,12 +359,17 @@ SourceMatchVector makeSourceMatchVector(
     Key<RecordId> key1 = matches.getSchema()["first"];
     Key<RecordId> key2 = matches.getSchema()["second"];
     Key<double> keyD = matches.getSchema()["distance"];
+    if (!first.isSorted() || !second.isSorted()) 
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterException,
+            "SourceVectors passed to makeSourceMatchVector must be sorted."
+        );
     SourceMatchVector result;
     result.resize(matches.size());
     SourceMatchVector::iterator j = result.begin();
     for (BaseVector::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
-        j->first = findSourceById(first, i->get(key1));
-        j->second = findSourceById(second, i->get(key2));
+        j->first = first.find(i->get(key1));
+        j->second = second.find(i->get(key2));
         j->distance = i->get(keyD);
     }
     return result;
