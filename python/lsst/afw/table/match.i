@@ -1,5 +1,4 @@
 // -*- lsst-c++ -*-
-#if 0
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -23,19 +22,15 @@
  */
 
 %{
-#include "lsst/afw/detection/Source.h"
-#include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/SourceMatch.h"
 %}
 
-%shared_ptr(lsst::afw::detection::PersistableSourceMatchVector);
+%include "lsst/afw/table/SourceMatch.h"
 
-%include "lsst/afw/detection/SourceMatch.h"
+%template(SourceMatchVector) std::vector<lsst::afw::table::SourceMatch>;
 
-%template(SourceMatchVector) std::vector<lsst::afw::detection::SourceMatch>;
-
-%shared_ptr(lsst::afw::detection::PersistableSourceMatchVector);
-
-%extend lsst::afw::detection::SourceMatch {
+%extend lsst::afw::table::SourceMatch {
     %pythoncode {
     def __repr__(self):
         return "SourceMatch(%s,\n            %s,\n            %g)" % \
@@ -44,8 +39,8 @@
     def __str__(self):
         s1, s2 = self.first, self.second
         return "((id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n (id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n dist %g [pix or radians])" % (
-            s1.getId(), s1.getRa().asDegrees(), s1.getDec().asDegrees(), s1.getXAstrom(), s1.getYAstrom(),
-            s2.getId(), s2.getRa().asDegrees(), s2.getDec().asDegrees(), s2.getXAstrom(), s2.getYAstrom(),
+            s1.getId(), s1.getRa().asDegrees(), s1.getDec().asDegrees(), s1.getX(), s1.getY(),
+            s2.getId(), s2.getRa().asDegrees(), s2.getDec().asDegrees(), s2.getX(), s2.getY(),
             self.distance)
 
     def __getitem__(self, i):
@@ -89,6 +84,3 @@
         self.__init__(*state)
     }
 }
-
-%lsst_persistable(lsst::afw::detection::PersistableSourceMatchVector);
-#endif

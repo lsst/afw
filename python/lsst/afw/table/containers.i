@@ -86,4 +86,6 @@ public:
 %template (BaseVector) VectorT<BaseRecord,BaseTable>;
 %template (SourceVector) VectorT<SourceRecord,SourceTable>;
 
+typedef VectorT<BaseRecord,BaseTable> BaseVector;
+typedef VectorT<SourceRecord,SourceTable> SourceVector;
 }}} // namespace lsst::afw::table

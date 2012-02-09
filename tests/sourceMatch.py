@@ -39,6 +39,7 @@ from math import radians
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDetect
+import lsst.afw.table as afwTable
 import lsst.afw.geom as afwGeom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -47,31 +48,34 @@ class SourceMatchTestCase(unittest.TestCase):
     """A test case for matching SourceSets"""
 
     def setUp(self):
-        self.ss1 = afwDetect.SourceSet()
-        self.ss2 = afwDetect.SourceSet()
+        schema = afwTable.SourceTable.makeMinimalSchema()
+        fluxKey = schema.addField("flux", type=float)
+        fluxErrKey = schema.addField("flux.err", type=float)
+        fluxFlagKey = schema.addField("flux.flags", type="Flag")
+        self.table = afwTable.SourceTable.make(schema)
+        self.table.definePsfFlux("flux")
+        self.ss1 = afwTable.SourceVector(self.table)
+        self.ss2 = afwTable.SourceVector(self.table)
 
     def tearDown(self):
+        del self.table
         del self.ss1
         del self.ss2
 
     def testIdentity(self):
         nobj = 1000
         for i in range(nobj):
-            s = afwDetect.Source()
+            s = self.ss1.addNew()
             s.setId(i)
-            s.setRa((10 + 0.001*i) * afwGeom.degrees)
-            s.setDec((10 + 0.001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
 
-            self.ss1.append(s)
-
-            s = afwDetect.Source()
+            s = self.ss2.addNew()
             s.setId(2*nobj + i)
-            s.setRa((10 + 0.001*i) * afwGeom.degrees)
-            s.setDec((10 + 0.001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
 
-            self.ss2.append(s)
-
-        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
+        mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(mat), nobj)
 
@@ -81,24 +85,22 @@ class SourceMatchTestCase(unittest.TestCase):
             print s0.getRa(), s1.getRa(), s0.getId(), s1.getId()
 
     def testNaNPositions(self):
-        ss1 = afwDetect.SourceSet()
-        ss2 = afwDetect.SourceSet()
+        ss1 = afwTable.SourceVector(self.table)
+        ss2 = afwTable.SourceVector(self.table)
         for ss in (ss1, ss2):
-            s = afwDetect.Source()
-            s.setRa(float('nan') * afwGeom.radians)
-            ss.append(s)
-            s = afwDetect.Source()
-            s.setDec(float('nan') * afwGeom.radians)
-            ss.append(s)
-            s = afwDetect.Source()
-            s.setRa(0.0 * afwGeom.radians)
-            s.setDec(0.0 * afwGeom.radians)
-            ss.append(s)
-            s = afwDetect.Source()
-            s.setRa(float('nan') * afwGeom.radians)
-            s.setDec(float('nan') * afwGeom.radians)
-            ss.append(s)
-        mat = afwDetect.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
+            ss.addNew().set(afwTable.SourceTable.getCoordKey().getRa(), float('nan') * afwGeom.radians)
+
+            ss.addNew().set(afwTable.SourceTable.getCoordKey().getDec(), float('nan') * afwGeom.radians)
+
+            s = ss.addNew()
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), 0.0 * afwGeom.radians)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), 0.0 * afwGeom.radians)
+
+            s = ss.addNew()
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), float('nan') * afwGeom.radians)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), float('nan') * afwGeom.radians)
+
+        mat = afwTable.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
         self.assertEqual(len(mat), 1)
 
     def testPhotometricCalib(self):
@@ -115,8 +117,8 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
 
-        sdss = afwDetect.SourceSet()
-        sdssSecondary = afwDetect.SourceSet()
+        sdss = afwTable.SourceVector(self.table)
+        sdssSecondary = afwTable.SourceVector(self.table)
 
         PRIMARY, SECONDARY = 1, 2       # values of mode
 
@@ -132,16 +134,15 @@ class SourceMatchTestCase(unittest.TestCase):
             ra, dec = [float(f) for f in fields[3:5]]
             psfMags = [float(f) for f in fields[5:]]
 
-            s = afwDetect.Source()
-            s.setId(objId)
-            s.setRa(ra * afwGeom.degrees)
-            s.setDec(dec * afwGeom.degrees)
-            s.setPsfFlux(psfMags[band])
-
             if mode == PRIMARY:
-                sdss.append(s)
+                s = sdss.addNew()
             elif SECONDARY:
-                sdssSecondary.append(s)
+                s = sdssSecondary.addNew()
+
+            s.setId(objId)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), ra * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), dec * afwGeom.degrees)
+            s.set(self.table.getPsfFluxKey(), psfMags[band])
 
         del ifd
         #
@@ -152,7 +153,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
 
-        template = afwDetect.SourceSet()
+        template = afwTable.SourceVector(self.table)
 
         id = 0
         for line in ifd.readlines():
@@ -167,20 +168,18 @@ class SourceMatchTestCase(unittest.TestCase):
             if flags & 0x1:             # EDGE
                 continue
 
-            s = afwDetect.Source()
+            s = template.addNew()
             s.setId(id)
             id += 1
-            s.setRa(ra * afwGeom.degrees)
-            s.setDec(dec * afwGeom.degrees)
-            s.setPsfFlux(flux[0])
-
-            template.append(s)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), ra * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), dec * afwGeom.degrees)
+            s.set(self.table.getPsfFluxKey(), flux[0])
 
         del ifd
         #
         # Actually do the match
         #
-        matches = afwDetect.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
+        matches = afwTable.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(matches), 901)
 
@@ -196,7 +195,7 @@ class SourceMatchTestCase(unittest.TestCase):
         for s in sdssSecondary:
             sdss.append(s)
 
-        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
+        matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         #
@@ -212,7 +211,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 if s.getId() not in matchIds:
                     print "RHL", s.getId()
 
-        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
+        matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
         
         if False:
