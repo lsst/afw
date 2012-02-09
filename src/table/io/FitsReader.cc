@@ -222,7 +222,6 @@ void FitsReader::_readSchema(
     bool stripMetadata
 ) {
     FitsSchema intermediate;
-    std::cerr << metadata.toString() << "\n";
     int flagCol = metadata.get("FLAGCOL", 0);
     if (flagCol > 0) {
         metadata.remove("FLAGCOL");
@@ -319,11 +318,14 @@ void FitsReader::_startRecords() {
 }
 
 PTR(BaseTable) FitsReader::_readTable() {
-    daf::base::PropertyList metadata;
-    _fits->readMetadata(metadata, true);
-    Schema schema(metadata, true);
+    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
+    _fits->readMetadata(*metadata, true);
+    Schema schema(*metadata, true);
     _startRecords();
-    return BaseTable::make(schema);
+    PTR(BaseTable) table = BaseTable::make(schema);
+    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+    table->setMetadata(metadata);
+    return table;
 }
 
 // ------------ FITS records reading ------------------------------------------------------------------------

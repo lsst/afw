@@ -366,8 +366,8 @@ namespace {
 
 bool isKeyIgnored(std::string const & key) {
     return key == "SIMPLE" || key == "BITPIX" || key == "EXTEND" ||
-        key == "GCOUNT" || key == "PCOUNT" || key == "XTENSION" ||
-        key == "BSCALE" || key == "BZERO" || key.compare(0, 4, "NAXIS") == 0;
+        key == "GCOUNT" || key == "PCOUNT" || key == "XTENSION" || key == "TFIELDS" ||
+        key == "BSCALE" || key == "BZERO" || key.compare(0, 5, "NAXIS") == 0;
 }
 
 class MetadataIterationFunctor : public HeaderIterationFunctor {

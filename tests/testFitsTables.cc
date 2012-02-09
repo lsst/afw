@@ -116,9 +116,8 @@ BOOST_AUTO_TEST_CASE(testFits) {
     BOOST_CHECK( func1.names == func2.names );
     BOOST_CHECK( func1.docs == func2.docs );
     BOOST_CHECK( func1.units == func2.units );
-
-    std::cerr << schema << "\n";
-    std::cerr << readVector.getSchema() << "\n";
+    
+    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->nameCount(),  0u );
 
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxKey(), readVector.getTable()->getModelFluxKey() );
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxErrKey(), readVector.getTable()->getModelFluxErrKey() );
