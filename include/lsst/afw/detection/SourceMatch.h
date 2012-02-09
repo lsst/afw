@@ -1,4 +1,3 @@
-#if 0
 // -*- lsst-c++ -*-
 
 /* 
@@ -32,9 +31,7 @@
 
 #include <vector>
 
-#include "boost/tuple/tuple.hpp"
-
-#include "lsst/afw/detection/Source.h"
+#include "lsst/afw/table/Source.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/geom/Angle.h"
@@ -47,23 +44,24 @@ namespace lsst { namespace afw { namespace formatters {
 namespace lsst { namespace afw { namespace detection {
 
 struct SourceMatch {
-    Source::Ptr first;
-    Source::Ptr second;
+    PTR(table::SourceRecord) first;
+    PTR(table::SourceRecord) second;
     // match distance, in RADIANS or PIXELS depending on the type of match requested.
     double distance;
 
     SourceMatch() : first(), second(), distance(0.0) {}
-    SourceMatch(Source::Ptr const & s1, Source::Ptr const & s2, double dist)
+    SourceMatch(PTR(table::SourceRecord) const & s1, PTR(table::SourceRecord) const & s2, double dist)
         : first(s1), second(s2), distance(dist) {}
     ~SourceMatch() {}
 };
 
-std::vector<SourceMatch> matchRaDec(SourceSet const &set1, SourceSet const &set2,
+std::vector<SourceMatch> matchRaDec(table::SourceVector const &set1, table::SourceVector const &set2,
                                     lsst::afw::geom::Angle radius, bool closest=true);
-std::vector<SourceMatch> matchRaDec(SourceSet const &set, lsst::afw::geom::Angle radius, bool symmetric = true);
-std::vector<SourceMatch> matchXy(SourceSet const &set1, SourceSet const &set2,
+std::vector<SourceMatch> matchRaDec(table::SourceVector const &set, lsst::afw::geom::Angle radius,
+                                    bool symmetric = true);
+std::vector<SourceMatch> matchXy(table::SourceVector const &set1, table::SourceVector const &set2,
                                  double radius, bool closest=true);
-std::vector<SourceMatch> matchXy(SourceSet const &set, double radius, bool symmetric = true);
+std::vector<SourceMatch> matchXy(table::SourceVector const &set, double radius, bool symmetric = true);
 
 
 typedef std::vector<SourceMatch> SourceMatchVector;
@@ -93,5 +91,3 @@ private:
 }}} // namespace lsst::afw::detection
 
 #endif // #ifndef LSST_AFW_DETECTION_SOURCEMATCH_H
-
-#endif

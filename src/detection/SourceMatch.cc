@@ -1,4 +1,3 @@
-#if 0
 // -*- lsst-c++ -*-
 
 /* 
@@ -37,66 +36,68 @@
 #include "lsst/afw/detection/SourceMatch.h"
 #include "lsst/afw/geom/Angle.h"
 
-
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
 namespace afwGeom = lsst::afw::geom;
 
 namespace lsst { namespace afw { namespace detection { namespace {
 
-    struct SourcePos {
-        double dec;
-        double x;
-        double y;
-        double z;
-        Source::Ptr const *src;
-    };
+struct SourcePos {
+    double dec;
+    double x;
+    double y;
+    double z;
+    // JFB removed extra pointer here; this may have performance implications, but hopefully not
+    // significant ones.  SourceVector iterators yield temporary SourceRecord PTRs, so storing
+    // their address was no longer an option.
+    PTR(table::SourceRecord) src;
+};
 
-    bool operator<(SourcePos const &s1, SourcePos const &s2) {
-        return (s1.dec < s2.dec);
+bool operator<(SourcePos const &s1, SourcePos const &s2) {
+    return (s1.dec < s2.dec);
+}
+
+struct CmpSourcePtr {
+    bool operator()(PTR(table::SourceRecord) const s1, PTR(table::SourceRecord) const s2) {
+        return s1->getY() < s2->getY();
     }
+};
 
-    struct CmpSourcePtr {
-        bool operator()(Source::Ptr const *s1, Source::Ptr const *s2) {
-            return (*s1)->getYAstrom() < (*s2)->getYAstrom();
+/**
+ * Extract source positions from @a set, convert them to cartesian coordinates
+ * (for faster distance checks) and sort the resulting array of @c SourcePos
+ * instances by declination. Sources with positions containing a NaN are skipped.
+ *
+ * @param[in] set          set of sources to process
+ * @param[out] positions   pointer to an array of at least @c set.size()
+ *                         SourcePos instances
+ * @return                 The number of sources with positions not containing a NaN.
+ */
+size_t makeSourcePositions(table::SourceVector const &set, SourcePos *positions) {
+    size_t n = 0;
+    for (table::SourceVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
+        afwGeom::Angle ra = i->getRa();
+        afwGeom::Angle dec = i->getDec();
+        if (lsst::utils::isnan(ra.asRadians()) || lsst::utils::isnan(dec.asRadians())) {
+            continue;
         }
-    };
-
-    /**
-      * Extract source positions from @a set, convert them to cartesian coordinates
-      * (for faster distance checks) and sort the resulting array of @c SourcePos
-      * instances by declination. Sources with positions containing a NaN are skipped.
-      *
-      * @param[in] set          set of sources to process
-      * @param[out] positions   pointer to an array of at least @c set.size()
-      *                         SourcePos instances
-      * @return                 The number of sources with positions not containing a NaN.
-      */
-    size_t makeSourcePositions(SourceSet const &set, SourcePos *positions) {
-        size_t n = 0;
-        for (SourceSet::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
-            afwGeom::Angle ra = (*i)->getRa();
-            afwGeom::Angle dec = (*i)->getDec();
-            if (lsst::utils::isnan(ra.asRadians()) || lsst::utils::isnan(dec.asRadians())) {
-                continue;
-            }
-            double cosDec    = std::cos(dec);
-            positions[n].dec = dec.asRadians();
-            positions[n].x   = std::cos(ra)*cosDec;
-            positions[n].y   = std::sin(ra)*cosDec;
-            positions[n].z   = std::sin(dec);
-            positions[n].src = &(*i);
-            ++n;
-        }
-        std::sort(positions, positions + n);
-        if (n < set.size()) {
-            lsst::pex::logging::TTrace<1>("afw.detection.matchRaDec",
-                                          "At least one source had ra or dec equal to NaN");
-        }
-        return n;
+        double cosDec    = std::cos(dec);
+        positions[n].dec = dec.asRadians();
+        positions[n].x   = std::cos(ra)*cosDec;
+        positions[n].y   = std::sin(ra)*cosDec;
+        positions[n].z   = std::sin(dec);
+        positions[n].src = i;
+        ++n;
     }
+    std::sort(positions, positions + n);
+    if (n < set.size()) {
+        lsst::pex::logging::TTrace<1>("afw.detection.matchRaDec",
+                                      "At least one source had ra or dec equal to NaN");
+    }
+    return n;
+}
 
-}}}} // namespace lsst::afw::detection::<anonymous>
+} // <anonymous>
 
 
 /** Compute all tuples (s1,s2,d) where s1 belings to @a set1, s2 belongs to @a set2 and
@@ -109,13 +110,13 @@ namespace lsst { namespace afw { namespace detection { namespace {
   * @param[in] radius   match radius
   * @param[in] closest  if true then just return the closest match
   */
-std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set1,
-                                              lsst::afw::detection::SourceSet const &set2,
-                                              afwGeom::Angle radius, bool closest) {
+std::vector<SourceMatch> matchRaDec(table::SourceVector const &set1,
+                                    table::SourceVector const &set2,
+                                    geom::Angle radius, bool closest) {
     if (&set1 == &set2) {
         return matchRaDec(set1, radius, true);
     }
-    if (radius < 0.0 || (radius > (45. * afwGeom::degrees))) {
+    if (radius < 0.0 || (radius > (45. * geom::degrees))) {
         throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range (0 to 45 degrees)");
     }
     if (set1.size() == 0 || set2.size() == 0) {
@@ -154,14 +155,18 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
                     closestIndex = j;
                     found = true;
                 } else {
-                    matches.push_back(SourceMatch(*pos1[i].src, *pos2[j].src,
-                                                  afwGeom::Angle::fromUnitSphereDistanceSquared(d2).asRadians()));
+                    matches.push_back(
+                        SourceMatch(pos1[i].src, pos2[j].src,
+                                    geom::Angle::fromUnitSphereDistanceSquared(d2).asRadians())
+                    );
                 }
             }
         }
         if (closest && found) {
-            matches.push_back(SourceMatch(*pos1[i].src, *pos2[closestIndex].src,
-                                          afwGeom::Angle::fromUnitSphereDistanceSquared(d2Include).asRadians()));
+            matches.push_back(
+                SourceMatch(pos1[i].src, pos2[closestIndex].src,
+                            geom::Angle::fromUnitSphereDistanceSquared(d2Include).asRadians())
+            );
         }
     }
     return matches;
@@ -177,10 +182,10 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
   * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
   *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
   */
-std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set,
-                                              afwGeom::Angle radius,
-                                              bool symmetric) {
-    if (radius < 0.0 || radius > (45.0 * afwGeom::degrees)) {
+std::vector<SourceMatch> matchRaDec(table::SourceVector const &set,
+                                    afwGeom::Angle radius,
+                                    bool symmetric) {
+    if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
         throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range (0 to 45 degrees)");
     }
     if (set.size() == 0) {
@@ -203,10 +208,10 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
             double dz = pos[i].z - pos[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
             if (d2 < d2Limit) {
-                afwGeom::Angle d = afwGeom::Angle::fromUnitSphereDistanceSquared(d2);
-                matches.push_back(SourceMatch(*pos[i].src, *pos[j].src, d.asRadians()));
+                geom::Angle d = geom::Angle::fromUnitSphereDistanceSquared(d2);
+                matches.push_back(SourceMatch(pos[i].src, pos[j].src, d.asRadians()));
                 if (symmetric) {
-                    matches.push_back(SourceMatch(*pos[j].src, *pos[i].src, d.asRadians()));
+                    matches.push_back(SourceMatch(pos[j].src, pos[i].src, d.asRadians()));
                 }
             }
         }
@@ -225,9 +230,9 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
   * @param[in] radius   match radius (pixels)
   * @param[in] closest  if true then just return the closest match
   */
-std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const &set1,
-                                           lsst::afw::detection::SourceSet const &set2,
-                                           double radius, bool closest) {
+std::vector<SourceMatch> matchXy(table::SourceVector const &set1,
+                                 table::SourceVector const &set2,
+                                 double radius, bool closest) {
     if (&set1 == &set2) {
        return matchXy(set1, radius);
     }
@@ -237,35 +242,35 @@ std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const
     // copy and sort array of pointers on y
     size_t const len1 = set1.size();
     size_t const len2 = set2.size();
-    boost::scoped_array<Source::Ptr const *> pos1(new Source::Ptr const *[len1]);
-    boost::scoped_array<Source::Ptr const *> pos2(new Source::Ptr const *[len2]);
+    boost::scoped_array<PTR(table::SourceRecord)> pos1(new PTR(table::SourceRecord)[len1]);
+    boost::scoped_array<PTR(table::SourceRecord)> pos2(new PTR(table::SourceRecord)[len2]);
     size_t n = 0;
-    for (SourceSet::const_iterator i(set1.begin()), e(set1.end()); i != e; ++i, ++n) {
-        pos1[n] = &(*i);
+    for (table::SourceVector::const_iterator i(set1.begin()), e(set1.end()); i != e; ++i, ++n) {
+        pos1[n] = i;
     }
     n = 0;
-    for (SourceSet::const_iterator i(set2.begin()), e(set2.end()); i != e; ++i, ++n) {
-        pos2[n] = &(*i);
+    for (table::SourceVector::const_iterator i(set2.begin()), e(set2.end()); i != e; ++i, ++n) {
+        pos2[n] = i;
     }
     std::sort(pos1.get(), pos1.get() + len1, CmpSourcePtr());
     std::sort(pos2.get(), pos2.get() + len2, CmpSourcePtr());
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
-        double y = (*pos1[i])->getYAstrom();
+        double y = pos1[i]->getY();
         double minY = y - radius;
-        while (start < len2 && (*pos2[start])->getYAstrom() < minY) { ++start; }
+        while (start < len2 && pos2[start]->getY() < minY) { ++start; }
         if (start == len2) {
             break;
         }
-        double x = (*pos1[i])->getXAstrom();
+        double x = pos1[i]->getX();
         double maxY = y + radius;
         double y2;
         size_t closestIndex = -1;          // Index of closest match (if any)
         double r2Include = r2;          // Squared radius for inclusion of match
         bool found = false;             // Found anything?
-        for (size_t j = start; j < len2 && (y2 = (*pos2[j])->getYAstrom()) <= maxY; ++j) {
-            double dx = x - (*pos2[j])->getXAstrom();
+        for (size_t j = start; j < len2 && (y2 = pos2[j]->getY()) <= maxY; ++j) {
+            double dx = x - pos2[j]->getX();
             double dy = y - y2;
             double d2 = dx*dx + dy*dy;
             if (d2 < r2Include) {
@@ -274,12 +279,12 @@ std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const
                     closestIndex = j;
                     found = true;
                 } else {
-                    matches.push_back(SourceMatch(*pos1[i], *pos2[j], std::sqrt(d2)));
+                    matches.push_back(SourceMatch(pos1[i], pos2[j], std::sqrt(d2)));
                 }
             }
         }
         if (closest && found) {
-            matches.push_back(SourceMatch(*pos1[i], *pos2[closestIndex], std::sqrt(r2Include)));
+            matches.push_back(SourceMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
         }
     }
     return matches;
@@ -295,36 +300,34 @@ std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const
   * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
   *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
   */
-std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const &set,
-                                           double radius,
-                                           bool symmetric) {
+std::vector<SourceMatch> matchXy(table::SourceVector const &set, double radius, bool symmetric) {
     // setup match parameters
     double const r2 = radius*radius;
 
     // copy and sort array of pointers on y
     size_t const len = set.size();
-    boost::scoped_array<Source::Ptr const *> pos(new Source::Ptr const *[len]);
+    boost::scoped_array<PTR(table::SourceRecord)> pos(new PTR(table::SourceRecord)[len]);
     size_t n = 0;
-    for (SourceSet::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
-        pos[n] = &(*i);
+    for (table::SourceVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
+        pos[n] = i;
     }
     std::sort(pos.get(), pos.get() + len, CmpSourcePtr());
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0; i < len; ++i) {
-        double x = (*pos[i])->getXAstrom();
-        double y = (*pos[i])->getYAstrom();
+        double x = pos[i]->getX();
+        double y = pos[i]->getY();
         double maxY = y + radius;
         double y2;
-        for (size_t j = i + 1; j < len && (y2 = (*pos[j])->getYAstrom()) <= maxY; ++j) {
-            double dx = x - (*pos[j])->getXAstrom();
+        for (size_t j = i + 1; j < len && (y2 = pos[j]->getY()) <= maxY; ++j) {
+            double dx = x - pos[j]->getX();
             double dy = y - y2;
             double d2 = dx*dx + dy*dy;
             if (d2 < r2) {
                 double d = std::sqrt(d2);
-                matches.push_back(SourceMatch(*pos[i], *pos[j], d));
+                matches.push_back(SourceMatch(pos[i], pos[j], d));
                 if (symmetric) {
-                    matches.push_back(SourceMatch(*pos[j], *pos[i], d));
+                    matches.push_back(SourceMatch(pos[j], pos[i], d));
                 }
             }
         }
@@ -332,4 +335,4 @@ std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const
     return matches;
 }
 
-#endif
+}}} // namespace lsst::afw::detection
