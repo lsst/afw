@@ -216,12 +216,6 @@ public:
      */
     explicit Schema(daf::base::PropertyList const & metadata);
 
-    /**
-     *  @brief Return a PropertyList that contains the FITS header keys that would be used
-     *         to save a table with this schema to a FITS binary table.
-     */
-    //PTR(daf::base::PropertyList) getFitsMetadata() const;
-
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 

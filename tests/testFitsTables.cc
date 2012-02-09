@@ -68,6 +68,10 @@ BOOST_AUTO_TEST_CASE(testFits) {
     vector.getTable()->defineModelFlux(flux.meas, flux.err, flux.flag);
     vector.getTable()->defineCentroid(centroid.meas, centroid.err, centroid.flag);
 
+    vector.getTable()->setMetadata(boost::make_shared<lsst::daf::base::PropertyList>());
+    vector.getTable()->getMetadata()->add("SHEEP", 7.3, "total number of sheep on the farm");
+    vector.getTable()->getMetadata()->add("MONKEYS", 155, "monkeys per tree");
+
     {
         PTR(Footprint) fp1 = boost::make_shared<Footprint>();
         fp1->addSpan(0, 5, 8);
@@ -111,14 +115,19 @@ BOOST_AUTO_TEST_CASE(testFits) {
     SourceVector readVector = SourceVector::readFits("testTable.fits[1]");
     BOOST_CHECK_EQUAL( schema, readVector.getSchema() ); // only checks equality of keys
 
+    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->get<double>("SHEEP"),
+                       vector.getTable()->getMetadata()->get<double>("SHEEP") );
+    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->get<int>("MONKEYS"),
+                       vector.getTable()->getMetadata()->get<int>("MONKEYS") );
+    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->nameCount(),
+                       vector.getTable()->getMetadata()->nameCount() );
+
     ExtractSchemaStrings func1;  schema.forEach(boost::ref(func1));
     ExtractSchemaStrings func2;  readVector.getSchema().forEach(boost::ref(func2));
     BOOST_CHECK( func1.names == func2.names );
     BOOST_CHECK( func1.docs == func2.docs );
     BOOST_CHECK( func1.units == func2.units );
     
-    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->nameCount(),  0u );
-
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxKey(), readVector.getTable()->getModelFluxKey() );
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxErrKey(), readVector.getTable()->getModelFluxErrKey() );
 

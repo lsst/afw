@@ -137,6 +137,8 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
     ProcessSchema::apply(*_fits, schema);
+    if (table->getMetadata())
+        _fits->writeMetadata(*table->getMetadata());
     _row = -1;
     _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
 }
