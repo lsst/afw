@@ -32,21 +32,22 @@
 /*
  * Test class for SpatialCellImageCandidate
  */
-class ExampleCandidate : public lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> > {
+class ExampleCandidate : public lsst::afw::math::SpatialCellImageCandidate<float> {
 public:
     typedef boost::shared_ptr<ExampleCandidate> Ptr;
-    typedef lsst::afw::image::Image<float> ImageT;
+    typedef float PixelT;
+    typedef lsst::afw::image::MaskedImage<PixelT> MaskedImageT;
 
     ExampleCandidate(float const xCenter, float const yCenter,
-                       ImageT::ConstPtr parent, lsst::afw::geom::Box2I bbox);
+                     MaskedImageT::ConstPtr parent, lsst::afw::geom::Box2I bbox);
 
     lsst::afw::geom::Box2I getBBox() const { return _bbox; }
 
     double getCandidateRating() const;
 
-    ImageT::ConstPtr getImage() const;
+    MaskedImageT::ConstPtr getImage() const;
 private:
-    ExampleCandidate::ImageT::ConstPtr _parent;
+    ExampleCandidate::MaskedImageT::ConstPtr _parent;
     lsst::afw::geom::Box2I _bbox;
 };
 
