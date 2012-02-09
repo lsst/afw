@@ -33,8 +33,10 @@ struct Field : public FieldBase<T> {
      *                           as only those names can be round-tripped with FITS I/O (periods are
      *                           converted to underscores in FITS, but hence cannot be distinguished
      *                           from underscores in field names).
-     *  @param[in]  doc          Documentation for the field.
-     *  @param[in]  units        Units for the field.
+     *  @param[in]  doc          Documentation for the field.  Should not contain single-quotes
+     *                           to avoid FITS round-trip problems.
+     *  @param[in]  units        Units for the field.  Should not contain single-quotes
+     *                           to avoid FITS round-trip problems.
      *  @param[in]  size         Size of the field as an integer, if appropriate.  Field types that
      *                           accept a size have a FieldBase that is implicitly constructable from
      *                           an integer, so the argument type should be considered to effectively

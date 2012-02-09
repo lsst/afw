@@ -13,7 +13,7 @@
 
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/Access.h"
-#include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/io/FitsReader.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -496,6 +496,14 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field) {
 //-----------------------------------------------------------------------------------------------------------
 
 Schema::Schema() : _impl(boost::make_shared<Impl>()) {};
+
+Schema::Schema(daf::base::PropertyList & metadata, bool stripMetadata) : _impl(boost::make_shared<Impl>()) {
+    io::FitsReader::_readSchema(*this, metadata, stripMetadata);
+}
+
+Schema::Schema(daf::base::PropertyList const & metadata) : _impl(boost::make_shared<Impl>()) {
+    io::FitsReader::_readSchema(*this, const_cast<daf::base::PropertyList &>(metadata), false);
+}
 
 void Schema::_edit() {
     if (!_impl.unique()) {

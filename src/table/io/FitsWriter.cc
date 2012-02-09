@@ -25,17 +25,28 @@ struct ProcessSchema {
         std::string name = item.field.getName();
         std::replace(name.begin(), name.end(), '.', '_');
         int n = fits->addColumn<typename Field<T>::Element>(
-            name.c_str(),
-            item.field.getElementCount(),
-            item.field.getDoc().c_str()
+            name, item.field.getElementCount(),
+            item.field.getDoc()
         );
+        if (!item.field.getDoc().empty()) {
+            // We use a separate key TDOCn for documentation (in addition to the TTYPEn comments)
+            // so we can have long strings via the CONTINUE convention.
+            // When reading, if there is no TDOCn, we'll just use the TTYPEn comment.
+            fits->writeColumnKey("TDOC", n, item.field.getDoc());
+        }
         specialize(item, n); // delegate to other member functions that are specialized on field tag types
     }
 
     void operator()(SchemaItem<Flag> const & item) const {
         std::string name = item.field.getName();
         std::replace(name.begin(), name.end(), '.', '_');
-        fits->writeColumnKey("TFLAG", nFlags, name.c_str(), item.field.getDoc().c_str());
+        fits->writeColumnKey("TFLAG", nFlags, name);
+        if (!item.field.getDoc().empty()) {
+            // We use a separate key TFDOCn for documentation instead of the comment on TFLAGn so
+            // we can have long strings via the CONTINUE convention.
+            // When reading, if there is no TFDOCn, we'll use the TTYPEn comment.
+            fits->writeColumnKey("TFDOC", nFlags, item.field.getDoc());
+        }
         ++nFlags;
     }
 
@@ -48,47 +59,47 @@ struct ProcessSchema {
     template <typename T>
     void specialize(SchemaItem<T> const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str());
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "Scalar", "Field template used by lsst.afw.table");
     }
 
     void specialize(SchemaItem<Angle> const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str());
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "Angle", "Field template used by lsst.afw.table");
     }
 
     template <typename T>
     void specialize(SchemaItem< Array<T> > const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str());
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "Array", "Field template used by lsst.afw.table");
     }
 
     void specialize(SchemaItem<Coord> const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str());
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "Coord", "Field template used by lsst.afw.table");
     }
 
     template <typename T>
     void specialize(SchemaItem< Point<T> > const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(), "{x, y}");
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits(), "{x, y}");
         fits->writeColumnKey("TCCLS", n, "Point", "Field template used by lsst.afw.table");
     }
 
     template <typename T>
     void specialize(SchemaItem< Moments<T> > const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(), "{xx, yy, xy}");
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits(), "{xx, yy, xy}");
         fits->writeColumnKey("TCCLS", n, "Moments", "Field template used by lsst.afw.table");
     }
 
     template <typename T>
     void specialize(SchemaItem< Covariance<T> > const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(),
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
                                  "{(0,0), (0,1), (1,1), (0,2), (1,2), (2,2), ...}");
         fits->writeColumnKey("TCCLS", n, "Covariance", "Field template used by lsst.afw.table");
     }
@@ -96,7 +107,7 @@ struct ProcessSchema {
     template <typename T>
     void specialize(SchemaItem< Covariance< Point<T> > > const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(),
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
                                  "{(x,x), (x,y), (y,y)}");
         fits->writeColumnKey("TCCLS", n, "Covariance(Point)", "Field template used by lsst.afw.table");
     }
@@ -104,7 +115,7 @@ struct ProcessSchema {
     template <typename T>
     void specialize(SchemaItem< Covariance< Moments<T> > > const & item, int n) const {
         if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits().c_str(),
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
                                  "{(xx,xx), (xx,yy), (yy,yy), (xx,xy), (yy,xy), (xy,xy)}");
         fits->writeColumnKey("TCCLS", n, "Covariance(Moments)", "Field template used by lsst.afw.table");
     }
@@ -119,13 +130,15 @@ struct ProcessSchema {
 void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
     Schema schema = table->getSchema();
     _fits->createTable();
-    _fits->checkStatus();
+    LSST_FITS_CHECK_STATUS(*_fits, "creating table");
     int nFlags = schema.getFlagFieldCount();
     if (nFlags > 0) {
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
     ProcessSchema::apply(*_fits, schema);
+    if (table->getMetadata())
+        _fits->writeMetadata(*table->getMetadata());
     _row = -1;
     _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
 }

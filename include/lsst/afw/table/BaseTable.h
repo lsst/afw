@@ -57,6 +57,12 @@ public:
     /// @brief Number of records in each memory block.
     static int nRecordsPerBlock;
 
+    /// @brief Return the flexible metadata associated with the table.  May be null.
+    PTR(daf::base::PropertyList) getMetadata() const { return _metadata; }
+
+    /// @brief Set the flexible metadata associated with the table.  May be null.
+    void setMetadata(PTR(daf::base::PropertyList) const & metadata) { _metadata = metadata; }
+
     /**
      *  @brief Return a polymorphic deep copy of the table.
      *
@@ -159,7 +165,13 @@ protected:
     explicit BaseTable(Schema const & schema);
 
     /// @brief Copy construct.
-    BaseTable(BaseTable const & other) : daf::base::Citizen(other), _schema(other._schema) {}
+    BaseTable(BaseTable const & other) :
+        daf::base::Citizen(other), _schema(other._schema),
+        _metadata(other._metadata) 
+    {
+        if (_metadata)
+            _metadata = boost::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
+    }
 
 private:
     
@@ -190,6 +202,7 @@ private:
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     Schema _schema;                 // schema that defines the table's fields
     ndarray::Manager::Ptr _manager; // current memory block to use for new records
+    PTR(daf::base::PropertyList) _metadata; // flexible metadata; may be null
 };
 
 }}} // namespace lsst::afw::table

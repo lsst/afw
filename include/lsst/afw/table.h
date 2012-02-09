@@ -131,6 +131,9 @@ namespace lsst { namespace afw { namespace table {
  *  can be found in the Schema and SubSchema class documentation, and the testSchema.py unit test may
  *  also be a useful example.
  *
+ *  Other field strings (documentation and units) are essentially arbitrary, but should not contain
+ *  single quotes, as these may also confuse FITS parsers (even when escaped).
+ *
  *  @section afwTableFieldTypes Field Types
  *  In C++, field types are defined by the template arguments to Key and Field (among others).  Empty
  *  tag templates (Array, Point, Moments, Covariance) are used for compound fields.  In Python, strings

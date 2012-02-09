@@ -34,9 +34,8 @@ public:
      */
     template <typename ContainerT>
     ContainerT read() {
-        Schema schema = _readSchema();
         PTR(typename ContainerT::Table) table 
-            = boost::dynamic_pointer_cast<typename ContainerT::Table>(_readTable(schema));
+            = boost::dynamic_pointer_cast<typename ContainerT::Table>(_readTable());
         if (!table) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::RuntimeErrorException,
@@ -58,26 +57,13 @@ public:
     virtual ~Reader() {}
 
 protected:
-    
-    /**
-     *  @brief Load a schema from the data source.
-     *
-     *  If nCols >= 0, any columns beyond that number should not be read.  This is a bit of a
-     *  hack for FITS I/O that has leaked into the base class; we need to stop reading the
-     *  Schema for regular tables before it encounters the Source-specific columns.  To do this,
-     *  the Source FITS Reader finds its special columns and tells the base FITS reader to stop
-     *  before it gets to them when it delegates mosts of its schema parsing to it.
-     */
-    virtual Schema _readSchema(int nCols=-1) = 0;
 
     /**
-     *  @brief Create a new table of the appropriate type with the given schema.
+     *  @brief Create a new table of the appropriate type.
      *
-     *  The result may be an instance of a subclass of BaseTable.  The schema will have just been loaded
-     *  with _readSchema; these are separated in order to allow subclasses to delegate to base
-     *  class implementations more effectively.
+     *  The result may be an instance of a subclass of BaseTable.
      */
-    virtual PTR(BaseTable) _readTable(Schema const & schema) = 0;
+    virtual PTR(BaseTable) _readTable() = 0;
 
     /**
      *  @brief Read an individual record, creating it with the given table.

@@ -12,43 +12,48 @@
     if (table->get ## Name ## Type ## Key().isValid()) {                \
         std::string s = table->getSchema().find(table->get ## Name ## Type ## Key()).field.getName(); \
         std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME "_" #TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
+        _fits->writeKey(#NAME #TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
     }                                                                   \
     if (table->get ## Name ## Type ## ErrKey().isValid()) {             \
         std::string s = table->getSchema().find(table->get ## Name ## Type ## ErrKey()).field.getName(); \
         std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME "_" #TYPE "_ERR_SLOT", s.c_str(),         \
+        _fits->writeKey(#NAME #TYPE "_ERR_SLOT", s.c_str(),         \
                         "Defines the " #Name #Type "Err slot");         \
     }                                                                   \
     if (table->get ## Name ## Type ## Flag ## Key().isValid()) {        \
         std::string s = table->getSchema().find(table->get ## Name ## Type ## FlagKey()).field.getName(); \
         std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME "_" #TYPE "_FLAG_SLOT", s.c_str(),        \
+        _fits->writeKey(#NAME #TYPE "_FLAG_SLOT", s.c_str(),        \
                         "Defines the " #Name #Type "Flag slot");        \
     }
 
-#define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME, Name, FLUX, Flux)
+#define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME ## _, Name, FLUX, Flux)
 #define SAVE_CENTROID_SLOT() SAVE_MEAS_SLOT(, , CENTROID, Centroid)
 #define SAVE_SHAPE_SLOT() SAVE_MEAS_SLOT(, , SHAPE, Shape)
 
 #define LOAD_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
     {                                                                   \
+        _fits->alwaysCheck = false;                                     \
         std::string s, sErr, sFlag;                                     \
-        _fits->readKey(#NAME "_" #TYPE "_SLOT", s);                     \
-        _fits->readKey(#NAME "_" #TYPE "_ERR_SLOT", sErr);              \
-        _fits->readKey(#NAME "_" #TYPE "_FLAG_SLOT", sFlag);            \
+        _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
+        _fits->readKey(#NAME #TYPE "_ERR_SLOT", sErr);                  \
+        _fits->readKey(#NAME #TYPE "_FLAG_SLOT", sFlag);                \
         if (_fits->status == 0) {                                       \
+            metadata->remove(#NAME #TYPE "_SLOT");                      \
+            metadata->remove(#NAME #TYPE "_ERR_SLOT");                  \
+            metadata->remove(#NAME #TYPE "_FLAG_SLOT");                 \
             std::replace(s.begin(), s.end(), '_', '.');                 \
             std::replace(sErr.begin(), sErr.end(), '_', '.');           \
-            std::replace(sFlag.begin(), sFlag.end(), '_', '.');           \
+            std::replace(sFlag.begin(), sFlag.end(), '_', '.');         \
             table->define ## Name ## Type(schema[s], schema[sErr], schema[sFlag]); \
         } else {                                                        \
             _fits->status = 0;                                          \
         }                                                               \
+        _fits->alwaysCheck = true;                                      \
     }
     
 
-#define LOAD_FLUX_SLOT(NAME, Name) LOAD_MEAS_SLOT(NAME, Name, FLUX, Flux)
+#define LOAD_FLUX_SLOT(NAME, Name) LOAD_MEAS_SLOT(NAME ## _, Name, FLUX, Flux)
 #define LOAD_CENTROID_SLOT() LOAD_MEAS_SLOT(, , CENTROID, Centroid)
 #define LOAD_SHAPE_SLOT() LOAD_MEAS_SLOT(, , SHAPE, Shape)
 
@@ -200,9 +205,7 @@ public:
 
 protected:
 
-    virtual Schema _readSchema(int nCols=-1);
-
-    virtual PTR(BaseTable) _readTable(Schema const & schema);
+    virtual PTR(BaseTable) _readTable();
 
     virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
@@ -211,26 +214,27 @@ private:
     int _peakCol;
 };
 
-Schema SourceFitsReader::_readSchema(int nCols) {
-    _fits->readKey("SPANCOL", _spanCol);
-    if (_fits->status == 0) {
-        --_spanCol;
-    } else {
-        _fits->status = 0;
-        _spanCol = -1;
+PTR(BaseTable) SourceFitsReader::_readTable() {
+    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
+    _fits->readMetadata(*metadata, true);
+    _spanCol = metadata->get("SPANCOL", 0);
+    if (_spanCol > 0) { 
+        // we remove these from the metadata so the Schema constructor doesn't try to parse
+        // the footprint columns
+        metadata->remove("SPANCOL");
+        metadata->remove((boost::format("TTYPE%d") % _spanCol).str());
+        metadata->remove((boost::format("TFORM%d") % _spanCol).str());
     }
-    _fits->readKey("PEAKCOL", _peakCol);
-    if (_fits->status == 0) {
-        --_peakCol;
-    } else {
-        _fits->status = 0;
-        _peakCol = -1;
+    _peakCol = metadata->get("PEAKCOL", 0);
+    if (_peakCol >= 0) {
+        metadata->remove("PEAKCOL");
+        metadata->remove((boost::format("TTYPE%d") % _peakCol).str());
+        metadata->remove((boost::format("TFORM%d") % _peakCol).str());
     }
-    int maxCol = std::min(_spanCol, _peakCol);
-    return io::FitsReader::_readSchema(maxCol);
-}
-
-PTR(BaseTable) SourceFitsReader::_readTable(Schema const & schema) {
+    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+    --_spanCol; // switch to 0-indexed rather than 1-indexed convention.
+    --_peakCol;
+    Schema schema(*metadata, true);
     PTR(SourceTable) table =  SourceTable::make(schema);
     LOAD_FLUX_SLOT(PSF, Psf);
     LOAD_FLUX_SLOT(MODEL, Model);
@@ -238,6 +242,8 @@ PTR(BaseTable) SourceFitsReader::_readTable(Schema const & schema) {
     LOAD_FLUX_SLOT(INST, Inst);
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
+    _startRecords();
+    table->setMetadata(metadata);
     return table;
 }
 

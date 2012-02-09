@@ -20,6 +20,7 @@
 #include <boost/format.hpp>
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/daf/base.h"
 
 namespace lsst { namespace afw { namespace fits {
 
@@ -32,7 +33,11 @@ namespace lsst { namespace afw { namespace fits {
 class HeaderIterationFunctor {
 public:
 
-    virtual void operator()(char const * key, char const * value, char const * comment) = 0;
+    virtual void operator()(
+        std::string const & key,
+        std::string const & value,
+        std::string const & comment
+    ) = 0;
 
     virtual ~HeaderIterationFunctor() {}
 
@@ -48,7 +53,6 @@ LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::Exception, lsst::afw::fits
  */
 LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::FitsTypeError)
 
-//@{
 /**
  *  @brief Return an error message reflecting FITS I/O errors.
  *
@@ -61,9 +65,7 @@ std::string makeErrorMessage(std::string const & fileName="", int status=0, std:
 inline std::string makeErrorMessage(std::string const & fileName, int status, boost::format const & msg) {
     return makeErrorMessage(fileName, status, msg.str());
 }
-//@}
 
-//@{
 /**
  *  @brief Return an error message reflecting FITS I/O errors.
  *
@@ -77,7 +79,19 @@ std::string makeErrorMessage(void * fptr, int status=0, std::string const & msg=
 inline std::string makeErrorMessage(void * fptr, int status, boost::format const & msg) {
     return makeErrorMessage(fptr, status, msg.str());
 }
-//@}
+
+/**
+ *  A FITS-related replacement for LSST_EXCEPT that takes an additional Fits object
+ *  and uses makeErrorMessage(fitsObj.fptr, fitsObj.status, ...) to construct the message.
+ */
+#define LSST_FITS_EXCEPT(type, fitsObj, ...) \
+    type(LSST_EXCEPT_HERE, lsst::afw::fits::makeErrorMessage((fitsObj).fptr, (fitsObj).status, __VA_ARGS__))
+
+/**
+ *  Throw a FitsError exception if the status of the given Fits object is nonzero.
+ */
+#define LSST_FITS_CHECK_STATUS(fitsObj, ...)                            \
+    if ((fitsObj).status != 0) LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
 
 /**
  *  @brief A simple struct that combines the two arguments that must be passed to most cfitsio routines
@@ -92,36 +106,102 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
  */
 struct Fits {
 
-    /// @brief Set a FITS header key, editing if it already exists and appending it if not.
-    void updateKey(char const * key, char const * value, char const * comment=0);
-
-    /// @brief Add a FITS header key to the bottom of the header.
-    void writeKey(char const * key, char const * value, char const * comment=0);
-
+    //@{
     /// @brief Set a FITS header key, editing if it already exists and appending it if not.
     template <typename T>
-    void updateKey(char const * key, T value, char const * comment=0);
-
-    /// @brief Add a FITS header key to the bottom of the header.
+    void updateKey(std::string const & key, T const & value, std::string const & comment);
+    void updateKey(std::string const & key, char const * value, std::string const & comment) {
+        updateKey(key, std::string(value), comment);
+    }
     template <typename T>
-    void writeKey(char const * key, T value, char const * comment=0);
+    void updateKey(std::string const & key, T const & value);
+    void updateKey(std::string const & key, char const * value) {
+        updateKey(key, std::string(value));
+    }
+    //@}
 
-    /// @brief Update a key of the form XXXXnnn, where XXXX is the prefix and nnn is a column number.
+    //@{
+    /**
+     *  @brief Add a FITS header key to the bottom of the header.
+     *
+     *  If the key is HISTORY or COMMENT and the value is a std::string or C-string, 
+     *  a special HISTORY or COMMENT key will be appended (and the comment argument 
+     *  will be ignored if present).
+     */
     template <typename T>
-    void updateColumnKey(char const * prefix, int n, T value, char const * comment=0);
+    void writeKey(std::string const & key, T const & value, std::string const & comment);
+    void writeKey(std::string const & key, char const * value, std::string const & comment) {
+        updateKey(key, std::string(value), comment);
+    }
+    template <typename T>
+    void writeKey(std::string const & key, T const & value);
+    void writeKey(std::string const & key, char const * value) {
+        updateKey(key, std::string(value));
+    }
+    //@}
 
-    /// @brief Write a key of the form XXXXnnn, where XXXX is the prefix and nnn is a column number.
+    //@{
+    /// @brief Update a key of the form XXXXXnnn, where XXXXX is the prefix and nnn is a column number.
     template <typename T>
-    void writeColumnKey(char const * prefix, int n, T value, char const * comment=0);
+    void updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment);
+    void updateColumnKey(std::string const & prefix, int n, char const * value, std::string const & comment) {
+        updateColumnKey(prefix, n, std::string(value), comment);
+    }
+    template <typename T>
+    void updateColumnKey(std::string const & prefix, int n, T const & value);
+    void updateColumnKey(std::string const & prefix, int n, char const * value) {
+        updateColumnKey(prefix, n, std::string(value));
+    }
+    //@}
+
+    //@{
+    /// @brief Write a key of the form XXXXXnnn, where XXXXX is the prefix and nnn is a column number.
+    template <typename T>
+    void writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment);
+    void writeColumnKey(std::string const & prefix, int n, char const * value, std::string const & comment) {
+        writeColumnKey(prefix, n, std::string(value), comment);
+    }
+    template <typename T>
+    void writeColumnKey(std::string const & prefix, int n, T const & value);
+    void writeColumnKey(std::string const & prefix, int n, char const * value) {
+        writeColumnKey(prefix, n, std::string(value));
+    }
+    //@}
+
+    /**
+     *  @brief Read a FITS header into a PropertySet or PropertyList.
+     *
+     *  @param[in]     metadata  A PropertySet or PropertyList whose items will be appended
+     *                           to the FITS header.
+     *
+     *  All keys will be appended to the FITS header rather than used to update existing keys.  Order of keys
+     *  will be preserved if and only if the metadata object is actually a PropertyList.
+     */
+    void writeMetadata(daf::base::PropertySet const & metadata);
+
+    /**
+     *  @brief Read a FITS header into a PropertySet or PropertyList.
+     *
+     *  @param[in,out] metadata  A PropertySet or PropertyList that FITS header items will be added to.
+     *  @param[in]     strip     If true, common FITS keys that usually have non-metadata intepretations
+     *                           (e.g. NAXIS, BITPIX) will be ignored.
+     *
+     *  Order will preserved if and only if the metadata object is actually a PropertyList.
+     */
+    void readMetadata(daf::base::PropertySet & metadata, bool strip=false);
 
     /// @brief Read a FITS header key into the given reference.
     template <typename T>
-    void readKey(char const * key, T & value);
+    void readKey(std::string const & key, T & value);
 
-    /// @brief Read a FITS header key into the given reference.
-    void readKey(char const * key, std::string & value);
-
-    /// @brief Call a polymorphic functor for every key in the header.
+    /**
+     *  @brief Call a polymorphic functor for every key in the header.
+     *
+     *  Each value is passed in as a string, and the single quotes that mark an actual
+     *  string value are not removed (neither are extra spaces).  However, long strings
+     *  that make use of the CONTINUE keyword are concatenated to look as if they were
+     *  on a single line.
+     */
     void forEachKey(HeaderIterationFunctor & functor);
 
     /**
@@ -131,7 +211,16 @@ struct Fits {
      *  or left unknown if size == 0.
      */
     template <typename T>
-    int addColumn(char const * ttype, int size, char const * comment=0);
+    int addColumn(std::string const & ttype, int size, std::string const & comment);
+
+    /**
+     *  @brief Add a column to a table
+     *
+     *  If size <= 0, the field will be a variable length array, with max set by (-size),
+     *  or left unknown if size == 0.
+     */
+    template <typename T>
+    int addColumn(std::string const & ttype, int size);
 
     /// @brief Append rows to a table, and return the index of the first new row.
     std::size_t addRows(std::size_t nRows);
@@ -162,10 +251,10 @@ struct Fits {
     long getTableArraySize(std::size_t row, int col);
 
     /// @brief Create a new FITS file.
-    static Fits createFile(char const * filename);
+    static Fits createFile(std::string const & filename);
 
     /// @brief Open a an existing FITS file.
-    static Fits openFile(char const * filename, bool writeable);
+    static Fits openFile(std::string const & filename, bool writeable);
 
     /// @brief Create a new binary table extension.
     void createTable();
@@ -173,13 +262,11 @@ struct Fits {
     /// @brief Close a FITS file.
     void closeFile();
 
-    /// @brief Throw a reasonably informative exception if the status is nonzero.
-    void checkStatus() const {
-        if (status != 0) throw LSST_EXCEPT(FitsError, makeErrorMessage(fptr, status));
-    }
+    Fits() : fptr(0), status(0), alwaysCheck(false) {}
 
     void * fptr;  // the actual cfitsio fitsfile pointer; void to avoid including fitsio.h here.
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
+    bool alwaysCheck; // if true, member functions will check status and throw exceptions on failure
 }; 
 
 }}} /// namespace lsst::afw::fits

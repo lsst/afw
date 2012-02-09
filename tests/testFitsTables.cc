@@ -34,6 +34,20 @@ struct EqualityCompare {
 
 };
 
+struct ExtractSchemaStrings {
+
+    template <typename T>
+    void operator()(lsst::afw::table::SchemaItem<T> const & item) const {
+        names.push_back(item.field.getName());
+        docs.push_back(item.field.getDoc());
+        units.push_back(item.field.getUnits());
+    }
+    
+    mutable std::vector<std::string> names;
+    mutable std::vector<std::string> docs;
+    mutable std::vector<std::string> units;
+};
+
 
 BOOST_AUTO_TEST_CASE(testFits) {
     using namespace lsst::afw::table;
@@ -41,7 +55,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Schema schema = SourceTable::makeMinimalSchema();
     Key<int> a_b_i = schema.addField<int>("a.b.i", "int");
     Key<Flag> a_b_i_valid = schema.addField<Flag>("a.b.i.valid", "is field a.b.i valid?");
-    Key<float> a_c_f = schema.addField<float>("a.c.f", "float", "femtoseamonkeys");
+    Key<float> a_c_f = schema.addField<float>("a.c.f", "an extremely long string for documenting this float field that will require use of the FITS long-string convention that splits long values up and puts them on different keys using CONTINUE.", "femtoseamonkeys");
     Key<double> e_g_d = schema.addField<double>("e.g.d", "double", "bargles^2");
     Key<Flag> e_g_d_flag1 = schema.addField<Flag>("e.g.d.flag1", "flag1 for e.g.d");
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e.g.d.flag2", "flag2 for e.g.d");
@@ -53,6 +67,10 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     vector.getTable()->defineModelFlux(flux.meas, flux.err, flux.flag);
     vector.getTable()->defineCentroid(centroid.meas, centroid.err, centroid.flag);
+
+    vector.getTable()->setMetadata(boost::make_shared<lsst::daf::base::PropertyList>());
+    vector.getTable()->getMetadata()->add("SHEEP", 7.3, "total number of sheep on the farm");
+    vector.getTable()->getMetadata()->add("MONKEYS", 155, "monkeys per tree");
 
     {
         PTR(Footprint) fp1 = boost::make_shared<Footprint>();
@@ -95,8 +113,21 @@ BOOST_AUTO_TEST_CASE(testFits) {
     vector.writeFits("!testTable.fits");
 
     SourceVector readVector = SourceVector::readFits("testTable.fits[1]");
-    BOOST_CHECK_EQUAL( schema, readVector.getSchema() );
+    BOOST_CHECK_EQUAL( schema, readVector.getSchema() ); // only checks equality of keys
 
+    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->get<double>("SHEEP"),
+                       vector.getTable()->getMetadata()->get<double>("SHEEP") );
+    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->get<int>("MONKEYS"),
+                       vector.getTable()->getMetadata()->get<int>("MONKEYS") );
+    BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->nameCount(),
+                       vector.getTable()->getMetadata()->nameCount() );
+
+    ExtractSchemaStrings func1;  schema.forEach(boost::ref(func1));
+    ExtractSchemaStrings func2;  readVector.getSchema().forEach(boost::ref(func2));
+    BOOST_CHECK( func1.names == func2.names );
+    BOOST_CHECK( func1.docs == func2.docs );
+    BOOST_CHECK( func1.units == func2.units );
+    
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxKey(), readVector.getTable()->getModelFluxKey() );
     BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxErrKey(), readVector.getTable()->getModelFluxErrKey() );
 

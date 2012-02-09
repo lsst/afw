@@ -36,15 +36,7 @@ typedef FitsReader::Fits Fits;
  *
  *  The driver code is at the bottom of this section; it's easier to understand if you start there
  *  and work your way up.
- *
  */
-
-// A convenience function use on FITS header key strings, to strip out the single-quotes and spaces.
-std::string strip(std::string const & s) {
-    std::size_t i1 = s.find_first_not_of(" '");
-    std::size_t i2 = s.find_last_not_of(" '");
-    return s.substr(i1, (i1 == std::string::npos) ? 0 : 1 + i2 - i1);
-}
 
 // A structure that describes a field as a bunch of strings read from the FITS header.
 struct FitsSchemaItem {
@@ -57,17 +49,14 @@ struct FitsSchemaItem {
     std::string cls;     // which field class to use (from our own TCCLS keys)
 
     // Add the field defined by the strings to a schema.
-    void addField(Fits & fits, Schema & schema) const {
+    void addField(Schema & schema) const {
         static boost::regex const regex("(\\d*)(\\u)(\\d)*", boost::regex::perl);
         // start by parsing the format; this tells the element type of the field and the number of elements
         boost::smatch m;
         if (!boost::regex_match(format, m, regex)) {
             throw LSST_EXCEPT(
                 afw::fits::FitsError,
-                afw::fits::makeErrorMessage(
-                    fits.fptr, fits.status,
-                    boost::format("Could not parse TFORM value for field '%s': '%s'.") % name % format
-                )
+                (boost::format("Could not parse TFORM value for field '%s': '%s'.") % name % format).str()
             );
         }
         int size = 1;
@@ -84,10 +73,7 @@ struct FitsSchemaItem {
             } else {
                 throw LSST_EXCEPT(
                     afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr, fits.status,
-                        boost::format("Unsupported FITS column type: '%s'.") % format
-                    )
+                    (boost::format("Unsupported FITS column type: '%s'.") % format).str()
                 );
             }
             break;
@@ -95,19 +81,16 @@ struct FitsSchemaItem {
             if (size != 1) {
                 throw LSST_EXCEPT(
                     afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr, fits.status,
-                        boost::format("Unsupported FITS column type: '%s'.") % format
-                    )
+                    (boost::format("Unsupported FITS column type: '%s'.") % format).str()
                 );
             }
-            schema.addField<boost::int64_t>(name, units, doc);
+            schema.addField<boost::int64_t>(name, doc, units);
             break;
         case 'E': // floats and doubles can be any number of things; delegate to a separate function
-            addFloatField<float>(fits, schema, size);
+            addFloatField<float>(schema, size);
             break;
         case 'D':
-            addFloatField<double>(fits, schema, size);
+            addFloatField<double>(schema, size);
             break;
         default:
             // We throw if we encounter a column type we can't handle.
@@ -116,17 +99,14 @@ struct FitsSchemaItem {
             // to call FitsReader::_readSchema in a way that prevents it from ever getting here.
             throw LSST_EXCEPT(
                 afw::fits::FitsError,
-                afw::fits::makeErrorMessage(
-                    fits.fptr, fits.status,
-                    boost::format("Unsupported FITS column type: '%s'.") % format
-                )
+                (boost::format("Unsupported FITS column type: '%s'.") % format).str()
             );
         }
     }
 
     // Add a field with a float or double element type to the schema.
     template <typename U>
-    void addFloatField(Fits & fits, Schema & schema, int size) const {
+    void addFloatField(Schema & schema, int size) const {
         if (size == 1) {
             if (cls == "Angle") {
                 schema.addField< Angle >(name, doc, units);
@@ -168,11 +148,7 @@ struct FitsSchemaItem {
             if (n * (n + 1) != size * 2) {
                 throw LSST_EXCEPT(
                     afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr,
-                        fits.status,
-                        boost::format("Covariance field has invalid size.")
-                    )
+                    "Covariance field has invalid size."
                 );
             }
             schema.addField< Covariance<U> >(name, doc, units, n);
@@ -238,94 +214,121 @@ struct FitsSchema {
     Container container;
 };
 
-// This is a polymorphic functor that's passed to Fits::forEachKey.  That calls
-// the functor with the keyword name, the keyword value, and the comment for each
-// key in the FITS header.  We use it to fill the FitsSchema multi-index container.
-struct ProcessHeader : public afw::fits::HeaderIterationFunctor {
-
-    virtual void operator()(char const * key, char const * value, char const * comment) {
-        if (std::strncmp(key, "TTYPE", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
-            FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
-            if (i == schema.asColSet().end() || i->col != col) {
-                i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
-            }
-            std::string v = strip(value);
-            std::replace(v.begin(), v.end(), '_', '.');
-            schema.asColSet().modify(i, FitsSchema::SetName(v));
-            schema.asColSet().modify(i, FitsSchema::SetDoc(comment));
-        } else if (std::strncmp(key, "TFLAG", 5) == 0) {
-            int bit = boost::lexical_cast<int>(key + 5) - 1;
-            FitsSchema::BitSet::iterator i = schema.asBitSet().lower_bound(bit);
-            if (i == schema.asBitSet().end() || i->bit != bit) {
-                i = schema.asBitSet().insert(i, FitsSchemaItem(-1, bit));
-            }
-            std::string v = strip(value);
-            std::replace(v.begin(), v.end(), '_', '.');
-            schema.asBitSet().modify(i, FitsSchema::SetName(v));
-            schema.asBitSet().modify(i, FitsSchema::SetDoc(comment));
-        } else if (std::strncmp(key, "TUNIT", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
-            FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
-            if (i == schema.asColSet().end() || i->col != col) {
-                i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
-            }
-            schema.asColSet().modify(i, FitsSchema::SetUnits(strip(value)));
-        } else if (std::strncmp(key, "TCCLS", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
-            FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
-            if (i == schema.asColSet().end() || i->col != col) {
-                i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
-            }
-            schema.asColSet().modify(i, FitsSchema::SetCls(strip(value)));
-        } else if (std::strncmp(key, "TFORM", 5) == 0) {
-            int col = boost::lexical_cast<int>(key + 5) - 1;
-            FitsSchema::ColSet::iterator i = schema.asColSet().lower_bound(col);
-            if (i == schema.asColSet().end() || i->col != col) {
-                i = schema.asColSet().insert(i, FitsSchemaItem(col, -1));
-            }
-            schema.asColSet().modify(i, FitsSchema::SetFormat(strip(value)));
-        } else if (std::strncmp(key, "FLAGCOL", 8) == 0) {
-            flagCol = boost::lexical_cast<int>(value) - 1;
-        }
-    }
-
-    explicit ProcessHeader() : schema(), flagCol(-1) {}
-
-    FitsSchema schema;
-    int flagCol;
-};
-
 } // anonymous
 
-// finally, here's the driver for all of the machinery above
-Schema FitsReader::_readSchema(int nCols) {
-    ProcessHeader f;
-    _fits->forEachKey(f);
-    Schema schema;
-    for (
-        FitsSchema::List::const_iterator i = f.schema.asList().begin();
-        i != f.schema.asList().end();
-        ++i
-    ) {
-        if (nCols >= 0 && i->col >= nCols) continue;
-        if (i->bit >= 0) {
-            schema.addField<Flag>(i->name, i->doc);
-        } else if (i->col != f.flagCol) {
-            i->addField(*_fits, schema);
+void FitsReader::_readSchema(
+    Schema & schema,
+    daf::base::PropertyList & metadata,
+    bool stripMetadata
+) {
+    FitsSchema intermediate;
+    int flagCol = metadata.get("FLAGCOL", 0);
+    if (flagCol > 0) {
+        metadata.remove("FLAGCOL");
+        metadata.remove((boost::format("TTYPE%d") % flagCol).str());
+        metadata.remove((boost::format("TFORM%d") % flagCol).str());
+    }
+    --flagCol; // switch from 1-indexed to 0-indexed
+    std::vector<std::string> keyList = metadata.getOrderedNames();
+    for (std::vector<std::string>::const_iterator key = keyList.begin(); key != keyList.end(); ++key) {
+        if (key->compare(0, 5, "TTYPE") == 0) {
+            int col = boost::lexical_cast<int>(key->substr(5)) - 1;
+            FitsSchema::ColSet::iterator i = intermediate.asColSet().lower_bound(col);
+            if (i == intermediate.asColSet().end() || i->col != col) {
+                i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
+            }
+            std::string v = metadata.get<std::string>(*key);
+            std::replace(v.begin(), v.end(), '_', '.');
+            intermediate.asColSet().modify(i, FitsSchema::SetName(v));
+            if (i->doc.empty()) // don't overwrite if already set with TDOCn
+                intermediate.asColSet().modify(i, FitsSchema::SetDoc(metadata.getComment(*key)));
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TFLAG") == 0) {
+            int bit = boost::lexical_cast<int>(key->substr(5)) - 1;
+            FitsSchema::BitSet::iterator i = intermediate.asBitSet().lower_bound(bit);
+            if (i == intermediate.asBitSet().end() || i->bit != bit) {
+                i = intermediate.asBitSet().insert(i, FitsSchemaItem(-1, bit));
+            }
+            std::string v = metadata.get<std::string>(*key);
+            std::replace(v.begin(), v.end(), '_', '.');
+            intermediate.asBitSet().modify(i, FitsSchema::SetName(v));
+            if (i->doc.empty()) // don't overwrite if already set with TFDOCn
+                intermediate.asBitSet().modify(i, FitsSchema::SetDoc(metadata.getComment(*key)));
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 4, "TDOC") == 0) {
+            int col = boost::lexical_cast<int>(key->substr(4)) - 1;
+            FitsSchema::ColSet::iterator i = intermediate.asColSet().lower_bound(col);
+            if (i == intermediate.asColSet().end() || i->col != col) {
+                i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
+            }
+            intermediate.asColSet().modify(i, FitsSchema::SetDoc(metadata.get<std::string>(*key)));
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TFDOC") == 0) {
+            int bit = boost::lexical_cast<int>(key->substr(5)) - 1;
+            FitsSchema::BitSet::iterator i = intermediate.asBitSet().lower_bound(bit);
+            if (i == intermediate.asBitSet().end() || i->bit != bit) {
+                i = intermediate.asBitSet().insert(i, FitsSchemaItem(-1, bit));
+            }
+            intermediate.asBitSet().modify(i, FitsSchema::SetDoc(metadata.get<std::string>(*key)));
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TUNIT") == 0) {
+            int col = boost::lexical_cast<int>(key->substr(5)) - 1;
+            FitsSchema::ColSet::iterator i = intermediate.asColSet().lower_bound(col);
+            if (i == intermediate.asColSet().end() || i->col != col) {
+                i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
+            }
+            intermediate.asColSet().modify(i, FitsSchema::SetUnits(metadata.get<std::string>(*key)));
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TCCLS") == 0) {
+            int col = boost::lexical_cast<int>(key->substr(5)) - 1;
+            FitsSchema::ColSet::iterator i = intermediate.asColSet().lower_bound(col);
+            if (i == intermediate.asColSet().end() || i->col != col) {
+                i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
+            }
+            intermediate.asColSet().modify(i, FitsSchema::SetCls(metadata.get<std::string>(*key)));
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TFORM") == 0) {
+            int col = boost::lexical_cast<int>(key->substr(5)) - 1;
+            FitsSchema::ColSet::iterator i = intermediate.asColSet().lower_bound(col);
+            if (i == intermediate.asColSet().end() || i->col != col) {
+                i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
+            }
+            intermediate.asColSet().modify(i, FitsSchema::SetFormat(metadata.get<std::string>(*key)));
+            if (stripMetadata) metadata.remove(*key);
         }
     }
+    
+    for (
+        FitsSchema::List::const_iterator i = intermediate.asList().begin();
+        i != intermediate.asList().end();
+        ++i
+    ) {
+        if (i->bit >= 0) {
+            schema.addField<Flag>(i->name, i->doc);
+        } else if (i->col != flagCol) {
+            i->addField(schema);
+        }
+    }
+}
+
+void FitsReader::_startRecords() {
     _row = -1;
     _nRows = _fits->countRows();
     _processor = boost::make_shared<ProcessRecords>(_fits, _row);
-    return schema;
 }
 
-PTR(BaseTable) FitsReader::_readTable(Schema const & schema) {
-    return BaseTable::make(schema);
+PTR(BaseTable) FitsReader::_readTable() {
+    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
+    _fits->readMetadata(*metadata, true);
+    Schema schema(*metadata, true);
+    _startRecords();
+    PTR(BaseTable) table = BaseTable::make(schema);
+    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+    table->setMetadata(metadata);
+    return table;
 }
 
-// ------------ FITS table to records implementation --------------------------------------------------------
+// ------------ FITS records reading ------------------------------------------------------------------------
 
 /*
  *  Compared to reading the header, reading the records is pretty easy.  We just
@@ -363,6 +366,7 @@ struct FitsReader::ProcessRecords {
     ProcessRecords(Fits * fits_, std::size_t const & row_) :
         row(row_), col(0), bit(0), flagCol(-1), fits(fits_)
     {
+        fits->alwaysCheck = false; // temporarily disable automatic FITS exceptions
         fits->readKey("FLAGCOL", flagCol);
         if (fits->status == 0) {
             --flagCol; // we want 0-indexed column numbers, not FITS' 1-indexed numbers
@@ -370,6 +374,7 @@ struct FitsReader::ProcessRecords {
             fits->status = 0;
             flagCol = -1;
         }
+        fits->alwaysCheck = true;
         nFlags = fits->getTableArraySize(flagCol);
         if (nFlags) flags.reset(new bool[nFlags]);
     }
@@ -415,11 +420,13 @@ FitsReader::Factory::Factory(std::string const & name) {
 
 PTR(FitsReader) FitsReader::make(Fits * fits) {
     std::string name;
+    fits->alwaysCheck = false; // temporarily disable automatic FITS exceptions
     fits->readKey("AFW_TYPE", name);
     if (fits->status != 0) {
         name = "BASE";
         fits->status = 0;
     }
+    fits->alwaysCheck = true;
     Registry::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
