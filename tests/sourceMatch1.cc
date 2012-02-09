@@ -31,12 +31,11 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/afw/table/Source.h"
-#include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/afw/table/SourceMatch.h"
 #include "lsst/afw/math/Random.h"
 #include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/geom/Angle.h"
 
-namespace det = lsst::afw::detection;
 namespace math = lsst::afw::math;
 namespace coord = lsst::afw::coord;
 namespace afwGeom = lsst::afw::geom;
@@ -77,7 +76,7 @@ void makeSources(afwTable::SourceVector &set, int n) {
 }
 
 struct CmpSourceMatch {
-    bool operator()(det::SourceMatch const &m1, det::SourceMatch const &m2) {
+    bool operator()(afwTable::SourceMatch const &m1, afwTable::SourceMatch const &m2) {
         if (m1.first->getId() == m2.first->getId()) {
             return m1.second->getId() < m2.second->getId();
         }
@@ -108,10 +107,10 @@ struct DistXy {
 };
 
 template <typename DistFunctorT>
-std::vector<det::SourceMatch> bruteMatch(afwTable::SourceVector const &set,
+std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceVector const &set,
                                          double radius,
                                          DistFunctorT const &distFun) {
-    std::vector<det::SourceMatch> matches;
+    std::vector<afwTable::SourceMatch> matches;
     for (afwTable::SourceVector::const_iterator i1(set.begin()), e(set.end()); i1 != e; ++i1) {
         for (afwTable::SourceVector::const_iterator i2(i1); i2 != e; ++i2) {
             if (i1 == i2) {
@@ -119,8 +118,8 @@ std::vector<det::SourceMatch> bruteMatch(afwTable::SourceVector const &set,
             }
             double d = distFun(i1, i2);
             if (d <= radius) {
-               matches.push_back(det::SourceMatch(i1, i2, d));
-               matches.push_back(det::SourceMatch(i2, i1, d));
+               matches.push_back(afwTable::SourceMatch(i1, i2, d));
+               matches.push_back(afwTable::SourceMatch(i2, i1, d));
             }
         }
     }
@@ -128,19 +127,19 @@ std::vector<det::SourceMatch> bruteMatch(afwTable::SourceVector const &set,
 }
 
 template <typename DistFunctorT>
-std::vector<det::SourceMatch> bruteMatch(afwTable::SourceVector const &set1,
+std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceVector const &set1,
                                          afwTable::SourceVector const &set2,
                                          double radius,
                                          DistFunctorT const &distFun) {
     if (&set1 == &set2) {
         return bruteMatch(set1, radius, distFun);
     }
-    std::vector<det::SourceMatch> matches;
+    std::vector<afwTable::SourceMatch> matches;
     for (afwTable::SourceVector::const_iterator i1(set1.begin()), e1(set1.end()); i1 != e1; ++i1) {
         for (afwTable::SourceVector::const_iterator i2(set2.begin()), e2(set2.end()); i2 != e2; ++i2) {
             double d = distFun(i1, i2);
             if (d <= radius) {
-                matches.push_back(det::SourceMatch(i1, i2, d));
+                matches.push_back(afwTable::SourceMatch(i1, i2, d));
             }
         }
     }
@@ -151,18 +150,18 @@ std::vector<det::SourceMatch> bruteMatch(afwTable::SourceVector const &set1,
 // so we cannot naively test whether both match lists are identical. Instead,  check
 // that any tuple in one result set but not the other has a match distance very close
 // to the match radius.
-void compareMatches(std::vector<det::SourceMatch> &matches,
-                    std::vector<det::SourceMatch> &refMatches,
+void compareMatches(std::vector<afwTable::SourceMatch> &matches,
+                    std::vector<afwTable::SourceMatch> &refMatches,
                     double radius) {
     double const tolerance = 1e-6; // 1 micro arcsecond
     CmpSourceMatch lessThan;
 
     std::sort(matches.begin(), matches.end(), lessThan);
     std::sort(refMatches.begin(), refMatches.end(), lessThan);
-    std::vector<det::SourceMatch>::const_iterator i(matches.begin());
-    std::vector<det::SourceMatch>::const_iterator j(refMatches.begin());
-    std::vector<det::SourceMatch>::const_iterator const iend(matches.end());
-    std::vector<det::SourceMatch>::const_iterator const jend(refMatches.end());
+    std::vector<afwTable::SourceMatch>::const_iterator i(matches.begin());
+    std::vector<afwTable::SourceMatch>::const_iterator j(refMatches.begin());
+    std::vector<afwTable::SourceMatch>::const_iterator const iend(matches.end());
+    std::vector<afwTable::SourceMatch>::const_iterator const jend(refMatches.end());
 
     while (i < iend && j < jend) {
         if (lessThan(*i, *j)) {
@@ -196,8 +195,8 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     afwTable::SourceVector set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<det::SourceMatch> matches = det::matchRaDec(set1, set2, radius, false);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec()); 
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, radius, false);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec()); 
     compareMatches(matches, refMatches, radius);
 }
 
@@ -208,8 +207,8 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
 
     afwTable::SourceVector set(getGlobalTable());
     makeSources(set, N);
-    std::vector<det::SourceMatch> matches = det::matchRaDec(set, radius, true);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set, radius, DistRaDec());
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set, radius, true);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistRaDec());
     compareMatches(matches, refMatches, radius);
 }
 
@@ -221,8 +220,8 @@ BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
     afwTable::SourceVector set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<det::SourceMatch> matches = det::matchXy(set1, set2, radius, false);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistXy());
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set1, set2, radius, false);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
 
@@ -233,8 +232,8 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
 
     afwTable::SourceVector set(getGlobalTable());
     makeSources(set, N);
-    std::vector<det::SourceMatch> matches = det::matchXy(set, radius, true);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set, radius, DistXy());
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set, radius, true);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
 
@@ -349,8 +348,8 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     normalizeRaDec(set1);
     normalizeRaDec(set2);
 
-    std::vector<det::SourceMatch> matches = det::matchRaDec(set1, set2, rad, false);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec()); 
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, rad, false);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec()); 
     compareMatches(matches, refMatches, rad);
 
 }

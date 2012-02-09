@@ -23,16 +23,14 @@
 
 %{
 #include "lsst/afw/table/Source.h"
-#include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/afw/table/SourceMatch.h"
 %}
 
-%shared_ptr(lsst::afw::detection::PersistableSourceMatchVector);
+%include "lsst/afw/table/SourceMatch.h"
 
-%include "lsst/afw/detection/SourceMatch.h"
+%template(SourceMatchVector) std::vector<lsst::afw::table::SourceMatch>;
 
-%template(SourceMatchVector) std::vector<lsst::afw::detection::SourceMatch>;
-
-%extend lsst::afw::detection::SourceMatch {
+%extend lsst::afw::table::SourceMatch {
     %pythoncode {
     def __repr__(self):
         return "SourceMatch(%s,\n            %s,\n            %g)" % \
@@ -86,5 +84,3 @@
         self.__init__(*state)
     }
 }
-
-%lsst_persistable(lsst::afw::detection::PersistableSourceMatchVector);

@@ -402,9 +402,10 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %include "specializations.i"
 
 %pythoncode %{
-for d in (Field, Key, SchemaItem, _suffixes):
-    for k, v in aliases.iteritems():
-        d[k] = d[v]
+# underscores here prevent these from becoming global names
+for _d in (Field, Key, SchemaItem, _suffixes):
+    for _k, _v in aliases.iteritems():
+        _d[_k] = _d[_v]
 %}
 
 %shared_ptr(lsst::afw::table::SourceTable)
@@ -435,3 +436,5 @@ namespace lsst { namespace afw { namespace table {
 %include "lsst/afw/table/Source.h"
 
 %include "containers.i"
+
+%include "match.i"

@@ -1,17 +1,5 @@
-from .tableLib import (
-    Key,
-    Field,
-    SchemaItem,
-    Schema,
-    SchemaMapper,
-    SubSchema,
-    IdFactory,
-    BaseRecord,
-    BaseTable,
-    SourceRecord,
-    SourceTable,
-    BaseVector,
-    SourceVector,
-    ColumnView,
-    aliases,
-)
+from .tableLib import *
+
+for name in globals().keys():
+    if "_" in name: # clean up namespace; these are all private or unfortunate swig droppings
+        del globals()[name]

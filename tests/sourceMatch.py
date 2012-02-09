@@ -75,7 +75,7 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
 
-        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
+        mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(mat), nobj)
 
@@ -100,7 +100,7 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(afwTable.SourceTable.getCoordKey().getRa(), float('nan') * afwGeom.radians)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), float('nan') * afwGeom.radians)
 
-        mat = afwDetect.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
+        mat = afwTable.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
         self.assertEqual(len(mat), 1)
 
     def testPhotometricCalib(self):
@@ -179,7 +179,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Actually do the match
         #
-        matches = afwDetect.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
+        matches = afwTable.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(matches), 901)
 
@@ -195,7 +195,7 @@ class SourceMatchTestCase(unittest.TestCase):
         for s in sdssSecondary:
             sdss.append(s)
 
-        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
+        matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         #
@@ -211,7 +211,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 if s.getId() not in matchIds:
                     print "RHL", s.getId()
 
-        matches = afwDetect.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
+        matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
         
         if False:

@@ -29,18 +29,15 @@
 #include <cmath>
 
 #include "boost/scoped_array.hpp"
+#include "boost/iterator/transform_iterator.hpp"
 
 #include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/afw/table/SourceMatch.h"
 #include "lsst/afw/geom/Angle.h"
 
-namespace ex = lsst::pex::exceptions;
-namespace det = lsst::afw::detection;
-namespace afwGeom = lsst::afw::geom;
-
-namespace lsst { namespace afw { namespace detection { namespace {
+namespace lsst { namespace afw { namespace table { namespace {
 
 struct SourcePos {
     double dec;
@@ -50,7 +47,7 @@ struct SourcePos {
     // JFB removed extra pointer here; this may have performance implications, but hopefully not
     // significant ones.  SourceVector iterators yield temporary SourceRecord PTRs, so storing
     // their address was no longer an option.
-    PTR(table::SourceRecord) src;
+    PTR(SourceRecord) src;
 };
 
 bool operator<(SourcePos const &s1, SourcePos const &s2) {
@@ -58,7 +55,7 @@ bool operator<(SourcePos const &s1, SourcePos const &s2) {
 }
 
 struct CmpSourcePtr {
-    bool operator()(PTR(table::SourceRecord) const s1, PTR(table::SourceRecord) const s2) {
+    bool operator()(PTR(SourceRecord) const s1, PTR(SourceRecord) const s2) {
         return s1->getY() < s2->getY();
     }
 };
@@ -73,11 +70,11 @@ struct CmpSourcePtr {
  *                         SourcePos instances
  * @return                 The number of sources with positions not containing a NaN.
  */
-size_t makeSourcePositions(table::SourceVector const &set, SourcePos *positions) {
+size_t makeSourcePositions(SourceVector const &set, SourcePos *positions) {
     size_t n = 0;
-    for (table::SourceVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
-        afwGeom::Angle ra = i->getRa();
-        afwGeom::Angle dec = i->getDec();
+    for (SourceVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
+        geom::Angle ra = i->getRa();
+        geom::Angle dec = i->getDec();
         if (lsst::utils::isnan(ra.asRadians()) || lsst::utils::isnan(dec.asRadians())) {
             continue;
         }
@@ -91,7 +88,7 @@ size_t makeSourcePositions(table::SourceVector const &set, SourcePos *positions)
     }
     std::sort(positions, positions + n);
     if (n < set.size()) {
-        lsst::pex::logging::TTrace<1>("afw.detection.matchRaDec",
+        lsst::pex::logging::TTrace<1>("afw.table.matchRaDec",
                                       "At least one source had ra or dec equal to NaN");
     }
     return n;
@@ -110,14 +107,15 @@ size_t makeSourcePositions(table::SourceVector const &set, SourcePos *positions)
   * @param[in] radius   match radius
   * @param[in] closest  if true then just return the closest match
   */
-std::vector<SourceMatch> matchRaDec(table::SourceVector const &set1,
-                                    table::SourceVector const &set2,
+std::vector<SourceMatch> matchRaDec(SourceVector const &set1,
+                                    SourceVector const &set2,
                                     geom::Angle radius, bool closest) {
     if (&set1 == &set2) {
         return matchRaDec(set1, radius, true);
     }
     if (radius < 0.0 || (radius > (45. * geom::degrees))) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range (0 to 45 degrees)");
+        throw LSST_EXCEPT(pex::exceptions::RangeErrorException, 
+                          "match radius out of range (0 to 45 degrees)");
     }
     if (set1.size() == 0 || set2.size() == 0) {
         return std::vector<SourceMatch>();
@@ -182,11 +180,12 @@ std::vector<SourceMatch> matchRaDec(table::SourceVector const &set1,
   * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
   *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
   */
-std::vector<SourceMatch> matchRaDec(table::SourceVector const &set,
-                                    afwGeom::Angle radius,
+std::vector<SourceMatch> matchRaDec(SourceVector const &set,
+                                    geom::Angle radius,
                                     bool symmetric) {
     if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "match radius out of range (0 to 45 degrees)");
+        throw LSST_EXCEPT(pex::exceptions::RangeErrorException,
+                          "match radius out of range (0 to 45 degrees)");
     }
     if (set.size() == 0) {
         return std::vector<SourceMatch>();
@@ -230,8 +229,8 @@ std::vector<SourceMatch> matchRaDec(table::SourceVector const &set,
   * @param[in] radius   match radius (pixels)
   * @param[in] closest  if true then just return the closest match
   */
-std::vector<SourceMatch> matchXy(table::SourceVector const &set1,
-                                 table::SourceVector const &set2,
+std::vector<SourceMatch> matchXy(SourceVector const &set1,
+                                 SourceVector const &set2,
                                  double radius, bool closest) {
     if (&set1 == &set2) {
        return matchXy(set1, radius);
@@ -242,14 +241,14 @@ std::vector<SourceMatch> matchXy(table::SourceVector const &set1,
     // copy and sort array of pointers on y
     size_t const len1 = set1.size();
     size_t const len2 = set2.size();
-    boost::scoped_array<PTR(table::SourceRecord)> pos1(new PTR(table::SourceRecord)[len1]);
-    boost::scoped_array<PTR(table::SourceRecord)> pos2(new PTR(table::SourceRecord)[len2]);
+    boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
+    boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
     size_t n = 0;
-    for (table::SourceVector::const_iterator i(set1.begin()), e(set1.end()); i != e; ++i, ++n) {
+    for (SourceVector::const_iterator i(set1.begin()), e(set1.end()); i != e; ++i, ++n) {
         pos1[n] = i;
     }
     n = 0;
-    for (table::SourceVector::const_iterator i(set2.begin()), e(set2.end()); i != e; ++i, ++n) {
+    for (SourceVector::const_iterator i(set2.begin()), e(set2.end()); i != e; ++i, ++n) {
         pos2[n] = i;
     }
     std::sort(pos1.get(), pos1.get() + len1, CmpSourcePtr());
@@ -300,15 +299,15 @@ std::vector<SourceMatch> matchXy(table::SourceVector const &set1,
   * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
   *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
   */
-std::vector<SourceMatch> matchXy(table::SourceVector const &set, double radius, bool symmetric) {
+std::vector<SourceMatch> matchXy(SourceVector const &set, double radius, bool symmetric) {
     // setup match parameters
     double const r2 = radius*radius;
 
     // copy and sort array of pointers on y
     size_t const len = set.size();
-    boost::scoped_array<PTR(table::SourceRecord)> pos(new PTR(table::SourceRecord)[len]);
+    boost::scoped_array<PTR(SourceRecord)> pos(new PTR(SourceRecord)[len]);
     size_t n = 0;
-    for (table::SourceVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
+    for (SourceVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
         pos[n] = i;
     }
     std::sort(pos.get(), pos.get() + len, CmpSourcePtr());
@@ -335,4 +334,62 @@ std::vector<SourceMatch> matchXy(table::SourceVector const &set, double radius, 
     return matches;
 }
 
-}}} // namespace lsst::afw::detection
+BaseVector makeSourceMatchTable(SourceMatchVector const & matches) {
+    Schema schema;
+    Key<RecordId> key1 = schema.addField<RecordId>("first", "ID for first source record in match.");
+    Key<RecordId> key2 = schema.addField<RecordId>("second", "ID for second source record in match.");
+    Key<double> keyD = schema.addField<double>("distance", "Distance between matches sources.",
+                                               "pixels or radians");
+    BaseVector result(schema);
+    result.getTable()->preallocate(matches.size());
+    result.reserve(matches.size());
+    for (SourceMatchVector::const_iterator i = matches.begin(); i != matches.end(); ++i) {
+        PTR(BaseRecord) record = result.addNew();
+        record->set(key1, i->first->getId());
+        record->set(key2, i->second->getId());
+        record->set(keyD, i->distance);
+    }
+    return result;
+}
+
+namespace {
+
+struct ExtractId {
+    typedef RecordId result_type;
+    typedef SourceRecord const & argument_type;
+    RecordId operator()(SourceRecord const & s) const { return s.getId(); } 
+};
+
+PTR(SourceRecord) findSourceById(SourceVector const & vector, RecordId id) {
+    
+    // Iterator type that makes a SourceVector iterator look like an iterator over IDs.
+    typedef boost::transform_iterator<ExtractId,SourceVector::const_iterator> SearchIter;
+
+    SearchIter i = std::lower_bound(SearchIter(vector.begin()), SearchIter(vector.end()), id);
+    if (i.base() != vector.end() && *i == id) return i.base();
+    return PTR(SourceRecord)();
+}
+
+
+} // anonymous
+
+SourceMatchVector makeSourceMatchVector(
+    BaseVector const & matches, 
+    SourceVector const & first,
+    SourceVector const & second
+) {
+    Key<RecordId> key1 = matches.getSchema()["first"];
+    Key<RecordId> key2 = matches.getSchema()["second"];
+    Key<double> keyD = matches.getSchema()["distance"];
+    SourceMatchVector result;
+    result.resize(matches.size());
+    SourceMatchVector::iterator j = result.begin();
+    for (BaseVector::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
+        j->first = findSourceById(first, i->get(key1));
+        j->second = findSourceById(second, i->get(key2));
+        j->distance = i->get(keyD);
+    }
+    return result;
+}
+
+}}} // namespace lsst::afw::table
