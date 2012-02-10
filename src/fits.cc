@@ -10,6 +10,7 @@ extern "C" {
 }
 
 #include "boost/regex.hpp"
+#include "boost/filesystem.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/cstdint.hpp"
 #include "boost/format.hpp"
@@ -122,6 +123,24 @@ std::string makeErrorMessage(void * fptr, int status, std::string const & msg) {
     return makeErrorMessage(fileName, status, msg);
 }
 
+void MemFileManager::reset() {
+    if (_managed) std::free(_ptr);
+    _ptr = 0;
+    _len = 0;
+    _managed = true;
+}
+
+void MemFileManager::reset(std::size_t len) {
+    reset();
+    _ptr = std::malloc(len);
+    _len = len;
+    _managed = true;
+}
+
+// ----------------------------------------------------------------------------------------------------------
+// ---- Implementations for Fits class ----------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
 // ---- Writing and updating header keys --------------------------------------------------------------------
 
 namespace {
@@ -215,52 +234,56 @@ void writeKeyImpl(Fits & fits, char const * key, bool const & value, char const 
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value, std::string const & comment) {
     updateKeyImpl(*this, key.c_str(), value, comment.c_str());
-    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
+    if (behavior & AUTO_CHECK) 
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value, std::string const & comment) {
     writeKeyImpl(*this, key.c_str(), value, comment.c_str());
-    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value) {
     updateKeyImpl(*this, key.c_str(), value, 0);
-    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value) {
     writeKeyImpl(*this, key.c_str(), value, 0);
-    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
-    if (alwaysCheck)
+    if (behavior & AUTO_CHECK)
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
-    if (alwaysCheck)
+    if (behavior & AUTO_CHECK)
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
-    if (alwaysCheck)
+    if (behavior & AUTO_CHECK)
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
-    if (alwaysCheck)
+    if (behavior & AUTO_CHECK)
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
 }
 
@@ -300,7 +323,7 @@ void readKeyImpl(Fits & fits, char const * key, std::string & value) {
 template <typename T>
 void Fits::readKey(std::string const & key, T & value) {
     readKeyImpl(*this, key.c_str(), value);
-    if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % key);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % key);
 }
 
 void Fits::forEachKey(HeaderIterationFunctor & functor) {
@@ -355,7 +378,7 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
             }
             ++i;
         }
-        if (alwaysCheck) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
+        if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
         functor(keyStr, valueStr, commentStr);
     }
 }
@@ -516,7 +539,8 @@ void writeKeyFromProperty(
             )
         );
     }
-    if (fits.alwaysCheck) LSST_FITS_CHECK_STATUS(fits, boost::format("Writing key '%s'") % key);
+    if (fits.behavior & Fits::AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(fits, boost::format("Writing key '%s'") % key);
 }
 
 } // anonymous
@@ -667,24 +691,101 @@ void Fits::createTable() {
 
 // ---- Manipulating files ----------------------------------------------------------------------------------
 
-Fits Fits::createFile(std::string const & filename) {
-    Fits result;
-    result.status = 0;
-    fits_create_file(reinterpret_cast<fitsfile**>(&result.fptr), 
-                     const_cast<char*>(filename.c_str()), &result.status);
-    return result;
+Fits::Fits(std::string const & filename, std::string const & mode, int behavior_)
+    : fptr(0), status(0), behavior(behavior_)
+{
+    if (mode == "r" || mode == "rb") {
+        fits_open_file(
+            reinterpret_cast<fitsfile**>(&fptr),
+            const_cast<char*>(filename.c_str()), 
+            READONLY,
+            &status
+        );
+    } else if (mode == "w" || mode == "wb" || mode == "pdu") {
+        boost::filesystem::remove(filename); // cfitsio doesn't like over-writing files
+        fits_create_file(
+            reinterpret_cast<fitsfile**>(&fptr), 
+            const_cast<char*>(filename.c_str()),
+            &status
+        );
+    } else if (mode == "a" || mode == "ab") {
+        fits_open_file(
+            reinterpret_cast<fitsfile**>(&fptr),
+            const_cast<char*>(filename.c_str()), 
+            READWRITE,
+            &status
+        );
+        int nHdu = 0;
+        fits_get_num_hdus(reinterpret_cast<fitsfile*>(fptr), &nHdu, &status);
+        fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), nHdu, NULL, &status);
+        if ((behavior & AUTO_CHECK) && (behavior & AUTO_CLOSE) && (status) && (fptr)) {
+            // We're about to throw an exception, and the destructor won't get called
+            // because we're in the constructor, so cleanup here first.
+            int tmpStatus = 0;
+            fits_close_file(reinterpret_cast<fitsfile*>(fptr), &tmpStatus);
+        }
+    } else {
+        throw LSST_EXCEPT(
+            FitsError,
+            (boost::format("Invalid mode '%s' given when opening file '%s'") % mode % filename).str()
+        );
+    }
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Opening file '%s' with mode '%s'") % filename % mode);
 }
 
-Fits Fits::openFile(std::string const & filename, bool writeable) {
-    Fits result;
-    result.status = 0;
-    fits_open_file(
-        reinterpret_cast<fitsfile**>(&result.fptr),
-        const_cast<char*>(filename.c_str()), 
-        writeable ? READWRITE : READONLY,
-        &result.status
-    );
-    return result;
+Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior) {
+    typedef void * (*Reallocator)(void *, std::size_t);
+    if (mode == "r" || mode == "rb") {
+        fits_open_memfile(
+            reinterpret_cast<fitsfile**>(&fptr),
+            "unused",
+            READONLY,
+            &manager._ptr, &manager._len,
+            0, 0, // no reallocator or deltasize necessary for READONLY
+            &status
+        );
+    } else if (mode == "w" || mode == "wb" || mode == "pdu") {
+        if (!manager._ptr) manager.reset(2880);
+        Reallocator reallocator = 0;
+        if (manager._managed) reallocator = &std::realloc;
+        fits_create_memfile(
+            reinterpret_cast<fitsfile**>(&fptr),
+            &manager._ptr, &manager._len,
+            0, reallocator, // use default deltasize
+            &status
+        );
+    } else if (mode == "a" || mode == "ab") {
+        Reallocator reallocator = 0;
+        if (manager._managed) reallocator = &std::realloc;
+        fits_open_memfile(
+            reinterpret_cast<fitsfile**>(&fptr),
+            "unused",
+            READWRITE,
+            &manager._ptr, &manager._len,
+            0, reallocator,
+            &status
+        );
+        int nHdu = 0;
+        fits_get_num_hdus(reinterpret_cast<fitsfile*>(fptr), &nHdu, &status);
+        fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), nHdu, NULL, &status);
+        if ((behavior & AUTO_CHECK) && (behavior & AUTO_CLOSE) && (status) && (fptr)) {
+            // We're about to throw an exception, and the destructor won't get called
+            // because we're in the constructor, so cleanup here first.
+            int tmpStatus = 0;
+            fits_close_file(reinterpret_cast<fitsfile*>(fptr), &tmpStatus);
+        }
+    } else {
+        throw LSST_EXCEPT(
+            FitsError,
+            (boost::format("Invalid mode '%s' given when opening memory file at '%s'")
+             % mode % manager._ptr).str()
+        );
+    }
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(
+            *this, boost::format("Opening memory file at '%s' with mode '%s'") % manager._ptr % mode
+        );
 }
 
 void Fits::closeFile() {

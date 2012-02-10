@@ -566,7 +566,7 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
     std::string const& fileName,                ///< File to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, //!< metadata to write to header or NULL
     std::string const& mode                     //!< "w" to write a new file; "a" to append
 ) const {
     using lsst::daf::base::PropertySet;

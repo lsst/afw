@@ -18,7 +18,7 @@ public:
 
     VectorT(VectorT const & other);
 
-    void writeFits(std::string const & filename) const;
+    void writeFits(std::string const & filename, std::string const & mode="w") const;
 
     static VectorT readFits(std::string const & filename);
 
