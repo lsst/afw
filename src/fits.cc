@@ -770,7 +770,7 @@ void Fits::createImageImpl(int naxis, long * naxes) {
 }
 
 template <typename T>
-void Fits::writeImageImpl(T const * data, int nElements) {
+void Fits::writeImageImpl(T const * data, std::size_t nElements) {
     fits_write_img(
         reinterpret_cast<fitsfile*>(fptr),
         FitsType<T>::CONSTANT,
@@ -780,6 +780,49 @@ void Fits::writeImageImpl(T const * data, int nElements) {
     );
     if (behavior & AUTO_CHECK)
         LSST_FITS_CHECK_STATUS(*this, "Writing image");
+}
+
+void Fits::getImageDimensionsImpl(int naxis, long * naxes) {
+    fits_get_img_size(reinterpret_cast<fitsfile*>(fptr), naxis, naxes, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting image size");        
+}
+
+template <typename T>
+void Fits::readImageImpl(int naxis, long const * naxes, T * data, std::size_t nElements) {
+    boost::scoped_array<long> fpixel(new long[naxis]);
+    std::fill(fpixel.get(), fpixel.get() + naxis, 1);
+    int anynul = 0;
+    fits_read_pix(
+        reinterpret_cast<fitsfile*>(fptr),
+        FitsType<T>::CONSTANT,
+        fpixel.get(), nElements,
+        0, data, &anynul,
+        &status
+    );
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Reading image");
+}
+
+template <typename T>
+void Fits::readImageImpl(int naxis, long const * naxes, T * data, long const * offset) {
+    boost::scoped_array<long> fpixel(new long[naxis]);
+    boost::scoped_array<long> lpixel(new long[naxis]);
+    boost::scoped_array<long> inc(new long[naxis]);
+    for (int i = 0; i < naxis; ++i) {
+        fpixel[i] = offset[i] + 1;
+        lpixel[i] = offset[i] + naxes[i];
+        inc[i] = 1;
+    }
+    fits_read_subset(
+        reinterpret_cast<fitsfile*>(fptr),
+        FitsType<T>::CONSTANT,
+        fpixel.get(), lpixel.get(), inc.get(),
+        0, data, 0,
+        &status
+    );
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Reading image");
 }
 
 // ---- Manipulating files ----------------------------------------------------------------------------------
@@ -907,7 +950,9 @@ void Fits::closeFile() {
 
 #define INSTANTIATE_IMAGE_OPS(r, data, T)                        \
     template void Fits::createImageImpl<T>(int, long *);         \
-    template void Fits::writeImageImpl(T const *, int);
+    template void Fits::writeImageImpl(T const *, std::size_t);         \
+    template void Fits::readImageImpl(int naxis, long const * naxes, T * data, std::size_t nElements); \
+    template void Fits::readImageImpl(int naxis, long const * naxes, T * data, long const * offset);
 
 #define INSTANTIATE_TABLE_OPS(r, data, T)                               \
     template int Fits::addColumn<T>(std::string const & ttype, int size); \

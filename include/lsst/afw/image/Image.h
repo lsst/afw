@@ -433,11 +433,26 @@ public:
     explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=LOCAL, 
                    const bool deep=false);
     Image(const Image& rhs, const bool deep=false);
-    explicit Image(std::string const& fileName, const int hdu=0,
+
+    /**
+     *  @brief Construct an Image from a FITS file
+     *
+     *  @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret
+     *  0 meaning the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus
+     *  [PDU, HDU2, HDU3, ...]
+     *
+     *  @param[in]   fileName     name of the file to open.
+     *  @param[in]   hdu          HDU to read.
+     *  @param[out]  metadata     If non-null, will be filled with the FITS header keys.
+     *  @param[in]   bbox         Region of the image to load (empty box == read the entire image).
+     *  @param[in]   origin       Coordinate system of the bbox.
+     */
+    explicit Image(std::string const& fileName, int hdu=0,
                    daf::base::PropertySet::Ptr metadata=daf::base::PropertySet::Ptr(),
                    geom::Box2I const& bbox=geom::Box2I(), 
                    ImageOrigin const origin=LOCAL);
-    explicit Image(char **ramFile, size_t *ramFileLen, const int hdu=0,
+
+    explicit Image(char **ramFile, size_t *ramFileLen, int hdu=0,
                    daf::base::PropertySet::Ptr metadata=daf::base::PropertySet::Ptr(),
                    geom::Box2I const& bbox=geom::Box2I(), 
                    ImageOrigin const origin=LOCAL);

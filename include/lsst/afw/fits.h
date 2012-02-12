@@ -23,6 +23,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/ndarray.h"
+#include "lsst/afw/geom.h"
 
 namespace lsst { namespace afw { namespace fits {
 
@@ -187,7 +188,10 @@ private:
  */
 class Fits : private boost::noncopyable {
     template <typename T> void createImageImpl(int naxis, long * naxes);
-    template <typename T> void writeImageImpl(T const * data, int nElements);
+    template <typename T> void writeImageImpl(T const * data, std::size_t nElements);
+    void getImageDimensionsImpl(int naxis, long * naxes);
+    template <typename T> void readImageImpl(int naxis, long const * naxes, T * data, std::size_t nElements);
+    template <typename T> void readImageImpl(int naxis, long const * naxes, T * data, long const * offset);
 public:
 
     enum BehaviorFlags {
@@ -339,6 +343,11 @@ public:
         createImageImpl<PixelT>(2, naxes);
     }
 
+    template <typename PixelT>
+    void createImage(geom::Extent2I const & dimensions) {
+        createImage<PixelT>(dimensions.getX(), dimensions.getY());
+    }
+
     /**
      *  @brief Write an ndarray::Array to a FITS image HDU.
      *
@@ -353,6 +362,100 @@ public:
         writeImageImpl(contiguous.getData(), contiguous.getNumElements());
     }
 
+    /**
+     *  @brief Return the dimensions of the current HDU.
+     *
+     *  The current HDU must be an image HDU with at least N dimensions; the shape of any
+     *  additional dimensions is ignored.
+     *
+     *  The returned shape is ordered fastest dimension last (e.g. [y, x]), as is standard
+     *  with ndarray.
+     */
+    template <int N>
+    ndarray::Vector<int,N> getImageShape() {
+        long naxes[N];
+        getImageDimensionsImpl(N, naxes);
+        ndarray::Vector<int,N> r;
+        std::copy(naxes, naxes + N, r.rbegin());
+        return r;
+    }
+
+    /**
+     *  @brief Return the dimensions of the current HDU.
+     *
+     *  The current HDU must be an image HDU with at least 2 dimensions, all dimensions
+     *  greater than the second will be ignored.
+     */
+    geom::Extent2I getImageDimensions() {
+        long naxes[2];
+        getImageDimensionsImpl(2, naxes);
+        return geom::Extent2I(naxes[0], naxes[1]);
+    }
+
+    /**
+     *  @brief Read the current HDU (which must be an image) into the given array.
+     *
+     *  The array must already be allocated with the correct shape.
+     *  The current HDU must be an image HDU with at least N dimensions, where all
+     *  dimensions greater than the Nth have size 1.
+     *
+     *  The array shape is ordered fastest dimension last (e.g. [y, x]), as is standard
+     *  with ndarray.
+     */
+    template <typename T, int N>
+    void readImage(ndarray::Array<T,N,N> const & array) {
+        long naxes[N];
+        ndarray::Vector<int,N> shape = array.getShape();
+        std::copy(shape.rbegin(), shape.rend(), naxes);
+        readImageImpl(N, naxes, array.getData(), array.getNumElements());
+    }
+
+    /**
+     *  @brief Read a subset of the current image HDU into the given array.
+     *
+     *  The array must already be allocated with the correct shape.
+     *  The current HDU must be an image HDU with at least 2 dimensions, where all
+     *  dimensions greater than the 2nd have size 1.
+     *
+     *  The given offset is relative to the on-disk array; this routine does not
+     *  parse the FITS header to find anything about XY0.  However, the offset
+     *  should be 0-indexed, not 1-indexed (i.e. LSST-standard, not FITS-standard).
+     *
+     *  The array shape is ordered fastest dimension last (e.g. [y, x]), as is standard
+     *  with ndarray.
+     */
+    template <typename T>
+    void readImage(ndarray::Array<T,2,2> const & array, geom::Extent2I const & offset) {
+        long naxes[2] = { array.template getSize<1>(), array.template getSize<0>() };
+        long offset_[2] = { offset.getX(), offset.getY() };
+        readImageImpl(2, naxes, array.getData(), array.getNumElements(), offset_);
+    }
+
+    /**
+     *  @brief Read a subset of the current image HDU into the given array.
+     *
+     *  The array must already be allocated with the correct shape.
+     *
+     *  The current HDU must be an image HDU with at least N dimensions, where all
+     *  dimensions greater than the Nth have size 1.
+     *
+     *  The given offset is relative to the on-disk array; this routine does not
+     *  parse the FITS header to find anything about XY0.  However, the offset
+     *  should be 0-indexed, not 1-indexed (i.e. LSST-standard, not FITS-standard).
+     *
+     *  The array shape and offset are ordered fastest dimension last (e.g. [y, x]),
+     *  as is standard with ndarray.
+     */
+    template <typename T, int N>
+    void readImage(ndarray::Array<T,N,N> & array, ndarray::Vector<int,N> const & offset) {
+        long naxes[N];
+        ndarray::Vector<int,N> shape = array.getShape();
+        std::copy(shape.rbegin(), shape.rend(), naxes);
+        long offset_[N];
+        std::copy(offset.rbegin(), offset.rend(), offset_);
+        readImageImpl(N, naxes, array.getData(), array.getNumElements(), offset_);
+    }
+    
     /// @brief Create a new binary table extension.
     void createTable();
 
