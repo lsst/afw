@@ -59,9 +59,9 @@ dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests") 
 
-InputMaskedImageName = "871034p_1_MI"
-InputMaskedImageNameSmall = "small_MI"
-InputImageNameSmall = "small"
+InputMaskedImageName = "871034p_1_MI.fits"
+InputMaskedImageNameSmall = "small_MI.fits"
+InputImageNameSmall = "small.fits"
 OutputMaskedImageName = "871034p_1_MInew.fits"
 
 currDir = os.path.abspath(os.path.dirname(__file__))
@@ -79,7 +79,7 @@ class ExposureTestCase(unittest.TestCase):
 
     def setUp(self):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
-        maskedImageMD = afwImage.readMetadata(inFilePathSmall + "_img.fits")
+        maskedImageMD = afwImage.readMetadata(inFilePathSmall)
 
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width =  maskedImage.getWidth()
@@ -312,13 +312,7 @@ class ExposureTestCase(unittest.TestCase):
         subExposure = afwImage.ExposureF(inFilePathSmall, hdu, subBBox)
         
         self.checkWcs(mainExposure, subExposure)
-        
-        # This should throw an exception
-        def getExposure():
-            afwImage.ExposureF(inFilePathSmallImage)
-        
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
-        
+                
         # Make sure we can write without an exception
         mainExposure.getCalib().setExptime(10)
         mainExposure.getCalib().setMidTime(dafBase.DateTime())

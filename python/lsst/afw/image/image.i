@@ -168,9 +168,6 @@
 %include "lsst/afw/image/ImagePca.h"
 %include "lsst/afw/image/Mask.h"
 
-%include "lsst/afw/image/fits/fits_io.h"
-%template(fits_write_imageF) lsst::afw::image::fits_write_image<lsst::afw::image::Image<float> >;
-
 %image(Image, U, boost::uint16_t);
 %image(Image, L, boost::uint64_t);
 %image(Image, I, int);

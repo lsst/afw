@@ -47,15 +47,22 @@
 
 namespace lsst {
 namespace afw {
-    namespace formatters {
-        template<typename> class MaskFormatter;
-    }
+
+namespace formatters {
+template<typename> class MaskFormatter;
+} // namespace formatters
+
+namespace fits {
+class MemFileManager;
+class Fits;
+} // namespace fits
+
 namespace image {
 
 // all masks will initially be instantiated with the same pixel type
 namespace detail {
-    /// tag for a Mask
-    struct Mask_tag : public detail::basic_tag { };
+/// tag for a Mask
+struct Mask_tag : public detail::basic_tag { };
 }
 
 /// Represent a 2-dimensional array of bitmask pixels
@@ -161,18 +168,48 @@ public:
 
     // I/O and FITS metadata
     
-    //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
+    //void readFits(...); // replaced by constructor
+
+    /**
+     *  @brief Write the image as a FITS file with the given filename.
+     *
+     *  @param[in] fileName   Name of the file.
+     *  @param[in] metadata   Flexible metadata to save in the FITS header.
+     *  @param[in] mode       "w" to write a new file; "a" to append.
+     */
     void writeFits(
         std::string const& fileName,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
+
+    /**
+     *  @brief Write the image as a FITS memory file.
+     *
+     *  @param[in] manager    Object that manages the lifetime of the memory block.
+     *  @param[in] metadata   Flexible metadata to save in the FITS header.
+     *  @param[in] mode       "w" to write a new file; "a" to append.
+     */
     void writeFits(
-        char **ramFile, size_t *ramFileLen,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
+        fits::MemFileManager & manager,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
-    
+
+    /**
+     *  @brief Write the image to the current HDU of the given FITS file.
+     *
+     *  @param[in] fitsfile   Internal cfitsio pointer in thin afw wrapper.
+     *  @param[in] metadata   Flexible metadata to save in the FITS header.
+     *
+     *  This overload is intended primarily for internal use (i.e. FITS persistence
+     *  for MaskedImages) and is not avalable in Python.
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+    ) const;
+
     // Mask Plane ops
     
     void clearAllMaskPlanes();

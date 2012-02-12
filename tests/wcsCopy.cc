@@ -48,7 +48,7 @@ int main() {
             exit(1);
         }
         std::string afwdata(afwdataCStr);
-        const std::string inFilename(afwdata + "/data/small_MI");
+        const std::string inFilename(afwdata + "/data/small_MI.fits");
 
         // Create a wcs from a fits file (so the wcs has some memory to allocate)
         std::cout << "Opening file " << inFilename << std::endl;

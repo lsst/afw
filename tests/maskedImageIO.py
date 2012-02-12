@@ -73,7 +73,7 @@ class MaskedImageTestCase(unittest.TestCase):
             self.baseName = os.path.join(dataDir, "Small_MI")
         else:
             self.baseName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1")
-        self.mi = afwImage.MaskedImageF(self.baseName)
+        self.mi = afwImage.MaskedImageF(self.baseName + ".fits")
 
     def tearDown(self):
         del self.mi
@@ -94,7 +94,8 @@ class MaskedImageTestCase(unittest.TestCase):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
         hdu, metadata, bbox, conformMasks = 0, None, afwGeom.Box2I(), True
-        self.mi = afwImage.MaskedImageF(self.baseName, hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
+        self.mi = afwImage.MaskedImageF(self.baseName + ".fits", hdu, metadata, bbox, afwImage.LOCAL,
+                                        conformMasks)
 
         image = self.mi.getImage()
         mask = self.mi.getMask()
@@ -132,42 +133,30 @@ class MaskedImageTestCase(unittest.TestCase):
         mi = afwImage.MaskedImageD(im)
 
     def testReadWriteMEF(self):
-        """Test that we read and write MEF and non-MEF representions of MaskedImages correctly"""
+        """Test that we read and write MEF representions of MaskedImages correctly"""
         im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
         im.set(666, 0x10, 10)
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
 
-        for tmpFile, writeMef in [("foo", False), ("foo", True),
-                                  ("foo.fits", False)]:
-            im.writeFits(tmpFile, None, "w", writeMef)
+        tmpFile = "foo.fits"
+        im.writeFits(tmpFile, None, "w")
 
-            im2 = im.Factory(tmpFile)
-            self.assertEqual(im2.getX0(), x0)
-            self.assertEqual(im2.getY0(), y0)
+        im2 = im.Factory(tmpFile)
+        self.assertEqual(im2.getX0(), x0)
+        self.assertEqual(im2.getY0(), y0)
 
-            self.assertEqual(im2.getImage().getX0(), x0)
-            self.assertEqual(im2.getImage().getY0(), y0)
+        self.assertEqual(im2.getImage().getX0(), x0)
+        self.assertEqual(im2.getImage().getY0(), y0)
 
-            self.assertEqual(im2.getMask().getX0(), x0)
-            self.assertEqual(im2.getMask().getY0(), y0)
+        self.assertEqual(im2.getMask().getX0(), x0)
+        self.assertEqual(im2.getMask().getY0(), y0)
 
-            self.assertEqual(im2.getVariance().getX0(), x0)
-            self.assertEqual(im2.getVariance().getY0(), y0)
+        self.assertEqual(im2.getVariance().getX0(), x0)
+        self.assertEqual(im2.getVariance().getY0(), y0)
 
-            if writeMef or re.search(r"\.fits(\.gz)?$", tmpFile):
-                os.remove(tmpFile)
-            else:
-                os.remove(afwImage.MaskedImageF.imageFileName(tmpFile))
-                os.remove(afwImage.MaskedImageF.maskFileName(tmpFile))
-                os.remove(afwImage.MaskedImageF.varianceFileName(tmpFile))
-
-        def tst():
-            """We can't write a compressed MEF as we write 3 HDUs"""
-            im.writeFits("foo.fits.gz", None, "w", writeMef)
-
-        utilsTests.assertRaisesLsstCpp(self, pexEx.IoErrorException, tst)
+        os.remove(tmpFile)
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
@@ -175,7 +164,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
-        tmpFile = "foo"
+        tmpFile = "foo.fits"
         im.writeFits(tmpFile)
 
         im2 = im.Factory(tmpFile)
@@ -191,9 +180,7 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(im2.getVariance().getX0(), x0)
         self.assertEqual(im2.getVariance().getY0(), y0)
         
-        os.remove(afwImage.MaskedImageF.imageFileName(tmpFile))
-        os.remove(afwImage.MaskedImageF.maskFileName(tmpFile))
-        os.remove(afwImage.MaskedImageF.varianceFileName(tmpFile))
+        os.remove(tmpFile)
 
     def testWcs(self):
         """Test round-tripping an empty Wcs"""

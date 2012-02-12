@@ -216,7 +216,7 @@ class BackgroundTestCase(unittest.TestCase):
         """Test background subtraction on some real CFHT data"""
 
         mi = afwImage.MaskedImageF(os.path.join(eups.productDir("afwdata"),
-                                                "CFHT", "D4", "cal-53535-i-797722_1"))
+                                                "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)

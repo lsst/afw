@@ -135,36 +135,6 @@ inline void fits_read_view(std::string const& filename,const View& view,
     m.read_image(array, xy0);
 }
 
-/// \ingroup FITS_IO
-/// \brief Saves the view to a fits file specified by the given fits image file name.
-/// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
-/// Throws lsst::afw::image::FitsException if it fails to create the file.
-template <typename ImageT>
-inline void fits_write_image(const std::string& filename, const ImageT & image,
-                            boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
-                            std::string const& mode="w"
-                           ) {
-    BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
-
-    detail::fits_writer m(filename, mode);
-    m.apply(image, metadata);
-}
-
-/// \ingroup FITS_IO
-/// \brief Saves the view to a fits RAM-file.
-/// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
-/// Throws lsst::afw::image::FitsException if it fails to create the RAM-file.
-template <typename ImageT>
-inline void fits_write_ramImage(char **ramFile, size_t *ramFileLen, const ImageT & image,
-                            boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
-                            std::string const& mode="w"
-                           ) {
-    BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
-
-    detail::fits_writer m(ramFile, ramFileLen, mode);
-    m.apply(image, metadata);
-}
-
 }}}                                     // namespace lsst::afw::image
 /// \endcond
 #endif

@@ -25,6 +25,7 @@ import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as detection
 from . import imageLib as afwImage
 import numpy
+import pyfits
 
 def clipImage(im, minClip, maxClip):
     """Clip an image to lie between minClip and maxclip (None to ignore)"""
@@ -77,3 +78,17 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
             for a in p.getArray("alias"):
                 afwImage.Filter.defineAlias(p.get("name"), a)
             
+
+def makeMaskedImageFits(base):
+    """Create a MaskedImage multi-extension FITS file from the three-separate-file format
+    used previously.
+    """
+    img = pyfits.open(base + "_img.fits")
+    msk = pyfits.open(base + "_msk.fits")
+    var = pyfits.open(base + "_var.fits")
+    out = pyfits.HDUList()
+    out.append(pyfits.PrimaryHDU())
+    out.append(img[0])
+    out.append(msk[0])
+    out.append(var[0])
+    out.writeto(base + ".fits")

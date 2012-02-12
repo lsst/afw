@@ -125,6 +125,12 @@ struct MemFileManager : private boost::noncopyable {
      */
     MemFileManager(void * ptr, std::size_t len) : _ptr(ptr), _len(len), _managed(false) {}
 
+    /// @brief Return the memory buffer.
+    void * get() const { return _ptr; }
+
+    /// @brief Return the current size of the buffer.
+    std::size_t size() const { return _len; }
+
     /**
      *  @brief Return the manager to the same state it would be if default-constructed.
      *

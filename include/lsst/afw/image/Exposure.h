@@ -67,6 +67,11 @@ namespace formatters {
     template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
 }
 
+namespace fits {
+class MemFileManager;
+class Fits;
+} // namespace fits
+
 namespace image {
 
 class Calib;
@@ -240,11 +245,102 @@ public:
 
     /// Does this Exposure have a Wcs?
     bool hasWcs() const { return *_wcs ? true : false; }
-    
-    // FITS
-    void writeFits(std::string const &expOutFile) const;
-    void writeFits(char **ramFile, size_t *ramFileLen) const;
-    
+        
+    /**
+     *  @brief Write the Exposure as a multi-extension FITS file with the given filename.
+     *
+     *  @param[in] fileName   Name of the file.
+     *  @param[in] mode       "w" to write a new file; "a" to append.
+     *
+     *  If mode is 'w', an empty Primary HDU will be created before appending three image Extension HDUs.
+     *
+     *  @note LSST and FITS use a different convention for WCS coordinates.
+     *  FITS measures crpix relative to the bottom left hand corner of the image
+     *  saved in that file (what ds9 calls image coordinates). LSST measures it 
+     *  relative to the bottom left hand corner of the parent image (what 
+     *  ds9 calls the physical coordinates). This may cause confusion when you
+     *  write an image to disk and discover that the values of crpix in the header
+     *  are not what you expect.
+     *
+     *  exposure = afwImage.ExposureF(filename) 
+     *  fitsHeader = afwImage.readMetadata(filename)
+     * 
+     *  exposure.getWcs().getPixelOrigin() ---> (128,128)
+     *  fitsHeader.get("CRPIX1") --> 108
+     *
+     *  This is expected. If you look at the value of
+     *  fitsHeader.get("LTV1") --> -20
+     *  you will find that CRPIX - LTV == getPixelOrigin.
+     *
+     *  This implementation means that if you open the image in ds9 (say)
+     *  the wcs translations for a given pixel are correct
+     */
+    void writeFits(std::string const& fileName, std::string const& mode="w") const;
+
+    /**
+     *  @brief Write the image as a FITS memory file.
+     *
+     *  If mode is 'w', an empty Primary HDU will be created before appending three image Extension HDUs.
+     *
+     *  @param[in] manager    Object that manages the lifetime of the memory block.
+     *  @param[in] mode       "w" to write a new file; "a" to append.
+     *
+     *  @note LSST and FITS use a different convention for WCS coordinates.
+     *  FITS measures crpix relative to the bottom left hand corner of the image
+     *  saved in that file (what ds9 calls image coordinates). LSST measures it 
+     *  relative to the bottom left hand corner of the parent image (what 
+     *  ds9 calls the physical coordinates). This may cause confusion when you
+     *  write an image to disk and discover that the values of crpix in the header
+     *  are not what you expect.
+     *
+     *  exposure = afwImage.ExposureF(filename) 
+     *  fitsHeader = afwImage.readMetadata(filename)
+     * 
+     *  exposure.getWcs().getPixelOrigin() ---> (128,128)
+     *  fitsHeader.get("CRPIX1") --> 108
+     *
+     *  This is expected. If you look at the value of
+     *  fitsHeader.get("LTV1") --> -20
+     *  you will find that CRPIX - LTV == getPixelOrigin.
+     *
+     *  This implementation means that if you open the image in ds9 (say)
+     *  the wcs translations for a given pixel are correct
+     */
+    void writeFits(fits::MemFileManager & manager, std::string const& mode="w") const;
+
+    /**
+     *  @brief Write the image to the current HDU of the given FITS file.
+     *
+     *  Three image Extension HDUs will be appended to the current file; if the file
+     *  is empty, an empty Primary HDU will be added first.
+     *
+     *  @param[in] fitsfile   Internal cfitsio pointer in thin afw wrapper.
+     *
+     *  This overload is intended primarily for internal use and is not avalable in Python.
+     *
+     *  @note LSST and FITS use a different convention for WCS coordinates.
+     *  FITS measures crpix relative to the bottom left hand corner of the image
+     *  saved in that file (what ds9 calls image coordinates). LSST measures it 
+     *  relative to the bottom left hand corner of the parent image (what 
+     *  ds9 calls the physical coordinates). This may cause confusion when you
+     *  write an image to disk and discover that the values of crpix in the header
+     *  are not what you expect.
+     *
+     *  exposure = afwImage.ExposureF(filename) 
+     *  fitsHeader = afwImage.readMetadata(filename)
+     * 
+     *  exposure.getWcs().getPixelOrigin() ---> (128,128)
+     *  fitsHeader.get("CRPIX1") --> 108
+     *
+     *  This is expected. If you look at the value of
+     *  fitsHeader.get("LTV1") --> -20
+     *  you will find that CRPIX - LTV == getPixelOrigin.
+     *
+     *  This implementation means that if you open the image in ds9 (say)
+     *  the wcs translations for a given pixel are correct
+     */
+    void writeFits(fits::Fits & fitsfile) const;
+
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
     

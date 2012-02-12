@@ -49,6 +49,7 @@
 #include "boost/gil/gil_all.hpp"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
+#include "lsst/afw/fits.h"
 
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
@@ -329,63 +330,50 @@ afwImage::Mask<MaskPixelT>::Mask(
                                         // defined by Mask::_maskPlaneDict
 }
 
-/**
- * \brief Write a Mask to the specified file
- */
-template<typename MaskPixelT>
+template <typename MaskPixelT>
 void afwImage::Mask<MaskPixelT>::writeFits(
-    std::string const& fileName, ///< File to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< metadata to write to header,
-        ///< or a null pointer if none
-    std::string const& mode    ///< "w" to write a new file; "a" to append
+    lsst::afw::fits::Fits & fits,
+    CONST_PTR(daf::base::PropertySet) metadata_i
 ) const {
-
-    dafBase::PropertySet::Ptr metadata;
+    PTR(dafBase::PropertySet) metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList());
+        metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList());
     }
     addMaskPlanesToMetadata(metadata);
     //
     // Add WCS with (X0, Y0) information
     //
-    dafBase::PropertySet::Ptr wcsAMetadata = detail::createTrivialWcsAsPropertySet(
+    PTR(dafBase::PropertySet) wcsAMetadata = detail::createTrivialWcsAsPropertySet(
         detail::wcsNameForXY0, this->getX0(), this->getY0()
     );
     metadata->combine(wcsAMetadata);
-
-    afwImage::fits_write_image(fileName, *this, metadata, mode);
+    fits.createImage<MaskPixelT>(this->getWidth(), this->getHeight());
+    fits.writeMetadata(*metadata);
+    fits.writeImage(this->getArray());    
 }
 
-/**
- * \brief Write a Mask to the specified RAM file
- */
 template<typename MaskPixelT>
 void afwImage::Mask<MaskPixelT>::writeFits(
-    char **ramFile,        ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen,    ///< RAM buffer length
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< metadata to write to header,
-        ///< or a null pointer if none
-    std::string const& mode    ///< "w" to write a new file; "a" to append
+    std::string const& fileName,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
 ) const {
+    using afw::fits::Fits;
+    Fits fits(fileName, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
+}
 
-    dafBase::PropertySet::Ptr metadata;
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-    } else {
-        metadata = dafBase::PropertySet::Ptr(new dafBase::PropertyList());
-    }
-    addMaskPlanesToMetadata(metadata);
-    //
-    // Add WCS with (X0, Y0) information
-    //
-    dafBase::PropertySet::Ptr wcsAMetadata = detail::createTrivialWcsAsPropertySet(
-        detail::wcsNameForXY0, this->getX0(), this->getY0()
-    );
-    metadata->combine(wcsAMetadata);
-
-    afwImage::fits_write_ramImage(ramFile, ramFileLen, *this, metadata, mode);
+template<typename MaskPixelT>
+void afwImage::Mask<MaskPixelT>::writeFits(
+    lsst::afw::fits::MemFileManager & manager,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
+) const {
+    using afw::fits::Fits;
+    Fits fits(manager, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
 }
 
 template<typename MaskPixelT>

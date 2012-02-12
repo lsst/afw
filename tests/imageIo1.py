@@ -56,7 +56,7 @@ class ReadFitsTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def testU16(self):
+    def _testU16(self):
         """Test reading U16 image"""
 
         im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
@@ -64,7 +64,7 @@ class ReadFitsTestCase(unittest.TestCase):
         col, row, val = 0, 0, 1154
         self.assertEqual(im.get(col, row), val)
 
-    def testS16(self):
+    def _testS16(self):
         """Test reading S16 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_img.fits"))
 
@@ -74,21 +74,21 @@ class ReadFitsTestCase(unittest.TestCase):
         col, row, val = 32, 1, 62
         self.assertEqual(im.get(col, row), val)
 
-    def testF32(self):
+    def _testF32(self):
         """Test reading F32 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI_var.fits"))
         
         col, row, val = 32, 1, 39.11672
         self.assertAlmostEqual(im.get(col, row), val, 5)
 
-    def testF64(self):
+    def _testF64(self):
         """Test reading a U16 file into a F64 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
         col, row, val = 0, 0, 1154
         self.assertEqual(im.get(col, row), val)
         
         #print "IM = ", im
-    def testWriteReadF64(self):
+    def _testWriteReadF64(self):
         """Test writing then reading an F64 image"""
 
         imPath = "data"
@@ -102,7 +102,7 @@ class ReadFitsTestCase(unittest.TestCase):
         newIm = afwImage.ImageD(imPath)
         os.remove(imPath)
 
-    def testSubimage(self):
+    def _testSubimage(self):
         """Test reading a subimage image"""
         fileName, hdu = os.path.join(dataDir, "871034p_1_MI_var.fits"), 0
         im = afwImage.ImageF(fileName)
@@ -118,7 +118,7 @@ class ReadFitsTestCase(unittest.TestCase):
         self.assertEqual(im2.getX0(), sim.getX0())
         self.assertEqual(im2.getY0(), sim.getY0())
 
-    def testMEF(self):
+    def _testMEF(self):
         """Test writing a set of images to an MEF fits file, and then reading them back"""
         
         imPath = "data"

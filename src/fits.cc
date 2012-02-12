@@ -483,6 +483,8 @@ void MetadataIterationFunctor::operator()(
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         // strip off the enclosing single quotes and return the string
         add(key, matchStrings[1].str(), comment);
+    } else if (value.empty()) {
+        // do nothing for empty values
     } else if (key == "HISTORY" ||
                (key == "COMMENT" &&
                 comment != "  FITS (Flexible Image Transport System) format is defined in 'Astronomy" &&
@@ -504,63 +506,76 @@ void writeKeyFromProperty(
     Fits & fits, daf::base::PropertySet const & metadata, std::string const & key, char const * comment=0
 ) {
     std::type_info const & valueType = metadata.typeOf(key); 
+    std::cerr << "Writing key '" << key << "...";
     if (valueType == typeid(bool)) {
         if (metadata.isArray(key)) {
+            std::cerr << "bool array\n";
             std::vector<bool> tmp = metadata.getArray<bool>(key);
             // work around unfortunate specialness of std::vector<bool>
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), static_cast<bool>(tmp[i]), comment);
             }
         } else {
+            std::cerr << "bool\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<bool>(key), comment);
         }
     } else if (valueType == typeid(int)) {
         if (metadata.isArray(key)) {
+            std::cerr << "int array\n";
             std::vector<int> tmp = metadata.getArray<int>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
+            std::cerr << "int\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<int>(key), comment);
         }
     } else if (valueType == typeid(long)) {
         if (metadata.isArray(key)) {
+            std::cerr << "long array\n";
             std::vector<long> tmp = metadata.getArray<long>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
+            std::cerr << "long\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<long>(key), comment);
         }
     } else if (valueType == typeid(boost::int64_t)) {
         if (metadata.isArray(key)) {
+            std::cerr << "int64 array\n";
             std::vector<boost::int64_t> tmp = metadata.getArray<boost::int64_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
+            std::cerr << "int64\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<boost::int64_t>(key), comment);
         }
     } else if (valueType == typeid(double)) {
         if (metadata.isArray(key)) {
+            std::cerr << "double array\n";
             std::vector<double> tmp = metadata.getArray<double>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
+            std::cerr << "double\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<double>(key), comment);
         }
     } else if (valueType == typeid(std::string)) {
         if (metadata.isArray(key)) {
+            std::cerr << "string array\n";
             std::vector<std::string> tmp = metadata.getArray<std::string>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
+            std::cerr << "string\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
         }
     } else {
-        // FIXME: inherited this error handling from fitsIo.cc; need a better option.
+        std::cerr << "error\n";
         pex::logging::Log::getDefaultLog().log(
             pex::logging::Log::WARN,
             makeErrorMessage(
@@ -593,13 +608,14 @@ void Fits::writeMetadata(daf::base::PropertySet const & metadata) {
     } else {
         paramNames = metadata.paramNames(false);
     }
+    std::cerr << "In writeMetadata...\n";
     for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
         if (!isKeyIgnored(*i)) {
             if (pl) {
                 writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
+            } else {
+                writeKeyFromProperty(*this, metadata, *i);
             }
-        } else {
-            if (pl) writeKeyFromProperty(*this, metadata, *i);
         }
     }
 }
@@ -800,6 +816,7 @@ Fits::Fits(std::string const & filename, std::string const & mode, int behavior_
             // because we're in the constructor, so cleanup here first.
             int tmpStatus = 0;
             fits_close_file(reinterpret_cast<fitsfile*>(fptr), &tmpStatus);
+            fptr = 0;
         }
     } else {
         throw LSST_EXCEPT(
@@ -853,22 +870,28 @@ Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior) {
             // because we're in the constructor, so cleanup here first.
             int tmpStatus = 0;
             fits_close_file(reinterpret_cast<fitsfile*>(fptr), &tmpStatus);
+            fptr = 0;
         }
     } else {
         throw LSST_EXCEPT(
             FitsError,
-            (boost::format("Invalid mode '%s' given when opening memory file at '%s'")
+            (boost::format("Invalid mode '%s' given when opening memory file at '%p'")
              % mode % manager._ptr).str()
         );
     }
-    if (behavior & AUTO_CHECK)
-        LSST_FITS_CHECK_STATUS(
-            *this, boost::format("Opening memory file at '%s' with mode '%s'") % manager._ptr % mode
+    if ((behavior & AUTO_CHECK) && (status)) {
+        // can't use LSST_FITS_CHECK_STATUS here, because fptr isn't in a valid state
+        // if fits_open_memfile fails in some ways
+        LSST_EXCEPT(
+            FitsError, 
+            (boost::format("Error opening memory file at '%p' with mode '%s'") % manager._ptr % mode).str()
         );
+    }
 }
 
 void Fits::closeFile() {
     fits_close_file(reinterpret_cast<fitsfile*>(fptr), &status);
+    fptr = 0;
 }
 
 #define INSTANTIATE_KEY_OPS(r, data, T)                                \

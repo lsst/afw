@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include "boost/lambda/lambda.hpp"
 #include "boost/regex.hpp"
+#include "boost/make_shared.hpp"
 #include "boost/filesystem/path.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
@@ -37,9 +38,11 @@
 
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/fits/fits_io.h"
+#include "lsst/afw/fits.h"
 
 namespace bl = boost::lambda;
-namespace image = lsst::afw::image;
+
+namespace lsst { namespace afw { namespace image {
 
 /** Constructors
  *
@@ -157,7 +160,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             }
         }
 
-        _image = typename Image::Ptr(new Image(baseName, real_hdu, metadata, bbox, origin));
+        _image = PTR(Image)(new Image(baseName, real_hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "IMAGE") {
@@ -168,14 +171,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
         try {
-            _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, origin, conformMasks));
+            _mask = PTR(Mask)(new Mask(baseName, real_hdu + 1, metadata, bbox, origin, conformMasks));
         } catch(image::FitsException &e) {
             if (needAllHdus) {
                 LSST_EXCEPT_ADD(e, "Reading Mask");
                 throw e;
             }
 
-            _mask = typename Mask::Ptr(new Mask(_image->getBBox(PARENT)));
+            _mask = PTR(Mask)(new Mask(_image->getBBox(PARENT)));
         }
 
         try {
@@ -191,13 +194,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
 
         try {
-            _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox, origin));
+            _variance = PTR(Variance)(new Variance(baseName, real_hdu + 2, metadata, bbox, origin));
         } catch(image::FitsException &e) {
             if (needAllHdus) {
                 LSST_EXCEPT_ADD(e, "Reading Variance");
                 throw e;
             }
-            _variance = typename Variance::Ptr(new Variance(_image->getBBox(PARENT)));
+            _variance = PTR(Variance)(new Variance(_image->getBBox(PARENT)));
         }
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
@@ -211,7 +214,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     } else {
         int real_hdu = (hdu == 0) ? 1 : hdu;
 
-        _image = typename Image::Ptr(new Image(MaskedImage::imageFileName(baseName),
+        _image = PTR(Image)(new Image(MaskedImage::imageFileName(baseName),
                                                real_hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
@@ -222,7 +225,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
-        _mask = typename Mask::Ptr(new Mask(MaskedImage::maskFileName(baseName),
+        _mask = PTR(Mask)(new Mask(MaskedImage::maskFileName(baseName),
                                             real_hdu, metadata, bbox, origin, conformMasks));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
@@ -233,7 +236,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
-        _variance = typename Variance::Ptr(new Variance(MaskedImage::varianceFileName(baseName),
+        _variance = PTR(Variance)(new Variance(MaskedImage::varianceFileName(baseName),
                                                         real_hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
@@ -283,7 +286,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
     }
 
-    _image = typename Image::Ptr(new Image(ramFile, ramFileLen, real_hdu, metadata, bbox, origin));
+    _image = PTR(Image)(new Image(ramFile, ramFileLen, real_hdu, metadata, bbox, origin));
     try {
         std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
         if (exttype != "" && exttype != "IMAGE") {
@@ -294,14 +297,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     } catch(lsst::pex::exceptions::NotFoundException) {}
 
     try {
-        _mask = typename Mask::Ptr(new Mask(ramFile, ramFileLen, real_hdu + 1, metadata, bbox, origin, conformMasks));
+        _mask = PTR(Mask)(new Mask(ramFile, ramFileLen, real_hdu + 1, metadata, bbox, origin, conformMasks));
     } catch(image::FitsException &e) {
         if (needAllHdus) {
             LSST_EXCEPT_ADD(e, "Reading Mask");
             throw e;
         }
 
-        _mask = typename Mask::Ptr(new Mask(_image->getBBox(PARENT)));
+        _mask = PTR(Mask)(new Mask(_image->getBBox(PARENT)));
     }
 
     try {
@@ -317,13 +320,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     }
 
     try {
-        _variance = typename Variance::Ptr(new Variance(ramFile, ramFileLen, real_hdu + 2, metadata, bbox, origin));
+        _variance = PTR(Variance)(new Variance(ramFile, ramFileLen, real_hdu + 2, metadata, bbox, origin));
     } catch(image::FitsException &e) {
         if (needAllHdus) {
             LSST_EXCEPT_ADD(e, "Reading Variance");
             throw e;
         }
-        _variance = typename Variance::Ptr(new Variance(_image->getBBox(PARENT)));
+        _variance = PTR(Variance)(new Variance(_image->getBBox(PARENT)));
     }
     try {
         std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
@@ -364,9 +367,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     lsst::daf::base::Citizen(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
-        _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
-        _mask =     typename Mask::Ptr(new Mask(*rhs.getMask(), deep));
-        _variance = typename Variance::Ptr(new Variance(*rhs.getVariance(), deep));
+        _image =    PTR(Image)(new Image(*rhs.getImage(), deep));
+        _mask =     PTR(Mask)(new Mask(*rhs.getMask(), deep));
+        _variance = PTR(Variance)(new Variance(*rhs.getVariance(), deep));
     }
     conformSizes();
 }
@@ -631,136 +634,55 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
     *_variance /= rhs*rhs;
 }
 
-/**
- * Write \c this to a FITS file
- *
- * \deprecated Please avoid using the interface that writes three separate files;  it may be
- * removed in some future release.
- */
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-        std::string const& baseName, ///< The desired file's baseName (e.g. foo reads foo_{img.msk.var}.fits),
-                                     ///< unless file's has a .fits suffix (or you set writeMef to true)
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file
-                                                                          ///< or NULL
-        std::string const& mode,                    //!< "w" to write a new file; "a" to append
-        bool const writeMef  ///< write an MEF file,
-                             ///< even if basename doesn't look like a fully qualified FITS file
-    ) const {
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT>::writeFits(
+    afw::fits::Fits & fits,
+    CONST_PTR(daf::base::PropertySet) metadata_i
+) const {
 
-    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
-    }
-
-    lsst::daf::base::PropertySet::Ptr metadata;
+    PTR(daf::base::PropertySet) metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata = PTR(daf::base::PropertySet)(new daf::base::PropertyList());
     }
 
-    static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
-    if (writeMef ||
-        // write an MEF if they call it *.fits"
-        boost::regex_search(baseName, fitsFile_RE_compiled)) {
-
-        static boost::regex const compressedFileNoMEF_RE_compiled(image::detail::compressedFileNoMEF_RE);
-        bool const isCompressed = boost::regex_search(baseName, compressedFileNoMEF_RE_compiled);
-
-        if (isCompressed) {
-            // cfitsio refuses to write the 2nd HDU of the compressed MEF
-            throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException,
-                              "I don't know how to write a compressed MEF: " + baseName);
-        }
-        //
-        // Write the PDU
-        //
-        if (mode == "w" || mode == "wb") {
-            _image->writeFits(baseName, metadata, "pdu");
-#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
-            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-#endif
-        }
-
-        metadata->set("EXTTYPE", "IMAGE");
-        _image->writeFits(baseName, metadata, "a");
-
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "MASK");
-        _mask->writeFits(baseName, metadata, "a");
-
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "VARIANCE");
-        _variance->writeFits(baseName, metadata, "a");
-    } else {
-        _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
-
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-        _mask->writeFits(MaskedImage::maskFileName(baseName), metadata, mode);
-
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-        _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
-    }
+    if (fits.countHdus() == 0) fits.createEmpty();
+    
+    metadata->set("EXTTYPE", "IMAGE");
+    _image->writeFits(fits, metadata);
+    
+    metadata = boost::make_shared<daf::base::PropertyList>();
+    metadata->set("EXTTYPE", "MASK");
+    _mask->writeFits(fits, metadata);
+    
+    metadata = boost::make_shared<daf::base::PropertyList>();
+    metadata->set("EXTTYPE", "VARIANCE");
+    _variance->writeFits(fits, metadata);
+            
 }
 
-/**
- * Write \c this to a FITS RAM file
- *
- * \deprecated Please avoid using the interface that writes three separate files;  it may be
- * removed in some future release.
- */
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-        char **ramFile,        ///< RAM buffer to receive RAM FITS file
-        size_t *ramFileLen,    ///< RAM buffer length
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file
-                                                                          ///< or NULL
-        std::string const& mode,                    //!< "w" to write a new file; "a" to append
-        bool const writeMef  ///< write an MEF file,
-                             ///< even if basename doesn't look like a fully qualified FITS file
-    ) const {
 
-    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
-    }
-    
-    if (!writeMef) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
-    }
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT>::writeFits(
+    std::string const& fileName,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
+) const {
+    using afw::fits::Fits;
+    Fits fits(fileName, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
+}
 
-    lsst::daf::base::PropertySet::Ptr metadata;
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-    } else {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-    }
-
-    static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
-    if (writeMef) {
-        //
-        // Write the PDU
-        //
-        if (mode == "w" || mode == "wb") {
-            _image->writeFits(ramFile, ramFileLen, metadata, "pdu");
-#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
-            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-#endif
-        }
-
-        metadata->set("EXTTYPE", "IMAGE");
-        _image->writeFits(ramFile, ramFileLen, metadata, "w");    //First one can't be 'a', must be 'w'
-
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "MASK");
-        _mask->writeFits(ramFile, ramFileLen, metadata, "a");
-
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "VARIANCE");
-        _variance->writeFits(ramFile, ramFileLen, metadata, "a");
-    } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
-
-    }
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT>::writeFits(
+    afw::fits::MemFileManager & manager,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
+) const {
+    using afw::fits::Fits;
+    Fits fits(manager, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
 }
 
 /************************************************************************************************************/
@@ -949,3 +871,4 @@ template class image::MaskedImage<float>;
 template class image::MaskedImage<double>;
 template class image::MaskedImage<boost::uint64_t>;
 
+}}} // namespace lsst::afw::image

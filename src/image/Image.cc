@@ -37,15 +37,16 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/fits.h"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
-namespace image = lsst::afw::image;
-namespace geom = lsst::afw::geom;
+namespace lsst { namespace afw { namespace image {
 
 /************************************************************************************************************/
+
 template <typename PixelT>
-typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateView(
+typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_allocateView(
     geom::Extent2I const & dimensions,
     Manager::Ptr & manager
 ) {    
@@ -60,7 +61,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateVi
     );
 }
 template <typename PixelT>
-typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubView(
+typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_makeSubView(
     geom::Extent2I const & dimensions, geom::Extent2I const & offset, const _view_t & view
 ) {
     if (offset.getX() < 0 || offset.getY() < 0 ||
@@ -68,7 +69,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
         offset.getY() + dimensions.getY() > view.height()
     ) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthErrorException,
             (boost::format("Box2I(Point2I(%d,%d),Extent2I(%d,%d)) doesn't fit in image %dx%d") %
                 offset.getX() % offset.getY() % 
                 dimensions.getX() % dimensions.getY() %
@@ -90,9 +91,9 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
  * Sets origin at (0,0)
  */
 template <typename PixelT>
-image::ImageBase<PixelT>::ImageBase(
+ImageBase<PixelT>::ImageBase(
     geom::Extent2I const & dimensions
-) : lsst::daf::base::Citizen(typeid(this)),
+) : daf::base::Citizen(typeid(this)),
     _origin(0,0), _manager(),
     _gilView(_allocateView(dimensions, _manager))
 {}
@@ -103,9 +104,9 @@ image::ImageBase<PixelT>::ImageBase(
  * allocate a new image with the specified dimensions and origin
  */
 template <typename PixelT>
-image::ImageBase<PixelT>::ImageBase(
+ImageBase<PixelT>::ImageBase(
     geom::Box2I const & bbox
-) : lsst::daf::base::Citizen(typeid(this)),
+) : daf::base::Citizen(typeid(this)),
     _origin(bbox.getMin()), _manager(),
     _gilView(_allocateView(bbox.getDimensions(), _manager))
 {}
@@ -117,12 +118,12 @@ image::ImageBase<PixelT>::ImageBase(
  * this may not be what you want.  See also operator<<=() to copy pixels between Image%s
  */
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(
+ImageBase<PixelT>::ImageBase(
     ImageBase const& rhs, ///< Right-hand-side %image
     bool const deep       ///< If false, new ImageBase shares storage with rhs;
                           ///< if true make a new, standalone, ImageBase
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _origin(rhs._origin),
     _manager(rhs._manager),
     _gilView(rhs._gilView)
@@ -143,14 +144,14 @@ image::ImageBase<PixelT>::ImageBase(
  * this is probably what you want 
  */
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(
+ImageBase<PixelT>::ImageBase(
     ImageBase const& rhs, ///< Right-hand-side %image
     geom::Box2I const& bbox,     ///< Specify desired region
     ImageOrigin const origin,   ///< Specify the coordinate system of the bbox
     bool const deep       ///< If false, new ImageBase shares storage with rhs;
                           ///< if true make a new, standalone, ImageBase
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _origin((origin==PARENT) ? bbox.getMin(): rhs._origin + geom::Extent2I(bbox.getMin())),
     _manager(rhs._manager), // reference counted pointer, don't copy pixels
     _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
@@ -173,8 +174,8 @@ image::ImageBase<PixelT>::ImageBase(
  *  will be deep-copied in Python, but the constructor will fail to compile in pure C++.
  */
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2I const & xy0) :
-    lsst::daf::base::Citizen(typeid(this)),
+ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2I const & xy0) :
+    daf::base::Citizen(typeid(this)),
     _origin(xy0),
     _manager(array.getManager()),
     _gilView(
@@ -199,7 +200,7 @@ image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
 template<typename PixelT>
-image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& rhs) {
+ImageBase<PixelT>& ImageBase<PixelT>::operator=(ImageBase const& rhs) {
     ImageBase tmp(rhs);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
     
@@ -208,9 +209,9 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 
 /// Set the lhs's %pixel values to equal the rhs's
 template<typename PixelT>
-void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
+void ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
     if (getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Dimension mismatch: %dx%d v. %dx%d") %
                               getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -219,44 +220,44 @@ void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
 
 /// Return a reference to the pixel <tt>(x, y)</tt>
 template<typename PixelT>
-typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(int x, int y) {
-    return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
-        static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
+typename ImageBase<PixelT>::PixelReference ImageBase<PixelT>::operator()(int x, int y) {
+    return const_cast<typename ImageBase<PixelT>::PixelReference>(
+        static_cast<typename ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
     );
 }
 
 /// Return a reference to the pixel <tt>(x, y)</tt> with bounds checking
 template<typename PixelT>
-typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(
+typename ImageBase<PixelT>::PixelReference ImageBase<PixelT>::operator()(
         int x,
         int y,
-        image::CheckIndices const& check
+        CheckIndices const& check
                                                                                       )
 {
     if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
                            x % y % (getWidth() - 1) % (getHeight() - 1)).str());
     }
                                           
-    return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
-        static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
+    return const_cast<typename ImageBase<PixelT>::PixelReference>(
+        static_cast<typename ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
     );
 }
 
 /// Return a const reference to the pixel <tt>(x, y)</tt>
 template<typename PixelT>
-typename image::ImageBase<PixelT>::PixelConstReference
-    image::ImageBase<PixelT>::operator()(int x, int y) const {
+typename ImageBase<PixelT>::PixelConstReference
+    ImageBase<PixelT>::operator()(int x, int y) const {
     return _gilView(x, y)[0];
 }
 
 /// Return a const reference to the pixel <tt>(x, y)</tt> with bounds checking
 template<typename PixelT>
-typename image::ImageBase<PixelT>::PixelConstReference
-    image::ImageBase<PixelT>::operator()(int x, int y, image::CheckIndices const& check) const {
+typename ImageBase<PixelT>::PixelConstReference
+    ImageBase<PixelT>::operator()(int x, int y, CheckIndices const& check) const {
     if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
                            x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
     }
@@ -265,7 +266,7 @@ typename image::ImageBase<PixelT>::PixelConstReference
 }
 
 template<typename PixelT>
-void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
+void ImageBase<PixelT>::swap(ImageBase &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     
     swap(_manager, rhs._manager);   // just swapping the pointers
@@ -274,29 +275,29 @@ void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
 }
 
 template<typename PixelT>
-void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
+void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
     a.swap(b);
 }
 
 template <typename PixelT>
-typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
+typename ImageBase<PixelT>::Array ImageBase<PixelT>::getArray() {
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
     return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        lsst::ndarray::makeVector(getHeight(), getWidth()),
-        lsst::ndarray::makeVector(rowStride, 1),
+        ndarray::makeVector(getHeight(), getWidth()),
+        ndarray::makeVector(rowStride, 1),
         this->_manager
     );
 }
 
 
 template <typename PixelT>
-typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray() const {
+typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
     return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        lsst::ndarray::makeVector(getHeight(), getWidth()),
-        lsst::ndarray::makeVector(rowStride, 1),
+        ndarray::makeVector(getHeight(), getWidth()),
+        ndarray::makeVector(rowStride, 1),
         this->_manager
     );
 }
@@ -308,31 +309,31 @@ typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray
 /// Note that this isn't especially efficient; see \link imageIterators\endlink for
 /// a discussion
 template<typename PixelT>
-typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::begin() const {
+typename ImageBase<PixelT>::iterator ImageBase<PixelT>::begin() const {
     return _gilView.begin();
 }
 
 /// Return an STL compliant iterator to the end of the %image
 template<typename PixelT>
-typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::end() const {
+typename ImageBase<PixelT>::iterator ImageBase<PixelT>::end() const {
     return _gilView.end();
 }
 
 /// Return an STL compliant reverse iterator to the start of the %image
 template<typename PixelT>
-typename image::ImageBase<PixelT>::reverse_iterator image::ImageBase<PixelT>::rbegin() const {
+typename ImageBase<PixelT>::reverse_iterator ImageBase<PixelT>::rbegin() const {
     return _gilView.rbegin();
 }
 
 /// Return an STL compliant reverse iterator to the end of the %image
 template<typename PixelT>
-typename image::ImageBase<PixelT>::reverse_iterator image::ImageBase<PixelT>::rend() const {
+typename ImageBase<PixelT>::reverse_iterator ImageBase<PixelT>::rend() const {
     return _gilView.rend();
 }
 
 /// Return an STL compliant iterator at the point <tt>(x, y)</tt>
 template<typename PixelT>
-typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, int y) const {
+typename ImageBase<PixelT>::iterator ImageBase<PixelT>::at(int x, int y) const {
     return _gilView.at(x, y);
 }
 
@@ -341,15 +342,15 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
-typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin(
+typename ImageBase<PixelT>::fast_iterator ImageBase<PixelT>::begin(
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(pex::exceptions::RuntimeErrorException,
                           "Only contiguous == true makes sense");
     }
     if (!this->isContiguous()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(pex::exceptions::RuntimeErrorException,
                           "Image's pixels are not contiguous");
     }
 
@@ -361,15 +362,15 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
-typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
+typename ImageBase<PixelT>::fast_iterator ImageBase<PixelT>::end(
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(pex::exceptions::RuntimeErrorException,
                           "Only contiguous == true makes sense"); 
     }
     if (!this->isContiguous()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, 
+        throw LSST_EXCEPT(pex::exceptions::RuntimeErrorException, 
                           "Image's pixels are not contiguous");
     }
 
@@ -379,7 +380,7 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
 /************************************************************************************************************/
 /// Set the %image's pixels to rhs
 template<typename PixelT>
-image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) {
+ImageBase<PixelT>& ImageBase<PixelT>::operator=(PixelT const rhs) {
     fill_pixels(_gilView, rhs);
 
     return *this;
@@ -396,11 +397,11 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(unsigned int width, ///< number of columns
+Image<PixelT>::Image(unsigned int width, ///< number of columns
                             unsigned int height, ///< number of rows
                             PixelT initialValue ///< Initial value
                            ) :
-    image::ImageBase<PixelT>(geom::ExtentI(width, height))
+    ImageBase<PixelT>(geom::ExtentI(width, height))
 {
     *this = initialValue;
 }
@@ -412,10 +413,10 @@ image::Image<PixelT>::Image(unsigned int width, ///< number of columns
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of columns, rows
+Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of columns, rows
                             PixelT initialValue ///< Initial value
                            ) :
-    image::ImageBase<PixelT>(dimensions) 
+    ImageBase<PixelT>(dimensions) 
 {
     *this = initialValue;
 }
@@ -424,10 +425,10 @@ image::Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of co
  * Create an initialized Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(geom::Box2I const & bbox, ///< dimensions and origin of desired Image
+Image<PixelT>::Image(geom::Box2I const & bbox, ///< dimensions and origin of desired Image
                             PixelT initialValue ///< Initial value
                            ) :
-    image::ImageBase<PixelT>(bbox) {
+    ImageBase<PixelT>(bbox) {
     *this = initialValue;
 }
 
@@ -438,11 +439,11 @@ image::Image<PixelT>::Image(geom::Box2I const & bbox, ///< dimensions and origin
  * this may not be what you want.  See also operator<<=() to copy pixels between Image%s
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
+Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
                             bool const deep       ///< If false, new Image shares storage with rhs; if true
                                                   ///< make a new, standalone, ImageBase
                            ) :
-    image::ImageBase<PixelT>(rhs, deep) {}
+    ImageBase<PixelT>(rhs, deep) {}
 
 /**
  * Copy constructor to make a copy of part of an Image.
@@ -453,17 +454,17 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
  * this is probably what you want 
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
+Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
                             geom::Box2I const& bbox,  ///< Specify desired region
                             ImageOrigin const origin, ///< Coordinate system of the bbox
                             bool const deep    ///< If false, new ImageBase shares storage with rhs; if true
                                                    ///< make a new, standalone, ImageBase
                            ) :
-    image::ImageBase<PixelT>(rhs, bbox, origin, deep) {}
+    ImageBase<PixelT>(rhs, bbox, origin, deep) {}
 
 /// Set the %image's pixels to rhs
 template<typename PixelT>
-image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
+Image<PixelT>& Image<PixelT>::operator=(PixelT const rhs) {
     this->ImageBase<PixelT>::operator=(rhs);
 
     return *this;
@@ -477,7 +478,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
 template<typename PixelT>
-image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
+Image<PixelT>& Image<PixelT>::operator=(Image const& rhs) {
     this->ImageBase<PixelT>::operator=(rhs);
     
     return *this;
@@ -491,13 +492,13 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
  * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
+Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
                             geom::Box2I const& bbox,                           ///< Only read these pixels
                             ImageOrigin const origin    ///< specify the coordinate system of the bbox
                            ) :
-    image::ImageBase<PixelT>() {
+    ImageBase<PixelT>() {
 
     typedef boost::mpl::vector<
         unsigned char, 
@@ -511,15 +512,15 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     > fits_image_types;
 
     if (!boost::filesystem::exists(fileName)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+        throw LSST_EXCEPT(pex::exceptions::NotFoundException,
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata = daf::base::PropertySet::Ptr(new daf::base::PropertyList);
     }
 
     if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(image::FitsException,
+        throw LSST_EXCEPT(FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
 }
@@ -531,14 +532,14 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
  * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
+Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
                             size_t *ramFileLen,      ///< Pointer to the length of the FITS file in memory
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
                             geom::Box2I const& bbox,                           ///< Only read these pixels
                             ImageOrigin const origin    ///< specify the coordinate system of the bbox
                            ) :
-    image::ImageBase<PixelT>() {
+    ImageBase<PixelT>() {
 
     typedef boost::mpl::vector<
         unsigned char, 
@@ -552,88 +553,67 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
     > fits_image_types;
 
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata = daf::base::PropertySet::Ptr(new daf::base::PropertyList);
     }
     if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(image::FitsException,
+        throw LSST_EXCEPT(FitsException,
                           (boost::format("Failed to read FITS HDU %d") % hdu).str());
     }
 }
 
-/**
- * Write an Image to the specified file
- */
-template<typename PixelT>
-void image::Image<PixelT>::writeFits(
-    std::string const& fileName,                ///< File to write
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, //!< metadata to write to header or NULL
-    std::string const& mode                     //!< "w" to write a new file; "a" to append
+template <typename PixelT>
+void Image<PixelT>::writeFits(
+    afw::fits::Fits & fits,
+    CONST_PTR(daf::base::PropertySet) metadata_i
 ) const {
-    using lsst::daf::base::PropertySet;
-
-    if (mode == "pdu") {
-        image::fits_write_image(fileName, *this, metadata_i, mode);
-        return;
-    }
-
-    lsst::daf::base::PropertySet::Ptr metadata;
-    PropertySet::Ptr wcsAMetadata =
-        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                     this->getX0(), this->getY0());
-    
+    using daf::base::PropertySet;
+    PTR(PropertySet) metadata;
+    PTR(PropertySet) wcsAMetadata =
+        detail::createTrivialWcsAsPropertySet(detail::wcsNameForXY0, this->getX0(), this->getY0());
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
         metadata->combine(wcsAMetadata);
     } else {
         metadata = wcsAMetadata;
     }
-
-    image::fits_write_image(fileName, *this, metadata, mode);
+    fits.createImage<PixelT>(this->getWidth(), this->getHeight());
+    fits.writeMetadata(*metadata);
+    fits.writeImage(this->getArray());    
 }
 
-/**
- * Write an Image to the specified file
- */
 template<typename PixelT>
-void image::Image<PixelT>::writeFits(
-    char **ramFile,     ///< Pointer to a pointer to the FITS file in memory
-    size_t *ramFileLen, ///< Pointer to the length of the FITS file in memory
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
-    std::string const& mode                     //!< "w" to write a new file; "a" to append
+void Image<PixelT>::writeFits(
+    std::string const& fileName,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
 ) const {
-    using lsst::daf::base::PropertySet;
+    using afw::fits::Fits;
+    Fits fits(fileName, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
+}
 
-    if (mode == "pdu") {
-        image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata_i, mode);
-        return;
-    }
-
-    lsst::daf::base::PropertySet::Ptr metadata;
-    PropertySet::Ptr wcsAMetadata =
-        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                     this->getX0(), this->getY0());
-    
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-        metadata->combine(wcsAMetadata);
-    } else {
-        metadata = wcsAMetadata;
-    }
-
-    image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata, mode);
+template<typename PixelT>
+void Image<PixelT>::writeFits(
+    afw::fits::MemFileManager & manager,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
+) const {
+    using afw::fits::Fits;
+    Fits fits(manager, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
 }
 
 /************************************************************************************************************/
 
 template<typename PixelT>
-void image::Image<PixelT>::swap(Image &rhs) {
+void Image<PixelT>::swap(Image &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     ImageBase<PixelT>::swap(rhs);
     ;                                   // no private variables to swap
 }
 
 template<typename PixelT>
-void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
+void swap(Image<PixelT>& a, Image<PixelT>& b) {
     a.swap(b);
 }
 
@@ -649,15 +629,15 @@ namespace bl = boost::lambda;
 
 /// Add scalar rhs to lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator+=(PixelT const rhs) {
+void Image<PixelT>::operator+=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 + rhs));
 }
 
 /// Add Image rhs to lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
+void Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -668,12 +648,12 @@ void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
  * @brief Add a Function2(x, y) to an Image
  */
 template<typename PixelT>
-void image::Image<PixelT>::operator+=(
-        lsst::afw::math::Function2<double> const& function ///< function to add
+void Image<PixelT>::operator+=(
+        afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = this->indexToPosition(y, image::Y);
-        double xPos = this->indexToPosition(0, image::X);
+        double const yPos = this->indexToPosition(y, Y);
+        double xPos = this->indexToPosition(0, X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr += function(xPos, yPos);
@@ -683,9 +663,9 @@ void image::Image<PixelT>::operator+=(
 
 /// Add Image c*rhs to lhs
 template<typename PixelT>
-void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -695,15 +675,15 @@ void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) 
 
 /// Subtract scalar rhs from lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator-=(PixelT const rhs) {
+void Image<PixelT>::operator-=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 - rhs));
 }
 
 /// Subtract Image rhs from lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
+void Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -712,9 +692,9 @@ void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
 
 /// Subtract Image c*rhs from lhs
 template<typename PixelT>
-void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -726,12 +706,12 @@ void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs)
  * @brief Subtract a Function2(x, y) from an Image
  */
 template<typename PixelT>
-void image::Image<PixelT>::operator-=(
-        lsst::afw::math::Function2<double> const& function ///< function to add
+void Image<PixelT>::operator-=(
+        afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = this->indexToPosition(y, image::Y);
-        double xPos = this->indexToPosition(0, image::X);
+        double const yPos = this->indexToPosition(y, Y);
+        double xPos = this->indexToPosition(0, X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr -= function(xPos, yPos);
@@ -741,15 +721,15 @@ void image::Image<PixelT>::operator-=(
 
 /// Multiply lhs by scalar rhs
 template<typename PixelT>
-void image::Image<PixelT>::operator*=(PixelT const rhs) {
+void Image<PixelT>::operator*=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 * rhs));
 }
 
 /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
 template<typename PixelT>
-void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
+void Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -758,9 +738,9 @@ void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
 
 /// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
 template<typename PixelT>
-void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -772,13 +752,13 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
 ///
 /// \note Floating point types implement this by multiplying by the 1/rhs
 template<typename PixelT>
-void image::Image<PixelT>::operator/=(PixelT const rhs) {
+void Image<PixelT>::operator/=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 / rhs));
 }
 //
 // Specialize float and double for efficiency
 //
-namespace lsst { namespace afw { namespace image {
+
 template<>
 void Image<double>::operator/=(double const rhs) {
     double const irhs = 1/rhs;
@@ -790,13 +770,12 @@ void Image<float>::operator/=(float const rhs) {
     float const irhs = 1/rhs;
     *this *= irhs;
 }
-}}}
 
 /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
-void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
+void Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -805,9 +784,9 @@ void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
 
 /// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
-void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -822,60 +801,60 @@ namespace {
  * Worker routine for manipulating images;
  */
 template<typename LhsPixelT, typename RhsPixelT>
-struct plusEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct plusEq : public pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs + rhs);
     }
 };
 
 template<typename LhsPixelT, typename RhsPixelT>
-struct minusEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct minusEq : public pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs - rhs);
     }
 };
 
 template<typename LhsPixelT, typename RhsPixelT>
-struct timesEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct timesEq : public pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs*rhs);
     }
 };
 
 template<typename LhsPixelT, typename RhsPixelT>
-struct divideEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct divideEq : public pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs/rhs);
     }
 };
-}
+} // anonymous
 
 /// Add lhs to Image rhs (i.e. %pixel-by-%pixel addition) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator+=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
-    image::for_each_pixel(lhs, rhs, plusEq<LhsPixelT, RhsPixelT>());
+void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs) {
+    for_each_pixel(lhs, rhs, plusEq<LhsPixelT, RhsPixelT>());
 }
 
 /// Subtract lhs from Image rhs (i.e. %pixel-by-%pixel subtraction) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator-=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
-    image::for_each_pixel(lhs, rhs, minusEq<LhsPixelT, RhsPixelT>());
+void operator-=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs) {
+    for_each_pixel(lhs, rhs, minusEq<LhsPixelT, RhsPixelT>());
 }
 
 /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator*=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
-    image::for_each_pixel(lhs, rhs, timesEq<LhsPixelT, RhsPixelT>());
+void operator*=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs) {
+    for_each_pixel(lhs, rhs, timesEq<LhsPixelT, RhsPixelT>());
 }
 
 /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
-    image::for_each_pixel(lhs, rhs, divideEq<LhsPixelT, RhsPixelT>());
+void operator/=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs) {
+    for_each_pixel(lhs, rhs, divideEq<LhsPixelT, RhsPixelT>());
 }
 
 /************************************************************************************************************/
@@ -884,15 +863,15 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
 //
 /// \cond
 #define INSTANTIATE_OPERATOR(OP_EQ, T) \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint16_t> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<float> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint64_t> const& rhs);
+   template void operator OP_EQ(Image<T>& lhs, Image<boost::uint16_t> const& rhs); \
+   template void operator OP_EQ(Image<T>& lhs, Image<int> const& rhs); \
+   template void operator OP_EQ(Image<T>& lhs, Image<float> const& rhs); \
+   template void operator OP_EQ(Image<T>& lhs, Image<double> const& rhs); \
+   template void operator OP_EQ(Image<T>& lhs, Image<boost::uint64_t> const& rhs);
 
 #define INSTANTIATE(T) \
-   template class image::ImageBase<T>; \
-   template class image::Image<T>; \
+   template class ImageBase<T>; \
+   template class Image<T>; \
    INSTANTIATE_OPERATOR(+=, T); \
    INSTANTIATE_OPERATOR(-=, T); \
    INSTANTIATE_OPERATOR(*=, T); \
@@ -904,3 +883,5 @@ INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(boost::uint64_t);
 /// \endcond
+
+}}} // namespace lsst::afw::image

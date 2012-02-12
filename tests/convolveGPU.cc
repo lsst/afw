@@ -256,13 +256,12 @@ string GetInputFileName(int argc, char **argv)
         string afwdata = getenv("AFWDATA_DIR");
         if (afwdata.empty()) {
             std::cerr << "Usage: convolveGPU fitsFile" << endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << endl;
             std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << endl;
             std::cerr << "Is afwdata set up?\n" << endl;
             exit(EXIT_FAILURE);
         }
         else {
-            imgBaseFileName = afwdata + "/data/med";
+            imgBaseFileName = afwdata + "/data/med.fits";
             //imgBaseFileName = afwdata + "/data/medsub";
             //imgBaseFileName = afwdata + "/data/871034p_1_MI";
             cout << "Using image: " << imgBaseFileName << endl;

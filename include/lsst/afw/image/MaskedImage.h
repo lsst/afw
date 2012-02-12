@@ -48,16 +48,16 @@
 namespace lsst {
 namespace afw {
 namespace image {
-    namespace detail {
-        /// A traits class for MaskedImage
-        struct MaskedImage_tag : public basic_tag { };
-        /// A class used to identify classes that represent MaskedImage pixels
-        struct MaskedImagePixel_tag { };
+namespace detail {
+/// A traits class for MaskedImage
+struct MaskedImage_tag : public basic_tag { };
+/// A class used to identify classes that represent MaskedImage pixels
+struct MaskedImagePixel_tag { };
 
-        std::string const fitsFile_RE = "\\.fits(\\.[fg]z)?$"; /// regexp to identify when MaskedImages should
-                                                           /// be written as MEFs
-        std::string const compressedFileNoMEF_RE = "(\\.gz)$";   /// regexp to identify compressed files that we can't write MEFs to
-    }
+std::string const fitsFile_RE = "\\.fits(\\.[fg]z)?$"; /// regexp to identify when MaskedImages should
+                                                       /// be written as MEFs
+std::string const compressedFileNoMEF_RE = "(\\.gz)$";   /// regexp to identify compressed files that we can't write MEFs to
+}
 }}}
 
 #include "lsst/afw/image/Pixel.h"
@@ -65,9 +65,15 @@ namespace image {
 
 namespace lsst {
 namespace afw {
-    namespace formatters {
-        template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> class MaskedImageFormatter;
-    }
+
+namespace formatters {
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> class MaskedImageFormatter;
+} // namespace formatters
+
+namespace fits {
+class MemFileManager;
+class Fits;
+} // namespace fits
 
 namespace image {
 
@@ -725,17 +731,51 @@ public:
     static std::string maskFileName(std::string const& baseName) { return baseName + "_msk.fits"; }
     static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
 
+    /**
+     *  @brief Write the MaskedImage as a multi-extension FITS file with the given filename.
+     *
+     *  If mode is 'w', an empty Primary HDU will be created before appending three image Extension HDUs.
+     *
+     *  @param[in] fileName   Name of the file.
+     *  @param[in] metadata   Flexible metadata to save in the FITS header.
+     *  @param[in] mode       "w" to write a new file; "a" to append.
+     */
     void writeFits(
-        std::string const& baseName,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
-        std::string const& mode="w",
-        bool const writeMef=false
+        std::string const& fileName,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const& mode="w"
     ) const;
+
+    /**
+     *  @brief Write the image as a FITS memory file.
+     *
+     *  If mode is 'w', an empty Primary HDU will be created before appending three image Extension HDUs.
+     *
+     *  @param[in] manager    Object that manages the lifetime of the memory block.
+     *  @param[in] metadata   Flexible metadata to save in the FITS header.
+     *  @param[in] mode       "w" to write a new file; "a" to append.
+     */
     void writeFits(
-        char **ramFile, size_t *ramFileLen,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
-        std::string const& mode="w",
-        bool const writeMef=true    //writeMef==false is not supported, it will throw an exception
+        fits::MemFileManager & manager,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const& mode="w"
+    ) const;
+
+    /**
+     *  @brief Write the image to the current HDU of the given FITS file.
+     *
+     *  Three image Extension HDUs will be appended to the current file; if the file
+     *  is empty, an empty Primary HDU will be added first.
+     *
+     *  @param[in] fitsfile   Internal cfitsio pointer in thin afw wrapper.
+     *  @param[in] metadata   Flexible metadata to save in the FITS header.
+     *
+     *  This overload is intended primarily for internal use (i.e. FITS persistence
+     *  for Exposure) and is not avalable in Python.
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
     // Getters

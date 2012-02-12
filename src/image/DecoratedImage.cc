@@ -26,25 +26,29 @@
  */
 #include <iostream>
 #include "boost/format.hpp"
+#include "boost/mpl/vector.hpp"
+#include "boost/gil/gil_all.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/fits/fits_io.h"
+#include "lsst/afw/image/fits/fits_io_mpl.h"
+#include "lsst/afw/fits.h"
 
-namespace image = lsst::afw::image;
-namespace geom = lsst::afw::geom;
+namespace lsst { namespace afw { namespace image {
 
 template<typename PixelT>
-void image::DecoratedImage<PixelT>::init() {
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
+void DecoratedImage<PixelT>::init() {
+    setMetadata(daf::base::PropertySet::Ptr(new daf::base::PropertyList()));
     _gain = 0;
 }
 
 /// Create an %image of the specified size
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(
+DecoratedImage<PixelT>::DecoratedImage(
     geom::Extent2I const & dimensions ///< desired number of columns. rows
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(dimensions))
 {
     init();
@@ -55,10 +59,10 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(
+DecoratedImage<PixelT>::DecoratedImage(
     geom::Box2I const & bbox // (width, height) and origin of the desired Image
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(bbox))
 {
     init();
@@ -69,10 +73,10 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  * Note that this ctor shares pixels with the rhs; it isn't a deep copy
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(
+DecoratedImage<PixelT>::DecoratedImage(
     typename Image<PixelT>::Ptr rhs ///< Image to go into DecoratedImage
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(rhs)
 {
     init();
@@ -83,11 +87,11 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  * Note that the lhs will share memory with the rhs unless \p deep is true
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(
+DecoratedImage<PixelT>::DecoratedImage(
     const DecoratedImage& src, ///< right hand side
     const bool deep            ///< Make deep copy?
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain) 
 {
     setMetadata(src.getMetadata());
@@ -98,7 +102,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  * N.b. this is a shallow assignment; use operator<<=() if you want to copy the pixels
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>& image::DecoratedImage<PixelT>::operator=(const DecoratedImage& src) {
+DecoratedImage<PixelT>& DecoratedImage<PixelT>::operator=(const DecoratedImage& src) {
     DecoratedImage tmp(src);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
     
@@ -106,7 +110,7 @@ image::DecoratedImage<PixelT>& image::DecoratedImage<PixelT>::operator=(const De
 }
 
 template<typename PixelT>
-void image::DecoratedImage<PixelT>::swap(DecoratedImage &rhs) {
+void DecoratedImage<PixelT>::swap(DecoratedImage &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     
     swap(_image, rhs._image);           // just swapping the pointers
@@ -114,7 +118,7 @@ void image::DecoratedImage<PixelT>::swap(DecoratedImage &rhs) {
 }
 
 template<typename PixelT>
-void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
+void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
     a.swap(b);
 }
 
@@ -122,40 +126,29 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 //
 // FITS code
 //
-#include <boost/mpl/vector.hpp>
-
-#include "lsst/pex/exceptions.h"
-#include "lsst/afw/image/Image.h"
-
-#include "boost/gil/gil_all.hpp"
-#include "lsst/afw/image/fits/fits_io.h"
-#include "lsst/afw/image/fits/fits_io_mpl.h"
 /**
  * Create a DecoratedImage from a FITS file
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
+DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
                                               const int hdu,               ///< The HDU to read
                                               geom::Box2I const& bbox,      ///< Only read these pixels
                                               ImageOrigin const origin     ///< Coordinate system of the bbox
                                              ) :
-    lsst::daf::base::Citizen(typeid(this))
+    daf::base::Citizen(typeid(this))
 {             ///< HDU within the file
     init();
     _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
 }
 
 /************************************************************************************************************/
-/**
- * Write a FITS file
- */
-template<typename PixelT>
-void image::DecoratedImage<PixelT>::writeFits(
-    std::string const& fileName,                        ///< the file to write
-    lsst::daf::base::PropertySet::ConstPtr metadata_i, ///< metadata to write to header; or NULL
-    std::string const& mode                              ///< "w" to write a new file; "a" to append
+
+template <typename PixelT>
+void DecoratedImage<PixelT>::writeFits(
+    afw::fits::Fits & fits,
+    CONST_PTR(daf::base::PropertySet) metadata_i
 ) const {
-    lsst::daf::base::PropertySet::Ptr metadata;
+    PTR(daf::base::PropertySet) metadata;
 
     if (metadata_i.get()) {
         metadata = getMetadata()->deepCopy();
@@ -163,17 +156,41 @@ void image::DecoratedImage<PixelT>::writeFits(
     } else {
         metadata = getMetadata();
     }
+    fits.createImage<PixelT>(this->getWidth(), this->getHeight());
+    fits.writeMetadata(*metadata);
+    fits.writeImage(this->getImage()->getArray());    
+}
 
-    image::fits_write_image(fileName, *_image, metadata, mode);
+template<typename PixelT>
+void DecoratedImage<PixelT>::writeFits(
+    std::string const& fileName,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
+) const {
+    using afw::fits::Fits;
+    Fits fits(fileName, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
+}
+
+template<typename PixelT>
+void DecoratedImage<PixelT>::writeFits(
+    afw::fits::MemFileManager & manager,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
+) const {
+    using afw::fits::Fits;
+    Fits fits(manager, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    writeFits(fits, metadata);
 }
 
 /************************************************************************************************************/
 //
 // Explicit instantiations
 //
-template class image::DecoratedImage<boost::uint16_t>;
-template class image::DecoratedImage<int>;
-template class image::DecoratedImage<float>;
-template class image::DecoratedImage<double>;
-template class image::DecoratedImage<boost::uint64_t>;
+template class DecoratedImage<boost::uint16_t>;
+template class DecoratedImage<int>;
+template class DecoratedImage<float>;
+template class DecoratedImage<double>;
+template class DecoratedImage<boost::uint64_t>;
 
+}}} // namespace lsst::afw::image
