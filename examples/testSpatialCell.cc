@@ -33,7 +33,7 @@ ExampleCandidate::ExampleCandidate(
         ExampleCandidate::MaskedImageT::ConstPtr parent, ///< the parent image
         lsst::afw::geom::Box2I bbox     ///< The object's bounding box
                                       ) :
-    lsst::afw::math::SpatialCellImageCandidate<PixelT>(xCenter, yCenter), _parent(parent), _bbox(bbox) {
+    lsst::afw::math::SpatialCellMaskedImageCandidate<PixelT>(xCenter, yCenter), _parent(parent), _bbox(bbox) {
 }
 
 /**

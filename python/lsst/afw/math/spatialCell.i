@@ -37,33 +37,34 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 // Must go BEFORE the include
 //
-%define %SpatialCellImageCandidatePtr(TYPE, ...)
-%shared_ptr(lsst::afw::math::SpatialCellImageCandidate<TYPE>);
-//   %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<%MASKEDIMAGE(TYPE) >);
+%define %SpatialCellImageCandidatePtrs(TYPE, ...)
+    %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<TYPE>);
+    %shared_ptr(lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE>);
 %enddef
 //
-// Must go AFTER the include (N.b. %SpatialCellImageCandidate_ is internal)
+// Must go AFTER the include
 //
-%define %SpatialCellImageCandidate_(NAME, TYPE)
-%template(SpatialCellImageCandidate##NAME) lsst::afw::math::SpatialCellImageCandidate<TYPE>;
+%define %SpatialCellImageCandidates(NAME, TYPE)
+    %template(SpatialCellImageCandidate##NAME) lsst::afw::math::SpatialCellImageCandidate<TYPE>;
+    %template(SpatialCellMaskedImageCandidate##NAME) lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE>;
 
-//
-// When swig sees a SpatialCellCandidate it doesn't know about SpatialCellImageCandidates; all it knows is that it
-// has a SpatialCellCandidate, and SpatialCellCandidates don't know about e.g. getSource()
-//
-// We therefore provide a cast to SpatialCellImageCandidate<> and swig can go from there
-//
-%inline %{
-    boost::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
-    cast_SpatialCellImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
-        return boost::shared_dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
-    }
-%}
-%enddef
+    //
+    // When swig sees a SpatialCellCandidate it doesn't know about SpatialCellImageCandidates; all it knows is that it
+    // has a SpatialCellCandidate, and SpatialCellCandidates don't know about e.g. getSource()
+    //
+    // We therefore provide a cast to SpatialCellImageCandidate<> and swig can go from there
+    //
+    %inline %{
+        boost::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
+        cast_SpatialCellImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
+            return boost::shared_dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
+        }
 
-%define %SpatialCellImageCandidate(NAME, TYPE, ...)
-    %SpatialCellImageCandidate_(NAME, TYPE)
-    %SpatialCellImageCandidate_(M##NAME, TYPE)
+        boost::shared_ptr<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >
+        cast_SpatialCellMaskedImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
+             return boost::shared_dynamic_cast<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >(candidate);
+        }
+    %}
 %enddef
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -79,8 +80,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %shared_ptr(lsst::afw::math::SpatialCellCandidate);
 %shared_ptr(lsst::afw::math::SpatialCell);
 
-%SpatialCellImageCandidatePtr(float);
-%SpatialCellImageCandidatePtr(double);
+%SpatialCellImageCandidatePtrs(float);
+%SpatialCellImageCandidatePtrs(double);
 
 %rename(__incr__) lsst::afw::math::SpatialCellCandidateIterator::operator++;
 %rename(__deref__) lsst::afw::math::SpatialCellCandidateIterator::operator*;
@@ -92,8 +93,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %template(SpatialCellCandidateList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> >;
 %template(SpatialCellList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCell> >;
 
-%SpatialCellImageCandidate(F, float);
-%SpatialCellImageCandidate(D, double);
+%SpatialCellImageCandidates(F, float);
+%SpatialCellImageCandidates(D, double);
 
 
 %extend lsst::afw::math::SpatialCell {
