@@ -594,7 +594,6 @@ void Fits::writeMetadata(daf::base::PropertySet const & metadata) {
     } else {
         paramNames = metadata.paramNames(false);
     }
-    std::cerr << "In writeMetadata...\n";
     for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
         if (!isKeyIgnored(*i)) {
             if (pl) {
