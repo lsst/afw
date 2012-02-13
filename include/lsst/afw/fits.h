@@ -428,7 +428,7 @@ public:
     void readImage(ndarray::Array<T,2,2> const & array, geom::Extent2I const & offset) {
         long naxes[2] = { array.template getSize<1>(), array.template getSize<0>() };
         long offset_[2] = { offset.getX(), offset.getY() };
-        readImageImpl(2, naxes, array.getData(), array.getNumElements(), offset_);
+        readImageImpl(2, naxes, array.getData(), offset_);
     }
 
     /**
@@ -453,7 +453,7 @@ public:
         std::copy(shape.rbegin(), shape.rend(), naxes);
         long offset_[N];
         std::copy(offset.rbegin(), offset.rend(), offset_);
-        readImageImpl(N, naxes, array.getData(), array.getNumElements(), offset_);
+        readImageImpl(N, naxes, array.getData(), offset_);
     }
     
     /// @brief Create a new binary table extension.
