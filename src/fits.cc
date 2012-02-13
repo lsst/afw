@@ -506,76 +506,62 @@ void writeKeyFromProperty(
     Fits & fits, daf::base::PropertySet const & metadata, std::string const & key, char const * comment=0
 ) {
     std::type_info const & valueType = metadata.typeOf(key); 
-    std::cerr << "Writing key '" << key << "...";
     if (valueType == typeid(bool)) {
         if (metadata.isArray(key)) {
-            std::cerr << "bool array\n";
             std::vector<bool> tmp = metadata.getArray<bool>(key);
             // work around unfortunate specialness of std::vector<bool>
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), static_cast<bool>(tmp[i]), comment);
             }
         } else {
-            std::cerr << "bool\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<bool>(key), comment);
         }
     } else if (valueType == typeid(int)) {
         if (metadata.isArray(key)) {
-            std::cerr << "int array\n";
             std::vector<int> tmp = metadata.getArray<int>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
-            std::cerr << "int\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<int>(key), comment);
         }
     } else if (valueType == typeid(long)) {
         if (metadata.isArray(key)) {
-            std::cerr << "long array\n";
             std::vector<long> tmp = metadata.getArray<long>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
-            std::cerr << "long\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<long>(key), comment);
         }
     } else if (valueType == typeid(boost::int64_t)) {
         if (metadata.isArray(key)) {
-            std::cerr << "int64 array\n";
             std::vector<boost::int64_t> tmp = metadata.getArray<boost::int64_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
-            std::cerr << "int64\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<boost::int64_t>(key), comment);
         }
     } else if (valueType == typeid(double)) {
         if (metadata.isArray(key)) {
-            std::cerr << "double array\n";
             std::vector<double> tmp = metadata.getArray<double>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
-            std::cerr << "double\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<double>(key), comment);
         }
     } else if (valueType == typeid(std::string)) {
         if (metadata.isArray(key)) {
-            std::cerr << "string array\n";
             std::vector<std::string> tmp = metadata.getArray<std::string>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
-            std::cerr << "string\n";
             writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
         }
     } else {
-        std::cerr << "error\n";
         pex::logging::Log::getDefaultLog().log(
             pex::logging::Log::WARN,
             makeErrorMessage(
