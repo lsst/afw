@@ -40,6 +40,7 @@
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
 
+#include "lsst/base.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
@@ -50,8 +51,8 @@ namespace lsst { namespace afw { namespace image {
 
 /************************************************************************************************************/
 
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0, bool strip=false);
-lsst::daf::base::PropertySet::Ptr readMetadata(char **ramFile, size_t *ramFileLen, const int hdu=0, bool strip=false);
+PTR(lsst::daf::base::PropertyList)
+readMetadata(std::string const& fileName, int hdu=0, bool strip=false);
 
 /************************************************************************************************************/
 /**

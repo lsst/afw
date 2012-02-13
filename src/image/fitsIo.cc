@@ -30,10 +30,12 @@
 #include <cstring>
 #include "boost/format.hpp"
 #include "boost/regex.hpp"
+#include "boost/make_shared.hpp"
 
 #include "lsst/base.h"
 #include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/fits.h"
 
 #include "lsst/afw/image/fits/fits_io_private.h"
 
@@ -41,6 +43,31 @@
 namespace lsst {
 namespace afw {
 namespace image {
+
+
+/**
+ * \brief Return the metadata from a fits file
+ */
+PTR(lsst::daf::base::PropertyList) readMetadata(
+    std::string const& fileName, ///< File to read
+    int hdu,               ///< HDU to read
+    bool strip       ///< Should I strip e.g. NAXIS1 from header?
+) {
+    PTR(lsst::daf::base::PropertyList) metadata = boost::make_shared<lsst::daf::base::PropertyList>();
+    afw::fits::Fits fitsfile(fileName, "r", afw::fits::Fits::AUTO_CHECK | afw::fits::Fits::AUTO_CLOSE);
+    if (hdu == 0) {
+        int naxis = 0;
+        fitsfile.readKey("NAXIS", naxis);
+        if (naxis == 0) {
+            fitsfile.setHdu(2); // skip the first HDU because it's empty
+        }
+    } else {
+        fitsfile.setHdu(hdu);
+    }
+    fitsfile.readMetadata(*metadata, strip);
+    return metadata;
+}
+
 namespace cfitsio {
                 
 std::string err_msg(std::string const& fileName, ///< (possibly empty) file name
@@ -434,36 +461,5 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
 } // namespace cfitsio
 
 /************************************************************************************************************/
-
-/**
- * \brief Return the metadata from a fits file
- */
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///< File to read
-                                               const int hdu,               ///< HDU to read
-                                               bool strip       ///< Should I strip e.g. NAXIS1 from header?
-                                              ) {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList);
-
-    detail::fits_reader m(fileName, metadata, hdu, true);
-    cfitsio::getMetadata(m.get(), metadata, strip);
-
-    return metadata;
-}
-
-/**
- * \brief Return the metadata from a fits RAM file
- */
-lsst::daf::base::PropertySet::Ptr readMetadata(char **ramFile,				///< RAM buffer to receive RAM FITS file
-												size_t *ramFileLen,			///< RAM buffer length
-												const int hdu,              ///< HDU to read
-												bool strip       ///< Should I strip e.g. NAXIS1 from header?
-                                              ) {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
-
-    detail::fits_reader m(ramFile, ramFileLen, metadata, hdu);
-    cfitsio::getMetadata(m.get(), metadata, strip);
-
-    return metadata;
-}
     
 }}} // namespace lsst::afw::image
