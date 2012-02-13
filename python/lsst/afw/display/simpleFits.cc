@@ -40,7 +40,6 @@ using namespace posix;
 #include "lsst/pex/exceptions.h"
 #include "boost/any.hpp"
 
-#include "lsst/afw/image/fits/fits_io_private.h"
 #include "simpleFits.h"
 
 namespace image = lsst::afw::image;
@@ -368,7 +367,7 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * What sort if image is it?
      */
-    int bitpix = image::detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
+    int bitpix = lsst::afw::fits::getBitpixCode<typename ImageT::Pixel>();
     if (bitpix == 20) {                 // cfitsio for "Unsigned short"
         cards.push_back(Card("BZERO",  32768.0, ""));
         cards.push_back(Card("BSCALE", 1.0,     ""));

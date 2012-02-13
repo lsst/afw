@@ -32,8 +32,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/fits/fits_io.h"
-#include "lsst/afw/image/fits/fits_io_mpl.h"
 #include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace image {

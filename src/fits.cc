@@ -110,6 +110,16 @@ template <> struct FitsBitPix<double> { static int const CONSTANT = DOUBLE_IMG; 
 // ---- Implementations for stuff in fits.h -----------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
 
+template <typename T>
+int getBitpixCode() {
+    return FitsBitPix<T>::CONSTANT;
+}
+
+template <typename T>
+int getTypeCode() {
+    return FitsType<T>::CONSTANT;
+}
+
 std::string makeErrorMessage(std::string const & fileName, int status, std::string const & msg) {
     std::ostringstream os;
     os << "cfitsio error";
@@ -942,7 +952,9 @@ void Fits::closeFile() {
     template void Fits::createImageImpl<T>(int, long *);         \
     template void Fits::writeImageImpl(T const *, std::size_t);         \
     template void Fits::readImageImpl(int naxis, long const * naxes, T * data, std::size_t nElements); \
-    template void Fits::readImageImpl(int naxis, long const * naxes, T * data, long const * offset);
+    template void Fits::readImageImpl(int naxis, long const * naxes, T * data, long const * offset);\
+    template int getBitpixCode<T>();                                    \
+    template int getTypeCode<T>();
 
 #define INSTANTIATE_TABLE_OPS(r, data, T)                               \
     template int Fits::addColumn<T>(std::string const & ttype, int size); \

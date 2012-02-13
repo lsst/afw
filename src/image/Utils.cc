@@ -1,3 +1,5 @@
+// -*- lsst-c++ -*-
+
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -19,30 +21,37 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * \file
- * \brief Definitions to write a FITS image
- */
-#if !defined(SIMPLE_FITS_H)
-#define SIMPLE_FITS_H 1
 
-#include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/Mask.h"
-#include "lsst/afw/image/Wcs.h"
+#include "boost/make_shared.hpp"
+
 #include "lsst/afw/fits.h"
+#include "lsst/afw/image/Utils.h"
 
 namespace lsst {
 namespace afw {
-namespace display {
+namespace image {
 
-template<typename ImageT>
-void writeBasicFits(int fd, ImageT const& data,
-                    lsst::afw::image::Wcs const* Wcs=NULL, char const* title=NULL);
-
-template<typename ImageT>
-void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::image::Wcs const* Wcs=NULL,
-                    const char* title=NULL);
-
-}}} // namespace lsst::afw::display
-#endif
+/**
+ * \brief Return the metadata from a fits file
+ */
+PTR(lsst::daf::base::PropertyList) readMetadata(
+    std::string const& fileName, ///< File to read
+    int hdu,               ///< HDU to read
+    bool strip       ///< Should I strip e.g. NAXIS1 from header?
+) {
+    PTR(lsst::daf::base::PropertyList) metadata = boost::make_shared<lsst::daf::base::PropertyList>();
+    afw::fits::Fits fitsfile(fileName, "r", afw::fits::Fits::AUTO_CHECK | afw::fits::Fits::AUTO_CLOSE);
+    if (hdu == 0) {
+        int naxis = 0;
+        fitsfile.readKey("NAXIS", naxis);
+        if (naxis == 0) {
+            fitsfile.setHdu(2); // skip the first HDU because it's empty
+        }
+    } else {
+        fitsfile.setHdu(hdu);
+    }
+    fitsfile.readMetadata(*metadata, strip);
+    return metadata;
+}
+    
+}}} // namespace lsst::afw::image

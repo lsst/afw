@@ -39,8 +39,6 @@
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/image/fits/fits_io.h"
-#include "lsst/afw/image/fits/fits_io_mpl.h"
 
 namespace lsst { namespace afw { namespace image {
 

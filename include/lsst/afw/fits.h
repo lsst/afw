@@ -46,6 +46,12 @@ public:
 
 };
 
+/// @brief Return the cfitsio BITPIX constant for the given type.
+template <typename T> int getBitpixCode();
+
+/// @brief Return the cfitsio type constant for the given type.
+template <typename T> int getTypecode();
+
 /**
  * @brief An exception thrown when problems are found when reading or writing FITS files.
  */

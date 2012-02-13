@@ -48,8 +48,6 @@
 //
 #include "boost/mpl/vector.hpp"
 #include "boost/gil/gil_all.hpp"
-#include "lsst/afw/image/fits/fits_io.h"
-#include "lsst/afw/image/fits/fits_io_mpl.h"
 #include "lsst/afw/fits.h"
 
 namespace afwImage = lsst::afw::image;

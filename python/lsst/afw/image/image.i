@@ -25,7 +25,6 @@
 %{
 #   include "lsst/afw/image/Image.h"
 #   include "lsst/afw/image/ImagePca.h"
-#   include "lsst/afw/image/fits/fits_io.h"
 %}
 
 //

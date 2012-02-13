@@ -37,7 +37,6 @@
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/fits.h"
 
 namespace bl = boost::lambda;
