@@ -205,6 +205,9 @@ public:
     /// @brief Set the current HDU (1-indexed; 1 is the Primary HDU).
     void setHdu(int hdu);
 
+    /// @brief Move to the next HDU.
+    void incrementHdu();
+
     /// @brief Return the number of HDUs in the file.
     int countHdus();
 

@@ -27,6 +27,7 @@
 #include <iostream>
 #include "boost/format.hpp"
 #include "boost/mpl/vector.hpp"
+#include "boost/make_shared.hpp"
 #include "boost/gil/gil_all.hpp"
 
 #include "lsst/pex/exceptions.h"
@@ -131,14 +132,14 @@ void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
  */
 template<typename PixelT>
 DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
-                                              const int hdu,               ///< The HDU to read
-                                              geom::Box2I const& bbox,      ///< Only read these pixels
-                                              ImageOrigin const origin     ///< Coordinate system of the bbox
-                                             ) :
+                                       int hdu,               ///< The HDU to read
+                                       geom::Box2I const& bbox,      ///< Only read these pixels
+                                       ImageOrigin const origin     ///< Coordinate system of the bbox
+) :
     daf::base::Citizen(typeid(this))
 {             ///< HDU within the file
     init();
-    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
+    _image = boost::make_shared< Image<PixelT> >(fileName, hdu, getMetadata(), bbox, origin);
 }
 
 /************************************************************************************************************/

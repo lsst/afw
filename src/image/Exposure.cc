@@ -213,60 +213,47 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 
-/** @brief Construct an Image from FITS files.
- *
- * Take the Exposure's base input file name (as a std::string without
- * the _img.fits, _var.fits, or _msk.fits suffixes) and gets the MaskedImage of
- * the Exposure.  The method then uses the MaskedImage 'readFits' method to
- * read the MaskedImage of the Exposure and gets the Exposure's Wcs.
- *
- * @return the MaskedImage and the Wcs object with appropriate metadata of the
- * Exposure.
- *  
- * @note The method warns the user if the Exposure does not have a Wcs.
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're helpful and interpret 0 as meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- *
- * @throw an lsst::pex::exceptions::NotFound if the MaskedImage could not be
- * read or the base file name could not be found.
- */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    std::string const& baseName,    ///< Exposure's base input file name
-    int const hdu,                  ///< Desired HDU
-    afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,       ///< Coordinate system for bbox
-    bool conformMasks               //!< Make Mask conform to mask layout in file?
+    std::string const& baseName,
+    int const hdu,
+    afwGeom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool conformMasks
 ) :
     lsst::daf::base::Citizen(typeid(this))
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
-
-    _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, origin, conformMasks);
-    
+    _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, origin, conformMasks);    
     postFitsCtorInit(metadata);
 }
 
-/**
-This ctor is conceptually identical to the ctor which takes a FITS file base name,
-except that the FITS file resides in RAM.
-*/
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    char **ramFile,                    ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen,                ///< RAM buffer length
-    int const hdu,                  ///< Desired HDU
-    afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,       ///< Coordinate system for bbox
-    bool conformMasks               //!< Make Mask conform to mask layout in file?
+    lsst::afw::fits::MemFileManager & manager,
+    int const hdu,
+    afwGeom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool conformMasks
 ) :
     lsst::daf::base::Citizen(typeid(this))
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
+    _maskedImage = MaskedImageT(manager, hdu, metadata, bbox, origin, conformMasks);
+    postFitsCtorInit(metadata);
+}
 
-    _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, origin, conformMasks);
-    
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    lsst::afw::fits::Fits & fitsfile,
+    afwGeom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool conformMasks
+) :
+    lsst::daf::base::Citizen(typeid(this))
+{
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
+    _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks);
     postFitsCtorInit(metadata);
 }
 

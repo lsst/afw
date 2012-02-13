@@ -30,6 +30,7 @@
 
 #include "boost/lambda/lambda.hpp"
 #include "boost/format.hpp"
+#include "boost/make_shared.hpp"
 #include "boost/filesystem/path.hpp"
 
 #include "lsst/daf/base.h"
@@ -215,117 +216,79 @@ afwImage::Mask<MaskPixelT>& afwImage::Mask<MaskPixelT>::operator=(MaskPixelT con
     return *this;
 }
 
-/**
- * \brief Create a Mask from a FITS file on disk
- *
- * The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
- * the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
- * bitvalues will be left alone, but Mask's dictionary will be modified to match the
- * on-disk version
- */
-template<typename MaskPixelT>
-afwImage::Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
-        int const hdu,                                     ///< HDU to read 
-        lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
-        afwGeom::Box2I const& bbox,                                  ///< Only read these pixels
-        ImageOrigin const origin,                          ///< coordinate system of the bbox
-        bool const conformMasks                            ///< Make Mask conform to mask layout in file?
-) :
-    afwImage::ImageBase<MaskPixelT>(),
-    _myMaskDictVersion(_maskDictVersion) 
-{
-    //
-    // These are the permitted input file types
-    //
-    typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short,
-        short
-    >fits_mask_types;
-
-    if (!boost::filesystem::exists(fileName)) {
-        throw LSST_EXCEPT(pexExcept::NotFoundException,
-                          (boost::format("File %s doesn't exist") % fileName).str());
-    }
-
-    if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
-    }
-
-    if (!fits_read_image<fits_mask_types>(fileName, *this, metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(afwImage::FitsException,
-            (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
-    }
-    // look for mask planes in the file
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
-
-    if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
-        return;
-    }
-    
-    if (conformMasks) {                 // adopt the definitions in the file
-        if (_maskPlaneDict != fileMaskDict) {
-            _maskPlaneDict = fileMaskDict;
-            _maskDictVersion++;
-        }
-    }
-
-    conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
-                                        // defined by Mask::_maskPlaneDict
-}
-
-/**
- * \brief Create a Mask from a FITS file in RAM
- *
- * See filename ctor for more information.
- * Admittedly, much of this function is duplicated in the filename ctor.
- * I couldn't quite decide if there was enough code in question
- * to pull it out into a tertiary function, but be aware...
- */
 template<typename MaskPixelT>
 afwImage::Mask<MaskPixelT>::Mask(
-        char **ramFile,                                        ///< RAM buffer to receive RAM FITS file
-        size_t *ramFileLen,                                    ///< RAM buffer length
-        int const hdu,                                     ///< HDU to read 
-        lsst::daf::base::PropertySet::Ptr metadata,        ///< file metadata (may point to NULL)
-        afwGeom::Box2I const& bbox,                                  ///< Only read these pixels
-        ImageOrigin const origin,                          ///< coordinate system of the bbox
-        bool const conformMasks                            ///< Make Mask conform to mask layout in file?
+    std::string const& fileName,
+    int hdu,
+    PTR(lsst::daf::base::PropertySet) metadata,
+    afwGeom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool const conformMasks
 ) :
     afwImage::ImageBase<MaskPixelT>(),
     _myMaskDictVersion(_maskDictVersion) 
 {
-    //
-    // These are the permitted input file types
-    //
-    typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short,
-        short
-    >fits_mask_types;
-
-   if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+    using afw::fits::Fits;
+    if (hdu == 0) hdu = 1;
+    if (!boost::filesystem::exists(fileName)) {
+        throw LSST_EXCEPT(pex::exceptions::NotFoundException,
+                          (boost::format("File %s doesn't exist") % fileName).str());
     }
+    Fits fits(fileName, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    fits.setHdu(hdu);
+    this->_initFits(fits, metadata, bbox, origin);
+    _initFitsMaskPlanes(metadata, conformMasks);
+}
 
-    if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(afwImage::FitsException,
-            (boost::format("Failed to read RAM FITS HDU %d") % hdu).str());
-    }
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
+    afw::fits::MemFileManager & manager,
+    int hdu,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool const conformMasks
+) :
+    ImageBase<MaskPixelT>()
+{
+    using afw::fits::Fits;
+    if (hdu == 0) hdu = 1;
+    Fits fits(manager, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    fits.setHdu(hdu);
+    this->_initFits(fits, metadata, bbox, origin);
+    _initFitsMaskPlanes(metadata, conformMasks);
+}
+
+template<typename MaskPixelT>
+afwImage::Mask<MaskPixelT>::Mask(
+    afw::fits::Fits & fits,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox,
+    ImageOrigin const origin,
+    bool const conformMasks
+) :
+    ImageBase<MaskPixelT>() 
+{
+    this->_initFits(fits, metadata, bbox, origin);
+    _initFitsMaskPlanes(metadata, conformMasks);
+}
+
+template <typename MaskPixelT>
+void afwImage::Mask<MaskPixelT>::_initFitsMaskPlanes(
+    PTR(lsst::daf::base::PropertySet) metadata,
+    bool conformMasks
+) {
     // look for mask planes in the file
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
-
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata);
     if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
         return;
     }
-    
     if (conformMasks) {                 // adopt the definitions in the file
         if (_maskPlaneDict != fileMaskDict) {
             _maskPlaneDict = fileMaskDict;
             _maskDictVersion++;
         }
     }
-
     conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
                                         // defined by Mask::_maskPlaneDict
 }

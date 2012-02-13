@@ -400,6 +400,14 @@ protected:
     inline bool isContiguous() const {
         return begin()+getWidth()*getHeight() == end();
     }    
+
+    void _initFits(
+        fits::Fits & fits,
+        daf::base::PropertySet::Ptr & metadata,
+        geom::Box2I const & bbox,
+        ImageOrigin const origin
+    );
+
 };
 
 template<typename PixelT>
@@ -447,15 +455,47 @@ public:
      *  @param[in]   bbox         Region of the image to load (empty box == read the entire image).
      *  @param[in]   origin       Coordinate system of the bbox.
      */
-    explicit Image(std::string const& fileName, int hdu=0,
-                   daf::base::PropertySet::Ptr metadata=daf::base::PropertySet::Ptr(),
-                   geom::Box2I const& bbox=geom::Box2I(), 
-                   ImageOrigin const origin=LOCAL);
+    explicit Image(
+        std::string const& fileName, int hdu=0,
+        daf::base::PropertySet::Ptr metadata=daf::base::PropertySet::Ptr(),
+        geom::Box2I const& bbox=geom::Box2I(), 
+        ImageOrigin const origin=LOCAL
+    );
 
-    explicit Image(char **ramFile, size_t *ramFileLen, int hdu=0,
-                   daf::base::PropertySet::Ptr metadata=daf::base::PropertySet::Ptr(),
-                   geom::Box2I const& bbox=geom::Box2I(), 
-                   ImageOrigin const origin=LOCAL);
+    /**
+     *  @brief Construct an Image from a FITS memory file
+     *
+     *  @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret
+     *  0 meaning the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus
+     *  [PDU, HDU2, HDU3, ...]
+     *
+     *  @param[in,out] manager      Object that contains the memory block.
+     *  @param[in]     hdu          HDU to read.
+     *  @param[out]    metadata     If non-null, will be filled with the FITS header keys.
+     *  @param[in]     bbox         Region of the image to load (empty box == read the entire image).
+     *  @param[in]     origin       Coordinate system of the bbox.
+     */
+    explicit Image(
+        afw::fits::MemFileManager & manager, int hdu=0,
+        daf::base::PropertySet::Ptr metadata=daf::base::PropertySet::Ptr(),
+        geom::Box2I const& bbox=geom::Box2I(), 
+        ImageOrigin const origin=LOCAL
+    );
+
+    /**
+     *  @brief Construct an Image from a FITS file object already at the correct HDU.
+     *
+     *  @param[in,out]   fitsfile   Internal cfitsio pointer in thin afw wrapper.
+     *  @param[out]      metadata     If non-null, will be filled with the FITS header keys.
+     *  @param[in]       bbox         Region of the image to load (empty box == read the entire image).
+     *  @param[in]       origin       Coordinate system of the bbox.
+     */
+    explicit Image(
+        fits::Fits & fitsfile, 
+        daf::base::PropertySet::Ptr metadata=daf::base::PropertySet::Ptr(),
+        geom::Box2I const& bbox=geom::Box2I(), 
+        ImageOrigin const origin=LOCAL
+    );
 
     // generalised copy constructor
     template<typename OtherPixelT>
@@ -491,9 +531,9 @@ public:
     /**
      *  @brief Write the image as a FITS memory file.
      *
-     *  @param[in] manager    Object that manages the lifetime of the memory block.
-     *  @param[in] metadata   Flexible metadata to save in the FITS header.
-     *  @param[in] mode       "w" to write a new file; "a" to append.
+     *  @param[in,out] manager    Object that manages the lifetime of the memory block.
+     *  @param[in]     metadata   Flexible metadata to save in the FITS header.
+     *  @param[in]     mode       "w" to write a new file; "a" to append.
      */
     void writeFits(
         fits::MemFileManager & manager,
@@ -504,8 +544,8 @@ public:
     /**
      *  @brief Write the image to the current HDU of the given FITS file.
      *
-     *  @param[in] fitsfile   Internal cfitsio pointer in thin afw wrapper.
-     *  @param[in] metadata   Flexible metadata to save in the FITS header.
+     *  @param[in,out]   fitsfile   Internal cfitsio pointer in thin afw wrapper.
+     *  @param[in]       metadata   Flexible metadata to save in the FITS header.
      *
      *  This overload is intended primarily for internal use (i.e. FITS persistence
      *  for MaskedImages) and is not avalable in Python.
@@ -573,9 +613,10 @@ public:
     explicit DecoratedImage(const geom::Box2I & bbox);
     explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
     DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
+
     explicit DecoratedImage(
         std::string const& fileName, 
-        const int hdu=0, 
+        int hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const origin = LOCAL
     );

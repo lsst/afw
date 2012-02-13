@@ -157,9 +157,8 @@ void test2()
 	
 	pair<PTR(Manager), size_t> file = readFile(gFilename);
 	
-	char* ramFile = reinterpret_cast<char*>(file.first->get());
 	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
-	ImageF::Ptr image = ImageF::Ptr(new ImageF(&ramFile, &file.second, 0, miMetadata));
+	ImageF::Ptr image = ImageF::Ptr(new ImageF(*file.first, 0, miMetadata));
 	
 	image->writeFits(string("!" + gFilenameStripped + "_imageInOut.fit").c_str());
 }

@@ -32,6 +32,7 @@
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
+#include "boost/make_shared.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
@@ -387,6 +388,49 @@ ImageBase<PixelT>& ImageBase<PixelT>::operator=(PixelT const rhs) {
 }
 
 /************************************************************************************************************/
+
+template <typename PixelT>
+void ImageBase<PixelT>::_initFits(
+    fits::Fits & fits,
+    daf::base::PropertySet::Ptr & metadata,
+    geom::Box2I const & bbox_i,
+    ImageOrigin const origin
+) {
+    if (!metadata) {
+        metadata = boost::make_shared<daf::base::PropertyList>();
+    }
+    fits.readMetadata(*metadata, true);
+    geom::Extent2I xyOffset(detail::getImageXY0FromMetadata(detail::wcsNameForXY0, metadata.get()));
+    geom::Extent2I dimensions = fits.getImageDimensions();
+    geom::Box2I bbox(bbox_i);
+    if (!bbox.isEmpty()) {
+        if (origin == PARENT) {
+            bbox.shift(-xyOffset);
+        }
+        _origin = bbox.getMin();
+        if (bbox.getMinX() < 0 || bbox.getMinY() < 0 ||
+            bbox.getWidth() > dimensions.getX() || bbox.getHeight() > dimensions.getY()
+        ) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+                 bbox.getMinX() % bbox.getMinY() % bbox.getWidth() % bbox.getHeight() %
+                 dimensions.getX() % dimensions.getY()).str()
+            );
+        }
+        dimensions = bbox.getDimensions();
+    }
+    _gilView = _allocateView(dimensions, _manager);
+    ndarray::Array<PixelT,2,2> array = ndarray::static_dimension_cast<2>(getArray());
+    if (bbox.isEmpty()) {
+        fits.readImage(array);
+    } else {
+        fits.readImage(array, geom::Extent2I(bbox.getMin()));
+    }
+    _origin += xyOffset;
+}
+
+/************************************************************************************************************/
 //
 // On to Image itself.  ctors, cctors, and operator=
 //
@@ -487,73 +531,53 @@ Image<PixelT>& Image<PixelT>::operator=(Image const& rhs) {
 /************************************************************************************************************/
 
 template<typename PixelT>
-Image<PixelT>::Image(std::string const& fileName, ///< File to read
-                     int hdu,               ///< Desired HDU
-                     daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
-                     geom::Box2I const& bbox,                           ///< Only read these pixels
-                     ImageOrigin const origin    ///< specify the coordinate system of the bbox
+Image<PixelT>::Image(
+    std::string const & fileName,
+    int hdu,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox,
+    ImageOrigin const origin
 ) :
-    ImageBase<PixelT>() {
-
-    typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short, 
-        short, 
-        int,
-        unsigned int,
-        float,
-        double,
-        boost::uint64_t
-    > fits_image_types;
-
+    ImageBase<PixelT>() 
+{
+    using afw::fits::Fits;
+    if (hdu == 0) hdu = 1;
     if (!boost::filesystem::exists(fileName)) {
         throw LSST_EXCEPT(pex::exceptions::NotFoundException,
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
-    if (!metadata) {
-        metadata = daf::base::PropertySet::Ptr(new daf::base::PropertyList);
-    }
-
-    if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(FitsException,
-                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
-    }
+    Fits fits(fileName, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    fits.setHdu(hdu);
+    this->_initFits(fits, metadata, bbox, origin);
 }
 
-/**
- * Construct an Image from a FITS RAM file
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- */
 template<typename PixelT>
-Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
-                            size_t *ramFileLen,      ///< Pointer to the length of the FITS file in memory
-                            int const hdu,               ///< Desired HDU
-                            daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
-                            geom::Box2I const& bbox,                           ///< Only read these pixels
-                            ImageOrigin const origin    ///< specify the coordinate system of the bbox
-                           ) :
-    ImageBase<PixelT>() {
+Image<PixelT>::Image(
+    afw::fits::MemFileManager & manager,
+    int hdu,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const& bbox,
+    ImageOrigin const origin
+) :
+    ImageBase<PixelT>()
+{
+    using afw::fits::Fits;
+    if (hdu == 0) hdu = 1;
+    Fits fits(manager, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    fits.setHdu(hdu);
+    this->_initFits(fits, metadata, bbox, origin);
+}
 
-    typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short, 
-        short, 
-        int,
-        unsigned int,
-        float,
-        double,
-        boost::uint64_t
-    > fits_image_types;
-
-    if (!metadata) {
-        metadata = daf::base::PropertySet::Ptr(new daf::base::PropertyList);
-    }
-    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(FitsException,
-                          (boost::format("Failed to read FITS HDU %d") % hdu).str());
-    }
+template<typename PixelT>
+Image<PixelT>::Image(
+    afw::fits::Fits & fits,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox,
+    ImageOrigin const origin
+) :
+    ImageBase<PixelT>() 
+{
+    this->_initFits(fits, metadata, bbox, origin);
 }
 
 template <typename PixelT>

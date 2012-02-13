@@ -165,6 +165,11 @@ void Fits::setHdu(int hdu) {
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
 }
 
+void Fits::incrementHdu() {
+    fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), 1, 0, &status);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Incrementing HDU");
+}
+
 int Fits::countHdus() {
     int n = 0;
     fits_get_num_hdus(reinterpret_cast<fitsfile*>(fptr), &n, &status);

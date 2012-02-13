@@ -629,19 +629,80 @@ public:
         geom::Box2I const & bbox, 
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
+
+    /**
+     *  @brief Construct a MaskedImage from a FITS file.
+     *
+     *  @note If baseName doesn't exist and ends ".fits" it's taken to be a single MEF file,
+     *        with data, mask, and variance in three successive HDUs; otherwise it's taken to
+     *        be the basename of three separate files, imageFileName(baseName),
+     *        maskFileName(baseName), and varianceFileName(baseName)
+     *
+     *  @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret
+     *        0 meaning the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus
+     *        [PDU, HDU2, HDU3, ...]
+     *
+     *  @param[in]   baseName     Name of the file to open.
+     *  @param[in]   hdu          HDU to read.
+     *  @param[out]  metadata     If non-null, will be filled with the FITS header keys.
+     *  @param[in]   bbox         Region of the image to load (empty box == read the entire image).
+     *  @param[in]   origin       Coordinate system of the bbox.
+     *  @param[in]   conformMasks Make Mask conform to mask layout in file? (default: false)
+     *  @param[in]   needAllHdus  Need all HDUs be present in file? (default: false)
+     */
     explicit MaskedImage(
         std::string const& baseName, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     );
+
+    /**
+     *  @brief Construct a MaskedImage from a FITS memory file.
+     *
+     *  @note the memory file must be a multi-extension file.
+     *
+     *  @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret
+     *        0 meaning the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus
+     *        [PDU, HDU2, HDU3, ...]
+     *
+     *  @param[in,out] manager      Object that contains the memory block.
+     *  @param[in]     hdu          HDU to read.
+     *  @param[out]    metadata     If non-null, will be filled with the FITS header keys.
+     *  @param[in]     bbox         Region of the image to load (empty box == read the entire image).
+     *  @param[in]     origin       Coordinate system of the bbox.
+     *  @param[in]     conformMasks Make Mask conform to mask layout in file? (default: false)
+     *  @param[in]     needAllHdus  Need all HDUs be present in file? (default: false)
+     */
     explicit MaskedImage(
-        char **ramFile, size_t *ramFileLen, int const hdu=0,
+        afw::fits::MemFileManager & manager, int const hdu=0,
         lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     ); 
 
+    /**
+     *  @brief Construct a MaskedImage from a FITS file object aready at the correct HDU.
+     *
+     *  @note the memory file must be a multi-extension file.
+     *
+     *  @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret
+     *        0 meaning the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus
+     *        [PDU, HDU2, HDU3, ...]
+     *
+     *  @param[in,out] fitsfile   Internal cfitsio pointer in thin afw wrapper.
+     *  @param[out]    metadata     If non-null, will be filled with the FITS header keys.
+     *  @param[in]     bbox         Region of the image to load (empty box == read the entire image).
+     *  @param[in]     origin       Coordinate system of the bbox.
+     *  @param[in]     conformMasks Make Mask conform to mask layout in file? (default: false)
+     *  @param[in]     needAllHdus  Need all HDUs be present in file? (default: false)
+     */
+    explicit MaskedImage(
+        afw::fits::Fits & fitsfile,
+        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
+        bool const conformMasks=false, bool const needAllHdus=false
+    ); 
 
     MaskedImage(
         MaskedImage const& rhs, 

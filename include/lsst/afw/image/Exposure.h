@@ -104,6 +104,15 @@ public:
 
     explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=NoWcs);
 
+    //@{
+    /**
+     *  @brief Construct an Exposure from a FITS multi-extension file.
+     *  
+     *  @note The method warns the user if the Exposure does not have a Wcs.
+     *
+     *  See the MaskedImage Fits constructors for more information; Exposure
+     *  simply parses the FITS header for its additional data members.
+     */
     explicit Exposure(
         std::string const &baseName, 
         int const hdu=0, 
@@ -111,15 +120,20 @@ public:
         ImageOrigin const origin=LOCAL,
         bool const conformMasks=false
     );
-    
     explicit Exposure(
-        char **ramFile,
-        size_t *ramFileLen,
+        afw::fits::MemFileManager & manager,
         int const hdu=0, 
         geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const origin=LOCAL, 
         bool const conformMasks=false
     );
+    explicit Exposure(
+        afw::fits::Fits & fitsfile,
+        geom::Box2I const& bbox=geom::Box2I(), 
+        ImageOrigin const origin=LOCAL, 
+        bool const conformMasks=false
+    );
+    //@}
     
     Exposure(
         Exposure const &src, 
