@@ -53,6 +53,8 @@
 #include "lsst/afw/math/detail/convCUDA.h"
 #include "lsst/afw/math/detail/ImageBuffer.h"
 #include "lsst/afw/math/detail/cudaConvWrapper.h"
+#include "lsst/afw/math/detail/CudaHelpers.h"
+#include "lsst/afw/math/detail/IsGpuBuild.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
@@ -66,53 +68,6 @@ namespace {
 typedef mathDetail::VarPixel VarPixel;
 typedef mathDetail::MskPixel MskPixel;
 typedef mathDetail::KerPixel KerPixel;
-
-
-
-bool TryToSelectCudaDevice(afwMath::ConvolutionControl const& convolutionControl)
-{
-#if !defined(GPU_BUILD)
-    return false;
-#else
-    static bool isDeviceSelected = false;
-    static bool isDeviceOk = false;
-    if (isDeviceSelected)
-        return isDeviceOk;
-    isDeviceSelected = true;
-
-    afwMath::ConvolutionControl::DeviceSelection_t devSel;
-    devSel = convolutionControl.getDeviceSelection();
-
-    if (devSel != afwMath::ConvolutionControl::AUTO_GPU_THROW) {
-
-        bool done = mathDetail::gpu::SelectPreferredCudaDevice();
-        if (!done) {
-            mathDetail::gpu::AutoSelectCudaDevice();
-            mathDetail::gpu::VerifyCudaDevice();
-        }
-
-        isDeviceOk = true;
-        return true;
-    }
-
-    bool done = mathDetail::gpu::SelectPreferredCudaDevice();
-    if (done) {
-        isDeviceOk = true;
-        return true;
-    }
-
-    try {
-        mathDetail::gpu::AutoSelectCudaDevice();
-    } catch(...) {
-        return false;
-    }
-    mathDetail::gpu::VerifyCudaDevice();
-
-    isDeviceOk = true;
-    return true;
-#endif
-}
-
 
 // copies data from MaskedImage to three image buffers
 template <typename PixelT>
@@ -183,21 +138,6 @@ void CopyToImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel>& outImage,
 }   // anonymous namespace
 
 /**
- * @brief Returns true if GPU_BUILD is defined
- *
- * @ingroup afw
- */
-bool mathDetail::IsGpuBuild()
-{
-#ifdef GPU_BUILD
-    return true;
-#else
-    return false;
-#endif
-}
-
-
-/**
  * @brief Low-level convolution function that does not set edge pixels.
  *
  * Will use GPU for convolution in following cases:
@@ -228,7 +168,7 @@ bool mathDetail::basicConvolveGPU(
     afwMath::Kernel const& kernel,  ///< convolution kernel
     afwMath::ConvolutionControl const& convolutionControl)  ///< convolution control parameters
 {
-    if (!IsGpuBuild()) {
+    if (!gpu::IsGpuBuild()) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "Afw not compiled with GPU support");
     }
 
@@ -284,7 +224,7 @@ bool mathDetail::convolveLinearCombinationGPU(
     afwMath::LinearCombinationKernel const& kernel,         ///< convolution kernel
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    if (!IsGpuBuild()) {
+    if (!gpu::IsGpuBuild()) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "Afw not compiled with GPU support");
     }
     typedef typename afwMath::Kernel::Pixel KernelPixel;
@@ -298,8 +238,9 @@ bool mathDetail::convolveLinearCombinationGPU(
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
                 convolutionControl.getDoNormalize());
     } else {
-        if (TryToSelectCudaDevice(convolutionControl) == false)
+        if (gpu::TryToSelectCudaDevice(convolutionControl.getDeviceSelection()) == false){
             return false;
+        }
 
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
@@ -462,7 +403,7 @@ bool mathDetail::convolveLinearCombinationGPU(
     afwMath::LinearCombinationKernel const& kernel,         ///< convolution kernel
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    if (!IsGpuBuild()) {
+    if (!gpu::IsGpuBuild()) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "Afw not compiled with GPU support");
     }
     typedef typename afwMath::Kernel::Pixel KernelPixel;
@@ -477,7 +418,7 @@ bool mathDetail::convolveLinearCombinationGPU(
                 convolutionControl.getDoNormalize());
     } else {
 
-        if (TryToSelectCudaDevice(convolutionControl) == false) {
+        if (gpu::TryToSelectCudaDevice(convolutionControl.getDeviceSelection()) == false){
             return false;
         }
 
@@ -648,12 +589,12 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     afwMath::Kernel const& kernel,  ///< convolution kernel
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    if (!IsGpuBuild()) {
+    if (!gpu::IsGpuBuild()) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "Afw not compiled with GPU support");
     }
     bool doNormalize = convolutionControl.getDoNormalize();
 
-    if (TryToSelectCudaDevice(convolutionControl) == false) {
+    if (gpu::TryToSelectCudaDevice(convolutionControl.getDeviceSelection()) == false){
         return false;
     }
 
@@ -748,7 +689,7 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     afwMath::Kernel const& kernel,  ///< convolution kernel
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
-    if (!IsGpuBuild()) {
+    if (!gpu::IsGpuBuild()) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "Afw not compiled with GPU support");
     }
     bool doNormalize = convolutionControl.getDoNormalize();
@@ -777,8 +718,9 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     int const cnvStartX = kernel.getCtrX();
     int const cnvStartY = kernel.getCtrY();
 
-    if (TryToSelectCudaDevice(convolutionControl) == false)
+    if (gpu::TryToSelectCudaDevice(convolutionControl.getDeviceSelection()) == false) {
         return false;
+    }
 
     const bool shMemOk = gpu::IsSufficientSharedMemoryAvailable_ForImgAndMaskBlock(kWidth, kHeight, sizeof(double));
     if (!shMemOk) {

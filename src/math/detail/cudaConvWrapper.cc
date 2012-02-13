@@ -37,7 +37,6 @@
 
 #ifndef GPU_BUILD //build this file only if requested
 
-#include <stdio.h>
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
@@ -89,8 +88,8 @@ bool IsSufficientSharedMemoryAvailable_ForSfn(int order, int kernelN)
 #include "lsst/afw/math/detail/cudaConvWrapper.h"
 #include "lsst/afw/math/detail/cudaQueryDevice.h"
 #include "lsst/afw/math/detail/Convolve.h"
-
 #include "lsst/afw/math/detail/CudaHelpers.h"
+#include "lsst/afw/math/detail/CudaMemory.h"
 
 using namespace std;
 namespace afwImage = lsst::afw::image;

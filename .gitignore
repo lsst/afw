@@ -5,6 +5,8 @@
 *.pyc
 *_wrap.cc
 *Lib.py
+*~
+core.*
 .sconf_temp
 .sconsign.dblite
 config.log

@@ -53,8 +53,6 @@ namespace afw {
 namespace math {
 namespace detail {
 
-bool IsGpuBuild();
-
 template <typename OutImageT, typename InImageT>
 bool basicConvolveGPU(
         OutImageT& convolvedImage,

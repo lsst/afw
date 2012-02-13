@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,10 +25,10 @@
 /**
  * @file
  *
- * @brief Set up for convolution, calls GPU convolution kernels
+ * @brief Functions to help managing setup for GPU kernels, implementation file
  *
- * Functions in this file are used to allocate necessary buffers,
- * transfer data from and to GPU memory, and to set up and perform convolution.
+ * Functions in this file are used to query GPU device,
+ * and to simplify GPu device selection
  *
  * @author Kresimir Cosic
  *
@@ -40,8 +40,11 @@
 
 #include <stdio.h>
 #include "lsst/afw/math/detail/Convolve.h"
+#include "lsst/afw/image.h"
 
 #include "lsst/afw/math/detail/CudaHelpers.h"
+
+namespace afwImage = lsst::afw::image;
 
 namespace lsst {
 namespace afw {
@@ -101,6 +104,15 @@ void VerifyCudaDevice()
 {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
 }
+bool TryToSelectCudaDevice(const lsst::afw::math::ConvolutionControl::DeviceSelection_t devSel)
+{
+    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
+}
+int GetPrefferedCudaDevice()
+{
+    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
+}
+
 
 }
 }
@@ -115,8 +127,8 @@ void VerifyCudaDevice()
 #include <stdio.h>
 
 #include "lsst/afw/math/detail/Convolve.h"
+#include "lsst/afw/math/detail/GpuExceptions.h"
 #include "lsst/afw/math/detail/ImageBuffer.h"
-
 #include "lsst/afw/math/detail/CudaHelpers.h"
 
 using namespace std;
@@ -287,6 +299,7 @@ void AutoSelectCudaDevice()
     }
     cudaError = cudaSetDevice(devId);
     if (cudaError == cudaErrorSetOnActiveProcess) {
+        cudaGetLastError(); //clear error
         cudaGetDevice(&devId);
     } else if (cudaError != cudaSuccess) {
         cudaGetLastError(); //clear error
@@ -333,6 +346,43 @@ void VerifyCudaDevice()
         throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough threads per block available on GPU");
     }
 }
+
+bool TryToSelectCudaDevice(const lsst::afw::math::ConvolutionControl::DeviceSelection_t devSel)
+{
+#if !defined(GPU_BUILD)
+    return false;
+#else
+    static bool isDeviceSelected = false;
+    static bool isDeviceOk = false;
+    if (isDeviceSelected)
+        return isDeviceOk;
+    isDeviceSelected = true;
+
+    bool done = SelectPreferredCudaDevice();
+    if (done) {
+        isDeviceOk = true;
+        return true;
+    }
+
+    if (devSel != lsst::afw::math::ConvolutionControl::AUTO_GPU_THROW) {
+        AutoSelectCudaDevice();
+        VerifyCudaDevice();
+        isDeviceOk = true;
+        return true;
+    }
+
+    try {
+        AutoSelectCudaDevice();
+    } catch(...) {
+        return false;
+    }
+    VerifyCudaDevice();
+
+    isDeviceOk = true;
+    return true;
+#endif
+}
+
 
 int GetCudaCurDeviceId()
 {

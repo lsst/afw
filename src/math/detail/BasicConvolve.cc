@@ -46,6 +46,7 @@
 #include "lsst/afw/math/detail/Convolve.h"
 #include "lsst/afw/math/detail/ConvCpuGpuShared.h"
 #include "lsst/afw/math/detail/ConvolveGPU.h"
+#include "lsst/afw/math/detail/IsGpuBuild.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
@@ -266,18 +267,18 @@ void mathDetail::basicConvolve(
             convolutionControl.getDoNormalize());
     } else {
         CheckForceGpuOnNoGpu(convolutionControl);
-        if (IsGpuBuild()) {
-            if (convolutionControl.getDeviceSelection()==ConvolutionControl::AUTO_GPU_SAFE) {
+        if (gpu::IsGpuBuild()) {
+            if (convolutionControl.getDeviceSelection() == ConvolutionControl::AUTO_GPU_SAFE) {
                 try {
-                    bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
+                    bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
                     if (isProcessed) return;
                 } catch(GpuMemoryException) { }
                 catch(pexExcept::MemoryException) { }
                 catch(GpuRuntimeErrorException) { }
-            } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
-                bool isProcessed=mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
+            } else if (convolutionControl.getDeviceSelection() != ConvolutionControl::FORCE_CPU) {
+                bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
                 if (isProcessed) return;
-                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU) {
+                if (convolutionControl.getDeviceSelection() == ConvolutionControl::FORCE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
                 }
             }
@@ -515,18 +516,18 @@ void mathDetail::convolveWithBruteForce(
             "convolveWithBruteForce: kernel is spatially invariant");
 
         CheckForceGpuOnNoGpu(convolutionControl);
-        if (IsGpuBuild()) {
-            if (convolutionControl.getDeviceSelection()==ConvolutionControl::AUTO_GPU_SAFE) {
+        if (gpu::IsGpuBuild()) {
+            if (convolutionControl.getDeviceSelection() == ConvolutionControl::AUTO_GPU_SAFE) {
                 try {
-                    bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
+                    bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
                     if (isProcessed) return;
                 } catch(GpuMemoryException) { }
                 catch(pexExcept::MemoryException) { }
                 catch(GpuRuntimeErrorException) { }
-            } else if (convolutionControl.getDeviceSelection()!=ConvolutionControl::FORCE_CPU) {
-                bool isProcessed=mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
+            } else if (convolutionControl.getDeviceSelection() != ConvolutionControl::FORCE_CPU) {
+                bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
                 if (isProcessed) return;                
-                if (convolutionControl.getDeviceSelection()==ConvolutionControl::FORCE_GPU) {
+                if (convolutionControl.getDeviceSelection() == ConvolutionControl::FORCE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
                 }
             }

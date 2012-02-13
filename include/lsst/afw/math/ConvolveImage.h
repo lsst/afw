@@ -56,26 +56,23 @@ namespace math {
      */
     class ConvolutionControl {
     public:
-    /**
-     * @brief Selects how to use CPU or GPU device
-     *
-     *
-     * AUTO_GPU_THROW - If all conditions for GPU acceleration are satisfied (AFW built 
-     *   with GPU support, a suitable GPU is present, limitations on kernel size 
-     *   and other limitations) the code will attempt to use a GPU. Otherwise, CPU code 
-     *   will be used to perform the convolution. If GPU execution results in a failure,
-     *   an exception will be thrown.
-     * AUTO_GPU_SAFE - If all conditions for GPU acceleration are satisfied, the code 
-     *   will attempt to use a GPU. Otherwise, CPU code will be used to perform the 
-     *   convolution. If GPU execution results in a failure, convolution by CPU will be 
-     *   attempted.
-     * FORCE_CPU - CPU code will always be used to perform the convolution.
-     * FORCE_GPU - GPU code will always be used to perform the convolution. If any 
-     *   limitation (except for 'kernel too small' limitation) for GPU acceleration is not 
-     *   satisfied, an exception will be thrown.
-     *
-     * @ingroup afw
-     */
+        /**
+         * @brief Selects whether to use CPU or GPU device
+         *
+         *
+         * AUTO_GPU_THROW - If all conditions for GPU execution and performance conditions are satisfied 
+         *   (AFW built with GPU support, a suitable GPU is present, GPU execution limitations and performance conditions) 
+         *   the code will attempt to use a GPU. Otherwise, CPU code 
+         *   will be used. If GPU execution results in a failure, an exception will be thrown.
+         * AUTO_GPU_SAFE - If all conditions for GPU execution and performance conditions are satisfied,
+         *    the code will attempt to use a GPU. Otherwise, CPU code will be used. 
+         *    If GPU execution results in a failure, it will fallback to CPU code.
+         * FORCE_CPU - a GPU will not be used.
+         * FORCE_GPU - code will always attempt to use a GPU. If any condition for
+         *    GPU execution is not satisfied, an exception will be thrown.    
+         *
+         * @ingroup afw
+         */
         enum DeviceSelection_t { AUTO_GPU_THROW, AUTO_GPU_SAFE, FORCE_CPU, FORCE_GPU };
 
         ConvolutionControl(
