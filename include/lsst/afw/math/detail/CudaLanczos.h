@@ -132,7 +132,7 @@ struct LinearInterp
     SPoint2 o;    /// defines the value at origin
     SVec2 deltaX; /// difference of neighbouring values in the first column
 
-    LinearInterp(SPoint2 par_o, SVec2 par_deltaX) : o(par_o), deltaX(par_deltaX) {};
+    CPU_GPU LinearInterp(SPoint2 par_o, SVec2 par_deltaX) : o(par_o), deltaX(par_deltaX) {};
 
     /// Calculates a value of the interpolation function at a point subX
     CPU_GPU SPoint2 Interpolate(int subX)
