@@ -248,13 +248,14 @@ or (the old idiom):
    ds9.cmdBuffer.popSize()
         """
 
-        def __init__(self, size=0):
+        def __init__(self, size=0, silent=True):
             """Create a command buffer, with a maximum depth of size"""
             self._commands = ""         # list of pending commands
             self._lenCommands = len(self._commands)
             self._bufsize = []          # stack of bufsizes
 
             self._bufsize.append(size)  # don't call self.size() as ds9Cmd isn't defined yet
+            self._silent = silent
 
         def set(self, size):
             """Set the ds9 buffer size to size"""
@@ -275,6 +276,11 @@ or (the old idiom):
 
             self.flush()
 
+        def setSilence(self, silent):
+            old = self._silent
+            self._silent = silent
+            return old
+
         def _getSize(self):
             """Get the current ds9 buffer size"""
             return self._bufsize[-1]
@@ -293,11 +299,11 @@ or (the old idiom):
             if len(self._bufsize) > 1:
                 self._bufsize.pop()
 
-        def flush(self, silent=False):
+        def flush(self):
             """Flush the pending commands"""
-            ds9Cmd(flush=True, silent=silent)
+            ds9Cmd(flush=True, silent=self._silent)
 
-    cmdBuffer = Buffer(0)
+    cmdBuffer = Buffer(0, silent=True)
 
 
 def ds9Cmd(cmd=None, trap=True, flush=False, silent=False):
@@ -310,7 +316,7 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=False):
     if cmd:
         # Work around xpa's habit of silently truncating long lines
         if cmdBuffer._lenCommands + len(cmd) > XPA_SZ_LINE - 5: # 5 to handle newlines and such like
-            ds9Cmd(flush=True)
+            ds9Cmd(flush=True, silent=silent)
 
         cmdBuffer._commands += ";" + cmd
         cmdBuffer._lenCommands += 1 + len(cmd)
@@ -535,7 +541,7 @@ def buffer(enable=True):
     else:
         cmdBuffer.popSize()
 
-flush = cmdBuffer.flush(silent=True)
+flush = cmdBuffer.flush()
 
 class Buffering(object):
     """A class intended to be used with python's with statement:
