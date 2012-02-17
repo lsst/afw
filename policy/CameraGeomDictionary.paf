@@ -116,16 +116,19 @@ definitions: {
 					    maxOccurs: 7
 					    default: 0.0 1.0
 					}
+					coefficientsUndistort: {
+					    type: bool
+					    description: "Polynomial describes the *inverse* transform."
+					    minOccurs: 0
+					    maxOccurs: 1
+					    default: false
+					}
 				    }
 				}
 			    }
-
-			    
 			}
 		    }
 		}
-
-
             }
         }
     }
