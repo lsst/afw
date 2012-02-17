@@ -353,9 +353,6 @@ SourceTable::MinimalSchema::MinimalSchema() {
     detail::Access::markPersistent(schema);
     id = schema.addField<RecordId>("id", "unique ID for source");
     parent = schema.addField<RecordId>("parent", "unique ID of parent source");
-    sky = schema.addField<float>("sky", "sky background at location of source", "DN/pix");
-    skyErr = schema.addField<float>("sky.err", "sky background uncertainty at location of source",
-                                    "DN/pix");
     coord = schema.addField<Coord>("coord", "position of source in ra/dec", "radians");
 }
 

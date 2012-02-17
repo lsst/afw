@@ -216,12 +216,6 @@ public:
     RecordId getParent() const;
     void setParent(RecordId id);
 
-    float getSky() const;
-    void setSky(float v);
-
-    float getSkyErr() const;
-    void setSkyErr(float v);
-
     IcrsCoord getCoord() const;
     void setCoord(IcrsCoord const & coord);
     void setCoord(Coord const & coord);
@@ -323,12 +317,6 @@ public:
 
     /// @brief Key for the parent ID.
     static Key<RecordId> getParentKey() { return getMinimalSchema().parent; }
-
-    /// @brief Key for the sky background at the location of the source.
-    static Key<float> getSkyKey() { return getMinimalSchema().sky; }
-
-    /// @brief Key for the sky background uncertainty at the location of the source.
-    static Key<float> getSkyErrKey() { return getMinimalSchema().skyErr; }
 
     /// @brief Key for the ra/dec of the source.
     static Key<Coord> getCoordKey() { return getMinimalSchema().coord; }
@@ -465,12 +453,6 @@ inline void SourceRecord::setId(RecordId id) { set(SourceTable::getIdKey(), id);
 
 inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
 inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
-
-inline float SourceRecord::getSky() const { return get(SourceTable::getSkyKey()); }
-inline void SourceRecord::setSky(float v) { set(SourceTable::getSkyKey(), v); }
-
-inline float SourceRecord::getSkyErr() const { return get(SourceTable::getSkyErrKey()); }
-inline void SourceRecord::setSkyErr(float v) { set(SourceTable::getSkyErrKey(), v); }
 
 inline IcrsCoord SourceRecord::getCoord() const { return get(SourceTable::getCoordKey()); }
 inline void SourceRecord::setCoord(IcrsCoord const & coord) { set(SourceTable::getCoordKey(), coord); }
