@@ -188,6 +188,13 @@ def asList(self):
 def __iter__(self):
     return iter(self.asList())
 
+def __contains__(self, k):
+    try:
+        r = self.find(k)
+        return True
+    except:
+        return False
+
 def find(self, k):
     if not isinstance(k, basestring):
          try:

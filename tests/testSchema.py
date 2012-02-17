@@ -96,6 +96,13 @@ class SchemaTestCase(unittest.TestCase):
         keys.append(schema.addField("a", type="Cov<Point<F4>>"))
         for key, item in zip(keys, schema):
             self.assertEqual(item.key, key)
+            self.assert_(key in schema)
+        for name in ("a", "b", "c", "d"):
+            self.assert_(name in schema)
+        self.assertFalse("e" in schema)
+        otherSchema = lsst.afw.table.Schema()
+        otherKey = otherSchema.addField("d", type=float)
+        self.assertFalse(otherKey in schema)
         self.assertNotEqual(keys[0], keys[1])
 
     def testKeyAccessors(self):
