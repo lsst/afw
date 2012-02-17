@@ -168,6 +168,8 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 
 %extend lsst::afw::table::Schema {
 
+    void reset(lsst::afw::table::Schema & other) { *self = other; }
+
 %pythoncode %{
 
 def asList(self):
@@ -276,6 +278,12 @@ def asKey(self):
 %include "lsst/afw/table/SchemaMapper.h"
 
 %include "lsst/afw/table/BaseTable.h"
+
+%extend lsst::afw::table::BaseTable {
+    %pythoncode %{
+         schema = property(getSchema)
+    %}
+}
 
 %ignore lsst::afw::table::BaseRecord::operator=;
 %include "lsst/afw/table/BaseRecord.h"
