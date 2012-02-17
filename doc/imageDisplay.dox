@@ -158,10 +158,26 @@ You can return the (ix, iy)th (or nth) bounding box with getBBox()
 <UL>
 <LI> %Image commands
 
+It turns out that writing symbols to ds9 is very slow.  Whenever you're writing more than a few glyphs
+we \em strongly recommend that you turn on buffering.  The simplest way to do this is by using python's
+\c with statement:
+\code
+with ds9.Buffering():
+    for source in sourceList:
+        if display:
+            ds9.dot("o", source.getXAstrom(), source.getYAstrom())
+\endcode
+(note that \c ds9.Buffering() is safe even if no \c ds9 display is available).  You can explicitly
+flush the buffer at anytime with \c ds9.flush()
+
 <dl>    
 <dt> erase() [frame=-1]
 <dd>
         Erase the specified DS9 frame
+    
+<dt> flush() []
+<dd>
+        Draw all pending glyphs; you shouldn't usually need to use this.
     
 <dt> mtv() [data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None]
 <dd>
