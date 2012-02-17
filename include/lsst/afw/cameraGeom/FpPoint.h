@@ -16,7 +16,7 @@ namespace lsst { namespace afw { namespace cameraGeom {
  */
 class FpPoint {
 public:
-    /** Construct an Angle with the specified value (interpreted in the given units) */
+    /** Construct an FpPoint with the specified value (interpreted in the given units) */
     explicit FpPoint(lsst::afw::geom::Point2D p) : _p(p) {}
     explicit FpPoint(lsst::afw::geom::Extent2D p) : _p(p) {}
     FpPoint(double x, double y) : _p(x, y) {}
@@ -49,7 +49,7 @@ private:
  */
 class FpExtent {
 public:
-    /** Construct an Angle with the specified value (interpreted in the given units) */
+    /** Construct an FpExtent with the specified value (interpreted in the given units) */
     explicit FpExtent(lsst::afw::geom::Point2D p) : _e(p) {}
     explicit FpExtent(lsst::afw::geom::Extent2D e) : _e(e) {}
     FpExtent(double x, double y) : _e(x, y) {}
