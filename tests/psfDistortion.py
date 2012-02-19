@@ -149,7 +149,8 @@ class PsfDistortionTestCase(unittest.TestCase):
         
 	# create a detector which is offset from the boresight
         pixelSize = 0.01 # mm
-        detector = cameraGeom.Detector(cameraGeom.Id(1), False, pixelSize)
+        allPixels = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(self.nx, self.ny))
+        detector = cameraUtils.makeDefaultCcd(allPixels, pixelSize=pixelSize)
         detector.setCenterPixel(afwGeom.Point2D(self.nx/2, self.ny/2))
         # try the upper right corner of chip 0 on suprimecam
         cenPixX, cenPixY = 5000.0, 4000.0
