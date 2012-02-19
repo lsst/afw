@@ -182,7 +182,7 @@ public:
 class RadialPolyDistortion : public Distortion {
 public:
     RadialPolyDistortion(std::vector<double> const &coeffs,
-                         bool const coefficientsUndistort=false,
+                         bool const coefficientsDistort=true,
                          int const lanczosOrder=5);
 #if 1
     // these may be useful for debugging
@@ -198,7 +198,7 @@ public:
     virtual std::string prynt() const { return std::string("RadialPolyDistortion Derived Class"); }
 private:
     int _maxN;
-    bool const _coefficientsUndistort;  // if true, the provided coefficients \em undistort positions
+    bool const _coefficientsDistort;  // if true, the provided coefficients \em distort positions
     std::vector<double> _coeffs;
     std::vector<double> _icoeffs;
     std::vector<double> _dcoeffs;

@@ -321,10 +321,10 @@ afwGeom::LinearTransform cameraGeom::NullDistortion::computeQuadrupoleTransform(
  */
 cameraGeom::RadialPolyDistortion::RadialPolyDistortion(
     std::vector<double> const &coeffs, ///<  polynomial coefficients a_i corresponding to r^i terms
-    bool const coefficientsUndistort, ///< coefficients apply to \em reverse transform
-    int lanczosOrder                    ///< lanczos order to use for interpolation kernels
+    bool const coefficientsDistort,    ///< coefficients apply to \em forward transform
+    int lanczosOrder                   ///< lanczos order to use for interpolation kernels
                                                       ) :
-    Distortion(lanczosOrder), _maxN(7), _coefficientsUndistort(coefficientsUndistort)
+    Distortion(lanczosOrder), _maxN(7), _coefficientsDistort(coefficientsDistort)
 {
     // initialize maxN-th order to zero
     _coeffs.resize(_maxN);
@@ -489,7 +489,7 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computePointTransform
     double y = p.getY();
     double r = std::sqrt(x*x + y*y);
 
-    double rp = (_coefficientsUndistort ? forward : !forward) ? _transformR(r, _coeffs) : _iTransformR(r);
+    double rp = (_coefficientsDistort ? forward : !forward) ? _transformR(r, _coeffs) : _iTransformR(r);
 
     double scale = (r > 0.0) ? rp/r : 1.0;
     return afwGeom::LinearTransform().makeScaling(scale);
@@ -511,7 +511,7 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeQuadrupoleTran
     double cost = std::cos(t);
     double sint = std::sin(t);
 
-    double dr = (_coefficientsUndistort ? forward : !forward) ? _transformR(r, _dcoeffs) : _iTransformDr(r); 
+    double dr = (_coefficientsDistort ? forward : !forward) ? _transformR(r, _dcoeffs) : _iTransformDr(r); 
 
     afwGeom::LinearTransform::Matrix M, R, Rinv;
     M    <<   dr,  0.0,   0.0,  1.0;  // scaling matrix to stretch along x-axis

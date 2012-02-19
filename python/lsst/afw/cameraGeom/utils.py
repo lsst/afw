@@ -482,8 +482,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
 	distort = cameraGeom.NullDistortion()
     elif distortActive == "RadialPolyDistortion":
 	coeffs = activePolicy.getArray('coeffs')
-        coefficientsUndistort = activePolicy.get('coefficientsUndistort')
-	distort = cameraGeom.RadialPolyDistortion(coeffs, coefficientsUndistort)
+        coefficientsDistort = activePolicy.get('coefficientsDistort')
+	distort = cameraGeom.RadialPolyDistortion(coeffs, coefficientsDistort)
     camera.setDistortion(distort)
 
 
