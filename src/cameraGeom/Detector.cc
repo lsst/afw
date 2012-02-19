@@ -98,7 +98,6 @@ cameraGeom::FpExtent cameraGeom::Detector::getSize() const {
 
 /**
  * Return the offset from the mosaic centre, in mm, given a pixel position
- * \sa getPositionFromIndex
  */
 cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
         lsst::afw::geom::Point2D const& pix    ///< Pixel coordinates wrt bottom left of Detector
@@ -115,7 +114,13 @@ cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
         bool const isTrimmed            ///< Is this detector trimmed?
                                                            ) const
 {
-    afwGeom::Extent2D pixWrtCenter = afwGeom::Extent2D(pix - afwGeom::Extent2D(getCenterPixel()));
+#if 0
+    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
+#else
+    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
+                                          0.5*(getAllPixels(true).getHeight() - 1));
+#endif
+    afwGeom::Extent2D pixWrtCenter = afwGeom::Extent2D(pix - detectorCenterPixel);
     pixWrtCenter *= getPixelSize();
     return _center + FpPoint(pixWrtCenter);
 }    
@@ -128,9 +133,14 @@ afwGeom::Point2D cameraGeom::Detector::getPixelFromPosition(
              FpPoint const &pos     ///< Offset from mosaic centre, mm
                                                            ) const
 {
-    afwGeom::Extent2D cen(getCenterPixel());
+#if 0
+    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
+#else
+    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
+                                          0.5*(getAllPixels(true).getHeight() - 1));
+#endif
     FpPoint posWrtCenter = pos - getCenter();
-    return posWrtCenter.getPixels(getPixelSize()) + cen;
+    return posWrtCenter.getPixels(getPixelSize()) + detectorCenterPixel;
 }
 
 
