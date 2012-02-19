@@ -131,7 +131,7 @@ class PsfDistortionTestCase(unittest.TestCase):
 
         self.lanczosOrder = 5
 	self.sCamCoeffs = [0.0, 1.0, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]
-	self.sCamDistorter = cameraGeom.RadialPolyDistortion(self.sCamCoeffs, self.lanczosOrder)
+	self.sCamDistorter = cameraGeom.RadialPolyDistortion(self.sCamCoeffs, True, self.lanczosOrder)
 	
     def tearDown(self):
 	del self.sCamDistorter
