@@ -37,6 +37,12 @@ public:
     FpPoint operator-(FpPoint const &pos2) const {
         return FpPoint(this->_p - lsst::afw::geom::Extent2D(pos2.getMm()));
     }
+    FpPoint operator*(double const val) const {
+        return FpPoint(this->_p.getX()*val, this->_p.getY()*val);
+    }
+    FpPoint operator/(double const val) const {
+        return FpPoint(this->_p.getX()/val, this->_p.getY()/val);
+    }
 private:
     lsst::afw::geom::Point2D _p; // store this in mm
 };
@@ -67,6 +73,12 @@ public:
     }
     FpExtent operator-(FpExtent const &pos2) const {
         return FpExtent(this->_e - lsst::afw::geom::Extent2D(pos2.getMm()));
+    }
+    FpExtent operator*(double const val) const {
+        return FpExtent(this->_e*val);
+    }
+    FpExtent operator/(double const val) const {
+        return FpExtent(this->_e/val);
     }
 private:
     lsst::afw::geom::Extent2D _e; // store this in mm
