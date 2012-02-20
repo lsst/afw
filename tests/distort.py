@@ -107,20 +107,20 @@ class DistortionTestCase(unittest.TestCase):
 		drTest = 0.0
 	    
 	    if self.prynt:
-		print "m:     %.12f %.12f %.12f" % (m.getIXX(), m.getIYY(), m.getIXY())
-		print "mDist: %.12f %.12f %.12f" % (mDist.getIXX(), mDist.getIYY(), mDist.getIXY())
-		print "mp:    %.12f %.12f %.12f" % (mm.getIXX(), mm.getIYY(), mm.getIXY())
+		print "m:     %.12f %.12f %.12f" % (m.getIxx(), m.getIyy(), m.getIxy())
+		print "mDist: %.12f %.12f %.12f" % (mDist.getIxx(), mDist.getIyy(), mDist.getIxy())
+		print "mp:    %.12f %.12f %.12f" % (mm.getIxx(), mm.getIyy(), mm.getIxy())
 
-		ixyTmp = m.getIXY() if m.getIXY() != 0.0 else 1.0
+		ixyTmp = m.getIxy() if m.getIxy() != 0.0 else 1.0
 		print "err:   %.12f %.12f %.12f" % (
-		    (m.getIXX()-mm.getIXX())/m.getIXX(),
-		    (m.getIYY()-mm.getIYY())/m.getIYY(),
-		    (m.getIXY()-mm.getIXY())/ixyTmp,
+		    (m.getIxx()-mm.getIxx())/m.getIxx(),
+		    (m.getIyy()-mm.getIyy())/m.getIyy(),
+		    (m.getIxy()-mm.getIxy())/ixyTmp,
 		    )
 		
-	    self.assertAlmostEqual(mm.getIXX(), m.getIXX()) 
-	    self.assertAlmostEqual(mm.getIYY(), m.getIYY()) 
-	    self.assertAlmostEqual(mm.getIXY(), m.getIXY()) 
+	    self.assertAlmostEqual(mm.getIxx(), m.getIxx()) 
+	    self.assertAlmostEqual(mm.getIyy(), m.getIyy()) 
+	    self.assertAlmostEqual(mm.getIxy(), m.getIxy()) 
 	    
 
 
@@ -230,7 +230,7 @@ class DistortionTestCase(unittest.TestCase):
 
             # check the moment
             iqq2 = rDist.distort(p, iqq, self.det)
-            iqqList = [iqq2.getIXX(), iqq2.getIYY(), iqq2.getIXY()]
+            iqqList = [iqq2.getIxx(), iqq2.getIyy(), iqq2.getIxy()]
             if self.prynt:
                 print "scale: ", scale, iqqList[i]
             self.assertAlmostEqual(scale, iqqList[i])

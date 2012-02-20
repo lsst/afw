@@ -706,7 +706,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintPeaks(self):
         """Test that we can extract the peaks from a Footprint"""
-        fs = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
+        fs = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
 
         foot = fs.getFootprints()[0]
 
