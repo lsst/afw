@@ -53,14 +53,14 @@ public:
     /// Matrix type for the matrix representation of Quadrupole parameters.
     typedef Eigen::Matrix<double,2,2,Eigen::DontAlign> Matrix;
 
-    double const getIXX() const { return _matrix(0, 0); }
-    void setIXX(double ixx) { _matrix(0, 0) = ixx; }
+    double const getIxx() const { return _matrix(0, 0); }
+    void setIxx(double ixx) { _matrix(0, 0) = ixx; }
 
-    double const getIYY() const { return _matrix(1, 1); }
-    void setIYY(double iyy) { _matrix(1, 1) = iyy; }
+    double const getIyy() const { return _matrix(1, 1); }
+    void setIyy(double iyy) { _matrix(1, 1) = iyy; }
 
-    double const getIXY() const { return _matrix(1, 0); }
-    void setIXY(double ixy) { _matrix(0, 1) = _matrix(1, 0) = ixy; }
+    double const getIxy() const { return _matrix(1, 0); }
+    void setIxy(double ixy) { _matrix(0, 1) = _matrix(1, 0) = ixy; }
 
     /// @brief Deep copy the ellipse core.
     Ptr clone() const { return boost::static_pointer_cast<Quadrupole>(_clone()); }
@@ -82,7 +82,7 @@ public:
     Matrix const & getMatrix() const { return _matrix; }
 
     /// @brief Return the determinant of the matrix representation.
-    double getDeterminant() const { return getIXX() * getIYY() - getIXY() * getIXY(); }
+    double getDeterminant() const { return getIxx() * getIyy() - getIxy() * getIxy(); }
 
     /// @brief Standard assignment.
     Quadrupole & operator=(Quadrupole const & other) { _matrix = other._matrix; return *this; }

@@ -92,9 +92,9 @@ def readImage(filename=None):
     #
     threshold = afwDetect.Threshold(5, afwDetect.Threshold.STDEV)
     npixMin = 5                         # we didn't smooth
-    fs = afwDetect.makeFootprintSet(mi, threshold, "DETECTED", npixMin)
+    fs = afwDetect.FootprintSet(mi, threshold, "DETECTED", npixMin)
     grow, isotropic = 1, False
-    fs = afwDetect.makeFootprintSet(fs, grow, isotropic)
+    fs = afwDetect.FootprintSet(fs, grow, isotropic)
     fs.setMask(mi.getMask(), "DETECTED")
 
     return mi, fs

@@ -281,15 +281,11 @@ void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
 template <typename PixelT>
 typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    typedef lsst::ndarray::detail::ArrayAccess<Array> ArrayAccess;
-    typedef typename ArrayAccess::Core ArrayCore;
-    return ArrayAccess::construct(
+    return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        ArrayCore::create(
-            lsst::ndarray::makeVector(getHeight(), getWidth()),
-            lsst::ndarray::makeVector(rowStride, 1),
-            this->_manager
-        )
+        lsst::ndarray::makeVector(getHeight(), getWidth()),
+        lsst::ndarray::makeVector(rowStride, 1),
+        this->_manager
     );
 }
 
@@ -297,15 +293,11 @@ typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
 template <typename PixelT>
 typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray() const {
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    typedef lsst::ndarray::detail::ArrayAccess<Array> ArrayAccess;
-    typedef typename ArrayAccess::Core ArrayCore;
-    return ArrayAccess::construct(
+    return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        ArrayCore::create(
-            lsst::ndarray::makeVector(getHeight(), getWidth()),
-            lsst::ndarray::makeVector(rowStride, 1),
-            this->_manager
-        )
+        lsst::ndarray::makeVector(getHeight(), getWidth()),
+        lsst::ndarray::makeVector(rowStride, 1),
+        this->_manager
     );
 }
 //

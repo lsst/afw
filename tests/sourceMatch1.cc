@@ -30,17 +30,16 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "lsst/afw/detection/Source.h"
-#include "lsst/afw/detection/SourceMatch.h"
+#include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/SourceMatch.h"
 #include "lsst/afw/math/Random.h"
 #include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/geom/Angle.h"
 
-
-namespace det = lsst::afw::detection;
 namespace math = lsst::afw::math;
 namespace coord = lsst::afw::coord;
 namespace afwGeom = lsst::afw::geom;
+namespace afwTable = lsst::afw::table;
 
 namespace {
 
@@ -52,32 +51,41 @@ math::Random & rng() {
     return *generator;
 }
 
+PTR(afwTable::SourceTable) getGlobalTable() {
+    static PTR(afwTable::SourceTable) table;
+    if (!table) {
+        afwTable::Schema schema = afwTable::SourceTable::makeMinimalSchema();
+        afwTable::addCentroidFields(schema, "centroid", "dummy centroid");
+        table = afwTable::SourceTable::make(schema);
+        table->defineCentroid("centroid");
+    }
+    return table;
+}
+
 // Randomly generate a set of sources that are uniformly distributed across
 // the unit sphere (ra/dec space) and the unit box (x,y space).
-void makeSources(det::SourceSet &set, int n) {
+void makeSources(afwTable::SourceVector &set, int n) {
     for (int i = 0; i < n; ++i) {
-        det::Source::Ptr src(new det::Source);
-        src->setSourceId(i);
-        src->setXAstrom(rng().uniform());
-        src->setYAstrom(rng().uniform());
+        PTR(afwTable::SourceRecord) src = set.addNew();
+        src->setId(i);
+        src->set(set.getTable()->getCentroidKey(), afwGeom::Point2D(rng().uniform(), rng().uniform()));
         double z = rng().flat(-1.0, 1.0);
-        src->setRa(rng().flat(0.0, 360.) * afwGeom::degrees);
-        src->setDec(std::asin(z) * afwGeom::radians);
-        set.push_back(src);
+        src->set(afwTable::SourceTable::getCoordKey().getRa(), rng().flat(0.0, 360.) * afwGeom::degrees);
+        src->set(afwTable::SourceTable::getCoordKey().getDec(), std::asin(z) * afwGeom::radians);
     }
 }
 
 struct CmpSourceMatch {
-    bool operator()(det::SourceMatch const &m1, det::SourceMatch const &m2) {
-        if (m1.first->getSourceId() == m2.first->getSourceId()) {
-            return m1.second->getSourceId() < m2.second->getSourceId();
+    bool operator()(afwTable::SourceMatch const &m1, afwTable::SourceMatch const &m2) {
+        if (m1.first->getId() == m2.first->getId()) {
+            return m1.second->getId() < m2.second->getId();
         }
-        return m1.first->getSourceId() < m2.first->getSourceId(); 
+        return m1.first->getId() < m2.first->getId(); 
     }
 };
 
 struct DistRaDec {
-    double operator()(det::Source::Ptr const &s1, det::Source::Ptr const &s2) const {
+    double operator()(PTR(afwTable::SourceRecord) const &s1, PTR(afwTable::SourceRecord) const &s2) const {
         // halversine distance formula
         double sinDeltaRa = std::sin(0.5*(s2->getRa() - s1->getRa()));
         double sinDeltaDec = std::sin(0.5*(s2->getDec() - s1->getDec()));
@@ -91,27 +99,27 @@ struct DistRaDec {
 };
 
 struct DistXy {
-    double operator()(det::Source::Ptr const &s1, det::Source::Ptr const &s2) const {
-        double dx = s2->getXAstrom() - s1->getXAstrom();
-        double dy = s2->getYAstrom() - s1->getYAstrom();
+    double operator()(PTR(afwTable::SourceRecord) const &s1, PTR(afwTable::SourceRecord) const &s2) const {
+        double dx = s2->getX() - s1->getX();
+        double dy = s2->getY() - s1->getY();
         return std::sqrt(dx*dx + dy*dy);
     }
 };
 
 template <typename DistFunctorT>
-std::vector<det::SourceMatch> bruteMatch(det::SourceSet const &set,
+std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceVector const &set,
                                          double radius,
                                          DistFunctorT const &distFun) {
-    std::vector<det::SourceMatch> matches;
-    for (det::SourceSet::const_iterator i1(set.begin()), e(set.end()); i1 != e; ++i1) {
-        for (det::SourceSet::const_iterator i2(i1); i2 != e; ++i2) {
+    std::vector<afwTable::SourceMatch> matches;
+    for (afwTable::SourceVector::const_iterator i1(set.begin()), e(set.end()); i1 != e; ++i1) {
+        for (afwTable::SourceVector::const_iterator i2(i1); i2 != e; ++i2) {
             if (i1 == i2) {
                 continue;
             }
-            double d = distFun(*i1, *i2);
+            double d = distFun(i1, i2);
             if (d <= radius) {
-               matches.push_back(det::SourceMatch(*i1, *i2, d));
-               matches.push_back(det::SourceMatch(*i2, *i1, d));
+               matches.push_back(afwTable::SourceMatch(i1, i2, d));
+               matches.push_back(afwTable::SourceMatch(i2, i1, d));
             }
         }
     }
@@ -119,19 +127,19 @@ std::vector<det::SourceMatch> bruteMatch(det::SourceSet const &set,
 }
 
 template <typename DistFunctorT>
-std::vector<det::SourceMatch> bruteMatch(det::SourceSet const &set1,
-                                         det::SourceSet const &set2,
+std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceVector const &set1,
+                                         afwTable::SourceVector const &set2,
                                          double radius,
                                          DistFunctorT const &distFun) {
     if (&set1 == &set2) {
         return bruteMatch(set1, radius, distFun);
     }
-    std::vector<det::SourceMatch> matches;
-    for (det::SourceSet::const_iterator i1(set1.begin()), e1(set1.end()); i1 != e1; ++i1) {
-        for (det::SourceSet::const_iterator i2(set2.begin()), e2(set2.end()); i2 != e2; ++i2) {
-            double d = distFun(*i1, *i2);
+    std::vector<afwTable::SourceMatch> matches;
+    for (afwTable::SourceVector::const_iterator i1(set1.begin()), e1(set1.end()); i1 != e1; ++i1) {
+        for (afwTable::SourceVector::const_iterator i2(set2.begin()), e2(set2.end()); i2 != e2; ++i2) {
+            double d = distFun(i1, i2);
             if (d <= radius) {
-                matches.push_back(det::SourceMatch(*i1, *i2, d));
+                matches.push_back(afwTable::SourceMatch(i1, i2, d));
             }
         }
     }
@@ -142,18 +150,18 @@ std::vector<det::SourceMatch> bruteMatch(det::SourceSet const &set1,
 // so we cannot naively test whether both match lists are identical. Instead,  check
 // that any tuple in one result set but not the other has a match distance very close
 // to the match radius.
-void compareMatches(std::vector<det::SourceMatch> &matches,
-                    std::vector<det::SourceMatch> &refMatches,
+void compareMatches(std::vector<afwTable::SourceMatch> &matches,
+                    std::vector<afwTable::SourceMatch> &refMatches,
                     double radius) {
     double const tolerance = 1e-6; // 1 micro arcsecond
     CmpSourceMatch lessThan;
 
     std::sort(matches.begin(), matches.end(), lessThan);
     std::sort(refMatches.begin(), refMatches.end(), lessThan);
-    std::vector<det::SourceMatch>::const_iterator i(matches.begin());
-    std::vector<det::SourceMatch>::const_iterator j(refMatches.begin());
-    std::vector<det::SourceMatch>::const_iterator const iend(matches.end());
-    std::vector<det::SourceMatch>::const_iterator const jend(refMatches.end());
+    std::vector<afwTable::SourceMatch>::const_iterator i(matches.begin());
+    std::vector<afwTable::SourceMatch>::const_iterator j(refMatches.begin());
+    std::vector<afwTable::SourceMatch>::const_iterator const iend(matches.end());
+    std::vector<afwTable::SourceMatch>::const_iterator const jend(refMatches.end());
 
     while (i < iend && j < jend) {
         if (lessThan(*i, *j)) {
@@ -184,11 +192,11 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     double const M = 8.0; // avg. # of matches
     afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
-    det::SourceSet set1, set2;
+    afwTable::SourceVector set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<det::SourceMatch> matches = det::matchRaDec(set1, set2, radius, false);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec()); 
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, radius, false);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec()); 
     compareMatches(matches, refMatches, radius);
 }
 
@@ -197,10 +205,10 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     double const M = 8.0; // avg. # of matches
     afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
-    det::SourceSet set;
+    afwTable::SourceVector set(getGlobalTable());
     makeSources(set, N);
-    std::vector<det::SourceMatch> matches = det::matchRaDec(set, radius, true);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set, radius, DistRaDec());
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set, radius, true);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistRaDec());
     compareMatches(matches, refMatches, radius);
 }
 
@@ -209,11 +217,11 @@ BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
     double const M = 8.0; // avg. # of matches
     double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
-    det::SourceSet set1, set2;
+    afwTable::SourceVector set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<det::SourceMatch> matches = det::matchXy(set1, set2, radius, false);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistXy());
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set1, set2, radius, false);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
 
@@ -222,33 +230,34 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     double const M = 8.0; // avg. # of matches
     double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
-    det::SourceSet set;
+    afwTable::SourceVector set(getGlobalTable());
     makeSources(set, N);
-    std::vector<det::SourceMatch> matches = det::matchXy(set, radius, true);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set, radius, DistXy());
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set, radius, true);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
 
 
-static void normalizeRaDec(det::SourceSet ss) {
+static void normalizeRaDec(afwTable::SourceVector & ss) {
     for (size_t i=0; i<ss.size(); i++) {
         double r,d;
-        r = ss[i]->getRa().asRadians();
-        d = ss[i]->getDec().asRadians();
+        r = ss[i].getRa().asRadians();
+        d = ss[i].getDec().asRadians();
         // wrap Dec over the (north) pole
         if (d > afwGeom::HALFPI) {
             d = afwGeom::PI - d;
             r = r + afwGeom::PI;
         }
-        ss[i]->setRa(r * afwGeom::radians);
-        ss[i]->setDec(d * afwGeom::radians);
+        ss[i].set(afwTable::SourceTable::getCoordKey().getRa(), r * afwGeom::radians);
+        ss[i].set(afwTable::SourceTable::getCoordKey().getDec(), d * afwGeom::radians);
     }
 }
 
 
 BOOST_AUTO_TEST_CASE(matchNearPole) {
-    det::SourceSet set1;
-    det::SourceSet set2;
+
+    afwTable::SourceVector set1(getGlobalTable());
+    afwTable::SourceVector set2(getGlobalTable());
 
     // for each source, add a true match right on top, plus one within range
     // and one outside range in each direction.
@@ -265,92 +274,82 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
             afwGeom::Angle ddec2 = 2. * rad;
             afwGeom::Angle dra2 = 2. * rad / cos(dec);
 
-            det::Source::Ptr src1(new det::Source);
-            src1->setSourceId(id1);
+            PTR(afwTable::SourceRecord) src1 = set1.addNew();
+            src1->setId(id1);
             id1++;
-            src1->setRa(ra);
-            src1->setDec(dec);
-            set1.push_back(src1);
+            src1->set(afwTable::SourceTable::getCoordKey().getRa(), ra);
+            src1->set(afwTable::SourceTable::getCoordKey().getDec(), dec);
 
             // right on top
-            det::Source::Ptr src2(new det::Source);
-            src2->setSourceId(id2);
+            PTR(afwTable::SourceRecord) src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra);
-            src2->setDec(dec);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec);
 
             // +Dec 1
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra);
-            src2->setDec(dec + ddec1);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec + ddec1);
 
             // +Dec 2
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra);
-            src2->setDec(dec + ddec2);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec + ddec2);
 
             // -Dec 1
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra);
-            src2->setDec(dec - ddec1);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec - ddec1);
 
             // -Dec 2
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra);
-            src2->setDec(dec - ddec2);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec - ddec2);
 
             // +RA 1
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra + dra1);
-            src2->setDec(dec);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra + dra1);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec);
+
             // +RA 2
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra + dra2);
-            src2->setDec(dec);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra + dra2);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec);
 
             // -RA 1
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra - dra1);
-            src2->setDec(dec);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra - dra1);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec);
+
             // -RA 2
-            src2 = det::Source::Ptr(new det::Source());
-            src2->setSourceId(id2);
+            src2 = set2.addNew();
+            src2->setId(id2);
             id2++;
-            src2->setRa(ra - dra2);
-            src2->setDec(dec);
-            set2.push_back(src2);
+            src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra - dra2);
+            src2->set(afwTable::SourceTable::getCoordKey().getDec(), dec);
         }
     }
 
     normalizeRaDec(set1);
     normalizeRaDec(set2);
 
-    std::vector<det::SourceMatch> matches = det::matchRaDec(set1, set2, rad, false);
-    std::vector<det::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec()); 
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, rad, false);
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec()); 
     compareMatches(matches, refMatches, rad);
 
 }
-
-

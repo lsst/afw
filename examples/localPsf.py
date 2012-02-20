@@ -73,12 +73,12 @@ def run():
     e = shapeletLocalPsf.computeMoments()
     m = geom.ellipses.Quadrupole(e.getCore())
     p = e.getCenter()
-    ds9.dot("@:%f,%f,%f"%(m.getIXX(), m.getIXY(), m.getIYY()), p.getX(), p.getY(), frame=0)
+    ds9.dot("@:%f,%f,%f"%(m.getIxx(), m.getIxy(), m.getIyy()), p.getX(), p.getY(), frame=0)
     ds9.mtv(roundtrip, frame=1, title="roundtripped shapeletImage")
     e = roundtripShapeletLocalPsf.computeMoments()
     m = geom.ellipses.Quadrupole(e.getCore())
     p = e.getCenter()
-    ds9.dot("@:%f,%f,%f"%(m.getIXX(), m.getIXY(), m.getIYY()), p.getX(), p.getY(),frame=1)
+    ds9.dot("@:%f,%f,%f"%(m.getIxx(), m.getIxy(), m.getIyy()), p.getX(), p.getY(),frame=1)
 
 if __name__ == "__main__":
     run()
