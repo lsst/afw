@@ -27,7 +27,7 @@ namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 
-#ifdef MY_BUILD
+#ifdef XXMY_BUILD
 extern double timeOrig;
 extern double timeTotal;
     extern double timeRows;

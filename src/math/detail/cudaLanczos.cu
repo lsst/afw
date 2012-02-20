@@ -96,9 +96,11 @@ namespace
                 }
 
             double kernelVal = Lanczos(-kernelCenterY-kernelFracY+kernelY,orderInv);
-            colSumImg+= rowSumImg * kernelVal;
-            colSumVar+= rowSumVar * kernelVal * kernelVal;
-            kernelSum+= rowKernelSum * kernelVal;
+            if (kernelVal!=0) {
+                colSumImg+= rowSumImg * kernelVal;
+                colSumVar+= rowSumVar * kernelVal * kernelVal;
+                kernelSum+= rowKernelSum * kernelVal;
+            }
             }
 
         PixelIVM<double> ret;
@@ -142,8 +144,10 @@ namespace
                 }
 
             double kernelVal = Lanczos(-kernelCenterY-kernelFracY+kernelY,orderInv);
+            if (kernelVal!=0) {
             colSumImg+= rowSumImg * kernelVal;
             kernelSum+= rowKernelSum * kernelVal;
+            }
             }
 
         return colSumImg/kernelSum;

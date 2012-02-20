@@ -48,12 +48,10 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
-
+#include "lsst/afw/math/detail/IsGpuBuild.h"
 //Just for PrintCudaDeviceInfo
 #include "lsst/afw/math/detail/cudaQueryDevice.h"
 
-//Just for IsGpuBuild
-#include "lsst/afw/math/detail/ConvolveGPU.h"
 
 using namespace std;
 using lsst::pex::logging::Trace;
@@ -491,7 +489,7 @@ int main(int argc, char **argv)
 {
     int status = EXIT_SUCCESS;
 
-    if (afwMath::detail::IsGpuBuild()) {
+    if (afwMath::detail::gpu::IsGpuBuild()) {
         afwMath::detail::gpu::PrintCudaDeviceInfo();
     } else {
         cout << "AFW not compiled with GPU support. Exiting." << endl;

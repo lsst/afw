@@ -35,7 +35,7 @@
  * @ingroup afw
  */
 
-#ifndef GPU_BUILD //build this file only if requested
+#ifndef GPU_BUILD 
 
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/detail/Convolve.h"
