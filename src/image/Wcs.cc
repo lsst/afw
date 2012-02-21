@@ -141,11 +141,11 @@ void Wcs::_initWcs()
 ///
 ///\note LSST units are zero indexed while FITs units are 1 indexed. So a value of crpix stored in a fits
 ///header of 127,127 corresponds to a pixel position in LSST units of 128, 128
-Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD, 
-                 const std::string ctype1, const std::string ctype2,
-                 double equinox, std::string raDecSys,
-                 const std::string cunits1, const std::string cunits2
-                ):
+Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD, 
+         std::string const & ctype1, std::string const & ctype2,
+         double equinox, std::string const & raDecSys,
+         std::string const & cunits1, std::string const & cunits2
+):
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), 
     _nWcsInfo(0), 
@@ -299,10 +299,10 @@ void Wcs::initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadat
 ///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-void Wcs::initWcsLib(GeomPoint crval, GeomPoint const crpix, Eigen::Matrix2d const CD, 
-                 const std::string ctype1, const std::string ctype2,
-                 double equinox, std::string raDecSys,
-                 const std::string cunits1, const std::string cunits2) {
+void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD, 
+                     std::string const & ctype1, std::string const & ctype2,
+                     double equinox, std::string const & raDecSys,
+                     std::string const & cunits1, std::string const & cunits2) {
 
     //Check CD is a valid size
     if( (CD.rows() != 2) || (CD.cols() != 2) ) {
@@ -836,7 +836,7 @@ Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) cons
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
-CoordPtr Wcs::pixelToSky(const GeomPoint pixel) const {
+CoordPtr Wcs::pixelToSky(GeomPoint const & pixel) const {
     return pixelToSky(pixel.getX(), pixel.getY());
 }
 
