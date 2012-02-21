@@ -68,8 +68,8 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
  * @brief Create a Wcs object from crval, crpix, CD, using CD elements (useful from python)
  */
 afwImg::Wcs::Ptr afwImg::makeWcs(
-    lsst::afw::coord::Coord::ConstPtr crval, ///< CRVAL1,2 (ie. the sky origin)
-    lsst::afw::geom::Point2D crpix, ///< CRPIX1,2 (ie. the pixel origin) in pixels
+    lsst::afw::coord::Coord const & crval, ///< CRVAL1,2 (ie. the sky origin)
+    lsst::afw::geom::Point2D const & crpix, ///< CRPIX1,2 (ie. the pixel origin) in pixels
     double CD11,                   ///< CD matrix element 1,1                    
     double CD12,                   ///< CD matrix element 1,2                    
     double CD21,                   ///< CD matrix element 2,1                    
@@ -78,7 +78,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     Eigen::Matrix2d CD;
     CD << CD11, CD12, CD21, CD22;
     lsst::afw::geom::Point2D crvalTmp;
-    crvalTmp[0] = crval->toIcrs().getLongitude().asDegrees();
-    crvalTmp[1] = crval->toIcrs().getLatitude().asDegrees();
+    crvalTmp[0] = crval.toIcrs().getLongitude().asDegrees();
+    crvalTmp[1] = crval.toIcrs().getLatitude().asDegrees();
     return afwImg::Wcs::Ptr(new lsst::afw::image::Wcs(crvalTmp, crpix, CD));
 }

@@ -164,27 +164,11 @@ public:
     lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord const & coord) const;
 
     /**
-     *  @copydoc skyToPixel(lsst::afw::coord::Coord const & coord)
-     *  @deprecated Please use the overload that passes by const reference in new code.
-     */
-    lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const {
-        return skyToPixel(*coord);
-    }
-
-    /**
      *  @brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
      *
      *  Intermediate world coordinates are in DEGREES.
      */
     lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord) const;
-
-    /**
-     *  @copydoc skyToIntermediateWorldCoord
-     *  @deprecated Please use the overload that passes by const reference in new code.
-     */
-    lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const {
-        return skyToIntermediateWorldCoord(*coord);
-    }
     
     virtual bool hasDistortion() const {    return false;};
     
@@ -209,17 +193,6 @@ public:
         lsst::afw::coord::Coord const & coord,
         lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
     ) const;
-
-    /**
-     *  @copydoc linearizePixelToSky
-     *  @deprecated Please use the overload that passes by const reference in new code.
-     */
-    lsst::afw::geom::AffineTransform linearizePixelToSky(
-        lsst::afw::coord::Coord::ConstPtr const & coord,
-        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
-    ) const {
-        return linearizePixelToSky(*coord, skyUnit);
-    }
     
     /**
      * @brief Return the local linear approximation to Wcs::pixelToSky at a point given in pixel coordinates.
@@ -260,17 +233,6 @@ public:
         lsst::afw::coord::Coord const & coord,
         lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
     ) const;
-
-    /**
-     *  @copydoc linearizeSkyToPixel
-     *  @deprecated Please use the overload that passes by const reference in new code.
-     */
-    lsst::afw::geom::AffineTransform linearizeSkyToPixel(
-        lsst::afw::coord::Coord::ConstPtr const & coord,
-        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
-    ) const {
-        return linearizeSkyToPixel(*coord, skyUnit);
-    }
 
     /**
      * @brief Return the local linear approximation to Wcs::skyToPixel at a point given in pixel coordinates.
@@ -366,7 +328,7 @@ Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata, bool stripMetad
 /*
  Note, CD matrix elements must be in degrees/pixel.
  */
-Wcs::Ptr makeWcs(lsst::afw::coord::Coord::ConstPtr crval, lsst::afw::geom::Point2D crpix,
+Wcs::Ptr makeWcs(lsst::afw::coord::Coord const & crval, lsst::afw::geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {
