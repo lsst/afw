@@ -133,7 +133,7 @@ double extremum(geom::Point2D a, geom::Point2D b, geom::Point2D c, geom::Point2D
 geom::Point2D transformPoint(double x, double y, 
                              image::Wcs const& source,
                              image::Wcs const& target){
-    return target.skyToPixel(source.pixelToSky(x, y));
+    return target.skyToPixel(*source.pixelToSky(x, y));
 }
 
 

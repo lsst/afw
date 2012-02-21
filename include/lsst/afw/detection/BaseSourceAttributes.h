@@ -305,17 +305,17 @@ public:
 		setXyPeakFromRaDec(wcs);
 	}
 	void setXyAstromFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
-		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecAstrom());
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(*getRaDecAstrom());
 		setXAstrom(xy[0]);
 		setYAstrom(xy[1]);
 	}
 	void setXyFluxFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
-		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecFlux());
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(*getRaDecFlux());
 		setXFlux(xy[0]);
 		setYFlux(xy[1]);
 	}
 	void setXyPeakFromRaDec(lsst::afw::image::Wcs::ConstPtr wcs) {
-		lsst::afw::geom::Point2D xy = wcs->skyToPixel(getRaDecPeak());
+		lsst::afw::geom::Point2D xy = wcs->skyToPixel(*getRaDecPeak());
 		setXPeak(xy[0]);
 		setYPeak(xy[1]);
 	}
