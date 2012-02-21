@@ -139,8 +139,8 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
         while(dec<= decUpr)
         {
 			afwCoord::Coord::Ptr rd = afwCoord::makeCoord(afwCoord::FK5, ra * afwGeom::degrees, dec * afwGeom::degrees);
-            afwGeom::Point2D xy = linWcs.skyToPixel(rd);
-            afwGeom::Point2D xySip = sipWcs.skyToPixel(rd);
+            afwGeom::Point2D xy = linWcs.skyToPixel(*rd);
+            afwGeom::Point2D xySip = sipWcs.skyToPixel(*rd);
             
             //Get pixel origin returns crpix in fits coords, so we convert to 
             //lsst coords before using (hence the -1)
