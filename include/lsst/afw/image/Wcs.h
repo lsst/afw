@@ -106,10 +106,11 @@ public:
     friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             bool stripMetadata);
 
-    Wcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, const Eigen::Matrix2d &CD, 
-        const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
-        double equinox=2000, std::string raDecSys="ICRS",
-        const std::string cunits1="deg", const std::string cunits2="deg"
+    Wcs(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
+        Eigen::Matrix2d const & CD, 
+        std::string const & ctype1="RA---TAN", std::string const & ctype2="DEC--TAN",
+        double equinox=2000, std::string const & raDecSys="ICRS",
+        std::string const & cunits1="deg", std::string const & cunits2="deg"
        );
 
     virtual ~Wcs();
@@ -148,11 +149,13 @@ public:
     // xyToRaDec(), but the name now reflects their increased generality. They
     // may be used, e.g. to convert xy to Galactic coordinates
     lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-    lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::Point2D pixel) const;
+    lsst::afw::coord::Coord::Ptr pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
 
     /// \note This routine is designed for the knowledgeable user in need of
     /// performance; it's safer to call the version that returns a CoordPtr
-    void pixelToSky(double pixel1, double pixel2, lsst::afw::geom::Angle& sky1, lsst::afw::geom::Angle& sky2) const;
+    void pixelToSky(
+        double pixel1, double pixel2, lsst::afw::geom::Angle& sky1, lsst::afw::geom::Angle& sky2
+    ) const;
     
     // ASSUMES the angles are in the appropriate coordinate system for this WCS.
     lsst::afw::geom::Point2D skyToPixel(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
@@ -298,11 +301,11 @@ private:
     //Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
     
-    void initWcsLib(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix,
-                    const  Eigen::Matrix2d CD, 
-                    const std::string ctype1, const std::string ctype2,
-                    double equinox, std::string raDecSys,
-                    const std::string cunits1, const std::string cunits2
+    void initWcsLib(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
+                    Eigen::Matrix2d const & CD, 
+                    std::string const & ctype1, std::string const & ctype2,
+                    double equinox, std::string const & raDecSys,
+                    std::string const & cunits1, std::string const & cunits2
                    );
 
     virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
