@@ -289,7 +289,7 @@ public:
      *  provided by this routine are present.
      *
      *  Keys for the standard fields added by this routine can be obtained
-     *  from other static member functions of the Source tag class.
+     *  from other static member functions of the SourceTable class.
      */
     static Schema makeMinimalSchema() { return getMinimalSchema().schema; }
 

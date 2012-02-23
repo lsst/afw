@@ -119,7 +119,7 @@ inline SourceMatchVector matchXy(SourceCatalog const &set, double radius, bool s
  *  @brief Return a table representation of an SourceMatchVector that can be used to persist it.
  *
  *  The schema of the returned object has "first" (RecordId), "second" (RecordID), and "distance"
- *  (Angle) fields.
+ *  (double) fields.
  *
  *  @param[in]  matches     A std::vector of Match objects to convert to table form.
  */
@@ -133,7 +133,7 @@ inline BaseCatalog packMatches(SourceMatchVector const & matches) {
 
 /**
  *  @brief Reconstruct a SourceMatchVector from a BaseCatalog representation of the matches
- *         and a pair of table CatalogTs that hold the records themselves.
+ *         and a pair of SourceCatalogs that hold the records themselves.
  *
  *  @note The table Catalog arguments must be sorted in ascending ID order on input; this will
  *        allow us to use binary search algorithms to find the sources referred to by the match

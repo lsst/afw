@@ -148,7 +148,7 @@ BaseMatchVector matchRaDec(
  *  @brief Return a table representation of a BaseMatchVector that can be used to persist it.
  *
  *  The schema of the returned object has "first" (RecordId), "second" (RecordID), and "distance"
- *  (Angle) fields.
+ *  (double) fields.
  *
  *  @param[in]  matches     A std::vector of Match objects to convert to table form.
  *  @param[in]  idKey1      Key for the unique ID field in the Record1 schema.
