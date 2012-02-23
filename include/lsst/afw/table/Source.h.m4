@@ -108,7 +108,7 @@ typedef lsst::afw::detection::Footprint Footprint;
 class SourceRecord;
 class SourceTable;
 
-template <typename RecordT=SourceRecord, typename TableT=typename RecordT::Table> class SourceSetT;
+template <typename RecordT> class SourceVectorT;
 
 /// @brief A collection of types that correspond to common measurements.
 template <typename MeasTagT, typename ErrTagT>
@@ -195,10 +195,8 @@ class SourceRecord : public BaseRecord {
 public:
 
     typedef SourceTable Table;
-    typedef VectorT<SourceRecord,Table> Vector;
-    typedef VectorT<SourceRecord const,Table> ConstVector;
-    typedef SourceSetT<SourceRecord,Table> Set;
-    typedef SourceSetT<SourceRecord const,Table> ConstSet;
+    typedef SourceVectorT<SourceRecord> Vector;
+    typedef SourceVectorT<SourceRecord const> ConstVector;
 
     PTR(Footprint) getFootprint() const { return _footprint; }
 
@@ -268,8 +266,8 @@ class SourceTable : public BaseTable {
 public:
 
     typedef SourceRecord Record;
-    typedef VectorT<Record,SourceTable> Vector;
-    typedef VectorT<Record const,SourceTable> ConstVector;
+    typedef SourceVectorT<Record> Vector;
+    typedef SourceVectorT<Record const> ConstVector;
 
     /**
      *  @brief Construct a new table.
@@ -390,37 +388,26 @@ private:
 
 #ifndef SWIG
 
-/**
- *  @brief A CRTP base class used to inject source-specific functionality into VectorT.
- *
- *  This class will serve as a base class for VectorT only when its TableT template
- *  parameter is SourceTable, allowing us to add the sort() and find() member functions
- *  that are aware of the Source ID field.
- */
 template <typename RecordT>
-class CustomVectorOps<RecordT,SourceTable> {
-    typedef std::vector<PTR(RecordT)> Internal;
-    typedef VectorT<RecordT,SourceTable> Base;
-    Base & self() { return static_cast<Base &>(*this); }
-    Base const & self() const { return static_cast<Base const &>(*this); }
+class SourceVectorT : public VectorT<RecordT> {
+    typedef VectorT<RecordT> Base;
 public:
 
-    typedef VectorIterator<typename Internal::iterator> iterator;
-    typedef VectorIterator<typename Internal::const_iterator> const_iterator;
+    typedef RecordT Record;
+    typedef typename Record::Table Table;
+
+    typedef typename Base::iterator iterator;
+    typedef typename Base::const_iterator const_iterator;
+
+    using Base::isSorted;
+    using Base::sort;
+    using Base::find;
 
     /// @brief Return true if the vector is in ascending ID order.
-    bool isSorted() const;
+    bool isSorted() const { return this->isSorted(SourceTable::getIdKey()); }
 
     /// @brief Sort the vector in-place by ID.
-    void sort();
-
-    /**
-     *  @brief Return true if all records in the vector have unique IDs.
-     *
-     *  @note The vector must be sorted in ascending ID order before calling find (i.e. 
-     *        isSorted() must be true).
-     */
-    bool hasUniqueIds() const;
+    void sort() { this->sort(SourceTable::getIdKey()); }
 
     //@{
     /**
@@ -431,15 +418,60 @@ public:
      *
      *  Returns end() if the Record cannot be found.
      */
-    iterator find(RecordId id);
-    const_iterator find(RecordId id) const;
+    iterator find(RecordId id) { return this->find(id, SourceTable::getIdKey()); }
+    const_iterator find(RecordId id) const { return this->find(id, SourceTable::getIdKey()); }
     //@}
+
+    /**
+     *  @brief Construct a vector from a table (or nothing).
+     *
+     *  A vector with no table is considered invalid; a valid table must be assigned to it
+     *  before it can be used.
+     */
+    explicit SourceVectorT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
+
+    /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
+    explicit SourceVectorT(Schema const & schema) : Base(schema) {}
+
+    /**
+     *  @brief Construct a vector from a table and an iterator range.
+     *
+     *  If deep is true, new records will be created using table->copyRecord before being inserted.
+     *  If deep is false, records will be not be copied, but they must already be associated with
+     *  the given table.  The table itself is never deep-copied.
+     *
+     *  The iterator must dereference to a record reference or const reference rather than a pointer,
+     *  but should be implicitly convertible to a record pointer as well (see VectorIterator).
+     *
+     *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
+     *  is true, table->preallocate will be used to ensure that the resulting records are
+     *  contiguous in memory and can be used with ColumnView.  To ensure this is the case for
+     *  other iterator types, the user must preallocate the table manually.
+     */
+    template <typename InputIterator>
+    SourceVectorT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
+        Base(table, first, last, deep)
+    {}
+
+    /**
+     *  @brief Shallow copy constructor from a container containing a related record type.
+     *
+     *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTable is
+     *  convertible to Table.
+     */
+    template <typename OtherRecordT>
+    SourceVectorT(SourceVectorT<OtherRecordT> const & other) : Base(other) {}
+
+    /// Read a FITS binary table.
+    static SourceVectorT readFits(std::string const & filename) {
+        return io::FitsReader::apply<SourceVectorT>(filename);
+    }
 
 };
 
 
-typedef VectorT<SourceRecord,SourceTable> SourceVector;
-typedef VectorT<SourceRecord const,SourceTable> ConstSourceVector;
+typedef SourceVectorT<SourceRecord> SourceVector;
+typedef SourceVectorT<SourceRecord const> ConstSourceVector;
 
 DEFINE_FLUX_GETTERS(`Psf')
 DEFINE_FLUX_GETTERS(`Model')

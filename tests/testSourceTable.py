@@ -121,10 +121,6 @@ class SourceVectorTestCase(unittest.TestCase):
         self.assertFalse(self.vector.isSorted())
         self.vector.sort()
         self.assert_(self.vector.isSorted())
-        self.assert_(self.vector.hasUniqueIds())
-        self.vector.addNew().setId(50)
-        self.vector.sort()
-        self.assert_(not self.vector.hasUniqueIds())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

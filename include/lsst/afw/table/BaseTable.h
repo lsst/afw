@@ -49,10 +49,10 @@ public:
     typedef BaseRecord Record;
 
     /// Template of VectorT used to hold records of the associated type.
-    typedef VectorT<Record,BaseTable> Vector;
+    typedef VectorT<Record> Vector;
 
     /// Template of VectorT used to hold const records of the associated type.
-    typedef VectorT<Record const,BaseTable> ConstVector;
+    typedef VectorT<Record const> ConstVector;
 
     /// @brief Number of records in each memory block.
     static int nRecordsPerBlock;

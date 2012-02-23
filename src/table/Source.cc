@@ -421,76 +421,9 @@ KeyTuple<Flux> addFluxFields(
     return keys;
 }
 
-//-----------------------------------------------------------------------------------------------------------
-//----- Customization for VectorT ---------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------
-
-namespace {
-
-struct ExtractId {
-    typedef RecordId result_type;
-    typedef SourceRecord const & argument_type;
-    RecordId operator()(SourceRecord const & s) const { return s.getId(); } 
-};
-
-struct CompareId {
-    bool operator()(CONST_PTR(SourceRecord) const & a, CONST_PTR(SourceRecord) const & b) const {
-        return a->getId() < b->getId();
-    }
-};
-
-} // anonymous
-
-template <typename RecordT>
-bool CustomVectorOps<RecordT,SourceTable>::isSorted() const {
-    RecordId last = std::numeric_limits<RecordId>::min();
-    for (const_iterator i = self().begin(); i != self().end(); ++i) {
-        if (last > i->getId()) return false;
-        last = i->getId();
-    }
-    return true;
-}
-
-template <typename RecordT>
-void CustomVectorOps<RecordT,SourceTable>::sort() {
-    std::sort(self()._internal.begin(), self()._internal.end(), CompareId());
-}
-
-template <typename RecordT>
-bool CustomVectorOps<RecordT,SourceTable>::hasUniqueIds() const {
-    RecordId last = std::numeric_limits<RecordId>::min();
-    for (const_iterator i = self().begin(); i != self().end(); ++i) {
-        if (last == i->getId()) return false;
-        last = i->getId();
-    }
-    return true;
-}
-
-template <typename RecordT>
-typename CustomVectorOps<RecordT,SourceTable>::iterator
-CustomVectorOps<RecordT,SourceTable>::find(RecordId id){
-    // Iterator adaptor that makes a SourceVector iterator work like an iterator over IDs.
-    typedef boost::transform_iterator<ExtractId,iterator> SearchIter;
-    // Use binary search for log n search; requires sorted table.
-    SearchIter i = std::lower_bound(SearchIter(self().begin()), SearchIter(self().end()), id);
-    if (*i == id) return self().end();
-    return i.base();
-}
-
-template <typename RecordT>
-typename CustomVectorOps<RecordT,SourceTable>::const_iterator
-CustomVectorOps<RecordT,SourceTable>::find(RecordId id) const {
-    // Iterator adaptor that makes a SourceVector iterator work like an iterator over IDs.
-    typedef boost::transform_iterator<ExtractId,const_iterator> SearchIter;
-    // Use binary search for log n search; requires sorted table.
-    SearchIter i = std::lower_bound(SearchIter(self().begin()), SearchIter(self().end()), id);
-    if (*i == id) return self().end();
-    return i.base();
-}
-
 template class VectorT<SourceRecord>;
 template class VectorT<SourceRecord const>;
-template class CustomVectorOps<SourceRecord,SourceTable>;
-template class CustomVectorOps<SourceRecord const,SourceTable>;
+template class SourceVectorT<SourceRecord>;
+template class SourceVectorT<SourceRecord const>;
 
 }}} // namespace lsst::afw::table

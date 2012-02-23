@@ -1,18 +1,21 @@
 %{
 #include "lsst/afw/table/Vector.h"
+#include "lsst/afw/table/Source.h"
 %}
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename RecordT, typename TableT>
+template <typename RecordT>
 class VectorT {
 public:
 
-    PTR(TableT) getTable() const;
+    typedef typename RecordT::Table Table;
+
+    PTR(Table) getTable() const;
 
     Schema getSchema() const;
 
-    explicit VectorT(PTR(TableT) const & table = PTR(TableT)());
+    explicit VectorT(PTR(Table) const & table = PTR(Table)());
 
     explicit VectorT(Schema const & table);
 
@@ -26,6 +29,22 @@ public:
 
     PTR(RecordT) addNew();
 
+};
+
+template <typename RecordT>
+class SourceVectorT<RecordT> : public VectorT<RecordT> {
+public:
+
+    typedef typename RecordT::Table Table;
+
+    explicit SourceVectorT(PTR(Table) const & table = PTR(Table)());
+
+    explicit SourceVectorT(Schema const & table);
+
+    SourceVectorT(SourceVectorT const & other);
+
+    bool isSorted() const;
+    void sort();
 };
 
 %extend VectorT {
@@ -83,19 +102,17 @@ public:
     %}
 }
 
-%template (BaseVector) VectorT<BaseRecord,BaseTable>;
-
-%extend VectorT<lsst::afw::table::SourceRecord,lsst::afw::table::SourceTable> {
-    bool isSorted() const { return self->isSorted(); }
-    void sort() { return self->sort(); }
-    bool hasUniqueIds() const { return self->hasUniqueIds(); }
-    PTR(SourceRecord) find(RecordId id) {
+%extend SourceVectorT {
+    PTR(RecordT) find(RecordId id) {
         return self->find(id);
     }
 }
 
-%template (SourceVector) VectorT<SourceRecord,SourceTable>;
+%template (BaseVector) VectorT<BaseRecord>;
+%template (SourceVectorBase) VectorT<SourceRecord>;
+%template (SourceVector) SourceVectorT<SourceRecord>;
 
-typedef VectorT<BaseRecord,BaseTable> BaseVector;
-typedef VectorT<SourceRecord,SourceTable> SourceVector;
+typedef VectorT<BaseRecord> BaseVector;
+typedef SourceVectorT<SourceRecord> SourceVector;
+
 }}} // namespace lsst::afw::table

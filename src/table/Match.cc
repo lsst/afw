@@ -107,7 +107,7 @@ size_t makeRecordPositions(
 } // <anonymous>
 
 
-AngularBaseMatchVector matchRaDec(
+BaseMatchVector matchRaDec(
     BaseVector const & set1, Key<Coord> const & key1,
     BaseVector const & set2, Key<Coord> const & key2,
     geom::Angle radius, bool closest
@@ -120,7 +120,7 @@ AngularBaseMatchVector matchRaDec(
                           "match radius out of range (0 to 45 degrees)");
     }
     if (set1.size() == 0 || set2.size() == 0) {
-        return AngularBaseMatchVector();
+        return BaseMatchVector();
     }
     // setup match parameters
     double const d2Limit = radius.toUnitSphereDistanceSquared();
@@ -133,7 +133,7 @@ AngularBaseMatchVector matchRaDec(
     len1 = makeRecordPositions(set1, key1, pos1.get());
     len2 = makeRecordPositions(set2, key2, pos2.get());
     
-    AngularBaseMatchVector matches;
+    BaseMatchVector matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double minDec = pos1[i].dec - radius.asRadians();
         while (start < len2 && pos2[start].dec < minDec) { ++start; }
@@ -156,37 +156,29 @@ AngularBaseMatchVector matchRaDec(
                     found = true;
                 } else {
                     matches.push_back(
-                        AngularBaseMatch(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
+                        BaseMatch(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
                     );
                 }
             }
         }
         if (closest && found) {
             matches.push_back(
-                AngularBaseMatch(pos1[i].src, pos2[closestIndex].src, geom::Angle::fromUnitSphereDistanceSquared(d2Include))
+                BaseMatch(pos1[i].src, pos2[closestIndex].src, geom::Angle::fromUnitSphereDistanceSquared(d2Include))
             );
         }
     }
     return matches;
 }
 
-
-/** Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a set,
-  * and d, the distance between s1 and s2, is at most @a radius. The
-  * match is performed in ra, dec space.
-  *
-  * @param[in] set          the set of sources to self-match
-  * @param[in] radius       match radius
-  * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
-  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
-  */
-AngularBaseMatchVector matchRaDec(BaseVector const &set, Key<Coord> const & key, geom::Angle radius, bool symmetric) {
+BaseMatchVector matchRaDec(
+    BaseVector const &set, Key<Coord> const & key, geom::Angle radius, bool symmetric
+) {
     if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
         throw LSST_EXCEPT(pex::exceptions::RangeErrorException,
                           "match radius out of range (0 to 45 degrees)");
     }
     if (set.size() == 0) {
-        return AngularBaseMatchVector();
+        return BaseMatchVector();
     }
     // setup match parameters
     double const d2Limit = radius.toUnitSphereDistanceSquared();
@@ -196,7 +188,7 @@ AngularBaseMatchVector matchRaDec(BaseVector const &set, Key<Coord> const & key,
     boost::scoped_array<RecordPos> pos(new RecordPos[len]);
     len = makeRecordPositions(set, key, pos.get());
 
-    AngularBaseMatchVector matches;
+    BaseMatchVector matches;
     for (size_t i = 0; i < len; ++i) {
         double maxDec = pos[i].dec + radius.asRadians();
         for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
@@ -206,9 +198,9 @@ AngularBaseMatchVector matchRaDec(BaseVector const &set, Key<Coord> const & key,
             double d2 = dx*dx + dy*dy + dz*dz;
             if (d2 < d2Limit) {
                 geom::Angle d = geom::Angle::fromUnitSphereDistanceSquared(d2);
-                matches.push_back(AngularBaseMatch(pos[i].src, pos[j].src, d));
+                matches.push_back(BaseMatch(pos[i].src, pos[j].src, d));
                 if (symmetric) {
-                    matches.push_back(AngularBaseMatch(pos[j].src, pos[i].src, d));
+                    matches.push_back(BaseMatch(pos[j].src, pos[i].src, d));
                 }
             }
         }
@@ -217,19 +209,9 @@ AngularBaseMatchVector matchRaDec(BaseVector const &set, Key<Coord> const & key,
 }
 
 
-/** Compute all tuples (s1,s2,d) where s1 belings to @a set1, s2 belongs to @a set2 and
-  * d, the distance between s1 and s2, in pixels, is at most @a radius. If set1 and
-  * set2 are identical, then this call is equivalent to @c matchXy(set1,radius,true).
-  * The match is performed in pixel space (2d cartesian).
-  *
-  * @param[in] set1     first set of sources
-  * @param[in] set2     second set of sources
-  * @param[in] radius   match radius (pixels)
-  * @param[in] closest  if true then just return the closest match
-  */
-CartesianBaseMatchVector matchXy(BaseVector const &set1, Key< Point<double> > const & key1,
-                                 BaseVector const &set2, Key< Point<double> > const & key2,
-                                 double radius, bool closest) {
+BaseMatchVector matchXy(BaseVector const &set1, Key< Point<double> > const & key1,
+                        BaseVector const &set2, Key< Point<double> > const & key2,
+                        double radius, bool closest) {
     if (&set1 == &set2) {
         return matchXy(set1, key1, radius);
     }
@@ -258,7 +240,7 @@ CartesianBaseMatchVector matchXy(BaseVector const &set1, Key< Point<double> > co
     std::sort(pos1.get(), pos1.get() + len1, CmpRecordPtr(yKey1));
     std::sort(pos2.get(), pos2.get() + len2, CmpRecordPtr(yKey2));
 
-    CartesianBaseMatchVector matches;
+    BaseMatchVector matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double y = pos1[i]->get(yKey1);
         double minY = y - radius;
@@ -282,28 +264,20 @@ CartesianBaseMatchVector matchXy(BaseVector const &set1, Key< Point<double> > co
                     closestIndex = j;
                     found = true;
                 } else {
-                    matches.push_back(CartesianBaseMatch(pos1[i], pos2[j], std::sqrt(d2)));
+                    matches.push_back(BaseMatch(pos1[i], pos2[j], std::sqrt(d2)));
                 }
             }
         }
         if (closest && found) {
-            matches.push_back(CartesianBaseMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
+            matches.push_back(BaseMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
         }
     }
     return matches;
 }
 
-
-/** Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a set,
-  * and d, the distance between s1 and s2, in pixels, is at most @a radius. The
-  * match is performed in pixel space (2d cartesian).
-  *
-  * @param[in] set          the set of sources to self-match
-  * @param[in] radius       match radius (pixels)
-  * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
-  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
-  */
-CartesianBaseMatchVector matchXy(BaseVector const & set, Key< Point<double> > const & key, double radius, bool symmetric) {
+BaseMatchVector matchXy(
+    BaseVector const & set, Key< Point<double> > const & key, double radius, bool symmetric
+) {
     // setup match parameters
     double const r2 = radius*radius;
 
@@ -320,7 +294,7 @@ CartesianBaseMatchVector matchXy(BaseVector const & set, Key< Point<double> > co
 
     std::sort(pos.get(), pos.get() + len, CmpRecordPtr(yKey));
 
-    CartesianBaseMatchVector matches;
+    BaseMatchVector matches;
     for (size_t i = 0; i < len; ++i) {
         double x = pos[i]->get(xKey);
         double y = pos[i]->get(yKey);
@@ -332,14 +306,59 @@ CartesianBaseMatchVector matchXy(BaseVector const & set, Key< Point<double> > co
             double d2 = dx*dx + dy*dy;
             if (d2 < r2) {
                 double d = std::sqrt(d2);
-                matches.push_back(CartesianBaseMatch(pos[i], pos[j], d));
+                matches.push_back(BaseMatch(pos[i], pos[j], d));
                 if (symmetric) {
-                    matches.push_back(CartesianBaseMatch(pos[j], pos[i], d));
+                    matches.push_back(BaseMatch(pos[j], pos[i], d));
                 }
             }
         }
     }
     return matches;
+}
+
+BaseVector packMatches(
+    BaseMatchVector const & matches,
+    Key<RecordId> const & idKey1,
+    Key<RecordId> const & idKey2
+) {
+    Schema schema;
+    Key<RecordId> outKey1 = schema.addField<RecordId>("first", "ID for first source record in match.");
+    Key<RecordId> outKey2 = schema.addField<RecordId>("second", "ID for second source record in match.");
+    Key<double> keyD = schema.addField<double>("distance", "Distance between matches sources.");
+    BaseVector result(schema);
+    result.getTable()->preallocate(matches.size());
+    result.reserve(matches.size());
+    for (BaseMatchVector::const_iterator i = matches.begin(); i != matches.end(); ++i) {
+        PTR(BaseRecord) record = result.addNew();
+        record->set(outKey1, i->first->get(idKey1));
+        record->set(outKey2, i->second->get(idKey2));
+        record->set(keyD, i->distance);
+    }
+    return result;
+}
+
+BaseMatchVector unpackMatches(
+    BaseVector const & matches, 
+    BaseVector const & first, Key<RecordId> const & idKey1,
+    BaseVector const & second, Key<RecordId> const & idKey2
+) {
+    Key<RecordId> inKey1 = matches.getSchema()["first"];
+    Key<RecordId> inKey2 = matches.getSchema()["second"];
+    Key<double> keyD = matches.getSchema()["distance"];
+    if (!first.isSorted(idKey1) || !second.isSorted(idKey2)) 
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterException,
+            "Vectors passed to unpackMatches must be sorted."
+        );
+    BaseMatchVector result;
+    result.resize(matches.size());
+    BaseMatchVector::iterator j = result.begin();
+    for (BaseVector::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
+        j->first = first.find(i->get(inKey1), idKey1);
+        j->second = second.find(i->get(inKey2), idKey2);
+        j->distance = i->get(keyD);
+    }
+    return result;
 }
 
 }}} // namespace lsst::afw::table

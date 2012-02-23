@@ -37,11 +37,7 @@ typedef lsst::afw::coord::IcrsCoord IcrsCoord;
 typedef lsst::afw::geom::Angle Angle;
 //@}
 
-template <
-    typename RecordT,
-    typename TableT = typename RecordT::Table
-    >
-class VectorT;
+template <typename RecordT> class VectorT;
 
 }}} // namespace lsst::afw::table
 

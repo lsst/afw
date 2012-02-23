@@ -23,14 +23,21 @@
 
 %{
 #include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/Match.h"
 #include "lsst/afw/table/SourceMatch.h"
 %}
 
+%include "lsst/afw/table/Match.h"
 %include "lsst/afw/table/SourceMatch.h"
 
-%template(SourceMatchVector) std::vector<lsst::afw::table::SourceMatch>;
+%template(BaseMatch) lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord>;
+%template(BaseMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord> >;
 
-%extend lsst::afw::table::SourceMatch {
+%template(SourceMatch) lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord>;
+%template(SourceMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord> >;
+
+
+%extend lsst::afw::table::Match {
     %pythoncode {
     def __repr__(self):
         return "SourceMatch(%s,\n            %s,\n            %g)" % \
@@ -44,7 +51,7 @@
             self.distance)
 
     def __getitem__(self, i):
-        """Treat a SourceMatch as a tuple of length 3:
+        """Treat a Match as a tuple of length 3:
         (first, second, distance)"""
         if i > 2 or i < -3:
             raise IndexError(i)
@@ -58,7 +65,7 @@
             return self.distance
 
     def __setitem__(self, i, val):
-        """Treat a SourceMatch as a tuple of length 3:
+        """Treat a Match as a tuple of length 3:
         (first, second, distance)"""
         if i > 2 or i < -3:
             raise IndexError(i)

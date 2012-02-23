@@ -37,10 +37,10 @@ public:
     typedef BaseTable Table;
 
     /// Template of VectorT used to hold records of this type.
-    typedef VectorT<BaseRecord,Table> Vector;
+    typedef VectorT<BaseRecord> Vector;
 
     /// Template of VectorT used to hold const records of this type.
-    typedef VectorT<BaseRecord const,Table> ConstVector;
+    typedef VectorT<BaseRecord const> ConstVector;
 
     /// @brief Return the Schema that holds this record's fields and keys.
     Schema getSchema() const { return _table->getSchema(); }

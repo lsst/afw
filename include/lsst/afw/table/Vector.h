@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "boost/iterator/iterator_adaptor.hpp"
+#include "boost/iterator/transform_iterator.hpp"
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
@@ -16,16 +17,6 @@
 #include "lsst/afw/table/io/FitsReader.h"
 
 namespace lsst { namespace afw { namespace table {
-
-/**
- *  @brief An empty base class that VectorT will inherit from.
- *
- *  This class can be specialized to inject extra functionality into the VectorT template
- *  for tables of that type.  See the SourceTable specialization for an example.
- *
- *  CustomVectorOps is friended by VectorT, so it can access the latters Internal vector.
- */
-template <typename RecordT, typename TableT> class CustomVectorOps {};
 
 /**
  *  @brief Iterator class for VectorT.
@@ -104,13 +95,13 @@ private:
  *  It is also considerably simpler, because it doesn't deal with iterator ranges or the distinction
  *  between references and shared_ptrs to records.
  */
-template <typename RecordT, typename TableT>
-class VectorT : public CustomVectorOps<RecordT,TableT> {
+template <typename RecordT>
+class VectorT {
     typedef std::vector<PTR(RecordT)> Internal;
 public:
 
     typedef RecordT Record;
-    typedef TableT Table;
+    typedef typename Record::Table Table;
 
     typedef RecordT value_type;
     typedef RecordT & reference;
@@ -121,7 +112,7 @@ public:
     typedef VectorIterator<typename Internal::const_iterator> const_iterator;
 
     /// @brief Return the table associated with the vector.
-    PTR(TableT) getTable() const { return _table; }
+    PTR(Table) getTable() const { return _table; }
 
     /// @brief Return the schema associated with the vector's table.
     Schema getSchema() const { return _table->getSchema(); }
@@ -132,10 +123,10 @@ public:
      *  A vector with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit VectorT(PTR(TableT) const & table = PTR(TableT)()) : _table(table), _internal() {}
+    explicit VectorT(PTR(Table) const & table = PTR(Table)()) : _table(table), _internal() {}
 
-    /// @brief Construct a vector from a schema, creating a table with TableT::make(schema).
-    explicit VectorT(Schema const & schema) : _table(TableT::make(schema)), _internal() {}
+    /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
+    explicit VectorT(Schema const & schema) : _table(Table::make(schema)), _internal() {}
 
     /**
      *  @brief Construct a vector from a table and an iterator range.
@@ -153,7 +144,7 @@ public:
      *  other iterator types, the user must preallocate the table manually.
      */
     template <typename InputIterator>
-    VectorT(PTR(TableT) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    VectorT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
         _table(table), _internal()
     {
         insert(first, last, deep);
@@ -165,11 +156,11 @@ public:
     /**
      *  @brief Shallow copy constructor from a container containing a related record type.
      *
-     *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTableT is
-     *  convertible to TableT.
+     *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTable is
+     *  convertible to Table.
      */
-    template <typename OtherRecordT, typename OtherTableT>
-    VectorT(VectorT<OtherRecordT,OtherTableT> const & other) :
+    template <typename OtherRecordT>
+    VectorT(VectorT<OtherRecordT> const & other) :
         _table(other.getTable()), _internal(other.begin().base(), other.end().base())
     {}
 
@@ -344,9 +335,47 @@ public:
     /// Remove all records from the vector.
     void clear() { _internal.clear(); }
     
-private:
+    /// @brief Return true if the vector is in ascending order according to the given key.
+    template <typename T>
+    bool isSorted(Key<T> const & key) const;
 
-    template <typename RecordU, typename TableU> friend class CustomVectorOps;
+    /**
+     *  @brief Return true if the vector is in ascending order according to the given predicate.
+     *
+     *  cmp(a, b) should return true if record a is less than record b, and false otherwise.
+     */
+    template <typename Compare>
+    bool isSorted(Compare cmp) const;
+    
+    /// @brief Sort the vector in-place by the field with the given key.
+    template <typename T>
+    void sort(Key<T> const & key);
+    
+    /**
+     *  @brief Sort the vector in-place by the field with the given predicate.
+     *
+     *  cmp(a, b) should return true if record a is less than record b, and false otherwise.
+     */
+    template <typename Compare>
+    void sort(Compare cmp);
+
+    //@{
+    /**
+     *  @brief Return an iterator to the record with the given value.
+     *
+     *  @note The vector must be sorted in ascending order according to the given key
+     *        before calling find (i.e. isSorted(key) must be true).
+     *
+     *  Returns end() if the Record cannot be found.
+     */
+    template <typename T>
+    iterator find(typename Field<T>::Value const & value, Key<T> const & key);
+
+    template <typename T>
+    const_iterator find(typename Field<T>::Value const & value, Key<T> const & key) const;
+    //@}
+
+private:
 
     template <typename InputIterator>
     void _insert(
@@ -378,12 +407,105 @@ private:
         }
     }
 
-    PTR(TableT) _table;
+    PTR(Table) _table;
     Internal _internal;
 };
 
-typedef VectorT<BaseRecord,BaseTable> BaseVector;
-typedef VectorT<BaseRecord const,BaseTable> ConstBaseVector;
+namespace detail {
+
+template <typename RecordT, typename T>
+struct KeyComparisonFunctor {
+
+    bool operator()(RecordT const & a, RecordT const & b) const { return a.get(key) < b.get(key); }
+
+    Key<T> key;
+};
+
+template <typename RecordT, typename Adaptee>
+struct ComparisonAdaptor {
+
+    bool operator()(PTR(RecordT) const & a, PTR(RecordT) const & b) const {
+        return adaptee(*a, *b);
+    }
+
+    Adaptee adaptee;
+};
+
+template <typename RecordT, typename T>
+struct KeyExtractionFunctor {
+
+    typedef typename Field<T>::Value result_type;
+
+    result_type operator()(RecordT const & r) const { return r.get(key); }
+
+    Key<T> key;
+};
+
+} // namespace detail
+
+template <typename RecordT>
+template <typename Compare>
+bool VectorT<RecordT>::isSorted(Compare cmp) const {
+    detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
+    if (empty()) return true;
+    const_iterator last = this->begin();
+    const_iterator i = last; ++i;
+    for (; i != this->end(); ++i) {
+        if (f(i, last)) return false;
+        last = i;
+    }
+    return true;
+}
+
+template <typename RecordT>
+template <typename Compare>
+void VectorT<RecordT>::sort(Compare cmp) {
+    detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
+    std::sort(_internal.begin(), _internal.end(), f);
+}
+
+template <typename RecordT>
+template <typename T>
+bool VectorT<RecordT>::isSorted(Key<T> const & key) const {
+    detail::KeyComparisonFunctor<RecordT,T> f = { key };
+    return isSorted(f);
+}
+
+template <typename RecordT>
+template <typename T>
+void VectorT<RecordT>::sort(Key<T> const & key) {
+    detail::KeyComparisonFunctor<RecordT,T> f = { key };
+    return sort(f);
+}
+
+template <typename RecordT>
+template <typename T>
+typename VectorT<RecordT>::iterator
+VectorT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a VectorT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
+    // Use binary search for log n search; requires sorted table.
+    SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
+    if (*i != value) return end();
+    return i.base();
+}
+
+template <typename RecordT>
+template <typename T>
+typename VectorT<RecordT>::const_iterator
+VectorT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) const {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a VectorT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
+    // Use binary search for log n search; requires sorted table.
+    SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
+    if (*i != value) return end();
+    return i.base();
+}
+
+typedef VectorT<BaseRecord> BaseVector;
+typedef VectorT<BaseRecord const> ConstBaseVector;
 
 }}} // namespace lsst::afw::table
 
