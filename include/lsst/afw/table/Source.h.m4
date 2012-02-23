@@ -365,8 +365,6 @@ private:
         Schema schema;
         Key<RecordId> id;
         Key<RecordId> parent;
-        Key<float> sky;
-        Key<float> skyErr;
         Key<Coord> coord;
 
         MinimalSchema();
