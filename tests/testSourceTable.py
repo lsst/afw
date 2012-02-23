@@ -121,6 +121,8 @@ class SourceVectorTestCase(unittest.TestCase):
         self.assertFalse(self.vector.isSorted())
         self.vector.sort()
         self.assert_(self.vector.isSorted())
+        r = self.vector.find(2)
+        self.assertEqual(r["id"], 2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

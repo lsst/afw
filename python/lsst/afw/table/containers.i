@@ -31,22 +31,6 @@ public:
 
 };
 
-template <typename RecordT>
-class SourceVectorT<RecordT> : public VectorT<RecordT> {
-public:
-
-    typedef typename RecordT::Table Table;
-
-    explicit SourceVectorT(PTR(Table) const & table = PTR(Table)());
-
-    explicit SourceVectorT(Schema const & table);
-
-    SourceVectorT(SourceVectorT const & other);
-
-    bool isSorted() const;
-    void sort();
-};
-
 %extend VectorT {
     std::size_t __len__() const { return self->size(); }
     PTR(RecordT) __getitem__(std::ptrdiff_t i) const {
@@ -102,8 +86,27 @@ public:
     %}
 }
 
-%extend SourceVectorT {
-    PTR(RecordT) find(RecordId id) {
+template <typename RecordT>
+class SourceVectorT<RecordT> : public VectorT<RecordT> {
+public:
+
+    typedef typename RecordT::Table Table;
+
+    explicit SourceVectorT(PTR(Table) const & table = PTR(Table)());
+
+    explicit SourceVectorT(Schema const & table);
+
+    SourceVectorT(SourceVectorT const & other);
+
+    bool isSorted() const;
+    void sort();
+};
+
+// For some reason, SWIG won't extend the template; it's only happy if
+// we extend the instantiation (but compare to %extend VectorT, above)
+// ...mystifying.  Good thing we only have one instantiation.
+%extend SourceVectorT<SourceRecord> {
+    PTR(SourceRecord) find(RecordId id) {
         return self->find(id);
     }
 }
