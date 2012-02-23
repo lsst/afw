@@ -30,13 +30,6 @@
 %include "lsst/afw/table/Match.h"
 %include "lsst/afw/table/SourceMatch.h"
 
-%template(BaseMatch) lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord>;
-%template(BaseMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord> >;
-
-%template(SourceMatch) lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord>;
-%template(SourceMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord> >;
-
-
 %extend lsst::afw::table::Match {
     %pythoncode {
     def __repr__(self):
@@ -91,3 +84,10 @@
         self.__init__(*state)
     }
 }
+
+%template(BaseMatch) lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord>;
+%template(BaseMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord> >;
+
+%template(SourceMatch) lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord>;
+%template(SourceMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord> >;
+
