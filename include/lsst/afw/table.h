@@ -68,7 +68,7 @@ namespace lsst { namespace afw { namespace table {
  *  all of the records it is associated with, however, or provide ways to iterate over records.
  *  Instead, we have a separate concept of a container class, which holds a single table pointer
  *  and multiple records, and is usually just a wrapper around an STL container of record shared_ptrs.
- *  The only container class provided by the library at present is VectorT, which is a wrapper around
+ *  The only container class provided by the library at present is CatalogT, which is a wrapper around
  *  std::vector.
  *
  *  @section afwTableMemory Memory and Copy Semantics

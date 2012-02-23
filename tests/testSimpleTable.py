@@ -159,49 +159,49 @@ class SimpleTableTestCase(unittest.TestCase):
         k4 = schema.addField("f4", type="Array<F4>", size=2)
         k5 = schema.addField("f5", type="Array<F8>", size=3)
         k6 = schema.addField("f6", type="Angle")
-        vector = lsst.afw.table.BaseVector(schema)
-        vector.addNew()
-        vector.addNew()
-        vector[0].set(k1, 2)
-        vector[0].set(k2, 0.5)
-        vector[0].set(k3, 0.25)
-        vector[0].set(kb1, False)
-        vector[0].set(kb2, True)
-        vector[0].set(kb3, False)
-        vector[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
-        vector[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
-        vector[0].set(k6, lsst.afw.geom.Angle(0.25))
-        vector[1].set(k1, 3)
-        vector[1].set(k2, 2.5)
-        vector[1].set(k3, 0.75)
-        vector[1].set(kb1, True)
-        vector[1].set(kb2, False)
-        vector[1].set(kb3, True)
-        vector[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
-        vector[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
-        vector[1].set(k6, lsst.afw.geom.Angle(0.15))
-        columns = vector.getColumnView()
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        catalog.addNew()
+        catalog.addNew()
+        catalog[0].set(k1, 2)
+        catalog[0].set(k2, 0.5)
+        catalog[0].set(k3, 0.25)
+        catalog[0].set(kb1, False)
+        catalog[0].set(kb2, True)
+        catalog[0].set(kb3, False)
+        catalog[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
+        catalog[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
+        catalog[0].set(k6, lsst.afw.geom.Angle(0.25))
+        catalog[1].set(k1, 3)
+        catalog[1].set(k2, 2.5)
+        catalog[1].set(k3, 0.75)
+        catalog[1].set(kb1, True)
+        catalog[1].set(kb2, False)
+        catalog[1].set(kb3, True)
+        catalog[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
+        catalog[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
+        catalog[1].set(k6, lsst.afw.geom.Angle(0.15))
+        columns = catalog.getColumnView()
         for key in [k1, k2, k3, kb1, kb2, kb3]:
             array = columns[key]
             for i in [0, 1]:
-                self.assertEqual(array[i], vector[i].get(key))
+                self.assertEqual(array[i], catalog[i].get(key))
         for key in [k4, k5]:
             array = columns[key]
             for i in [0, 1]:
-                self.assert_(numpy.all(array[i] == vector[i].get(key)))
+                self.assert_(numpy.all(array[i] == catalog[i].get(key)))
         for key in [k6]:
             array = columns[key]
             for i in [0, 1]:
-                self.assertEqual(lsst.afw.geom.Angle(array[i]), vector[i].get(key))
+                self.assertEqual(lsst.afw.geom.Angle(array[i]), catalog[i].get(key))
 
     def testIteration(self):
         schema = lsst.afw.table.Schema()
         k = schema.addField("a", type=int)
-        vector = lsst.afw.table.BaseVector(schema)
+        catalog = lsst.afw.table.BaseCatalog(schema)
         for n in range(5):
-            record = vector.addNew()
+            record = catalog.addNew()
             record[k] = n
-        for n, r in enumerate(vector):
+        for n, r in enumerate(catalog):
             self.assertEqual(n, r[k])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

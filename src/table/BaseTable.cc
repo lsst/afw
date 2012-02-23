@@ -4,7 +4,7 @@
 
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
-#include "lsst/afw/table/Vector.h"
+#include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/detail/Access.h"
 
@@ -223,9 +223,9 @@ void BaseTable::_destroy(BaseRecord & record) {
  */
 int BaseTable::nRecordsPerBlock = 100;
 
-// =============== BaseVector instantiation =================================================================
+// =============== BaseCatalog instantiation =================================================================
 
-template class VectorT<BaseRecord>;
-template class VectorT<BaseRecord const>;
+template class CatalogT<BaseRecord>;
+template class CatalogT<BaseRecord const>;
 
 }}} // namespace lsst::afw::table

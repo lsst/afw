@@ -17,10 +17,10 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  "AFW_TABLE" with a value other than "BASE", FitsReader::make consults a registry of
  *  and constructs the subclass corresponding to that key.  This means the type of
  *  records/tables loaded correctly depends on the file itself, rather than the caller.
- *  For instance, if you load a FITS table corresponding to a saved SourceVector using
- *  BaseVector::readFits, you'll actually get a BaseVector whose record are actually
+ *  For instance, if you load a FITS table corresponding to a saved SourceCatalog using
+ *  BaseCatalog::readFits, you'll actually get a BaseCatalog whose record are actually
  *  SourceRecords and whose table is actually a SourceTable.  On the other hand, if you
- *  try to load a non-Source FITS table into a SourceVector, you'll get an exception
+ *  try to load a non-Source FITS table into a SourceCatalog, you'll get an exception
  *  when it tries to dynamic_cast the table to a SourceTable.
  */
 class FitsReader : public Reader {

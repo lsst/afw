@@ -27,7 +27,7 @@ public:
     /**
      *  @brief Load an on-disk table into a container.
      *
-     *  The container must be a specialized table container (like VectorT):
+     *  The container must be a specialized table container (like CatalogT):
      *   - It must be constructable from a single table shared_ptr argument.
      *   - It must have an insert member function that takes an position
      *     iterator and a record shared_ptr.

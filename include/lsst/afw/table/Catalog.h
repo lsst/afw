@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_Vector_h_INCLUDED
-#define AFW_TABLE_Vector_h_INCLUDED
+#ifndef AFW_TABLE_Catalog_h_INCLUDED
+#define AFW_TABLE_Catalog_h_INCLUDED
 
 #include <vector>
 
@@ -19,39 +19,39 @@
 namespace lsst { namespace afw { namespace table {
 
 /**
- *  @brief Iterator class for VectorT.
+ *  @brief Iterator class for CatalogT.
  *
- *  Iterators dereference to record references or const references, even though the VectorT container
+ *  Iterators dereference to record references or const references, even though the CatalogT container
  *  is based on a vector of shared_ptr internally.  This is usually very convenient (and is one of
  *  the reasons for having a custom container class in the first place).
  *
  *  Sometimes, however, we'd like to get a shared_ptr from an iterator (especially because records
- *  are noncopyable).  With that in mind, VectorIterator is implicitly convertible to the shared_ptr
+ *  are noncopyable).  With that in mind, CatalogIterator is implicitly convertible to the shared_ptr
  *  type it holds internally, and can also be assigned a shared_ptr to set the pointer in the 
  *  underlying container.  This conversion makes sense from the perspective that both iterators
  *  and smart pointers mimic the interface of pointers and provide the same interface to get at
  *  the underlying record.
  */
 template <typename BaseT>
-class VectorIterator
-    : public boost::iterator_adaptor<VectorIterator<BaseT>,BaseT,typename BaseT::value_type::element_type>
+class CatalogIterator
+    : public boost::iterator_adaptor<CatalogIterator<BaseT>,BaseT,typename BaseT::value_type::element_type>
 {
 public:
 
-    VectorIterator() {}
+    CatalogIterator() {}
 
     template <typename OtherBaseT>
-    VectorIterator(VectorIterator<OtherBaseT> const & other) :
-        VectorIterator::iterator_adaptor_(other.base())
+    CatalogIterator(CatalogIterator<OtherBaseT> const & other) :
+        CatalogIterator::iterator_adaptor_(other.base())
     {}
 
-    explicit VectorIterator(BaseT const & base) : VectorIterator::iterator_adaptor_(base) {}
+    explicit CatalogIterator(BaseT const & base) : CatalogIterator::iterator_adaptor_(base) {}
 
     template <typename RecordT>
     operator PTR(RecordT) () const { return *this->base(); }
 
     template <typename RecordT>
-    VectorIterator & operator=(PTR(RecordT) const & other) const {
+    CatalogIterator & operator=(PTR(RecordT) const & other) const {
         if (other->getTable() != dereference().getTable()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LogicErrorException,
@@ -70,33 +70,33 @@ private:
 /**
  *  @brief A custom container class for records, based on std::vector.
  *
- *  VectorT wraps a std::vector<PTR(RecordT)> in an interface that looks more like a std::vector<RecordT>;
+ *  CatalogT wraps a std::vector<PTR(RecordT)> in an interface that looks more like a std::vector<RecordT>;
  *  its iterators and accessors return references or const references, rather than pointers, making them
  *  easier to use.  It also holds a table, and requires that all records in the container be allocated
  *  by that table (this is sufficient to also ensure that all records have the same schema).  Because 
- *  a VectorT is holds shared_ptrs internally, many of its operations can be either shallow or deep,
- *  with new deep copies allocated by the vector's table object.  New records can be also be inserted
+ *  a CatalogT is holds shared_ptrs internally, many of its operations can be either shallow or deep,
+ *  with new deep copies allocated by the catalog's table object.  New records can be also be inserted
  *  by pointer (shallow) or by value (deep).
  *
  *  In the future, we may have additional containers (a Set class that sorts by ID, for instance), and
- *  most of the tables library is designed to work with any container class that, like VectorT, has
+ *  most of the tables library is designed to work with any container class that, like CatalogT, has
  *  a getTable() member function and yields references rather than pointers to records.
  *
  *  The constness of records is determined by the constness of the first template
- *  parameter to VectorT; a container instance is always either const or non-const
+ *  parameter to CatalogT; a container instance is always either const or non-const
  *  in that respect (like smart pointers).  Also like smart pointers, const member
  *  functions (and by extension, const_iterators) do not allow the underlying 
  *  pointers to be changed, while non-const member functions and iterators do.
  *
- *  VectorT does not permit empty (null) pointers as elements.  As a result, VectorT has no resize
+ *  CatalogT does not permit empty (null) pointers as elements.  As a result, CatalogT has no resize
  *  member function.
  *
- *  VectorT has a very different interface in Python; it mimics Python's list instead of C++'s std::vector.
+ *  CatalogT has a very different interface in Python; it mimics Python's list instead of C++'s std::vector.
  *  It is also considerably simpler, because it doesn't deal with iterator ranges or the distinction
  *  between references and shared_ptrs to records.
  */
 template <typename RecordT>
-class VectorT {
+class CatalogT {
     typedef std::vector<PTR(RecordT)> Internal;
 public:
 
@@ -108,35 +108,35 @@ public:
     typedef PTR(RecordT) pointer;
     typedef typename Internal::size_type size_type;
     typedef typename Internal::difference_type difference_type;
-    typedef VectorIterator<typename Internal::iterator> iterator;
-    typedef VectorIterator<typename Internal::const_iterator> const_iterator;
+    typedef CatalogIterator<typename Internal::iterator> iterator;
+    typedef CatalogIterator<typename Internal::const_iterator> const_iterator;
 
-    /// @brief Return the table associated with the vector.
+    /// @brief Return the table associated with the catalog.
     PTR(Table) getTable() const { return _table; }
 
-    /// @brief Return the schema associated with the vector's table.
+    /// @brief Return the schema associated with the catalog's table.
     Schema getSchema() const { return _table->getSchema(); }
 
     /**
-     *  @brief Construct a vector from a table (or nothing).
+     *  @brief Construct a catalog from a table (or nothing).
      *
-     *  A vector with no table is considered invalid; a valid table must be assigned to it
+     *  A catalog with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit VectorT(PTR(Table) const & table = PTR(Table)()) : _table(table), _internal() {}
+    explicit CatalogT(PTR(Table) const & table = PTR(Table)()) : _table(table), _internal() {}
 
-    /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
-    explicit VectorT(Schema const & schema) : _table(Table::make(schema)), _internal() {}
+    /// @brief Construct a catalog from a schema, creating a table with Table::make(schema).
+    explicit CatalogT(Schema const & schema) : _table(Table::make(schema)), _internal() {}
 
     /**
-     *  @brief Construct a vector from a table and an iterator range.
+     *  @brief Construct a catalog from a table and an iterator range.
      *
      *  If deep is true, new records will be created using table->copyRecord before being inserted.
      *  If deep is false, records will be not be copied, but they must already be associated with
      *  the given table.  The table itself is never deep-copied.
      *
      *  The iterator must dereference to a record reference or const reference rather than a pointer,
-     *  but should be implicitly convertible to a record pointer as well (see VectorIterator).
+     *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      *
      *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
      *  is true, table->preallocate will be used to ensure that the resulting records are
@@ -144,14 +144,14 @@ public:
      *  other iterator types, the user must preallocate the table manually.
      */
     template <typename InputIterator>
-    VectorT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    CatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
         _table(table), _internal()
     {
         insert(first, last, deep);
     }
 
     /// Shallow copy constructor.
-    VectorT(VectorT const & other) : _table(other._table), _internal(other._internal) {}
+    CatalogT(CatalogT const & other) : _table(other._table), _internal(other._internal) {}
 
     /**
      *  @brief Shallow copy constructor from a container containing a related record type.
@@ -160,12 +160,12 @@ public:
      *  convertible to Table.
      */
     template <typename OtherRecordT>
-    VectorT(VectorT<OtherRecordT> const & other) :
+    CatalogT(CatalogT<OtherRecordT> const & other) :
         _table(other.getTable()), _internal(other.begin().base(), other.end().base())
     {}
 
     /// Shallow assigment.
-    VectorT & operator=(VectorT const & other) {
+    CatalogT & operator=(CatalogT const & other) {
         if (&other != this) {
             _table = other._table;
             _internal = other._internal;
@@ -179,12 +179,12 @@ public:
     }
 
     /// Read a FITS binary table.
-    static VectorT readFits(std::string const & filename) {
-        return io::FitsReader::apply<VectorT>(filename);
+    static CatalogT readFits(std::string const & filename) {
+        return io::FitsReader::apply<CatalogT>(filename);
     }
 
     /**
-     *  @brief Return a ColumnView of this vector's records.
+     *  @brief Return a ColumnView of this catalog's records.
      *
      *  Will throw RuntimeErrorException if records are not contiguous.
      */
@@ -194,7 +194,7 @@ public:
     /**
      *  Iterator access.
      *
-     *  @sa VectorIterator
+     *  @sa CatalogIterator
      */
     iterator begin() { return iterator(_internal.begin()); }
     iterator end() { return iterator(_internal.end()); }
@@ -202,19 +202,19 @@ public:
     const_iterator end() const { return const_iterator(_internal.end()); }
     //@}
 
-    /// Return true if the vector has no records.
+    /// Return true if the catalog has no records.
     bool empty() const { return _internal.empty(); }
 
-    /// Return the number of elements in the vector.
+    /// Return the number of elements in the catalog.
     size_type size() const { return _internal.size(); }
 
-    /// Return the maximum number of elements allowed in a vector.
+    /// Return the maximum number of elements allowed in a catalog.
     size_type max_size() const { return _internal.max_size(); }
 
-    /// Return the capacity of the internal vector; this is unrelated to the space available in the table.
+    /// Return the capacity of the internal catalog; this is unrelated to the space available in the table.
     size_type capacity() const { return _internal.capacity(); }
 
-    /// Increase the capacity of the internal vector to the given size.  This does not affect the table.
+    /// Increase the capacity of the internal catalog to the given size.  This does not affect the table.
     void reserve(size_type n) { _internal.reserve(n); }
 
     /// Return the record at index i.
@@ -254,13 +254,13 @@ public:
         insert(end(), first, last, deep);
     }
 
-    /// @brief Add a copy of the given record to the end of the vector.
+    /// @brief Add a copy of the given record to the end of the catalog.
     void push_back(Record const & r) {
         PTR(RecordT) p = _table->copyRecord(r);
         _internal.push_back(p);
     }
 
-    /// @brief Add the given record to the end of the vector without copying.
+    /// @brief Add the given record to the end of the catalog without copying.
     void push_back(PTR(RecordT) const & p) {
         if (p->getTable() != _table) {
             throw LSST_EXCEPT(
@@ -271,25 +271,25 @@ public:
         _internal.push_back(p);
     }
 
-    /// @brief Create a new record, add it to the end of the vector, and return a pointer to it.
+    /// @brief Create a new record, add it to the end of the catalog, and return a pointer to it.
     PTR(RecordT) addNew() {
         PTR(RecordT) r = _table->makeRecord();
         _internal.push_back(r);
         return r;
     }
 
-    /// @brief Remove the last record in the vector
+    /// @brief Remove the last record in the catalog
     void pop_back() { _internal.pop_back(); }
 
     /**
      *  @brief Insert an iterator range into the table.
      *
      *  InputIterator must dereference to a record reference that is convertible to the record type
-     *  held by the vector, and must be implicitly convertible to a shared_ptr to a record.
+     *  held by the catalog, and must be implicitly convertible to a shared_ptr to a record.
      *
-     *  If deep is true, new records will be created by calling copyRecord on the vector's table.
+     *  If deep is true, new records will be created by calling copyRecord on the catalog's table.
      *  If deep is false, the new records will not be copied, but they must have been created
-     *  with the vector's table (not that a table may be shared by multiple vectors).
+     *  with the catalog's table (not that a table may be shared by multiple catalogs).
      *
      *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
      *  is true, table->preallocate will be used to ensure that the resulting records are
@@ -326,33 +326,33 @@ public:
         return iterator(_internal.erase(first.base(), last.base()));
     }
 
-    /// Shallow swap of two vectors.
-    void swap(VectorT & other) {
+    /// Shallow swap of two catalogs.
+    void swap(CatalogT & other) {
         _table.swap(other._table);
         _internal.swap(other._internal);
     }
 
-    /// Remove all records from the vector.
+    /// Remove all records from the catalog.
     void clear() { _internal.clear(); }
     
-    /// @brief Return true if the vector is in ascending order according to the given key.
+    /// @brief Return true if the catalog is in ascending order according to the given key.
     template <typename T>
     bool isSorted(Key<T> const & key) const;
 
     /**
-     *  @brief Return true if the vector is in ascending order according to the given predicate.
+     *  @brief Return true if the catalog is in ascending order according to the given predicate.
      *
      *  cmp(a, b) should return true if record a is less than record b, and false otherwise.
      */
     template <typename Compare>
     bool isSorted(Compare cmp) const;
     
-    /// @brief Sort the vector in-place by the field with the given key.
+    /// @brief Sort the catalog in-place by the field with the given key.
     template <typename T>
     void sort(Key<T> const & key);
     
     /**
-     *  @brief Sort the vector in-place by the field with the given predicate.
+     *  @brief Sort the catalog in-place by the field with the given predicate.
      *
      *  cmp(a, b) should return true if record a is less than record b, and false otherwise.
      */
@@ -363,7 +363,7 @@ public:
     /**
      *  @brief Return an iterator to the record with the given value.
      *
-     *  @note The vector must be sorted in ascending order according to the given key
+     *  @note The catalog must be sorted in ascending order according to the given key
      *        before calling find (i.e. isSorted(key) must be true).
      *
      *  Returns end() if the Record cannot be found.
@@ -445,7 +445,7 @@ struct KeyExtractionFunctor {
 
 template <typename RecordT>
 template <typename Compare>
-bool VectorT<RecordT>::isSorted(Compare cmp) const {
+bool CatalogT<RecordT>::isSorted(Compare cmp) const {
     detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
     if (empty()) return true;
     const_iterator last = this->begin();
@@ -459,31 +459,31 @@ bool VectorT<RecordT>::isSorted(Compare cmp) const {
 
 template <typename RecordT>
 template <typename Compare>
-void VectorT<RecordT>::sort(Compare cmp) {
+void CatalogT<RecordT>::sort(Compare cmp) {
     detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
     std::sort(_internal.begin(), _internal.end(), f);
 }
 
 template <typename RecordT>
 template <typename T>
-bool VectorT<RecordT>::isSorted(Key<T> const & key) const {
+bool CatalogT<RecordT>::isSorted(Key<T> const & key) const {
     detail::KeyComparisonFunctor<RecordT,T> f = { key };
     return isSorted(f);
 }
 
 template <typename RecordT>
 template <typename T>
-void VectorT<RecordT>::sort(Key<T> const & key) {
+void CatalogT<RecordT>::sort(Key<T> const & key) {
     detail::KeyComparisonFunctor<RecordT,T> f = { key };
     return sort(f);
 }
 
 template <typename RecordT>
 template <typename T>
-typename VectorT<RecordT>::iterator
-VectorT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) {
+typename CatalogT<RecordT>::iterator
+CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) {
     detail::KeyExtractionFunctor<RecordT,T> f = { key };
-    // Iterator adaptor that makes a VectorT iterator work like an iterator over field values.
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
     typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
@@ -493,10 +493,10 @@ VectorT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & ke
 
 template <typename RecordT>
 template <typename T>
-typename VectorT<RecordT>::const_iterator
-VectorT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) const {
+typename CatalogT<RecordT>::const_iterator
+CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) const {
     detail::KeyExtractionFunctor<RecordT,T> f = { key };
-    // Iterator adaptor that makes a VectorT iterator work like an iterator over field values.
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
     typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
@@ -504,9 +504,9 @@ VectorT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & ke
     return i.base();
 }
 
-typedef VectorT<BaseRecord> BaseVector;
-typedef VectorT<BaseRecord const> ConstBaseVector;
+typedef CatalogT<BaseRecord> BaseCatalog;
+typedef CatalogT<BaseRecord const> ConstBaseCatalog;
 
 }}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_Vector_h_INCLUDED
+#endif // !AFW_TABLE_Catalog_h_INCLUDED

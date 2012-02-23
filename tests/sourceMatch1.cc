@@ -64,7 +64,7 @@ PTR(afwTable::SourceTable) getGlobalTable() {
 
 // Randomly generate a set of sources that are uniformly distributed across
 // the unit sphere (ra/dec space) and the unit box (x,y space).
-void makeSources(afwTable::SourceVector &set, int n) {
+void makeSources(afwTable::SourceCatalog &set, int n) {
     for (int i = 0; i < n; ++i) {
         PTR(afwTable::SourceRecord) src = set.addNew();
         src->setId(i);
@@ -107,12 +107,12 @@ struct DistXy {
 };
 
 template <typename DistFunctorT>
-std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceVector const &set,
+std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set,
                                          double radius,
                                          DistFunctorT const &distFun) {
     std::vector<afwTable::SourceMatch> matches;
-    for (afwTable::SourceVector::const_iterator i1(set.begin()), e(set.end()); i1 != e; ++i1) {
-        for (afwTable::SourceVector::const_iterator i2(i1); i2 != e; ++i2) {
+    for (afwTable::SourceCatalog::const_iterator i1(set.begin()), e(set.end()); i1 != e; ++i1) {
+        for (afwTable::SourceCatalog::const_iterator i2(i1); i2 != e; ++i2) {
             if (i1 == i2) {
                 continue;
             }
@@ -127,16 +127,16 @@ std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceVector const &set,
 }
 
 template <typename DistFunctorT>
-std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceVector const &set1,
-                                         afwTable::SourceVector const &set2,
+std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set1,
+                                         afwTable::SourceCatalog const &set2,
                                          double radius,
                                          DistFunctorT const &distFun) {
     if (&set1 == &set2) {
         return bruteMatch(set1, radius, distFun);
     }
     std::vector<afwTable::SourceMatch> matches;
-    for (afwTable::SourceVector::const_iterator i1(set1.begin()), e1(set1.end()); i1 != e1; ++i1) {
-        for (afwTable::SourceVector::const_iterator i2(set2.begin()), e2(set2.end()); i2 != e2; ++i2) {
+    for (afwTable::SourceCatalog::const_iterator i1(set1.begin()), e1(set1.end()); i1 != e1; ++i1) {
+        for (afwTable::SourceCatalog::const_iterator i2(set2.begin()), e2(set2.end()); i2 != e2; ++i2) {
             double d = distFun(i1, i2);
             if (d <= radius) {
                 matches.push_back(afwTable::SourceMatch(i1, i2, d));
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     double const M = 8.0; // avg. # of matches
     afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
-    afwTable::SourceVector set1(getGlobalTable()), set2(getGlobalTable());
+    afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
     std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, radius, false);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     double const M = 8.0; // avg. # of matches
     afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
 
-    afwTable::SourceVector set(getGlobalTable());
+    afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
     std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set, radius, true);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistRaDec());
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
     double const M = 8.0; // avg. # of matches
     double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
-    afwTable::SourceVector set1(getGlobalTable()), set2(getGlobalTable());
+    afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
     std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set1, set2, radius, false);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     double const M = 8.0; // avg. # of matches
     double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
 
-    afwTable::SourceVector set(getGlobalTable());
+    afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
     std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set, radius, true);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistXy());
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
 }
 
 
-static void normalizeRaDec(afwTable::SourceVector & ss) {
+static void normalizeRaDec(afwTable::SourceCatalog & ss) {
     for (size_t i=0; i<ss.size(); i++) {
         double r,d;
         r = ss[i].getRa().asRadians();
@@ -256,8 +256,8 @@ static void normalizeRaDec(afwTable::SourceVector & ss) {
 
 BOOST_AUTO_TEST_CASE(matchNearPole) {
 
-    afwTable::SourceVector set1(getGlobalTable());
-    afwTable::SourceVector set2(getGlobalTable());
+    afwTable::SourceCatalog set1(getGlobalTable());
+    afwTable::SourceCatalog set2(getGlobalTable());
 
     // for each source, add a true match right on top, plus one within range
     // and one outside range in each direction.

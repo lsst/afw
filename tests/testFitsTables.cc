@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     KeyTuple<Flux> flux = addFluxFields(schema, "flux", "flux doc");
     KeyTuple<Centroid> centroid = addCentroidFields(schema, "centroid", "centroid doc");
-    SourceVector vector(SourceTable::make(schema));
+    SourceCatalog vector(SourceTable::make(schema));
 
     vector.getTable()->defineModelFlux(flux.meas, flux.err, flux.flag);
     vector.getTable()->defineCentroid(centroid.meas, centroid.err, centroid.flag);
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     vector.writeFits("!testTable.fits");
 
-    SourceVector readVector = SourceVector::readFits("testTable.fits[1]");
+    SourceCatalog readVector = SourceCatalog::readFits("testTable.fits[1]");
     BOOST_CHECK_EQUAL( schema, readVector.getSchema() ); // only checks equality of keys
 
     BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->get<double>("SHEEP"),

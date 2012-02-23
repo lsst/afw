@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "lsst/afw/table/BaseRecord.h"
-#include "lsst/afw/table/Vector.h"
+#include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/geom/Angle.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -88,8 +88,8 @@ typedef std::vector<BaseMatch> BaseMatchVector;
  * @param[in] closest  if true then just return the closest match
  */
 BaseMatchVector matchXy(
-    BaseVector const & v1, Key< Point<double> > const & key1,
-    BaseVector const & v2, Key< Point<double> > const & key2,
+    BaseCatalog const & v1, Key< Point<double> > const & key1,
+    BaseCatalog const & v2, Key< Point<double> > const & key2,
     double dist, bool closest=true
 );
 
@@ -105,7 +105,7 @@ BaseMatchVector matchXy(
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
  */
 BaseMatchVector matchXy(
-    BaseVector const & v, Key< Point<double> > const & key,
+    BaseCatalog const & v, Key< Point<double> > const & key,
     double dist, bool symmetric=true
 );
 
@@ -123,8 +123,8 @@ BaseMatchVector matchXy(
  * @param[in] closest  if true then just return the closest match
  */
 BaseMatchVector matchRaDec(
-    BaseVector const & v1, Key<Coord> const & key1,
-    BaseVector const & v2, Key<Coord> const & key2,
+    BaseCatalog const & v1, Key<Coord> const & key1,
+    BaseCatalog const & v2, Key<Coord> const & key2,
     Angle dist, bool closest=true
 );
 
@@ -140,7 +140,7 @@ BaseMatchVector matchRaDec(
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
  */
 BaseMatchVector matchRaDec(
-    BaseVector const & v, Key<Coord> const & key,
+    BaseCatalog const & v, Key<Coord> const & key,
     Angle dist, bool symmetric=true
 );
 
@@ -154,35 +154,35 @@ BaseMatchVector matchRaDec(
  *  @param[in]  idKey1      Key for the unique ID field in the Record1 schema.
  *  @param[in]  idKey2      Key for the unique ID field in the Record2 schema.
  */
-BaseVector packMatches(
+BaseCatalog packMatches(
     BaseMatchVector const & matches,
     Key<RecordId> const & idKey1,
     Key<RecordId> const & idKey2
 );
 
 /**
- *  @brief Reconstruct a BaseMatchVector from a BaseVector representation of the matches
- *         and a pair of table VectorTs that hold the records themselves.
+ *  @brief Reconstruct a BaseMatchVector from a BaseCatalog representation of the matches
+ *         and a pair of table CatalogTs that hold the records themselves.
  *
- *  @note The table VectorT arguments must be sorted in ascending ID order on input; this will
+ *  @note The table Catalog arguments must be sorted in ascending ID order on input; this will
  *        allow us to use binary search algorithms to find the records referred to by the match
  *        table.
  *
  *  If an ID cannot be found in the given tables, that pointer will be set to null
  *  in the returned match vector.
  *
- *  @param[in]  matches     A BaseTable vector representation, as produced by makeMatchTable.
- *  @param[in]  first       A VectorT containing the records used on the 'first' side of the match,
+ *  @param[in]  matches     A normalized BaseCatalog representation, as produced by packMatches.
+ *  @param[in]  first       A CatalogT containing the records used on the 'first' side of the match,
  *                          sorted by ascending ID.
  *  @param[in]  idKey1      Key for the ID key for the 'first' side of the match.
- *  @param[in]  second      A VectorT containing the records used on the 'second' side of the match,
+ *  @param[in]  second      A CatalogT containing the records used on the 'second' side of the match,
  *                          sorted by ascending ID.  May be the same as first.
  *  @param[in]  idKey2      Key for the ID key for the 'second' side of the match.
  */
 BaseMatchVector unpackMatches(
-    BaseVector const & matches, 
-    BaseVector const & first, Key<RecordId> const & idKey1,
-    BaseVector const & second, Key<RecordId> const & idKey2
+    BaseCatalog const & matches, 
+    BaseCatalog const & first, Key<RecordId> const & idKey1,
+    BaseCatalog const & second, Key<RecordId> const & idKey2
 );
 
 }}} // namespace lsst::afw::table

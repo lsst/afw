@@ -27,7 +27,7 @@ class SchemaMapper;
  *
  *  Tables do not actually maintain a list of all the records they have allocated - but those records
  *  hold a pointer back to the table.  This allows the work of holding and iterating over records to
- *  be delegated to templated container classes (such as VectorT) while allowing tables to be polymorphic,
+ *  be delegated to templated container classes (such as CatalogT) while allowing tables to be polymorphic,
  *  non-template classes.  In some sense, then, it may make more sense to think of a table as a combination
  *  factory and "container header".
  *
@@ -48,11 +48,11 @@ public:
     /// The associated record class.
     typedef BaseRecord Record;
 
-    /// Template of VectorT used to hold records of the associated type.
-    typedef VectorT<Record> Vector;
+    /// Template of CatalogT used to hold records of the associated type.
+    typedef CatalogT<Record> Catalog;
 
-    /// Template of VectorT used to hold const records of the associated type.
-    typedef VectorT<Record const> ConstVector;
+    /// Template of CatalogT used to hold const records of the associated type.
+    typedef CatalogT<Record const> ConstCatalog;
 
     /// @brief Number of records in each memory block.
     static int nRecordsPerBlock;

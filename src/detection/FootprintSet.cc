@@ -1462,10 +1462,10 @@ detection::FootprintSet::makeHeavy(
 }
 
 void detection::FootprintSet::makeSources(
-    lsst::afw::table::SourceVector & vector
+    lsst::afw::table::SourceCatalog & cat
 ) const {
     for (FootprintList::const_iterator i = _footprints->begin(); i != _footprints->end(); ++i) {
-        PTR(afw::table::SourceRecord) r = vector.addNew();
+        PTR(afw::table::SourceRecord) r = cat.addNew();
         r->setFootprint(*i);
     }
 }

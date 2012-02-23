@@ -421,9 +421,9 @@ KeyTuple<Flux> addFluxFields(
     return keys;
 }
 
-template class VectorT<SourceRecord>;
-template class VectorT<SourceRecord const>;
-template class SourceVectorT<SourceRecord>;
-template class SourceVectorT<SourceRecord const>;
+template class CatalogT<SourceRecord>;
+template class CatalogT<SourceRecord const>;
+template class SourceCatalogT<SourceRecord>;
+template class SourceCatalogT<SourceRecord const>;
 
 }}} // namespace lsst::afw::table

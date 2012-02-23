@@ -1,12 +1,12 @@
 %{
-#include "lsst/afw/table/Vector.h"
+#include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/Source.h"
 %}
 
 namespace lsst { namespace afw { namespace table {
 
 template <typename RecordT>
-class VectorT {
+class CatalogT {
 public:
 
     typedef typename RecordT::Table Table;
@@ -15,15 +15,15 @@ public:
 
     Schema getSchema() const;
 
-    explicit VectorT(PTR(Table) const & table = PTR(Table)());
+    explicit CatalogT(PTR(Table) const & table = PTR(Table)());
 
-    explicit VectorT(Schema const & table);
+    explicit CatalogT(Schema const & table);
 
-    VectorT(VectorT const & other);
+    CatalogT(CatalogT const & other);
 
     void writeFits(std::string const & filename) const;
 
-    static VectorT readFits(std::string const & filename);
+    static CatalogT readFits(std::string const & filename);
 
     ColumnView getColumnView() const;
 
@@ -31,14 +31,14 @@ public:
 
 };
 
-%extend VectorT {
+%extend CatalogT {
     std::size_t __len__() const { return self->size(); }
     PTR(RecordT) __getitem__(std::ptrdiff_t i) const {
         if (i < 0) i = self->size() - i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
+                (boost::format("Catalog index %d out of range.") % i).str()
             );
         }
         return self->get(i);
@@ -48,7 +48,7 @@ public:
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
+                (boost::format("Catalog index %d out of range.") % i).str()
             );
         }
         self->set(i, p);
@@ -58,7 +58,7 @@ public:
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
+                (boost::format("Catalog index %d out of range.") % i).str()
             );
         }
         self->erase(self->begin() + i);
@@ -69,7 +69,7 @@ public:
         if (std::size_t(i) > self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Vector index %d out of range.") % i).str()
+                (boost::format("Catalog index %d out of range.") % i).str()
             );
         }
         self->insert(self->begin() + i, p);
@@ -87,35 +87,35 @@ public:
 }
 
 template <typename RecordT>
-class SourceVectorT<RecordT> : public VectorT<RecordT> {
+class SourceCatalogT<RecordT> : public CatalogT<RecordT> {
 public:
 
     typedef typename RecordT::Table Table;
 
-    explicit SourceVectorT(PTR(Table) const & table = PTR(Table)());
+    explicit SourceCatalogT(PTR(Table) const & table = PTR(Table)());
 
-    explicit SourceVectorT(Schema const & table);
+    explicit SourceCatalogT(Schema const & table);
 
-    SourceVectorT(SourceVectorT const & other);
+    SourceCatalogT(SourceCatalogT const & other);
 
     bool isSorted() const;
     void sort();
 };
 
 // For some reason, SWIG won't extend the template; it's only happy if
-// we extend the instantiation (but compare to %extend VectorT, above)
+// we extend the instantiation (but compare to %extend CatalogT, above)
 // ...mystifying.  Good thing we only have one instantiation.
-%extend SourceVectorT<SourceRecord> {
+%extend SourceCatalogT<SourceRecord> {
     PTR(SourceRecord) find(RecordId id) {
         return self->find(id);
     }
 }
 
-%template (BaseVector) VectorT<BaseRecord>;
-%template (SourceVectorBase) VectorT<SourceRecord>;
-%template (SourceVector) SourceVectorT<SourceRecord>;
+%template (BaseCatalog) CatalogT<BaseRecord>;
+%template (SourceCatalogBase) CatalogT<SourceRecord>;
+%template (SourceCatalog) SourceCatalogT<SourceRecord>;
 
-typedef VectorT<BaseRecord> BaseVector;
-typedef SourceVectorT<SourceRecord> SourceVector;
+typedef CatalogT<BaseRecord> BaseCatalog;
+typedef SourceCatalogT<SourceRecord> SourceCatalog;
 
 }}} // namespace lsst::afw::table

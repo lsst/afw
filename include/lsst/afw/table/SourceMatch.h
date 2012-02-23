@@ -48,7 +48,7 @@ typedef std::vector<SourceMatch> SourceMatchVector;
  * @param[in] closest  if true then just return the closest match
  */
 inline SourceMatchVector matchRaDec(
-    SourceVector const &set1, SourceVector const &set2,
+    SourceCatalog const &set1, SourceCatalog const &set2,
     geom::Angle radius, bool closest=true
 ) {
     return SourceMatch::static_vector_cast(
@@ -67,7 +67,7 @@ inline SourceMatchVector matchRaDec(
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
  */
 inline SourceMatchVector matchRaDec(
-    SourceVector const &set, geom::Angle radius,
+    SourceCatalog const &set, geom::Angle radius,
     bool symmetric = true
 ) {
     return SourceMatch::static_vector_cast(
@@ -87,7 +87,7 @@ inline SourceMatchVector matchRaDec(
  * @param[in] closest  if true then just return the closest match
  */
 inline SourceMatchVector matchXy(
-    SourceVector const &set1, SourceVector const &set2,
+    SourceCatalog const &set1, SourceCatalog const &set2,
     double radius, bool closest=true
 ) {
     return SourceMatch::static_vector_cast(
@@ -109,7 +109,7 @@ inline SourceMatchVector matchXy(
  * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
  */
-inline SourceMatchVector matchXy(SourceVector const &set, double radius, bool symmetric = true) {
+inline SourceMatchVector matchXy(SourceCatalog const &set, double radius, bool symmetric = true) {
     return SourceMatch::static_vector_cast(
         matchXy(set, set.getTable()->getCentroidKey(), radius, symmetric)
     );
@@ -123,7 +123,7 @@ inline SourceMatchVector matchXy(SourceVector const &set, double radius, bool sy
  *
  *  @param[in]  matches     A std::vector of Match objects to convert to table form.
  */
-inline BaseVector packMatches(SourceMatchVector const & matches) {
+inline BaseCatalog packMatches(SourceMatchVector const & matches) {
     return packMatches(
         BaseMatchVector(matches.begin(), matches.end()),
         SourceTable::getIdKey(),
@@ -132,26 +132,26 @@ inline BaseVector packMatches(SourceMatchVector const & matches) {
 }
 
 /**
- *  @brief Reconstruct a SourceMatchVector from a BaseVector representation of the matches
- *         and a pair of table VectorTs that hold the records themselves.
+ *  @brief Reconstruct a SourceMatchVector from a BaseCatalog representation of the matches
+ *         and a pair of table CatalogTs that hold the records themselves.
  *
- *  @note The table VectorT arguments must be sorted in ascending ID order on input; this will
+ *  @note The table Catalog arguments must be sorted in ascending ID order on input; this will
  *        allow us to use binary search algorithms to find the sources referred to by the match
  *        table.
  *
  *  If an ID cannot be found in the given tables, that pointer will be set to null
  *  in the returned match vector.
  *
- *  @param[in]  matches     A BaseTable vector representation, as produced by makeMatchTable.
- *  @param[in]  first       A VectorT containing the sources used on the 'first' side of the match,
+ *  @param[in]  matches     A normalized BaseCatalog representation, as produced by packMatches.
+ *  @param[in]  first       A CatalogT containing the sources used on the 'first' side of the match,
  *                          sorted by ascending ID.
- *  @param[in]  second      A VectorT containing the sources used on the 'second' side of the match,
+ *  @param[in]  second      A CatalogT containing the sources used on the 'second' side of the match,
  *                          sorted by ascending ID.  May be the same as first.
  */
 inline SourceMatchVector unpackMatches(
-    BaseVector const & matches, 
-    SourceVector const & first,
-    SourceVector const & second
+    BaseCatalog const & matches, 
+    SourceCatalog const & first,
+    SourceCatalog const & second
 ) {
     return SourceMatch::static_vector_cast(
         unpackMatches(

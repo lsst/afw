@@ -44,7 +44,7 @@ struct RecordPos {
     double y;
     double z;
     // JFB removed extra pointer here; this may have performance implications, but hopefully not
-    // significant ones.  BaseVector iterators yield temporary BaseRecord PTRs, so storing
+    // significant ones.  BaseCatalog iterators yield temporary BaseRecord PTRs, so storing
     // their address was no longer an option.
     PTR(BaseRecord) src;
 };
@@ -75,14 +75,14 @@ struct CmpRecordPtr {
  * @return                 The number of sources with positions not containing a NaN.
  */
 size_t makeRecordPositions(
-    BaseVector const &set,
+    BaseCatalog const &set,
     Key<Coord> const & key,
     RecordPos *positions
 ) {
     size_t n = 0;
     Key<Angle> raKey = key.getRa();
     Key<Angle> decKey = key.getDec();
-    for (BaseVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
+    for (BaseCatalog::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
         geom::Angle ra = i->get(raKey);
         geom::Angle dec = i->get(decKey);
         if (lsst::utils::isnan(ra.asRadians()) || lsst::utils::isnan(dec.asRadians())) {
@@ -108,8 +108,8 @@ size_t makeRecordPositions(
 
 
 BaseMatchVector matchRaDec(
-    BaseVector const & set1, Key<Coord> const & key1,
-    BaseVector const & set2, Key<Coord> const & key2,
+    BaseCatalog const & set1, Key<Coord> const & key1,
+    BaseCatalog const & set2, Key<Coord> const & key2,
     geom::Angle radius, bool closest
 ) {
     if (&set1 == &set2) {
@@ -171,7 +171,7 @@ BaseMatchVector matchRaDec(
 }
 
 BaseMatchVector matchRaDec(
-    BaseVector const &set, Key<Coord> const & key, geom::Angle radius, bool symmetric
+    BaseCatalog const &set, Key<Coord> const & key, geom::Angle radius, bool symmetric
 ) {
     if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
         throw LSST_EXCEPT(pex::exceptions::RangeErrorException,
@@ -209,8 +209,8 @@ BaseMatchVector matchRaDec(
 }
 
 
-BaseMatchVector matchXy(BaseVector const &set1, Key< Point<double> > const & key1,
-                        BaseVector const &set2, Key< Point<double> > const & key2,
+BaseMatchVector matchXy(BaseCatalog const &set1, Key< Point<double> > const & key1,
+                        BaseCatalog const &set2, Key< Point<double> > const & key2,
                         double radius, bool closest) {
     if (&set1 == &set2) {
         return matchXy(set1, key1, radius);
@@ -224,11 +224,11 @@ BaseMatchVector matchXy(BaseVector const &set1, Key< Point<double> > const & key
     boost::scoped_array<PTR(BaseRecord)> pos1(new PTR(BaseRecord)[len1]);
     boost::scoped_array<PTR(BaseRecord)> pos2(new PTR(BaseRecord)[len2]);
     size_t n = 0;
-    for (BaseVector::const_iterator i(set1.begin()), e(set1.end()); i != e; ++i, ++n) {
+    for (BaseCatalog::const_iterator i(set1.begin()), e(set1.end()); i != e; ++i, ++n) {
         pos1[n] = i;
     }
     n = 0;
-    for (BaseVector::const_iterator i(set2.begin()), e(set2.end()); i != e; ++i, ++n) {
+    for (BaseCatalog::const_iterator i(set2.begin()), e(set2.end()); i != e; ++i, ++n) {
         pos2[n] = i;
     }
 
@@ -276,7 +276,7 @@ BaseMatchVector matchXy(BaseVector const &set1, Key< Point<double> > const & key
 }
 
 BaseMatchVector matchXy(
-    BaseVector const & set, Key< Point<double> > const & key, double radius, bool symmetric
+    BaseCatalog const & set, Key< Point<double> > const & key, double radius, bool symmetric
 ) {
     // setup match parameters
     double const r2 = radius*radius;
@@ -285,7 +285,7 @@ BaseMatchVector matchXy(
     size_t const len = set.size();
     boost::scoped_array<PTR(BaseRecord)> pos(new PTR(BaseRecord)[len]);
     size_t n = 0;
-    for (BaseVector::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
+    for (BaseCatalog::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
         pos[n] = i;
     }
 
@@ -316,7 +316,7 @@ BaseMatchVector matchXy(
     return matches;
 }
 
-BaseVector packMatches(
+BaseCatalog packMatches(
     BaseMatchVector const & matches,
     Key<RecordId> const & idKey1,
     Key<RecordId> const & idKey2
@@ -325,7 +325,7 @@ BaseVector packMatches(
     Key<RecordId> outKey1 = schema.addField<RecordId>("first", "ID for first source record in match.");
     Key<RecordId> outKey2 = schema.addField<RecordId>("second", "ID for second source record in match.");
     Key<double> keyD = schema.addField<double>("distance", "Distance between matches sources.");
-    BaseVector result(schema);
+    BaseCatalog result(schema);
     result.getTable()->preallocate(matches.size());
     result.reserve(matches.size());
     for (BaseMatchVector::const_iterator i = matches.begin(); i != matches.end(); ++i) {
@@ -338,9 +338,9 @@ BaseVector packMatches(
 }
 
 BaseMatchVector unpackMatches(
-    BaseVector const & matches, 
-    BaseVector const & first, Key<RecordId> const & idKey1,
-    BaseVector const & second, Key<RecordId> const & idKey2
+    BaseCatalog const & matches, 
+    BaseCatalog const & first, Key<RecordId> const & idKey1,
+    BaseCatalog const & second, Key<RecordId> const & idKey2
 ) {
     Key<RecordId> inKey1 = matches.getSchema()["first"];
     Key<RecordId> inKey2 = matches.getSchema()["second"];
@@ -348,12 +348,12 @@ BaseMatchVector unpackMatches(
     if (!first.isSorted(idKey1) || !second.isSorted(idKey2)) 
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterException,
-            "Vectors passed to unpackMatches must be sorted."
+            "Catalogs passed to unpackMatches must be sorted."
         );
     BaseMatchVector result;
     result.resize(matches.size());
     BaseMatchVector::iterator j = result.begin();
-    for (BaseVector::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
+    for (BaseCatalog::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
         j->first = first.find(i->get(inKey1), idKey1);
         j->second = second.find(i->get(inKey2), idKey2);
         j->distance = i->get(keyD);

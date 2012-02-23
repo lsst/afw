@@ -98,7 +98,7 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `')')dnl
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/IdFactory.h"
-#include "lsst/afw/table/Vector.h"
+#include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -108,7 +108,7 @@ typedef lsst::afw::detection::Footprint Footprint;
 class SourceRecord;
 class SourceTable;
 
-template <typename RecordT> class SourceVectorT;
+template <typename RecordT> class SourceCatalogT;
 
 /// @brief A collection of types that correspond to common measurements.
 template <typename MeasTagT, typename ErrTagT>
@@ -195,8 +195,8 @@ class SourceRecord : public BaseRecord {
 public:
 
     typedef SourceTable Table;
-    typedef SourceVectorT<SourceRecord> Vector;
-    typedef SourceVectorT<SourceRecord const> ConstVector;
+    typedef SourceCatalogT<SourceRecord> Catalog;
+    typedef SourceCatalogT<SourceRecord const> ConstCatalog;
 
     PTR(Footprint) getFootprint() const { return _footprint; }
 
@@ -266,8 +266,8 @@ class SourceTable : public BaseTable {
 public:
 
     typedef SourceRecord Record;
-    typedef SourceVectorT<Record> Vector;
-    typedef SourceVectorT<Record const> ConstVector;
+    typedef SourceCatalogT<Record> Catalog;
+    typedef SourceCatalogT<Record const> ConstCatalog;
 
     /**
      *  @brief Construct a new table.
@@ -389,8 +389,8 @@ private:
 #ifndef SWIG
 
 template <typename RecordT>
-class SourceVectorT : public VectorT<RecordT> {
-    typedef VectorT<RecordT> Base;
+class SourceCatalogT : public CatalogT<RecordT> {
+    typedef CatalogT<RecordT> Base;
 public:
 
     typedef RecordT Record;
@@ -428,10 +428,10 @@ public:
      *  A vector with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit SourceVectorT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
+    explicit SourceCatalogT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
 
     /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
-    explicit SourceVectorT(Schema const & schema) : Base(schema) {}
+    explicit SourceCatalogT(Schema const & schema) : Base(schema) {}
 
     /**
      *  @brief Construct a vector from a table and an iterator range.
@@ -441,7 +441,7 @@ public:
      *  the given table.  The table itself is never deep-copied.
      *
      *  The iterator must dereference to a record reference or const reference rather than a pointer,
-     *  but should be implicitly convertible to a record pointer as well (see VectorIterator).
+     *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      *
      *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
      *  is true, table->preallocate will be used to ensure that the resulting records are
@@ -449,7 +449,7 @@ public:
      *  other iterator types, the user must preallocate the table manually.
      */
     template <typename InputIterator>
-    SourceVectorT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    SourceCatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
         Base(table, first, last, deep)
     {}
 
@@ -460,18 +460,18 @@ public:
      *  convertible to Table.
      */
     template <typename OtherRecordT>
-    SourceVectorT(SourceVectorT<OtherRecordT> const & other) : Base(other) {}
+    SourceCatalogT(SourceCatalogT<OtherRecordT> const & other) : Base(other) {}
 
     /// Read a FITS binary table.
-    static SourceVectorT readFits(std::string const & filename) {
-        return io::FitsReader::apply<SourceVectorT>(filename);
+    static SourceCatalogT readFits(std::string const & filename) {
+        return io::FitsReader::apply<SourceCatalogT>(filename);
     }
 
 };
 
 
-typedef SourceVectorT<SourceRecord> SourceVector;
-typedef SourceVectorT<SourceRecord const> ConstSourceVector;
+typedef SourceCatalogT<SourceRecord> SourceCatalog;
+typedef SourceCatalogT<SourceRecord const> ConstSourceCatalog;
 
 DEFINE_FLUX_GETTERS(`Psf')
 DEFINE_FLUX_GETTERS(`Model')

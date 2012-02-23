@@ -54,8 +54,8 @@ class SourceMatchTestCase(unittest.TestCase):
         fluxFlagKey = schema.addField("flux.flags", type="Flag")
         self.table = afwTable.SourceTable.make(schema)
         self.table.definePsfFlux("flux")
-        self.ss1 = afwTable.SourceVector(self.table)
-        self.ss2 = afwTable.SourceVector(self.table)
+        self.ss1 = afwTable.SourceCatalog(self.table)
+        self.ss2 = afwTable.SourceCatalog(self.table)
 
     def tearDown(self):
         del self.table
@@ -85,8 +85,8 @@ class SourceMatchTestCase(unittest.TestCase):
             print s0.getRa(), s1.getRa(), s0.getId(), s1.getId()
 
     def testNaNPositions(self):
-        ss1 = afwTable.SourceVector(self.table)
-        ss2 = afwTable.SourceVector(self.table)
+        ss1 = afwTable.SourceCatalog(self.table)
+        ss2 = afwTable.SourceCatalog(self.table)
         for ss in (ss1, ss2):
             ss.addNew().set(afwTable.SourceTable.getCoordKey().getRa(), float('nan') * afwGeom.radians)
 
@@ -117,8 +117,8 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
 
-        sdss = afwTable.SourceVector(self.table)
-        sdssSecondary = afwTable.SourceVector(self.table)
+        sdss = afwTable.SourceCatalog(self.table)
+        sdssSecondary = afwTable.SourceCatalog(self.table)
 
         PRIMARY, SECONDARY = 1, 2       # values of mode
 
@@ -153,7 +153,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
 
-        template = afwTable.SourceVector(self.table)
+        template = afwTable.SourceCatalog(self.table)
 
         id = 0
         for line in ifd.readlines():

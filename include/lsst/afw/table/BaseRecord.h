@@ -36,11 +36,11 @@ public:
     /// The associated table class.
     typedef BaseTable Table;
 
-    /// Template of VectorT used to hold records of this type.
-    typedef VectorT<BaseRecord> Vector;
+    /// Template of CatalogT used to hold records of this type.
+    typedef CatalogT<BaseRecord> Catalog;
 
-    /// Template of VectorT used to hold const records of this type.
-    typedef VectorT<BaseRecord const> ConstVector;
+    /// Template of CatalogT used to hold const records of this type.
+    typedef CatalogT<BaseRecord const> ConstCatalog;
 
     /// @brief Return the Schema that holds this record's fields and keys.
     Schema getSchema() const { return _table->getSchema(); }

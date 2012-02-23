@@ -105,23 +105,23 @@ class SourceTableTestCase(unittest.TestCase):
         self.table.defineShape("c")
         self.checkCanonical()
 
-class SourceVectorTestCase(unittest.TestCase):
+class SourceCatalogTestCase(unittest.TestCase):
 
     def setUp(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.vector = lsst.afw.table.SourceVector(schema)
-        self.vector.addNew().setId(50)
-        self.vector.addNew()
-        self.vector.addNew()
+        self.catalog = lsst.afw.table.SourceCatalog(schema)
+        self.catalog.addNew().setId(50)
+        self.catalog.addNew()
+        self.catalog.addNew()
 
     def tearDown(self):
-        del self.vector
+        del self.catalog
 
     def testCustomization(self):
-        self.assertFalse(self.vector.isSorted())
-        self.vector.sort()
-        self.assert_(self.vector.isSorted())
-        r = self.vector.find(2)
+        self.assertFalse(self.catalog.isSorted())
+        self.catalog.sort()
+        self.assert_(self.catalog.isSorted())
+        r = self.catalog.find(2)
         self.assertEqual(r["id"], 2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -133,7 +133,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SourceTableTestCase)
-    suites += unittest.makeSuite(SourceVectorTestCase)
+    suites += unittest.makeSuite(SourceCatalogTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
