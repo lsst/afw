@@ -26,7 +26,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import mathLib
 
-__all__ = ["Warper"]
+__all__ = ["Warper", "WarperConfig"]
 
 def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     """Compute the bounding box of a warped image
