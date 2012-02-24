@@ -10,7 +10,7 @@
 
 namespace lsst { namespace afw { namespace table {
 
-// =============== SimpleTable and SimpleRecord ============================================================
+// =============== BaseTableImpl and BaseRecordImpl =========================================================
 
 //  These are a private table/record pair -- they're what you actually get when you do TableBase::make(),
 //  but we hide them here to avoid a giant nest of friending that would be necessary if they had to make
@@ -18,31 +18,31 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-class SimpleRecord;
+class BaseRecordImpl;
 
-class SimpleTable : public BaseTable {
+class BaseTableImpl : public BaseTable {
 public:
 
-    explicit SimpleTable(Schema const & schema) : BaseTable(schema) {}
+    explicit BaseTableImpl(Schema const & schema) : BaseTable(schema) {}
 
-    SimpleTable(SimpleTable const & other) : BaseTable(other) {}
+    BaseTableImpl(BaseTableImpl const & other) : BaseTable(other) {}
 
 private:
     virtual PTR(BaseTable) _clone() const;
     virtual PTR(BaseRecord) _makeRecord();
 };
 
-class SimpleRecord : public BaseRecord {
+class BaseRecordImpl : public BaseRecord {
 public:
-    explicit SimpleRecord(PTR(BaseTable) const & table) : BaseRecord(table) {}
+    explicit BaseRecordImpl(PTR(BaseTable) const & table) : BaseRecord(table) {}
 };
 
-PTR(BaseTable) SimpleTable::_clone() const {
-    return boost::make_shared<SimpleTable>(*this);
+PTR(BaseTable) BaseTableImpl::_clone() const {
+    return boost::make_shared<BaseTableImpl>(*this);
 }
 
-PTR(BaseRecord) SimpleTable::_makeRecord() {
-    return boost::make_shared<SimpleRecord>(shared_from_this());
+PTR(BaseRecord) BaseTableImpl::_makeRecord() {
+    return boost::make_shared<BaseRecordImpl>(shared_from_this());
 }
 
 } // anonymous
@@ -145,7 +145,7 @@ void BaseTable::preallocate(std::size_t n) {
 }
 
 PTR(BaseTable) BaseTable::make(Schema const & schema) {
-    return boost::make_shared<SimpleTable>(schema);
+    return boost::make_shared<BaseTableImpl>(schema);
 }
 
 PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input) {
