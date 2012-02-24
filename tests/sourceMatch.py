@@ -79,6 +79,18 @@ class SourceMatchTestCase(unittest.TestCase):
 
         self.assertEqual(len(mat), nobj)
 
+        cat = afwTable.packMatches(mat)
+            
+        mat2 = afwTable.unpackMatches(cat, self.ss1, self.ss2)
+        
+        for m1, m2, c in zip(mat, mat2, cat):
+            self.assertEqual(m1.first, m2.first)
+            self.assertEqual(m1.second, m2.second)
+            self.assertEqual(m1.distance, m2.distance)
+            self.assertEqual(m1.first.getId(), c["first"])
+            self.assertEqual(m1.second.getId(), c["second"])
+            self.assertEqual(m1.distance, c["distance"])
+
         if False:
             s0 = mat[0][0]
             s1 = mat[0][1]
@@ -140,8 +152,8 @@ class SourceMatchTestCase(unittest.TestCase):
                 s = sdssSecondary.addNew()
 
             s.setId(objId)
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), ra * afwGeom.degrees)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), dec * afwGeom.degrees)
+            s.setRa(ra * afwGeom.degrees)
+            s.setDec(dec * afwGeom.degrees)
             s.set(self.table.getPsfFluxKey(), psfMags[band])
 
         del ifd

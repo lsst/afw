@@ -28,6 +28,8 @@
 #include <vector>
 
 #include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/Simple.h"
+#include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/geom/Angle.h"
 
@@ -54,117 +56,102 @@ struct Match {
     template <typename R1, typename R2>
     Match(Match<R1,R2> const & other) : first(other.first), second(other.second), distance(other.distance) {}
 
-    template <typename R1, typename R2>
-    static std::vector<Match> static_vector_cast(std::vector< Match<R1,R2> > const & v) {
-        std::vector<Match> r;
-        r.resize(v.size());
-        typename std::vector<Match>::iterator j = r.begin();
-        typename std::vector< Match<R1,R2> >::const_iterator i = v.begin();
-        for (; i != v.end(); ++i, ++j) {
-            j->first = boost::static_pointer_cast<Record1>(i->first);
-            j->second = boost::static_pointer_cast<Record2>(i->second);
-            j->distance = i->distance;
-        }
-        return r;
-    }
-
 };
 
-typedef Match<BaseRecord,BaseRecord> BaseMatch;
+typedef Match<SimpleRecord,SimpleRecord> SimpleMatch;
+typedef Match<SimpleRecord,SourceRecord> ReferenceMatch;
+typedef Match<SourceRecord,SourceRecord> SourceMatch;
 
-typedef std::vector<BaseMatch> BaseMatchVector;
+typedef std::vector<SimpleMatch> SimpleMatchVector;
+typedef std::vector<ReferenceMatch> ReferenceMatchVector;
+typedef std::vector<SourceMatch> SourceMatchVector;
 
 /**
- * Compute all tuples (s1,s2,d) where s1 belings to @a set1, s2 belongs to @a set2 and
- * d, the distance between s1 and s2, in pixels, is at most @a radius. If set1 and
- * set2 are identical, then this call is equivalent to @c matchXy(set1,radius,true).
+ * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
+ * d, the distance between s1 and s2, in pixels, is at most @a radius. If cat1 and
+ * cat2 are identical, then this call is equivalent to @c matchXy(cat1,radius,true).
  * The match is performed in pixel space (2d cartesian).
  *
- * @param[in] set1     first set of records
- * @param[in] key1     key used to extract the center of records in set1
- * @param[in] set2     second set of records
- * @param[in] key2     key used to extract the center of records in set2
+ * @param[in] cat1     first catalog
+ * @param[in] cat2     second catalog
  * @param[in] radius   match radius (pixels)
  * @param[in] closest  if true then just return the closest match
  */
-BaseMatchVector matchXy(
-    BaseCatalog const & v1, Key< Point<double> > const & key1,
-    BaseCatalog const & v2, Key< Point<double> > const & key2,
-    double dist, bool closest=true
+SourceMatchVector matchXy(
+    SourceCatalog const &cat1, SourceCatalog const &cat2,
+    double radius, bool closest=true
 );
 
 /**
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a set,
+ * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a cat,
  * and d, the distance between s1 and s2, in pixels, is at most @a radius. The
  * match is performed in pixel space (2d cartesian).
  *
- * @param[in] set          the set of records to self-match
- * @param[in] key          key used to extract the center
+ * @param[in] cat          the catalog to self-match
  * @param[in] radius       match radius (pixels)
- * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
+ * @param[in] symmetric    if cat to @c true symmetric matches are produced: i.e.
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
  */
-BaseMatchVector matchXy(
-    BaseCatalog const & v, Key< Point<double> > const & key,
-    double dist, bool symmetric=true
-);
+SourceMatchVector matchXy(SourceCatalog const &cat, double radius, bool symmetric = true);
+
+#ifndef SWIG // swig will be confused by the nested names below; repeated with typedefs in match.i
 
 /** 
- * Compute all tuples (s1,s2,d) where s1 belings to @a set1, s2 belongs to @a set2 and
- * d, the distance between s1 and s2, is at most @a radius. If set1 and
- * set2 are identical, then this call is equivalent to @c matchRaDec(set1,radius,true).
+ * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
+ * d, the distance between s1 and s2, is at most @a radius. If cat1 and
+ * cat2 are identical, then this call is equivalent to @c matchRaDec(cat1,radius,true).
  * The match is performed in ra, dec space.
  *
- * @param[in] set1     first set of records
- * @param[in] key1     key used to extract the center of records in set1
- * @param[in] set2     second set of records
- * @param[in] key2     key used to extract the center of records in set2
+ * @param[in] cat1     first catalog
+ * @param[in] cat2     second catalog
  * @param[in] radius   match radius
  * @param[in] closest  if true then just return the closest match
+ *
+ * This is instantiated for Simple-Simple, Simple-Source, and Source-Source catalog combinations.
  */
-BaseMatchVector matchRaDec(
-    BaseCatalog const & v1, Key<Coord> const & key1,
-    BaseCatalog const & v2, Key<Coord> const & key2,
-    Angle dist, bool closest=true
+template <typename Cat1, typename Cat2>
+std::vector< Match< typename Cat1::Record, typename Cat2::Record> > matchRaDec(
+    Cat1 const & cat1,
+    Cat2 const & cat2,
+    Angle radius, bool closest = true
 );
 
-/** 
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a set,
+/*
+ * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a cat,
  * and d, the distance between s1 and s2, is at most @a radius. The
  * match is performed in ra, dec space.
  *
- * @param[in] set          the set of records to self-match
- * @param[in] key          key used to extract the center
+ * @param[in] cat          the catalog to self-match
  * @param[in] radius       match radius
- * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
+ * @param[in] symmetric    if cat to @c true symmetric matches are produced: i.e.
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
+ * @param[in] key          key used to extract the center
+ *
+ * This is instantiated for Simple and Source catalogs.
  */
-BaseMatchVector matchRaDec(
-    BaseCatalog const & v, Key<Coord> const & key,
-    Angle dist, bool symmetric=true
+template <typename Cat>
+std::vector< Match< typename Cat::Record, typename Cat::Record> > matchRaDec(
+    Cat const & cat,
+    Angle radius,
+    bool symmetric = true
 );
 
 /**
- *  @brief Return a table representation of a BaseMatchVector that can be used to persist it.
+ *  @brief Return a table representation of a MatchVector that can be used to persist it.
  *
  *  The schema of the returned object has "first" (RecordId), "second" (RecordID), and "distance"
  *  (double) fields.
  *
  *  @param[in]  matches     A std::vector of Match objects to convert to table form.
- *  @param[in]  idKey1      Key for the unique ID field in the Record1 schema.
- *  @param[in]  idKey2      Key for the unique ID field in the Record2 schema.
  */
-BaseCatalog packMatches(
-    BaseMatchVector const & matches,
-    Key<RecordId> const & idKey1,
-    Key<RecordId> const & idKey2
-);
+template <typename Record1, typename Record2>
+BaseCatalog packMatches(std::vector< Match<Record1,Record2> > const & matches);
 
 /**
- *  @brief Reconstruct a BaseMatchVector from a BaseCatalog representation of the matches
- *         and a pair of table CatalogTs that hold the records themselves.
+ *  @brief Reconstruct a MatchVector from a BaseCatalog representation of the matches
+ *         and a pair of catalogs.
  *
- *  @note The table Catalog arguments must be sorted in ascending ID order on input; this will
+ *  @note The first and second catalog arguments must be sorted in ascending ID order on input; this will
  *        allow us to use binary search algorithms to find the records referred to by the match
  *        table.
  *
@@ -172,18 +159,18 @@ BaseCatalog packMatches(
  *  in the returned match vector.
  *
  *  @param[in]  matches     A normalized BaseCatalog representation, as produced by packMatches.
- *  @param[in]  first       A CatalogT containing the records used on the 'first' side of the match,
+ *  @param[in]  cat1        A CatalogT containing the records used on the 'first' side of the match,
  *                          sorted by ascending ID.
- *  @param[in]  idKey1      Key for the ID key for the 'first' side of the match.
- *  @param[in]  second      A CatalogT containing the records used on the 'second' side of the match,
+ *  @param[in]  cat2        A CatalogT containing the records used on the 'second' side of the match,
  *                          sorted by ascending ID.  May be the same as first.
- *  @param[in]  idKey2      Key for the ID key for the 'second' side of the match.
+ *
+ * This is instantiated for Simple-Simple, Simple-Source, and Source-Source catalog combinations.
  */
-BaseMatchVector unpackMatches(
-    BaseCatalog const & matches, 
-    BaseCatalog const & first, Key<RecordId> const & idKey1,
-    BaseCatalog const & second, Key<RecordId> const & idKey2
-);
+template <typename Cat1, typename Cat2>
+std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
+unpackMatches(BaseCatalog const & matches, Cat1 const & cat1, Cat2 const & cat2);
+
+#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

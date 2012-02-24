@@ -24,16 +24,14 @@
 %{
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Match.h"
-#include "lsst/afw/table/SourceMatch.h"
 %}
 
 %include "lsst/afw/table/Match.h"
-%include "lsst/afw/table/SourceMatch.h"
 
 %extend lsst::afw::table::Match {
     %pythoncode {
     def __repr__(self):
-        return "SourceMatch(%s,\n            %s,\n            %g)" % \
+        return "Match(%s,\n            %s,\n            %g)" % \
         (repr(self.first), repr(self.second), self.distance)
 
     def __str__(self):
@@ -85,9 +83,79 @@
     }
 }
 
-%template(BaseMatch) lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord>;
-%template(BaseMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::BaseRecord,lsst::afw::table::BaseRecord> >;
+%define %declareMatch(NAME, R1, R2)
 
-%template(SourceMatch) lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord>;
-%template(SourceMatchVector) std::vector< lsst::afw::table::Match<lsst::afw::table::SourceRecord,lsst::afw::table::SourceRecord> >;
+%template(NAME##Match) lsst::afw::table::Match<lsst::afw::table::R1##Record,lsst::afw::table::R2##Record>;
 
+%template(NAME##MatchVector)
+    std::vector< lsst::afw::table::Match<lsst::afw::table::R1##Record,lsst::afw::table::R2##Record> >;
+
+// swig can't parse the template declarations for these because of the nested names in the
+// return values, so we repeat them here and pretend they aren't templates, using typedefs
+// that swig can understand.
+
+namespace lsst { namespace afw { namespace table {
+
+NAME##MatchVector matchRaDec(
+    R1##Catalog const & cat1,
+    R2##Catalog const & cat2,
+    Angle radius, bool closest=true
+);
+
+NAME##MatchVector unpackMatches(
+    BaseCatalog const & matches,
+    R1##Catalog const & cat1,
+    R2##Catalog const & cat2
+);
+
+}}} // namespace lsst::afw::table
+
+%enddef
+
+%declareMatch(Simple, Simple, Simple)
+%declareMatch(Reference, Simple, Source)
+%declareMatch(Source, Source, Source)
+
+namespace lsst { namespace afw { namespace table {
+
+SimpleMatchVector matchRaDec(
+    SimpleCatalog const & cat,
+    Angle radius, bool symmetric=true
+);
+
+SourceMatchVector matchRaDec(
+    SourceCatalog const & cat,
+    Angle radius, bool symmetric=true
+);
+
+SourceMatchVector matchXy(
+    SourceCatalog const & cat1,
+    SourceCatalog const & cat2,
+    double radius, bool closest=true
+);
+
+SourceMatchVector matchXy(
+    SourceCatalog const & cat,
+    double radius, bool symmetric=true
+);
+
+}}} // namespace lsst::afw::table
+
+// swig can't disambiguate between the different packMatches overloads (which is actually
+// understandable, because they'd all match a Python list), so instead we provide
+// a pure-Python implementation that works on any sequence.
+%pythoncode %{
+    def packMatches(matches):
+        schema = Schema()
+        outKey1 = schema.addField("first", type="I8", doc="ID for first source record in match.")
+        outKey2 = schema.addField("second", type="I8", doc="ID for second source record in match.")
+        keyD = schema.addField("distance", type=float, doc="Distance between matches sources.")
+        result = BaseCatalog(schema)
+        result.table.preallocate(len(matches))
+        for match in matches:
+            record = result.addNew()
+            record.set(outKey1, match.first.getId())
+            record.set(outKey2, match.second.getId())
+            record.set(keyD, match.distance)
+        return result
+%}

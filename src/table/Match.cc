@@ -22,9 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-/** @file
-  * @ingroup afw
-  */
 #include <algorithm>
 #include <cmath>
 
@@ -38,6 +35,7 @@
 
 namespace lsst { namespace afw { namespace table { namespace {
 
+template <typename RecordT>
 struct RecordPos {
     double dec;
     double x;
@@ -46,22 +44,20 @@ struct RecordPos {
     // JFB removed extra pointer here; this may have performance implications, but hopefully not
     // significant ones.  BaseCatalog iterators yield temporary BaseRecord PTRs, so storing
     // their address was no longer an option.
-    PTR(BaseRecord) src;
+    PTR(RecordT) src;
 };
 
-bool operator<(RecordPos const &s1, RecordPos const &s2) {
+template <typename Record1, typename Record2>
+bool operator<(RecordPos<Record1> const &s1, RecordPos<Record2> const &s2) {
     return (s1.dec < s2.dec);
 }
 
 struct CmpRecordPtr {
 
-    bool operator()(PTR(BaseRecord) const s1, PTR(BaseRecord) const s2) {
-        return s1->get(yKey) < s2->get(yKey);
+    bool operator()(PTR(SourceRecord) const s1, PTR(SourceRecord) const s2) {
+        return s1->getY() < s2->getY();
     }
 
-    explicit CmpRecordPtr(Key<double> const & yKey_) : yKey(yKey_) {}
-
-    Key<double> yKey;
 };
 
 /**
@@ -74,15 +70,15 @@ struct CmpRecordPtr {
  *                         RecordPos instances
  * @return                 The number of sources with positions not containing a NaN.
  */
+template <typename Cat>
 size_t makeRecordPositions(
-    BaseCatalog const &set,
-    Key<Coord> const & key,
-    RecordPos *positions
+    Cat const & cat,
+    RecordPos<typename Cat::Record> *positions
 ) {
     size_t n = 0;
-    Key<Angle> raKey = key.getRa();
-    Key<Angle> decKey = key.getDec();
-    for (BaseCatalog::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
+    Key<Angle> raKey = Cat::Table::getCoordKey().getRa();
+    Key<Angle> decKey = Cat::Table::getCoordKey().getDec();
+    for (typename Cat::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i) {
         geom::Angle ra = i->get(raKey);
         geom::Angle dec = i->get(decKey);
         if (lsst::utils::isnan(ra.asRadians()) || lsst::utils::isnan(dec.asRadians())) {
@@ -97,43 +93,68 @@ size_t makeRecordPositions(
         ++n;
     }
     std::sort(positions, positions + n);
-    if (n < set.size()) {
+    if (n < cat.size()) {
         lsst::pex::logging::TTrace<1>("afw.table.matchRaDec",
                                       "At least one source had ra or dec equal to NaN");
     }
     return n;
 }
 
-} // <anonymous>
+template size_t makeRecordPositions(SimpleCatalog const &, RecordPos<SimpleRecord> *);
+template size_t makeRecordPositions(SourceCatalog const &, RecordPos<SourceRecord> *);
 
-
-BaseMatchVector matchRaDec(
-    BaseCatalog const & set1, Key<Coord> const & key1,
-    BaseCatalog const & set2, Key<Coord> const & key2,
-    geom::Angle radius, bool closest
+template <typename Cat1, typename Cat2>
+bool doSelfMatchIfSame(
+    std::vector< Match< typename Cat1::Record, typename Cat2::Record> > & result,
+    Cat1 const & cat1, Cat2 const & cat2, Angle radius
 ) {
-    if (&set1 == &set2) {
-        return matchRaDec(set1, key1, radius, true);
+    // types are different, so the catalogs are never the same.
+    return false;
+}
+
+template <typename Cat>
+bool doSelfMatchIfSame(
+    std::vector< Match< typename Cat::Record, typename Cat::Record> > & result,
+    Cat const & cat1, Cat const & cat2, Angle radius
+) {
+    if (&cat1 == &cat2) {
+        result = matchRaDec(cat1, radius, true);
+        return true;
     }
+    return false;
+}
+
+} // anonymous
+
+template <typename Cat1, typename Cat2>
+std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
+matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
+    typedef Match< typename Cat1::Record, typename Cat2::Record> MatchT;
+    std::vector<MatchT> matches;
+
+    if (doSelfMatchIfSame(matches, cat1, cat2, radius)) return matches;
+
     if (radius < 0.0 || (radius > (45. * geom::degrees))) {
         throw LSST_EXCEPT(pex::exceptions::RangeErrorException, 
                           "match radius out of range (0 to 45 degrees)");
     }
-    if (set1.size() == 0 || set2.size() == 0) {
-        return BaseMatchVector();
+    if (cat1.size() == 0 || cat2.size() == 0) {
+        return matches;
     }
     // setup match parameters
     double const d2Limit = radius.toUnitSphereDistanceSquared();
     
     // Build position lists
-    size_t len1 = set1.size();
-    size_t len2 = set2.size();
-    boost::scoped_array<RecordPos> pos1(new RecordPos[len1]);
-    boost::scoped_array<RecordPos> pos2(new RecordPos[len2]);
-    len1 = makeRecordPositions(set1, key1, pos1.get());
-    len2 = makeRecordPositions(set2, key2, pos2.get());
+    size_t len1 = cat1.size();
+    size_t len2 = cat2.size();
+
+    typedef RecordPos<typename Cat1::Record> Pos1;
+    typedef RecordPos<typename Cat2::Record> Pos2;
+    boost::scoped_array<Pos1> pos1(new Pos1[len1]);
+    boost::scoped_array<Pos2> pos2(new Pos2[len2]);
+    len1 = makeRecordPositions(cat1, pos1.get());
+    len2 = makeRecordPositions(cat2, pos2.get());
     
-    BaseMatchVector matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double minDec = pos1[i].dec - radius.asRadians();
         while (start < len2 && pos2[start].dec < minDec) { ++start; }
@@ -156,39 +177,48 @@ BaseMatchVector matchRaDec(
                     found = true;
                 } else {
                     matches.push_back(
-                        BaseMatch(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
+                        MatchT(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
                     );
                 }
             }
         }
         if (closest && found) {
             matches.push_back(
-                BaseMatch(pos1[i].src, pos2[closestIndex].src, geom::Angle::fromUnitSphereDistanceSquared(d2Include))
+                MatchT(pos1[i].src, pos2[closestIndex].src, 
+                       geom::Angle::fromUnitSphereDistanceSquared(d2Include))
             );
         }
     }
     return matches;
 }
 
-BaseMatchVector matchRaDec(
-    BaseCatalog const &set, Key<Coord> const & key, geom::Angle radius, bool symmetric
-) {
+template SimpleMatchVector matchRaDec(SimpleCatalog const &, SimpleCatalog const &, Angle, bool);
+template ReferenceMatchVector matchRaDec(SimpleCatalog const &, SourceCatalog const &, Angle, bool);
+template SourceMatchVector matchRaDec(SourceCatalog const &, SourceCatalog const &, Angle, bool);
+
+
+template <typename Cat>
+std::vector< Match< typename Cat::Record, typename Cat::Record> >
+matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric) {
+    typedef Match<typename Cat::Record,typename Cat::Record> MatchT;
+    std::vector<MatchT> matches;
+
     if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
         throw LSST_EXCEPT(pex::exceptions::RangeErrorException,
                           "match radius out of range (0 to 45 degrees)");
     }
-    if (set.size() == 0) {
-        return BaseMatchVector();
+    if (cat.size() == 0) {
+        return matches;
     }
     // setup match parameters
     double const d2Limit = radius.toUnitSphereDistanceSquared();
 
     // Build position list
-    size_t len = set.size();
-    boost::scoped_array<RecordPos> pos(new RecordPos[len]);
-    len = makeRecordPositions(set, key, pos.get());
+    size_t len = cat.size();
+    typedef RecordPos<typename Cat::Record> Pos;
+    boost::scoped_array<Pos> pos(new Pos[len]);
+    len = makeRecordPositions(cat, pos.get());
 
-    BaseMatchVector matches;
     for (size_t i = 0; i < len; ++i) {
         double maxDec = pos[i].dec + radius.asRadians();
         for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
@@ -197,10 +227,10 @@ BaseMatchVector matchRaDec(
             double dz = pos[i].z - pos[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
             if (d2 < d2Limit) {
-                geom::Angle d = geom::Angle::fromUnitSphereDistanceSquared(d2);
-                matches.push_back(BaseMatch(pos[i].src, pos[j].src, d));
+                Angle d = Angle::fromUnitSphereDistanceSquared(d2);
+                matches.push_back(MatchT(pos[i].src, pos[j].src, d));
                 if (symmetric) {
-                    matches.push_back(BaseMatch(pos[j].src, pos[i].src, d));
+                    matches.push_back(MatchT(pos[j].src, pos[i].src, d));
                 }
             }
         }
@@ -208,54 +238,51 @@ BaseMatchVector matchRaDec(
     return matches;
 }
 
+template SimpleMatchVector matchRaDec(SimpleCatalog const &, Angle, bool);
+template SourceMatchVector matchRaDec(SourceCatalog const &, Angle, bool);
 
-BaseMatchVector matchXy(BaseCatalog const &set1, Key< Point<double> > const & key1,
-                        BaseCatalog const &set2, Key< Point<double> > const & key2,
+
+SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
                         double radius, bool closest) {
-    if (&set1 == &set2) {
-        return matchXy(set1, key1, radius);
+    if (&cat1 == &cat2) {
+        return matchXy(cat1, radius);
     }
     // setup match parameters
     double const r2 = radius*radius;
 
     // copy and sort array of pointers on y
-    size_t const len1 = set1.size();
-    size_t const len2 = set2.size();
-    boost::scoped_array<PTR(BaseRecord)> pos1(new PTR(BaseRecord)[len1]);
-    boost::scoped_array<PTR(BaseRecord)> pos2(new PTR(BaseRecord)[len2]);
+    size_t const len1 = cat1.size();
+    size_t const len2 = cat2.size();
+    boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
+    boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
     size_t n = 0;
-    for (BaseCatalog::const_iterator i(set1.begin()), e(set1.end()); i != e; ++i, ++n) {
+    for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i, ++n) {
         pos1[n] = i;
     }
     n = 0;
-    for (BaseCatalog::const_iterator i(set2.begin()), e(set2.end()); i != e; ++i, ++n) {
+    for (SourceCatalog::const_iterator i(cat2.begin()), e(cat2.end()); i != e; ++i, ++n) {
         pos2[n] = i;
     }
 
-    Key<double> xKey1 = key1.getX();
-    Key<double> yKey1 = key1.getY();
-    Key<double> xKey2 = key2.getX();
-    Key<double> yKey2 = key2.getY();
+    std::sort(pos1.get(), pos1.get() + len1, CmpRecordPtr());
+    std::sort(pos2.get(), pos2.get() + len2, CmpRecordPtr());
 
-    std::sort(pos1.get(), pos1.get() + len1, CmpRecordPtr(yKey1));
-    std::sort(pos2.get(), pos2.get() + len2, CmpRecordPtr(yKey2));
-
-    BaseMatchVector matches;
+    SourceMatchVector matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
-        double y = pos1[i]->get(yKey1);
+        double y = pos1[i]->getY();
         double minY = y - radius;
-        while (start < len2 && pos2[start]->get(key2.getY()) < minY) { ++start; }
+        while (start < len2 && pos2[start]->getY() < minY) { ++start; }
         if (start == len2) {
             break;
         }
-        double x = pos1[i]->get(xKey1);
+        double x = pos1[i]->getX();
         double maxY = y + radius;
         double y2;
         size_t closestIndex = -1;          // Index of closest match (if any)
         double r2Include = r2;          // Squared radius for inclusion of match
         bool found = false;             // Found anything?
-        for (size_t j = start; j < len2 && (y2 = pos2[j]->get(yKey2)) <= maxY; ++j) {
-            double dx = x - pos2[j]->get(xKey2);
+        for (size_t j = start; j < len2 && (y2 = pos2[j]->getY()) <= maxY; ++j) {
+            double dx = x - pos2[j]->getX();
             double dy = y - y2;
             double d2 = dx*dx + dy*dy;
             if (d2 < r2Include) {
@@ -264,51 +291,48 @@ BaseMatchVector matchXy(BaseCatalog const &set1, Key< Point<double> > const & ke
                     closestIndex = j;
                     found = true;
                 } else {
-                    matches.push_back(BaseMatch(pos1[i], pos2[j], std::sqrt(d2)));
+                    matches.push_back(SourceMatch(pos1[i], pos2[j], std::sqrt(d2)));
                 }
             }
         }
         if (closest && found) {
-            matches.push_back(BaseMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
+            matches.push_back(SourceMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
         }
     }
     return matches;
 }
 
-BaseMatchVector matchXy(
-    BaseCatalog const & set, Key< Point<double> > const & key, double radius, bool symmetric
+SourceMatchVector matchXy(
+    SourceCatalog const & cat, double radius, bool symmetric
 ) {
     // setup match parameters
     double const r2 = radius*radius;
 
     // copy and sort array of pointers on y
-    size_t const len = set.size();
-    boost::scoped_array<PTR(BaseRecord)> pos(new PTR(BaseRecord)[len]);
+    size_t const len = cat.size();
+    boost::scoped_array<PTR(SourceRecord)> pos(new PTR(SourceRecord)[len]);
     size_t n = 0;
-    for (BaseCatalog::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
+    for (SourceCatalog::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i, ++n) {
         pos[n] = i;
     }
 
-    Key<double> xKey = key.getX();
-    Key<double> yKey = key.getY();
+    std::sort(pos.get(), pos.get() + len, CmpRecordPtr());
 
-    std::sort(pos.get(), pos.get() + len, CmpRecordPtr(yKey));
-
-    BaseMatchVector matches;
+    SourceMatchVector matches;
     for (size_t i = 0; i < len; ++i) {
-        double x = pos[i]->get(xKey);
-        double y = pos[i]->get(yKey);
+        double x = pos[i]->getX();
+        double y = pos[i]->getY();
         double maxY = y + radius;
         double y2;
-        for (size_t j = i + 1; j < len && (y2 = pos[j]->get(yKey)) <= maxY; ++j) {
-            double dx = x - pos[j]->get(xKey);
+        for (size_t j = i + 1; j < len && (y2 = pos[j]->getY()) <= maxY; ++j) {
+            double dx = x - pos[j]->getX();
             double dy = y - y2;
             double d2 = dx*dx + dy*dy;
             if (d2 < r2) {
                 double d = std::sqrt(d2);
-                matches.push_back(BaseMatch(pos[i], pos[j], d));
+                matches.push_back(SourceMatch(pos[i], pos[j], d));
                 if (symmetric) {
-                    matches.push_back(BaseMatch(pos[j], pos[i], d));
+                    matches.push_back(SourceMatch(pos[j], pos[i], d));
                 }
             }
         }
@@ -316,10 +340,9 @@ BaseMatchVector matchXy(
     return matches;
 }
 
+template <typename Record1, typename Record2>
 BaseCatalog packMatches(
-    BaseMatchVector const & matches,
-    Key<RecordId> const & idKey1,
-    Key<RecordId> const & idKey2
+    std::vector< Match<Record1,Record2> > const & matches
 ) {
     Schema schema;
     Key<RecordId> outKey1 = schema.addField<RecordId>("first", "ID for first source record in match.");
@@ -328,37 +351,47 @@ BaseCatalog packMatches(
     BaseCatalog result(schema);
     result.getTable()->preallocate(matches.size());
     result.reserve(matches.size());
-    for (BaseMatchVector::const_iterator i = matches.begin(); i != matches.end(); ++i) {
+    typedef typename std::vector< Match<Record1,Record2> >::const_iterator Iter;
+    for (Iter i = matches.begin(); i != matches.end(); ++i) {
         PTR(BaseRecord) record = result.addNew();
-        record->set(outKey1, i->first->get(idKey1));
-        record->set(outKey2, i->second->get(idKey2));
+        record->set(outKey1, i->first->getId());
+        record->set(outKey2, i->second->getId());
         record->set(keyD, i->distance);
     }
     return result;
 }
 
-BaseMatchVector unpackMatches(
-    BaseCatalog const & matches, 
-    BaseCatalog const & first, Key<RecordId> const & idKey1,
-    BaseCatalog const & second, Key<RecordId> const & idKey2
-) {
+template BaseCatalog packMatches(SimpleMatchVector const &);
+template BaseCatalog packMatches(ReferenceMatchVector const &);
+template BaseCatalog packMatches(SourceMatchVector const &);
+
+template <typename Cat1, typename Cat2>
+std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
+unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & second) {
     Key<RecordId> inKey1 = matches.getSchema()["first"];
     Key<RecordId> inKey2 = matches.getSchema()["second"];
     Key<double> keyD = matches.getSchema()["distance"];
-    if (!first.isSorted(idKey1) || !second.isSorted(idKey2)) 
+    if (!first.isSorted() || !second.isSorted()) 
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterException,
             "Catalogs passed to unpackMatches must be sorted."
         );
-    BaseMatchVector result;
+    typedef Match< typename Cat1::Record, typename Cat2::Record> MatchT;
+    std::vector<MatchT> result;
     result.resize(matches.size());
-    BaseMatchVector::iterator j = result.begin();
+    typename std::vector<MatchT>::iterator j = result.begin();
     for (BaseCatalog::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
-        j->first = first.find(i->get(inKey1), idKey1);
-        j->second = second.find(i->get(inKey2), idKey2);
+        j->first = first.find(i->get(inKey1));
+        j->second = second.find(i->get(inKey2));
         j->distance = i->get(keyD);
     }
     return result;
 }
+
+template SimpleMatchVector unpackMatches(BaseCatalog const &, SimpleCatalog const &, SimpleCatalog const &);
+template ReferenceMatchVector unpackMatches(
+    BaseCatalog const &, SimpleCatalog const &, SourceCatalog const &
+);
+template SourceMatchVector unpackMatches(BaseCatalog const &, SourceCatalog const &, SourceCatalog const &);
 
 }}} // namespace lsst::afw::table

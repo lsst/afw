@@ -31,7 +31,7 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/afw/table/Source.h"
-#include "lsst/afw/table/SourceMatch.h"
+#include "lsst/afw/table/Match.h"
 #include "lsst/afw/math/Random.h"
 #include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/geom/Angle.h"
