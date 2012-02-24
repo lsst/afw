@@ -169,7 +169,7 @@ def SpatialCellSetDemo(filename=None):
                             cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
             j += 1
 
-            im = cand.getImage()
+            im = cand.getMaskedImage()
             if 0 and display:
                 ds9.mtv(im, title="Candidate", frame=1)
     #

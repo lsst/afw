@@ -52,7 +52,7 @@ Various swigged-up C++ classes for testing
 
 %shared_ptr(TestCandidate);
 %shared_ptr(TestCandidateVisitor);
-%shared_ptr(TestImageCandidate);
+%shared_ptr(TestMaskedImageCandidate);
 
 %inline %{
     /*
@@ -98,17 +98,17 @@ Various swigged-up C++ classes for testing
 
     /************************************************************************************************************/
     /*
-     * Test class for SpatialCellImageCandidate
+     * Test class for SpatialCellMaskedImageCandidate
      */
-    class TestImageCandidate : public lsst::afw::math::SpatialCellImageCandidate<float> {
+    class TestMaskedImageCandidate : public lsst::afw::math::SpatialCellMaskedImageCandidate<float> {
     public:
         typedef lsst::afw::image::MaskedImage<float> MaskedImageT;
 
-        TestImageCandidate(float const xCenter, ///< The object's column-centre
-                           float const yCenter, ///< The object's row-centre
-                           float const flux     ///< The object's flux
-                    ) :
-            lsst::afw::math::SpatialCellImageCandidate<float>(xCenter, yCenter), _flux(flux) {
+        TestMaskedImageCandidate(float const xCenter, ///< The object's column-centre
+                                 float const yCenter, ///< The object's row-centre
+                                 float const flux     ///< The object's flux
+                                ) :
+            lsst::afw::math::SpatialCellMaskedImageCandidate<float>(xCenter, yCenter), _flux(flux) {
         }
 
         /// Return candidates rating
