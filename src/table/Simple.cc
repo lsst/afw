@@ -139,18 +139,16 @@ PTR(SimpleTable) SimpleTable::make(Schema const & schema, PTR(IdFactory) const &
     return boost::make_shared<SimpleTableImpl>(schema, idFactory);
 }
 
-SimpleTable::SimpleTable(
-    Schema const & schema,
-    PTR(IdFactory) const & idFactory
-) : BaseTable(schema), _idFactory(idFactory) {}
+SimpleTable::SimpleTable(Schema const & schema, PTR(IdFactory) const & idFactory) :
+    BaseTable(schema), _idFactory(idFactory) {}
 
 SimpleTable::SimpleTable(SimpleTable const & other) :
     BaseTable(other), _idFactory(other._idFactory->clone()) {}
 
 SimpleTable::MinimalSchema::MinimalSchema() {
-    detail::Access::markPersistent(schema);
     id = schema.addField<RecordId>("id", "unique ID");
     coord = schema.addField<Coord>("coord", "position in ra/dec", "IRCS; radians");
+    detail::Access::markPersistent(schema);
 }
 
 SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
@@ -163,10 +161,10 @@ SimpleTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
     return boost::make_shared<SimpleFitsWriter>(fits);
 }
 
-template class SimpleCatalogT<SimpleRecord>;
-template class SimpleCatalogT<SimpleRecord const>;
-
 template class CatalogT<SimpleRecord>;
 template class CatalogT<SimpleRecord const>;
+
+template class SimpleCatalogT<SimpleRecord>;
+template class SimpleCatalogT<SimpleRecord const>;
 
 }}} // namespace lsst::afw::table

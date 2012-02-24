@@ -93,10 +93,8 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `')')dnl
 #include "boost/array.hpp"
 #include "boost/type_traits/is_convertible.hpp"
 
-#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/detection/Footprint.h"
-#include "lsst/afw/table/BaseRecord.h"
-#include "lsst/afw/table/BaseTable.h"
+#include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/io/FitsWriter.h"
@@ -107,8 +105,6 @@ typedef lsst::afw::detection::Footprint Footprint;
 
 class SourceRecord;
 class SourceTable;
-
-template <typename RecordT> class SourceCatalogT;
 
 /// @brief A collection of types that correspond to common measurements.
 template <typename MeasTagT, typename ErrTagT>
@@ -180,7 +176,7 @@ KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::str
  *  @brief Record class that contains measurements made on a single exposure.
  *
  *  Sources provide four additions to BaseRecord/BaseRecord:
- *   - Specific fields that must always be present, with specialized getters on source (e.g. getId()).
+ *   - Specific fields that must always be present, with specialized getters.
  *     The schema for a SourceTable should always be constructed by starting with the result of
  *     SourceTable::makeMinimalSchema.
  *   - A shared_ptr to a Footprint for each record.
@@ -191,12 +187,12 @@ KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::str
  *   - SourceTables hold an ID factory, which is used to initialize the unique ID field when a 
  *     new SourceRecord is created.
  */
-class SourceRecord : public BaseRecord {
+class SourceRecord : public SimpleRecord {
 public:
 
     typedef SourceTable Table;
-    typedef SourceCatalogT<SourceRecord> Catalog;
-    typedef SourceCatalogT<SourceRecord const> ConstCatalog;
+    typedef SimpleCatalogT<SourceRecord> Catalog;
+    typedef SimpleCatalogT<SourceRecord const> ConstCatalog;
 
     PTR(Footprint) getFootprint() const { return _footprint; }
 
@@ -208,22 +204,9 @@ public:
 
     //@{
     /// @brief Convenience accessors for the keys in the minimal source schema.
-    RecordId getId() const;
-    void setId(RecordId id);
-
     RecordId getParent() const;
     void setParent(RecordId id);
-
-    IcrsCoord getCoord() const;
-    void setCoord(IcrsCoord const & coord);
-    void setCoord(Coord const & coord);
     //@}
-
-    /// @brief Equivalent to getCoord().getRa() (but possibly faster if only ra is needed).
-    Angle getRa() const;
-
-    /// @brief Equivalent to getCoord().getDec() (but possibly faster if only dec is needed).
-    Angle getDec() const;
 
     DECLARE_FLUX_GETTERS(`Psf')
     DECLARE_FLUX_GETTERS(`Model')
@@ -262,12 +245,12 @@ private:
  *
  *  @copydetails SourceRecord
  */
-class SourceTable : public BaseTable {
+class SourceTable : public SimpleTable {
 public:
 
     typedef SourceRecord Record;
-    typedef SourceCatalogT<Record> Catalog;
-    typedef SourceCatalogT<Record const> ConstCatalog;
+    typedef SimpleCatalogT<Record> Catalog;
+    typedef SimpleCatalogT<Record const> ConstCatalog;
 
     /**
      *  @brief Construct a new table.
@@ -312,29 +295,8 @@ public:
         return other.contains(getMinimalSchema().schema);
     }
 
-    //@{
-    /**
-     *  Get keys for standard fields shared by all sources.
-     *
-     *  These keys are used to implement getters and setters on SourceRecord.
-     */
-
-    /// @brief Key for the source ID.
-    static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
-
     /// @brief Key for the parent ID.
     static Key<RecordId> getParentKey() { return getMinimalSchema().parent; }
-
-    /// @brief Key for the ra/dec of the source.
-    static Key<Coord> getCoordKey() { return getMinimalSchema().coord; }
-
-    //@}
-
-    /// @brief Return the object that generates IDs for the table.
-    PTR(IdFactory) getIdFactory() { return _idFactory; }
-
-    /// @brief Return the object that generates IDs for the table.
-    CONST_PTR(IdFactory) getIdFactory() const { return _idFactory; }
 
     /// @copydoc BaseTable::clone
     PTR(SourceTable) clone() const { return boost::static_pointer_cast<SourceTable>(_clone()); }
@@ -360,10 +322,7 @@ public:
     DECLARE_SHAPE_DEFINERS
 protected:
 
-    SourceTable(
-        Schema const & schema,
-        PTR(IdFactory) const & idFactory
-    );
+    SourceTable(Schema const & schema, PTR(IdFactory) const & idFactory);
 
     SourceTable(SourceTable const & other);
 
@@ -372,9 +331,7 @@ private:
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         Schema schema;
-        Key<RecordId> id;
         Key<RecordId> parent;
-        Key<Coord> coord;
 
         MinimalSchema();
     };
@@ -387,7 +344,6 @@ private:
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
 
-    PTR(IdFactory) _idFactory;        // generates IDs for new records
     boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux; // aliases for flux measurements
     KeyTuple<Centroid> _slotCentroid;  // alias for a centroid measurement
     KeyTuple<Shape> _slotShape;  // alias for a shape measurement
@@ -395,90 +351,8 @@ private:
 
 #ifndef SWIG
 
-template <typename RecordT>
-class SourceCatalogT : public CatalogT<RecordT> {
-    typedef CatalogT<RecordT> Base;
-public:
-
-    typedef RecordT Record;
-    typedef typename Record::Table Table;
-
-    typedef typename Base::iterator iterator;
-    typedef typename Base::const_iterator const_iterator;
-
-    using Base::isSorted;
-    using Base::sort;
-    using Base::find;
-
-    /// @brief Return true if the vector is in ascending ID order.
-    bool isSorted() const { return this->isSorted(SourceTable::getIdKey()); }
-
-    /// @brief Sort the vector in-place by ID.
-    void sort() { this->sort(SourceTable::getIdKey()); }
-
-    //@{
-    /**
-     *  @brief Return an iterator to the record with the given ID.
-     *
-     *  @note The vector must be sorted in ascending ID order before calling find (i.e. 
-     *        isSorted() must be true).
-     *
-     *  Returns end() if the Record cannot be found.
-     */
-    iterator find(RecordId id) { return this->find(id, SourceTable::getIdKey()); }
-    const_iterator find(RecordId id) const { return this->find(id, SourceTable::getIdKey()); }
-    //@}
-
-    /**
-     *  @brief Construct a vector from a table (or nothing).
-     *
-     *  A vector with no table is considered invalid; a valid table must be assigned to it
-     *  before it can be used.
-     */
-    explicit SourceCatalogT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
-
-    /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
-    explicit SourceCatalogT(Schema const & schema) : Base(schema) {}
-
-    /**
-     *  @brief Construct a vector from a table and an iterator range.
-     *
-     *  If deep is true, new records will be created using table->copyRecord before being inserted.
-     *  If deep is false, records will be not be copied, but they must already be associated with
-     *  the given table.  The table itself is never deep-copied.
-     *
-     *  The iterator must dereference to a record reference or const reference rather than a pointer,
-     *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
-     *
-     *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
-     *  is true, table->preallocate will be used to ensure that the resulting records are
-     *  contiguous in memory and can be used with ColumnView.  To ensure this is the case for
-     *  other iterator types, the user must preallocate the table manually.
-     */
-    template <typename InputIterator>
-    SourceCatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
-        Base(table, first, last, deep)
-    {}
-
-    /**
-     *  @brief Shallow copy constructor from a container containing a related record type.
-     *
-     *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTable is
-     *  convertible to Table.
-     */
-    template <typename OtherRecordT>
-    SourceCatalogT(SourceCatalogT<OtherRecordT> const & other) : Base(other) {}
-
-    /// Read a FITS binary table.
-    static SourceCatalogT readFits(std::string const & filename) {
-        return io::FitsReader::apply<SourceCatalogT>(filename);
-    }
-
-};
-
-
-typedef SourceCatalogT<SourceRecord> SourceCatalog;
-typedef SourceCatalogT<SourceRecord const> ConstSourceCatalog;
+typedef SimpleCatalogT<SourceRecord> SourceCatalog;
+typedef SimpleCatalogT<SourceRecord const> ConstSourceCatalog;
 
 DEFINE_FLUX_GETTERS(`Psf')
 DEFINE_FLUX_GETTERS(`Model')
@@ -487,18 +361,8 @@ DEFINE_FLUX_GETTERS(`Inst')
 DEFINE_CENTROID_GETTERS
 DEFINE_SHAPE_GETTERS
 
-inline RecordId SourceRecord::getId() const { return get(SourceTable::getIdKey()); }
-inline void SourceRecord::setId(RecordId id) { set(SourceTable::getIdKey(), id); }
-
 inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
 inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
-
-inline IcrsCoord SourceRecord::getCoord() const { return get(SourceTable::getCoordKey()); }
-inline void SourceRecord::setCoord(IcrsCoord const & coord) { set(SourceTable::getCoordKey(), coord); }
-inline void SourceRecord::setCoord(Coord const & coord) { set(SourceTable::getCoordKey(), coord); }
-
-inline Angle SourceRecord::getRa() const { return get(SourceTable::getCoordKey().getRa()); }
-inline Angle SourceRecord::getDec() const { return get(SourceTable::getCoordKey().getDec()); }
 
 inline double SourceRecord::getX() const { return get(getTable()->getCentroidKey().getX()); }
 inline double SourceRecord::getY() const { return get(getTable()->getCentroidKey().getY()); }

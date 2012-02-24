@@ -1,5 +1,6 @@
 %{
 #include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/Source.h"
 %}
 
@@ -87,16 +88,16 @@ public:
 }
 
 template <typename RecordT>
-class SourceCatalogT<RecordT> : public CatalogT<RecordT> {
+class SimpleCatalogT<RecordT> : public CatalogT<RecordT> {
 public:
 
     typedef typename RecordT::Table Table;
 
-    explicit SourceCatalogT(PTR(Table) const & table = PTR(Table)());
+    explicit SimpleCatalogT(PTR(Table) const & table = PTR(Table)());
 
-    explicit SourceCatalogT(Schema const & table);
+    explicit SimpleCatalogT(Schema const & table);
 
-    SourceCatalogT(SourceCatalogT const & other);
+    SimpleCatalogT(SimpleCatalogT const & other);
 
     bool isSorted() const;
     void sort();
@@ -104,18 +105,26 @@ public:
 
 // For some reason, SWIG won't extend the template; it's only happy if
 // we extend the instantiation (but compare to %extend CatalogT, above)
-// ...mystifying.  Good thing we only have one instantiation.
-%extend SourceCatalogT<SourceRecord> {
+// ...mystifying.  Good thing we only have two instantiations.
+%extend SimpleCatalogT<SimpleRecord> {
+    PTR(SimpleRecord) find(RecordId id) {
+        return self->find(id);
+    }
+}
+%extend SimpleCatalogT<SourceRecord> {
     PTR(SourceRecord) find(RecordId id) {
         return self->find(id);
     }
 }
 
 %template (BaseCatalog) CatalogT<BaseRecord>;
+%template (SimpleCatalogBase) CatalogT<SimpleRecord>;
+%template (SimpleCatalog) SimpleCatalogT<SimpleRecord>;
 %template (SourceCatalogBase) CatalogT<SourceRecord>;
-%template (SourceCatalog) SourceCatalogT<SourceRecord>;
+%template (SourceCatalog) SimpleCatalogT<SourceRecord>;
 
 typedef CatalogT<BaseRecord> BaseCatalog;
-typedef SourceCatalogT<SourceRecord> SourceCatalog;
+typedef SimpleCatalogT<SimpleRecord> SimpleCatalog;
+typedef SimpleCatalogT<SourceRecord> SourceCatalog;
 
 }}} // namespace lsst::afw::table

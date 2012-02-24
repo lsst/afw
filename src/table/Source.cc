@@ -83,10 +83,8 @@ public:
 class SourceTableImpl : public SourceTable {
 public:
 
-    explicit SourceTableImpl(
-        Schema const & schema,
-        PTR(IdFactory) const & idFactory
-    ) : SourceTable(schema, idFactory) {}
+    explicit SourceTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) :
+        SourceTable(schema, idFactory) {}
 
     SourceTableImpl(SourceTableImpl const & other) : SourceTable(other) {}
 
@@ -237,7 +235,7 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     --_spanCol; // switch to 0-indexed rather than 1-indexed convention.
     --_peakCol;
     Schema schema(*metadata, true);
-    PTR(SourceTable) table =  SourceTable::make(schema);
+    PTR(SourceTable) table =  SourceTable::make(schema, PTR(IdFactory)());
     LOAD_FLUX_SLOT(PSF, Psf);
     LOAD_FLUX_SLOT(MODEL, Model);
     LOAD_FLUX_SLOT(AP, Ap);
@@ -252,7 +250,6 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
 PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
     PTR(SourceRecord) record = boost::static_pointer_cast<SourceRecord>(io::FitsReader::_readRecord(table));
     if (!record) return record;
-    boost::static_pointer_cast<SourceTable>(table)->getIdFactory()->notify(record->getId());
     int spanElementCount = (_spanCol >= 0) ? _fits->getTableArraySize(_row, _spanCol) : 0;
     int peakElementCount = (_peakCol >= 0) ? _fits->getTableArraySize(_row, _peakCol) : 0;
     if (spanElementCount || peakElementCount) {
@@ -313,7 +310,7 @@ static io::FitsReader::FactoryT<SourceFitsReader> sourceFitsReaderFactory("SOURC
 //----- SourceTable/Record member function implementations --------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-SourceRecord::SourceRecord(PTR(SourceTable) const & table) : BaseRecord(table) {}
+SourceRecord::SourceRecord(PTR(SourceTable) const & table) : SimpleRecord(table) {}
 
 void SourceRecord::_assign(BaseRecord const & other) {
     try {
@@ -322,10 +319,7 @@ void SourceRecord::_assign(BaseRecord const & other) {
     } catch (std::bad_cast&) {}
 }
 
-PTR(SourceTable) SourceTable::make(
-    Schema const & schema,
-    PTR(IdFactory) const & idFactory
-) {
+PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const & idFactory) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
@@ -338,19 +332,17 @@ PTR(SourceTable) SourceTable::make(
 SourceTable::SourceTable(
     Schema const & schema,
     PTR(IdFactory) const & idFactory
-) : BaseTable(schema), _idFactory(idFactory) {}
+) : SimpleTable(schema, idFactory) {}
 
 SourceTable::SourceTable(SourceTable const & other) :
-    BaseTable(other),
-    _idFactory(other._idFactory->clone()),
+    SimpleTable(other),
     _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
 {}
 
 SourceTable::MinimalSchema::MinimalSchema() {
-    detail::Access::markPersistent(schema);
-    id = schema.addField<RecordId>("id", "unique ID for source");
+    schema = SimpleTable::makeMinimalSchema();
     parent = schema.addField<RecordId>("parent", "unique ID of parent source");
-    coord = schema.addField<Coord>("coord", "position of source in ra/dec", "radians");
+    detail::Access::markPersistent(schema);
 }
 
 SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
@@ -420,7 +412,7 @@ KeyTuple<Flux> addFluxFields(
 
 template class CatalogT<SourceRecord>;
 template class CatalogT<SourceRecord const>;
-template class SourceCatalogT<SourceRecord>;
-template class SourceCatalogT<SourceRecord const>;
+template class SimpleCatalogT<SourceRecord>;
+template class SimpleCatalogT<SourceRecord const>;
 
 }}} // namespace lsst::afw::table

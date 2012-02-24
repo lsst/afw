@@ -423,6 +423,12 @@ for _d in (Field, Key, SchemaItem, _suffixes):
         _d[_k] = _d[_v]
 %}
 
+
+%shared_ptr(lsst::afw::table::SimpleTable)
+%shared_ptr(lsst::afw::table::SimpleRecord)
+
+%include "lsst/afw/table/Simple.h"
+
 %shared_ptr(lsst::afw::table::SourceTable)
 %shared_ptr(lsst::afw::table::SourceRecord)
 // Workarounds for SWIG's failure to parse the Measurement template correctly.
