@@ -98,7 +98,7 @@ private:
 
     virtual PTR(BaseRecord) _makeRecord() {
         PTR(SourceRecord) record = boost::make_shared<SourceRecordImpl>(getSelf<SourceTableImpl>());
-        record->setId((*getIdFactory())());
+        if (getIdFactory()) record->setId((*getIdFactory())());
         return record;
     }
 
@@ -338,10 +338,7 @@ PTR(SourceTable) SourceTable::make(
 SourceTable::SourceTable(
     Schema const & schema,
     PTR(IdFactory) const & idFactory
-) : BaseTable(schema), _idFactory(idFactory)
-{
-    if (!_idFactory) _idFactory = IdFactory::makeSimple();
-}
+) : BaseTable(schema), _idFactory(idFactory) {}
 
 SourceTable::SourceTable(SourceTable const & other) :
     BaseTable(other),

@@ -274,12 +274,21 @@ public:
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
-     *                               If empty, defaults to a simple counter that starts at 1.
+     *                               If null, record IDs will default to zero.
+     *
+     *  Note that not passing an IdFactory at all will call the other override of make(), which will
+     *  set the ID factory to IdFactory::makeSimple().
      */
-    static PTR(SourceTable) make(
-        Schema const & schema,
-        PTR(IdFactory) const & idFactory = PTR(IdFactory)()
-    );
+    static PTR(SourceTable) make(Schema const & schema, PTR(IdFactory) const & idFactory);
+
+    /**
+     *  @brief Construct a new table.
+     *
+     *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
+     *
+     *  This overload sets the ID factory to IdFactory::makeSimple().
+     */
+    static PTR(SourceTable) make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
 
     /**
      *  @brief Return a minimal schema for Source tables and records.
