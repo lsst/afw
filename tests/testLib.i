@@ -117,7 +117,7 @@ Various swigged-up C++ classes for testing
         }
 
         /// Return the %image
-        MaskedImageT::ConstPtr getImage() const {
+        MaskedImageT::ConstPtr getMaskedImage() const {
             if (_image.get() == NULL) {
                 _image = MaskedImageT::Ptr(new MaskedImageT(lsst::afw::geom::ExtentI(getWidth(), getHeight())));
                 *_image->getImage() = _flux;
