@@ -178,9 +178,14 @@ public:
         io::FitsWriter::apply(filename, mode, *this);
     }
 
-    /// Read a FITS binary table.
-    static CatalogT readFits(std::string const & filename) {
-        return io::FitsReader::apply<CatalogT>(filename, "r");
+    /**
+     *  @brief Read a FITS binary table.
+     *
+     *  We look in HDU 2 by default, because HDU one is the Primary HDU, and must
+     *  be an image HDU (even if its an empty image).
+     */
+    static CatalogT readFits(std::string const & filename, int hdu=2) {
+        return io::FitsReader::apply<CatalogT>(filename, hdu);
     }
 
     /**

@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <map>
 
+#include "boost/filesystem.hpp"
+
 #include "lsst/utils/ieee.h"
 #include "lsst/afw/table/Source.h"
 
@@ -51,6 +53,8 @@ struct ExtractSchemaStrings {
 
 BOOST_AUTO_TEST_CASE(testFits) {
     using namespace lsst::afw::table;
+
+    std::string filename = "tests/data/testTable.fits";
 
     Schema schema = SourceTable::makeMinimalSchema();
     Key<int> a_b_i = schema.addField<int>("a.b.i", "int");
@@ -110,9 +114,10 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_EQUAL( r2->get(e_g_d_flag2), false );
     }
 
-    vector.writeFits("!testTable.fits");
+    vector.writeFits(filename);
 
-    SourceCatalog readVector = SourceCatalog::readFits("testTable.fits[1]");
+    SourceCatalog readVector = SourceCatalog::readFits(filename);
+
     BOOST_CHECK_EQUAL( schema, readVector.getSchema() ); // only checks equality of keys
 
     BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->get<double>("SHEEP"),
@@ -171,5 +176,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
                                 EqualityCompare()) );
         BOOST_CHECK_EQUAL( fp2a.getBBox(), fp2b.getBBox() );
     }
+
+    boost::filesystem::remove(filename);
 
 }
