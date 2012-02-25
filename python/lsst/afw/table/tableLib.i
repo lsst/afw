@@ -41,6 +41,7 @@ Python interface to lsst::afw::table classes
 
 %{
 #include "lsst/afw/table.h"
+
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "lsst/ndarray/python.h"
@@ -88,6 +89,12 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
+
+%{
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
+%}
+%import "lsst/afw/image/wcs.i"
 
 // ---------------------------------------------------------------------------------------------------------
 

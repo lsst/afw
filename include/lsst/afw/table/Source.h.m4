@@ -99,7 +99,13 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `')')dnl
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst { namespace afw {
+
+namespace image {
+class Wcs;
+} // namespace image
+
+namespace table {
 
 typedef lsst::afw::detection::Footprint Footprint;
 
@@ -229,6 +235,12 @@ public:
 
     /// @brief Return the shape slot Ixy value.
     double getIxy() const;
+
+    /// @brief Update the coord field using the given Wcs and the field in the centroid slot.
+    void updateCoord(image::Wcs const & wcs);
+
+    /// @brief Update the coord field using the given Wcs and the image center from the given key.
+    void updateCoord(image::Wcs const & wcs, Key< Point<double> > const & key);
 
 protected:
 

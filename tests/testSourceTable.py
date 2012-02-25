@@ -41,6 +41,8 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
+import lsst.afw.coord
+import lsst.afw.image
 
 try:
     type(display)
@@ -55,6 +57,11 @@ def makeArray(size, dtype):
 def makeCov(size, dtype):
     m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
     return numpy.dot(m, m.transpose())
+
+def makeWcs():
+    crval = lsst.afw.coord.Coord(lsst.afw.geom.Point2D(1.606631, 5.090329))
+    crpix = lsst.afw.geom.Point2D(2036., 2000.)
+    return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
 
 class SourceTableTestCase(unittest.TestCase):
 
@@ -104,6 +111,13 @@ class SourceTableTestCase(unittest.TestCase):
         self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.checkCanonical()
+
+    def testCoordUpdate(self):
+        wcs = makeWcs()
+        self.record.updateCoord(wcs, self.centroidKey)
+        coord1 = self.record.getCoord()
+        coord2 = wcs.pixelToSky(self.record.get(self.centroidKey))
+        self.assertEqual(coord1, coord2)
 
 class SourceCatalogTestCase(unittest.TestCase):
 

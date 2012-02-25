@@ -6,6 +6,7 @@
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/detail/Access.h"
+#include "lsst/afw/image/Wcs.h"
 
 // Some boilerplate macros for saving/loading Source slot aliases to/from FITS headers.
 // Didn't seem to be quite enough to give the file the full M4 treatment.
@@ -311,6 +312,14 @@ static io::FitsReader::FactoryT<SourceFitsReader> sourceFitsReaderFactory("SOURC
 //-----------------------------------------------------------------------------------------------------------
 
 SourceRecord::SourceRecord(PTR(SourceTable) const & table) : SimpleRecord(table) {}
+
+void SourceRecord::updateCoord(image::Wcs const & wcs) {
+    set(SourceTable::getCoordKey(), *wcs.pixelToSky(getCentroid()));
+}
+
+void SourceRecord::updateCoord(image::Wcs const & wcs, Key< Point<double> > const & key) {
+    set(SourceTable::getCoordKey(), *wcs.pixelToSky(get(key)));
+}
 
 void SourceRecord::_assign(BaseRecord const & other) {
     try {
