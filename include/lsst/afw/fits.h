@@ -18,9 +18,11 @@
 #include <string>
 
 #include <boost/format.hpp>
+#include <boost/scoped_array.hpp>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
+#include "lsst/ndarray.h"
 
 namespace lsst { namespace afw { namespace fits {
 
@@ -169,16 +171,32 @@ private:
  *  saves a lot of repetition, const/reinterpret casts, and replaces void pointer args and type codes
  *  with templates and overloads.
  *
- *  @note All functions that take a row or column number befow are 0-indexed; the internal cfitsio
+ *  Like a cfitsio pointer, a Fits object always considers one HDU the "active" one, and most operations
+ *  will be applied to that HDU.
+ *
+ *  All member functions are non-const because they may modify the 'status' data member.
+ *
+ *  @note All functions that take a row or column number below are 0-indexed; the internal cfitsio
  *  calls are all 1-indexed.
  */
 class Fits : private boost::noncopyable {
+    template <typename T> void createImageImpl(int naxis, long * naxes);
+    template <typename T> void writeImageImpl(T const * data, int nElements);
 public:
 
     enum BehaviorFlags {
         AUTO_CLOSE = 0x01, // Close files when the Fits object goes out of scope if fptr != NULL
         AUTO_CHECK = 0x02  // Call LSST_FITS_CHECK_STATUS after every cfitsio call
     };
+
+    /// @brief Return the current HDU (1-indexed; 1 is the Primary HDU).
+    int getHdu();
+
+    /// @brief Set the current HDU (1-indexed; 1 is the Primary HDU).
+    void setHdu(int hdu);
+
+    /// @brief Return the number of HDUs in the file.
+    int countHdus();
 
     //@{
     /// @brief Set a FITS header key, editing if it already exists and appending it if not.
@@ -279,6 +297,60 @@ public:
     void forEachKey(HeaderIterationFunctor & functor);
 
     /**
+     *  @brief Create an empty image HDU with NAXIS=0 at the end of the file.
+     *
+     *  This is primarily useful to force the first "real" HDU to be an extension HDU by creating
+     *  an empty Primary HDU.  The new HDU is set as the active one.
+     */
+    void createEmpty();
+
+    /**
+     *  @brief Create an image with pixel type provided by the given explicit PixelT template parameter
+     *         and shape defined by an ndarray index.
+     *
+     *  @note The shape parameter is ordered fastest-dimension last (i.e. [y, x]) as is conventional
+     *        with ndarray.
+     *
+     *  The new image will be in a new HDU at the end of the file, which may be the Primary HDU
+     *  if the FITS file is empty.
+     */
+    template <typename PixelT, int N>
+    void createImage(ndarray::Vector<int,N> const & shape) {
+        boost::scoped_array<long> naxes(new long[N]);
+        for (int i = 0; i < N; ++i) naxes[i] = shape[N-i-1];
+        createImageImpl<PixelT>(N, naxes.get());
+    }
+
+    /**
+     *  @brief Create a 2-d image with pixel type provided by the given explicit PixelT template parameter.
+     *
+     *  The new image will be in a new HDU at the end of the file, which may be the Primary HDU
+     *  if the FITS file is empty.
+     */
+    template <typename PixelT>
+    void createImage(long x, long y) {
+        long naxes[2] = { x, y };
+        createImageImpl<PixelT>(2, naxes);
+    }
+
+    /**
+     *  @brief Write an ndarray::Array to a FITS image HDU.
+     *
+     *  The HDU must already exist and have the correct bitpix.
+     *
+     *  An extra deep-copy may be necessary if the array is not fully contiguous.
+     */
+    template <typename T, int N, int C>
+    void writeImage(ndarray::Array<T const,N,C> const & array) {
+        ndarray::Array<T const,N,N> contiguous = ndarray::dynamic_dimension_cast<2>(array);
+        if (contiguous.empty()) contiguous = ndarray::copy(array);
+        writeImageImpl(contiguous.getData(), contiguous.getNumElements());
+    }
+
+    /// @brief Create a new binary table extension.
+    void createTable();
+
+    /**
      *  @brief Add a column to a table
      *
      *  If size <= 0, the field will be a variable length array, with max set by (-size),
@@ -332,9 +404,6 @@ public:
 
     /// @brief Open or create a FITS file from an in-memory file.
     Fits(MemFileManager & manager, std::string const & mode, int behavior);
-
-    /// @brief Create a new binary table extension.
-    void createTable();
 
     /// @brief Close a FITS file.
     void closeFile();
