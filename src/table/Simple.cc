@@ -55,7 +55,7 @@ private:
 //----- SimpleFitsWriter ---------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-// A custom FitsWriter for Simple - this just sets the AFW_TYPE key to REFERENCE, which should ensure
+// A custom FitsWriter for Simple - this just sets the AFW_TYPE key to SIMPLE, which should ensure
 // we use SimpleFitsReader to read it.
 
 namespace {
