@@ -24,7 +24,7 @@ public:
 
     void writeFits(std::string const & filename, std::string const & mode="w") const;
 
-    static CatalogT readFits(std::string const & filename);
+    static CatalogT readFits(std::string const & filename, int hdu=2);
 
     ColumnView getColumnView() const;
 
@@ -105,6 +105,8 @@ public:
     explicit SimpleCatalogT(Schema const & table);
 
     SimpleCatalogT(SimpleCatalogT const & other);
+
+    static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
 
     bool isSorted() const;
     void sort();
