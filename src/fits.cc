@@ -429,6 +429,8 @@ void MetadataIterationFunctor::operator()(
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         // strip off the enclosing single quotes and return the string
         add(key, matchStrings[1].str(), comment);
+    } else if (value.empty()) {
+        // do nothing for empty values
     } else if (key == "HISTORY" ||
                (key == "COMMENT" &&
                 comment != "  FITS (Flexible Image Transport System) format is defined in 'Astronomy" &&
