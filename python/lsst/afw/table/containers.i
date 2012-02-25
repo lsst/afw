@@ -82,6 +82,13 @@ public:
     def __iter__(self):
         for i in xrange(len(self)):
             yield self[i]
+    def cast(self, type, deep=False):
+        newTable = self.table.clone() if deep else self.table
+        copy = type(newTable)
+        for record in self:
+            newRecord = newTable.copyRecord(record) if deep else record
+            copy.append(newRecord)
+        return copy
     table = property(getTable)
     schema = property(getSchema)
     %}

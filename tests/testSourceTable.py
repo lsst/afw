@@ -138,6 +138,23 @@ class SourceCatalogTestCase(unittest.TestCase):
         r = self.catalog.find(2)
         self.assertEqual(r["id"], 2)
 
+    def testConversion(self):
+        catalog1 = self.catalog.cast(lsst.afw.table.SourceCatalog)
+        catalog2 = self.catalog.cast(lsst.afw.table.SimpleCatalog)
+        catalog3 = self.catalog.cast(lsst.afw.table.SourceCatalog, deep=True)
+        catalog4 = self.catalog.cast(lsst.afw.table.SimpleCatalog, deep=True)
+        self.assertEqual(self.catalog.table, catalog1.table)
+        self.assertEqual(self.catalog.table, catalog2.table)
+        self.assertNotEqual(self.catalog.table, catalog3.table)
+        self.assertNotEqual(self.catalog.table, catalog3.table)
+        for r, r1, r2, r3, r4 in zip(self.catalog, catalog1, catalog2, catalog3, catalog4):
+            self.assertEqual(r, r1)
+            self.assertEqual(r, r2)
+            self.assertNotEqual(r, r3)
+            self.assertNotEqual(r, r4)
+            self.assertEqual(r.getId(), r3.getId())
+            self.assertEqual(r.getId(), r4.getId())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
