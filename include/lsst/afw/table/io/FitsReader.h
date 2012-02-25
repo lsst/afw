@@ -82,9 +82,8 @@ public:
      *  Reader::read.
      */
     template <typename ContainerT>
-    static ContainerT apply(std::string const & filename) {
-        Fits fits = fits::Fits::openFile(filename.c_str(), true);
-        fits.alwaysCheck = true;
+    static ContainerT apply(std::string const & filename, std::string const & mode) {
+        Fits fits(filename, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
         PTR(FitsReader) reader = make(&fits);
         return reader->template read<ContainerT>();
     }

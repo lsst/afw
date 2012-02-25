@@ -174,13 +174,13 @@ public:
     }
 
     /// Write a FITS binary table.
-    void writeFits(std::string const & filename) const {
-        io::FitsWriter::apply(filename, *this);
+    void writeFits(std::string const & filename, std::string const & mode="w") const {
+        io::FitsWriter::apply(filename, mode, *this);
     }
 
     /// Read a FITS binary table.
     static CatalogT readFits(std::string const & filename) {
-        return io::FitsReader::apply<CatalogT>(filename);
+        return io::FitsReader::apply<CatalogT>(filename, "r");
     }
 
     /**

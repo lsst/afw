@@ -265,7 +265,7 @@ public:
 
     /// Read a FITS binary table.
     static SimpleCatalogT readFits(std::string const & filename) {
-        return io::FitsReader::apply<SimpleCatalogT>(filename);
+        return io::FitsReader::apply<SimpleCatalogT>(filename, "r");
     }
 
 };

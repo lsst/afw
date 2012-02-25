@@ -94,6 +94,74 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
     if ((fitsObj).status != 0) LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
 
 /**
+ *  @brief Lifetime-management for memory that goes into FITS memory files.
+ */
+struct MemFileManager : private boost::noncopyable {
+
+    /**
+     *  @brief Construct a MemFileManager with no initial memory buffer.
+     *
+     *  The manager will still free the memory when it goes out of scope, but all allocation
+     *  and reallocation will be performed by cfitsio as needed.
+     */
+    MemFileManager() : _ptr(0), _len(0), _managed(true) {}
+
+    /**
+     *  @brief Construct a MemFileManager with (len) bytes of initial memory.
+     *
+     *  The manager will free the memory when it goes out of scope, and cfitsio will be allowed
+     *  to reallocate the internal memory as needed.
+     */
+    explicit MemFileManager(std::size_t len) : _ptr(0), _len(0), _managed(true) { reset(len); }
+
+    /**
+     *  @brief Construct a MemFileManager that references and does not manage external memory.
+     *
+     *  The manager will not manage the given pointer, and it will not allow cfitsio to do so
+     *  either.  The user must provide enough initial memory and is responsible for freeing
+     *  it manually after the FITS file has been closed.
+     */
+    MemFileManager(void * ptr, std::size_t len) : _ptr(ptr), _len(len), _managed(false) {}
+
+    /**
+     *  @brief Return the manager to the same state it would be if default-constructed.
+     *
+     *  This must not be called while a FITS file that uses this memory is open.
+     */
+    void reset();
+
+    /**
+     *  @brief Set the size of the internal memory buffer, freeing the current buffer if necessary.
+     *
+     *  This must not be called while a FITS file that uses this memory is open.
+     *
+     *  Memory allocated with this overload of reset can be reallocated by cfitsio
+     *  and will be freed when the manager goes out of scope or is reset.
+     */
+    void reset(std::size_t len);
+
+    /**
+     *  @brief Set the internal memory buffer to an manually-managed external block.
+     *
+     *  This must not be called while a FITS file that uses this memory is open.
+     *
+     *  Memory passed to this overload of reset cannot be reallocated by cfitsio
+     *  and will not be freed when the manager goes out of scope or is reset.
+     */
+    void reset(void * ptr, std::size_t len) { reset(); _ptr = ptr; _len = len; _managed = false; }
+
+    ~MemFileManager() { reset(); }
+
+private:
+
+    friend class Fits;
+
+    void * _ptr;
+    std::size_t _len;
+    bool _managed;
+};
+
+/**
  *  @brief A simple struct that combines the two arguments that must be passed to most cfitsio routines
  *         and contains thin and/or templated wrappers around common cfitsio routines.
  *
@@ -104,7 +172,13 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
  *  @note All functions that take a row or column number befow are 0-indexed; the internal cfitsio
  *  calls are all 1-indexed.
  */
-struct Fits {
+class Fits : private boost::noncopyable {
+public:
+
+    enum BehaviorFlags {
+        AUTO_CLOSE = 0x01, // Close files when the Fits object goes out of scope if fptr != NULL
+        AUTO_CHECK = 0x02  // Call LSST_FITS_CHECK_STATUS after every cfitsio call
+    };
 
     //@{
     /// @brief Set a FITS header key, editing if it already exists and appending it if not.
@@ -250,11 +324,14 @@ struct Fits {
     /// @brief Return the size of an variable-length array field.
     long getTableArraySize(std::size_t row, int col);
 
-    /// @brief Create a new FITS file.
-    static Fits createFile(std::string const & filename);
+    /// @brief Default constructor; set all data members to 0.
+    Fits() : fptr(0), status(0), behavior(0) {}
 
-    /// @brief Open a an existing FITS file.
-    static Fits openFile(std::string const & filename, bool writeable);
+    /// @brief Open or create a FITS file from disk.
+    Fits(std::string const & filename, std::string const & mode, int behavior);
+
+    /// @brief Open or create a FITS file from an in-memory file.
+    Fits(MemFileManager & manager, std::string const & mode, int behavior);
 
     /// @brief Create a new binary table extension.
     void createTable();
@@ -262,11 +339,11 @@ struct Fits {
     /// @brief Close a FITS file.
     void closeFile();
 
-    Fits() : fptr(0), status(0), alwaysCheck(false) {}
+    ~Fits() { if ((fptr) && (behavior & AUTO_CLOSE)) closeFile(); }
 
     void * fptr;  // the actual cfitsio fitsfile pointer; void to avoid including fitsio.h here.
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
-    bool alwaysCheck; // if true, member functions will check status and throw exceptions on failure
+    int behavior; // bitwise OR of BehaviorFlags
 }; 
 
 }}} /// namespace lsst::afw::fits

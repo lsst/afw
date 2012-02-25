@@ -366,7 +366,7 @@ struct FitsReader::ProcessRecords {
     ProcessRecords(Fits * fits_, std::size_t const & row_) :
         row(row_), col(0), bit(0), flagCol(-1), fits(fits_)
     {
-        fits->alwaysCheck = false; // temporarily disable automatic FITS exceptions
+        fits->behavior &= ~ Fits::AUTO_CHECK; // temporarily disable automatic FITS exceptions
         fits->readKey("FLAGCOL", flagCol);
         if (fits->status == 0) {
             --flagCol; // we want 0-indexed column numbers, not FITS' 1-indexed numbers
@@ -374,7 +374,7 @@ struct FitsReader::ProcessRecords {
             fits->status = 0;
             flagCol = -1;
         }
-        fits->alwaysCheck = true;
+        fits->behavior |= Fits::AUTO_CHECK;
         nFlags = fits->getTableArraySize(flagCol);
         if (nFlags) flags.reset(new bool[nFlags]);
     }
@@ -420,13 +420,13 @@ FitsReader::Factory::Factory(std::string const & name) {
 
 PTR(FitsReader) FitsReader::make(Fits * fits) {
     std::string name;
-    fits->alwaysCheck = false; // temporarily disable automatic FITS exceptions
+    fits->behavior &= ~Fits::AUTO_CHECK; // temporarily disable automatic FITS exceptions
     fits->readKey("AFW_TYPE", name);
     if (fits->status != 0) {
         name = "BASE";
         fits->status = 0;
     }
-    fits->alwaysCheck = true;
+    fits->behavior |= Fits::AUTO_CHECK;
     Registry::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(

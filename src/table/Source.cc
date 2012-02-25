@@ -36,7 +36,7 @@
 
 #define LOAD_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
     {                                                                   \
-        _fits->alwaysCheck = false;                                     \
+        _fits->behavior &= ~fits::Fits::AUTO_CHECK;                     \
         std::string s, sErr, sFlag;                                     \
         _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
         _fits->readKey(#NAME #TYPE "_ERR_SLOT", sErr);                  \
@@ -52,7 +52,7 @@
         } else {                                                        \
             _fits->status = 0;                                          \
         }                                                               \
-        _fits->alwaysCheck = true;                                      \
+        _fits->behavior |= fits::Fits::AUTO_CHECK;                      \
     }
     
 

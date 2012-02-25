@@ -22,7 +22,7 @@ public:
 
     CatalogT(CatalogT const & other);
 
-    void writeFits(std::string const & filename) const;
+    void writeFits(std::string const & filename, std::string const & mode="w") const;
 
     static CatalogT readFits(std::string const & filename);
 

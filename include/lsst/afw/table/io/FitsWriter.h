@@ -30,13 +30,11 @@ public:
      *  then calls Writer::write on it.
      */
     template <typename ContainerT>
-    static void apply(std::string const & filename, ContainerT const & container) {
-        Fits fits = Fits::createFile(filename.c_str());
-        fits.alwaysCheck = true;
+    static void apply(std::string const & filename, std::string const & mode, ContainerT const & container) {
+        Fits fits(filename, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
         PTR(FitsWriter) writer 
             = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits);
         writer->write(container);
-        fits.closeFile();
     }
 
     /// @brief Construct from a wrapped cfitsio pointer. 
