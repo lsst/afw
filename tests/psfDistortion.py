@@ -127,7 +127,7 @@ class PsfDistortionTestCase(unittest.TestCase):
     """Test the distortion of the PSF."""
 
     def setUp(self):
-        self.nx, self.ny = 512, 512 #2048, 4096
+        self.nx, self.ny = 513, 513 #2048, 4096
 
         self.lanczosOrder = 5
 	self.sCamCoeffs = [0.0, 1.0, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]
@@ -154,7 +154,7 @@ class PsfDistortionTestCase(unittest.TestCase):
         detector.setCenterPixel(afwGeom.Point2D(self.nx/2, self.ny/2))
         # try the upper right corner of chip 0 on suprimecam
         cenPixX, cenPixY = 5000.0, 4000.0
-        detector.setCenter(cameraGeom.FpPoint(afwGeom.Point2D(cenPixX*pixelSize,cenPixY*pixelSize)))
+        detector.setCenter(cameraGeom.FpPoint(cenPixX*pixelSize, cenPixY*pixelSize))
         
         detector.setDistortion(distorter)
         psf.setDetector(detector)
