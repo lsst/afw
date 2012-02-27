@@ -223,7 +223,7 @@ class DistortionTestCase(unittest.TestCase):
             # check the point
 	    p2 = rDist.distort(p, self.det)
 	    x, y = p2.getX(), p2.getY()
-	    r2Calc = numpy.sqrt(x*x+y*y)
+	    r2Calc = numpy.hypot(x, y)
 	    if self.prynt:
 		print "r2known,r2Calc: ", r2Known, r2Calc
 	    self.assertAlmostEqual(r2Known, r2Calc)

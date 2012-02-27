@@ -487,7 +487,7 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computePointTransform
                                                                                 ) const {
     double x = p.getX();
     double y = p.getY();
-    double r = std::sqrt(x*x + y*y);
+    double r = ::hypot(x, y);
 
     double rp = (_coefficientsDistort ? forward : !forward) ? _transformR(r, _coeffs) : _iTransformR(r);
 
