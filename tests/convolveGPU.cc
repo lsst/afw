@@ -776,8 +776,8 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
 TestResult TestGpu(int argc, char**argv)
 {
-    string baseFileName = GetInputFileName(argc, argv);
     lsst::afw::gpu::detail::PrintCudaDeviceInfo();
+    string baseFileName = GetInputFileName(argc, argv);
 
     const bool isSuccess1 = GpuTestAccuracy(baseFileName);
     const bool isSuccess2 = GpuTestExceptions(baseFileName);
@@ -789,7 +789,6 @@ TestResult TestGpu(int argc, char**argv)
 TestResult TestCpu(int argc, char**argv)
 {
     string baseFileName = GetInputFileName(argc, argv);
-    lsst::afw::gpu::detail::PrintCudaDeviceInfo();
 
     const bool isSuccess = CpuTestExceptions(baseFileName);
 
