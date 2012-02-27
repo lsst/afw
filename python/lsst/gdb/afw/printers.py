@@ -236,7 +236,7 @@ try:
 
             var = gdb.parse_and_eval(opts.eigenObject)
 
-            if not re.search(r"Eigen::(Matrix|Vector)", str(var.type)):
+            if not re.search(r"(Eigen|LinearTransform)::(Matrix|Vector)", str(var.type)):
                 raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
                 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -749,7 +749,7 @@ try:
         printer.add_printer('lsst::afw::cameraGeom::Id',
                             '^lsst::afw::cameraGeom::Id$', cgIdPrinter)
         printer.add_printer('lsst::afw::cameraGeom::Detector',
-                            '^lsst::afw::cameraGeom::Detector$', DetectorPrinter)
+                            '^lsst::afw::cameraGeom::(Amp|Ccd|Detector|DetectorMosaic)$', DetectorPrinter)
 
         printer.add_printer('lsst::afw::detection::Footprint',
                             '^lsst::afw::detection::Footprint$', FootprintPrinter)
