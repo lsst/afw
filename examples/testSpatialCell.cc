@@ -46,7 +46,7 @@ double ExampleCandidate::getCandidateRating() const {
 /**
  * Return the %image
  */
-ExampleCandidate::MaskedImageT::ConstPtr ExampleCandidate::getImage() const {
+ExampleCandidate::MaskedImageT::ConstPtr ExampleCandidate::getMaskedImage() const {
     if (_image.get() == NULL) {
         _image = MaskedImageT::Ptr(new MaskedImageT(*_parent, _bbox, lsst::afw::image::LOCAL));
     }
