@@ -57,27 +57,30 @@ int GetCudaCurDeviceId() {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
 }
 
-int GetCudaCurSMSharedMemorySize(){
+int GetCudaCurSMSharedMemorySize() {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
 }
 
-int GetCudaCurGlobalMemorySize(){
+int GetCudaCurGlobalMemorySize() {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
 }
 
-int GetCudaCurSMRegisterCount(){
+int GetCudaCurSMRegisterCount() {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
 }
 
-int GetCudaCurSMCount(){
+int GetCudaCurSMCount() {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
 }
 
-bool GetCudaCurIsDoublePrecisionSupported(){
+bool GetCudaCurIsDoublePrecisionSupported() {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
 }
 
-}}}}
+}
+}
+}
+}
 
 #else
 
@@ -244,7 +247,10 @@ bool GetCudaCurIsDoublePrecisionSupported()
 }
 
 
-}}}}
+}
+}
+}
+}
 
 #endif
 

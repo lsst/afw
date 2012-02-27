@@ -45,36 +45,36 @@ namespace afw {
 namespace gpu {
 namespace {
 
-    // globaly enables or disables GPU acceleration
-    // don't allow GPU acceleration until the constructor of EnvVarDisableGpuAcceleration is called
-    bool globalIsGpuEnabled=false;
+// globaly enables or disables GPU acceleration
+// don't allow GPU acceleration until the constructor of EnvVarDisableGpuAcceleration is called
+bool globalIsGpuEnabled = false;
 
-    class EnvVarDisableGpuAcceleration
+class EnvVarDisableGpuAcceleration
+{
+public:
+    bool val;
+
+    EnvVarDisableGpuAcceleration()
     {
-          public:
-          bool val;
-
-          EnvVarDisableGpuAcceleration()
-          {
-              const char *envVal = getenv("DISABLE_GPU_ACCELERATION");
-              if (envVal!=NULL && atoi(envVal)==1) {
-                  val=true;
-              } else {
-                  val=false;
-                  globalIsGpuEnabled=true;
-              }
-           }
-    } const envVarDisableGpuAccelerationSingleton;
+        const char *envVal = getenv("DISABLE_GPU_ACCELERATION");
+        if (envVal != NULL && atoi(envVal) == 1) {
+            val = true;
+        } else {
+            val = false;
+            globalIsGpuEnabled = true;
+        }
+    }
+} const envVarDisableGpuAccelerationSingleton;
 }
 
 void setGpuEnable(bool enable)
 {
-    if (enable){
-        if (!envVarDisableGpuAccelerationSingleton.val){
-            globalIsGpuEnabled=true;
+    if (enable) {
+        if (!envVarDisableGpuAccelerationSingleton.val) {
+            globalIsGpuEnabled = true;
         }
     } else {
-        globalIsGpuEnabled=false;
+        globalIsGpuEnabled = false;
     }
 }
 
@@ -83,5 +83,7 @@ bool getGpuEnable()
     return globalIsGpuEnabled;
 }
 
-}}} //namespace lsst::afw::gpu ends
+}
+}
+} //namespace lsst::afw::gpu ends
 
