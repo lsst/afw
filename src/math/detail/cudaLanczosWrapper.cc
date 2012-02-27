@@ -32,7 +32,7 @@
  * \author Kresimir Cosic.
  */
 
-#ifdef IS_GPU_BUILD
+#ifdef GPU_BUILD
 #include <cuda.h>
 #include <cuda_runtime.h>
 #endif
@@ -177,7 +177,7 @@ int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & inter
     return cnt;
 }
 
-#ifdef IS_GPU_BUILD
+#ifdef GPU_BUILD
 // for (plain) Image::
 // allocate CPU and GPU buffers, transfer data and call GPU kernel proxy
 // precondition: order*2 < gpu::cWarpingKernelMaxSize
@@ -427,7 +427,7 @@ int WarpImageGpuWrapper(
 
     return numGoodPixels;
 }
-#endif //IS_GPU_BUILD
+#endif //GPU_BUILD
 
 // Calculate bilinear interpolation data based on given function values
 // input:
@@ -507,7 +507,7 @@ std::pair<int, bool> warpImageGPU(
                           "GPU accelerated warping must use interpolation");
     }
 
-#ifndef IS_GPU_BUILD
+#ifndef GPU_BUILD
     throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
 #else
     if (gpuDetail::TryToSelectCudaDevice(devPref) == false)
@@ -588,7 +588,7 @@ std::pair<int, bool> warpImageGPU(
     TimeEnd(timeGpuLanczos);
 
     return std::pair<int, bool>(numGoodPixels, true);
-#endif //IS_GPU_BUILD
+#endif //GPU_BUILD
 }
 
 //
