@@ -163,8 +163,8 @@ class PsfDistortionTestCase(unittest.TestCase):
 	settings = {'scale': 'minmax', 'zoom':"to fit", 'mask':'transparency 80'}
 
         # use a point in the middle of the test image
-        x = self.nx/2
-        y = self.ny/2
+        x = self.nx//2
+        y = self.ny//2
         p = afwGeom.Point2D(x,y) # this is our **measured** coordinate
         pOrig = distorter.undistort(p, detector)  # this is where p would be without optical distortion
 
