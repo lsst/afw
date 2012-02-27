@@ -534,7 +534,7 @@ def buffer(enable=True):
     else:
         cmdBuffer.popSize()
 
-flush = cmdBuffer.flush(silent=True)
+flush = lambda : cmdBuffer.flush(silent=True)
 
 class Buffering(object):
     """A class intended to be used with python's with statement:
