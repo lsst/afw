@@ -55,9 +55,9 @@ class Distortion;
  * Describe a detector (e.g. a CCD)
  */
     class Detector
+        : public lsst::daf::base::Citizen
 #if !defined(SWIG)
-        : public lsst::daf::base::Citizen,
-          public boost::enable_shared_from_this<Detector>
+        , public boost::enable_shared_from_this<Detector>
 #endif
     {
 public:
