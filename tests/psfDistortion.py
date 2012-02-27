@@ -127,11 +127,11 @@ class PsfDistortionTestCase(unittest.TestCase):
     """Test the distortion of the PSF."""
 
     def setUp(self):
-        self.nx, self.ny = 512, 512 #2048, 4096
+        self.nx, self.ny = 513, 513 #2048, 4096
 
         self.lanczosOrder = 5
 	self.sCamCoeffs = [0.0, 1.0, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]
-	self.sCamDistorter = cameraGeom.RadialPolyDistortion(self.sCamCoeffs, self.lanczosOrder)
+	self.sCamDistorter = cameraGeom.RadialPolyDistortion(self.sCamCoeffs, True, self.lanczosOrder)
 	
     def tearDown(self):
 	del self.sCamDistorter
@@ -149,11 +149,12 @@ class PsfDistortionTestCase(unittest.TestCase):
         
 	# create a detector which is offset from the boresight
         pixelSize = 0.01 # mm
-        detector = cameraGeom.Detector(cameraGeom.Id(1), False, pixelSize)
+        allPixels = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(self.nx, self.ny))
+        detector = cameraUtils.makeDefaultCcd(allPixels, pixelSize=pixelSize)
         detector.setCenterPixel(afwGeom.Point2D(self.nx/2, self.ny/2))
         # try the upper right corner of chip 0 on suprimecam
         cenPixX, cenPixY = 5000.0, 4000.0
-        detector.setCenter(cameraGeom.FpPoint(afwGeom.Point2D(cenPixX*pixelSize,cenPixY*pixelSize)))
+        detector.setCenter(cameraGeom.FpPoint(cenPixX*pixelSize, cenPixY*pixelSize))
         
         detector.setDistortion(distorter)
         psf.setDetector(detector)
@@ -162,8 +163,8 @@ class PsfDistortionTestCase(unittest.TestCase):
 	settings = {'scale': 'minmax', 'zoom':"to fit", 'mask':'transparency 80'}
 
         # use a point in the middle of the test image
-        x = self.nx/2
-        y = self.ny/2
+        x = self.nx//2
+        y = self.ny//2
         p = afwGeom.Point2D(x,y) # this is our **measured** coordinate
         pOrig = distorter.undistort(p, detector)  # this is where p would be without optical distortion
 
