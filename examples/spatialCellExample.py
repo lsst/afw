@@ -133,8 +133,8 @@ def SpatialCellSetDemo(filename=None):
         bbox = foot.getBBox()
         xc = (bbox.getMinX() + bbox.getMaxX())/2.0
         yc = (bbox.getMinY() + bbox.getMaxY())/2.0
-
-        cellSet.insertCandidate(testSpatialCellLib.ExampleCandidate(xc, yc, im.getImage(), bbox))
+        tc = testSpatialCellLib.ExampleCandidate(xc, yc, im, bbox)
+        cellSet.insertCandidate(tc)
     #
     # OK, the SpatialCellList is populated.  Let's do something with it
     #
