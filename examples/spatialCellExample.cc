@@ -56,7 +56,7 @@ void SpatialCellSetDemo() {
      * Create an (empty) SpatialCellSet
      */
     afwMath::SpatialCellSet cellSet(
-        im->getBBox(afwImage::LOCAL),
+        im->getBBox(afwImage::PARENT),
         260, 200
     );
     /*
