@@ -1,5 +1,41 @@
-#include <cuda.h>
-#include <cuda_runtime.h>
+// -*- LSST-C++ -*- // fixed format comment for emacs
+
+/*
+ * LSST Data Management System
+ * Copyright 2008 - 2012 LSST Corporation.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+
+/**
+ * \file
+ *
+ * \ingroup afw
+ *
+ * \brief GPU image warping implementation
+ *
+ * \author Kresimir Cosic.
+ */
+
+#ifdef IS_GPU_BUILD
+    #include <cuda.h>
+    #include <cuda_runtime.h>
+#endif
 
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/geom/Box.h"
@@ -141,6 +177,7 @@ namespace {
         return cnt;
     }
 
+#ifdef IS_GPU_BUILD
     // for (plain) Image::
     // allocate CPU and GPU buffers, transfer data and call GPU kernel proxy
     // precondition: order*2 < gpu::cWarpingKernelMaxSize
@@ -390,21 +427,7 @@ namespace {
 
         return numGoodPixels;
     }
-
-    // This function is copy-pasted from warpExposure.cc. Too short to warrant a separate file.
-    inline afwGeom::Point2D computeSrcPos(
-                int destCol,  ///< destination column index
-                int destRow,  ///< destination row index
-                afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
-                afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
-                afwImage::Wcs const &srcWcs)        ///< WCS of source %image
-        {
-            double const col = afwImage::indexToPosition(destCol + destXY0[0]);
-            double const row = afwImage::indexToPosition(destRow + destXY0[1]);
-            afwGeom::Angle sky1, sky2;
-            destWcs.pixelToSky(col, row, sky1, sky2);
-            return srcWcs.skyToPixel(sky1, sky2);
-        }
+#endif //IS_GPU_BUILD
 
     // Calculate bilinear interpolation data based on given function values
     // input:
@@ -484,10 +507,9 @@ std::pair<int,bool> warpImageGPU(
                     "GPU accelerated warping must use interpolation");
     }
 
-    if (!afwGpu::isGpuBuild()) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
-    }
-
+#ifndef IS_GPU_BUILD
+    throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+#else
     if (gpuDetail::TryToSelectCudaDevice(devPref) == false)
         return std::pair<int,bool>(-1,false);
 
@@ -566,6 +588,7 @@ std::pair<int,bool> warpImageGPU(
     TimeEnd(timeGpuLanczos);
 
     return std::pair<int,bool>(numGoodPixels,true);
+#endif //IS_GPU_BUILD
 }
 
 //
@@ -604,6 +627,5 @@ INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
 /// \endcond
-
 
 }}}} //namespace lsst::afw::math::detail ends

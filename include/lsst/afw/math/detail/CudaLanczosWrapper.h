@@ -1,9 +1,55 @@
+// -*- LSST-C++ -*-
 
+/*
+ * LSST Data Management System
+ * Copyright 2008 - 2012 LSST Corporation.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+
+/**
+ * @file
+ *
+ * @brief GPU accelerared image warping
+ *
+ * @author Kresimir Cosic
+ *
+ * @ingroup afw
+ */
 
 namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
+
+    inline lsst::afw::geom::Point2D computeSrcPos(
+            int destCol,  ///< destination column index
+            int destRow,  ///< destination row index
+            lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
+            lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
+            lsst::afw::image::Wcs const &srcWcs)        ///< WCS of source %image
+    {
+        double const col = lsst::afw::image::indexToPosition(destCol + destXY0[0]);
+        double const row = lsst::afw::image::indexToPosition(destRow + destXY0[1]);
+        lsst::afw::geom::Angle sky1, sky2;
+        destWcs.pixelToSky(col, row, sky1, sky2);
+        return srcWcs.skyToPixel(sky1, sky2);
+    }
 
 /**
  * \brief GPU accelerated image warping for Lanczos resampling
@@ -47,7 +93,4 @@ std::pair<int,bool> warpImageGPU(
     );
 
 }}}} //namespace lsst::afw::math::detail ends
-
-
-
 

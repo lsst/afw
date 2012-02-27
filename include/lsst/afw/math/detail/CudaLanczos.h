@@ -28,9 +28,6 @@
  * @brief Declaration of a GPU kernel for image warping
  *        and declarations of requred datatypes
  *
- * @note This types have to be specifically declared for GPUs
- *       (since GPUs can't just use of-the shelf libraries)
- *
  * @author Kresimir Cosic
  *
  * @ingroup afw

@@ -83,8 +83,6 @@ void setGpuEnable(bool enable);
  */
 bool getGpuEnable();
 
-}
-}
-} //namespace lsst::afw::gpu ends
+}}} //namespace lsst::afw::gpu ends
 
 #endif //not defined LSST_AFW_MATH_DETAIL_GPU_DEVICEPREFERENCE_H

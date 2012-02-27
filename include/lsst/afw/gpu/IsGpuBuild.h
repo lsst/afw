@@ -37,17 +37,17 @@ namespace lsst {
 namespace afw {
 namespace gpu {
 
-
 /**
  * \brief Inline function which returns true only when GPU_BUILD macro is defined
+ *
+ * Used to determine whether compiling for GPU is enabled
  */
 inline bool isGpuBuild()
 {
-#ifdef GPU_BUILD
-    return true;
-#else
-    return false;
-#endif
+    #ifdef GPU_BUILD
+        return true;
+    #else
+        return false;
+    #endif
 }
-
 }}} //namespace lsst::afw::gpu ends

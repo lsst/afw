@@ -35,12 +35,7 @@
  * @ingroup afw
  */
 
-#ifndef GPU_BUILD 
-
-#include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/detail/Convolve.h"
-
-#include "lsst/afw/math/detail/CudaHelpers.h"
+#ifndef GPU_BUILD
 
 namespace lsst {
 namespace afw {
@@ -173,7 +168,7 @@ void TestGpuKernel(int& ret1, int& ret2)
     int res[2];
 
     GpuMemOwner<int> resGpu;
-    resGpu.Alloc(2);    
+    resGpu.Alloc(2);
 
     gpu::CallTestGpuKernel(resGpu.ptr);
 

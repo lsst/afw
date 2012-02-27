@@ -205,20 +205,6 @@ int afwMath::warpExposure(
 
 /************************************************************************************************************/
 namespace {
-    inline afwGeom::Point2D computeSrcPos(
-            int destCol,  ///< destination column index
-            int destRow,  ///< destination row index
-            afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
-            afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
-            afwImage::Wcs const &srcWcs)        ///< WCS of source %image
-    {
-        double const col = afwImage::indexToPosition(destCol + destXY0[0]);
-        double const row = afwImage::indexToPosition(destRow + destXY0[1]);
-        afwGeom::Angle sky1, sky2;
-        destWcs.pixelToSky(col, row, sky1, sky2);
-        return srcWcs.skyToPixel(sky1, sky2);
-    }
-
 
     inline double computeRelativeArea(
             afwGeom::Point2D const &srcPos,     /// source position at desired destination pixel
@@ -423,12 +409,12 @@ int afwMath::warpImage(
         std::vector<afwGeom::Extent2D> yDeltaSrcPosList(edgeColList.size());
 
         // Initialize _srcPosList for row -1
-        srcPosView[-1] = computeSrcPos(-1, -1, destXY0, destWcs, srcWcs);
+        srcPosView[-1] = detail::computeSrcPos(-1, -1, destXY0, destWcs, srcWcs);
         for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
             int const prevEndCol = edgeColList[colBand-1];
             int const endCol = edgeColList[colBand];
             afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
-            afwGeom::Point2D rightSrcPos = computeSrcPos(endCol, -1, destXY0, destWcs, srcWcs);
+            afwGeom::Point2D rightSrcPos = detail::computeSrcPos(endCol, -1, destXY0, destWcs, srcWcs);
             afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
 
             for (int col = prevEndCol + 1; col <= endCol; ++col) {
@@ -451,7 +437,7 @@ int afwMath::warpImage(
             // Set yDeltaSrcPosList for this horizontal interpolation band
             for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
                 int endCol = edgeColList[colBand];
-                afwGeom::Point2D bottomSrcPos = computeSrcPos(endCol, endRow, destXY0, destWcs, srcWcs);
+                afwGeom::Point2D bottomSrcPos = detail::computeSrcPos(endCol, endRow, destXY0, destWcs, srcWcs);
                 yDeltaSrcPosList[colBand] = (bottomSrcPos - srcPosView[endCol]) * interpInvHeight;
             }
 
@@ -527,16 +513,16 @@ int afwMath::warpImage(
         // the first value is not needed, but it's safer to compute it
         std::vector<afwGeom::Point2D>::iterator srcPosView = _srcPosList.begin() + 1;
         for (int col = -1; col < destWidth; ++col) {
-            srcPosView[col] = computeSrcPos(col, -1, destXY0, destWcs, srcWcs);
+            srcPosView[col] = detail::computeSrcPos(col, -1, destXY0, destWcs, srcWcs);
         }
 
         for (int row = 0; row < destHeight; ++row) {
             typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
 
-            srcPosView[-1] = computeSrcPos(-1, row, destXY0, destWcs, srcWcs);
+            srcPosView[-1] = detail::computeSrcPos(-1, row, destXY0, destWcs, srcWcs);
 
             for (int col = 0; col < destWidth; ++col, ++destXIter) {
-                afwGeom::Point2D srcPos = computeSrcPos(col, row, destXY0, destWcs, srcWcs);
+                afwGeom::Point2D srcPos = detail::computeSrcPos(col, row, destXY0, destWcs, srcWcs);
                 double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
                 srcPosView[col] = srcPos;
 

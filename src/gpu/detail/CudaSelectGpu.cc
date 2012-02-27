@@ -42,9 +42,6 @@ using namespace lsst::afw::gpu;
 
 #ifndef GPU_BUILD //if no GPU support, throw exceptions
 
-namespace afwImage = lsst::afw::image;
-
-
 namespace lsst {
 namespace afw {
 namespace gpu {
@@ -84,8 +81,6 @@ int GetPrefferedCudaDevice()
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
 }
 
-
-}
 }
 }
 }
@@ -232,34 +227,34 @@ bool TryToSelectCudaDevice(const lsst::afw::gpu::DevicePreference devPref)
 #if !defined(GPU_BUILD)
     return false;
 #else
-static bool isDeviceSelected = false;
-                               static bool isDeviceOk = false;
-                                       if (isDeviceSelected)
-                                           return isDeviceOk;
-                                               isDeviceSelected = true;
+    static bool isDeviceSelected = false;
+    static bool isDeviceOk = false;
+    if (isDeviceSelected)
+        return isDeviceOk;
+    isDeviceSelected = true;
 
-                                                       bool done = SelectPreferredCudaDevice();
-if (done) {
-    isDeviceOk = true;
-    return true;
-}
+    bool done = SelectPreferredCudaDevice();
+    if (done) {
+        isDeviceOk = true;
+        return true;
+    }
 
-if (devPref != lsst::afw::gpu::AUTO) {
-    AutoSelectCudaDevice();
+    if (devPref != lsst::afw::gpu::AUTO) {
+        AutoSelectCudaDevice();
+        VerifyCudaDevice();
+        isDeviceOk = true;
+        return true;
+    }
+
+    try {
+        AutoSelectCudaDevice();
+    } catch(...) {
+        return false;
+    }
     VerifyCudaDevice();
+
     isDeviceOk = true;
     return true;
-}
-
-try {
-    AutoSelectCudaDevice();
-} catch(...) {
-    return false;
-}
-VerifyCudaDevice();
-
-isDeviceOk = true;
-             return true;
 #endif
 }
 
@@ -294,4 +289,5 @@ void CudaThreadExit()
 } // namespace lsst::afw::gpu::detail ends
 
 #endif
+
 

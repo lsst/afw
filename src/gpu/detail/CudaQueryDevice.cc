@@ -44,9 +44,6 @@ using namespace lsst::afw::gpu;
 
 #include <stdio.h>
 
-namespace afwImage = lsst::afw::image;
-
-
 namespace lsst {
 namespace afw {
 namespace gpu {
