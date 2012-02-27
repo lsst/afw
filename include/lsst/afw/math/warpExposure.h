@@ -44,6 +44,7 @@
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/gpu/DevicePreference.h"
 
 namespace lsst {
 namespace afw {
@@ -196,7 +197,7 @@ namespace math {
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel, int const interpLength=0,
-        ConvolutionControl::DeviceSelection_t devSel=ConvolutionControl::AUTO_GPU_THROW);
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::defaultDevicePreference);
 
     namespace details {
         template <typename A, typename B>

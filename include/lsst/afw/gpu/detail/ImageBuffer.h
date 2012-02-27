@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,7 +25,7 @@
 /**
  * @file
  *
- * @brief contains ImageBuffer class (for simple handling of images)
+ * @brief contains ImageBuffer class (for simple handling of images or 2D arrays)
  *
  * @author Kresimir Cosic
  *
@@ -34,11 +34,11 @@
 
 namespace lsst {
 namespace afw {
-namespace math {
+namespace gpu {
 namespace detail {
 
 /**
- * @brief Class for representing an image buffer
+ * @brief Class for representing an image or 2D array in general)
  *
  * Allocates width*height pixels memory for image. Automatically allocates and
  * releases memory for buffer (this class is the owner of the buffer).

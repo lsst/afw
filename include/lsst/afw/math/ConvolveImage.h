@@ -44,6 +44,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/gpu/DevicePreference.h"
 
 namespace lsst {
 namespace afw {
@@ -55,51 +56,33 @@ namespace math {
      * @ingroup afw
      */
     class ConvolutionControl {
-    public:
-        /**
-         * @brief Selects whether to use CPU or GPU device
-         *
-         *
-         * AUTO_GPU_THROW - If all conditions for GPU execution and performance conditions are satisfied 
-         *   (AFW built with GPU support, a suitable GPU is present, GPU execution limitations and performance conditions) 
-         *   the code will attempt to use a GPU. Otherwise, CPU code 
-         *   will be used. If GPU execution results in a failure, an exception will be thrown.
-         * AUTO_GPU_SAFE - If all conditions for GPU execution and performance conditions are satisfied,
-         *    the code will attempt to use a GPU. Otherwise, CPU code will be used. 
-         *    If GPU execution results in a failure, it will fallback to CPU code.
-         * FORCE_CPU - a GPU will not be used.
-         * FORCE_GPU - code will always attempt to use a GPU. If any condition for
-         *    GPU execution is not satisfied, an exception will be thrown.    
-         *
-         * @ingroup afw
-         */
-        enum DeviceSelection_t { AUTO_GPU_THROW, AUTO_GPU_SAFE, FORCE_CPU, FORCE_GPU };
-
+    public:        
         ConvolutionControl(
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
                 int maxInterpolationDistance = 10,  ///< maximum width or height of a region
                     ///< over which to use linear interpolation interpolate
-                DeviceSelection_t deviceSelection = FORCE_CPU  ///< use Gpu acceleration?
+                lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::defaultDevicePreference  ///< 
+                    ///< use Gpu acceleration?
                 )
         :
             _doNormalize(doNormalize),
             _doCopyEdge(doCopyEdge),
             _maxInterpolationDistance(maxInterpolationDistance),
-            _deviceSelection(deviceSelection)
+            _devicePreference(devicePreference)
         { }
 
         bool getDoNormalize() const { return _doNormalize; }
         bool getDoCopyEdge() const { return _doCopyEdge; }
         int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
-        DeviceSelection_t getDeviceSelection() const { return _deviceSelection; };
+        lsst::afw::gpu::DevicePreference getDevicePreference() const { return _devicePreference; };
 
         void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
         void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
         void setMaxInterpolationDistance(int maxInterpolationDistance) {
             _maxInterpolationDistance = maxInterpolationDistance; }
-        void setDeviceSelection(DeviceSelection_t deviceSelection) { _deviceSelection = deviceSelection; }
+        void setDevicePreference(lsst::afw::gpu::DevicePreference devicePreference) { _devicePreference = devicePreference; }
 
     private:
         bool _doNormalize;  ///< normalize the kernel to sum=1?
@@ -107,7 +90,7 @@ namespace math {
                     ///< instead of setting them to the standard edge pixel?
         int _maxInterpolationDistance;  ///< maximum width or height of a region
                     ///< over which to attempt interpolation
-        DeviceSelection_t _deviceSelection; ///< choose CPU or GPU acceleration
+        lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
     };
 
     template <typename OutImageT, typename InImageT>

@@ -1,8 +1,6 @@
-// -*- LSST-C++ -*-
-
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -22,27 +20,19 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-#ifndef LSST_AFW_MATH_DETAIL_GPU_EXCEPTIONS_H
-#define LSST_AFW_MATH_DETAIL_GPU_EXCEPTIONS_H
 /**
- * @file
+ * \file
+ * \brief An include file to include the public header files for lsst::afw::gpu
  *
- * @brief additional Gpu exceptions
- *
- * @author Russell Owen
- *
- * @ingroup afw
+ * Note: this header file intentionally excludes math/detail header files because they define
+ * classes and functions which are not part of the public API.
  */
+#ifndef LSST_AFW_GPU_H
+#define LSST_AFW_GPU_H
 
-namespace lsst {
-namespace afw {
-namespace math {
 
-LSST_EXCEPTION_TYPE(GpuMemoryException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuMemoryException)
-LSST_EXCEPTION_TYPE(GpuRuntimeErrorException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::math::GpuRuntimeErrorException)
+#include "lsst/afw/gpu/DevicePreference.h"
+#include "lsst/afw/gpu/GpuExceptions.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
 
-}
-}
-}
-
-#endif
+#endif // LSST_AFW_GPU_H

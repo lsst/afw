@@ -48,9 +48,9 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
-#include "lsst/afw/math/detail/IsGpuBuild.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
 //Just for PrintCudaDeviceInfo
-#include "lsst/afw/math/detail/cudaQueryDevice.h"
+#include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 
 const int defaultInterpLen = 20;
 
@@ -181,8 +181,8 @@ void TimeOneKernelMI(
     const int interpLen
 )
 {
-    const afwMath::ConvolutionControl::DeviceSelection_t selCPU = afwMath::ConvolutionControl::FORCE_CPU;
-    const afwMath::ConvolutionControl::DeviceSelection_t selGPU = afwMath::ConvolutionControl::AUTO_GPU_THROW;
+    const lsst::afw::gpu::DevicePreference selCPU = lsst::afw::gpu::USE_CPU;
+    const lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::AUTO;
 
     afwMath::LanczosWarpingKernel lanKernel(order);
 
@@ -233,8 +233,8 @@ void TimeOneKernelPI(
     const int interpLen
 )
 {
-    const afwMath::ConvolutionControl::DeviceSelection_t selCPU = afwMath::ConvolutionControl::FORCE_CPU;
-    const afwMath::ConvolutionControl::DeviceSelection_t selGPU = afwMath::ConvolutionControl::AUTO_GPU_THROW;
+    const lsst::afw::gpu::DevicePreference selCPU = lsst::afw::gpu::USE_CPU;
+    const lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::AUTO;
 
     afwMath::LanczosWarpingKernel lanKernel(order);
 
@@ -299,7 +299,7 @@ void TestWarpGpu(
     {
         // do one warp and discard the result
         // because first warp has to initialize GPU, thus using aditional time
-        afwMath::ConvolutionControl::DeviceSelection_t selGPU = afwMath::ConvolutionControl::FORCE_GPU;
+        lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::USE_GPU;
         afwMath::LanczosWarpingKernel lanKernel(2);
         afwImage::MaskedImage<float>       resGpu(15, 15);
         warpImage(resGpu, wcs1, inImgFlt, wcs2, lanKernel, 40, selGPU);
@@ -356,8 +356,8 @@ int main(int argc, char **argv)
 {
     int status = EXIT_SUCCESS;
 
-    if (afwMath::detail::gpu::IsGpuBuild()) {
-        afwMath::detail::gpu::PrintCudaDeviceInfo();
+    if (lsst::afw::gpu::isGpuBuild()) {
+        lsst::afw::gpu::detail::PrintCudaDeviceInfo();
     } else {
         cout << "AFW not compiled with GPU support. Exiting." << endl;
         return EXIT_SUCCESS;

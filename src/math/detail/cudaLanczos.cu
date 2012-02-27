@@ -288,21 +288,7 @@ __global__ void WarpImageGpuKernel(
 		}
 }
 
-/**
-    Calls GPU kernel for lanczos resampling
-
-    @arg isMaskedImage - if false, only image plane is calculated, mask and variance panes are ignored
-    @arg destImageGpu - (output) defines memory region (on GPU) containing allocated buffers for output data
-    @arg srcImageGpu - defines memory region (on GPU) containing source image data
-    @arg srcGoodBox - valid pixel centers of Lanczos kernels
-    @arg kernelCenterX, kernelCenterY - offset of Lanczos kernel center, in pixels
-    @arg edgePixel - value in destination image of pixels outside bounds of source image
-    @arg srcBlk - defines part of input image required to calculate a block of output image. Currently unused.
-    @arg srcPosInterp - a 2D array defining a bilinear interpolation of coordinate transform function over
-                   input image. Each element defines coordinate transform of one part of input image.
-                   The size of each part is defined by the following parameter
-    @arg interpLength - defines width and height of parts of input image (for interpolation)
-*/
+// In public interface, Calls the GPU kernel for lanczos resampling
 template<typename DestPixelT, typename SrcPixelT>
 void WarpImageGpuCallKernel(bool isMaskedImage,
                             ImageDataPtr<DestPixelT> destImageGpu,

@@ -41,19 +41,16 @@
 #include <cuda_runtime.h>
 
 #include "lsst/afw/image.h"
-#include "lsst/afw/math/detail/ImageBuffer.h"
-#include "lsst/afw/math/detail/GpuExceptions.h" 
-#include "lsst/afw/math/detail/CudaMemory.h"
+#include "lsst/afw/gpu/GpuExceptions.h" 
+#include "lsst/afw/gpu/detail/ImageBuffer.h"
+#include "lsst/afw/gpu/detail/CudaMemory.h"
 
 using namespace std;
 
 namespace lsst {
 namespace afw {
-namespace math {
-namespace detail {
-
 namespace gpu {
-
+namespace detail {
 
 template<typename T>
 int GpuMemOwner<T>::TransferFromImageBase(const lsst::afw::image::ImageBase<T>& img)
@@ -102,7 +99,7 @@ INSTANTIATE(boost::uint16_t)
 /// \endcond
 
 
-}}}}} // namespace lsst::afw::math::detail::gpu ends
+}}}} // namespace lsst::afw::gpu::detail ends
 
 #endif
 

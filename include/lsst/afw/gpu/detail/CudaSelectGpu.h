@@ -25,27 +25,50 @@
 /**
  * @file
  *
- * @brief A function to determine whether compiling for GPU is enabled
+ * @brief Functions to help managing setup for GPU kernels
+ *
+ * Functions in this file are used to query GPU device,
+ * and to simplify GPu device selection 
  *
  * @author Kresimir Cosic
  *
  * @ingroup afw
  */
 
+/* requires:
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include "lsst/afw/math/detail/ImageBuffer.h"
+*/
 
 namespace lsst {
 namespace afw {
-namespace math {
-namespace detail {
 namespace gpu {
+namespace detail {
 
-inline bool IsGpuBuild()
-{
-#ifdef GPU_BUILD
-    return true;
-#else
-    return false;
-#endif
-}
 
-}}}}} //namespace lsst::afw::math::detail::gpu ends
+/// selects a cuda device
+void SetCudaDevice(int devId);
+
+/// reserves cuda device
+void CudaReserveDevice();
+
+/// frees resources and releases current cuda device
+void CudaThreadExit();
+
+// returns true when preffered device has been selected
+// returns false when there is no preffered device
+// throws exception when unable to select preffered device
+bool SelectPreferredCudaDevice();
+
+// throws exception when automatic selection fails
+void AutoSelectCudaDevice();
+
+// verifies basic parameters of Cuda device
+void VerifyCudaDevice();
+
+bool TryToSelectCudaDevice(const lsst::afw::gpu::DevicePreference devPref);
+int GetPreferredCudaDevice();
+
+}}}} //namespace lsst::afw::math::detail::gpu ends
+

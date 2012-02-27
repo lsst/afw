@@ -48,10 +48,10 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
-#include "lsst/afw/math/detail/IsGpuBuild.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
 
 //Just for PrintCudaDeviceInfo
-#include "lsst/afw/math/detail/cudaQueryDevice.h"
+#include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 
 
 
@@ -324,8 +324,8 @@ bool TestConvGpu(
     cout << "Image size: " << sizeX << " x " << sizeY;
     cout << "        Kernel normalization: " << Sel(doNormalizeKernel, "on", "off") << endl;
 
-    afwMath::ConvolutionControl cctrlXGpu  (doNormalizeKernel, false, 0, afwMath::ConvolutionControl::FORCE_GPU);
-    afwMath::ConvolutionControl cctrlXCpu  (doNormalizeKernel, false, 0, afwMath::ConvolutionControl::FORCE_CPU);
+    afwMath::ConvolutionControl cctrlXGpu  (doNormalizeKernel, false, 0, lsst::afw::gpu::USE_GPU);
+    afwMath::ConvolutionControl cctrlXCpu  (doNormalizeKernel, false, 0, lsst::afw::gpu::USE_CPU);
 
     afwImage::MaskedImage<double> resMIDbl(inMIDbl.getDimensions());
     afwImage::MaskedImage<float>  resMIFlt(inMIDbl.getDimensions());
@@ -493,10 +493,10 @@ bool GpuTestExceptions(const string imgBaseFileName)
 
     PrintSeparator();
 
-    afwMath::ConvolutionControl cctrlFGpu   (false, false, 0, afwMath::ConvolutionControl::FORCE_GPU);
-    afwMath::ConvolutionControl cctrlFCpu   (false, false, 0, afwMath::ConvolutionControl::FORCE_CPU);
-    afwMath::ConvolutionControl cctrlThrw  (false, false, 0, afwMath::ConvolutionControl::AUTO_GPU_THROW);
-    afwMath::ConvolutionControl cctrlSafe  (false, false, 0, afwMath::ConvolutionControl::AUTO_GPU_SAFE);
+    afwMath::ConvolutionControl cctrlFGpu   (false, false, 0, lsst::afw::gpu::USE_GPU);
+    afwMath::ConvolutionControl cctrlFCpu   (false, false, 0, lsst::afw::gpu::USE_CPU);
+    afwMath::ConvolutionControl cctrlThrw  (false, false, 0, lsst::afw::gpu::AUTO);
+    afwMath::ConvolutionControl cctrlSafe  (false, false, 0, lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK);
 
     afwMath::FixedKernel::Ptr fixedKernel = ConstructKernel(5, 7);
     afwMath::GaussianFunction2<KerPixel> gaussFunc(0.8, 0.7, 30);
@@ -522,7 +522,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with fixed kernel with AUTO_GPU_THROW "
+        cout << "ERROR: GPU convolution with fixed kernel with AUTO "
              << "should have not thrown an exception" << endl;
     }
 
@@ -535,7 +535,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
 
     if (!isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with FORCE_GPU"
+        cout << "ERROR: GPU convolution with delta function kernel with USE_GPU"
              << "should have thrown an exception because it's acceleration is not supported" << endl;
     }
 
@@ -548,7 +548,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with AUTO_GPU_SAFE"
+        cout << "ERROR: GPU convolution with delta function kernel with AUTO_WITH_CPU_FALLBACK"
              << "should not have thrown an exception because it should have fell back to CPU execution" << endl;
     }
 
@@ -561,7 +561,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with AUTO_GPU_THROW"
+        cout << "ERROR: GPU convolution with delta function kernel with AUTO"
              << "should not have thrown an exception because it should have fell back to CPU execution" << endl;
     }
 
@@ -574,7 +574,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with FORCE_CPU"
+        cout << "ERROR: GPU convolution with delta function kernel with USE_CPU"
              << "should not have thrown an exception because it should have used CPU execution" << endl;
     }
 
@@ -587,7 +587,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with analytic kernel with FORCE_GPU "
+        cout << "ERROR: GPU convolution with analytic kernel with USE_GPU "
              << "should have not thrown an exception because this specific kernel was spatially invariant" << endl;
     }
 
@@ -601,7 +601,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
     if (!isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with linear combination kernel "
-             << "with gaussian spatial function with FORCE_GPU "
+             << "with gaussian spatial function with USE_GPU "
              << "should have thrown an exception because gaussian spatial function is not supported" << endl;
     }
 
@@ -615,7 +615,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
     if (isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with linear combination kernel "
-             << "with gaussian spatial function with AUTO_GPU_THROW "
+             << "with gaussian spatial function with AUTO "
              << "should not have thrown an exception because it should have fell back to CPU execution" << endl;
     }
 
@@ -639,10 +639,10 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
     PrintSeparator();
 
-    afwMath::ConvolutionControl cctrlFGpu   (false, false, 0, afwMath::ConvolutionControl::FORCE_GPU);
-    afwMath::ConvolutionControl cctrlFCpu   (false, false, 0, afwMath::ConvolutionControl::FORCE_CPU);
-    afwMath::ConvolutionControl cctrlThrw  (false, false, 0, afwMath::ConvolutionControl::AUTO_GPU_THROW);
-    afwMath::ConvolutionControl cctrlSafe  (false, false, 0, afwMath::ConvolutionControl::AUTO_GPU_SAFE);
+    afwMath::ConvolutionControl cctrlFGpu   (false, false, 0, lsst::afw::gpu::USE_GPU);
+    afwMath::ConvolutionControl cctrlFCpu   (false, false, 0, lsst::afw::gpu::USE_CPU);
+    afwMath::ConvolutionControl cctrlThrw  (false, false, 0, lsst::afw::gpu::AUTO);
+    afwMath::ConvolutionControl cctrlSafe  (false, false, 0, lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK);
 
     afwMath::FixedKernel::Ptr fixedKernel = ConstructKernel(5, 7);
     afwMath::GaussianFunction2<KerPixel> gaussFunc(0.8, 0.7, 30);
@@ -668,7 +668,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with fixed kernel with AUTO_GPU_THROW "
+        cout << "ERROR: GPU convolution with fixed kernel with AUTO "
              << "should have not thrown an exception" << endl;
     }
 
@@ -681,7 +681,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
     if (!isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with FORCE_GPU"
+        cout << "ERROR: GPU convolution with delta function kernel with USE_GPU"
              << "should have thrown an exception because AFW was not compiled with GPU support" << endl;
     }
 
@@ -694,7 +694,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with AUTO_GPU_SAFE"
+        cout << "ERROR: GPU convolution with delta function kernel with AUTO_WITH_CPU_FALLBACK"
              << "should not have thrown an exception because it should have used to CPU execution" << endl;
     }
 
@@ -707,7 +707,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with AUTO_GPU_THROW"
+        cout << "ERROR: GPU convolution with delta function kernel with AUTO"
              << "should not have thrown an exception because it should have fell back to CPU execution" << endl;
     }
 
@@ -720,7 +720,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
     if (isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with delta function kernel with FORCE_CPU"
+        cout << "ERROR: GPU convolution with delta function kernel with USE_CPU"
              << "should not have thrown an exception because it should have used CPU execution" << endl;
     }
 
@@ -733,7 +733,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
 
     if (!isThrown) {
         isSuccess = false;
-        cout << "ERROR: GPU convolution with analytic kernel with FORCE_GPU "
+        cout << "ERROR: GPU convolution with analytic kernel with USE_GPU "
              << "should have thrown an exception because AFW was not compiled with GPU support" << endl;
     }
 
@@ -747,7 +747,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
     if (!isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with linear combination kernel "
-             << "with gaussian spatial function with FORCE_GPU "
+             << "with gaussian spatial function with USE_GPU "
              << "should have thrown an exception because AFW was not compiled with GPU support" << endl;
     }
 
@@ -761,7 +761,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
     if (isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with linear combination kernel "
-             << "with gaussian spatial function with AUTO_GPU_THROW "
+             << "with gaussian spatial function with AUTO "
              << "should not have thrown an exception because it should have used CPU execution" << endl;
     }
 
@@ -777,7 +777,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
 TestResult TestGpu(int argc, char**argv)
 {
     string baseFileName = GetInputFileName(argc, argv);
-    afwMath::detail::gpu::PrintCudaDeviceInfo();
+    lsst::afw::gpu::detail::PrintCudaDeviceInfo();
 
     const bool isSuccess1 = GpuTestAccuracy(baseFileName);
     const bool isSuccess2 = GpuTestExceptions(baseFileName);
@@ -789,7 +789,7 @@ TestResult TestGpu(int argc, char**argv)
 TestResult TestCpu(int argc, char**argv)
 {
     string baseFileName = GetInputFileName(argc, argv);
-    afwMath::detail::gpu::PrintCudaDeviceInfo();
+    lsst::afw::gpu::detail::PrintCudaDeviceInfo();
 
     const bool isSuccess = CpuTestExceptions(baseFileName);
 
@@ -805,7 +805,7 @@ int main(int argc, char **argv)
 
     int status = EXIT_SUCCESS;
     try {
-        if (afwMath::detail::gpu::IsGpuBuild()) {
+        if (lsst::afw::gpu::isGpuBuild()) {
             status = TestGpu(argc, argv);
         } else {
             status = TestCpu(argc, argv);

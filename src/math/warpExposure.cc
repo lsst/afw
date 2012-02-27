@@ -47,8 +47,9 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/coord/Coord.h"
-#include "lsst/afw/math/detail/IsGpuBuild.h"
-#include "lsst/afw/math/detail/GpuExceptions.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
+#include "lsst/afw/gpu/GpuExceptions.h"
+#include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/math/detail/CudaLanczosWrapper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -299,7 +300,7 @@ int afwMath::warpImage(
     int const interpLength,              ///< Distance over which WCS can be linearily interpolated
         ///< 0 means no interpolation and uses an optimized branch of the code
         ///< 1 also performs no interpolation but it runs the interpolation code branch
-    ConvolutionControl::DeviceSelection_t devSel  ///< Specifies whether to use CPU or GPU device
+    lsst::afw::gpu::DevicePreference devPref  ///< Specifies whether to use CPU or GPU device
     )
 {
     if (afwMath::details::isSameObject(destImage, srcImage)) {
@@ -307,37 +308,37 @@ int afwMath::warpImage(
             "destImage is srcImage; cannot warp in place");
     }
 
-    if (interpLength<1) {
-        if (devSel == afwMath::ConvolutionControl::FORCE_GPU) {
+    if (lsst::afw::gpu::getGpuEnable()==false) {
+        // (this case bypasses all GPU acceleration code)
+    } else if ( interpLength<1) {
+        if (devPref == lsst::afw::gpu::USE_GPU) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu cannot warp without interpolation enabled");
         }
     } else if(NULL == dynamic_cast<afwMath::LanczosWarpingKernel const*>(&warpingKernel)){
-        if (devSel == afwMath::ConvolutionControl::FORCE_GPU) {
+        if (devPref == lsst::afw::gpu::USE_GPU) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,"Gpu can process only Lanczos kernels");
         }
+    } else if (!lsst::afw::gpu::isGpuBuild()) {
+        if (devPref == lsst::afw::gpu::USE_GPU) {
+            throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+                    "Gpu acceleration must be enabled at compiling for ConvolutionControl::USE_GPU");
+        }
     } else {
-        if (!detail::gpu::IsGpuBuild()) {
-            if (devSel == afwMath::ConvolutionControl::FORCE_GPU) {
-                throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
-                        "Gpu acceleration must be enabled at compiling for ConvolutionControl::FORCE_GPU");
-            }
-        } else {
-            if (devSel == ConvolutionControl::AUTO_GPU_SAFE) {
-                try {
-                    std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs,
-                                                                      warpingKernel, interpLength, devSel);
-                    if (result.second) return result.first;
-                } catch(GpuMemoryException) { }
-                catch(pexExcept::MemoryException) { }
-                catch(GpuRuntimeErrorException) { }
-            } else if (devSel != ConvolutionControl::FORCE_CPU) {
+        if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
+            try {
                 std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs,
-                                                                  warpingKernel, interpLength, devSel);
+                                                                    warpingKernel, interpLength, devPref);
                 if (result.second) return result.first;
-                if (devSel == ConvolutionControl::FORCE_GPU) {
-                    throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
-                                      "Gpu cannot perform this warp (kernel too big?)");
-                }
+            } catch(lsst::afw::gpu::GpuMemoryException) { }
+            catch(pexExcept::MemoryException) { }
+            catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
+        } else if (devPref != lsst::afw::gpu::USE_CPU) {
+            std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs,
+                                                                warpingKernel, interpLength, devPref);
+            if (result.second) return result.first;
+            if (devPref == lsst::afw::gpu::USE_GPU) {
+                throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+                                    "Gpu cannot perform this warp (kernel too big?)");
             }
         }
     }
@@ -599,14 +600,14 @@ int afwMath::warpImage(
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel, int const interpLength, \
-        ConvolutionControl::DeviceSelection_t devSel); NL    \
+        lsst::afw::gpu::DevicePreference devPref); NL    \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel, int const interpLength, \
-        ConvolutionControl::DeviceSelection_t devSel); NL    \
+        lsst::afw::gpu::DevicePreference devPref); NL    \
     template int afwMath::warpExposure( \
         EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \

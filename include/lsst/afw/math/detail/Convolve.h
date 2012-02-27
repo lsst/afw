@@ -43,7 +43,7 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/ConvolveImage.h"
-#include "lsst/afw/math/detail/GpuExceptions.h"
+#include "lsst/afw/gpu/GpuExceptions.h"
 
 #define IS_INSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
 

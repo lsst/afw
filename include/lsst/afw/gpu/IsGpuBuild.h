@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,45 +25,29 @@
 /**
  * @file
  *
- * @brief Functions to help managing setup for GPU kernels
- *
- * Functions in this file are used to query GPU device,
- * and to simplify GPu device selection 
+ * @brief A function to determine whether compiling for GPU is enabled
  *
  * @author Kresimir Cosic
  *
  * @ingroup afw
  */
 
-/* requires:
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include "lsst/afw/math/detail/ImageBuffer.h"
-*/
 
 namespace lsst {
 namespace afw {
-namespace math {
-namespace detail {
 namespace gpu {
 
-void PrintCudaDeviceInfo();
-int GetCudaCurDeviceId();
-int GetCudaCurSMSharedMemorySize();
-int GetCudaCurGlobalMemorySize();
-int GetCudaCurSMRegisterCount();
-int GetCudaCurSMCount();
-bool GetCudaCurIsDoublePrecisionSupported();
 
-void SetCudaDevice(int devId);
-void CudaReserveDevice();
-void CudaThreadExit();
+/**
+ * \brief Inline function which returns true only when GPU_BUILD macro is defined
+ */
+inline bool isGpuBuild()
+{
+#ifdef GPU_BUILD
+    return true;
+#else
+    return false;
+#endif
+}
 
-bool SelectPreferredCudaDevice();
-void AutoSelectCudaDevice();
-void VerifyCudaDevice();
-bool TryToSelectCudaDevice(const lsst::afw::math::ConvolutionControl::DeviceSelection_t devSel);
-int GetPreferredCudaDevice();
-
-}}}}} //namespace lsst::afw::math::detail::gpu ends
-
+}}} //namespace lsst::afw::gpu ends

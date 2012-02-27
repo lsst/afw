@@ -46,7 +46,6 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-namespace gpu {
 
 
 void TestGpuKernel(int& ret1, int& ret2) {
@@ -71,7 +70,6 @@ bool IsSufficientSharedMemoryAvailable_ForSfn(int order, int kernelN)
 }
 }
 }
-}
 
 #else
 
@@ -83,15 +81,17 @@ bool IsSufficientSharedMemoryAvailable_ForSfn(int order, int kernelN)
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 
-#include "lsst/afw/math/detail/ImageBuffer.h"
+#include "lsst/afw/gpu/detail/ImageBuffer.h"
 #include "lsst/afw/math/detail/convCUDA.h"
 #include "lsst/afw/math/detail/cudaConvWrapper.h"
-#include "lsst/afw/math/detail/cudaQueryDevice.h"
+#include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 #include "lsst/afw/math/detail/Convolve.h"
-#include "lsst/afw/math/detail/CudaHelpers.h"
-#include "lsst/afw/math/detail/CudaMemory.h"
+#include "lsst/afw/gpu/detail/CudaSelectGpu.h"
+#include "lsst/afw/gpu/detail/CudaMemory.h"
 
 using namespace std;
+using namespace lsst::afw::gpu;
+using namespace lsst::afw::gpu::detail;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace mathDetailGpu = lsst::afw::math::detail::gpu;
@@ -107,7 +107,6 @@ namespace {
 const int shMemBytesUsed = 200;
 }
 
-namespace gpu {
 
 // Returns true if there is sufficient shared memory for loading an image block,
 // where image block includes including filter frame.
@@ -173,17 +172,16 @@ void TestGpuKernel(int& ret1, int& ret2)
 {
     int res[2];
 
-    int* resGpu = gpu::AllocOnGpu<int>(2);
+    GpuMemOwner<int> resGpu;
+    resGpu.Alloc(2);    
 
-    CallTestGpuKernel(resGpu);
+    gpu::CallTestGpuKernel(resGpu.ptr);
 
-    gpu::CopyFromGpu(res, resGpu, 2);
+    resGpu.CopyFromGpu(res);
 
     ret1 = res[0];
     ret2 = res[1];
 }
-
-} // namespace lsst::afw::math::detail::gpu ends
 
 namespace {
 
@@ -244,32 +242,32 @@ void GPU_ConvolutionImage_LC_Img(
     const int kernelN = sFn.size();
 
     //transfer input image
-    gpu::GpuMemOwner<InPixelT > inImageGPU;
+    GpuMemOwner<InPixelT > inImageGPU;
     inImageGPU.Transfer(inImage);
     if (inImageGPU.ptr == NULL)  {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input image");
     }
     // allocate output image planes on GPU
-    gpu::GpuMemOwner<OutPixelT> outImageGPU;
+    GpuMemOwner<OutPixelT> outImageGPU;
     outImageGPU.Alloc( outImage.Size());
     if (outImageGPU.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for output image");
     }
     //transfer coordinate tranform data
-    gpu::GpuMemOwner<double> colPosGPU_Owner;
+    GpuMemOwner<double> colPosGPU_Owner;
     colPosGPU_Owner.TransferVec(colPos);
     if (colPosGPU_Owner.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException,
                           "Not enough memory on GPU for row coordinate tranformation data");
     }
-    gpu::GpuMemOwner<double> rowPosGPU_Owner;
+    GpuMemOwner<double> rowPosGPU_Owner;
     rowPosGPU_Owner.TransferVec(rowPos);
     if (rowPosGPU_Owner.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException,
                           "Not enough memory on GPU for column coordinate tranformation data");
     }
     vector< double* >                     sFnParamsGPUPtr(kernelN);
-    vector< gpu::GpuMemOwner<double> >    sFnParamsGPU_Owner(kernelN);
+    vector< GpuMemOwner<double> >    sFnParamsGPU_Owner(kernelN);
 
     //transfer sfn parameters to GPU
     for (int i = 0; i < kernelN; i++) {
@@ -280,7 +278,7 @@ void GPU_ConvolutionImage_LC_Img(
         }
     }
 
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
 
     for (int i = 0; i < kernelN; i++)
     {
@@ -334,15 +332,15 @@ void GPU_ConvolutionImage_LC_Img(
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
     }
 
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     //transfer basis kernel sums
     if (doNormalize) {
-        gpu::GpuMemOwner<double> basisKernelSumsGPU;
+        GpuMemOwner<double> basisKernelSumsGPU;
         basisKernelSumsGPU.TransferVec(basisKernelSums);
 
         bool isDivideByZero = false;
-        gpu::GpuMemOwner<bool> isDivideByZeroGPU;
+        GpuMemOwner<bool> isDivideByZeroGPU;
         isDivideByZeroGPU.Transfer(&isDivideByZero, 1);
 
         gpu::Call_NormalizationImageValues(
@@ -357,7 +355,7 @@ void GPU_ConvolutionImage_LC_Img(
         if (cudaGetLastError() != cudaSuccess) {
             throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
         }
-        gpu::CopyFromGpu<bool>(&isDivideByZero, isDivideByZeroGPU.ptr, 1);
+        CopyFromGpu<bool>(&isDivideByZero, isDivideByZeroGPU.ptr, 1);
         if (isDivideByZero) {
             throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
         }
@@ -379,7 +377,7 @@ void GPU_ConvolutionImage_LC_Img(
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
     }
 
-    gpu::CopyFromGpu(outImage.img, outImageGPU.ptr, outImage.Size() );
+    CopyFromGpu(outImage.img, outImageGPU.ptr, outImage.Size() );
 
 }
 
@@ -413,12 +411,12 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
     }
 
     // transfer array of basis kernels on GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelsGPU;
+    GpuMemOwner<KerPixel > basisKernelsGPU;
     basisKernelsGPU.Alloc(kernelSize * kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         KerPixel* kernelBeg = basisKernelsGPU.ptr + (kernelSize * i);
-        gpu::CopyToGpu(kernelBeg,
+        CopyToGpu(kernelBeg,
                        basisKernels[i].img,
                        kernelSize
                       );
@@ -426,7 +424,7 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
 
     // allocate array of spatial function value images on GPU
     vector< double* >                     sFnValGPUPtr(kernelN);
-    vector< gpu::GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
+    vector< GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         sFnValGPUPtr[i] = sFnValGPU_Owner[i].Alloc(outWidth * outHeight);
@@ -434,10 +432,10 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
             throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for spatial function values");
         }
     }
-    gpu::GpuMemOwner<double*> sFnValGPU;
+    GpuMemOwner<double*> sFnValGPU;
     sFnValGPU.TransferVec(sFnValGPUPtr);
 
-    gpu::GpuMemOwner<double > normGPU_Owner;
+    GpuMemOwner<double > normGPU_Owner;
     vector<double> basisKernelSums(kernelN);
     if (doNormalize) {
         //allocate normalization coeficients
@@ -515,12 +513,12 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     }
 
     // transfer basis kernels to GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelsGPU;
+    GpuMemOwner<KerPixel > basisKernelsGPU;
     basisKernelsGPU.Alloc(kernelSize * kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         KerPixel* kernelBeg = basisKernelsGPU.ptr + (kernelSize * i);
-        gpu::CopyToGpu(kernelBeg,
+        CopyToGpu(kernelBeg,
                        basisKernels[i].img,
                        kernelSize
                       );
@@ -528,7 +526,7 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
 
     //alloc sFn images on GPU
     vector< double* >                     sFnValGPUPtr(kernelN);
-    vector< gpu::GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
+    vector< GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         sFnValGPUPtr[i] = sFnValGPU_Owner[i].Alloc(outWidth * outHeight);
@@ -536,11 +534,11 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
             throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for spatial function values");
         }
     }
-    gpu::GpuMemOwner<double*> sFnValGPU;
+    GpuMemOwner<double*> sFnValGPU;
     sFnValGPU.TransferVec(sFnValGPUPtr);
 
     //allocate normalization coeficients image on GPU
-    gpu::GpuMemOwner<double > normGPU_Owner;
+    GpuMemOwner<double > normGPU_Owner;
     std::vector<KerPixel> basisKernelSums(kernelN);
     if (doNormalize) {
         //allocate normalization coeficients
@@ -568,30 +566,30 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     );
 
     //transfer input image planes to GPU
-    gpu::GpuMemOwner<VarPixel> inImageGPUVar;
+    GpuMemOwner<VarPixel> inImageGPUVar;
     inImageGPUVar.Transfer(inImageVar);
     if (inImageGPUVar.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input variance");
     }
-    gpu::GpuMemOwner<MskPixel> inImageGPUMsk;
+    GpuMemOwner<MskPixel> inImageGPUMsk;
     inImageGPUMsk.Transfer(inImageMsk);
     if (inImageGPUMsk.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input mask");
     }
 
     // allocate output image planes on GPU
-    gpu::GpuMemOwner<VarPixel > outImageGPUVar;
+    GpuMemOwner<VarPixel > outImageGPUVar;
     outImageGPUVar.Alloc( outImageVar.Size());
     if (outImageGPUVar.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for output variance");
     }
-    gpu::GpuMemOwner<MskPixel > outImageGPUMsk;
+    GpuMemOwner<MskPixel > outImageGPUMsk;
     outImageGPUMsk.Alloc( outImageMsk.Size());
     if (outImageGPUMsk.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for output mask");
     }
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     cudaGetLastError(); //clear error status
     mathDetailGpu::Call_ConvolutionKernel_LC_Var(
@@ -610,8 +608,8 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     if (cudaGetLastError() != cudaSuccess)
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
 
-    gpu::CopyFromGpu(outImageVar.img, outImageGPUVar.ptr, outImageVar.Size() );
-    gpu::CopyFromGpu(outImageMsk.img, outImageGPUMsk.ptr, outImageMsk.Size() );
+    CopyFromGpu(outImageVar.img, outImageGPUVar.ptr, outImageVar.Size() );
+    CopyFromGpu(outImageMsk.img, outImageGPUMsk.ptr, outImageMsk.Size() );
 }
 
 #define INSTANTIATE_GPU_ConvolutionMI_LinearCombinationKernel(OutPixelT,InPixelT)  \
@@ -641,31 +639,31 @@ void GPU_ConvolutionImage_SpatiallyInvariantKernel(
     int kernelW = kernel.width;
     int kernelH = kernel.height;
 
-    gpu::GpuMemOwner<InPixelT> inImageGPU;
+    GpuMemOwner<InPixelT> inImageGPU;
     inImageGPU.Transfer(inImage);
     if (inImageGPU.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input image");
     }
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
 
     // allocate array of kernels on GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelGPU;
+    GpuMemOwner<KerPixel > basisKernelGPU;
     basisKernelGPU.Transfer(kernel);
     if (basisKernelGPU.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for kernel");
     }
     // allocate array of output images on GPU   (one output image per kernel)
     vector< OutPixelT* > outImageGPUPtr(1);
-    vector< gpu::GpuMemOwner<OutPixelT> > outImageGPU_Owner(1);
+    vector< GpuMemOwner<OutPixelT> > outImageGPU_Owner(1);
 
     outImageGPUPtr[0] = outImageGPU_Owner[0].Alloc( outImage.Size());
     if (outImageGPUPtr[0] == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for output image");
     }
-    gpu::GpuMemOwner<OutPixelT*> outImageGPU;
+    GpuMemOwner<OutPixelT*> outImageGPU;
     outImageGPU.TransferVec(outImageGPUPtr);
 
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     cudaGetLastError(); //clear error status
     mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<OutPixelT, InPixelT>(
@@ -680,7 +678,7 @@ void GPU_ConvolutionImage_SpatiallyInvariantKernel(
     if (cudaGetLastError() != cudaSuccess) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
     }
-    gpu::CopyFromGpu(outImage.img, outImageGPUPtr[0], outImage.Size() );
+    CopyFromGpu(outImage.img, outImageGPUPtr[0], outImage.Size() );
 }
 
 #define INSTANTIATE_GPU_ConvolutionImage_SpatiallyInvariantKernel(OutPixelT,InPixelT)  \
@@ -704,25 +702,25 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
     int kernelW = kernel.width;
     int kernelH = kernel.height;
 
-    gpu::GpuMemOwner<InPixelT> inImageGPUImg;
+    GpuMemOwner<InPixelT> inImageGPUImg;
     inImageGPUImg.Transfer(inImageImg);
     if (inImageGPUImg.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for input image");
     }
-    gpu::GpuMemOwner<VarPixel> inImageGPUVar;
+    GpuMemOwner<VarPixel> inImageGPUVar;
     inImageGPUVar.Transfer(inImageVar);
     if (inImageGPUVar.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for input variance");
     }
-    gpu::GpuMemOwner<MskPixel> inImageGPUMsk;
+    GpuMemOwner<MskPixel> inImageGPUMsk;
     inImageGPUMsk.Transfer(inImageMsk);
     if (inImageGPUMsk.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for input mask");
     }
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
 
     //allocate kernel on GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelGPU;
+    GpuMemOwner<KerPixel > basisKernelGPU;
     basisKernelGPU.Transfer(kernel);
     if (basisKernelGPU.ptr == NULL)
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for kernel");
@@ -732,9 +730,9 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
     vector< VarPixel*  > outImageGPUPtrVar(1);
     vector< MskPixel*  > outImageGPUPtrMsk(1);
 
-    vector< gpu::GpuMemOwner<OutPixelT> > outImageGPU_OwnerImg(1);
-    vector< gpu::GpuMemOwner<VarPixel > > outImageGPU_OwnerVar(1);
-    vector< gpu::GpuMemOwner<MskPixel > > outImageGPU_OwnerMsk(1);
+    vector< GpuMemOwner<OutPixelT> > outImageGPU_OwnerImg(1);
+    vector< GpuMemOwner<VarPixel > > outImageGPU_OwnerVar(1);
+    vector< GpuMemOwner<MskPixel > > outImageGPU_OwnerMsk(1);
 
     outImageGPUPtrImg[0] = outImageGPU_OwnerImg[0].Alloc( outImageImg.Size());
     if (outImageGPUPtrImg[0] == NULL) {
@@ -749,14 +747,14 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for output mask");
     }
 
-    gpu::GpuMemOwner<OutPixelT*> outImageGPUImg;
+    GpuMemOwner<OutPixelT*> outImageGPUImg;
     outImageGPUImg.TransferVec(outImageGPUPtrImg);
-    gpu::GpuMemOwner<VarPixel*> outImageGPUVar;
+    GpuMemOwner<VarPixel*> outImageGPUVar;
     outImageGPUVar.TransferVec(outImageGPUPtrVar);
-    gpu::GpuMemOwner<MskPixel*> outImageGPUMsk;
+    GpuMemOwner<MskPixel*> outImageGPUMsk;
     outImageGPUMsk.TransferVec(outImageGPUPtrMsk);
 
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<OutPixelT, InPixelT>(
         inImageGPUImg.ptr, inImageImg.width, inImageImg.height,
@@ -773,7 +771,7 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
         }
     }
 
-    gpu::CopyFromGpu(outImageImg.img, outImageGPUPtrImg[0], outImageImg.Size() );
+    CopyFromGpu(outImageImg.img, outImageGPUPtrImg[0], outImageImg.Size() );
 
     basisKernelGPU.CopyToGpu(kernel);
 
@@ -804,8 +802,8 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
     if (cudaGetLastError() != cudaSuccess) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU mask calculation failed to run");
     }
-    gpu::CopyFromGpu(outImageVar.img, outImageGPUPtrVar[0], outImageVar.Size() );
-    gpu::CopyFromGpu(outImageMsk.img, outImageGPUPtrMsk[0], outImageMsk.Size() );
+    CopyFromGpu(outImageVar.img, outImageGPUPtrVar[0], outImageVar.Size() );
+    CopyFromGpu(outImageMsk.img, outImageGPUPtrMsk[0], outImageMsk.Size() );
 }
 
 #define INSTANTIATE_GPU_ConvolutionMI_SpatiallyInvariantKernel(OutPixelT,InPixelT)  \

@@ -48,9 +48,9 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
-#include "lsst/afw/math/detail/IsGpuBuild.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
 //Just for PrintCudaDeviceInfo
-#include "lsst/afw/math/detail/cudaQueryDevice.h"
+#include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 
 
 using namespace std;
@@ -285,8 +285,8 @@ void TimeOneKernelMI(
 
     const afwImage::MaskedImage<T>  inMI = inImg;
 
-    afwMath::ConvolutionControl cctrlXGpu  (doNormalizeKernel, false, 0, afwMath::ConvolutionControl::AUTO_GPU_THROW);
-    afwMath::ConvolutionControl cctrlXCpu  (doNormalizeKernel, false, 0, afwMath::ConvolutionControl::FORCE_CPU);
+    afwMath::ConvolutionControl cctrlXGpu  (doNormalizeKernel, false, 0, lsst::afw::gpu::AUTO);
+    afwMath::ConvolutionControl cctrlXCpu  (doNormalizeKernel, false, 0, lsst::afw::gpu::USE_CPU);
 
     afwImage::MaskedImage<T> resMI   (inMI.getDimensions());
     afwImage::MaskedImage<T> resMIGpu(inMI.getDimensions());
@@ -336,8 +336,8 @@ void TimeOneKernelPI(
     const afwImage::MaskedImage<T>  inMI = inImg;
     const afwImage::Image<T> inPI = *inMI.getImage();
 
-    afwMath::ConvolutionControl cctrlXGpu  (doNormalizeKernel, false, 0, afwMath::ConvolutionControl::AUTO_GPU_THROW);
-    afwMath::ConvolutionControl cctrlXCpu  (doNormalizeKernel, false, 0, afwMath::ConvolutionControl::FORCE_CPU);
+    afwMath::ConvolutionControl cctrlXGpu  (doNormalizeKernel, false, 0, lsst::afw::gpu::AUTO);
+    afwMath::ConvolutionControl cctrlXCpu  (doNormalizeKernel, false, 0, lsst::afw::gpu::USE_CPU);
 
     afwImage::Image<T>       resPI   (inMI.getDimensions());
     afwImage::Image<T>       resPIGpu(inMI.getDimensions());
@@ -439,7 +439,7 @@ void TestConvGpu(
         // do one convolution and discard the result
         // because first convolution has to initialize GPU, thus using aditional time
         afwMath::FixedKernel::Ptr     fixedKernel = ConstructKernel(7, 7);
-        afwMath::ConvolutionControl   cctrlXGpu  (false, false, 0, afwMath::ConvolutionControl::AUTO_GPU_THROW);
+        afwMath::ConvolutionControl   cctrlXGpu  (false, false, 0, lsst::afw::gpu::AUTO);
         afwImage::MaskedImage<float>  resMI   (inMIFlt.getDimensions());
         afwMath::convolve(resMI, inMIFlt, *fixedKernel, cctrlXGpu);
     }
@@ -489,8 +489,8 @@ int main(int argc, char **argv)
 {
     int status = EXIT_SUCCESS;
 
-    if (afwMath::detail::gpu::IsGpuBuild()) {
-        afwMath::detail::gpu::PrintCudaDeviceInfo();
+    if (lsst::afw::gpu::isGpuBuild()) {
+        lsst::afw::gpu::detail::PrintCudaDeviceInfo();
     } else {
         cout << "AFW not compiled with GPU support. Exiting." << endl;
         return EXIT_SUCCESS;
