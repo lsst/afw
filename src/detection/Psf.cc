@@ -10,11 +10,13 @@
 #include <typeinfo>
 #include <cmath>
 #include "boost/pointer_cast.hpp"
+#include "lsst/pex/logging.h"
 #include "lsst/afw/detection/Psf.h"
 
 /************************************************************************************************************/
 
 namespace pexExcept = lsst::pex::exceptions;
+namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
@@ -35,7 +37,8 @@ Psf::Image::Ptr Psf::computeImage(
         afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
         bool normalizePeak,              ///< normalize the image to have a maximum value of 1.0
         bool distort
-                                    ) const {
+                                    ) const
+{
     lsst::afw::image::Color color;
     afwGeom::Point2D const ccdXY = lsst::afw::geom::Point2D(0, 0);
 
@@ -49,10 +52,11 @@ Psf::Image::Ptr Psf::computeImage(
  * \note The real work is done in the virtual function, Psf::doComputeImage
  */
 Psf::Image::Ptr Psf::computeImage(
-        afwGeom::Point2D const& ccdXY, ///< Position in image where PSF should be created
-        bool normalizePeak,              ///< normalize the image to have a maximum value of 1.0
-        bool distort
-                                    ) const {
+        afwGeom::Point2D const& ccdXY,  ///< Position in image where PSF should be created
+        bool normalizePeak,             ///< normalize the image to have a maximum value of 1.0
+        bool distort                    ///< generate an image that includes the known camera distortion
+                                    ) const
+{
     lsst::afw::image::Color color;
     afwGeom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0);
 
@@ -67,11 +71,12 @@ Psf::Image::Ptr Psf::computeImage(
  * \note The real work is done in the virtual function, Psf::doComputeImage
  */
 Psf::Image::Ptr Psf::computeImage(
-        afwGeom::Point2D const& ccdXY, ///< Position in image where PSF should be created
-        afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
-        bool normalizePeak,              ///< normalize the image to have a maximum value of 1.0
-        bool distort
-                                    ) const {
+        afwGeom::Point2D const& ccdXY,  ///< Position in image where PSF should be created
+        afwGeom::Extent2I const& size,  ///< Desired size of Image (overriding natural size of Kernel)
+        bool normalizePeak,             ///< normalize the image to have a maximum value of 1.0
+        bool distort                    ///< generate an image that includes the known camera distortion
+                                    ) const
+{
     lsst::afw::image::Color color;
     return doComputeImage(color, ccdXY, size, normalizePeak, distort);
 
@@ -85,11 +90,12 @@ Psf::Image::Ptr Psf::computeImage(
  */
 Psf::Image::Ptr Psf::computeImage(
         lsst::afw::image::Color const& color, ///< Colour of source whose PSF is desired
-        afwGeom::Point2D const& ccdXY, ///< Position in image where PSF should be created
-        afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
-        bool normalizePeak,              ///< normalize the image to have a maximum value of 1.0
-        bool distort
-                            ) const {
+        afwGeom::Point2D const& ccdXY,        ///< Position in image where PSF should be created
+        afwGeom::Extent2I const& size,        ///< Desired size of Image (overriding natural size of Kernel)
+        bool normalizePeak,                   ///< normalize the image to have a maximum value of 1.0
+        bool distort                          ///< generate an image that includes the known camera distortion
+                            ) const
+{
     return doComputeImage(color, ccdXY, size, normalizePeak, distort);
 }
 
@@ -111,8 +117,20 @@ Psf::Image::Ptr Psf::doComputeImage(
         lsst::afw::geom::Point2D const& ccdXY, ///< Position in parent (CCD) image
         lsst::afw::geom::Extent2I const& size, ///< Size of PSF image
         bool normalizePeak,                    ///< normalize the image to have a maximum value of 1.0
-        bool distort                           ///< Distort the PSF according the Distortion object
-                                           ) const {
+        bool distort                           ///< generate an image that includes the known camera distortion
+                                           ) const
+{
+    if (distort) {
+        if (!_detector) {
+            distort = false;
+        }
+    }
+    if (distort and !_detector->getDistortion()) {
+        pexLog::Debug("afw.detection.Psf").debug<5>(
+                          "Requested a distorted image but Detector.getDistortion() is NULL");
+
+        distort = false;
+    }
 
     afwMath::Kernel::ConstPtr kernel = getKernel(color);
     if (!kernel) {
@@ -127,7 +145,7 @@ Psf::Image::Ptr Psf::doComputeImage(
     // ... that's where it's really being distorted from!
     afwGeom::Point2D ccdXYundist = ccdXY;
 #if 0
-    if (distort && _detector && _detector->getDistortion()) {
+    if (distort) {
         ccdXYundist = _detector->getDistortion()->undistort(ccdXY, *_detector);
     } else {
         ccdXYundist = ccdXY;
@@ -200,8 +218,7 @@ Psf::Image::Ptr Psf::doComputeImage(
 
             
     // distort the image according to the camera distortion
-    if (distort && _detector && _detector->getDistortion()) {
-        
+    if (distort) {        
         cameraGeom::Distortion::ConstPtr distortion = _detector->getDistortion();
 
 #if 1
@@ -214,8 +231,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         afwGeom::Box2I bbox(afwGeom::Point2I(edge, edge), afwGeom::Extent2I(width-2*edge, height-2*edge));
         
         return Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
-#endif
-#if 0        
+#else
         Psf::Image::SinglePixel padValue(0.0);
         // distort as though we're where ccdXY was before it got distorted
         Psf::Image::Ptr imDist = distortion->distort(ccdXYundist, *im, *_detector, padValue);
@@ -227,7 +243,6 @@ Psf::Image::Ptr Psf::doComputeImage(
                                                      warpAlgorithm, warpBuffer);
         return psfIm;
 #endif
-        
     } else {
         return im;
     }
