@@ -101,7 +101,7 @@ protected:
     virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
     /// @brief Should be called by any reimplementation of _readTable.
-    void _startRecords();
+    void _startRecords(BaseTable & table);
 
     struct ProcessRecords;
 

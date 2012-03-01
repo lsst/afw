@@ -243,7 +243,7 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     LOAD_FLUX_SLOT(INST, Inst);
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
-    _startRecords();
+    _startRecords(*table);
     table->setMetadata(metadata);
     return table;
 }

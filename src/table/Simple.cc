@@ -113,7 +113,7 @@ PTR(BaseTable) SimpleFitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     PTR(SimpleTable) table =  SimpleTable::make(schema, PTR(IdFactory)());
-    _startRecords();
+    _startRecords(*table);
     table->setMetadata(metadata);
     return table;
 }
