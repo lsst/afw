@@ -48,6 +48,7 @@ namespace afw {
 
 // forward declarations    
 namespace image {
+    template<typename ImagePixelT> class Image;
     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> class MaskedImage;
 }
 
@@ -125,7 +126,7 @@ namespace math {
 
     /************************************************************************************************************/
     /**
-     * Base class for candidate objects in a SpatialCell that are able to return an %image of some sort
+     * Base class for candidate objects in a SpatialCell that are able to return an Image of some sort
      * (e.g. a PSF or a DIA kernel)
      */
     template<typename PixelT>
@@ -138,16 +139,72 @@ namespace math {
         SpatialCellImageCandidate(float const xCenter, ///< The object's column-centre
                                   float const yCenter  ///< The object's row-centre
                                  ) : SpatialCellCandidate(xCenter, yCenter),
-                                     _image(PTR(lsst::afw::image::MaskedImage<PixelT,
-                                                lsst::afw::image::MaskPixel,
-                                                lsst::afw::image::VariancePixel>)()),
+                                     _image(PTR(lsst::afw::image::Image<PixelT>)()),
                                      _chi2(std::numeric_limits<double>::max()) {
         }
         virtual ~SpatialCellImageCandidate() {}
 
         /// Return the Candidate's Image
+        virtual CONST_PTR(lsst::afw::image::Image<PixelT>) getImage() const = 0;
+
+        /// Set the width of the image that getImage should return
+        static void setWidth(int width) {
+            _width = width;
+        }
+        /// Return the width of the image that getImage should return
+        static int getWidth() { return _width; }
+
+        /// Set the height of the image that getImage should return
+        static void setHeight(int height) { _height = height; }
+        /// Return the height of the image that getImage should return
+        static int getHeight() { return _height; }
+
+        /// Return the candidate's chi^2
+        double getChi2() const { return _chi2; }
+        /// Set the candidate's chi^2
+        void setChi2(double chi2) { _chi2 = chi2; }
+
+    protected:
+        PTR(lsst::afw::image::Image<PixelT>) mutable _image; ///< a pointer to the Image, for the use of the base class
+    private:
+        static int _width;              // the width of images to return; may be ignored by subclasses
+        static int _height;             // the height of images to return; may be ignored by subclasses
+        double _chi2;                   // chi^2 for fit
+    };
+
+    /// The width of images that SpatialCellImageCandidate should return; may be ignored by subclasses
+    template<typename PixelT>
+    int SpatialCellImageCandidate<PixelT>::_width = 0;
+
+    /// The height of images that SpatialCellImageCandidate should return; may be ignored by subclasses
+    template<typename PixelT>
+    int SpatialCellImageCandidate<PixelT>::_height = 0;
+
+    /************************************************************************************************************/
+    /**
+     * Base class for candidate objects in a SpatialCell that are able to return a MaskedImage of some sort
+     * (e.g. a PSF or a DIA kernel)
+     */
+    template<typename PixelT>
+    class SpatialCellMaskedImageCandidate : public SpatialCellCandidate {
+    public:
+        typedef boost::shared_ptr<SpatialCellMaskedImageCandidate> Ptr;
+        typedef boost::shared_ptr<const SpatialCellMaskedImageCandidate> ConstPtr;
+
+        /// ctor
+        SpatialCellMaskedImageCandidate(float const xCenter, ///< The object's column-centre
+                                        float const yCenter  ///< The object's row-centre
+                                       ) : SpatialCellCandidate(xCenter, yCenter),
+                                           _image(PTR(lsst::afw::image::MaskedImage<PixelT,
+                                                      lsst::afw::image::MaskPixel,
+                                                      lsst::afw::image::VariancePixel>)()),
+                                           _chi2(std::numeric_limits<double>::max()) {
+        }
+        virtual ~SpatialCellMaskedImageCandidate() {}
+
+        /// Return the Candidate's Image
         virtual CONST_PTR(lsst::afw::image::MaskedImage<PixelT,lsst::afw::image::MaskPixel,
-                          lsst::afw::image::VariancePixel>) getImage() const = 0;
+                          lsst::afw::image::VariancePixel>) getMaskedImage() const = 0;
 
         /// Set the width of the image that getImage should return
         static void setWidth(int width) {
@@ -168,20 +225,20 @@ namespace math {
 
     protected:
         PTR(lsst::afw::image::MaskedImage<PixelT,lsst::afw::image::MaskPixel,
-            lsst::afw::image::VariancePixel>) mutable _image; ///< a pointer to the %image, for the use of the base class
+            lsst::afw::image::VariancePixel>) mutable _image; ///< a pointer to the MaskedImage, for the use of the base class
     private:
         static int _width;              // the width of images to return; may be ignored by subclasses
         static int _height;             // the height of images to return; may be ignored by subclasses
         double _chi2;                   // chi^2 for fit
     };
 
-    /// The width of images that SpatialCellImageCandidate should return; may be ignored by subclasses
+    /// The width of images that SpatialCellMaskedImageCandidate should return; may be ignored by subclasses
     template<typename PixelT>
-    int SpatialCellImageCandidate<PixelT>::_width = 0;
+    int SpatialCellMaskedImageCandidate<PixelT>::_width = 0;
 
-    /// The height of images that SpatialCellImageCandidate should return; may be ignored by subclasses
+    /// The height of images that SpatialCellMaskedImageCandidate should return; may be ignored by subclasses
     template<typename PixelT>
-    int SpatialCellImageCandidate<PixelT>::_height = 0;
+    int SpatialCellMaskedImageCandidate<PixelT>::_height = 0;
 
     /************************************************************************************************************/
     /**

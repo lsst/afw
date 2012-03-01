@@ -32,7 +32,7 @@
 /*
  * Test class for SpatialCellImageCandidate
  */
-class ExampleCandidate : public lsst::afw::math::SpatialCellImageCandidate<float> {
+class ExampleCandidate : public lsst::afw::math::SpatialCellMaskedImageCandidate<float> {
 public:
     typedef boost::shared_ptr<ExampleCandidate> Ptr;
     typedef float PixelT;
@@ -45,7 +45,7 @@ public:
 
     double getCandidateRating() const;
 
-    MaskedImageT::ConstPtr getImage() const;
+    MaskedImageT::ConstPtr getMaskedImage() const;
 private:
     ExampleCandidate::MaskedImageT::ConstPtr _parent;
     lsst::afw::geom::Box2I _bbox;

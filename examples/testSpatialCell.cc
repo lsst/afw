@@ -33,7 +33,7 @@ ExampleCandidate::ExampleCandidate(
         ExampleCandidate::MaskedImageT::ConstPtr parent, ///< the parent image
         lsst::afw::geom::Box2I bbox     ///< The object's bounding box
                                       ) :
-    lsst::afw::math::SpatialCellImageCandidate<PixelT>(xCenter, yCenter), _parent(parent), _bbox(bbox) {
+    lsst::afw::math::SpatialCellMaskedImageCandidate<PixelT>(xCenter, yCenter), _parent(parent), _bbox(bbox) {
 }
 
 /**
@@ -46,7 +46,7 @@ double ExampleCandidate::getCandidateRating() const {
 /**
  * Return the %image
  */
-ExampleCandidate::MaskedImageT::ConstPtr ExampleCandidate::getImage() const {
+ExampleCandidate::MaskedImageT::ConstPtr ExampleCandidate::getMaskedImage() const {
     if (_image.get() == NULL) {
         _image = MaskedImageT::Ptr(new MaskedImageT(*_parent, _bbox, lsst::afw::image::LOCAL));
     }

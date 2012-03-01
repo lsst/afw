@@ -1,6 +1,6 @@
 setupRequired(daf_base >= 4.7.3.0)
 setupRequired(daf_persistence >= 4.7.3.0)
-setupRequired(pex_config)
+setupRequired(pex_config > 4.8)
 setupRequired(ndarray >= 4.6.0.0)
 setupRequired(cfitsio >= 3260)
 setupRequired(wcslib >= 4.4.4)

@@ -373,21 +373,23 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::generateOutputMetadata() const {
     using lsst::daf::base::PropertySet;
     
+    //Create fits header
+    PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
+    afwImage::MaskedImage<ImageT> mi = getMaskedImage();
+
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
     //image coordinates. When saving an image we convert from pixel to index coordinates.
     //In the case where this image is a parent image, the reference pixels are unchanged
     //by this transformation
-    afwImage::MaskedImage<ImageT> mi = getMaskedImage();
+    if (_wcs) {
+        afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
+        newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
 
-    afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
-    newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
-
-    //Create fits header
-    PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
-    // Copy wcsMetadata over to fits header
-    PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
-    outputMetadata->combine(wcsMetadata);
+        // Copy wcsMetadata over to fits header
+        PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
+        outputMetadata->combine(wcsMetadata);
+    }
     
     //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
     //indicate the origin (the position of the bottom left corner) of the sub-image with 

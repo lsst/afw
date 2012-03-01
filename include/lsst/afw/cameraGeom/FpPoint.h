@@ -16,7 +16,7 @@ namespace lsst { namespace afw { namespace cameraGeom {
  */
 class FpPoint {
 public:
-    /** Construct an Angle with the specified value (interpreted in the given units) */
+    /** Construct an FpPoint with the specified value (interpreted in the given units) */
     explicit FpPoint(lsst::afw::geom::Point2D p) : _p(p) {}
     explicit FpPoint(lsst::afw::geom::Extent2D p) : _p(p) {}
     FpPoint(double x, double y) : _p(x, y) {}
@@ -37,6 +37,12 @@ public:
     FpPoint operator-(FpPoint const &pos2) const {
         return FpPoint(this->_p - lsst::afw::geom::Extent2D(pos2.getMm()));
     }
+    FpPoint operator*(double const val) const {
+        return FpPoint(this->_p.getX()*val, this->_p.getY()*val);
+    }
+    FpPoint operator/(double const val) const {
+        return FpPoint(this->_p.getX()/val, this->_p.getY()/val);
+    }
 private:
     lsst::afw::geom::Point2D _p; // store this in mm
 };
@@ -49,7 +55,7 @@ private:
  */
 class FpExtent {
 public:
-    /** Construct an Angle with the specified value (interpreted in the given units) */
+    /** Construct an FpExtent with the specified value (interpreted in the given units) */
     explicit FpExtent(lsst::afw::geom::Point2D p) : _e(p) {}
     explicit FpExtent(lsst::afw::geom::Extent2D e) : _e(e) {}
     FpExtent(double x, double y) : _e(x, y) {}
@@ -67,6 +73,12 @@ public:
     }
     FpExtent operator-(FpExtent const &pos2) const {
         return FpExtent(this->_e - lsst::afw::geom::Extent2D(pos2.getMm()));
+    }
+    FpExtent operator*(double const val) const {
+        return FpExtent(this->_e*val);
+    }
+    FpExtent operator/(double const val) const {
+        return FpExtent(this->_e/val);
     }
 private:
     lsst::afw::geom::Extent2D _e; // store this in mm
