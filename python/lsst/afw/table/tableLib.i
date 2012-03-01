@@ -326,6 +326,17 @@ def asKey(self):
 
 %include "lsst/afw/table/ColumnView.h"
 
+%extend lsst::afw::table::ColumnView {
+    %pythoncode %{
+        schema = property(getSchema)
+    %}
+    // Allow field name strings be used in place of keys (but only in Python)
+    %pythonprepend __getitem__ %{
+        if isinstance(args[0], basestring):
+            return self[self.schema.find(args[0]).key]
+    %}
+}
+
 %pythoncode %{
 from ..geom import Angle, Point2D, Point2I
 from ..geom.ellipses import Quadrupole
