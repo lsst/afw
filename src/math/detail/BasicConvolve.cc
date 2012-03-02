@@ -109,7 +109,7 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
     void CheckForceGpuOnNoGpu(afwMath::ConvolutionControl const& convolutionControl)
     {
         #ifndef GPU_BUILD
-        if (lsst::afw::gpu::getGpuEnable()==true
+        if (lsst::afw::gpu::isGpuEnabled()==true
             && convolutionControl.getDevicePreference()==lsst::afw::gpu::USE_GPU) {
             throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
                     "Gpu acceleration must be enabled at compiling for lsst::afw::gpu::USE_GPU");
@@ -127,7 +127,7 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
      */
     void CheckForceGpuOnUnsupportedKernel(afwMath::ConvolutionControl const& convolutionControl)
     {
-        if (lsst::afw::gpu::getGpuEnable()==true
+        if (lsst::afw::gpu::isGpuEnabled()==true
             && convolutionControl.getDevicePreference()==lsst::afw::gpu::USE_GPU) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can not process this type of kernel");
         }
@@ -269,7 +269,7 @@ void mathDetail::basicConvolve(
             convolutionControl.getDoNormalize());
     } else {
         CheckForceGpuOnNoGpu(convolutionControl);
-        if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::getGpuEnable()==true) {
+        if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
             if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                 try {
                     bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
@@ -518,7 +518,7 @@ void mathDetail::convolveWithBruteForce(
             "convolveWithBruteForce: kernel is spatially invariant");
 
         CheckForceGpuOnNoGpu(convolutionControl);
-        if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::getGpuEnable()==true) {
+        if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
             if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                 try {
                     bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);

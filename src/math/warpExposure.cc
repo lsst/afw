@@ -294,33 +294,28 @@ int afwMath::warpImage(
             "destImage is srcImage; cannot warp in place");
     }
 
-    if (lsst::afw::gpu::getGpuEnable()==false) {
+    afwMath::LanczosWarpingKernel const *const lanczosKernel= 
+                         dynamic_cast<afwMath::LanczosWarpingKernel const*>(&warpingKernel);
+
+    if (lsst::afw::gpu::isGpuEnabled()==false) {
         // (this case bypasses all GPU acceleration code)
-    } else if ( interpLength<1) {
-        if (devPref == lsst::afw::gpu::USE_GPU) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu cannot warp without interpolation enabled");
-        }
-    } else if(NULL == dynamic_cast<afwMath::LanczosWarpingKernel const*>(&warpingKernel)){
+    } else if(NULL == lanczosKernel){
         if (devPref == lsst::afw::gpu::USE_GPU) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,"Gpu can process only Lanczos kernels");
         }
-    } else if (!lsst::afw::gpu::isGpuBuild()) {
-        if (devPref == lsst::afw::gpu::USE_GPU) {
-            throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
-                    "Gpu acceleration must be enabled at compiling for ConvolutionControl::USE_GPU");
-        }
-    } else {
+    } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength>0) ) {
         if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
             try {
-                std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs,
-                                                                    warpingKernel, interpLength, devPref);
+                std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs, 
+                                                                  *lanczosKernel, interpLength, false);
                 if (result.second) return result.first;
             } catch(lsst::afw::gpu::GpuMemoryException) { }
             catch(pexExcept::MemoryException) { }
             catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
         } else if (devPref != lsst::afw::gpu::USE_CPU) {
-            std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs,
-                                                                warpingKernel, interpLength, devPref);
+            std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs, 
+                                                              *lanczosKernel, interpLength, 
+                                                              devPref==lsst::afw::gpu::USE_GPU);
             if (result.second) return result.first;
             if (devPref == lsst::afw::gpu::USE_GPU) {
                 throw LSST_EXCEPT(pexExcept::RuntimeErrorException,

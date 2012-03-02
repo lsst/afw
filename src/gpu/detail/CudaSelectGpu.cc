@@ -34,7 +34,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/gpu/GpuExceptions.h"
-#include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/gpu/detail/CudaSelectGpu.h"
 #include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 
@@ -222,13 +221,19 @@ void VerifyCudaDevice()
     }
 }
 
-bool TryToSelectCudaDevice(const lsst::afw::gpu::DevicePreference devPref)
+bool TryToSelectCudaDevice(bool noExceptions, bool reselect)
 {
 #if !defined(GPU_BUILD)
     return false;
 #else
     static bool isDeviceSelected = false;
     static bool isDeviceOk = false;
+
+    if (reselect){
+        isDeviceSelected = false;
+        isDeviceOk = false;
+    }
+
     if (isDeviceSelected)
         return isDeviceOk;
     isDeviceSelected = true;
@@ -239,7 +244,7 @@ bool TryToSelectCudaDevice(const lsst::afw::gpu::DevicePreference devPref)
         return true;
     }
 
-    if (devPref != lsst::afw::gpu::AUTO) {
+    if (!noExceptions) {
         AutoSelectCudaDevice();
         VerifyCudaDevice();
         isDeviceOk = true;
@@ -248,11 +253,11 @@ bool TryToSelectCudaDevice(const lsst::afw::gpu::DevicePreference devPref)
 
     try {
         AutoSelectCudaDevice();
+        VerifyCudaDevice();
     } catch(...) {
         return false;
     }
-    VerifyCudaDevice();
-
+    
     isDeviceOk = true;
     return true;
 #endif

@@ -137,7 +137,7 @@ gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::ImageBuffer<gpu::BilinearInter
 // calculate the number of points falling within the srcGoodBox,
 // given a bilinearily interpolated function on integer range [0,width> x [0, height>
 int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & interpBuf,
-                  int interpLen, int width, int height, SBox2I srcGoodBox)
+                  const int interpLen, const int width, const int height, SBox2I srcGoodBox)
 {
     int cnt = 0;
     /*for (int row=0; row<height; row++) {
@@ -184,14 +184,14 @@ int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & inter
 template< typename DestPixelT, typename SrcPixelT>
 int WarpImageGpuWrapper(
     afwImage::Image<DestPixelT>     &destImage,
-    afwImage::Image<SrcPixelT>const &srcImage,
-    int order,
-    lsst::afw::geom::Box2I srcBox,
-    int kernelCenterX,
-    int kernelCenterY,
+    afwImage::Image<SrcPixelT> const &srcImage,
+    const int order,
+    const lsst::afw::geom::Box2I srcBox,
+    const int kernelCenterX,
+    const int kernelCenterY,
     lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
-    int interpLength
+    const int interpLength
 )
 {
     //TimeStart(timeWriteData);
@@ -295,13 +295,13 @@ template< typename DestPixelT, typename SrcPixelT>
 int WarpImageGpuWrapper(
     afwImage::MaskedImage<DestPixelT>      &dstImage,
     afwImage::MaskedImage<SrcPixelT>const  &srcImage,
-    int order,
-    lsst::afw::geom::Box2I srcBox,
-    int kernelCenterX,
-    int kernelCenterY,
+    const int order,
+    const lsst::afw::geom::Box2I srcBox,
+    const int kernelCenterX,
+    const int kernelCenterY,
     lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
-    int interpLength
+    const int interpLength
 )
 {
     TimeStart(timeWriteData);
@@ -490,43 +490,33 @@ std::pair<int, bool> warpImageGPU(
     afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
     SrcImageT const &srcImage,          ///< source %image
     afwImage::Wcs const &srcWcs,        ///< WCS of source %image
-    afwMath::SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
+    afwMath::LanczosWarpingKernel const &lanczosKernel,     ///< warping kernel
     int const interpLength,              ///< Distance over which WCS can be linearily interpolated
     ///< must be >0
-    lsst::afw::gpu::DevicePreference devPref
+    const bool forceProcessing
 )
 {
-    afwMath::LanczosWarpingKernel const* lanKernel =
-        dynamic_cast<afwMath::LanczosWarpingKernel const*>(&warpingKernel);
-    if (lanKernel == NULL)
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-                          "Kernel for GPU acceleration must be Lanczos kernel");
-
     if (interpLength < 1) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                           "GPU accelerated warping must use interpolation");
     }
 
-#ifndef GPU_BUILD
-    throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
-#else
-    if (gpuDetail::TryToSelectCudaDevice(devPref) == false)
+    if (!lsst::afw::gpu::isGpuBuild())
+    	throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+
+    if (gpuDetail::TryToSelectCudaDevice(!forceProcessing) == false)
         return std::pair<int, bool>(-1, false);
 
+    const int order = lanczosKernel.getOrder();
     //do not process if the kernel is too large for allocated GPU local memory
-    const int order = lanKernel->getOrder();
     if (order * 2 > gpu::cWarpingKernelMaxSize)
         return std::pair<int, bool>(-1, false);
 
     //do not process if the interpolation data is too large to make any speed gains
-    if (devPref != lsst::afw::gpu::USE_GPU && interpLength < 3) {
+    if (!forceProcessing && interpLength < 3) {
         return std::pair<int, bool>(-1, false);
     }
-
-    // Compute borders; use to prevent applying kernel outside of srcImage
-    int const kernelCtrX = warpingKernel.getCtrX();
-    int const kernelCtrY = warpingKernel.getCtrY();
-
+    
     int const destWidth = destImage.getWidth();
     int const destHeight = destImage.getHeight();
     int const maxCol = destWidth - 1;
@@ -536,7 +526,8 @@ std::pair<int, bool> warpImageGPU(
     typedef typename DestImageT::SinglePixel DestPixelT;
     typedef typename  SrcImageT::SinglePixel SrcPixelT;
 
-    afwGeom::Box2I srcGoodBBox = warpingKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+    // Compute borders; use to prevent applying kernel outside of srcImage
+    afwGeom::Box2I srcGoodBBox = lanczosKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
 
     const int interpBlkNX = InterpBlkN(destWidth , interpLength);
     const int interpBlkNY = InterpBlkN(destHeight, interpLength);
@@ -577,18 +568,19 @@ std::pair<int, bool> warpImageGPU(
     TimeStart(timeGpuLanczos);
     int numGoodPixels = 0;
 
+    #ifdef GPU_BUILD
     numGoodPixels = WarpImageGpuWrapper(destImage,
                                         srcImage,
                                         order,
                                         srcGoodBBox,
-                                        kernelCtrX, kernelCtrY,
+                                        lanczosKernel.getCtrX(), 
+                                        lanczosKernel.getCtrY(),
                                         srcBlk, srcPosInterp, interpLength
                                        );
-
+    #endif
     TimeEnd(timeGpuLanczos);
 
     return std::pair<int, bool>(numGoodPixels, true);
-#endif //GPU_BUILD
 }
 
 //
@@ -605,17 +597,17 @@ std::pair<int, bool> warpImageGPU(
         afwImage::Wcs const &destWcs, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        afwMath::SeparableKernel &warpingKernel, \
+        afwMath::LanczosWarpingKernel const &warpingKernel, \
         int const interpLength, \
-        lsst::afw::gpu::DevicePreference devPref); NL    \
+        const bool forceProcessing); NL    \
     template std::pair<int,bool> warpImageGPU( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        afwMath::SeparableKernel &warpingKernel, \
+        afwMath::LanczosWarpingKernel const &warpingKernel, \
         int const interpLength, \
-        lsst::afw::gpu::DevicePreference devPref);
+        const bool forceProcessing);
 
 INSTANTIATE(double, double)
 INSTANTIATE(double, float)

@@ -78,7 +78,7 @@ void setGpuEnable(bool enable)
     }
 }
 
-bool getGpuEnable()
+bool isGpuEnabled()
 {
     return globalIsGpuEnabled;
 }

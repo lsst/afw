@@ -241,7 +241,8 @@ bool mathDetail::convolveLinearCombinationGPU(
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
                 convolutionControl.getDoNormalize());
     } else {
-        if (afwGpu::detail::TryToSelectCudaDevice(convolutionControl.getDevicePreference()) == false){
+        bool throwExceptionsOn=convolutionControl.getDevicePreference() == afwGpu::USE_GPU;
+        if (afwGpu::detail::TryToSelectCudaDevice(!throwExceptionsOn) == false){
             return false;
         }
 
@@ -420,8 +421,8 @@ bool mathDetail::convolveLinearCombinationGPU(
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
                 convolutionControl.getDoNormalize());
     } else {
-
-        if (afwGpu::detail::TryToSelectCudaDevice(convolutionControl.getDevicePreference()) == false){
+        bool throwExceptionsOn=convolutionControl.getDevicePreference() == afwGpu::USE_GPU;
+        if (afwGpu::detail::TryToSelectCudaDevice(!throwExceptionsOn) == false){
             return false;
         }
 
@@ -595,9 +596,10 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     if (!afwGpu::isGpuBuild()) {
         throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
     }
-    bool doNormalize = convolutionControl.getDoNormalize();
+    const bool doNormalize = convolutionControl.getDoNormalize();
 
-    if (afwGpu::detail::TryToSelectCudaDevice(convolutionControl.getDevicePreference()) == false){
+    const bool throwExceptionsOn=convolutionControl.getDevicePreference() == afwGpu::USE_GPU;
+    if (afwGpu::detail::TryToSelectCudaDevice(!throwExceptionsOn) == false){
         return false;
     }
 
@@ -721,7 +723,8 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     int const cnvStartX = kernel.getCtrX();
     int const cnvStartY = kernel.getCtrY();
 
-    if (afwGpu::detail::TryToSelectCudaDevice(convolutionControl.getDevicePreference()) == false) {
+    const bool throwExceptionsOn=convolutionControl.getDevicePreference() == afwGpu::USE_GPU;
+    if (afwGpu::detail::TryToSelectCudaDevice(!throwExceptionsOn) == false){
         return false;
     }
 

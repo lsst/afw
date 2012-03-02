@@ -297,8 +297,7 @@ __global__ void WarpImageGpuKernel(
                 destImage.img[pixelIimg] = sample.img * relativeArea;
                 destImage.var[pixelIvar] = sample.var * relativeArea * relativeArea;
                 destImage.msk[pixelImsk] = sample.msk;
-            }
-            else {
+            } else {
                 double sample = ApplyLanczosFilter(kernelSize, orderInv,
                                                    srcImage.img, srcImage.strideImg, srcImage.width,
                                                    srcX, srcY,
@@ -307,8 +306,7 @@ __global__ void WarpImageGpuKernel(
                 const int pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
                 destImage.img[pixelIimg] = sample * relativeArea;
             }
-        }
-        else {
+        } else {
             const int pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
             destImage.img[pixelIimg] = edgePixel.img;
             if (isMaskedImage) {

@@ -35,12 +35,6 @@
  * @ingroup afw
  */
 
-/* requires:
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include "lsst/afw/math/detail/ImageBuffer.h"
-*/
-
 namespace lsst {
 namespace afw {
 namespace gpu {
@@ -67,7 +61,7 @@ void AutoSelectCudaDevice();
 // verifies basic parameters of Cuda device
 void VerifyCudaDevice();
 
-bool TryToSelectCudaDevice(const lsst::afw::gpu::DevicePreference devPref);
+bool TryToSelectCudaDevice(bool noExceptions, bool reselect=false);
 int GetPreferredCudaDevice();
 
 }}}} //namespace lsst::afw::math::detail::gpu ends

@@ -49,7 +49,7 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/gpu/IsGpuBuild.h"
-
+#include "lsst/afw/gpu/DevicePreference.h"
 //Just for PrintCudaDeviceInfo
 #include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 
@@ -533,7 +533,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
         isThrown = true;
     }
 
-    if (!isThrown) {
+    if (lsst::afw::gpu::isGpuEnabled() && !isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with delta function kernel with USE_GPU"
              << "should have thrown an exception because it's acceleration is not supported" << endl;
@@ -549,7 +549,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
     if (isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with delta function kernel with AUTO_WITH_CPU_FALLBACK"
-             << "should not have thrown an exception because it should have fell back to CPU execution" << endl;
+             << "should not have thrown an exception because it should have fell back to CPU code path" << endl;
     }
 
     isThrown = false;
@@ -562,7 +562,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
     if (isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with delta function kernel with AUTO"
-             << "should not have thrown an exception because it should have fell back to CPU execution" << endl;
+             << "should not have thrown an exception because it should have fell back to CPU code path" << endl;
     }
 
     isThrown = false;
@@ -575,7 +575,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
     if (isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with delta function kernel with USE_CPU"
-             << "should not have thrown an exception because it should have used CPU execution" << endl;
+             << "should not have thrown an exception because it should have used CPU code path" << endl;
     }
 
     isThrown = false;
@@ -598,7 +598,7 @@ bool GpuTestExceptions(const string imgBaseFileName)
         isThrown = true;
     }
 
-    if (!isThrown) {
+    if (lsst::afw::gpu::isGpuEnabled() && !isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with linear combination kernel "
              << "with gaussian spatial function with USE_GPU "
@@ -679,7 +679,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
         isThrown = true;
     }
 
-    if (!isThrown) {
+    if (lsst::afw::gpu::isGpuEnabled() && !isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with delta function kernel with USE_GPU"
              << "should have thrown an exception because AFW was not compiled with GPU support" << endl;
@@ -731,7 +731,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
         isThrown = true;
     }
 
-    if (!isThrown) {
+    if (lsst::afw::gpu::isGpuEnabled() && !isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with analytic kernel with USE_GPU "
              << "should have thrown an exception because AFW was not compiled with GPU support" << endl;
@@ -744,7 +744,7 @@ bool CpuTestExceptions(const string imgBaseFileName)
         isThrown = true;
     }
 
-    if (!isThrown) {
+    if (lsst::afw::gpu::isGpuEnabled() && !isThrown) {
         isSuccess = false;
         cout << "ERROR: GPU convolution with linear combination kernel "
              << "with gaussian spatial function with USE_GPU "

@@ -81,7 +81,7 @@ void setGpuEnable(bool enable);
 /**
  * @brief returns true if GPU acceleration is enabled
  */
-bool getGpuEnable();
+bool isGpuEnabled();
 
 }}} //namespace lsst::afw::gpu ends
 
