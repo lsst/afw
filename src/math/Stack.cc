@@ -155,19 +155,12 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
 
         for (x_iterator ptr = imgStack->row_begin(y), end = imgStack->row_end(y); ptr != end; ++ptr) {
             typename afwMath::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
-            afwImage::MaskPixel msk(0x0);
             WeightVector::iterator wtPtr = weights.begin();
-            for (unsigned int i = 0; i < images.size(); ++i, ++psPtr, ++wtPtr) {
-                afwImage::MaskPixel mskTmp = rows[i].mask();
-                psPtr.value() = rows[i].image();
-                psPtr.mask()  = mskTmp;
-                psPtr.variance() = rows[i].variance();
-
+            for (unsigned int i = 0; i < images.size(); ++rows[i], ++i, ++psPtr, ++wtPtr) {
+                *psPtr = *rows[i];
                 if (useVariance) {      // we're weighting using the variance
                     *wtPtr = 1.0/rows[i].variance();
                 }
-
-                ++rows[i];
             }
 
             afwMath::Property const eflags = static_cast<afwMath::Property>(flags |
@@ -177,7 +170,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                 afwMath::makeStatistics(pixelSet,          eflags, sctrlTmp);
             
             PixelT variance = ::pow(stat.getError(flags), 2);
-            msk = stat.getOrMask();
+            afwImage::MaskPixel msk(stat.getOrMask());
             int const npoint = stat.getValue(afwMath::NPOINT);
             if (npoint == 0) {
                 msk = sctrlTmp.getNoGoodPixelsMask();
