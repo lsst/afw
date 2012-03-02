@@ -112,9 +112,20 @@ typename afwImage::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                              WeightVector const &wvector=WeightVector()
                                                                    )
 {
+    // Check sizes of input images
+    afwGeom::Extent2I const& dim = images[0]->getDimensions();
+    for (unsigned int i = 1; i < images.size(); ++i) {
+        if (images[i]->getDimensions() != dim) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                              (boost::format("Bad dimensions for image %d: %dx%d vs %dx%d") %
+                               i % images[i]->getDimensions().getX() % images[i]->getDimensions().getY() %
+                               dim.getX() % dim.getY()).str());
+        }
+    }
+
     // create the image to be returned
     typedef afwImage::MaskedImage<PixelT> Image;
-    typename Image::Ptr imgStack(new Image(images[0]->getDimensions()));
+    typename Image::Ptr imgStack(new Image(dim));
 
     // get a list of row_begin iterators
     typedef typename afwImage::MaskedImage<PixelT>::x_iterator x_iterator;
