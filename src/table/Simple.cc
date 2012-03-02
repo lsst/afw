@@ -113,7 +113,7 @@ PTR(BaseTable) SimpleFitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     PTR(SimpleTable) table =  SimpleTable::make(schema, PTR(IdFactory)());
-    _startRecords();
+    _startRecords(*table);
     table->setMetadata(metadata);
     return table;
 }
@@ -143,7 +143,7 @@ SimpleTable::SimpleTable(Schema const & schema, PTR(IdFactory) const & idFactory
     BaseTable(schema), _idFactory(idFactory) {}
 
 SimpleTable::SimpleTable(SimpleTable const & other) :
-    BaseTable(other), _idFactory(other._idFactory->clone()) {}
+    BaseTable(other), _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
 
 SimpleTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");

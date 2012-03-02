@@ -311,18 +311,19 @@ void FitsReader::_readSchema(
     }
 }
 
-void FitsReader::_startRecords() {
+void FitsReader::_startRecords(BaseTable & table) {
     _row = -1;
     _nRows = _fits->countRows();
     _processor = boost::make_shared<ProcessRecords>(_fits, _row);
+    table.preallocate(_nRows);
 }
 
 PTR(BaseTable) FitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
-    _startRecords();
     PTR(BaseTable) table = BaseTable::make(schema);
+    _startRecords(*table);
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
     return table;
