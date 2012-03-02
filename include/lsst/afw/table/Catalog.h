@@ -147,7 +147,7 @@ public:
     CatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
         _table(table), _internal()
     {
-        insert(first, last, deep);
+        insert(end(), first, last, deep);
     }
 
     /// Shallow copy constructor.
