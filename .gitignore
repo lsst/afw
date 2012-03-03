@@ -66,6 +66,7 @@ examples/forEachPixel
 examples/spatialCellExample
 examples/simpleStacker
 examples/timeConvolveGpu
+examples/timeWarpGpu
 examples/Spline
 lib/libafw.*
 python/lsst/*.pyc
@@ -129,6 +130,7 @@ tests/statistics
 tests/statisticsSpeed
 tests/testLib.py
 tests/testWcs
+tests/testWarpGpu
 tests/ticket1145
 tests/wcsCopy
 tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageInOut.fit

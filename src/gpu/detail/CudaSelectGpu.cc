@@ -71,7 +71,7 @@ void VerifyCudaDevice()
 {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
 }
-bool TryToSelectCudaDevice(const lsst::afw::gpu::DevicePreference devPref)
+bool TryToSelectCudaDevice(bool noExceptions, bool reselect)
 {
     throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
 }
