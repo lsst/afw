@@ -101,7 +101,7 @@ cameraGeom::Raft::Ptr makeRaft(std::string const& name)
     for (int i = 0; i != 5; ++i) {
         std::stringstream ccdName;
         ccdName << filters[i] << name;
-        dewar->addDetector(afwGeom::Point2I(0, i), afwGeom::Point2D(0.0, 25.4*2.1*(2.0 - i)),
+        dewar->addDetector(afwGeom::Point2I(0, i), cameraGeom::FpPoint(0.0, 25.4*2.1*(2.0 - i)),
                            cameraGeom::Orientation(0), makeCcd(ccdName.str()));
     }
 
@@ -118,7 +118,7 @@ cameraGeom::Camera::Ptr makeCamera(std::string const& name)
     for (int i = 0; i != 6; ++i) {
         std::stringstream dewarName;
         dewarName << i + 1;
-        camera->addDetector(afwGeom::Point2I(i, 0), afwGeom::Point2D(25.4*2.5*(2.5 - i), 0.0),
+        camera->addDetector(afwGeom::Point2I(i, 0), cameraGeom::FpPoint(25.4*2.5*(2.5 - i), 0.0),
                             cameraGeom::Orientation(0), makeRaft(dewarName.str()));
     }
 
@@ -176,7 +176,7 @@ void printDewar(std::string const& title,
         cameraGeom::Detector::ConstPtr det = *ptr;
         cout << indent << det->getId().getName() << " " <<
             det->getAllPixels(true).getWidth() << "x" << det->getAllPixels(true).getHeight() <<
-            "   centre (mm): " << det->getCenter() << endl;
+            "   centre (mm): " << det->getCenter().getMm() << endl;
     }
 }
 

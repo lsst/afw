@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
 #include "lsst/afw/detection/Photometry.h"
 #include "lsst/afw/detection/Astrometry.h"
+#include "lsst/afw/detection/AperturePhotometry.h"
 #include "lsst/afw/detection/Shape.h"
 
 namespace lsst { namespace afw { namespace detection {
@@ -43,3 +44,5 @@ LSST_REGISTER_SERIALIZER(lsst::afw::detection::Photometry)
 LSST_REGISTER_SERIALIZER(lsst::afw::detection::Astrometry)
 LSST_REGISTER_SERIALIZER(lsst::afw::detection::Shape)
 
+LSST_REGISTER_SERIALIZER(lsst::afw::detection::AperturePhotometry)
+LSST_REGISTER_SERIALIZER(lsst::afw::detection::MultipleAperturePhotometry)

@@ -111,7 +111,14 @@ public :
     lsst::afw::geom::Angle getDecObject() const { return _decObject * lsst::afw::geom::radians; }
 
 #ifndef SWIG
-    CONST_PTR(Footprint) getFootprint() const { return _footprint; }
+    CONST_PTR(Footprint) getFootprint() const {
+        if (_footprint) {
+            return _footprint;
+        }
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                          str(boost::format("Source %d has no Footprint") % _id));
+
+    }
     void setFootprint(CONST_PTR(Footprint) footprint) { _footprint = footprint; }
 #endif
 

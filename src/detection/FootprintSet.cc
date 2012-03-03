@@ -566,8 +566,8 @@ static void findFootprints(
         geom::Box2I const& _region,               // BBox of pixels that are being searched
         image::ImageBase<ImagePixelT> const &img, // Image to search for objects
         image::Image<VariancePixelT> const *var,  // img's variance
-        double const thresholdVal,                // threshold value defining Footprints
-        double const includeThresholdMultiplier,  // threshold multiplier for inclusion in FootprintSet
+        double const footprintThreshold,  // threshold value for footprint
+        double const includeThresholdMultiplier,  // threshold (relative to footprintThreshold) for inclusion
         bool const polarity,                      // if false, search _below_ thresholdVal
         int const npixMin,                        // minimum number of pixels in an object
         bool const setPeaks                       // should I set the Peaks list?
@@ -577,9 +577,9 @@ static void findFootprints(
     int in_span;                        /* object ID of current IdSpan */
     int nobj = 0;                       /* number of objects found */
     int x0 = 0;                         /* unpacked from a IdSpan */
-    double const includeThresholdVal = thresholdVal*includeThresholdMultiplier; // threshold for inclusion
 
     typedef typename image::Image<ImagePixelT> ImageT;
+    double includeThreshold = footprintThreshold * includeThresholdMultiplier; // Threshold for inclusion
     
     int const row0 = img.getY0();
     int const col0 = img.getX0();
@@ -628,8 +628,8 @@ static void findFootprints(
         for (int x = 0; x < width; ++x, ++pixPtr, varPtr = advancePtr(varPtr, ThresholdTraitT())) {
             ImagePixelT const pixVal = *pixPtr;
 
-            if (isBadPixel(pixVal) || !inFootprint(pixVal, varPtr,
-                                                   polarity, thresholdVal, ThresholdTraitT())) {
+            if (isBadPixel(pixVal) ||
+                !inFootprint(pixVal, varPtr, polarity, footprintThreshold, ThresholdTraitT())) {
                 if (in_span) {
                     IdSpan::Ptr sp(new IdSpan(in_span, y, x0, x - 1, good));
                     spans.push_back(sp);
@@ -665,8 +665,7 @@ static void findFootprints(
                     idc[x] = id = idp[x + 1];
                 }
 
-                if (!good && inFootprint(pixVal, varPtr, polarity, includeThresholdVal, 
-                                         ThresholdTraitT())) {
+                if (!good && inFootprint(pixVal, varPtr, polarity, includeThreshold, ThresholdTraitT())) {
                     good = true;
                 }
             }

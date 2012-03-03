@@ -44,6 +44,9 @@
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
+
+#include "lsst/afw/geom.h"
+
 #include "lsst/afw/gpu/DevicePreference.h"
 
 namespace lsst {
@@ -188,7 +191,12 @@ namespace math {
     int warpExposure(
         DestExposureT &destExposure,
         SrcExposureT const &srcExposure,
-        SeparableKernel &warpingKernel, int const interpLength=0);
+        SeparableKernel &warpingKernel, int const interpLength=0,
+        typename DestExposureT::MaskedImageT::SinglePixel padValue=
+          lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
+          typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::defaultDevicePreference
+                    );
 
     template<typename DestImageT, typename SrcImageT>
     int warpImage(
@@ -197,7 +205,34 @@ namespace math {
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel, int const interpLength=0,
-        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::defaultDevicePreference);
+        typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::defaultDevicePreference
+                 );
+
+    template<typename DestImageT, typename SrcImageT>
+    int warpImage(
+        DestImageT &destImage,
+        SrcImageT const &srcImage,
+        SeparableKernel &warpingKernel,
+        lsst::afw::geom::AffineTransform const &affineTransform,
+        int const interpLength=0,
+        typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+                 );
+
+
+    template<typename DestImageT, typename SrcImageT>
+    int warpCenteredImage(
+        DestImageT &destImage,
+        SrcImageT const &srcImage,
+        SeparableKernel &warpingKernel,
+        lsst::afw::geom::LinearTransform const &linearTransform,
+        lsst::afw::geom::Point2D const &centerPixel,
+        int const interpLength=0,
+        typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+                         );
 
     namespace details {
         template <typename A, typename B>

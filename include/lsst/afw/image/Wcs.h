@@ -106,10 +106,11 @@ public:
     friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             bool stripMetadata);
 
-    Wcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, const Eigen::Matrix2d &CD, 
-        const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
-        double equinox=2000, std::string raDecSys="ICRS",
-        const std::string cunits1="deg", const std::string cunits2="deg"
+    Wcs(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
+        Eigen::Matrix2d const & CD, 
+        std::string const & ctype1="RA---TAN", std::string const & ctype2="DEC--TAN",
+        double equinox=2000, std::string const & raDecSys="ICRS",
+        std::string const & cunits1="deg", std::string const & cunits2="deg"
        );
 
     virtual ~Wcs();
@@ -123,6 +124,8 @@ public:
     lsst::afw::geom::Point2D getPixelOrigin() const;
     // Returns CD matrix.  You would never have guessed that from the name.
     Eigen::Matrix2d getCDMatrix() const;
+    virtual void flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const;
+    virtual void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const;
     
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
     
@@ -146,42 +149,110 @@ public:
     // xyToRaDec(), but the name now reflects their increased generality. They
     // may be used, e.g. to convert xy to Galactic coordinates
     lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-    lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::Point2D pixel) const;
+    lsst::afw::coord::Coord::Ptr pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
 
     /// \note This routine is designed for the knowledgeable user in need of
     /// performance; it's safer to call the version that returns a CoordPtr
-    void pixelToSky(double pixel1, double pixel2, lsst::afw::geom::Angle& sky1, lsst::afw::geom::Angle& sky2) const;
+    void pixelToSky(
+        double pixel1, double pixel2, lsst::afw::geom::Angle& sky1, lsst::afw::geom::Angle& sky2
+    ) const;
     
     // ASSUMES the angles are in the appropriate coordinate system for this WCS.
     lsst::afw::geom::Point2D skyToPixel(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
 
-    lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
-    // Intermediate World Coords are in DEGREES
-    lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
+    /// @brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+    lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord const & coord) const;
+
+    /**
+     *  @brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
+     *
+     *  Intermediate world coordinates are in DEGREES.
+     */
+    lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord) const;
     
     virtual bool hasDistortion() const {    return false;};
     
     lsst::afw::geom::LinearTransform getLinearTransform() const;
     
+    /**
+     * @brief Return the local linear approximation to Wcs::pixelToSky at a point given in sky coordinates.
+     *
+     * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+     * @code
+     * wcs.linearizePixelToSky(sky, skyUnit)(wcs.skyToPixel(sky)) == sky.getPosition(skyUnit);
+     * @endcode
+     * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
+     *
+     * This is currently implemented as a numerical derivative, but we should specialise the Wcs class
+     * (or rather its implementation) to handle "simple" cases such as TAN-SIP analytically
+     *
+     * @param[in] coord   Position in sky coordinates where transform is desired.
+     * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+     */
     lsst::afw::geom::AffineTransform linearizePixelToSky(
-        lsst::afw::coord::Coord::ConstPtr const & coord,
+        lsst::afw::coord::Coord const & coord,
         lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
-                                                        ) const;
+    ) const;
     
+    /**
+     * @brief Return the local linear approximation to Wcs::pixelToSky at a point given in pixel coordinates.
+     *
+     * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+     * @code
+     * wcs.linearizePixelToSky(pix, skyUnit)(pix) == wcs.pixelToSky(pix).getPosition(skyUnit)
+     * @endcode
+     * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
+     *
+     * This is currently implemented as a numerical derivative, but we should specialise the Wcs class
+     * (or rather its implementation) to handle "simple" cases such as TAN-SIP analytically
+     *
+     * @param[in] pix     Position in pixel coordinates where transform is desired.
+     * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
+     */
     lsst::afw::geom::AffineTransform linearizePixelToSky(
         lsst::afw::geom::Point2D const & pix,
         lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
-                                                        ) const;
+    ) const;
 
+    /**
+     * @brief Return the local linear approximation to Wcs::skyToPixel at a point given in sky coordinates.
+     *
+     * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+     * @code
+     * wcs.linearizeSkyToPixel(sky, skyUnit)(sky.getPosition(skyUnit)) == wcs.skyToPixel(sky)
+     * @endcode
+     * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
+     *
+     * This is currently implemented as a numerical derivative, but we should specialise the Wcs class
+     * (or rather its implementation) to handle "simple" cases such as TAN-SIP analytically
+     *
+     * @param[in] coord   Position in sky coordinates where transform is desired.
+     * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+     */
     lsst::afw::geom::AffineTransform linearizeSkyToPixel(
-        lsst::afw::coord::Coord::ConstPtr const & coord,
-            lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
-        ) const;
-        
+        lsst::afw::coord::Coord const & coord,
+        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
+    ) const;
+
+    /**
+     * @brief Return the local linear approximation to Wcs::skyToPixel at a point given in pixel coordinates.
+     *
+     * The local linear approximation is defined such the following is true (ignoring floating-point errors):
+     * @code
+     * wcs.linearizeSkyToPixel(pix, skyUnit)(wcs.pixelToSky(pix).getPosition(skyUnit)) == pix
+     * @endcode
+     * (recall that AffineTransform::operator() is matrix multiplication with the augmented point (x,y,1)).
+     *
+     * This is currently implemented as a numerical derivative, but we should specialise the Wcs class
+     * (or rather its implementation) to handle "simple" cases such as TAN-SIP analytically
+     *
+     * @param[in] pix     Position in pixel coordinates where transform is desired.
+     * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
+     */        
     lsst::afw::geom::AffineTransform linearizeSkyToPixel(
         lsst::afw::geom::Point2D const & pix,
         lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
-                                                        ) const;
+    ) const;
 
     //Mutators
     void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
@@ -192,11 +263,11 @@ private:
     //Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
     
-    void initWcsLib(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix,
-                    const  Eigen::Matrix2d CD, 
-                    const std::string ctype1, const std::string ctype2,
-                    double equinox, std::string raDecSys,
-                    const std::string cunits1, const std::string cunits2
+    void initWcsLib(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
+                    Eigen::Matrix2d const & CD, 
+                    std::string const & ctype1, std::string const & ctype2,
+                    double equinox, std::string const & raDecSys,
+                    std::string const & cunits1, std::string const & cunits2
                    );
 
     virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
@@ -211,21 +282,25 @@ protected:
     Wcs(lsst::afw::image::Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
     
-    lsst::afw::coord::Coord::Ptr makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const;
+    afw::coord::Coord::Ptr makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const;
 
-    lsst::afw::coord::Coord::Ptr convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
+    /**
+     *  Given a Coord (as a shared pointer), return the sky position in the correct
+     *  coordinate system for this Wcs.
+     */
+    afw::coord::Coord::Ptr convertCoordToSky(lsst::afw::coord::Coord const & coord) const;
     
     virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
-                                                 lsst::afw::geom::Point2D const & pix,
-                                                 lsst::afw::coord::Coord::ConstPtr const & coord,
-                                                 lsst::afw::geom::AngleUnit skyUnit
-                                                                        ) const;
+        lsst::afw::geom::Point2D const & pix,
+        lsst::afw::coord::Coord const & coord,
+        lsst::afw::geom::AngleUnit skyUnit
+    ) const;
 
     virtual lsst::afw::geom::AffineTransform linearizeSkyToPixelInternal(
-                                                 lsst::afw::geom::Point2D const & pix,
-                                                 lsst::afw::coord::Coord::ConstPtr const & coord,
-                                                 lsst::afw::geom::AngleUnit skyUnit
-                                                                        ) const;
+        lsst::afw::geom::Point2D const & pix,
+        lsst::afw::coord::Coord const & coord,
+        lsst::afw::geom::AngleUnit skyUnit
+    ) const;
 
     
     void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
@@ -253,7 +328,7 @@ Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata, bool stripMetad
 /*
  Note, CD matrix elements must be in degrees/pixel.
  */
-Wcs::Ptr makeWcs(lsst::afw::coord::Coord::ConstPtr crval, lsst::afw::geom::Point2D crpix,
+Wcs::Ptr makeWcs(lsst::afw::coord::Coord const & crval, lsst::afw::geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {
@@ -261,8 +336,7 @@ namespace detail {
                          CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
                         );
 }
-    
-extern Wcs NoWcs;
+
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H

@@ -287,8 +287,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class TestImageCandidateCase(unittest.TestCase):
-    """A test case for TestImageCandidate"""
+class TestMaskedImageCandidateCase(unittest.TestCase):
+    """A test case for TestMaskedImageCandidate"""
 
     def setUp(self):
         self.cellSet = afwMath.SpatialCellSet(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(501, 501)), 2, 3)
@@ -297,29 +297,26 @@ class TestImageCandidateCase(unittest.TestCase):
         del self.cellSet
 
     def testInsertCandidate(self):
-        """Test that we can use SpatialCellImageCandidate"""
+        """Test that we can use SpatialCellMaskedImageCandidate"""
 
         flux = 10
-        self.cellSet.insertCandidate(testLib.TestImageCandidate(0, 0, flux))
+        self.cellSet.insertCandidate(testLib.TestMaskedImageCandidate(0, 0, flux))
 
         cand = self.cellSet.getCellList()[0][0]
         #
-        # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
-        # a SpatialCellCandidate, and SpatialCellCandidates don't know about getImage;  so cast the
-        # pointer to SpatialCellImageCandidate<Image<float> > and all will be well;
+        # Swig doesn't know that we're a SpatialCellMaskedImageCandidate;  all it knows is that we have
+        # a SpatialCellCandidate, and SpatialCellCandidates don't know about getMaskedImage;  so cast the
+        # pointer to SpatialCellMaskedImageCandidate<Image<float> > and all will be well;
         #
-        # First check that we _can't_ cast to SpatialCellImageCandidate<MaskedImage<float> >
-        #
-        self.assertEqual(afwMath.cast_SpatialCellImageCandidateMF(cand), None)
 
-        cand = afwMath.cast_SpatialCellImageCandidateF(cand)
+        cand = afwMath.cast_SpatialCellMaskedImageCandidateF(cand)
 
         width, height = 15, 21
         cand.setWidth(width)
         cand.setHeight(height)
 
-        im = cand.getImage()
-        self.assertEqual(im.get(0, 0), flux) # This is how TestImageCandidate sets its pixels
+        im = cand.getMaskedImage().getImage()
+        self.assertEqual(im.get(0, 0), flux) # This is how TestMaskedImageCandidate sets its pixels
         self.assertEqual(im.getWidth(), width)
         self.assertEqual(im.getHeight(), height)
         
@@ -333,7 +330,7 @@ def suite():
     suites = []
     suites += unittest.makeSuite(SpatialCellTestCase)
     suites += unittest.makeSuite(SpatialCellSetTestCase)
-    suites += unittest.makeSuite(TestImageCandidateCase)
+    suites += unittest.makeSuite(TestMaskedImageCandidateCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

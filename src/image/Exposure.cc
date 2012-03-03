@@ -35,10 +35,6 @@
   * Contact: nms@astro.washington.edu
   *
   * Created on: Mon Apr 23 13:01:15 2007
-  *
-  * @version 
-  *
-  * LSST Legalese here... 
   */
 
 #include <stdexcept>
@@ -55,10 +51,13 @@
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwDetection = lsst::afw::detection;
+namespace cameraGeom = lsst::afw::cameraGeom;
 
 /** @brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a Wcs.
@@ -99,11 +98,11 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     unsigned int width,                 ///< number of columns
     unsigned int height,                ///< number of rows
-    afwImage::Wcs const & wcs           ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs        ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())
@@ -117,11 +116,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Extent2I const & dimensions, ///< desired image width/height
-    afwImage::Wcs const & wcs   ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs          ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())
@@ -135,11 +134,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
-    afwImage::Wcs const & wcs   ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())
@@ -152,11 +151,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage, ///< the MaskedImage
-    afwImage::Wcs const& wcs   ///< the Wcs
+    CONST_PTR(afwImage::Wcs) wcs  ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
-    _wcs(wcs.clone()),
+    _wcs(_cloneWcs(wcs)),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib()),
@@ -175,10 +174,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), deep),
-    _wcs(src._wcs->clone()),
+    _wcs(_cloneWcs(src.getWcs())),
     _detector(src._detector),
     _filter(src._filter),
-    _calib(new lsst::afw::image::Calib(*src.getCalib())),
+    _calib(_cloneCalib(src.getCalib())),
     _psf(_clonePsf(src.getPsf()))
 {
 /*
@@ -202,10 +201,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, origin, deep),
-    _wcs(src._wcs->clone()),
+    _wcs(_cloneWcs(src.getWcs())),
     _detector(src._detector),
     _filter(src._filter),
-    _calib(new lsst::afw::image::Calib(*src.getCalib())),
+    _calib(_cloneCalib(src.getCalib())),
     _psf(_clonePsf(src.getPsf()))
 {
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
@@ -280,11 +279,9 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
     lsst::daf::base::PropertySet::Ptr metadata
 ) {
-    _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
-    //
-    // Strip keywords from the input metadata that are related to the generated Wcs
-    //
-    detail::stripWcsKeywords(metadata, _wcs);
+    // true: strip keywords that are related to the created WCS from the input
+    // metadata
+    _wcs = afwImage::makeWcs(metadata, true);
     /*
      * Filter
      */
@@ -323,7 +320,9 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
     CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
 ) {
-    return (psf) ? psf->clone() : PTR(afwDetection::Psf)();
+    if (psf)
+        return psf->clone();
+    return PTR(afwDetection::Psf)();
 }
 
 /**
@@ -333,16 +332,21 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 PTR(afwImage::Calib) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneCalib(
     CONST_PTR(afwImage::Calib) calib    // the Calib to clone
 ) {
-    return PTR(afwImage::Calib)(calib ? new afwImage::Calib(*calib) : NULL);
+    if (calib)
+        return PTR(afwImage::Calib)(new afwImage::Calib(*calib));
+    return PTR(afwImage::Calib)();
 }
 
-/** @brief Get the Wcs of an Exposure.
-  *
-  * @return a boost::shared_ptr to the Wcs.
-  */
+/**
+ * Clone a Wcs; defined here so that we don't have to expose the insides of Wcs in Exposure.h
+ */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-afwImage::Wcs::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::getWcs() const { 
-    return _wcs;
+PTR(afwImage::Wcs) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneWcs(
+    CONST_PTR(afwImage::Wcs) wcs    // the Wcs to clone
+) {
+    if (wcs)
+        return wcs->clone();
+    return PTR(afwImage::Wcs)();
 }
 
 // SET METHODS
@@ -354,12 +358,12 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
     _maskedImage = maskedImage; 
 }
 
-
-/** @brief Set the Wcs of the Exposure.  
- */   
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &wcs){
-    _wcs = wcs.clone();
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const& origin) {
+    afwGeom::Point2I old(_maskedImage.getXY0());
+    if (_wcs)
+        _wcs->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
+    _maskedImage.setXY0(origin);
 }
 
 
@@ -369,21 +373,23 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::generateOutputMetadata() const {
     using lsst::daf::base::PropertySet;
     
+    //Create fits header
+    PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
+    afwImage::MaskedImage<ImageT> mi = getMaskedImage();
+
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
     //image coordinates. When saving an image we convert from pixel to index coordinates.
     //In the case where this image is a parent image, the reference pixels are unchanged
     //by this transformation
-    afwImage::MaskedImage<ImageT> mi = getMaskedImage();
+    if (_wcs) {
+        afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
+        newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
 
-    afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
-    newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
-
-    //Create fits header
-    PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
-    // Copy wcsMetadata over to fits header
-    PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
-    outputMetadata->combine(wcsMetadata);
+        // Copy wcsMetadata over to fits header
+        PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
+        outputMetadata->combine(wcsMetadata);
+    }
     
     //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
     //indicate the origin (the position of the bottom left corner) of the sub-image with 

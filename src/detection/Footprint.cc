@@ -57,6 +57,24 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+bool Span::operator<(const Span& b) const {
+	if (_y < b._y)
+		return true;
+	if (_y > b._y)
+		return false;
+	// y equal...
+	if (_x0 < b._x0)
+		return true;
+	if (_x0 > b._x0)
+		return false;
+	if (_x1 < b._x1)
+		return true;
+	// if (_x1 > b._x1)
+	// return false;
+    // they're equal.
+	return false;
+}
+
 namespace {
 /*
  * Compare two Span%s by y, then x0, then x1
@@ -115,7 +133,7 @@ double extremum(geom::Point2D a, geom::Point2D b, geom::Point2D c, geom::Point2D
 geom::Point2D transformPoint(double x, double y, 
                              image::Wcs const& source,
                              image::Wcs const& target){
-    return target.skyToPixel(source.pixelToSky(x, y));
+    return target.skyToPixel(*source.pixelToSky(x, y));
 }
 
 

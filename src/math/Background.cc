@@ -33,6 +33,7 @@
 #include <limits>
 #include <vector>
 #include <cmath>
+#include "boost/math/special_functions/round.hpp"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
@@ -43,7 +44,7 @@ namespace geom = lsst::afw::geom;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
-
+namespace bm = boost::math;
 
 /**
  * @brief Constructor for Background
@@ -77,6 +78,8 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _ycen.resize(_nySample);
     _xorig.resize(_nxSample);
     _yorig.resize(_nySample);
+    _xsize.resize(_nxSample);
+    _ysize.resize(_nySample);
     _grid.resize(_nxSample);
     _gridcolumns.resize(_nxSample);
 
@@ -90,23 +93,35 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     // --> We'll store _nxSample fully-interpolated columns to spline the rows over
 
     // Compute the centers and origins for the sub-images
-    _subimgWidth = _imgWidth / _nxSample;
-    _subimgHeight = _imgHeight / _nySample;
+    int sum = 0;
+    //printf("nxsample = %i, imgwidth = %i\n", _nxSample, _imgWidth);
     for (int iX = 0; iX < _nxSample; ++iX) {
-        _xcen[iX] = (iX + 0.5)*_subimgWidth - 0.5;
-        _xorig[iX] = iX * _subimgWidth;
+        const int endx = std::min(((iX+1)*_imgWidth + _nxSample/2) / _nxSample, _imgWidth);
+        _xorig[iX] = (iX == 0) ? 0 : _xorig[iX-1] + _xsize[iX-1];
+        _xsize[iX] = endx - _xorig[iX];
+        _xcen [iX] = _xorig[iX] + (0.5 * _xsize[iX]) - 0.5;
+        //printf("  ix = %i, endx=%i, orig=%i, size=%i, cen=%f\n", iX, endx, _xorig[iX], _xsize[iX], _xcen[iX]);
+        sum += _xsize[iX];
     }
+    assert(sum == _imgWidth);
+    sum = 0;
+    //printf("nysample = %i, imgheight = %i\n", _nySample, _imgHeight);
     for (int iY = 0; iY < _nySample; ++iY) {
-        _ycen[iY] = (iY + 0.5)*_subimgHeight - 0.5;
-        _yorig[iY] = iY * _subimgHeight;
+        const int endy = std::min(((iY+1)*_imgHeight + _nySample/2) / _nySample, _imgHeight);
+        _yorig[iY] = (iY == 0) ? 0 : _yorig[iY-1] + _ysize[iY-1];
+        _ysize[iY] = endy - _yorig[iY];
+        _ycen [iY] = _yorig[iY] + (0.5 * _ysize[iY]) - 0.5;
+        //printf("  iy = %i, endy=%i, orig=%i, size=%i, cen=%f\n", iY, endy, _yorig[iY], _ysize[iY], _ycen[iY]);
+        sum += _ysize[iY];
     }
+    assert(sum == _imgHeight);
 
     // make a vector containing the y pixel coords for the column
     vector<int> ypix(_imgHeight);
     for (int iY = 0; iY < _imgHeight; ++iY) { ypix[iY] = iY; }
 
 
-    // go to each sub-image and get it's stats.
+    // go to each sub-image and get its stats.
     // -- do columns in the inner-loop and spline them as they complete
     for (int iX = 0; iX < _nxSample; ++iX) {
         
@@ -115,7 +130,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             
             ImageT subimg = ImageT(img, geom::Box2I(
                     geom::Point2I(_xorig[iX], _yorig[iY]),
-                    geom::Extent2I(_subimgWidth, _subimgHeight)
+                    geom::Extent2I(_xsize[iX], _ysize[iY])
                 ),
                 image::LOCAL
             );
@@ -141,7 +156,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             // it should only be used sanely when nx,nySample are both 1,
             //  but this should still work for other grid sizes.
             for (int iY = 0; iY < _imgHeight; ++iY) {
-                int const iGridY = (iY/_subimgHeight < _nySample) ? iY/_subimgHeight : _nySample;
+                int const iGridY = (_nySample * iY) / _imgHeight;
                 _gridcolumns[iX][iY] = _grid[iX][iGridY];
             }
         }
@@ -174,7 +189,7 @@ double math::Background::getPixel(int const x, int const y) const {
         math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
         return static_cast<double>(intobj.interpolate(x));
     } else {
-        int const iGridX = (x/_subimgWidth < _nxSample) ? x/_subimgHeight : _nxSample;
+        int const iGridX = (_nxSample * x) / _imgWidth;
         return static_cast<double>(_gridcolumns[iGridX][y]);
     }
     
@@ -224,7 +239,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
             int iX = 0;
             for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
                      end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgWidth : _nxSample - 1;
+                int const iGridX = (_nxSample * iX) / _imgWidth;
                 *ptr = static_cast<PixelT>(_gridcolumns[iGridX][iY]);
             }
         }

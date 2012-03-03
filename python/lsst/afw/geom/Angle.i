@@ -24,13 +24,9 @@
     }
 %}
 
+%addStreamRepr(lsst::afw::geom::Angle)
+
 %extend lsst::afw::geom::Angle {
-    std::string __str__() {
-        std::ostringstream ss;
-        ss << *self;
-        return ss.str();
-    }
-            
     %pythoncode %{
          def __add__(self, rhs):
              return Angle_add(self, rhs)
@@ -49,9 +45,12 @@
          def __rdiv__(self, lhs):
              return Angle_div(lhs, self)
          def __eq__(self, rhs):
-             return float(self) == float(rhs)
-         def __repr__(self):
-             return str(self)
+             try:
+                 return float(self) == float(rhs)
+             except Exception:
+                 return NotImplemented
+         def __ne__(self, rhs):
+             return not self == rhs
     %}
 }
 

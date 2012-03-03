@@ -171,6 +171,12 @@ bool IsErrorAcceptable(double val, double limit)
     return val < limit;
 }
 
+template<typename T>
+typename T::SinglePixel const GetEdgePixel(T& x)
+{ 
+    return afwMath::edgePixel< T >( typename afwImage::detail::image_traits< T >::image_category() );
+}
+
 bool TestWarpGpu(
     const afwImage::MaskedImage<double>  inImgDbl,
     const afwImage::MaskedImage<float>   inImgFlt,
@@ -216,10 +222,10 @@ bool TestWarpGpu(
     bool isSuccess = true;
 
     // warp
-    int retPIDblCpu = afwMath::warpImage(resPIDbl   , *wcs1, inPIDbl, *wcs2, lanKernel, interpLen, useCpu);
-    int retPIDblGpu = afwMath::warpImage(resPIDblGpu, *wcs1, inPIDbl, *wcs2, lanKernel, interpLen, useGpu);
-    int retPIFltCpu = afwMath::warpImage(resPIFlt   , *wcs1, inPIFlt, *wcs2, lanKernel, interpLen, useCpu);
-    int retPIFltGpu = afwMath::warpImage(resPIFltGpu, *wcs1, inPIFlt, *wcs2, lanKernel, interpLen, useGpu);
+    int retPIDblCpu = afwMath::warpImage(resPIDbl   , *wcs1, inPIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIDbl), useCpu);
+    int retPIDblGpu = afwMath::warpImage(resPIDblGpu, *wcs1, inPIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIDbl), useGpu);
+    int retPIFltCpu = afwMath::warpImage(resPIFlt   , *wcs1, inPIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIFlt), useCpu);
+    int retPIFltGpu = afwMath::warpImage(resPIFltGpu, *wcs1, inPIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIFlt), useGpu);
 
     const double errDbl = 5e-13;
     const double errFlt = 5e-7;
@@ -243,10 +249,10 @@ bool TestWarpGpu(
          << setw(11)     << diffPIFlt << Sel(diffPIFlt > errFlt          , "*  ", "   ")
          << setw(14+9+6) << dretPIFlt << Sel(abs(dretPIFlt) > maxRetDiff , "*", " ") << endl;
 
-    int retMIDblCpu = afwMath::warpImage(resMIDbl   , *wcs1, inMIDbl, *wcs2, lanKernel, interpLen, useCpu);
-    int retMIDblGpu = afwMath::warpImage(resMIDblGpu, *wcs1, inMIDbl, *wcs2, lanKernel, interpLen, useGpu);
-    int retMIFltCpu = afwMath::warpImage(resMIFlt   , *wcs1, inMIFlt, *wcs2, lanKernel, interpLen, useCpu);
-    int retMIFltGpu = afwMath::warpImage(resMIFltGpu, *wcs1, inMIFlt, *wcs2, lanKernel, interpLen, useGpu);
+    int retMIDblCpu = afwMath::warpImage(resMIDbl   , *wcs1, inMIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIDbl), useCpu);
+    int retMIDblGpu = afwMath::warpImage(resMIDblGpu, *wcs1, inMIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIDbl), useGpu);
+    int retMIFltCpu = afwMath::warpImage(resMIFlt   , *wcs1, inMIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIFlt), useCpu);
+    int retMIFltGpu = afwMath::warpImage(resMIFltGpu, *wcs1, inMIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIFlt), useGpu);
 
     double diffMIImgDbl = CvRmsd(*resMIDbl.getImage()   , *resMIDblGpu.getImage());
     double diffMIVarDbl = CvRmsd(*resMIDbl.getVariance(), *resMIDblGpu.getVariance());
@@ -364,7 +370,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     bool isThrown;
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefAuto);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -377,7 +383,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefUGpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -390,7 +396,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, devPrefSafe);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefSafe);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -403,7 +409,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefAuto);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -416,7 +422,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, devPrefUCpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUCpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -429,7 +435,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefUGpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -442,7 +448,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUGpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -456,7 +462,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefAuto);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -501,7 +507,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     bool isThrown;
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefAuto);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -514,7 +520,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefUGpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -527,7 +533,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, devPrefSafe);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefSafe);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -540,7 +546,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefAuto);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -553,7 +559,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, devPrefUCpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUCpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -566,7 +572,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUGpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -579,7 +585,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, 2, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, 2, GetEdgePixel(resImg), devPrefUGpu);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -592,7 +598,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, 2, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, 2, GetEdgePixel(resImg), devPrefAuto);
     } catch(pexEx::Exception) {
         isThrown = true;
     }

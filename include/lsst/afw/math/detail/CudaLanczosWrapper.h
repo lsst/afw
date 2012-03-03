@@ -37,7 +37,7 @@ namespace afw {
 namespace math {
 namespace detail {
 
-    inline lsst::afw::geom::Point2D computeSrcPos(
+    /*inline lsst::afw::geom::Point2D computeSrcPos(
             int destCol,  ///< destination column index
             int destRow,  ///< destination row index
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
@@ -49,7 +49,41 @@ namespace detail {
         lsst::afw::geom::Angle sky1, sky2;
         destWcs.pixelToSky(col, row, sky1, sky2);
         return srcWcs.skyToPixel(sky1, sky2);
-    }
+    }*/
+
+    class SrcPosFunctor {
+    public:
+        SrcPosFunctor() {}
+        typedef boost::shared_ptr<SrcPosFunctor> Ptr;
+        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const = 0;
+    private:
+    };
+
+    class WcsSrcPosFunctor : public SrcPosFunctor {
+    public:
+        WcsSrcPosFunctor(
+                         lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
+                         lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
+                         lsst::afw::image::Wcs const &srcWcs
+                        ) :      ///< WCS of source %image
+            SrcPosFunctor(),
+            _destXY0(destXY0),
+            _destWcs(destWcs),
+            _srcWcs(srcWcs) {}
+        typedef boost::shared_ptr<WcsSrcPosFunctor> Ptr;
+
+        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
+            double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
+            double const row = lsst::afw::image::indexToPosition(destRow + _destXY0[1]);
+            lsst::afw::geom::Angle sky1, sky2;
+            _destWcs.pixelToSky(col, row, sky1, sky2);
+            return _srcWcs.skyToPixel(sky1, sky2);
+        }
+    private:
+        lsst::afw::geom::Point2D const &_destXY0;
+        lsst::afw::image::Wcs const &_destWcs;
+        lsst::afw::image::Wcs const &_srcWcs;
+    };
 
 /**
  * \brief GPU accelerated image warping for Lanczos resampling
@@ -86,12 +120,12 @@ namespace detail {
 template<typename DestImageT, typename SrcImageT>
 std::pair<int,bool> warpImageGPU(
     DestImageT &destImage,                  ///< remapped %image
-    lsst::afw::image::Wcs const &destWcs,   ///< WCS of remapped %image
     SrcImageT const &srcImage,              ///< source %image
-    lsst::afw::image::Wcs const &srcWcs,               ///< WCS of source %image
     lsst::afw::math::LanczosWarpingKernel const &warpingKernel,   ///< warping kernel
+    SrcPosFunctor const &computeSrcPos,      ///< Functor to compute source position
     int const interpLength,                  ///< Distance over which WCS can be linearily interpolated
                                              ///< must be >0
+    typename DestImageT::SinglePixel padValue, ///< value to use for undefined pixels
     const bool forceProcessing=true          ///< if true, this function will perform the warping even when 
                                              ///< it is slower then the CPU code path
     );

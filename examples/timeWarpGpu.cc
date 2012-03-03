@@ -173,6 +173,12 @@ string DecimalPlaces(int places, double val)
 }
 
 template<typename T>
+typename T::SinglePixel const GetEdgePixel(T& x)
+{ 
+    return afwMath::edgePixel< T >( typename afwImage::detail::image_traits< T >::image_category() );
+}
+
+template<typename T>
 void TimeOneKernelMI(
     const afwImage::MaskedImage<T>  inImg,
     const int order,
@@ -200,13 +206,13 @@ void TimeOneKernelMI(
     // warp masked image
     time_t maskedImgCpuStart = clock();
     for (int i = 0; i < repCpu; i++) {
-        numGoodPixels = warpImage(resMI, *destWcs, inImg, *srcWcs, lanKernel, interpLen, selCPU);
+        numGoodPixels = warpImage(resMI, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resMI), selCPU);
     }
     double maskedImgCpuTime = DiffTime(maskedImgCpuStart, clock()) / repCpu;
 
     time_t maskedImgGpuStart = clock();
     for (int i = 0; i < repGpu; i++) {
-        numGoodPixelsGpu = warpImage(resMIGpu, *destWcs, inImg, *srcWcs, lanKernel, interpLen, selGPU);
+        numGoodPixelsGpu = warpImage(resMIGpu, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resMIGpu), selGPU);
     }
     double maskedImgGpuTime = DiffTime(maskedImgGpuStart, clock()) / repGpu;
 
@@ -252,13 +258,13 @@ void TimeOneKernelPI(
     // warp plain image
     time_t plainImgCpuStart = clock();
     for (int i = 0; i < repCpu; i++) {
-        numGoodPixels = warpImage(resPI, *destWcs, inImg, *srcWcs, lanKernel, interpLen, selCPU);
+        numGoodPixels = warpImage(resPI, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resPI), selCPU);
     }
     double plainImgCpuTime = DiffTime(plainImgCpuStart, clock()) / repCpu;
 
     time_t plainImgGpuStart = clock();
     for (int i = 0; i < repGpu; i++) {
-        numGoodPixelsGpu = warpImage(resPIGpu, *destWcs, inImg, *srcWcs, lanKernel, interpLen, selGPU);
+        numGoodPixelsGpu = warpImage(resPIGpu, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resPIGpu), selGPU);
     }
     double plainImgGpuTime = DiffTime(plainImgGpuStart, clock()) / repGpu;
 
@@ -302,7 +308,7 @@ void TestWarpGpu(
         lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::USE_GPU;
         afwMath::LanczosWarpingKernel lanKernel(2);
         afwImage::MaskedImage<float>       resGpu(15, 15);
-        warpImage(resGpu, wcs1, inImgFlt, wcs2, lanKernel, 40, selGPU);
+        warpImage(resGpu, wcs1, inImgFlt, wcs2, lanKernel, 40, GetEdgePixel(resGpu), selGPU);
     }
 
     cout << endl;

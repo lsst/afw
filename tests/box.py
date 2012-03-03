@@ -163,6 +163,7 @@ class Box2ITestCase(unittest.TestCase):
         
     def testRelations(self):
         box = geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(2,1), True)
+        self.assertNotEqual(box, (3,4,5)) # should not throw
         self.assert_(box.contains(geom.Point2I(0,0)))
         self.assert_(box.contains(geom.Point2I(-2,-3)))
         self.assert_(box.contains(geom.Point2I(2,-3)))

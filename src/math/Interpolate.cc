@@ -77,8 +77,11 @@ void math::Interpolate::initialize(std::vector<double> const &x, std::vector<dou
                            % gslInterpType->name % y.size()).str());
 
     }
-    
-    int const status = ::gsl_interp_init(_interp, &x[0], &y[0], y.size());
+    // Note, "x" and "y" are vector<double>; gsl_inter_init requires double[].
+    // The &(x[0]) here is valid because std::vector guarantees that the values are
+    // stored contiguously in memory (for types other than bool); C++0X 23.3.6.1 for
+    // those of you reading along.
+    int const status = ::gsl_interp_init(_interp, &(x[0]), &(y[0]), y.size());
     if (status != 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           str(boost::format("gsl_interp_init failed: %s [%d]")
@@ -92,15 +95,35 @@ math::Interpolate::~Interpolate() {
 }
 
 double math::Interpolate::interpolate(double const x) {
-#if 0 // Enable this when we upgrade GSL to make failure more graceful.
-    if (x < _x.front() || x > _x.back()) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Interpolation point %f outside range [%f, %f]")
-             % x % _x.front() % _x.back()).str()
-        );
+    // New GSL versions refuse to extrapolate.
+    // gsl_interp_init() requires x to be ordered, so can just check
+    // the array endpoints for out-of-bounds.
+    if ((x < _x.front() || (x > _x.back()))) {
+        // do our own quadratic extrapolation.
+        // (GSL only provides first and second derivative functions)
+        /* could also just fail via:
+         throw LSST_EXCEPT(
+         lsst::pex::exceptions::InvalidParameterException,
+         (boost::format("Interpolation point %f outside range [%f, %f]")
+         % x % _x.front() % _x.back()).str()
+         );
+         */
+        double x0, y0;
+        if (x < _x.front()) {
+            x0 = _x.front();
+            y0 = _y.front();
+        } else {
+            x0 = _x.back();
+            y0 = _y.back();
+        }
+        // first derivative at endpoint
+        double d = ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], x0, _acc);
+        // second derivative at endpoint
+        double d2 = ::gsl_interp_eval_deriv2(_interp, &_x[0], &_y[0], x0, _acc);
+        return y0 + (x - x0)*d + 0.5*(x - x0)*(x - x0)*d2;
     }
-#endif
+    assert(x >= _x.front());
+    assert(x <= _x.back());
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], x, _acc);
 }
 
