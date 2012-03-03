@@ -37,7 +37,7 @@ namespace afw {
 namespace math {
 namespace detail {
 
-    inline lsst::afw::geom::Point2D computeSrcPos(
+    /*inline lsst::afw::geom::Point2D computeSrcPos(
             int destCol,  ///< destination column index
             int destRow,  ///< destination row index
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
@@ -49,22 +49,22 @@ namespace detail {
         lsst::afw::geom::Angle sky1, sky2;
         destWcs.pixelToSky(col, row, sky1, sky2);
         return srcWcs.skyToPixel(sky1, sky2);
-    }
+    }*/
 
     class SrcPosFunctor {
     public:
         SrcPosFunctor() {}
         typedef boost::shared_ptr<SrcPosFunctor> Ptr;
-        virtual afwGeom::Point2D operator()(int destCol, int destRow) const = 0;
+        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const = 0;
     private:
     };
 
     class WcsSrcPosFunctor : public SrcPosFunctor {
     public:
         WcsSrcPosFunctor(
-                         afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
-                         afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
-                         afwImage::Wcs const &srcWcs
+                         lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
+                         lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
+                         lsst::afw::image::Wcs const &srcWcs
                         ) :      ///< WCS of source %image
             SrcPosFunctor(),
             _destXY0(destXY0),
@@ -72,17 +72,17 @@ namespace detail {
             _srcWcs(srcWcs) {}
         typedef boost::shared_ptr<WcsSrcPosFunctor> Ptr;
 
-        virtual afwGeom::Point2D operator()(int destCol, int destRow) const {
-            double const col = afwImage::indexToPosition(destCol + _destXY0[0]);
-            double const row = afwImage::indexToPosition(destRow + _destXY0[1]);
-            afwGeom::Angle sky1, sky2;
+        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
+            double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
+            double const row = lsst::afw::image::indexToPosition(destRow + _destXY0[1]);
+            lsst::afw::geom::Angle sky1, sky2;
             _destWcs.pixelToSky(col, row, sky1, sky2);
             return _srcWcs.skyToPixel(sky1, sky2);
         }
     private:
-        afwGeom::Point2D const &_destXY0;
-        afwImage::Wcs const &_destWcs;
-        afwImage::Wcs const &_srcWcs;
+        lsst::afw::geom::Point2D const &_destXY0;
+        lsst::afw::image::Wcs const &_destWcs;
+        lsst::afw::image::Wcs const &_srcWcs;
     };
 
 /**

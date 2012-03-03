@@ -42,6 +42,7 @@
 
 #include "lsst/afw/math.h"
 #include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image/Wcs.h"
 
 #include "lsst/afw/gpu/GpuExceptions.h"
 #include "lsst/afw/gpu/IsGpuBuild.h"
@@ -155,7 +156,7 @@ int WarpImageGpuWrapper(
     lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
     const int interpLength,
-    typename DestImageT::SinglePixel padValue
+    typename afwImage::Image<DestPixelT>::SinglePixel padValue
 )
 {
     typedef typename afwImage::Image<DestPixelT> DestImageT;
@@ -244,7 +245,7 @@ int WarpImageGpuWrapper(
     lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
     const int interpLength,
-    typename DestImageT::SinglePixel padValue
+    typename afwImage::MaskedImage<DestPixelT>::SinglePixel padValue
 )
 {
     typedef typename afwImage::MaskedImage<DestPixelT> DestImageT;
@@ -503,7 +504,7 @@ std::pair<int, bool> warpImageGPU(
         afwMath::LanczosWarpingKernel const &warpingKernel, \
         SrcPosFunctor const &computeSrcPos, \
         int const interpLength, \
-        typename DestImageT::SinglePixel padValue, \
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         const bool forceProcessing); NL    \
     template std::pair<int,bool> warpImageGPU( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
@@ -511,7 +512,7 @@ std::pair<int, bool> warpImageGPU(
         afwMath::LanczosWarpingKernel const &warpingKernel, \
         SrcPosFunctor const &computeSrcPos, \
         int const interpLength, \
-        typename DestImageT::SinglePixel padValue \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         const bool forceProcessing);
 
 INSTANTIATE(double, double)

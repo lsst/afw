@@ -248,7 +248,7 @@ namespace {
         afwImage::Wcs const &_srcWcs;
     };
 */
-    class AffineTransformSrcPosFunctor : public SrcPosFunctor {
+    class AffineTransformSrcPosFunctor : public lsst::afw::math::detail::SrcPosFunctor {
     public:
         // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
         // ... so we actually want to use the *inverse* transform of the affineTransform we we're given.
@@ -311,7 +311,7 @@ namespace {
         DestImageT &destImage,              ///< remapped %image
         SrcImageT const &srcImage,          ///< source %image
         afwMath::SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
-        SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
+        afwMath::detail::SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
         int const interpLength,              ///< Distance over which WCS can be linearily interpolated
             ///< 0 means no interpolation and uses an optimized branch of the code
             ///< 1 also performs no interpolation but it runs the interpolation code branch
@@ -337,14 +337,14 @@ namespace {
         } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
             if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                 try {
-                    std::pair<int, bool> result = detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
+                    std::pair<int, bool> result = afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
                                                             computeSrcPos,  interpLength, padValue, false);
                     if (result.second) return result.first;
                 } catch(lsst::afw::gpu::GpuMemoryException) { }
                 catch(pexExcept::MemoryException) { }
                 catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
             } else if (devPref != lsst::afw::gpu::USE_CPU) {
-                std::pair<int, bool> result = detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
+                std::pair<int, bool> result = afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
                                                                   computeSrcPos, interpLength, padValue,
                                                                   devPref == lsst::afw::gpu::USE_GPU);
                 if (result.second) return result.first;
@@ -608,7 +608,7 @@ namespace {
         DestImageT &destImage,              ///< remapped %image
         SrcImageT const &srcImage,          ///< source %image
         afwMath::SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
-        SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
+        afwMath::detail::SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
         typename DestImageT::SinglePixel padValue ///< value to use for undefined pixels
                          )
     {
@@ -781,7 +781,7 @@ int afwMath::warpImage(
     )
 {
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    WcsSrcPosFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
+    afwMath::detail::WcsSrcPosFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
     return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength, padValue, devPref);
 }
 
