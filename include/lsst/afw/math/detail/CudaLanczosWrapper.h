@@ -63,14 +63,18 @@ namespace detail {
  * This function will not perform the warping if kernel size is too large.
  * (currently, when the order of the Lanczos kernel is >50)
  * If warping is not performed, the return value will be (X,false).
- * If forceProcessing is true, the warping might not be performed if interpLength is too small. Also, exceptions
- *      will be thrown in case that GPU device cannot be selected.
- *
+ * If forceProcessing is true: 
+ *       - this function will throw exceptions if a GPU device cannot be selected or used
+ * If forceProcessing is false: 
+ *       - the warping will not be performed if the GPU code path is estimated to be slower than CPU code path.
+ *              That might happen if interpLength is too small (less than 3)
+ *       - the warping will not be performed if a GPU device cannot be selected or used
+ * 
  * Also see lsst::afw::math::warpImage()
  *
  * \b Implementation:
- * Calculates values of the coordinate transform function at some points, which are spaced by interpLength intervals
- * Calls CalculateInterpolationData().
+ * Calculates samples of the coordinate transform function at some points, which are spaced by interpLength intervals
+ * Calls CalculateInterpolationData() for coordinate transformation function samples.
  * Calls WarpImageGpuWrapper() to perform the wapring.
  *
  * \throw lsst::pex::exceptions::InvalidParameterException if interpLength < 1

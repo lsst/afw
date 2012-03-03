@@ -65,34 +65,6 @@ namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 
-#ifdef XXMY_BUILD
-extern double timeOrig;
-extern double timeTotal;
-extern double timeRows;
-extern double timeColLoop;
-extern double timeSrcPos;
-extern double timeRelArea;
-extern double timeGpuLanczos;
-extern double timeWriteData;
-extern double timeTransferData;
-extern double  timeTransferResult;
-extern double timeKernel;
-extern double timeTransferXX;
-extern double timeWriteback;
-
-
-void TimeStart(double& clk);
-void TimeEnd(double& clk);
-void TimeStartSlw(double& clk);
-void TimeEndSlw(double& clk);
-#else
-#define TimeStart(ignore)
-#define TimeEnd(ignore)
-#define TimeStartSlw(ignore)
-#define TimeEndSlw(ignore)
-#endif
-
-
 namespace lsst {
 namespace afw {
 namespace math {
@@ -140,14 +112,6 @@ int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & inter
                   const int interpLen, const int width, const int height, SBox2I srcGoodBox)
 {
     int cnt = 0;
-    /*for (int row=0; row<height; row++) {
-        for (int col=0; col<width; col++) {
-            gpu::SPoint2 srcPos=GetInterpolatedValue(interpBuf, interpLen, col+1, row+1);
-            if (srcGoodBox.isInsideBox(srcPos)) {
-                cnt++;
-            }
-        }
-    }*/
 
     int subY = 1, blkY = 0;
     for (int row = 0; row < height; row++, subY++) {
@@ -167,7 +131,6 @@ int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & inter
                 interp = interpBuf.Pixel(blkX, blkY);
                 lineY = interp.GetLinearInterp(subY);
             }
-            //gpu::SPoint2 srcPos=GetInterpolatedValue(interpBuf, blkX, blkY, subX, subY);
             gpu::SPoint2 srcPos = lineY.Interpolate(subX);
             if (srcGoodBox.isInsideBox(srcPos)) {
                 cnt++;
@@ -194,7 +157,6 @@ int WarpImageGpuWrapper(
     const int interpLength
 )
 {
-    //TimeStart(timeWriteData);
     typedef typename afwImage::Image<DestPixelT> DestImageT;
 
     typename DestImageT::SinglePixel const edgePixel = afwMath::edgePixel<DestImageT>(
@@ -212,12 +174,9 @@ int WarpImageGpuWrapper(
     gpuDetail::GpuMemOwner<SrcPixelT> srcBufImgGpu;
     gpuDetail::GpuMemOwner<SBox2I> srcBlkGpu;
     gpuDetail::GpuMemOwner<BilinearInterp> srcPosInterpGpu;
-    //TimeEnd(timeWriteData);
 
-    TimeStart(timeTransferData);
     ImageDataPtr<DestPixelT> destImgGpu;
     destImgGpu.strideImg = destBufImgGpu.AllocImageBaseBuffer(destImage);
-    //destImgGpu.strideImg=destBufImgGpu.TransferFromImageBase(*dstImage.getImage()    ,destBufImgGpu);
     if (destBufImgGpu.ptr == NULL)  {
         throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output image");
     }
@@ -249,9 +208,6 @@ int WarpImageGpuWrapper(
     }
 
     SBox2I srcBoxConv(srcBox.getMinX(), srcBox.getMinY(), srcBox.getMaxX() + 1, srcBox.getMaxY() + 1);
-    TimeEnd(timeTransferData);
-
-    TimeStart(timeKernel);
 
     WarpImageGpuCallKernel(false,
                            destImgGpu, srcImgGpu,
@@ -264,27 +220,14 @@ int WarpImageGpuWrapper(
                            srcPosInterpGpu.ptr, interpLength
                           );
 
-    TimeStart(timeWriteData);
     int numGoodPixels = NumGoodPixels(srcPosInterp, interpLength, destWidth, destHeight, srcBoxConv);
-    TimeEnd(timeWriteData);
 
-    TimeStart(timeWriteback);
     cudaThreadSynchronize();
-    TimeEnd(timeWriteback);
     if (cudaGetLastError() != cudaSuccess) {
         throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "GPU calculation failed to run");
     }
 
-    TimeEnd(timeKernel);
-
-    TimeStart(timeTransferResult);
     destBufImgGpu.CopyToImageBase(destImage);
-    TimeEnd(timeTransferResult);
-
-    //TimeStart(timeWriteback);
-    //destBufImg.CopyToImage(destImage,0,0);
-    //TimeEnd(timeWriteback);
-
     return numGoodPixels;
 }
 
@@ -304,8 +247,6 @@ int WarpImageGpuWrapper(
     const int interpLength
 )
 {
-    TimeStart(timeWriteData);
-
     typedef typename afwImage::MaskedImage<DestPixelT> DestImageT;
 
     typename DestImageT::SinglePixel const edgePixel = afwMath::edgePixel<DestImageT>(
@@ -331,21 +272,10 @@ int WarpImageGpuWrapper(
     gpuDetail::GpuMemOwner<SBox2I> srcBlkGpu;
     gpuDetail::GpuMemOwner<BilinearInterp> srcPosInterpGpu;
 
-    //typename afwImage::MaskedImage<DestPixelT>::Pixel p(222, 333, 444);
-    //dstImage=p;
-
-    TimeEnd(timeWriteData);
-
-    TimeStart(timeTransferData);
-
     ImageDataPtr<DestPixelT> destImgGpu;
     destImgGpu.strideImg = destBufImgGpu.AllocImageBaseBuffer(*dstImage.getImage());
     destImgGpu.strideVar = destBufVarGpu.AllocImageBaseBuffer(*dstImage.getVariance());
     destImgGpu.strideMsk = destBufMskGpu.AllocImageBaseBuffer(*dstImage.getMask());
-    /*
-    destImgGpu.strideImg=destBufImgGpu.TransferFromImageBase(*dstImage.getImage());
-    destImgGpu.strideVar=destBufVarGpu.TransferFromImageBase(*dstImage.getVariance());
-    destImgGpu.strideMsk=destBufMskGpu.TransferFromImageBase(*dstImage.getMask());*/
     if (destBufImgGpu.ptr == NULL)  {
         throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input image");
     }
@@ -392,10 +322,6 @@ int WarpImageGpuWrapper(
     }
 
     SBox2I srcBoxConv(srcBox.getMinX(), srcBox.getMinY(), srcBox.getMaxX() + 1, srcBox.getMaxY() + 1);
-    TimeEnd(timeTransferData);
-
-    //printf("MASKED KERNEL!!\n");
-    TimeStart(timeKernel);
 
     WarpImageGpuCallKernel(true,
                            destImgGpu, srcImgGpu,
@@ -413,17 +339,10 @@ int WarpImageGpuWrapper(
     if (cudaGetLastError() != cudaSuccess) {
         throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "GPU calculation failed to run");
     }
-    TimeEnd(timeKernel);
 
-    TimeStart(timeTransferResult);
     destBufImgGpu.CopyToImageBase(*dstImage.getImage());
     destBufVarGpu.CopyToImageBase(*dstImage.getVariance());
     destBufMskGpu.CopyToImageBase(*dstImage.getMask());
-    TimeEnd(timeTransferResult);
-
-    //TimeStart(timeWriteback);
-    //lsst::afw::math::detail::CopyToMaskedImage(dstImage, 0, 0, destBufImg, destBufVar, destBufMsk);
-    //TimeEnd(timeWriteback);
 
     return numGoodPixels;
 }
@@ -535,8 +454,6 @@ std::pair<int, bool> warpImageGPU(
     gpuDetail::ImageBuffer<BilinearInterp> srcPosInterp(interpBlkNX, interpBlkNY);
 
     // calculate values of coordinate transform function
-    TimeStart(timeRows);
-    TimeStart(timeSrcPos);
     for (int rowBand = 0; rowBand < interpBlkNY; rowBand++) {
         int row = min(maxRow, (rowBand * interpLength - 1));
         for (int colBand = 0; colBand < interpBlkNX; colBand++) {
@@ -547,13 +464,9 @@ std::pair<int, bool> warpImageGPU(
             srcPosInterp.Pixel(colBand, rowBand).o =  sSrcPos;
         }
     }
-    TimeEnd(timeSrcPos);
-
-    TimeStart(timeRelArea);
 
     CalculateInterpolationData(/*in,out*/srcPosInterp, interpLength, destWidth, destHeight);
 
-    TimeEnd(timeRelArea);
     // calculates dimensions of partitions of destination image to GPU blocks
     // each block is handled by one GPU multiprocessor
     const int gpuBlockSizeX = gpu::cWarpingBlockSizeX;
@@ -563,9 +476,6 @@ std::pair<int, bool> warpImageGPU(
     //***UNUSED*** GPU input, will contain: for each gpu block, the box specifying the required source image data
     gpuDetail::ImageBuffer<gpu::SBox2I> srcBlk(gpuBlockXN, gpuBlockYN);
 
-    TimeEnd(timeRows);
-
-    TimeStart(timeGpuLanczos);
     int numGoodPixels = 0;
 
     #ifdef GPU_BUILD
@@ -578,7 +488,6 @@ std::pair<int, bool> warpImageGPU(
                                         srcBlk, srcPosInterp, interpLength
                                        );
     #endif
-    TimeEnd(timeGpuLanczos);
 
     return std::pair<int, bool>(numGoodPixels, true);
 }
