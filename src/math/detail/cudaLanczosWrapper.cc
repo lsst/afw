@@ -154,14 +154,13 @@ int WarpImageGpuWrapper(
     const int kernelCenterY,
     lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
-    const int interpLength
+    const int interpLength,
+    typename DestImageT::SinglePixel padValue
 )
 {
     typedef typename afwImage::Image<DestPixelT> DestImageT;
 
-    typename DestImageT::SinglePixel const edgePixel = afwMath::edgePixel<DestImageT>(
-                typename afwImage::detail::image_traits<DestImageT>::image_category()
-            );
+    typename DestImageT::SinglePixel const edgePixel = padValue;
 
     PixelIVM<DestPixelT> edgePixelGpu;
     edgePixelGpu.img = edgePixel;
@@ -244,14 +243,13 @@ int WarpImageGpuWrapper(
     const int kernelCenterY,
     lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
-    const int interpLength
+    const int interpLength,
+    typename DestImageT::SinglePixel padValue
 )
 {
     typedef typename afwImage::MaskedImage<DestPixelT> DestImageT;
 
-    typename DestImageT::SinglePixel const edgePixel = afwMath::edgePixel<DestImageT>(
-                typename afwImage::detail::image_traits<DestImageT>::image_category()
-            );
+    typename DestImageT::SinglePixel const edgePixel = padValue;
 
     PixelIVM<DestPixelT> edgePixelGpu;
     edgePixelGpu.img = edgePixel.image();
@@ -402,16 +400,15 @@ void CalculateInterpolationData(gpuDetail::ImageBuffer<BilinearInterp>& srcPosIn
 
 } //local namespace ends
 
-//part of public interface
+// a part of public interface, see header file for description
 template<typename DestImageT, typename SrcImageT>
 std::pair<int, bool> warpImageGPU(
     DestImageT &destImage,              ///< remapped %image
-    afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
     SrcImageT const &srcImage,          ///< source %image
-    afwImage::Wcs const &srcWcs,        ///< WCS of source %image
     afwMath::LanczosWarpingKernel const &lanczosKernel,     ///< warping kernel
-    int const interpLength,              ///< Distance over which WCS can be linearily interpolated
-    ///< must be >0
+    SrcPosFunctor const &computeSrcPos,      ///< Functor to compute source position
+    int const interpLength,              ///< Distance over which WCS can be linearily interpolated, must be >0
+    typename DestImageT::SinglePixel padValue, ///< value to use for undefined pixels
     const bool forceProcessing
 )
 {
@@ -440,7 +437,6 @@ std::pair<int, bool> warpImageGPU(
     int const destHeight = destImage.getHeight();
     int const maxCol = destWidth - 1;
     int const maxRow = destHeight - 1;
-    afwGeom::Point2D const destXY0(destImage.getXY0());
 
     typedef typename DestImageT::SinglePixel DestPixelT;
     typedef typename  SrcImageT::SinglePixel SrcPixelT;
@@ -458,7 +454,7 @@ std::pair<int, bool> warpImageGPU(
         int row = min(maxRow, (rowBand * interpLength - 1));
         for (int colBand = 0; colBand < interpBlkNX; colBand++) {
             int col = min(maxCol, (colBand * interpLength - 1));
-            afwGeom::Point2D srcPos = computeSrcPos(col, row, destXY0, destWcs, srcWcs);
+            afwGeom::Point2D srcPos = computeSrcPos(col, row);
             SPoint2 sSrcPos(srcPos);
             sSrcPos = MovePoint(sSrcPos, SVec2(-srcImage.getX0(), -srcImage.getY0()));
             srcPosInterp.Pixel(colBand, rowBand).o =  sSrcPos;
@@ -485,7 +481,7 @@ std::pair<int, bool> warpImageGPU(
                                         srcGoodBBox,
                                         lanczosKernel.getCtrX(), 
                                         lanczosKernel.getCtrY(),
-                                        srcBlk, srcPosInterp, interpLength
+                                        srcBlk, srcPosInterp, interpLength, padValue
                                        );
     #endif
 
@@ -503,19 +499,19 @@ std::pair<int, bool> warpImageGPU(
 #define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
     template std::pair<int,bool> warpImageGPU( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
-        afwImage::Wcs const &destWcs, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwImage::Wcs const &srcWcs, \
         afwMath::LanczosWarpingKernel const &warpingKernel, \
+        SrcPosFunctor const &computeSrcPos, \
         int const interpLength, \
+        typename DestImageT::SinglePixel padValue, \
         const bool forceProcessing); NL    \
     template std::pair<int,bool> warpImageGPU( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
-        afwImage::Wcs const &destWcs, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwImage::Wcs const &srcWcs, \
         afwMath::LanczosWarpingKernel const &warpingKernel, \
+        SrcPosFunctor const &computeSrcPos, \
         int const interpLength, \
+        typename DestImageT::SinglePixel padValue \
         const bool forceProcessing);
 
 INSTANTIATE(double, double)

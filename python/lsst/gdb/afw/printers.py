@@ -236,7 +236,7 @@ try:
 
             var = gdb.parse_and_eval(opts.eigenObject)
 
-            if not re.search(r"Eigen::(Matrix|Vector)", str(var.type)):
+            if not re.search(r"(Eigen|LinearTransform)::(Matrix|Vector)", str(var.type)):
                 raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
                 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -391,6 +391,25 @@ try:
             return "Source{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"],
                                                           self.val["_xAstrom"], self.val["_yAstrom"])
 
+    class cgIdPrinter(object):
+        "Print a cameraGeom::Id"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "Id{%d %s}" % (self.val["_serial"], self.val["_name"])
+
+    class DetectorPrinter(object):
+        "Print a cameraGeom::Detector"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "Detector{%s Centre: %smm %spix %s}" % (self.val["_id"], self.val["_center"]["_p"],
+                                                self.val["_centerPixel"], self.val["_trimmedAllPixels"])
+
     class FootprintPrinter(object):
         "Print a Footprint"
 
@@ -445,11 +464,11 @@ try:
             if type.code == gdb.TYPE_CODE_REF:
                 type = type.target ()
 
-            llc = [getEigenValue(self.val["_minimum"]["_vector"], 0, i) for i in range(2)]
-            dims = [getEigenValue(self.val["_dimensions"]["_vector"], 0, i) for i in range(2)]
+            llc = [getEigenValue(self.val["_minimum"]["_vector"], i) for i in range(2)]
+            dims = [getEigenValue(self.val["_dimensions"]["_vector"], i) for i in range(2)]
 
             return "Box2{(%s,%s)--(%s,%s)}" % (llc[0], llc[1],
-                                                 llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
+                                               llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
 
         def display_hint (self):
             return "array"
@@ -616,10 +635,11 @@ try:
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
-            if not re.search(r"^(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type.unqualified())):
+            if not re.search(r"(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type.unqualified())):
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
-            if re.search(r"MaskedImage", str(var.type)):
+            if re.search(r"MaskedImage", str(var.type)) and \
+                    not re.search(r"::Image(\s*&)?$", str(var.type)):
                 print "N.b. %s is a MaskedImage; showing image" % (opts.image)
                 var = var["_image"]
 
@@ -725,6 +745,11 @@ try:
 
     def build_afw_dictionary():
         printer = gdb.printing.RegexpCollectionPrettyPrinter("afw")
+
+        printer.add_printer('lsst::afw::cameraGeom::Id',
+                            '^lsst::afw::cameraGeom::Id$', cgIdPrinter)
+        printer.add_printer('lsst::afw::cameraGeom::Detector',
+                            '^lsst::afw::cameraGeom::(Amp|Ccd|Detector|DetectorMosaic)$', DetectorPrinter)
 
         printer.add_printer('lsst::afw::detection::Footprint',
                             '^lsst::afw::detection::Footprint$', FootprintPrinter)

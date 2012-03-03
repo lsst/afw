@@ -84,7 +84,7 @@ void test(char *name) {
           boost::format("sky: %lf %lf") % sky[0] % sky[1]);
 
     CoordPtr coord = afwCoord::makeCoord(afwCoord::ICRS, sky, afwGeom::degrees);
-    pix = testWcs->skyToPixel(coord);
+    pix = testWcs->skyToPixel(*coord);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);

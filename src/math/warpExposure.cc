@@ -37,16 +37,20 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <ctime>
 
+#include "boost/shared_ptr.hpp"
 #include "boost/cstdint.hpp"
 #include "boost/regex.hpp"
 
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/image.h"
-#include "lsst/afw/geom.h"
-#include "lsst/afw/math.h"
+#include "lsst/afw/math/warpExposure.h"
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/gpu/IsGpuBuild.h"
 #include "lsst/afw/gpu/GpuExceptions.h"
 #include "lsst/afw/gpu/DevicePreference.h"
@@ -185,7 +189,9 @@ int afwMath::warpExposure(
                                         ///< All other attributes are left alone (including Detector and Psf)
     SrcExposureT const &srcExposure,    ///< Source exposure
     SeparableKernel &warpingKernel,     ///< Warping kernel; determines warping algorithm
-    int const interpLength              ///< Distance over which WCS can be linearily interpolated
+    int const interpLength,              ///< Distance over which WCS can be linearily interpolated
+    typename DestExposureT::MaskedImageT::SinglePixel padValue, ///< use this value for undefined pixels)
+    lsst::afw::gpu::DevicePreference devPref  ///< Specifies whether to use CPU or GPU device
     )
 {
     if (!destExposure.hasWcs()) {
@@ -199,12 +205,92 @@ int afwMath::warpExposure(
     destExposure.setCalib(calibCopy);
     destExposure.setFilter(srcExposure.getFilter());
     return warpImage(mi, *destExposure.getWcs(),
-                     srcExposure.getMaskedImage(), *srcExposure.getWcs(), warpingKernel, interpLength);
+                     srcExposure.getMaskedImage(), *srcExposure.getWcs(), warpingKernel, interpLength,
+                     padValue, devPref);
 }
 
 
 /************************************************************************************************************/
 namespace {
+
+/*
+    class SrcPosFunctor {
+    public:
+        SrcPosFunctor() {}
+        typedef boost::shared_ptr<SrcPosFunctor> Ptr;
+        virtual afwGeom::Point2D operator()(int destCol, int destRow) const = 0;
+    private:
+    };
+
+    class WcsSrcPosFunctor : public SrcPosFunctor {
+    public:
+        WcsSrcPosFunctor(
+                         afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
+                         afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
+                         afwImage::Wcs const &srcWcs
+                        ) :      ///< WCS of source %image
+            SrcPosFunctor(),
+            _destXY0(destXY0),
+            _destWcs(destWcs),
+            _srcWcs(srcWcs) {}
+        typedef boost::shared_ptr<WcsSrcPosFunctor> Ptr;
+
+        virtual afwGeom::Point2D operator()(int destCol, int destRow) const {
+            double const col = afwImage::indexToPosition(destCol + _destXY0[0]);
+            double const row = afwImage::indexToPosition(destRow + _destXY0[1]);
+            afwGeom::Angle sky1, sky2;
+            _destWcs.pixelToSky(col, row, sky1, sky2);
+            return _srcWcs.skyToPixel(sky1, sky2);
+        }
+    private:
+        afwGeom::Point2D const &_destXY0;
+        afwImage::Wcs const &_destWcs;
+        afwImage::Wcs const &_srcWcs;
+    };
+*/
+    class AffineTransformSrcPosFunctor : public SrcPosFunctor {
+    public:
+        // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
+        // ... so we actually want to use the *inverse* transform of the affineTransform we we're given.
+        // Thus _affineTransform is initialized to affineTransform.invert()
+        AffineTransformSrcPosFunctor(
+                                     afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
+                                     afwGeom::AffineTransform const &affineTransform
+                                     ) :
+            SrcPosFunctor(),
+            _destXY0(destXY0),
+            _affineTransform() {
+            _affineTransform = affineTransform.invert();
+        }
+
+        virtual afwGeom::Point2D operator()(int destCol, int destRow) const {
+            double const col = afwImage::indexToPosition(destCol + _destXY0[0]);
+            double const row = afwImage::indexToPosition(destRow + _destXY0[1]);
+            afwGeom::Point2D p = _affineTransform(afwGeom::Point2D(col, row));
+            return p;
+        }
+    private:
+        afwGeom::Point2D const &_destXY0;
+        afwGeom::AffineTransform _affineTransform;
+    };
+
+
+
+
+    inline afwGeom::Point2D xcomputeSrcPos(
+            int destCol,  ///< destination column index
+            int destRow,  ///< destination row index
+            afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
+            afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
+            afwImage::Wcs const &srcWcs)        ///< WCS of source %image
+    {
+        double const col = afwImage::indexToPosition(destCol + destXY0[0]);
+        double const row = afwImage::indexToPosition(destRow + destXY0[1]);
+        afwGeom::Angle sky1, sky2;
+        destWcs.pixelToSky(col, row, sky1, sky2);
+        return srcWcs.skyToPixel(sky1, sky2);
+    }
+
 
     inline double computeRelativeArea(
             afwGeom::Point2D const &srcPos,     /// source position at desired destination pixel
@@ -217,6 +303,407 @@ namespace {
         return std::abs(dSrcA.getX()*dSrcB.getY() - dSrcA.getY()*dSrcB.getX());
     }
 }
+
+namespace {
+
+    template<typename DestImageT, typename SrcImageT>
+    int doWarpImage(
+        DestImageT &destImage,              ///< remapped %image
+        SrcImageT const &srcImage,          ///< source %image
+        afwMath::SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
+        SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
+        int const interpLength,              ///< Distance over which WCS can be linearily interpolated
+            ///< 0 means no interpolation and uses an optimized branch of the code
+            ///< 1 also performs no interpolation but it runs the interpolation code branch
+        typename DestImageT::SinglePixel padValue, ///< value to use for undefined pixels
+        lsst::afw::gpu::DevicePreference devPref  ///< Specifies whether to use CPU or GPU device
+        )
+    {
+
+        if (afwMath::details::isSameObject(destImage, srcImage)) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                "destImage is srcImage; cannot warp in place");
+        }
+
+        afwMath::LanczosWarpingKernel const *const lanczosKernel =
+            dynamic_cast<afwMath::LanczosWarpingKernel const*>(&warpingKernel);
+
+        if (lsst::afw::gpu::isGpuEnabled() == false) {
+            // (this case bypasses all GPU acceleration code)
+        } else if(NULL == lanczosKernel) {
+            if (devPref == lsst::afw::gpu::USE_GPU) {
+                throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can process only Lanczos kernels");
+            }
+        } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
+            if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
+                try {
+                    std::pair<int, bool> result = detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
+                                                            computeSrcPos,  interpLength, padValue, false);
+                    if (result.second) return result.first;
+                } catch(lsst::afw::gpu::GpuMemoryException) { }
+                catch(pexExcept::MemoryException) { }
+                catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
+            } else if (devPref != lsst::afw::gpu::USE_CPU) {
+                std::pair<int, bool> result = detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
+                                                                  computeSrcPos, interpLength, padValue,
+                                                                  devPref == lsst::afw::gpu::USE_GPU);
+                if (result.second) return result.first;
+                if (devPref == lsst::afw::gpu::USE_GPU) {
+                    throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+                                      "Gpu cannot perform this warp (kernel too big?)");
+                }
+            }
+        }
+
+        int numGoodPixels = 0;
+
+        typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
+
+        // Compute borders; use to prevent applying kernel outside of srcImage
+        int const kernelWidth = warpingKernel.getWidth();
+        int const kernelHeight = warpingKernel.getHeight();
+        int const kernelCtrX = warpingKernel.getCtrX();
+        int const kernelCtrY = warpingKernel.getCtrY();
+
+        // Get the source MaskedImage and a pixel accessor to it.
+        int const srcWidth = srcImage.getWidth();
+        int const srcHeight = srcImage.getHeight();
+        pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+
+        int const destWidth = destImage.getWidth();
+        int const destHeight = destImage.getHeight();
+
+        pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
+
+        typename DestImageT::SinglePixel edgePixel = padValue;
+
+        std::vector<double> kernelXList(kernelWidth);
+        std::vector<double> kernelYList(kernelHeight);
+
+        afwGeom::Box2I srcGoodBBox = warpingKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+
+        // Set each pixel of destExposure's MaskedImage
+        pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
+
+        // A cache of pixel positions on the source corresponding to the previous or current row
+        // of the destination image.
+        // The first value is for column -1 because the previous source position is used to compute relative area
+        // To simplify the indexing, use an iterator that starts at begin+1, thus:
+        // srcPosView = _srcPosList.begin() + 1
+        // srcPosView[col-1] and lower indices are for this row
+        // srcPosView[col] and higher indices are for the previous row
+        std::vector<afwGeom::Point2D> _srcPosList(1 + destWidth);
+        std::vector<afwGeom::Point2D>::iterator const srcPosView = _srcPosList.begin() + 1;
+
+        int const maxCol = destWidth - 1;
+        int const maxRow = destHeight - 1;
+
+        if (interpLength > 0) {
+            // Use interpolation. Note that 1 produces the same result as no interpolation
+            // but uses this code branch, thus providing an easy way to compare the two branches.
+
+            // Estimate for number of horizontal interpolation band edges, to reserve memory in vectors
+            int const numColEdges = 2 + ((destWidth - 1) / interpLength);
+
+            // A list of edge column indices for interpolation bands;
+            // starts at -1, increments by interpLen (except the final interval), and ends at destWidth-1
+            std::vector<int> edgeColList;
+            edgeColList.reserve(numColEdges);
+
+            // A list of 1/column width for horizontal interpolation bands; the first value is garbage.
+            // The inverse is used for speed because the values is always multiplied.
+            std::vector<double> invWidthList;
+            invWidthList.reserve(numColEdges);
+
+            // Compute edgeColList and invWidthList
+            edgeColList.push_back(-1);
+            invWidthList.push_back(0.0);
+            for (int prevEndCol = -1; prevEndCol < maxCol; prevEndCol += interpLength) {
+                int endCol = prevEndCol + interpLength;
+                if (endCol > maxCol) {
+                    endCol = maxCol;
+                }
+                edgeColList.push_back(endCol);
+                assert(endCol - prevEndCol > 0);
+                invWidthList.push_back(1.0 / static_cast<double>(endCol - prevEndCol));
+            }
+            assert(edgeColList.back() == maxCol);
+
+            // A list of delta source positions along the edge columns of the horizontal interpolation bands
+            std::vector<afwGeom::Extent2D> yDeltaSrcPosList(edgeColList.size());
+
+            // Initialize _srcPosList for row -1
+            //srcPosView[-1] = computeSrcPos(-1, -1, destXY0, destWcs, srcWcs);
+            srcPosView[-1] = computeSrcPos(-1, -1);
+            for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                int const prevEndCol = edgeColList[colBand-1];
+                int const endCol = edgeColList[colBand];
+                afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
+                afwGeom::Point2D rightSrcPos = computeSrcPos(endCol, -1);
+                afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
+
+                for (int col = prevEndCol + 1; col <= endCol; ++col) {
+                    srcPosView[col] = srcPosView[col-1] + xDeltaSrcPos;
+                }
+            }
+
+            int endRow = -1;
+            while (endRow < maxRow) {
+                // Next horizontal interpolation band
+
+                int prevEndRow = endRow;
+                endRow = prevEndRow + interpLength;
+                if (endRow > maxRow) {
+                    endRow = maxRow;
+                }
+                assert(endRow - prevEndRow > 0);
+                double interpInvHeight = 1.0 / static_cast<double>(endRow - prevEndRow);
+
+                // Set yDeltaSrcPosList for this horizontal interpolation band
+                for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                    int endCol = edgeColList[colBand];
+                    afwGeom::Point2D bottomSrcPos = computeSrcPos(endCol, endRow);
+                    yDeltaSrcPosList[colBand] = (bottomSrcPos - srcPosView[endCol]) * interpInvHeight;
+                }
+
+                for (int row = prevEndRow + 1; row <= endRow; ++row) {
+                    typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+                    srcPosView[-1] += yDeltaSrcPosList[0];
+                    for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                        /// Next vertical interpolation band
+
+                        int const prevEndCol = edgeColList[colBand-1];
+                        int const endCol = edgeColList[colBand];
+
+                        // Compute xDeltaSrcPos; remember that srcPosView contains
+                        // positions for this row in prevEndCol and smaller indices,
+                        // and positions for the previous row for larger indices (including endCol)
+                        afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
+                        afwGeom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
+                        afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
+
+                        for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
+                            afwGeom::Point2D leftSrcPos = srcPosView[col-1];
+                            afwGeom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
+                            double relativeArea = computeRelativeArea(srcPos, leftSrcPos, srcPosView[col]);
+
+                            srcPosView[col] = srcPos;
+
+                            // Compute associated source pixel index as integer and nonnegative fractional parts;
+                            // the latter is used to compute the remapping kernel.
+                            std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
+                            std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
+                            if (srcIndFracX.second < 0) {
+                                ++srcIndFracX.second;
+                                --srcIndFracX.first;
+                            }
+                            if (srcIndFracY.second < 0) {
+                                ++srcIndFracY.second;
+                                --srcIndFracY.first;
+                            }
+
+                            if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+                                 ++numGoodPixels;
+
+                                // Offset source pixel index from kernel center to kernel corner (0, 0)
+                                // so we can convolveAtAPoint the pixels that overlap between source and kernel
+                                srcIndFracX.first -= kernelCtrX;
+                                srcIndFracY.first -= kernelCtrY;
+
+                                // Compute warped pixel
+                                std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
+                                warpingKernel.setKernelParameters(srcFracInd);
+                                double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+
+                                typename SrcImageT::const_xy_locator srcLoc =
+                                    srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
+
+                                *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(
+                                    srcLoc, kernelXList, kernelYList);
+                                *destXIter *= relativeArea/kSum;
+                            } else {
+                               // Edge pixel pixel
+                                *destXIter = edgePixel;
+                            }
+                        } // for col
+                    }   // for col band
+                }   // for row
+            }   // while next row band
+
+
+        } else {
+            // No interpolation
+
+            // initialize _srcPosList for row -1;
+            // the first value is not needed, but it's safer to compute it
+            std::vector<afwGeom::Point2D>::iterator srcPosView = _srcPosList.begin() + 1;
+            for (int col = -1; col < destWidth; ++col) {
+                srcPosView[col] = computeSrcPos(col, -1);
+            }
+
+            for (int row = 0; row < destHeight; ++row) {
+                typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+
+                srcPosView[-1] = computeSrcPos(-1, row);
+
+                for (int col = 0; col < destWidth; ++col, ++destXIter) {
+                    afwGeom::Point2D srcPos = computeSrcPos(col, row);
+                    double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
+                    srcPosView[col] = srcPos;
+
+                    // Compute associated source pixel index as integer and nonnegative fractional parts;
+                    // the latter is used to compute the remapping kernel.
+                    std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
+                    std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
+                    if (srcIndFracX.second < 0) {
+                        ++srcIndFracX.second;
+                        --srcIndFracX.first;
+                    }
+                    if (srcIndFracY.second < 0) {
+                        ++srcIndFracY.second;
+                        --srcIndFracY.first;
+                    }
+
+                    if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+                         ++numGoodPixels;
+
+                        // Offset source pixel index from kernel center to kernel corner (0, 0)
+                        // so we can convolveAtAPoint the pixels that overlap between source and kernel
+                        srcIndFracX.first -= kernelCtrX;
+                        srcIndFracY.first -= kernelCtrY;
+
+                        // Compute warped pixel
+                        std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
+                        warpingKernel.setKernelParameters(srcFracInd);
+                        double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+
+                        typename SrcImageT::const_xy_locator srcLoc =
+                            srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
+
+                        *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(
+                            srcLoc, kernelXList, kernelYList);
+                        *destXIter *= relativeArea/kSum;
+                    } else {
+                       // Edge pixel pixel
+                        *destXIter = edgePixel;
+                    }
+                }   // for col
+            }   // for row
+        } // if interp
+
+        return numGoodPixels;
+    }
+
+
+
+    /*
+     * This is a nearly identical version of doWarpImage() (literally copied and edited).
+     * The difference is that it makes no effort to interpolate and assumes constant area.
+     * The intention was to try to remove as much as possible from the inner-most loop
+     * in order to buy speed for the warping needed by Distortion.
+     * Almost no speed-up was found, but I've left it in for the time-being.
+     */
+    template<typename DestImageT, typename SrcImageT>
+    int doLinearWarpImage(
+        DestImageT &destImage,              ///< remapped %image
+        SrcImageT const &srcImage,          ///< source %image
+        afwMath::SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
+        SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
+        typename DestImageT::SinglePixel padValue ///< value to use for undefined pixels
+                         )
+    {
+
+        if (afwMath::details::isSameObject(destImage, srcImage)) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                "destImage is srcImage; cannot warp in place");
+        }
+        int numGoodPixels = 0;
+
+        typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
+
+        // Compute borders; use to prevent applying kernel outside of srcImage
+        int const kernelWidth = warpingKernel.getWidth();
+        int const kernelHeight = warpingKernel.getHeight();
+        int const kernelCtrX = warpingKernel.getCtrX();
+        int const kernelCtrY = warpingKernel.getCtrY();
+
+        // Get the source MaskedImage and a pixel accessor to it.
+        int const srcWidth = srcImage.getWidth();
+        int const srcHeight = srcImage.getHeight();
+        pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+
+        int const destWidth = destImage.getWidth();
+        int const destHeight = destImage.getHeight();
+
+        pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
+
+        typename DestImageT::SinglePixel edgePixel = padValue;
+
+        std::vector<double> kernelXList(kernelWidth);
+        std::vector<double> kernelYList(kernelHeight);
+
+        afwGeom::Box2I srcGoodBBox = warpingKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+
+        // Set each pixel of destExposure's MaskedImage
+        pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
+
+        // pre-compute the relative area.  it's constant across the field.
+        // use the center pixel
+        afwGeom::Point2D srcPosCenter = computeSrcPos(destWidth/2, destHeight/2);
+        afwGeom::Point2D srcPosLeft   = computeSrcPos(destWidth/2-1, destHeight/2);
+        afwGeom::Point2D srcPosUp     = computeSrcPos(destWidth/2, destHeight/2+1);
+        double relativeArea           = computeRelativeArea(srcPosCenter, srcPosLeft, srcPosUp);
+
+        for (int row = 0; row < destHeight; ++row) {
+            typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+
+            for (int col = 0; col < destWidth; ++col, ++destXIter) {
+                afwGeom::Point2D srcPos = computeSrcPos(col, row);
+
+                // Compute associated source pixel index as integer and nonnegative fractional parts;
+                // the latter is used to compute the remapping kernel.
+                std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
+                std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
+                if (srcIndFracX.second < 0) {
+                    ++srcIndFracX.second;
+                    --srcIndFracX.first;
+                }
+                if (srcIndFracY.second < 0) {
+                    ++srcIndFracY.second;
+                    --srcIndFracY.first;
+                }
+
+                if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+                    ++numGoodPixels;
+
+                    // Offset source pixel index from kernel center to kernel corner (0, 0)
+                    // so we can convolveAtAPoint the pixels that overlap between source and kernel
+                    srcIndFracX.first -= kernelCtrX;
+                    srcIndFracY.first -= kernelCtrY;
+
+                    // Compute warped pixel
+                    std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
+                    warpingKernel.setKernelParameters(srcFracInd);
+                    double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+
+                    typename SrcImageT::const_xy_locator srcLoc =
+                        srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
+
+                    *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(srcLoc,
+                                                                                 kernelXList, kernelYList);
+                    *destXIter *= relativeArea/kSum;
+                } else {
+                    // Edge pixel pixel
+                    *destXIter = edgePixel;
+                }
+            }   // for col
+        }   // for row
+
+        return numGoodPixels;
+    }
+
+
+} // namespace
 
 /**
  * \brief Remap an Image or MaskedImage to a new Wcs. See also convenience function
@@ -270,6 +757,9 @@ namespace {
  * by linear interpolation between those grid points. Everything else remains the same.
  *
  * \throw lsst::pex::exceptions::InvalidParameterException if destImage is srcImage
+ * \throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
+ * \throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
+ * \throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
  *
  * \todo Should support an additional color-based position correction in the remapping (differential chromatic
  *   refraction). This can be done either object-by-object or pixel-by-pixel.
@@ -283,286 +773,91 @@ int afwMath::warpImage(
     SrcImageT const &srcImage,          ///< source %image
     afwImage::Wcs const &srcWcs,        ///< WCS of source %image
     SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
-    int const interpLength,              ///< Distance over which WCS can be linearily interpolated
+    int const interpLength,             ///< Distance over which WCS can be linearily interpolated
         ///< 0 means no interpolation and uses an optimized branch of the code
         ///< 1 also performs no interpolation but it runs the interpolation code branch
+    typename DestImageT::SinglePixel padValue,          ///< Set undefined pixels to this value
     lsst::afw::gpu::DevicePreference devPref  ///< Specifies whether to use CPU or GPU device
     )
 {
-    if (afwMath::details::isSameObject(destImage, srcImage)) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "destImage is srcImage; cannot warp in place");
-    }
-
-    afwMath::LanczosWarpingKernel const *const lanczosKernel= 
-                         dynamic_cast<afwMath::LanczosWarpingKernel const*>(&warpingKernel);
-
-    if (lsst::afw::gpu::isGpuEnabled()==false) {
-        // (this case bypasses all GPU acceleration code)
-    } else if(NULL == lanczosKernel){
-        if (devPref == lsst::afw::gpu::USE_GPU) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,"Gpu can process only Lanczos kernels");
-        }
-    } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength>0) ) {
-        if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
-            try {
-                std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs, 
-                                                                  *lanczosKernel, interpLength, false);
-                if (result.second) return result.first;
-            } catch(lsst::afw::gpu::GpuMemoryException) { }
-            catch(pexExcept::MemoryException) { }
-            catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
-        } else if (devPref != lsst::afw::gpu::USE_CPU) {
-            std::pair<int,bool> result = detail::warpImageGPU(destImage, destWcs, srcImage, srcWcs, 
-                                                              *lanczosKernel, interpLength, 
-                                                              devPref==lsst::afw::gpu::USE_GPU);
-            if (result.second) return result.first;
-            if (devPref == lsst::afw::gpu::USE_GPU) {
-                throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
-                                    "Gpu cannot perform this warp (kernel too big?)");
-            }
-        }
-    }
-
-    int numGoodPixels = 0;
-
-    typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
-
-    // Compute borders; use to prevent applying kernel outside of srcImage
-    int const kernelWidth = warpingKernel.getWidth();
-    int const kernelHeight = warpingKernel.getHeight();
-    int const kernelCtrX = warpingKernel.getCtrX();
-    int const kernelCtrY = warpingKernel.getCtrY();
-
-    // Get the source MaskedImage and a pixel accessor to it.
-    int const srcWidth = srcImage.getWidth();
-    int const srcHeight = srcImage.getHeight();
-    pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
-
-    int const destWidth = destImage.getWidth();
-    int const destHeight = destImage.getHeight();
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
-
-    typename DestImageT::SinglePixel const edgePixel = afwMath::edgePixel<DestImageT>(
-        typename afwImage::detail::image_traits<DestImageT>::image_category()
-    );
-
-    std::vector<double> kernelXList(kernelWidth);
-    std::vector<double> kernelYList(kernelHeight);
-
-    afwGeom::Box2I srcGoodBBox = warpingKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
-
-    // Set each pixel of destExposure's MaskedImage
-    pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
-
-    // A cache of pixel positions on the source corresponding to the previous or current row
-    // of the destination image.
-    // The first value is for column -1 because the previous source position is used to compute relative area
-    // To simplify the indexing, use an iterator that starts at begin+1, thus:
-    // srcPosView = _srcPosList.begin() + 1
-    // srcPosView[col-1] and lower indices are for this row
-    // srcPosView[col] and higher indices are for the previous row
-    std::vector<afwGeom::Point2D> _srcPosList(1 + destWidth);
-    std::vector<afwGeom::Point2D>::iterator const srcPosView = _srcPosList.begin() + 1;
-
-    int const maxCol = destWidth - 1;
-    int const maxRow = destHeight - 1;
-
-    if (interpLength > 0) {
-        // Use interpolation. Note that 1 produces the same result as no interpolation
-        // but uses this code branch, thus providing an easy way to compare the two branches.
-
-        // Estimate for number of horizontal interpolation band edges, to reserve memory in vectors
-        int const numColEdges = 2 + ((destWidth - 1) / interpLength);
-
-        // A list of edge column indices for interpolation bands;
-        // starts at -1, increments by interpLen (except the final interval), and ends at destWidth-1
-        std::vector<int> edgeColList;
-        edgeColList.reserve(numColEdges);
-
-        // A list of 1/column width for horizontal interpolation bands; the first value is garbage.
-        // The inverse is used for speed because the values is always multiplied.
-        std::vector<double> invWidthList;
-        invWidthList.reserve(numColEdges);
-
-        // Compute edgeColList and invWidthList
-        edgeColList.push_back(-1);
-        invWidthList.push_back(0.0);
-        for (int prevEndCol = -1; prevEndCol < maxCol; prevEndCol += interpLength) {
-            int endCol = prevEndCol + interpLength;
-            if (endCol > maxCol) {
-                endCol = maxCol;
-            }
-            edgeColList.push_back(endCol);
-            assert(endCol - prevEndCol > 0);
-            invWidthList.push_back(1.0 / static_cast<double>(endCol - prevEndCol));
-        }
-        assert(edgeColList.back() == maxCol);
-
-        // A list of delta source positions along the edge columns of the horizontal interpolation bands
-        std::vector<afwGeom::Extent2D> yDeltaSrcPosList(edgeColList.size());
-
-        // Initialize _srcPosList for row -1
-        srcPosView[-1] = detail::computeSrcPos(-1, -1, destXY0, destWcs, srcWcs);
-        for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-            int const prevEndCol = edgeColList[colBand-1];
-            int const endCol = edgeColList[colBand];
-            afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
-            afwGeom::Point2D rightSrcPos = detail::computeSrcPos(endCol, -1, destXY0, destWcs, srcWcs);
-            afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
-
-            for (int col = prevEndCol + 1; col <= endCol; ++col) {
-                srcPosView[col] = srcPosView[col-1] + xDeltaSrcPos;
-            }
-        }
-
-        int endRow = -1;
-        while (endRow < maxRow) {
-            // Next horizontal interpolation band
-
-            int prevEndRow = endRow;
-            endRow = prevEndRow + interpLength;
-            if (endRow > maxRow) {
-                endRow = maxRow;
-            }
-            assert(endRow - prevEndRow > 0);
-            double interpInvHeight = 1.0 / static_cast<double>(endRow - prevEndRow);
-
-            // Set yDeltaSrcPosList for this horizontal interpolation band
-            for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                int endCol = edgeColList[colBand];
-                afwGeom::Point2D bottomSrcPos = detail::computeSrcPos(endCol, endRow, destXY0, destWcs, srcWcs);
-                yDeltaSrcPosList[colBand] = (bottomSrcPos - srcPosView[endCol]) * interpInvHeight;
-            }
-
-            for (int row = prevEndRow + 1; row <= endRow; ++row) {
-                typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
-                srcPosView[-1] += yDeltaSrcPosList[0];
-                for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                    /// Next vertical interpolation band
-
-                    int const prevEndCol = edgeColList[colBand-1];
-                    int const endCol = edgeColList[colBand];
-
-                    // Compute xDeltaSrcPos; remember that srcPosView contains
-                    // positions for this row in prevEndCol and smaller indices,
-                    // and positions for the previous row for larger indices (including endCol)
-                    afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
-                    afwGeom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
-                    afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
-
-                    for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
-                        afwGeom::Point2D leftSrcPos = srcPosView[col-1];
-                        afwGeom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
-                        double relativeArea = computeRelativeArea(srcPos, leftSrcPos, srcPosView[col]);
-
-                        srcPosView[col] = srcPos;
-
-                        // Compute associated source pixel index as integer and nonnegative fractional parts;
-                        // the latter is used to compute the remapping kernel.
-                        std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
-                        std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
-                        if (srcIndFracX.second < 0) {
-                            ++srcIndFracX.second;
-                            --srcIndFracX.first;
-                        }
-                        if (srcIndFracY.second < 0) {
-                            ++srcIndFracY.second;
-                            --srcIndFracY.first;
-                        }
-
-                        if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
-                             ++numGoodPixels;
-
-                            // Offset source pixel index from kernel center to kernel corner (0, 0)
-                            // so we can convolveAtAPoint the pixels that overlap between source and kernel
-                            srcIndFracX.first -= kernelCtrX;
-                            srcIndFracY.first -= kernelCtrY;
-
-                            // Compute warped pixel
-                            std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
-                            warpingKernel.setKernelParameters(srcFracInd);
-                            double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
-
-                            typename SrcImageT::const_xy_locator srcLoc =
-                                srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
-
-                            *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(
-                                srcLoc, kernelXList, kernelYList);
-                            *destXIter *= relativeArea/kSum;
-                        } else {
-                           // Edge pixel pixel
-                            *destXIter = edgePixel;
-                        }
-                    } // for col
-                }   // for col band
-            }   // for row
-        }   // while next row band
-
-
-    } else {
-        // No interpolation
-
-        // initialize _srcPosList for row -1;
-        // the first value is not needed, but it's safer to compute it
-        std::vector<afwGeom::Point2D>::iterator srcPosView = _srcPosList.begin() + 1;
-        for (int col = -1; col < destWidth; ++col) {
-            srcPosView[col] = detail::computeSrcPos(col, -1, destXY0, destWcs, srcWcs);
-        }
-
-        for (int row = 0; row < destHeight; ++row) {
-            typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
-
-            srcPosView[-1] = detail::computeSrcPos(-1, row, destXY0, destWcs, srcWcs);
-
-            for (int col = 0; col < destWidth; ++col, ++destXIter) {
-                afwGeom::Point2D srcPos = detail::computeSrcPos(col, row, destXY0, destWcs, srcWcs);
-                double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
-                srcPosView[col] = srcPos;
-
-                // Compute associated source pixel index as integer and nonnegative fractional parts;
-                // the latter is used to compute the remapping kernel.
-                std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
-                std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
-                if (srcIndFracX.second < 0) {
-                    ++srcIndFracX.second;
-                    --srcIndFracX.first;
-                }
-                if (srcIndFracY.second < 0) {
-                    ++srcIndFracY.second;
-                    --srcIndFracY.first;
-                }
-
-                if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
-                     ++numGoodPixels;
-
-                    // Offset source pixel index from kernel center to kernel corner (0, 0)
-                    // so we can convolveAtAPoint the pixels that overlap between source and kernel
-                    srcIndFracX.first -= kernelCtrX;
-                    srcIndFracY.first -= kernelCtrY;
-
-                    // Compute warped pixel
-                    std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
-                    warpingKernel.setKernelParameters(srcFracInd);
-                    double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
-
-                    typename SrcImageT::const_xy_locator srcLoc =
-                        srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
-
-                    *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(
-                        srcLoc, kernelXList, kernelYList);
-                    *destXIter *= relativeArea/kSum;
-                } else {
-                   // Edge pixel pixel
-                    *destXIter = edgePixel;
-                }
-            }   // for col
-        }   // for row
-    } // if interp
-
-    return numGoodPixels;
+    WcsSrcPosFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
+    return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength, padValue, devPref);
 }
+
+
+template<typename DestImageT, typename SrcImageT>
+int afwMath::warpImage(
+    DestImageT &destImage,                      ///< remapped %image
+    SrcImageT const &srcImage,                  ///< source %image
+    SeparableKernel &warpingKernel,             ///< warping kernel; determines warping algorithm
+    afwGeom::AffineTransform const &affineTransform, ///< affine transformation to apply
+    int const interpLength,                      ///< Distance over which WCS can be linearily interpolated
+    ///< 0 means no interpolation and uses an optimized branch of the code
+    ///< 1 also performs no interpolation but it runs the interpolation code branch
+    typename DestImageT::SinglePixel padValue          ///< Set undefined pixels to this value
+                      )
+{
+    afwGeom::Point2D const destXY0(destImage.getXY0());
+    AffineTransformSrcPosFunctor const computeSrcPos(destXY0, affineTransform);
+    //return doWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, interpLength, padValue);
+    return doLinearWarpImage(destImage, srcImage, warpingKernel, computeSrcPos, padValue);
+}
+
+
+template<typename DestImageT, typename SrcImageT>
+int afwMath::warpCenteredImage(
+    DestImageT &destImage,                      ///< remapped %image
+    SrcImageT const &srcImage,                  ///< source %image
+    SeparableKernel &warpingKernel,             ///< warping kernel; determines warping algorithm
+    afwGeom::LinearTransform const &linearTransform, ///< linear transformation to apply
+    afwGeom::Point2D const &centerPixel,         ///< pixel corresponding to location of linearTransform
+    int const interpLength,
+    typename DestImageT::SinglePixel padValue                  ///< set undefined pixels to this value
+                      )
+{
+
+    // force src and dest to be the same size and xy0
+    if (
+        (destImage.getWidth() != srcImage.getWidth()) ||
+        (destImage.getHeight() != srcImage.getHeight()) ||
+        (destImage.getXY0() != srcImage.getXY0())
+       ) {
+        std::ostringstream errStream;
+        errStream << "src and dest images must have same size and xy0.";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
+    }
+
+    // set the xy0 coords to 0,0 to make life easier
+    SrcImageT srcImageCopy(srcImage, true);
+    srcImageCopy.setXY0(0, 0);
+    destImage.setXY0(0, 0);
+    afwGeom::Extent2D cLocal = afwGeom::Extent2D(centerPixel) - afwGeom::Extent2D(srcImage.getXY0());
+
+    // for the affine transform, the centerPixel will not only get sheared, but also
+    // moved slightly.  So we'll include a translation to move it back by an amount
+    // centerPixel - translatedCenterPixel
+    afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
+
+    // now warp
+#if 0
+    static float t = 0.0;
+    float t_before = 1.0*clock()/CLOCKS_PER_SEC;
+    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran, interpLength, padValue);
+    float t_after = 1.0*clock()/CLOCKS_PER_SEC;
+    float dt = t_after - t_before;
+    t += dt;
+    std::cout <<srcImage.getWidth()<<"x"<<srcImage.getHeight()<<": "<< dt <<" "<< t <<std::endl;
+#else
+    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran, interpLength, padValue);
+#endif
+
+    // fix the origin and we're done.
+    destImage.setXY0(srcImage.getXY0());
+
+    return n;
+}
+
 
 //
 // Explicit instantiations
@@ -575,24 +870,59 @@ int afwMath::warpImage(
 #define NL /* */
 
 #define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
+    template int afwMath::warpCenteredImage( \
+        IMAGE(DESTIMAGEPIXELT) &destImage, \
+        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        SeparableKernel &warpingKernel,                                 \
+        afwGeom::LinearTransform const &linearTransform,                \
+        afwGeom::Point2D const &centerPixel,                            \
+        int const interpLength,                                         \
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
+    template int afwMath::warpCenteredImage(                                    \
+        MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
+        MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        SeparableKernel &warpingKernel,                                 \
+        afwGeom::LinearTransform const &linearTransform,                \
+        afwGeom::Point2D const &centerPixel,                            \
+        int const interpLength,                                         \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
-        afwImage::Wcs const &destWcs, \
+        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        SeparableKernel &warpingKernel,                                 \
+        afwGeom::AffineTransform const &affineTransform,  int const interpLength,\
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL               \
+    template int afwMath::warpImage(                                    \
+        MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
+        MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        SeparableKernel &warpingKernel,                                 \
+        afwGeom::AffineTransform const &affineTransform,  int const interpLength, \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL         \
+    template int afwMath::warpImage(                                    \
+        IMAGE(DESTIMAGEPIXELT) &destImage,  \
+        afwImage::Wcs const &destWcs,          \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        SeparableKernel &warpingKernel, int const interpLength, \
-        lsst::afw::gpu::DevicePreference devPref); NL    \
+        SeparableKernel &warpingKernel, int const interpLength,\
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
+        lsst::afw::gpu::DevicePreference devPref); NL      \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        SeparableKernel &warpingKernel, int const interpLength, \
-        lsst::afw::gpu::DevicePreference devPref); NL    \
-    template int afwMath::warpExposure( \
+        SeparableKernel &warpingKernel, int const interpLength,        \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
+        lsst::afw::gpu::DevicePreference devPref); NL        \
+    template int afwMath::warpExposure(                                \
         EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
-        SeparableKernel &warpingKernel, int const interpLength);
+        SeparableKernel &warpingKernel, int const interpLength,\
+        EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue, \
+        lsst::afw::gpu::DevicePreference devPref);
+
+
+
 
 INSTANTIATE(double, double)
 INSTANTIATE(double, float)

@@ -56,7 +56,7 @@ void SpatialCellSetDemo() {
      * Create an (empty) SpatialCellSet
      */
     afwMath::SpatialCellSet cellSet(
-        im->getBBox(afwImage::LOCAL),
+        im->getBBox(afwImage::PARENT),
         260, 200
     );
     /*
@@ -67,12 +67,7 @@ void SpatialCellSetDemo() {
         afwGeom::Box2I const bbox = (*ptr)->getBBox();
         float const xc = (bbox.getMinX() + bbox.getMaxX())/2.0;
         float const yc = (bbox.getMinY() + bbox.getMaxY())/2.0;
-        ExampleCandidate::Ptr tc(
-            new ExampleCandidate(xc, yc, 
-                im->getImage(), 
-                bbox
-            )
-        );
+        ExampleCandidate::Ptr tc(new ExampleCandidate(xc, yc, im, bbox));
         cellSet.insertCandidate(tc);
     }
     /*

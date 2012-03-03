@@ -72,6 +72,57 @@ class BackgroundTestCase(unittest.TestCase):
 
         #self.assertAlmostEqual(mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
+    def testOddSize(self):
+        '''
+        Test for ticket #1781 -- without it, in oddly-sized images
+        there is a chunk of pixels on the right/bottom that do not go
+        into the fit and are extrapolated.  After this ticket, the
+        subimage boundaries are spread more evenly so the last pixels
+        get fit as well.  This slightly strange test case checks that
+        the interpolant is close to the function at the end.  I could
+        not think of an interpolant that would fit exactly, so this
+        just puts a limit on the errors.
+        '''
+        W,H = 2,99
+        image = afwImage.ImageF(afwGeom.Extent2I(W,H))
+        bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.LINEAR)
+        bgCtrl.setNxSample(2)
+        NY = 10
+        bgCtrl.setNySample(NY)
+        for y in range(H):
+            for x in range(W):
+                B = 89
+                if y < B:
+                    image.set(x,y,y)
+                else:
+                    image.set(x,y,B+(y-B)*-1.) #0.5)
+        bobj = afwMath.makeBackground(image, bgCtrl)
+        back = bobj.getImageD()
+        
+        for iy,by in zip([image.get(0,y) for y in range(H)],
+                         [ back.get(0,y) for y in range(H)]):
+            self.assertTrue( abs(iy - by) < 5 )
+
+        if False:
+            import matplotlib
+            matplotlib.use('Agg')
+            import pylab as plt
+            import numpy as np
+            plt.clf()
+            IY = [image.get(0,y) for y in range(H)]
+            BY = [ back.get(0,y) for y in range(H)]
+            for iy,by in zip(IY,BY):
+                print 'diff', iy-by
+            b = np.linspace(0, H-1, NY+1)
+            plt.plot(IY, 'b-', lw=3, alpha=0.5)
+            plt.plot(BY, 'r-')
+            for y in b:
+                plt.axvline(y)
+            plt.savefig('bg.png')
+
+
+        
+
     def testgetPixel(self):
         """Test the getPixel() function"""
 
@@ -94,7 +145,8 @@ class BackgroundTestCase(unittest.TestCase):
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00295902395123] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.08468385712251] ) # cooked to known value
         #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00305806663295] ) # cooked to known value
-        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.0035102188698] ) # cooked to known value
+        #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.0035102188698] ) # cooked to known value
+        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 399.9912966583894] ) # cooked to known value
         #imgfiles.append("v1_i1_g_m400_s20_u16.fits")
         #imgfiles.append("v1_i2_g_m400_s20_f.fits"
         #imgfiles.append("v1_i2_g_m400_s20_u16.fits")
@@ -170,19 +222,40 @@ class BackgroundTestCase(unittest.TestCase):
             for ypix in ypixels:
                 testval = backobj.getPixel(xpix, ypix)
                 self.assertAlmostEqual( testval, rampimg.get(xpix, ypix), 10 )
-                
+
+    def getParabolaImage(self, nx, ny):
+        parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
+        d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
+        for x in range(nx):
+            for y in range(ny):
+                parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
+        return parabimg
+
+    def testTicket1781(self):
+        # make an unusual-sized image
+        nx = 526
+        ny = 154
+
+        parabimg = self.getParabolaImage(nx, ny)
+
+        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
+        bctrl.setNxSample(16)
+        bctrl.setNySample(4)
+        bctrl.getStatisticsControl().setNumSigmaClip(10.0)  
+        bctrl.getStatisticsControl().setNumIter(1)
+        backobj = afwMath.makeBackground(parabimg, bctrl)
+
+        #parabimg.writeFits('in.fits')
+        #backobj.getImageF().writeFits('out.fits')
+
 
     def testParabola(self):
 
         # make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         nx = 512
         ny = 512
-        parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
-        d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
 
-        for x in range(nx):
-            for y in range(ny):
-                parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
+        parabimg = self.getParabolaImage(nx, ny)
         
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
@@ -313,6 +386,7 @@ class BackgroundTestCase(unittest.TestCase):
             bim = bkd.getImageF()
             im.writeFits("im.fits")
             bim.writeFits("bim.fits")
+
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

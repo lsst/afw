@@ -34,6 +34,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
+#include "lsst/afw/geom/ellipses.h"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/cameraGeom.h"
@@ -42,7 +43,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
 #if defined(IMPORT_IMAGE_I)
-%import  "lsst/afw/image/imageLib.i" 
+%import  "lsst/afw/image/imageLib.i"
+%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 #endif
 
 %lsst_exceptions();
@@ -54,6 +56,9 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %shared_ptr(lsst::afw::cameraGeom::Ccd);
 %shared_ptr(lsst::afw::cameraGeom::Raft);
 %shared_ptr(lsst::afw::cameraGeom::Camera);
+%shared_ptr(lsst::afw::cameraGeom::Distortion);
+%shared_ptr(lsst::afw::cameraGeom::NullDistortion);
+%shared_ptr(lsst::afw::cameraGeom::RadialPolyDistortion);
 
 %template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
@@ -70,6 +75,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
     }
 }
 
+%include "lsst/afw/cameraGeom/FpPoint.h"
 %include "lsst/afw/cameraGeom/Orientation.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 %include "lsst/afw/cameraGeom/Amp.h"
@@ -77,6 +83,18 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/Ccd.h"
 %include "lsst/afw/cameraGeom/Raft.h"
 %include "lsst/afw/cameraGeom/Camera.h"
+%include "lsst/afw/cameraGeom/Distortion.h"
+
+%define DistortInstantiate(PIXEL)
+%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::Image<PIXEL> >;
+%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::MaskedImage<PIXEL> >;
+%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::Image<PIXEL> >;
+%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::MaskedImage<PIXEL> >;
+%enddef
+
+DistortInstantiate(float);
+DistortInstantiate(double);
+
 
 %inline %{
     lsst::afw::cameraGeom::DetectorMosaic::Ptr
