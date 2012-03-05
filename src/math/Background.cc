@@ -154,7 +154,7 @@ void math::Background::_set_gridcolums(int iX, std::vector<int> const& ypix)
     // there isn't actually any way to interpolate as a constant ... do that manually here
     if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
         // this is the real interpolation
-        typename math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
+        math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
         for (int iY = 0; iY < _imgHeight; ++iY) {
             _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
         }
