@@ -691,6 +691,14 @@ try:
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+    class BackgroundPrinter(object):
+        "Print a Background"
+
+        def to_string(self):
+            return "Background(%dx%d) %s %s" % (
+                self.val["_imgWidth"], self.val["_imgHeight"],
+                self.val["_grid"], self.val["_bctrl"])
+
     class KernelPrinter(object):
         "Print a Kernel"
 
@@ -787,8 +795,10 @@ try:
         printer.add_printer('lsst::afw::image::Exposure',
                             '^lsst::afw::image::Exposure', ExposurePrinter)
 
+        printer.add_printer('lsst::afw::math::Background',
+                            '^lsst::afw::math::Background', BackgroundPrinter)
         printer.add_printer('lsst::afw::math::Kernel',
-                            '^lsst::afw::math::Kernel', KernelPrinter)
+                            '^lsst::afw::math::.*Kernel', KernelPrinter)
 
         return printer
 
