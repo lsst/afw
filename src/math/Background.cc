@@ -21,7 +21,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file Background.cc
  * @ingroup afw
@@ -120,7 +120,6 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     vector<int> ypix(_imgHeight);
     for (int iY = 0; iY < _imgHeight; ++iY) { ypix[iY] = iY; }
 
-
     // go to each sub-image and get its stats.
     // -- do columns in the inner-loop and spline them as they complete
     for (int iX = 0; iX < _nxSample; ++iX) {
@@ -142,29 +141,62 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             _grid[iX][iY] = stats.getValue(_bctrl.getStatisticsProperty());
         }
 
-        _gridcolumns[iX].resize(_imgHeight);
-
-        // there isn't actually any way to interpolate as a constant ... do that manually here
-        if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
-            // this is the real interpolation
-            typename math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
-            for (int iY = 0; iY < _imgHeight; ++iY) {
-                _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
-            }
-        } else {
-            // this is the constant interpolation
-            // it should only be used sanely when nx,nySample are both 1,
-            //  but this should still work for other grid sizes.
-            for (int iY = 0; iY < _imgHeight; ++iY) {
-                int const iGridY = (_nySample * iY) / _imgHeight;
-                _gridcolumns[iX][iY] = _grid[iX][iGridY];
-            }
-        }
-
+        _set_gridcolums(iX, ypix);
     }
-
 }
 
+void math::Background::_set_gridcolums(int iX, std::vector<int> const& ypix)
+{
+    
+
+    _gridcolumns[iX].resize(_imgHeight);
+
+    // there isn't actually any way to interpolate as a constant ... do that manually here
+    if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
+        // this is the real interpolation
+        typename math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
+        for (int iY = 0; iY < _imgHeight; ++iY) {
+            _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
+        }
+    } else {
+        // this is the constant interpolation
+        // it should only be used sanely when nx,nySample are both 1,
+        //  but this should still work for other grid sizes.
+        for (int iY = 0; iY < _imgHeight; ++iY) {
+            int const iGridY = (_nySample * iY) / _imgHeight;
+            _gridcolumns[iX][iY] = _grid[iX][iGridY];
+        }
+    }
+}
+
+/**
+ * @brief Add a scalar to the Background (equivalent to adding a constant to the original image)
+ */
+void math::Background::operator+=(float const delta ///< Value to add
+                                  )
+{
+    std::vector<int> ypix(_imgHeight);
+    for (int y = 0; y != _imgHeight; ++y) {
+        ypix[y] = y;
+    }
+
+    for (int x = 0; x != _nxSample; ++x) {
+
+        for (int y = 0; y != _nySample; ++y) {
+            _grid[x][y] += delta;
+        }
+        _set_gridcolums(x, ypix);
+    }
+}
+
+/**
+ * @brief Subtract a scalar from the Background (equivalent to subtracting a constant from the original image)
+ */
+void math::Background::operator-=(float const delta ///< Value to subtract
+                                  )
+{
+    *this += -delta;
+}
 
 /**
  * @brief Method to retrieve the background level at a pixel coord.
