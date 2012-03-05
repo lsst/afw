@@ -766,7 +766,10 @@ void afwMath::Statistics::doStatistics(
     _max = standard.get<5>();
     _allPixelOrMask = standard.get<6>();
 
+#define DEBUG_VARARGS 0                 // requires a bugfix to pex_logging
+#if DEBUG_VARARGS
     traceLog.debug<4>("Data: %g +- %g", _mean, ::sqrt(_variance.first));
+#endif
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
 
@@ -793,7 +796,9 @@ void afwMath::Statistics::doStatistics(
         
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
+#if DEBUG_VARARGS
                 traceLog.debug<3>("Clipping at %gsigma: iteration %d", _sctrl.getNumSigmaClip(), i_i);
+#endif
 
                 double const center = ((i_i > 0) ? _meanclip : _median).first;
                 double const hwidth = (i_i > 0 && _n > 1) ?
@@ -801,7 +806,9 @@ void afwMath::Statistics::doStatistics(
                     _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
                 std::pair<double, double> const clipinfo(center, hwidth);
 
+#if DEBUG_VARARGS
                 traceLog.debug<4>("Using %g -- %g", center - hwidth, center + hwidth);
+#endif
                 
                 StandardReturn clipped = getStandard(img, msk, var, weights, flags, clipinfo,
                                                      _weightsAreMultiplicative,
