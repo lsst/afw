@@ -27,6 +27,28 @@
 
 %include "lsst/afw/math/Background.h"
 
+
+%extend lsst::afw::math::Background {
+    %pythoncode {
+    #
+    # Deal with incorrect swig wrappers for C++ "void operator op=()"
+    #
+    def __iadd__(*args):
+        """
+        __iadd__(self, float scalar) -> self
+        """
+        _mathLib.Background___iadd__(*args)
+        return args[0]
+
+    def __isub__(*args):
+        """
+        __isub__(self, float scalar) -> self
+        """
+        _mathLib.Background___isub__(*args)
+        return args[0]
+    }
+}
+
 %define %declareBack(PIXTYPE, SUFFIX)
     %template(makeBackground) lsst::afw::math::makeBackground<lsst::afw::image::Image<PIXTYPE> >;
     %template(makeBackground) lsst::afw::math::makeBackground<lsst::afw::image::MaskedImage<PIXTYPE> >;
