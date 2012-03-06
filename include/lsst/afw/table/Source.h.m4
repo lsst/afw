@@ -181,7 +181,7 @@ KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::str
 /**
  *  @brief Record class that contains measurements made on a single exposure.
  *
- *  Sources provide four additions to BaseRecord/BaseRecord:
+ *  Sources provide four additions to SimpleRecord / SimpleRecord:
  *   - Specific fields that must always be present, with specialized getters.
  *     The schema for a SourceTable should always be constructed by starting with the result of
  *     SourceTable::makeMinimalSchema.
@@ -190,8 +190,6 @@ KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::str
  *     measurements (a centroid, a shape, and a number of different fluxes) and SourceRecord uses
  *     this keys to provide custom getters and setters.  These are not separate fields, but rather
  *     aliases that can point to custom fields.
- *   - SourceTables hold an ID factory, which is used to initialize the unique ID field when a 
- *     new SourceRecord is created.
  */
 class SourceRecord : public SimpleRecord {
 public:

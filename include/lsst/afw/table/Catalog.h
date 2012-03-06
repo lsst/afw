@@ -78,7 +78,7 @@ private:
  *  with new deep copies allocated by the catalog's table object.  New records can be also be inserted
  *  by pointer (shallow) or by value (deep).
  *
- *  In the future, we may have additional containers (a Set class that sorts by ID, for instance), and
+ *  In the future, we may have additional containers, and
  *  most of the tables library is designed to work with any container class that, like CatalogT, has
  *  a getTable() member function and yields references rather than pointers to records.
  *
@@ -92,8 +92,8 @@ private:
  *  member function.
  *
  *  CatalogT has a very different interface in Python; it mimics Python's list instead of C++'s std::vector.
- *  It is also considerably simpler, because it doesn't deal with iterator ranges or the distinction
- *  between references and shared_ptrs to records.
+ *  It is also considerably simpler, because it doesn't need to deal with iterator ranges or the distinction
+ *  between references and shared_ptrs to records.  See the Python docstring for more information.
  */
 template <typename RecordT>
 class CatalogT {
@@ -285,6 +285,9 @@ public:
 
     /// @brief Remove the last record in the catalog
     void pop_back() { _internal.pop_back(); }
+
+    /// @brief Deep-copy the catalog using a cloned table.
+    CatalogT copy() const { return CatalogT(getTable()->clone(), begin(), end(), true); }
 
     /**
      *  @brief Insert an iterator range into the table.

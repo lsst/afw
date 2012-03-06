@@ -14,13 +14,24 @@ public:
 
     PTR(Table) getTable() const;
 
+    %feature("autodoc", "Return the table shared by all the catalog's records.") getTable;
+
     Schema getSchema() const;
 
-    explicit CatalogT(PTR(Table) const & table = PTR(Table)());
+    %feature("autodoc", "Shortcut for self.getTable().getSchema()") getSchema;
+
+    explicit CatalogT(PTR(Table) const & table);
 
     explicit CatalogT(Schema const & table);
 
     CatalogT(CatalogT const & other);
+
+    %feature(
+        "autodoc", 
+        "Constructors:  __init__(self, table) -> empty catalog with the given table\n"
+        "               __init__(self, schema) -> empty catalog with a new table with the given schema\n"
+        "               __init__(self, catalog) -> shallow copy of the given catalog\n"
+    ) CatalogT;
 
     void writeFits(std::string const & filename, std::string const & mode="w") const;
 
@@ -29,6 +40,8 @@ public:
     ColumnView getColumnView() const;
 
     PTR(RecordT) addNew();
+
+    CatalogT copy() const;
 
 };
 
@@ -100,13 +113,15 @@ public:
 
     typedef typename RecordT::Table Table;
 
-    explicit SimpleCatalogT(PTR(Table) const & table = PTR(Table)());
+    explicit SimpleCatalogT(PTR(Table) const & table);
 
     explicit SimpleCatalogT(Schema const & table);
 
     SimpleCatalogT(SimpleCatalogT const & other);
 
     static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
+
+    SimpleCatalogT copy() const;
 
     bool isSorted() const;
     void sort();

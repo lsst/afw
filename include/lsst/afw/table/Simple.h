@@ -38,6 +38,10 @@ template <typename RecordT> class SimpleCatalogT;
 
 /**
  *  @brief Record class that must contain a unique ID field and a celestial coordinate field.
+ *
+ *  SimpleTable / SimpleRecord are intended to be the base class for records representing astronomical
+ *  objects.  In additional to the minimal schema and the convenience accessors it allows, a SimpleTable
+ *  may hold an IdFactory object that is used to assign unique IDs to new records.
  */
 class SimpleRecord : public BaseRecord {
 public:
@@ -74,6 +78,8 @@ protected:
 
 /**
  *  @brief Table class that must contain a unique ID field and a celestial coordinate field.
+ *
+ *  @copydetails SimpleRecord
  */
 class SimpleTable : public BaseTable {
 public:
@@ -188,6 +194,9 @@ private:
 
 /**
  *  @brief Custom catalog class for SimpleRecord/Table.
+ *
+ *  Because SimpleRecords are guaranteed to have an ID, SimpleCatalogT can provide member functions
+ *  that sort the catalog by ID, and lookup records by ID when the catalog is sorted.
  */
 template <typename RecordT>
 class SimpleCatalogT : public CatalogT<RecordT> {
@@ -271,6 +280,11 @@ public:
      */
     static SimpleCatalogT readFits(std::string const & filename, int hdu=2) {
         return io::FitsReader::apply<SimpleCatalogT>(filename, hdu);
+    }
+
+    /// @copydoc CatalogT::copy
+    SimpleCatalogT copy() const {
+        return SimpleCatalogT(this->getTable()->clone(), this->begin(), this->end(), true);
     }
 
 };
