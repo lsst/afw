@@ -699,8 +699,9 @@ try:
             self.val = val
 
         def to_string(self):
-            return "Background(%dx%d) %s" % (self.val["_imgWidth"], self.val["_imgHeight"],
-                                             self.val["_bctrl"])
+            return "Background(%dx%d) %s %s" % (
+                self.val["_imgWidth"], self.val["_imgHeight"],
+                self.val["_grid"], self.val["_bctrl"])
 
     class BackgroundControlPrinter(object):
         "Print a BackgroundControl"
@@ -740,6 +741,31 @@ try:
                                                          self.val["_numIter"],
                                                          self.val["_andMask"])
 
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class TablePrinter(object):
+        "Print a table::Table"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "{schema = %s, md=%s}" % (self.val["_schema"], self.val["_metadata"])
+        
+    class TableSchemaPrinter(object):
+        "Print a table::Schema"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            names = str(self.val["_impl"]["px"]["_names"])
+            names = re.sub(r"^[^{]*{|}|[\[\]\"\"]|\s*=\s*[^,]*", "", names)
+
+            return "%s" % (names)
+        
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     printers = []
@@ -837,6 +863,11 @@ try:
                             '^lsst::afw::math::.*Kernel', KernelPrinter)
         printer.add_printer('lsst::afw::math::StatisticsControl',
                             '^lsst::afw::math::StatisticsControl', StatisticsControlPrinter)
+
+        printer.add_printer('lsst::afw::table::Table',
+                            '^lsst::afw::table::.*Table$', TablePrinter)
+        printer.add_printer('lsst::afw::table::Schema',
+                            '^lsst::afw::table::Schema$', TableSchemaPrinter)
 
         return printer
 
