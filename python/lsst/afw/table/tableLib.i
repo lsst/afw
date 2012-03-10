@@ -173,6 +173,21 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 %addStreamRepr(lsst::afw::table::Schema)
 %include "lsst/afw/table/Schema.h"
 
+%extend lsst::afw::table::SchemaItem {
+%pythoncode %{
+    def __getitem__(self, i):
+        if i == 0:
+            return self.key
+        elif i == 1:
+            return self.field
+        raise IndexError("SchemaItem index must be 0 or 1")
+    def __str__(self):
+        return str(tuple(self))
+    def __repr__(self):
+        return "SchemaItem(%r, %r)" % (self.key, self.field)
+%}
+}
+
 %extend lsst::afw::table::Schema {
 
     void reset(lsst::afw::table::Schema & other) { *self = other; }
@@ -186,7 +201,7 @@ def asList(self):
     def extractSortKey(item):
         key = item.key
         if type(key) == Key_Flag:
-            return (key.getOffset(), get.getBit())
+            return (key.getOffset(), key.getBit())
         else:
             return (key.getOffset(), None)
     for name in self.getNames():
