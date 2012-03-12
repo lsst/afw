@@ -1,5 +1,3 @@
-// -*- lsst-c++ -*-
-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -53,6 +51,16 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 }}}
 
 %}
+
+// Macro that provides a Python-side dynamic cast.
+// The BASE argument should be the root of the class hierarchy, not the immediate base class.
+%define %addCastMethod(CLS, BASE)
+%extend CLS {
+    static PTR(CLS) _cast(PTR(BASE) base) {
+        return boost::dynamic_pointer_cast< CLS >(base);
+    }
+}
+%enddef
 
 %include "lsst/ndarray/ndarray.i"
 %init %{
@@ -304,6 +312,8 @@ def asKey(self):
 %extend lsst::afw::table::BaseTable {
     %pythoncode %{
          schema = property(getSchema)
+         def cast(self, type):
+             return type._cast(self)
     %}
 }
 
@@ -314,6 +324,8 @@ def asKey(self):
     %pythoncode %{
         table = property(lambda self: self.getTable()) # extra lambda allows for polymorphism in property
         schema = property(getSchema)
+        def cast(self, type):
+            return type._cast(self)
     %}
     // Allow field name strings be used in place of keys (but only in Python)
     %pythonprepend __getitem__ %{
@@ -343,7 +355,11 @@ def asKey(self):
 
 %extend lsst::afw::table::ColumnView {
     %pythoncode %{
+        table = property(getTable)
         schema = property(getSchema)
+        def get(self, key):
+            """Return the column for the given key or field name; synonym for __getitem__."""
+            return self[key]
     %}
     // Allow field name strings be used in place of keys (but only in Python)
     %pythonprepend __getitem__ %{
@@ -462,6 +478,9 @@ for _d in (Field, Key, SchemaItem, _suffixes):
 
 %include "lsst/afw/table/Simple.h"
 
+%addCastMethod(lsst::afw::table::SimpleTable, lsst::afw::table::BaseTable)
+%addCastMethod(lsst::afw::table::SimpleRecord, lsst::afw::table::BaseRecord)
+
 %shared_ptr(lsst::afw::table::SourceTable)
 %shared_ptr(lsst::afw::table::SourceRecord)
 // Workarounds for SWIG's failure to parse the Measurement template correctly.
@@ -488,6 +507,9 @@ namespace lsst { namespace afw { namespace table {
 }}}
 
 %include "lsst/afw/table/Source.h"
+
+%addCastMethod(lsst::afw::table::SourceTable, lsst::afw::table::BaseTable)
+%addCastMethod(lsst::afw::table::SourceRecord, lsst::afw::table::BaseRecord)
 
 %include "containers.i"
 

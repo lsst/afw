@@ -123,6 +123,9 @@ class SourceCatalogTestCase(unittest.TestCase):
 
     def setUp(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        schema.addField("d", type="F4", doc="single-precision float field")
+        schema.addField("flags.a", type="Flag", doc="first flag field")
+        schema.addField("flags.b", type="Flag", doc="second flag field")
         self.catalog = lsst.afw.table.SourceCatalog(schema)
         self.catalog.addNew().setId(50)
         self.catalog.addNew()
@@ -131,7 +134,7 @@ class SourceCatalogTestCase(unittest.TestCase):
     def tearDown(self):
         del self.catalog
 
-    def testCustomization(self):
+    def testSorting(self):
         self.assertFalse(self.catalog.isSorted())
         self.catalog.sort()
         self.assert_(self.catalog.isSorted())
@@ -154,6 +157,11 @@ class SourceCatalogTestCase(unittest.TestCase):
             self.assertNotEqual(r, r4)
             self.assertEqual(r.getId(), r3.getId())
             self.assertEqual(r.getId(), r4.getId())
+
+    def testColumnView(self):
+        cols1 = self.catalog.getColumnView()
+        cols2 = self.catalog.columns
+        self.assert_(cols1 is cols2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

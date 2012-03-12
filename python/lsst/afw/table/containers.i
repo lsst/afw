@@ -4,6 +4,8 @@
 #include "lsst/afw/table/Source.h"
 %}
 
+%pythondynamic;  // We want to add attributes in Python for the classes wrapped here.
+
 namespace lsst { namespace afw { namespace table {
 
 template <typename RecordT>
@@ -38,6 +40,9 @@ public:
     static CatalogT readFits(std::string const & filename, int hdu=2);
 
     ColumnView getColumnView() const;
+    %pythonappend getColumnView %{
+        self._columns = val
+    %}
 
     PTR(RecordT) addNew();
 
@@ -88,7 +93,24 @@ public:
         }
         self->insert(self->begin() + i, p);
     }
+    %feature("pythonprepend") __setitem__ %{
+        self._columns = None
+    %}
+    %feature("pythonprepend") __delitem__ %{
+        self._columns = None
+    %}
+    %feature("pythonprepend") append %{
+        self._columns = None
+    %}
+    %feature("pythonprepend") insert %{
+        self._columns = None
+    %}
     %pythoncode %{
+    def __getColumns(self):
+        if not hasattr(self, "_columns") or self._columns is None:
+            self._columns = self.getColumnView()
+        return self._columns
+    columns = property(__getColumns)
     def extend(self, iterable):
         for e in iterable:
             self.append(e)
@@ -108,7 +130,7 @@ public:
 }
 
 template <typename RecordT>
-class SimpleCatalogT<RecordT> : public CatalogT<RecordT> {
+class SimpleCatalogT : public CatalogT<RecordT> {
 public:
 
     typedef typename RecordT::Table Table;
@@ -119,6 +141,13 @@ public:
 
     SimpleCatalogT(SimpleCatalogT const & other);
 
+    %feature(
+        "autodoc", 
+        "Constructors:  __init__(self, table) -> empty catalog with the given table\n"
+        "               __init__(self, schema) -> empty catalog with a new table with the given schema\n"
+        "               __init__(self, catalog) -> shallow copy of the given catalog\n"
+    ) SimpleCatalogT;
+
     static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
 
     SimpleCatalogT copy() const;
@@ -127,16 +156,8 @@ public:
     void sort();
 };
 
-// For some reason, SWIG won't extend the template; it's only happy if
-// we extend the instantiation (but compare to %extend CatalogT, above)
-// ...mystifying.  Good thing we only have two instantiations.
-%extend SimpleCatalogT<SimpleRecord> {
-    PTR(SimpleRecord) find(RecordId id) {
-        return self->find(id);
-    }
-}
-%extend SimpleCatalogT<SourceRecord> {
-    PTR(SourceRecord) find(RecordId id) {
+%extend SimpleCatalogT {
+    PTR(RecordT) find(RecordId id) {
         return self->find(id);
     }
 }
@@ -152,3 +173,5 @@ typedef SimpleCatalogT<SimpleRecord> SimpleCatalog;
 typedef SimpleCatalogT<SourceRecord> SourceCatalog;
 
 }}} // namespace lsst::afw::table
+
+%pythonnondynamic;  // Re-enable attribute restriction
