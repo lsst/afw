@@ -100,6 +100,7 @@ m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `')')dnl
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
 namespace lsst { namespace afw {
@@ -181,6 +182,8 @@ KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::str
 
 #endif // !SWIG
 
+template <typename RecordT> class SourceColumnViewT;
+
 /**
  *  @brief Record class that contains measurements made on a single exposure.
  *
@@ -198,6 +201,7 @@ class SourceRecord : public SimpleRecord {
 public:
 
     typedef SourceTable Table;
+    typedef SourceColumnViewT<SourceRecord> ColumnView;
     typedef SimpleCatalogT<SourceRecord> Catalog;
     typedef SimpleCatalogT<SourceRecord const> ConstCatalog;
 
@@ -262,6 +266,7 @@ class SourceTable : public SimpleTable {
 public:
 
     typedef SourceRecord Record;
+    typedef SourceColumnViewT<SourceRecord> ColumnView;
     typedef SimpleCatalogT<Record> Catalog;
     typedef SimpleCatalogT<Record const> ConstCatalog;
 
@@ -361,6 +366,55 @@ private:
     KeyTuple<Centroid> _slotCentroid;  // alias for a centroid measurement
     KeyTuple<Shape> _slotShape;  // alias for a shape measurement
 };
+
+template <typename RecordT>
+class SourceColumnViewT : public ColumnViewT<RecordT> {
+public:
+
+    typedef RecordT Record;
+    typedef typename RecordT::Table Table;
+
+    lsst::ndarray::Array<double const,1> getPsfFlux() const {
+        return this->operator[](this->getTable()->getPsfFluxKey());
+    }
+    lsst::ndarray::Array<double const,1> getApFlux() const {
+        return this->operator[](this->getTable()->getApFluxKey());
+    }
+    lsst::ndarray::Array<double const,1> getModelFlux() const {
+        return this->operator[](this->getTable()->getModelFluxKey());
+    }
+    lsst::ndarray::Array<double const,1> getInstFlux() const {
+        return this->operator[](this->getTable()->getInstFluxKey());
+    }
+
+    lsst::ndarray::Array<double const,1> getX() const {
+        return this->operator[](this->getTable()->getCentroidKey().getX());
+    }
+    lsst::ndarray::Array<double const,1> getY() const {
+        return this->operator[](this->getTable()->getCentroidKey().getY());
+    }
+
+    lsst::ndarray::Array<double const,1> getIxx() const {
+        return this->operator[](this->getTable()->getShapeKey().getIxx());
+    }
+    lsst::ndarray::Array<double const,1> getIyy() const {
+        return this->operator[](this->getTable()->getShapeKey().getIyy());
+    }
+    lsst::ndarray::Array<double const,1> getIxy() const {
+        return this->operator[](this->getTable()->getShapeKey().getIxy());
+    }
+
+    /// @brief @copydoc BaseColumnView::make
+    template <typename InputIterator>
+    static SourceColumnViewT make(PTR(Table) const & table, InputIterator first, InputIterator last) {
+        return SourceColumnViewT(BaseColumnView::make(table, first, last));
+    }
+
+protected:
+    explicit SourceColumnViewT(BaseColumnView const & base) : ColumnViewT<RecordT>(base) {}
+};
+
+typedef SourceColumnViewT<SourceRecord> SourceColumnView;
 
 #ifndef SWIG
 

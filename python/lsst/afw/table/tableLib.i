@@ -478,6 +478,8 @@ for _d in (Field, Key, SchemaItem, _suffixes):
 
 %include "lsst/afw/table/Simple.h"
 
+%template(SimpleColumnView) lsst::afw::table::ColumnViewT<lsst::afw::table::SimpleRecord>;
+
 %addCastMethod(lsst::afw::table::SimpleTable, lsst::afw::table::BaseTable)
 %addCastMethod(lsst::afw::table::SimpleRecord, lsst::afw::table::BaseRecord)
 
@@ -510,6 +512,9 @@ namespace lsst { namespace afw { namespace table {
 
 %addCastMethod(lsst::afw::table::SourceTable, lsst::afw::table::BaseTable)
 %addCastMethod(lsst::afw::table::SourceRecord, lsst::afw::table::BaseRecord)
+
+%template(SourceColumnViewBase) lsst::afw::table::ColumnViewT<lsst::afw::table::SourceRecord>;
+%template(SourceColumnView) lsst::afw::table::SourceColumnViewT<lsst::afw::table::SourceRecord>;
 
 %include "containers.i"
 

@@ -73,8 +73,8 @@ public:
      *  The iterators must dereference to a reference or const reference to a record.
      *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeErrorException.
      */
-    template <typename TableT, typename InputIterator>
-    static BaseColumnView make(PTR(TableT) const & table, InputIterator first, InputIterator last);
+    template <typename InputIterator>
+    static BaseColumnView make(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
 
     ~BaseColumnView();
 
@@ -93,8 +93,31 @@ private:
     boost::shared_ptr<Impl> _impl;
 };
 
-template <typename TableT, typename InputIterator>
-BaseColumnView BaseColumnView::make(PTR(TableT) const & table, InputIterator first, InputIterator last) {
+template <typename RecordT>
+class ColumnViewT : public BaseColumnView {
+public:
+
+    typedef RecordT Record;
+    typedef typename RecordT::Table Table;
+
+    /// @brief @copydoc BaseColumnView::getTable
+    PTR(Table) getTable() const { return boost::static_pointer_cast<Table>(BaseColumnView::getTable()); }
+
+    /// @brief @copydoc BaseColumnView::make
+    template <typename InputIterator>
+    static ColumnViewT make(PTR(Table) const & table, InputIterator first, InputIterator last) {
+        return ColumnViewT(BaseColumnView::make(table, first, last));
+    }
+
+protected:
+
+    explicit ColumnViewT(BaseColumnView const & base) : BaseColumnView(base) {}
+
+};
+
+
+template <typename InputIterator>
+BaseColumnView BaseColumnView::make(PTR(BaseTable) const & table, InputIterator first, InputIterator last) {
     if (first == last) {
         return BaseColumnView(table, 0, 0, ndarray::Manager::Ptr());
     }

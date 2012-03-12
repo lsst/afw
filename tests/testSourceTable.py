@@ -65,29 +65,38 @@ def makeWcs():
 
 class SourceTableTestCase(unittest.TestCase):
 
+    def fillRecord(self, record):
+        record.set(self.fluxKey, numpy.random.randn())
+        record.set(self.fluxErrKey, numpy.random.randn())
+        record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
+        record.set(self.centroidErrKey, makeCov(2, float))
+        record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
+        record.set(self.shapeErrKey, makeCov(3, float))        
+
     def setUp(self):
-        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.fluxKey = schema.addField("a", type="F8")
-        self.fluxErrKey = schema.addField("a.err", type="F8")
-        self.fluxFlagKey = schema.addField("a.flags", type="Flag")
-        self.centroidKey = schema.addField("b", type="Point<F8>")
-        self.centroidErrKey = schema.addField("b.err", type="Cov<Point<F8>>")
-        self.centroidFlagKey = schema.addField("b.flags", type="Flag")
-        self.shapeKey = schema.addField("c", type="Moments<F8>")
-        self.shapeErrKey = schema.addField("c.err", type="Cov<Moments<F8>>")
-        self.shapeFlagKey = schema.addField("c.flags", type="Flag")
-        self.table = lsst.afw.table.SourceTable.make(schema)
-        self.record = self.table.makeRecord()
-        self.record.set(self.fluxKey, numpy.random.randn())
-        self.record.set(self.fluxErrKey, numpy.random.randn())
-        self.record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
-        self.record.set(self.centroidErrKey, makeCov(2, float))
-        self.record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
-        self.record.set(self.shapeErrKey, makeCov(3, float))
+        self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        self.fluxKey = self.schema.addField("a", type="F8")
+        self.fluxErrKey = self.schema.addField("a.err", type="F8")
+        self.fluxFlagKey = self.schema.addField("a.flags", type="Flag")
+        self.centroidKey = self.schema.addField("b", type="Point<F8>")
+        self.centroidErrKey = self.schema.addField("b.err", type="Cov<Point<F8>>")
+        self.centroidFlagKey = self.schema.addField("b.flags", type="Flag")
+        self.shapeKey = self.schema.addField("c", type="Moments<F8>")
+        self.shapeErrKey = self.schema.addField("c.err", type="Cov<Moments<F8>>")
+        self.shapeFlagKey = self.schema.addField("c.flags", type="Flag")
+        self.table = lsst.afw.table.SourceTable.make(self.schema)
+        self.catalog = lsst.afw.table.SourceCatalog(self.table)
+        self.record = self.catalog.addNew()
+        self.fillRecord(self.record)
+        self.record.setId(50)
+        self.fillRecord(self.catalog.addNew())
+        self.fillRecord(self.catalog.addNew())
 
     def tearDown(self):
+        del self.schema
         del self.record
         del self.table
+        del self.catalog
 
     def checkCanonical(self):
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
@@ -119,21 +128,6 @@ class SourceTableTestCase(unittest.TestCase):
         coord2 = wcs.pixelToSky(self.record.get(self.centroidKey))
         self.assertEqual(coord1, coord2)
 
-class SourceCatalogTestCase(unittest.TestCase):
-
-    def setUp(self):
-        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        schema.addField("d", type="F4", doc="single-precision float field")
-        schema.addField("flags.a", type="Flag", doc="first flag field")
-        schema.addField("flags.b", type="Flag", doc="second flag field")
-        self.catalog = lsst.afw.table.SourceCatalog(schema)
-        self.catalog.addNew().setId(50)
-        self.catalog.addNew()
-        self.catalog.addNew()
-
-    def tearDown(self):
-        del self.catalog
-
     def testSorting(self):
         self.assertFalse(self.catalog.isSorted())
         self.catalog.sort()
@@ -162,6 +156,16 @@ class SourceCatalogTestCase(unittest.TestCase):
         cols1 = self.catalog.getColumnView()
         cols2 = self.catalog.columns
         self.assert_(cols1 is cols2)
+        self.assert_(isinstance(cols1, lsst.afw.table.SourceColumnView))
+        self.table.definePsfFlux("a")
+        self.table.defineCentroid("b")
+        self.table.defineShape("c")
+        self.assert_((cols2["a"] == cols2.getPsfFlux()).all())
+        self.assert_((cols2["b.x"] == cols2.getX()).all())
+        self.assert_((cols2["b.y"] == cols2.getY()).all())
+        self.assert_((cols2["c.xx"] == cols2.getIxx()).all())
+        self.assert_((cols2["c.yy"] == cols2.getIyy()).all())
+        self.assert_((cols2["c.xy"] == cols2.getIxy()).all())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -172,7 +176,6 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SourceTableTestCase)
-    suites += unittest.makeSuite(SourceCatalogTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
