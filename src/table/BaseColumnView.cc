@@ -1,13 +1,13 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/afw/table/ColumnView.h"
+#include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
 
-// Private implementation class for ColumnView
-struct ColumnView::Impl {
+// Private implementation class for BaseColumnView
+struct BaseColumnView::Impl {
     int recordCount;                  // number of records
     void * buf;                       // pointer to the beginning of the first record's data
     PTR(BaseTable) table;             // table that owns the records
@@ -19,10 +19,10 @@ struct ColumnView::Impl {
     {}
 };
 
-PTR(BaseTable) ColumnView::getTable() const { return _impl->table; }
+PTR(BaseTable) BaseColumnView::getTable() const { return _impl->table; }
 
 template <typename T>
-typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
+typename ndarray::Array<T const,1> BaseColumnView::operator[](Key<T> const & key) const {
     return ndarray::external(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
@@ -34,7 +34,7 @@ typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) co
 }
 
 template <typename T>
-typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > const & key) const {
+typename ndarray::Array<T const,2,1> BaseColumnView::operator[](Key< Array<T> > const & key) const {
     return ndarray::external(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
@@ -46,7 +46,7 @@ typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > cons
 }
 
 ndarray::result_of::vectorize< detail::FlagBitExtractor, ndarray::Array< Field<Flag>::Element const,1> >::type
-ColumnView::operator[](Key<Flag> const & key) const {
+BaseColumnView::operator[](Key<Flag> const & key) const {
     return ndarray::vectorize(
         detail::FlagBitExtractor(key),
         ndarray::Array<Field<Flag>::Element const,1>(
@@ -63,16 +63,16 @@ ColumnView::operator[](Key<Flag> const & key) const {
     );
 }
 
-ColumnView::~ColumnView() {}
+BaseColumnView::~BaseColumnView() {}
 
-ColumnView::ColumnView(
+BaseColumnView::BaseColumnView(
     PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
 ) : _impl(boost::make_shared<Impl>(table, recordCount, buf, manager)) {}
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_COLUMNVIEW_SCALAR(r, data, elem)                    \
-    template ndarray::Array< elem const, 1> ColumnView::operator[](Key< elem > const &) const;
+    template ndarray::Array< elem const, 1> BaseColumnView::operator[](Key< elem > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_SCALAR, _,
@@ -80,7 +80,7 @@ BOOST_PP_SEQ_FOR_EACH(
 )
 
 #define INSTANTIATE_COLUMNVIEW_ARRAY(r, data, elem)                    \
-    template ndarray::Array< elem const, 2, 1 > ColumnView::operator[](Key< Array< elem > > const &) const;
+    template ndarray::Array< elem const, 2, 1 > BaseColumnView::operator[](Key< Array< elem > > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_ARRAY, _,

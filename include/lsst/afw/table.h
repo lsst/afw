@@ -6,6 +6,6 @@
 #include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Match.h"
-#include "lsst/afw/table/ColumnView.h"
+#include "lsst/afw/table/BaseColumnView.h"
 
 #endif // !LSST_AFW_table_h_INCLUDED

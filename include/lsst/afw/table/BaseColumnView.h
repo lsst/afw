@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_TABLE_ColumnView_h_INCLUDED
-#define AFW_TABLE_ColumnView_h_INCLUDED
+#ifndef AFW_TABLE_BaseColumnView_h_INCLUDED
+#define AFW_TABLE_BaseColumnView_h_INCLUDED
 
 #include "lsst/afw/table/BaseTable.h"
 
@@ -28,18 +28,18 @@ class BaseTable;
 /**
  *  @brief Column-wise view into a sequence of records that have been allocated contiguously.
  *
- *  A ColumnView can be created from any iterator range that dereferences to records, as long
+ *  A BaseColumnView can be created from any iterator range that dereferences to records, as long
  *  as those records' field data is contiguous in memory.  In practice, that means they must
  *  have been created from the same table, and be in the same order they were created (with
  *  no deletions).  It also requires that those records be allocated in the same block,
  *  which can be guaranteed with BaseTable::preallocate().
  *
- *  Geometric (point and shape) fields cannot be accessed through a ColumnView, but their
+ *  Geometric (point and shape) fields cannot be accessed through a BaseColumnView, but their
  *  scalar components can be.
  *
- *  ColumnViews do not allow table data to be modified.
+ *  BaseColumnViews do not allow table data to be modified.
  */
-class ColumnView {
+class BaseColumnView {
 public:
 
     /// @brief Return the table that owns the records.
@@ -68,15 +68,21 @@ public:
     operator[](Key<Flag> const & key) const;
 
     /**
-     *  @brief Construct a ColumnView from an iterator range.
+     *  @brief Construct a BaseColumnView from an iterator range.
      *
      *  The iterators must dereference to a reference or const reference to a record.
      *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeErrorException.
      */
-    template <typename InputIterator>
-    static ColumnView make(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
+    template <typename TableT, typename InputIterator>
+    static BaseColumnView make(PTR(TableT) const & table, InputIterator first, InputIterator last);
 
-    ~ColumnView();
+    ~BaseColumnView();
+
+protected:
+
+    BaseColumnView(
+        PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
+    );
 
 private:
 
@@ -84,17 +90,13 @@ private:
 
     struct Impl;
 
-    ColumnView(
-        PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
-    );
-
     boost::shared_ptr<Impl> _impl;
 };
 
-template <typename InputIterator>
-ColumnView ColumnView::make(PTR(BaseTable) const & table, InputIterator first, InputIterator last) {
+template <typename TableT, typename InputIterator>
+BaseColumnView BaseColumnView::make(PTR(TableT) const & table, InputIterator first, InputIterator last) {
     if (first == last) {
-        return ColumnView(table, 0, 0, ndarray::Manager::Ptr());
+        return BaseColumnView(table, 0, 0, ndarray::Manager::Ptr());
     }
     Schema schema = table->getSchema();
     std::size_t recordSize = schema.getRecordSize();
@@ -110,9 +112,9 @@ ColumnView ColumnView::make(PTR(BaseTable) const & table, InputIterator first, I
             );
         }
     }
-    return ColumnView(table, recordCount, buf, manager);
+    return BaseColumnView(table, recordCount, buf, manager);
 }
 
 }}} // namespace lsst::afw::table
 
-#endif // !AFW_TABLE_ColumnView_h_INCLUDED
+#endif // !AFW_TABLE_BaseColumnView_h_INCLUDED

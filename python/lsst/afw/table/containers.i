@@ -13,6 +13,7 @@ class CatalogT {
 public:
 
     typedef typename RecordT::Table Table;
+    typedef typename RecordT::ColumnView ColumnView;
 
     PTR(Table) getTable() const;
 

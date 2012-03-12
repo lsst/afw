@@ -351,9 +351,9 @@ def asKey(self):
 %usePointerEquality(lsst::afw::table::BaseRecord)
 %usePointerEquality(lsst::afw::table::BaseTable)
 
-%include "lsst/afw/table/ColumnView.h"
+%include "lsst/afw/table/BaseColumnView.h"
 
-%extend lsst::afw::table::ColumnView {
+%extend lsst::afw::table::BaseColumnView {
     %pythoncode %{
         table = property(getTable)
         schema = property(getSchema)
