@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_ColumnView_h_INCLUDED
 #define AFW_TABLE_ColumnView_h_INCLUDED
 
-#include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/BaseTable.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -42,8 +42,11 @@ class BaseTable;
 class ColumnView {
 public:
 
+    /// @brief Return the table that owns the records.
+    PTR(BaseTable) getTable() const;
+
     /// @brief Return the schema that defines the fields.
-    Schema getSchema() const;
+    Schema getSchema() const { return getTable()->getSchema(); }
 
     /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
@@ -71,7 +74,7 @@ public:
      *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeErrorException.
      */
     template <typename InputIterator>
-    static ColumnView make(InputIterator first, InputIterator last);
+    static ColumnView make(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
 
     ~ColumnView();
 
@@ -81,34 +84,33 @@ private:
 
     struct Impl;
 
-    ColumnView(Schema const & schema, int recordCount, void * buf, ndarray::Manager::Ptr const & manager);
+    ColumnView(
+        PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
+    );
 
     boost::shared_ptr<Impl> _impl;
 };
 
 template <typename InputIterator>
-ColumnView ColumnView::make(InputIterator first, InputIterator last) {
+ColumnView ColumnView::make(PTR(BaseTable) const & table, InputIterator first, InputIterator last) {
     if (first == last) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
-            "Cannot create zero-length ColumnView."
-        );
+        return ColumnView(table, 0, 0, ndarray::Manager::Ptr());
     }
-    Schema schema = first->getSchema();
+    Schema schema = table->getSchema();
     std::size_t recordSize = schema.getRecordSize();
     std::size_t recordCount = 1;
     void * buf = first->_data;
     ndarray::Manager::Ptr manager = first->_manager;
     char * expected = reinterpret_cast<char*>(buf) + recordSize;
     for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
-        if (first->_data != expected || first->_manager != manager || first->getSchema() != schema) {
+        if (first->_data != expected || first->_manager != manager) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::RuntimeErrorException,
                 "Record data is not contiguous in memory."
             );
         }
     }
-    return ColumnView(schema, recordCount, buf, manager);
+    return ColumnView(table, recordCount, buf, manager);
 }
 
 }}} // namespace lsst::afw::table

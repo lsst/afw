@@ -10,16 +10,16 @@ namespace lsst { namespace afw { namespace table {
 struct ColumnView::Impl {
     int recordCount;                  // number of records
     void * buf;                       // pointer to the beginning of the first record's data
-    Schema schema;                    // schema that defines the fields
+    PTR(BaseTable) table;             // table that owns the records
     ndarray::Manager::Ptr manager;    // manages lifetime of 'buf'
 
-    Impl(Schema const & schema_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
-        : recordCount(recordCount_), buf(buf_), schema(schema_),
+    Impl(PTR(BaseTable) const & table_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
+        : recordCount(recordCount_), buf(buf_), table(table_),
           manager(manager_)
     {}
 };
 
-Schema ColumnView::getSchema() const { return _impl->schema; }
+PTR(BaseTable) ColumnView::getTable() const { return _impl->table; }
 
 template <typename T>
 typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) const {
@@ -28,7 +28,7 @@ typename ndarray::Array<T const,1> ColumnView::operator[](Key<T> const & key) co
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
         ndarray::makeVector(_impl->recordCount),
-        ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(T))),
+        ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() / sizeof(T))),
         _impl->manager
     );
 }
@@ -40,7 +40,7 @@ typename ndarray::Array<T const,2,1> ColumnView::operator[](Key< Array<T> > cons
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
         ),
         ndarray::makeVector(_impl->recordCount, key.getSize()),
-        ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(T)), 1),
+        ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() / sizeof(T)), 1),
         _impl->manager
     );
 }
@@ -55,7 +55,8 @@ ColumnView::operator[](Key<Flag> const & key) const {
                     reinterpret_cast<char *>(_impl->buf) + key.getOffset()
                 ),
                 ndarray::makeVector(_impl->recordCount),
-                ndarray::makeVector(int(_impl->schema.getRecordSize() / sizeof(Field<Flag>::Element))),
+                ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() 
+                                        / sizeof(Field<Flag>::Element))),
                 _impl->manager
             )
         )
@@ -65,8 +66,8 @@ ColumnView::operator[](Key<Flag> const & key) const {
 ColumnView::~ColumnView() {}
 
 ColumnView::ColumnView(
-    Schema const & schema, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
-) : _impl(boost::make_shared<Impl>(schema, recordCount, buf, manager)) {}
+    PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
+) : _impl(boost::make_shared<Impl>(table, recordCount, buf, manager)) {}
 
 //----- Explicit instantiation ------------------------------------------------------------------------------
 

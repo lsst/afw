@@ -193,7 +193,7 @@ public:
      *
      *  Will throw RuntimeErrorException if records are not contiguous.
      */
-    ColumnView getColumnView() const { return ColumnView::make(begin(), end()); }
+    ColumnView getColumnView() const { return ColumnView::make(_table, begin(), end()); }
 
     //@{
     /**
