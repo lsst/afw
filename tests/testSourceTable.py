@@ -167,6 +167,17 @@ class SourceTableTestCase(unittest.TestCase):
         self.assert_((cols2["c.yy"] == cols2.getIyy()).all())
         self.assert_((cols2["c.xy"] == cols2.getIxy()).all())
 
+    def testForwarding(self):
+        """Verify that Catalog forwards unknown methods to its table and/or columns."""
+        self.table.definePsfFlux("a")
+        self.table.defineCentroid("b")
+        self.table.defineShape("c")
+        self.assert_((self.catalog.columns["a"] == self.catalog["a"]).all())
+        self.assert_((self.catalog.columns[self.fluxKey] == self.catalog.get(self.fluxKey)).all())
+        self.assert_((self.catalog.columns.get(self.fluxKey) == self.catalog.getPsfFlux()).all())
+        self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
+        self.assertRaises(AttributeError, lambda c: c.foo(), self.catalog)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

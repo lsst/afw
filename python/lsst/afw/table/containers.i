@@ -63,6 +63,16 @@ public:
         }
         return self->get(i);
     }
+    %feature("shadow") __getitem__ %{
+    def __getitem__(self, k):
+        """Return the record at index k if k is an integer,
+        or return a column if k is a string field name or Key.
+        """
+        try:
+            return $action(self, k)
+        except TypeError:
+            return self.columns[k]
+    %}
     void __setitem__(std::ptrdiff_t i, PTR(RecordT) const & p) {
         if (i < 0) i = self->size() - i;
         if (std::size_t(i) >= self->size()) {
@@ -111,20 +121,40 @@ public:
         if not hasattr(self, "_columns") or self._columns is None:
             self._columns = self.getColumnView()
         return self._columns
-    columns = property(__getColumns)
+    columns = property(__getColumns, doc="a column view of the catalog")
     def extend(self, iterable):
+        """Append all records in the given iterable to the catalog."""
         for e in iterable:
             self.append(e)
     def __iter__(self):
         for i in xrange(len(self)):
             yield self[i]
+    def get(self, k):
+        """Synonym for self[k]; provided for consistency with C++ interface."""
+        return self[k]
     def cast(self, type, deep=False):
+        """Return a copy of the catalog with the given type, optionally
+        cloning the table and deep-copying all records if deep==True.
+        """
         newTable = self.table.clone() if deep else self.table
         copy = type(newTable)
         for record in self:
             newRecord = newTable.copyRecord(record) if deep else record
             copy.append(newRecord)
         return copy
+    def __getattribute__(self, name):
+        # Catalog forwards unknown method calls to its table and column view
+        # for convenience.  (Feature requested by RHL; complaints about magic
+        # should be directed to him.)
+        # We have to use __getattribute__ because SWIG overrides __getattr__.
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            pass
+        try:
+            return getattr(self.table, name)
+        except AttributeError:
+            return getattr(self.columns, name)
     table = property(getTable)
     schema = property(getSchema)
     %}
