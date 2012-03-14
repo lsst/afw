@@ -195,15 +195,38 @@ public:
     }
 }
 
-%template (BaseCatalog) CatalogT<BaseRecord>;
-%template (SimpleCatalogBase) CatalogT<SimpleRecord>;
-%template (SimpleCatalog) SimpleCatalogT<SimpleRecord>;
-%template (SourceCatalogBase) CatalogT<SourceRecord>;
-%template (SourceCatalog) SimpleCatalogT<SourceRecord>;
+%define %declareCatalog(TMPL, PREFIX)
+%template (PREFIX ## Catalog) TMPL< PREFIX ## Record >;
+typedef TMPL< PREFIX ## Record > PREFIX ## Catalog;
+%extend TMPL< PREFIX ## Record > {
+%pythoncode %{
+    Table = PREFIX ## Table
+    Record = PREFIX ## Record
+    ColumnView = PREFIX ## ColumnView
+%}
+}
+// Can't put this in class %extend blocks because they need to come after all class blocks in Python.xz
+%pythoncode %{ 
+PREFIX ## Record.Table = PREFIX ## Table
+PREFIX ## Record.Catalog = PREFIX ## Catalog
+PREFIX ## Record.ColumnView = PREFIX ## ColumnView
+PREFIX ## Table.Record = PREFIX ## Record
+PREFIX ## Table.Catalog = PREFIX ## Catalog
+PREFIX ## Table.ColumnView = PREFIX ## ColumnView
+PREFIX ## ColumnView.Record = PREFIX ## Record
+PREFIX ## ColumnView.Table = PREFIX ## Table
+PREFIX ## ColumnView.Catalog = PREFIX ## Catalog
+%}
+%enddef
 
-typedef CatalogT<BaseRecord> BaseCatalog;
-typedef SimpleCatalogT<SimpleRecord> SimpleCatalog;
-typedef SimpleCatalogT<SourceRecord> SourceCatalog;
+
+%template (SimpleCatalogBase) CatalogT<SimpleRecord>;
+%template (SourceCatalogBase) CatalogT<SourceRecord>;
+
+
+%declareCatalog(CatalogT, Base)
+%declareCatalog(SimpleCatalogT, Simple);
+%declareCatalog(SimpleCatalogT, Source);
 
 }}} // namespace lsst::afw::table
 
