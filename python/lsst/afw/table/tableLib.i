@@ -84,6 +84,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %declareNumPyConverters(lsst::ndarray::Array<float const,2>);
 %declareNumPyConverters(lsst::ndarray::Array<double const,2>);
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::geom::Angle const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::table::BitsColumn::IntT const,1,1>);
 %declareNumPyConverters(Eigen::Matrix<float,2,2>);
 %declareNumPyConverters(Eigen::Matrix<double,2,2>);
 %declareNumPyConverters(Eigen::Matrix<float,3,3>);
@@ -351,7 +352,56 @@ def asKey(self):
 %usePointerEquality(lsst::afw::table::BaseRecord)
 %usePointerEquality(lsst::afw::table::BaseTable)
 
+%template(FlagKeyVector) std::vector< lsst::afw::table::Key< lsst::afw::table::Flag > >;
+
+%feature("shadow") lsst::afw::table::BaseColumnView::getBits %{
+def getBits(self, keys=None):
+    if keys is None:
+        return self.getAllBits()
+    arg = FlagKeyVector()
+    for k in keys:
+        if isinstance(k, basestring):
+            arg.append(self.schema.find(k).key)
+        else:
+            arg.append(k)
+    return $action(self, arg)
+%}
+
 %include "lsst/afw/table/BaseColumnView.h"
+
+%extend lsst::afw::table::BitsColumn {
+    PyObject * getSchemaItems() const {
+        // Can't use SWIG's std::vector wrapper because SchemaItem doesn't have a default
+        // ctor.  And we want to return a list anyway, so you can print it easily and not
+        // worry about dangling references and implicit const-casts.
+        PyObject * result = PyList_New(0);
+        typedef std::vector< lsst::afw::table::SchemaItem<lsst::afw::table::Flag> > ItemVector;
+        for (
+            ItemVector::const_iterator i = self->getSchemaItems().begin();
+            i != self->getSchemaItems().end();
+            ++i
+        ) {
+            PyObject * pyItem = SWIG_NewPointerObj(
+                new lsst::afw::table::SchemaItem<lsst::afw::table::Flag>(*i),
+                SWIGTYPE_p_lsst__afw__table__SchemaItemT_lsst__afw__table__Flag_t,
+                true // SWIG takes ownership of the pointer
+            );
+            if (!pyItem) {
+                Py_DECREF(result);
+                return NULL;
+            }
+            if (PyList_Append(result, pyItem) != 0) {
+                Py_DECREF(result);
+                Py_DECREF(pyItem);
+                return NULL;
+            }
+        }
+        return result;
+    }
+    %pythoncode %{
+        array = property(getArray)
+    %}
+}
 
 %extend lsst::afw::table::BaseColumnView {
     %pythoncode %{

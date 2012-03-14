@@ -71,7 +71,7 @@ namespace lsst { namespace afw { namespace table {
  *  sorting and lookups based on unique IDs.  Future derived classes of BaseRecord and BaseTable
  *  will hopefully be able to just use one of the existing catalog templates and provide a new typedef
  *  rather than require a new catalog class.  Catalogs have a significantly different interface in
- *  Python, where they mimic a (limited) Python list instead of a C++ vector (see the Python docstring).
+ *  Python, where they mimic a (limited) Python list instead of a C++ vector (see the Python in-line help).
  *
  *  @section afwTableMemory Memory and Copy Semantics
  *  Tables and records are noncopyable, and are always allocated in shared_ptrs.  Both can be

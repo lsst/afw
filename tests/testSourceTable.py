@@ -71,7 +71,10 @@ class SourceTableTestCase(unittest.TestCase):
         record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
         record.set(self.centroidErrKey, makeCov(2, float))
         record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
-        record.set(self.shapeErrKey, makeCov(3, float))        
+        record.set(self.shapeErrKey, makeCov(3, float))
+        record.set(self.fluxFlagKey, numpy.random.randn() > 0)
+        record.set(self.centroidFlagKey, numpy.random.randn() > 0)
+        record.set(self.shapeFlagKey, numpy.random.randn() > 0)
 
     def setUp(self):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
@@ -177,6 +180,21 @@ class SourceTableTestCase(unittest.TestCase):
         self.assert_((self.catalog.columns.get(self.fluxKey) == self.catalog.getPsfFlux()).all())
         self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
         self.assertRaises(AttributeError, lambda c: c.foo(), self.catalog)
+
+    def testBitsColumn(self):
+        allBits = self.catalog.getBits()
+        someBits = self.catalog.getBits(["a.flags", "c.flags"])
+        self.assertEqual(allBits.getMask("a.flags"), 0x1)
+        self.assertEqual(allBits.getMask("b.flags"), 0x2)
+        self.assertEqual(allBits.getMask("c.flags"), 0x4)
+        self.assertEqual(someBits.getMask(self.fluxFlagKey), 0x1)
+        self.assertEqual(someBits.getMask(self.shapeFlagKey), 0x2)
+        self.assert_(((allBits.array & 0x1 != 0) == self.catalog.columns["a.flags"]).all())
+        self.assert_(((allBits.array & 0x2 != 0) == self.catalog.columns["b.flags"]).all())
+        self.assert_(((allBits.array & 0x4 != 0) == self.catalog.columns["c.flags"]).all())
+        self.assert_(((someBits.array & 0x1 != 0) == self.catalog.columns["a.flags"]).all())
+        self.assert_(((someBits.array & 0x2 != 0) == self.catalog.columns["c.flags"]).all())
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

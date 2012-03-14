@@ -9,13 +9,13 @@ namespace lsst { namespace afw { namespace table {
 namespace detail {
 
 /// Functor to compute a flag bit, used to create an ndarray expression template for flag columns.
-struct FlagBitExtractor {
+struct FlagExtractor {
     typedef Field<Flag>::Element argument_type;
     typedef bool result_type;
 
     result_type operator()(argument_type element) const { return element & _mask; }
 
-    explicit FlagBitExtractor(Key<Flag> const & key) : _mask(argument_type(1) << key.getBit()) {}
+    explicit FlagExtractor(Key<Flag> const & key) : _mask(argument_type(1) << key.getBit()) {}
 
 private:
     argument_type _mask;
@@ -24,6 +24,43 @@ private:
 } // namespace detail
 
 class BaseTable;
+
+class BaseColumnView;
+
+/**
+ *  @brief A packed representation of a collection of Flag field columns.
+ *
+ *  The packing of bits here is not necessarily the same as the packing using in the actual
+ *  table, as the latter may contain more than 64 bits spread across multiple integers.
+ *
+ *  A BitsColumn can only be constructed by calling BaseColumnView::getBits().
+ */
+class BitsColumn {
+public:
+
+    typedef boost::int64_t IntT;
+
+    lsst::ndarray::Array<IntT const,1,1> getArray() const { return _array; }
+
+    IntT getBit(Key<Flag> const & key) const;
+    IntT getBit(std::string const & name) const;
+
+    IntT getMask(Key<Flag> const & key) const { return IntT(1) << getBit(key); }
+    IntT getMask(std::string const & name) const { return IntT(1) << getBit(name); }
+
+#ifndef SWIG
+    std::vector< SchemaItem<Flag> > const & getSchemaItems() const { return _items; }
+#endif
+
+private:
+
+    friend class BaseColumnView;
+
+    explicit BitsColumn(int size);
+
+    ndarray::Array<IntT,1,1> _array;
+    std::vector< SchemaItem<Flag> > _items;
+};
 
 /**
  *  @brief Column-wise view into a sequence of records that have been allocated contiguously.
@@ -63,9 +100,29 @@ public:
      *  & operation on every element when that element is requested.  In Python, the result will
      *  be copied into a bool NumPy array.
      */
-    ndarray::result_of::vectorize< detail::FlagBitExtractor,
+    ndarray::result_of::vectorize< detail::FlagExtractor,
                                    ndarray::Array< Field<Flag>::Element const,1> >::type
     operator[](Key<Flag> const & key) const;
+
+    /**
+     *  @brief Return an integer array with the given Flag fields repacked into individual bits.
+     *
+     *  The returned object contains both the int64 array and accessors to obtain a mask given
+     *  a Key or field name.
+     *
+     *  @throw pex::exceptions::LengthErrorException if keys.size() > 64
+     */
+    BitsColumn getBits(std::vector< Key<Flag> > const & keys) const;
+
+    /**
+     *  @brief Return an integer array with all Flag fields repacked into individual bits.
+     *
+     *  The returned object contains both the int64 array and accessors to obtain a mask given
+     *  a Key or field name.
+     *
+     *  @throw pex::exceptions::LengthErrorException if the schema has more than 64 Flag fields.
+     */
+    BitsColumn getAllBits() const;
 
     /**
      *  @brief Construct a BaseColumnView from an iterator range.
