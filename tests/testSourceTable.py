@@ -195,6 +195,9 @@ class SourceTableTestCase(unittest.TestCase):
         self.assert_(((someBits.array & 0x1 != 0) == self.catalog.columns["a.flags"]).all())
         self.assert_(((someBits.array & 0x2 != 0) == self.catalog.columns["c.flags"]).all())
 
+    def testCast(self):
+        baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
+        sourceCat = baseCat.cast(lsst.afw.table.SourceCatalog)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

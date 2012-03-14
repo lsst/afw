@@ -132,14 +132,15 @@ public:
     def get(self, k):
         """Synonym for self[k]; provided for consistency with C++ interface."""
         return self[k]
-    def cast(self, type, deep=False):
+    def cast(self, type_, deep=False):
         """Return a copy of the catalog with the given type, optionally
         cloning the table and deep-copying all records if deep==True.
         """
-        newTable = self.table.clone() if deep else self.table
-        copy = type(newTable)
+        table = self.table.clone() if deep else self.table
+        newTable = table.cast(type_.Table)
+        copy = type_(newTable)
         for record in self:
-            newRecord = newTable.copyRecord(record) if deep else record
+            newRecord = newTable.copyRecord(record) if deep else record.cast(type_.Record)
             copy.append(newRecord)
         return copy
     def copy(self, deep=False):

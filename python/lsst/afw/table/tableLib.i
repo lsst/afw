@@ -105,6 +105,14 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %}
 %import "lsst/afw/image/wcs.i"
 
+// =============== miscellaneous bits =======================================================================
+
+%shared_ptr(lsst::afw::table::IdFactory);
+%ignore lsst::afw::table::IdFactory::operator=;
+
+%include "lsst/afw/table/misc.h"
+%include "lsst/afw/table/IdFactory.h"
+
 // ---------------------------------------------------------------------------------------------------------
 
 // We prefer to convert std::set<std::string> to a Python tuple, because SWIG's std::set wrapper
@@ -160,15 +168,8 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
     %}
 }
 
-// ---------------------------------------------------------------------------------------------------------
+// =============== Schemas and their components =============================================================
 
-%shared_ptr(lsst::afw::table::BaseTable);
-%shared_ptr(lsst::afw::table::BaseRecord);
-%shared_ptr(lsst::afw::table::IdFactory);
-%ignore lsst::afw::table::IdFactory::operator=;
-
-%include "lsst/afw/table/misc.h"
-%include "lsst/afw/table/IdFactory.h"
 %include "lsst/afw/table/FieldBase.h"
 %include "lsst/afw/table/Field.h"
 %include "lsst/afw/table/KeyBase.h"
@@ -308,13 +309,18 @@ def asKey(self):
 
 %include "lsst/afw/table/SchemaMapper.h"
 
+// =============== BaseTable and BaseRecord =================================================================
+
+%shared_ptr(lsst::afw::table::BaseTable);
+%shared_ptr(lsst::afw::table::BaseRecord);
+
 %include "lsst/afw/table/BaseTable.h"
 
 %extend lsst::afw::table::BaseTable {
     %pythoncode %{
          schema = property(getSchema)
-         def cast(self, type):
-             return type._cast(self)
+         def cast(self, type_):
+             return type_._cast(self)
     %}
 }
 
@@ -325,8 +331,8 @@ def asKey(self):
     %pythoncode %{
         table = property(lambda self: self.getTable()) # extra lambda allows for polymorphism in property
         schema = property(getSchema)
-        def cast(self, type):
-            return type._cast(self)
+        def cast(self, type_):
+            return type_._cast(self)
     %}
     // Allow field name strings be used in place of keys (but only in Python)
     %pythonprepend __getitem__ %{
@@ -349,8 +355,12 @@ def asKey(self):
     %}
 }
 
+%addCastMethod(lsst::afw::table::BaseTable, lsst::afw::table::BaseTable)
+%addCastMethod(lsst::afw::table::BaseRecord, lsst::afw::table::BaseRecord)
 %usePointerEquality(lsst::afw::table::BaseRecord)
 %usePointerEquality(lsst::afw::table::BaseTable)
+
+// =============== BaseColumnView ===========================================================================
 
 %template(FlagKeyVector) std::vector< lsst::afw::table::Key< lsst::afw::table::Flag > >;
 
@@ -417,6 +427,8 @@ def getBits(self, keys=None):
             return self[self.schema.find(args[0]).key]
     %}
 }
+
+// =============== Field Types ==============================================================================
 
 %pythoncode %{
 from ..geom import Angle, Point2D, Point2I
@@ -522,6 +534,7 @@ for _d in (Field, Key, SchemaItem, _suffixes):
         _d[_k] = _d[_v]
 %}
 
+// =============== SimpleTable and SimpleRecord =============================================================
 
 %shared_ptr(lsst::afw::table::SimpleTable)
 %shared_ptr(lsst::afw::table::SimpleRecord)
@@ -532,6 +545,8 @@ for _d in (Field, Key, SchemaItem, _suffixes):
 
 %addCastMethod(lsst::afw::table::SimpleTable, lsst::afw::table::BaseTable)
 %addCastMethod(lsst::afw::table::SimpleRecord, lsst::afw::table::BaseRecord)
+
+// =============== SourceTable and SourceRecord =============================================================
 
 %shared_ptr(lsst::afw::table::SourceTable)
 %shared_ptr(lsst::afw::table::SourceRecord)
@@ -565,6 +580,8 @@ namespace lsst { namespace afw { namespace table {
 
 %template(SourceColumnViewBase) lsst::afw::table::ColumnViewT<lsst::afw::table::SourceRecord>;
 %template(SourceColumnView) lsst::afw::table::SourceColumnViewT<lsst::afw::table::SourceRecord>;
+
+// =============== Catalogs =================================================================================
 
 %include "containers.i"
 
