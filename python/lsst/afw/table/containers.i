@@ -142,6 +142,8 @@ public:
             newRecord = newTable.copyRecord(record) if deep else record
             copy.append(newRecord)
         return copy
+    def copy(self, deep=False):
+        return self.cast(type(self), deep)
     def __getattribute__(self, name):
         # Catalog forwards unknown method calls to its table and column view
         # for convenience.  (Feature requested by RHL; complaints about magic
