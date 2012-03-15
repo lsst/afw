@@ -71,7 +71,7 @@ public:
       : lsst::daf::base::Citizen(typeid(this)),
         _id(++id),
         _ix(other._ix), _iy(other._iy),
-        _fx(other._fx), _fy(other._fy), _peakValue(std::numeric_limits<float>::quiet_NaN()) 
+        _fx(other._fx), _fy(other._fy), _peakValue(other._peakValue) 
     { }
 
     ~Peak() {};

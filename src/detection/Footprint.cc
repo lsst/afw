@@ -607,7 +607,7 @@ Footprint::insertIntoImage(
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
 {
-    if (id > std::numeric_limits<PixelT>::max()) {
+    if (id > std::size_t(std::numeric_limits<PixelT>::max())) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::OutOfRangeException,
             "id out of range for image type"
@@ -1148,8 +1148,7 @@ Footprint::Ptr growFootprintSlow(
     image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
 
-    FootprintSet<int>::Ptr
-        grownList(new FootprintSet<int>(*convolvedImage, 0.5, "", 1));
+    PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1));
 
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
@@ -1241,9 +1240,7 @@ Footprint::Ptr growFootprint(
 
     image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
     // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
-    FootprintSet<int>::Ptr grownList(
-        new FootprintSet<int>(*midImage, Threshold(-ngrow, Threshold::VALUE, false))
-    );
+    PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(-ngrow, Threshold::VALUE, false)));
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
     //
