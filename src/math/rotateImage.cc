@@ -67,11 +67,11 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         outImage.reset(new ImageT(inImage.getDimensions()));
         
         for (int y = 0; y != inImage.getHeight(); ++y) {
-            typename ImageT::x_iterator optr = outImage->row_begin(inImage.getHeight() - y - 1);
-            int x = inImage.getWidth() - 1;
+            typename ImageT::x_iterator optr = outImage->x_at(inImage.getWidth() - 1,
+                                                              inImage.getHeight() - y - 1);
             for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                 iptr != end; ++iptr, --x) {
-                optr[x] = *iptr;
+                 iptr != end; ++iptr, optr -= 1) {
+                *optr = *iptr;
             }
         }
         break;
@@ -79,11 +79,10 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
 
         for (int y = 0; y != inImage.getHeight(); ++y) {
-            typename ImageT::y_iterator optr = outImage->col_begin(y);
-            int x = inImage.getWidth() - 1;
+            typename ImageT::y_iterator optr = outImage->y_at(y, inImage.getWidth() - 1);
             for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                 iptr != end; ++iptr, --x) {
-                optr[x] = *iptr;
+                 iptr != end; ++iptr, optr -= 1) {
+                *optr = *iptr;
             }
         }
         
@@ -106,20 +105,19 @@ typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
     if (flipLR) {
         if (flipTB) {
             for (int y = 0; y != inImage.getHeight(); ++y) {
-                typename ImageT::x_iterator optr = outImage->row_begin(inImage.getHeight() - y - 1);
-                int x = inImage.getWidth() - 1;
+                typename ImageT::x_iterator optr = outImage->x_at(inImage.getWidth() - 1,
+                                                                  inImage.getHeight() - y - 1);
                 for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                     iptr != end; ++iptr, --x) {
-                    optr[x] = *iptr;
+                     iptr != end; ++iptr, optr -= 1) {
+                    *optr = *iptr;
                 }
             }
         } else {
             for (int y = 0; y != inImage.getHeight(); ++y) {
-                typename ImageT::x_iterator optr = outImage->row_begin(y);
-                int x = inImage.getWidth() - 1;
+                typename ImageT::x_iterator optr = outImage->x_at(inImage.getWidth() - 1, y);
                 for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                     iptr != end; ++iptr, --x) {
-                    optr[x] = *iptr;
+                     iptr != end; ++iptr, optr -= 1) {
+                    *optr = *iptr;
                 }
             }
         }
@@ -127,10 +125,9 @@ typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
         if (flipTB) {
             for (int y = 0; y != inImage.getHeight(); ++y) {
                 typename ImageT::x_iterator optr = outImage->row_begin(inImage.getHeight() - y - 1);
-                int x = 0;
                 for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                     iptr != end; ++iptr, ++x) {
-                    optr[x] = *iptr;
+                     iptr != end; ++iptr, ++optr) {
+                    *optr = *iptr;
                 }
             }
         } else {
@@ -148,9 +145,9 @@ typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
 /// \cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr rotateImageBy90(afwImage::Image<TYPE> const&, int); \
-    /*template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int);*/ \
+    template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int); \
     template afwImage::Image<TYPE>::Ptr flipImage(afwImage::Image<TYPE> const&, bool flipLR, bool flipTB); \
-    /*template afwImage::Image<TYPE>::Ptr flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB);*/ 
+    template afwImage::MaskedImage<TYPE>::Ptr flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB); 
     
 
 INSTANTIATE(boost::uint16_t)
