@@ -96,10 +96,10 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
  * Flip an image left--right and/or top--bottom
  */
 template<typename ImageT>
-typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
-                               bool flipLR,           ///< Flip left <--> right?
-                               bool flipTB            ///< Flip top <--> bottom?
-                              ) {
+PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
+                      bool flipLR,           ///< Flip left <--> right?
+                      bool flipTB            ///< Flip top <--> bottom?
+                     ) {
     typename ImageT::Ptr outImage(new ImageT(inImage, true)); // Output image
 
     if (flipLR) {
