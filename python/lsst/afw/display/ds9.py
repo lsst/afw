@@ -460,27 +460,28 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
             mtv(im, frame=frame)
         
         for p in planeList:
-            if planes[p] or True:
-                if not getMaskPlaneVisibility(planes[p]):
-                    continue
+            pname = planes.get(p, "unknown")
 
-                if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
-                    continue
+            if not getMaskPlaneVisibility(pname):
+                continue
 
-                mask <<= data
-                mask &= (1 << p)
+            if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
+                continue
 
-                color = getMaskPlaneColor(planes[p])
+            mask <<= data
+            mask &= (1 << p)
 
-                if not color:            # none was specified
-                    while True:
-                        color = _maskColors[colorIndex % len(_maskColors)]
-                        colorIndex += 1
-                        if color != WHITE and color != BLACK:
-                            break
+            color = getMaskPlaneColor(pname)
 
-                setMaskColor(color)
-                _mtv(mask, wcs, title, True)
+            if not color:            # none was specified
+                while True:
+                    color = _maskColors[colorIndex % len(_maskColors)]
+                    colorIndex += 1
+                    if color != WHITE and color != BLACK:
+                        break
+
+            setMaskColor(color)
+            _mtv(mask, wcs, title, True)
         return
     elif re.search("::Image<", repr(data)): # it's an Image; display it
         _mtv(data, wcs, title, False)
