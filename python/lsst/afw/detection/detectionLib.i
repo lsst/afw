@@ -69,12 +69,11 @@ Python interface to lsst::afw::detection classes
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 %import "lsst/afw/math/mathLib.i"
 %import "lsst/afw/math/shapelets/shapeletsLib.i"
+%import "lsst/afw/table/tableLib.i"
 %include "lsst/ndarray/ndarray.i"
 
 %lsst_exceptions()
 
-%include "source.i"
 %include "footprints.i"
-%include "match.i"
 %include "psf.i"
 

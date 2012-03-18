@@ -519,7 +519,7 @@ class FootprintTestCase(unittest.TestCase):
         if False and display:
             ds9.mtv(mi, frame=0)
 
-        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(15))
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(15))
 
         objects = ds.getFootprints()
         afwDetect.setMaskFromFootprintList(mi.getMask(), objects, 0x1)
@@ -552,7 +552,7 @@ class FootprintTestCase(unittest.TestCase):
         im.set(100)
 
         mi.setXY0(afwGeom.PointI(2, 2))
-        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(1), "DETECTED")
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(1), "DETECTED")
 
         bitmask = mi.getMask().getPlaneBitMask("DETECTED")
         for y in range(im.getHeight()):
@@ -588,11 +588,11 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetect.makeFootprintSet(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
-        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -601,8 +601,8 @@ class FootprintSetTestCase(unittest.TestCase):
             self.assertEqual(objects[i], self.objects[i])
             
     def testFootprints2(self):
-        """Check that we found the correct number of objects using makeFootprintSet"""
-        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
+        """Check that we found the correct number of objects using FootprintSet"""
+        ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -611,7 +611,7 @@ class FootprintSetTestCase(unittest.TestCase):
             self.assertEqual(objects[i], self.objects[i])
             
     def testFootprints3(self):
-        """Check that we found the correct number of objects using makeFootprintSet and PIXEL_STDEV"""
+        """Check that we found the correct number of objects using FootprintSet and PIXEL_STDEV"""
         threshold = 4.5                 # in units of sigma
 
         self.ms.set(2, 4, (10, 0x0, 36)) # not detected (high variance)
@@ -619,7 +619,7 @@ class FootprintSetTestCase(unittest.TestCase):
         y, x = self.objects[2].spans[0][0:2]
         self.ms.set(x, y, (threshold, 0x0, 1.0))
 
-        ds = afwDetect.makeFootprintSet(self.ms,
+        ds = afwDetect.FootprintSet(self.ms,
                                         afwDetect.createThreshold(threshold, "pixel_stdev"), "OBJECT")
 
         objects = ds.getFootprints()
@@ -630,7 +630,7 @@ class FootprintSetTestCase(unittest.TestCase):
             
     def testFootprintsMasks(self):
         """Check that detectionSets have the proper mask bits set"""
-        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
+        ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
         objects = ds.getFootprints()
 
         if display:
@@ -644,7 +644,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
-        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
@@ -664,7 +664,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
-        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = ds.insertIntoImage(True)
@@ -678,7 +678,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""
-        ds = afwDetect.makeFootprintSet(self.ms.getImage(), afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.ms.getImage(), afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -689,7 +689,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         
-        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
+        ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)
@@ -706,7 +706,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintPeaks(self):
         """Test that we can extract the peaks from a Footprint"""
-        fs = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
+        fs = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
 
         foot = fs.getFootprints()[0]
 
@@ -740,9 +740,9 @@ class MaskFootprintSetTestCase(unittest.TestCase):
         del self.mim
 
     def testFootprints(self):
-        """Check that we found the correct number of objects using makeFootprintSet"""
+        """Check that we found the correct number of objects using FootprintSet"""
         level = 0x2
-        ds = afwDetect.makeFootprintSet(self.mim.getMask(), afwDetect.createThreshold(level, "bitmask"))
+        ds = afwDetect.FootprintSet(self.mim.getMask(), afwDetect.createThreshold(level, "bitmask"))
 
         objects = ds.getFootprints()
 
@@ -793,8 +793,8 @@ class NaNFootprintSetTestCase(unittest.TestCase):
         del self.ms
 
     def testFootprints(self):
-        """Check that we found the correct number of objects using makeFootprintSet"""
-        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "DETECTED")
+        """Check that we found the correct number of objects using FootprintSet"""
+        ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10), "DETECTED")
 
         objects = ds.getFootprints()
 

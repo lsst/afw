@@ -173,9 +173,9 @@ def version(HeadURL = r"$HeadURL$"):
 %extend lsst::afw::geom::ellipses::Quadrupole {
     %pythoncode {
     def __repr__(self):
-        return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIXX(), self.getIYY(), self.getIXY())
+        return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIxx(), self.getIyy(), self.getIxy())
     def __str__(self):
-        return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIXX(), self.getIYY(), self.getIXY())
+        return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIxx(), self.getIyy(), self.getIxy())
     }
 }
 

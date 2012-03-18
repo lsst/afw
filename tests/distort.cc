@@ -102,14 +102,14 @@ BOOST_AUTO_TEST_CASE(roundTrip) {
     printf("r: %.12f %.12f\n", pDist.getX(), pDist.getY());
     printf("r: %.12f %.12f\n", pp.getX(),    pp.getY());
 
-    printf("r: %.12f %.12f\n", q.getIXX(),     q.getIYY());
-    printf("r: %.12f %.12f\n", qDist.getIXX(), qDist.getIYY());
-    printf("r: %.12f %.12f\n", qq.getIXX(),    qq.getIYY());
+    printf("r: %.12f %.12f\n", q.getIxx(),     q.getIyy());
+    printf("r: %.12f %.12f\n", qDist.getIxx(), qDist.getIyy());
+    printf("r: %.12f %.12f\n", qq.getIxx(),    qq.getIyy());
     
     BOOST_CHECK_CLOSE(pp.getX(), p.getX(), 1.0e-7);
     BOOST_CHECK_CLOSE(pp.getY(), p.getY(), 1.0e-7);
-    BOOST_CHECK_CLOSE(qq.getIXX(), q.getIXX(), 1.0e-7);
-    BOOST_CHECK_CLOSE(qq.getIYY(), q.getIYY(), 1.0e-7);
+    BOOST_CHECK_CLOSE(qq.getIxx(), q.getIxx(), 1.0e-7);
+    BOOST_CHECK_CLOSE(qq.getIyy(), q.getIyy(), 1.0e-7);
 
 
     int nx = 31, ny = 31;
