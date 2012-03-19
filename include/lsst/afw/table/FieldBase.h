@@ -11,7 +11,7 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/coord.h"
@@ -271,13 +271,13 @@ protected:
 template <typename U>
 struct FieldBase< Array<U> > {
 
-    typedef lsst::ndarray::Array<U const,1,1> Value; ///< @brief the type returned by BaseRecord::get
+    typedef ndarray::Array<U const,1,1> Value; ///< @brief the type returned by BaseRecord::get
 
     /// @brief the type returned by BaseRecord::operator[]
-    typedef lsst::ndarray::ArrayRef<U,1,1> Reference;
+    typedef ndarray::ArrayRef<U,1,1> Reference;
 
     /// @brief the type returned by BaseRecord::operator[] (const)
-    typedef lsst::ndarray::ArrayRef<U const,1,1> ConstReference;
+    typedef ndarray::ArrayRef<U const,1,1> ConstReference;
 
     typedef U Element;  ///< @brief the type of subfields and array elements
 

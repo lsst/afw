@@ -6,7 +6,7 @@
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
-#include "lsst/ndarray/Manager.h"
+#include "ndarray/Manager.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/io/FitsWriter.h"

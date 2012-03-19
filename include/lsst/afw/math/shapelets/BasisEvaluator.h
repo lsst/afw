@@ -35,7 +35,7 @@
  * @author Jim Bosch
  */
 
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/afw/math/shapelets/constants.h"
 #include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
@@ -65,22 +65,22 @@ public:
 
     BasisTypeEnum getBasisType() const { return _basisType; }
 
-    void fillEvaluation(lsst::ndarray::Array<Pixel,1> const & array, double x, double y) const {
+    void fillEvaluation(ndarray::Array<Pixel,1> const & array, double x, double y) const {
         _h.fillEvaluation(array, x, y);
         ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
     }
 
-    void fillEvaluation(lsst::ndarray::Array<Pixel,1> const & array, geom::Point2D const & point) const {
+    void fillEvaluation(ndarray::Array<Pixel,1> const & array, geom::Point2D const & point) const {
         _h.fillEvaluation(array, point);
         ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
     }
 
-    void fillEvaluation(lsst::ndarray::Array<Pixel,1> const & array, geom::Extent2D const & point) const {
+    void fillEvaluation(ndarray::Array<Pixel,1> const & array, geom::Extent2D const & point) const {
         _h.fillEvaluation(array, point);
         ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
     }
 
-    void fillIntegration(lsst::ndarray::Array<Pixel,1> const & array, int xMoment=0, int yMoment=0) const {
+    void fillIntegration(ndarray::Array<Pixel,1> const & array, int xMoment=0, int yMoment=0) const {
         _h.fillIntegration(array, xMoment, yMoment);
         ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
     }

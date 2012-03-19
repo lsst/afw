@@ -35,7 +35,7 @@
  * @author Jim Bosch
  */
 
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/shapelets/constants.h"
 #include "Eigen/Core"

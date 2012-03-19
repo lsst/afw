@@ -11,7 +11,7 @@
     void __setitem__(lsst::afw::table::Key< U > const & key, U value) { (*self)[key] = value; }
 }
 %extend lsst::afw::table::BaseColumnView {
-    lsst::ndarray::Array<U const,1> __getitem__(Key<U> const & key) const { return (*self)[key]; }
+    ndarray::Array<U const,1> __getitem__(Key<U> const & key) const { return (*self)[key]; }
 }
 %enddef
 
@@ -48,27 +48,27 @@
     int getSize() const { return self->getSize(); }
 }
 %extend lsst::afw::table::BaseRecord {
-    lsst::ndarray::Array<U const,1,1> get(lsst::afw::table::Key< Array< U > > const & key) const {
+    ndarray::Array<U const,1,1> get(lsst::afw::table::Key< Array< U > > const & key) const {
         return self->get(key);
     }
     void set(
         lsst::afw::table::Key< Array< U > > const & key,
-        lsst::ndarray::Array<U const,1> const & v
+        ndarray::Array<U const,1> const & v
     ) {
         self->set(key, v);
     }
-    lsst::ndarray::Array<U,1,1> __getitem__(lsst::afw::table::Key< Array< U > > const & key) {
+    ndarray::Array<U,1,1> __getitem__(lsst::afw::table::Key< Array< U > > const & key) {
         return (*self)[key];
     }
     void __setitem__(
         lsst::afw::table::Key< Array< U > > const & key,
-        lsst::ndarray::Array<U const,1> const & v
+        ndarray::Array<U const,1> const & v
     ) {
         (*self)[key] = v;
     }
 }
 %extend lsst::afw::table::BaseColumnView {
-    lsst::ndarray::Array<U const,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
+    ndarray::Array<U const,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
         return (*self)[key];
     }
 }
@@ -150,10 +150,10 @@
     }
 }
 %extend lsst::afw::table::BaseColumnView {
-    lsst::ndarray::Array<bool const,1> __getitem__(
+    ndarray::Array<bool const,1> __getitem__(
         lsst::afw::table::Key< lsst::afw::table::Flag > const & key
     ) const {
-        return lsst::ndarray::copy((*self)[key]);
+        return ndarray::copy((*self)[key]);
     }
 }
 
