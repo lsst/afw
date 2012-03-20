@@ -436,8 +436,8 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
             False, lowOrderBits=lowOrderBits, title=title, settings=settings)
 
     elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
-        nMaskPlanes = data.getNumPlanesUsed()
         maskPlanes = data.getMaskPlaneDict()
+        nMaskPlanes = max(maskPlanes.values()) + 1
 
         planes = {}                      # build inverse dictionary
         for key in maskPlanes.keys():
