@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-#include "lsst/ndarray/Manager.h"
+#include "ndarray/Manager.h"
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/SchemaImpl.h"

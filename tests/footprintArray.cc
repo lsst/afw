@@ -32,14 +32,14 @@
 #include "lsst/afw/detection.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 
-#include "lsst/ndarray/eigen.h"
+#include "ndarray/eigen.h"
 
 #include "Eigen/Core"
 
 namespace image = lsst::afw::image;
 namespace detection = lsst::afw::detection;
 namespace geom = lsst::afw::geom;
-namespace nd = lsst::ndarray;
+namespace nd = ndarray;
 
 void doRoundTrip(
     detection::Footprint const & footprint,

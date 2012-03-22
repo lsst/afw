@@ -24,7 +24,7 @@
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
 #include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
 #include "lsst/afw/geom/Angle.h"
-#include "lsst/ndarray/eigen.h"
+#include "ndarray/eigen.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace shapelets = lsst::afw::math::shapelets;
@@ -282,7 +282,7 @@ shapelets::detail::HermiteConvolution::Impl::Impl(
     _monomialFwd.triangularView<Eigen::Lower>().solveInPlace(_monomialInv);
 }
 
-lsst::ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution::Impl::evaluate(
+ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution::Impl::evaluate(
     afw::geom::ellipses::Ellipse & ellipse
 ) const {
     ndarray::EigenView<double,2,2> result(_result);
@@ -409,7 +409,7 @@ int shapelets::detail::HermiteConvolution::getRowOrder() const { return _impl->g
 
 int shapelets::detail::HermiteConvolution::getColOrder() const { return _impl->getColOrder(); }
 
-lsst::ndarray::Array<shapelets::Pixel const,2,2>
+ndarray::Array<shapelets::Pixel const,2,2>
 shapelets::detail::HermiteConvolution::evaluate(
     lsst::afw::geom::ellipses::Ellipse & ellipse
 ) const {

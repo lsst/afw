@@ -12,7 +12,7 @@
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"
-#include "lsst/afw/table/ColumnView.h"
+#include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
 
@@ -102,6 +102,7 @@ public:
 
     typedef RecordT Record;
     typedef typename Record::Table Table;
+    typedef typename Record::ColumnView ColumnView;
 
     typedef RecordT value_type;
     typedef RecordT & reference;
@@ -193,7 +194,7 @@ public:
      *
      *  Will throw RuntimeErrorException if records are not contiguous.
      */
-    ColumnView getColumnView() const { return ColumnView::make(begin(), end()); }
+    ColumnView getColumnView() const { return ColumnView::make(_table, begin(), end()); }
 
     //@{
     /**
@@ -495,7 +496,7 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
     typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
-    if (*i != value) return end();
+    if (i.base() == end() || *i != value) return end();
     return i.base();
 }
 
@@ -509,6 +510,7 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     if (*i != value) return end();
+    if (i.base() == end() || *i != value) return end();
     return i.base();
 }
 

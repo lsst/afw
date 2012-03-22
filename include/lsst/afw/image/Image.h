@@ -48,7 +48,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 
 namespace lsst { namespace afw {
 
@@ -156,9 +156,9 @@ namespace image {
         /// A const iterator for traversing the pixels in a column
         typedef typename _const_view_t::y_iterator const_y_iterator;
         /// An mutable ndarray representation of the image
-        typedef typename lsst::ndarray::Array<PixelT, 2, 1> Array;
+        typedef typename ndarray::Array<PixelT, 2, 1> Array;
         /// A n immutable ndarray representation of the image
-        typedef typename lsst::ndarray::Array<PixelT const, 2, 1> ConstArray;
+        typedef typename ndarray::Array<PixelT const, 2, 1> ConstArray;
 
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
         //
@@ -444,7 +444,7 @@ namespace image {
         Image(Image<OtherPixelT> const& rhs, const bool deep) :
             image::ImageBase<PixelT>(rhs, deep) {}
 
-        explicit Image(lsst::ndarray::Array<PixelT,2,1> const & array, bool deep = false,
+        explicit Image(ndarray::Array<PixelT,2,1> const & array, bool deep = false,
                        geom::Point2I const & xy0 = geom::Point2I()) :
             image::ImageBase<PixelT>(array, deep, xy0) {}
 

@@ -445,7 +445,7 @@ public:
     ~fits_reader() { }
     
     template <typename PixelT>
-    geom::Point2I apply(lsst::ndarray::Array<PixelT,2,2> const & array) {
+    geom::Point2I apply(ndarray::Array<PixelT,2,2> const & array) {
         const int BITPIX = detail::fits_read_support_private<PixelT>::BITPIX;
 
         if (BITPIX != _bitpix) {            
@@ -509,8 +509,8 @@ public:
     }
    
     template <typename PixelT>
-    void read_image(lsst::ndarray::Array<PixelT,2,2> & array, geom::Point2I & xy0) {
-        array = lsst::ndarray::allocate(getDimensions().getY(), getDimensions().getX());
+    void read_image(ndarray::Array<PixelT,2,2> & array, geom::Point2I & xy0) {
+        array = ndarray::allocate(getDimensions().getY(), getDimensions().getX());
         xy0 = apply(array);        
     }
 

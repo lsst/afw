@@ -27,6 +27,7 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -47,6 +48,7 @@ class SimpleRecord : public BaseRecord {
 public:
 
     typedef SimpleTable Table;
+    typedef ColumnViewT<SimpleRecord> ColumnView;
     typedef SimpleCatalogT<SimpleRecord> Catalog;
     typedef SimpleCatalogT<SimpleRecord const> ConstCatalog;
 
@@ -85,6 +87,7 @@ class SimpleTable : public BaseTable {
 public:
 
     typedef SimpleRecord Record;
+    typedef ColumnViewT<SimpleRecord> ColumnView;
     typedef SimpleCatalogT<Record> Catalog;
     typedef SimpleCatalogT<Record const> ConstCatalog;
 
@@ -282,13 +285,9 @@ public:
         return io::FitsReader::apply<SimpleCatalogT>(filename, hdu);
     }
 
-    /// @copydoc CatalogT::copy
-    SimpleCatalogT copy() const {
-        return SimpleCatalogT(this->getTable()->clone(), this->begin(), this->end(), true);
-    }
-
 };
 
+typedef ColumnViewT<SimpleRecord> SimpleColumnView;
 typedef SimpleCatalogT<SimpleRecord> SimpleCatalog;
 typedef SimpleCatalogT<SimpleRecord const> ConstSimpleCatalog;
 

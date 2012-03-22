@@ -54,8 +54,8 @@ Basic routines to talk to lsst::afw::image classes
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/ndarray/python.h"
-#include "lsst/ndarray/python/eigen.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
 
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
@@ -94,7 +94,7 @@ namespace boost {
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
-%include "lsst/ndarray/ndarray.i"
+%include "ndarray.i"
 
 %declareNumPyConverters(Eigen::MatrixXd);
 %declareNumPyConverters(Eigen::VectorXd);
@@ -103,17 +103,17 @@ namespace boost {
 %declareNumPyConverters(Eigen::Matrix3d);
 %declareNumPyConverters(Eigen::Vector3d);
 
-%declareNumPyConverters(lsst::ndarray::Array<unsigned short,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<unsigned short const,2,1>);
+%declareNumPyConverters(ndarray::Array<unsigned short,2,1>);
+%declareNumPyConverters(ndarray::Array<unsigned short const,2,1>);
 
-%declareNumPyConverters(lsst::ndarray::Array<int,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<int const,2,1>);
+%declareNumPyConverters(ndarray::Array<int,2,1>);
+%declareNumPyConverters(ndarray::Array<int const,2,1>);
 
-%declareNumPyConverters(lsst::ndarray::Array<float,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<float const,2,1>);
+%declareNumPyConverters(ndarray::Array<float,2,1>);
+%declareNumPyConverters(ndarray::Array<float const,2,1>);
 
-%declareNumPyConverters(lsst::ndarray::Array<double,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<double const,2,1>);
+%declareNumPyConverters(ndarray::Array<double,2,1>);
+%declareNumPyConverters(ndarray::Array<double const,2,1>);
 
 %lsst_exceptions();
 

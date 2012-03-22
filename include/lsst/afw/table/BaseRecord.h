@@ -9,7 +9,7 @@
 namespace lsst { namespace afw { namespace table {
 
 class SchemaMapper;
-class ColumnView;
+class BaseColumnView;
 
 /**
  *  @brief Base class for all records.
@@ -35,6 +35,9 @@ public:
 
     /// The associated table class.
     typedef BaseTable Table;
+
+    /// The associated ColumnView class.
+    typedef BaseColumnView ColumnView;
 
     /// Template of CatalogT used to hold records of this type.
     typedef CatalogT<BaseRecord> Catalog;
@@ -146,7 +149,7 @@ protected:
 private:
 
     friend class BaseTable;
-    friend class ColumnView;
+    friend class BaseColumnView;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     void * _data;                   // pointer to field data

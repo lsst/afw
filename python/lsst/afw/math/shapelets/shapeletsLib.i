@@ -43,19 +43,19 @@ Python interface to lsst::afw::math::shapelets classes and functions
 #include "lsst/afw/geom.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_MATH_SHAPELETS_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/ndarray/python.h"
-#include "lsst/ndarray/python/eigen.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
 %}
 
 %init %{
     import_array();
 %}
 
-%include "lsst/ndarray/ndarray.i"
+%include "ndarray.i"
 
 %declareNumPyConverters(Eigen::MatrixXd);
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1>);
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::math::shapelets::Pixel,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1>);
 
 %feature(valuewrapper) lsst::afw::math::shapelets::ShapeletFunction;
 %feature(valuewrapper) lsst::afw::math::shapelets::MultiShapeletFunction;

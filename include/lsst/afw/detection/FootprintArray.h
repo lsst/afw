@@ -21,7 +21,7 @@
  */
 #include "boost/tr1/functional.hpp"
 #include "boost/type_traits.hpp"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 
 #if !defined(LSST_DETECTION_FOOTPRINT_ARRAY_H)
 #define LSST_DETECTION_FOOTPRINT_ARRAY_H
@@ -34,25 +34,25 @@ class Footprint;
 template <typename T, typename U, int N, int C, int D>
 void flattenArray(
     Footprint const & fp,
-    lsst::ndarray::Array<T,N,C> const & src,
-    lsst::ndarray::Array<U, N-1, D> const & dest,
+    ndarray::Array<T,N,C> const & src,
+    ndarray::Array<U, N-1, D> const & dest,
     lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
 template <typename T, typename U, int N, int C, int D, typename PixelOpT>
 void flattenArray(
     Footprint const & fp,
-    lsst::ndarray::Array<T,N,C> const & src,
-    lsst::ndarray::Array<U, N-1, D> const & dest,
+    ndarray::Array<T,N,C> const & src,
+    ndarray::Array<U, N-1, D> const & dest,
     PixelOpT const& pixelOp,
     lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
 
 template <typename T, int N, int C>
-lsst::ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
+ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
-    lsst::ndarray::Array<T,N,C> const & src,
+    ndarray::Array<T,N,C> const & src,
     lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
@@ -60,24 +60,24 @@ lsst::ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArr
 template <typename T, typename U, int N, int C, int D>
 void expandArray(
     Footprint const & fp,
-    lsst::ndarray::Array<T,N,C> const & src,
-    lsst::ndarray::Array<U, N+1, D> const & dest,
+    ndarray::Array<T,N,C> const & src,
+    ndarray::Array<U, N+1, D> const & dest,
     lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
 template <typename T, typename U, int N, int C, int D, typename PixelOpT>
 void expandArray(
     Footprint const & fp,
-    lsst::ndarray::Array<T, N, C> const & src,
-    lsst::ndarray::Array<U, N+1, D> const & dest,
+    ndarray::Array<T, N, C> const & src,
+    ndarray::Array<U, N+1, D> const & dest,
     PixelOpT const& pixelOp,
     lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
 );
 
 template <typename T, int N, int C>
-lsst::ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
+ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     Footprint const & fp,
-    lsst::ndarray::Array<T, N, C> const & src,
+    ndarray::Array<T, N, C> const & src,
     lsst::afw::geom::Box2I const & bbox = lsst::afw::geom::Box2I()
 );
 

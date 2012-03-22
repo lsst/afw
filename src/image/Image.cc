@@ -283,8 +283,8 @@ typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
     return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        lsst::ndarray::makeVector(getHeight(), getWidth()),
-        lsst::ndarray::makeVector(rowStride, 1),
+        ndarray::makeVector(getHeight(), getWidth()),
+        ndarray::makeVector(rowStride, 1),
         this->_manager
     );
 }
@@ -295,8 +295,8 @@ typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
     return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        lsst::ndarray::makeVector(getHeight(), getWidth()),
-        lsst::ndarray::makeVector(rowStride, 1),
+        ndarray::makeVector(getHeight(), getWidth()),
+        ndarray::makeVector(rowStride, 1),
         this->_manager
     );
 }

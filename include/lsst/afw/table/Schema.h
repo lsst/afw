@@ -7,7 +7,7 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/ref.hpp"
 
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
 #include "lsst/afw/table/detail/SchemaImpl.h"

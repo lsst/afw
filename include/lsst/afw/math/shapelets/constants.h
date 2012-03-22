@@ -36,7 +36,7 @@
  */
 
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {

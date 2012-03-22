@@ -6,7 +6,7 @@
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
-#include "lsst/ndarray/Manager.h"
+#include "ndarray/Manager.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/io/FitsWriter.h"
@@ -14,6 +14,7 @@
 namespace lsst { namespace afw { namespace table {
 
 class BaseRecord;
+class BaseColumnView;
 class SchemaMapper;
 
 /**
@@ -47,6 +48,9 @@ public:
 
     /// The associated record class.
     typedef BaseRecord Record;
+    
+    /// The associated ColumnView class.
+    typedef BaseColumnView ColumnView;
 
     /// Template of CatalogT used to hold records of the associated type.
     typedef CatalogT<Record> Catalog;
