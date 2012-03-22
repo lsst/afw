@@ -285,11 +285,6 @@ public:
         return io::FitsReader::apply<SimpleCatalogT>(filename, hdu);
     }
 
-    /// @copydoc CatalogT::copy
-    SimpleCatalogT copy() const {
-        return SimpleCatalogT(this->getTable()->clone(), this->begin(), this->end(), true);
-    }
-
 };
 
 typedef ColumnViewT<SimpleRecord> SimpleColumnView;

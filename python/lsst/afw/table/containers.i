@@ -184,8 +184,6 @@ public:
 
     static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
 
-    SimpleCatalogT copy() const;
-
     bool isSorted() const;
     void sort();
 };
