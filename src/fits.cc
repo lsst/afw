@@ -774,6 +774,10 @@ Fits::Fits(std::string const & filename, std::string const & mode, int behavior_
     : fptr(0), status(0), behavior(behavior_)
 {
     if (mode == "r" || mode == "rb") {
+        if (!boost::filesystem::exists(filename)) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                              (boost::format("File %s doesn't exist") % filename).str());
+        }
         fits_open_file(
             reinterpret_cast<fitsfile**>(&fptr),
             const_cast<char*>(filename.c_str()), 

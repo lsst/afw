@@ -165,6 +165,7 @@ class SimpleTableTestCase(unittest.TestCase):
         for r1, r2 in zip(cat1, cat2):
             self.assertEqual(r1.get(k), r2.get(k))
         os.remove("testBaseTable.fits")
+        self.assertRaises(Exception, lsst.afw.table.BaseCatalog.readFits, "nonexistentfile.fits")
 
     def testColumnView(self):
         schema = lsst.afw.table.Schema()
