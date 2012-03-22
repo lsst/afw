@@ -55,7 +55,11 @@ def makeArray(size, dtype):
 
 def makeCov(size, dtype):
     m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
-    return numpy.dot(m, m.transpose())
+    r = numpy.dot(m, m.transpose())  # not quite symmetric for single-precision on some platforms
+    for i in range(r.shape[0]):
+        for j in range(i):
+            r[i,j] = r[j,i]
+    return r
 
 class SimpleTableTestCase(unittest.TestCase):
 
@@ -87,7 +91,7 @@ class SimpleTableTestCase(unittest.TestCase):
         record.set(name, value)
         self.assertEqual(record.get(name), value)
 
-    def checkArrayAccessors(self, record, name, key, value):
+    def checkArrayAccessors(self, record, key, name, value):
         record.set(key, value)
         self.assert_(numpy.all(record.get(key) == value))
         record.set(name, value)
