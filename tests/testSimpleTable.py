@@ -148,6 +148,20 @@ class SimpleTableTestCase(unittest.TestCase):
             lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
             )
 
+    def testBaseFits(self):
+        schema = lsst.afw.table.Schema()
+        k = schema.addField("f", type="F8")
+        cat1 = lsst.afw.table.BaseCatalog(schema)
+        for i in range(50):
+            record = cat1.addNew()
+            record.set(k, numpy.random.randn())
+        cat1.writeFits("testBaseTable.fits")
+        cat2 = lsst.afw.table.BaseCatalog.readFits("testBaseTable.fits")
+        self.assertEqual(len(cat1), len(cat2))
+        for r1, r2 in zip(cat1, cat2):
+            self.assertEqual(r1.get(k), r2.get(k))
+        os.remove("testBaseTable.fits")
+
     def testColumnView(self):
         schema = lsst.afw.table.Schema()
         k1 = schema.addField("f1", type="I4")
@@ -203,6 +217,7 @@ class SimpleTableTestCase(unittest.TestCase):
             record[k] = n
         for n, r in enumerate(catalog):
             self.assertEqual(n, r[k])
+        
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
