@@ -42,12 +42,12 @@ namespace afw {
 namespace gpu {
 
 /**
- * @brief A type for selection whether to use CPU or GPU device
+ * @brief A type used to select whether to use CPU or GPU device
  *
  * AUTO - If all conditions for GPU execution and performance conditions are satisfied
  *   (AFW built with GPU support, a suitable GPU is present, GPU execution limitations and performance conditions)
  *   the code will attempt to use a GPU. Otherwise, CPU code
- *   will be used. If GPU execution results in a failure, an exception will be thrown.
+ *   will be used. If GPU execution results in a failure, an exception will be thrown.)
  * AUTO_WITH_CPU_FALLBACK - Same as AUTO, except that
  *    if the GPU code path throws an exception, it will fallback to CPU code path.
  * USE_CPU - a GPU will not be used.

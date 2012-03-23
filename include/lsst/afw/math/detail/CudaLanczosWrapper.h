@@ -37,20 +37,6 @@ namespace afw {
 namespace math {
 namespace detail {
 
-    /*inline lsst::afw::geom::Point2D computeSrcPos(
-            int destCol,  ///< destination column index
-            int destRow,  ///< destination row index
-            lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-            lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
-            lsst::afw::image::Wcs const &srcWcs)        ///< WCS of source %image
-    {
-        double const col = lsst::afw::image::indexToPosition(destCol + destXY0[0]);
-        double const row = lsst::afw::image::indexToPosition(destRow + destXY0[1]);
-        lsst::afw::geom::Angle sky1, sky2;
-        destWcs.pixelToSky(col, row, sky1, sky2);
-        return srcWcs.skyToPixel(sky1, sky2);
-    }*/
-
     class SrcPosFunctor {
     public:
         SrcPosFunctor() {}
@@ -97,13 +83,13 @@ namespace detail {
  * This function will not perform the warping if kernel size is too large.
  * (currently, when the order of the Lanczos kernel is >50)
  * If warping is not performed, the return value will be (X,false).
- * If forceProcessing is true: 
+ * If forceProcessing is true:
  *       - this function will throw exceptions if a GPU device cannot be selected or used
- * If forceProcessing is false: 
+ * If forceProcessing is false:
  *       - the warping will not be performed if the GPU code path is estimated to be slower than CPU code path.
  *              That might happen if interpLength is too small (less than 3)
  *       - the warping will not be performed if a GPU device cannot be selected or used
- * 
+ *
  * Also see lsst::afw::math::warpImage()
  *
  * \b Implementation:
@@ -126,7 +112,7 @@ std::pair<int,bool> warpImageGPU(
     int const interpLength,                  ///< Distance over which WCS can be linearily interpolated
                                              ///< must be >0
     typename DestImageT::SinglePixel padValue, ///< value to use for undefined pixels
-    const bool forceProcessing=true          ///< if true, this function will perform the warping even when 
+    const bool forceProcessing=true          ///< if true, this function will perform the warping even when
                                              ///< it is slower then the CPU code path
     );
 

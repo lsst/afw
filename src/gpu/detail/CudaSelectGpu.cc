@@ -238,10 +238,23 @@ bool TryToSelectCudaDevice(bool noExceptions, bool reselect)
         return isDeviceOk;
     isDeviceSelected = true;
 
-    bool done = SelectPreferredCudaDevice();
-    if (done) {
-        isDeviceOk = true;
-        return true;
+
+    if (!noExceptions) {
+        bool done = SelectPreferredCudaDevice();
+        if (done) {
+            isDeviceOk = true;
+            return true;
+        }
+    } else {
+        try {
+            bool done = SelectPreferredCudaDevice();
+            if (done) {
+                isDeviceOk = true;
+                return true;
+            }
+        } catch(...) {
+            return false;
+        }
     }
 
     if (!noExceptions) {
@@ -257,7 +270,7 @@ bool TryToSelectCudaDevice(bool noExceptions, bool reselect)
     } catch(...) {
         return false;
     }
-    
+
     isDeviceOk = true;
     return true;
 #endif

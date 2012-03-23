@@ -55,7 +55,6 @@
 
 using namespace std;
 using namespace lsst::afw::math::detail::gpu;
-using namespace boost::tuples;
 
 namespace mathDetail = lsst::afw::math::detail;
 namespace gpuDetail = lsst::afw::gpu::detail;
@@ -418,6 +417,10 @@ std::pair<int, bool> warpImageGPU(
                           "GPU accelerated warping must use interpolation");
     }
 
+    int const srcWidth = srcImage.getWidth();
+    int const srcHeight = srcImage.getHeight();
+    pexLog::TTrace<3>("lsst.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
+
     if (!lsst::afw::gpu::isGpuBuild())
     	throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
 
@@ -433,9 +436,11 @@ std::pair<int, bool> warpImageGPU(
     if (!forceProcessing && interpLength < 3) {
         return std::pair<int, bool>(-1, false);
     }
-    
+
     int const destWidth = destImage.getWidth();
     int const destHeight = destImage.getHeight();
+    pexLog::TTrace<3>("lsst.afw.math.warp", "(GPU) remap image width=%d; height=%d", destWidth, destHeight);
+
     int const maxCol = destWidth - 1;
     int const maxRow = destHeight - 1;
 
@@ -475,12 +480,14 @@ std::pair<int, bool> warpImageGPU(
 
     int numGoodPixels = 0;
 
+    pexLog::TTrace<3>("lsst.afw.math.warp", "using GPU acceleration, remapping masked image");
+
     #ifdef GPU_BUILD
     numGoodPixels = WarpImageGpuWrapper(destImage,
                                         srcImage,
                                         order,
                                         srcGoodBBox,
-                                        lanczosKernel.getCtrX(), 
+                                        lanczosKernel.getCtrX(),
                                         lanczosKernel.getCtrY(),
                                         srcBlk, srcPosInterp, interpLength, padValue
                                        );

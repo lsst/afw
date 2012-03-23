@@ -120,7 +120,7 @@ struct SBox2I
 /** Used for linear interpolation of a 2D function Z -> R*R
 
     This class just defines a line which can be used to interpolate
-    a part of a function.
+    a segment of a function.
 
     It does not specify which part of a function is interpolated.
 */
@@ -142,9 +142,9 @@ struct LinearInterp
 /** Used for bilinear interpolation of a 2D function Z*Z -> R*R
 
     This class just defines a 2D surface which can be used to interpolate
-    some part of a 2D function.
+    some segment of a 2D function.
 
-    It does not specify which part of a function is interpolated.
+    It does not specify which segment of a function is interpolated.
 */
 struct BilinearInterp
 {
@@ -166,15 +166,9 @@ struct BilinearInterp
         return LinearInterp(lineBeg, deltaX);
     }
 
-    /// Calculates a value of the interpolation plane at a point (subX,subY)
+    /// Calculates a value of the interpolation surface at a point (subX,subY)
     CPU_GPU SPoint2 Interpolate(int subX, int subY)
     {
-        /*SVec2 deltaX = VecAdd(d0X, VecMul(ddX, subY));
-        SVec2 diffX  = VecMul(deltaX,subX);
-        SVec2 diffY  = VecMul(deltaY,subY);
-
-        //partially mimics original interpolation alg. for warping
-        return MovePoint(MovePoint(o, diffY), diffX);*/
         LinearInterp lineY=GetLinearInterp(subY);
         return lineY.Interpolate(subX);
     }

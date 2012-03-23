@@ -184,7 +184,7 @@ bool mathDetail::basicConvolveGPU(
         return false;
     } else if (IS_INSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
         pexLog::TTrace<4>("lsst.afw.math.convolve",
-                          "generic basicConvolve: dispatch to convolveLinearCombinationGPU");
+                          "generic basicConvolve (GPU): dispatch to convolveLinearCombinationGPU");
         return mathDetail::convolveLinearCombinationGPU(convolvedImage, inImage,
                 *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
                 convolutionControl);
@@ -192,7 +192,7 @@ bool mathDetail::basicConvolveGPU(
 
     // use brute force
     pexLog::TTrace<3>("lsst.afw.math.convolve",
-                      "generic basicConvolve: dispatch to convolveSpatiallyInvariantGPU");
+                      "generic basicConvolve (GPU): dispatch to convolveSpatiallyInvariantGPU");
     return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel, convolutionControl);
 }
 
@@ -326,6 +326,9 @@ bool mathDetail::convolveLinearCombinationGPU(
                 return false;
             }
         }
+        pexLog::TTrace<3>("lsst.afw.math.convolve",
+                "MaskedImage, convolveLinearCombinationGPU: will use GPU acceleration");
+
         std::vector< KernelBuffer >  basisKernels(kernelN);
         for (int i = 0; i < kernelN; i++) {
             KernelImage kernelImage(kernelList[i]->getDimensions());
@@ -358,6 +361,9 @@ bool mathDetail::convolveLinearCombinationGPU(
         gpuDetail::ImageBuffer<OutPixelT> outBufImg(cnvWidth, cnvHeight);
         gpuDetail::ImageBuffer<VarPixel>  outBufVar(cnvWidth, cnvHeight);
         gpuDetail::ImageBuffer<MskPixel>  outBufMsk(cnvWidth, cnvHeight);
+
+        pexLog::TTrace<3>("lsst.afw.math.convolve",
+                "MaskedImage, convolveLinearCombinationGPU: will use GPU acceleration");
 
 #ifdef GPU_BUILD
         GPU_ConvolutionMI_LinearCombinationKernel<OutPixelT, InPixelT>(
@@ -513,6 +519,7 @@ bool mathDetail::convolveLinearCombinationGPU(
                     return false;
                 }
             }
+
             std::vector< KernelBuffer >  basisKernels(kernelN);
             for (int i = 0; i < kernelN; i++) {
                 KernelImage kernelImage(kernelList[i]->getDimensions());
@@ -538,6 +545,9 @@ bool mathDetail::convolveLinearCombinationGPU(
             }
             gpuDetail::ImageBuffer<InPixelT>  inBuf(inImage);
             gpuDetail::ImageBuffer<OutPixelT> outBuf(cnvWidth, cnvHeight);
+
+            pexLog::TTrace<3>("lsst.afw.math.convolve",
+                "plain Image, convolveLinearCombinationGPU: will use GPU acceleration");
 
 #ifdef GPU_BUILD
             GPU_ConvolutionImage_LinearCombinationKernel<OutPixelT, InPixelT>(
@@ -628,8 +638,9 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     KernelImage kernelImage(kernel.getDimensions());
     KernelXYLocator const kernelLoc = kernelImage.xy_at(0, 0);
 
-    pexLog::TTrace<5>("lsst.afw.math.convolve",
-                      "convolveSpatiallyInvariantGPU: plain Image, kernel is spatially invariant");
+    pexLog::TTrace<3>("lsst.afw.math.convolve",
+                      "convolveSpatiallyInvariantGPU: using GPU acceleration, "
+                      "plain Image, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);
 
     typedef afwImage::Image<InPixelT  > InImageT;
@@ -743,8 +754,9 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
     KernelImage kernelImage(kernel.getDimensions());
     KernelXYLocator const kernelLoc = kernelImage.xy_at(0, 0);
 
-    pexLog::TTrace<5>("lsst.afw.math.convolve",
-                      "convolveSpatiallyInvariantGPU: MaskedImage, kernel is spatially invariant");
+    pexLog::TTrace<3>("lsst.afw.math.convolve",
+                      "convolveSpatiallyInvariantGPU: using GPU acceleration, "
+                      "MaskedImage, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);
 
     gpuDetail::ImageBuffer<InPixelT>  inBufImg;

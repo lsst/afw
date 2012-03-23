@@ -161,7 +161,7 @@ __device__ double ApplyLanczosFilter(int kernelSize, double orderInv,
         kernelRowVal[kernelX] = Lanczos(-kernelCenterX - kernelFracX + kernelX, orderInv);
     }
 
-    double   colSumImg = 0;
+    double colSumImg = 0;
     double kernelSum = 0;
     for (int kernelY = 0; kernelY < kernelSize; kernelY++) {
         double rowSumImg = 0;
@@ -248,7 +248,7 @@ __global__ void WarpImageGpuKernel(
         // Each thread gets its own pixel.
         // The calling function ensures that the number of pixels in a block
         // matches the number of threads in a block
-        // (or less pixel than threads for blocks on edge)
+        // (or less pixels than threads for blocks on the edge)
         const int curBlkPixelX = threadIdx.x % blockSizeX;
         const int curBlkPixelY = threadIdx.x / blockSizeX;
 
@@ -265,13 +265,13 @@ __global__ void WarpImageGpuKernel(
                                interpLength, pixelX + 1, pixelY + 1);
         const double roundedSrcPtX = floor(srcPos.x);
         const double roundedSrcPtY = floor(srcPos.y);
-        //integer and frac parts of kernel center
+        //integer and frac parts of the kernel center
         const int    srcX = int(roundedSrcPtX);
         const int    srcY = int(roundedSrcPtY);
         const double kernelFracX = srcPos.x - roundedSrcPtX;
         const double kernelFracY = srcPos.y - roundedSrcPtY;
 
-        // if destination pixel is mapped form a part within the source image
+        // check that destination pixel is mapped from within the source image
         if (   srcGoodBox.begX <= srcX && srcX < srcGoodBox.endX
                 && srcGoodBox.begY <= srcY && srcY < srcGoodBox.endY
            ) {
@@ -307,6 +307,7 @@ __global__ void WarpImageGpuKernel(
                 destImage.img[pixelIimg] = sample * relativeArea;
             }
         } else {
+            //set the output pixel to the value of edgePixel
             const int pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
             destImage.img[pixelIimg] = edgePixel.img;
             if (isMaskedImage) {
