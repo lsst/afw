@@ -96,7 +96,7 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(int kernelSize, double orderInv
     const int srcTLY = srcY - kernelCenterY;
 
     //calculate values of Lanczos function for rows
-    double kernelRowVal[cWarpingKernelMaxSize];
+    double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
     for (int kernelX = 0; kernelX < kernelSize; kernelX++) {
         kernelRowVal[kernelX] = Lanczos(-kernelCenterX - kernelFracX + kernelX, orderInv);
     }
@@ -156,7 +156,7 @@ __device__ double ApplyLanczosFilter(int kernelSize, double orderInv,
     const int srcTLY = srcY - kernelCenterY;
 
     //calculate values of Lanczos function for rows
-    double kernelRowVal[cWarpingKernelMaxSize];
+    double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
     for (int kernelX = 0; kernelX < kernelSize; kernelX++) {
         kernelRowVal[kernelX] = Lanczos(-kernelCenterX - kernelFracX + kernelX, orderInv);
     }
@@ -222,8 +222,8 @@ __global__ void WarpImageGpuKernel(
     const double orderInv = 1.0 / order;
     const int kernelSize = order * 2;
 
-    const int blockSizeX = cWarpingBlockSizeX;
-    const int blockSizeY = cWarpingBlockSizeY;
+    const int blockSizeX = SIZE_X_WARPING_BLOCK;
+    const int blockSizeY = SIZE_Y_WARPING_BLOCK;
 
     //number of blocks in X nad Y directions
     const int blockNX = CeilDivide(destImage.width,  blockSizeX);
@@ -335,9 +335,10 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
                             int interpLength
                            )
 {
-    dim3 block(cWarpingBlockSizeX * cWarpingBlockSizeY);
-    dim3 grid(14 * 8);
+    dim3 block(SIZE_X_WARPING_BLOCK * SIZE_Y_WARPING_BLOCK);
+    dim3 grid(7 * 16); //divisible by no. of SM's in most GPUs, performs well
 
+    //15500 - will fit into SM 1.3 devices, and fits twice into SM 2.x devices
     WarpImageGpuKernel <<< grid, block, 15500>>>(
         isMaskedImage,
         destImageGpu,

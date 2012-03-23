@@ -195,7 +195,7 @@ namespace math {
         typename DestExposureT::MaskedImageT::SinglePixel padValue=
           lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
           typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category()),
-        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::defaultDevicePreference
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                     );
 
     template<typename DestImageT, typename SrcImageT>
@@ -207,7 +207,7 @@ namespace math {
         SeparableKernel &warpingKernel, int const interpLength=0,
         typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
             typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
-        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::defaultDevicePreference
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                  );
 
     template<typename DestImageT, typename SrcImageT>

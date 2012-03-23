@@ -62,7 +62,7 @@ enum DevicePreference { AUTO, AUTO_WITH_CPU_FALLBACK, USE_CPU, USE_GPU };
  *
  * Used in all GPU-accelerated functions when DevicePreference is ommited by the caller.
  */
-const DevicePreference defaultDevicePreference = AUTO;
+const DevicePreference DEFAULT_DEVICE_PREFERENCE = AUTO;
 
 /**
  * @brief Enables or disables GPU acceleration globally

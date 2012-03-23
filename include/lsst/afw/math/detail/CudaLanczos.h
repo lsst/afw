@@ -48,9 +48,9 @@ namespace gpu {
 typedef lsst::afw::image::VariancePixel VarPixel;
 typedef lsst::afw::image::MaskPixel     MskPixel;
 
-const int cWarpingBlockSizeX=16;
-const int cWarpingBlockSizeY=16;
-const int cWarpingKernelMaxSize=100;
+const int SIZE_X_WARPING_BLOCK=16;
+const int SIZE_Y_WARPING_BLOCK=16;
+const int SIZE_MAX_WARPING_KERNEL=100;
 
 /// Simple 2D point (suitable for use on a GPU)
 struct SPoint2

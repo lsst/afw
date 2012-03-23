@@ -56,14 +56,14 @@ namespace math {
      * @ingroup afw
      */
     class ConvolutionControl {
-    public:        
+    public:
         ConvolutionControl(
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
                 int maxInterpolationDistance = 10,  ///< maximum width or height of a region
                     ///< over which to use linear interpolation interpolate
-                lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::defaultDevicePreference  ///< 
+                lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE  ///<
                     ///< use Gpu acceleration?
                 )
         :

@@ -143,7 +143,7 @@ int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & inter
 #ifdef GPU_BUILD
 // for (plain) Image::
 // allocate CPU and GPU buffers, transfer data and call GPU kernel proxy
-// precondition: order*2 < gpu::cWarpingKernelMaxSize
+// precondition: order*2 < gpu::SIZE_MAX_WARPING_KERNEL
 template< typename DestPixelT, typename SrcPixelT>
 int WarpImageGpuWrapper(
     afwImage::Image<DestPixelT>     &destImage,
@@ -232,7 +232,7 @@ int WarpImageGpuWrapper(
 
 // for MaskedImage::
 // allocate CPU and GPU buffers, transfer data and call GPU kernel proxy
-// precondition: order*2 < gpu::cWarpingKernelMaxSize
+// precondition: order*2 < gpu::SIZE_MAX_WARPING_KERNEL
 template< typename DestPixelT, typename SrcPixelT>
 int WarpImageGpuWrapper(
     afwImage::MaskedImage<DestPixelT>      &dstImage,
@@ -429,7 +429,7 @@ std::pair<int, bool> warpImageGPU(
 
     const int order = lanczosKernel.getOrder();
     //do not process if the kernel is too large for allocated GPU local memory
-    if (order * 2 > gpu::cWarpingKernelMaxSize)
+    if (order * 2 > gpu::SIZE_MAX_WARPING_KERNEL)
         return std::pair<int, bool>(-1, false);
 
     //do not process if the interpolation data is too large to make any speed gains
@@ -471,8 +471,8 @@ std::pair<int, bool> warpImageGPU(
 
     // calculates dimensions of partitions of destination image to GPU blocks
     // each block is handled by one GPU multiprocessor
-    const int gpuBlockSizeX = gpu::cWarpingBlockSizeX;
-    const int gpuBlockSizeY = gpu::cWarpingBlockSizeY;
+    const int gpuBlockSizeX = gpu::SIZE_X_WARPING_BLOCK;
+    const int gpuBlockSizeY = gpu::SIZE_Y_WARPING_BLOCK;
     const int gpuBlockXN = CeilDivide(destWidth, gpuBlockSizeX);
     const int gpuBlockYN = CeilDivide(destHeight, gpuBlockSizeY);
     //***UNUSED*** GPU input, will contain: for each gpu block, the box specifying the required source image data
