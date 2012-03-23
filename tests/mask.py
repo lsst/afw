@@ -415,7 +415,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         d = testMask2.getMaskPlaneDict()
         
-        checkPlaneBP                    # still present in default mask
+        checkPlaneBP()                                        # still present in default mask
         self.assertTrue("BP" in testMask2.getMaskPlaneDict()) # should still be in testMask2
 
         self.Mask.removeMaskPlane("BP") # remove from default mask too
