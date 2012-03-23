@@ -46,8 +46,8 @@ namespace gpu {
  *
  * AUTO - If all conditions for GPU execution and performance conditions are satisfied
  *   (AFW built with GPU support, a suitable GPU is present, GPU execution limitations and performance conditions)
- *   the code will attempt to use a GPU. Otherwise, CPU code
- *   will be used. If GPU execution results in a failure, an exception will be thrown.)
+ *   the code will attempt to use a GPU. Otherwise, CPU code path
+ *   will be used. If GPU execution results in a failure, an exception will be thrown.
  * AUTO_WITH_CPU_FALLBACK - Same as AUTO, except that
  *    if the GPU code path throws an exception, it will fallback to CPU code path.
  * USE_CPU - a GPU will not be used.

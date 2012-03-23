@@ -148,8 +148,9 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::pex::exceptions::MemoryException when allocation of either CPU or GPU memory allocation fails
- * @throw lsst::pex::exceptions::RuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
  *
  * @ingroup afw
  */
@@ -249,8 +250,9 @@ void mathDetail::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::pex::exceptions::MemoryException when allocation of either CPU or GPU memory allocation fails
- * @throw lsst::pex::exceptions::RuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
  *
  * @ingroup afw
  */
@@ -272,13 +274,15 @@ void mathDetail::basicConvolve(
         if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
             if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                 try {
-                    bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
+                    bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
+                                                                                convolutionControl);
                     if (isProcessed) return;
                 } catch(lsst::afw::gpu::GpuMemoryException) { }
                 catch(pexExcept::MemoryException) { }
                 catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
             } else if (convolutionControl.getDevicePreference() != lsst::afw::gpu::USE_CPU) {
-                bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,convolutionControl);
+                bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
+                                                                            convolutionControl);
                 if (isProcessed) return;
                 if (convolutionControl.getDevicePreference() == lsst::afw::gpu::USE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
@@ -451,8 +455,9 @@ void mathDetail::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
  * @throw lsst::pex::exceptions::InvalidParameterException when GPU acceleration forced on spatially varying kernel
- * @throw lsst::pex::exceptions::MemoryException when allocation of either CPU or GPU memory allocation fails
- * @throw lsst::pex::exceptions::RuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
  *
  * @ingroup afw
  */
@@ -521,13 +526,15 @@ void mathDetail::convolveWithBruteForce(
         if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
             if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                 try {
-                    bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
+                    bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
+                                                                                 convolutionControl);
                     if (isProcessed) return;
                 } catch(lsst::afw::gpu::GpuMemoryException) { }
                 catch(pexExcept::MemoryException) { }
                 catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
             } else if (convolutionControl.getDevicePreference() != lsst::afw::gpu::USE_CPU) {
-                bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,convolutionControl);
+                bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
+                                                                             convolutionControl);
                 if (isProcessed) return;
                 if (convolutionControl.getDevicePreference() == lsst::afw::gpu::USE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");

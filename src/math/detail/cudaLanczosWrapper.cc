@@ -107,7 +107,7 @@ gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::ImageBuffer<gpu::BilinearInter
 }
 
 // calculate the number of points falling within the srcGoodBox,
-// given a bilinearily interpolated function on integer range [0,width> x [0, height>
+// given a bilinearily interpolated coordinate transform function on integer range [0,width> x [0, height>
 int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & interpBuf,
                   const int interpLen, const int width, const int height, SBox2I srcGoodBox)
 {

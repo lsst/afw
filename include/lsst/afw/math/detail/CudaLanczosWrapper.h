@@ -86,15 +86,15 @@ namespace detail {
  * If forceProcessing is true:
  *       - this function will throw exceptions if a GPU device cannot be selected or used
  * If forceProcessing is false:
- *       - the warping will not be performed if the GPU code path is estimated to be slower than CPU code path.
- *              That might happen if interpLength is too small (less than 3)
+ *       - the warping will not be performed if the GPU code path is estimated to be slower
+ *              than the CPU code path. That might happen if interpLength is too small (less than 3).
  *       - the warping will not be performed if a GPU device cannot be selected or used
  *
  * Also see lsst::afw::math::warpImage()
  *
  * \b Implementation:
- * Calculates samples of the coordinate transform function at some points, which are spaced by interpLength intervals
- * Calls CalculateInterpolationData() for coordinate transformation function samples.
+ * Calculates values of the coordinate transform function at some points, which are spaced by interpLength intervals.
+ * Calls CalculateInterpolationData() to calculate interpolation data from values of coordinate transformation fn.
  * Calls WarpImageGpuWrapper() to perform the wapring.
  *
  * \throw lsst::pex::exceptions::InvalidParameterException if interpLength < 1

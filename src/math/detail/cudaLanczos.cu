@@ -320,7 +320,7 @@ __global__ void WarpImageGpuKernel(
     }
 }
 
-// In public interface, Calls the GPU kernel for lanczos resampling
+// External interface, calls the GPU kernel for lanczos resampling
 template<typename DestPixelT, typename SrcPixelT>
 void WarpImageGpuCallKernel(bool isMaskedImage,
                             ImageDataPtr<DestPixelT> destImageGpu,

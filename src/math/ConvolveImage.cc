@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -57,7 +57,7 @@ namespace afwMath = lsst::afw::math;
 namespace mathDetail = lsst::afw::math::detail;
 
 namespace {
-    
+
     /*
     * @brief Set the edge pixels of a convolved Image based on size of the convolution kernel used
     *
@@ -74,7 +74,7 @@ namespace {
                                         ///< if true, copy edge pixels from input and set EDGE bit of mask
             lsst::afw::image::detail::Image_tag)
                 ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
-                                
+
     {
         const unsigned int imWidth = outImage.getWidth();
         const unsigned int imHeight = outImage.getHeight();
@@ -87,7 +87,7 @@ namespace {
             typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
         );
         std::vector<afwGeom::Box2I> bboxList;
-    
+
         // create a list of bounding boxes describing edge regions, in this order:
         // bottom edge, top edge (both edge to edge),
         // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
@@ -136,7 +136,7 @@ namespace {
                                         ///< if true, copy edge pixels from input and set EDGE bit of mask
             lsst::afw::image::detail::MaskedImage_tag)
                 ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
-                                
+
     {
         const unsigned int imWidth = outImage.getWidth();
         const unsigned int imHeight = outImage.getHeight();
@@ -149,7 +149,7 @@ namespace {
             typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
         );
         std::vector<afwGeom::Box2I> bboxList;
-    
+
         // create a list of bounding boxes describing edge regions, in this order:
         // bottom edge, top edge (both edge to edge),
         // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
@@ -157,25 +157,25 @@ namespace {
         int const numWidth = kWidth - (1 + kCtrX);
         bboxList.push_back(
             afwGeom::Box2I(
-                afwGeom::Point2I(0, 0), 
+                afwGeom::Point2I(0, 0),
                 afwGeom::Extent2I(imWidth, kCtrY)
             )
         );
         bboxList.push_back(
             afwGeom::Box2I(
-                afwGeom::Point2I(0, imHeight - numHeight), 
+                afwGeom::Point2I(0, imHeight - numHeight),
                 afwGeom::Extent2I(imWidth, numHeight)
             )
         );
         bboxList.push_back(
             afwGeom::Box2I(
-                afwGeom::Point2I(0, kCtrY), 
+                afwGeom::Point2I(0, kCtrY),
                 afwGeom::Extent2I(kCtrX, imHeight + 1 - kHeight)
             )
         );
         bboxList.push_back(
             afwGeom::Box2I(
-                afwGeom::Point2I(imWidth - numWidth, kCtrY), 
+                afwGeom::Point2I(imWidth - numWidth, kCtrY),
                 afwGeom::Extent2I(numWidth, imHeight + 1 - kHeight)
             )
         );
@@ -234,7 +234,7 @@ void afwMath::scaledPlus(
             << ") = inImage2 dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
-    
+
     typedef typename InImageT::const_x_iterator InConstXIter;
     typedef typename OutImageT::x_iterator OutXIter;
     for (int y = 0; y != inImage1.getHeight(); ++y) {
@@ -250,7 +250,7 @@ void afwMath::scaledPlus(
 
 /**
  * @brief Convolve an Image or MaskedImage with a Kernel, setting pixels of an existing output %image.
- * 
+ *
  * Various convolution kernels are available, including:
  * - FixedKernel: a kernel based on an %image
  * - AnalyticKernel: a kernel based on a Function
@@ -263,11 +263,11 @@ void afwMath::scaledPlus(
  * (pixel position, not pixel index). At present (2009-09-24) this position is computed relative
  * to the lower left corner of the sub-image, but it will almost certainly change to be
  * the lower left corner of the parent image.
- * 
+ *
  * All convolution is performed in real space. This allows convolution to handle masked pixels
  * and spatially varying kernels. Although convolution of an Image with a spatially invariant kernel could,
  * in fact, be performed in Fourier space, the code does not do this.
- * 
+ *
  * Note that mask bits are smeared by convolution; all nonzero pixels in the kernel smear the mask, even
  * pixels that have very small values. Larger kernels smear the mask more and are also slower to convolve.
  * Use the smallest kernel that will do the job.
@@ -284,7 +284,7 @@ void afwMath::scaledPlus(
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  * You can obtain a bounding box for the good pixels in the convolved image
  * from a bounding box for the entire image using the Kernel method shrinkBBox.
- * 
+ *
  * Convolution has been optimized for the various kinds of kernels, as follows (listed approximately
  * in order of decreasing speed):
  * - DeltaFunctionKernel convolution is a simple %image shift.
@@ -307,12 +307,20 @@ void afwMath::scaledPlus(
  *  - basicConvolve(): convolve a Kernel with an Image or MaskedImage, but do not set the edge pixels
  *    of the output. Optimization of convolution for different types of Kernel are handled by different
  *    specializations of basicConvolve().
- * 
+ *
  * afw/examples offers programs that time convolution including timeConvolve and timeSpatiallyVaryingConvolve.
+ *
+ * \note This function is able to use GPU acceleration (for spatially invariant kernels and
+ *       for LinearCombinationKernel).
+ *       There is a limit on maximum kernel size, but kernels sized at most 17x17 should be accelerated
+ *       on all supported GPU hardware (SM 1.3 and better). SM 2.x can accelerate kernels sized up to 22x22.
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
  *  in columns and/or rows.
+ * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
  *
  * @ingroup afw
  */

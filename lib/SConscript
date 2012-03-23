@@ -5,8 +5,6 @@ objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glo
 
 import eups
 if eups.productDir("cuda_toolkit"):
-    gpuObjConvolution = env.SharedObject('#src/math/detail/convGPU'    , ['#src/math/detail/convGPU.cu'])
-    gpuWarpLanczos    = env.SharedObject('#src/math/detail/cudaLanczos', ['#src/math/detail/cudaLanczos.cu'])
     objs.append("#src/math/detail/convGPU.os")
     objs.append("#src/math/detail/cudaLanczos.os")
 

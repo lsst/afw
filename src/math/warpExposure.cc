@@ -213,41 +213,6 @@ int afwMath::warpExposure(
 /************************************************************************************************************/
 namespace {
 
-/*
-    class SrcPosFunctor {
-    public:
-        SrcPosFunctor() {}
-        typedef boost::shared_ptr<SrcPosFunctor> Ptr;
-        virtual afwGeom::Point2D operator()(int destCol, int destRow) const = 0;
-    private:
-    };
-
-    class WcsSrcPosFunctor : public SrcPosFunctor {
-    public:
-        WcsSrcPosFunctor(
-                         afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
-                         afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
-                         afwImage::Wcs const &srcWcs
-                        ) :      ///< WCS of source %image
-            SrcPosFunctor(),
-            _destXY0(destXY0),
-            _destWcs(destWcs),
-            _srcWcs(srcWcs) {}
-        typedef boost::shared_ptr<WcsSrcPosFunctor> Ptr;
-
-        virtual afwGeom::Point2D operator()(int destCol, int destRow) const {
-            double const col = afwImage::indexToPosition(destCol + _destXY0[0]);
-            double const row = afwImage::indexToPosition(destRow + _destXY0[1]);
-            afwGeom::Angle sky1, sky2;
-            _destWcs.pixelToSky(col, row, sky1, sky2);
-            return _srcWcs.skyToPixel(sky1, sky2);
-        }
-    private:
-        afwGeom::Point2D const &_destXY0;
-        afwImage::Wcs const &_destWcs;
-        afwImage::Wcs const &_srcWcs;
-    };
-*/
     class AffineTransformSrcPosFunctor : public lsst::afw::math::detail::SrcPosFunctor {
     public:
         // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
@@ -734,6 +699,8 @@ namespace {
  * - It almost always has even width and height (which is unusual for a kernel) and a center index of
  *   (width/2, /height/2). This is because the kernel is used to map source positions that range from
  *   centered on on pixel (width/2, height/2) to nearly centered on pixel (width/2 + 1, height/2 + 1).
+ *
+ * \note This function is able to use GPU acceleration when interpLength > 0.
  *
  * \b Algorithm Without Interpolation:
  *
