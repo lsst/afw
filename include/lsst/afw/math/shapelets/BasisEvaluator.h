@@ -55,19 +55,31 @@ public:
 
     BasisTypeEnum getBasisType() const { return _basisType; }
 
-    void fillEvaluation(ndarray::Array<Pixel,1> const & array, double x, double y) const {
-        _h.fillEvaluation(array, x, y);
+    void fillEvaluation(
+        ndarray::Array<Pixel,1> const & array, double x, double y,
+        ndarray::Array<Pixel,1> const & dx = ndarray::Array<Pixel,1>(),
+        ndarray::Array<Pixel,1> const & dy = ndarray::Array<Pixel,1>()
+    ) const {
+        _h.fillEvaluation(array, x, y, dx, dy);
         ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
+        if (!dx.isEmpty()) ConversionMatrix::convertOperationVector(dx, HERMITE, _basisType, getOrder());
+        if (!dy.isEmpty()) ConversionMatrix::convertOperationVector(dy, HERMITE, _basisType, getOrder());
     }
 
-    void fillEvaluation(ndarray::Array<Pixel,1> const & array, geom::Point2D const & point) const {
-        _h.fillEvaluation(array, point);
-        ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
+    void fillEvaluation(
+        ndarray::Array<Pixel,1> const & array, geom::Point2D const & point,
+        ndarray::Array<Pixel,1> const & dx = ndarray::Array<Pixel,1>(),
+        ndarray::Array<Pixel,1> const & dy = ndarray::Array<Pixel,1>()
+    ) const {
+        fillEvaluation(array, point.getX(), point.getY(), dx, dy);
     }
 
-    void fillEvaluation(ndarray::Array<Pixel,1> const & array, geom::Extent2D const & point) const {
-        _h.fillEvaluation(array, point);
-        ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
+    void fillEvaluation(
+        ndarray::Array<Pixel,1> const & array, geom::Extent2D const & point,
+        ndarray::Array<Pixel,1> const & dx = ndarray::Array<Pixel,1>(),
+        ndarray::Array<Pixel,1> const & dy = ndarray::Array<Pixel,1>()
+    ) const {
+        fillEvaluation(array, point.getX(), point.getY(), dx, dy);
     }
 
     void fillIntegration(ndarray::Array<Pixel,1> const & array, int xMoment=0, int yMoment=0) const {
