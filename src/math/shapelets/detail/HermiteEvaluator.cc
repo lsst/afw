@@ -89,9 +89,6 @@ public:
     /// @brief Return the value of the shapelet basis function at the current order.
     double operator()() const { return _current; }
 
-    /// @brief Return the derivative of the shapelet basis function at the current order.
-    double derivative() const { return std::sqrt(2.0*_order) * _previous - _x * _current; }
-
     /// @brief Increase the order of the recurrence relation by one.
     HermiteRecurrenceRelation & operator++() {
         double copy = _current;
@@ -115,11 +112,22 @@ private:
     double _previous;
 };
 
-void fillEvaluation1d(ndarray::Array<Pixel,1,1> const & result, double x) {
+void fillEvaluation1d(
+    ndarray::Array<Pixel,1,1> const & result,
+    double x,
+    ndarray::Array<Pixel,1,1> const & dx = ndarray::Array<Pixel,1,1>()
+) {
     HermiteRecurrenceRelation r(x, NORMALIZATION * std::exp(-0.5*x*x));
     ndarray::Array<Pixel,1,1>::Iterator const end = result.end();
     for (ndarray::Array<Pixel,1,1>::Iterator i = result.begin(); i != end; ++i, ++r) {
         *i = r();
+    }
+    if (!dx.isEmpty() && dx.getSize<0>() > 0) {
+        assert(dx.getSize<0>() == result.getSize<0>());
+        dx[0] = -x * result[0];
+        for (int n = 1; n < result.getSize<0>(); ++n) {
+            dx[n] = -x * result[n] + std::sqrt(2.0 * n) * result[n - 1];
+        }
     }
 }
 
@@ -182,30 +190,50 @@ Eigen::MatrixXd computeInnerProductMatrix1d(int rowOrder, int colOrder, double a
     return result;
 }
 
-} // anonymous    
-
-void HermiteEvaluator::weaveFill(ndarray::Array<Pixel,1> const & target) const {
-    int const order = getOrder();
+void weaveFill(
+    ndarray::Array<Pixel,1> const & target,
+    ndarray::Array<Pixel const,1,1> const & x,
+    ndarray::Array<Pixel const,1,1> const & y
+) {
+    int const order = x.getSize<0>() - 1;
     for (PackedIndex i; i.getOrder() <= order; ++i) {
-        target[i.getIndex()] = _xWorkspace[i.getX()] * _yWorkspace[i.getY()];
+        target[i.getIndex()] = x[i.getX()] * y[i.getY()];
     }
 }
 
-double HermiteEvaluator::weaveSum(ndarray::Array<Pixel const,1> const & target) const {
+double weaveSum(
+    ndarray::Array<Pixel const,1> const & target,
+    ndarray::Array<Pixel const,1,1> const & x,
+    ndarray::Array<Pixel const,1,1> const & y
+) {
     double r = 0.0;
-    int const order = getOrder();
+    int const order = x.getSize<0>() - 1;
     for (PackedIndex i; i.getOrder() <= order; ++i) {
-        r += target[i.getIndex()] * _xWorkspace[i.getX()] * _yWorkspace[i.getY()];
+        r += target[i.getIndex()] * x[i.getX()] * y[i.getY()];
     }
     return r;
 }
 
+} // anonymous    
+
 void HermiteEvaluator::fillEvaluation(
-    ndarray::Array<Pixel,1> const & target, double x, double y
+    ndarray::Array<Pixel,1> const & target, double x, double y,
+    ndarray::Array<Pixel,1> const & dx,
+    ndarray::Array<Pixel,1> const & dy 
 ) const {
-    fillEvaluation1d(_xWorkspace, x);
-    fillEvaluation1d(_yWorkspace, y);
-    weaveFill(target);
+    if (dx.isEmpty()) {
+        fillEvaluation1d(_xWorkspace, x);
+    } else {
+        fillEvaluation1d(_xWorkspace, x, _dxWorkspace);
+    }
+    if (dy.isEmpty()) {
+        fillEvaluation1d(_yWorkspace, y);
+    } else {
+        fillEvaluation1d(_yWorkspace, y, _dyWorkspace);
+    }
+    weaveFill(target, _xWorkspace, _yWorkspace);
+    if (!dx.isEmpty()) weaveFill(dx, _dxWorkspace, _yWorkspace);
+    if (!dy.isEmpty()) weaveFill(dy, _xWorkspace, _dyWorkspace);
 }
 
 void HermiteEvaluator::fillIntegration(
@@ -213,28 +241,41 @@ void HermiteEvaluator::fillIntegration(
 ) const {
     fillIntegration1d(_xWorkspace, xMoment);
     fillIntegration1d(_yWorkspace, yMoment);
-    return weaveFill(target);
+    return weaveFill(target, _xWorkspace, _yWorkspace);
 }
 
 double HermiteEvaluator::sumEvaluation(
-    ndarray::Array<Pixel const,1> const & target, double x, double y
+    ndarray::Array<Pixel const,1> const & coeff, double x, double y,
+    double * dx, double * dy
 ) const {
-    fillEvaluation1d(_xWorkspace, x);
-    fillEvaluation1d(_yWorkspace, y);
-    return weaveSum(target);
+    if (!dx) {
+        fillEvaluation1d(_xWorkspace, x);
+    } else {
+        fillEvaluation1d(_xWorkspace, x, _dxWorkspace);
+    }
+    if (!dy) {
+        fillEvaluation1d(_yWorkspace, y);
+    } else {
+        fillEvaluation1d(_yWorkspace, y, _dyWorkspace);
+    }
+    if (dx) *dx = weaveSum(coeff, _dxWorkspace, _yWorkspace);
+    if (dy) *dy = weaveSum(coeff, _xWorkspace, _dyWorkspace);
+    return weaveSum(coeff, _xWorkspace, _yWorkspace);
 }
 
 double HermiteEvaluator::sumIntegration(
-    ndarray::Array<Pixel const,1> const & target, int xMoment, int yMoment
+    ndarray::Array<Pixel const,1> const & coeff, int xMoment, int yMoment
 ) const {
     fillIntegration1d(_xWorkspace, xMoment);
     fillIntegration1d(_yWorkspace, yMoment);
-    return weaveSum(target);
+    return weaveSum(coeff, _xWorkspace, _yWorkspace);
 }
 
 HermiteEvaluator::HermiteEvaluator(int order) :
     _xWorkspace(ndarray::allocate(order + 1)),
-    _yWorkspace(ndarray::allocate(order + 1))
+    _yWorkspace(ndarray::allocate(order + 1)),
+    _dxWorkspace(ndarray::allocate(order + 1)),
+    _dyWorkspace(ndarray::allocate(order + 1))
 {}
 
 Eigen::MatrixXd HermiteEvaluator::computeInnerProductMatrix(
