@@ -29,14 +29,14 @@
 #include "ndarray/eigen.h"
 #include <boost/format.hpp>
 
-namespace shapelets = lsst::afw::math::shapelets;
-namespace geom = lsst::afw::geom;
-namespace nd = ndarray;
+namespace lsst { namespace afw { namespace math { namespace shapelets {
+
+namespace {
 
 static inline void validateSize(int expected, int actual) {
     if (expected != actual) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthErrorException,
             (boost::format(
                 "Coefficient vector for ShapeletFunction has incorrect size (%n, should be %n)."
             ) % actual % expected).str()
@@ -44,7 +44,9 @@ static inline void validateSize(int expected, int actual) {
     }
 }
 
-shapelets::ShapeletFunction::ShapeletFunction() : 
+} // anonymous
+
+ShapeletFunction::ShapeletFunction() : 
     _order(0), _basisType(HERMITE),
     _ellipse(EllipseCore(0.0, 0.0, 1.0), geom::Point2D()), 
     _coefficients(ndarray::allocate(1))
@@ -52,68 +54,68 @@ shapelets::ShapeletFunction::ShapeletFunction() :
     _coefficients[0] = 0.0;
 }
 
-shapelets::ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType) :
+ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, 1.0)),
-    _coefficients(nd::allocate(computeSize(_order)))
+    _coefficients(ndarray::allocate(computeSize(_order)))
 {
     _coefficients.deep() = 0.0;
 }
 
-shapelets::ShapeletFunction::ShapeletFunction(
+ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType,
-    ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+    ndarray::Array<Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, 1.0)),
-    _coefficients(nd::copy(coefficients))
+    _coefficients(ndarray::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
  
-shapelets::ShapeletFunction::ShapeletFunction(
+ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, double radius,
     geom::Point2D const & center
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius), center),
-    _coefficients(nd::allocate(computeSize(_order)))
+    _coefficients(ndarray::allocate(computeSize(_order)))
 {
     _coefficients.deep() = 0.0;
 }
 
-shapelets::ShapeletFunction::ShapeletFunction(
+ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, double radius, geom::Point2D const & center,
-    ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+    ndarray::Array<Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius), center),
-    _coefficients(nd::copy(coefficients))
+    _coefficients(ndarray::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
  
-shapelets::ShapeletFunction::ShapeletFunction(
+ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, geom::ellipses::Ellipse const & ellipse
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(ellipse.getCore()), ellipse.getCenter()),
-    _coefficients(nd::allocate(computeSize(_order)))
+    _coefficients(ndarray::allocate(computeSize(_order)))
 {
     _coefficients.deep() = 0.0;
 }
 
-shapelets::ShapeletFunction::ShapeletFunction(
+ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, geom::ellipses::Ellipse const & ellipse,
-    ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+    ndarray::Array<Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(ellipse.getCore()), ellipse.getCenter()),
-    _coefficients(nd::copy(coefficients))
+    _coefficients(ndarray::copy(coefficients))
 {
     validateSize(computeSize(order), _coefficients.getSize<0>());
 }
 
-shapelets::ShapeletFunction::ShapeletFunction(ShapeletFunction const & other) :
+ShapeletFunction::ShapeletFunction(ShapeletFunction const & other) :
     _order(other._order), _basisType(other._basisType), _ellipse(other._ellipse),
-    _coefficients(nd::copy(other._coefficients))
+    _coefficients(ndarray::copy(other._coefficients))
 {}
 
-shapelets::ShapeletFunction & shapelets::ShapeletFunction::operator=(ShapeletFunction const & other) {
+ShapeletFunction & ShapeletFunction::operator=(ShapeletFunction const & other) {
     if (&other != this) {
         if (other.getOrder() != this->getOrder()) {
             _order = other.getOrder();
@@ -127,38 +129,38 @@ shapelets::ShapeletFunction & shapelets::ShapeletFunction::operator=(ShapeletFun
     return *this;
 }
 
-void shapelets::ShapeletFunction::normalize() {
+void ShapeletFunction::normalize() {
     _coefficients.deep() /= evaluate().integrate();
 }
 
-void shapelets::ShapeletFunctionEvaluator::update(ShapeletFunction const & function) {
+void ShapeletFunctionEvaluator::update(ShapeletFunction const & function) {
     validateSize(_h.getOrder(), function.getOrder());
     _transform = function.getEllipse().getGridTransform();
     _initialize(function);
 }
 
-shapelets::ShapeletFunctionEvaluator::ShapeletFunctionEvaluator(
-    lsst::afw::math::shapelets::ShapeletFunction const & function
+ShapeletFunctionEvaluator::ShapeletFunctionEvaluator(
+    ShapeletFunction const & function
 ) : _transform(function.getEllipse().getGridTransform()), _h(function.getOrder()) {
     _initialize(function);
 }
 
-void shapelets::ShapeletFunctionEvaluator::_initialize(ShapeletFunction const & function) {
+void ShapeletFunctionEvaluator::_initialize(ShapeletFunction const & function) {
     switch (function.getBasisType()) {
     case HERMITE:
         _coefficients = function.getCoefficients();
         break;
     case LAGUERRE:
-        nd::Array<Pixel,1,1> tmp(nd::copy(function.getCoefficients()));
+        ndarray::Array<Pixel,1,1> tmp(ndarray::copy(function.getCoefficients()));
         ConversionMatrix::convertCoefficientVector(
-            tmp, shapelets::LAGUERRE, shapelets::HERMITE, function.getOrder()
+            tmp, LAGUERRE, HERMITE, function.getOrder()
         );
         _coefficients = tmp;
         break;
     }
 }
 
-void shapelets::ShapeletFunction::convolve(lsst::afw::math::shapelets::ShapeletFunction const & other) {
+void ShapeletFunction::convolve(ShapeletFunction const & other) {
     detail::HermiteConvolution convolution(other.getOrder(), *this);
     ndarray::EigenView<Pixel const,2,2> matrix(convolution.evaluate(_ellipse));
     if (_basisType == LAGUERRE) {
@@ -170,7 +172,7 @@ void shapelets::ShapeletFunction::convolve(lsst::afw::math::shapelets::ShapeletF
     }
 }
 
-void shapelets::ShapeletFunctionEvaluator::_computeRawMoments(
+void ShapeletFunctionEvaluator::_computeRawMoments(
     double & q0, Eigen::Vector2d & q1, Eigen::Matrix2d & q2
 ) const {
     double determinant = _transform.getLinear().computeDeterminant();
@@ -194,7 +196,7 @@ void shapelets::ShapeletFunctionEvaluator::_computeRawMoments(
         / determinant;
 }
 
-geom::ellipses::Ellipse shapelets::ShapeletFunctionEvaluator::computeMoments() const {
+geom::ellipses::Ellipse ShapeletFunctionEvaluator::computeMoments() const {
     double q0 = 0.0;
     Eigen::Vector2d q1 = Eigen::Vector2d::Zero();
     Eigen::Matrix2d q2 = Eigen::Matrix2d::Zero();
@@ -207,3 +209,5 @@ geom::ellipses::Ellipse shapelets::ShapeletFunctionEvaluator::computeMoments() c
         geom::Point2D(q1)
     );
 }
+
+}}}} // namespace lsst::afw::math::shapelets

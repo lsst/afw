@@ -26,14 +26,11 @@
 #include "lsst/afw/geom/Angle.h"
 #include "ndarray/eigen.h"
 
-namespace afwGeom = lsst::afw::geom;
-namespace shapelets = lsst::afw::math::shapelets;
-
 namespace lsst { namespace afw { namespace math { namespace shapelets { namespace detail {
 
 namespace {
 
-static double const NORMALIZATION = std::pow(afwGeom::PI, -0.25);
+static double const NORMALIZATION = std::pow(geom::PI, -0.25);
 
 class TripleProductIntegral {
 public:
@@ -73,9 +70,9 @@ TripleProductIntegral::TripleProductIntegral(int order1, int order2, int order3)
     _array(
         ndarray::allocate(
             ndarray::makeVector(
-                shapelets::computeOffset(order1+1), 
-                shapelets::computeOffset(order2+1),
-                shapelets::computeOffset(order3+1)
+                computeOffset(order1+1), 
+                computeOffset(order2+1),
+                computeOffset(order3+1)
             )
         )
     )
@@ -227,7 +224,7 @@ void Binomial::reset(double a, double b) {
 class HermiteConvolution::Impl {
 public:
 
-    Impl(int colOrder, shapelets::ShapeletFunction const & psf);
+    Impl(int colOrder, ShapeletFunction const & psf);
 
     ndarray::Array<Pixel const,2,2> evaluate(afw::geom::ellipses::Ellipse & ellipse) const;
 
@@ -249,19 +246,16 @@ private:
     Eigen::MatrixXd _monomialInv;
 };
 
-}}}}} // namespace lsst::afw::math::shapelets::detail
-
-
-shapelets::detail::HermiteConvolution::Impl::Impl(
-    int colOrder, shapelets::ShapeletFunction const & psf
+HermiteConvolution::Impl::Impl(
+    int colOrder, ShapeletFunction const & psf
 ) : 
     _rowOrder(colOrder + psf.getOrder()), _colOrder(colOrder), _psf(psf),
-    _result(ndarray::allocate(shapelets::computeSize(_rowOrder), computeSize(_colOrder))),
+    _result(ndarray::allocate(computeSize(_rowOrder), computeSize(_colOrder))),
     _tpi(psf.getOrder(), _rowOrder, _colOrder),
     _monomialFwd(
         Eigen::MatrixXd::Zero(
-            shapelets::computeSize(_rowOrder),
-            shapelets::computeSize(_rowOrder)
+            computeSize(_rowOrder),
+            computeSize(_rowOrder)
         )
     ),
     _monomialInv(Eigen::MatrixXd::Identity(_monomialFwd.rows(), _monomialFwd.cols()))
@@ -282,7 +276,7 @@ shapelets::detail::HermiteConvolution::Impl::Impl(
     _monomialFwd.triangularView<Eigen::Lower>().solveInPlace(_monomialInv);
 }
 
-ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution::Impl::evaluate(
+ndarray::Array<Pixel const,2,2> HermiteConvolution::Impl::evaluate(
     afw::geom::ellipses::Ellipse & ellipse
 ) const {
     ndarray::EigenView<double,2,2> result(_result);
@@ -314,7 +308,7 @@ ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution
             }
         }
     }
-    kq *= 4.0 * afwGeom::PI * (
+    kq *= 4.0 * geom::PI * (
         std::fabs(convolved_gt_inv.computeDeterminant()
                   * psf_gt.computeDeterminant()
                   * model_gt.computeDeterminant())
@@ -365,10 +359,10 @@ ndarray::Array<shapelets::Pixel const,2,2> shapelets::detail::HermiteConvolution
     return _result;
 }
 
-Eigen::MatrixXd shapelets::detail::HermiteConvolution::Impl::computeHermiteTransformMatrix(
-    int order, lsst::afw::geom::LinearTransform const & transform
+Eigen::MatrixXd HermiteConvolution::Impl::computeHermiteTransformMatrix(
+    int order, geom::LinearTransform const & transform
 ) const {
-    int const size = shapelets::computeSize(order);
+    int const size = computeSize(order);
     Eigen::MatrixXd result = Eigen::MatrixXd::Zero(size, size);
     for (int jn=0, joff=0; jn <= order; joff += (++jn)) {
         for (int kn=jn, koff=joff; kn <= order; (koff += (++kn)) += (++kn)) {
@@ -379,15 +373,15 @@ Eigen::MatrixXd shapelets::detail::HermiteConvolution::Impl::computeHermiteTrans
                         int const order_minus_m = order - m;
                         Binomial binomial_m(
                             m, 
-                            transform[lsst::afw::geom::LinearTransform::XX],
-                            transform[lsst::afw::geom::LinearTransform::XY]
+                            transform[geom::LinearTransform::XX],
+                            transform[geom::LinearTransform::XY]
                         );
                         for (int p = 0; p <= m; ++p) {
                             for (int n = 0; n <= order_minus_m; ++n) {
                                 Binomial binomial_n(
                                     n, 
-                                    transform[lsst::afw::geom::LinearTransform::YX], 
-                                    transform[lsst::afw::geom::LinearTransform::YY]
+                                    transform[geom::LinearTransform::YX], 
+                                    transform[geom::LinearTransform::YY]
                                 );
                                 for (int q = 0; q <= n; ++q) {
                                     element +=
@@ -405,20 +399,22 @@ Eigen::MatrixXd shapelets::detail::HermiteConvolution::Impl::computeHermiteTrans
     return result;
 }
 
-int shapelets::detail::HermiteConvolution::getRowOrder() const { return _impl->getRowOrder(); }
+int HermiteConvolution::getRowOrder() const { return _impl->getRowOrder(); }
 
-int shapelets::detail::HermiteConvolution::getColOrder() const { return _impl->getColOrder(); }
+int HermiteConvolution::getColOrder() const { return _impl->getColOrder(); }
 
-ndarray::Array<shapelets::Pixel const,2,2>
-shapelets::detail::HermiteConvolution::evaluate(
-    lsst::afw::geom::ellipses::Ellipse & ellipse
+ndarray::Array<Pixel const,2,2>
+HermiteConvolution::evaluate(
+    geom::ellipses::Ellipse & ellipse
 ) const {
     return _impl->evaluate(ellipse);
 }
 
-shapelets::detail::HermiteConvolution::HermiteConvolution(
+HermiteConvolution::HermiteConvolution(
     int colOrder, 
-    shapelets::ShapeletFunction const & psf
+    ShapeletFunction const & psf
 ) : _impl(new Impl(colOrder, psf)) {}
 
-shapelets::detail::HermiteConvolution::~HermiteConvolution() {}
+HermiteConvolution::~HermiteConvolution() {}
+
+}}}}} // namespace lsst::afw::math::detail

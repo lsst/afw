@@ -28,37 +28,34 @@
 #include "ndarray/eigen.h"
 #include <boost/format.hpp>
 
-namespace shapelets = lsst::afw::math::shapelets;
-namespace geom = lsst::afw::geom;
-namespace nd = ndarray;
+namespace lsst { namespace afw { namespace math { namespace shapelets {
 
-
-void shapelets::MultiShapeletFunction::normalize() {
+void MultiShapeletFunction::normalize() {
     double integral = evaluate().integrate();
     for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
         i->getCoefficients().deep() /= integral;
     }
 }
 
-void shapelets::MultiShapeletFunction::shiftInPlace(geom::Extent2D const & offset) {
+void MultiShapeletFunction::shiftInPlace(geom::Extent2D const & offset) {
     for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
         i->shiftInPlace(offset);
     }    
 }
 
-void shapelets::MultiShapeletFunction::transformInPlace(geom::AffineTransform const & transform) {
+void MultiShapeletFunction::transformInPlace(geom::AffineTransform const & transform) {
     for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
         i->transformInPlace(transform);
     }    
 }
 
-void shapelets::MultiShapeletFunction::convolve(shapelets::ShapeletFunction const & other) {
+void MultiShapeletFunction::convolve(ShapeletFunction const & other) {
     for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
         i->convolve(other);
     }
 }
 
-void shapelets::MultiShapeletFunction::convolve(shapelets::MultiShapeletFunction const & other) {
+void MultiShapeletFunction::convolve(MultiShapeletFunction const & other) {
     ElementList newElements;
     for (ElementList::const_iterator j = other.getElements().begin(); j != other.getElements().end(); ++j) {
         for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i) {
@@ -70,7 +67,7 @@ void shapelets::MultiShapeletFunction::convolve(shapelets::MultiShapeletFunction
     newElements.swap(_elements);
 }
 
-void shapelets::MultiShapeletFunctionEvaluator::update(shapelets::MultiShapeletFunction const & function) {
+void MultiShapeletFunctionEvaluator::update(MultiShapeletFunction const & function) {
     _elements.clear();
     for (
         MultiShapeletFunction::ElementList::const_iterator i = function.getElements().begin(); 
@@ -81,7 +78,7 @@ void shapelets::MultiShapeletFunctionEvaluator::update(shapelets::MultiShapeletF
     }
 }
 
-shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Point2D const & point) const {
+Pixel MultiShapeletFunctionEvaluator::operator()(geom::Point2D const & point) const {
     Pixel r = 0.0;
     for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
         r += (*i)(point);
@@ -89,7 +86,7 @@ shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Poi
     return r;
 }
 
-shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Extent2D const & point) const {
+Pixel MultiShapeletFunctionEvaluator::operator()(geom::Extent2D const & point) const {
     Pixel r = 0.0;
     for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
         r += (*i)(point);
@@ -98,7 +95,7 @@ shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::operator()(geom::Ext
 }
 
 
-shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::integrate() const {
+Pixel MultiShapeletFunctionEvaluator::integrate() const {
     Pixel r = 0.0;
     for (ElementList::const_iterator i = _elements.begin(); i != _elements.end(); ++i) {
         r += i->integrate();
@@ -106,13 +103,13 @@ shapelets::Pixel shapelets::MultiShapeletFunctionEvaluator::integrate() const {
     return r;
 }
 
-shapelets::MultiShapeletFunctionEvaluator::MultiShapeletFunctionEvaluator(
-    shapelets::MultiShapeletFunction const & function
+MultiShapeletFunctionEvaluator::MultiShapeletFunctionEvaluator(
+    MultiShapeletFunction const & function
 ) {
     update(function);
 }
 
-geom::ellipses::Ellipse shapelets::MultiShapeletFunctionEvaluator::computeMoments() const {
+geom::ellipses::Ellipse MultiShapeletFunctionEvaluator::computeMoments() const {
     double q0 = 0.0;
     Eigen::Vector2d q1 = Eigen::Vector2d::Zero();
     Eigen::Matrix2d q2 = Eigen::Matrix2d::Zero();
@@ -127,3 +124,5 @@ geom::ellipses::Ellipse shapelets::MultiShapeletFunctionEvaluator::computeMoment
         geom::Point2D(q1)
     );
 }
+
+}}}} // namespace lsst::afw::math::shapelets

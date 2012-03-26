@@ -36,11 +36,9 @@
 #include <complex>
 #include <vector>
 
-namespace shapelets = lsst::afw::math::shapelets;
+namespace lsst { namespace afw { namespace math { namespace shapelets {
 
 namespace {
-
-typedef shapelets::Pixel Pixel;
 
 inline std::complex<Pixel> iPow(int z) {
     switch (z % 4) {
@@ -144,7 +142,7 @@ private:
 
 } // anonymous
 
-Eigen::MatrixXd shapelets::ConversionMatrix::getBlock(int n) const { 
+Eigen::MatrixXd ConversionMatrix::getBlock(int n) const { 
     if (_input == _output) return Eigen::MatrixXd::Identity(n + 1, n + 1);
     if (_input == HERMITE)
         return ConversionSingleton::get().getBlockH2L(n);
@@ -152,7 +150,7 @@ Eigen::MatrixXd shapelets::ConversionMatrix::getBlock(int n) const {
         return ConversionSingleton::get().getBlockL2H(n);
 }
 
-Eigen::MatrixXd shapelets::ConversionMatrix::buildDenseMatrix() const { 
+Eigen::MatrixXd ConversionMatrix::buildDenseMatrix() const { 
     int const size = computeSize(_order);
     if (_input == _output) return Eigen::MatrixXd::Identity(size, size);
     Eigen::MatrixXd r = Eigen::MatrixXd::Zero(size, size);
@@ -168,8 +166,8 @@ Eigen::MatrixXd shapelets::ConversionMatrix::buildDenseMatrix() const {
     return r;
 }
 
-void shapelets::ConversionMatrix::multiplyOnLeft(
-    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const {
+void ConversionMatrix::multiplyOnLeft(
+    ndarray::Array<Pixel,1> const & array) const {
     if (array.getSize<0>() != computeSize(_order)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
@@ -192,8 +190,8 @@ void shapelets::ConversionMatrix::multiplyOnLeft(
     }
 }
 
-void shapelets::ConversionMatrix::multiplyOnRight(
-    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const {
+void ConversionMatrix::multiplyOnRight(
+    ndarray::Array<Pixel,1> const & array) const {
     if (array.getSize<0>() != computeSize(_order)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
@@ -216,14 +214,14 @@ void shapelets::ConversionMatrix::multiplyOnRight(
     }
 }
 
-shapelets::ConversionMatrix::ConversionMatrix(BasisTypeEnum input, BasisTypeEnum output, int order) :
+ConversionMatrix::ConversionMatrix(BasisTypeEnum input, BasisTypeEnum output, int order) :
     _order(order), _input(input), _output(output)
 {
     ConversionSingleton::get().ensure(_order);
 }
 
-void shapelets::ConversionMatrix::convertCoefficientVector(
-    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array,
+void ConversionMatrix::convertCoefficientVector(
+    ndarray::Array<Pixel,1> const & array,
     BasisTypeEnum input,
     BasisTypeEnum output,
     int order
@@ -233,8 +231,8 @@ void shapelets::ConversionMatrix::convertCoefficientVector(
     m.multiplyOnLeft(array);
 }
 
-void shapelets::ConversionMatrix::convertOperationVector(
-    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array,
+void ConversionMatrix::convertOperationVector(
+    ndarray::Array<Pixel,1> const & array,
     BasisTypeEnum input,
     BasisTypeEnum output,
     int order
@@ -243,3 +241,5 @@ void shapelets::ConversionMatrix::convertOperationVector(
     ConversionMatrix m(output, input, order);
     m.multiplyOnRight(array);
 }
+
+}}}} // namespace lsst::afw::math::shapelets
