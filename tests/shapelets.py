@@ -46,7 +46,7 @@ import lsst.afw.math.shapelets as shapelets
 class ShapeletTestMixin(object):
 
     def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%f != %f" % (a, b))
+        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%s != %s" % (a, b))
 
     def makeImage(self, function, x, y):
         z = numpy.zeros((y.size, x.size), dtype=float)
@@ -125,6 +125,25 @@ class ShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
             z = self.makeImage(function, x, y)
             self.measureMoments(function, x, y, z)
 
+    def testDerivatives(self):
+        eps = 1E-8
+        v = numpy.zeros(self.coefficients.shape, dtype=float)
+        v_lo = numpy.zeros(self.coefficients.shape, dtype=float)
+        v_hi = numpy.zeros(self.coefficients.shape, dtype=float)
+        dx_a = numpy.zeros(self.coefficients.shape, dtype=float)
+        dy_a = numpy.zeros(self.coefficients.shape, dtype=float)
+        for basis in self.bases:
+            for x, y in zip(self.x, self.y):
+                basis.fillEvaluation(v, x, y, dx_a, dy_a)
+                basis.fillEvaluation(v_hi, x+eps, y) 
+                basis.fillEvaluation(v_lo, x-eps, y)
+                dx_n = 0.5 * (v_hi - v_lo) / eps
+                basis.fillEvaluation(v_hi, x, y+eps) 
+                basis.fillEvaluation(v_lo, x, y-eps)
+                dy_n = 0.5 * (v_hi - v_lo) / eps
+                self.assertClose(dx_n, dx_a)
+                self.assertClose(dy_n, dy_a)
+                
 class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
 
     def testMoments(self):
