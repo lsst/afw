@@ -22,18 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-#ifndef LSST_AFW_MATH_SHAPELETS_DETAIL_HERMITEEVALUATOR_H
-#define LSST_AFW_MATH_SHAPELETS_DETAIL_HERMITEEVALUATOR_H
-
-/**
- * @file
- *
- * @brief HermiteEvaluator, a utility class for evaluating HERMITE shapelet functions.
- *
- * @todo
- *
- * @author Jim Bosch
- */
+#ifndef LSST_AFW_MATH_SHAPELETS_HERMITEEVALUATOR_H
+#define LSST_AFW_MATH_SHAPELETS_HERMITEEVALUATOR_H
 
 #include "ndarray.h"
 #include "lsst/afw/geom.h"
@@ -44,7 +34,6 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace shapelets {
-namespace detail {
 
 /**
  *  @brief A class to evaluate HERMITE shapelet-related quantities.
@@ -149,6 +138,6 @@ private:
     ndarray::Array<Pixel,1,1> _dyWorkspace;
 };
 
-}}}}}   // lsst::afw::math::shapelets::detail
+}}}}   // lsst::afw::math::shapelets
 
-#endif // !defined(LSST_AFW_MATH_SHAPELETS_DETAIL_HERMITEEVALUATOR_H)
+#endif // !defined(LSST_AFW_MATH_SHAPELETS_HERMITEEVALUATOR_H)

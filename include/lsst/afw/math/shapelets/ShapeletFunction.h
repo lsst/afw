@@ -25,19 +25,9 @@
 #ifndef LSST_AFW_MATH_SHAPELETS_SHAPELETFUNCTION_H
 #define LSST_AFW_MATH_SHAPELETS_SHAPELETFUNCTION_H
 
-/**
- * @file
- *
- * @brief A 2-d function defined by an expansion onto a Gauss-Laguerre or Gauss-Hermite basis.
- *
- * @todo
- *
- * @author Jim Bosch
- */
-
 #include "ndarray.h"
 #include "lsst/afw/math/shapelets/constants.h"
-#include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
+#include "lsst/afw/math/shapelets/HermiteEvaluator.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
@@ -211,7 +201,7 @@ private:
 
     ndarray::Array<Pixel const,1,1> _coefficients;
     geom::AffineTransform _transform;
-    detail::HermiteEvaluator _h;
+    HermiteEvaluator _h;
 };
 
 inline ShapeletFunctionEvaluator ShapeletFunction::evaluate() const {

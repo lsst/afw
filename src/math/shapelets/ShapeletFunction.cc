@@ -24,7 +24,7 @@
 
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
-#include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
+#include "lsst/afw/math/shapelets/HermiteConvolution.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray/eigen.h"
 #include <boost/format.hpp>
@@ -161,7 +161,7 @@ void ShapeletFunctionEvaluator::_initialize(ShapeletFunction const & function) {
 }
 
 void ShapeletFunction::convolve(ShapeletFunction const & other) {
-    detail::HermiteConvolution convolution(other.getOrder(), *this);
+    HermiteConvolution convolution(other.getOrder(), *this);
     ndarray::EigenView<Pixel const,2,2> matrix(convolution.evaluate(_ellipse));
     if (_basisType == LAGUERRE) {
         ConversionMatrix::convertCoefficientVector(_coefficients, LAGUERRE, HERMITE, getOrder());

@@ -21,8 +21,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_MATH_SHAPELETS_DETAIL_HermiteConvolution
-#define LSST_AFW_MATH_SHAPELETS_DETAIL_HermiteConvolution
+#ifndef LSST_AFW_MATH_SHAPELETS_HermiteConvolution
+#define LSST_AFW_MATH_SHAPELETS_HermiteConvolution
 
 #include "ndarray.h"
 #include "lsst/afw/geom/ellipses.h"
@@ -33,8 +33,6 @@
 namespace lsst { namespace afw { namespace math { namespace shapelets {
 
 class ShapeletFunction;
-
-namespace detail {
 
 /**
  *  @brief A parametrized matrix that performs a convolution in shapelet space.
@@ -69,6 +67,6 @@ private:
 };
 
 
-}}}}} // namespace lsst::afw::math::shapelets::detail
+}}}} // namespace lsst::afw::math::shapelets
 
-#endif // !LSST_AFW_MATH_SHAPELETS_DETAIL_HermiteConvolution
+#endif // !LSST_AFW_MATH_SHAPELETS_HermiteConvolution

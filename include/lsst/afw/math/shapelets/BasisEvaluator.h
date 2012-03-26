@@ -25,19 +25,9 @@
 #ifndef LSST_AFW_MATH_SHAPELETS_BASISEVALUATOR_H
 #define LSST_AFW_MATH_SHAPELETS_BASISEVALUATOR_H
 
-/**
- * @file
- *
- * @brief A 2-d function defined by an expansion onto a Gauss-Laguerre or Gauss-Hermite basis.
- *
- * @todo
- *
- * @author Jim Bosch
- */
-
 #include "ndarray.h"
 #include "lsst/afw/math/shapelets/constants.h"
-#include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
+#include "lsst/afw/math/shapelets/HermiteEvaluator.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/afw/geom.h"
 
@@ -87,7 +77,7 @@ public:
 
 private:
     BasisTypeEnum _basisType;
-    detail::HermiteEvaluator _h;
+    HermiteEvaluator _h;
 };
 
 }}}}   // lsst::afw::math::shapelets

@@ -22,11 +22,11 @@
  */
 
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
-#include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
+#include "lsst/afw/math/shapelets/HermiteConvolution.h"
 #include "lsst/afw/geom/Angle.h"
 #include "ndarray/eigen.h"
 
-namespace lsst { namespace afw { namespace math { namespace shapelets { namespace detail {
+namespace lsst { namespace afw { namespace math { namespace shapelets {
 
 namespace {
 
@@ -417,4 +417,4 @@ HermiteConvolution::HermiteConvolution(
 
 HermiteConvolution::~HermiteConvolution() {}
 
-}}}}} // namespace lsst::afw::math::detail
+}}}} // namespace lsst::afw::math

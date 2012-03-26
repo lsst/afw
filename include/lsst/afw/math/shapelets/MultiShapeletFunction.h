@@ -25,16 +25,6 @@
 #ifndef LSST_AFW_MATH_SHAPELETS_MULTISHAPELETFUNCTION_H
 #define LSST_AFW_MATH_SHAPELETS_MULTISHAPELETFUNCTION_H
 
-/**
- * @file
- *
- * @brief Multi-scale shapelets.
- *
- * @todo
- *
- * @author Jim Bosch
- */
-
 #include "lsst/afw/math/shapelets/ShapeletFunction.h"
 #include <list>
 

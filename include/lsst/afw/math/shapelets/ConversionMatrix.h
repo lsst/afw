@@ -25,15 +25,6 @@
 #ifndef LSST_AFW_MATH_SHAPELETS_CONVERSIONMATRIX_H
 #define LSST_AFW_MATH_SHAPELETS_CONVERSIONMATRIX_H
 
-/**
- * @file
- *
- * @brief Conversions between shapelet basis types.
- *
- * @todo
- *
- * @author Jim Bosch
- */
 
 #include "lsst/afw/geom/ellipses.h"
 #include "ndarray.h"
@@ -44,6 +35,13 @@ namespace afw {
 namespace math {
 namespace shapelets {
 
+/**
+ *  @brief Conversions between shapelet basis types.
+ *
+ *  The basis conversion matrix is block-diagonal and only needs to be computed once, so we cache
+ *  the blocks in a hidden singleton and provide operations that act on shapelet matrices while
+ *  taking advantage of the sparseness of the conversion.
+ */
 class ConversionMatrix {
 public:
 
