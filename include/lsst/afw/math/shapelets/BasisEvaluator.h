@@ -26,10 +26,13 @@
 #define LSST_AFW_MATH_SHAPELETS_BASISEVALUATOR_H
 
 #include "ndarray.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/math/shapelets/constants.h"
 #include "lsst/afw/math/shapelets/HermiteEvaluator.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
-#include "lsst/afw/geom.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/detection/Footprint.h"
 
 namespace lsst {
 namespace afw {
@@ -37,10 +40,7 @@ namespace math {
 namespace shapelets {
 
 /**
- *  @brief Evaluates a Basis.
- *
- *  A BasisEvaluator is invalidated whenever the Basis it
- *  was constructed from is modified.
+ *  @brief Evaluates a standard shapelet Basis.
  */
 class BasisEvaluator {
 public:
@@ -59,12 +59,7 @@ public:
         ndarray::Array<Pixel,1> const & array, double x, double y,
         ndarray::Array<Pixel,1> const & dx = ndarray::Array<Pixel,1>(),
         ndarray::Array<Pixel,1> const & dy = ndarray::Array<Pixel,1>()
-    ) const {
-        _h.fillEvaluation(array, x, y, dx, dy);
-        ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
-        if (!dx.isEmpty()) ConversionMatrix::convertOperationVector(dx, HERMITE, _basisType, getOrder());
-        if (!dy.isEmpty()) ConversionMatrix::convertOperationVector(dy, HERMITE, _basisType, getOrder());
-    }
+    ) const;
 
     void fillEvaluation(
         ndarray::Array<Pixel,1> const & array, geom::Point2D const & point,
@@ -82,10 +77,74 @@ public:
         fillEvaluation(array, point.getX(), point.getY(), dx, dy);
     }
 
-    void fillIntegration(ndarray::Array<Pixel,1> const & array, int xMoment=0, int yMoment=0) const {
-        _h.fillIntegration(array, xMoment, yMoment);
-        ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
-    }
+    void fillIntegration(ndarray::Array<Pixel,1> const & array, int xMoment=0, int yMoment=0) const;
+
+    /**
+     *  @brief Fill the matrix and vector that define the normal equations used in solving
+     *         a linear least squares problem.
+     *
+     *  If @f$M@f$ is the design matrix that maps shapelet coefficients to pixel values, and @f$d@f$
+     *  is the flattened data vector, then the output matrix is equal to @f$M^T M@f$ and the output
+     *  vector is equal to @F$M^T d@f$.  The design matrix itself is never formed.
+     *
+     *  The outputs will be added to, not overwritten, so they should be initialized to zero if
+     *  desired (this allows this function to be called repeatedly to construct a least-squares
+     *  equation that fits the same model to multiple images).
+     *
+     *  @param[out]  matrix   A square matrix with dimensions corresponding to the size of the basis.
+     *  @param[out]  vector   A vector with dimensions corresponding to the size of the basis.
+     *  @param[in]   data     Image containing pixel values to be fit.
+     *  @param[in]   region   A Footprint that defines the region of the image to be fit.
+     *  @param[in]   ellipse  Basis ellipse for the shapelet model.
+     *
+     *  Note that the ellipse transformation is applied without correcting for its determinant;
+     *  the total flux of the model is a function of the area of the ellipse (and the coefficients,
+     *  of course).
+     */
+    template <typename ImagePixelT>
+    void fillLeastSquares(
+        ndarray::Array<Pixel,2,1> const & matrix,
+        ndarray::Array<Pixel,1,1> const & vector,
+        image::Image<ImagePixelT> const & data,
+        detection::Footprint const & region,
+        geom::ellipses::Ellipse const & ellipse
+    ) const;
+
+    /**
+     *  @brief Fill the matrix and vector that define the normal equations used in solving
+     *         a weighted linear least squares problem.
+     *
+     *  If @f$M@f$ is the design matrix that maps shapelet coefficients to pixel values, @f$d@f$
+     *  is the flattened data vector, and @f$V@f$ is a diagonal matrix with containing the pixel
+     *  variances, then the output matrix is equal to @f$M^T V^{-1} M@f$ and the output vector
+     *  is equal to @F$M^T V^{-1} d@f$.  The design matrix itself is never formed.
+     *
+     *  The outputs will be added to, not overwritten, so they should be initialized to zero if
+     *  desired (this allows this function to be called repeatedly to construct a least-squares
+     *  equation that fits the same model to multiple images).
+     *
+     *  @param[out]  matrix   A square matrix with dimensions corresponding to the size of the basis.
+     *  @param[out]  vector   A vector with dimensions corresponding to the size of the basis.
+     *  @param[in]   data     MaskedImage containing pixel values to be fit, and variances to be used
+     *                        as weights.  Pixels with mask values corresponding to andMask will be
+     *                        ignored.
+     *  @param[in]   region   A Footprint that defines the region of the image to be fit.
+     *  @param[in]   ellipse  Basis ellipse for the shapelet model.
+     *  @param[in]   andMask  Defines which mask bits cause a value to be ignored.
+     *
+     *  Note that the ellipse transformation is applied without correcting for its determinant;
+     *  the total flux of the model is a function of the area of the ellipse (and the coefficients,
+     *  of course).
+     */
+    template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+    void fillLeastSquares(
+        ndarray::Array<Pixel,2,1> const & matrix,
+        ndarray::Array<Pixel,1,1> const & vector,
+        image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> const & data,
+        detection::Footprint const & region,
+        geom::ellipses::Ellipse const & ellipse,
+        image::MaskPixel andMask=0x0
+    ) const;
 
 private:
     BasisTypeEnum _basisType;
