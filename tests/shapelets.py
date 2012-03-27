@@ -41,6 +41,8 @@ import lsst.afw.geom as geom
 import lsst.afw.geom.ellipses as ellipses
 import lsst.afw.math.shapelets as shapelets
 
+numpy.random.seed(5)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ShapeletTestMixin(object):
@@ -141,8 +143,8 @@ class ShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
                 basis.fillEvaluation(v_hi, x, y+eps) 
                 basis.fillEvaluation(v_lo, x, y-eps)
                 dy_n = 0.5 * (v_hi - v_lo) / eps
-                self.assertClose(dx_n, dx_a)
-                self.assertClose(dy_n, dy_a)
+                self.assertClose(dx_n, dx_a, rtol=2.0*eps)
+                self.assertClose(dy_n, dy_a, rtol=2.0*eps)
                 
 class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
 
