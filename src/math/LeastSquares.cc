@@ -24,6 +24,7 @@
 
 #include "Eigen/Eigenvalues"
 #include "Eigen/SVD"
+#include "Eigen/Cholesky"
 #include "boost/format.hpp"
 #include "boost/make_shared.hpp"
 
@@ -35,7 +36,9 @@ namespace lsst { namespace afw { namespace math {
 class LeastSquares::Impl {
 public:
 
-    bool const needsNormalEquations;
+    enum HessianState { NO_HESSIAN=0, LOWER_HESSIAN=1, FULL_HESSIAN=2 };
+
+    HessianState hessianState;
     double threshold;
     int dimension;
     int rank;
@@ -54,6 +57,18 @@ public:
         for (rank = dimension; (rank > 0) && (values[rank-1] < cond); --rank);
     }
 
+    void computeHessian(HessianState desired) {
+        if (hessianState < LOWER_HESSIAN && desired > LOWER_HESSIAN) {
+            hessian = Eigen::MatrixXd::Zero(design.cols(), design.cols());
+            hessian.selfadjointView<Eigen::Lower>().rankUpdate(design.adjoint());
+            hessianState = LOWER_HESSIAN;
+        }
+        if (hessianState < FULL_HESSIAN && desired >= FULL_HESSIAN) {
+            hessian.triangularView<Eigen::StrictlyUpper>() = hessian.adjoint();
+            hessianState = FULL_HESSIAN;
+        }
+    }
+
     virtual void factor() = 0;
 
     virtual void updateRank();
@@ -61,9 +76,8 @@ public:
     virtual void solve() = 0;
     virtual void computeCovariance() = 0;
 
-    Impl(int dimension_, bool needsNormalEquations_, double threshold_) : 
-        needsNormalEquations(needsNormalEquations),
-        threshold(threshold_), dimension(dimension_), rank(dimension_)
+    Impl(int dimension_, double threshold_) : 
+        hessianState(NO_HESSIAN), threshold(threshold_), dimension(dimension_), rank(dimension_)
         {}
 
     virtual ~Impl() {}
@@ -75,11 +89,12 @@ class EigensystemSolver : public LeastSquares::Impl {
 public:
 
     explicit EigensystemSolver(int dimension) :
-        Impl(dimension, true, std::sqrt(std::numeric_limits<double>::epsilon())),
+        Impl(dimension, std::sqrt(std::numeric_limits<double>::epsilon())),
         _eig(dimension), _svd()
         {}
     
     virtual void factor() {
+        computeHessian(LOWER_HESSIAN);
         _eig.compute(hessian);
         if (_eig.info() == Eigen::Success) {
             setRank(_eig.eigenvalues());
@@ -132,9 +147,9 @@ private:
 class CholeskySolver : public LeastSquares::Impl {
 public:
 
-    explicit CholeskySolver(int dimension) : Impl(dimension, true, 0.0), _ldlt(dimension) {}
+    explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
     
-    virtual void factor() { _ldlt.compute(hessian); }
+    virtual void factor() { computeHessian(LOWER_HESSIAN); _ldlt.compute(hessian); }
 
     virtual void updateRank() {}
 
@@ -173,6 +188,7 @@ ndarray::Array<double const,2,2> LeastSquares::computeCovariance() {
 }
 
 ndarray::Array<double const,2,2> LeastSquares::computeHessian() {
+    _impl->computeHessian(Impl::FULL_HESSIAN);
     // Wrap the Eigen::MatrixXd in an ndarray::Array, using _impl as the reference-counted owner.
     // Doesn't matter if we swap strides, because it's symmetric.
     return ndarray::external(
@@ -235,6 +251,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
                  % _getRhsVector().size() % _impl->dimension).str()
             );
         }
+        _impl->hessianState = Impl::FULL_HESSIAN;
     } else {
         if (_getDesignMatrix().cols() != _impl->dimension) {
             throw LSST_EXCEPT(
@@ -250,12 +267,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
                 ).str()
             );
         }
-        if (_impl->needsNormalEquations) {
-            _getHessianMatrix() = Eigen::MatrixXd::Zero(_getDesignMatrix().cols(), _getDesignMatrix().cols());
-            _getHessianMatrix().selfadjointView<Eigen::Lower>().rankUpdate(_getDesignMatrix().adjoint());
-            _getHessianMatrix().triangularView<Eigen::StrictlyUpper>() = _getHessianMatrix().adjoint();
-            _getRhsVector() = _getDesignMatrix().adjoint() * _getDataVector();
-        }
+        _impl->hessianState = Impl::NO_HESSIAN;
     }
     _impl->factor();
 }
