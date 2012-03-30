@@ -556,7 +556,19 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                          \
+    template void afwMath::statisticsStack<TYPE>( \
+            afwImage::Image<TYPE> &out, \
+            std::vector<afwImage::Image<TYPE>::Ptr > &images, \
+            afwMath::Property flags, \
+            afwMath::StatisticsControl const& sctrl,    \
+            WeightVector const &wvector);                          \
     template afwImage::MaskedImage<TYPE>::Ptr afwMath::statisticsStack<TYPE>( \
+            std::vector<afwImage::MaskedImage<TYPE>::Ptr > &images, \
+            afwMath::Property flags, \
+            afwMath::StatisticsControl const& sctrl,    \
+            WeightVector const &wvector);                          \
+    template void afwMath::statisticsStack<TYPE>( \
+            afwImage::MaskedImage<TYPE> &out, \
             std::vector<afwImage::MaskedImage<TYPE>::Ptr > &images, \
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
