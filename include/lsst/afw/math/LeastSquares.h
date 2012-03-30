@@ -25,6 +25,7 @@
 #ifndef LSST_AFW_MATH_LeastSquares_h_INCLUDED
 #define LSST_AFW_MATH_LeastSquares_h_INCLUDED
 
+#include "lsst/base.h"
 #include "ndarray/eigen.h"
 
 namespace lsst { namespace afw { namespace math {
@@ -33,7 +34,7 @@ namespace lsst { namespace afw { namespace math {
  *  @brief Solver for linear least-squares problems.
  *
  *  Linear least-squares problems are defined as finding the vector @f$x@f$ that minimizes 
- *  @f$ \left|\bm{A} \bm{x} -\bm{b}\right|_2 @f$, with the number of rows of @f$A@f$ generally
+ *  @f$\left|\bm{A} \bm{x}-\bm{b}\right|_2@f$, with the number of rows of @f$A@f$ generally
  *  greater than the number of columns.  We call @f$\bm{A}@f$ the design matrix, @f$\bm{b}@f$
  *  the data vector, and @f$\bm{x}@f$ the solution vector.  When the rank of @f$\bm{A}@f$ is
  *  equal to the number of columns, we can obtain using the solution using the normal equations:
@@ -63,6 +64,8 @@ namespace lsst { namespace afw { namespace math {
  */
 class LeastSquares {
 public:
+
+    class Impl; ///< Private implementation; forward-declared publically so we can inherit from it in .cc
 
     enum Factorization {
         NORMAL_EIGENSYSTEM,  /**<
@@ -98,10 +101,11 @@ public:
         ndarray::Array<T2 const,1,C2> const & data,
         Factorization factorization
     ) {
-        _initialize(factorization);
-        _getDesignMatrix() = design.asEigen();
-        _getDataVector() = data.asEigen();
-        _factor(false);
+        LeastSquares r(factorization);
+        r._getDesignMatrix() = design.asEigen();
+        r._getDataVector() = data.asEigen();
+        r._factor(false);
+        return r;
     }
 
     /// @brief Initialize from the design matrix and data vector given as an Eigen objects.
@@ -111,10 +115,11 @@ public:
         Eigen::MatrixBase<D2> const & data,
         Factorization factorization
     ) {
-        _initialize(factorization);
-        _getDesignMatrix() = design;
-        _getDataVector() = data;
-        _factor(false);
+        LeastSquares r(factorization);
+        r._getDesignMatrix() = design;
+        r._getDataVector() = data;
+        r._factor(false);
+        return r;
     }
 
     /// @brief Reset the design matrix and data vector given as ndarrays; dimension must not change.
@@ -161,13 +166,14 @@ public:
         ndarray::Array<T2 const,1,C2> const & rhs,
         Factorization factorization
     ) {
-        _initialize(factorization);
+        LeastSquares r(factorization);
         if (C1 > 0 == Eigen::MatrixXd::IsRowMajor)
-            _getHessianMatrix() = hessian.asEigen();
+            r._getHessianMatrix() = hessian.asEigen();
         else
-            _getHessianMatrix() = hessian.asEigen().transpose();
-        _getRhsVector() = rhs.asEigen();
-        _factor(true);
+            r._getHessianMatrix() = hessian.asEigen().transpose();
+        r._getRhsVector() = rhs.asEigen();
+        r._factor(true);
+        return r;
     }
 
     /// @brief Initialize from the terms in the normal equations, given as Eigen objects.
@@ -177,13 +183,14 @@ public:
         Eigen::MatrixBase<D2> const & rhs,
         Factorization factorization
     ) {
-        _initialize(factorization);
-        if (C1 > 0 == Eigen::MatrixXd::IsRowMajor)
-            _getHessianMatrix() = hessian;
+        LeastSquares r(factorization);
+        if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
+            r._getHessianMatrix() = hessian;
         else
-            _getHessianMatrix() = hessian.transpose();
-        _getRhsVector() = rhs;
-        _factor(true);
+            r._getHessianMatrix() = hessian.transpose();
+        r._getRhsVector() = rhs;
+        r._factor(true);
+        return r;
     }
 
     /// @brief Reset the terms in the normal equations given as ndarrays; dimension must not change.
@@ -206,7 +213,7 @@ public:
         Eigen::MatrixBase<D1> const & hessian,
         Eigen::MatrixBase<D2> const & rhs
     ) {
-        if (C1 > 0 == Eigen::MatrixXd::IsRowMajor)
+        if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
             _getHessianMatrix() = hessian;
         else
             _getHessianMatrix() = hessian.transpose();
@@ -279,8 +286,6 @@ public:
     
 private:
 
-    void _initialize(Factorization factorization);
-
     // We want a column-major design matrix so the self-adjoint product is cache-friendly, hence '-2'...
     // so we always copy a (possibly row-major) design matrix into a col-major one.  This is an
     // unnecessarily and cache-unfriendly operation when solver is DIRECT_SVD, but right now it doesn't
@@ -297,9 +302,7 @@ private:
 
     void _factor(bool haveNormalEquations);
 
-    class Impl;
-
-    explicit LeastSquares(PTR(Impl) impl) : _impl(impl) {}
+    explicit LeastSquares(Factorization factorization);
 
     PTR(Impl) _impl;
 };
