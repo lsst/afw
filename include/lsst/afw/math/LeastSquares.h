@@ -65,7 +65,7 @@ namespace lsst { namespace afw { namespace math {
 class LeastSquares {
 public:
 
-    class Impl; ///< Private implementation; forward-declared publically so we can inherit from it in .cc
+    class Impl; ///< Private implementation; forward-declared publicly so we can inherit from it in .cc
 
     enum Factorization {
         NORMAL_EIGENSYSTEM,  /**<
@@ -101,7 +101,7 @@ public:
         ndarray::Array<T2 const,1,C2> const & data,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
-        LeastSquares r(factorization);
+        LeastSquares r(factorization, design.template getSize<1>());
         r._getDesignMatrix() = design.asEigen();
         r._getDataVector() = data.asEigen();
         r._factor(false);
@@ -115,7 +115,7 @@ public:
         Eigen::MatrixBase<D2> const & data,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
-        LeastSquares r(factorization);
+        LeastSquares r(factorization, design.cols());
         r._getDesignMatrix() = design;
         r._getDataVector() = data;
         r._factor(false);
@@ -166,7 +166,7 @@ public:
         ndarray::Array<T2 const,1,C2> const & rhs,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
-        LeastSquares r(factorization);
+        LeastSquares r(factorization, hessian.template getSize<0>());
         if (C1 > 0 == Eigen::MatrixXd::IsRowMajor)
             r._getHessianMatrix() = hessian.asEigen();
         else
@@ -183,7 +183,7 @@ public:
         Eigen::MatrixBase<D2> const & rhs,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
-        LeastSquares r(factorization);
+        LeastSquares r(factorization, hessian.rows());
         if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
             r._getHessianMatrix() = hessian;
         else
@@ -267,9 +267,6 @@ public:
      */
     ndarray::Array<double const,2,2> computeHessian();
 
-    /// @brief Compute the unreduced chi-squared (sum of squared residuals).
-    double computeChiSq();
-
     /// @brief Return the number of parameters.
     int getDimension() const;
 
@@ -302,7 +299,7 @@ private:
 
     void _factor(bool haveNormalEquations);
 
-    explicit LeastSquares(Factorization factorization);
+    LeastSquares(Factorization factorization, int dimension);
 
     PTR(Impl) _impl;
 };
