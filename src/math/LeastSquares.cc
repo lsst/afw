@@ -25,6 +25,7 @@
 #include "Eigen/Eigenvalues"
 #include "Eigen/SVD"
 #include "boost/format.hpp"
+#include "boost/make_shared.hpp"
 
 #include "lsst/afw/math/LeastSquares.h"
 #include "lsst/pex/exceptions.h"
@@ -73,7 +74,7 @@ namespace {
 class EigensystemSolver : public LeastSquares::Impl {
 public:
 
-    EigensystemSolver(int dimension) :
+    explicit EigensystemSolver(int dimension) :
         Impl(dimension, true, std::sqrt(std::numeric_limits<double>::epsilon())),
         _eig(dimension), _svd()
         {}
@@ -128,6 +129,27 @@ private:
     Eigen::VectorXd _tmp;
 };
 
+class CholeskySolver : public LeastSquares::Impl {
+public:
+
+    explicit CholeskySolver(int dimension) : Impl(dimension, true, 0.0), _ldlt(dimension) {}
+    
+    virtual void factor() { _ldlt.compute(hessian); }
+
+    virtual void updateRank() {}
+
+    virtual void solve() { solution.asEigen() = _ldlt.solve(rhs); }
+
+    virtual void computeCovariance() {
+        ndarray::EigenView<double,2,2> cov(covariance);
+        cov.setIdentity();
+        cov = _ldlt.solve(cov);
+    }
+        
+private:
+    Eigen::LDLT<Eigen::MatrixXd> _ldlt;
+};
+
 } // anonymous
 
 void LeastSquares::setThreshold(double threshold) { _impl->threshold = threshold; _impl->updateRank(); }
@@ -166,7 +188,17 @@ int LeastSquares::getDimension() const { return _impl->dimension; }
 int LeastSquares::getRank() const { return _impl->rank; }
 
 LeastSquares::LeastSquares(Factorization factorization, int dimension) {
-    // TODO
+    switch (factorization) {
+    case NORMAL_EIGENSYSTEM:
+        _impl = boost::make_shared<EigensystemSolver>(dimension);
+        break;
+    case NORMAL_CHOLESKY:
+        _impl = boost::make_shared<CholeskySolver>(dimension);
+        break;
+    case DIRECT_SVD:
+        //_impl = boost::make_shared<SvdSolver>(dimension);
+        break;        
+    }
 }
 
 LeastSquares::~LeastSquares() {}
