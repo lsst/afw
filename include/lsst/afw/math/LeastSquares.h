@@ -99,7 +99,7 @@ public:
     static LeastSquares fromDesignMatrix(
         ndarray::Array<T1 const,2,C1> const & design,
         ndarray::Array<T2 const,1,C2> const & data,
-        Factorization factorization
+        Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization);
         r._getDesignMatrix() = design.asEigen();
@@ -113,7 +113,7 @@ public:
     static LeastSquares fromDesignMatrix(
         Eigen::MatrixBase<D1> const & design,
         Eigen::MatrixBase<D2> const & data,
-        Factorization factorization
+        Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization);
         r._getDesignMatrix() = design;
@@ -164,7 +164,7 @@ public:
     static LeastSquares fromNormalEquations(
         ndarray::Array<T1 const,2,C1> const & hessian,
         ndarray::Array<T2 const,1,C2> const & rhs,
-        Factorization factorization
+        Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization);
         if (C1 > 0 == Eigen::MatrixXd::IsRowMajor)
@@ -181,7 +181,7 @@ public:
     static LeastSquares fromNormalEquations(
         Eigen::MatrixBase<D1> const & hessian,
         Eigen::MatrixBase<D2> const & rhs,
-        Factorization factorization
+        Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization);
         if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
