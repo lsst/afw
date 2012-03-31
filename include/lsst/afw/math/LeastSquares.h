@@ -167,7 +167,7 @@ public:
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization, hessian.template getSize<0>());
-        if (C1 > 0 == Eigen::MatrixXd::IsRowMajor)
+        if ((C1 > 0) == Eigen::MatrixXd::IsRowMajor)
             r._getHessianMatrix() = hessian.asEigen();
         else
             r._getHessianMatrix() = hessian.asEigen().transpose();
@@ -199,7 +199,7 @@ public:
         ndarray::Array<T1 const,2,C1> const & hessian,
         ndarray::Array<T2 const,1,C2> const & rhs
     ) {
-        if (C1 > 0 == Eigen::MatrixXd::IsRowMajor)
+        if ((C1 > 0) == Eigen::MatrixXd::IsRowMajor)
             _getHessianMatrix() = hessian.asEigen();
         else
             _getHessianMatrix() = hessian.asEigen().transpose();
