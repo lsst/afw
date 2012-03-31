@@ -34,7 +34,7 @@ namespace lsst { namespace afw { namespace math {
  *  @brief Solver for linear least-squares problems.
  *
  *  Linear least-squares problems are defined as finding the vector @f$x@f$ that minimizes 
- *  @f$\left|\bm{A} \bm{x}-\bm{b}\right|_2@f$, with the number of rows of @f$A@f$ generally
+ *  @f$\left|\bm{A}\bm{x}-\bm{b}\right|_2@f$, with the number of rows of @f$A@f$ generally
  *  greater than the number of columns.  We call @f$\bm{A}@f$ the design matrix, @f$\bm{b}@f$
  *  the data vector, and @f$\bm{x}@f$ the solution vector.  When the rank of @f$\bm{A}@f$ is
  *  equal to the number of columns, we can obtain using the solution using the normal equations:
