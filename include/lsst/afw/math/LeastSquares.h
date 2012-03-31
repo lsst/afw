@@ -145,7 +145,7 @@ public:
     }
 
     /// @brief Reset the design matrix given as an ndarray; dimension and data are not changed.
-    template <typename T1, typename T2, int C1, int C2>
+    template <typename T1, int C1>
     void setDesignMatrix(ndarray::Array<T1 const,2,C1> const & design) {
         _getDesignMatrix() = design.asEigen();
         _factor(false);
