@@ -71,7 +71,7 @@ public:
 
     virtual void factor() = 0;
 
-    virtual void updateRank();
+    virtual void updateRank() = 0;
 
     virtual void solve() = 0;
     virtual void computeCovariance() = 0;
@@ -133,7 +133,7 @@ public:
         } else {
             covariance.asEigen() = 
                 _svd.matrixU().leftCols(rank)
-                * _svd.singularValues().head(rank).asDiagonal()
+                * _svd.singularValues().head(rank).array().inverse().matrix().asDiagonal()
                 * _svd.matrixU().leftCols(rank).adjoint();
         }
     }
@@ -163,6 +163,40 @@ public:
         
 private:
     Eigen::LDLT<Eigen::MatrixXd> _ldlt;
+};
+
+class SvdSolver : public LeastSquares::Impl {
+public:
+
+    explicit SvdSolver(int dimension) :
+        Impl(dimension, std::numeric_limits<double>::epsilon()), _svd()
+    {}
+    
+    virtual void factor() {
+        _svd.compute(design, Eigen::ComputeThinU | Eigen::ComputeThinV);
+        setRank(_svd.singularValues());
+    }
+
+    virtual void updateRank() {
+        setRank(_svd.singularValues());
+    }
+
+    virtual void solve() {
+        _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * data;
+        _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
+        solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp;
+    }
+
+    virtual void computeCovariance() {
+        covariance.asEigen() = 
+            _svd.matrixV().leftCols(rank)
+            * _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal()
+            * _svd.matrixV().leftCols(rank).adjoint();
+    }
+        
+private:
+    Eigen::JacobiSVD<Eigen::MatrixXd> _svd;
+    Eigen::VectorXd _tmp;    
 };
 
 } // anonymous
@@ -212,7 +246,7 @@ LeastSquares::LeastSquares(Factorization factorization, int dimension) {
         _impl = boost::make_shared<CholeskySolver>(dimension);
         break;
     case DIRECT_SVD:
-        //_impl = boost::make_shared<SvdSolver>(dimension);
+        _impl = boost::make_shared<SvdSolver>(dimension);
         break;        
     }
 }
