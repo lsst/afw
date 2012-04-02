@@ -34,21 +34,21 @@ namespace lsst { namespace afw { namespace math {
  *  @brief Solver for linear least-squares problems.
  *
  *  Linear least-squares problems are defined as finding the vector @f$x@f$ that minimizes 
- *  @f$\left|\bm{A}\bm{x}-\bm{b}\right|_2@f$, with the number of rows of @f$A@f$ generally
- *  greater than the number of columns.  We call @f$\bm{A}@f$ the design matrix, @f$\bm{b}@f$
- *  the data vector, and @f$\bm{x}@f$ the solution vector.  When the rank of @f$\bm{A}@f$ is
+ *  @f$\left|A x - b\right|_2@f$, with the number of rows of @f$A@f$ generally
+ *  greater than the number of columns.  We call @f$A@f$ the design matrix, @f$b@f$
+ *  the data vector, and @f$x@f$ the solution vector.  When the rank of @f$A@f$ is
  *  equal to the number of columns, we can obtain using the solution using the normal equations:
  *  @f[
- *      \bm{A}^T \bm{A} \bm{x} = \bm{A}^T \bm{b}
+ *      A^T A x = A^T b
  *  @f]
- *  If @f$\bm{A}@f$ is not full-rank, the problem is underconstrained, and we usually wish to
- *  solve the minimum-norm least-squares problem, which also minimizes @f$|\bm{x}|_2@f$.
- *  This can be done by computing a pseudo-inverse of @f$\bm{A}@f$ using an SVD or complete
- *  orthogonal factorization of @f$\bm{A}@f$, or by performing an Eigen decomposition of
- *  @f$\bm{A}^T\bm{A}@f$.
+ *  If @f$A@f$ is not full-rank, the problem is underconstrained, and we usually wish to
+ *  solve the minimum-norm least-squares problem, which also minimizes @f$|x|_2@f$.
+ *  This can be done by computing a pseudo-inverse of @f$A@f$ using an SVD or complete
+ *  orthogonal factorization of @f$A@f$, or by performing an Eigen decomposition of
+ *  @f$A^T A@f$.
  *
  *  This class can be constructed from the design matrix and data vector, or from the two terms
- *  in the normal equations (below, we call the matrix @f$\bm{A}^T\bm{A}@f$ the Hessian, as it
+ *  in the normal equations (below, we call the matrix @f$A^TA@f$ the Hessian, as it
  *  is the second-derivative matrix of the model w.r.t. the parameters).  If initialized with
  *  the design matrix and data vector, we can still use the normal equations to solve it.
  *  The solution via the normal equations is more susceptible to round-off error, but it is also
