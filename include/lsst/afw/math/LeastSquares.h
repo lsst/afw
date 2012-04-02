@@ -48,12 +48,12 @@ namespace lsst { namespace afw { namespace math {
  *  @f$A^T A@f$.
  *
  *  This class can be constructed from the design matrix and data vector, or from the two terms
- *  in the normal equations (below, we call the matrix @f$A^TA@f$ the Hessian, as it
- *  is the second-derivative matrix of the model w.r.t. the parameters).  If initialized with
+ *  in the normal equations (below, we call the matrix @f$A^TA@f$ the Fisher matrix, and the
+ *  vector @f$A^T b@f$ simply the "right-hand side" (RHS) vector).  If initialized with
  *  the design matrix and data vector, we can still use the normal equations to solve it.
  *  The solution via the normal equations is more susceptible to round-off error, but it is also
  *  faster, and if the normal equation terms can be computed directly it can be significantly
- *  less expensive in terms of memory.  The Hessian matrix is a symmetric matrix, and it should
+ *  less expensive in terms of memory.  The Fisher matrix is a symmetric matrix, and it should
  *  be exactly symmetric when provided as input, because which triangle will be used is an
  *  implementation detail that is subject to change.
  *
@@ -162,15 +162,15 @@ public:
     /// @brief Initialize from the terms in the normal equations, given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
     static LeastSquares fromNormalEquations(
-        ndarray::Array<T1 const,2,C1> const & hessian,
+        ndarray::Array<T1 const,2,C1> const & fisher,
         ndarray::Array<T2 const,1,C2> const & rhs,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
-        LeastSquares r(factorization, hessian.template getSize<0>());
+        LeastSquares r(factorization, fisher.template getSize<0>());
         if ((C1 > 0) == Eigen::MatrixXd::IsRowMajor)
-            r._getHessianMatrix() = hessian.asEigen();
+            r._getFisherMatrix() = fisher.asEigen();
         else
-            r._getHessianMatrix() = hessian.asEigen().transpose();
+            r._getFisherMatrix() = fisher.asEigen().transpose();
         r._getRhsVector() = rhs.asEigen();
         r._factor(true);
         return r;
@@ -179,15 +179,15 @@ public:
     /// @brief Initialize from the terms in the normal equations, given as Eigen objects.
     template <typename D1, typename D2>
     static LeastSquares fromNormalEquations(
-        Eigen::MatrixBase<D1> const & hessian,
+        Eigen::MatrixBase<D1> const & fisher,
         Eigen::MatrixBase<D2> const & rhs,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
-        LeastSquares r(factorization, hessian.rows());
+        LeastSquares r(factorization, fisher.rows());
         if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
-            r._getHessianMatrix() = hessian;
+            r._getFisherMatrix() = fisher;
         else
-            r._getHessianMatrix() = hessian.transpose();
+            r._getFisherMatrix() = fisher.transpose();
         r._getRhsVector() = rhs;
         r._factor(true);
         return r;
@@ -196,13 +196,13 @@ public:
     /// @brief Reset the terms in the normal equations given as ndarrays; dimension must not change.
     template <typename T1, typename T2, int C1, int C2>
     void setNormalEquations(
-        ndarray::Array<T1 const,2,C1> const & hessian,
+        ndarray::Array<T1 const,2,C1> const & fisher,
         ndarray::Array<T2 const,1,C2> const & rhs
     ) {
         if ((C1 > 0) == Eigen::MatrixXd::IsRowMajor)
-            _getHessianMatrix() = hessian.asEigen();
+            _getFisherMatrix() = fisher.asEigen();
         else
-            _getHessianMatrix() = hessian.asEigen().transpose();
+            _getFisherMatrix() = fisher.asEigen().transpose();
         _getRhsVector() = rhs.asEigen();
         _factor(true);
     }
@@ -210,13 +210,13 @@ public:
     /// @brief Reset the terms in the normal equations given as Eigen objects; dimension must not change.
     template <typename D1, typename D2>
     void setNormalEquations(
-        Eigen::MatrixBase<D1> const & hessian,
+        Eigen::MatrixBase<D1> const & fisher,
         Eigen::MatrixBase<D2> const & rhs
     ) {
         if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
-            _getHessianMatrix() = hessian;
+            _getFisherMatrix() = fisher;
         else
-            _getHessianMatrix() = hessian.transpose();
+            _getFisherMatrix() = fisher.transpose();
         _getRhsVector() = rhs;
         _factor(true);        
     }
@@ -254,34 +254,34 @@ public:
     ndarray::Array<double const,2,2> computeCovariance();
 
     /**
-     *  @brief Return the Hessian matrix (inverse of the covariance) of the parameters.
+     *  @brief Return the Fisher matrix (inverse of the covariance) of the parameters.
      *
-     *  Note that the Hessian matrix is exactly the same as the matrix on the lhs of the
+     *  Note that the Fisher matrix is exactly the same as the matrix on the lhs of the
      *  normal equations.
      *
      *  The returned array is owned by the LeastSquares object and may be modified in-place
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
      *  result elsewhere.
      *
-     *  If you want an Eigen object instead, just use computeCovariance().asEigen().
+     *  If you want an Eigen object instead, just use computeFisherMatrix().asEigen().
      */
-    ndarray::Array<double const,2,2> computeHessian();
+    ndarray::Array<double const,2,2> computeFisherMatrix();
 
     /**
      *  @brief Return a factorization-dependent vector that can be used to characterize
      *         the stability of the solution.
      *
-     *  For the NORMAL_EIGENSYSTEM method, this is the vector of Eigenvalues of the Hessian
+     *  For the NORMAL_EIGENSYSTEM method, this is the vector of Eigenvalues of the Fisher
      *  matrix, including those rejected as being below the threshold.
      *
      *  For the DIRECT_SVD method, this is the vector of singular values of the design
      *  matrix, including those rejected as being below the threshold; with exact arithmetic,
-     *  these would be the square roots of the Eigenvalues of the Hessian.
+     *  these would be the square roots of the Eigenvalues of the Fisher matrix.
      *
      *  For the NORMAL_CHOLESKY method, this is @f$D@f$ in the pivoted Cholesky factorization
-     *  @f$P L D L^T P^T@f$ of the Hessian.  This does not provide a reliable way
+     *  @f$P L D L^T P^T@f$ of the Fisher matrix.  This does not provide a reliable way
      *  to test the stability of the problem, but it does provide a way to compute the determinant
-     *  of the Hessian.
+     *  of the Fisher matrix.
      */
     ndarray::Array<double const,1,1> getCondition();
 
@@ -310,9 +310,9 @@ private:
     Eigen::VectorXd & _getDataVector();
 
     // Storage order matters less here, so we just go with what Eigen is most accustomed to.
-    // Because the Hessian is symmetric, we can just transpose it before copying to avoid doing
+    // Because the Fisher matrix is symmetric, we can just transpose it before copying to avoid doing
     // any expensive copies between different storage orders.
-    Eigen::MatrixXd & _getHessianMatrix();
+    Eigen::MatrixXd & _getFisherMatrix();
     Eigen::VectorXd & _getRhsVector();
 
     void _factor(bool haveNormalEquations);

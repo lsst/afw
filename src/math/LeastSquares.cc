@@ -37,16 +37,16 @@ namespace lsst { namespace afw { namespace math {
 class LeastSquares::Impl {
 public:
 
-    enum HessianState { NO_HESSIAN=0, LOWER_HESSIAN=1, FULL_HESSIAN=2 };
+    enum MatrixState { NO_MATRIX=0, LOWER_MATRIX=1, FULL_MATRIX=2 };
 
-    HessianState hessianState;
+    MatrixState fisherState;
     double threshold;
     int dimension;
     int rank;
 
     Eigen::MatrixXd design;
     Eigen::VectorXd data;
-    Eigen::MatrixXd hessian;
+    Eigen::MatrixXd fisher;
     Eigen::VectorXd rhs;
 
     ndarray::Array<double,1,1> solution;
@@ -61,15 +61,15 @@ public:
         for (rank = dimension; (rank > 1) && (values[rank-1] < cond); --rank);
     }
 
-    void computeHessian(HessianState desired) {
-        if (hessianState < LOWER_HESSIAN && desired >= LOWER_HESSIAN) {
-            hessian = Eigen::MatrixXd::Zero(design.cols(), design.cols());
-            hessian.selfadjointView<Eigen::Lower>().rankUpdate(design.adjoint());
-            hessianState = LOWER_HESSIAN;
+    void computeFisherMatrix(MatrixState desired) {
+        if (fisherState < LOWER_MATRIX && desired >= LOWER_MATRIX) {
+            fisher = Eigen::MatrixXd::Zero(design.cols(), design.cols());
+            fisher.selfadjointView<Eigen::Lower>().rankUpdate(design.adjoint());
+            fisherState = LOWER_MATRIX;
         }
-        if (hessianState < FULL_HESSIAN && desired >= FULL_HESSIAN) {
-            hessian.triangularView<Eigen::StrictlyUpper>() = hessian.adjoint();
-            hessianState = FULL_HESSIAN;
+        if (fisherState < FULL_MATRIX && desired >= FULL_MATRIX) {
+            fisher.triangularView<Eigen::StrictlyUpper>() = fisher.adjoint();
+            fisherState = FULL_MATRIX;
         }
     }
 
@@ -83,7 +83,7 @@ public:
     virtual void getCondition() = 0;
 
     Impl(int dimension_, double threshold_) : 
-        hessianState(NO_HESSIAN), threshold(threshold_), dimension(dimension_), rank(dimension_),
+        fisherState(NO_MATRIX), threshold(threshold_), dimension(dimension_), rank(dimension_),
         log("afw.math.LeastSquares")
         {}
 
@@ -101,20 +101,20 @@ public:
     {}
     
     virtual void factor() {
-        if (hessianState == NO_HESSIAN) {
+        if (fisherState == NO_MATRIX) {
             rhs = design.adjoint() * data;
         }
-        computeHessian(LOWER_HESSIAN);
-        _eig.compute(hessian);
+        computeFisherMatrix(LOWER_MATRIX);
+        _eig.compute(fisher);
         if (_eig.info() == Eigen::Success) {
             setRank(_eig.eigenvalues().reverse());
             log.debug<5>("SelfAdjointEigenSolver succeeded: dimension=%d, rank=%d", dimension, rank);
         } else {
-            // Note that the fallback is using SVD of the Hessian to compute the Eigensystem, because those
+            // Note that the fallback is using SVD of the Fisher to compute the Eigensystem, because those
             // are the same for a symmetric matrix; this is very different from doing a direct SVD of
             // the design matrix.
-            computeHessian(FULL_HESSIAN);
-            _svd.compute(hessian, Eigen::ComputeFullU); // Matrix is symmetric, so V == U == eigenvectors
+            computeFisherMatrix(FULL_MATRIX);
+            _svd.compute(fisher, Eigen::ComputeFullU); // Matrix is symmetric, so V == U == eigenvectors
             setRank(_svd.singularValues());
             log.debug<5>(
                 "SelfAdjointEigenSolver failed; falling back to equivalent SVD: dimension=%d, rank=%d",
@@ -177,11 +177,11 @@ public:
     explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
     
     virtual void factor() {
-        if (hessianState == NO_HESSIAN) {
+        if (fisherState == NO_MATRIX) {
             rhs = design.adjoint() * data;
         }
-        computeHessian(LOWER_HESSIAN);
-        _ldlt.compute(hessian);
+        computeFisherMatrix(LOWER_MATRIX);
+        _ldlt.compute(fisher);
     }
 
     virtual void updateRank() {}
@@ -257,12 +257,12 @@ ndarray::Array<double const,2,2> LeastSquares::computeCovariance() {
     return _impl->covariance;
 }
 
-ndarray::Array<double const,2,2> LeastSquares::computeHessian() {
-    _impl->computeHessian(Impl::FULL_HESSIAN);
+ndarray::Array<double const,2,2> LeastSquares::computeFisherMatrix() {
+    _impl->computeFisherMatrix(Impl::FULL_MATRIX);
     // Wrap the Eigen::MatrixXd in an ndarray::Array, using _impl as the reference-counted owner.
     // Doesn't matter if we swap strides, because it's symmetric.
     return ndarray::external(
-        _impl->hessian.data(),
+        _impl->fisher.data(),
         ndarray::makeVector(_impl->dimension, _impl->dimension),
         ndarray::makeVector(_impl->dimension, 1),
         _impl
@@ -300,25 +300,25 @@ LeastSquares::~LeastSquares() {}
 Eigen::MatrixXd & LeastSquares::_getDesignMatrix() { return _impl->design; }
 Eigen::VectorXd & LeastSquares::_getDataVector() { return _impl->data; }
 
-Eigen::MatrixXd & LeastSquares::_getHessianMatrix() { return _impl->hessian; }
+Eigen::MatrixXd & LeastSquares::_getFisherMatrix() { return _impl->fisher; }
 Eigen::VectorXd & LeastSquares::_getRhsVector() { return _impl->rhs; }
 
 void LeastSquares::_factor(bool haveNormalEquations) {
     if (haveNormalEquations) {
-        if (_getHessianMatrix().rows() != _impl->dimension) {
+        if (_getFisherMatrix().rows() != _impl->dimension) {
             throw LSST_EXCEPT(
                 pex::exceptions::InvalidParameterException,
-                (boost::format("Number of rows of Hessian matrix (%d) does not match"
+                (boost::format("Number of rows of Fisher matrix (%d) does not match"
                                " dimension of LeastSquares solver.")
-                 % _getHessianMatrix().rows() % _impl->dimension).str()
+                 % _getFisherMatrix().rows() % _impl->dimension).str()
             );
         }
-        if (_getHessianMatrix().cols() != _impl->dimension) {
+        if (_getFisherMatrix().cols() != _impl->dimension) {
             throw LSST_EXCEPT(
                 pex::exceptions::InvalidParameterException,
-                (boost::format("Number of columns of Hessian matrix (%d) does not match"
+                (boost::format("Number of columns of Fisher matrix (%d) does not match"
                                " dimension of LeastSquares solver.")
-                 % _getHessianMatrix().cols() % _impl->dimension).str()
+                 % _getFisherMatrix().cols() % _impl->dimension).str()
             );
         }
         if (_getRhsVector().size() != _impl->dimension) {
@@ -329,7 +329,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
                  % _getRhsVector().size() % _impl->dimension).str()
             );
         }
-        _impl->hessianState = Impl::FULL_HESSIAN;
+        _impl->fisherState = Impl::FULL_MATRIX;
     } else {
         if (_getDesignMatrix().cols() != _impl->dimension) {
             throw LSST_EXCEPT(
@@ -353,7 +353,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
                 ).str()
             );
         }
-        _impl->hessianState = Impl::NO_HESSIAN;
+        _impl->fisherState = Impl::NO_MATRIX;
     }
     _impl->factor();
 }
