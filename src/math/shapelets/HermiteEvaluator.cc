@@ -32,52 +32,6 @@ namespace {
 static double const NORMALIZATION = std::pow(geom::PI, -0.25);
 
 /**
- *  @brief An iterator-like object to help in traversing "packed" shapelet or Hermite polynomial
- *         matrix or vector dimensions.
- *
- *  A pair of indices (x,y) is mapped to the packed position i = (x+y)(x+y+1)/2 + x.
- *
- *  Typical usage is in a nested loop of the form:
- *  @code
- *      for (PackedIndex i; i.getOrder() <= order; ++i) {
- *          // utilize i
- *      }
- *  @endcode
- */
-class PackedIndex {
-public:
-    
-    static int const computeOffset(int order) { return order*(order+1)/2; }
-    static int const computeIndex(int x, int y) { return computeOffset(x+y) + x; }
-
-    PackedIndex & operator++() {
-        ++_i;
-        if (--_y < 0) {
-            _x = 0;
-            _y = ++_n;
-        } else {
-            ++_x;
-        }
-        return *this;
-    }
-
-    int const getOrder() const { return _n; }
-    int const getX() const { return _x; }
-    int const getY() const { return _y; }
-
-    int const getIndex() const { return _i; }
-
-    PackedIndex() : _n(0), _i(0), _x(0), _y(0) {}
-    PackedIndex(int const x, int const y) : _n(x+y), _i(computeOffset(_n) + x), _x(x), _y(y) {}
-
-private:
-    int _n;
-    int _i;
-    int _x;
-    int _y;
-};
-
-/**
  *  @brief An iterator-like construct for evaluating either normalized Hermite polynomials or
  *         Gauss-Hermite functions at a point.
  */

@@ -23,13 +23,9 @@
  */
 
 #include "boost/format.hpp"
-#include "boost/make_shared.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/shapelets/BasisEvaluator.h"
-#include "lsst/afw/detection/FootprintFunctor.h"
-#include "ndarray/eigen.h"
-
 
 namespace lsst { namespace afw { namespace math { namespace shapelets {
 
