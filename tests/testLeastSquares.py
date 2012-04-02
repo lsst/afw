@@ -41,6 +41,7 @@ import lsst.pex.exceptions
 import lsst.pex.logging
 from lsst.afw.math import LeastSquares
 
+numpy.random.seed(500)
 
 lsst.pex.logging.getDefaultLog().setThresholdFor("afw.math.LeastSquares", -10)
 
@@ -51,10 +52,12 @@ class LeastSquaresTestCase(unittest.TestCase):
     def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
         self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%s != %s" % (a, b))
 
-    def check(self, solver, solution, rank):
+    def check(self, solver, solution, rank, hessian, cov):
         self.assertEqual(solver.getRank(), rank)
         self.assertEqual(solver.getDimension(), solution.shape[0])
         self.assertClose(solver.solve(), solution)
+        self.assertClose(solver.computeHessian(), hessian)
+        self.assertClose(solver.computeCovariance(), cov)
 
     def testFullRank(self):
         dimension = 10
@@ -64,21 +67,25 @@ class LeastSquaresTestCase(unittest.TestCase):
         hessian = numpy.dot(design.transpose(), design)
         rhs = numpy.dot(design.transpose(), data)
         solution, residues, rank, sv = numpy.linalg.lstsq(design, data)
+        cov = numpy.linalg.inv(hessian)
         s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
         s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
         s_design_cholesky = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_CHOLESKY)
         s_normal_eigen = LeastSquares.fromNormalEquations(hessian, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
         s_normal_cholesky = LeastSquares.fromNormalEquations(hessian, rhs, LeastSquares.NORMAL_CHOLESKY)
-        self.check(s_svd, solution, rank)
-        self.check(s_design_eigen, solution, rank)
-        self.check(s_design_cholesky, solution, rank)
-        self.check(s_normal_eigen, solution, rank)
-        self.check(s_normal_cholesky, solution, rank)
+        self.check(s_svd, solution, rank, hessian, cov)
+        self.check(s_design_eigen, solution, rank, hessian, cov)
+        self.check(s_design_cholesky, solution, rank, hessian, cov)
+        self.check(s_normal_eigen, solution, rank, hessian, cov)
+        self.check(s_normal_cholesky, solution, rank, hessian, cov)
         self.assertClose(s_svd.getCondition(), sv)
         self.assertClose(s_design_eigen.getCondition(), sv**2)
         self.assertClose(s_normal_eigen.getCondition(), sv**2)
         self.assertClose(numpy.multiply.reduce(s_design_cholesky.getCondition()), 
                          numpy.multiply.reduce(sv**2))
+        self.assertClose(numpy.multiply.reduce(s_normal_cholesky.getCondition()), 
+                         numpy.multiply.reduce(sv**2))
+        
 
     def testSingular(self):
         dimension = 10
@@ -91,12 +98,13 @@ class LeastSquaresTestCase(unittest.TestCase):
         rhs = numpy.dot(design.transpose(), data)
         threshold = sys.float_info.epsilon**0.5
         solution, residues, rank, sv = numpy.linalg.lstsq(design, data, rcond=threshold)
+        cov = numpy.linalg.pinv(hessian, rcond=threshold)
         s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
         s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
         s_normal_eigen = LeastSquares.fromNormalEquations(hessian, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
-        self.check(s_svd, solution, rank)
-        self.check(s_design_eigen, solution, rank)
-        self.check(s_normal_eigen, solution, rank)
+        self.check(s_svd, solution, rank, hessian, cov)
+        self.check(s_design_eigen, solution, rank, hessian, cov)
+        self.check(s_normal_eigen, solution, rank, hessian, cov)
         self.assertClose(s_svd.getCondition(), sv)
         self.assertClose(s_design_eigen.getCondition(), sv**2)
         self.assertClose(s_normal_eigen.getCondition(), sv**2)

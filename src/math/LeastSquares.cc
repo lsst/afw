@@ -113,6 +113,7 @@ public:
             // Note that the fallback is using SVD of the Hessian to compute the Eigensystem, because those
             // are the same for a symmetric matrix; this is very different from doing a direct SVD of
             // the design matrix.
+            computeHessian(FULL_HESSIAN);
             _svd.compute(hessian, Eigen::ComputeFullU); // Matrix is symmetric, so V == U == eigenvectors
             setRank(_svd.singularValues());
             log.debug<5>(
@@ -154,7 +155,7 @@ public:
         if (_eig.info() == Eigen::Success) {
             covariance.asEigen() = 
                 _eig.eigenvectors().rightCols(rank)
-                * _eig.eigenvalues().tail(rank).asDiagonal()
+                * _eig.eigenvalues().tail(rank).array().inverse().matrix().asDiagonal()
                 * _eig.eigenvectors().rightCols(rank).adjoint();
         } else {
             covariance.asEigen() = 
