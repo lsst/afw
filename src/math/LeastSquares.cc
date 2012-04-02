@@ -96,7 +96,7 @@ class EigensystemSolver : public LeastSquares::Impl {
 public:
 
     explicit EigensystemSolver(int dimension) :
-        Impl(dimension, std::sqrt(std::numeric_limits<double>::epsilon())),
+        Impl(dimension, std::numeric_limits<double>::epsilon()),
         _eig(dimension), _svd(), _tmp(dimension)
     {}
     
