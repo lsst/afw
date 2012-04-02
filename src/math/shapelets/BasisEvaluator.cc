@@ -46,45 +46,6 @@ static inline void validateSize(int expected, int actual) {
     }
 }
 
-template <typename MaskedImageT>
-class ShapeletLeastSquaresFunctor : public detection::FootprintFunctor<MaskedImageT> {
-public:
-
-    explicit ShapeletLeastSquaresFunctor(
-        BasisEvaluator const * evaluator,
-        ndarray::Array<Pixel,2,1> const & matrix,
-        ndarray::Array<Pixel,1,1> const & vector,
-        MaskedImageT const & data,
-        geom::ellipses::Ellipse const & ellipse,
-        image::MaskPixel andMask
-    ) :
-        detection::FootprintFunctor<MaskedImageT>(data),
-        _evaluator(evaluator), _andMask(andMask), 
-        _transform(ellipse.getGridTransform()),
-        _matrix(matrix), _vector(vector),
-        _workspace(ndarray::allocate(vector.getSize<0>()))
-        {}
-
-    void operator()(typename MaskedImageT::xy_locator loc, int x, int y) {
-        if (this->getImage().getMask(true) && (loc.mask() & _andMask)) return;
-        Pixel weight = 1.0;
-        if (this->getImage().getVariance(true)) weight = 1.0 / loc.variance();
-        geom::Point2D p = _transform(geom::Point2D(x, y));
-        _evaluator->fillEvaluation(_workspace.shallow(), p);
-        Eigen::SelfAdjointView<ndarray::EigenView<Pixel,2,1>,Eigen::Lower>(_matrix)
-            .rankUpdate(_workspace, weight);
-        _vector += loc.image() * weight * _workspace;
-    }
-
-private:
-    BasisEvaluator const * _evaluator;
-    image::MaskPixel _andMask;
-    geom::AffineTransform _transform;
-    ndarray::EigenView<Pixel,2,1> _matrix;
-    ndarray::EigenView<Pixel,1,1> _vector;
-    ndarray::EigenView<Pixel,1,1> _workspace;
-};
-
 } // anonymous
 
 void BasisEvaluator::fillEvaluation(
@@ -110,70 +71,5 @@ void BasisEvaluator::fillIntegration(ndarray::Array<Pixel,1> const & array, int 
     _h.fillIntegration(array, xMoment, yMoment);
     ConversionMatrix::convertOperationVector(array, HERMITE, _basisType, getOrder());
 }
-
-template <typename ImagePixelT>
-void BasisEvaluator::fillLeastSquares(
-    ndarray::Array<Pixel,2,1> const & matrix,
-    ndarray::Array<Pixel,1,1> const & vector,
-    image::Image<ImagePixelT> const & data,
-    detection::Footprint const & region,
-    geom::ellipses::Ellipse const & ellipse
-) const {
-    image::MaskedImage<ImagePixelT> mi(boost::make_shared< image::Image<ImagePixelT> >(data));
-    fillLeastSquares(matrix, vector, mi, region, ellipse);
-}
-
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void BasisEvaluator::fillLeastSquares(
-    ndarray::Array<Pixel,2,1> const & matrix,
-    ndarray::Array<Pixel,1,1> const & vector,
-    image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> const & data,
-    detection::Footprint const & region,
-    geom::ellipses::Ellipse const & ellipse,
-    image::MaskPixel andMask
-) const {
-    int const size = computeSize(getOrder());
-    validateSize(size, matrix.getSize<0>());
-    validateSize(size, matrix.getSize<1>());
-    validateSize(size, vector.getSize<0>());
-    ShapeletLeastSquaresFunctor< image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> > functor(
-        this, matrix, vector, data, ellipse, andMask
-    );
-    functor.apply(region);
-}
-
-template void BasisEvaluator::fillLeastSquares(
-    ndarray::Array<Pixel,2,1> const & matrix,
-    ndarray::Array<Pixel,1,1> const & vector,
-    image::Image<float> const & data,
-    detection::Footprint const & region,
-    geom::ellipses::Ellipse const & ellipse
-) const;
-
-template void BasisEvaluator::fillLeastSquares(
-    ndarray::Array<Pixel,2,1> const & matrix,
-    ndarray::Array<Pixel,1,1> const & vector,
-    image::Image<double> const & data,
-    detection::Footprint const & region,
-    geom::ellipses::Ellipse const & ellipse
-) const;
-
-template void BasisEvaluator::fillLeastSquares(
-    ndarray::Array<Pixel,2,1> const & matrix,
-    ndarray::Array<Pixel,1,1> const & vector,
-    image::MaskedImage<float> const & data,
-    detection::Footprint const & region,
-    geom::ellipses::Ellipse const & ellipse,
-    image::MaskPixel andMask
-) const;
-
-template void BasisEvaluator::fillLeastSquares(
-    ndarray::Array<Pixel,2,1> const & matrix,
-    ndarray::Array<Pixel,1,1> const & vector,
-    image::MaskedImage<double> const & data,
-    detection::Footprint const & region,
-    geom::ellipses::Ellipse const & ellipse,
-    image::MaskPixel andMask
-) const;
 
 }}}} // namespace lsst::afw::math::shapelets
