@@ -52,12 +52,18 @@ class LeastSquaresTestCase(unittest.TestCase):
     def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
         self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%s != %s" % (a, b))
 
-    def check(self, solver, solution, rank, fisher, cov):
+    def check(self, solver, solution, rank, fisher, cov, sv):
         self.assertEqual(solver.getRank(), rank)
         self.assertEqual(solver.getDimension(), solution.shape[0])
-        self.assertClose(solver.solve(), solution)
-        self.assertClose(solver.computeFisherMatrix(), fisher)
-        self.assertClose(solver.computeCovariance(), cov)
+        self.assertClose(solver.getSolution(), solution)
+        self.assertClose(solver.getFisherMatrix(), fisher)
+        self.assertClose(solver.getCovariance(), cov)
+        if solver.getFactorization() == LeastSquares.DIRECT_SVD:
+            self.assertClose(solver.getCondition(), sv)
+        elif solver.getFactorization() == LeastSquares.NORMAL_EIGENSYSTEM:
+            self.assertClose(solver.getCondition(), sv**2)
+        elif solver.getFactorization() == LeastSquares.NORMAL_CHOLESKY:
+            self.assertClose(numpy.multiply.reduce(solver.getCondition()), numpy.multiply.reduce(sv**2))
 
     def testFullRank(self):
         dimension = 10
@@ -73,19 +79,43 @@ class LeastSquaresTestCase(unittest.TestCase):
         s_design_cholesky = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_CHOLESKY)
         s_normal_eigen = LeastSquares.fromNormalEquations(fisher, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
         s_normal_cholesky = LeastSquares.fromNormalEquations(fisher, rhs, LeastSquares.NORMAL_CHOLESKY)
-        self.check(s_svd, solution, rank, fisher, cov)
-        self.check(s_design_eigen, solution, rank, fisher, cov)
-        self.check(s_design_cholesky, solution, rank, fisher, cov)
-        self.check(s_normal_eigen, solution, rank, fisher, cov)
-        self.check(s_normal_cholesky, solution, rank, fisher, cov)
-        self.assertClose(s_svd.getCondition(), sv)
-        self.assertClose(s_design_eigen.getCondition(), sv**2)
-        self.assertClose(s_normal_eigen.getCondition(), sv**2)
-        self.assertClose(numpy.multiply.reduce(s_design_cholesky.getCondition()), 
-                         numpy.multiply.reduce(sv**2))
-        self.assertClose(numpy.multiply.reduce(s_normal_cholesky.getCondition()), 
-                         numpy.multiply.reduce(sv**2))
-        
+        self.check(s_svd, solution, rank, fisher, cov, sv)
+        self.check(s_design_eigen, solution, rank, fisher, cov, sv)
+        self.check(s_design_cholesky, solution, rank, fisher, cov, sv)
+        self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
+        self.check(s_normal_cholesky, solution, rank, fisher, cov, sv)
+        # test updating solver in-place with the same kind of inputs
+        design = numpy.random.randn(dimension, nData).transpose()
+        data = numpy.random.randn(nData)
+        fisher = numpy.dot(design.transpose(), design)
+        rhs = numpy.dot(design.transpose(), data)
+        solution, residues, rank, sv = numpy.linalg.lstsq(design, data)
+        cov = numpy.linalg.inv(fisher)
+        s_svd.setDesignMatrix(design, data)
+        s_design_eigen.setDesignMatrix(design, data)
+        s_design_cholesky.setDesignMatrix(design, data)
+        s_normal_eigen.setNormalEquations(fisher, rhs)
+        s_normal_cholesky.setNormalEquations(fisher, rhs)        
+        self.check(s_svd, solution, rank, fisher, cov, sv)
+        self.check(s_design_eigen, solution, rank, fisher, cov, sv)
+        self.check(s_design_cholesky, solution, rank, fisher, cov, sv)
+        self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
+        self.check(s_normal_cholesky, solution, rank, fisher, cov, sv)
+        # test updating solver in-place with the opposite kind of inputs
+        design = numpy.random.randn(dimension, nData).transpose()
+        data = numpy.random.randn(nData)
+        fisher = numpy.dot(design.transpose(), design)
+        rhs = numpy.dot(design.transpose(), data)
+        solution, residues, rank, sv = numpy.linalg.lstsq(design, data)
+        cov = numpy.linalg.inv(fisher)
+        s_normal_eigen.setDesignMatrix(design, data)
+        s_normal_cholesky.setDesignMatrix(design, data)
+        s_design_eigen.setNormalEquations(fisher, rhs)
+        s_design_cholesky.setNormalEquations(fisher, rhs)        
+        self.check(s_design_eigen, solution, rank, fisher, cov, sv)
+        self.check(s_design_cholesky, solution, rank, fisher, cov, sv)
+        self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
+        self.check(s_normal_cholesky, solution, rank, fisher, cov, sv)
 
     def testSingular(self):
         dimension = 10
@@ -102,12 +132,9 @@ class LeastSquaresTestCase(unittest.TestCase):
         s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
         s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
         s_normal_eigen = LeastSquares.fromNormalEquations(fisher, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
-        self.check(s_svd, solution, rank, fisher, cov)
-        self.check(s_design_eigen, solution, rank, fisher, cov)
-        self.check(s_normal_eigen, solution, rank, fisher, cov)
-        self.assertClose(s_svd.getCondition(), sv)
-        self.assertClose(s_design_eigen.getCondition(), sv**2)
-        self.assertClose(s_normal_eigen.getCondition(), sv**2)
+        self.check(s_svd, solution, rank, fisher, cov, sv)
+        self.check(s_design_eigen, solution, rank, fisher, cov, sv)
+        self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

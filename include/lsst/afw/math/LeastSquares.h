@@ -55,7 +55,7 @@ namespace lsst { namespace afw { namespace math {
  *  faster, and if the normal equation terms can be computed directly it can be significantly
  *  less expensive in terms of memory.  The Fisher matrix is a symmetric matrix, and it should
  *  be exactly symmetric when provided as input, because which triangle will be used is an
- *  implementation detail that is subject to change.
+ *  implementation detail that is subject to change and may depend on the storage order.
  *
  *  The solver always operates in double precision, and returns all results in double precision.
  *  However, it can be initialized from single precision inputs.  It isn't usually a good idea
@@ -251,9 +251,12 @@ public:
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
      *  result elsewhere.
      *
-     *  If you want an Eigen object instead, just use solve().asEigen().
+     *  If you want an Eigen object instead, just use getSolution().asEigen().
+     *
+     *  The solution is cached the first time this member function is called, and will be
+     *  reused unless the matrices are reset or the threshold is changed.
      */
-    ndarray::Array<double const,1,1> solve();
+    ndarray::Array<double const,1,1> getSolution();
 
     /**
      *  @brief Return the covariance matrix of the least squares problem.
@@ -262,9 +265,12 @@ public:
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
      *  result elsewhere.
      *
-     *  If you want an Eigen object instead, just use computeCovariance().asEigen().
+     *  If you want an Eigen object instead, just use getCovariance().asEigen().
+     *
+     *  The covariance is cached the first time this member function is called, and will be
+     *  reused unless the matrices are reset or the threshold is changed.
      */
-    ndarray::Array<double const,2,2> computeCovariance();
+    ndarray::Array<double const,2,2> getCovariance();
 
     /**
      *  @brief Return the Fisher matrix (inverse of the covariance) of the parameters.
@@ -276,9 +282,9 @@ public:
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
      *  result elsewhere.
      *
-     *  If you want an Eigen object instead, just use computeFisherMatrix().asEigen().
+     *  If you want an Eigen object instead, just use getFisherMatrix().asEigen().
      */
-    ndarray::Array<double const,2,2> computeFisherMatrix();
+    ndarray::Array<double const,2,2> getFisherMatrix();
 
     /**
      *  @brief Return a factorization-dependent vector that can be used to characterize
@@ -312,6 +318,9 @@ public:
      *  (which may be incorrect, because a Cholesky decomposition is not rank-revealing).
      */
     int getRank() const;
+
+    /// @brief Retun the type of factorization used by the solver.
+    Factorization getFactorization() const;
 
     // Need to define dtor in source file so it can see Impl declaration.
     ~LeastSquares();

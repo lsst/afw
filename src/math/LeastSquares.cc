@@ -37,12 +37,21 @@ namespace lsst { namespace afw { namespace math {
 class LeastSquares::Impl {
 public:
 
-    enum MatrixState { NO_MATRIX=0, LOWER_MATRIX=1, FULL_MATRIX=2 };
+    enum StateFlags { 
+        LOWER_FISHER_MATRIX     = 0x001,
+        FULL_FISHER_MATRIX      = 0x002,
+        RHS_VECTOR              = 0x004,
+        SOLUTION_ARRAY          = 0x008,
+        COVARIANCE_ARRAY        = 0x010,
+        CONDITION_ARRAY         = 0x020,
+        DESIGN_AND_DATA         = 0x040
+    };
 
-    MatrixState fisherState;
-    double threshold;
+    int state;
     int dimension;
     int rank;
+    Factorization factorization;
+    double threshold;
 
     Eigen::MatrixXd design;
     Eigen::VectorXd data;
@@ -61,29 +70,48 @@ public:
         for (rank = dimension; (rank > 1) && (values[rank-1] < cond); --rank);
     }
 
-    void computeFisherMatrix(MatrixState desired) {
-        if (fisherState < LOWER_MATRIX && desired >= LOWER_MATRIX) {
+    void ensure(int desired) {
+        if (state & FULL_FISHER_MATRIX) state |= LOWER_FISHER_MATRIX;
+        if (desired & FULL_FISHER_MATRIX) desired |= LOWER_FISHER_MATRIX;
+        int toAdd = ~state & desired;
+        if (toAdd & LOWER_FISHER_MATRIX) {
+            assert(state & DESIGN_AND_DATA);
             fisher = Eigen::MatrixXd::Zero(design.cols(), design.cols());
             fisher.selfadjointView<Eigen::Lower>().rankUpdate(design.adjoint());
-            fisherState = LOWER_MATRIX;
         }
-        if (fisherState < FULL_MATRIX && desired >= FULL_MATRIX) {
+        if (toAdd & FULL_FISHER_MATRIX) {
             fisher.triangularView<Eigen::StrictlyUpper>() = fisher.adjoint();
-            fisherState = FULL_MATRIX;
         }
+        if (toAdd & RHS_VECTOR) {
+            assert(state & DESIGN_AND_DATA);
+            rhs = design.adjoint() * data;
+        }
+        if (toAdd & SOLUTION_ARRAY) {
+            if (solution.isEmpty()) solution = ndarray::allocate(dimension);
+            getSolution();
+        }
+        if (toAdd & COVARIANCE_ARRAY) {
+            if (covariance.isEmpty()) covariance = ndarray::allocate(dimension, dimension);
+            getCovariance();
+        }
+        if (toAdd & CONDITION_ARRAY) {
+            if (condition.isEmpty()) condition = ndarray::allocate(dimension);
+            getCondition();
+        }
+        state |= toAdd;
     }
 
     virtual void factor() = 0;
 
     virtual void updateRank() = 0;
 
-    virtual void solve() = 0;
-    virtual void computeCovariance() = 0;
+    virtual void getSolution() = 0;
+    virtual void getCovariance() = 0;
 
     virtual void getCondition() = 0;
 
-    Impl(int dimension_, double threshold_) : 
-        fisherState(NO_MATRIX), threshold(threshold_), dimension(dimension_), rank(dimension_),
+    Impl(int dimension_, double threshold_=std::numeric_limits<double>::epsilon()) : 
+        state(0), dimension(dimension_), rank(dimension_), threshold(threshold_), 
         log("afw.math.LeastSquares")
         {}
 
@@ -96,15 +124,11 @@ class EigensystemSolver : public LeastSquares::Impl {
 public:
 
     explicit EigensystemSolver(int dimension) :
-        Impl(dimension, std::numeric_limits<double>::epsilon()),
-        _eig(dimension), _svd(), _tmp(dimension)
+        Impl(dimension), _eig(dimension), _svd(), _tmp(dimension)
     {}
     
     virtual void factor() {
-        if (fisherState == NO_MATRIX) {
-            rhs = design.adjoint() * data;
-        }
-        computeFisherMatrix(LOWER_MATRIX);
+        ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
         _eig.compute(fisher);
         if (_eig.info() == Eigen::Success) {
             setRank(_eig.eigenvalues().reverse());
@@ -113,7 +137,7 @@ public:
             // Note that the fallback is using SVD of the Fisher to compute the Eigensystem, because those
             // are the same for a symmetric matrix; this is very different from doing a direct SVD of
             // the design matrix.
-            computeFisherMatrix(FULL_MATRIX);
+            ensure(FULL_FISHER_MATRIX);
             _svd.compute(fisher, Eigen::ComputeFullU); // Matrix is symmetric, so V == U == eigenvectors
             setRank(_svd.singularValues());
             log.debug<5>(
@@ -139,7 +163,7 @@ public:
         }
     }
 
-    virtual void solve() {
+    virtual void getSolution() {
         if (_eig.info() == Eigen::Success) {
             _tmp.head(rank) = _eig.eigenvectors().rightCols(rank).adjoint() * rhs;
             _tmp.head(rank).array() /= _eig.eigenvalues().tail(rank).array();
@@ -151,7 +175,7 @@ public:
         }
     }
 
-    virtual void computeCovariance() {
+    virtual void getCovariance() {
         if (_eig.info() == Eigen::Success) {
             covariance.asEigen() = 
                 _eig.eigenvectors().rightCols(rank)
@@ -177,10 +201,7 @@ public:
     explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
     
     virtual void factor() {
-        if (fisherState == NO_MATRIX) {
-            rhs = design.adjoint() * data;
-        }
-        computeFisherMatrix(LOWER_MATRIX);
+        ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
         _ldlt.compute(fisher);
     }
 
@@ -188,9 +209,9 @@ public:
 
     virtual void getCondition() { condition.asEigen() = _ldlt.vectorD(); }
 
-    virtual void solve() { solution.asEigen() = _ldlt.solve(rhs); }
+    virtual void getSolution() { solution.asEigen() = _ldlt.solve(rhs); }
 
-    virtual void computeCovariance() {
+    virtual void getCovariance() {
         ndarray::EigenView<double,2,2> cov(covariance);
         cov.setIdentity();
         cov = _ldlt.solve(cov);
@@ -203,11 +224,15 @@ private:
 class SvdSolver : public LeastSquares::Impl {
 public:
 
-    explicit SvdSolver(int dimension) :
-        Impl(dimension, std::numeric_limits<double>::epsilon()), _svd(), _tmp(dimension)
-    {}
+    explicit SvdSolver(int dimension) : Impl(dimension), _svd(), _tmp(dimension) {}
     
     virtual void factor() {
+        if (!(state & DESIGN_AND_DATA)) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterException,
+                "Cannot initialize DIRECT_SVD solver with normal equations."
+            );
+        }
         _svd.compute(design, Eigen::ComputeThinU | Eigen::ComputeThinV);
         setRank(_svd.singularValues());
         log.debug<5>("Using direct SVD method; dimension=%d, rank=%d", dimension, rank);
@@ -217,13 +242,13 @@ public:
 
     virtual void getCondition() { condition.asEigen() = _svd.singularValues(); }
 
-    virtual void solve() {
+    virtual void getSolution() {
         _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * data;
         _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
         solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp.head(rank);
     }
 
-    virtual void computeCovariance() {
+    virtual void getCovariance() {
         covariance.asEigen() = 
             _svd.matrixV().leftCols(rank)
             * _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal()
@@ -237,28 +262,27 @@ private:
 
 } // anonymous
 
-void LeastSquares::setThreshold(double threshold) { _impl->threshold = threshold; _impl->updateRank(); }
+void LeastSquares::setThreshold(double threshold) {
+    _impl->threshold = threshold;
+    _impl->state &= ~Impl::SOLUTION_ARRAY;
+    _impl->state &= ~Impl::COVARIANCE_ARRAY;
+    _impl->updateRank();
+}
 
 double LeastSquares::getThreshold() const { return _impl->threshold; }
 
-ndarray::Array<double const,1,1> LeastSquares::solve() {
-    if (_impl->solution.isEmpty()) {
-        _impl->solution = ndarray::allocate(_impl->dimension);
-    }
-    _impl->solve();
+ndarray::Array<double const,1,1> LeastSquares::getSolution() {
+    _impl->ensure(Impl::SOLUTION_ARRAY);
     return _impl->solution;
 }
 
-ndarray::Array<double const,2,2> LeastSquares::computeCovariance() {
-    if (_impl->covariance.isEmpty()) {
-        _impl->covariance = ndarray::allocate(_impl->dimension, _impl->dimension);
-    }
-    _impl->computeCovariance();
+ndarray::Array<double const,2,2> LeastSquares::getCovariance() {
+    _impl->ensure(Impl::COVARIANCE_ARRAY);
     return _impl->covariance;
 }
 
-ndarray::Array<double const,2,2> LeastSquares::computeFisherMatrix() {
-    _impl->computeFisherMatrix(Impl::FULL_MATRIX);
+ndarray::Array<double const,2,2> LeastSquares::getFisherMatrix() {
+    _impl->ensure(Impl::FULL_FISHER_MATRIX);
     // Wrap the Eigen::MatrixXd in an ndarray::Array, using _impl as the reference-counted owner.
     // Doesn't matter if we swap strides, because it's symmetric.
     return ndarray::external(
@@ -270,16 +294,15 @@ ndarray::Array<double const,2,2> LeastSquares::computeFisherMatrix() {
 }
 
 ndarray::Array<double const,1,1> LeastSquares::getCondition() {
-    if (_impl->condition.isEmpty()) {
-        _impl->condition = ndarray::allocate(_impl->dimension);
-    }
-    _impl->getCondition();
+    _impl->ensure(Impl::CONDITION_ARRAY);
     return _impl->condition;
 }
 
 int LeastSquares::getDimension() const { return _impl->dimension; }
 
 int LeastSquares::getRank() const { return _impl->rank; }
+
+LeastSquares::Factorization LeastSquares::getFactorization() const { return _impl->factorization; }
 
 LeastSquares::LeastSquares(Factorization factorization, int dimension) {
     switch (factorization) {
@@ -291,8 +314,9 @@ LeastSquares::LeastSquares(Factorization factorization, int dimension) {
         break;
     case DIRECT_SVD:
         _impl = boost::make_shared<SvdSolver>(dimension);
-        break;        
+        break;
     }
+    _impl->factorization = factorization;
 }
 
 LeastSquares::~LeastSquares() {}
@@ -329,7 +353,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
                  % _getRhsVector().size() % _impl->dimension).str()
             );
         }
-        _impl->fisherState = Impl::FULL_MATRIX;
+        _impl->state = Impl::RHS_VECTOR | Impl::FULL_FISHER_MATRIX | Impl::LOWER_FISHER_MATRIX;
     } else {
         if (_getDesignMatrix().cols() != _impl->dimension) {
             throw LSST_EXCEPT(
@@ -353,7 +377,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
                 ).str()
             );
         }
-        _impl->fisherState = Impl::NO_MATRIX;
+        _impl->state = Impl::DESIGN_AND_DATA;
     }
     _impl->factor();
 }
