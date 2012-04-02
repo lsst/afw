@@ -267,6 +267,24 @@ public:
      */
     ndarray::Array<double const,2,2> computeHessian();
 
+    /**
+     *  @brief Return a factorization-dependent vector that can be used to characterize
+     *         the stability of the solution.
+     *
+     *  For the NORMAL_EIGENSYSTEM method, this is the vector of Eigenvalues of the Hessian
+     *  matrix, including those rejected as being below the threshold.
+     *
+     *  For the DIRECT_SVD method, this is the vector of singular values of the design
+     *  matrix, including those rejected as being below the threshold; with exact arithmetic,
+     *  these would be the square roots of the Eigenvalues of the Hessian.
+     *
+     *  For the NORMAL_CHOLESKY method, this is @f$D@f$ in the pivoted Cholesky factorization
+     *  @f$P L D L^T P^T@f$ of the Hessian.  This does not provide a reliable way
+     *  to test the stability of the problem, but it does provide a way to compute the determinant
+     *  of the Hessian.
+     */
+    ndarray::Array<double const,1,1> getCondition();
+
     /// @brief Return the number of parameters.
     int getDimension() const;
 

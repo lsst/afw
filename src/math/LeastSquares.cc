@@ -30,6 +30,7 @@
 
 #include "lsst/afw/math/LeastSquares.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging.h"
 
 namespace lsst { namespace afw { namespace math {
 
@@ -50,15 +51,18 @@ public:
 
     ndarray::Array<double,1,1> solution;
     ndarray::Array<double,2,2> covariance;
+    ndarray::Array<double,1,1> condition;
+
+    pex::logging::Debug log;
 
     template <typename D>
     void setRank(Eigen::MatrixBase<D> const & values) {
         double cond = threshold * values[0];
-        for (rank = dimension; (rank > 0) && (values[rank-1] < cond); --rank);
+        for (rank = dimension; (rank > 1) && (values[rank-1] < cond); --rank);
     }
 
     void computeHessian(HessianState desired) {
-        if (hessianState < LOWER_HESSIAN && desired > LOWER_HESSIAN) {
+        if (hessianState < LOWER_HESSIAN && desired >= LOWER_HESSIAN) {
             hessian = Eigen::MatrixXd::Zero(design.cols(), design.cols());
             hessian.selfadjointView<Eigen::Lower>().rankUpdate(design.adjoint());
             hessianState = LOWER_HESSIAN;
@@ -76,8 +80,11 @@ public:
     virtual void solve() = 0;
     virtual void computeCovariance() = 0;
 
+    virtual void getCondition() = 0;
+
     Impl(int dimension_, double threshold_) : 
-        hessianState(NO_HESSIAN), threshold(threshold_), dimension(dimension_), rank(dimension_)
+        hessianState(NO_HESSIAN), threshold(threshold_), dimension(dimension_), rank(dimension_),
+        log("afw.math.LeastSquares")
         {}
 
     virtual ~Impl() {}
@@ -90,46 +97,65 @@ public:
 
     explicit EigensystemSolver(int dimension) :
         Impl(dimension, std::sqrt(std::numeric_limits<double>::epsilon())),
-        _eig(dimension), _svd()
-        {}
+        _eig(dimension), _svd(), _tmp(dimension)
+    {}
     
     virtual void factor() {
+        if (hessianState == NO_HESSIAN) {
+            rhs = design.adjoint() * data;
+        }
         computeHessian(LOWER_HESSIAN);
         _eig.compute(hessian);
         if (_eig.info() == Eigen::Success) {
-            setRank(_eig.eigenvalues());
+            setRank(_eig.eigenvalues().reverse());
+            log.debug<5>("SelfAdjointEigenSolver succeeded: dimension=%d, rank=%d", dimension, rank);
         } else {
-            _svd.compute(hessian, Eigen::ComputeFullU); // Matrix is symmetric, so V == U
+            // Note that the fallback is using SVD of the Hessian to compute the Eigensystem, because those
+            // are the same for a symmetric matrix; this is very different from doing a direct SVD of
+            // the design matrix.
+            _svd.compute(hessian, Eigen::ComputeFullU); // Matrix is symmetric, so V == U == eigenvectors
             setRank(_svd.singularValues());
+            log.debug<5>(
+                "SelfAdjointEigenSolver failed; falling back to equivalent SVD: dimension=%d, rank=%d",
+                dimension, rank
+            );
         }
     }
 
     virtual void updateRank() {
         if (_eig.info() == Eigen::Success) {
-            setRank(_eig.eigenvalues());
+            setRank(_eig.eigenvalues().reverse());
         } else {
             setRank(_svd.singularValues());
         }
     }
 
+    virtual void getCondition() {
+        if (_eig.info() == Eigen::Success) {
+            condition.asEigen() = _eig.eigenvalues().reverse();
+        } else {
+            condition.asEigen() = _svd.singularValues();
+        }
+    }
+
     virtual void solve() {
         if (_eig.info() == Eigen::Success) {
-            _tmp.head(rank) = _eig.eigenvectors().leftCols(rank).adjoint() * rhs;
-            _tmp.head(rank).array() /= _eig.eigenvalues().head(rank).array();
-            solution.asEigen() = _eig.eigenvectors().leftCols(rank) * _tmp;
+            _tmp.head(rank) = _eig.eigenvectors().rightCols(rank).adjoint() * rhs;
+            _tmp.head(rank).array() /= _eig.eigenvalues().tail(rank).array();
+            solution.asEigen() = _eig.eigenvectors().rightCols(rank) * _tmp.head(rank);
         } else {
             _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * rhs;
             _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
-            solution.asEigen() = _svd.matrixU().leftCols(rank) * _tmp;
+            solution.asEigen() = _svd.matrixU().leftCols(rank) * _tmp.head(rank);
         }
     }
 
     virtual void computeCovariance() {
         if (_eig.info() == Eigen::Success) {
             covariance.asEigen() = 
-                _eig.eigenvectors().leftCols(rank)
-                * _eig.eigenvalues().head(rank).asDiagonal()
-                * _eig.eigenvectors().leftCols(rank).adjoint();
+                _eig.eigenvectors().rightCols(rank)
+                * _eig.eigenvalues().tail(rank).asDiagonal()
+                * _eig.eigenvectors().rightCols(rank).adjoint();
         } else {
             covariance.asEigen() = 
                 _svd.matrixU().leftCols(rank)
@@ -149,9 +175,17 @@ public:
 
     explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
     
-    virtual void factor() { computeHessian(LOWER_HESSIAN); _ldlt.compute(hessian); }
+    virtual void factor() {
+        if (hessianState == NO_HESSIAN) {
+            rhs = design.adjoint() * data;
+        }
+        computeHessian(LOWER_HESSIAN);
+        _ldlt.compute(hessian);
+    }
 
     virtual void updateRank() {}
+
+    virtual void getCondition() { condition.asEigen() = _ldlt.vectorD(); }
 
     virtual void solve() { solution.asEigen() = _ldlt.solve(rhs); }
 
@@ -169,22 +203,23 @@ class SvdSolver : public LeastSquares::Impl {
 public:
 
     explicit SvdSolver(int dimension) :
-        Impl(dimension, std::numeric_limits<double>::epsilon()), _svd()
+        Impl(dimension, std::numeric_limits<double>::epsilon()), _svd(), _tmp(dimension)
     {}
     
     virtual void factor() {
         _svd.compute(design, Eigen::ComputeThinU | Eigen::ComputeThinV);
         setRank(_svd.singularValues());
+        log.debug<5>("Using direct SVD method; dimension=%d, rank=%d", dimension, rank);
     }
 
-    virtual void updateRank() {
-        setRank(_svd.singularValues());
-    }
+    virtual void updateRank() { setRank(_svd.singularValues()); }
+
+    virtual void getCondition() { condition.asEigen() = _svd.singularValues(); }
 
     virtual void solve() {
         _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * data;
         _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
-        solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp;
+        solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp.head(rank);
     }
 
     virtual void computeCovariance() {
@@ -231,6 +266,14 @@ ndarray::Array<double const,2,2> LeastSquares::computeHessian() {
         ndarray::makeVector(_impl->dimension, 1),
         _impl
     );
+}
+
+ndarray::Array<double const,1,1> LeastSquares::getCondition() {
+    if (_impl->condition.isEmpty()) {
+        _impl->condition = ndarray::allocate(_impl->dimension);
+    }
+    _impl->getCondition();
+    return _impl->condition;
 }
 
 int LeastSquares::getDimension() const { return _impl->dimension; }
@@ -298,6 +341,14 @@ void LeastSquares::_factor(bool haveNormalEquations) {
                 pex::exceptions::InvalidParameterException,
                 (boost::format("Number of rows of design matrix (%d) does not match number of "
                                "data points (%d)") % _getDesignMatrix().rows() % _getDataVector().size()
+                ).str()
+            );
+        }
+        if (_getDesignMatrix().cols() > _getDataVector().size()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterException,
+                (boost::format("Number of columns of design matrix (%d) must be smaller than number of "
+                               "data points (%d)") % _getDesignMatrix().cols() % _getDataVector().size()
                 ).str()
             );
         }
