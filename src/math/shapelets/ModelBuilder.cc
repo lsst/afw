@@ -37,10 +37,8 @@ namespace {
 
 static double const NORMALIZATION = std::pow(geom::PI, -0.25);
 
-template <typename ImageT>
-int countPixels(
-    detection::Footprint const & region,
-    ImageT const & img, image::MaskPixel andMask
+void fillCoordinates(
+    detection::Footprint const & region, Eigen::ArrayXd & xArray, Eigen::ArrayXd & yArray
 ) {
     int n = 0;
     for (
@@ -48,13 +46,12 @@ int countPixels(
         i != region.getSpans().end();
         ++i
     ) {
-        typename ImageT::x_iterator iter = img.x_at((**i).getX0(), (**i).getY());
-        typename ImageT::x_iterator const end = img.x_at((**i).getX1() + 1, (**i).getY());
-        for (; iter != end; ++iter) {
-            if (!(iter.mask() & andMask)) ++n;
+        for (int x = (**i).getX0(); x <= (**i).getX1(); ++x) {
+            xArray[n] = x;
+            yArray[n] = (**i).getY();
+            ++n;
         }
     }
-    return n;
 }
 
 void fillHermite1d(Eigen::ArrayXXd & workspace, Eigen::ArrayXd const & coord) {
@@ -76,24 +73,11 @@ ModelBuilder::ModelBuilder(
     geom::ellipses::Ellipse const & ellipse,
     detection::Footprint const & region,
     image::Image<ImagePixelT> const & img
-) : _order(order), _basisType(basisType), _ellipse(ellipse) {
-    _allocate(region.getArea());
-    detection::flattenArray(region, img.getArray(), _data, img.getXY0());
-    int n = 0;
-    for (
-        detection::Footprint::SpanList::const_iterator i = region.getSpans().begin();
-        i != region.getSpans().end();
-        ++i
-    ) {
-        typename image::Image<ImagePixelT>::x_iterator iter 
-            = img.x_at((**i).getX0(), (**i).getY());
-        for (int x = (**i).getX0(); x <= (**i).getX1(); ++iter, ++x) {
-            _data[n] = *iter;
-            _x[n] = x;
-            _y[n] = (**i).getY();
-            ++n;
-        }
-    }
+) : _order(order), _basisType(basisType), _region(region), _ellipse(ellipse) {
+    _region.clipTo(img.getBBox(image::PARENT));
+    _allocate();
+    detection::flattenArray(_region, img.getArray(), _data, img.getXY0());
+    fillCoordinates(_region, _x, _y);
 }
 
 template <typename ImagePixelT>
@@ -104,33 +88,21 @@ ModelBuilder::ModelBuilder(
     image::MaskedImage<ImagePixelT> const & img,
     image::MaskPixel andMask,
     bool useVariance
-) : _order(order), _basisType(basisType), _ellipse(ellipse) {
-    _allocate(countPixels(region, img, andMask));
-    if (useVariance) _weights = ndarray::allocate(_data.getSize<0>());
-    int n = 0;
-    for (
-        detection::Footprint::SpanList::const_iterator i = region.getSpans().begin();
-        i != region.getSpans().end();
-        ++i
-    ) {
-        typename image::MaskedImage<ImagePixelT>::x_iterator iter 
-            = img.x_at((**i).getX0(), (**i).getY());
-        for (int x = (**i).getX0(); x <= (**i).getX1(); ++iter, ++x) {
-            if (!(iter.mask() & andMask)) {
-                _data[n] = iter.image();
-                if (useVariance) {
-                    _weights[n] = 1.0 / iter.variance();
-                    _data[n] *= _weights[n];
-                }
-                _x[n] = x;
-                _y[n] = (**i).getY();
-                ++n;
-            }
-        }
+) : _order(order), _basisType(basisType), _region(region), _ellipse(ellipse) {
+    _region.intersectMask(*img.getMask(), andMask);
+    _allocate();
+    detection::flattenArray(_region, img.getImage()->getArray(), _data, img.getXY0());
+    if (useVariance) {
+        _weights = ndarray::allocate(_data.getSize<0>());
+        detection::flattenArray(_region, img.getVariance()->getArray(), _weights, img.getXY0());
+        _weights.asEigen<Eigen::ArrayXpr>() = _weights.asEigen<Eigen::ArrayXpr>().sqrt().inverse();
+        _data.asEigen<Eigen::ArrayXpr>() *= _weights.asEigen<Eigen::ArrayXpr>();
     }
+    fillCoordinates(_region, _x, _y);
 }
 
-void ModelBuilder::_allocate(int nPix) {
+void ModelBuilder::_allocate() {
+    int nPix = _region.getArea();
     int nCoeff = computeSize(_order);
     _design = ndarray::allocate(nPix, nCoeff);
     _data = ndarray::allocate(nPix);
@@ -155,7 +127,11 @@ void ModelBuilder::update(geom::ellipses::Ellipse const & ellipse) {
     for (PackedIndex i; i.getOrder() <= _order; ++i) {
         design.col(i.getIndex()) = _xWorkspace.col(i.getX()) * _yWorkspace.col(i.getY());
     }
-    if (!_weights.isEmpty()) design *= _weights.asEigen<Eigen::ArrayXpr>();
+    if (!_weights.isEmpty()) {
+        for (int n = 0; n < design.cols(); ++n) {
+            design.col(n) *= _weights.asEigen<Eigen::ArrayXpr>();
+        }
+    }
 }
 
 template ModelBuilder::ModelBuilder(
