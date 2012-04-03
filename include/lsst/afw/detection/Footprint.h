@@ -35,7 +35,7 @@
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -265,9 +265,9 @@ public:
 
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
 private:
-    lsst::ndarray::Array<ImagePixelT, 1, 1> _image;
-    lsst::ndarray::Array<MaskPixelT, 1, 1> _mask;
-    lsst::ndarray::Array<VariancePixelT, 1, 1> _variance;
+    ndarray::Array<ImagePixelT, 1, 1> _image;
+    ndarray::Array<MaskPixelT, 1, 1> _mask;
+    ndarray::Array<VariancePixelT, 1, 1> _variance;
 };
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

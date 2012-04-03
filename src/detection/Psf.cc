@@ -35,8 +35,8 @@ namespace detection {
  */
 Psf::Image::Ptr Psf::computeImage(
         afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
-        bool normalizePeak,              ///< normalize the image to have a maximum value of 1.0
-        bool distort
+        bool normalizePeak,            ///< normalize the image to have a maximum value of 1.0
+        bool distort                   ///< generate an image that includes the known camera distortion
                                     ) const
 {
     lsst::afw::image::Color color;

@@ -184,15 +184,17 @@ public:
 
     static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
 
-    SimpleCatalogT copy() const;
-
     bool isSorted() const;
     void sort();
 };
 
 %extend SimpleCatalogT {
     PTR(RecordT) find(RecordId id) {
-        return self->find(id);
+        lsst::afw::table::SimpleCatalogT< RecordT >::iterator i = self->find(id);
+        if (i == self->end()) {
+            return PTR(RecordT)();
+        }
+        return i;
     }
 }
 
@@ -206,7 +208,7 @@ typedef TMPL< PREFIX ## Record > PREFIX ## Catalog;
     ColumnView = PREFIX ## ColumnView
 %}
 }
-// Can't put this in class %extend blocks because they need to come after all class blocks in Python.xz
+// Can't put this in class %extend blocks because they need to come after all class blocks in Python.
 %pythoncode %{ 
 PREFIX ## Record.Table = PREFIX ## Table
 PREFIX ## Record.Catalog = PREFIX ## Catalog

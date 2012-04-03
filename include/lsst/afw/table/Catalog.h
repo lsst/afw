@@ -496,7 +496,7 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
     typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
-    if (*i != value) return end();
+    if (i.base() == end() || *i != value) return end();
     return i.base();
 }
 
@@ -510,6 +510,7 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     if (*i != value) return end();
+    if (i.base() == end() || *i != value) return end();
     return i.base();
 }
 

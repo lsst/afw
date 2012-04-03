@@ -351,6 +351,8 @@ struct FitsReader::ProcessRecords {
     }
 
     void operator()(SchemaItem<Flag> const & item) const {
+        assert(nFlags > 0);
+        assert(flagCol >= 0);
         record->set(item.key, flags[bit]);
         ++bit;
     }
@@ -365,19 +367,19 @@ struct FitsReader::ProcessRecords {
     }
 
     ProcessRecords(Fits * fits_, std::size_t const & row_) :
-        row(row_), col(0), bit(0), flagCol(-1), fits(fits_)
+        row(row_), col(0), bit(0), nFlags(0), flagCol(-1), fits(fits_)
     {
         fits->behavior &= ~ Fits::AUTO_CHECK; // temporarily disable automatic FITS exceptions
         fits->readKey("FLAGCOL", flagCol);
         if (fits->status == 0) {
             --flagCol; // we want 0-indexed column numbers, not FITS' 1-indexed numbers
+            nFlags = fits->getTableArraySize(flagCol);
+            if (nFlags) flags.reset(new bool[nFlags]);
         } else {
             fits->status = 0;
             flagCol = -1;
         }
         fits->behavior |= Fits::AUTO_CHECK;
-        nFlags = fits->getTableArraySize(flagCol);
-        if (nFlags) flags.reset(new bool[nFlags]);
     }
 
     std::size_t const & row;  // this is a reference back to the _row data member in FitsReader

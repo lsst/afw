@@ -374,33 +374,33 @@ public:
     typedef RecordT Record;
     typedef typename RecordT::Table Table;
 
-    lsst::ndarray::Array<double const,1> getPsfFlux() const {
+    ndarray::Array<double const,1> getPsfFlux() const {
         return this->operator[](this->getTable()->getPsfFluxKey());
     }
-    lsst::ndarray::Array<double const,1> getApFlux() const {
+    ndarray::Array<double const,1> getApFlux() const {
         return this->operator[](this->getTable()->getApFluxKey());
     }
-    lsst::ndarray::Array<double const,1> getModelFlux() const {
+    ndarray::Array<double const,1> getModelFlux() const {
         return this->operator[](this->getTable()->getModelFluxKey());
     }
-    lsst::ndarray::Array<double const,1> getInstFlux() const {
+    ndarray::Array<double const,1> getInstFlux() const {
         return this->operator[](this->getTable()->getInstFluxKey());
     }
 
-    lsst::ndarray::Array<double const,1> getX() const {
+    ndarray::Array<double const,1> getX() const {
         return this->operator[](this->getTable()->getCentroidKey().getX());
     }
-    lsst::ndarray::Array<double const,1> getY() const {
+    ndarray::Array<double const,1> getY() const {
         return this->operator[](this->getTable()->getCentroidKey().getY());
     }
 
-    lsst::ndarray::Array<double const,1> getIxx() const {
+    ndarray::Array<double const,1> getIxx() const {
         return this->operator[](this->getTable()->getShapeKey().getIxx());
     }
-    lsst::ndarray::Array<double const,1> getIyy() const {
+    ndarray::Array<double const,1> getIyy() const {
         return this->operator[](this->getTable()->getShapeKey().getIyy());
     }
-    lsst::ndarray::Array<double const,1> getIxy() const {
+    ndarray::Array<double const,1> getIxy() const {
         return this->operator[](this->getTable()->getShapeKey().getIxy());
     }
 

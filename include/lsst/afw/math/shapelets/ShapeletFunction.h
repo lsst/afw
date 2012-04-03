@@ -35,7 +35,7 @@
  * @author Jim Bosch
  */
 
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/afw/math/shapelets/constants.h"
 #include "lsst/afw/math/shapelets/detail/HermiteEvaluator.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
@@ -87,10 +87,10 @@ public:
     void normalize();
 
     /// @brief Return the coefficient vector.
-    lsst::ndarray::Array<Pixel,1,1> const getCoefficients() { return _coefficients; }
+    ndarray::Array<Pixel,1,1> const getCoefficients() { return _coefficients; }
 
     /// @brief Return the coefficient vector (const).
-    lsst::ndarray::Array<Pixel const,1,1> const getCoefficients() const { return _coefficients; }
+    ndarray::Array<Pixel const,1,1> const getCoefficients() const { return _coefficients; }
 
     /// @brief Convolve the shapelet function in-place.
     void convolve(ShapeletFunction const & other);
@@ -114,7 +114,7 @@ public:
     /// @brief Construct a function with a unit-circle ellipse and a deep-copied coefficient vector.
     ShapeletFunction(
         int order, BasisTypeEnum basisType,
-        lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+        ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
     );
 
     /// @brief Construct a function with a circular ellipse and set all coefficients to zero.
@@ -124,7 +124,7 @@ public:
     /// @brief Construct a function with a circular ellipse and a deep-copied coefficient vector.
     ShapeletFunction(
         int order, BasisTypeEnum basisType, double radius, lsst::afw::geom::Point2D const & center,
-        lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+        ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
     );
 
     /// @brief Construct a function and set all coefficients to zero.
@@ -135,7 +135,7 @@ public:
     ShapeletFunction(
         int order, BasisTypeEnum basisType,
         lsst::afw::geom::ellipses::Ellipse const & ellipse,
-        lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+        ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
     );
 
     /// @brief Copy constructor (deep).

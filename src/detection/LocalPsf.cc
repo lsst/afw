@@ -25,7 +25,7 @@
  */
 #include "lsst/afw/detection/LocalPsf.h"
 #include "lsst/afw/detection/FootprintArray.cc"
-#include "lsst/ndarray/eigen.h"
+#include "ndarray/eigen.h"
 #include "Eigen/SVD"
 
 /************************************************************************************************************/

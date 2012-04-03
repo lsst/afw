@@ -164,41 +164,41 @@ namespace lsst { namespace afw { namespace table {
 
 // because stupid SWIG's %template doesn't work on these functions
 %define %footprintArrayTemplates(T)
-%declareNumPyConverters(lsst::ndarray::Array<T,1,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T,2,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T,3,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T const,1,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T const,2,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T const,3,0>);
+%declareNumPyConverters(ndarray::Array<T,1,0>);
+%declareNumPyConverters(ndarray::Array<T,2,0>);
+%declareNumPyConverters(ndarray::Array<T,3,0>);
+%declareNumPyConverters(ndarray::Array<T const,1,0>);
+%declareNumPyConverters(ndarray::Array<T const,2,0>);
+%declareNumPyConverters(ndarray::Array<T const,3,0>);
 %inline %{
     void flattenArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,2,0> const & src,
-        lsst::ndarray::Array<T,1,0> const & dest,
+        ndarray::Array<T const,2,0> const & src,
+        ndarray::Array<T,1,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::flattenArray(fp, src, dest, origin);
     }    
     void flattenArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,3,0> const & src,
-        lsst::ndarray::Array<T,2,0> const & dest,
+        ndarray::Array<T const,3,0> const & src,
+        ndarray::Array<T,2,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::flattenArray(fp, src, dest, origin);
     }    
     void expandArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,1,0> const & src,
-        lsst::ndarray::Array<T,2,0> const & dest,
+        ndarray::Array<T const,1,0> const & src,
+        ndarray::Array<T,2,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::expandArray(fp, src, dest, origin);
     }
     void expandArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,2,0> const & src,
-        lsst::ndarray::Array<T,3,0> const & dest,
+        ndarray::Array<T const,2,0> const & src,
+        ndarray::Array<T,3,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::expandArray(fp, src, dest, origin);
@@ -207,26 +207,26 @@ namespace lsst { namespace afw { namespace table {
 %{
     template void lsst::afw::detection::flattenArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,2,0> const &,
-        lsst::ndarray::Array<T,1,0> const &,
+        ndarray::Array<T const,2,0> const &,
+        ndarray::Array<T,1,0> const &,
         lsst::afw::geom::Point2I const &
     );
     template void lsst::afw::detection::flattenArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,3,0> const &,
-        lsst::ndarray::Array<T,2,0> const &,
+        ndarray::Array<T const,3,0> const &,
+        ndarray::Array<T,2,0> const &,
         lsst::afw::geom::Point2I const &
     );
     template void lsst::afw::detection::expandArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,1,0> const &,
-        lsst::ndarray::Array<T,2,0> const &,
+        ndarray::Array<T const,1,0> const &,
+        ndarray::Array<T,2,0> const &,
         lsst::afw::geom::Point2I const &
     );
     template void lsst::afw::detection::expandArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,2,0> const &,
-        lsst::ndarray::Array<T,3,0> const &,
+        ndarray::Array<T const,2,0> const &,
+        ndarray::Array<T,3,0> const &,
         lsst::afw::geom::Point2I const &
     );
 %}

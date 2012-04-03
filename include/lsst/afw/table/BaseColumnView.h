@@ -40,7 +40,7 @@ public:
 
     typedef boost::int64_t IntT;
 
-    lsst::ndarray::Array<IntT const,1,1> getArray() const { return _array; }
+    ndarray::Array<IntT const,1,1> getArray() const { return _array; }
 
     IntT getBit(Key<Flag> const & key) const;
     IntT getBit(std::string const & name) const;

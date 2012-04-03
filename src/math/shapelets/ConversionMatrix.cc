@@ -24,7 +24,7 @@
 
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/ndarray/eigen.h"
+#include "ndarray/eigen.h"
 
 #include <boost/format.hpp>
 #include <boost/math/special_functions/binomial.hpp>
@@ -169,7 +169,7 @@ Eigen::MatrixXd shapelets::ConversionMatrix::buildDenseMatrix() const {
 }
 
 void shapelets::ConversionMatrix::multiplyOnLeft(
-    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const {
+    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const {
     if (array.getSize<0>() != computeSize(_order)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
@@ -185,7 +185,7 @@ void shapelets::ConversionMatrix::multiplyOnLeft(
     } else {
         i = ConversionSingleton::get().getL2H().begin();
     }
-    lsst::ndarray::EigenView<Pixel,1,0> vector(array);
+    ndarray::EigenView<Pixel,1,0> vector(array);
     for (int offset = 0; offset < vector.size(); ++i) {
         vector.segment(offset, i->rows()).transpose() *= i->transpose();
         offset += i->rows();
@@ -193,7 +193,7 @@ void shapelets::ConversionMatrix::multiplyOnLeft(
 }
 
 void shapelets::ConversionMatrix::multiplyOnRight(
-    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const {
+    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const {
     if (array.getSize<0>() != computeSize(_order)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
@@ -209,7 +209,7 @@ void shapelets::ConversionMatrix::multiplyOnRight(
     } else {
         i = ConversionSingleton::get().getL2H().begin();
     }
-    lsst::ndarray::EigenView<Pixel,1,0> vector(array);
+    ndarray::EigenView<Pixel,1,0> vector(array);
     for (int offset = 0; offset < vector.size(); ++i) {
         vector.segment(offset, i->rows()).transpose() *= (*i);
         offset += i->rows();
@@ -223,7 +223,7 @@ shapelets::ConversionMatrix::ConversionMatrix(BasisTypeEnum input, BasisTypeEnum
 }
 
 void shapelets::ConversionMatrix::convertCoefficientVector(
-    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array,
+    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array,
     BasisTypeEnum input,
     BasisTypeEnum output,
     int order
@@ -234,7 +234,7 @@ void shapelets::ConversionMatrix::convertCoefficientVector(
 }
 
 void shapelets::ConversionMatrix::convertOperationVector(
-    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array,
+    ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array,
     BasisTypeEnum input,
     BasisTypeEnum output,
     int order

@@ -42,13 +42,13 @@ Python interface to lsst::afw::table classes
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/ndarray/python.h"
+#include "ndarray/swig.h"
 #include "lsst/afw/geom/Angle.h"
 
 // This enables numpy array conversion for Angle, converting it to a regular array of double.
-namespace lsst { namespace ndarray { namespace detail {
+namespace ndarray { namespace detail {
 template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<double> {};
-}}}
+}}
 
 %}
 
@@ -62,29 +62,29 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 }
 %enddef
 
-%include "lsst/ndarray/ndarray.i"
+%include "ndarray.i"
 %init %{
     import_array();
 %}
 
-%declareNumPyConverters(lsst::ndarray::Array<bool const,1>);
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::table::RecordId const,1>);
-%declareNumPyConverters(lsst::ndarray::Array<boost::int32_t const,1>);
-%declareNumPyConverters(lsst::ndarray::Array<boost::int64_t const,1>);
-%declareNumPyConverters(lsst::ndarray::Array<boost::int32_t,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<boost::int64_t,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<boost::int32_t const,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<boost::int64_t const,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<float const,1>);
-%declareNumPyConverters(lsst::ndarray::Array<double const,1>);
-%declareNumPyConverters(lsst::ndarray::Array<float,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<double,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<float const,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<double const,1,1>);
-%declareNumPyConverters(lsst::ndarray::Array<float const,2>);
-%declareNumPyConverters(lsst::ndarray::Array<double const,2>);
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::geom::Angle const,1>);
-%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::table::BitsColumn::IntT const,1,1>);
+%declareNumPyConverters(ndarray::Array<bool const,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::table::RecordId const,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t const,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t const,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t const,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t const,1,1>);
+%declareNumPyConverters(ndarray::Array<float const,1>);
+%declareNumPyConverters(ndarray::Array<double const,1>);
+%declareNumPyConverters(ndarray::Array<float,1,1>);
+%declareNumPyConverters(ndarray::Array<double,1,1>);
+%declareNumPyConverters(ndarray::Array<float const,1,1>);
+%declareNumPyConverters(ndarray::Array<double const,1,1>);
+%declareNumPyConverters(ndarray::Array<float const,2>);
+%declareNumPyConverters(ndarray::Array<double const,2>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle const,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::table::BitsColumn::IntT const,1,1>);
 %declareNumPyConverters(Eigen::Matrix<float,2,2>);
 %declareNumPyConverters(Eigen::Matrix<double,2,2>);
 %declareNumPyConverters(Eigen::Matrix<float,3,3>);
@@ -122,7 +122,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 
 %{
     inline PyObject * convertNameSet(std::set<std::string> const & input) {
-        lsst::ndarray::PyPtr result(PyTuple_New(input.size()));
+        ndarray::PyPtr result(PyTuple_New(input.size()));
         if (!result) return 0;
         Py_ssize_t n = 0;
         for (std::set<std::string>::const_iterator i = input.begin(); i != input.end(); ++i, ++n) {

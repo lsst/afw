@@ -98,7 +98,7 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     unsigned int width,                 ///< number of columns
     unsigned int height,                ///< number of rows
-    CONST_PTR(afwImage::Wcs) wcs        ///< the Wcs
+    CONST_PTR(Wcs) wcs        ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
@@ -116,7 +116,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Extent2I const & dimensions, ///< desired image width/height
-    CONST_PTR(afwImage::Wcs) wcs          ///< the Wcs
+    CONST_PTR(Wcs) wcs          ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
@@ -134,7 +134,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
-    CONST_PTR(afwImage::Wcs) wcs ///< the Wcs
+    CONST_PTR(Wcs) wcs ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
@@ -151,7 +151,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage, ///< the MaskedImage
-    CONST_PTR(afwImage::Wcs) wcs  ///< the Wcs
+    CONST_PTR(Wcs) wcs  ///< the Wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),

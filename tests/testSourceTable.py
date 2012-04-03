@@ -137,6 +137,8 @@ class SourceTableTestCase(unittest.TestCase):
         self.assert_(self.catalog.isSorted())
         r = self.catalog.find(2)
         self.assertEqual(r["id"], 2)
+        r = self.catalog.find(500)
+        self.assert_(r is None)
 
     def testConversion(self):
         catalog1 = self.catalog.cast(lsst.afw.table.SourceCatalog)

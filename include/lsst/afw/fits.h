@@ -22,7 +22,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 
 namespace lsst { namespace afw { namespace fits {
 

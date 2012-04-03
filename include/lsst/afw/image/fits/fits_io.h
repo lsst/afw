@@ -42,7 +42,7 @@
 #include "lsst/pex/exceptions.h"
 #include "fits_io_private.h"
 
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -100,7 +100,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// if its color space or channel depth are not compatible with the ones specified by Image
  template <typename PixelT>
  inline void fits_read_image(const std::string& filename,
-                             lsst::ndarray::Array<PixelT,2,2> & array,
+                             ndarray::Array<PixelT,2,2> & array,
                              geom::Point2I & xy0,
                              lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
                              int hdu=1,
@@ -122,7 +122,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// if its color space or channel depth are not compatible with the ones specified by Image
  template <typename PixelT>
  inline void fits_read_ramImage(char **ramFile, size_t *ramFileLen,
-                             lsst::ndarray::Array<PixelT,2,2> & array,
+                             ndarray::Array<PixelT,2,2> & array,
                              geom::Point2I & xy0,
                              lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
                              int hdu=1,
