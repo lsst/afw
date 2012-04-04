@@ -57,7 +57,7 @@ void fillHermite1d(Eigen::ArrayXXd & workspace, Eigen::ArrayXd const & coord) {
     if (workspace.cols() > 0)
         workspace.col(0) = NORMALIZATION * (-0.5 * coord.square()).exp();
     if (workspace.cols() > 1)
-        workspace.col(1) = workspace.col(0) * std::sqrt(2.0);
+        workspace.col(1) = std::sqrt(2.0) * coord * workspace.col(0);
     for (int j = 2; j < workspace.cols(); ++j) {
         workspace.col(j) = std::sqrt(2.0 / j) * coord * workspace.col(j-1)
             - std::sqrt((j - 1.0) / j) * workspace.col(j-2);
@@ -79,26 +79,27 @@ void fillDerivative1d(
 
 template <typename ImagePixelT>
 ModelBuilder::ModelBuilder(
-    int order, BasisTypeEnum basisType,
+    int order,
     geom::ellipses::Ellipse const & ellipse,
     detection::Footprint const & region,
     image::Image<ImagePixelT> const & img
-) : _order(order), _basisType(basisType), _region(region), _ellipse(ellipse) {
+) : _order(order), _region(region), _ellipse(ellipse) {
     _region.clipTo(img.getBBox(image::PARENT));
     _allocate();
     detection::flattenArray(_region, img.getArray(), _data, img.getXY0());
     fillCoordinates(_region, _x, _y);
+    update(ellipse);
 }
 
 template <typename ImagePixelT>
 ModelBuilder::ModelBuilder(
-    int order, BasisTypeEnum basisType,
+    int order,
     geom::ellipses::Ellipse const & ellipse,
     detection::Footprint const & region,
     image::MaskedImage<ImagePixelT> const & img,
     image::MaskPixel andMask,
     bool useVariance
-) : _order(order), _basisType(basisType), _region(region), _ellipse(ellipse) {
+) : _order(order), _region(region), _ellipse(ellipse) {
     _region.intersectMask(*img.getMask(), andMask);
     _allocate();
     detection::flattenArray(_region, img.getImage()->getArray(), _data, img.getXY0());
@@ -109,6 +110,7 @@ ModelBuilder::ModelBuilder(
         _data.asEigen<Eigen::ArrayXpr>() *= _weights.asEigen<Eigen::ArrayXpr>();
     }
     fillCoordinates(_region, _x, _y);
+    update(ellipse);
 }
 
 void ModelBuilder::_allocate() {
@@ -182,7 +184,7 @@ void ModelBuilder::computeDerivative(
     bool add
 ) const {
     geom::ellipses::Ellipse::GridTransform::DerivativeMatrix gtJac = _ellipse.getGridTransform().d();
-    Eigen::Matrix<Pixel,6,Eigen::Dynamic> finalJac = gtJac * jacobian.transpose();
+    Eigen::Matrix<Pixel,6,Eigen::Dynamic> finalJac = gtJac * jacobian;
     _computeDerivative(output, finalJac, add);
 }
 
@@ -221,31 +223,31 @@ void ModelBuilder::_computeDerivative(
             if (std::abs(jacobian(AT::YX, n)) > eps)
                 block.col(n) += jacobian(AT::YX, n) * _x * tmp;
             if (std::abs(jacobian(AT::YY, n)) > eps)
-                block.row(n) += jacobian(AT::YY, n) * _y * tmp;
+                block.col(n) += jacobian(AT::YY, n) * _y * tmp;
             if (std::abs(jacobian(AT::Y, n)) > eps)
-                block.row(n) += jacobian(AT::Y, n) * tmp;
+                block.col(n) += jacobian(AT::Y, n) * tmp;
         }
     }
 }
 
 
 template ModelBuilder::ModelBuilder(
-    int, BasisTypeEnum, geom::ellipses::Ellipse const &, detection::Footprint const &,
+    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
     image::Image<float> const &
 );
 
 template ModelBuilder::ModelBuilder(
-    int, BasisTypeEnum, geom::ellipses::Ellipse const &, detection::Footprint const &,
+    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
     image::Image<double> const &
 );
 
 template ModelBuilder::ModelBuilder(
-    int, BasisTypeEnum, geom::ellipses::Ellipse const &, detection::Footprint const &,
+    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
     image::MaskedImage<float> const &, image::MaskPixel, bool
 );
 
 template ModelBuilder::ModelBuilder(
-    int, BasisTypeEnum, geom::ellipses::Ellipse const &, detection::Footprint const &,
+    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
     image::MaskedImage<double> const &, image::MaskPixel, bool
 );
 

@@ -40,15 +40,18 @@ import lsst.pex.exceptions
 import lsst.afw.geom as geom
 import lsst.afw.geom.ellipses as ellipses
 import lsst.afw.math.shapelets as shapelets
+import lsst.afw.image
+import lsst.afw.detection
 
 numpy.random.seed(5)
+numpy.set_printoptions(linewidth=120)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ShapeletTestMixin(object):
 
     def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%s != %s" % (a, b))
+        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "\n%s\n!=\n%s" % (a, b))
 
     def makeImage(self, function, x, y):
         z = numpy.zeros((y.size, x.size), dtype=float)
@@ -128,7 +131,7 @@ class ShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
             self.measureMoments(function, x, y, z)
 
     def testDerivatives(self):
-        eps = 1E-8
+        eps = 1E-7
         v = numpy.zeros(self.coefficients.shape, dtype=float)
         v_lo = numpy.zeros(self.coefficients.shape, dtype=float)
         v_hi = numpy.zeros(self.coefficients.shape, dtype=float)
@@ -172,6 +175,152 @@ class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
         self.measureMoments(function, x, y, z)
     
 
+class ModelBuilderTestCase(unittest.TestCase, ShapeletTestMixin):
+
+    def buildDesignMatrix(self, region, ellipse):
+        design = numpy.zeros((shapelets.computeSize(self.order), region.getArea()), dtype=float).transpose()
+        evaluator = shapelets.BasisEvaluator(self.order, shapelets.HERMITE)
+        n = 0
+        gt = ellipse.getGridTransform()
+        for span in region.getSpans():
+            y = span.getY()
+            for x in range(span.getX0(), span.getX1() + 1):
+                p = gt(geom.Point2D(x, y))
+                evaluator.fillEvaluation(design[n,:], p)
+                n += 1
+        return design
+
+    def buildNumericalDerivative(self, builder, parameters, makeEllipse):
+        eps = 1E-6
+        derivative = numpy.zeros((len(parameters), shapelets.computeSize(self.order),
+                                  builder.getRegion().getArea()), dtype=float).transpose()
+        for i in range(len(parameters)):
+            parameters[i] += eps
+            ellipse = makeEllipse(parameters)
+            builder.update(ellipse)
+            derivative[:,:,i] = builder.getDesignMatrix()
+            parameters[i] -= 2.0 * eps
+            ellipse = makeEllipse(parameters)
+            builder.update(ellipse)
+            derivative[:,:,i] -= builder.getDesignMatrix()
+            derivative[:,:,i] /= 2.0 * eps
+        return derivative
+
+    def setUp(self):
+        self.order = 3
+        self.ellipse = ellipses.Ellipse(ellipses.Axes(10, 7, 0.3), geom.Point2D(500, 600))
+        self.bbox = geom.Box2I(lsst.afw.geom.Point2I(480, 580), geom.Point2I(501, 601))
+        rEllipse = ellipses.Ellipse(self.ellipse)
+        rEllipse.scale(4)
+        self.inputRegion = lsst.afw.detection.Footprint(rEllipse)
+        self.inputMask = lsst.afw.image.MaskU(self.bbox)
+        self.varianceImage = lsst.afw.image.ImageF(self.bbox)
+        imageShape = self.inputMask.getArray().shape
+        self.inputMask.getArray()[:,:] |= (numpy.random.randn(*imageShape) > 1.5) # sprinkle in bad pixels
+        self.varianceImage.getArray()[:,:] = numpy.random.randn(*imageShape)**2 + 1.0
+        self.maskedRegion = lsst.afw.detection.Footprint(self.inputRegion)
+        self.maskedRegion.intersectMask(self.inputMask, 0x1)
+        self.clippedRegion = lsst.afw.detection.Footprint(self.inputRegion)
+        self.clippedRegion.clipTo(self.bbox)
+        self.maskedDesign = self.buildDesignMatrix(self.maskedRegion, self.ellipse)
+        self.clippedDesign = self.buildDesignMatrix(self.clippedRegion, self.ellipse)
+        maskedVariance = numpy.zeros(self.maskedRegion.getArea(), dtype=numpy.float32)
+        clippedVariance = numpy.zeros(self.clippedRegion.getArea(), dtype=numpy.float32)
+        lsst.afw.detection.flattenArray(self.maskedRegion, self.varianceImage.getArray(), maskedVariance,
+                                        self.bbox.getMin())
+        lsst.afw.detection.flattenArray(self.clippedRegion, self.varianceImage.getArray(), clippedVariance,
+                                        self.bbox.getMin())
+        self.maskedWeights = 1.0 / maskedVariance**0.5
+        self.clippedWeights = 1.0 / clippedVariance**0.5
+
+    def tearDown(self):
+        del self.ellipse
+        del self.bbox
+        del self.inputRegion
+        del self.inputMask
+        del self.maskedRegion
+        del self.clippedRegion
+        del self.varianceImage
+
+    def check(self, builder, region, design):
+        self.assertEqual(builder.getRegion().getArea(), region.getArea())
+        self.assertClose(builder.getDesignMatrix(), design)
+
+    def doImageTest(self, ImageClass):
+        image = ImageClass(self.bbox)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
+        self.check(builder, self.clippedRegion, self.clippedDesign)
+
+    def doMaskedImageTest(self, ImageClass, MaskedImageClass):
+        image = ImageClass(self.bbox)
+        mi = MaskedImageClass(image, self.inputMask, self.varianceImage)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x1, False)
+        self.check(builder, self.maskedRegion, self.maskedDesign)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x1, True)
+        self.check(builder, self.maskedRegion, self.maskedDesign * self.maskedWeights[:,numpy.newaxis])
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x0, False)
+        self.check(builder, self.clippedRegion, self.clippedDesign)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x0, True)
+        self.check(builder, self.clippedRegion, self.clippedDesign * self.clippedWeights[:,numpy.newaxis])
+
+    def testImageF(self):
+        self.doImageTest(lsst.afw.image.ImageF)
+        
+    def testMaskedImageF(self):
+        self.doMaskedImageTest(lsst.afw.image.ImageF, lsst.afw.image.MaskedImageF)
+
+    def testImageD(self):
+        self.doImageTest(lsst.afw.image.ImageD)
+        
+    def testMaskedImageD(self):
+        self.doMaskedImageTest(lsst.afw.image.ImageD, lsst.afw.image.MaskedImageD)
+
+    def testDerivative1(self):
+        """test derivative with no reparameterization"""
+        image = lsst.afw.image.ImageD(self.bbox)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
+        a = numpy.zeros((5, shapelets.computeSize(self.order), builder.getRegion().getArea()),
+                         dtype=float).transpose()
+        builder.computeDerivative(a)
+        def makeAxesEllipse(p):
+            return ellipses.Ellipse(ellipses.Axes(*p[0:3]), geom.Point2D(*p[3:5]))
+        n = self.buildNumericalDerivative(builder, self.ellipse.getParameterVector(), makeAxesEllipse)
+        # no hard requirement for tolerances here, but I've dialed them to the max to avoid regressions
+        self.assertClose(a, n, rtol=1E-4, atol=1E-6)
+
+    def testDerivative2(self):
+        """test derivative with trivial reparameterization (derivative wrt center point only)"""
+        image = lsst.afw.image.ImageD(self.bbox)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
+        jac = numpy.zeros((5, 2), dtype=float)
+        jac[3,0] = 1.0
+        jac[4,1] = 1.0
+        a = numpy.zeros((2, shapelets.computeSize(self.order), builder.getRegion().getArea()),
+                         dtype=float).transpose()
+        builder.computeDerivative(a, jac)
+        def makePoint(p):
+            return ellipses.Ellipse(self.ellipse.getCore(), geom.Point2D(*p))
+        n = self.buildNumericalDerivative(builder, self.ellipse.getParameterVector()[3:5], makePoint)
+        # no hard requirement for tolerances here, but I've dialed them to the max to avoid regressions
+        self.assertClose(a, n, rtol=1E-4, atol=1E-6)
+
+    def testDerivative3(self):
+        """test derivative with nontrivial reparameterization (derivative wrt different core)"""
+        image = lsst.afw.image.ImageD(self.bbox)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
+        quad = ellipses.Quadrupole(self.ellipse.getCore())
+        jac = numpy.zeros((5, 3), dtype=float)
+        jac[:3,:] = self.ellipse.getCore().dAssign(quad)
+        a = numpy.zeros((3, shapelets.computeSize(self.order), builder.getRegion().getArea()),
+                         dtype=float).transpose()
+        builder.computeDerivative(a, jac)
+        def makeQuadrupole(p):
+            return ellipses.Ellipse(ellipses.Quadrupole(*p), self.ellipse.getCenter())
+        n = self.buildNumericalDerivative(builder, quad.getParameterVector(), makeQuadrupole)
+        # no hard requirement for tolerances here, but I've dialed them to the max to avoid regressions
+        self.assertClose(a, n, rtol=1E-4, atol=1E-6)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -182,6 +331,7 @@ def suite():
     suites = []
     suites += unittest.makeSuite(ShapeletTestCase)
     suites += unittest.makeSuite(MultiShapeletTestCase)
+    suites += unittest.makeSuite(ModelBuilderTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

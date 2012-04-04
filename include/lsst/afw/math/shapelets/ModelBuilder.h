@@ -43,7 +43,6 @@ public:
      *  @brief Construct a ModelBuilder that can be used to fit data from an Image.
      *
      *  @param[in] order       Order of the shapelet model.
-     *  @param[in] basisType   Basis type of the shapelet model.
      *  @param[in] ellipse     Basis ellipse for the shapelet model.  This can be
      *                         changed after construction, but the parameterization
      *                         of the ellipse used in the definition of derivatives
@@ -57,7 +56,7 @@ public:
      */
     template <typename ImagePixelT>
     explicit ModelBuilder(
-        int order, BasisTypeEnum basisType,
+        int order,
         geom::ellipses::Ellipse const & ellipse,
         detection::Footprint const & region,
         image::Image<ImagePixelT> const & img
@@ -67,7 +66,6 @@ public:
      *  @brief Construct a ModelBuilder that can be used to fit data from an Image.
      *
      *  @param[in] order       Order of the shapelet model.
-     *  @param[in] basisType   Basis type of the shapelet model.
      *  @param[in] ellipse     Basis ellipse for the shapelet model.  This can be
      *                         changed after construction, but the parameterization
      *                         of the ellipse used in the definition of derivatives
@@ -87,7 +85,7 @@ public:
      */
     template <typename ImagePixelT>
     explicit ModelBuilder(
-        int order, BasisTypeEnum basisType,
+        int order, 
         geom::ellipses::Ellipse const & ellipse,
         detection::Footprint const & region,
         image::MaskedImage<ImagePixelT> const & img,
@@ -189,7 +187,6 @@ private:
     void _allocate();
 
     int _order;
-    BasisTypeEnum _basisType;
     detection::Footprint _region;
     geom::ellipses::Ellipse _ellipse;
     ndarray::Array<Pixel,2,-2> _design;

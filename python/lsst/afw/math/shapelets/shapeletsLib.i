@@ -33,6 +33,10 @@ Python interface to lsst::afw::math::shapelets classes and functions
 
 %{
 #   include "lsst/afw/geom.h"
+#   include "lsst/afw/detection.h"
+#   include "lsst/afw/image.h"
+#   include "lsst/afw/cameraGeom.h"
+#   include "lsst/pex/logging.h"
 #   include "lsst/afw/math/shapelets.h"
 %}
 
@@ -56,6 +60,10 @@ Python interface to lsst::afw::math::shapelets classes and functions
 %declareNumPyConverters(Eigen::MatrixXd);
 %declareNumPyConverters(ndarray::Array<lsst::afw::math::shapelets::Pixel,1>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::math::shapelets::Pixel const,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::math::shapelets::Pixel const,2,-2>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::math::shapelets::Pixel,3,-3>);
+%declareNumPyConverters(Eigen::Matrix<lsst::afw::math::shapelets::Pixel,5,Eigen::Dynamic>);
 
 %feature(valuewrapper) lsst::afw::math::shapelets::ShapeletFunction;
 %feature(valuewrapper) lsst::afw::math::shapelets::MultiShapeletFunction;
@@ -63,6 +71,8 @@ Python interface to lsst::afw::math::shapelets classes and functions
 
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
+%import "lsst/afw/image/imageLib.i"
+%import "lsst/afw/detection/detectionLib.i"
 
 %lsst_exceptions();
 
@@ -71,3 +81,12 @@ Python interface to lsst::afw::math::shapelets classes and functions
 %include "lsst/afw/math/shapelets/ShapeletFunction.h"
 %include "lsst/afw/math/shapelets/MultiShapeletFunction.h"
 %include "lsst/afw/math/shapelets/BasisEvaluator.h"
+
+%returnCopy(lsst::afw::math::shapelets::ModelBuilder::getRegion)
+
+%include "lsst/afw/math/shapelets/ModelBuilder.h"
+
+%template(ModelBuilder) lsst::afw::math::shapelets::ModelBuilder::ModelBuilder<float>;
+%template(ModelBuilder) lsst::afw::math::shapelets::ModelBuilder::ModelBuilder<double>;
+%template(addToImage) lsst::afw::math::shapelets::ModelBuilder::addToImage<float>;
+%template(addToImage) lsst::afw::math::shapelets::ModelBuilder::addToImage<double>;
