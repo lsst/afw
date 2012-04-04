@@ -71,12 +71,18 @@ namespace detail {
         lsst::afw::image::Wcs const &_srcWcs;
     };
 
+namespace WarpImageGpuStatus
+{
+    enum ReturnCode {OK, NO_GPU, KERNEL_TOO_LARGE, INTERP_LEN_TOO_SMALL};
+}
+
 /**
  * \brief GPU accelerated image warping for Lanczos resampling
  *
- * \return a std::pair<int,bool> containing:
+ * \return a std::pair<int,WarpImageGpuStatus::ReturnValue> containing:
  *                1) the number of valid pixels in destImage (those that are not edge pixels).
- *                2) whether the warping was performed (if false, then the first value is not defined)
+ *                2) whether the warping was performed successfully, or error code
+ *                        (if not OK, then the first value is not defined)
  *
  * This function requires a Lanczos warping kernel to perform the source value estimation.
  *
@@ -104,7 +110,7 @@ namespace detail {
  *
  */
 template<typename DestImageT, typename SrcImageT>
-std::pair<int,bool> warpImageGPU(
+std::pair<int,WarpImageGpuStatus::ReturnCode> warpImageGPU(
     DestImageT &destImage,                  ///< remapped %image
     SrcImageT const &srcImage,              ///< source %image
     lsst::afw::math::LanczosWarpingKernel const &warpingKernel,   ///< warping kernel

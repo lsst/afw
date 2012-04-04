@@ -208,7 +208,6 @@ struct ImageDataPtr
     @arg srcGoodBox - valid source pixel centers ffor Lanczos kernels
     @arg kernelCenterX, kernelCenterY - offset of Lanczos kernel center, in pixels
     @arg edgePixel - set this for all dest. image output pixels mapped from outside of bounds of the source image
-    @arg srcBlk - defines part of the input image required to calculate a block of the output image. Currently unused.
     @arg srcPosInterp - a 2D array defining a piecewise bilinear interpolation of a coordinate transform function over
                    input image. Each element defines coordinate transform of one part of the input image.
                    The size of each part is defined by the interpLength parameter.
@@ -223,7 +222,6 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
                             int kernelCenterX,
                             int kernelCenterY,
                             PixelIVM<DestPixelT> edgePixel,
-                            SBox2I* srcBlk,
                             BilinearInterp* srcPosInterp,
                             int interpLength
                             );

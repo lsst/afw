@@ -212,7 +212,6 @@ __global__ void WarpImageGpuKernel(
     int kernelCenterX,
     int kernelCenterY,
     PixelIVM<DestPixelT> edgePixel,
-    SBox2I* srcBlk,
     BilinearInterp* srcPosInterp,
     int interpLength
 )
@@ -328,7 +327,6 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
                             int kernelCenterX,
                             int kernelCenterY,
                             PixelIVM<DestPixelT> edgePixel,
-                            SBox2I* srcBlk,
                             BilinearInterp* srcPosInterp,
                             int interpLength
                            )
@@ -345,7 +343,6 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
         kernelCenterX,
         kernelCenterY,
         edgePixel,
-        srcBlk,
         srcPosInterp,
         interpLength
     );
@@ -369,7 +366,6 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
                             int kernelCenterX, \
                             int kernelCenterY, \
                             PixelIVM<DESTIMAGEPIXELT> edgePixel, \
-                            SBox2I* srcBlk, \
                             BilinearInterp* srcPosInterp, \
                             int interpLength \
                             );

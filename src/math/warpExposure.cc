@@ -301,19 +301,20 @@ namespace {
             } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
                 if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                     try {
-                        std::pair<int, bool> result =
+                        std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
                                            afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
                                                                 computeSrcPos,  interpLength, padValue, false);
-                        if (result.second) return result.first;
+                        if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
                     }
                     catch(lsst::afw::gpu::GpuMemoryException) { }
                     catch(pexExcept::MemoryException) { }
                     catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
                 } else if (devPref != lsst::afw::gpu::USE_CPU) {
-                    std::pair<int, bool> result =  afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
+                    std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
+                                           afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernel,
                                                                       computeSrcPos, interpLength, padValue,
                                                                       devPref == lsst::afw::gpu::USE_GPU);
-                    if (result.second) return result.first;
+                    if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
                     if (devPref == lsst::afw::gpu::USE_GPU) {
                         throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
                                           "Gpu cannot perform this warp (kernel too big?)");

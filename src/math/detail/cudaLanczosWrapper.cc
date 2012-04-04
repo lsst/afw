@@ -152,7 +152,6 @@ int WarpImageGpuWrapper(
     const lsst::afw::geom::Box2I srcBox,
     const int kernelCenterX,
     const int kernelCenterY,
-    lsst::afw::gpu::detail::GpuBuffer2D<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::GpuBuffer2D<BilinearInterp> const& srcPosInterp,
     const int interpLength,
     typename afwImage::Image<DestPixelT>::SinglePixel padValue
@@ -171,7 +170,6 @@ int WarpImageGpuWrapper(
     const int destHeight = destImage.getHeight();
     gpuDetail::GpuMemOwner<DestPixelT> destBufImgGpu;
     gpuDetail::GpuMemOwner<SrcPixelT> srcBufImgGpu;
-    gpuDetail::GpuMemOwner<SBox2I> srcBlkGpu;
     gpuDetail::GpuMemOwner<BilinearInterp> srcPosInterpGpu;
 
     ImageDataPtr<DestPixelT> destImgGpu;
@@ -196,12 +194,8 @@ int WarpImageGpuWrapper(
     srcImgGpu.width = srcImage.getWidth();
     srcImgGpu.height = srcImage.getHeight();
 
-    srcBlkGpu.Transfer(srcBlk);
-    if (srcBlkGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for source block sizes");
-    }
     srcPosInterpGpu.Transfer(srcPosInterp);
-    if (srcBlkGpu.ptr == NULL)  {
+    if (srcPosInterpGpu.ptr == NULL)  {
         throw LSST_EXCEPT(afwGpu::GpuMemoryException,
                           "Not enough memory on GPU for interpolation data for coorinate transformation");
     }
@@ -215,7 +209,6 @@ int WarpImageGpuWrapper(
                            kernelCenterX,
                            kernelCenterY,
                            edgePixelGpu,
-                           srcBlkGpu.ptr,
                            srcPosInterpGpu.ptr, interpLength
                           );
 
@@ -241,7 +234,6 @@ int WarpImageGpuWrapper(
     const lsst::afw::geom::Box2I srcBox,
     const int kernelCenterX,
     const int kernelCenterY,
-    lsst::afw::gpu::detail::GpuBuffer2D<SBox2I> const& srcBlk,
     lsst::afw::gpu::detail::GpuBuffer2D<BilinearInterp> const& srcPosInterp,
     const int interpLength,
     typename afwImage::MaskedImage<DestPixelT>::SinglePixel padValue
@@ -267,7 +259,6 @@ int WarpImageGpuWrapper(
     gpuDetail::GpuMemOwner<VarPixel>  srcBufVarGpu;
     gpuDetail::GpuMemOwner<MskPixel>  srcBufMskGpu;
 
-    gpuDetail::GpuMemOwner<SBox2I> srcBlkGpu;
     gpuDetail::GpuMemOwner<BilinearInterp> srcPosInterpGpu;
 
     ImageDataPtr<DestPixelT> destImgGpu;
@@ -309,12 +300,8 @@ int WarpImageGpuWrapper(
     srcImgGpu.width = srcImage.getWidth();
     srcImgGpu.height = srcImage.getHeight();
 
-    srcBlkGpu.Transfer(srcBlk);
-    if (srcBlkGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for source block sizes");
-    }
     srcPosInterpGpu.Transfer(srcPosInterp);
-    if (srcBlkGpu.ptr == NULL)  {
+    if (srcPosInterpGpu.ptr == NULL)  {
         throw LSST_EXCEPT(afwGpu::GpuMemoryException,
                           "Not enough memory on GPU for interpolation data for coorinate transformation");
     }
@@ -328,7 +315,6 @@ int WarpImageGpuWrapper(
                            kernelCenterX,
                            kernelCenterY,
                            edgePixelGpu,
-                           srcBlkGpu.ptr,
                            srcPosInterpGpu.ptr, interpLength
                           );
     int numGoodPixels = NumGoodPixels(srcPosInterp, interpLength, destWidth, destHeight, srcBoxConv);
@@ -402,7 +388,7 @@ void CalculateInterpolationData(gpuDetail::GpuBuffer2D<BilinearInterp>& srcPosIn
 
 // a part of public interface, see header file for description
 template<typename DestImageT, typename SrcImageT>
-std::pair<int, bool> warpImageGPU(
+std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     DestImageT &destImage,              ///< remapped %image
     SrcImageT const &srcImage,          ///< source %image
     afwMath::LanczosWarpingKernel const &lanczosKernel,     ///< warping kernel
@@ -425,16 +411,16 @@ std::pair<int, bool> warpImageGPU(
     	throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
 
     if (gpuDetail::TryToSelectCudaDevice(!forceProcessing) == false)
-        return std::pair<int, bool>(-1, false);
+        return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::NO_GPU);
 
     const int order = lanczosKernel.getOrder();
     //do not process if the kernel is too large for allocated GPU local memory
     if (order * 2 > gpu::SIZE_MAX_WARPING_KERNEL)
-        return std::pair<int, bool>(-1, false);
+        return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::KERNEL_TOO_LARGE);
 
     //do not process if the interpolation data is too large to make any speed gains
     if (!forceProcessing && interpLength < 3) {
-        return std::pair<int, bool>(-1, false);
+        return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::INTERP_LEN_TOO_SMALL);
     }
 
     int const destWidth = destImage.getWidth();
@@ -469,15 +455,6 @@ std::pair<int, bool> warpImageGPU(
 
     CalculateInterpolationData(/*in,out*/srcPosInterp, interpLength, destWidth, destHeight);
 
-    // calculates dimensions of partitions of destination image to GPU blocks
-    // each block is handled by one GPU multiprocessor
-    const int gpuBlockSizeX = gpu::SIZE_X_WARPING_BLOCK;
-    const int gpuBlockSizeY = gpu::SIZE_Y_WARPING_BLOCK;
-    const int gpuBlockXN = CeilDivide(destWidth, gpuBlockSizeX);
-    const int gpuBlockYN = CeilDivide(destHeight, gpuBlockSizeY);
-    //***UNUSED*** GPU input, will contain: for each gpu block, the box specifying the required source image data
-    gpuDetail::GpuBuffer2D<gpu::SBox2I> srcBlk(gpuBlockXN, gpuBlockYN);
-
     int numGoodPixels = 0;
 
     pexLog::TTrace<3>("lsst.afw.math.warp", "using GPU acceleration, remapping masked image");
@@ -489,11 +466,11 @@ std::pair<int, bool> warpImageGPU(
                                         srcGoodBBox,
                                         lanczosKernel.getCtrX(),
                                         lanczosKernel.getCtrY(),
-                                        srcBlk, srcPosInterp, interpLength, padValue
+                                        srcPosInterp, interpLength, padValue
                                        );
     #endif
 
-    return std::pair<int, bool>(numGoodPixels, true);
+    return std::pair<int, WarpImageGpuStatus::ReturnCode>(numGoodPixels, WarpImageGpuStatus::OK);
 }
 
 //
@@ -505,7 +482,7 @@ std::pair<int, bool> warpImageGPU(
 #define NL /* */
 
 #define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
-    template std::pair<int,bool> warpImageGPU( \
+    template std::pair<int,WarpImageGpuStatus::ReturnCode> warpImageGPU( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwMath::LanczosWarpingKernel const &warpingKernel, \
@@ -513,7 +490,7 @@ std::pair<int, bool> warpImageGPU(
         int const interpLength, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         const bool forceProcessing); NL    \
-    template std::pair<int,bool> warpImageGPU( \
+    template std::pair<int,WarpImageGpuStatus::ReturnCode> warpImageGPU( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwMath::LanczosWarpingKernel const &warpingKernel, \
