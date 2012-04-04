@@ -44,12 +44,10 @@ namespace math {
 namespace detail {
 namespace gpu {
 
-typedef unsigned char uint8;
-extern __shared__ uint8 smem[];
 
 namespace
 {
-// CeilDivide: returns the greatest integer n such that n*divisor>=num
+// CeilDivide: returns the smallest integer n such that n*divisor>=num
 // preconditions: num>=0, divisor>0
 __device__
 int CeilDivide(int num, int divisor)    {
@@ -186,7 +184,7 @@ __device__ double ApplyLanczosFilter(int kernelSize, double orderInv,
     return colSumImg / kernelSum;
 }
 
-// calculate the interpolated value given the data for linear interpolation
+// calculate the interpolated value given the data for bilinear interpolation
 __device__ SPoint2 GetInterpolatedValue(BilinearInterp* const interpBuf, int interpBufPitch,
                                         int interpLen, int x, int y
                                        )
@@ -225,7 +223,7 @@ __global__ void WarpImageGpuKernel(
     const int blockSizeX = SIZE_X_WARPING_BLOCK;
     const int blockSizeY = SIZE_Y_WARPING_BLOCK;
 
-    //number of blocks in X nad Y directions
+    //number of blocks in X and Y directions
     const int blockNX = CeilDivide(destImage.width,  blockSizeX);
     const int blockNY = CeilDivide(destImage.height, blockSizeY);
 
@@ -338,8 +336,7 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
     dim3 block(SIZE_X_WARPING_BLOCK * SIZE_Y_WARPING_BLOCK);
     dim3 grid(7 * 16); //divisible by no. of SM's in most GPUs, performs well
 
-    //15500 - will fit into SM 1.3 devices, and fits twice into SM 2.x devices
-    WarpImageGpuKernel <<< grid, block, 15500>>>(
+    WarpImageGpuKernel <<< grid, block, 0>>>(
         isMaskedImage,
         destImageGpu,
         srcImageGpu,

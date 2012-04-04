@@ -34,12 +34,12 @@
  * requires:
  * #include <cuda.h>
  * #include <cuda_runtime.h>
- * #include "lsst/afw/gpu/detail/ImageBuffer.h"
+ * #include "lsst/afw/gpu/detail/GpuBuffer2D.h"
  *
  * @ingroup afw
  */
 
-#ifdef GPU_BUILD 
+#ifdef GPU_BUILD
 
 namespace lsst {
 namespace afw {
@@ -79,7 +79,7 @@ T* AllocOnGpu(int size)
  *
  * Copies data from GPU to CPU memory. destCpu should be a valid pointer into any allocated CPU memory,
  * and sourceGpu should be a valid parameter into any allocated GPU memory.
- * 
+ *
  * A failure to copy is generaly not expected. It could be due to invalid arguments,
  * or due to CUDA or GPu device not being initialized properly, or not in a correct state.
  *
@@ -106,7 +106,7 @@ void CopyFromGpu(T* destCpu, T* sourceGpu, int size)
  *
  * Copies data from CPU to GPU memory. destGpu should be a valid pointer into any allocated GPU memory,
  * and sourceCpu should be a valid parameter into any allocated CPU memory.
- * 
+ *
  * A failure to copy is generaly not expected. It could be due to invalid arguments,
  * or due to CUDA or GPU device not being initialized properly, or not in a correct state.
  *
@@ -133,7 +133,7 @@ void CopyToGpu(T* destGpu, T* sourceCpu, int size)
  * \arg size: number of elements of the array to copy
  * \return Pointer to allocated GPU memory where data was transferred int, or NULL on GPU memory allocation failure
  *
- * Allocates a continuos block of GPU memory which will contain the transferred data, 
+ * Allocates a continuos block of GPU memory which will contain the transferred data,
  * and returns a GPU pointer to the allocated memory. Then copies data from CPU to GPU memory.
  * sourceCpu should be a valid parameter into any allocated CPU memory.
  * If GPU memory allocation fails, returns NULL, so the return value should always be verified.
@@ -141,8 +141,8 @@ void CopyToGpu(T* destGpu, T* sourceCpu, int size)
  *
  * It is obligatory to free the allocated GPU memory with cudaFree() (available from cuda_runtime.h)
  *
- * Throws exception if data copying fails. A failure to copy is generaly not expected. It could be due to invalid arguments,
- * or due to CUDA or GPU device not being initialized properly, or not in a correct state.
+ * Throws exception if data copying fails. A failure to copy is generaly not expected. It could be due to
+ * invalid arguments, or due to CUDA or GPU device not being initialized properly, or not in a correct state.
  *
  * \throw lsst::afw::math::GpuMemoryException if data copying fails
  */
@@ -182,17 +182,17 @@ T* TransferToGpu(const T* sourceCpu, int size)
 template<typename T>
 class GpuMemOwner
 {
-private:    
+private:
     void operator=(const GpuMemOwner& rhs);
 
 public:
     GpuMemOwner(const GpuMemOwner& rhs) {
-	assert(rhs.getPtr() == NULL);
+	    assert(rhs.getPtr() == NULL);
         ptr=NULL;
 	}
 
     T* ptr;   ///> pointer to the allocated GPU memory block, or NULL
-    int size; ///> size of the allocated GPU memory block, valid whenever this->ptr != NULL
+    int size; ///> size (as element count) of the allocated GPU memory block, valid whenever this->ptr != NULL
 
     /** \brief Creates a GpuMemOwner object in a free state (see GpuMemOwner class description) */
     GpuMemOwner() : ptr(NULL) {}
@@ -213,21 +213,22 @@ public:
      * \brief Transfers data from an array to the GPU
      * \arg source: pointer to the source array (in CPU main memory)
      * \arg size: number of elements of the array to copy
-     * \return Pointer to allocated GPU memory where data was transferred into, or NULL on GPU memory allocation failure
+     * \return Pointer to allocated GPU memory where data was transferred into, or NULL on GPU mem. allocation failure
      *
      * \pre this->ptr must be NULL (this object must be in the free state, see class description)
      *
      * If transfer succeeds, this->ptr will be set to point to the GPU memory block where data was transferred into.
      * The same value (equal to this->ptr will be returned). It will change the
      * state of this object to bound. Sets this->size to the value of the argument size_p
-     * If GPU memory allocation fails, returns NULL, and sets this->ptr to NULL, so the return value should always be verified.
+     * If GPU memory allocation fails, returns NULL, and sets this->ptr to NULL, so the return value should
+     * always be verified.
      *
-     * Use member function CopyFromGpu() to copy data from the bound GPU memory. 
+     * Use member function CopyFromGpu() to copy data from the bound GPU memory.
      *
      * Also see function lsst:afw::gpu::detail::TransferToGpu().
      *
-     * Throws exception if data copying fails. A failure to copy is generaly not expected. It could be due to invalid arguments,
-     * or due to CUDA or GPU device not being initialized properly, or not in a correct state.
+     * Throws exception if data copying fails. A failure to copy is generaly not expected. It could be due to invalid
+     * arguments, or due to CUDA or GPU device not being initialized properly, or not in a correct state.
      *
      * \throw lsst::afw::math::GpuMemoryException if data copying fails
      */
@@ -239,9 +240,9 @@ public:
     }
 
     /**
-     * \brief Transfers data from an ImageBuffer to the GPU
-     * \arg source: source ImageBuffer (in CPU main memory)
-     * \return Pointer to allocated GPU memory where data was transferred into, or NULL on GPU memory allocation failure
+     * \brief Transfers data from an GpuBuffer2D to the GPU
+     * \arg source: source GpuBuffer2D (in CPU main memory)
+     * \return Pointer to allocated GPU memory where data was transferred into, or NULL on GPU mem. allocation failure
      *
      * \pre this->ptr must be NULL (this object must be in the free state, see class description)
      *
@@ -249,7 +250,7 @@ public:
      *
      * \throw lsst::afw::math::GpuMemoryException if data copying fails
      */
-    T* Transfer(const ImageBuffer<T>& source) {
+    T* Transfer(const GpuBuffer2D<T>& source) {
         assert(ptr == NULL);
         size = source.Size();
         ptr = TransferToGpu(source.img, size);
@@ -259,7 +260,7 @@ public:
     /**
      * \brief Transfers data from a vector to the GPU
      * \arg source: source vector (in CPU main memory)
-     * \return Pointer to allocated GPU memory where data was transferred into, or NULL on GPU memory allocation failure
+     * \return Pointer to allocated GPU memory where data was transferred into, or NULL on GPU mem. allocation failure
      *
      * \pre this->ptr must be NULL (this object must be in the free state, see class description)
      *
@@ -273,7 +274,7 @@ public:
         ptr = TransferToGpu(&source[0], size);
         return ptr;
     }
-    
+
     /**
      * \brief Allocates GPU memory for an array
      * \arg size: number of elements of the array
@@ -284,9 +285,10 @@ public:
      * If allocation succeeds, this->ptr will be set to point to the allocated GPU memory block.
      * The same value (equal to this->ptr will be returned). It will change the
      * state of this object to bound. Sets this->size to the value of the argument size_p
-     * If GPU memory allocation fails, returns NULL, and sets this->ptr to NULL, so the return value should always be verified.
+     * If GPU memory allocation fails, returns NULL, and sets this->ptr to NULL, so the return value should
+     * always be verified.
      *
-     * Use member function CopyFromGpu() to copy data from the bound GPU memory. 
+     * Use member function CopyFromGpu() to copy data from the bound GPU memory.
      *
      * Also see function lsst:afw::gpu::detail::AllocOnGpu().
      */
@@ -297,22 +299,22 @@ public:
         return ptr;
     }
 
-    /** \brief Copies ImageBuffer data to bound GPU memory
+    /** \brief Copies GpuBuffer2D data to bound GPU memory
      *
      * Also see lsst::afw::math::detail::CopyToGpu, which this function delegates to.
      */
-    T* CopyToGpu(detail::ImageBuffer<T>& source) const {
+    T* CopyToGpu(detail::GpuBuffer2D<T>& source) const {
         assert(ptr != NULL);
         assert(source.Size() == size);
         lsst::afw::gpu::detail::CopyToGpu(ptr, source.img, size);
         return ptr;
     }
 
-    /** \brief Copies ImageBuffer data from bound GPU memory
-     * 
+    /** \brief Copies GpuBuffer2D data from bound GPU memory
+     *
      * Also see lsst::afw::math::detail::CopyFromGpu, which this function delegates to.
      */
-    T* CopyFromGpu(detail::ImageBuffer<T>& dest) const {
+    T* CopyFromGpu(detail::GpuBuffer2D<T>& dest) const {
         assert(ptr != NULL);
         assert(dest.Size() == size);
         lsst::afw::gpu::detail::CopyFromGpu(dest.img, ptr, size);
@@ -320,7 +322,7 @@ public:
     }
 
     /** \brief Copies data from bound GPU memory to CPU memory
-     * 
+     *
      * Also see lsst::afw::gpu::detail::CopyFromGpu, which this function delegates to.
      */
     T* CopyFromGpu(T* dest) const {
@@ -330,20 +332,20 @@ public:
     }
 
     /** \brief Transfers data from an ImageBase to the GPU. The stride from ImageBase is retained.
-     * 
+     *
      * Also see ImageBase::Transfer() function, which this function delegates to.
      */
     int TransferFromImageBase(const lsst::afw::image::ImageBase<T>& img);
 
-    /** \brief Allocates a block of GPU memory into which ImageBases' data can fit into. 
-     * 
+    /** \brief Allocates a block of GPU memory into which ImageBases' data can fit into.
+     *
      *  The stride required for data of a given ImageBase is taken into account.
      *
      * Also see ImageBase::Alloc() function, which this function delegates to.
      */
     int AllocImageBaseBuffer(const lsst::afw::image::ImageBase<T>& img);
 
-    /** \brief Copies data from bound GPU memory into an ImageBase.      
+    /** \brief Copies data from bound GPU memory into an ImageBase.
      *
      * The stride of ImageBase must be taken into account, and the easiest way to assure that
      * is to bind GPU memory with ImageBase::TransferFromImageBase() or ImageBase::AllocImageBaseBuffer() .

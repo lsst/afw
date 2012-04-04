@@ -46,7 +46,7 @@
 
 #include "lsst/afw/gpu/GpuExceptions.h"
 #include "lsst/afw/gpu/IsGpuBuild.h"
-#include "lsst/afw/gpu/detail/ImageBuffer.h"
+#include "lsst/afw/gpu/detail/GpuBuffer2D.h"
 #include "lsst/afw/gpu/detail/CudaMemory.h"
 #include "lsst/afw/gpu/detail/CudaSelectGpu.h"
 
@@ -84,7 +84,7 @@ int InterpBlkN(int size , int interpLength)
 }
 
 // calculate the interpolated value given the data for linear interpolation
-gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & interpBuf,
+gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::GpuBuffer2D<gpu::BilinearInterp> const & interpBuf,
                                   int blkX, int blkY, int subX, int subY
                                  )
 {
@@ -93,7 +93,7 @@ gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::ImageBuffer<gpu::BilinearInter
 }
 
 // calculate the interpolated value given the data for linear interpolation
-gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & interpBuf,
+gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::GpuBuffer2D<gpu::BilinearInterp> const & interpBuf,
                                   int interpLen, int x, int y
                                  )
 {
@@ -108,7 +108,7 @@ gpu::SPoint2 GetInterpolatedValue(afwGpu::detail::ImageBuffer<gpu::BilinearInter
 
 // calculate the number of points falling within the srcGoodBox,
 // given a bilinearily interpolated coordinate transform function on integer range [0,width> x [0, height>
-int NumGoodPixels(afwGpu::detail::ImageBuffer<gpu::BilinearInterp> const & interpBuf,
+int NumGoodPixels(afwGpu::detail::GpuBuffer2D<gpu::BilinearInterp> const & interpBuf,
                   const int interpLen, const int width, const int height, SBox2I srcGoodBox)
 {
     int cnt = 0;
@@ -152,8 +152,8 @@ int WarpImageGpuWrapper(
     const lsst::afw::geom::Box2I srcBox,
     const int kernelCenterX,
     const int kernelCenterY,
-    lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
-    lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
+    lsst::afw::gpu::detail::GpuBuffer2D<SBox2I> const& srcBlk,
+    lsst::afw::gpu::detail::GpuBuffer2D<BilinearInterp> const& srcPosInterp,
     const int interpLength,
     typename afwImage::Image<DestPixelT>::SinglePixel padValue
 )
@@ -241,8 +241,8 @@ int WarpImageGpuWrapper(
     const lsst::afw::geom::Box2I srcBox,
     const int kernelCenterX,
     const int kernelCenterY,
-    lsst::afw::gpu::detail::ImageBuffer<SBox2I> const& srcBlk,
-    lsst::afw::gpu::detail::ImageBuffer<BilinearInterp> const& srcPosInterp,
+    lsst::afw::gpu::detail::GpuBuffer2D<SBox2I> const& srcBlk,
+    lsst::afw::gpu::detail::GpuBuffer2D<BilinearInterp> const& srcPosInterp,
     const int interpLength,
     typename afwImage::MaskedImage<DestPixelT>::SinglePixel padValue
 )
@@ -354,7 +354,7 @@ int WarpImageGpuWrapper(
 //    destWidth, destHeight - size of function domain
 // output:
 //    srcPosInterp - all members are calculated and set, ready to calculate interpolation values
-void CalculateInterpolationData(gpuDetail::ImageBuffer<BilinearInterp>& srcPosInterp, int interpLength,
+void CalculateInterpolationData(gpuDetail::GpuBuffer2D<BilinearInterp>& srcPosInterp, int interpLength,
                                 int destWidth, int destHeight)
 {
     const int interpBlkNX = InterpBlkN(destWidth , interpLength);
@@ -453,7 +453,7 @@ std::pair<int, bool> warpImageGPU(
     const int interpBlkNX = InterpBlkN(destWidth , interpLength);
     const int interpBlkNY = InterpBlkN(destHeight, interpLength);
     //GPU kernel input, will contain: for each interpolation block, all interpolation parameters
-    gpuDetail::ImageBuffer<BilinearInterp> srcPosInterp(interpBlkNX, interpBlkNY);
+    gpuDetail::GpuBuffer2D<BilinearInterp> srcPosInterp(interpBlkNX, interpBlkNY);
 
     // calculate values of coordinate transform function
     for (int rowBand = 0; rowBand < interpBlkNY; rowBand++) {
@@ -476,7 +476,7 @@ std::pair<int, bool> warpImageGPU(
     const int gpuBlockXN = CeilDivide(destWidth, gpuBlockSizeX);
     const int gpuBlockYN = CeilDivide(destHeight, gpuBlockSizeY);
     //***UNUSED*** GPU input, will contain: for each gpu block, the box specifying the required source image data
-    gpuDetail::ImageBuffer<gpu::SBox2I> srcBlk(gpuBlockXN, gpuBlockYN);
+    gpuDetail::GpuBuffer2D<gpu::SBox2I> srcBlk(gpuBlockXN, gpuBlockYN);
 
     int numGoodPixels = 0;
 

@@ -35,14 +35,14 @@
  * @ingroup afw
  */
 
-#ifdef GPU_BUILD 
+#ifdef GPU_BUILD
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
 #include "lsst/afw/image.h"
-#include "lsst/afw/gpu/GpuExceptions.h" 
-#include "lsst/afw/gpu/detail/ImageBuffer.h"
+#include "lsst/afw/gpu/GpuExceptions.h"
+#include "lsst/afw/gpu/detail/GpuBuffer2D.h"
 #include "lsst/afw/gpu/detail/CudaMemory.h"
 
 using namespace std;

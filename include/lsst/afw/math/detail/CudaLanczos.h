@@ -122,16 +122,16 @@ struct SBox2I
     This class just defines a line which can be used to interpolate
     a segment of a function.
 
-    It does not specify which part of a function is interpolated.
+    It does not specify which part of the function is interpolated.
 */
 struct LinearInterp
 {
-    SPoint2 o;    /// defines the value at origin
-    SVec2 deltaX; /// difference of neighbouring values of teh function (the gradient)
+    SPoint2 o;    /// defines the value at the origin
+    SVec2 deltaX; /// difference of neighbouring values of the function (the gradient)
 
     CPU_GPU LinearInterp(SPoint2 par_o, SVec2 par_deltaX) : o(par_o), deltaX(par_deltaX) {};
 
-    /// Calculates a value of the interpolation function at a point subX
+    /// Calculates a value of the interpolation function at subX
     CPU_GPU SPoint2 Interpolate(int subX)
     {
         return MovePoint(o, VecMul(deltaX,subX) );
@@ -142,16 +142,17 @@ struct LinearInterp
 /** Used for bilinear interpolation of a 2D function Z*Z -> R*R
 
     This class just defines a 2D surface which can be used to interpolate
-    some segment of a 2D function.
+    a segment of a 2D function.
 
-    It does not specify which segment of a function is interpolated.
+    It does not specify which segment of the function is interpolated.
 */
 struct BilinearInterp
 {
     SPoint2 o;  /// defines the value at origin
     SVec2 d0X;  /// difference of neighbouring values in the first row (the gradient of a line at y=0)
-    SVec2 ddX;  /// difference of difference of neighbouring values in two neighbouring rows (diff. of gradients at y=0 and y=1)
-    SVec2 deltaY; /// difference of neighbouring values in the first column (gradient of line at x=0)
+    /// difference of difference of neighbouring values in two neighbouring rows (diff. of gradients at x=0 and x=1)
+    SVec2 ddX;
+    SVec2 deltaY; /// difference of neighbouring values in the first column (gradient of a line at x=0)
 
     BilinearInterp() : o(0,0), d0X(0,0), ddX(0,0), deltaY(0,0) {};
 
@@ -159,6 +160,7 @@ struct BilinearInterp
         : o(par_o), d0X(par_d0X), ddX(par_ddX), deltaY(par_deltaY) {}
 
 
+    /// intersects the interpolation surface with a const-y plane
     CPU_GPU LinearInterp GetLinearInterp(int subY)
     {
         SVec2 deltaX=VecAdd(d0X, VecMul(ddX, subY));
@@ -203,9 +205,9 @@ struct ImageDataPtr
     @arg isMaskedImage - if false, only the image plane is calculated, mask and variance planes are ignored
     @arg destImageGpu - (output) defines memory region (on GPU) containing allocated buffer for output data
     @arg srcImageGpu - defines memory region (on GPU) containing source image data
-    @arg srcGoodBox - valid pixel centers of Lanczos kernels
+    @arg srcGoodBox - valid source pixel centers ffor Lanczos kernels
     @arg kernelCenterX, kernelCenterY - offset of Lanczos kernel center, in pixels
-    @arg edgePixel - set this value in the destination image to all pixels outside of bounds of the source image
+    @arg edgePixel - set this for all dest. image output pixels mapped from outside of bounds of the source image
     @arg srcBlk - defines part of the input image required to calculate a block of the output image. Currently unused.
     @arg srcPosInterp - a 2D array defining a piecewise bilinear interpolation of a coordinate transform function over
                    input image. Each element defines coordinate transform of one part of the input image.

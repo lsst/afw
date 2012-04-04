@@ -50,7 +50,7 @@ namespace gpu {
  *   will be used. If GPU execution results in a failure, an exception will be thrown.
  * AUTO_WITH_CPU_FALLBACK - Same as AUTO, except that
  *    if the GPU code path throws an exception, it will fallback to CPU code path.
- * USE_CPU - a GPU will not be used.
+ * USE_CPU - GPU will not be used.
  * USE_GPU - code will always attempt to use a GPU (except when overriden by global settings).
  *    If a GPU can not be used, an exception will be thrown.
  *

@@ -51,11 +51,11 @@ void CudaReserveDevice();
 void CudaThreadExit();
 
 // gets the preferred cuda device id from a CUDA_DEVICE environment variable
-// if the CUDA_DEVICE environment variable is not set, returns -2 (preferred device not available)
+// if the CUDA_DEVICE environment variable is not set, returns -2 (preferred device not specified)
 int GetPreferredCudaDevice();
 
 // returns true when preffered device has been selected
-// returns false when preffered device is not available
+// returns false when preffered device is not specified
 // throws exception when unable to select the preffered device
 bool SelectPreferredCudaDevice();
 
@@ -73,11 +73,11 @@ void VerifyCudaDevice();
 // All subsequent calls will return the previous result.
 // To select again, set reselect to true.
 // Attempts to use the preferred device.
-// If a preferred device is not available, it attempts to auto-select.
+// If a preferred device is not specified, it attempts to auto-select.
 // Finally, it verifies the selected cuda device.
 // returns true if gpu device was sucesssfully selected at this call or at a previous call
 // returns false if gpu device selection failed at this call or at a previous call
-// Throws exceptions if device selection fails due to any reason (only on first call or reselect)
+// Throws exceptions if device selection fails due to any reason (only on a first call or on reselect)
 // When noExceptions is set to true, no exceptions will be thrown.
 bool TryToSelectCudaDevice(bool noExceptions, bool reselect=false);
 

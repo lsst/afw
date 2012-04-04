@@ -51,7 +51,7 @@
 
 #include "lsst/afw/math/detail/ConvolveGPU.h"
 #include "lsst/afw/math/detail/convCUDA.h"
-#include "lsst/afw/gpu/detail/ImageBuffer.h"
+#include "lsst/afw/gpu/detail/GpuBuffer2D.h"
 #include "lsst/afw/math/detail/cudaConvWrapper.h"
 #include "lsst/afw/gpu/detail/CudaSelectGpu.h"
 #include "lsst/afw/gpu/IsGpuBuild.h"
@@ -75,9 +75,9 @@ typedef mathDetail::KerPixel KerPixel;
 // copies data from MaskedImage to three image buffers
 template <typename PixelT>
 void CopyFromMaskedImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel> const& image,
-                         gpuDetail::ImageBuffer<PixelT>& img,
-                         gpuDetail::ImageBuffer<VarPixel>& var,
-                         gpuDetail::ImageBuffer<MskPixel>& msk
+                         gpuDetail::GpuBuffer2D<PixelT>& img,
+                         gpuDetail::GpuBuffer2D<VarPixel>& var,
+                         gpuDetail::GpuBuffer2D<MskPixel>& msk
                         )
 {
     int width = image.getWidth();
@@ -109,9 +109,9 @@ void CopyFromMaskedImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel> const
 template <typename PixelT>
 void CopyToImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel>& outImage,
                  int startX, int startY,
-                 const gpuDetail::ImageBuffer<PixelT>& img,
-                 const gpuDetail::ImageBuffer<VarPixel>& var,
-                 const gpuDetail::ImageBuffer<MskPixel>& msk
+                 const gpuDetail::GpuBuffer2D<PixelT>& img,
+                 const gpuDetail::GpuBuffer2D<VarPixel>& var,
+                 const gpuDetail::GpuBuffer2D<MskPixel>& msk
                 )
 {
     assert(img.height == var.height);
@@ -232,7 +232,7 @@ bool mathDetail::convolveLinearCombinationGPU(
     }
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
-    typedef gpuDetail::ImageBuffer<KernelPixel> KernelBuffer;
+    typedef gpuDetail::GpuBuffer2D<KernelPixel> KernelBuffer;
 
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
@@ -352,15 +352,15 @@ bool mathDetail::convolveLinearCombinationGPU(
         for (int i = 0; i < cnvHeight; i++) {
             rowPos[i] = inImage.indexToPosition(i + cnvStartY, afwImage::Y);
         }
-        gpuDetail::ImageBuffer<InPixelT>  inBufImg;
-        gpuDetail::ImageBuffer<VarPixel>  inBufVar;
-        gpuDetail::ImageBuffer<MskPixel>  inBufMsk;
+        gpuDetail::GpuBuffer2D<InPixelT>  inBufImg;
+        gpuDetail::GpuBuffer2D<VarPixel>  inBufVar;
+        gpuDetail::GpuBuffer2D<MskPixel>  inBufMsk;
 
         CopyFromMaskedImage(inImage, inBufImg, inBufVar, inBufMsk);
 
-        gpuDetail::ImageBuffer<OutPixelT> outBufImg(cnvWidth, cnvHeight);
-        gpuDetail::ImageBuffer<VarPixel>  outBufVar(cnvWidth, cnvHeight);
-        gpuDetail::ImageBuffer<MskPixel>  outBufMsk(cnvWidth, cnvHeight);
+        gpuDetail::GpuBuffer2D<OutPixelT> outBufImg(cnvWidth, cnvHeight);
+        gpuDetail::GpuBuffer2D<VarPixel>  outBufVar(cnvWidth, cnvHeight);
+        gpuDetail::GpuBuffer2D<MskPixel>  outBufMsk(cnvWidth, cnvHeight);
 
         pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "MaskedImage, convolveLinearCombinationGPU: will use GPU acceleration");
@@ -418,7 +418,7 @@ bool mathDetail::convolveLinearCombinationGPU(
     }
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
-    typedef gpuDetail::ImageBuffer<KernelPixel> KernelBuffer;
+    typedef gpuDetail::GpuBuffer2D<KernelPixel> KernelBuffer;
 
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
@@ -543,8 +543,8 @@ bool mathDetail::convolveLinearCombinationGPU(
             for (int i = 0; i < cnvHeight; i++) {
                 rowPos[i] = inImage.indexToPosition(i + cnvStartY, afwImage::Y);
             }
-            gpuDetail::ImageBuffer<InPixelT>  inBuf(inImage);
-            gpuDetail::ImageBuffer<OutPixelT> outBuf(cnvWidth, cnvHeight);
+            gpuDetail::GpuBuffer2D<InPixelT>  inBuf(inImage);
+            gpuDetail::GpuBuffer2D<OutPixelT> outBuf(cnvWidth, cnvHeight);
 
             pexLog::TTrace<3>("lsst.afw.math.convolve",
                 "plain Image, convolveLinearCombinationGPU: will use GPU acceleration");
@@ -657,9 +657,9 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
         return false;
     }
 
-    gpuDetail::ImageBuffer<InPixelT>  inBuf(inImage);
-    gpuDetail::ImageBuffer<OutPixelT> outBuf(cnvWidth, cnvHeight);
-    gpuDetail::ImageBuffer<KernelPixel> kernelBuf(kernelImage);
+    gpuDetail::GpuBuffer2D<InPixelT>  inBuf(inImage);
+    gpuDetail::GpuBuffer2D<OutPixelT> outBuf(cnvWidth, cnvHeight);
+    gpuDetail::GpuBuffer2D<KernelPixel> kernelBuf(kernelImage);
 
 #ifdef GPU_BUILD
     GPU_ConvolutionImage_SpatiallyInvariantKernel<OutPixelT, InPixelT>(inBuf, outBuf, kernelBuf);
@@ -759,16 +759,16 @@ bool mathDetail::convolveSpatiallyInvariantGPU(
                       "MaskedImage, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);
 
-    gpuDetail::ImageBuffer<InPixelT>  inBufImg;
-    gpuDetail::ImageBuffer<VarPixel>  inBufVar;
-    gpuDetail::ImageBuffer<MskPixel>  inBufMsk;
+    gpuDetail::GpuBuffer2D<InPixelT>  inBufImg;
+    gpuDetail::GpuBuffer2D<VarPixel>  inBufVar;
+    gpuDetail::GpuBuffer2D<MskPixel>  inBufMsk;
     CopyFromMaskedImage(inImage, inBufImg, inBufVar, inBufMsk);
 
-    gpuDetail::ImageBuffer<OutPixelT> outBufImg(cnvWidth, cnvHeight);
-    gpuDetail::ImageBuffer<VarPixel>  outBufVar(cnvWidth, cnvHeight);
-    gpuDetail::ImageBuffer<MskPixel>  outBufMsk(cnvWidth, cnvHeight);
+    gpuDetail::GpuBuffer2D<OutPixelT> outBufImg(cnvWidth, cnvHeight);
+    gpuDetail::GpuBuffer2D<VarPixel>  outBufVar(cnvWidth, cnvHeight);
+    gpuDetail::GpuBuffer2D<MskPixel>  outBufMsk(cnvWidth, cnvHeight);
 
-    gpuDetail::ImageBuffer<KernelPixel> kernelBuf(kernelImage);
+    gpuDetail::GpuBuffer2D<KernelPixel> kernelBuf(kernelImage);
 #ifdef GPU_BUILD
     GPU_ConvolutionMI_SpatiallyInvariantKernel<OutPixelT, InPixelT>(
         inBufImg, inBufVar, inBufMsk,
