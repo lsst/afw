@@ -127,18 +127,64 @@ public:
      *  Note that the model can be subtracted instead simply by negating the coefficient array.
      */
     template <typename ImagePixelT>
-    void addModelToImage(
+    void addToImage(
         image::Image<ImagePixelT> & img,
         ndarray::Array<Pixel const,1,1> const & coefficients,
         bool useWeights = false
-    );
+    ) const;
 
+    /**
+     *  @brief Evaluate the derivative of the model with respect to the ellipse parameters
+     *         or a function thereof.
+     *
+     *  @param[out]   output       Array that will contain the derivative.  The dimensions
+     *                             are ordered {data points, basis elements, ellipse parameters}.
+     *                             Must be preallocated to the correct dimensions.
+     */
+    void computeDerivative(ndarray::Array<Pixel,3,-3> const & output) const;
+
+    /**
+     *  @brief Evaluate the derivative of the model with respect to the ellipse parameters
+     *         or a function thereof.
+     *
+     *  @param[out]   output       Array that will contain the derivative.  The dimensions
+     *                             are ordered {data points, basis elements, ellipse parameters}.
+     *                             Must be preallocated to the correct dimensions.
+     *  @param[in]    jacobian     Matrix giving the partial derivatives of the ellipse parameters
+     *                             with respect to the desired parameters.  Each row corresponds
+     *                             to a single ellipse parameter, and each column corresponds
+     *                             to a desired output parameter.
+     *  @param[in]    add          If true, the derivative will be added to the output array
+     *                             instead of overwriting it.
+     *
+     *  Passing a Jacobian matrix to computeDerivative is equivalent to multiplying the output
+     *  by the Jacobian on the right; that is:
+     *  @code
+     *  computeDerivative(output, jacobian);
+     *  @endcode
+     *  is equivalent to
+     *  @code
+     *  computeDerivative(tmp);
+     *  for (int n = 0; n < tmp.getSize<0>(); ++n)
+     *      output[n].asEigen() = tmp[n].asEigen() * jacobian;
+     *  @endcode
+     *  The second may be significantly slower, however, because the tmp tensor is never
+     *  actually formed in the first case.
+     */
     void computeDerivative(
-        ndarray::Array<Pixel,3> const & output,
-        Eigen::Matrix<Pixel,Eigen::Dynamic,5> const & jacobian
+        ndarray::Array<Pixel,3,-3> const & output,
+        Eigen::Matrix<Pixel,5,Eigen::Dynamic> const & jacobian,
+        bool add=false
     ) const;
 
 private:
+
+    // Implemenatation takes Jacobian wrt affine transform parameters instead of ellipse parameters.
+    void _computeDerivative(
+        ndarray::Array<Pixel,3,-3> const & output,
+        Eigen::Matrix<Pixel,6,Eigen::Dynamic> const & jacobian,
+        bool add
+    ) const;
 
     void _allocate();
 
@@ -155,8 +201,6 @@ private:
     Eigen::ArrayXd _yt;
     Eigen::ArrayXXd _xWorkspace;
     Eigen::ArrayXXd _yWorkspace;
-    Eigen::ArrayXXd _dxWorkspace;
-    Eigen::ArrayXXd _dyWorkspace;
 };
 
 }}}}   // lsst::afw::math::shapelets

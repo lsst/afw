@@ -42,14 +42,13 @@ void fillCoordinates(
 ) {
     int n = 0;
     for (
-        detection::Footprint::SpanList::const_iterator i = region.getSpans().begin();
-        i != region.getSpans().end();
-        ++i
+        detection::Footprint::SpanList::const_iterator spanIter = region.getSpans().begin();
+        spanIter != region.getSpans().end();
+        ++spanIter
     ) {
-        for (int x = (**i).getX0(); x <= (**i).getX1(); ++x) {
+        for (int x = (**spanIter).getX0(); x <= (**spanIter).getX1(); ++x, ++n) {
             xArray[n] = x;
-            yArray[n] = (**i).getY();
-            ++n;
+            yArray[n] = (**spanIter).getY();
         }
     }
 }
@@ -62,6 +61,17 @@ void fillHermite1d(Eigen::ArrayXXd & workspace, Eigen::ArrayXd const & coord) {
     for (int j = 2; j < workspace.cols(); ++j) {
         workspace.col(j) = std::sqrt(2.0 / j) * coord * workspace.col(j-1)
             - std::sqrt((j - 1.0) / j) * workspace.col(j-2);
+    }
+}
+
+void fillDerivative1d(
+    Eigen::ArrayXXd & dWorkspace, Eigen::ArrayXXd const & workspace, Eigen::ArrayXd const & coord
+) {
+    dWorkspace.resize(workspace.rows(), workspace.cols());
+    if (dWorkspace.cols() > 0)
+        dWorkspace.col(0) = - coord * workspace.col(0);
+    for (int j = 1; j < dWorkspace.cols(); ++j) {
+        dWorkspace.col(j) = std::sqrt(2.0 * j) * workspace.col(j-1) - coord * workspace.col(j);
     }
 }
 
@@ -134,6 +144,91 @@ void ModelBuilder::update(geom::ellipses::Ellipse const & ellipse) {
     }
 }
 
+template <typename ImagePixelT>
+void ModelBuilder::addToImage(
+    image::Image<ImagePixelT> & img,
+    ndarray::Array<Pixel const,1,1> const & coefficients,
+    bool useWeights
+) const {
+    int n = 0;
+    ndarray::EigenView<Pixel,2,-2> design(_design);
+    ndarray::EigenView<Pixel const,1,1> coeff(coefficients);
+    for (
+        detection::Footprint::SpanList::const_iterator spanIter = _region.getSpans().begin();
+        spanIter != _region.getSpans().end();
+        ++spanIter
+    ) {
+        typename image::Image<ImagePixelT>::x_iterator pixIter
+            = img.x_at((**spanIter).getX0(), (**spanIter).getY());
+        for (int x = (**spanIter).getX0(); x <= (**spanIter).getX1(); ++x, ++pixIter, ++n) {
+            Pixel v = design.row(n).dot(coeff);
+            if (!useWeights && !_weights.isEmpty()) {
+                v /= _weights[n];  // if _weights is not empty, design matrix already includes weights
+            }
+            *pixIter += v;
+        }
+    }
+}
+
+void ModelBuilder::computeDerivative(ndarray::Array<Pixel,3,-3> const & output) const {
+    Eigen::Matrix<Pixel,6,Eigen::Dynamic> gtJac(6, 5);
+    gtJac.block<6,5>(0,0) = _ellipse.getGridTransform().d();
+    _computeDerivative(output, gtJac, false);
+}
+
+void ModelBuilder::computeDerivative(
+    ndarray::Array<Pixel,3,-3> const & output,
+    Eigen::Matrix<Pixel,5,Eigen::Dynamic> const & jacobian,
+    bool add
+) const {
+    geom::ellipses::Ellipse::GridTransform::DerivativeMatrix gtJac = _ellipse.getGridTransform().d();
+    Eigen::Matrix<Pixel,6,Eigen::Dynamic> finalJac = gtJac * jacobian.transpose();
+    _computeDerivative(output, finalJac, add);
+}
+
+void ModelBuilder::_computeDerivative(
+    ndarray::Array<Pixel,3,-3> const & output,
+    Eigen::Matrix<Pixel,6,Eigen::Dynamic> const & jacobian,
+    bool add
+) const {
+    static double const eps = std::numeric_limits<double>::epsilon();
+    typedef geom::AffineTransform AT;
+    Eigen::ArrayXXd dxWorkspace(_xWorkspace.rows(), _xWorkspace.cols());
+    Eigen::ArrayXXd dyWorkspace(_yWorkspace.rows(), _yWorkspace.cols());
+    Eigen::ArrayXd tmp(_x.size());
+    fillDerivative1d(dxWorkspace, _xWorkspace, _xt);
+    fillDerivative1d(dyWorkspace, _yWorkspace, _yt);
+    for (PackedIndex i; i.getOrder() <= _order; ++i) {
+        ndarray::EigenView<Pixel,2,-1,Eigen::ArrayXpr> block(output[ndarray::view()(i.getIndex())()]);
+        if (!add) block.setZero();
+        // We expect the Jacobian to be pretty sparse, so instead of just doing
+        // standard multiplications here, we inspect each element and only do the
+        // products we'll need.
+        // This way if the user wants, for example, the derivatives with respect
+        // to the ellipticity, we don't waste time computing elements that are
+        // only useful when computing the derivatives wrt the centroid.
+        tmp = dxWorkspace.col(i.getX()) * _yWorkspace.col(i.getY());
+        for (int n = 0; n < jacobian.cols(); ++n) {
+            if (std::abs(jacobian(AT::XX, n)) > eps)
+                block.col(n) += jacobian(AT::XX, n) * _x * tmp;
+            if (std::abs(jacobian(AT::XY, n)) > eps)
+                block.col(n) += jacobian(AT::XY, n) * _y * tmp;
+            if (std::abs(jacobian(AT::X, n)) > eps)
+                block.col(n) += jacobian(AT::X, n) * tmp;
+        }
+        tmp = _xWorkspace.col(i.getX()) * dyWorkspace.col(i.getY());
+        for (int n = 0; n < jacobian.cols(); ++n) {
+            if (std::abs(jacobian(AT::YX, n)) > eps)
+                block.col(n) += jacobian(AT::YX, n) * _x * tmp;
+            if (std::abs(jacobian(AT::YY, n)) > eps)
+                block.row(n) += jacobian(AT::YY, n) * _y * tmp;
+            if (std::abs(jacobian(AT::Y, n)) > eps)
+                block.row(n) += jacobian(AT::Y, n) * tmp;
+        }
+    }
+}
+
+
 template ModelBuilder::ModelBuilder(
     int, BasisTypeEnum, geom::ellipses::Ellipse const &, detection::Footprint const &,
     image::Image<float> const &
@@ -153,5 +248,17 @@ template ModelBuilder::ModelBuilder(
     int, BasisTypeEnum, geom::ellipses::Ellipse const &, detection::Footprint const &,
     image::MaskedImage<double> const &, image::MaskPixel, bool
 );
+
+template void ModelBuilder::addToImage(
+    image::Image<float> & img,
+    ndarray::Array<Pixel const,1,1> const & coefficients,
+    bool useWeights
+) const;
+
+template void ModelBuilder::addToImage(
+    image::Image<double> & img,
+    ndarray::Array<Pixel const,1,1> const & coefficients,
+    bool useWeights
+) const;
 
 }}}} // namespace lsst::afw::math::shapelets
