@@ -45,16 +45,20 @@ namespace shapelets {
 class ConversionMatrix {
 public:
 
+    /// @brief Return a block of the block-diagonal conversion matrix.
     Eigen::MatrixXd getBlock(int n) const;
 
+    /// @brief Construct the full conversion matrix (should just be used for testing).
     Eigen::MatrixXd buildDenseMatrix() const;
 
+    /// @brief Multiply the given array by the conversion matrix on the left in-place.
     void multiplyOnLeft(ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const;
     
+    /// @brief Multiply the given array by the conversion matrix on the right in-place.
     void multiplyOnRight(ndarray::Array<lsst::afw::math::shapelets::Pixel,1> const & array) const;
 
-    explicit ConversionMatrix(BasisTypeEnum input,
-        BasisTypeEnum output, int order);
+    /// @brief Construct a conversion matrix that maps the input basis to the output basis.
+    explicit ConversionMatrix(BasisTypeEnum input, BasisTypeEnum output, int order);
 
     /// @brief Convert a coefficient vector between basis types in-place.
     static void convertCoefficientVector(

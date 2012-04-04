@@ -36,6 +36,19 @@ namespace afw {
 namespace math {
 namespace shapelets {
 
+/**
+ *  @brief A class that evaluates a Gauss-Hermite (shapelet with HERMITE basis type) basis over a footprint.
+ *
+ *  This is intended as the primary way to build shapelet models that will be fit to image data.  Given
+ *  an Image or MaskedImage, it flattens the pixels according to a footprint and generates a
+ *  (pixels) x (basis function) matrix that can be fit to the flattened data vector with linear
+ *  least-squares.  It can also produce the derivative of this matrix w.r.t. the ellipse parameters.
+ *
+ *  Unlike virtually everything else in the shapelets library, ModelBuilder does not rely on the
+ *  HermiteEvaluator class to compute basis functions.  Instead of making the iteration over the
+ *  pixels the outer loop, it uses Eigen array objects that are the size of an entire image.  This
+ *  uses more memory for temporaries, but it takes advantage of Eigen's vectorized arithmetic operators.
+ */
 class ModelBuilder {
 public:
 

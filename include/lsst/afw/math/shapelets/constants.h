@@ -30,8 +30,6 @@
  *
  * @brief Constants, typedefs, and general-purpose functions for shapelets library.
  *
- * @todo
- *
  * @author Jim Bosch
  */
 

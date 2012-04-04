@@ -49,15 +49,22 @@ public:
      *
      *  @param[in,out] ellipse   On input, the ellipse core of the unconvolved shapelet expansion.
      *                           On output, the ellipse core of the convolved shapelet expansion.
+     *
+     *  The returned array is owned by the HermiteConvolution object and will be modified
+     *  the next time evaluate() is called.
      */
     ndarray::Array<Pixel const,2,2> evaluate(geom::ellipses::Ellipse & ellipse) const;
 
+    /// @brief Return the order of the to-be-convolved shapelet basis.
     int getColOrder() const;
 
+    /// @brief Return the order of the post-convolution shapelet basis.
     int getRowOrder() const;
 
+    /// @brief Construct a matrix that convolves a basis of the given order with the given shapelet function.
     HermiteConvolution(int colOrder, ShapeletFunction const & psf);
 
+    // Must be defined in .cc file so it can see Impl dtor.
     ~HermiteConvolution();
 
 private:
