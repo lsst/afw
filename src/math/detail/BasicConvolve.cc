@@ -274,16 +274,18 @@ void mathDetail::basicConvolve(
         if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
             if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                 try {
-                    bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
+                    mathDetail::ConvolveGpuStatus::ReturnCode rc =
+                               mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
                                                                                 convolutionControl);
-                    if (isProcessed) return;
+                    if (rc == mathDetail::ConvolveGpuStatus::OK) return;
                 } catch(lsst::afw::gpu::GpuMemoryException) { }
                 catch(pexExcept::MemoryException) { }
                 catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
             } else if (convolutionControl.getDevicePreference() != lsst::afw::gpu::USE_CPU) {
-                bool isProcessed = mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
+                mathDetail::ConvolveGpuStatus::ReturnCode rc =
+                              mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
                                                                             convolutionControl);
-                if (isProcessed) return;
+                if (rc == mathDetail::ConvolveGpuStatus::OK) return;
                 if (convolutionControl.getDevicePreference() == lsst::afw::gpu::USE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
                 }
@@ -526,16 +528,18 @@ void mathDetail::convolveWithBruteForce(
         if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
             if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                 try {
-                    bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
+                    mathDetail::ConvolveGpuStatus::ReturnCode rc =
+                              mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
                                                                                  convolutionControl);
-                    if (isProcessed) return;
+                    if (rc == mathDetail::ConvolveGpuStatus::OK) return;
                 } catch(lsst::afw::gpu::GpuMemoryException) { }
                 catch(pexExcept::MemoryException) { }
                 catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
             } else if (convolutionControl.getDevicePreference() != lsst::afw::gpu::USE_CPU) {
-                bool isProcessed = mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
+                mathDetail::ConvolveGpuStatus::ReturnCode rc =
+                            mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
                                                                              convolutionControl);
-                if (isProcessed) return;
+                if (rc == mathDetail::ConvolveGpuStatus::OK) return;
                 if (convolutionControl.getDevicePreference() == lsst::afw::gpu::USE_GPU) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Gpu will not process this kernel");
                 }
