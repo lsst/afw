@@ -1,2 +1,8 @@
 EXAMPLE_PATH = examples
-EXCLUDE += src/math/shapelets/*
+EXCLUDE += src/math/shapelets/BasisEvaluator.cc
+EXCLUDE += src/math/shapelets/ConversionMatrix.cc
+EXCLUDE += src/math/shapelets/HermiteConvolution.cc
+EXCLUDE += src/math/shapelets/HermiteEvaluator.cc
+EXCLUDE += src/math/shapelets/ModelBuilder.cc
+EXCLUDE += src/math/shapelets/MultiShapeletFunction.cc
+EXCLUDE += src/math/shapelets/ShapeletFunction.cc
