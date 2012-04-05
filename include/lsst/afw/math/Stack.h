@@ -53,6 +53,10 @@ typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
         StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
                                                              );
+
+/**
+ * @ brief compute statistical stack of Image.  Write to output image in-situ
+ */
 template<typename PixelT>
 void statisticsStack(
     lsst::afw::image::Image<PixelT>& out, ///< Output image
@@ -73,6 +77,10 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
         StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
                                                                    );
+    
+/**
+ * @ brief compute statistical stack of MaskedImage.  Write to output image in-situ
+ */
 template<typename PixelT>
 void statisticsStack(
     lsst::afw::image::MaskedImage<PixelT>& out, ///< Output image

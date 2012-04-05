@@ -201,9 +201,8 @@ void computeMaskedImageStack(
 } // end anonymous namespace
 
 
-/**
- * @brief A function to compute some statistics of a stack of Masked Images
- * @relates Statistics
+/*
+ * A function to compute some statistics of a stack of Masked Images
  *
  * If none of the input images are valid for some pixel,
  * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
@@ -212,10 +211,10 @@ void computeMaskedImageStack(
  */
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
-        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images, //!< images to process
-        afwMath::Property flags,                                           //!< Desired statistic (only one!)
-        afwMath::StatisticsControl const& sctrl,                           //!< Fine control over processing
-        WeightVector const &wvector                                        //!< optional weights vector
+        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images,
+        afwMath::Property flags,                                          
+        afwMath::StatisticsControl const& sctrl,                          
+        WeightVector const &wvector                                       
                                                               )
 {
     if (images.size() == 0) {
@@ -229,10 +228,10 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
 template<typename PixelT>
 void afwMath::statisticsStack(
     afwImage::MaskedImage<PixelT>& out,
-        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images, //!< images to process
-        afwMath::Property flags,                                           //!< Desired statistic (only one!)
-        afwMath::StatisticsControl const& sctrl,                           //!< Fine control over processing
-        WeightVector const &wvector                                        //!< optional weights vector
+        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images,
+        afwMath::Property flags,                                          
+        afwMath::StatisticsControl const& sctrl,                          
+        WeightVector const &wvector                                       
                                                               )
 {
     checkObjectsAndWeights(images, wvector);
@@ -306,10 +305,7 @@ void computeImageStack(
 } // end anonymous namespace
 
 
-/**
- * @brief A function to compute some statistics of a stack of regular images
- * @relates Statistics
- */
+
 template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwMath::statisticsStack(
         std::vector<typename afwImage::Image<PixelT>::Ptr > &images,  
@@ -325,6 +321,7 @@ typename afwImage::Image<PixelT>::Ptr afwMath::statisticsStack(
     statisticsStack(*out, images, flags, sctrl, wvector);
     return out;
 }
+
 template<typename PixelT>
 void afwMath::statisticsStack(
     afwImage::Image<PixelT> & out,
@@ -402,12 +399,7 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
 } // end anonymous namespace
 
 
-/**
- * @brief A function to handle stacking a vector of vectors
- * @relates Statistics
- *
- * All the work is done in the function computeVectorStack.
- */
+
 template<typename PixelT>
 boost::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
         std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,  
@@ -432,10 +424,6 @@ boost::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
  *
  **************************************************************************/
 
-/**
- * @brief A function to collapse a maskedImage to a one column image
- * @relates Statistics
- */
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         afwImage::Image<PixelT> const &image,  
@@ -492,12 +480,8 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     return imgOut;
 }
 
-/**
- * @brief A function to collapse a maskedImage to a one column image
- * @relates Statistics
- *
- *
- */
+
+
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         afwImage::MaskedImage<PixelT> const &image,  
