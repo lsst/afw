@@ -17,7 +17,18 @@ class IndexingCatalogTestCase(unittest.TestCase):
         catalog.addNew()
         self.assertEqual(len(catalog), 1)
         catalog[-1]
-        
+        catalog.addNew()
+        catalog.addNew()
+        catalog[1] = catalog[2]
+        del catalog[2]
+        print catalog
+        for src in catalog:
+            print src.getId()
+        self.assertEqual(len(catalog), 2)
+        self.assertEqual(catalog[0].getId(), 1)
+        self.assertEqual(catalog[1].getId(), 3)
+        self.assertEqual(catalog[-1].getId(), 3)
+        self.assertEqual(catalog[-2].getId(), 1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -54,7 +54,7 @@ public:
 %extend CatalogT {
     std::size_t __len__() const { return self->size(); }
     PTR(RecordT) __getitem__(std::ptrdiff_t i) const {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
@@ -74,7 +74,7 @@ public:
             return self.columns[k]
     %}
     void __setitem__(std::ptrdiff_t i, PTR(RecordT) const & p) {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
@@ -84,7 +84,7 @@ public:
         self->set(i, p);
     }
     void __delitem__(std::ptrdiff_t i) {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
@@ -95,7 +95,7 @@ public:
     }
     void append(PTR(RecordT) const & p) { self->push_back(p); }
     void insert(std::ptrdiff_t i, PTR(RecordT) const & p) {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) > self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
