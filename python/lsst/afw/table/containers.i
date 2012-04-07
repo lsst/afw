@@ -49,6 +49,7 @@ public:
 
     CatalogT copy() const;
 
+    CatalogT subset(int start, int stop, int step) const;
 };
 
 %extend CatalogT {
@@ -63,11 +64,21 @@ public:
         }
         return self->get(i);
     }
+
     %feature("shadow") __getitem__ %{
     def __getitem__(self, k):
         """Return the record at index k if k is an integer,
         or return a column if k is a string field name or Key.
         """
+        if type(k) is slice:
+            (start, stop, step) = (k.start, k.stop, k.step)
+            if step is None:
+                step = 1
+            if start is None:
+                start = 0
+            if stop is None:
+                stop = len(self)
+            return self.subset(start, stop, step)
         try:
             return $action(self, k)
         except TypeError:

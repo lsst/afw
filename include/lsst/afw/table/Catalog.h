@@ -165,6 +165,46 @@ public:
         _table(other.getTable()), _internal(other.begin().base(), other.end().base())
     {}
 
+    /**
+     * @brief Shallow copy a subset of another Catalog.  Mostly here for use from python.
+     */
+    CatalogT subset(int start, int stop, int step) const {
+        if (start < 0) start += size();
+        if (stop  < 0) stop  += size();
+        if (step == 1) {
+            if (start >= stop)
+                // Empty
+                return CatalogT<RecordT>(getTable(), begin(), begin());
+            if (start < 0)
+                start = 0;
+            if (stop > size())
+                stop = size();
+            iterator zero, green, red;
+            zero = begin();
+            green = zero + start;
+            red = zero + stop;
+            return CatalogT<RecordT>(getTable(), green, red);
+            //return CatalogT<RecordT>(getTable(), begin() + start, begin() + stop);
+        }
+        // Build a new CatalogT and copy records into it.
+        CatalogT<RecordT> cat(getTable());
+        size_t N = 0;
+        if (step >= 0)
+            for (int i=start; i<stop; i+=step)
+                N++;
+        else
+            for (int i=start; i>stop; i+=step)
+                N++;
+        cat.reserve(N);
+        if (step >= 0)
+            for (int i=start; i<stop; i+=step)
+                cat.push_back(get(i));
+        else
+            for (int i=start; i>stop; i+=step)
+                cat.push_back(get(i));
+        return cat;
+    }
+
     /// Shallow assigment.
     CatalogT & operator=(CatalogT const & other) {
         if (&other != this) {

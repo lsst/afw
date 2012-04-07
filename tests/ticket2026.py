@@ -30,6 +30,25 @@ class IndexingCatalogTestCase(unittest.TestCase):
         self.assertEqual(catalog[-1].getId(), 3)
         self.assertEqual(catalog[-2].getId(), 1)
 
+    def testSlice(self):
+        schema = afwTable.SourceTable.makeMinimalSchema()
+        table = afwTable.SourceTable.make(schema)
+        catalog = afwTable.SourceCatalog(table)
+        for i in range(10):
+            catalog.addNew()
+        print 'Empty range'
+        catalog[4:4]
+        print 'Count by 2'
+        catalog[1:7:2]
+        print 'Normal range'
+        catalog[4:7]
+        print 'Normal range 2'
+        catalog[4:10]
+        print 'Negative indexed range'
+        catalog[-20:-1]
+        catalog[1:-1]
+        catalog[6:1:-2]
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
