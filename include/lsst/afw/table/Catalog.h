@@ -165,6 +165,11 @@ public:
         _table(other.getTable()), _internal(other.begin().base(), other.end().base())
     {}
 
+    /**
+     * @brief Shallow copy a subset of another Catalog.  Mostly here for use from python.
+     */
+    CatalogT<RecordT> subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const;
+
     /// Shallow assigment.
     CatalogT & operator=(CatalogT const & other) {
         if (&other != this) {
@@ -391,8 +396,10 @@ private:
         iterator pos, InputIterator first, InputIterator last, bool deep,
         std::random_access_iterator_tag *
     ) {
+        std::ptrdiff_t n = pos - begin();
         _internal.reserve(_internal.size() + last - first);
-        _table->preallocate(last - first);
+        pos = begin() + n;
+        if (deep) _table->preallocate(last - first);
         _insert(pos, first, last, deep, (std::input_iterator_tag *)0);
     }
 
@@ -410,6 +417,7 @@ private:
         } else {
             while (first != last) {
                 pos = insert(pos, first);
+                assert(pos != end());
                 ++pos;
                 ++first;
             }
