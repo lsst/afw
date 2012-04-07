@@ -179,7 +179,7 @@ public:
                 start = 0;
             if (stop > size())
                 stop = size();
-            iterator zero, green, red;
+            const_iterator zero, green, red;
             zero = begin();
             green = zero + start;
             red = zero + stop;

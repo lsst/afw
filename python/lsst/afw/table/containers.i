@@ -49,7 +49,7 @@ public:
 
     CatalogT copy() const;
 
-    CatalogT subset(int start, int stop, int step) const;
+    CatalogT subset(int start, int stop, int step);
 };
 
 %extend CatalogT {
