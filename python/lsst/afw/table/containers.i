@@ -49,12 +49,13 @@ public:
 
     CatalogT copy() const;
 
+    CatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 };
 
 %extend CatalogT {
     std::size_t __len__() const { return self->size(); }
     PTR(RecordT) __getitem__(std::ptrdiff_t i) const {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
@@ -63,18 +64,28 @@ public:
         }
         return self->get(i);
     }
+
     %feature("shadow") __getitem__ %{
     def __getitem__(self, k):
         """Return the record at index k if k is an integer,
         or return a column if k is a string field name or Key.
         """
+        if type(k) is slice:
+            (start, stop, step) = (k.start, k.stop, k.step)
+            if step is None:
+                step = 1
+            if start is None:
+                start = 0
+            if stop is None:
+                stop = len(self)
+            return self.subset(start, stop, step)
         try:
             return $action(self, k)
         except TypeError:
             return self.columns[k]
     %}
     void __setitem__(std::ptrdiff_t i, PTR(RecordT) const & p) {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
@@ -84,7 +95,7 @@ public:
         self->set(i, p);
     }
     void __delitem__(std::ptrdiff_t i) {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
@@ -95,7 +106,7 @@ public:
     }
     void append(PTR(RecordT) const & p) { self->push_back(p); }
     void insert(std::ptrdiff_t i, PTR(RecordT) const & p) {
-        if (i < 0) i = self->size() - i;
+        if (i < 0) i = self->size() + i;
         if (std::size_t(i) > self->size()) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::InvalidParameterException,
