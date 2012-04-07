@@ -168,72 +168,7 @@ public:
     /**
      * @brief Shallow copy a subset of another Catalog.  Mostly here for use from python.
      */
-    CatalogT subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const {
-        size_type S = size();
-        size_type start, stop;
-        if (startd < 0)
-            startd += S;
-        if (stopd  < 0)
-            stopd  += S;
-        if (startd < 0)
-            startd = 0;
-        start = (size_type)startd;
-        if (start > S)
-            start = S;
-
-        if (step > 0) {
-            if (stopd < 0)
-                stopd = 0;
-            stop = (size_type)stopd;
-            if (stop > S)
-                stop = S;
-        }
-
-        if (((step > 0) && (start >= stop)) ||
-            ((step < 0) && (start <= stop))) {
-            // Empty
-            return CatalogT<RecordT>(getTable(), begin(), begin());
-        }
-
-        if (step == 1) {
-            assert(start >= 0);
-            assert(stop  >  0);
-            assert(start <  S);
-            assert(stop  <= S);
-            return CatalogT<RecordT>(getTable(), begin()+start, begin()+stop);
-        }
-        // Build a new CatalogT and copy records into it.
-        CatalogT<RecordT> cat(getTable());
-        size_type N = 0;
-        if (step >= 0)
-            for (size_type i=start; i<stop; i+=step)
-                N++;
-        else {
-            // range(10)[5:-20:-1]
-            // ->  [5, 4, 3, 2, 1, 0]
-            if (stopd < 0)
-                stopd = -1;
-            assert(stopd >= -1);
-            assert((size_type)stopd < S);
-            stop = (size_type)(stopd + 1);
-            for (size_type i=start; i>=stop; i+=step)
-                N++;
-            /*
-             for (std::ptrdiff_t i=start; i>stopd; i+=step)
-             N++;
-             */
-        }
-        cat.reserve(N);
-        if (step >= 0)
-            for (size_type i=start; i<stop; i+=step)
-                cat.push_back(get(i));
-        else {
-            //for (std::ptrdiff_t i=start; i>stopd; i+=step)
-            for (size_type i=start; i>=stop; i+=step)
-                cat.push_back(get(i));
-        }
-        return cat;
-    }
+    CatalogT<RecordT> subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const;
 
     /// Shallow assigment.
     CatalogT & operator=(CatalogT const & other) {
@@ -481,6 +416,10 @@ private:
             }
         } else {
             while (first != last) {
+                std::cerr << "  _insert pos = " << (pos-begin()) <<
+                    ", last-first = " << (last - first) << "\n";
+                    //", first = " << (first - first.base()) <<
+                    //", last = " << (last - last.base()) << "\n";
                 pos = insert(pos, first);
                 assert(pos != end());
                 ++pos;

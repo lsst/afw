@@ -49,7 +49,7 @@ public:
 
     CatalogT copy() const;
 
-    CatalogT subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
+    CatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 };
 
 %extend CatalogT {

@@ -60,19 +60,25 @@ class IndexingCatalogTestCase(unittest.TestCase):
         c = catalog[-20:-1]
         printids(c)
         print 'Negative end (1,-3)'
-        catalog[1:-3]
+        c = catalog[1:-3]
         printids(c)
         print 'Negative step (6:1:-2)'
-        catalog[6:1:-2]
+        c = catalog[6:1:-2]
         printids(c)
         print 'Negative step (6:0:-2)'
-        catalog[6:0:-2]
+        c = catalog[6:0:-2]
         printids(c)
         print 'Negative step (6:0:-1)'
-        catalog[6:0:-1]
+        c = catalog[6:0:-1]
         printids(c)
         print 'Negative step (6:-20:-1)'
-        catalog[6:-20:-1]
+        c = catalog[6:-20:-1]
+        printids(c)
+        print 'Negative step (6:-20:-2)'
+        c = catalog[6:-20:-2]
+        printids(c)
+        print 'Negative step (5:-20:-2)'
+        c = catalog[5:-20:-2]
         printids(c)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
