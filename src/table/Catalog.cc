@@ -32,14 +32,10 @@ CatalogT<RecordT> CatalogT<RecordT>::subset(
     } else if (step < 0) {
         if (stopd < 0)
             stopd = -1;
-        assert(stopd >= -1);
-        assert((size_type)(stopd+1) <= S);
-        // NOTE that we +1, changing the ranges to be inclusive below.
-        stop = (size_type)(stopd + 1);
     }
 
     if (((step > 0) && (start >= stop)) ||
-        ((step < 0) && (start < stop))) {
+        ((step < 0) && ((std::ptrdiff_t)start <= stopd))) {
         // Empty
         return CatalogT<RecordT>(getTable(), begin(), begin());
     }
@@ -59,12 +55,10 @@ CatalogT<RecordT> CatalogT<RecordT>::subset(
         for (size_type i=start; i<stop; i+=step)
             N++;
     else {
-        std::cerr << "subset: start=" << start << ", stop=" << stop << ", step=" << step << "\n";
-        for (size_type i=start; i>=stop; i+=step) {
+        std::cerr << "subset: start=" << start << ", stopd=" << stopd << ", step=" << step << "\n";
+        for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step) {
             std::cerr << "  i = " << i << "\n";
             N++;
-            if (!i)
-                break;
         }
     }
     cat.reserve(N);
@@ -72,11 +66,8 @@ CatalogT<RecordT> CatalogT<RecordT>::subset(
         for (size_type i=start; i<stop; i+=step)
             cat.push_back(get(i));
     else {
-        for (size_type i=start; i>=stop; i+=step) {
+        for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step)
             cat.push_back(get(i));
-            if (!i)
-                break;
-        }
     }
     return cat;
 }
