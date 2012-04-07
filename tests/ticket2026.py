@@ -8,6 +8,10 @@ import lsst.utils.tests
 
 import lsst.afw.table as afwTable
 
+# Subtract 1 so that ids == indices
+def printids(c):
+    print '  ', [s.getId()-1 for s in c]
+
 class IndexingCatalogTestCase(unittest.TestCase):
 
     def testMinusOne(self):
@@ -36,18 +40,40 @@ class IndexingCatalogTestCase(unittest.TestCase):
         catalog = afwTable.SourceCatalog(table)
         for i in range(10):
             catalog.addNew()
-        print 'Empty range'
-        catalog[4:4]
-        print 'Count by 2'
-        catalog[1:7:2]
-        print 'Normal range'
-        catalog[4:7]
-        print 'Normal range 2'
-        catalog[4:10]
-        print 'Negative indexed range'
-        catalog[-20:-1]
-        catalog[1:-1]
+        print 'Catalog:', printids(catalog)
+        print 'Empty range (4,4)'
+        c = catalog[4:4]
+        printids(c)
+        print 'Count by 2 (1,7,2)'
+        c = catalog[1:7:2]
+        printids(c)
+        print 'Normal range (4,7)'
+        c = catalog[4:7]
+        printids(c)
+        print 'Normal range 2 (4,10)'
+        c = catalog[4:10]
+        printids(c)
+        print 'Normal range 3 (4,15)'
+        c = catalog[4:15]
+        printids(c)
+        print 'Negative indexed range (-20,-1)'
+        c = catalog[-20:-1]
+        printids(c)
+        print 'Negative end (1,-3)'
+        catalog[1:-3]
+        printids(c)
+        print 'Negative step (6:1:-2)'
         catalog[6:1:-2]
+        printids(c)
+        print 'Negative step (6:0:-2)'
+        catalog[6:0:-2]
+        printids(c)
+        print 'Negative step (6:0:-1)'
+        catalog[6:0:-1]
+        printids(c)
+        print 'Negative step (6:-20:-1)'
+        catalog[6:-20:-1]
+        printids(c)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
