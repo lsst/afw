@@ -416,10 +416,6 @@ private:
             }
         } else {
             while (first != last) {
-                std::cerr << "  _insert pos = " << (pos-begin()) <<
-                    ", last-first = " << (last - first) << "\n";
-                    //", first = " << (first - first.base()) <<
-                    //", last = " << (last - last.base()) << "\n";
                 pos = insert(pos, first);
                 assert(pos != end());
                 ++pos;

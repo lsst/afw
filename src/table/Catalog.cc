@@ -45,7 +45,6 @@ CatalogT<RecordT> CatalogT<RecordT>::subset(
         assert(stop  >  0);
         assert(start <  S);
         assert(stop  <= S);
-        //std::cerr << "  subset: [" << start << ", " << stop << ")\n";
         return CatalogT<RecordT>(getTable(), begin()+start, begin()+stop);
     }
     // Build a new CatalogT and copy records into it.
@@ -55,11 +54,8 @@ CatalogT<RecordT> CatalogT<RecordT>::subset(
         for (size_type i=start; i<stop; i+=step)
             N++;
     else {
-        std::cerr << "subset: start=" << start << ", stopd=" << stopd << ", step=" << step << "\n";
-        for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step) {
-            std::cerr << "  i = " << i << "\n";
+        for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step)
             N++;
-        }
     }
     cat.reserve(N);
     if (step >= 0)

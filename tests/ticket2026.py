@@ -9,8 +9,12 @@ import lsst.utils.tests
 import lsst.afw.table as afwTable
 
 # Subtract 1 so that ids == indices
+def getids(c):
+    return [s.getId()-1 for s in c]
 def printids(c):
-    print '  ', [s.getId()-1 for s in c]
+    print getids(c)
+
+            
 
 class IndexingCatalogTestCase(unittest.TestCase):
 
@@ -34,6 +38,16 @@ class IndexingCatalogTestCase(unittest.TestCase):
         self.assertEqual(catalog[-1].getId(), 3)
         self.assertEqual(catalog[-2].getId(), 1)
 
+    def assertSlice(self, cat, start, stop, step=None):
+        if step is None:
+            c = cat[start:stop]
+            tru = range(10)[start:stop]
+        else:
+            c = cat[start:stop:step]
+            tru = range(10)[start:stop:step]
+        printids(c)
+        self.assertEqual(getids(c), tru)
+
     def testSlice(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
         table = afwTable.SourceTable.make(schema)
@@ -42,44 +56,33 @@ class IndexingCatalogTestCase(unittest.TestCase):
             catalog.addNew()
         print 'Catalog:', printids(catalog)
         print 'Empty range (4,4)'
-        c = catalog[4:4]
-        printids(c)
+        self.assertSlice(catalog, 4, 4)
         print 'Count by 2 (1,7,2)'
-        c = catalog[1:7:2]
-        printids(c)
+        self.assertSlice(catalog, 1, 7, 2)
         print 'Normal range (4,7)'
-        c = catalog[4:7]
-        printids(c)
+        self.assertSlice(catalog, 4, 7)
         print 'Normal range 2 (4,10)'
-        c = catalog[4:10]
-        printids(c)
+        self.assertSlice(catalog, 4, 10)
         print 'Normal range 3 (4,15)'
-        c = catalog[4:15]
-        printids(c)
+        self.assertSlice(catalog, 4, 15)
         print 'Negative indexed range (-20,-1)'
-        c = catalog[-20:-1]
-        printids(c)
+        self.assertSlice(catalog, -20, -1)
         print 'Negative end (1,-3)'
-        c = catalog[1:-3]
-        printids(c)
+        self.assertSlice(catalog, 1, -3)
         print 'Negative step (6:1:-2)'
-        c = catalog[6:1:-2]
-        printids(c)
+        self.assertSlice(catalog, 6, 1, -2)
         print 'Negative step (6:0:-2)'
-        c = catalog[6:0:-2]
-        printids(c)
+        self.assertSlice(catalog, 6, 0 ,-2)
+        print 'Negative step (-1:-12:-2)'
+        self.assertSlice(catalog, -1, -12, -2)
         print 'Negative step (6:0:-1)'
-        c = catalog[6:0:-1]
-        printids(c)
+        self.assertSlice(catalog, 6, 0, -1)
         print 'Negative step (6:-20:-1)'
-        c = catalog[6:-20:-1]
-        printids(c)
+        self.assertSlice(catalog, 6, -20, -1)
         print 'Negative step (6:-20:-2)'
-        c = catalog[6:-20:-2]
-        printids(c)
+        self.assertSlice(catalog, 6, -20, -2)
         print 'Negative step (5:-20:-2)'
-        c = catalog[5:-20:-2]
-        printids(c)
+        self.assertSlice(catalog, 5, -20, -2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
