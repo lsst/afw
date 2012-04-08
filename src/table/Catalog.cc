@@ -12,7 +12,7 @@ template <typename RecordT>
 CatalogT<RecordT> CatalogT<RecordT>::subset(
     std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const {
     size_type S = size();
-    size_type start, stop;
+    size_type start, stop = 0;
     if (startd < 0)
         startd += S;
     if (stopd  < 0)
