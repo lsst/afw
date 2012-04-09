@@ -18,6 +18,22 @@ def printids(c):
 
 class IndexingCatalogTestCase(unittest.TestCase):
 
+    def testSimpleCatalogType(self):
+        schema = afwTable.SourceTable.makeMinimalSchema()
+        table = afwTable.SourceTable.make(schema)
+        catalog = afwTable.SourceCatalog(table)
+        catalog.addNew()
+        catcopy = catalog.copy()
+        catsub = catalog[:]
+        catsub2 = catalog.subset(0, 1, 1)
+        print 'catalog', catalog
+        print 'catcopy', catcopy
+        print 'catsub', catsub
+        print 'catsub2', catsub2
+        self.assertEqual(type(catalog), type(catcopy))
+        self.assertEqual(type(catalog), type(catsub))
+        self.assertEqual(type(catalog), type(catsub2))
+
     def testMinusOne(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
         table = afwTable.SourceTable.make(schema)

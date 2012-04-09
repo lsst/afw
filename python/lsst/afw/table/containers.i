@@ -197,6 +197,8 @@ public:
 
     bool isSorted() const;
     void sort();
+
+    SimpleCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 };
 
 %extend SimpleCatalogT {
