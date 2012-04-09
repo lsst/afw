@@ -11,6 +11,7 @@ config.log
 bin/filter-gcc
 doc/*.tag
 doc/html
+doc/xml
 doc/doxygen.conf
 examples/maskIo2
 examples/transform
