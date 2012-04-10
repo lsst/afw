@@ -25,6 +25,22 @@
 /// \file
 /// \brief Implementations of Mask class methods
 
+/*
+ * There are a number of classes defined here and in Mask.h
+ *
+ * The fundamental type visible to the user is Mask; a 2-d array of pixels.  Each of these pixels should
+ * be thought of as a set of bits, and the names of these bits are given by MaskPlaneDict (which is
+ * implemented as a std::map)
+ *
+ * Internally to this file, we have a MapWithHash which is like a std::map, but maintains a hash of its
+ * contents;  this is used to check equality efficiently.
+ *
+ * We also have a MaskDict which isa MapWithHash, but also maintains a list of MaskDicts (or equivalently
+ * MapWithHash) allowing us to iterate over these maps, updating them as needed.
+ *
+ * The list of MaskDicts is actually kept as a singleton of a helper class, DictState
+ */
+
 #include <functional>
 #include <list>
 #include <string>
