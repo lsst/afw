@@ -36,6 +36,7 @@
 #include <cassert>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/utils/ieee.h"
@@ -45,7 +46,8 @@ using namespace std;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace afwGeom = lsst::afw::geom;
-namespace ex = lsst::pex::exceptions;
+namespace pexExceptions = lsst::pex::exceptions;
+namespace pexLogging = lsst::pex::logging;
 
 namespace {
     double const NaN = std::numeric_limits<double>::quiet_NaN();
@@ -739,9 +741,11 @@ void afwMath::Statistics::doStatistics(
     afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
                                )
 {
+    pexLogging::Debug traceLog("afw.math.Statistics"); // trace output goes here
+
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Image contains no pixels");
     }
     
     // Check that an int's large enough to hold the number of pixels
@@ -762,6 +766,10 @@ void afwMath::Statistics::doStatistics(
     _max = standard.get<5>();
     _allPixelOrMask = standard.get<6>();
 
+#define DEBUG_VARARGS 0                 // requires a bugfix to pex_logging
+#if DEBUG_VARARGS
+    traceLog.debug<4>("Data: %g +- %g", _mean, ::sqrt(_variance.first));
+#endif
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
 
@@ -788,12 +796,19 @@ void afwMath::Statistics::doStatistics(
         
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
-                
+#if DEBUG_VARARGS
+                traceLog.debug<3>("Clipping at %gsigma: iteration %d", _sctrl.getNumSigmaClip(), i_i);
+#endif
+
                 double const center = ((i_i > 0) ? _meanclip : _median).first;
                 double const hwidth = (i_i > 0 && _n > 1) ?
                     _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip.first) :
                     _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
                 std::pair<double, double> const clipinfo(center, hwidth);
+
+#if DEBUG_VARARGS
+                traceLog.debug<4>("Using %g -- %g", center - hwidth, center + hwidth);
+#endif
                 
                 StandardReturn clipped = getStandard(img, msk, var, weights, flags, clipinfo,
                                                      _weightsAreMultiplicative,
@@ -835,7 +850,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
         static_cast<afwMath::Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
     
     if (!(prop & _flags)) {             // we didn't calculate it
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterException,
                           (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
 
@@ -984,14 +999,14 @@ Statistics::Statistics(
     _sctrl(sctrl) {
     
     if ((flags & ~(NPOINT | SUM)) != 0x0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Statistics<Mask> only supports NPOINT and SUM");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Statistics<Mask> only supports NPOINT and SUM");
     }
     
     typedef afwImage::Mask<afwImage::MaskPixel> Mask;
     
     _n = msk.getWidth()*msk.getHeight();
     if (_n == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Image contains no pixels");
     }
     
     // Check that an int's large enough to hold the number of pixels

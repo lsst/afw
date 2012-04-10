@@ -1,5 +1,3 @@
-// -*- lsst-c++ -*-
-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -54,6 +52,16 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 
 %}
 
+// Macro that provides a Python-side dynamic cast.
+// The BASE argument should be the root of the class hierarchy, not the immediate base class.
+%define %addCastMethod(CLS, BASE)
+%extend CLS {
+    static PTR(CLS) _cast(PTR(BASE) base) {
+        return boost::dynamic_pointer_cast< CLS >(base);
+    }
+}
+%enddef
+
 %include "lsst/ndarray/ndarray.i"
 %init %{
     import_array();
@@ -76,6 +84,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %declareNumPyConverters(lsst::ndarray::Array<float const,2>);
 %declareNumPyConverters(lsst::ndarray::Array<double const,2>);
 %declareNumPyConverters(lsst::ndarray::Array<lsst::afw::geom::Angle const,1>);
+%declareNumPyConverters(lsst::ndarray::Array<lsst::afw::table::BitsColumn::IntT const,1,1>);
 %declareNumPyConverters(Eigen::Matrix<float,2,2>);
 %declareNumPyConverters(Eigen::Matrix<double,2,2>);
 %declareNumPyConverters(Eigen::Matrix<float,3,3>);
@@ -95,6 +104,14 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 #include "lsst/afw/image/TanWcs.h"
 %}
 %import "lsst/afw/image/wcs.i"
+
+// =============== miscellaneous bits =======================================================================
+
+%shared_ptr(lsst::afw::table::IdFactory);
+%ignore lsst::afw::table::IdFactory::operator=;
+
+%include "lsst/afw/table/misc.h"
+%include "lsst/afw/table/IdFactory.h"
 
 // ---------------------------------------------------------------------------------------------------------
 
@@ -151,15 +168,8 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
     %}
 }
 
-// ---------------------------------------------------------------------------------------------------------
+// =============== Schemas and their components =============================================================
 
-%shared_ptr(lsst::afw::table::BaseTable);
-%shared_ptr(lsst::afw::table::BaseRecord);
-%shared_ptr(lsst::afw::table::IdFactory);
-%ignore lsst::afw::table::IdFactory::operator=;
-
-%include "lsst/afw/table/misc.h"
-%include "lsst/afw/table/IdFactory.h"
 %include "lsst/afw/table/FieldBase.h"
 %include "lsst/afw/table/Field.h"
 %include "lsst/afw/table/KeyBase.h"
@@ -172,6 +182,21 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 %rename("__getitem__") lsst::afw::table::SubSchema::operator[];
 %addStreamRepr(lsst::afw::table::Schema)
 %include "lsst/afw/table/Schema.h"
+
+%extend lsst::afw::table::SchemaItem {
+%pythoncode %{
+    def __getitem__(self, i):
+        if i == 0:
+            return self.key
+        elif i == 1:
+            return self.field
+        raise IndexError("SchemaItem index must be 0 or 1")
+    def __str__(self):
+        return str(tuple(self))
+    def __repr__(self):
+        return "SchemaItem(%r, %r)" % (self.key, self.field)
+%}
+}
 
 %extend lsst::afw::table::Schema {
 
@@ -186,7 +211,7 @@ def asList(self):
     def extractSortKey(item):
         key = item.key
         if type(key) == Key_Flag:
-            return (key.getOffset(), get.getBit())
+            return (key.getOffset(), key.getBit())
         else:
             return (key.getOffset(), None)
     for name in self.getNames():
@@ -284,11 +309,18 @@ def asKey(self):
 
 %include "lsst/afw/table/SchemaMapper.h"
 
+// =============== BaseTable and BaseRecord =================================================================
+
+%shared_ptr(lsst::afw::table::BaseTable);
+%shared_ptr(lsst::afw::table::BaseRecord);
+
 %include "lsst/afw/table/BaseTable.h"
 
 %extend lsst::afw::table::BaseTable {
     %pythoncode %{
          schema = property(getSchema)
+         def cast(self, type_):
+             return type_._cast(self)
     %}
 }
 
@@ -299,6 +331,8 @@ def asKey(self):
     %pythoncode %{
         table = property(lambda self: self.getTable()) # extra lambda allows for polymorphism in property
         schema = property(getSchema)
+        def cast(self, type_):
+            return type_._cast(self)
     %}
     // Allow field name strings be used in place of keys (but only in Python)
     %pythonprepend __getitem__ %{
@@ -321,14 +355,71 @@ def asKey(self):
     %}
 }
 
+%addCastMethod(lsst::afw::table::BaseTable, lsst::afw::table::BaseTable)
+%addCastMethod(lsst::afw::table::BaseRecord, lsst::afw::table::BaseRecord)
 %usePointerEquality(lsst::afw::table::BaseRecord)
 %usePointerEquality(lsst::afw::table::BaseTable)
 
-%include "lsst/afw/table/ColumnView.h"
+// =============== BaseColumnView ===========================================================================
 
-%extend lsst::afw::table::ColumnView {
+%template(FlagKeyVector) std::vector< lsst::afw::table::Key< lsst::afw::table::Flag > >;
+
+%feature("shadow") lsst::afw::table::BaseColumnView::getBits %{
+def getBits(self, keys=None):
+    if keys is None:
+        return self.getAllBits()
+    arg = FlagKeyVector()
+    for k in keys:
+        if isinstance(k, basestring):
+            arg.append(self.schema.find(k).key)
+        else:
+            arg.append(k)
+    return $action(self, arg)
+%}
+
+%include "lsst/afw/table/BaseColumnView.h"
+
+%extend lsst::afw::table::BitsColumn {
+    PyObject * getSchemaItems() const {
+        // Can't use SWIG's std::vector wrapper because SchemaItem doesn't have a default
+        // ctor.  And we want to return a list anyway, so you can print it easily and not
+        // worry about dangling references and implicit const-casts.
+        PyObject * result = PyList_New(0);
+        typedef std::vector< lsst::afw::table::SchemaItem<lsst::afw::table::Flag> > ItemVector;
+        for (
+            ItemVector::const_iterator i = self->getSchemaItems().begin();
+            i != self->getSchemaItems().end();
+            ++i
+        ) {
+            PyObject * pyItem = SWIG_NewPointerObj(
+                new lsst::afw::table::SchemaItem<lsst::afw::table::Flag>(*i),
+                SWIGTYPE_p_lsst__afw__table__SchemaItemT_lsst__afw__table__Flag_t,
+                true // SWIG takes ownership of the pointer
+            );
+            if (!pyItem) {
+                Py_DECREF(result);
+                return NULL;
+            }
+            if (PyList_Append(result, pyItem) != 0) {
+                Py_DECREF(result);
+                Py_DECREF(pyItem);
+                return NULL;
+            }
+        }
+        return result;
+    }
     %pythoncode %{
+        array = property(getArray)
+    %}
+}
+
+%extend lsst::afw::table::BaseColumnView {
+    %pythoncode %{
+        table = property(getTable)
         schema = property(getSchema)
+        def get(self, key):
+            """Return the column for the given key or field name; synonym for __getitem__."""
+            return self[key]
     %}
     // Allow field name strings be used in place of keys (but only in Python)
     %pythonprepend __getitem__ %{
@@ -336,6 +427,8 @@ def asKey(self):
             return self[self.schema.find(args[0]).key]
     %}
 }
+
+// =============== Field Types ==============================================================================
 
 %pythoncode %{
 from ..geom import Angle, Point2D, Point2I
@@ -441,11 +534,19 @@ for _d in (Field, Key, SchemaItem, _suffixes):
         _d[_k] = _d[_v]
 %}
 
+// =============== SimpleTable and SimpleRecord =============================================================
 
 %shared_ptr(lsst::afw::table::SimpleTable)
 %shared_ptr(lsst::afw::table::SimpleRecord)
 
 %include "lsst/afw/table/Simple.h"
+
+%template(SimpleColumnView) lsst::afw::table::ColumnViewT<lsst::afw::table::SimpleRecord>;
+
+%addCastMethod(lsst::afw::table::SimpleTable, lsst::afw::table::BaseTable)
+%addCastMethod(lsst::afw::table::SimpleRecord, lsst::afw::table::BaseRecord)
+
+// =============== SourceTable and SourceRecord =============================================================
 
 %shared_ptr(lsst::afw::table::SourceTable)
 %shared_ptr(lsst::afw::table::SourceRecord)
@@ -473,6 +574,14 @@ namespace lsst { namespace afw { namespace table {
 }}}
 
 %include "lsst/afw/table/Source.h"
+
+%addCastMethod(lsst::afw::table::SourceTable, lsst::afw::table::BaseTable)
+%addCastMethod(lsst::afw::table::SourceRecord, lsst::afw::table::BaseRecord)
+
+%template(SourceColumnViewBase) lsst::afw::table::ColumnViewT<lsst::afw::table::SourceRecord>;
+%template(SourceColumnView) lsst::afw::table::SourceColumnViewT<lsst::afw::table::SourceRecord>;
+
+// =============== Catalogs =================================================================================
 
 %include "containers.i"
 

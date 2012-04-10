@@ -10,7 +10,7 @@
     U __getitem__(lsst::afw::table::Key< U > const & key) const { return (*self)[key]; }
     void __setitem__(lsst::afw::table::Key< U > const & key, U value) { (*self)[key] = value; }
 }
-%extend lsst::afw::table::ColumnView {
+%extend lsst::afw::table::BaseColumnView {
     lsst::ndarray::Array<U const,1> __getitem__(Key<U> const & key) const { return (*self)[key]; }
 }
 %enddef
@@ -67,7 +67,7 @@
         (*self)[key] = v;
     }
 }
-%extend lsst::afw::table::ColumnView {
+%extend lsst::afw::table::BaseColumnView {
     lsst::ndarray::Array<U const,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
         return (*self)[key];
     }
@@ -149,7 +149,7 @@
         self->set(key, value);
     }
 }
-%extend lsst::afw::table::ColumnView {
+%extend lsst::afw::table::BaseColumnView {
     lsst::ndarray::Array<bool const,1> __getitem__(
         lsst::afw::table::Key< lsst::afw::table::Flag > const & key
     ) const {

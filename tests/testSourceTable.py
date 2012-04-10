@@ -65,29 +65,41 @@ def makeWcs():
 
 class SourceTableTestCase(unittest.TestCase):
 
+    def fillRecord(self, record):
+        record.set(self.fluxKey, numpy.random.randn())
+        record.set(self.fluxErrKey, numpy.random.randn())
+        record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
+        record.set(self.centroidErrKey, makeCov(2, float))
+        record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
+        record.set(self.shapeErrKey, makeCov(3, float))
+        record.set(self.fluxFlagKey, numpy.random.randn() > 0)
+        record.set(self.centroidFlagKey, numpy.random.randn() > 0)
+        record.set(self.shapeFlagKey, numpy.random.randn() > 0)
+
     def setUp(self):
-        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.fluxKey = schema.addField("a", type="F8")
-        self.fluxErrKey = schema.addField("a.err", type="F8")
-        self.fluxFlagKey = schema.addField("a.flags", type="Flag")
-        self.centroidKey = schema.addField("b", type="Point<F8>")
-        self.centroidErrKey = schema.addField("b.err", type="Cov<Point<F8>>")
-        self.centroidFlagKey = schema.addField("b.flags", type="Flag")
-        self.shapeKey = schema.addField("c", type="Moments<F8>")
-        self.shapeErrKey = schema.addField("c.err", type="Cov<Moments<F8>>")
-        self.shapeFlagKey = schema.addField("c.flags", type="Flag")
-        self.table = lsst.afw.table.SourceTable.make(schema)
-        self.record = self.table.makeRecord()
-        self.record.set(self.fluxKey, numpy.random.randn())
-        self.record.set(self.fluxErrKey, numpy.random.randn())
-        self.record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
-        self.record.set(self.centroidErrKey, makeCov(2, float))
-        self.record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
-        self.record.set(self.shapeErrKey, makeCov(3, float))
+        self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        self.fluxKey = self.schema.addField("a", type="F8")
+        self.fluxErrKey = self.schema.addField("a.err", type="F8")
+        self.fluxFlagKey = self.schema.addField("a.flags", type="Flag")
+        self.centroidKey = self.schema.addField("b", type="Point<F8>")
+        self.centroidErrKey = self.schema.addField("b.err", type="Cov<Point<F8>>")
+        self.centroidFlagKey = self.schema.addField("b.flags", type="Flag")
+        self.shapeKey = self.schema.addField("c", type="Moments<F8>")
+        self.shapeErrKey = self.schema.addField("c.err", type="Cov<Moments<F8>>")
+        self.shapeFlagKey = self.schema.addField("c.flags", type="Flag")
+        self.table = lsst.afw.table.SourceTable.make(self.schema)
+        self.catalog = lsst.afw.table.SourceCatalog(self.table)
+        self.record = self.catalog.addNew()
+        self.fillRecord(self.record)
+        self.record.setId(50)
+        self.fillRecord(self.catalog.addNew())
+        self.fillRecord(self.catalog.addNew())
 
     def tearDown(self):
+        del self.schema
         del self.record
         del self.table
+        del self.catalog
 
     def checkCanonical(self):
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
@@ -119,19 +131,7 @@ class SourceTableTestCase(unittest.TestCase):
         coord2 = wcs.pixelToSky(self.record.get(self.centroidKey))
         self.assertEqual(coord1, coord2)
 
-class SourceCatalogTestCase(unittest.TestCase):
-
-    def setUp(self):
-        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.catalog = lsst.afw.table.SourceCatalog(schema)
-        self.catalog.addNew().setId(50)
-        self.catalog.addNew()
-        self.catalog.addNew()
-
-    def tearDown(self):
-        del self.catalog
-
-    def testCustomization(self):
+    def testSorting(self):
         self.assertFalse(self.catalog.isSorted())
         self.catalog.sort()
         self.assert_(self.catalog.isSorted())
@@ -155,6 +155,50 @@ class SourceCatalogTestCase(unittest.TestCase):
             self.assertEqual(r.getId(), r3.getId())
             self.assertEqual(r.getId(), r4.getId())
 
+    def testColumnView(self):
+        cols1 = self.catalog.getColumnView()
+        cols2 = self.catalog.columns
+        self.assert_(cols1 is cols2)
+        self.assert_(isinstance(cols1, lsst.afw.table.SourceColumnView))
+        self.table.definePsfFlux("a")
+        self.table.defineCentroid("b")
+        self.table.defineShape("c")
+        self.assert_((cols2["a"] == cols2.getPsfFlux()).all())
+        self.assert_((cols2["b.x"] == cols2.getX()).all())
+        self.assert_((cols2["b.y"] == cols2.getY()).all())
+        self.assert_((cols2["c.xx"] == cols2.getIxx()).all())
+        self.assert_((cols2["c.yy"] == cols2.getIyy()).all())
+        self.assert_((cols2["c.xy"] == cols2.getIxy()).all())
+
+    def testForwarding(self):
+        """Verify that Catalog forwards unknown methods to its table and/or columns."""
+        self.table.definePsfFlux("a")
+        self.table.defineCentroid("b")
+        self.table.defineShape("c")
+        self.assert_((self.catalog.columns["a"] == self.catalog["a"]).all())
+        self.assert_((self.catalog.columns[self.fluxKey] == self.catalog.get(self.fluxKey)).all())
+        self.assert_((self.catalog.columns.get(self.fluxKey) == self.catalog.getPsfFlux()).all())
+        self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
+        self.assertRaises(AttributeError, lambda c: c.foo(), self.catalog)
+
+    def testBitsColumn(self):
+        allBits = self.catalog.getBits()
+        someBits = self.catalog.getBits(["a.flags", "c.flags"])
+        self.assertEqual(allBits.getMask("a.flags"), 0x1)
+        self.assertEqual(allBits.getMask("b.flags"), 0x2)
+        self.assertEqual(allBits.getMask("c.flags"), 0x4)
+        self.assertEqual(someBits.getMask(self.fluxFlagKey), 0x1)
+        self.assertEqual(someBits.getMask(self.shapeFlagKey), 0x2)
+        self.assert_(((allBits.array & 0x1 != 0) == self.catalog.columns["a.flags"]).all())
+        self.assert_(((allBits.array & 0x2 != 0) == self.catalog.columns["b.flags"]).all())
+        self.assert_(((allBits.array & 0x4 != 0) == self.catalog.columns["c.flags"]).all())
+        self.assert_(((someBits.array & 0x1 != 0) == self.catalog.columns["a.flags"]).all())
+        self.assert_(((someBits.array & 0x2 != 0) == self.catalog.columns["c.flags"]).all())
+
+    def testCast(self):
+        baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
+        sourceCat = baseCat.cast(lsst.afw.table.SourceCatalog)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -164,7 +208,6 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SourceTableTestCase)
-    suites += unittest.makeSuite(SourceCatalogTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

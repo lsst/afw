@@ -495,7 +495,8 @@ except NameError:
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
-    title = str(title)
+    if title is not None:
+        title = str(title)
     if True:
         if isMask:
             xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()
