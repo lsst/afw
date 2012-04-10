@@ -27,12 +27,10 @@
 
 %ignore lsst::afw::geom::Box2I::getSlices;
 %rename(set) lsst::afw::geom::Box2I::operator=;
-%rename(__eq__) lsst::afw::geom::Box2I::operator==;
-%rename(__ne__) lsst::afw::geom::Box2I::operator!=;
+%useValueEquality(lsst::afw::geom::Box2I);
 %copyctor lsst::afw::geom::Box2I;
 %rename(set) lsst::afw::geom::Box2D::operator=;
-%rename(__eq__) lsst::afw::geom::Box2D::operator==;
-%rename(__ne__) lsst::afw::geom::Box2D::operator!=;
+%useValueEquality(lsst::afw::geom::Box2D);
 %copyctor lsst::afw::geom::Box2D;
 
 %include "lsst/afw/geom/Box.h"

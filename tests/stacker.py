@@ -72,9 +72,11 @@ class StackTestCase(unittest.TestCase):
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         knownMean /= self.nImg
-        
         self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)
 
+        # Test in-place stacking
+        afwMath.statisticsStack(imgStack, imgList, afwMath.MEAN)
+        self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)
         
     def testStatistics(self):
         """ Test the statisticsStack() function """
@@ -107,6 +109,9 @@ class StackTestCase(unittest.TestCase):
         wmean = float(len(self.values)) / reduce(lambda x, y: x + y, wvalues)
         self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
 
+        # Test in-place stacking
+        afwMath.statisticsStack(mimgStack, mimgList, afwMath.MEAN, sctrl)
+        self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
 
     def testConstantWeightedStack(self):
         """ Test statisticsStack() function when weighting by a vector of weights"""

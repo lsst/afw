@@ -33,10 +33,7 @@
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Peak.h"
-#include "lsst/afw/detection/Source.h"
-#include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/detection/LocalPsf.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/detection/SourceMatch.h"
 
 #endif

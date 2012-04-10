@@ -28,6 +28,7 @@
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Amp.h"
+#include "lsst/afw/cameraGeom/FpPoint.h"
 
 /**
  * @file
@@ -87,9 +88,9 @@ public:
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pos,
+    virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix,
                                                           bool const isTrimmed) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
+    virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
 
     virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);

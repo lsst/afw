@@ -24,7 +24,7 @@
 #ifndef LSST_AFW_MATH_SHAPELETS_DETAIL_HermiteConvolution
 #define LSST_AFW_MATH_SHAPELETS_DETAIL_HermiteConvolution
 
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/math/shapelets/constants.h"
 

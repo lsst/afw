@@ -159,7 +159,7 @@ void randomGaussianImage(ImageT *image,  ///< The image to set
 }
 
 /**
- * Set image to random numbers with a gaussian N(0, 1) distribution
+ * Set image to random numbers with a $\chi^2_{nu}$ distribution
  */
 template<typename ImageT>
 void randomChisqImage(ImageT *image,    ///< The image to set
@@ -171,7 +171,7 @@ void randomChisqImage(ImageT *image,    ///< The image to set
 
 
 /**
- * Set image to random numbers with a gaussian N(0, 1) distribution
+ * Set image to random numbers with a Poisson distribution with mean mu (n.b. not per-pixel)
  */
 template<typename ImageT>
 void randomPoissonImage(ImageT *image,    ///< The image to set

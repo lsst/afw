@@ -48,8 +48,8 @@ Python interface to lsst::afw::detection classes
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/ndarray/python.h"
-#include "lsst/ndarray/python/eigen.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
 %}
 
 %init %{
@@ -69,12 +69,11 @@ Python interface to lsst::afw::detection classes
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 %import "lsst/afw/math/mathLib.i"
 %import "lsst/afw/math/shapelets/shapeletsLib.i"
-%include "lsst/ndarray/ndarray.i"
+%import "lsst/afw/table/tableLib.i"
+%include "ndarray.i"
 
 %lsst_exceptions()
 
-%include "source.i"
 %include "footprints.i"
-%include "match.i"
 %include "psf.i"
 

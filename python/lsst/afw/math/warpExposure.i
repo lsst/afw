@@ -48,6 +48,9 @@
 %template(warpImage) lsst::afw::math::warpImage<
     lsst::afw::image::Image<DESTIMAGEPIXEL>,
     lsst::afw::image::Image<SRCIMAGEPIXEL> >;
+%template(warpCenteredImage) lsst::afw::math::warpCenteredImage<
+    lsst::afw::image::Image<DESTIMAGEPIXEL>,
+    lsst::afw::image::Image<SRCIMAGEPIXEL> >;
 %enddef
 
 %WarpFuncsByType(float, boost::uint16_t);
@@ -78,12 +81,10 @@
 #endif
 
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Image<PIXELT> >;
-#if 0
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<
     lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 %template(flipImage) lsst::afw::math::flipImage<
     lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
-#endif
 %enddef
 
 imageTransforms(boost::uint16_t, 0);

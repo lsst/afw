@@ -2,7 +2,7 @@
 import os
 
 import lsst.daf.persistence
-from lsst.sconsUtils import scripts, env
+from lsst.sconsUtils import scripts, env, targets
 
 dataDir = env.ProductDir("afwdata")
 if not dataDir:
@@ -29,3 +29,5 @@ else:
     )
     
     scripts.BasicSConscript.tests(args=testArgs)
+
+env.Clean(targets["tests"], "#testTable.fits")

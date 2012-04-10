@@ -38,16 +38,16 @@ template<typename ImageT>
 typename ImageT::Ptr rotateImageBy90(ImageT const& image, int nQuarter);
 
 template<typename ImageT>
-typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
-                               bool flipLR,           ///< Flip left <--> right?
-                               bool flipTB            ///< Flip top <--> bottom?
-                              );
+PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
+                      bool flipLR,           ///< Flip left <--> right?
+                      bool flipTB            ///< Flip top <--> bottom?
+                     );
 template<typename ImageT>
-typename ImageT::Ptr binImage(ImageT const& inImage, int const binX, int const binY,
-                              lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
+PTR(ImageT) binImage(ImageT const& inImage, int const binX, int const binY,
+                     lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
 template<typename ImageT>
-typename ImageT::Ptr binImage(ImageT const& inImage, int const binsize,
-                              lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
+PTR(ImageT) binImage(ImageT const& inImage, int const binsize,
+                     lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
 
     
 }}}

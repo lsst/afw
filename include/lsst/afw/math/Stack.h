@@ -53,6 +53,15 @@ typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
         StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
                                                              );
+template<typename PixelT>
+void statisticsStack(
+    lsst::afw::image::Image<PixelT>& out, ///< Output image
+    std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &images,      ///< Images to process
+    Property flags, ///< statistics requested
+    StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
+    std::vector<lsst::afw::image::VariancePixel> const& wvector=
+        std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
+    );
 
 /**
  * @brief A function to compute some statistics of a stack of MaskedImages
@@ -64,6 +73,15 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
         StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
                                                                    );
+template<typename PixelT>
+void statisticsStack(
+    lsst::afw::image::MaskedImage<PixelT>& out, ///< Output image
+    std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &images,///< MaskedImages to process
+    Property flags, ///< statistics requested
+    StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
+    std::vector<lsst::afw::image::VariancePixel> const& wvector=
+        std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
+    );
 
 
 /**

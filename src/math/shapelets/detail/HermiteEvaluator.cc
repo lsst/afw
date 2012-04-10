@@ -26,7 +26,7 @@
 #include "lsst/afw/geom/Angle.h"
 
 namespace shapelets = lsst::afw::math::shapelets;
-namespace nd = lsst::ndarray;
+namespace nd = ndarray;
 namespace afwGeom = lsst::afw::geom;
 
 namespace {

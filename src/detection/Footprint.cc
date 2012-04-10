@@ -57,6 +57,24 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+bool Span::operator<(const Span& b) const {
+	if (_y < b._y)
+		return true;
+	if (_y > b._y)
+		return false;
+	// y equal...
+	if (_x0 < b._x0)
+		return true;
+	if (_x0 > b._x0)
+		return false;
+	if (_x1 < b._x1)
+		return true;
+	// if (_x1 > b._x1)
+	// return false;
+    // they're equal.
+	return false;
+}
+
 namespace {
 /*
  * Compare two Span%s by y, then x0, then x1
@@ -115,7 +133,7 @@ double extremum(geom::Point2D a, geom::Point2D b, geom::Point2D c, geom::Point2D
 geom::Point2D transformPoint(double x, double y, 
                              image::Wcs const& source,
                              image::Wcs const& target){
-    return target.skyToPixel(source.pixelToSky(x, y));
+    return target.skyToPixel(*source.pixelToSky(x, y));
 }
 
 
@@ -589,7 +607,7 @@ Footprint::insertIntoImage(
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
 {
-    if (id > std::numeric_limits<PixelT>::max()) {
+    if (id > std::size_t(std::numeric_limits<PixelT>::max())) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::OutOfRangeException,
             "id out of range for image type"
@@ -1130,8 +1148,7 @@ Footprint::Ptr growFootprintSlow(
     image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
 
-    FootprintSet<int>::Ptr
-        grownList(new FootprintSet<int>(*convolvedImage, 0.5, "", 1));
+    PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1));
 
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
@@ -1223,9 +1240,7 @@ Footprint::Ptr growFootprint(
 
     image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
     // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
-    FootprintSet<int>::Ptr grownList(
-        new FootprintSet<int>(*midImage, Threshold(-ngrow, Threshold::VALUE, false))
-    );
+    PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(-ngrow, Threshold::VALUE, false)));
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
     //

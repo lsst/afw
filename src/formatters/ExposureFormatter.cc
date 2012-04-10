@@ -57,6 +57,7 @@ static char const* SVNid __attribute__((unused)) =
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/Exposure.h"
+#include "lsst/afw/image/Wcs.h"
 
 #include <iostream>
 

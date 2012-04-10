@@ -26,12 +26,15 @@
 #include <string>
 #include "boost/weak_ptr.hpp"
 #include <boost/enable_shared_from_this.hpp>
+#include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
+
+#include "lsst/afw/cameraGeom/FpPoint.h"
 
 /**
  * @file
@@ -41,17 +44,16 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-
-#include "lsst/afw/image/Utils.h"
-#include "lsst/afw/image/Defect.h"
-
+ 
+class Distortion;
+    
 /**
  * Describe a detector (e.g. a CCD)
  */
     class Detector
+        : public lsst::daf::base::Citizen
 #if !defined(SWIG)
-        : public lsst::daf::base::Citizen,
-          public boost::enable_shared_from_this<Detector>
+        , public boost::enable_shared_from_this<Detector>
 #endif
     {
 public:
@@ -65,7 +67,8 @@ public:
                      ) :
         lsst::daf::base::Citizen(typeid(this)),
         _id(id), _isTrimmed(false), _allPixels(),
-        _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize)
+        _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize), _center(),
+        _distortion(PTR(Distortion)()) // init as a null pointer
     {
         _parent = boost::weak_ptr<Detector>();
         
@@ -117,7 +120,7 @@ public:
     /// Return the pixel size, mm/pixel
     double getPixelSize() const { return _pixelSize; }
 
-    virtual lsst::afw::geom::Extent2D getSize() const;
+    virtual FpExtent getSize() const;
 
     /// Return Detector's total footprint
     virtual lsst::afw::geom::Box2I& getAllPixels() {
@@ -150,19 +153,16 @@ public:
     Orientation const& getOrientation() const { return _orientation;}
 
     /// Set the Detector's center
-    virtual void setCenter(lsst::afw::geom::Point2D const& center) { _center = center; }
+    virtual void setCenter(FpPoint const& center) { _center = center; }
+
     /// Return the Detector's center
-    lsst::afw::geom::Point2D getCenter() const { return _center; }
+    FpPoint getCenter() const { return _center; }
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2D getPixelFromPosition(lsst::afw::geom::Point2D const& pos) const;
-    virtual lsst::afw::geom::Point2D getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
-
-    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
-    lsst::afw::geom::Point2D getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
+    virtual lsst::afw::geom::Point2D getPixelFromPosition(FpPoint const& pos) const;
+    virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
+    virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
     
     virtual void shift(int dx, int dy);
     //
@@ -177,6 +177,11 @@ public:
     /// Get the Detector's Defect list
     std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> > const& getDefects() const { return _defects; }
     std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >& getDefects() { return _defects; }
+
+    void setDistortion(CONST_PTR(Distortion) distortion);
+    CONST_PTR(Distortion) getDistortion() const;
+    
+    
 protected:
     /// Return a shared pointer to this
     Ptr getThisPtr() {
@@ -186,6 +191,9 @@ protected:
     lsst::afw::geom::Box2I& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
+
+   
+    
 private:
     Id _id;
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?
@@ -194,12 +202,14 @@ private:
     double _pixelSize;                  // Size of a pixel in mm
     lsst::afw::geom::Point2D _centerPixel;      // the pixel defined to be the centre of the Detector
     Orientation _orientation;           // orientation of this Detector
-    lsst::afw::geom::Point2D _center;           // position of _centerPixel (mm)
+    FpPoint _center;           // position of _centerPixel (mm)
     lsst::afw::geom::Extent2D _size;            // Size in mm of this Detector
     lsst::afw::geom::Box2I _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
     boost::weak_ptr<Detector> _parent;  // Parent Detector in the hierarchy
 
     std::vector<lsst::afw::image::DefectBase::Ptr> _defects; // Defects in this detector
+    
+    CONST_PTR(Distortion) _distortion;
 };
 
 namespace detail {

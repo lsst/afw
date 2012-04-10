@@ -54,8 +54,8 @@ Basic routines to talk to lsst::afw::image classes
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/ndarray/python.h"
-#include "lsst/ndarray/python/eigen.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
 
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
@@ -94,7 +94,7 @@ namespace boost {
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 
-%include "lsst/ndarray/ndarray.i"
+%include "ndarray.i"
 
 %declareNumPyConverters(Eigen::MatrixXd);
 %declareNumPyConverters(Eigen::VectorXd);
@@ -103,17 +103,17 @@ namespace boost {
 %declareNumPyConverters(Eigen::Matrix3d);
 %declareNumPyConverters(Eigen::Vector3d);
 
-%declareNumPyConverters(lsst::ndarray::Array<unsigned short,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<unsigned short const,2,1>);
+%declareNumPyConverters(ndarray::Array<unsigned short,2,1>);
+%declareNumPyConverters(ndarray::Array<unsigned short const,2,1>);
 
-%declareNumPyConverters(lsst::ndarray::Array<int,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<int const,2,1>);
+%declareNumPyConverters(ndarray::Array<int,2,1>);
+%declareNumPyConverters(ndarray::Array<int const,2,1>);
 
-%declareNumPyConverters(lsst::ndarray::Array<float,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<float const,2,1>);
+%declareNumPyConverters(ndarray::Array<float,2,1>);
+%declareNumPyConverters(ndarray::Array<float const,2,1>);
 
-%declareNumPyConverters(lsst::ndarray::Array<double,2,1>);
-%declareNumPyConverters(lsst::ndarray::Array<double const,2,1>);
+%declareNumPyConverters(ndarray::Array<double,2,1>);
+%declareNumPyConverters(ndarray::Array<double const,2,1>);
 
 %lsst_exceptions();
 
@@ -131,10 +131,6 @@ namespace boost {
 
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
-
-%shared_ptr(lsst::afw::image::Calib);
-%include "lsst/afw/image/Calib.h"
-%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
 
 #if defined(IMPORT_FUNCTION_I)
 %{
@@ -156,47 +152,7 @@ namespace boost {
 
 %include "lsst/afw/image/ImageUtils.h"
 
-/************************************************************************************************************/
-%{
-namespace lsst { namespace afw { namespace image {
-    extern Wcs NoWcs;
-}}}
-using lsst::afw::image::NoWcs;
-%}
-
-%shared_ptr(lsst::afw::image::Wcs);
-%shared_ptr(lsst::afw::image::TanWcs);
-
-%ignore lsst::afw::image::NoWcs;
-
-%{
-#include "lsst/afw/image/Wcs.h"
-#include "lsst/afw/image/TanWcs.h"
-%}
-
-
-%include "lsst/afw/image/Wcs.h"
-%include "lsst/afw/image/TanWcs.h"
-
-%lsst_persistable(lsst::afw::image::Wcs);
-%lsst_persistable(lsst::afw::image::TanWcs);
-
-%boost_picklable(lsst::afw::image::Wcs);
-%boost_picklable(lsst::afw::image::TanWcs);
-
-%newobject makeWcs;
-
-%inline %{
-    lsst::afw::image::TanWcs::Ptr
-    cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
-        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
-        
-        if(tanWcs.get() == NULL) {
-            throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
-        }
-        return tanWcs;
-    }
-%}
+%include "wcs.i"
 
 /************************************************************************************************************/
 
@@ -206,6 +162,11 @@ using lsst::afw::image::NoWcs;
 
 
 /************************************************************************************************************/
+
+%shared_ptr(lsst::afw::image::Calib);
+%include "lsst/afw/image/Calib.h"
+%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
+
 %{
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image/Exposure.h"

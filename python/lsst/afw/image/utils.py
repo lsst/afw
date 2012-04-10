@@ -35,12 +35,27 @@ def clipImage(im, minClip, maxClip):
         mi = afwImage.makeMaskedImage(im, afwImage.MaskU(im.getDimensions()))
 
     if minClip is not None:
-        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), minClip)
 
     if maxclip is not None:
-        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(maxclip))
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxclip))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxclip)
+
+def resetFilters():
+    """Reset registry of filters and filter properties"""
+    afwImage.Filter.reset()
+    afwImage.FilterProperty.reset()
+
+def defineFilter(name, lambdaEff, alias=[], force=False):
+    """Define a filter and its properties in the filter registry"""
+    prop = afwImage.FilterProperty(name, lambdaEff, force)
+    afwImage.Filter.define(prop)
+    if isinstance(alias, basestring):
+        afwImage.Filter.defineAlias(name, alias)
+    else:
+        for a in alias:
+            afwImage.Filter.defineAlias(name, a)
 
 def defineFiltersFromPolicy(filterPolicy, reset=False):
     """Process a Policy and define the filters"""

@@ -1,1 +1,2 @@
 EXAMPLE_PATH = examples
+EXCLUDE += include/lsst/afw/detection/FootprintArray.cc

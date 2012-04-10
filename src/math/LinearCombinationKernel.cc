@@ -41,10 +41,12 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/geom.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 
 /**
  * @brief Construct an empty LinearCombinationKernel of size 0x0
@@ -178,23 +180,45 @@ double afwMath::LinearCombinationKernel::computeImage(
     double x,
     double y
 ) const {
-    if (image.getDimensions() != this->getDimensions()) {
+    if ( (image.getWidth() != this->getWidth()) || (image.getHeight() != this->getHeight())) {
         std::ostringstream os;
         os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
-            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+            << ") > (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
     }
 
+    int dx=0, dy=0;
+    if (image.getWidth() < this->getWidth()) {
+        dx = this->getWidth() - image.getWidth();
+    }
+    if (image.getHeight() < this->getHeight()) {
+        dy = this->getHeight() - image.getHeight();
+    }
+
+    if (dx%2 || dy%2 || dx != dy) {
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+           << ") > (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions"
+           << " Image is smaller than kernel (ok), but I need a constant edge to center a bbox.";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+    
     image = 0.0;
     double imSum = 0.0;
     std::vector<afwImage::Image<Pixel>::Ptr>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
-        image.scaledPlus(*kParIter, **kImPtrIter);
+        if (dx || dy) {
+            afwGeom::Box2I bbox(afwGeom::Point2I(dx/2, dy/2),
+                                afwGeom::Extent2I(image.getWidth(), image.getHeight()));
+            image.scaledPlus(*kParIter, afwImage::Image<Pixel>(**kImPtrIter, bbox));
+        } else {
+            image.scaledPlus(*kParIter, **kImPtrIter);
+        }
         imSum += (*kSumIter) * (*kParIter);
     }
 

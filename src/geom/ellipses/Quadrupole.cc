@@ -33,35 +33,35 @@ std::string Quadrupole::getName() const { return "Quadrupole"; }
 void Quadrupole::normalize() {
     if (_matrix(0, 1) != _matrix(1, 0))
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix must be symmetric.");
-    if (getIXX() < 0 || getIYY() < 0)
+    if (getIxx() < 0 || getIyy() < 0)
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix cannot have negative diagonal elements.");
     if (getDeterminant() < 0) 
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix cannot have negative determinant.");
 }
 
 void Quadrupole::readParameters(double const * iter) {
-    setIXX(*iter++);
-    setIYY(*iter++);
-    setIXY(*iter++);
+    setIxx(*iter++);
+    setIyy(*iter++);
+    setIxy(*iter++);
 }
 
 void Quadrupole::writeParameters(double * iter) const {
-    *iter++ = getIXX();
-    *iter++ = getIYY();
-    *iter++ = getIXY();
+    *iter++ = getIxx();
+    *iter++ = getIyy();
+    *iter++ = getIxy();
 }
 
 Quadrupole::Quadrupole(double ixx, double iyy, double ixy, bool normalize) {
-    setIXX(ixx);
-    setIYY(iyy);
-    setIXY(ixy);
+    setIxx(ixx);
+    setIyy(iyy);
+    setIxy(ixy);
     if (normalize) this->normalize();
 }
 
 Quadrupole::Quadrupole(BaseCore::ParameterVector const & vector, bool normalize) {
-    setIXX(vector[IXX]);
-    setIYY(vector[IYY]);
-    setIXY(vector[IXY]);
+    setIxx(vector[IXX]);
+    setIyy(vector[IYY]);
+    setIxy(vector[IXY]);
     if (normalize) this->normalize();
 }
 
@@ -70,36 +70,36 @@ Quadrupole::Quadrupole(Matrix const & matrix, bool normalize) : _matrix(matrix) 
 }
 
 void Quadrupole::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
-    ixx = getIXX();
-    iyy = getIYY();
-    ixy = getIXY();
+    ixx = getIxx();
+    iyy = getIyy();
+    ixy = getIxy();
 }
 
 BaseCore::Jacobian Quadrupole::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
-    ixx = getIXX();
-    iyy = getIYY();
-    ixy = getIXY();
+    ixx = getIxx();
+    iyy = getIyy();
+    ixy = getIxy();
     return Jacobian::Identity();
 }
 
 void Quadrupole::_assignToAxes(double & a, double & b, double & theta) const {
-    BaseCore::_assignQuadrupoleToAxes(getIXX(), getIYY(), getIXY(), a, b, theta);
+    BaseCore::_assignQuadrupoleToAxes(getIxx(), getIyy(), getIxy(), a, b, theta);
 }
 
 BaseCore::Jacobian Quadrupole::_dAssignToAxes(double & a, double & b, double & theta) const {
-    return BaseCore::_dAssignQuadrupoleToAxes(getIXX(), getIYY(), getIXY(), a, b, theta);
+    return BaseCore::_dAssignQuadrupoleToAxes(getIxx(), getIyy(), getIxy(), a, b, theta);
 }
 
 void Quadrupole::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
-    setIXX(ixx);
-    setIYY(iyy);
-    setIXY(ixy);
+    setIxx(ixx);
+    setIyy(iyy);
+    setIxy(ixy);
 }
 
 BaseCore::Jacobian Quadrupole::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
-    setIXX(ixx);
-    setIYY(iyy);
-    setIXY(ixy);
+    setIxx(ixx);
+    setIyy(iyy);
+    setIxy(ixy);
     return Jacobian::Identity();
 }
 

@@ -56,9 +56,15 @@ class FilterProperty {
 public:
     boost::shared_ptr<FilterProperty> Ptr;
     boost::shared_ptr<FilterProperty const> ConstPtr;
-    
-    FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol=lsst::pex::policy::Policy(),
-                   bool force=false);
+
+    explicit FilterProperty(std::string const& name, double lambdaEff, bool force=false) :
+        _name(name), _lambdaEff(lambdaEff) { _insert(force); }
+    explicit FilterProperty(
+        std::string const& name,
+        lsst::daf::base::PropertySet const& prop=lsst::daf::base::PropertySet(),
+        bool force=false
+        );
+    explicit FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol, bool force=false);
     /**
      * Return a filter's name
      */
@@ -86,6 +92,7 @@ private:
     typedef std::tr1::unordered_map<std::string const, FilterProperty> PropertyMap;
 
     static void _initRegistry();
+    void _insert(bool force=false);
 
     std::string _name;                  // name of filter
     double _lambdaEff;                  // effective wavelength (nm)

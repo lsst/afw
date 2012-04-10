@@ -256,7 +256,7 @@ or (the old idiom):
 
             self._bufsize.append(size)  # don't call self.size() as ds9Cmd isn't defined yet
 
-        def set(self, size):
+        def set(self, size, silent=False):
             """Set the ds9 buffer size to size"""
             if size < 0:
                 size = XPA_SZ_LINE - 5
@@ -273,7 +273,7 @@ or (the old idiom):
             else:
                 self._bufsize.append(size) # there is no current value; set one
 
-            self.flush()
+            self.flush(silent=silent)
 
         def _getSize(self):
             """Get the current ds9 buffer size"""
@@ -282,13 +282,13 @@ or (the old idiom):
         def pushSize(self, size=-1):
             """Replace current ds9 command buffer size with size (see also popSize)
             @param:  Size of buffer (-1: largest possible given bugs in xpa)"""
-            self.flush()
+            self.flush(silent=True)
             self._bufsize.append(0)
-            self.set(size)
+            self.set(size, silent=True)
 
         def popSize(self):
             """Switch back to the previous command buffer size (see also pushSize)"""
-            self.flush()
+            self.flush(silent=True)
 
             if len(self._bufsize) > 1:
                 self._bufsize.pop()
@@ -464,23 +464,26 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 if not getMaskPlaneVisibility(planes[p]):
                     continue
 
-                if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
-                    continue
+            if not getMaskPlaneVisibility(pname):
+                continue
 
-                mask <<= data
-                mask &= (1 << p)
+            if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
+                continue
 
-                color = getMaskPlaneColor(planes[p])
+            mask <<= data
+            mask &= (1 << p)
 
-                if not color:            # none was specified
-                    while True:
-                        color = _maskColors[colorIndex % len(_maskColors)]
-                        colorIndex += 1
-                        if color != WHITE and color != BLACK:
-                            break
+            color = getMaskPlaneColor(pname)
 
-                setMaskColor(color)
-                _mtv(mask, wcs, title, True)
+            if not color:            # none was specified
+                while True:
+                    color = _maskColors[colorIndex % len(_maskColors)]
+                    colorIndex += 1
+                    if color != WHITE and color != BLACK:
+                        break
+
+            setMaskColor(color)
+            _mtv(mask, wcs, title, True)
         return
     elif re.search("::Image<", repr(data)): # it's an Image; display it
         _mtv(data, wcs, title, False)
@@ -513,7 +516,6 @@ def _mtv(data, wcs, title, isMask):
         pfd = file("foo.fits", "w")
 
     try:
-        #import pdb; pdb.set_trace()
         displayLib.writeFitsImage(pfd.fileno(), data, wcs, title)
     except Exception, e:
         try:
@@ -536,7 +538,7 @@ def buffer(enable=True):
     else:
         cmdBuffer.popSize()
 
-flush = cmdBuffer.flush(silent=True)
+flush = lambda : cmdBuffer.flush(silent=True)
 
 class Buffering(object):
     """A class intended to be used with python's with statement:

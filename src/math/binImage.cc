@@ -36,20 +36,20 @@ namespace afw {
 namespace math {
 
 template<typename ImageT>
-typename ImageT::Ptr binImage(ImageT const& in,  ///< The %image to bin
-                              int const binsize, ///< Output pixels are binsize*binsize input pixels
-                              lsst::afw::math::Property const flags ///< how to generate super-pixels
-                             )
+PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
+                     int const binsize, ///< Output pixels are binsize*binsize input pixels
+                     lsst::afw::math::Property const flags ///< how to generate super-pixels
+                    )
 {
     return binImage(in, binsize, binsize, flags);
 }
 
 template<typename ImageT>
-typename ImageT::Ptr binImage(ImageT const& in,  ///< The %image to bin
-                              int const binX,    ///< Output pixels are binX*binY input pixels
-                              int const binY,    ///< Output pixels are binX*binY input pixels
-                              lsst::afw::math::Property const flags ///< how to generate super-pixels
-                             )
+PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
+                     int const binX,    ///< Output pixels are binX*binY input pixels
+                     int const binY,    ///< Output pixels are binX*binY input pixels
+                     lsst::afw::math::Property const flags ///< how to generate super-pixels
+                    )
 {
     if (flags != lsst::afw::math::MEAN) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException,

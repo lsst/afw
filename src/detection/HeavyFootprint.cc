@@ -81,9 +81,9 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage, ///< The pixel values
     HeavyFootprintCtrl const *ctrl     ///< Control how we manipulate HeavyFootprints
         ) : Footprint(foot),
-            _image(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
-            _mask(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
-            _variance(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix())))
+            _image(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+            _mask(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+            _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
 {
     HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
 

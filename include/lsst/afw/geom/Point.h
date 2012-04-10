@@ -109,6 +109,9 @@ public:
     /// @brief Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
 
+
+    void scale(double factor) { this->_vector *= factor; }
+
     double distanceSquared(PointBase<T,N> const & other) {
         // the cast to double is lame but Eigen seems to require they be the same type
         return (this->asEigen() - other.asEigen()).squaredNorm();

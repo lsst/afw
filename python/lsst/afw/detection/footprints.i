@@ -44,10 +44,7 @@
 %shared_ptr(lsst::afw::detection::Peak);
 %shared_ptr(lsst::afw::detection::Footprint);
 %shared_ptr(lsst::afw::detection::Span);
-%shared_ptr(lsst::afw::detection::FootprintSet<boost::uint16_t, lsst::afw::image::MaskPixel>);
-%shared_ptr(lsst::afw::detection::FootprintSet<int, lsst::afw::image::MaskPixel>);
-%shared_ptr(lsst::afw::detection::FootprintSet<float, lsst::afw::image::MaskPixel>);
-%shared_ptr(lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
+%shared_ptr(lsst::afw::detection::FootprintSet);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
 %define %HeavyFootprintPtr(TYPE)
@@ -90,6 +87,24 @@
 %template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Span> >;
 %template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
 
+%define %footprintSetOperations(PIXEL)
+%template(FootprintSet) FootprintSet<PIXEL>;
+%template(FootprintSet) FootprintSet<PIXEL,lsst::afw::image::MaskPixel>;
+%template(makeHeavy) makeHeavy<PIXEL,lsst::afw::image::MaskPixel>;
+%template(setMask) setMask<lsst::afw::image::MaskPixel>;
+%enddef
+
+namespace lsst { namespace afw { namespace table {
+     typedef VectorT< lsst::afw::table::SourceRecord, lsst::afw::table::SourceTable > SourceVector;
+}}}
+
+%extend lsst::afw::detection::FootprintSet {
+%footprintSetOperations(boost::uint16_t)
+%footprintSetOperations(int)
+%footprintSetOperations(float)
+%footprintSetOperations(double)
+}
+
 %define %heavyFootprints(NAME, PIXEL_TYPE...)
     %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>;
     %template(makeHeavyFootprint) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE>;
@@ -129,11 +144,6 @@
     %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<PIXEL_TYPE>;
 %enddef
 
-%define %FootprintSet(NAME, PIXEL_TYPE)
-%template(FootprintSet##NAME) lsst::afw::detection::FootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
-%template(makeFootprintSet) lsst::afw::detection::makeFootprintSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
-%enddef
-
 %heavyFootprints(I, int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 %heavyFootprints(F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 
@@ -143,12 +153,6 @@
 %imageOperations(D, double);
 %maskOperations(lsst::afw::image::MaskPixel);
 %template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
-
-%FootprintSet(U, boost::uint16_t);
-%FootprintSet(I, int);
-%FootprintSet(D, double);
-%FootprintSet(F, float);
-%template(makeFootprintSet) lsst::afw::detection::makeFootprintSet<lsst::afw::image::MaskPixel>;
 
 %extend lsst::afw::detection::Span {
     %pythoncode {
@@ -160,41 +164,41 @@
 
 // because stupid SWIG's %template doesn't work on these functions
 %define %footprintArrayTemplates(T)
-%declareNumPyConverters(lsst::ndarray::Array<T,1,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T,2,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T,3,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T const,1,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T const,2,0>);
-%declareNumPyConverters(lsst::ndarray::Array<T const,3,0>);
+%declareNumPyConverters(ndarray::Array<T,1,0>);
+%declareNumPyConverters(ndarray::Array<T,2,0>);
+%declareNumPyConverters(ndarray::Array<T,3,0>);
+%declareNumPyConverters(ndarray::Array<T const,1,0>);
+%declareNumPyConverters(ndarray::Array<T const,2,0>);
+%declareNumPyConverters(ndarray::Array<T const,3,0>);
 %inline %{
     void flattenArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,2,0> const & src,
-        lsst::ndarray::Array<T,1,0> const & dest,
+        ndarray::Array<T const,2,0> const & src,
+        ndarray::Array<T,1,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::flattenArray(fp, src, dest, origin);
     }    
     void flattenArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,3,0> const & src,
-        lsst::ndarray::Array<T,2,0> const & dest,
+        ndarray::Array<T const,3,0> const & src,
+        ndarray::Array<T,2,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::flattenArray(fp, src, dest, origin);
     }    
     void expandArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,1,0> const & src,
-        lsst::ndarray::Array<T,2,0> const & dest,
+        ndarray::Array<T const,1,0> const & src,
+        ndarray::Array<T,2,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::expandArray(fp, src, dest, origin);
     }
     void expandArray(
         lsst::afw::detection::Footprint const & fp,
-        lsst::ndarray::Array<T const,2,0> const & src,
-        lsst::ndarray::Array<T,3,0> const & dest,
+        ndarray::Array<T const,2,0> const & src,
+        ndarray::Array<T,3,0> const & dest,
         lsst::afw::geom::Point2I const & origin = lsst::afw::geom::Point2I()
     ) {
         lsst::afw::detection::expandArray(fp, src, dest, origin);
@@ -203,26 +207,26 @@
 %{
     template void lsst::afw::detection::flattenArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,2,0> const &,
-        lsst::ndarray::Array<T,1,0> const &,
+        ndarray::Array<T const,2,0> const &,
+        ndarray::Array<T,1,0> const &,
         lsst::afw::geom::Point2I const &
     );
     template void lsst::afw::detection::flattenArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,3,0> const &,
-        lsst::ndarray::Array<T,2,0> const &,
+        ndarray::Array<T const,3,0> const &,
+        ndarray::Array<T,2,0> const &,
         lsst::afw::geom::Point2I const &
     );
     template void lsst::afw::detection::expandArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,1,0> const &,
-        lsst::ndarray::Array<T,2,0> const &,
+        ndarray::Array<T const,1,0> const &,
+        ndarray::Array<T,2,0> const &,
         lsst::afw::geom::Point2I const &
     );
     template void lsst::afw::detection::expandArray(
         lsst::afw::detection::Footprint const &,
-        lsst::ndarray::Array<T const,2,0> const &,
-        lsst::ndarray::Array<T,3,0> const &,
+        ndarray::Array<T const,2,0> const &,
+        ndarray::Array<T,3,0> const &,
         lsst::afw::geom::Point2I const &
     );
 %}

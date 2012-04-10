@@ -73,11 +73,11 @@ class ShapeletTestMixin(object):
                          rtol=1E-4, atol=1E-3)
         self.assertClose(imageMoments.getCenter().getY(), shapeletMoments.getCenter().getY(),
                          rtol=1E-4, atol=1E-3)
-        self.assertClose(imageMoments.getCore().getIXX(), shapeletMoments.getCore().getIXX(),
+        self.assertClose(imageMoments.getCore().getIxx(), shapeletMoments.getCore().getIxx(),
                          rtol=1E-4, atol=1E-3)
-        self.assertClose(imageMoments.getCore().getIYY(), shapeletMoments.getCore().getIYY(),
+        self.assertClose(imageMoments.getCore().getIyy(), shapeletMoments.getCore().getIyy(),
                          rtol=1E-4, atol=1E-3)
-        self.assertClose(imageMoments.getCore().getIXY(), shapeletMoments.getCore().getIXY(),
+        self.assertClose(imageMoments.getCore().getIxy(), shapeletMoments.getCore().getIxy(),
                          rtol=1E-4, atol=1E-3)
         integral = numpy.trapz(numpy.trapz(z, gx, axis=1), y, axis=0)
         self.assertClose(integral, function.evaluate().integrate(), rtol=1E-3, atol=1E-2)
