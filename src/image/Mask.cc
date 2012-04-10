@@ -385,8 +385,7 @@ template<typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     pexLog::Trace("afw.Mask", 5, boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-    _maskDict = planeDefs.empty() ?
-        detail::MaskDict::makeMaskDict() : detail::MaskDict::makeMaskDict(planeDefs);
+    _maskDict = detail::MaskDict::makeMaskDict(planeDefs);
 }
 
 /**
