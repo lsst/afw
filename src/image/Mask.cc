@@ -509,8 +509,8 @@ Mask<MaskPixelT>::Mask(
 }
 
 template<typename MaskPixelT>
-Mask<MaskPixelT>::Mask(lsst::ndarray::Array<MaskPixelT,2,1> const & array, bool deep,
-                                 geom::Point2I const & xy0) :
+Mask<MaskPixelT>::Mask(ndarray::Array<MaskPixelT,2,1> const & array, bool deep,
+                       geom::Point2I const & xy0) :
         image::ImageBase<MaskPixelT>(array, deep, xy0),
         _maskDict(detail::MaskDict::makeMaskDict()) {
 }
