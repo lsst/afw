@@ -170,7 +170,8 @@ class MaskDict : public MapWithHash {
     MaskDict() : MapWithHash() {}
     MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
 public:
-    static PTR(MaskDict) makeMaskDict(detail::MaskPlaneDict const& = MaskPlaneDict());
+    static PTR(MaskDict) makeMaskDict();
+    static PTR(MaskDict) makeMaskDict(detail::MaskPlaneDict const &dict);
     static PTR(MaskDict) setDefaultDict(PTR(MaskDict) dict);
 
     PTR(MaskDict) clone() const;
@@ -235,6 +236,14 @@ namespace {
 
     private:
         PTR(detail::MaskDict) getDefaultDict() {
+            static bool first = true;
+
+            if (first) {
+                setInitMaskBits(_defaultMaskDict);
+                
+                first = false;
+            }
+
             return _defaultMaskDict;
         }
 
@@ -277,16 +286,15 @@ namespace detail {
  * your very very own
  */
 PTR(MaskDict)
+MaskDict::makeMaskDict()
+{
+    return _state.getDefaultDict();
+}
+
+PTR(MaskDict)
 MaskDict::makeMaskDict(detail::MaskPlaneDict const& mpd)
 {
-    static bool first = true;
-
     PTR(MaskDict) dict = _state.getDefaultDict();
-    if (first) {
-        setInitMaskBits(_state.getDefaultDict());
-
-        first = false;
-    }
 
     if (!mpd.empty()) {
         MapWithHash mwh(mpd);
