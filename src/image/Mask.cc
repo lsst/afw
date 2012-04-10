@@ -399,7 +399,6 @@ Mask<MaskPixelT>::Mask(
 ) :
     ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)) {
     _initializePlanes(planeDefs);
-    _maskDict = detail::MaskDict::makeMaskDict(); // after initializePlanes
     *this = 0x0;
 }
 

@@ -311,6 +311,16 @@ class MaskTestCase(unittest.TestCase):
         for tst in tsts:
             utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
 
+    def testCtorWithPlaneDefs(self):
+        """Test that we can create a Mask with a given MaskPlaneDict"""
+        FOO, val = "FOO", 2
+        mask = afwImage.MaskU(100, 200, {FOO : val}
+                              )
+        mpd = mask.getMaskPlaneDict()
+        self.assertTrue(FOO in mpd.keys()) # n.b. there's a bug in swig 2.1.15; mpd[XXX] corrupts memory
+                                           # if XXX isn't a valid key
+        self.assertEqual(mpd[FOO], val)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class OldMaskTestCase(unittest.TestCase):
