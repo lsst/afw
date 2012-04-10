@@ -203,9 +203,6 @@ public:
     //
     // This one isn't static, it fixes up a given Mask's planes
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
-    
-    // Getters
-    int getMyMaskDictVersion() const;
         
 private:
     //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)

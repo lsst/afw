@@ -178,8 +178,6 @@ public:
 
     ~MaskDict();
 
-    int getId();
-
     int getUnusedPlane() const;
     int getMaskPlane(const std::string& name) const;
 
@@ -220,11 +218,6 @@ namespace {
                 delete ptr->first;
             }
             _dicts.clear();
-        }
-
-        int getId(MapWithHash *dict) const {
-            HandleList::const_iterator pair = _dicts.find(dict);
-            return (pair == _dicts.end()) ? -1 : pair->second;
         }
 
         template<typename FunctorT>
@@ -361,10 +354,6 @@ detail::MaskDict::getMaskPlane(const std::string& name) const
     MapWithHash::const_iterator i = find(name);
     
     return (i == end()) ? -1 : i->second;
-}
-
-int detail::MaskDict::getId() {
-    return _state.getId(static_cast<MaskDict *>(this));
 }
 }
 
@@ -808,7 +797,7 @@ void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, ///< nam
 {
     clearMaskPlane(getMaskPlane(name)); // clear this bits in this Mask
 
-    if (_maskDict->getId() == detail::MaskDict::makeMaskDict()->getId() && removeFromDefault) { // we are the default
+    if (_maskDict == detail::MaskDict::makeMaskDict() && removeFromDefault) { // we are the default
         ;
     } else {
         _maskDict = _maskDict->clone();
@@ -1087,9 +1076,7 @@ bool Mask<MaskPixelT>::operator()(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::checkMaskDictionaries(Mask<MaskPixelT> const &other) {
     if (*_maskDict != *other._maskDict) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
-                          str(boost::format("Mask dictionary versions do not match; %d v. %d") %
-                              _maskDict->getId() % other._maskDict->getId()));
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Mask dictionaries do not match");
     }
 }        
 
@@ -1283,13 +1270,6 @@ template<typename MaskPixelT>
 PTR(detail::MaskDict) Mask<MaskPixelT>::_maskPlaneDict()
 {
     return detail::MaskDict::makeMaskDict();
-}
-
-template<typename MaskPixelT>
-int
-Mask<MaskPixelT>::getMyMaskDictVersion() const
-{
-    return _maskDict->getId();
 }
 
 //
