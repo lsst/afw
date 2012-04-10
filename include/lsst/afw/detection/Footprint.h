@@ -264,6 +264,8 @@ public:
                            );
 
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
+    void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
+
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;
     ndarray::Array<MaskPixelT, 1, 1> _mask;
