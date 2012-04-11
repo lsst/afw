@@ -127,6 +127,17 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
     expandArray(*this, _variance, mimage.getVariance()->getArray(), mimage.getXY0());
 }
 
+/**
+ * Replace all the pixels in the image with the values in the HeavyFootprint
+ */
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
+                                                                     lsst::afw::image::Image<ImagePixelT> & image ///< Image to set
+                                                                     ) const
+{
+    expandArray(*this, _image,    image.getArray(),    image.getXY0());
+}
+
 /************************************************************************************************************/
 //
 // Explicit instantiations
