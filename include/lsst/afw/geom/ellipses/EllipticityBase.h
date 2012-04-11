@@ -53,10 +53,22 @@ public:
     void setComplex(std::complex<double> const & v) { _complex = v; }
 
     double getE1() const { return _complex.real(); }
-    void setE1(double e1) { _complex.real() = e1; }
+    void setE1(double e1) {
+#if __cplusplus < 201103L
+        _complex = std::complex<double>(e1, _complex.imag());
+#else
+        _complex.real(e1);
+#endif
+    }
 
     double getE2() const { return _complex.imag(); }
-    void setE2(double e2) { _complex.imag() = e2; }
+    void setE2(double e2) {
+#if __cplusplus < 201103L
+        _complex = std::complex<double>(_complex.real(), e2);
+#else
+        _complex.imag(e2);
+#endif
+    }
 
     double getE() const { return std::sqrt(std::norm(_complex)); }
     void setE(double e) { _complex *= e / getE(); }
