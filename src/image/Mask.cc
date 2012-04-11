@@ -181,7 +181,7 @@ namespace detail {
  * actually kept in a singleton instance of DictState)
  */
 class MaskDict : public MapWithHash {
-    friend class DictState;
+    friend class ::lsst::afw::image::DictState; // actually anonymous within lsst::afw::image; g++ is confused
 
     MaskDict() : MapWithHash() {}
     MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
