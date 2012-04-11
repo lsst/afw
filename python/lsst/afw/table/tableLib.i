@@ -43,7 +43,15 @@ Python interface to lsst::afw::table classes
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "ndarray/swig.h"
+#include "lsst/pex/logging.h"
 #include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/cameraGeom.h"
+// Instead of pulling in all of detection.h we just grab specific things.
+#include "lsst/afw/detection/Threshold.h"
+#include "lsst/afw/detection/FootprintFunctor.h"
+#include "lsst/afw/detection/FootprintArray.h"
+#include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/Peak.h"
 
 // This enables numpy array conversion for Angle, converting it to a regular array of double.
 namespace ndarray { namespace detail {
@@ -98,6 +106,12 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
+
+ // We need to know about Footprints so that Sources can correctly hold
+ // Footprints or HeavyFootprints.  (We get an assert(own) failure from swig --
+ // something about how it handles ownership of shared ptrs.)  We
+ // can't just pull in detectionLib.i because it depends on tableLib.i
+%import "lsst/afw/detection/footprints.i"
 
 %{
 #include "lsst/afw/image/Wcs.h"

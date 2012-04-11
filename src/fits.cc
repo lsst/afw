@@ -358,9 +358,9 @@ void Fits::readKey(std::string const & key, T & value) {
 }
 
 void Fits::forEachKey(HeaderIterationFunctor & functor) {
-    char key[80];
-    char value[80];
-    char comment[80];
+    char key[81];                       // allow for terminating NUL
+    char value[81];
+    char comment[81];
     int nKeys = 0;
     fits_get_hdrspace(reinterpret_cast<fitsfile*>(fptr), &nKeys, 0, &status);
     std::string keyStr;
