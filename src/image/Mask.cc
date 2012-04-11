@@ -661,7 +661,7 @@ Mask<MaskPixelT>::Mask(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     std::string const& fileName, ///< File to write
-    CONST_PTR(dafBase::PropertySet) metadata_i, ///< metadata to write to header,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, ///< metadata to write to header,
         ///< or a null pointer if none
     std::string const& mode    ///< "w" to write a new file; "a" to append
 ) const {
@@ -691,7 +691,7 @@ template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     char **ramFile,        ///< RAM buffer to receive RAM FITS file
     size_t *ramFileLen,    ///< RAM buffer length
-    CONST_PTR(dafBase::PropertySet) metadata_i, ///< metadata to write to header,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, ///< metadata to write to header,
         ///< or a null pointer if none
     std::string const& mode    ///< "w" to write a new file; "a" to append
 ) const {
