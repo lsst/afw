@@ -2,6 +2,11 @@
 #include "lsst/afw/math/LeastSquares.h"
 %}
 
+%declareNumPyConverters(ndarray::Array<double,1,1>);
+%declareNumPyConverters(ndarray::Array<double,2,2>);
+%declareNumPyConverters(ndarray::Array<double,1,0>);
+%declareNumPyConverters(ndarray::Array<double,2,0>);
+
 %declareNumPyConverters(ndarray::Array<double const,1,1>);
 %declareNumPyConverters(ndarray::Array<double const,2,2>);
 %declareNumPyConverters(ndarray::Array<double const,1,0>);

@@ -97,8 +97,8 @@ public:
     /// @brief Initialize from the design matrix and data vector given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
     static LeastSquares fromDesignMatrix(
-        ndarray::Array<T1 const,2,C1> const & design,
-        ndarray::Array<T2 const,1,C2> const & data,
+        ndarray::Array<T1,2,C1> const & design,
+        ndarray::Array<T2,1,C2> const & data,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization, design.template getSize<1>());
@@ -125,8 +125,8 @@ public:
     /// @brief Reset the design matrix and data vector given as ndarrays; dimension must not change.
     template <typename T1, typename T2, int C1, int C2>
     void setDesignMatrix(
-        ndarray::Array<T1 const,2,C1> const & design,
-        ndarray::Array<T2 const,1,C2> const & data
+        ndarray::Array<T1,2,C1> const & design,
+        ndarray::Array<T2,1,C2> const & data
     ) {
         _getDesignMatrix() = design.asEigen();
         _getDataVector() = data.asEigen();
@@ -146,7 +146,7 @@ public:
 
     /// @brief Reset the design matrix given as an ndarray; dimension and data are not changed.
     template <typename T1, int C1>
-    void setDesignMatrix(ndarray::Array<T1 const,2,C1> const & design) {
+    void setDesignMatrix(ndarray::Array<T1,2,C1> const & design) {
         _getDesignMatrix() = design.asEigen();
         _factor(false);
     }
@@ -162,8 +162,8 @@ public:
     /// @brief Initialize from the terms in the normal equations, given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
     static LeastSquares fromNormalEquations(
-        ndarray::Array<T1 const,2,C1> const & fisher,
-        ndarray::Array<T2 const,1,C2> const & rhs,
+        ndarray::Array<T1,2,C1> const & fisher,
+        ndarray::Array<T2,1,C2> const & rhs,
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization, fisher.template getSize<0>());
@@ -196,8 +196,8 @@ public:
     /// @brief Reset the terms in the normal equations given as ndarrays; dimension must not change.
     template <typename T1, typename T2, int C1, int C2>
     void setNormalEquations(
-        ndarray::Array<T1 const,2,C1> const & fisher,
-        ndarray::Array<T2 const,1,C2> const & rhs
+        ndarray::Array<T1,2,C1> const & fisher,
+        ndarray::Array<T2,1,C2> const & rhs
     ) {
         if ((C1 > 0) == Eigen::MatrixXd::IsRowMajor)
             _getFisherMatrix() = fisher.asEigen();
