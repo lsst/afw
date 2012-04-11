@@ -27,8 +27,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/shapelets/ModelBuilder.h"
-#include "lsst/afw/detection/FootprintArray.h"
-#include "lsst/afw/detection/FootprintArray.cc"
 #include "ndarray/eigen.h"
 
 namespace lsst { namespace afw { namespace math { namespace shapelets {
@@ -36,22 +34,6 @@ namespace lsst { namespace afw { namespace math { namespace shapelets {
 namespace {
 
 static double const NORMALIZATION = std::pow(geom::PI, -0.25);
-
-void fillCoordinates(
-    detection::Footprint const & region, Eigen::ArrayXd & xArray, Eigen::ArrayXd & yArray
-) {
-    int n = 0;
-    for (
-        detection::Footprint::SpanList::const_iterator spanIter = region.getSpans().begin();
-        spanIter != region.getSpans().end();
-        ++spanIter
-    ) {
-        for (int x = (**spanIter).getX0(); x <= (**spanIter).getX1(); ++x, ++n) {
-            xArray[n] = x;
-            yArray[n] = (**spanIter).getY();
-        }
-    }
-}
 
 void fillHermite1d(Eigen::ArrayXXd & workspace, Eigen::ArrayXd const & coord) {
     if (workspace.cols() > 0)
@@ -77,55 +59,52 @@ void fillDerivative1d(
 
 } // anonymous
 
-template <typename ImagePixelT>
 ModelBuilder::ModelBuilder(
     int order,
     geom::ellipses::Ellipse const & ellipse,
-    detection::Footprint const & region,
-    image::Image<ImagePixelT> const & img
-) : _order(order), _region(region), _ellipse(ellipse) {
-    _region.clipTo(img.getBBox(image::PARENT));
-    _allocate();
-    detection::flattenArray(_region, img.getArray(), _data, img.getXY0());
-    fillCoordinates(_region, _x, _y);
-    update(ellipse);
-}
-
-template <typename ImagePixelT>
-ModelBuilder::ModelBuilder(
-    int order,
-    geom::ellipses::Ellipse const & ellipse,
-    detection::Footprint const & region,
-    image::MaskedImage<ImagePixelT> const & img,
-    image::MaskPixel andMask,
-    bool useVariance
-) : _order(order), _region(region), _ellipse(ellipse) {
-    _region.intersectMask(*img.getMask(), andMask);
-    _allocate();
-    detection::flattenArray(_region, img.getImage()->getArray(), _data, img.getXY0());
-    if (useVariance) {
-        _weights = ndarray::allocate(_data.getSize<0>());
-        detection::flattenArray(_region, img.getVariance()->getArray(), _weights, img.getXY0());
-        _weights.asEigen<Eigen::ArrayXpr>() = _weights.asEigen<Eigen::ArrayXpr>().sqrt().inverse();
-        _data.asEigen<Eigen::ArrayXpr>() *= _weights.asEigen<Eigen::ArrayXpr>();
+    detection::Footprint const & region
+) : _order(order), _ellipse(ellipse),
+    _model(ndarray::allocate(region.getArea(), computeSize(order))),
+    _x(region.getArea()), _y(region.getArea()),
+    _xt(region.getArea()), _yt(region.getArea()),
+    _xWorkspace(region.getArea(), order + 1), _yWorkspace(region.getArea(), order + 1)
+{
+    int n = 0;
+    for (
+        detection::Footprint::SpanList::const_iterator i = region.getSpans().begin();
+        i != region.getSpans().end();
+        ++i
+    ) {
+        for (int x = (**i).getX0(); x <= (**i).getX1(); ++x, ++n) {
+            _x[n] = x;
+            _y[n] = (**i).getY();
+        }
     }
-    fillCoordinates(_region, _x, _y);
     update(ellipse);
 }
 
-void ModelBuilder::_allocate() {
-    int nPix = _region.getArea();
-    int nCoeff = computeSize(_order);
-    _design = ndarray::allocate(nPix, nCoeff);
-    _data = ndarray::allocate(nPix);
-    // Note that we don't allocate weights here; we might not have any.
-    _x.resize(nPix);
-    _y.resize(nPix);
-    _xt.resize(nPix);
-    _yt.resize(nPix);
-    _xWorkspace.resize(nPix, _order + 1);
-    _yWorkspace.resize(nPix, _order + 1);
+ModelBuilder::ModelBuilder(
+    int order,
+    geom::ellipses::Ellipse const & ellipse,
+    afw::geom::Box2I const & region
+) : _order(order), _ellipse(ellipse),
+    _model(ndarray::allocate(region.getArea(), computeSize(order))),
+    _x(region.getArea()), _y(region.getArea()),
+    _xt(region.getArea()), _yt(region.getArea()),
+    _xWorkspace(region.getArea(), order + 1), _yWorkspace(region.getArea(), order + 1)
+{
+    int n = 0;
+    afw::geom::Point2I const llc = region.getMin();
+    afw::geom::Point2I const urc = region.getMax();
+    for (int y = llc.getY(); y <= urc.getY(); ++y) {
+        for (int x = llc.getX(); x <= urc.getX(); ++x, ++n) {
+            _x[n] = x;
+            _y[n] = y;
+        }
+    }
+    update(ellipse);
 }
+
 
 void ModelBuilder::update(geom::ellipses::Ellipse const & ellipse) {
     typedef geom::AffineTransform AT;
@@ -135,40 +114,9 @@ void ModelBuilder::update(geom::ellipses::Ellipse const & ellipse) {
     _yt = _x * transform[AT::YX] + _y * transform[AT::YY] + transform[AT::Y];
     fillHermite1d(_xWorkspace, _xt);
     fillHermite1d(_yWorkspace, _yt);
-    ndarray::EigenView<Pixel,2,-2,Eigen::ArrayXpr> design(_design);
+    ndarray::EigenView<Pixel,2,-2,Eigen::ArrayXpr> model(_model);
     for (PackedIndex i; i.getOrder() <= _order; ++i) {
-        design.col(i.getIndex()) = _xWorkspace.col(i.getX()) * _yWorkspace.col(i.getY());
-    }
-    if (!_weights.isEmpty()) {
-        for (int n = 0; n < design.cols(); ++n) {
-            design.col(n) *= _weights.asEigen<Eigen::ArrayXpr>();
-        }
-    }
-}
-
-template <typename ImagePixelT>
-void ModelBuilder::addToImage(
-    image::Image<ImagePixelT> & img,
-    ndarray::Array<Pixel const,1,1> const & coefficients,
-    bool useWeights
-) const {
-    int n = 0;
-    ndarray::EigenView<Pixel,2,-2> design(_design);
-    ndarray::EigenView<Pixel const,1,1> coeff(coefficients);
-    for (
-        detection::Footprint::SpanList::const_iterator spanIter = _region.getSpans().begin();
-        spanIter != _region.getSpans().end();
-        ++spanIter
-    ) {
-        typename image::Image<ImagePixelT>::x_iterator pixIter
-            = img.x_at((**spanIter).getX0(), (**spanIter).getY());
-        for (int x = (**spanIter).getX0(); x <= (**spanIter).getX1(); ++x, ++pixIter, ++n) {
-            Pixel v = design.row(n).dot(coeff);
-            if (!useWeights && !_weights.isEmpty()) {
-                v /= _weights[n];  // if _weights is not empty, design matrix already includes weights
-            }
-            *pixIter += v;
-        }
+        model.col(i.getIndex()) = _xWorkspace.col(i.getX()) * _yWorkspace.col(i.getY());
     }
 }
 
@@ -230,37 +178,5 @@ void ModelBuilder::_computeDerivative(
     }
 }
 
-
-template ModelBuilder::ModelBuilder(
-    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
-    image::Image<float> const &
-);
-
-template ModelBuilder::ModelBuilder(
-    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
-    image::Image<double> const &
-);
-
-template ModelBuilder::ModelBuilder(
-    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
-    image::MaskedImage<float> const &, image::MaskPixel, bool
-);
-
-template ModelBuilder::ModelBuilder(
-    int, geom::ellipses::Ellipse const &, detection::Footprint const &,
-    image::MaskedImage<double> const &, image::MaskPixel, bool
-);
-
-template void ModelBuilder::addToImage(
-    image::Image<float> & img,
-    ndarray::Array<Pixel const,1,1> const & coefficients,
-    bool useWeights
-) const;
-
-template void ModelBuilder::addToImage(
-    image::Image<double> & img,
-    ndarray::Array<Pixel const,1,1> const & coefficients,
-    bool useWeights
-) const;
 
 }}}} // namespace lsst::afw::math::shapelets

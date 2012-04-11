@@ -177,8 +177,8 @@ class MultiShapeletTestCase(unittest.TestCase, ShapeletTestMixin):
 
 class ModelBuilderTestCase(unittest.TestCase, ShapeletTestMixin):
 
-    def buildDesignMatrix(self, region, ellipse):
-        design = numpy.zeros((shapelets.computeSize(self.order), region.getArea()), dtype=float).transpose()
+    def buildModel(self, region, ellipse):
+        model = numpy.zeros((shapelets.computeSize(self.order), region.getArea()), dtype=float).transpose()
         evaluator = shapelets.BasisEvaluator(self.order, shapelets.HERMITE)
         n = 0
         gt = ellipse.getGridTransform()
@@ -186,23 +186,23 @@ class ModelBuilderTestCase(unittest.TestCase, ShapeletTestMixin):
             y = span.getY()
             for x in range(span.getX0(), span.getX1() + 1):
                 p = gt(geom.Point2D(x, y))
-                evaluator.fillEvaluation(design[n,:], p)
+                evaluator.fillEvaluation(model[n,:], p)
                 n += 1
-        return design
+        return model
 
     def buildNumericalDerivative(self, builder, parameters, makeEllipse):
         eps = 1E-6
         derivative = numpy.zeros((len(parameters), shapelets.computeSize(self.order),
-                                  builder.getRegion().getArea()), dtype=float).transpose()
+                                  self.region.getArea()), dtype=float).transpose()
         for i in range(len(parameters)):
             parameters[i] += eps
             ellipse = makeEllipse(parameters)
             builder.update(ellipse)
-            derivative[:,:,i] = builder.getDesignMatrix()
+            derivative[:,:,i] = builder.getModel()
             parameters[i] -= 2.0 * eps
             ellipse = makeEllipse(parameters)
             builder.update(ellipse)
-            derivative[:,:,i] -= builder.getDesignMatrix()
+            derivative[:,:,i] -= builder.getModel()
             derivative[:,:,i] /= 2.0 * eps
         return derivative
 
@@ -210,76 +210,27 @@ class ModelBuilderTestCase(unittest.TestCase, ShapeletTestMixin):
         self.order = 3
         self.ellipse = ellipses.Ellipse(ellipses.Axes(10, 7, 0.3), geom.Point2D(500, 600))
         self.bbox = geom.Box2I(lsst.afw.geom.Point2I(480, 580), geom.Point2I(501, 601))
-        rEllipse = ellipses.Ellipse(self.ellipse)
-        rEllipse.scale(4)
-        self.inputRegion = lsst.afw.detection.Footprint(rEllipse)
-        self.inputMask = lsst.afw.image.MaskU(self.bbox)
-        self.varianceImage = lsst.afw.image.ImageF(self.bbox)
-        imageShape = self.inputMask.getArray().shape
-        self.inputMask.getArray()[:,:] |= (numpy.random.randn(*imageShape) > 1.5) # sprinkle in bad pixels
-        self.varianceImage.getArray()[:,:] = numpy.random.randn(*imageShape)**2 + 1.0
-        self.maskedRegion = lsst.afw.detection.Footprint(self.inputRegion)
-        self.maskedRegion.intersectMask(self.inputMask, 0x1)
-        self.clippedRegion = lsst.afw.detection.Footprint(self.inputRegion)
-        self.clippedRegion.clipTo(self.bbox)
-        self.maskedDesign = self.buildDesignMatrix(self.maskedRegion, self.ellipse)
-        self.clippedDesign = self.buildDesignMatrix(self.clippedRegion, self.ellipse)
-        maskedVariance = numpy.zeros(self.maskedRegion.getArea(), dtype=numpy.float32)
-        clippedVariance = numpy.zeros(self.clippedRegion.getArea(), dtype=numpy.float32)
-        lsst.afw.detection.flattenArray(self.maskedRegion, self.varianceImage.getArray(), maskedVariance,
-                                        self.bbox.getMin())
-        lsst.afw.detection.flattenArray(self.clippedRegion, self.varianceImage.getArray(), clippedVariance,
-                                        self.bbox.getMin())
-        self.maskedWeights = 1.0 / maskedVariance**0.5
-        self.clippedWeights = 1.0 / clippedVariance**0.5
+        self.region = lsst.afw.detection.Footprint(self.bbox)
+        self.model = self.buildModel(self.region, self.ellipse)
 
     def tearDown(self):
         del self.ellipse
         del self.bbox
-        del self.inputRegion
-        del self.inputMask
-        del self.maskedRegion
-        del self.clippedRegion
-        del self.varianceImage
+        del self.region
 
-    def check(self, builder, region, design):
-        self.assertEqual(builder.getRegion().getArea(), region.getArea())
-        self.assertClose(builder.getDesignMatrix(), design)
+    def check(self, builder, region, model):
+        self.assertClose(builder.getModel(), model)
 
-    def doImageTest(self, ImageClass):
-        image = ImageClass(self.bbox)
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
-        self.check(builder, self.clippedRegion, self.clippedDesign)
-
-    def doMaskedImageTest(self, ImageClass, MaskedImageClass):
-        image = ImageClass(self.bbox)
-        mi = MaskedImageClass(image, self.inputMask, self.varianceImage)
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x1, False)
-        self.check(builder, self.maskedRegion, self.maskedDesign)
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x1, True)
-        self.check(builder, self.maskedRegion, self.maskedDesign * self.maskedWeights[:,numpy.newaxis])
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x0, False)
-        self.check(builder, self.clippedRegion, self.clippedDesign)
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, mi, 0x0, True)
-        self.check(builder, self.clippedRegion, self.clippedDesign * self.clippedWeights[:,numpy.newaxis])
-
-    def testImageF(self):
-        self.doImageTest(lsst.afw.image.ImageF)
-        
-    def testMaskedImageF(self):
-        self.doMaskedImageTest(lsst.afw.image.ImageF, lsst.afw.image.MaskedImageF)
-
-    def testImageD(self):
-        self.doImageTest(lsst.afw.image.ImageD)
-        
-    def testMaskedImageD(self):
-        self.doMaskedImageTest(lsst.afw.image.ImageD, lsst.afw.image.MaskedImageD)
+    def testModel(self):
+        builder1 = shapelets.ModelBuilder(self.order, self.ellipse, self.region)
+        builder2 = shapelets.ModelBuilder(self.order, self.ellipse, self.bbox)
+        self.assertClose(builder1.getModel(), self.model)
+        self.assertClose(builder2.getModel(), self.model)
 
     def testDerivative1(self):
         """test derivative with no reparameterization"""
-        image = lsst.afw.image.ImageD(self.bbox)
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
-        a = numpy.zeros((5, shapelets.computeSize(self.order), builder.getRegion().getArea()),
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.region)
+        a = numpy.zeros((5, shapelets.computeSize(self.order), self.region.getArea()),
                          dtype=float).transpose()
         builder.computeDerivative(a)
         def makeAxesEllipse(p):
@@ -290,12 +241,11 @@ class ModelBuilderTestCase(unittest.TestCase, ShapeletTestMixin):
 
     def testDerivative2(self):
         """test derivative with trivial reparameterization (derivative wrt center point only)"""
-        image = lsst.afw.image.ImageD(self.bbox)
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.region)
         jac = numpy.zeros((5, 2), dtype=float)
         jac[3,0] = 1.0
         jac[4,1] = 1.0
-        a = numpy.zeros((2, shapelets.computeSize(self.order), builder.getRegion().getArea()),
+        a = numpy.zeros((2, shapelets.computeSize(self.order), self.region.getArea()),
                          dtype=float).transpose()
         builder.computeDerivative(a, jac)
         def makePoint(p):
@@ -306,12 +256,11 @@ class ModelBuilderTestCase(unittest.TestCase, ShapeletTestMixin):
 
     def testDerivative3(self):
         """test derivative with nontrivial reparameterization (derivative wrt different core)"""
-        image = lsst.afw.image.ImageD(self.bbox)
-        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.inputRegion, image)
+        builder = shapelets.ModelBuilder(self.order, self.ellipse, self.region)
         quad = ellipses.Quadrupole(self.ellipse.getCore())
         jac = numpy.zeros((5, 3), dtype=float)
         jac[:3,:] = self.ellipse.getCore().dAssign(quad)
-        a = numpy.zeros((3, shapelets.computeSize(self.order), builder.getRegion().getArea()),
+        a = numpy.zeros((3, shapelets.computeSize(self.order), self.region.getArea()),
                          dtype=float).transpose()
         builder.computeDerivative(a, jac)
         def makeQuadrupole(p):

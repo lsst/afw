@@ -28,8 +28,6 @@
 #include "lsst/afw/math/shapelets/BasisEvaluator.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/MaskedImage.h"
 
 namespace lsst {
 namespace afw {
@@ -61,18 +59,12 @@ public:
      *                         of the ellipse used in the definition of derivatives
      *                         is based on the ellipse the ModelBuilder was
      *                         constructed with.
-     *  @param[in] region      Footprint that defines where on the image to evaluate
-     *                         the model.  The footprint need not be contained by
-     *                         the image's bounding box.
-     *  @param[in] img         Image whose pixels will be flattened into the data
-     *                         array.
+     *  @param[in] region      Footprint that defines the pixels used in the model.
      */
-    template <typename ImagePixelT>
-    explicit ModelBuilder(
+    ModelBuilder(
         int order,
         geom::ellipses::Ellipse const & ellipse,
-        detection::Footprint const & region,
-        image::Image<ImagePixelT> const & img
+        detection::Footprint const & region
     );
 
     /**
@@ -84,66 +76,25 @@ public:
      *                         of the ellipse used in the definition of derivatives
      *                         is based on the ellipse the ModelBuilder was
      *                         constructed with.
-     *  @param[in] region      Footprint that defines where on the image to evaluate
-     *                         the model.  The footprint need not be contained by the
-     *                         image's bounding box.
-     *  @param[in] img         MaskedImage whose pixels will be flattened into the data
-     *                         array, and whose mask and variance planes may be used
-     *                         to reject pixels and set the weights, respectively.
-     *  @param[in] andMask     Bitmask that will be used to ignore pixels by removing
-     *                         them from the region footprint before using it to
-     *                         flatten the data pixels (and possibly variance pixels).
-     *  @param[in] useVariance If true, the design matrix and data vector will be
-     *                         multiplied by the inverse variance.
+     *  @param[in] region      Bounding box that defines the pixels used in the model
+     *                         (rows will be concatenated to flatten the model).
      */
-    template <typename ImagePixelT>
-    explicit ModelBuilder(
-        int order, 
+    ModelBuilder(
+        int order,
         geom::ellipses::Ellipse const & ellipse,
-        detection::Footprint const & region,
-        image::MaskedImage<ImagePixelT> const & img,
-        image::MaskPixel andMask=0x0,
-        bool useVariance=true
+        geom::Box2I const & region
     );
 
     /**
-     *  @brief Update the basis ellipse and recompute the design matrix.
+     *  @brief Update the basis ellipse and recompute the model matrix.
      *
      *  This does not change the ellipse parameterization used by computeDerivative.
      */
     void update(geom::ellipses::Ellipse const & ellipse);
 
-    /// @brief Return the design matrix (may or may not be weighted, depending on construction).
-    ndarray::Array<Pixel const,2,-2> getDesignMatrix() const { return _design; }
-
-    /// @brief Return the data vector (may or may not be weighted, depending on construction).
-    ndarray::Array<Pixel const,1,1> getDataVector() const { return _data; }
-
-    /**
-     *  @brief Return the region that defines the pixels in the model.
-     *
-     *  This may differ from the footprint supplied at construction if the andMask argument
-     *  was used to reject bad pixels from a MaskedImage.
-     */
-    detection::Footprint const & getRegion() const { return _region; }
+    /// @brief Return the model design matrix (basis functions in columns, flattened pixels in rows).
+    ndarray::Array<Pixel const,2,-2> getModel() const { return _model; }
     
-    /**
-     *  @brief Add the model to an image.
-     *
-     *  @param[in,out]  img           Image the model will be added to.  Only pixels in the region
-     *                                footprint will be affected.
-     *  @param[in]      coefficients  Shapelet coefficients for the model.
-     *  @param[in]      useWeights    If true, the model will include the weights (if there are any).
-     *
-     *  Note that the model can be subtracted instead simply by negating the coefficient array.
-     */
-    template <typename ImagePixelT>
-    void addToImage(
-        image::Image<ImagePixelT> & img,
-        ndarray::Array<Pixel const,1,1> const & coefficients,
-        bool useWeights = false
-    ) const;
-
     /**
      *  @brief Evaluate the derivative of the model with respect to the ellipse parameters
      *         or a function thereof.
@@ -200,11 +151,8 @@ private:
     void _allocate();
 
     int _order;
-    detection::Footprint _region;
     geom::ellipses::Ellipse _ellipse;
-    ndarray::Array<Pixel,2,-2> _design;
-    ndarray::Array<Pixel,1,1> _data;
-    ndarray::Array<Pixel,1,1> _weights;
+    ndarray::Array<Pixel,2,-2> _model;
     Eigen::ArrayXd _x;
     Eigen::ArrayXd _y;
     Eigen::ArrayXd _xt;

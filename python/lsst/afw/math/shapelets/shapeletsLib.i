@@ -67,6 +67,8 @@ Python interface to lsst::afw::math::shapelets classes and functions
 
 %feature(valuewrapper) lsst::afw::math::shapelets::ShapeletFunction;
 %feature(valuewrapper) lsst::afw::math::shapelets::MultiShapeletFunction;
+%feature(valuewrapper) lsst::afw::math::shapelets::ModelBuilder;
+
 %template(MultiShapeletElementList) std::list<lsst::afw::math::shapelets::ShapeletFunction>;
 
 %import "lsst/afw/geom/geomLib.i"
@@ -82,11 +84,4 @@ Python interface to lsst::afw::math::shapelets classes and functions
 %include "lsst/afw/math/shapelets/MultiShapeletFunction.h"
 %include "lsst/afw/math/shapelets/BasisEvaluator.h"
 
-%returnCopy(lsst::afw::math::shapelets::ModelBuilder::getRegion)
-
 %include "lsst/afw/math/shapelets/ModelBuilder.h"
-
-%template(ModelBuilder) lsst::afw::math::shapelets::ModelBuilder::ModelBuilder<float>;
-%template(ModelBuilder) lsst::afw::math::shapelets::ModelBuilder::ModelBuilder<double>;
-%template(addToImage) lsst::afw::math::shapelets::ModelBuilder::addToImage<float>;
-%template(addToImage) lsst::afw::math::shapelets::ModelBuilder::addToImage<double>;
