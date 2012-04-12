@@ -28,6 +28,8 @@ which are ultimately derived from ImageBase:
       - MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
       - Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
 
+You can use \ref afwSecDisplay "ds9" to display Image%s and their Mask%s.
+
 \subsection afwSecPixelAccess How to Access Pixels
 
 %Image Pixels may be accessed via iterators or locators;
@@ -39,12 +41,17 @@ you with access to a pixel's friends and neighbours. The following tutorials are
 - \link maskedImageLocators MaskedImage locators\endlink
 
 See also \ref afwSecPixelAccessReference. LSST %image access is modelled after the boost::gil %image interface; see
-   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/giltutorial.html
+   http://www.boost.org/doc/libs/1_48_0/libs/gil/doc/html/giltutorial.html
 and
-   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
+   http://www.boost.org/doc/libs/1_48_0/libs/gil/doc/html/gildesignguide.html
 - \ref afwSecImageIO
 
 There are also some algorithms analogous to the STL's @c \<algorithm\>; see \ref afwSecImageAlgorithm.
+
+\subsection Using Masks
+
+- \ref afwMaskPlanes
+
 */
 
 /**
@@ -263,7 +270,6 @@ You can read the HDU of your desires by passing an \c hdu to the constructor.
 \note For MaskedImage if you specify \b hdu, we'll read \b hdu, \b hdu+1, and \b hdu+2
 so to get the nth MaskedImage, you should set <tt>hdu == 1 + 3*n</tt>
 */
-
 }}}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -304,3 +310,4 @@ Annotated examples are available for \link FootprintFunctorsExample FootprintFun
 
 */
 }}}
+

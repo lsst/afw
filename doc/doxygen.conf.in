@@ -1,2 +1,3 @@
 EXAMPLE_PATH = examples
 EXCLUDE += include/lsst/afw/detection/FootprintArray.cc
+EXCLUDE += src/math/Stack.cc

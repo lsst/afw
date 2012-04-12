@@ -1,0 +1,135 @@
+namespace lsst { namespace afw { namespace image {
+/**
+\page afwMaskPlanes How Mask Planes are handled in @c afw
+
+There is no universally-adopted standard on how the bits in a mask are to be interpreted, and
+accordingly the LSST code tries to be flexible.  The mapping <TT>name --> bitmask</TT>
+is defined by a dictionary in the Mask class (\e e.g. <TT>EDGE -> 4 -> 2^4 == 0x10</TT>).
+
+When Mask is created, the dictionary is initialised with a number of useful values; a
+convenience function is provided to list them:
+\code
+>>> import lsst.afw.image as afwImage
+>>> Mask = afwImage.MaskU		# Mask will make a "MaskU", a 16-bit Mask
+>>> msk = Mask()
+>>> msk.printMaskPlanes()
+Plane 0 -> BAD
+Plane 3 -> CR
+Plane 5 -> DETECTED
+Plane 6 -> DETECTED_NEGATIVE
+Plane 4 -> EDGE
+Plane 2 -> INTRP
+Plane 1 -> SAT
+>>>
+>>> def showMask(msk, msg="???"):
+...    print "%-15s" % msg, " ".join(sorted([str(x) for x in msk.getMaskPlaneDict().items()]))
+\endcode
+(where we slipped in a convenient function @c showMask to show masks in name-order)
+
+You can add more mask planes:
+\code
+>>> rhl = msk.addMaskPlane("RHL")
+>>> showMask(msk, "msk")
+msk             ('BAD', 0) ('CR', 3) ('DETECTED', 5) ('DETECTED_NEGATIVE', 6) ('EDGE', 4) ('INTRP', 2) ('RHL', 7) ('SAT', 1)
+>>> msk |= Mask.getPlaneBitMask("RHL")		# set the RHL bits
+\endcode
+
+That last example was a little misleading;  I could just as well have written
+<tt>Mask.addMaskPlane("RHL")</tt> as \c addMaskPlane is a class static function --- it adds
+the named mask plane to all masks.  I can remove a mask plane just as easily with
+<tt>Mask.removeMaskPlane("RHL")</tt>:
+\code
+>>> Mask.removeMaskPlane("RHL")
+showMask(Mask(), "default Mask")
+default Mask    ('BAD', 0) ('CR', 3) ('DETECTED', 5) ('DETECTED_NEGATIVE', 6) ('EDGE', 4) ('INTRP', 2) ('SAT', 1)
+\endcode
+(note that @c getMaskPlaneDict is \e not static; we needed to create an object to be able to call it).
+
+Unfortunately we have a problem;  we set the beloved @c RHL bit in @c msk, but now it's gone.  The resolution
+is that each mask remembers the version of the mask dictionary that was current when it was created, so:
+\code
+>>> showMask(msk, "msk")
+msk             ('BAD', 0) ('CR', 3) ('DETECTED', 5) ('DETECTED_NEGATIVE', 6) ('EDGE', 4) ('INTRP', 2) ('RHL', 7) ('SAT', 1)
+\endcode
+If you want to get rid of @c msk's @c RHL bit, use <tt>msk.removeAndClearMaskPlane("RHL")</tt> or
+<tt>msk.removeAndClearMaskPlane("RHL", True)</tt> if you want to drop @c RHL from the default mask too.  This
+does two things:  It clears any @c RHL bits that are set in the Mask (it isn't static, so it can do that), and it removes @c RHL from the Mask's dictionary.
+
+It's clear that you can make things inconsistent if you try:
+\code
+>>> Mask.clearMaskPlaneDict()
+>>> p0 = Mask.addMaskPlane("P0")
+>>> p1 = Mask.addMaskPlane("P1")
+>>> print "Planes:", p0, p1, Mask.addMaskPlane("P1")   # a no-op -- re-adding a plane has no effect
+Planes: 0 1 1
+>>> msk = Mask()
+>>> Mask.removeMaskPlane("P0")
+>>> Mask.removeMaskPlane("P1")
+>>> showMask(Mask(), "default Mask")
+default Mask    
+>>> showMask(msk, "msk")
+msk             ('P0', 0) ('P1', 1)
+>>> p1 = Mask.addMaskPlane("P1")
+>>> p0 = Mask.addMaskPlane("P0")
+>>>
+>>> msk2 = Mask()
+>>> showMask(msk2, "msk2")
+msk2            ('P0', 1) ('P1', 0)
+\endcode
+But you can't actually do much harm:
+\code
+>>> msk |= msk2
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/rhl/LSST/afw/python/lsst/afw/image/imageLib.py", line 5415, in __ior__
+    _imageLib.MaskU___ior__(*args)
+lsst.pex.exceptions.exceptionsLib.LsstCppException: 0: lsst::pex::exceptions::RuntimeErrorException thrown at src/image/Mask.cc:896 in void lsst::afw::image::Mask<unsigned short>::checkMaskDictionaries(const lsst::afw::image::Mask<afwImage::MaskPixel> &)
+0: Message: Mask dictionary versions do not match; 3 v. 6
+\endcode
+The version numbers aren't actually compared directly, rather a hash of the contents is computed, so:
+\code
+>>> showMask(msk, "msk")
+msk             ('P0', 0) ('P1', 1)
+>>> msk.removeAndClearMaskPlane("P0")
+>>> msk.removeAndClearMaskPlane("P1")
+>>> p0 = Mask.addMaskPlane("P0")
+>>> p1 = Mask.addMaskPlane("P1")
+>>> showMask(msk, "msk")
+msk             ('P0', 1) ('P1', 0)
+>>> msk |= msk2
+\endcode
+(We removed the errant planes from @c msk, then re-added the ones that are already defined in the default
+dictionary)
+
+Adding planes has no such difficulties, so they are added to all pre-existing dictionaries that don't have
+conflicts:
+\code
+>>> msk = Mask()
+>>> Mask.addMaskPlane("P2")
+>>> showMask(msk, "msk")
+msk             ('P0', 1) ('P1', 0) ('P2', 2)
+\endcode
+
+However, as expected,
+\code
+>>> msk2 = Mask()
+>>> msk.removeAndClearMaskPlane("P2")
+>>> msk |= msk2
+\endcode
+will raise an exception.
+
+What did I mean by, "conflicts"?  Here's an example:
+\code
+>>> Mask.removeMaskPlane("P0")
+>>> Mask.addMaskPlane("P3")
+>>> Mask.addMaskPlane("P0")
+>>> showMask(msk, "msk")
+msk             ('P0', 1) ('P1', 0) ('P2', 2)
+>>> showMask(Mask(), "default Mask")
+default Mask    ('P0', 3) ('P1', 0) ('P2', 2) ('P3', 1)
+\endcode
+Note that \c msk hasn't acquired a \c P3 plane as plane \c 1 is already in use.
+
+*/
+
+}}}

@@ -8,9 +8,11 @@
 .sconf_temp
 .sconsign.dblite
 config.log
+memleak.fits
 bin/filter-gcc
 doc/*.tag
 doc/html
+doc/xml
 doc/doxygen.conf
 examples/maskIo2
 examples/transform
