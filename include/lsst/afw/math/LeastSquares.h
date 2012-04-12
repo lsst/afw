@@ -102,9 +102,7 @@ public:
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization, design.template getSize<1>());
-        r._getDesignMatrix() = design.asEigen();
-        r._getDataVector() = data.asEigen();
-        r._factor(false);
+        r.setDesignMatrix(design, data);
         return r;
     }
 
@@ -116,9 +114,7 @@ public:
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization, design.cols());
-        r._getDesignMatrix() = design;
-        r._getDataVector() = data;
-        r._factor(false);
+        r.setDesignMatrix(design, data);
         return r;
     }
 
@@ -167,12 +163,7 @@ public:
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization, fisher.template getSize<0>());
-        if ((C1 > 0) == Eigen::MatrixXd::IsRowMajor)
-            r._getFisherMatrix() = fisher.asEigen();
-        else
-            r._getFisherMatrix() = fisher.asEigen().transpose();
-        r._getRhsVector() = rhs.asEigen();
-        r._factor(true);
+        r.setNormalEquations(fisher, rhs);
         return r;
     }
 
@@ -184,12 +175,7 @@ public:
         Factorization factorization = NORMAL_EIGENSYSTEM
     ) {
         LeastSquares r(factorization, fisher.rows());
-        if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
-            r._getFisherMatrix() = fisher;
-        else
-            r._getFisherMatrix() = fisher.transpose();
-        r._getRhsVector() = rhs;
-        r._factor(true);
+        r.setNormalEquations(fisher, rhs);
         return r;
     }
 
