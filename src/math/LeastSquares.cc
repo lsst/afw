@@ -88,15 +88,15 @@ public:
         }
         if (toAdd & SOLUTION_ARRAY) {
             if (solution.isEmpty()) solution = ndarray::allocate(dimension);
-            getSolution();
+            updateSolution();
         }
         if (toAdd & COVARIANCE_ARRAY) {
             if (covariance.isEmpty()) covariance = ndarray::allocate(dimension, dimension);
-            getCovariance();
+            updateCovariance();
         }
         if (toAdd & CONDITION_ARRAY) {
             if (condition.isEmpty()) condition = ndarray::allocate(dimension);
-            getCondition();
+            updateCondition();
         }
         state |= toAdd;
     }
@@ -105,10 +105,10 @@ public:
 
     virtual void updateRank() = 0;
 
-    virtual void getSolution() = 0;
-    virtual void getCovariance() = 0;
+    virtual void updateSolution() = 0;
+    virtual void updateCovariance() = 0;
 
-    virtual void getCondition() = 0;
+    virtual void updateCondition() = 0;
 
     Impl(int dimension_, double threshold_=std::numeric_limits<double>::epsilon()) : 
         state(0), dimension(dimension_), rank(dimension_), threshold(threshold_), 
@@ -155,7 +155,7 @@ public:
         }
     }
 
-    virtual void getCondition() {
+    virtual void updateCondition() {
         if (_eig.info() == Eigen::Success) {
             condition.asEigen() = _eig.eigenvalues().reverse();
         } else {
@@ -163,7 +163,7 @@ public:
         }
     }
 
-    virtual void getSolution() {
+    virtual void updateSolution() {
         if (_eig.info() == Eigen::Success) {
             _tmp.head(rank) = _eig.eigenvectors().rightCols(rank).adjoint() * rhs;
             _tmp.head(rank).array() /= _eig.eigenvalues().tail(rank).array();
@@ -175,7 +175,7 @@ public:
         }
     }
 
-    virtual void getCovariance() {
+    virtual void updateCovariance() {
         if (_eig.info() == Eigen::Success) {
             covariance.asEigen() = 
                 _eig.eigenvectors().rightCols(rank)
@@ -207,11 +207,11 @@ public:
 
     virtual void updateRank() {}
 
-    virtual void getCondition() { condition.asEigen() = _ldlt.vectorD(); }
+    virtual void updateCondition() { condition.asEigen() = _ldlt.vectorD(); }
 
-    virtual void getSolution() { solution.asEigen() = _ldlt.solve(rhs); }
+    virtual void updateSolution() { solution.asEigen() = _ldlt.solve(rhs); }
 
-    virtual void getCovariance() {
+    virtual void updateCovariance() {
         ndarray::EigenView<double,2,2> cov(covariance);
         cov.setIdentity();
         cov = _ldlt.solve(cov);
@@ -240,15 +240,15 @@ public:
 
     virtual void updateRank() { setRank(_svd.singularValues()); }
 
-    virtual void getCondition() { condition.asEigen() = _svd.singularValues(); }
+    virtual void updateCondition() { condition.asEigen() = _svd.singularValues(); }
 
-    virtual void getSolution() {
+    virtual void updateSolution() {
         _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * data;
         _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
         solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp.head(rank);
     }
 
-    virtual void getCovariance() {
+    virtual void updateCovariance() {
         covariance.asEigen() = 
             _svd.matrixV().leftCols(rank)
             * _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal()
