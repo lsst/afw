@@ -250,18 +250,10 @@ public:
         CatalogT<RecordT> cat(getTable());
         size_type N = 0;
         if (step >= 0) {
-            for (size_type i=start; i<stop; i+=step)
-                N++;
-            std::cout << "N " << N << ", start,stop,step " << start << " " << stop << " " << step << ", (stop-start)/step " << (stop-start)/step
-                      << ", (stop-start)%step " << (stop-start)%step << ", ?" << (((stop - start) % step) ? 1 : 0) << "\n";
-            assert(N == (((stop - start) / step) + (((stop - start) % step) ? 1 : 0)));
+            N = (stop - start) / step + (((stop - start) % step) ? 1 : 0);
         } else {
-            for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step)
-                N++;
-            std::cout << "N " << N << ", start,stop,step " << start << " " << stopd << " " << step << ", (stop-start)/step " << (stopd-(std::ptrdiff_t)start)/step
-                      << ", (stop-start)%step " << (stopd-(std::ptrdiff_t)start)%step << ", ?" << (((stopd - (std::ptrdiff_t)start) % step) ? 1 : 0) << "\n";
-            assert(N == (size_t)(((stopd - (std::ptrdiff_t)start) / step) +
-                                 (((stopd - (std::ptrdiff_t)start) % step) ? 1 : 0)));
+            N = (size_t)((stopd - (std::ptrdiff_t)start) / step +
+                         (((stopd - (std::ptrdiff_t)start) % step) ? 1 : 0));
         }
         cat.reserve(N);
         if (step >= 0)
