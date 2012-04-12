@@ -31,10 +31,12 @@
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
+#ifndef DOXYGEN // Doxygen doesn't like includes inside namespaces
 namespace posix {
 #   include <unistd.h>
 #   include <fcntl.h>
 }
+#endif //!DOXYGEN
 using namespace posix;
 
 #include "lsst/pex/exceptions.h"

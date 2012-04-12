@@ -34,6 +34,8 @@
  */
 #include "boost/mpl/assert.hpp"
 #include "boost/mpl/bool.hpp"
+#include "boost/mpl/if.hpp"
+#include "boost/type_traits/is_same.hpp"
 
 //#define BOOST_GIL_USE_CONCEPT_CHECK 1
 
@@ -306,8 +308,6 @@ namespace lsst { namespace afw { namespace image { namespace detail {
         typedef boost::gil::channel_traits<long>::const_reference const_reference;
     };
 
-    #include "boost/mpl/if.hpp"
-    #include "boost/type_traits/is_same.hpp"
     namespace {
         struct unknown {};                  // two unused and unimplemented types
         struct unknown_u {};

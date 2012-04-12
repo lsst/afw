@@ -44,10 +44,6 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-
-#include "lsst/afw/image/Utils.h"
-#include "lsst/afw/image/Defect.h"
-
  
 class Distortion;
     

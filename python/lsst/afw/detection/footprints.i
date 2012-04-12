@@ -27,7 +27,6 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
-#include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/FootprintArray.cc"
@@ -44,7 +43,6 @@
 %shared_ptr(lsst::afw::detection::Peak);
 %shared_ptr(lsst::afw::detection::Footprint);
 %shared_ptr(lsst::afw::detection::Span);
-%shared_ptr(lsst::afw::detection::FootprintSet);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
 %define %HeavyFootprintPtr(TYPE)
@@ -60,7 +58,6 @@
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
 %include "lsst/afw/detection/FootprintCtrl.h"
-%include "lsst/afw/detection/FootprintSet.h"
 %include "lsst/afw/detection/FootprintFunctor.h"
 
 %define %thresholdOperations(TYPE)
@@ -86,24 +83,6 @@
 %template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
 %template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Span> >;
 %template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
-
-%define %footprintSetOperations(PIXEL)
-%template(FootprintSet) FootprintSet<PIXEL>;
-%template(FootprintSet) FootprintSet<PIXEL,lsst::afw::image::MaskPixel>;
-%template(makeHeavy) makeHeavy<PIXEL,lsst::afw::image::MaskPixel>;
-%template(setMask) setMask<lsst::afw::image::MaskPixel>;
-%enddef
-
-namespace lsst { namespace afw { namespace table {
-     typedef VectorT< lsst::afw::table::SourceRecord, lsst::afw::table::SourceTable > SourceVector;
-}}}
-
-%extend lsst::afw::detection::FootprintSet {
-%footprintSetOperations(boost::uint16_t)
-%footprintSetOperations(int)
-%footprintSetOperations(float)
-%footprintSetOperations(double)
-}
 
 %define %heavyFootprints(NAME, PIXEL_TYPE...)
     %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>;

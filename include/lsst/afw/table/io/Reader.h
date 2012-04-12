@@ -34,8 +34,17 @@ public:
      */
     template <typename ContainerT>
     ContainerT read() {
+#if 1
+        // Work around a clang++ version 3.0 (tags/Apple/clang-211.12) bug with shared_ptr reference counts
+        PTR(typename ContainerT::Table) table;
+        {
+            PTR(BaseTable) tmpTable = _readTable();
+            table = boost::dynamic_pointer_cast<typename ContainerT::Table>(tmpTable);
+        }
+#else
         PTR(typename ContainerT::Table) table 
             = boost::dynamic_pointer_cast<typename ContainerT::Table>(_readTable());
+#endif
         if (!table) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::RuntimeErrorException,

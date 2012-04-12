@@ -285,6 +285,16 @@ public:
         return io::FitsReader::apply<SimpleCatalogT>(filename, hdu);
     }
 
+    /**
+     * @brief Shallow copy a subset of another SimpleCatalog.  Mostly here for
+     * use from python.
+     */
+    SimpleCatalogT subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const {
+        return SimpleCatalogT(Base::subset(startd, stopd, step));
+    }
+
+protected:
+    explicit SimpleCatalogT(Base const & other) : Base(other) {}
 };
 
 typedef ColumnViewT<SimpleRecord> SimpleColumnView;
