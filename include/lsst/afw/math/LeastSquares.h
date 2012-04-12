@@ -327,6 +327,9 @@ private:
     Eigen::MatrixXd & _getFisherMatrix();
     Eigen::VectorXd & _getRhsVector();
 
+    // Do the actual high-level linear algrebra factorization; the appropriate input matrices and
+    // vectors must already be set before this is called.  The solution and other quantities
+    // will not be computed until they are first requested.
     void _factor(bool haveNormalEquations);
 
     LeastSquares(Factorization factorization, int dimension);
