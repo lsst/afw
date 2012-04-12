@@ -204,31 +204,37 @@ public:
         // Python doesn't allow step == 0
         assert(step != 0);
         // Basic negative indexing rule: first add size
-        if (startd < 0)
+        if (startd < 0) {
             startd += S;
-        if (stopd  < 0)
+        }
+        if (stopd  < 0) {
             stopd  += S;
+        }
         // Start gets clipped to zero; stop does not (yet).
-        if (startd < 0)
+        if (startd < 0) {
             startd = 0;
+        }
         // Now start is non-negative, so can cast to size_t.
         start = (size_type)startd;
-        if (start > S)
+        if (start > S) {
             start = S;
-
+        }
         if (step > 0) {
             // When stepping forward, stop gets clipped at zero,
             // so is non-negative and can get cast to size_t.
-            if (stopd < 0)
+            if (stopd < 0) {
                 stopd = 0;
+            }
             stop = (size_type)stopd;
-            if (stop > S)
+            if (stop > S) {
                 stop = S;
+            }
         } else if (step < 0) {
             // When stepping backward, stop gets clipped at -1 so that slices
             // including 0 are possible.
-            if (stopd < 0)
+            if (stopd < 0) {
                 stopd = -1;
+            }
         }
 
         if (((step > 0) && (start >= stop)) ||
@@ -256,12 +262,14 @@ public:
                          (((stopd - (std::ptrdiff_t)start) % step) ? 1 : 0));
         }
         cat.reserve(N);
-        if (step >= 0)
-            for (size_type i=start; i<stop; i+=step)
+        if (step >= 0) {
+            for (size_type i=start; i<stop; i+=step) {
                 cat.push_back(get(i));
-        else {
-            for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step)
+            }
+        } else {
+            for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step) {
                 cat.push_back(get(i));
+            }
         }
         return cat;
     }
