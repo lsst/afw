@@ -225,4 +225,7 @@ int BaseTable::nRecordsPerBlock = 100;
 
 // =============== BaseCatalog instantiation =================================================================
 
+template class CatalogT<BaseRecord>;
+template class CatalogT<BaseRecord const>;
+
 }}} // namespace lsst::afw::table
