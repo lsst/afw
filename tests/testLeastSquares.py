@@ -52,6 +52,9 @@ class LeastSquaresTestCase(unittest.TestCase):
     def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
         self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%s != %s" % (a, b))
 
+    def assertNotClose(self, a, b, rtol=1E-5, atol=1E-8):
+        self.assert_(not numpy.allclose(a, b, rtol=rtol, atol=atol), "%s == %s" % (a, b))
+
     def check(self, solver, solution, rank, fisher, cov, sv):
         self.assertEqual(solver.getRank(), rank)
         self.assertEqual(solver.getDimension(), solution.shape[0])
@@ -64,6 +67,11 @@ class LeastSquaresTestCase(unittest.TestCase):
             self.assertClose(solver.getCondition(), sv**2)
         elif solver.getFactorization() == LeastSquares.NORMAL_CHOLESKY:
             self.assertClose(numpy.multiply.reduce(solver.getCondition()), numpy.multiply.reduce(sv**2))
+        if solver.getFactorization() != LeastSquares.NORMAL_CHOLESKY:
+            rcond = solver.getCondition()[0] * solver.getThreshold()
+            self.assert_(solver.getCondition()[rank-1] > rcond)
+            if rank < solver.getDimension():
+                self.assert_(solver.getCondition()[rank] < rcond)
 
     def testFullRank(self):
         dimension = 10
@@ -135,6 +143,22 @@ class LeastSquaresTestCase(unittest.TestCase):
         self.check(s_svd, solution, rank, fisher, cov, sv)
         self.check(s_design_eigen, solution, rank, fisher, cov, sv)
         self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
+
+        s_svd.setThreshold((sv[-3] / sv[0]) * (1.0 - sys.float_info.epsilon))
+        s_design_eigen.setThreshold((sv[-3] / sv[0])**2 * (1.0 - sys.float_info.epsilon))
+        s_normal_eigen.setThreshold((sv[-3] / sv[0])**2 * (1.0 - sys.float_info.epsilon))
+        self.assertEqual(s_svd.getRank(), dimension - 3)
+        self.assertEqual(s_design_eigen.getRank(), dimension - 3)
+        self.assertEqual(s_normal_eigen.getRank(), dimension - 3)
+        # Just check that solutions are different from before, but consistent with each other;
+        # I can't figure out how get numpy.lstsq to deal with the thresholds appropriately to
+        # test against that.
+        self.assertNotClose(s_svd.getSolution(), solution)
+        self.assertNotClose(s_design_eigen.getSolution(), solution)
+        self.assertNotClose(s_normal_eigen.getSolution(), solution)
+        self.assertClose(s_svd.getSolution(), s_design_eigen.getSolution())
+        self.assertClose(s_svd.getSolution(), s_normal_eigen.getSolution())
+        
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
