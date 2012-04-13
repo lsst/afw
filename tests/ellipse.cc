@@ -1,7 +1,10 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE ellipses
-#include <boost/test/unit_test.hpp>
-#include <boost/format.hpp>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+#include "boost/test/unit_test.hpp"
+#pragma clang diagnostic pop
+#include "boost/format.hpp"
 
 #include "lsst/afw/geom/ellipses.h"
 #include "Eigen/LU"

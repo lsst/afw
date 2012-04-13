@@ -144,7 +144,7 @@ public:
     ) {
         setMaskFromFootprintList(
             mask, 
-            getFootprints(),
+            _footprints,                // calling getFootprints() confuses clang++ 3.0 and leaks memory
             image::Mask<MaskPixelT>::getPlaneBitMask(planeName)
         );        
     }

@@ -165,11 +165,6 @@ public:
         _table(other.getTable()), _internal(other.begin().base(), other.end().base())
     {}
 
-    /**
-     * @brief Shallow copy a subset of another Catalog.  Mostly here for use from python.
-     */
-    CatalogT<RecordT> subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const;
-
     /// Shallow assigment.
     CatalogT & operator=(CatalogT const & other) {
         if (&other != this) {
@@ -177,6 +172,106 @@ public:
             _internal = other._internal;
         }
         return *this;
+    }
+
+    /**
+     * @brief Returns a shallow copy of a subset of this Catalog.  The arguments
+     * correspond to python's slice() syntax.
+     */
+    CatalogT<RecordT> subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const {
+        /* Python's slicing syntax is weird and wonderful.
+         
+         Both the "start" and "stop" indices can be negative, which means the
+         abs() of the index less than the size; [-1] means the last item.
+         Moreover, it's possible to have a negative index less than -len(); it
+         will get clipped.  That is in fact one way to slice *backward* through
+         the array *and* include element 0;
+
+         >>> range(10)[5:-20:-1]
+         [5, 4, 3, 2, 1, 0]
+
+         The clipping tests in this function look more complicated than they
+         need to be, but that is partly because there are some weird edge cases.
+
+         Also, ptrdiff_t vs size_t introduces some annoying complexity.  Note
+         that the args are "startd"/"stopd" (not "start"/"stop").
+
+         There is a fairly complete set of tests in tests/ticket2026.py; if you
+         try to simplify this function, be sure they continue to pass.
+         */
+        size_type S = size();
+        size_type start, stop = 0;
+        // Python doesn't allow step == 0
+        assert(step != 0);
+        // Basic negative indexing rule: first add size
+        if (startd < 0) {
+            startd += S;
+        }
+        if (stopd  < 0) {
+            stopd  += S;
+        }
+        // Start gets clipped to zero; stop does not (yet).
+        if (startd < 0) {
+            startd = 0;
+        }
+        // Now start is non-negative, so can cast to size_t.
+        start = (size_type)startd;
+        if (start > S) {
+            start = S;
+        }
+        if (step > 0) {
+            // When stepping forward, stop gets clipped at zero,
+            // so is non-negative and can get cast to size_t.
+            if (stopd < 0) {
+                stopd = 0;
+            }
+            stop = (size_type)stopd;
+            if (stop > S) {
+                stop = S;
+            }
+        } else if (step < 0) {
+            // When stepping backward, stop gets clipped at -1 so that slices
+            // including 0 are possible.
+            if (stopd < 0) {
+                stopd = -1;
+            }
+        }
+
+        if (((step > 0) && (start >= stop)) ||
+            ((step < 0) && ((std::ptrdiff_t)start <= stopd))) {
+            // Empty range
+            return CatalogT<RecordT>(getTable(), begin(), begin());
+        }
+
+        if (step == 1) {
+            // Use the iterator-based constructor for this simple case
+            assert(start >= 0);
+            assert(stop  >  0);
+            assert(start <  S);
+            assert(stop  <= S);
+            return CatalogT<RecordT>(getTable(), begin()+start, begin()+stop);
+        }
+
+        // Build a new CatalogT and copy records into it.
+        CatalogT<RecordT> cat(getTable());
+        size_type N = 0;
+        if (step >= 0) {
+            N = (stop - start) / step + (((stop - start) % step) ? 1 : 0);
+        } else {
+            N = (size_t)((stopd - (std::ptrdiff_t)start) / step +
+                         (((stopd - (std::ptrdiff_t)start) % step) ? 1 : 0));
+        }
+        cat.reserve(N);
+        if (step >= 0) {
+            for (size_type i=start; i<stop; i+=step) {
+                cat.push_back(get(i));
+            }
+        } else {
+            for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step) {
+                cat.push_back(get(i));
+            }
+        }
+        return cat;
     }
 
     /// Write a FITS binary table.

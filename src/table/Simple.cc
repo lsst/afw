@@ -162,4 +162,10 @@ SimpleTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
     return boost::make_shared<SimpleFitsWriter>(fits);
 }
 
+template class CatalogT<SimpleRecord>;
+template class CatalogT<SimpleRecord const>;
+
+template class SimpleCatalogT<SimpleRecord>;
+template class SimpleCatalogT<SimpleRecord const>;
+
 }}} // namespace lsst::afw::table
