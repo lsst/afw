@@ -461,8 +461,11 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
         
         for p in planeList:
             if planes.get(p):
-                if not getMaskPlaneVisibility(planes[p]):
+                pname = planes[p]
+                if not getMaskPlaneVisibility(pname):
                     continue
+            else:
+                pname = "unknown"
 
             if not getMaskPlaneVisibility(pname):
                 continue
