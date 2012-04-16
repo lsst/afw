@@ -50,10 +50,10 @@ lsst.pex.logging.getDefaultLog().setThresholdFor("afw.math.LeastSquares", -10)
 class LeastSquaresTestCase(unittest.TestCase):
 
     def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "%s != %s" % (a, b))
+        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "\n%s\n!=\n%s" % (a, b))
 
     def assertNotClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assert_(not numpy.allclose(a, b, rtol=rtol, atol=atol), "%s == %s" % (a, b))
+        self.assert_(not numpy.allclose(a, b, rtol=rtol, atol=atol), "\n%s\n==\n%s" % (a, b))
 
     def check(self, solver, solution, rank, fisher, cov, sv):
         self.assertEqual(solver.getRank(), rank)
@@ -61,17 +61,16 @@ class LeastSquaresTestCase(unittest.TestCase):
         self.assertClose(solver.getSolution(), solution)
         self.assertClose(solver.getFisherMatrix(), fisher)
         self.assertClose(solver.getCovariance(), cov)
-        if solver.getFactorization() == LeastSquares.DIRECT_SVD:
-            self.assertClose(solver.getCondition(), sv)
-        elif solver.getFactorization() == LeastSquares.NORMAL_EIGENSYSTEM:
-            self.assertClose(solver.getCondition(), sv**2)
-        elif solver.getFactorization() == LeastSquares.NORMAL_CHOLESKY:
-            self.assertClose(numpy.multiply.reduce(solver.getCondition()), numpy.multiply.reduce(sv**2))
         if solver.getFactorization() != LeastSquares.NORMAL_CHOLESKY:
-            rcond = solver.getCondition()[0] * solver.getThreshold()
-            self.assert_(solver.getCondition()[rank-1] > rcond)
+            self.assertClose(solver.getDiagnostic(LeastSquares.NORMAL_EIGENSYSTEM), sv**2)
+            diagnostic = solver.getDiagnostic(solver.getFactorization())
+            rcond = diagnostic[0] * solver.getThreshold()
+            self.assert_(diagnostic[rank-1] > rcond)
             if rank < solver.getDimension():
-                self.assert_(solver.getCondition()[rank] < rcond)
+                self.assert_(diagnostic[rank] < rcond)
+        else:
+            self.assertClose(numpy.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)), 
+                             numpy.multiply.reduce(sv**2))
 
     def testFullRank(self):
         dimension = 10

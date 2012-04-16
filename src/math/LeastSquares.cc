@@ -43,7 +43,7 @@ public:
         RHS_VECTOR              = 0x004,
         SOLUTION_ARRAY          = 0x008,
         COVARIANCE_ARRAY        = 0x010,
-        CONDITION_ARRAY         = 0x020,
+        DIAGNOSTIC_ARRAY        = 0x020,
         DESIGN_AND_DATA         = 0x040
     };
 
@@ -51,6 +51,7 @@ public:
     int dimension;
     int rank;
     Factorization factorization;
+    Factorization whichDiagnostic;
     double threshold;
 
     Eigen::MatrixXd design;
@@ -60,7 +61,7 @@ public:
 
     ndarray::Array<double,1,1> solution;
     ndarray::Array<double,2,2> covariance;
-    ndarray::Array<double,1,1> condition;
+    ndarray::Array<double,1,1> diagnostic;
 
     pex::logging::Debug log;
 
@@ -94,9 +95,9 @@ public:
             if (covariance.isEmpty()) covariance = ndarray::allocate(dimension, dimension);
             updateCovariance();
         }
-        if (toAdd & CONDITION_ARRAY) {
-            if (condition.isEmpty()) condition = ndarray::allocate(dimension);
-            updateCondition();
+        if (toAdd & DIAGNOSTIC_ARRAY) {
+            if (diagnostic.isEmpty()) diagnostic = ndarray::allocate(dimension);
+            updateDiagnostic();
         }
         state |= toAdd;
     }
@@ -108,7 +109,7 @@ public:
     virtual void updateSolution() = 0;
     virtual void updateCovariance() = 0;
 
-    virtual void updateCondition() = 0;
+    virtual void updateDiagnostic() = 0;
 
     Impl(int dimension_, double threshold_=std::numeric_limits<double>::epsilon()) : 
         state(0), dimension(dimension_), rank(dimension_), threshold(threshold_), 
@@ -155,11 +156,20 @@ public:
         }
     }
 
-    virtual void updateCondition() {
+    virtual void updateDiagnostic() {
+        if (whichDiagnostic == LeastSquares::NORMAL_CHOLESKY) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Cannot compute NORMAL_CHOLESKY diagnostic from NORMAL_EIGENSYSTEM factorization."
+            );
+        }
         if (_eig.info() == Eigen::Success) {
-            condition.asEigen() = _eig.eigenvalues().reverse();
+            diagnostic.asEigen() = _eig.eigenvalues().reverse();
         } else {
-            condition.asEigen() = _svd.singularValues();
+            diagnostic.asEigen() = _svd.singularValues();
+        }
+        if (whichDiagnostic == LeastSquares::DIRECT_SVD) {
+            diagnostic.asEigen<Eigen::ArrayXpr>() = diagnostic.asEigen<Eigen::ArrayXpr>().sqrt();
         }
     }
 
@@ -207,7 +217,15 @@ public:
 
     virtual void updateRank() {}
 
-    virtual void updateCondition() { condition.asEigen() = _ldlt.vectorD(); }
+    virtual void updateDiagnostic() {
+        if (whichDiagnostic != LeastSquares::NORMAL_CHOLESKY) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Can only compute NORMAL_CHOLESKY diagnostic from NORMAL_CHOLESKY factorization."
+            );
+        }
+        diagnostic.asEigen() = _ldlt.vectorD();
+    }
 
     virtual void updateSolution() { solution.asEigen() = _ldlt.solve(rhs); }
 
@@ -240,7 +258,21 @@ public:
 
     virtual void updateRank() { setRank(_svd.singularValues()); }
 
-    virtual void updateCondition() { condition.asEigen() = _svd.singularValues(); }
+    virtual void updateDiagnostic() {
+        switch (whichDiagnostic) {
+        case LeastSquares::NORMAL_EIGENSYSTEM:
+            diagnostic.asEigen<Eigen::ArrayXpr>() = _svd.singularValues().array().square();
+            break;
+        case LeastSquares::NORMAL_CHOLESKY:
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Can only compute NORMAL_CHOLESKY diagnostic from DIRECT_SVD factorization."
+            );
+        case LeastSquares::DIRECT_SVD:
+            diagnostic.asEigen() = _svd.singularValues();
+            break;
+        }
+    }
 
     virtual void updateSolution() {
         _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * data;
@@ -293,9 +325,13 @@ ndarray::Array<double const,2,2> LeastSquares::getFisherMatrix() {
     );
 }
 
-ndarray::Array<double const,1,1> LeastSquares::getCondition() {
-    _impl->ensure(Impl::CONDITION_ARRAY);
-    return _impl->condition;
+ndarray::Array<double const,1,1> LeastSquares::getDiagnostic(Factorization factorization) {
+    if (_impl->whichDiagnostic != factorization) {
+        _impl->state &= ~Impl::DIAGNOSTIC_ARRAY;
+        _impl->whichDiagnostic = factorization;
+    }
+    _impl->ensure(Impl::DIAGNOSTIC_ARRAY);
+    return _impl->diagnostic;
 }
 
 int LeastSquares::getDimension() const { return _impl->dimension; }

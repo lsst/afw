@@ -211,12 +211,12 @@ public:
      *  @brief Set the threshold used to determine when to truncate Eigenvalues.
      *
      *  The rank of the matrix is determined by comparing the product of this threshold
-     *  and the first (largest) element of the array returned by getCondition() to all other
+     *  and the first (largest) element of the array returned by getDiagnostic() to all other
      *  elements of that array.  Elements smaller than this product are ignored and reduce
      *  the rank.
      *
-     *  In the DIRECT_SVD case, the condition array contains the singular values of the design
-     *  matrix, while in the NORMAL_EIGENSYSTEM case the condition array holds the Eigenvalues
+     *  In the DIRECT_SVD case, the diagnostic array contains the singular values of the design
+     *  matrix, while in the NORMAL_EIGENSYSTEM case the diagnostic array holds the Eigenvalues
      *  of the Fisher matrix, and the latter are the square of the former.  The default
      *  threshold is the same (std::numeric_limits<double>::epsilon()) in both cases,
      *  reflecting the fact that using the normal equations squares the condition number
@@ -281,18 +281,23 @@ public:
      *  zero (see setThreshold).
      *
      *  For the NORMAL_EIGENSYSTEM method, this is the vector of Eigenvalues of the Fisher
-     *  matrix, including those rejected as being below the threshold.
+     *  matrix, including those rejected as being below the threshold, sorted in descending
+     *  order (all values are nonnegative).  This is the square of the singular values of
+     *  the design matrix, and is only available when the factorization is either
+     *  NORMAL_EIGENSYSTEM or DIRECT_SVD.
      *
      *  For the DIRECT_SVD method, this is the vector of singular values of the design
-     *  matrix, including those rejected as being below the threshold; with exact arithmetic,
-     *  these would be the square roots of the Eigenvalues of the Fisher matrix.
+     *  matrix, including those rejected as being below the threshold, sorted in descending
+     *  order (all values are nonnegative).  This is the square root of the Eigenvalues of
+     *  the Fisher matrix, and is only available when the factorization is either
+     *  NORMAL_EIGENSYSTEM or DIRECT_SVD.
      *
      *  For the NORMAL_CHOLESKY method, this is @f$D@f$ in the pivoted Cholesky factorization
      *  @f$P L D L^T P^T@f$ of the Fisher matrix.  This does not provide a reliable way to 
      *  test the stability of the problem, but it does provide a way to compute the determinant
-     *  of the Fisher matrix.
+     *  of the Fisher matrix.  It is only available when the factorization is NORMAL_CHOLESKY.
      */
-    ndarray::Array<double const,1,1> getCondition();
+    ndarray::Array<double const,1,1> getDiagnostic(Factorization factorization);
 
     /// @brief Return the number of parameters.
     int getDimension() const;
