@@ -782,7 +782,9 @@ int afwMath::warpCenteredImage(
     SeparableKernel &warpingKernel,             ///< warping kernel; determines warping algorithm
     afwGeom::LinearTransform const &linearTransform, ///< linear transformation to apply
     afwGeom::Point2D const &centerPixel,         ///< pixel corresponding to location of linearTransform
-    int const interpLength,
+    int const interpLength,                      ///< Distance over which WCS can be linearily interpolated
+    ///< 0 means no interpolation and uses an optimized branch of the code
+    ///< 1 also performs no interpolation but it runs the interpolation code branch
     typename DestImageT::SinglePixel padValue                  ///< set undefined pixels to this value
                       )
 {

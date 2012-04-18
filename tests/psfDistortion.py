@@ -232,7 +232,7 @@ class PsfDistortionTestCase(unittest.TestCase):
         # try 4% shear along theta=45
         shear = 1.04
         q = geomEllip.Quadrupole(geomEllip.Axes(shear*sigma, sigma, math.pi/4.0))
-        img = plantEllipse(kwid, kwid, q.getIXX(), q.getIYY(), q.getIXY())
+        img = plantEllipse(kwid, kwid, q.getIxx(), q.getIyy(), q.getIxy())
         a, b, theta, ixx, iyy, ixy = quickAndDirtyShape(img, afwGeom.Point2D(kwid/2,kwid/2))
         print "sheared 4%:", a/sigma, b/sigma, theta, ixx/sigma**2, iyy/sigma**2, ixy/sigma**2
         self.assertAlmostEqual(a, shear*sigma, prec)

@@ -81,9 +81,9 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage, ///< The pixel values
     HeavyFootprintCtrl const *ctrl     ///< Control how we manipulate HeavyFootprints
         ) : Footprint(foot),
-            _image(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
-            _mask(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix()))),
-            _variance(lsst::ndarray::allocate(lsst::ndarray::makeVector(foot.getNpix())))
+            _image(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+            _mask(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+            _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
 {
     HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
 
@@ -125,6 +125,17 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
     expandArray(*this, _image,    mimage.getImage()->getArray(),    mimage.getXY0());
     expandArray(*this, _mask,     mimage.getMask()->getArray(),     mimage.getXY0());
     expandArray(*this, _variance, mimage.getVariance()->getArray(), mimage.getXY0());
+}
+
+/**
+ * Replace all the pixels in the image with the values in the HeavyFootprint
+ */
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
+                                                                     lsst::afw::image::Image<ImagePixelT> & image ///< Image to set
+                                                                     ) const
+{
+    expandArray(*this, _image,    image.getArray(),    image.getXY0());
 }
 
 /************************************************************************************************************/

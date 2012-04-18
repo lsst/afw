@@ -96,7 +96,7 @@ class Object(object):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class FootprintSetUTestCase(unittest.TestCase):
+class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
 
     def setUp(self):
@@ -122,11 +122,11 @@ class FootprintSetUTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetect.FootprintSetU(afwImage.ImageU(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(afwImage.ImageU(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -135,8 +135,8 @@ class FootprintSetUTestCase(unittest.TestCase):
             self.assertEqual(objects[i], self.objects[i])
             
     def testFootprints2(self):
-        """Check that we found the correct number of objects using makeFootprintSet"""
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
+        """Check that we found the correct number of objects using FootprintSet"""
+        ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -147,7 +147,7 @@ class FootprintSetUTestCase(unittest.TestCase):
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = afwImage.ImageU(self.im.getDimensions())
@@ -167,7 +167,7 @@ class FootprintSetUTestCase(unittest.TestCase):
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = ds.insertIntoImage(True)
@@ -181,7 +181,7 @@ class FootprintSetUTestCase(unittest.TestCase):
 
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -192,7 +192,7 @@ class FootprintSetUTestCase(unittest.TestCase):
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests""" 
         #Can't set mask plane as the image is not a masked image.
-        ds = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10))
+        ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
 
         idImage = afwImage.ImageU(self.im.getDimensions())
         idImage.set(0)
@@ -209,9 +209,9 @@ class FootprintSetUTestCase(unittest.TestCase):
 
     def testGrow(self):
         """Grow footprints using the FootprintSet constructor"""
-        fs = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10), "BINNED1")
+        fs = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), len(self.objects))
-        grown = afwDetect.FootprintSetU(fs, 1, False)
+        grown = afwDetect.FootprintSet(fs, 1, False)
         self.assertEqual(len(fs.getFootprints()), len(self.objects))
 
         self.assertGreater(len(grown.getFootprints()), 0)
@@ -227,7 +227,7 @@ class FootprintSetUTestCase(unittest.TestCase):
         for x in range(im.getWidth()):
             im.set(x, im.getHeight() - 1, (numpy.Inf, 0x0, 0))
 
-        ds = afwDetect.makeFootprintSet(im, afwDetect.createThreshold(100))
+        ds = afwDetect.FootprintSet(im, afwDetect.createThreshold(100))
 
         objects = ds.getFootprints()
         afwDetect.setMaskFromFootprintList(im.getMask(), objects, 0x10)
@@ -299,10 +299,10 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                                    lambda x, y: cmpPeaks(self.im, x, y))
 
         threshold = afwDetect.Threshold(threshold, afwDetect.Threshold.VALUE, polarity)
-        fs = afwDetect.makeFootprintSet(self.im, threshold, "BINNED1")
+        fs = afwDetect.FootprintSet(self.im, threshold, "BINNED1")
 
         if grow:
-            fs = afwDetect.makeFootprintSet(fs, grow, True)
+            fs = afwDetect.FootprintSet(fs, grow, True)
             msk = self.im.getMask()
             afwDetect.setMaskFromFootprintList(msk, fs.getFootprints(), msk.getPlaneBitMask("DETECTED"))
             del msk
@@ -442,7 +442,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.im.getImage().set(6, 5, 30)
         self.peaks[0].append((6, 5,))
 
-        self.fs = afwDetect.makeFootprintSet(self.im, afwDetect.Threshold(10), "BINNED1")
+        self.fs = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10), "BINNED1")
         #
         # The disappearing Footprint special case only shows up if the outer Footprint is grown
         # _after_ the inner one.  So arrange the order properly
@@ -452,7 +452,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         msk = self.im.getMask()
 
         grow = 2
-        self.fs = afwDetect.makeFootprintSet(self.fs, grow, False)
+        self.fs = afwDetect.FootprintSet(self.fs, grow, False)
         afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(),
                                            msk.getPlaneBitMask("DETECTED_NEGATIVE"))
 
@@ -487,7 +487,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.doTestPeaks(threshold=10, callback=callback, grow=0, x0=x0, y0=y0, dwidth=dwidth, dheight=dheight)
 
             threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, False)
-            fs2 = afwDetect.makeFootprintSet(self.im, threshold)
+            fs2 = afwDetect.FootprintSet(self.im, threshold)
             
             msk = self.im.getMask()
             afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
@@ -521,7 +521,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.doTestPeaks(threshold=10, callback=callback, grow=0)
 
         threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, False)
-        fs2 = afwDetect.makeFootprintSet(self.im, threshold)
+        fs2 = afwDetect.FootprintSet(self.im, threshold)
 
         msk = self.im.getMask()
         afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
@@ -542,7 +542,7 @@ def suite():
     tests.init()
 
     suites = []
-    suites += unittest.makeSuite(FootprintSetUTestCase)
+    suites += unittest.makeSuite(FootprintSetTestCase)
     suites += unittest.makeSuite(PeaksInFootprintsTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)

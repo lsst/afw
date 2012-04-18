@@ -106,11 +106,17 @@ public:
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
-        _noGoodPixelsMask(lsst::afw::image::Mask<>::getPlaneBitMask("EDGE")),
+        _noGoodPixelsMask(0x0),
         _isNanSafe(isNanSafe),
         _useWeights(useWeights == 0 ? WEIGHTS_FALSE : (useWeights == 1) ? WEIGHTS_TRUE : WEIGHTS_NONE),
         _calcErrorFromInputVariance(false)
     {
+        try {
+            _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("EDGE");
+        } catch(lsst::pex::exceptions::InvalidParameterException) {
+            ;                           // Mask has no EDGE plane defined
+        }
+
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
     }

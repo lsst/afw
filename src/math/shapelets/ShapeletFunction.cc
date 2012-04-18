@@ -26,12 +26,12 @@
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/afw/math/shapelets/detail/HermiteConvolution.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/ndarray/eigen.h"
+#include "ndarray/eigen.h"
 #include <boost/format.hpp>
 
 namespace shapelets = lsst::afw::math::shapelets;
 namespace geom = lsst::afw::geom;
-namespace nd = lsst::ndarray;
+namespace nd = ndarray;
 
 static inline void validateSize(int expected, int actual) {
     if (expected != actual) {
@@ -61,7 +61,7 @@ shapelets::ShapeletFunction::ShapeletFunction(int order, BasisTypeEnum basisType
 
 shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType,
-    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+    ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, 1.0)),
     _coefficients(nd::copy(coefficients))
@@ -81,7 +81,7 @@ shapelets::ShapeletFunction::ShapeletFunction(
 
 shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, double radius, geom::Point2D const & center,
-    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+    ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(0.0, 0.0, radius), center),
     _coefficients(nd::copy(coefficients))
@@ -100,7 +100,7 @@ shapelets::ShapeletFunction::ShapeletFunction(
 
 shapelets::ShapeletFunction::ShapeletFunction(
     int order, BasisTypeEnum basisType, geom::ellipses::Ellipse const & ellipse,
-    lsst::ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
+    ndarray::Array<lsst::afw::math::shapelets::Pixel,1,1> const & coefficients
 ) :
     _order(order), _basisType(basisType), _ellipse(EllipseCore(ellipse.getCore()), ellipse.getCenter()),
     _coefficients(nd::copy(coefficients))

@@ -23,8 +23,10 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE sipterms
  
-//The boost unit test header
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
+#pragma clang diagnostic pop
 
 using namespace std;
 

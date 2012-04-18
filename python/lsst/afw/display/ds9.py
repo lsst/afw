@@ -436,8 +436,8 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
             False, lowOrderBits=lowOrderBits, title=title, settings=settings)
 
     elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
-        nMaskPlanes = data.getNumPlanesUsed()
         maskPlanes = data.getMaskPlaneDict()
+        nMaskPlanes = max(maskPlanes.values()) + 1
 
         planes = {}                      # build inverse dictionary
         for key in maskPlanes.keys():
@@ -460,27 +460,33 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
             mtv(im, frame=frame)
         
         for p in planeList:
-            if planes[p] or True:
-                if not getMaskPlaneVisibility(planes[p]):
+            if planes.get(p):
+                pname = planes[p]
+                if not getMaskPlaneVisibility(pname):
                     continue
+            else:
+                pname = "unknown"
 
-                if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
-                    continue
+            if not getMaskPlaneVisibility(pname):
+                continue
 
-                mask <<= data
-                mask &= (1 << p)
+            if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
+                continue
 
-                color = getMaskPlaneColor(planes[p])
+            mask <<= data
+            mask &= (1 << p)
 
-                if not color:            # none was specified
-                    while True:
-                        color = _maskColors[colorIndex % len(_maskColors)]
-                        colorIndex += 1
-                        if color != WHITE and color != BLACK:
-                            break
+            color = getMaskPlaneColor(pname)
 
-                setMaskColor(color)
-                _mtv(mask, wcs, title, True)
+            if not color:            # none was specified
+                while True:
+                    color = _maskColors[colorIndex % len(_maskColors)]
+                    colorIndex += 1
+                    if color != WHITE and color != BLACK:
+                        break
+
+            setMaskColor(color)
+            _mtv(mask, wcs, title, True)
         return
     elif re.search("::Image<", repr(data)): # it's an Image; display it
         _mtv(data, wcs, title, False)
@@ -495,8 +501,8 @@ except NameError:
 def _mtv(data, wcs, title, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
-    if title is not None:
-        title = str(title)
+    title = str(title) if title else ""
+
     if True:
         if isMask:
             xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()

@@ -271,17 +271,22 @@ public:
     
     typedef boost::shared_ptr<EclipticCoord> Ptr;
 
-    EclipticCoord(lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit = lsst::afw::geom::degrees,
-        double const epoch = 2000.0) :
+    EclipticCoord(lsst::afw::geom::Point2D const &p2d,
+                  lsst::afw::geom::AngleUnit unit = lsst::afw::geom::degrees,
+                  double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
     EclipticCoord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0,
                   bool normalize=true,
                   lsst::afw::geom::Angle const defaultLongitude= lsst::afw::geom::Angle(0.)) :
         Coord(p3d, epoch, normalize, defaultLongitude) {}
-    EclipticCoord(lsst::afw::geom::Angle const lambda, lsst::afw::geom::Angle const beta, double const epoch = 2000.0) : 
-        Coord(lambda, beta, epoch) {}
-    EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
-        Coord(lambda, beta, epoch) {}
+    
+    // note the abbreviation of lambda -> lamd to avoid swig warnings for python keyword 'lambda'
+    EclipticCoord(lsst::afw::geom::Angle const lamb, lsst::afw::geom::Angle const beta,
+                  double const epoch = 2000.0) : 
+        Coord(lamb, beta, epoch) {}
+    EclipticCoord(std::string const lamb, std::string const beta, double const epoch = 2000.0) : 
+        Coord(lamb, beta, epoch) {}
+    
     EclipticCoord() : Coord() {}
     
     virtual Coord::Ptr clone() const { return EclipticCoord::Ptr(new EclipticCoord(*this)); }

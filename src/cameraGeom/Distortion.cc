@@ -21,7 +21,7 @@
  */
  
 /**
- * @file Distortion.cc
+ * @file src/cameraGeom/Distortion.cc
  * @brief Provide Classes to handle coordinate/moment distortion due to camera optics
  * @ingroup afw
  * @author Steve Bickerton
@@ -524,6 +524,7 @@ afwGeom::LinearTransform cameraGeom::RadialPolyDistortion::computeQuadrupoleTran
     return lintran;
 }
 
+#ifndef DOXYGEN
 
 // explicit instantiations
 /*
@@ -547,3 +548,5 @@ INSTANTIATE(Image, float);
 INSTANTIATE(Image, double);
 INSTANTIATE(MaskedImage, float);
 INSTANTIATE(MaskedImage, double);
+
+#endif // !DOXYGEN

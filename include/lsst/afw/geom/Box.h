@@ -32,7 +32,7 @@
 #include "boost/format.hpp"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 
 namespace lsst { namespace afw { namespace geom {
 
@@ -123,8 +123,8 @@ public:
     int getArea() const { return getWidth() * getHeight(); }
     //@}
 
-    lsst::ndarray::View< 
-        boost::fusion::vector2< lsst::ndarray::index::Range, lsst::ndarray::index::Range > 
+    ndarray::View< 
+        boost::fusion::vector2< ndarray::index::Range, ndarray::index::Range > 
         >
     getSlices() const;
 

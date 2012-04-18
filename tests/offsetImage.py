@@ -201,6 +201,11 @@ class transformImageTestCase(unittest.TestCase):
                 frame += 1
             self.assertEqual(self.inImage.get(0, 0), outImage.get(x, y))
 
+    def testMask(self):
+        """Test that we can flip a Mask"""
+        mask = afwImage.MaskU(10, 20)
+        afwMath.flipImage(mask, True, False) # for a while, swig couldn't handle the resulting Mask::Ptr
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class binImageTestCase(unittest.TestCase):
