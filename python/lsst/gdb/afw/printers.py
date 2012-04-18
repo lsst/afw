@@ -691,25 +691,67 @@ try:
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+    class BackgroundPrinter(object):
+        "Print a Background"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "Background(%dx%d) %s" % (self.val["_imgWidth"], self.val["_imgHeight"],
+                                             self.val["_bctrl"])
+
+    class BackgroundControlPrinter(object):
+        "Print a BackgroundControl"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "{%s %s %s %s}" % (re.sub(r"lsst::afw::math::Interpolate::", "", str(self.val["_style"])),
+                                        re.sub(r"lsst::afw::math::", "", str(self.val["_prop"])),
+                                        re.sub(r"lsst::afw::math::", "", str(self.val["_undersampleStyle"])),
+                                        self.val["_sctrl"]["px"].dereference())
+
     class KernelPrinter(object):
         "Print a Kernel"
 
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
         def to_string(self):
-            return "%s(%dx%d)" % (self.typeName(),
+            return "%s(%dx%d)" % (self.typename,
                                   self.val["_width"], self.val["_height"])
+
+
+
+    class StatisticsControlPrinter(object):
+        "Print a StatisticsControl"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "{nSigma=%g nIter=%d ignore=0x%x}" % (self.val["_numSigmaClip"],
+                                                         self.val["_numIter"],
+                                                         self.val["_andMask"])
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     printers = []
 
-    def register(obj):
+    def register(obj=None):
         "Register my pretty-printers with objfile Obj."
 
         if obj is None:
             obj = gdb
 
         for p in printers:
-            gdb.printing.register_pretty_printer(obj, p)
+            gdb.printing.register_pretty_printer(obj, p, replace=True)
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -787,8 +829,14 @@ try:
         printer.add_printer('lsst::afw::image::Exposure',
                             '^lsst::afw::image::Exposure', ExposurePrinter)
 
+        printer.add_printer('lsst::afw::math::Background',
+                            '^lsst::afw::math::Background$', BackgroundPrinter)
+        printer.add_printer('lsst::afw::math::BackgroundControl',
+                            '^lsst::afw::math::BackgroundControl$', BackgroundControlPrinter)
         printer.add_printer('lsst::afw::math::Kernel',
-                            '^lsst::afw::math::Kernel', KernelPrinter)
+                            '^lsst::afw::math::.*Kernel', KernelPrinter)
+        printer.add_printer('lsst::afw::math::StatisticsControl',
+                            '^lsst::afw::math::StatisticsControl', StatisticsControlPrinter)
 
         return printer
 
@@ -803,5 +851,6 @@ try:
         return printer
 
     printers.append(build_daf_base_dictionary())
-except ImportError:
+except ImportError, e:
+    print "RHL", e
     from printers_oldgdb import *

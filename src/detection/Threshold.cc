@@ -130,7 +130,7 @@ double Threshold::getValue(ImageT const& image) const {
  *
  * @param value value of threshold
  * @param typeStr string representation of a ThresholdType. This parameter is 
- *                optional. Allowed values are: "variance", "value", "stdev"
+ *                optional. Allowed values are: "variance", "value", "stdev", "pixel_stdev"
  * @param polarity If true detect positive objects, false for negative
  *
  * @return desired Threshold
