@@ -218,7 +218,8 @@ namespace math {
         lsst::afw::geom::AffineTransform const &affineTransform,
         int const interpLength=0,
         typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                  );
 
 
@@ -231,7 +232,8 @@ namespace math {
         lsst::afw::geom::Point2D const &centerPixel,
         int const interpLength=0,
         typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                          );
 
     namespace details {

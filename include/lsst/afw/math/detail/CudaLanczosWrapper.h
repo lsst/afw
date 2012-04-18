@@ -50,8 +50,8 @@ namespace detail {
         WcsSrcPosFunctor(
                          lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
                          lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
-                         lsst::afw::image::Wcs const &srcWcs
-                        ) :      ///< WCS of source %image
+                         lsst::afw::image::Wcs const &srcWcs         ///< WCS of source %image
+                        ) :
             SrcPosFunctor(),
             _destXY0(destXY0),
             _destWcs(destWcs),
