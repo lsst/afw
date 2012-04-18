@@ -162,6 +162,9 @@ public:
     
     virtual ~Background() {}
     
+    void operator+=(float const delta);
+    void operator-=(float const delta);
+
     double getPixel(int const x, int const y) const;
 
     template<typename PixelT>
@@ -188,6 +191,7 @@ private:
     BackgroundControl _bctrl;           // control info set by user.
 
     void _checkSampling();
+    void _set_gridcolums(int iX, std::vector<int> const& ypix);
 };
 
 /**

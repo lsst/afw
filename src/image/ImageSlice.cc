@@ -23,11 +23,9 @@
  */
  
 /**
- * @file Stack.cc
- * @brief Provide functions to stack images
- * @ingroup stack
+ * @file ImageSlice.cc
+ * @brief Provide functions to operate on rows/columns of images
  * @author Steve Bickerton
- *
  */
 #include <vector>
 #include "boost/shared_ptr.hpp"

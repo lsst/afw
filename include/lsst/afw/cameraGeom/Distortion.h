@@ -36,7 +36,7 @@
 #include "lsst/afw/cameraGeom/Id.h"
 
 /**
- * @file Distortion.cc
+ * @file lsst/afw/cameraGeom/Distortion.h
  * @brief Provide Classes to handle coordinate/moment distortion due to camera optics
  * @ingroup afw
  * @author Steve Bickerton
@@ -49,7 +49,7 @@ namespace cameraGeom {
 
     
 /**
- * @class Distort/Undistort coordinates, moments, and images according to camera optical distortion
+ *  Distort/Undistort coordinates, moments, and images according to camera optical distortion
  */
 class Distortion {
 public:
@@ -161,7 +161,7 @@ private:
 
 
 /**
- * @class Offer a derived 'no-op' class with identity operators for all transforms
+ *  Offer a derived 'no-op' class with identity operators for all transforms
  */
 class NullDistortion : public Distortion {
 public:
@@ -177,7 +177,7 @@ public:
 };
 
 /**
- * @class Handle optical distortions described by a polynomial function of radius
+ *  Handle optical distortions described by a polynomial function of radius
  */
 class RadialPolyDistortion : public Distortion {
 public:

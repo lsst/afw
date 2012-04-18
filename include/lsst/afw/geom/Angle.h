@@ -6,9 +6,9 @@
 #include <boost/math/constants/constants.hpp>
 #include <cmath>
 
-#if 1
+#if __cplusplus < 201103L
 #   include <boost/static_assert.hpp>
-#   define static_assert(EXPR, MSG) BOOST_STATIC_ASSERT(EXPR) // in C++0x
+#   define static_assert(EXPR, MSG) BOOST_STATIC_ASSERT(EXPR) // not in C++98
 #endif
 
 namespace lsst { namespace afw { namespace geom {
@@ -17,6 +17,8 @@ namespace lsst { namespace afw { namespace geom {
 /*
  * None of C99, C++98, and C++0x define M_PI, so we'll do it ourselves
  */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 double const PI = boost::math::constants::pi<double>(); ///< The ratio of a circle's circumference to diameter
 double const TWOPI = boost::math::constants::pi<double>() * 2.0;
 double const HALFPI = boost::math::constants::pi<double>() * 0.5;
@@ -24,6 +26,7 @@ double const ONE_OVER_PI = 1.0 / boost::math::constants::pi<double>();
 double const SQRTPI = sqrt(boost::math::constants::pi<double>());
 double const INVSQRTPI = 1.0/sqrt(boost::math::constants::pi<double>());
 double const ROOT2 = boost::math::constants::root_two<double>(); // sqrt(2)
+#pragma clang diagnostic pop
 
 // These shouldn't be necessary if the Angle class is used, but sometimes you just need
 // them.  Better to define them once here than have *180/PI throughout the code...

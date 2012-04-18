@@ -25,12 +25,12 @@
 #include "lsst/afw/math/shapelets/MultiShapeletFunction.h"
 #include "lsst/afw/math/shapelets/ConversionMatrix.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/ndarray/eigen.h"
+#include "ndarray/eigen.h"
 #include <boost/format.hpp>
 
 namespace shapelets = lsst::afw::math::shapelets;
 namespace geom = lsst::afw::geom;
-namespace nd = lsst::ndarray;
+namespace nd = ndarray;
 
 
 void shapelets::MultiShapeletFunction::normalize() {

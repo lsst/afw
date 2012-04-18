@@ -29,7 +29,7 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/shapelets.h"
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 
 namespace lsst {
 namespace afw {
@@ -125,7 +125,7 @@ public:
      */
     virtual void evaluatePointSource(
         Footprint const & fp, 
-        lsst::ndarray::Array<Pixel,1,0> const & array,
+        ndarray::Array<Pixel,1,0> const & array,
         lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
     ) const = 0;
     
@@ -135,7 +135,7 @@ public:
      *  @param[in]  fp     Footprint that defines the nonzero pixels of the model.
      *  @param[in]  offset Offset of the point source from the point the LocalPsf was evaluated at.
      */
-    lsst::ndarray::Array<Pixel,1,1> evaluatePointSource(
+    ndarray::Array<Pixel,1,1> evaluatePointSource(
         Footprint const & fp, 
         lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
     ) const {
@@ -209,7 +209,7 @@ public:
      */
     virtual void evaluatePointSource(
         Footprint const & fp, 
-        lsst::ndarray::Array<Pixel,1,0> const & array,
+        ndarray::Array<Pixel,1,0> const & array,
         lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
     ) const;
 
@@ -261,7 +261,7 @@ public:
      */
     virtual void evaluatePointSource(
         Footprint const & fp, 
-        lsst::ndarray::Array<Pixel,1,0> const & array,
+        ndarray::Array<Pixel,1,0> const & array,
         lsst::afw::geom::Extent2D const & offset = lsst::afw::geom::Extent2D()
     ) const;
 

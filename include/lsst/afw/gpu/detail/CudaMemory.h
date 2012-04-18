@@ -32,9 +32,9 @@
  * Contents of this file are available only when GPU_BUILD is defined (i.e. when cuda_toolkit package is setup)
  *
  * requires:
- * #include <cuda.h>
- * #include <cuda_runtime.h>
- * #include "lsst/afw/gpu/detail/GpuBuffer2D.h"
+ *   - include <cuda.h>
+ *   - include <cuda_runtime.h>
+ *   - include "lsst/afw/gpu/detail/GpuBuffer2D.h"
  *
  * @ingroup afw
  */

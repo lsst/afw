@@ -387,8 +387,21 @@ class BackgroundTestCase(unittest.TestCase):
             im.writeFits("im.fits")
             bim.writeFits("bim.fits")
 
+    def testAdjustLevel(self):
+        """Test that we can adjust a background level"""
+        sky = 100
+        im = afwImage.ImageF(40, 40); im.set(sky);
+        nx, ny = im.getWidth()//2, im.getHeight()//2
+        bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
+        bkd = afwMath.makeBackground(im, bctrl)
+       
+        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky)
             
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        delta = 123
+        bkd += delta
+        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky + 123)
+        bkd -= delta
+        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky)
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
