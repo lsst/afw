@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,26 +25,35 @@
 /**
  * @file
  *
- * @brief CPU and GPU convolution shared code
+ * @brief Calls cudaThreadExit from a destructor of a global object.
+ *
+ * When using library libcudart.so (CUDA 3.2) from Python, it fails to properly close the library 
+ * resulting in segmentation fault. This file is intended to solve that problem by
+ * automatically deinitializing the library just prior to exiting.
  *
  * @author Kresimir Cosic
  *
  * @ingroup afw
  */
 
-namespace lsst {
-	namespace afw {
-		namespace math {
-			namespace detail {
+#ifdef GPU_BUILD
 
-    template <typename OutImageT, typename InImageT>
-    void assertDimensionsOK(
-            OutImageT const &convolvedImage,
-            InImageT const &inImage,
-            lsst::afw::math::Kernel const &kernel
-                                   );
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+namespace {
 
 
-}}}} //lsst::afw::math::detail
+struct LibCudartCleanup
+{
+    ~LibCudartCleanup()
+    {
+        cudaThreadExit();
+    }
+};
 
+LibCudartCleanup globCudaCleanup;
 
+}
+
+#endif

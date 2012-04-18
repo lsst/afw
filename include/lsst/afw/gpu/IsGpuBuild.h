@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,26 +25,29 @@
 /**
  * @file
  *
- * @brief CPU and GPU convolution shared code
+ * @brief A function to determine whether compiling for GPU is enabled
  *
  * @author Kresimir Cosic
  *
  * @ingroup afw
  */
 
+
 namespace lsst {
-	namespace afw {
-		namespace math {
-			namespace detail {
+namespace afw {
+namespace gpu {
 
-    template <typename OutImageT, typename InImageT>
-    void assertDimensionsOK(
-            OutImageT const &convolvedImage,
-            InImageT const &inImage,
-            lsst::afw::math::Kernel const &kernel
-                                   );
-
-
-}}}} //lsst::afw::math::detail
-
-
+/**
+ * \brief Inline function which returns true only when GPU_BUILD macro is defined
+ *
+ * Used to determine whether compiling for GPU is enabled
+ */
+inline bool isGpuBuild()
+{
+    #ifdef GPU_BUILD
+        return true;
+    #else
+        return false;
+    #endif
+}
+}}} //namespace lsst::afw::gpu ends

@@ -35,58 +35,13 @@
  * @ingroup afw
  */
 
-
-#ifndef GPU_BUILD //build this file only if requested
-
-#include <stdio.h>
-#include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/detail/Convolve.h"
+#ifndef GPU_BUILD
 
 namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-namespace gpu {
 
-void PrintCudaDeviceInfo() {
-    printf("Afw not compiled with GPU support\n");
-}
-
-int GetCudaCurDeviceId() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-int GetCudaCurSMSharedMemorySize(){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-int GetCudaCurGlobalMemorySize(){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-int GetCudaCurSMRegisterCount(){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-int GetCudaCurSMCount(){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-bool GetCudaCurIsDoublePrecisionSupported(){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-void SetCudaDevice(int devId){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-void CudaReserveDevice(){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
-
-void CudaThreadExit(){
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
-}
 
 void TestGpuKernel(int& ret1, int& ret2) {
     ret1 = 0;
@@ -105,22 +60,7 @@ bool IsSufficientSharedMemoryAvailable_ForSfn(int order, int kernelN)
 {
     return false;
 }
-bool SelectPreferredCudaDevice()
-{
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
-}
-void AutoSelectCudaDevice()
-{
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
-}
-void VerifyCudaDevice()
-{
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
-}
 
-
-
-}
 }
 }
 }
@@ -136,12 +76,17 @@ void VerifyCudaDevice()
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 
-#include "lsst/afw/math/detail/ImageBuffer.h"
+#include "lsst/afw/gpu/detail/GpuBuffer2D.h"
+#include "lsst/afw/math/detail/convCUDA.h"
 #include "lsst/afw/math/detail/cudaConvWrapper.h"
-#include "lsst/afw/math/detail/cudaQueryDevice.h"
+#include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 #include "lsst/afw/math/detail/Convolve.h"
+#include "lsst/afw/gpu/detail/CudaSelectGpu.h"
+#include "lsst/afw/gpu/detail/CudaMemory.h"
 
 using namespace std;
+using namespace lsst::afw::gpu;
+using namespace lsst::afw::gpu::detail;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace mathDetailGpu = lsst::afw::math::detail::gpu;
@@ -157,412 +102,6 @@ namespace {
 const int shMemBytesUsed = 200;
 }
 
-namespace gpu {
-
-void PrintDeviceProperties(int id, cudaDeviceProp deviceProp)
-{
-    printf("Name : %s  |", deviceProp.name );
-    printf("  CUDA Capable SM %d.%d hardware, %d multiproc.\n", deviceProp.major, deviceProp.minor,
-           deviceProp.multiProcessorCount);
-    printf("   Clock rate:       %6.2f GHz \t", deviceProp.clockRate / (1000.0 * 1000));
-    printf("   Memory on device: %6zu MiB\n", deviceProp.totalGlobalMem / (1 << 20) );
-    printf("   Multiprocessors:  %6d\n", deviceProp.multiProcessorCount);
-    printf("       Warp size:    %6d \t",  deviceProp.warpSize );
-    printf("       Shared memory:%6zu KiB\n", deviceProp.sharedMemPerBlock / (1 << 10) );
-    printf("       Registers:    %6d \t", deviceProp.regsPerBlock );
-    printf("       Max threads:  %6d \n", deviceProp.maxThreadsPerBlock );
-
-    printf("   Compute mode (device sharing) : ");
-    if (deviceProp.computeMode == cudaComputeModeDefault) {
-        printf("Default - shared between threads\n" );
-    }
-    if (deviceProp.computeMode == cudaComputeModeExclusive) {
-        printf("Exclusive - only one thread at a time\n" );
-    }
-    if (deviceProp.computeMode == cudaComputeModeProhibited) {
-        printf("Prohibited - cannot use this device\n" );
-    }
-
-    printf("   Timeout enabled: %3s  ", deviceProp.kernelExecTimeoutEnabled == 1 ? "Yes" : "No" );
-    printf("   Overlapped copying: %3s  ", deviceProp.deviceOverlap == 1 ? "Yes" : "No" );
-    printf("   Intergrated on MB: %3s\n", deviceProp.integrated == 1 ? "Yes" : "No" );
-    printf("   Memory pitch: %12zu \t", deviceProp.memPitch );
-    printf("   Constant memory: %6zu kiB \n", deviceProp.totalConstMem / (1 << 10) );
-}
-
-void PrintCudaErrorInfo(cudaError_t cudaError, const char* errorStr)
-{
-    printf("\nSupplied error string: %s\n", errorStr);
-    printf(  "CUDA error           : %d\n", cudaError);
-    printf(  "CUDA error string    : %s\n", cudaGetErrorString(cudaError));
-    exit(0);
-}
-
-void PrintCudaDeviceInfo()
-{
-    fflush(stdout);
-
-    cudaError_t cudaError;
-
-    int driverVersion;
-    cudaError = cudaDriverGetVersion(&driverVersion);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "Could not get CUDA driver version");
-    printf("Driver ver.: %d.%d   ", driverVersion / 1000, driverVersion % 1000);
-    fflush(stdout);
-
-    int runtimeVersion;
-    cudaError = cudaRuntimeGetVersion(&runtimeVersion);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "Could not get CUDA runtime version");
-    printf("Runtime ver.: %d.%d   ", runtimeVersion / 1000, runtimeVersion % 1000);
-    fflush(stdout);
-
-    //int preferredDeviceId = 0;
-
-    int cudaDevicesN = 0;
-    cudaError = cudaGetDeviceCount(&cudaDevicesN);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "Could not get CUDA device count");
-
-    printf("Device count: %d   ", cudaDevicesN);
-    fflush(stdout);
-    if(cudaDevicesN < 1) {
-        printf("Your system does not have a CUDA capable device\n");
-        exit(0);
-    }
-
-    int curDevId;
-    cudaError = cudaGetDevice(&curDevId);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "Could not get CUDA device id");
-    printf("Info for device %d\n", curDevId);
-    fflush(stdout);
-
-    cudaDeviceProp deviceProp;
-    cudaError = cudaGetDeviceProperties(&deviceProp, curDevId);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "Could not get CUDA device properties");
-    PrintDeviceProperties(curDevId, deviceProp);
-    fflush(stdout);
-
-    for (int i = 0; i < 79; i++) {
-        printf("-");
-    }
-    printf("\n");
-    fflush(stdout);
-}
-
-int GetPreferredCudaDevice()
-{
-    const char *devStr = getenv("CUDA_DEVICE");
-    if (devStr == NULL) return -2;
-    else                return atoi(devStr);
-}
-
-bool SelectPreferredCudaDevice()
-{
-    int devId = GetPreferredCudaDevice();
-
-    //printf("DEVICE ID %d\n", devId);
-
-    if (devId >= 0) {
-        cudaError_t err = cudaSetDevice(devId);
-        if (err != cudaSuccess) {
-            cudaGetLastError(); //clear error code
-            char errorStr[1000];
-            sprintf(errorStr, "Error selecting device %d:\n %s\n", devId, cudaGetErrorString(err));
-            throw LSST_EXCEPT(GpuRuntimeErrorException, errorStr);
-        }
-        return true;
-    }
-
-    if (devId != -2) return true;
-
-    return false;
-}
-
-cudaDeviceProp GetDesiredDeviceProperties()
-{
-    cudaDeviceProp prop;
-    memset(&prop, 1, sizeof(prop));
-
-    //min sm 1.3
-    prop.major = 1;
-    prop.minor = 3;
-
-    prop.maxGridSize[0] = 128;
-    prop.maxThreadsDim[0] = 256;
-
-    prop.multiProcessorCount = 2;
-    prop.clockRate = 700.0 * 1000 ; // 700 MHz
-    prop.warpSize = 32 ;
-    prop.sharedMemPerBlock = 32 * (1 << 10); //32 KiB
-    prop.regsPerBlock = 256 * 60 ;
-    prop.maxThreadsPerBlock = 256;
-    prop.totalGlobalMem = 500 * 1024 * 1024;
-
-    return prop;
-}
-
-void AutoSelectCudaDevice()
-{
-    int cudaDevicesN = 0;
-    cudaGetDeviceCount(&cudaDevicesN);
-    if (cudaDevicesN == 0) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "No CUDA capable GPUs found");
-    }
-
-    cudaDeviceProp prop = GetDesiredDeviceProperties();
-    char errorStr[1000];
-
-    int devId;
-    cudaError_t cudaError = cudaChooseDevice(&devId, &prop);
-    //printf("Error device %d:\n %s\n", devId, cudaGetErrorString(err));
-    if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Error choosing device automatically");
-    }
-    cudaError = cudaSetDevice(devId);
-    if (cudaError == cudaErrorSetOnActiveProcess) {
-        cudaGetDevice(&devId);
-    } else if (cudaError != cudaSuccess) {
-        cudaGetLastError(); //clear error
-        sprintf(errorStr, "Error automatically selecting device %d:\n %s\n",
-                devId, cudaGetErrorString(cudaError));
-        throw LSST_EXCEPT(GpuRuntimeErrorException, errorStr);
-    }
-}
-
-void VerifyCudaDevice()
-{
-    cudaDeviceProp prop = GetDesiredDeviceProperties();
-    char errorStr[1000];
-
-    int devId;
-    cudaError_t cudaError = cudaGetDevice(&devId);
-    if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Could not get selected CUDA device ID");
-    }
-    cudaDeviceProp deviceProp;
-    cudaError = cudaGetDeviceProperties(&deviceProp, devId);
-    if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Could not get CUDA device properties");
-    }
-    if (deviceProp.major < prop.major ||
-            (deviceProp.major == prop.major && deviceProp.minor < prop.minor)
-       ) {
-        sprintf(errorStr, "Only SM %d.%d or better GPU devices are currently allowed", prop.major, prop.minor);
-        throw LSST_EXCEPT(GpuRuntimeErrorException, errorStr );
-    }
-
-    if (deviceProp.major == prop.major && deviceProp.minor < prop.minor) {
-        if (deviceProp.totalGlobalMem < prop.totalGlobalMem) {
-            throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough global memory on GPU");
-        }
-    }
-    if (deviceProp.sharedMemPerBlock < 16 * 1000) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough shared memory on GPU");
-    }
-    if (deviceProp.regsPerBlock < prop.regsPerBlock) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough registers per block available on GPU");
-    }
-    if (deviceProp.maxThreadsPerBlock < prop.maxThreadsPerBlock) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough threads per block available on GPU");
-    }
-}
-
-int GetCudaCurDeviceId()
-{
-    int curDevId;
-    cudaError_t cudaError = cudaGetDevice(&curDevId);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "GetCudaDeviceId> Could not get CUDA device id");
-    return curDevId;
-}
-
-int GetCudaCurSMSharedMemorySize()
-{
-    int curDevId = GetCudaCurDeviceId();
-    cudaDeviceProp deviceProp;
-    cudaError_t cudaError = cudaGetDeviceProperties(&deviceProp, curDevId);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "GetCudaSMSharedMemorySize> Could not get CUDA device properties");
-
-    return deviceProp.sharedMemPerBlock;
-}
-
-int GetCudaCurGlobalMemorySize()
-{
-    int curDevId = GetCudaCurDeviceId();
-    cudaDeviceProp deviceProp;
-    cudaError_t cudaError = cudaGetDeviceProperties(&deviceProp, curDevId);
-    if (cudaError != cudaSuccess) {
-        PrintCudaErrorInfo(cudaError, "GetCudaCurGlobalMemorySize> Could not get CUDA device properties");
-    }
-    return deviceProp.totalGlobalMem;
-}
-
-int GetCudaCurSMRegisterCount()
-{
-    int curDevId = GetCudaCurDeviceId();
-    cudaDeviceProp deviceProp;
-    cudaError_t cudaError = cudaGetDeviceProperties(&deviceProp, curDevId);
-    if (cudaError != cudaSuccess) {
-        PrintCudaErrorInfo(cudaError, "GetCudaSMRegisterCount> Could not get CUDA device properties");
-    }
-    return deviceProp.regsPerBlock;
-}
-
-int GetCudaCurSMCount()
-{
-    int curDevId = GetCudaCurDeviceId();
-    cudaDeviceProp deviceProp;
-    cudaError_t cudaError = cudaGetDeviceProperties(&deviceProp, curDevId);
-    if (cudaError != cudaSuccess) {
-        PrintCudaErrorInfo(cudaError, "GetCudaSMCount> Could not get CUDA device properties");
-    }
-    return deviceProp.multiProcessorCount;
-}
-
-bool GetCudaCurIsDoublePrecisionSupported()
-{
-    int curDevId = GetCudaCurDeviceId();
-    cudaDeviceProp deviceProp;
-    cudaError_t cudaError = cudaGetDeviceProperties(&deviceProp, curDevId);
-    if (cudaError != cudaSuccess) {
-        PrintCudaErrorInfo(cudaError, "GetCudaIsDoublePrecisionSupported> Could not get CUDA device properties");
-    }
-    return deviceProp.major >= 2 || (deviceProp.major == 1 && deviceProp.minor >= 3);
-}
-
-void SetCudaDevice(int devId)
-{
-    cudaError_t cudaError = cudaSetDevice(devId);
-    if (cudaError != cudaSuccess) PrintCudaErrorInfo(cudaError, "SetCudaDevice> unsucessfull");
-}
-
-void CudaReserveDevice()
-{
-    int* dataGpu;
-    cudaError_t cudaError = cudaMalloc((void**)&dataGpu, 256 * sizeof(int));
-    if (cudaError != cudaSuccess) {
-        PrintCudaErrorInfo(cudaError, "CudaReserveDevice> Could not reserve device by calling cudaMalloc");
-    }
-    cudaError = cudaFree(dataGpu);
-    if (cudaError != cudaSuccess) {
-        PrintCudaErrorInfo(cudaError, "CudaReserveDevice> Could not release memory by calling cudaFree");
-    }
-}
-
-void CudaThreadExit()
-{
-    cudaThreadExit();
-}
-
-template<typename T>
-T* AllocOnGpu(int size)
-{
-    T* dataGpu;
-    cudaError_t cudaError = cudaMalloc((void**)&dataGpu, size * sizeof(T));
-    if (cudaError != cudaSuccess) {
-        return NULL;
-    }
-    return dataGpu;
-}
-template<typename T>
-void CopyFromGpu(T* destCpu, T* sourceGpu, int size)
-{
-    cudaError_t cudaError = cudaMemcpy(
-                                /* Desination:*/     destCpu,
-                                /* Source:    */     sourceGpu,
-                                /* Size in bytes: */ size * sizeof(T),
-                                /* Direction   */    cudaMemcpyDeviceToHost
-                            );
-    if (cudaError != cudaSuccess)
-        throw LSST_EXCEPT(GpuMemoryException, "CopyFromGpu: failed");
-}
-template<typename T>
-void CopyToGpu(T* destGpu, T* sourceCpu, int size)
-{
-    cudaError_t cudaError;
-    cudaError = cudaMemcpy(
-                    /* Desination:*/     destGpu,
-                    /* Source:    */     sourceCpu,
-                    /* Size in bytes: */ size * sizeof(T),
-                    /* Direction   */    cudaMemcpyHostToDevice
-                );
-    if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuMemoryException, "CopyToGpu: failed");
-    }
-}
-
-template<typename T>
-T* TransferToGpu(const T* sourceCpu, int size)
-{
-    T* dataGpu;
-    cudaError_t cudaError = cudaMalloc((void**)&dataGpu, size * sizeof(T));
-    if (cudaError != cudaSuccess) {
-        return NULL;
-    }
-    cudaError = cudaMemcpy(
-                    /* Desination:*/     dataGpu,
-                    /* Source:    */     sourceCpu,
-                    /* Size in bytes: */ size * sizeof(T),
-                    /* Direction   */    cudaMemcpyHostToDevice
-                );
-    if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuMemoryException, "TransferToGpu: transfer failed");
-    }
-    return dataGpu;
-}
-
-/**
-    A class for handling GPU memory managment and copying data to and from GPU
-
-    Automatically releases GPU memory on destruction, simplifying GPU memory management
-*/
-template<typename T>
-class GpuMemOwner
-{
-public:
-    T* ptr;
-    int size;
-    GpuMemOwner() : ptr(NULL) {}
-
-    T* Transfer(const T* source, int size_p) {
-        assert(ptr == NULL);
-        size = size_p;
-        ptr = TransferToGpu(source, size);
-        return ptr;
-    }
-    T* Transfer(const ImageBuffer<T>& source) {
-        assert(ptr == NULL);
-        size = source.Size();
-        ptr = TransferToGpu(source.img, size);
-        return ptr;
-    }
-    T* TransferVec(const vector<T>& source) {
-        assert(ptr == NULL);
-        size = int(source.size());
-        ptr = TransferToGpu(&source[0], size);
-        return ptr;
-    }
-    T* Alloc(int size_p)  {
-        assert(ptr == NULL);
-        size = size_p;
-        ptr = AllocOnGpu<T>(size);
-        return ptr;
-    }
-    T* CopyToGpu(ImageBuffer<T>& source) {
-        assert(ptr != NULL);
-        assert(source.Size() == size);
-        gpu::CopyToGpu(ptr, source.img, size);
-        return ptr;
-    }
-    T* CopyFromGpu(ImageBuffer<T>& dest) {
-        assert(ptr != NULL);
-        assert(dest.Size() == size);
-        gpu::CopyFromGpu(dest.img, ptr, size);
-        return ptr;
-    }
-
-    ~GpuMemOwner() {
-        if (ptr != NULL) cudaFree(ptr);
-    }
-};
 
 // Returns true if there is sufficient shared memory for loading an image block,
 // where image block includes including filter frame.
@@ -628,23 +167,22 @@ void TestGpuKernel(int& ret1, int& ret2)
 {
     int res[2];
 
-    int* resGpu = gpu::AllocOnGpu<int>(2);
+    GpuMemOwner<int> resGpu;
+    resGpu.Alloc(2);
 
-    CallTestGpuKernel(resGpu);
+    gpu::CallTestGpuKernel(resGpu.ptr);
 
-    gpu::CopyFromGpu(res, resGpu, 2);
+    resGpu.CopyFromGpu(res);
 
     ret1 = res[0];
     ret2 = res[1];
 }
 
-} // namespace lsst::afw::math::detail::gpu ends
-
 namespace {
 
 //calculates sum of each image in 'images' vector
 template <typename ResultT, typename InT>
-vector<ResultT> SumsOfImages(const vector< ImageBuffer<InT> >&  images)
+vector<ResultT> SumsOfImages(const vector< GpuBuffer2D<InT> >&  images)
 {
     int n = int(images.size());
     vector<ResultT> sum(n);
@@ -681,14 +219,14 @@ vector<ResultT> SumsOfImages(const vector< ImageBuffer<InT> >&  images)
 */
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_LC_Img(
-    const ImageBuffer<InPixelT>& inImage,
+    const GpuBuffer2D<InPixelT>& inImage,
     const vector<double>& colPos,
     const vector<double>& rowPos,
     const std::vector< afwMath::Kernel::SpatialFunctionPtr >& sFn,
     const vector<double*>& sFnValGPUPtr, //output
     double** sFnValGPU,    //output
     SpatialFunctionType_t sfType,
-    ImageBuffer<OutPixelT>&  outImage, //output
+    GpuBuffer2D<OutPixelT>&  outImage, //output
     KerPixel*   basisKernelsListGPU,
     int kernelW, int kernelH,
     const vector<double>&   basisKernelSums,   //input
@@ -699,32 +237,32 @@ void GPU_ConvolutionImage_LC_Img(
     const int kernelN = sFn.size();
 
     //transfer input image
-    gpu::GpuMemOwner<InPixelT > inImageGPU;
+    GpuMemOwner<InPixelT > inImageGPU;
     inImageGPU.Transfer(inImage);
     if (inImageGPU.ptr == NULL)  {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input image");
     }
     // allocate output image planes on GPU
-    gpu::GpuMemOwner<OutPixelT> outImageGPU;
+    GpuMemOwner<OutPixelT> outImageGPU;
     outImageGPU.Alloc( outImage.Size());
     if (outImageGPU.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for output image");
     }
     //transfer coordinate tranform data
-    gpu::GpuMemOwner<double> colPosGPU_Owner;
+    GpuMemOwner<double> colPosGPU_Owner;
     colPosGPU_Owner.TransferVec(colPos);
     if (colPosGPU_Owner.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException,
                           "Not enough memory on GPU for row coordinate tranformation data");
     }
-    gpu::GpuMemOwner<double> rowPosGPU_Owner;
+    GpuMemOwner<double> rowPosGPU_Owner;
     rowPosGPU_Owner.TransferVec(rowPos);
     if (rowPosGPU_Owner.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException,
                           "Not enough memory on GPU for column coordinate tranformation data");
     }
     vector< double* >                     sFnParamsGPUPtr(kernelN);
-    vector< gpu::GpuMemOwner<double> >    sFnParamsGPU_Owner(kernelN);
+    vector< GpuMemOwner<double> >    sFnParamsGPU_Owner(kernelN);
 
     //transfer sfn parameters to GPU
     for (int i = 0; i < kernelN; i++) {
@@ -735,7 +273,7 @@ void GPU_ConvolutionImage_LC_Img(
         }
     }
 
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
 
     for (int i = 0; i < kernelN; i++)
     {
@@ -789,15 +327,15 @@ void GPU_ConvolutionImage_LC_Img(
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
     }
 
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     //transfer basis kernel sums
     if (doNormalize) {
-        gpu::GpuMemOwner<double> basisKernelSumsGPU;
+        GpuMemOwner<double> basisKernelSumsGPU;
         basisKernelSumsGPU.TransferVec(basisKernelSums);
 
         bool isDivideByZero = false;
-        gpu::GpuMemOwner<bool> isDivideByZeroGPU;
+        GpuMemOwner<bool> isDivideByZeroGPU;
         isDivideByZeroGPU.Transfer(&isDivideByZero, 1);
 
         gpu::Call_NormalizationImageValues(
@@ -812,7 +350,7 @@ void GPU_ConvolutionImage_LC_Img(
         if (cudaGetLastError() != cudaSuccess) {
             throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
         }
-        gpu::CopyFromGpu<bool>(&isDivideByZero, isDivideByZeroGPU.ptr, 1);
+        CopyFromGpu<bool>(&isDivideByZero, isDivideByZeroGPU.ptr, 1);
         if (isDivideByZero) {
             throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
         }
@@ -834,7 +372,7 @@ void GPU_ConvolutionImage_LC_Img(
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
     }
 
-    gpu::CopyFromGpu(outImage.img, outImageGPU.ptr, outImage.Size() );
+    CopyFromGpu(outImage.img, outImageGPU.ptr, outImage.Size() );
 
 }
 
@@ -842,12 +380,12 @@ void GPU_ConvolutionImage_LC_Img(
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_LinearCombinationKernel(
-    ImageBuffer<InPixelT>& inImage,
+    GpuBuffer2D<InPixelT>& inImage,
     vector<double> colPos,
     vector<double> rowPos,
     std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn,
-    ImageBuffer<OutPixelT>&                outImage,
-    std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+    GpuBuffer2D<OutPixelT>&                outImage,
+    std::vector< GpuBuffer2D<KerPixel> >&  basisKernels,
     SpatialFunctionType_t sfType,
     bool doNormalize
 )
@@ -868,12 +406,12 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
     }
 
     // transfer array of basis kernels on GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelsGPU;
+    GpuMemOwner<KerPixel > basisKernelsGPU;
     basisKernelsGPU.Alloc(kernelSize * kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         KerPixel* kernelBeg = basisKernelsGPU.ptr + (kernelSize * i);
-        gpu::CopyToGpu(kernelBeg,
+        CopyToGpu(kernelBeg,
                        basisKernels[i].img,
                        kernelSize
                       );
@@ -881,7 +419,7 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
 
     // allocate array of spatial function value images on GPU
     vector< double* >                     sFnValGPUPtr(kernelN);
-    vector< gpu::GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
+    vector< GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         sFnValGPUPtr[i] = sFnValGPU_Owner[i].Alloc(outWidth * outHeight);
@@ -889,10 +427,10 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
             throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for spatial function values");
         }
     }
-    gpu::GpuMemOwner<double*> sFnValGPU;
+    GpuMemOwner<double*> sFnValGPU;
     sFnValGPU.TransferVec(sFnValGPUPtr);
 
-    gpu::GpuMemOwner<double > normGPU_Owner;
+    GpuMemOwner<double > normGPU_Owner;
     vector<double> basisKernelSums(kernelN);
     if (doNormalize) {
         //allocate normalization coeficients
@@ -924,28 +462,28 @@ void GPU_ConvolutionImage_LinearCombinationKernel(
 
 #define INSTANTIATE_GPU_ConvolutionImage_LinearCombinationKernel(OutPixelT,InPixelT)  \
         template void GPU_ConvolutionImage_LinearCombinationKernel<OutPixelT,InPixelT>( \
-                    ImageBuffer<InPixelT>& inImage, \
+                    GpuBuffer2D<InPixelT>& inImage, \
                     vector<double> colPos, \
                     vector<double> rowPos, \
                     std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn, \
-                    ImageBuffer<OutPixelT>&                outImage, \
-                    std::vector< ImageBuffer<KerPixel> >&  basisKernels, \
+                    GpuBuffer2D<OutPixelT>&                outImage, \
+                    std::vector< GpuBuffer2D<KerPixel> >&  basisKernels, \
                     SpatialFunctionType_t sfType, \
                     bool doNormalize \
                     );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_LinearCombinationKernel(
-    ImageBuffer<InPixelT>& inImageImg,
-    ImageBuffer<VarPixel>& inImageVar,
-    ImageBuffer<MskPixel>& inImageMsk,
+    GpuBuffer2D<InPixelT>& inImageImg,
+    GpuBuffer2D<VarPixel>& inImageVar,
+    GpuBuffer2D<MskPixel>& inImageMsk,
     vector<double> colPos,
     vector<double> rowPos,
     std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn,
-    ImageBuffer<OutPixelT>&                outImageImg,
-    ImageBuffer<VarPixel>&                 outImageVar,
-    ImageBuffer<MskPixel>&                 outImageMsk,
-    std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+    GpuBuffer2D<OutPixelT>&                outImageImg,
+    GpuBuffer2D<VarPixel>&                 outImageVar,
+    GpuBuffer2D<MskPixel>&                 outImageMsk,
+    std::vector< GpuBuffer2D<KerPixel> >&  basisKernels,
     SpatialFunctionType_t sfType,
     bool doNormalize
 )
@@ -970,12 +508,12 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     }
 
     // transfer basis kernels to GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelsGPU;
+    GpuMemOwner<KerPixel > basisKernelsGPU;
     basisKernelsGPU.Alloc(kernelSize * kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         KerPixel* kernelBeg = basisKernelsGPU.ptr + (kernelSize * i);
-        gpu::CopyToGpu(kernelBeg,
+        CopyToGpu(kernelBeg,
                        basisKernels[i].img,
                        kernelSize
                       );
@@ -983,7 +521,7 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
 
     //alloc sFn images on GPU
     vector< double* >                     sFnValGPUPtr(kernelN);
-    vector< gpu::GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
+    vector< GpuMemOwner<double > >   sFnValGPU_Owner(kernelN);
 
     for (int i = 0; i < kernelN; i++) {
         sFnValGPUPtr[i] = sFnValGPU_Owner[i].Alloc(outWidth * outHeight);
@@ -991,11 +529,11 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
             throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for spatial function values");
         }
     }
-    gpu::GpuMemOwner<double*> sFnValGPU;
+    GpuMemOwner<double*> sFnValGPU;
     sFnValGPU.TransferVec(sFnValGPUPtr);
 
     //allocate normalization coeficients image on GPU
-    gpu::GpuMemOwner<double > normGPU_Owner;
+    GpuMemOwner<double > normGPU_Owner;
     std::vector<KerPixel> basisKernelSums(kernelN);
     if (doNormalize) {
         //allocate normalization coeficients
@@ -1023,30 +561,30 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     );
 
     //transfer input image planes to GPU
-    gpu::GpuMemOwner<VarPixel> inImageGPUVar;
+    GpuMemOwner<VarPixel> inImageGPUVar;
     inImageGPUVar.Transfer(inImageVar);
     if (inImageGPUVar.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input variance");
     }
-    gpu::GpuMemOwner<MskPixel> inImageGPUMsk;
+    GpuMemOwner<MskPixel> inImageGPUMsk;
     inImageGPUMsk.Transfer(inImageMsk);
     if (inImageGPUMsk.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input mask");
     }
 
     // allocate output image planes on GPU
-    gpu::GpuMemOwner<VarPixel > outImageGPUVar;
+    GpuMemOwner<VarPixel > outImageGPUVar;
     outImageGPUVar.Alloc( outImageVar.Size());
     if (outImageGPUVar.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for output variance");
     }
-    gpu::GpuMemOwner<MskPixel > outImageGPUMsk;
+    GpuMemOwner<MskPixel > outImageGPUMsk;
     outImageGPUMsk.Alloc( outImageMsk.Size());
     if (outImageGPUMsk.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for output mask");
     }
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     cudaGetLastError(); //clear error status
     mathDetailGpu::Call_ConvolutionKernel_LC_Var(
@@ -1065,22 +603,22 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
     if (cudaGetLastError() != cudaSuccess)
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
 
-    gpu::CopyFromGpu(outImageVar.img, outImageGPUVar.ptr, outImageVar.Size() );
-    gpu::CopyFromGpu(outImageMsk.img, outImageGPUMsk.ptr, outImageMsk.Size() );
+    CopyFromGpu(outImageVar.img, outImageGPUVar.ptr, outImageVar.Size() );
+    CopyFromGpu(outImageMsk.img, outImageGPUMsk.ptr, outImageMsk.Size() );
 }
 
 #define INSTANTIATE_GPU_ConvolutionMI_LinearCombinationKernel(OutPixelT,InPixelT)  \
         template void GPU_ConvolutionMI_LinearCombinationKernel<OutPixelT,InPixelT>( \
-                    ImageBuffer<InPixelT>& inImageImg, \
-                    ImageBuffer<VarPixel>& inImageVar, \
-                    ImageBuffer<MskPixel>& inImageMsk, \
+                    GpuBuffer2D<InPixelT>& inImageImg, \
+                    GpuBuffer2D<VarPixel>& inImageVar, \
+                    GpuBuffer2D<MskPixel>& inImageMsk, \
                     vector<double> colPos, \
                     vector<double> rowPos, \
                     std::vector< afwMath::Kernel::SpatialFunctionPtr > sFn, \
-                    ImageBuffer<OutPixelT>&                outImageImg, \
-                    ImageBuffer<VarPixel>&                 outImageVar, \
-                    ImageBuffer<MskPixel>&                 outImageMsk, \
-                    std::vector< ImageBuffer<KerPixel> >&  basisKernels, \
+                    GpuBuffer2D<OutPixelT>&                outImageImg, \
+                    GpuBuffer2D<VarPixel>&                 outImageVar, \
+                    GpuBuffer2D<MskPixel>&                 outImageMsk, \
+                    std::vector< GpuBuffer2D<KerPixel> >&  basisKernels, \
                     SpatialFunctionType_t sfType, \
                     bool doNormalize  \
                     );
@@ -1088,39 +626,39 @@ void GPU_ConvolutionMI_LinearCombinationKernel(
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_SpatiallyInvariantKernel(
-    ImageBuffer<InPixelT>&    inImage,
-    ImageBuffer<OutPixelT>&   outImage,
-    ImageBuffer<KerPixel>&    kernel
+    GpuBuffer2D<InPixelT>&    inImage,
+    GpuBuffer2D<OutPixelT>&   outImage,
+    GpuBuffer2D<KerPixel>&    kernel
 )
 {
     int kernelW = kernel.width;
     int kernelH = kernel.height;
 
-    gpu::GpuMemOwner<InPixelT> inImageGPU;
+    GpuMemOwner<InPixelT> inImageGPU;
     inImageGPU.Transfer(inImage);
     if (inImageGPU.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU for input image");
     }
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
 
     // allocate array of kernels on GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelGPU;
+    GpuMemOwner<KerPixel > basisKernelGPU;
     basisKernelGPU.Transfer(kernel);
     if (basisKernelGPU.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for kernel");
     }
     // allocate array of output images on GPU   (one output image per kernel)
     vector< OutPixelT* > outImageGPUPtr(1);
-    vector< gpu::GpuMemOwner<OutPixelT> > outImageGPU_Owner(1);
+    vector< GpuMemOwner<OutPixelT> > outImageGPU_Owner(1);
 
     outImageGPUPtr[0] = outImageGPU_Owner[0].Alloc( outImage.Size());
     if (outImageGPUPtr[0] == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for output image");
     }
-    gpu::GpuMemOwner<OutPixelT*> outImageGPU;
+    GpuMemOwner<OutPixelT*> outImageGPU;
     outImageGPU.TransferVec(outImageGPUPtr);
 
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     cudaGetLastError(); //clear error status
     mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<OutPixelT, InPixelT>(
@@ -1135,49 +673,49 @@ void GPU_ConvolutionImage_SpatiallyInvariantKernel(
     if (cudaGetLastError() != cudaSuccess) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU calculation failed to run");
     }
-    gpu::CopyFromGpu(outImage.img, outImageGPUPtr[0], outImage.Size() );
+    CopyFromGpu(outImage.img, outImageGPUPtr[0], outImage.Size() );
 }
 
 #define INSTANTIATE_GPU_ConvolutionImage_SpatiallyInvariantKernel(OutPixelT,InPixelT)  \
         template void GPU_ConvolutionImage_SpatiallyInvariantKernel<OutPixelT,InPixelT>( \
-                    ImageBuffer<InPixelT>&    inImage, \
-                    ImageBuffer<OutPixelT>&   outImage, \
-                    ImageBuffer<KerPixel>&    kernel  \
+                    GpuBuffer2D<InPixelT>&    inImage, \
+                    GpuBuffer2D<OutPixelT>&   outImage, \
+                    GpuBuffer2D<KerPixel>&    kernel  \
                     );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_SpatiallyInvariantKernel(
-    ImageBuffer<InPixelT>&    inImageImg,
-    ImageBuffer<VarPixel>&    inImageVar,
-    ImageBuffer<MskPixel>&    inImageMsk,
-    ImageBuffer<OutPixelT>&   outImageImg,
-    ImageBuffer<VarPixel>&    outImageVar,
-    ImageBuffer<MskPixel>&    outImageMsk,
-    ImageBuffer<KerPixel>&    kernel
+    GpuBuffer2D<InPixelT>&    inImageImg,
+    GpuBuffer2D<VarPixel>&    inImageVar,
+    GpuBuffer2D<MskPixel>&    inImageMsk,
+    GpuBuffer2D<OutPixelT>&   outImageImg,
+    GpuBuffer2D<VarPixel>&    outImageVar,
+    GpuBuffer2D<MskPixel>&    outImageMsk,
+    GpuBuffer2D<KerPixel>&    kernel
 )
 {
     int kernelW = kernel.width;
     int kernelH = kernel.height;
 
-    gpu::GpuMemOwner<InPixelT> inImageGPUImg;
+    GpuMemOwner<InPixelT> inImageGPUImg;
     inImageGPUImg.Transfer(inImageImg);
     if (inImageGPUImg.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for input image");
     }
-    gpu::GpuMemOwner<VarPixel> inImageGPUVar;
+    GpuMemOwner<VarPixel> inImageGPUVar;
     inImageGPUVar.Transfer(inImageVar);
     if (inImageGPUVar.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for input variance");
     }
-    gpu::GpuMemOwner<MskPixel> inImageGPUMsk;
+    GpuMemOwner<MskPixel> inImageGPUMsk;
     inImageGPUMsk.Transfer(inImageMsk);
     if (inImageGPUMsk.ptr == NULL) {
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for input mask");
     }
-    int shMemSize = gpu::GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
+    int shMemSize = GetCudaCurSMSharedMemorySize() - shMemBytesUsed;
 
     //allocate kernel on GPU
-    gpu::GpuMemOwner<KerPixel > basisKernelGPU;
+    GpuMemOwner<KerPixel > basisKernelGPU;
     basisKernelGPU.Transfer(kernel);
     if (basisKernelGPU.ptr == NULL)
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for kernel");
@@ -1187,9 +725,9 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
     vector< VarPixel*  > outImageGPUPtrVar(1);
     vector< MskPixel*  > outImageGPUPtrMsk(1);
 
-    vector< gpu::GpuMemOwner<OutPixelT> > outImageGPU_OwnerImg(1);
-    vector< gpu::GpuMemOwner<VarPixel > > outImageGPU_OwnerVar(1);
-    vector< gpu::GpuMemOwner<MskPixel > > outImageGPU_OwnerMsk(1);
+    vector< GpuMemOwner<OutPixelT> > outImageGPU_OwnerImg(1);
+    vector< GpuMemOwner<VarPixel > > outImageGPU_OwnerVar(1);
+    vector< GpuMemOwner<MskPixel > > outImageGPU_OwnerMsk(1);
 
     outImageGPUPtrImg[0] = outImageGPU_OwnerImg[0].Alloc( outImageImg.Size());
     if (outImageGPUPtrImg[0] == NULL) {
@@ -1204,14 +742,14 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
         throw LSST_EXCEPT(GpuMemoryException, "Not enough memory on GPU available for output mask");
     }
 
-    gpu::GpuMemOwner<OutPixelT*> outImageGPUImg;
+    GpuMemOwner<OutPixelT*> outImageGPUImg;
     outImageGPUImg.TransferVec(outImageGPUPtrImg);
-    gpu::GpuMemOwner<VarPixel*> outImageGPUVar;
+    GpuMemOwner<VarPixel*> outImageGPUVar;
     outImageGPUVar.TransferVec(outImageGPUPtrVar);
-    gpu::GpuMemOwner<MskPixel*> outImageGPUMsk;
+    GpuMemOwner<MskPixel*> outImageGPUMsk;
     outImageGPUMsk.TransferVec(outImageGPUPtrMsk);
 
-    int blockN = gpu::CalcBlockCount( gpu::GetCudaCurSMCount());
+    int blockN = CalcBlockCount( GetCudaCurSMCount());
 
     mathDetailGpu::Call_SpatiallyInvariantImageConvolutionKernel<OutPixelT, InPixelT>(
         inImageGPUImg.ptr, inImageImg.width, inImageImg.height,
@@ -1228,7 +766,7 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
         }
     }
 
-    gpu::CopyFromGpu(outImageImg.img, outImageGPUPtrImg[0], outImageImg.Size() );
+    CopyFromGpu(outImageImg.img, outImageGPUPtrImg[0], outImageImg.Size() );
 
     basisKernelGPU.CopyToGpu(kernel);
 
@@ -1259,19 +797,19 @@ void GPU_ConvolutionMI_SpatiallyInvariantKernel(
     if (cudaGetLastError() != cudaSuccess) {
         throw LSST_EXCEPT(GpuRuntimeErrorException, "GPU mask calculation failed to run");
     }
-    gpu::CopyFromGpu(outImageVar.img, outImageGPUPtrVar[0], outImageVar.Size() );
-    gpu::CopyFromGpu(outImageMsk.img, outImageGPUPtrMsk[0], outImageMsk.Size() );
+    CopyFromGpu(outImageVar.img, outImageGPUPtrVar[0], outImageVar.Size() );
+    CopyFromGpu(outImageMsk.img, outImageGPUPtrMsk[0], outImageMsk.Size() );
 }
 
 #define INSTANTIATE_GPU_ConvolutionMI_SpatiallyInvariantKernel(OutPixelT,InPixelT)  \
         template void GPU_ConvolutionMI_SpatiallyInvariantKernel<OutPixelT,InPixelT>( \
-                    ImageBuffer<InPixelT>&    inImageImg,  \
-                    ImageBuffer<VarPixel>&    inImageVar,  \
-                    ImageBuffer<MskPixel>&    inImageMsk,  \
-                    ImageBuffer<OutPixelT>&   outImageImg, \
-                    ImageBuffer<VarPixel>&    outImageVar, \
-                    ImageBuffer<MskPixel>&    outImageMsk, \
-                    ImageBuffer<KerPixel>&    kernel   \
+                    GpuBuffer2D<InPixelT>&    inImageImg,  \
+                    GpuBuffer2D<VarPixel>&    inImageVar,  \
+                    GpuBuffer2D<MskPixel>&    inImageMsk,  \
+                    GpuBuffer2D<OutPixelT>&   outImageImg, \
+                    GpuBuffer2D<VarPixel>&    outImageVar, \
+                    GpuBuffer2D<MskPixel>&    outImageMsk, \
+                    GpuBuffer2D<KerPixel>&    kernel   \
                     );
 
 /*

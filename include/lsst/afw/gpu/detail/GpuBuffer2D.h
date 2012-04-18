@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,22 +25,20 @@
 /**
  * @file
  *
- * @brief contains ImageBuffer class (for simple handling of images)
+ * @brief contains GpuBuffer2D class (for simple handling of images or 2D arrays)
  *
  * @author Kresimir Cosic
  *
  * @ingroup afw
  */
 
-#include "convCUDA.h"
-
 namespace lsst {
 namespace afw {
-namespace math {
+namespace gpu {
 namespace detail {
 
 /**
- * @brief Class for representing an image buffer
+ * @brief Class for representing an image or 2D array in general)
  *
  * Allocates width*height pixels memory for image. Automatically allocates and
  * releases memory for buffer (this class is the owner of the buffer).
@@ -53,7 +51,7 @@ namespace detail {
  * @ingroup afw
  */
 template <typename PixelT>
-class ImageBuffer
+class GpuBuffer2D
 {
 public:
     typedef lsst::afw::image::Image<PixelT>  ImageT;
@@ -62,10 +60,10 @@ public:
     int         width;
     int         height;
 
-    ImageBuffer() : img(NULL) {}
+    GpuBuffer2D() : img(NULL) {}
 
     //copying is not allowed except for uninitialized image buffers
-    ImageBuffer(const ImageBuffer& x) {
+    GpuBuffer2D(const GpuBuffer2D& x) {
         assert(x.img == NULL);
         img = NULL;
     };
@@ -78,7 +76,7 @@ public:
         try {
             img = new PixelT [width*height];
         } catch(...) {
-            throw LSST_EXCEPT(pexExcept::MemoryException, "ImageBuffer:Init - not enough memory");
+            throw LSST_EXCEPT(pexExcept::MemoryException, "GpuBuffer2D:Init - not enough memory");
         }
 
         //copy input image data to buffer
@@ -100,21 +98,21 @@ public:
         try {
             img = new PixelT [width*height];
         } catch(...) {
-            throw LSST_EXCEPT(pexExcept::MemoryException, "ImageBuffer:Init - not enough memory");
+            throw LSST_EXCEPT(pexExcept::MemoryException, "GpuBuffer2D:Init - not enough memory");
         }
     }
 
-    ImageBuffer(const ImageT& image) {
+    GpuBuffer2D(const ImageT& image) {
         img = NULL;
         Init(image);
     }
 
-    ImageBuffer(int width, int height) {
+    GpuBuffer2D(int width, int height) {
         img = NULL;
         Init(width, height);
     }
 
-    ~ImageBuffer() {
+    ~GpuBuffer2D() {
         delete[] img;
     }
 
@@ -145,7 +143,7 @@ public:
         return img[x+ y*width];
     }
 
-    void CopyFromBuffer(const ImageBuffer<PixelT>& buffer, int startX, int startY)
+    void CopyFromBuffer(const GpuBuffer2D<PixelT>& buffer, int startX, int startY)
     {
         assert(img != NULL);
         for (int i = 0; i < height; ++i) {

@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,19 +11,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
- * \file 
+ * \file
  *
  * \ingroup afw
  *
@@ -47,13 +47,15 @@
 
 #include "lsst/afw/geom.h"
 
+#include "lsst/afw/gpu/DevicePreference.h"
+
 namespace lsst {
 namespace afw {
 namespace image {
     class Wcs;
 }
 namespace math {
-       
+
     /**
     * \brief Lanczos warping: accurate but slow and can introduce ringing artifacts.
     *
@@ -71,11 +73,11 @@ namespace math {
             SeparableKernel(2 * order, 2 * order,
                 LanczosFunction1<Kernel::Pixel>(order), LanczosFunction1<Kernel::Pixel>(order))
         {}
-        
+
         virtual ~LanczosWarpingKernel() {}
-        
+
         virtual Kernel::Ptr clone() const;
-        
+
         int getOrder() const;
     };
 
@@ -95,7 +97,7 @@ namespace math {
         {}
 
         virtual ~BilinearWarpingKernel() {}
-        
+
         virtual Kernel::Ptr clone() const;
 
         /**
@@ -108,7 +110,7 @@ namespace math {
         class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
             typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
-    
+
             /**
              * \brief Construct a Bilinear interpolation function
              */
@@ -120,13 +122,13 @@ namespace math {
                 this->_params[0] = fracPos;
             }
             virtual ~BilinearFunction1() {}
-            
+
             virtual Function1Ptr clone() const {
                 return Function1Ptr(new BilinearFunction1(this->_params[0]));
             }
-            
+
             virtual Kernel::Pixel operator() (double x) const;
-            
+
             virtual std::string toString(std::string const& ="") const;
         };
     };
@@ -147,7 +149,7 @@ namespace math {
         {}
 
         virtual ~NearestWarpingKernel() {}
-        
+
         virtual Kernel::Ptr clone() const;
 
         /**
@@ -160,7 +162,7 @@ namespace math {
         class NearestFunction1: public Function1<Kernel::Pixel> {
         public:
             typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
-    
+
             /**
              * \brief Construct a Nearest interpolation function
              */
@@ -172,17 +174,17 @@ namespace math {
                 this->_params[0] = fracPos;
             }
             virtual ~NearestFunction1() {}
-            
+
             virtual Function1Ptr clone() const {
                 return Function1Ptr(new NearestFunction1(this->_params[0]));
             }
-            
+
             virtual Kernel::Pixel operator() (double x) const;
-            
+
             virtual std::string toString(std::string const& ="") const;
         };
     };
-    
+
     boost::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name);
 
     template<typename DestExposureT, typename SrcExposureT>
@@ -192,7 +194,8 @@ namespace math {
         SeparableKernel &warpingKernel, int const interpLength=0,
         typename DestExposureT::MaskedImageT::SinglePixel padValue=
           lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
-          typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category())
+          typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                     );
 
     template<typename DestImageT, typename SrcImageT>
@@ -203,7 +206,8 @@ namespace math {
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel, int const interpLength=0,
         typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                  );
 
     template<typename DestImageT, typename SrcImageT>
@@ -214,7 +218,8 @@ namespace math {
         lsst::afw::geom::AffineTransform const &affineTransform,
         int const interpLength=0,
         typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                  );
 
 
@@ -227,17 +232,18 @@ namespace math {
         lsst::afw::geom::Point2D const &centerPixel,
         int const interpLength=0,
         typename DestImageT::SinglePixel padValue=lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
+        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                          );
-    
+
     namespace details {
         template <typename A, typename B>
         bool isSameObject(A const&, B const&) { return false; }
-        
+
         template <typename A>
         bool isSameObject(A const& a, A const& b) { return &a == &b; }
     }
-       
+
 }}} // lsst::afw::math
 
 #endif // !defined(LSST_AFW_MATH_WARPEXPOSURE_H)

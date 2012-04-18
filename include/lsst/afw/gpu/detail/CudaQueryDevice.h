@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,7 +25,7 @@
 /**
  * @file
  *
- * @brief Exposes some simple procedures to query and select GPU devices
+ * @brief Functions to query the properties of currently selected GPU device
  *
  * @author Kresimir Cosic
  *
@@ -34,9 +34,8 @@
 
 namespace lsst {
 namespace afw {
-namespace math {
-namespace detail {
 namespace gpu {
+namespace detail {
 
 /// prints some cuda device information to stdout
 void PrintCudaDeviceInfo();
@@ -50,28 +49,17 @@ int GetCudaCurSMSharedMemorySize();
 /// returns global memory size of currently selected cuda device
 int GetCudaCurGlobalMemorySize();
 
-/// returns number of registers per block of currently selected cuda device
+/// returns the number of registers per block of currently selected cuda device
 int GetCudaCurSMRegisterCount();
 
-/// returns number streaming multiprocessors of currently selected cuda device
+/// returns the number of streaming multiprocessors of currently selected cuda device
 int GetCudaCurSMCount();
 
 /// returns whether currently selected cuda device supports double precision
 bool GetCudaCurIsDoublePrecisionSupported();
 
-/// selects a cuda device
-void SetCudaDevice(int devId);
-
-/// reserves cuda device
-void CudaReserveDevice();
-
-/// frees resources and releases current cuda device
-void CudaThreadExit();
-
-} //namespace gpu ends
-
 }
 }
 }
-} //namespace lsst::afw::math::detail ends
+} //namespace lsst::afw::gpu::detail ends
 
