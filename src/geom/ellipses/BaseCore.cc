@@ -158,9 +158,11 @@ bool BaseCore::operator==(BaseCore const & other) const {
 
 BaseCore & BaseCore::operator=(BaseCore const & other) {
     if (&other != this) {
-        double ixx, iyy, ixy;
-        other._assignToAxes(ixx, iyy, ixy);
-        _assignFromAxes(ixx, iyy, ixy);
+        // We use Axes instead of Quadrupole here because it allows us to copy Axes without
+        // implicitly normalizing them.
+        double a, b, theta;
+        other._assignToAxes(a, b, theta);
+        _assignFromAxes(a, b, theta);
     }
     return *this;
 }
@@ -170,6 +172,10 @@ BaseCore::Jacobian BaseCore::dAssign(BaseCore const & other) {
         this->operator=(other);
         return Jacobian::Identity();
     }
+    // We use Quadrupole instead of Axes here because the ambiguity of the position angle
+    // in the circular case causes some of the Jacobians to/from Axes to be undefined for
+    // exact circles.  Quadrupoles don't have that problem, and the Axes-to-Axes case is
+    // handled by the above if block.
     double ixx, iyy, ixy;
     Jacobian rhs = other._dAssignToQuadrupole(ixx, iyy, ixy);
     Jacobian lhs = _dAssignFromQuadrupole(ixx, iyy, ixy);
