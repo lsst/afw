@@ -23,6 +23,7 @@
  */
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/Angle.h"
 #include <boost/format.hpp>
 #include <map>
@@ -102,25 +103,23 @@ void BaseCore::grow(double buffer) {
 }
 
 void BaseCore::scale(double factor) {
-    double ixx, iyy, ixy;
-    _assignToQuadrupole(ixx, iyy, ixy);
-    factor *= factor;
-    ixx *= factor;
-    iyy *= factor;
-    ixy *= factor;
-    _assignFromQuadrupole(ixx, iyy, ixy);
+    double a, b, theta;
+    _assignToAxes(a, b, theta);
+    a *= factor;
+    b *= factor;
+    _assignFromAxes(a, b, theta);
 }
 
 double BaseCore::getArea() const {
-    double ixx, iyy, ixy;
-    _assignToQuadrupole(ixx, iyy, ixy);
-    return std::sqrt(ixx * iyy - ixy * ixy) * afwGeom::PI;
+    double a, b, theta;
+    _assignToAxes(a, b, theta);
+    return a * b * afwGeom::PI;
 }
 
 double BaseCore::getDeterminantRadius() const {
-    double ixx, iyy, ixy;
-    _assignToQuadrupole(ixx, iyy, ixy);
-    return std::pow(ixx * iyy - ixy * ixy, 0.25);
+    double a, b, theta;
+    _assignToAxes(a, b, theta);
+    return std::sqrt(a * b);
 }
 
 double BaseCore::getTraceRadius() const {
@@ -160,13 +159,17 @@ bool BaseCore::operator==(BaseCore const & other) const {
 BaseCore & BaseCore::operator=(BaseCore const & other) {
     if (&other != this) {
         double ixx, iyy, ixy;
-        other._assignToQuadrupole(ixx, iyy, ixy);
-        _assignFromQuadrupole(ixx, iyy, ixy);
+        other._assignToAxes(ixx, iyy, ixy);
+        _assignFromAxes(ixx, iyy, ixy);
     }
     return *this;
 }
 
 BaseCore::Jacobian BaseCore::dAssign(BaseCore const & other) {
+    if (getName() == other.getName()) {
+        this->operator=(other);
+        return Jacobian::Identity();
+    }
     double ixx, iyy, ixy;
     Jacobian rhs = other._dAssignToQuadrupole(ixx, iyy, ixy);
     Jacobian lhs = _dAssignFromQuadrupole(ixx, iyy, ixy);
