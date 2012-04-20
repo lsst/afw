@@ -126,15 +126,21 @@ class LeastSquaresTestCase(unittest.TestCase):
 
     def testSingular(self):
         dimension = 10
-        nData = 500
-        indep = numpy.random.randn(dimension, dimension-1)
-        factors = numpy.random.randn(dimension-1, nData)
-        design = numpy.dot(indep, factors).transpose()
+        nData = 100
+        svIn = (numpy.random.randn(dimension) + 1.0)**2 + 1.0
+        svIn = numpy.sort(svIn)[::-1]
+        svIn[-1] = 0.0
+        svIn[-2] = svIn[0] * 1E-4
+        # Just use SVD to get a pair of orthogonal matrices; we'll use our own singular values
+        # so we can control the stability of the matrix.
+        u, s, vt = numpy.linalg.svd(numpy.random.randn(dimension, nData), full_matrices=False)
+        design = numpy.dot(u * svIn, vt).transpose()
         data = numpy.random.randn(nData)
         fisher = numpy.dot(design.transpose(), design)
         rhs = numpy.dot(design.transpose(), data)
-        threshold = sys.float_info.epsilon**0.5
+        threshold = 10 * sys.float_info.epsilon
         solution, residues, rank, sv = numpy.linalg.lstsq(design, data, rcond=threshold)
+        self.assertClose(svIn, sv)
         cov = numpy.linalg.pinv(fisher, rcond=threshold)
         s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
         s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
@@ -142,13 +148,12 @@ class LeastSquaresTestCase(unittest.TestCase):
         self.check(s_svd, solution, rank, fisher, cov, sv)
         self.check(s_design_eigen, solution, rank, fisher, cov, sv)
         self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
-
-        s_svd.setThreshold((sv[-3] / sv[0]) * (1.0 - sys.float_info.epsilon))
-        s_design_eigen.setThreshold((sv[-3] / sv[0])**2 * (1.0 - sys.float_info.epsilon))
-        s_normal_eigen.setThreshold((sv[-3] / sv[0])**2 * (1.0 - sys.float_info.epsilon))
-        self.assertEqual(s_svd.getRank(), dimension - 3)
-        self.assertEqual(s_design_eigen.getRank(), dimension - 3)
-        self.assertEqual(s_normal_eigen.getRank(), dimension - 3)
+        s_svd.setThreshold(1E-3)
+        s_design_eigen.setThreshold(1E-6)
+        s_normal_eigen.setThreshold(1E-6)
+        self.assertEqual(s_svd.getRank(), dimension - 2)
+        self.assertEqual(s_design_eigen.getRank(), dimension - 2)
+        self.assertEqual(s_normal_eigen.getRank(), dimension - 2)
         # Just check that solutions are different from before, but consistent with each other;
         # I can't figure out how get numpy.lstsq to deal with the thresholds appropriately to
         # test against that.
