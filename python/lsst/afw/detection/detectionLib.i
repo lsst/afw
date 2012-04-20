@@ -68,7 +68,6 @@ Python interface to lsst::afw::detection classes
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 %import "lsst/afw/math/mathLib.i"
-%import "lsst/afw/math/shapelets/shapeletsLib.i"
 %include "ndarray.i"
 
 %lsst_exceptions()
