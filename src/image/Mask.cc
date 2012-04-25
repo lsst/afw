@@ -45,7 +45,10 @@
 #include <list>
 #include <string>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/lambda/lambda.hpp"
+#pragma clang diagnostic pop
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 

@@ -28,7 +28,10 @@
  */
 #include <iostream>
 #include "boost/mpl/vector.hpp"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/lambda/lambda.hpp"
+#pragma clang diagnostic pop
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
