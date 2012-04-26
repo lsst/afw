@@ -36,70 +36,57 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-namespace gpu {
 
 bool IsSufficientSharedMemoryAvailable_ForImgBlock(int filterW, int filterH, int pixSize);
 bool IsSufficientSharedMemoryAvailable_ForImgAndMaskBlock(int filterW, int filterH, int pixSize);
 bool IsSufficientSharedMemoryAvailable_ForSfn(int order, int kernelN);
 
-// returns true when preffered device has been selected
-// returns false when there is no preffered device
-// throws exception when unable to select preffered device
-bool SelectPreferredCudaDevice();
-
-// throws exception when automatic selection fails
-void AutoSelectCudaDevice();
-
-// verifies basic parameters of Cuda device
-void VerifyCudaDevice();
-
-} //namespace gpu ends
 
 enum SpatialFunctionType_t { sftChebyshev, sftPolynomial};
 
 #ifdef GPU_BUILD
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_SpatiallyInvariantKernel(
-        ImageBuffer<InPixelT>&    inImage,
-        ImageBuffer<OutPixelT>&   outImage,
-        ImageBuffer<KerPixel>&    kernel
+        lsst::afw::gpu::detail::GpuBuffer2D<InPixelT>&    inImage,
+        lsst::afw::gpu::detail::GpuBuffer2D<OutPixelT>&   outImage,
+        lsst::afw::gpu::detail::GpuBuffer2D<KerPixel>&    kernel
                                                   );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_SpatiallyInvariantKernel(
-        ImageBuffer<InPixelT>&    inImageImg,
-        ImageBuffer<VarPixel>&    inImageVar,
-        ImageBuffer<MskPixel>&    inImageMsk,
-        ImageBuffer<OutPixelT>&   outImageImg,
-        ImageBuffer<VarPixel>&    outImageVar,
-        ImageBuffer<MskPixel>&    outImageMsk,
-        ImageBuffer<KerPixel>&    kernel
+        lsst::afw::gpu::detail::GpuBuffer2D<InPixelT>&    inImageImg,
+        lsst::afw::gpu::detail::GpuBuffer2D<VarPixel>&    inImageVar,
+        lsst::afw::gpu::detail::GpuBuffer2D<MskPixel>&    inImageMsk,
+        lsst::afw::gpu::detail::GpuBuffer2D<OutPixelT>&   outImageImg,
+        lsst::afw::gpu::detail::GpuBuffer2D<VarPixel>&    outImageVar,
+        lsst::afw::gpu::detail::GpuBuffer2D<MskPixel>&    outImageMsk,
+        lsst::afw::gpu::detail::GpuBuffer2D<KerPixel>&    kernel
                                                );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionImage_LinearCombinationKernel(
-        ImageBuffer<InPixelT>& inImage,
+        lsst::afw::gpu::detail::GpuBuffer2D<InPixelT>& inImage,
         std::vector<double> colPos,
         std::vector<double> rowPos,
         std::vector< lsst::afw::math::Kernel::SpatialFunctionPtr > sFn,
-        ImageBuffer<OutPixelT>&                outImage,
-        std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+        lsst::afw::gpu::detail::GpuBuffer2D<OutPixelT>&                outImage,
+        std::vector< lsst::afw::gpu::detail::GpuBuffer2D<KerPixel> >&  basisKernels,
         SpatialFunctionType_t sfType,
         bool doNormalize
                                                  );
 
 template <typename OutPixelT, typename InPixelT>
 void GPU_ConvolutionMI_LinearCombinationKernel(
-        ImageBuffer<InPixelT>& inImageImg,
-        ImageBuffer<VarPixel>& inImageVar,
-        ImageBuffer<MskPixel>& inImageMsk,
+        lsst::afw::gpu::detail::GpuBuffer2D<InPixelT>& inImageImg,
+        lsst::afw::gpu::detail::GpuBuffer2D<VarPixel>& inImageVar,
+        lsst::afw::gpu::detail::GpuBuffer2D<MskPixel>& inImageMsk,
         std::vector<double> colPos,
         std::vector<double> rowPos,
         std::vector< lsst::afw::math::Kernel::SpatialFunctionPtr > sFn,
-        ImageBuffer<OutPixelT>&                outImageImg,
-        ImageBuffer<VarPixel>&                 outImageVar,
-        ImageBuffer<MskPixel>&                 outImageMsk,
-        std::vector< ImageBuffer<KerPixel> >&  basisKernels,
+        lsst::afw::gpu::detail::GpuBuffer2D<OutPixelT>&                outImageImg,
+        lsst::afw::gpu::detail::GpuBuffer2D<VarPixel>&                 outImageVar,
+        lsst::afw::gpu::detail::GpuBuffer2D<MskPixel>&                 outImageMsk,
+        std::vector< lsst::afw::gpu::detail::GpuBuffer2D<KerPixel> >&  basisKernels,
         SpatialFunctionType_t sfType,
         bool doNormalize
                                               );
