@@ -33,7 +33,7 @@ public:
      */
     template <typename ContainerT>
     void write(ContainerT const & container) {
-        _writeTable(container.getTable());
+        _writeTable(container.getTable(), container.size());
         for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
             _writeRecord(*i);
         }
@@ -44,7 +44,7 @@ public:
 protected:
 
     /// @brief Write a table and its schema.
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table) = 0;
+    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows) = 0;
 
     /// @brief Write an individual record.
     virtual void _writeRecord(BaseRecord const & record) = 0;
