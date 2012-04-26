@@ -584,7 +584,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
         metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList);
     }
 
-    if (!fits_read_image<fits_mask_types>(fileName, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_image<fits_mask_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(FitsException,
             str(boost::format("Failed to read %s HDU %d") % fileName % hdu));
     }
@@ -637,7 +637,7 @@ Mask<MaskPixelT>::Mask(
        metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList);
     }
 
-    if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(FitsException,
                           str(boost::format("Failed to read RAM FITS HDU %d") % hdu));
     }
