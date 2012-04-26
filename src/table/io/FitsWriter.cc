@@ -127,7 +127,7 @@ struct ProcessSchema {
 } // anonymous
 
 // the driver for all the above machinery
-void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
+void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows) {
     Schema schema = table->getSchema();
     _fits->createTable();
     LSST_FITS_CHECK_STATUS(*_fits, "creating table");
@@ -140,6 +140,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table) {
     if (table->getMetadata())
         _fits->writeMetadata(*table->getMetadata());
     _row = -1;
+    _fits->appendRows(nRows);
     _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
 }
 

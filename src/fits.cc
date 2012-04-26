@@ -615,6 +615,11 @@ void Fits::createTable() {
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Creating binary table");
 }
 
+void Fits::appendRows(std::size_t nRows) {
+    fits_insert_rows(reinterpret_cast<fitsfile*>(fptr), countRows(), nRows, &status);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Appending rows to binary table");
+}
+
 template <typename T>
 int Fits::addColumn(std::string const & ttype, int size) {
     int nCols = 0;
