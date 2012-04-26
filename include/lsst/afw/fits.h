@@ -93,7 +93,7 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
  *  Throw a FitsError exception if the status of the given Fits object is nonzero.
  */
 #define LSST_FITS_CHECK_STATUS(fitsObj, ...)                            \
-    if ((fitsObj).status != 0) LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
+    if ((fitsObj).status != 0) throw LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
 
 /**
  *  @brief Lifetime-management for memory that goes into FITS memory files.
