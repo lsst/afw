@@ -125,7 +125,7 @@ public:
 
 protected:
     
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table);
+    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
     virtual void _writeRecord(BaseRecord const & record);
 
@@ -134,7 +134,7 @@ private:
     int _peakCol;
 };
 
-void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
+void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
     CONST_PTR(SourceTable) table = boost::dynamic_pointer_cast<SourceTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
@@ -142,7 +142,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
             "Cannot use a SourceFitsWriter on a non-Source table."
         );
     }
-    io::FitsWriter::_writeTable(table);
+    io::FitsWriter::_writeTable(table, nRows);
     _spanCol = _fits->addColumn<int>("spans", 0, "footprint spans (y, x0, x1)");
     _peakCol = _fits->addColumn<float>("peaks", 0, "footprint peaks (fx, fy, peakValue)");
     _fits->writeKey("SPANCOL", _spanCol + 1, "Column with footprint spans.");

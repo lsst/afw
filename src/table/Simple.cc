@@ -67,11 +67,11 @@ public:
 
 protected:
     
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table);
+    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
 };
 
-void SimpleFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
+void SimpleFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
     CONST_PTR(SimpleTable) table = boost::dynamic_pointer_cast<SimpleTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
@@ -79,7 +79,7 @@ void SimpleFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
             "Cannot use a SimpleFitsWriter on a non-Simple table."
         );
     }
-    io::FitsWriter::_writeTable(table);
+    io::FitsWriter::_writeTable(table, nRows);
     _fits->writeKey("AFW_TYPE", "SIMPLE", "Tells lsst::afw to load this as a Simple table.");
 }
 
