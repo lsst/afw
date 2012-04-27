@@ -652,7 +652,7 @@ namespace bl = boost::lambda;
 // write out this sqrt function which does the casts explicitly.
 template<typename PixelT>
 static PixelT mysqrt(PixelT x) {
-    return static_cast<PixelT>(std::sqrt(static_cast<double>(x)));
+    return static_cast<PixelT>(std::sqrt(x));
 }
 
 // In-place, per-pixel, sqrt().
