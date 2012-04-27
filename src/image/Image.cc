@@ -29,6 +29,7 @@
 #include <iostream>
 #include "boost/mpl/vector.hpp"
 #include "boost/lambda/lambda.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
@@ -646,6 +647,20 @@ void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
 //    transform_pixels(_gilView, _gilView, std::bind2nd(std::plus<PixelT>(), rhs));
 //
 namespace bl = boost::lambda;
+
+// dstn: being a bear of little brain when it comes to templated lambdas, I found it easier to
+// write out this sqrt function which does the casts explicitly.
+template<typename PixelT>
+static PixelT mysqrt(PixelT x) {
+    return static_cast<PixelT>(std::sqrt(static_cast<double>(x)));
+}
+
+// In-place, per-pixel, sqrt().
+template<typename PixelT>
+void image::Image<PixelT>::sqrt() {
+     transform_pixels(_getRawView(), _getRawView(),
+                      boost::bind(mysqrt<PixelT>, bl::_1));
+}
 
 /// Add scalar rhs to lhs
 template<typename PixelT>

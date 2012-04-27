@@ -484,6 +484,9 @@ namespace image {
         void operator/=(PixelT const rhs);
         void operator/=(Image<PixelT> const& rhs);
         void scaledDivides(double const c, Image<PixelT>const & rhs);
+
+        // In-place per-pixel sqrt().  Useful when handling variance planes.
+        void sqrt();
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:
