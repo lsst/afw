@@ -852,7 +852,7 @@ Footprint::Ptr footprintAndMask(
 
 /************************************************************************************************************/
 /**
- * \brief OR bitmask into all the Mask's pixels which are in the Footprint
+ * \brief OR bitmask into all the Mask's pixels that are in the Footprint
  *
  * \return bitmask
  */
@@ -882,6 +882,45 @@ MaskT setMaskFromFootprint(
         for (typename image::Image<MaskT>::x_iterator ptr = mask->x_at(x0, y),
                  end = mask->x_at(x1 + 1, y); ptr != end; ++ptr) {
             *ptr |= bitmask;
+        }
+    }
+
+    return bitmask;
+}
+
+/************************************************************************************************************/
+/**
+ * \brief (AND ~bitmask) all the Mask's pixels that are in the
+ * Footprint; that is, set to zero in the Mask-intersecting-Footprint
+ * all bits that are 1 in then bitmask.
+ *
+ * \return bitmask
+ */
+template<typename MaskT>
+MaskT clearMaskFromFootprint(
+    image::Mask<MaskT> *mask,              ///< Mask to set
+    Footprint const& foot,      ///< Footprint specifying desired pixels
+    MaskT const bitmask                    ///< Bitmask
+) {
+    int const width = static_cast<int>(mask->getWidth());
+    int const height = static_cast<int>(mask->getHeight());
+
+    for (Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+         siter != foot.getSpans().end(); siter++) {
+        Span::Ptr const span = *siter;
+        int const y = span->getY() - mask->getY0();
+        if (y < 0 || y >= height) {
+            continue;
+        }
+
+        int x0 = span->getX0() - mask->getX0();
+        int x1 = span->getX1() - mask->getX0();
+        x0 = (x0 < 0) ? 0 : (x0 >= width ? width - 1 : x0);
+        x1 = (x1 < 0) ? 0 : (x1 >= width ? width - 1 : x1);
+
+        for (typename image::Image<MaskT>::x_iterator ptr = mask->x_at(x0, y),
+                 end = mask->x_at(x1 + 1, y); ptr != end; ++ptr) {
+            *ptr &= ~bitmask;
         }
     }
 
