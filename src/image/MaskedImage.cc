@@ -28,7 +28,10 @@
  */
 #include <typeinfo>
 #include <sys/stat.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/lambda/lambda.hpp"
+#pragma clang diagnostic pop
 #include "boost/regex.hpp"
 #include "boost/filesystem/path.hpp"
 #include "lsst/pex/logging/Trace.h"

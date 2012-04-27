@@ -28,7 +28,10 @@
  */
 #include <iostream>
 #include "boost/mpl/vector.hpp"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/lambda/lambda.hpp"
+#pragma clang diagnostic pop
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
@@ -518,7 +521,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
 
-    if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_image<fits_image_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
@@ -554,7 +557,7 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
     if (!metadata) {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
-    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read FITS HDU %d") % hdu).str());
     }

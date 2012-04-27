@@ -89,7 +89,7 @@ namespace cfitsio {
     int getNumKeys(fitsfile* fd);
     void getKey(fitsfile* fd, int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 
-    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr  metadata, bool strip=true);
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet & metadata, bool strip=true);
 }
 
 namespace detail {
@@ -327,7 +327,7 @@ class fits_reader : public fits_file_mgr {
     typedef lsst::daf::base::PropertySet PropertySet;
 protected:
     int _hdu;                                            //!< desired HDU
-    PropertySet::Ptr _metadata;                          //!< header metadata
+    PropertySet & _metadata;                             //!< header metadata
     int _naxis1, _naxis2;                                //!< dimension of image    
     int _ttype;                                          //!< cfitsio's name for data type
     int _bitpix;                                         //!< FITS' BITPIX keyword
@@ -411,7 +411,7 @@ protected:
     
 public:
     fits_reader(cfitsio::fitsfile *file,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet & metadata,
                 int hdu=0, geom::Box2I const& bbox=geom::Box2I(), 
                 ImageOrigin const origin = LOCAL
     ) : fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) {         
@@ -419,7 +419,7 @@ public:
     }
 
     fits_reader(const std::string& filename,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet & metadata,
                 int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
                 ImageOrigin const origin = LOCAL
     ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) { 
@@ -427,7 +427,7 @@ public:
     }
 
     fits_reader(char **ramFile, size_t *ramFileLen,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet & metadata,
                 int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
                 ImageOrigin const origin = LOCAL
     ) : fits_file_mgr(ramFile, ramFileLen, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) { 
@@ -435,7 +435,7 @@ public:
     }
 
     fits_reader(const std::string& filename,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet & metadata,
                 int hdu, bool headerOnly
                ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata),
                    _bbox(geom::Box2I()), _origin(LOCAL) { 
@@ -463,7 +463,7 @@ public:
         // Origin of part of image to read
         geom::Point2I xy0(0,0);
 
-        geom::Extent2I xyOffset(getImageXY0FromMetadata(wcsNameForXY0, _metadata.get()));
+        geom::Extent2I xyOffset(getImageXY0FromMetadata(wcsNameForXY0, &_metadata));
         if (!_bbox.isEmpty()) {
             if(_origin == PARENT) {
                 _bbox.shift(-xyOffset);
