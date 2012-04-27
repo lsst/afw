@@ -1743,6 +1743,9 @@ image::MaskPixel setMaskFromFootprintList(
 template image::MaskPixel setMaskFromFootprint(
     image::Mask<image::MaskPixel> *mask,
     Footprint const& foot, image::MaskPixel const bitmask);
+template image::MaskPixel clearMaskFromFootprint(
+    image::Mask<image::MaskPixel> *mask,
+    Footprint const& foot, image::MaskPixel const bitmask);
 
 #define INSTANTIATE_FLOAT(TYPE) \
 template \

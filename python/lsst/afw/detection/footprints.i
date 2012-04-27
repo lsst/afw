@@ -120,6 +120,7 @@
 %define %maskOperations(PIXEL_TYPE)
     %template(footprintAndMask) lsst::afw::detection::footprintAndMask<PIXEL_TYPE>;
     %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<PIXEL_TYPE>;
+    %template(clearMaskFromFootprint) lsst::afw::detection::clearMaskFromFootprint<PIXEL_TYPE>;
     %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<PIXEL_TYPE>;
 %enddef
 
