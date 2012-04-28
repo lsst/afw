@@ -49,11 +49,27 @@ class EllipseTestCase(unittest.TestCase):
             geom.ellipses.Axes(4, 3, 1),
             geom.ellipses.Quadrupole(5, 3, -1)
             ]
-        for s in geomEllipse.Separable.values():
+        self.classes = [geom.ellipses.Axes, geom.ellipses.Quadrupole]
+        for s in geom.ellipses.Separable.values():
             self.cores.append(s(0.5, 0.3, 2.1))
+            self.classes.append(s)
 
     def assertClose(self, a, b):
-        self.assert_(numpy.allclose(a, b))
+        self.assert_(numpy.allclose(a, b), "%s != %s" % (a, b))
+
+    def testRadii(self):
+        for core, det, trace in zip(self.cores, [144, 14], [25, 8]):
+            detRadius = det**0.25
+            traceRadius = (0.5 * trace)**0.5
+            area = numpy.pi * det**0.5
+            self.assertClose(core.getDeterminantRadius(), detRadius)
+            self.assertClose(core.getTraceRadius(), traceRadius)
+            self.assertClose(core.getArea(), area)
+            for cls in self.classes:
+                conv = cls(core)
+                self.assertClose(conv.getDeterminantRadius(), detRadius)
+                self.assertClose(conv.getTraceRadius(), traceRadius)
+                self.assertClose(conv.getArea(), area)
 
     def testAccessors(self):
         for core in self.cores:
@@ -72,7 +88,8 @@ class EllipseTestCase(unittest.TestCase):
             self.assertClose(core.getParameterVector(), ellipse.getCore().getParameterVector())
             self.assert_((core.clone().getParameterVector()==core.getParameterVector()).all())
             self.assert_(core is not core.clone())
-            self.assert_((geomEllipse.Ellipse(ellipse).getParameterVector()==ellipse.getParameterVector()).all())
+            self.assert_((geomEllipse.Ellipse(ellipse).getParameterVector()
+                          == ellipse.getParameterVector()).all())
             self.assert_(ellipse is not geomEllipse.Ellipse(ellipse))
 
     def testTransform(self):
