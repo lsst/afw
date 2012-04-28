@@ -201,6 +201,21 @@ class SourceTableTestCase(unittest.TestCase):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
         sourceCat = baseCat.cast(lsst.afw.table.SourceCatalog)
 
+    def testIdFactory(self):
+        expId = int(1257198)
+        reserved = 32
+        factory = lsst.afw.table.IdFactory.makeSource(expId, reserved)
+        upper = expId
+        id1 = factory()
+        id2 = factory()
+        self.assertEqual(id2 - id1, 1)
+        factory.notify(0xFFFFFFFF)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, factory)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             factory.notify, 0x1FFFFFFFF)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             lsst.afw.table.IdFactory.makeSource, 0x1FFFFFFFF, reserved)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
