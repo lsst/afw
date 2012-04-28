@@ -70,6 +70,11 @@ class EllipseTestCase(unittest.TestCase):
                 self.assertClose(conv.getDeterminantRadius(), detRadius)
                 self.assertClose(conv.getTraceRadius(), traceRadius)
                 self.assertClose(conv.getArea(), area)
+                conv.scale(3.0)
+                self.assertClose(conv.getDeterminantRadius(), detRadius * 3)
+                self.assertClose(conv.getTraceRadius(), traceRadius * 3)
+                self.assertClose(conv.getArea(), area * 9)
+                
 
     def testAccessors(self):
         for core in self.cores:
