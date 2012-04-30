@@ -381,8 +381,10 @@ unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & seco
     result.resize(matches.size());
     typename std::vector<MatchT>::iterator j = result.begin();
     for (BaseCatalog::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
-        j->first = first.find(i->get(inKey1));
-        j->second = second.find(i->get(inKey2));
+        typename Cat1::const_iterator k1 = first.find(i->get(inKey1));
+        typename Cat2::const_iterator k2 = second.find(i->get(inKey2));
+        if (k1 != first.end()) j->first = k1;
+        if (k2 != second.end()) j->second = k2;
         j->distance = i->get(keyD);
     }
     return result;
