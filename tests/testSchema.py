@@ -86,6 +86,18 @@ class SchemaTestCase(unittest.TestCase):
         schema3.addField("d", type="Angle", doc="angle")
         schema3.addField("p", type="Point<F4>", doc="point")
         self.assertEqual(schema3, schema)
+        schema4 = lsst.afw.table.Schema()
+        keys = []
+        keys.append(schema4.addField("a", type="Coord", doc="a"))
+        keys.append(schema4.addField("b", type="Flag", doc="b"))
+        keys.append(schema4.addField("c", type=int, doc="c"))
+        keys.append(schema4.addField("d", type="Flag", doc="d"))
+        self.assertEqual(keys[1].getBit(), 0)
+        self.assertEqual(keys[3].getBit(), 1)
+        for n1, n2 in zip(schema4.getOrderedNames(), "abcd"):
+            self.assertEqual(n1, n2)
+        keys2 = map(lambda x: x.key, schema4.asList())
+        self.assertEqual(keys, keys2)
         
     def testInspection(self):
         schema = lsst.afw.table.Schema()
@@ -119,6 +131,7 @@ class SchemaTestCase(unittest.TestCase):
         shapeKey = schema.addField("s", type="Moments<F4>", doc="doc for shape field")
         shapeElementKey = shapeKey.getIxx()
         self.assertEqual(lsst.afw.table.Key["F4"], type(shapeElementKey))
+        
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

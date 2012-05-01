@@ -147,6 +147,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
         Py_INCREF(result.get());
         return result.get();
     }
+
 %}
 
 %typemap(out) std::set<std::string> {
@@ -159,6 +160,23 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
     // I'll never understand why swig passes pointers to reference typemaps, but it does.
     $result = convertNameSet(*$1);
 }
+
+// SWIG doesn't understand Schema::forEach, but the Schema interface provides no other
+// way of getting field names in definition order. This forEach functor records field names,
+// allowing the python asList Schema method to return schema items in an order consistent
+// with forEach.
+%{
+    struct _FieldNameExtractor {
+        std::vector<std::string> mutable * _vec;
+
+        _FieldNameExtractor(std::vector<std::string> * vec) : _vec(vec) { }
+
+        template <typename T>
+        void operator()(lsst::afw::table::SchemaItem<T> const & item) const {
+            _vec->push_back(item.field.getName());
+        }
+    };
+%}
 
 // ---------------------------------------------------------------------------------------------------------
 
@@ -216,21 +234,20 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 
     void reset(lsst::afw::table::Schema & other) { *self = other; }
 
+    std::vector<std::string> getOrderedNames() {
+        std::vector<std::string> names;
+        self->forEach(_FieldNameExtractor(&names));
+        return names;
+    }
+
 %pythoncode %{
 
 def asList(self):
-    # This should be replaced by an implementation that uses Schema::forEach
+    # This should be replaced by an implementation that uses Schema::forEach directly
     # if/when SWIG gets better at handling templates or we switch to Boost.Python.
     result = []
-    def extractSortKey(item):
-        key = item.key
-        if type(key) == Key_Flag:
-            return (key.getOffset(), key.getBit())
-        else:
-            return (key.getOffset(), None)
-    for name in self.getNames():
+    for name in self.getOrderedNames():
         result.append(self.find(name))
-    result.sort(key=extractSortKey)
     return result
 
 def __iter__(self):
@@ -444,6 +461,9 @@ def getBits(self, keys=None):
 
 // =============== Field Types ==============================================================================
 
+// Must come after the FlagKeyVector %template, or SWIG bungles the generated code.
+%include "lsst/afw/table/Flag.h"
+
 %pythoncode %{
 from ..geom import Angle, Point2D, Point2I
 from ..geom.ellipses import Quadrupole
@@ -462,7 +482,6 @@ aliases = {
     numpy.float32: "F4",
     numpy.float64: "F8",
     Angle: "Angle",
-    Quadrupole: "Angle",
     Coord: "Coord",
     IcrsCoord: "Coord",
     Point2I: "Point<I4>",
