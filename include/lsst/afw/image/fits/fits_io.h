@@ -61,7 +61,7 @@ struct fits_read_support {
 /// \brief Returns the width and height of the FITS file at the specified location.
 /// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
 inline geom::Extent2I fits_read_dimensions(const char* filename) {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
+    lsst::daf::base::PropertySet metadata;
     detail::fits_reader m(filename, metadata);
     return m.getDimensions();
 }
@@ -98,15 +98,17 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// Triggers a compile assert if the image channel depth is not supported by the FITS library or by the I/O
 /// extension.  Throws lsst::afw::image::FitsException if the file is not a valid FITS file, or
 /// if its color space or channel depth are not compatible with the ones specified by Image
- template <typename PixelT>
- inline void fits_read_image(const std::string& filename,
-                             ndarray::Array<PixelT,2,2> & array,
-                             geom::Point2I & xy0,
-                             lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-                             int hdu=1,
-                             geom::Box2I const& bbox=geom::Box2I(),
-                             ImageOrigin const origin = LOCAL
- ) {
+
+template <typename PixelT>
+inline void fits_read_image(const std::string& filename,
+                            ndarray::Array<PixelT,2,2> & array,
+                            geom::Point2I & xy0,
+                            lsst::daf::base::PropertySet & metadata,
+                            int hdu=1,
+                            geom::Box2I const& bbox=geom::Box2I(),
+                            ImageOrigin const origin = LOCAL
+                           )
+{
     BOOST_STATIC_ASSERT(fits_read_support<PixelT>::is_supported);
 
     detail::fits_reader m(filename, metadata, hdu, bbox, origin);
@@ -124,7 +126,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
  inline void fits_read_ramImage(char **ramFile, size_t *ramFileLen,
                              ndarray::Array<PixelT,2,2> & array,
                              geom::Point2I & xy0,
-                             lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+                             lsst::daf::base::PropertySet &metadata,
                              int hdu=1,
                              geom::Box2I const& bbox=geom::Box2I(),
                              ImageOrigin const origin = LOCAL
