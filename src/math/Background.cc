@@ -46,6 +46,29 @@ namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
 namespace bm = boost::math;
 
+
+
+namespace {
+
+    // helper function.
+    // assuming we have two vectors: x and y, and there are some nans in y
+    // we want vectors x' and y' that correspond to the data without the nans
+    // basic idea is that 'x' is the values, and 'y' is the ref (where nan checking happens)
+    // thus:
+    // x_clean = cullNan(x, y)
+    // y_clean = cullNan(y, y)  // called with itself for both 'values' and 'refs'
+    std::vector<double> cullNan(std::vector<double> const &values, std::vector<double> const &refs) {
+        std::vector<double> vRet;
+        std::vector<double>::const_iterator pVal = values.begin();
+        for (std::vector<double>::const_iterator pRef = refs.begin(); pRef != refs.end(); ++pRef, ++pVal) {
+            if (!isnan(*pRef)) {
+                vRet.push_back(*pVal);
+            }
+        }
+        return vRet;
+    }
+}
+
 /**
  * @brief Constructor for Background
  *
@@ -154,7 +177,14 @@ void math::Background::_set_gridcolums(int iX, std::vector<int> const& ypix)
     // there isn't actually any way to interpolate as a constant ... do that manually here
     if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
         // this is the real interpolation
-        math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
+
+        // remove nan from the grid values before computing columns
+        // if we do it here (ie. in set_gridcolumns), it should
+        // take care of all future occurances, so we don't need to do this elsewhere
+        std::vector<double> ycenTmp = cullNan(_ycen,     _grid[iX]);
+        std::vector<double> gridTmp = cullNan(_grid[iX], _grid[iX]);
+        math::Interpolate intobj(ycenTmp, gridTmp, _bctrl.getInterpStyle());
+        
         for (int iY = 0; iY < _imgHeight; ++iY) {
             _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
         }
