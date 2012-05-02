@@ -18,7 +18,6 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-class LocalPsf;
 class PsfFormatter;
 class PsfFactoryBase;
 /**
@@ -80,13 +79,6 @@ public:
                             lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
                             bool normalizePeak=true,
                             bool distort=true) const;
-   
-    PTR(LocalPsf) getLocalPsf(
-        lsst::afw::geom::Point2D const & ccdXY,
-        lsst::afw::image::Color const & color=lsst::afw::image::Color()
-    ) const {
-        return doGetLocalPsf(ccdXY, color);
-    }
 
     lsst::afw::math::Kernel::Ptr getKernel(lsst::afw::image::Color const&
                                            color=lsst::afw::image::Color()) {
@@ -161,16 +153,6 @@ protected:
                                                                lsst::afw::image::Color const&) const {
         return lsst::afw::math::Kernel::Ptr();
     }
-
-    virtual PTR(LocalPsf) doGetLocalPsf(
-        lsst::afw::geom::Point2D const&, 
-        lsst::afw::image::Color const&
-    ) const {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
-            "Functionality not implemented"
-        );
-    };
 
         
 private:

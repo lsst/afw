@@ -346,17 +346,29 @@ class CoordTestCase(unittest.TestCase):
         az, alt = 231.5947, 44.3375
         obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0) # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
-        sedna = afwCoord.Fk5Coord(ra, dec, obsDate.get(dafBase.DateTime.EPOCH))
+        epoch = obsDate.get(dafBase.DateTime.EPOCH)
+        sedna = afwCoord.Fk5Coord(ra, dec, epoch)
         altaz = sedna.toTopocentric(obs, obsDate)
-        s = ("Topocentric (Sedna): ", altaz.getAltitude().asDegrees(),
-             altaz.getAzimuth().asDegrees(), alt, az)
+        s = "Topocentric (Sedna): ", \
+            altaz.getAltitude().asDegrees(), altaz.getAzimuth().asDegrees(), alt, az
         print s
-
+        
         # precision is low as we don't account for as much as jpl (abberation, nutation, etc)
         self.assertAlmostEqual(altaz.getAltitude().asDegrees(), alt, 1)
         self.assertAlmostEqual(altaz.getAzimuth().asDegrees(), az, 1)
 
+        # convert back to RA,Dec to check the roundtrip
+        sedna2 = altaz.toFk5(epoch)
+        ra2, dec2 = sedna2.getRa().asDegrees(), sedna2.getDec().asDegrees()
 
+        s = "Topocentric roundtrip (Sedna): ", \
+            sedna.getRa().asDegrees(), ra2, sedna.getDec().asDegrees(), dec2
+        print s
+        
+        self.assertAlmostEqual(sedna.getRa().asDegrees(), ra2)
+        self.assertAlmostEqual(sedna.getDec().asDegrees(), dec2)
+        
+    
     def testPrecess(self):
         """Test precession calculations in different coordinate systems"""
 

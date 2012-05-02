@@ -5,7 +5,6 @@
 //
 #include "lsst/base.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/detection/LocalPsf.h"
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/void_cast.hpp"
 
@@ -52,8 +51,6 @@ public:
         );
     }
 
-protected:
-    PTR(LocalPsf) doGetLocalPsf(lsst::afw::geom::Point2D const&, lsst::afw::image::Color const&) const;
 private:
     double _sigma1;                     ///< Width of inner Gaussian
     double _sigma2;                     ///< Width of outer Gaussian

@@ -1,8 +1,6 @@
-// -*- LSST-C++ -*-
-
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008 - 2012 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -22,17 +20,19 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-#ifndef LSST_AFW_MATH_SHAPELETS_H
-#define LSST_AFW_MATH_SHAPELETS_H
 /**
- * @file
+ * \file
+ * \brief An include file to include the public header files for lsst::afw::gpu
  *
- * @brief An include file to include the header files for lsst::afw::math::shapelets
+ * Note: this header file intentionally excludes math/detail header files because they define
+ * classes and functions which are not part of the public API.
  */
-#include "lsst/afw/math/shapelets/constants.h"
-#include "lsst/afw/math/shapelets/ConversionMatrix.h"
-#include "lsst/afw/math/shapelets/ShapeletFunction.h"
-#include "lsst/afw/math/shapelets/MultiShapeletFunction.h"
-#include "lsst/afw/math/shapelets/BasisEvaluator.h"
+#ifndef LSST_AFW_GPU_H
+#define LSST_AFW_GPU_H
 
-#endif // !defined(LSST_AFW_MATH_SHAPELETS_H)
+
+#include "lsst/afw/gpu/DevicePreference.h"
+#include "lsst/afw/gpu/GpuExceptions.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
+
+#endif // LSST_AFW_GPU_H

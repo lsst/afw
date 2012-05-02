@@ -335,7 +335,7 @@ void getKey(fitsfile* fd,
 
 }
 
-void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, std::string const& value, std::string const& comment) {
+void addKV(lsst::daf::base::PropertySet & metadata, std::string const& key, std::string const& value, std::string const& comment) {
     static boost::regex const boolRegex("[tTfF]");
     static boost::regex const intRegex("[+-]?[0-9]+");
     static boost::regex const doubleRegex("[+-]?([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)([eE][+-]?[0-9]+)?");
@@ -343,10 +343,7 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
 
     boost::smatch matchStrings;
     std::istringstream converter(value);
-
-    PTR(lsst::daf::base::PropertyList) pl =
-        boost::dynamic_pointer_cast<lsst::daf::base::PropertyList,
-        lsst::daf::base::PropertySet>(metadata);
+    lsst::daf::base::PropertyList *pl = dynamic_cast<lsst::daf::base::PropertyList *>(&metadata);
 
     if (boost::regex_match(value, boolRegex)) {
         // convert the string to an bool
@@ -359,7 +356,7 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
         if (pl) {
             pl->add(key, val, comment);
         } else {
-            metadata->add(key, val);
+            metadata.add(key, val);
         }
     } else if (boost::regex_match(value, intRegex)) {
         // convert the string to an int
@@ -370,13 +367,13 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
             if (pl) {
                 pl->add(key, v, comment);
             } else {
-                metadata->add(key, v);
+                metadata.add(key, v);
             }
         } else {
             if (pl) {
                 pl->add(key, val, comment);
             } else {
-                metadata->add(key, val);
+                metadata.add(key, val);
             }
         }
     } else if (boost::regex_match(value, doubleRegex)) {
@@ -386,14 +383,14 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
         if (pl) {
             pl->add(key, val, comment);
         } else {
-            metadata->add(key, val);
+            metadata.add(key, val);
         }
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         // strip off the enclosing single quotes and return the string
         if (pl) {
             pl->add(key, matchStrings[1].str(), comment);
         } else {
-            metadata->add(key, matchStrings[1].str());
+            metadata.add(key, matchStrings[1].str());
         }
     } else if (key == "HISTORY" ||
                (key == "COMMENT" &&
@@ -402,18 +399,14 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string const& key, s
         if (pl) {
             pl->add(key, comment);
         } else {
-            metadata->add(key, comment);
+            metadata.add(key, comment);
         }
     }
 }
 
 // Private function to build a PropertySet that contains all the FITS kw-value pairs
-    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata, bool strip) {
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet &metadata, bool strip) {
     // Get all the kw-value pairs from the FITS file, and add each to DataProperty
-    if (metadata.get() == NULL) {
-        return;
-    }
-
     for (int i=1; i<=getNumKeys(fd); i++) {
         std::string keyName;
         std::string val;
@@ -444,8 +437,8 @@ lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///<
                                               ) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList);
 
-    detail::fits_reader m(fileName, metadata, hdu, true);
-    cfitsio::getMetadata(m.get(), metadata, strip);
+    detail::fits_reader m(fileName, *metadata, hdu, true);
+    cfitsio::getMetadata(m.get(), *metadata, strip);
 
     return metadata;
 }
@@ -460,8 +453,8 @@ lsst::daf::base::PropertySet::Ptr readMetadata(char **ramFile,				///< RAM buffe
                                               ) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
 
-    detail::fits_reader m(ramFile, ramFileLen, metadata, hdu);
-    cfitsio::getMetadata(m.get(), metadata, strip);
+    detail::fits_reader m(ramFile, ramFileLen, *metadata, hdu);
+    cfitsio::getMetadata(m.get(), *metadata, strip);
 
     return metadata;
 }
