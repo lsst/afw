@@ -137,6 +137,9 @@ public:
     /// @brief Return the object that generates IDs for the table (may be null).
     CONST_PTR(IdFactory) getIdFactory() const { return _idFactory; }
 
+    /// @brief Switch to a new IdFactory -- object that generates IDs for the table (may be null).
+    void setIdFactory(PTR(IdFactory) f) { _idFactory = f; }
+
     //@{
     /**
      *  Get keys for standard fields shared by all references.
