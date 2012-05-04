@@ -366,7 +366,10 @@ void Footprint::clipTo(geom::Box2I const& bbox) {
 		}
 		pit++;
 	}
-	if (!_spans.empty()) {
+
+	if (_spans.empty()) {
+        _bbox = geom::Box2I();
+    } else {
 		_normalized = false;
 		normalize();
 	}
