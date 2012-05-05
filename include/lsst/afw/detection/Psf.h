@@ -9,11 +9,14 @@
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
-#include "lsst/afw/math.h"
+#include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
 
 namespace lsst {
 namespace afw {
+namespace cameraGeom {
+    class Detector;
+}
 namespace detection {
 
 class PsfFormatter;

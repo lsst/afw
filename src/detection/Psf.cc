@@ -14,6 +14,7 @@
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/math/offsetImage.h"
 
 /************************************************************************************************************/
 
