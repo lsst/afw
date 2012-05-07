@@ -60,7 +60,12 @@ public:
      */
     template <typename T>
     typename Field<T>::Element * getElement(Key<T> const & key) {
-        assert(key.isValid());
+        if (!key.isValid()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Key is not valid (if this is a SourceRecord, make sure slot aliases have been setup)."
+            );
+        }
         return reinterpret_cast<typename Field<T>::Element*>(
             reinterpret_cast<char*>(_data) + key.getOffset()
         );
@@ -75,7 +80,12 @@ public:
      */
     template <typename T>
     typename Field<T>::Element const * getElement(Key<T> const & key) const {
-        assert(key.isValid());
+        if (!key.isValid()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Key is not valid (if this is a SourceRecord, make sure slot aliases have been setup)."
+            );
+        }
         return reinterpret_cast<typename Field<T>::Element const *>(
             reinterpret_cast<char const *>(_data) + key.getOffset()
         );
