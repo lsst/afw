@@ -124,8 +124,7 @@ void flattenArray(
         typename SourceT::Reference::Iterator rowIter = row.begin() + span.getX0() - xy0.getX();
         for (typename DestT::Iterator destEnd = destIter + span.getWidth(); destIter != destEnd;
              ++destIter, ++rowIter) {
-            *destIter = *rowIter;
-            *rowIter = pixelOp(*rowIter);
+            *destIter = pixelOp(*rowIter);
         }
     }
 }

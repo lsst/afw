@@ -97,6 +97,16 @@ BOOST_AUTO_TEST_CASE(conversion) {
         lsst::pex::exceptions::InvalidParameterException
     );
 
+    {
+        geom::Box2I box = footprint.getBBox();
+        nd::Array<double,2,2> i1 = ndarray::allocate(10, 10);
+        i1.deep() = 0.0;
+        detection::expandArray(footprint, v, i1, std::bind2nd(std::plus<double>(), 1.0), box.getMin());
+        nd::Array<double,1,1> v1 = ndarray::allocate(v.getShape());
+        detection::flattenArray(footprint, i1, v1, std::bind2nd(std::minus<double>(), 1.0), box.getMin());
+        BOOST_CHECK( std::equal(v1.begin(), v1.end(), v.begin()) );
+    }
+
     footprint.shift(20, 30);
 
     doRoundTrip(footprint, v, geom::Box2I(geom::Point2I(10, 15), geom::Extent2I(50, 60)));
