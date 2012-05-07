@@ -82,7 +82,17 @@ class MatchFitsTestCase(unittest.TestCase):
         cat2.sort()
         unpacked = afwTable.unpackMatches(matches, cat1, cat2)
         self.testMatches(unpacked)
- 
+
+    def testTicket2080(self):
+        packed = afwTable.packMatches(self.matches)
+        cat1 = self.cat1.copy()
+        cat2 = afwTable.SimpleCatalog(self.schema)
+        cat1.sort()
+        cat2.sort()
+        # just test that the next line doesn't segv
+        afwTable.unpackMatches(packed, cat1, cat2)
+        
+        
         
 #################################################################
 # Test suite boiler plate
