@@ -239,7 +239,21 @@ class DistortionTestCase(unittest.TestCase):
                 print "scale: ", scale, iqqList[i]
             self.assertAlmostEqual(scale, iqqList[i])
 
-            
+    def testNullDistortionDefaultCcd(self):
+        """Test that we can use a NullDistortion even if the Detector is default-constructed"""
+        ccd = cameraGeom.Ccd(cameraGeom.Id("dummy"))
+        distorter = cameraGeom.NullDistortion()
+
+        pin = afwGeom.PointD(0, 0)
+        pout = distorter.undistort(pin, ccd)
+
+        self.assertEqual(pin, pout)
+
+        ein = geomEllip.Quadrupole(1, 0, 1)
+        eout = distorter.distort(pin, ein, ccd)
+        
+        self.assertEqual(ein, eout)
+
 #################################################################
 # Test suite boiler plate
 #################################################################

@@ -12,6 +12,9 @@
 #include "boost/pointer_cast.hpp"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/detection/Psf.h"
+#include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/math/offsetImage.h"
 
 /************************************************************************************************************/
 
