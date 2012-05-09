@@ -30,6 +30,7 @@
 #include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
+#include "lsst/pex/logging/Log.h"
 #include "lsst/afw/table/Match.h"
 #include "lsst/afw/geom/Angle.h"
 
@@ -368,6 +369,7 @@ template BaseCatalog packMatches(SourceMatchVector const &);
 template <typename Cat1, typename Cat2>
 std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
 unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & second) {
+    pex::logging::Log tableLog(pex::logging::Log::getDefaultLog(), "afw.table");
     Key<RecordId> inKey1 = matches.getSchema()["first"];
     Key<RecordId> inKey2 = matches.getSchema()["second"];
     Key<double> keyD = matches.getSchema()["distance"];
@@ -381,8 +383,24 @@ unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & seco
     result.resize(matches.size());
     typename std::vector<MatchT>::iterator j = result.begin();
     for (BaseCatalog::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
-        j->first = first.find(i->get(inKey1));
-        j->second = second.find(i->get(inKey2));
+        typename Cat1::const_iterator k1 = first.find(i->get(inKey1));
+        typename Cat2::const_iterator k2 = second.find(i->get(inKey2));
+        if (k1 != first.end()) {
+            j->first = k1;
+        } else {
+            tableLog.log(
+                pex::logging::Log::WARN,
+                boost::format("Persisted match record with ID %s not found in catalog 1.") % i->get(inKey1)
+            );
+        }
+        if (k2 != second.end()) {
+            j->second = k2;
+        } else {
+            tableLog.log(
+                pex::logging::Log::WARN,
+                boost::format("Persisted match record with ID %s not found in catalog 2.") % i->get(inKey2)
+            );
+        }
         j->distance = i->get(keyD);
     }
     return result;

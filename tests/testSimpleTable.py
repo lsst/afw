@@ -151,6 +151,10 @@ class SimpleTableTestCase(unittest.TestCase):
             record, k19, "f19", 
             lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
             )
+        k0a = lsst.afw.table.Key["F8"]()
+        k0b = lsst.afw.table.Key["Flag"]()
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0a)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0b)
 
     def testBaseFits(self):
         schema = lsst.afw.table.Schema()
