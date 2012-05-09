@@ -134,12 +134,12 @@ public:
     
 private: 
 
-    lsst::afw::geom::Point2D _distort(lsst::afw::geom::Point2D const &p,
-                                      Detector const &det, bool foward) const;
-    lsst::afw::geom::ellipses::Quadrupole _distort(lsst::afw::geom::Point2D const &p,
-                                                   lsst::afw::geom::ellipses::Quadrupole const &Iqq,
-                                                   Detector const &det,
-                                                   bool forward) const;
+    virtual lsst::afw::geom::Point2D _distort(lsst::afw::geom::Point2D const &p,
+                                              Detector const &det, bool foward) const;
+    virtual lsst::afw::geom::ellipses::Quadrupole _distort(lsst::afw::geom::Point2D const &p,
+                                                           lsst::afw::geom::ellipses::Quadrupole const &Iqq,
+                                                           Detector const &det,
+                                                           bool forward) const;
 
     template<typename ImageT>
     typename ImageT::Ptr _warp(lsst::afw::geom::Point2D const &p,
@@ -174,6 +174,13 @@ public:
     virtual std::vector<double> getCoeffs() const {return std::vector<double>(0);  }
     //std::vector<double> getICoeffs()  {return _icoeffs;  }
     //std::vector<double> getDCoeffs()  {return _dcoeffs;  }
+private:
+    virtual lsst::afw::geom::Point2D _distort(lsst::afw::geom::Point2D const &p,
+                                              Detector const &, bool) const { return p; }
+    virtual lsst::afw::geom::ellipses::Quadrupole _distort(lsst::afw::geom::Point2D const &,
+                                                           lsst::afw::geom::ellipses::Quadrupole const &Iqq,
+                                                           Detector const &,
+                                                           bool) const { return Iqq; }
 };
 
 /**
