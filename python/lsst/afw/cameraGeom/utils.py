@@ -23,13 +23,7 @@
 #
 
 """
-Tests for SpatialCell
-
-Run with:
-   python SpatialCell.py
-or
-   python
-   >>> import SpatialCell; SpatialCell.run()
+Support for cameraGeom
 """
 
 import math
@@ -41,6 +35,7 @@ try:
 except ImportError:
     pyfits = None
 
+import lsst.daf.persistence as dafPersist
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -49,7 +44,6 @@ import lsst.afw.cameraGeom as cameraGeom
 
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
-display = True
 try:
     type(display)
 except NameError:
@@ -92,9 +86,9 @@ class GetCcdImage(object):
 class SynthesizeCcdImage(GetCcdImage):
     """A class to return an Image of a given Ccd based on its cameraGeometry"""
     
-    def __init__(self, isTrimmed=True):
+    def __init__(self, isTrimmed=True, *args):
         """Initialise"""
-        super(SynthesizeCcdImage, self).__init__()
+        super(SynthesizeCcdImage, self).__init__(*args)
         self.isTrimmed = isTrimmed
         self.isRaw = True               # we're always pretending to generate data straight from the DAQ
 
