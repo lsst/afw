@@ -583,69 +583,70 @@ of the detectors"""
     if not overlay:
         return
 
-    if amp:
-        bboxes = [(amp.getAllPixels(isTrimmed), 0.49, None),]
-        xy0 = bboxes[0][0].getMin()
-        if not isTrimmed:
-            bboxes.append((amp.getBiasSec(), 0.49, ds9.RED)) 
-            bboxes.append((amp.getDataSec(), 0.49, ds9.BLUE))
+    with ds9.Buffering():
+        if amp:
+            bboxes = [(amp.getAllPixels(isTrimmed), 0.49, None),]
+            xy0 = bboxes[0][0].getMin()
+            if not isTrimmed:
+                bboxes.append((amp.getBiasSec(), 0.49, ds9.RED)) 
+                bboxes.append((amp.getDataSec(), 0.49, ds9.BLUE))
 
-        for bbox, borderWidth, ctype in bboxes:
-            bbox = bbox.clone()
-            bbox.shift(-afwGeom.ExtentI(xy0))
-            displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame, bin=bin)
+            for bbox, borderWidth, ctype in bboxes:
+                bbox = bbox.clone()
+                bbox.shift(-afwGeom.ExtentI(xy0))
+                displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame, bin=bin)
 
-        return
+            return
 
-    nQuarter = ccd.getOrientation().getNQuarter()
-#    ccdDim = cameraGeom.rotateBBoxBy90(ccd.getAllPixels(isTrimmed), nQuarter,
-#           ccd.getAllPixels(isTrimmed).getDimensions()).getDimensions()
-    for a in ccd:
-        bbox = a.getAllPixels(isTrimmed)
-#        if nQuarter != 0:
-#            bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
+        nQuarter = ccd.getOrientation().getNQuarter()
+    #    ccdDim = cameraGeom.rotateBBoxBy90(ccd.getAllPixels(isTrimmed), nQuarter,
+    #           ccd.getAllPixels(isTrimmed).getDimensions()).getDimensions()
+        for a in ccd:
+            bbox = a.getAllPixels(isTrimmed)
+    #        if nQuarter != 0:
+    #            bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
 
-        displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49,
-                              frame=frame, bin=bin)
+            displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49,
+                                  frame=frame, bin=bin)
 
-        if not isTrimmed:
-            for bbox, ctype in ((a.getBiasSec(), ds9.RED), (a.getDataSec(), ds9.BLUE)):
-#                if nQuarter != 0:
-#                    bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
-                displayUtils.drawBBox(bbox, origin=ccdOrigin,
-                                      borderWidth=0.49, ctype=ctype, frame=frame, bin=bin)
-        # Label each Amp
-        ap = a.getAllPixels(isTrimmed)
-        xc, yc = (ap.getMin()[0] + ap.getMax()[0])//2, (ap.getMin()[1] +
-                ap.getMax()[1])//2
-        cen = afwGeom.Point2I(xc, yc)
-        #
-        # Rotate the amp labels too
-        #
-        if nQuarter == 0:
+            if not isTrimmed:
+                for bbox, ctype in ((a.getBiasSec(), ds9.RED), (a.getDataSec(), ds9.BLUE)):
+    #                if nQuarter != 0:
+    #                    bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
+                    displayUtils.drawBBox(bbox, origin=ccdOrigin,
+                                          borderWidth=0.49, ctype=ctype, frame=frame, bin=bin)
+            # Label each Amp
+            ap = a.getAllPixels(isTrimmed)
+            xc, yc = (ap.getMin()[0] + ap.getMax()[0])//2, (ap.getMin()[1] +
+                    ap.getMax()[1])//2
+            cen = afwGeom.Point2I(xc, yc)
+            #
+            # Rotate the amp labels too
+            #
+            if nQuarter == 0:
+                c, s = 1, 0
+            elif nQuarter == 1:
+                c, s = 0, -1
+            elif nQuarter == 2:
+                c, s = -1, 0
+            elif nQuarter == 3:
+                c, s = 0, 1
             c, s = 1, 0
-        elif nQuarter == 1:
-            c, s = 0, -1
-        elif nQuarter == 2:
-            c, s = -1, 0
-        elif nQuarter == 3:
-            c, s = 0, 1
-        c, s = 1, 0
-        ccdHeight = ccd.getAllPixels(isTrimmed).getHeight()
-        ccdWidth = ccd.getAllPixels(isTrimmed).getWidth()
-        xc -= 0.5*ccdHeight
-        yc -= 0.5*ccdWidth
-            
-        xc, yc = 0.5*ccdHeight + c*xc + s*yc, 0.5*ccdWidth + -s*xc + c*yc
+            ccdHeight = ccd.getAllPixels(isTrimmed).getHeight()
+            ccdWidth = ccd.getAllPixels(isTrimmed).getWidth()
+            xc -= 0.5*ccdHeight
+            yc -= 0.5*ccdWidth
 
-        if ccdOrigin:
-            xc += ccdOrigin[0]
-            yc += ccdOrigin[1]
+            xc, yc = 0.5*ccdHeight + c*xc + s*yc, 0.5*ccdWidth + -s*xc + c*yc
 
-        ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc/bin, yc/bin, frame=frame)
+            if ccdOrigin:
+                xc += ccdOrigin[0]
+                yc += ccdOrigin[1]
 
-    displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
-                          borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
+            ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc/bin, yc/bin, frame=frame)
+
+        displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
+                              borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
 
 def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
                       imageFactory=afwImage.ImageU, bin=1):
@@ -700,23 +701,24 @@ If imageSource isn't None, create an image using the images specified by imageSo
     if not raftImage and not overlay:
         return
 
-    for det in raft:
-        ccd = cameraGeom.cast_Ccd(det)
-        
-        bbox = ccd.getAllPixels(True)
-        origin = ccd.getCenterPixel() - \
-                afwGeom.ExtentD(bbox.getWidth()/2 - raftCenter.getX(), 
-                                bbox.getHeight()/2 - raftCenter.getY())
-            
-        if True:
-            name = ccd.getId().getName()
-        else:
-            name = str(ccd.getCenter())
+    with ds9.Buffering():
+        for det in raft:
+            ccd = cameraGeom.cast_Ccd(det)
 
-        ds9.dot(name, (origin[0] + 0.5*bbox.getWidth())/bin,
-                      (origin[1] + 0.4*bbox.getHeight())/bin, frame=frame)
+            bbox = ccd.getAllPixels(True)
+            origin = ccd.getCenterPixel() - \
+                    afwGeom.ExtentD(bbox.getWidth()/2 - raftCenter.getX(), 
+                                    bbox.getHeight()/2 - raftCenter.getY())
 
-        showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay, bin=bin)
+            if True:
+                name = ccd.getId().getName()
+            else:
+                name = str(ccd.getCenter())
+
+            ds9.dot(name, (origin[0] + 0.5*bbox.getWidth())/bin,
+                          (origin[1] + 0.4*bbox.getHeight())/bin, frame=frame)
+
+            showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay, bin=bin)
 
 def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Camera"""
@@ -761,19 +763,20 @@ of the detectors"""
     if cameraImage:
         ds9.mtv(cameraImage, frame=frame, title=camera.getId().getName())
 
-    for det in camera:
-        raft = cameraGeom.cast_Raft(det)
-        
-        center = camera.getCenterPixel() + afwGeom.Extent2D(raft.getCenterPixel())
+    with ds9.Buffering():
+        for det in camera:
+            raft = cameraGeom.cast_Raft(det)
 
-        if overlay:
-            bbox = raft.getAllPixels()
-            ds9.dot(raft.getId().getName(), center[0]/bin, center[1]/bin, frame=frame)
+            center = camera.getCenterPixel() + afwGeom.Extent2D(raft.getCenterPixel())
 
-        showRaft(raft, None, frame=frame, overlay=overlay,
-                 raftOrigin=center - afwGeom.Extent2D(raft.getAllPixels().getWidth()/2,
-                                                         raft.getAllPixels().getHeight()/2), 
-                 bin=bin)
+            if overlay:
+                bbox = raft.getAllPixels()
+                ds9.dot(raft.getId().getName(), center[0]/bin, center[1]/bin, frame=frame)
+
+            showRaft(raft, None, frame=frame, overlay=overlay,
+                     raftOrigin=center - afwGeom.Extent2D(raft.getAllPixels().getWidth()/2,
+                                                             raft.getAllPixels().getHeight()/2), 
+                     bin=bin)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

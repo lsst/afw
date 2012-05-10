@@ -34,7 +34,9 @@ or
 
 import math
 import os
+import sys
 import unittest
+import numpy as np
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
@@ -107,7 +109,6 @@ class BackgroundTestCase(unittest.TestCase):
             import matplotlib
             matplotlib.use('Agg')
             import pylab as plt
-            import numpy as np
             plt.clf()
             IY = [image.get(0,y) for y in range(H)]
             BY = [ back.get(0,y) for y in range(H)]
@@ -156,6 +157,10 @@ class BackgroundTestCase(unittest.TestCase):
         #imgfiles.append("v2_i2_p_m9_u16.fits")
         
         afwdataDir = eups.productDir("afwdata")
+        if not afwdataDir:
+            print >> sys.stderr, "Skipping testBackgroundTestImages as afwdata is not setup"
+            return
+        
         for imginfo in imginfolist:
 
             imgfile, centerValue = imginfo
@@ -288,7 +293,12 @@ class BackgroundTestCase(unittest.TestCase):
     def testCFHT(self):
         """Test background subtraction on some real CFHT data"""
 
-        mi = afwImage.MaskedImageF(os.path.join(eups.productDir("afwdata"),
+        afwdataDir = eups.productDir("afwdata")
+        if not afwdataDir:
+            print >> sys.stderr, "Skipping testCFHT as afwdata is not setup"
+            return
+
+        mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
                                                 "CFHT", "D4", "cal-53535-i-797722_1"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
@@ -403,6 +413,33 @@ class BackgroundTestCase(unittest.TestCase):
         bkd -= delta
         self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky)
 
+    def testNaNFromMaskedImage(self):
+        """Check that an extensively masked image doesn't lead to NaNs in the background estimation"""
+        
+        image = afwImage.MaskedImageF(800, 800)
+        msk = image.getMask()
+        bbox = afwGeom.BoxI(afwGeom.PointI(560, 0), afwGeom.PointI(799, 335))
+        smsk = msk.Factory(msk, bbox)
+        smsk.set(msk.getPlaneBitMask("DETECTED"))
+        
+        binSize = 256
+        nx = image.getWidth()//binSize + 1
+        ny = image.getHeight()//binSize + 1
+
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setAndMask(reduce(lambda x, y: x | image.getMask().getPlaneBitMask(y),
+                                ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'], 0x0))
+
+        bctrl = afwMath.BackgroundControl("NATURAL_SPLINE", nx, ny, "THROW_EXCEPTION", sctrl, "MEANCLIP")
+
+        bkgd = afwMath.makeBackground(image, bctrl)
+        bkgdImage = bkgd.getImageF()
+        if display:
+            ds9.mtv(image)
+            ds9.mtv(bkgdImage, frame=1)
+
+        self.assertFalse(np.isnan(bkgdImage.get(0,0)))
+        
 def suite():
     """Returns a suite containing all the test cases in this module."""
 

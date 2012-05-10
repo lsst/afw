@@ -43,7 +43,7 @@ public:
 protected:
 
     /// @copydoc Writer::_writeTable
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table);
+    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
     /// @copydoc Writer::_writeRecord
     virtual void _writeRecord(BaseRecord const & source);

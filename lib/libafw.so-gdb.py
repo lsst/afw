@@ -1,4 +1,4 @@
-import os.path, sys
+import os, os.path, sys
 import gdb
 #
 # Adjust the load path to include lsst.gdb, bypassing the regular lsstimport mechanism as
