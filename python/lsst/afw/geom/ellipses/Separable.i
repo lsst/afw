@@ -57,7 +57,7 @@
     }
     %pythoncode {
     def __str__(self):
-        return float(self)
+        return str(float(self))
     def __repr__(self):
         return "%s(%g)" % (self.getName(), float(self))
     }
