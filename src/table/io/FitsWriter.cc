@@ -140,7 +140,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
     if (table->getMetadata())
         _fits->writeMetadata(*table->getMetadata());
     _row = -1;
-    _fits->appendRows(nRows);
+    _fits->addRows(nRows);
     _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
 }
 

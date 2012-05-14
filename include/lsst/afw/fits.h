@@ -350,9 +350,6 @@ public:
     /// @brief Create a new binary table extension.
     void createTable();
 
-    /// @brief Add blank rows to a binary table extension.
-    void appendRows(std::size_t nRows);
-
     /**
      *  @brief Add a column to a table
      *
