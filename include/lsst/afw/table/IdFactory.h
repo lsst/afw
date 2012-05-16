@@ -38,7 +38,7 @@ public:
     /**
      *  @brief Return an IdFactory that includes another, fixed ID in the higher-order bits. 
      *
-     *  @param[in] expID     ID to include in the upper bits via a bitwise OR.
+     *  @param[in] expId     ID to include in the upper bits via a bitwise OR.
      *  @param[in] reserved  How many bits to reserve for the part of the ID that is unique.
      *
      *  The final record ID will be:
