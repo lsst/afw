@@ -60,45 +60,19 @@ namespace detection {
 bool Span::operator<(const Span& b) const {
 	if (_y < b._y)
 		return true;
-	if (_y > b._y)
+	else if (_y > b._y)
 		return false;
-	// y equal...
+	// y equal; check x...
 	if (_x0 < b._x0)
 		return true;
-	if (_x0 > b._x0)
+	else if (_x0 > b._x0)
 		return false;
 	if (_x1 < b._x1)
 		return true;
-	// if (_x1 > b._x1)
-	// return false;
-    // they're equal.
 	return false;
 }
 
 namespace {
-/*
- * Compare two Span%s by y, then x0, then x1
- *
- * A utility functor passed to sort
- */
-    struct compareSpanByYX : 
-        public std::binary_function<Span::ConstPtr, Span::ConstPtr, bool> {
-        int operator()(Span::ConstPtr a, Span::ConstPtr b) {
-            if (a->getY() < b->getY()) {
-                return true;
-            } else if (a->getY() == b->getY()) {
-                if (a->getX0() < b->getX0()) {
-                    return true;
-                } else if (a->getX0() == b->getX0()) {
-                    if (a->getX1() < b->getX1()) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    };
-
 /// Get extremum from a list of four points
 ///
 /// There are four options (min/max, x/y), supplied by the following helpers
@@ -314,12 +288,10 @@ bool Footprint::contains(
 ) const
 {
     if (_bbox.contains(pix)) {
-        for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
-            Span::ConstPtr span = *siter;
-            
-            if (span->_y == pix.getY() && pix.getX() >= span->_x0 && pix.getX() <= span->_x1) {
-                return true;
-            }
+        for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter) {
+			if ((*siter)->contains(pix.getX(), pix.getY())) {
+				return true;
+			}
         }
     }
 
@@ -369,6 +341,7 @@ void Footprint::clipTo(geom::Box2I const& bbox) {
 
 	if (_spans.empty()) {
         _bbox = geom::Box2I();
+		_normalized = true;
     } else {
 		_normalized = false;
 		normalize();
@@ -379,66 +352,66 @@ void Footprint::clipTo(geom::Box2I const& bbox) {
  * Normalise a Footprint, sorting spans and setting the BBox
  */
 void Footprint::normalize() {
-    if (!_normalized) {
-        assert(!_spans.empty());
+	if (_normalized) {
+		return;
+	}
+	assert(!_spans.empty());
+	//
+	// Check that the spans are sorted, and (more importantly) that each pixel appears
+	// in only one span
+	//
+	sort(_spans.begin(), _spans.end());
 
-        //
-        // Check that the spans are sorted, and (more importantly) that each pixel appears
-        // in only one span
-        //
-        sort(_spans.begin(), _spans.end(), compareSpanByYX());
-
-        Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
+	Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
         
-        Span *lspan = ptr->get();  // Left span
-        int y = lspan->_y;
-        int x1 = lspan->_x1;
-        _area = lspan->getWidth();
-        int minX = lspan->_x0, minY=y, maxX=x1;
+	Span *lspan = ptr->get();  // Left span
+	int y = lspan->_y;
+	int x1 = lspan->_x1;
+	_area = lspan->getWidth();
+	int minX = lspan->_x0, minY=y, maxX=x1;
 
-        ++ptr;
+	++ptr;
 
-        for (; ptr != end; ++ptr) {
-            Span *rspan = ptr->get(); // Right span
-            if (rspan->_y == y) {
-                if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
-                    if (rspan->_x1 > x1) {  // right span extends left span
-                        //update area
-                        _area += rspan->_x1 - x1;
-                        //update end of current span
-                        x1 = lspan->_x1 = rspan->_x1;
-                        //update bounds
-                        if(x1 > maxX) maxX = x1;
-                    }                    
+	for (; ptr != end; ++ptr) {
+		Span *rspan = ptr->get(); // Right span
+		if (rspan->_y == y) {
+			if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
+				if (rspan->_x1 > x1) {  // right span extends left span
+					//update area
+					_area += rspan->_x1 - x1;
+					//update end of current span
+					x1 = lspan->_x1 = rspan->_x1;
+					//update bounds
+					if(x1 > maxX) maxX = x1;
+				}                    
                     
-                    ptr = _spans.erase(ptr);
-                    end = _spans.end();   // delete the right span
-                    if (ptr == end) {
-                        break;
-                    }
+				ptr = _spans.erase(ptr);
+				end = _spans.end();   // delete the right span
+				if (ptr == end) {
+					break;
+				}
                     
-                    --ptr;
-                    continue;
-                } 
-                else{
-                    _area += rspan->getWidth();
-                    if(rspan->_x1 > maxX) maxX = rspan->_x1;
-                }
-            } else {
-                _area += rspan->getWidth();
-            }
+				--ptr;
+				continue;
+			} 
+			else{
+				_area += rspan->getWidth();
+				if(rspan->_x1 > maxX) maxX = rspan->_x1;
+			}
+		} else {
+			_area += rspan->getWidth();
+		}
 
-            y = rspan->_y;            
-            x1 = rspan->_x1;
+		y = rspan->_y;            
+		x1 = rspan->_x1;
             
-            lspan = rspan;
-            if(lspan->_x0 < minX) minX = lspan->_x0;
-            if(x1 > maxX) maxX = x1;
-        }
-        _bbox = geom::Box2I(geom::Point2I(minX, minY), geom::Point2I(maxX, y));
+		lspan = rspan;
+		if(lspan->_x0 < minX) minX = lspan->_x0;
+		if(x1 > maxX) maxX = x1;
+	}
+	_bbox = geom::Box2I(geom::Point2I(minX, minY), geom::Point2I(maxX, y));
 
-        _normalized = true;
-    }
+	_normalized = true;
 }
 
 /**
