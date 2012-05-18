@@ -64,26 +64,39 @@ def makeCov(size, dtype):
 class SimpleTableTestCase(unittest.TestCase):
 
     def checkScalarAccessors(self, record, key, name, value1, value2):
+        fastSetter = getattr(record, "set" + key.getTypeString())
+        fastGetter = getattr(record, "get" + key.getTypeString())
         record[key] = value1
         self.assertEqual(record[key], value1)
         self.assertEqual(record.get(key), value1)
-        self.assertEqual(record[name], value1)   
-        self.assertEqual(record.get(name), value1)   
+        self.assertEqual(record[name], value1)
+        self.assertEqual(record.get(name), value1)
+        self.assertEqual(fastGetter(key), value1)
         record.set(key, value2)
         self.assertEqual(record[key], value2)
         self.assertEqual(record.get(key), value2)
-        self.assertEqual(record[name], value2)   
+        self.assertEqual(record[name], value2)
         self.assertEqual(record.get(name), value2)
+        self.assertEqual(fastGetter(key), value2)
         record[name] = value1
         self.assertEqual(record[key], value1)
         self.assertEqual(record.get(key), value1)
-        self.assertEqual(record[name], value1)   
+        self.assertEqual(record[name], value1)
         self.assertEqual(record.get(name), value1)
-        record.set(name, value2)   
+        self.assertEqual(fastGetter(key), value1)
+        record.set(name, value2)
         self.assertEqual(record[key], value2)
         self.assertEqual(record.get(key), value2)
-        self.assertEqual(record[name], value2)   
+        self.assertEqual(record[name], value2)
         self.assertEqual(record.get(name), value2)
+        self.assertEqual(fastGetter(key), value2)
+        fastSetter(key, value1)
+        self.assertEqual(record[key], value1)
+        self.assertEqual(record.get(key), value1)
+        self.assertEqual(record[name], value1)
+        self.assertEqual(record.get(name), value1)
+        self.assertEqual(fastGetter(key), value1)
+        
 
     def checkGeomAccessors(self, record, key, name, value):
         record.set(key, value)
