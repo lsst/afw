@@ -239,3 +239,5 @@ def version(HeadURL = r"$HeadURL$"):
 
 %include "lsst/afw/geom/ellipses/Ellipse.h"
 %include "lsst/afw/geom/ellipses/Parametric.h"
+%include "lsst/afw/geom/ellipses.h" // just for Separable typedefs
+
