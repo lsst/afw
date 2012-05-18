@@ -60,19 +60,34 @@ namespace detection {
 bool Span::operator<(const Span& b) const {
 	if (_y < b._y)
 		return true;
-	else if (_y > b._y)
+	if (_y > b._y)
 		return false;
-	// y equal; check x...
+	// y equal; check x0...
 	if (_x0 < b._x0)
 		return true;
-	else if (_x0 > b._x0)
+	if (_x0 > b._x0)
 		return false;
+	// x0 equal; check x1...
 	if (_x1 < b._x1)
 		return true;
 	return false;
 }
 
+// anonymous namespace
 namespace {
+
+/*
+ * Compare two Span%s by y, then x0, then x1
+ *
+ * A utility functor passed to sort; needed to dereference the boost::shared_ptrs.
+ */
+    struct compareSpanByYX :
+		public std::binary_function<Span::ConstPtr, Span::ConstPtr, bool> {
+		int operator()(Span::ConstPtr a, Span::ConstPtr b) {
+			return (*a) < (*b);
+		}
+	};
+
 /// Get extremum from a list of four points
 ///
 /// There are four options (min/max, x/y), supplied by the following helpers
@@ -360,7 +375,7 @@ void Footprint::normalize() {
 	// Check that the spans are sorted, and (more importantly) that each pixel appears
 	// in only one span
 	//
-	sort(_spans.begin(), _spans.end());
+	sort(_spans.begin(), _spans.end(), compareSpanByYX());
 
 	Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
         
