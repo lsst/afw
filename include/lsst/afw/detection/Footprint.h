@@ -274,22 +274,14 @@ public:
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
 
-    void appendImage(std::vector<ImagePixelT> &v) const;
-    void appendMask(std::vector<MaskPixelT> &v) const;
-    void appendVariance(std::vector<VariancePixelT> &v) const;
-
     const ImagePixelT*    getImageData() const { return _image.getData(); }
     const MaskPixelT*     getMaskData() const { return _mask.getData(); }
     const VariancePixelT* getVarianceData() const { return _variance.getData(); }
-
-//PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits *fits) const;
 
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;
     ndarray::Array<MaskPixelT, 1, 1> _mask;
     ndarray::Array<VariancePixelT, 1, 1> _variance;
-
-//friend class io::FitsWriter;
 };
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

@@ -201,12 +201,6 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
             assert((_heavyPixCol >= 0) && (_heavyMaskCol >= 0) && (_heavyVarCol >= 0));
             PTR(HeavyFootprint) heavy = boost::static_pointer_cast<HeavyFootprint>(record.getFootprint());
             int N = heavy->getArea();
-            /*
-             std::vector<float> vec;
-             //? vec.reserve(heavy.getArea());
-             heavy->appendPix(vec);
-             _fits->writeTableArray(_row, _heavyPixCol, vec.size(), &vec.front());
-             */
             _fits->writeTableArray(_row, _heavyPixCol,  N, heavy->getImageData());
             _fits->writeTableArray(_row, _heavyMaskCol, N, heavy->getMaskData());
             _fits->writeTableArray(_row, _heavyVarCol,  N, heavy->getVarianceData());

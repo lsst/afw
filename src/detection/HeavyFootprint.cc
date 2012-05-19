@@ -138,22 +138,6 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
     expandArray(*this, _image,    image.getArray(),    image.getXY0());
 }
 
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::appendImage(
-	std::vector<ImagePixelT> &v) const {
-	v.insert(v.end(), _image.begin(), _image.end());
-}
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::appendMask(
-	std::vector<MaskPixelT> &v) const {
-	v.insert(v.end(), _mask.begin(), _mask.end());
-}
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::appendVariance(
-	std::vector<VariancePixelT> &v) const {
-	v.insert(v.end(), _variance.begin(), _variance.end());
-}
-
 
 /************************************************************************************************************/
 //
