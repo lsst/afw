@@ -121,7 +121,10 @@ namespace {
 class SourceFitsWriter : public io::FitsWriter {
 public:
 
-    explicit SourceFitsWriter(Fits * fits) : io::FitsWriter(fits) {}
+    explicit SourceFitsWriter(Fits * fits) : io::FitsWriter(fits),
+                                             _heavyPixCol(-1),
+                                             _heavyMaskCol(-1),
+                                             _heavyVarCol(-1) {}
 
 protected:
     
@@ -132,6 +135,9 @@ protected:
 private:
     int _spanCol;
     int _peakCol;
+    int _heavyPixCol;
+    int _heavyMaskCol;
+    int _heavyVarCol;
 };
 
 void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
@@ -147,6 +153,14 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
     _peakCol = _fits->addColumn<float>("peaks", 0, "footprint peaks (fx, fy, peakValue)");
     _fits->writeKey("SPANCOL", _spanCol + 1, "Column with footprint spans.");
     _fits->writeKey("PEAKCOL", _peakCol + 1, "Column with footprint peaks (float values).");
+    if (table->getWriteHeavyFootprints()) {
+        _heavyPixCol  = _fits->addColumn<float>("heavyPix", 0, "HeavyFootprint pixels");
+        _heavyMaskCol = _fits->addColumn<lsst::afw::image::MaskPixel>("heavyMask", 0, "HeavyFootprint masks");
+        _heavyVarCol  = _fits->addColumn<lsst::afw::image::VariancePixel>("heavyVar", 0, "HeavyFootprint variance");
+        _fits->writeKey("HVYPIXCO", _heavyPixCol  + 1, "Column with HeavyFootprint pix");
+        _fits->writeKey("HVYMSKCO", _heavyMaskCol + 1, "Column with HeavyFootprint mask");
+        _fits->writeKey("HVYVARCO", _heavyVarCol  + 1, "Column with HeavyFootprint variance");
+    }
     _fits->writeKey("AFW_TYPE", "SOURCE", "Tells lsst::afw to load this as a Source table.");
     SAVE_FLUX_SLOT(PSF, Psf);
     SAVE_FLUX_SLOT(MODEL, Model);
@@ -157,6 +171,8 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
 }
 
 void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
+    typedef lsst::afw::detection::HeavyFootprint<float,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
+
     SourceRecord const & record = static_cast<SourceRecord const &>(r);
     io::FitsWriter::_writeRecord(record);
     if (record.getFootprint()) {
@@ -180,6 +196,20 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
                 vec.push_back((**j).getFy());
                 vec.push_back((**j).getPeakValue());}
             _fits->writeTableArray(_row, _peakCol, vec.size(), &vec.front());
+        }
+        if ((_heavyPixCol != -1) && record.getFootprint()->isHeavy()) {
+            assert((_heavyPixCol >= 0) && (_heavyMaskCol >= 0) && (_heavyVarCol >= 0));
+            PTR(HeavyFootprint) heavy = boost::static_pointer_cast<HeavyFootprint>(record.getFootprint());
+            int N = heavy->getArea();
+            /*
+             std::vector<float> vec;
+             //? vec.reserve(heavy.getArea());
+             heavy->appendPix(vec);
+             _fits->writeTableArray(_row, _heavyPixCol, vec.size(), &vec.front());
+             */
+            _fits->writeTableArray(_row, _heavyPixCol,  N, heavy->getImageData());
+            _fits->writeTableArray(_row, _heavyMaskCol, N, heavy->getMaskData());
+            _fits->writeTableArray(_row, _heavyVarCol,  N, heavy->getVarianceData());
         }
     }
 }
@@ -341,11 +371,13 @@ PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const &
 SourceTable::SourceTable(
     Schema const & schema,
     PTR(IdFactory) const & idFactory
-) : SimpleTable(schema, idFactory) {}
+    ) : SimpleTable(schema, idFactory),
+        _writeHeavyFootprints(false) {}
 
 SourceTable::SourceTable(SourceTable const & other) :
     SimpleTable(other),
-    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
+    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape),
+    _writeHeavyFootprints(other._writeHeavyFootprints)
 {}
 
 SourceTable::MinimalSchema::MinimalSchema() {

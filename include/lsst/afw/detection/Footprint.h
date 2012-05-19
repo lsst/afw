@@ -132,12 +132,14 @@ public:
     Footprint(Footprint const & other);    
     virtual ~Footprint();
 
+	virtual bool isHeavy() const { return false; }
+
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
     const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
     PeakList & getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
-    int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint
+    int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
 
     const Span& addSpan(const int y, const int x0, const int x1);
@@ -196,7 +198,7 @@ private:
 
     static int id;
     mutable int _fid;                    //!< unique ID
-    int _area;                           //!< number of pixels in this Footprint
+    int _area;                           //!< number of pixels in this Footprint (not the area of the bbox)
      
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
@@ -267,13 +269,27 @@ public:
         HeavyFootprintCtrl const* ctrl=NULL
                            );
 
+	virtual bool isHeavy() const { return true; }
+
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
+
+    void appendImage(std::vector<ImagePixelT> &v) const;
+    void appendMask(std::vector<MaskPixelT> &v) const;
+    void appendVariance(std::vector<VariancePixelT> &v) const;
+
+    const ImagePixelT*    getImageData() const { return _image.getData(); }
+    const MaskPixelT*     getMaskData() const { return _mask.getData(); }
+    const VariancePixelT* getVarianceData() const { return _variance.getData(); }
+
+//PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits *fits) const;
 
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;
     ndarray::Array<MaskPixelT, 1, 1> _mask;
     ndarray::Array<VariancePixelT, 1, 1> _variance;
+
+//friend class io::FitsWriter;
 };
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
