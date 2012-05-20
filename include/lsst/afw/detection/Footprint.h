@@ -274,9 +274,14 @@ public:
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
 
+    // for FITS persistence
     const ImagePixelT*    getImageData() const { return _image.getData(); }
     const MaskPixelT*     getMaskData() const { return _mask.getData(); }
     const VariancePixelT* getVarianceData() const { return _variance.getData(); }
+
+    ImagePixelT*    getImageData() { return _image.getData(); }
+    MaskPixelT*     getMaskData() { return _mask.getData(); }
+    VariancePixelT* getVarianceData() { return _variance.getData(); }
 
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;

@@ -7,6 +7,7 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/detection/FootprintCtrl.h"
 
 // Some boilerplate macros for saving/loading Source slot aliases to/from FITS headers.
 // Didn't seem to be quite enough to give the file the full M4 treatment.
@@ -226,7 +227,10 @@ namespace {
 class SourceFitsReader : public io::FitsReader {
 public:
 
-    explicit SourceFitsReader(Fits * fits) : io::FitsReader(fits), _spanCol(-1), _peakCol(-1) {}
+    explicit SourceFitsReader(Fits * fits) : io::FitsReader(fits), _spanCol(-1), _peakCol(-1),
+                                             _heavyPixCol(-1),
+                                             _heavyMaskCol(-1),
+                                             _heavyVarCol(-1) {}
 
 protected:
 
@@ -237,6 +241,9 @@ protected:
 private:
     int _spanCol;
     int _peakCol;
+    int _heavyPixCol;
+    int _heavyMaskCol;
+    int _heavyVarCol;
 };
 
 PTR(BaseTable) SourceFitsReader::_readTable() {
@@ -256,9 +263,31 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
         metadata->remove((boost::format("TTYPE%d") % _peakCol).str());
         metadata->remove((boost::format("TFORM%d") % _peakCol).str());
     }
+    _heavyPixCol  = metadata->get("HVYPIXCO", 0);
+    if (_heavyPixCol >= 0) {
+        metadata->remove("HVYPIXCO");
+        metadata->remove((boost::format("TTYPE%d") % _heavyPixCol).str());
+        metadata->remove((boost::format("TFORM%d") % _heavyPixCol).str());
+    }
+    _heavyMaskCol  = metadata->get("HVYMSKCO", 0);
+    if (_heavyMaskCol >= 0) {
+        metadata->remove("HVYMSKCO");
+        metadata->remove((boost::format("TTYPE%d") % _heavyMaskCol).str());
+        metadata->remove((boost::format("TFORM%d") % _heavyMaskCol).str());
+    }
+    _heavyVarCol  = metadata->get("HVYVARCO", 0);
+    if (_heavyVarCol >= 0) {
+        metadata->remove("HVYVARCO");
+        metadata->remove((boost::format("TTYPE%d") % _heavyVarCol).str());
+        metadata->remove((boost::format("TFORM%d") % _heavyVarCol).str());
+    }
+
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     --_spanCol; // switch to 0-indexed rather than 1-indexed convention.
     --_peakCol;
+    --_heavyPixCol;
+    --_heavyMaskCol;
+    --_heavyVarCol;
     Schema schema(*metadata, true);
     PTR(SourceTable) table =  SourceTable::make(schema, PTR(IdFactory)());
     LOAD_FLUX_SLOT(PSF, Psf);
@@ -273,10 +302,15 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
 }
 
 PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
+    typedef lsst::afw::detection::HeavyFootprint<float,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
+
     PTR(SourceRecord) record = boost::static_pointer_cast<SourceRecord>(io::FitsReader::_readRecord(table));
     if (!record) return record;
     int spanElementCount = (_spanCol >= 0) ? _fits->getTableArraySize(_row, _spanCol) : 0;
     int peakElementCount = (_peakCol >= 0) ? _fits->getTableArraySize(_row, _peakCol) : 0;
+    int heavyPixElementCount  = (_heavyPixCol  >= 0) ? _fits->getTableArraySize(_row, _heavyPixCol)  : 0;
+    int heavyMaskElementCount = (_heavyMaskCol >= 0) ? _fits->getTableArraySize(_row, _heavyMaskCol) : 0;
+    int heavyVarElementCount  = (_heavyVarCol  >= 0) ? _fits->getTableArraySize(_row, _heavyVarCol)  : 0;
     if (spanElementCount || peakElementCount) {
         PTR(Footprint) fp = boost::make_shared<Footprint>();
         if (spanElementCount) {
@@ -322,6 +356,28 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
             }
         }
         record->setFootprint(fp);
+
+        if (heavyPixElementCount && heavyMaskElementCount && heavyVarElementCount) {
+            int N = fp->getArea();
+            if ((heavyPixElementCount  != N) ||
+                (heavyMaskElementCount != N) ||
+                (heavyVarElementCount  != N)) {
+                throw LSST_EXCEPT(
+                    afw::fits::FitsError,
+                    afw::fits::makeErrorMessage(
+                        _fits->fptr, _fits->status,
+                        boost::format("Number of HeavyFootprint elements (pix %d, mask %d, var %d) must all be equal to footprint area (%d)")
+                        % heavyPixElementCount % heavyMaskElementCount % heavyVarElementCount % N
+                        ));
+            }
+            afw::detection::HeavyFootprintCtrl ctrl(afw::detection::HeavyFootprintCtrl::IGNORE);
+            afw::image::MaskedImage<float, afw::image::MaskPixel, afw::image::VariancePixel> mim;
+            PTR(HeavyFootprint) heavy = boost::make_shared<HeavyFootprint>(*fp, mim, &ctrl);
+            _fits->readTableArray(_row, _heavyPixCol,  N, heavy->getImageData());
+            _fits->readTableArray(_row, _heavyMaskCol, N, heavy->getMaskData());
+            _fits->readTableArray(_row, _heavyVarCol,  N, heavy->getVarianceData());
+            record->setFootprint(heavy);
+        }
     }
     return record;
 }

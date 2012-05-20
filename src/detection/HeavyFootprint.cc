@@ -92,6 +92,8 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     }
 
     switch (ctrl->getModifySource()) {
+      case HeavyFootprintCtrl::IGNORE:
+		  break;
       case HeavyFootprintCtrl::NONE:
         flattenArray(*this, mimage.getImage()->getArray(),    _image,    mimage.getXY0());
         flattenArray(*this, mimage.getMask()->getArray(),     _mask,     mimage.getXY0());
