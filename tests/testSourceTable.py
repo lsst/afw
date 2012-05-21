@@ -36,6 +36,7 @@ import sys
 import os
 import unittest
 import numpy
+import tempfile
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -43,6 +44,7 @@ import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.coord
 import lsst.afw.image
+import lsst.afw.detection
 
 try:
     type(display)
@@ -200,6 +202,88 @@ class SourceTableTestCase(unittest.TestCase):
     def testCast(self):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
         sourceCat = baseCat.cast(lsst.afw.table.SourceCatalog)
+
+    def testHeavyFootprint(self):
+        '''Test round-tripping a HeavyFootprint to FITS
+        '''
+        self.catalog.setWriteHeavyFootprints(True)
+        src1 = self.catalog.addNew()
+        src2 = self.catalog.addNew()
+        src3 = self.catalog.addNew()
+        self.fillRecord(src1)
+        self.fillRecord(src2)
+        self.fillRecord(src3)
+        src2.setParent(src1.getId())
+
+        W,H = 100,100
+        mim = lsst.afw.image.MaskedImageF(W,H)
+        im = mim.getImage()
+        msk = mim.getMask()
+        var = mim.getVariance()
+        for y in range(H):
+            for x in range(W):
+                im.set (x, y, y * 1e6 + x * 1e3)
+                msk.set(x, y, (y << 8) | x)
+                var.set(x, y, y * 1e2 + x)
+        circ = lsst.afw.detection.Footprint(lsst.afw.geom.Point2I(50,50), 20)
+        heavy = lsst.afw.detection.makeHeavyFootprint(circ, mim)
+        src2.setFootprint(heavy)
+
+        for i,src in enumerate(self.catalog):
+            if src != src2:
+                src.setFootprint(lsst.afw.detection.Footprint(lsst.afw.geom.Point2I(50,50), 1+i*2))
+
+        # insert this HeavyFootprint into an otherwise blank image (for comparing the results)
+        mim2 = lsst.afw.image.MaskedImageF(W,H)
+        heavy.insert(mim2)
+
+        f,fn = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
+        os.close(f)
+        self.catalog.writeFits(fn)
+
+        cat2 = lsst.afw.table.SourceCatalog.readFits(fn)
+        r2 = cat2[-2]
+        f2 = r2.getFootprint()
+        self.assertTrue(f2.isHeavy())
+        h2 = lsst.afw.detection.cast_HeavyFootprintF(f2)
+        mim3 = lsst.afw.image.MaskedImageF(W, H)
+        h2.insert(mim3)
+
+        self.assertFalse(cat2[-1].getFootprint().isHeavy())
+        self.assertFalse(cat2[-3].getFootprint().isHeavy())
+        self.assertFalse(cat2[0].getFootprint().isHeavy())
+        self.assertFalse(cat2[1].getFootprint().isHeavy())
+        self.assertFalse(cat2[2].getFootprint().isHeavy())
+
+
+        if False:
+            # Write out before-n-after FITS images
+            for MI in [mim, mim2, mim3]:
+                f,fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
+                os.close(f)
+                MI.writeFits(fn2)
+                print 'wrote', fn2
+
+        self.assertTrue(all((mim2.getImage().getArray() == mim3.getImage().getArray()).ravel()))
+        self.assertTrue(all((mim2.getMask().getArray() == mim3.getMask().getArray()).ravel()))
+        self.assertTrue(all((mim2.getVariance().getArray() == mim3.getVariance().getArray()).ravel()))
+
+        im3 = mim3.getImage()
+        ma3 = mim3.getMask()
+        va3 = mim3.getVariance()
+        for y in range(H):
+            for x in range(W):
+                if circ.contains(lsst.afw.geom.Point2I(x, y)):
+                    self.assertEqual(im.get(x, y),  im3.get(x, y))
+                    self.assertEqual(msk.get(x, y), ma3.get(x, y))
+                    self.assertEqual(var.get(x, y), va3.get(x, y))
+                else:
+                    self.assertEqual(im3.get(x, y), 0.)
+                    self.assertEqual(ma3.get(x, y), 0.)
+                    self.assertEqual(va3.get(x, y), 0.)
+                        
+
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
