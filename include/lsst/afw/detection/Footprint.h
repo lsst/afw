@@ -68,7 +68,7 @@ public:
     Span(int y,                         //!< Row that Span's in
          int x0,                        //!< Starting column (inclusive)
          int x1)                        //!< Ending column (inclusive)
-        : _y(y), _x0(x0), _x1(x1) {}    
+        : _y(y), _x0(x0), _x1(x1) {}
     ~Span() {}
 
     int getX0() const { return _x0; }         ///< Return the starting x-value
@@ -76,19 +76,19 @@ public:
     int getY()  const { return _y; }          ///< Return the y-value
     int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
 
-	bool contains(int x) { return (x >= _x0) && (x <= _x1); }
-	bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
+    bool contains(int x) { return (x >= _x0) && (x <= _x1); }
+    bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
 
-    std::string toString() const;    
+    std::string toString() const;
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
 
-	/* Required to make Span "LessThanComparable" so they can be used
-	 * in sorting, binary search, etc.
-	 * http://www.sgi.com/tech/stl/LessThanComparable.html
-	 */
-	bool operator<(const Span& b) const;
-	
+    /* Required to make Span "LessThanComparable" so they can be used
+     * in sorting, binary search, etc.
+     * http://www.sgi.com/tech/stl/LessThanComparable.html
+     */
+    bool operator<(const Span& b) const;
+
     friend class Footprint;
 private:
     Span() {}
@@ -132,7 +132,7 @@ public:
     Footprint(Footprint const & other);    
     virtual ~Footprint();
 
-	virtual bool isHeavy() const { return false; }
+    virtual bool isHeavy() const { return false; }
 
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
@@ -150,7 +150,7 @@ public:
     void shift(geom::ExtentI d) {shift(d.getX(), d.getY());}
 
     /// Return the Footprint's bounding box
-    geom::Box2I getBBox() const { return _bbox; }     
+    geom::Box2I getBBox() const { return _bbox; }
     /// Return the corners of the MaskedImage the footprints live in
     geom::Box2I const & getRegion() const { return _region; }
 
@@ -160,17 +160,17 @@ public:
     void clipTo(geom::Box2I const & bbox);
 
     bool contains(geom::Point2I const& pix) const;
-    
+
     void normalize();
     bool isNormalized() const {return _normalized;}
 
     template<typename PixelT>
-    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
                          boost::uint64_t const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
     template<typename PixelT>
-    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
                          boost::uint64_t const id,
                          bool const overwriteId, long const idMask,
                          typename std::set<boost::uint64_t> *oldIds,
@@ -181,7 +181,7 @@ public:
 
     template <typename MaskPixelT>
     void intersectMask(
-        image::Mask<MaskPixelT> const & mask, 
+        image::Mask<MaskPixelT> const & mask,
         MaskPixelT bitmask=~0x0
     );
 
@@ -204,7 +204,7 @@ private:
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
     PeakList _peaks;                     //!< the Peaks lying in this footprint
     mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
-    bool _normalized;                    //!< Are the spans sorted? 
+    bool _normalized;                    //!< Are the spans sorted?
 };
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
@@ -269,7 +269,7 @@ public:
         HeavyFootprintCtrl const* ctrl=NULL
                            );
 
-	virtual bool isHeavy() const { return true; }
+    virtual bool isHeavy() const { return true; }
 
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
@@ -294,10 +294,10 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
     Footprint const& foot,
     lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& img,
     HeavyFootprintCtrl const* ctrl=NULL
-                                                                          )    
+                                                                          )
 {
     return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img, ctrl);
-}    
+}
 
 }}}
 
