@@ -474,19 +474,19 @@ Key = {}
 SchemaItem = {}
 _suffixes = {}
 aliases = {
-    int: "I4",
-    long: "I8",
-    float: "F8",
-    numpy.int32: "I4",
-    numpy.int64: "I8",
-    numpy.float32: "F4",
-    numpy.float64: "F8",
+    int: "I",
+    long: "L",
+    float: "D",
+    numpy.int32: "I",
+    numpy.int64: "L",
+    numpy.float32: "F",
+    numpy.float64: "D",
     Angle: "Angle",
     Coord: "Coord",
     IcrsCoord: "Coord",
-    Point2I: "PointI4",
-    Point2D: "PointF8",
-    Quadrupole: "MomentsF8",
+    Point2I: "PointI",
+    Point2D: "PointD",
+    Quadrupole: "MomentsD",
 }
 %}
 
@@ -531,32 +531,32 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %implicitconv FieldBase_ ## PYNAME;
 %enddef
 
-%declareFieldType(boost::int32_t, I4)
-%declareFieldType(boost::int64_t, I8)
-%declareFieldType(float, F4)
-%declareFieldType(double, F8)
+%declareFieldType(boost::int32_t, I)
+%declareFieldType(boost::int64_t, L)
+%declareFieldType(float, F)
+%declareFieldType(double, D)
 %declareFieldType(lsst::afw::table::Flag, Flag)
 %declareFieldType(lsst::afw::geom::Angle, Angle)
 %declareFieldType(lsst::afw::coord::Coord, Coord)
 
-%declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI4)
-%declareFieldType(lsst::afw::table::Point<float>, PointF4)
-%declareFieldType(lsst::afw::table::Point<double>, PointF8)
+%declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI)
+%declareFieldType(lsst::afw::table::Point<float>, PointF)
+%declareFieldType(lsst::afw::table::Point<double>, PointD)
 
-%declareFieldType(lsst::afw::table::Moments<float>, MomentsF4)
-%declareFieldType(lsst::afw::table::Moments<double>, MomentsF8)
+%declareFieldType(lsst::afw::table::Moments<float>, MomentsF)
+%declareFieldType(lsst::afw::table::Moments<double>, MomentsD)
 
-%declareFieldType(lsst::afw::table::Array<float>, ArrayF4)
-%declareFieldType(lsst::afw::table::Array<double>, ArrayF8)
+%declareFieldType(lsst::afw::table::Array<float>, ArrayF)
+%declareFieldType(lsst::afw::table::Array<double>, ArrayD)
 
-%declareFieldType(lsst::afw::table::Covariance<float>, CovF4)
-%declareFieldType(lsst::afw::table::Covariance<double>, CovF8)
+%declareFieldType(lsst::afw::table::Covariance<float>, CovF)
+%declareFieldType(lsst::afw::table::Covariance<double>, CovD)
 
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF4)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointF8)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointD)
 
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF4)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsF8)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsD)
 
 %include "specializations.i"
 

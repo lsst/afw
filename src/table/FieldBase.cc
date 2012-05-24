@@ -16,22 +16,16 @@ namespace {
 template <typename T> struct TypeTraits;
 
 template <> struct TypeTraits<boost::int32_t> {
-    static char const * getName() { return "I4"; }
-};
-template <> struct TypeTraits<boost::uint32_t> {
-    static char const * getName() { return "U4"; }
+    static char const * getName() { return "I"; }
 };
 template <> struct TypeTraits<boost::int64_t> {
-    static char const * getName() { return "I8"; }
-};
-template <> struct TypeTraits<boost::uint64_t> {
-    static char const * getName() { return "U8"; }
+    static char const * getName() { return "L"; }
 };
 template <> struct TypeTraits<float> {
-    static char const * getName() { return "F4"; }
+    static char const * getName() { return "F"; }
 };
 template <> struct TypeTraits<double> {
-    static char const * getName() { return "F8"; }
+    static char const * getName() { return "D"; }
 };
 template <> struct TypeTraits<lsst::afw::geom::Angle> {
     static char const * getName() { return "Angle"; }
