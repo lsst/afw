@@ -238,7 +238,7 @@
         self->set(key, value);
     }
 
-    void set_Flag(lsst::afw::table::Key< Flag > const & key, bool value) {
+    void setFlag(lsst::afw::table::Key< Flag > const & key, bool value) {
         self->set(key, value);
     }
 
@@ -276,7 +276,7 @@
         self->set(key, v);
     }
 
-    void set_Coord(
+    void setCoord(
         lsst::afw::table::Key< lsst::afw::coord::Coord > const & key,
         lsst::afw::coord::Coord const & v
     ) {
