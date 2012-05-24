@@ -9,6 +9,9 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
 
+// We ASSUME, for FITS persistence:
+typedef float HeavyFootprintPixelT;
+
 // Some boilerplate macros for saving/loading Source slot aliases to/from FITS headers.
 // Didn't seem to be quite enough to give the file the full M4 treatment.
 
@@ -155,7 +158,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
     _fits->writeKey("SPANCOL", _spanCol + 1, "Column with footprint spans.");
     _fits->writeKey("PEAKCOL", _peakCol + 1, "Column with footprint peaks (float values).");
     if (table->getWriteHeavyFootprints()) {
-        _heavyPixCol  = _fits->addColumn<float>("heavyPix", 0, "HeavyFootprint pixels");
+        _heavyPixCol  = _fits->addColumn<HeavyFootprintPixelT>("heavyPix", 0, "HeavyFootprint pixels");
         _heavyMaskCol = _fits->addColumn<lsst::afw::image::MaskPixel>("heavyMask", 0, "HeavyFootprint masks");
         _heavyVarCol  = _fits->addColumn<lsst::afw::image::VariancePixel>("heavyVar", 0, "HeavyFootprint variance");
         _fits->writeKey("HVYPIXCO", _heavyPixCol  + 1, "Column with HeavyFootprint pix");
@@ -172,7 +175,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t) {
 }
 
 void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
-    typedef lsst::afw::detection::HeavyFootprint<float,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
+    typedef lsst::afw::detection::HeavyFootprint<HeavyFootprintPixelT,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
 
     SourceRecord const & record = static_cast<SourceRecord const &>(r);
     io::FitsWriter::_writeRecord(record);
@@ -302,7 +305,7 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
 }
 
 PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
-    typedef lsst::afw::detection::HeavyFootprint<float,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
+    typedef lsst::afw::detection::HeavyFootprint<HeavyFootprintPixelT,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
 
     PTR(SourceRecord) record = boost::static_pointer_cast<SourceRecord>(io::FitsReader::_readRecord(table));
     if (!record) return record;
@@ -370,7 +373,6 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
                         % heavyPixElementCount % heavyMaskElementCount % heavyVarElementCount % N
                         ));
             }
-            afw::image::MaskedImage<float, afw::image::MaskPixel, afw::image::VariancePixel> mim;
             PTR(HeavyFootprint) heavy = boost::make_shared<HeavyFootprint>(*fp);
             _fits->readTableArray(_row, _heavyPixCol,  N, heavy->getImageData());
             _fits->readTableArray(_row, _heavyMaskCol, N, heavy->getMaskData());
