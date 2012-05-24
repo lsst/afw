@@ -47,7 +47,15 @@
         return "Box2I(%s, %s)" % (self.getMin(), self.getMax())
 
     def getSlices(self):
-         return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
+        return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
+
+    def getCorners(self):
+        return (
+            self.getMin(),
+            self.Point(self.getMaxX(), self.getMinY()),
+            self.getMax(),
+            self.Point(self.getMinX(), self.getMaxY())
+        )
     }
 }
 
@@ -61,5 +69,7 @@
              
     def __str__(self):
         return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
+
+    getCorners = Box2I.getCorners
     }
 }
