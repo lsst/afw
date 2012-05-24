@@ -178,9 +178,7 @@ def setMaskTransparency(transparency=None, frame=None):
     _maskTransparency = transparency
 
     if transparency is not None:
-        if frame is not None:
-            ds9Cmd(selectFrame(frame))
-        ds9Cmd("mask transparency %d" % transparency)
+        ds9Cmd("mask transparency %d" % transparency, frame=frame)
 
 setMaskTransparency()
 
@@ -300,7 +298,7 @@ or (the old idiom):
     cmdBuffer = Buffer(0)
 
 
-def ds9Cmd(cmd=None, trap=True, flush=False, silent=False):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -308,6 +306,9 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=False):
 
     global cmdBuffer
     if cmd:
+        if frame is not None:
+            cmd = "%s;" % selectFrame(frame) + cmd
+
         # Work around xpa's habit of silently truncating long lines
         if cmdBuffer._lenCommands + len(cmd) > XPA_SZ_LINE - 5: # 5 to handle newlines and such like
             ds9Cmd(flush=True)
@@ -375,7 +376,7 @@ def show(frame=None):
     if frame is None:
         return
 
-    ds9Cmd(selectFrame(frame) + "; raise", trap=False)
+    ds9Cmd("raise", trap=False, frame=frame)
 
 def setMaskColor(color=GREEN):
     """Set the ds9 mask colour to; eg. setMaskColor(RED)"""
@@ -560,7 +561,7 @@ def erase(frame=None):
     if frame is None:
         return
 
-    ds9Cmd(selectFrame(frame) + "; regions delete all", flush=True)
+    ds9Cmd("regions delete all", flush=True, frame=frame)
 
 def dot(symb, c, r, frame=None, size=2, ctype=None):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
