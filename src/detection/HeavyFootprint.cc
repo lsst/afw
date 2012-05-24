@@ -92,8 +92,6 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     }
 
     switch (ctrl->getModifySource()) {
-      case HeavyFootprintCtrl::IGNORE:
-		  break;
       case HeavyFootprintCtrl::NONE:
         flattenArray(*this, mimage.getImage()->getArray(),    _image,    mimage.getXY0());
         flattenArray(*this, mimage.getMask()->getArray(),     _mask,     mimage.getXY0());
@@ -114,6 +112,22 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
         break;
         }
     }
+}
+
+/**
+ * Create a HeavyFootprint from a regular Footprint, allocating space
+ * to hold foot.getArea() pixels, but not initializing them.  This is
+ * used when unpersisting a HeavyFootprint.
+ */
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
+    Footprint const& foot,              ///< The Footprint defining the pixels to set
+	HeavyFootprintCtrl const* ctrl)
+	: Footprint(foot),
+	  _image   (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+	  _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+	  _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
+{
 }
 
 /**

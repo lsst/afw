@@ -269,16 +269,18 @@ public:
         HeavyFootprintCtrl const* ctrl=NULL
                            );
 
+    explicit HeavyFootprint(Footprint const& foot,
+                            HeavyFootprintCtrl const* ctrl=NULL);
+
     virtual bool isHeavy() const { return true; }
 
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
 
-    // for FITS persistence
+    // for FITS persistence: direct access to data pointers.
     const ImagePixelT*    getImageData() const { return _image.getData(); }
     const MaskPixelT*     getMaskData() const { return _mask.getData(); }
     const VariancePixelT* getVarianceData() const { return _variance.getData(); }
-
     ImagePixelT*    getImageData() { return _image.getData(); }
     MaskPixelT*     getMaskData() { return _mask.getData(); }
     VariancePixelT* getVarianceData() { return _variance.getData(); }

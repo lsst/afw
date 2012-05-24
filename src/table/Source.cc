@@ -370,9 +370,8 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
                         % heavyPixElementCount % heavyMaskElementCount % heavyVarElementCount % N
                         ));
             }
-            afw::detection::HeavyFootprintCtrl ctrl(afw::detection::HeavyFootprintCtrl::IGNORE);
             afw::image::MaskedImage<float, afw::image::MaskPixel, afw::image::VariancePixel> mim;
-            PTR(HeavyFootprint) heavy = boost::make_shared<HeavyFootprint>(*fp, mim, &ctrl);
+            PTR(HeavyFootprint) heavy = boost::make_shared<HeavyFootprint>(*fp);
             _fits->readTableArray(_row, _heavyPixCol,  N, heavy->getImageData());
             _fits->readTableArray(_row, _heavyMaskCol, N, heavy->getMaskData());
             _fits->readTableArray(_row, _heavyVarCol,  N, heavy->getVarianceData());
