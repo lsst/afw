@@ -99,16 +99,24 @@ class SimpleTableTestCase(unittest.TestCase):
         
 
     def checkGeomAccessors(self, record, key, name, value):
+        fastSetter = getattr(record, "set" + key.getTypeString())
+        fastGetter = getattr(record, "get" + key.getTypeString())
         record.set(key, value)
         self.assertEqual(record.get(key), value)
         record.set(name, value)
         self.assertEqual(record.get(name), value)
+        fastSetter(key, value)
+        self.assertEqual(fastGetter(key), value)
 
     def checkArrayAccessors(self, record, key, name, value):
+        fastSetter = getattr(record, "set" + key.getTypeString())
+        fastGetter = getattr(record, "get" + key.getTypeString())
         record.set(key, value)
         self.assert_(numpy.all(record.get(key) == value))
         record.set(name, value)
         self.assert_(numpy.all(record.get(name) == value))
+        fastSetter(key, value)
+        self.assert_(numpy.all(fastGetter(key) == value))
 
     def testRecordAccess(self):
         schema = lsst.afw.table.Schema()
