@@ -86,8 +86,14 @@ def BaseRecord_extract(self, *patterns, **kwds):
 
       items ------ The result of a call to self.schema.extract(); this will be used instead
                    of doing any new matching, and allows the pattern matching to be reused
-                   to extract values from multiple records.  This must be the only argument
-                   if present and not None.
+                   to extract values from multiple records.  This keyword is incompatible
+                   with any position arguments and the regex, sub, and ordered keyword
+                   arguments.
+
+      split ------ If True, fields with named subfields (e.g. points) will be split into
+                   separate items in the dict; instead of {"point": lsst.afw.geom.Point2I(2,3)},
+                   for instance, you'd get {"point.x": 2, "point.y": 3}.
+                   Default is False.
 
       regex ------ A regular expression to be used in addition to any glob patterns passed
                    as positional arguments.  Note that this will be compared with re.match,
@@ -98,16 +104,23 @@ def BaseRecord_extract(self, *patterns, **kwds):
 
       ordered----- If True, a collections.OrderedDict will be returned instead of a standard
                    dict, with the order corresponding to the definition order of the Schema.
+                   Default is False.
 
     """
     d = kwds.pop("items", None)
+    split = kwds.pop("split", False)
     if d is None:
         d = self.schema.extract(*patterns, **kwds).copy()
     elif kwds:
         raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
-    for name, schemaItem in d.iteritems():
-        # TODO: use fast getters here once #2112 is merged
-        d[name] = self.get(schemaItem.key)
+    for name, schemaItem in d.items():  # can't use iteritems because we might be adding/deleting elements
+        key = schemaItem.key
+        if split and key.HAS_NAMED_SUBFIELDS:
+            for subname, subkey in zip(key.subfields, key.subkeys):
+                d["%s.%s" % (name, subname)] = self.get(subkey)
+            del d[name]
+        else:
+            d[name] = self.get(schemaItem.key)
     return d
 
 def BaseColumnView_extract(self, *patterns, **kwds):
@@ -119,9 +132,13 @@ def BaseColumnView_extract(self, *patterns, **kwds):
     the result of each glob considered separately.
 
     Note that extract("*", copy=True) provides an easy way to transform a row-major
-    ColumnView into a possibly more efficient set of contiguous NumPy arrays.  This
-    also unpacks Flag columns into full boolean arrays, however, and each column array
-    is allocated separately.
+    ColumnView into a possibly more efficient set of contiguous NumPy arrays.
+
+    This routines unpacks Flag columns into full boolean arrays and covariances into dense
+    (i.e. non-triangular packed) arrays with dimension (N,M,M), where N is the number of
+    records and M is the dimension of the covariance matrix.  Fields with named subfields
+    (e.g. points) are always split into separate dictionary items, as is done in
+    BaseRecord.extract(..., split=True).
 
     Additional optional arguments may be passed as keywords:
 
@@ -141,6 +158,7 @@ def BaseColumnView_extract(self, *patterns, **kwds):
                    views into the catalog.  This ensures that the lifetime of the catalog is
                    not tied to the lifetime of a particular catalog, and it also may improve
                    the performance if the array is used repeatedly.
+                   Default is False.
 
       regex ------ A regular expression to be used in addition to any glob patterns passed
                    as positional arguments.  Note that this will be compared with re.match,
@@ -151,6 +169,7 @@ def BaseColumnView_extract(self, *patterns, **kwds):
 
       ordered----- If True, a collections.OrderedDict will be returned instead of a standard
                    dict, with the order corresponding to the definition order of the Schema.
+                   Default is False.
 
     """
     copy = kwds.pop("copy", False)
@@ -160,11 +179,29 @@ def BaseColumnView_extract(self, *patterns, **kwds):
         d = self.schema.extract(*patterns, **kwds).copy()
     elif kwds:
         raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
-    for name, schemaItem in d.iteritems():
-        array = self.get(schemaItem.key)
+    def processArray(a):
         if where is not None:
-            array = array[where]
+            a = a[where]
         if copy:
-            array = numpy.ascontiguousarray(array)
-        d[name] = array
+            a = numpy.ascontiguousarray(a)
+        return a
+    for name, schemaItem in d.items(): # can't use iteritems because we might be adding/deleting elements
+        key = schemaItem.key
+        if key.HAS_NAMED_SUBFIELDS:
+            for subname, subkey in zip(key.subfields, key.subkeys):
+                d["%s.%s" % (name, subname)] = processArray(self.get(subkey))
+            del d[name]
+        elif key.getTypeString().startswith("Cov"):
+            unpacked = None
+            for idx, subkey in zip(key.subfields, key.subkeys):
+                i, j = idx
+                array = processArray(self.get(subkey))
+                if unpacked is None:
+                    unpacked = numpy.zeros((array.size, key.getSize(), key.getSize()), dtype=array.dtype)
+                unpacked[:,i,j] = array
+                if i != j:
+                    unpacked[:,j,i] = array
+            d[name] = unpacked
+        else:
+            d[name] = processArray(self.get(schemaItem.key))
     return d
