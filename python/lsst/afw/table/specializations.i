@@ -4,6 +4,13 @@
 // by replacing many of the get/set implementations with %template lines.
 
 %define %specializeScalar(U, PYNAME)
+%extend lsst::afw::table::KeyBase< U > {
+    %pythoncode %{
+        subfields = None
+        subkeys = None
+        HAS_NAMED_SUBFIELDS = False
+    %}
+}
 %extend lsst::afw::table::BaseRecord {
     %template(get) get< U >;
     %template(get##PYNAME) get< U >;
@@ -21,6 +28,11 @@
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Point< U > > {
     lsst::afw::table::Key<U> getX() const { return self->getX(); }
     lsst::afw::table::Key<U> getY() const { return self->getY(); }
+    %pythoncode %{
+        subfields = ("x", "y")
+        subkeys = property(lambda self: (self.getX(), self.getY()))
+        HAS_NAMED_SUBFIELDS = True
+    %}
 }
 %extend lsst::afw::table::BaseRecord {
 
@@ -44,6 +56,11 @@
     lsst::afw::table::Key<U> getIxx() const { return self->getIxx(); }
     lsst::afw::table::Key<U> getIyy() const { return self->getIyy(); }
     lsst::afw::table::Key<U> getIxy() const { return self->getIxy(); }
+    %pythoncode %{
+        subfields = ("xx", "yy", "xy")
+        subkeys = property(lambda self: (self.getIxx(), self.getIyy(), self.getIxy()))
+        HAS_NAMED_SUBFIELDS = True
+    %}
 }
 %extend lsst::afw::table::BaseRecord {
 
@@ -67,6 +84,11 @@
     lsst::afw::table::Key<U> __getitem__(int n) const {
         return (*self)[n];
     }
+    %pythoncode %{
+        subfields = property(lambda self: tuple(range(self.getSize())))
+        subkeys = property(lambda self: tuple(self[i] for i in range(self.getSize())))
+        HAS_NAMED_SUBFIELDS = False
+    %}
 }
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Array< U > > {
     int getSize() const { return self->getSize(); }
@@ -111,11 +133,14 @@
 }
 %enddef
 
-     %define %specializeCovariance(U, PYNAME)
+%define %specializeCovariance(U, PYNAME)
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< U > > {
     lsst::afw::table::Key<U> _getitem_impl(int i, int j) const { return (*self)(i, j); }
     %pythoncode %{
         def __getitem__(self, args): return self._getitem_impl(*args)
+        subfields = property(_syntax.KeyBaseCov_subfields)
+        subkeys = property(_syntax.KeyBaseCov_subkeys)
+        HAS_NAMED_SUBFIELDS = False
     %}
 }
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Covariance< U > > {
@@ -154,6 +179,9 @@
     lsst::afw::table::Key<U> _getitem_impl(int i, int j) const { return (*self)(i, j); }
     %pythoncode %{
         def __getitem__(self, args): return self._getitem_impl(*args)
+        subfields = property(_syntax.KeyBaseCov_subfields)
+        subkeys = property(_syntax.KeyBaseCov_subkeys)
+        HAS_NAMED_SUBFIELDS = False
     %}
 }
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Covariance< lsst::afw::table::Point< U > > > {
@@ -189,6 +217,9 @@
     lsst::afw::table::Key<U> _getitem_impl(int i, int j) const { return (*self)(i, j); }
     %pythoncode %{
         def __getitem__(self, args): return self._getitem_impl(*args)
+        subfields = property(_syntax.KeyBaseCov_subfields)
+        subkeys = property(_syntax.KeyBaseCov_subkeys)
+        HAS_NAMED_SUBFIELDS = False
     %}
 }
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Covariance< lsst::afw::table::Moments< U > > > {
@@ -243,6 +274,15 @@
     }
 
 }
+
+%extend lsst::afw::table::KeyBase< Flag > {
+    %pythoncode %{
+        subfields = None
+        subkeys = None
+        HAS_NAMED_SUBFIELDS = False
+    %}
+}
+
 %extend lsst::afw::table::BaseColumnView {
     ndarray::Array<bool const,1> __getitem__(
         lsst::afw::table::Key< lsst::afw::table::Flag > const & key
@@ -254,6 +294,11 @@
 %extend lsst::afw::table::KeyBase< lsst::afw::coord::Coord > {
     lsst::afw::table::Key<lsst::afw::geom::Angle> getRa() const { return self->getRa(); }
     lsst::afw::table::Key<lsst::afw::geom::Angle> getDec() const { return self->getDec(); }
+    %pythoncode %{
+        subfields = ("ra", "dec")
+        subkeys = property(lambda self: (self.getRa(), self.getDec()))
+        HAS_NAMED_SUBFIELDS = True
+    %}
 }
 %extend lsst::afw::table::BaseRecord {
 

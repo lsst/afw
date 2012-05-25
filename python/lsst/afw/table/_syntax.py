@@ -11,6 +11,22 @@ import re
 import numpy
 import collections
 
+def KeyBaseCov_subfields(self):
+    """a tuple of Key subfield extraction indices (the lower-triangular elements)."""
+    r = []
+    for i in range(self.getSize()):
+        for j in range(i+1):
+            r.append((i,j))
+    return tuple(r)
+
+def KeyBaseCov_subkeys(self):
+    """a tuple of subelement Keys (the lower-triangular elements)."""
+    r = []
+    for i in range(self.getSize()):
+        for j in range(i+1):
+            r.append(self[i,j])
+    return tuple(r)
+
 def Schema_extract(self, *patterns, **kwds):
     """
     Extract a dictionary of {<name>: <schema-item>} in which the field names
