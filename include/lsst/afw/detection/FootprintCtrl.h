@@ -35,22 +35,38 @@ namespace detection {
  */
 class FootprintCtrl {
     enum TBool { FALSE_=false, TRUE_=true, NONE_ }; // ternary boolean value. N.b. _XXX is reserved
+
+    static std::pair<bool, bool> makePairFromTBool(TBool const val)
+    {
+        return (val == NONE_) ? std::make_pair(false, false) : std::make_pair(true, val == TRUE_);
+    }
     
-    TBool _isotropic;
-    TBool _left, _right, _up, _down;
+    TBool _circular;                    // grow in all directions ( == left & right & up & down)
+    TBool _isotropic;                   // go to the expense of as isotropic a grow as possible 
+    TBool _left, _right, _up, _down;    // grow in selected directions?
 public:
-    explicit FootprintCtrl() : _isotropic(NONE_), _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
-    explicit FootprintCtrl(bool isotropic) : _isotropic(isotropic ? TRUE_ : FALSE_),
-                                             _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
+    explicit FootprintCtrl() : _circular(NONE_), _isotropic(NONE_),
+                               _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
+    explicit FootprintCtrl(bool circular, bool isotropic=false) :
+        _circular(circular ? TRUE_ : FALSE_), _isotropic(isotropic ? TRUE_ : FALSE_),
+        _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
+
+    /// Set whether Footprint should be grown circularly
+    void circularGrow(bool val         //!< Should grow be circular?
+                     ) { _circular = val ? TRUE_ : FALSE_; }
+    /// Return <isSet, Value> for circular grows
+    std::pair<bool, bool> isCircular() const {
+        return makePairFromTBool(_circular);
+    }
     /// Set whether Footprint should be grown isotropically
     void isotropicGrow(bool val         //!< Should grow be isotropic?
-                      ) { _isotropic = val ? TRUE_ : FALSE_; }
+                      ) {
+        _circular = TRUE_;
+        _isotropic = val ? TRUE_ : FALSE_;
+    }
+    /// Return <isSet, Value> for isotropic grows
     std::pair<bool, bool> isIsotropic() const {
-        if (_isotropic == NONE_) {
-            return std::make_pair(false, false);
-        } else {
-            return std::make_pair(true, _isotropic == TRUE_);
-        }
+        return makePairFromTBool(_isotropic);
     }
 };
 

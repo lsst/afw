@@ -1401,10 +1401,13 @@ detection::FootprintSet::FootprintSet(detection::FootprintSet const& rhs,
     : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
 {
     /*
-     * Handle isotropic grows
+     * Handle grows in all directions.  I'd call them "isotropic" except that that term is taken 
+     * for "all direction" grows that are as isotropic as possible
      */
-    std::pair<bool, bool> const isotropic = ctrl.isIsotropic();
-    if (isotropic.first) {              // value is set
+    std::pair<bool, bool> const circular = ctrl.isCircular();
+    if (circular.first && circular.second) {
+        std::pair<bool, bool> const isotropic = ctrl.isIsotropic();
+        assert (isotropic.first);       // value is set when circular is set
         detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow,
                                                         isotropic.second);
         swap(fs);                       // Swap the new FootprintSet into place
