@@ -1318,7 +1318,13 @@ detection::FootprintSet::FootprintSet(
     FootprintSet const &rhs         //!< the input FootprintSet
 ) :
     lsst::daf::base::Citizen(typeid(this)),
-    _footprints(rhs._footprints), _region(rhs._region) {
+    _footprints(new FootprintList), _region(rhs._region)
+{
+    _footprints->reserve(rhs._footprints->size());
+    for (FootprintSet::FootprintList::const_iterator ptr = rhs._footprints->begin(),
+             end = rhs._footprints->end(); ptr != end; ++ptr) {
+        _footprints->push_back(PTR(Footprint)(new Footprint(**ptr)));
+    }
 }
 
 /// Assignment operator.
