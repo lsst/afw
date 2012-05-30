@@ -1397,7 +1397,7 @@ detection::FootprintSet::FootprintSet(
 
 detection::FootprintSet::FootprintSet(detection::FootprintSet const& rhs,
                                       int ngrow,
-                                      detection::FootprintCtrl const& ctrl)
+                                      detection::FootprintControl const& ctrl)
     : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
 {
     /*
