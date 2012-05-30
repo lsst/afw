@@ -218,14 +218,19 @@ class FootprintSetTestCase(unittest.TestCase):
             self.assertGreater(len(grown.getFootprints()), 0)
             self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
 
-    def testGrowNSEW(self):
-        """Grow footprints in various directions using the FootprintSet constructor """
+    def testGrowCircular(self):
+        """Grow footprints in all 4 directions using the FootprintSet/FootprintCtrl constructor """
         im = afwImage.MaskedImageF(11, 11)
         im.set(5, 5, (10,))
         fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), 1)
-        for fctrl in (afwDetect.FootprintCtrl(True), afwDetect.FootprintCtrl(),):
-            grown = afwDetect.FootprintSet(fs, 1, fctrl)
+
+        radius = 3                      # How much to grow by
+        for fctrl in (afwDetect.FootprintCtrl(),
+                      afwDetect.FootprintCtrl(True),
+                      afwDetect.FootprintCtrl(True, True),
+                      ):
+            grown = afwDetect.FootprintSet(fs, radius, fctrl)
             afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
@@ -233,17 +238,18 @@ class FootprintSetTestCase(unittest.TestCase):
 
             foot = grown.getFootprints()[0]
 
-            if not fctrl.isIsotropic()[0]:
+            if not fctrl.isCircular()[0]:
                 self.assertEqual(foot.getNpix(), 1)
-            else:
+            elif fctrl.isCircular()[0]:
+                assert radius == 3
                 if fctrl.isIsotropic()[1]:
-                    self.assertEqual(foot.getNpix(), 5)
+                    self.assertEqual(foot.getNpix(), 29)
                 else:
-                    pass
+                    self.assertEqual(foot.getNpix(), 25)
 
-            if False:
-                for s in foot.getSpans():
-                    print s
+    def testGrowNSEW(self):
+        """Grow footprints in various directions using the FootprintSet/FootprintCtrl constructor """
+        pass
 
     def testInf(self):
         """Test detection for images with Infs"""
