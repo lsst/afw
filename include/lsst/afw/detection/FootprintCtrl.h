@@ -30,25 +30,50 @@ namespace lsst {
 namespace afw { 
 namespace detection {
 /*!
+ * \brief A Control Object for Footprints, controlling e.g. how they are grown
+ *
+ */
+class FootprintCtrl {
+    enum TBool { FALSE_=false, TRUE_=true, NONE_ }; // ternary boolean value. N.b. _XXX is reserved
+    
+    TBool _isotropic;
+    TBool _left, _right, _up, _down;
+public:
+    explicit FootprintCtrl() : _isotropic(NONE_), _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
+    explicit FootprintCtrl(bool isotropic) : _isotropic(isotropic ? TRUE_ : FALSE_),
+                                             _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
+    /// Set whether Footprint should be grown isotropically
+    void isotropicGrow(bool val         //!< Should grow be isotropic?
+                      ) { _isotropic = val ? TRUE_ : FALSE_; }
+    std::pair<bool, bool> isIsotropic() const {
+        if (_isotropic == NONE_) {
+            return std::make_pair(false, false);
+        } else {
+            return std::make_pair(true, _isotropic == TRUE_);
+        }
+    }
+};
+
+/*!
  * \brief A control object for HeavyFootprint%s
  */
-class HeavyFootprintCtrl {
-public:
-    enum ModifySource {NONE, SET,};
+    class HeavyFootprintCtrl {
+    public:
+        enum ModifySource {NONE, SET,};
 
-    explicit HeavyFootprintCtrl(ModifySource modifySource=NONE) :
-        _modifySource(modifySource),
-        _imageVal(0.0), _maskVal(0), _varianceVal(0.0)
-        {}
+        explicit HeavyFootprintCtrl(ModifySource modifySource=NONE) :
+            _modifySource(modifySource),
+            _imageVal(0.0), _maskVal(0), _varianceVal(0.0)
+            {}
 
-    ModifySource getModifySource() const { return _modifySource; }
-    void setModifySource(ModifySource modifySource) { _modifySource = modifySource; }
+        ModifySource getModifySource() const { return _modifySource; }
+        void setModifySource(ModifySource modifySource) { _modifySource = modifySource; }
 
-    double getImageVal() const { return _imageVal; }
-    void setImageVal(double imageVal) { _imageVal = imageVal; }
-    long getMaskVal() const { return _maskVal; }
-    void setMaskVal(long maskVal) { _maskVal = maskVal; }
-    double getVarianceVal() const { return _varianceVal; }
+        double getImageVal() const { return _imageVal; }
+        void setImageVal(double imageVal) { _imageVal = imageVal; }
+        long getMaskVal() const { return _maskVal; }
+        void setMaskVal(long maskVal) { _maskVal = maskVal; }
+        double getVarianceVal() const { return _varianceVal; }
     void setVarianceVal(double varianceVal) { _varianceVal = varianceVal; }
     
 private:

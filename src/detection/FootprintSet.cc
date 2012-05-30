@@ -1393,10 +1393,29 @@ detection::FootprintSet::FootprintSet(
     }
 
     detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, r, isotropic);
+    swap(fs);                           // Swap the new FootprintSet into place
+}
+
+/************************************************************************************************************/
+
+detection::FootprintSet::FootprintSet(detection::FootprintSet const& rhs,
+                                      int ngrow,
+                                      detection::FootprintCtrl const& ctrl)
+    : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
+{
     /*
-     * Swap the new FootprintSet into place
+     * Handle isotropic grows
      */
-    swap(fs);
+    std::pair<bool, bool> const isotropic = ctrl.isIsotropic();
+    if (isotropic.first) {              // value is set
+        detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow,
+                                                        isotropic.second);
+        swap(fs);                       // Swap the new FootprintSet into place
+        return;
+    }
+
+    detection::FootprintSet fs = rhs;
+    swap(fs);                           // Swap the new FootprintSet into place
 }
 
 /************************************************************************************************************/
