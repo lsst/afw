@@ -211,11 +211,39 @@ class FootprintSetTestCase(unittest.TestCase):
         """Grow footprints using the FootprintSet constructor"""
         fs = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), len(self.objects))
-        grown = afwDetect.FootprintSet(fs, 1, False)
-        self.assertEqual(len(fs.getFootprints()), len(self.objects))
+        for isotropic in (True, False, afwDetect.FootprintCtrl(True),):
+            grown = afwDetect.FootprintSet(fs, 1, isotropic)
+            self.assertEqual(len(fs.getFootprints()), len(self.objects))
 
-        self.assertGreater(len(grown.getFootprints()), 0)
-        self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
+            self.assertGreater(len(grown.getFootprints()), 0)
+            self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
+
+    def testGrowNSEW(self):
+        """Grow footprints in various directions using the FootprintSet constructor """
+        im = afwImage.MaskedImageF(11, 11)
+        im.set(5, 5, (10,))
+        fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
+        self.assertEqual(len(fs.getFootprints()), 1)
+        for fctrl in (afwDetect.FootprintCtrl(True), afwDetect.FootprintCtrl(),):
+            grown = afwDetect.FootprintSet(fs, 1, fctrl)
+            afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
+
+            if display:
+                ds9.mtv(im)
+
+            foot = grown.getFootprints()[0]
+
+            if not fctrl.isIsotropic()[0]:
+                self.assertEqual(foot.getNpix(), 1)
+            else:
+                if fctrl.isIsotropic()[1]:
+                    self.assertEqual(foot.getNpix(), 5)
+                else:
+                    pass
+
+            if False:
+                for s in foot.getSpans():
+                    print s
 
     def testInf(self):
         """Test detection for images with Infs"""

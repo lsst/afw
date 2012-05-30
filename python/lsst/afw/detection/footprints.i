@@ -32,8 +32,10 @@
 #include "lsst/afw/detection/FootprintArray.cc"
 %}
 
-%shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
+%include "std_pair.i"
+%template(pairBB) std::pair<bool, bool>;
 
+%shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
 
 %ignore lsst::afw::detection::FootprintFunctor::operator();
 
