@@ -1384,6 +1384,8 @@ detection::FootprintSet::FootprintSet(
     : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
 
     if (r == 0) {
+        FootprintSet fs = rhs;
+        swap(fs);
         return;
     } else if (r < 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
