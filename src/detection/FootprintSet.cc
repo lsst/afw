@@ -1347,10 +1347,7 @@ void detection::FootprintSet::merge(
 )
 {
     detection::FootprintSet fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, isotropic);
-    /*
-     * Swap the new FootprintSet into place
-     */
-    this->swap(fs);
+    swap(fs);                           // Swap the new FootprintSet into place
 }
 
 /// Set the corners of the FootprintSet's MaskedImage to region
@@ -1385,7 +1382,7 @@ detection::FootprintSet::FootprintSet(
 
     if (r == 0) {
         FootprintSet fs = rhs;
-        swap(fs);
+        swap(fs);                       // Swap the new FootprintSet into place
         return;
     } else if (r < 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
