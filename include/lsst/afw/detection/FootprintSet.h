@@ -87,7 +87,7 @@ public:
 
     FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
-    FootprintSet(FootprintSet const& set, int rGrow, FootprintCtrl const& ctrl);
+    FootprintSet(FootprintSet const& set, int rGrow, FootprintControl const& ctrl);
     FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, 
                  FootprintSet const& footprints2,

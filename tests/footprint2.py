@@ -211,7 +211,7 @@ class FootprintSetTestCase(unittest.TestCase):
         """Grow footprints using the FootprintSet constructor"""
         fs = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), len(self.objects))
-        for isotropic in (True, False, afwDetect.FootprintCtrl(True),):
+        for isotropic in (True, False, afwDetect.FootprintControl(True),):
             grown = afwDetect.FootprintSet(fs, 1, isotropic)
             self.assertEqual(len(fs.getFootprints()), len(self.objects))
 
@@ -219,16 +219,16 @@ class FootprintSetTestCase(unittest.TestCase):
             self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
 
     def testGrowCircular(self):
-        """Grow footprints in all 4 directions using the FootprintSet/FootprintCtrl constructor """
+        """Grow footprints in all 4 directions using the FootprintSet/FootprintControl constructor """
         im = afwImage.MaskedImageF(11, 11)
         im.set(5, 5, (10,))
         fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), 1)
 
         radius = 3                      # How much to grow by
-        for fctrl in (afwDetect.FootprintCtrl(),
-                      afwDetect.FootprintCtrl(True),
-                      afwDetect.FootprintCtrl(True, True),
+        for fctrl in (afwDetect.FootprintControl(),
+                      afwDetect.FootprintControl(True),
+                      afwDetect.FootprintControl(True, True),
                       ):
             grown = afwDetect.FootprintSet(fs, radius, fctrl)
             afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
@@ -248,7 +248,7 @@ class FootprintSetTestCase(unittest.TestCase):
                     self.assertEqual(foot.getNpix(), 25)
 
     def testGrowNSEW(self):
-        """Grow footprints in various directions using the FootprintSet/FootprintCtrl constructor """
+        """Grow footprints in various directions using the FootprintSet/FootprintControl constructor """
         pass
 
     def testInf(self):

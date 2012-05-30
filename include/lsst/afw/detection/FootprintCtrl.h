@@ -33,7 +33,7 @@ namespace detection {
  * \brief A Control Object for Footprints, controlling e.g. how they are grown
  *
  */
-class FootprintCtrl {
+class FootprintControl {
     enum TBool { FALSE_=false, TRUE_=true, NONE_ }; // ternary boolean value. N.b. _XXX is reserved
 
     static std::pair<bool, bool> makePairFromTBool(TBool const val)
@@ -45,9 +45,9 @@ class FootprintCtrl {
     TBool _isotropic;                   // go to the expense of as isotropic a grow as possible 
     TBool _left, _right, _up, _down;    // grow in selected directions?
 public:
-    explicit FootprintCtrl() : _circular(NONE_), _isotropic(NONE_),
+    explicit FootprintControl() : _circular(NONE_), _isotropic(NONE_),
                                _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
-    explicit FootprintCtrl(bool circular, bool isotropic=false) :
+    explicit FootprintControl(bool circular, bool isotropic=false) :
         _circular(circular ? TRUE_ : FALSE_), _isotropic(isotropic ? TRUE_ : FALSE_),
         _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
 
