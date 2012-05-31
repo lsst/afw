@@ -247,10 +247,38 @@ class FootprintSetTestCase(unittest.TestCase):
                 else:
                     self.assertEqual(foot.getNpix(), 25)
 
-    def testGrowNSEW(self):
+    def testGrowLRUD(self):
         """Grow footprints in various directions using the FootprintSet/FootprintControl constructor """
         pass
+    
+    def testGrowLRUD(self):
+        """Test the FootprintControl constructor"""
+        fctrl = afwDetect.FootprintControl()
+        self.assertFalse(fctrl.isCircular()[0]) # not set
+        self.assertFalse(fctrl.isIsotropic()[0]) # not set
 
+        fctrl.growIsotropic(False)
+        self.assertTrue(fctrl.isCircular()[0])
+        self.assertTrue(fctrl.isIsotropic()[0])
+        self.assertTrue(fctrl.isCircular()[1])
+        self.assertFalse(fctrl.isIsotropic()[1])
+
+        #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        fctrl = afwDetect.FootprintControl()
+        fctrl.growLeft(False)
+        self.assertTrue(fctrl.isLeft()[0]) # it's now set
+        self.assertFalse(fctrl.isLeft()[1]) # ... but False
+
+        #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        fctrl = afwDetect.FootprintControl(True, False, False, False)
+        self.assertTrue(fctrl.isLeft()[0])
+        self.assertTrue(fctrl.isRight()[0])
+        self.assertTrue(fctrl.isUp()[0])
+        self.assertTrue(fctrl.isDown()[0])
+
+        self.assertTrue(fctrl.isLeft()[1])
+        self.assertFalse(fctrl.isRight()[1])
+        
     def testInf(self):
         """Test detection for images with Infs"""
 
