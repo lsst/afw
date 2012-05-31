@@ -331,6 +331,14 @@ namespace math {
         }
         //
         void insertCandidate(PTR(SpatialCellCandidate) candidate);
+
+        /// Remove a candidate from the list
+        ///
+        /// This is not a particularly efficient operation, since we're
+        /// using a std::vector, but should not hurt too much if the number
+        /// of candidates in a cell is small.
+        void removeCandidate(PTR(SpatialCellCandidate) candidate);
+
         /// Set whether we should omit BAD candidates from candidate list when traversing
         void setIgnoreBad(bool ignoreBad) { _ignoreBad = ignoreBad; }
         /// Get whether we are omitting BAD candidates from candidate list when traversing
