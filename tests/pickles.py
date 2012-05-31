@@ -36,6 +36,8 @@ import pickle
 import lsst.daf.base as dafBase
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
+import lsst.afw.geom  as afwGeom
+import lsst.afw.coord as afwCoord
 
 class PickleTestCase(unittest.TestCase):
     """A test case for pickles"""
@@ -51,6 +53,19 @@ class PickleTestCase(unittest.TestCase):
         pickled = pickle.dumps(self.data)
         newData = pickle.loads(pickled)
         self.assertTrue(newData == self.data)
+
+
+class AngleTestCase(PickleTestCase):
+    def setUp(self):
+	self.data = 1.0*afwGeom.degrees
+
+class CoordTestCase(PickleTestCase):
+    def setUp(self):
+	ra = 10.0*afwGeom.degrees
+	dec = 1.0*afwGeom.degrees
+	epoch = 2000.0
+	self.data = afwCoord.makeCoord(afwCoord.FK5, ra, dec, epoch)
+
 
 class WcsPickleTestCase(PickleTestCase):
     def setUp(self):
@@ -163,6 +178,8 @@ def suite():
     utilsTests.init()
 
     suites = []
+    suites += unittest.makeSuite(AngleTestCase)
+    suites += unittest.makeSuite(CoordTestCase)
     suites += unittest.makeSuite(WcsPickleTestCase)
     suites += unittest.makeSuite(TanWcsPickleTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
