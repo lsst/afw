@@ -207,6 +207,8 @@ private:
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
+Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
+                             bool left, bool right, bool up, bool down);
 
 std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
 

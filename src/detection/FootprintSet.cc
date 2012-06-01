@@ -186,13 +186,16 @@ namespace {
         int rLhs,                                         // Grow lhs Footprints by this many pixels
         detection::FootprintSet const &rhs, // the FootprintSet to be merged into lhs
         int rRhs,                                         // Grow rhs Footprints by this many pixels
-        bool isotropic                  // Grow isotropically (as opposed to a Manhattan metric)
-                                        // n.b. Isotropic grows are significantly slower
+        detection::FootprintControl const& ctrl           // Control how the grow is done
                       )
     {
         typedef detection::Footprint Footprint;
         typedef detection::FootprintSet::FootprintList FootprintList;
         
+        assert(ctrl.isCircular().first);
+        bool isotropic = ctrl.isIsotropic().second; // Grow isotropically (as opposed to a Manhattan metric)
+                                        // n.b. Isotropic grows are significantly slower
+
         geom::Box2I const region = lhs.getRegion();
         if (region != rhs.getRegion()) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
@@ -1346,7 +1349,8 @@ void detection::FootprintSet::merge(
         bool isotropic                      ///< Use (expensive) isotropic grow
 )
 {
-    detection::FootprintSet fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, isotropic);
+    detection::FootprintControl const ctrl(true, isotropic);
+    detection::FootprintSet fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, ctrl);
     swap(fs);                           // Swap the new FootprintSet into place
 }
 
@@ -1389,7 +1393,8 @@ detection::FootprintSet::FootprintSet(
                           (boost::format("I cannot grow by negative numbers: %d") % r).str());
     }
 
-    detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, r, isotropic);
+    detection::FootprintControl const ctrl(true, isotropic);
+    detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, r, ctrl);
     swap(fs);                           // Swap the new FootprintSet into place
 }
 
@@ -1406,13 +1411,22 @@ detection::FootprintSet::FootprintSet(detection::FootprintSet const& rhs,
      */
     std::pair<bool, bool> const circular = ctrl.isCircular();
     if (circular.first && circular.second) {
-        std::pair<bool, bool> const isotropic = ctrl.isIsotropic();
-        assert (isotropic.first);       // value is set when circular is set
-        detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow,
-                                                        isotropic.second);
+        detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow, ctrl);
         swap(fs);                       // Swap the new FootprintSet into place
         return;
     }
+    std::pair<bool, bool> const left = ctrl.isLeft();
+    std::pair<bool, bool> const right = ctrl.isRight();
+    std::pair<bool, bool> const up = ctrl.isUp();
+    std::pair<bool, bool> const down = ctrl.isDown();
+
+    if (left.first || right.first || up.first || down.first) {
+        if (!(up.first || down.first)) { // we can do left and or right grows directly
+            ;
+        } else {                        // up or down are far easier with a convolution
+        }
+    }
+
 
     detection::FootprintSet fs = rhs;
     swap(fs);                           // Swap the new FootprintSet into place
