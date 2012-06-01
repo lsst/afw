@@ -40,10 +40,6 @@ class FootprintControl {
     {
         return (val == NONE_) ? std::make_pair(false, false) : std::make_pair(true, val == TRUE_);
     }
-    
-    TBool _circular;                    // grow in all directions ( == left & right & up & down)
-    TBool _isotropic;                   // go to the expense of as isotropic a grow as possible 
-    TBool _left, _right, _up, _down;    // grow in selected directions?
 public:
     explicit FootprintControl() : _circular(NONE_), _isotropic(NONE_),
                                _left(NONE_), _right(NONE_), _up(NONE_), _down(NONE_) {}
@@ -83,6 +79,10 @@ public:
     }
 
 #undef DEFINE_ACCESSORS
+private:    
+    TBool _circular;                    // grow in all directions ( == left & right & up & down)
+    TBool _isotropic;                   // go to the expense of as isotropic a grow as possible 
+    TBool _left, _right, _up, _down;    // grow in selected directions?
 };
 
 /*!
