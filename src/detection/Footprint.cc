@@ -1294,8 +1294,19 @@ Footprint::Ptr growFootprint(
     return grown;
 }
 
+/**
+ * \note Deprecated interface; use the Footprint const& version
+ */
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic) {
     return growFootprint(*foot, ngrow, isotropic);
+}
+
+/************************************************************************************************************/
+
+PTR(Footprint) growFootprint(Footprint const& foot, int ngrow,
+                             bool left, bool right, bool up, bool down)
+{
+    return PTR(Footprint)(new Footprint(foot));
 }
 
 /************************************************************************************************************/
