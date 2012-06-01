@@ -238,7 +238,7 @@
         self->set(key, value);
     }
 
-    void set_Flag(lsst::afw::table::Key< Flag > const & key, bool value) {
+    void setFlag(lsst::afw::table::Key< Flag > const & key, bool value) {
         self->set(key, value);
     }
 
@@ -276,7 +276,7 @@
         self->set(key, v);
     }
 
-    void set_Coord(
+    void setCoord(
         lsst::afw::table::Key< lsst::afw::coord::Coord > const & key,
         lsst::afw::coord::Coord const & v
     ) {
@@ -284,19 +284,19 @@
     }
 }
 
-%specializeScalar(boost::int32_t, I4)
-%specializeScalar(boost::int64_t, I8)
-%specializeScalar(float, F4)
-%specializeScalar(double, F8)
+%specializeScalar(boost::int32_t, I)
+%specializeScalar(boost::int64_t, L)
+%specializeScalar(float, F)
+%specializeScalar(double, D)
 %specializeScalar(lsst::afw::geom::Angle, Angle)
 
-%specializePoint(boost::int32_t, I4, lsst::afw::geom::Point<int,2>)
-%specializePoint(float, F4, lsst::afw::geom::Point<double,2>)
-%specializePoint(double, F8, lsst::afw::geom::Point<double,2>)
-%specializeMoments(float, F4, lsst::afw::geom::ellipses::Quadrupole)
-%specializeMoments(double, F8, lsst::afw::geom::ellipses::Quadrupole)
+%specializePoint(boost::int32_t, I, lsst::afw::geom::Point<int,2>)
+%specializePoint(float, F, lsst::afw::geom::Point<double,2>)
+%specializePoint(double, D, lsst::afw::geom::Point<double,2>)
+%specializeMoments(float, F, lsst::afw::geom::ellipses::Quadrupole)
+%specializeMoments(double, D, lsst::afw::geom::ellipses::Quadrupole)
 
-%specializeArray(float, F4)
-%specializeArray(double, F8)
-%specializeCovariance(float, F4)
-%specializeCovariance(double, F8)
+%specializeArray(float, F)
+%specializeArray(double, D)
+%specializeCovariance(float, F)
+%specializeCovariance(double, D)

@@ -147,8 +147,8 @@ SourceMatchVector matchXy(
 %pythoncode %{
     def packMatches(matches):
         schema = Schema()
-        outKey1 = schema.addField("first", type="I8", doc="ID for first source record in match.")
-        outKey2 = schema.addField("second", type="I8", doc="ID for second source record in match.")
+        outKey1 = schema.addField("first", type="L", doc="ID for first source record in match.")
+        outKey2 = schema.addField("second", type="L", doc="ID for second source record in match.")
         keyD = schema.addField("distance", type=float, doc="Distance between matches sources.")
         result = BaseCatalog(schema)
         result.table.preallocate(len(matches))
