@@ -278,20 +278,41 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGrowLRUD(self):
         """Grow footprints in various directions using the FootprintSet/FootprintControl constructor """
         im = afwImage.MaskedImageF(11, 11)
-        im.set(5, 5, (10,))
+        x0, y0, ny = 5, 5, 3
+        for y in range(y0 - ny//2, y0 + ny//2 + 1):
+            im.set(x0, y, (10,))
         fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), 1)
 
-        radius = 3                      # How much to grow by
-        for fctrl in (afwDetect.FootprintControl(True, True, True, True),
+        ngrow = 2                       # How much to grow by
+        #
+        # Test growing to the left and/or right
+        #
+        for fctrl in (
+            afwDetect.FootprintControl(False, True, False, False),
+            afwDetect.FootprintControl(True, False, False, False),
+            afwDetect.FootprintControl(True, True, False, False),
                       ):
-            grown = afwDetect.FootprintSet(fs, radius, fctrl)
+            grown = afwDetect.FootprintSet(fs, ngrow, fctrl)
+            im.getMask().set(0)
             afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
 
-            if True or display:
+            if display:
                 ds9.mtv(im)
 
             foot = grown.getFootprints()[0]
+            nextra = 0
+            if fctrl.isLeft()[1]:
+                nextra += ngrow
+                for y in range(y0 - ny//2, y0 + ny//2 + 1):
+                    self.assertNotEqual(im.getMask().get(x0 - 1, y), 0)
+
+            if fctrl.isRight()[1]:
+                nextra += ngrow
+                for y in range(y0 - ny//2, y0 + ny//2 + 1):
+                    self.assertNotEqual(im.getMask().get(x0 + 1, y), 0)
+
+            self.assertEqual(foot.getNpix(), (1 + nextra)*ny)
     
     def testInf(self):
         """Test detection for images with Infs"""
