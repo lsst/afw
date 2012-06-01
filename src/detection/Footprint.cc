@@ -1300,10 +1300,29 @@ Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotrop
 
 /************************************************************************************************************/
 
-PTR(Footprint) growFootprint(Footprint const& foot, int ngrow,
+PTR(Footprint) growFootprint(Footprint const& old, int ngrow,
                              bool left, bool right, bool up, bool down)
 {
-    return PTR(Footprint)(new Footprint(foot));
+    PTR(Footprint) foot(new Footprint(old));
+
+    if (up || down) {               // not implemented
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Up/Down grows are not implemented");
+    }
+
+    if (left || right) {
+        for (Footprint::SpanList::iterator siter = foot->getSpans().begin();
+             siter != foot->getSpans().end(); ++siter) {
+            PTR(Span) span = *siter;
+            if (left) {
+                span->getX0() -= ngrow;
+            }
+            if (right) {
+                span->getX1() += ngrow;
+            }
+        }        
+    }
+
+    return foot;
 }
 
 /************************************************************************************************************/

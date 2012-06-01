@@ -191,10 +191,14 @@ namespace {
     {
         typedef detection::Footprint Footprint;
         typedef detection::FootprintSet::FootprintList FootprintList;
-        
-        assert(ctrl.isCircular().first);
-        bool isotropic = ctrl.isIsotropic().second; // Grow isotropically (as opposed to a Manhattan metric)
+        // The isXXX routines return <isset, value>
+        bool const circular = ctrl.isCircular().first && ctrl.isCircular().second;
+        bool const isotropic = ctrl.isIsotropic().second; // isotropic grow as opposed to a Manhattan metric
                                         // n.b. Isotropic grows are significantly slower
+        bool const left =  ctrl.isLeft().first  && ctrl.isLeft().second;
+        bool const right = ctrl.isRight().first && ctrl.isRight().second;
+        bool const up =    ctrl.isUp().first    && ctrl.isUp().second;
+        bool const down =  ctrl.isDown().first  && ctrl.isDown().second;
 
         geom::Box2I const region = lhs.getRegion();
         if (region != rhs.getRegion()) {
@@ -236,7 +240,8 @@ namespace {
             CONST_PTR(Footprint) foot = *ptr;
 
             if (rLhs > 0) {
-                foot = growFootprint(*foot, rLhs, isotropic);
+                foot = circular ?
+                    growFootprint(*foot, rLhs, isotropic) : growFootprint(*foot, rLhs, left, right, up, down);
             }
 
             std::set<boost::uint64_t> overwritten;
@@ -254,7 +259,8 @@ namespace {
             CONST_PTR(Footprint) foot = *ptr;
 
             if (rRhs > 0) {
-                foot = growFootprint(*foot, rRhs, isotropic);
+                foot = circular ?
+                    growFootprint(*foot, rRhs, isotropic) : growFootprint(*foot, rRhs, left, right, up, down);
             }
 
             std::set<boost::uint64_t> overwritten;
@@ -1382,8 +1388,8 @@ detection::FootprintSet::FootprintSet(
     bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
     //!< @note Isotropic grows are significantly slower
 )
-    : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
-
+    : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
+{
     if (r == 0) {
         FootprintSet fs = rhs;
         swap(fs);                       // Swap the new FootprintSet into place
@@ -1405,30 +1411,16 @@ detection::FootprintSet::FootprintSet(detection::FootprintSet const& rhs,
                                       detection::FootprintControl const& ctrl)
     : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
 {
-    /*
-     * Handle grows in all directions.  I'd call them "isotropic" except that that term is taken 
-     * for "all direction" grows that are as isotropic as possible
-     */
-    std::pair<bool, bool> const circular = ctrl.isCircular();
-    if (circular.first && circular.second) {
-        detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow, ctrl);
+    if (ngrow == 0) {
+        FootprintSet fs = rhs;
         swap(fs);                       // Swap the new FootprintSet into place
         return;
-    }
-    std::pair<bool, bool> const left = ctrl.isLeft();
-    std::pair<bool, bool> const right = ctrl.isRight();
-    std::pair<bool, bool> const up = ctrl.isUp();
-    std::pair<bool, bool> const down = ctrl.isDown();
-
-    if (left.first || right.first || up.first || down.first) {
-        if (!(up.first || down.first)) { // we can do left and or right grows directly
-            ;
-        } else {                        // up or down are far easier with a convolution
-        }
+    } else if (ngrow < 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          str(boost::format("I cannot grow by negative numbers: %d") % ngrow));
     }
 
-
-    detection::FootprintSet fs = rhs;
+    detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow, ctrl);
     swap(fs);                           // Swap the new FootprintSet into place
 }
 
