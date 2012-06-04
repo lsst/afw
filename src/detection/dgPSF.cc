@@ -9,6 +9,7 @@
 #include <cmath>
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/detail/dgPsf.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/ImageUtils.h"
 
 namespace afwMath = lsst::afw::math;

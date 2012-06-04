@@ -80,14 +80,14 @@ class SourceTableTestCase(unittest.TestCase):
 
     def setUp(self):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.fluxKey = self.schema.addField("a", type="F8")
-        self.fluxErrKey = self.schema.addField("a.err", type="F8")
+        self.fluxKey = self.schema.addField("a", type="D")
+        self.fluxErrKey = self.schema.addField("a.err", type="D")
         self.fluxFlagKey = self.schema.addField("a.flags", type="Flag")
-        self.centroidKey = self.schema.addField("b", type="Point<F8>")
-        self.centroidErrKey = self.schema.addField("b.err", type="Cov<Point<F8>>")
+        self.centroidKey = self.schema.addField("b", type="PointD")
+        self.centroidErrKey = self.schema.addField("b.err", type="CovPointD")
         self.centroidFlagKey = self.schema.addField("b.flags", type="Flag")
-        self.shapeKey = self.schema.addField("c", type="Moments<F8>")
-        self.shapeErrKey = self.schema.addField("c.err", type="Cov<Moments<F8>>")
+        self.shapeKey = self.schema.addField("c", type="MomentsD")
+        self.shapeErrKey = self.schema.addField("c.err", type="CovMomentsD")
         self.shapeFlagKey = self.schema.addField("c.flags", type="Flag")
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
@@ -282,8 +282,20 @@ class SourceTableTestCase(unittest.TestCase):
                     self.assertEqual(ma3.get(x, y), 0.)
                     self.assertEqual(va3.get(x, y), 0.)
                         
-
-
+    def testIdFactory(self):
+        expId = int(1257198)
+        reserved = 32
+        factory = lsst.afw.table.IdFactory.makeSource(expId, reserved)
+        upper = expId
+        id1 = factory()
+        id2 = factory()
+        self.assertEqual(id2 - id1, 1)
+        factory.notify(0xFFFFFFFF)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, factory)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             factory.notify, 0x1FFFFFFFF)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             lsst.afw.table.IdFactory.makeSource, 0x1FFFFFFFF, reserved)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

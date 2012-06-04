@@ -9,13 +9,14 @@
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
-#include "lsst/afw/math.h"
+#include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
-#include "lsst/afw/cameraGeom/Detector.h"
-#include "lsst/afw/cameraGeom/Distortion.h"
 
 namespace lsst {
 namespace afw {
+namespace cameraGeom {
+    class Detector;
+}
 namespace detection {
 
 class PsfFormatter;
@@ -52,13 +53,15 @@ public:
     virtual Ptr clone() const = 0;
 
     // accessors for distortion
-    void setDetector(lsst::afw::cameraGeom::Detector::Ptr det) {
+    void setDetector(PTR(lsst::afw::cameraGeom::Detector) det) {
         _detector = det;
     }
-    lsst::afw::cameraGeom::Detector::Ptr getDetector() {
+    PTR(lsst::afw::cameraGeom::Detector) getDetector() {
         return _detector;
     }
-
+    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const {
+        return _detector;
+    }
     
     /// Return true iff Psf is valid
     operator bool() const { return getKernel().get() != NULL; }
@@ -127,7 +130,7 @@ public:
         return true;
     }
 protected:
-    lsst::afw::cameraGeom::Detector::Ptr _detector;
+    PTR(lsst::afw::cameraGeom::Detector) _detector;
     
     virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
                                       lsst::afw::geom::Point2D const& ccdXY,

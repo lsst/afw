@@ -83,7 +83,8 @@ cameraGeom::Amp::Amp(
     _originInDetector = afwGeom::Point2I(0, 0);
     _nQuarter = 0;
     _flipLR = false;
-    
+    _diskCoordSys = CAMERA;
+   
     setTrimmedGeom();
 }
 /**
