@@ -34,7 +34,7 @@ namespace detection {
  */
 class HeavyFootprintCtrl {
 public:
-    enum ModifySource {NONE, SET};
+    enum ModifySource {NONE, SET,};
 
     explicit HeavyFootprintCtrl(ModifySource modifySource=NONE) :
         _modifySource(modifySource),
