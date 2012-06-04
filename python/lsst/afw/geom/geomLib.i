@@ -41,8 +41,8 @@ Python interface to lsst::afw::geom classes
 #include "lsst/afw/geom.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/ndarray/python.h"
-#include "lsst/ndarray/python/eigen.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
 %}
 
 %init %{
@@ -53,7 +53,7 @@ Python interface to lsst::afw::geom classes
 
 %lsst_exceptions();
 
-%include "lsst/ndarray/ndarray.i"
+%include "ndarray.i"
 
 %declareNumPyConverters(Eigen::Matrix<double,2,1,Eigen::DontAlign>);
 %declareNumPyConverters(Eigen::Matrix<double,3,1,Eigen::DontAlign>);

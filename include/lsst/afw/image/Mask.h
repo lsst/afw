@@ -136,7 +136,7 @@ public:
         const bool deep=false
     );
     
-    explicit Mask(lsst::ndarray::Array<MaskPixelT,2,1> const & array, bool deep = false,
+    explicit Mask(ndarray::Array<MaskPixelT,2,1> const & array, bool deep = false,
                   geom::Point2I const & xy0 = geom::Point2I());
 
     void swap(Mask& rhs);
@@ -168,12 +168,12 @@ public:
     //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
     void writeFits(
         std::string const& fileName,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
+        CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
     void writeFits(
         char **ramFile, size_t *ramFileLen,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata=lsst::daf::base::PropertySet::Ptr(),
+        CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
     
@@ -203,9 +203,6 @@ public:
     //
     // This one isn't static, it fixes up a given Mask's planes
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
-    
-    // Getters
-    int getMyMaskDictVersion() const;
         
 private:
     //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)

@@ -118,7 +118,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
 
     def testMakeHeavy(self):
         """Test that we can make a FootprintSet heavy"""
-        fs = afwDetect.makeFootprintSet(self.mi, afwDetect.Threshold(1))
+        fs = afwDetect.FootprintSet(self.mi, afwDetect.Threshold(1))
 
         ctrl = afwDetect.HeavyFootprintCtrl(afwDetect.HeavyFootprintCtrl.NONE)
         fs.makeHeavy(self.mi, ctrl)
@@ -141,7 +141,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
 
     def testMakeHeavy(self):
         """Test that inserting a HeavyFootprint obeys XY0"""
-        fs = afwDetect.makeFootprintSet(self.mi, afwDetect.Threshold(1))
+        fs = afwDetect.FootprintSet(self.mi, afwDetect.Threshold(1))
 
         fs.makeHeavy(self.mi)
 

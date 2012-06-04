@@ -869,7 +869,11 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     // compute the azimuth, A
     double const tanAnumerator   = std::sin(H);
     double const tanAdenominator = (std::cos(H) * std::sin(phi) - std::tan(delta) * std::cos(phi));
-    afwGeom::Angle A = (-90.0 * afwGeom::degrees) - (atan2(tanAdenominator, tanAnumerator) * afwGeom::radians);
+    
+    // Equations used here assume azimuth is with respect to South
+    // but we use the North as our origin ... must add 180 deg
+    afwGeom::Angle A = (180.0*afwGeom::degrees) + atan2(tanAnumerator, tanAdenominator)* afwGeom::radians;
+    A.wrap();
     
     return TopocentricCoord(A, h, obsDate.get(dafBase::DateTime::EPOCH), obs);
 }
@@ -1059,19 +1063,27 @@ afwCoord::EclipticCoord afwCoord::EclipticCoord::precess(
  */
 afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
      
-    afwGeom::Angle const A        = getAzimuth();
-    afwGeom::Angle const h        = getAltitude();
-    double const phi      = _obs.getLatitude();
-    double const L        = _obs.getLongitude();
+    afwGeom::Angle const phi      = _obs.getLatitude();
+    afwGeom::Angle const L        = _obs.getLongitude();
 
+    // Equations used here assume azimuth is with respect to South
+    // but we use the North as our origin.
+    afwGeom::Angle A              = getAzimuth() + 180.0*afwGeom::degrees;
+    A.wrap();
+    afwGeom::Angle const h        = getAltitude();
+
+    
     double const jd       = dafBase::DateTime(epoch,
                                               dafBase::DateTime::EPOCH,
                                               dafBase::DateTime::TAI).get(dafBase::DateTime::JD);
     afwGeom::Angle theta0   = meanSiderealTimeGreenwich(jd);
     theta0.wrap();
 
-    double const tanH     = std::sin(A) / (std::cos(A)*std::sin(phi) + std::tan(h)*std::cos(phi));
-    afwGeom::Angle const alpha    = (theta0 - L - std::atan(tanH)) * afwGeom::radians;
+    double const tanHnum     = std::sin(A);
+    double const tanHdenom   = std::cos(A)*std::sin(phi) + std::tan(h)*std::cos(phi);
+    afwGeom::Angle H         = std::atan2(tanHnum, tanHdenom) * afwGeom::radians;
+
+    afwGeom::Angle const alpha    = theta0 + L - H;
     double const sinDelta = std::sin(phi)*std::sin(h) - std::cos(phi)*std::cos(h)*std::cos(A);
     afwGeom::Angle const delta    = (std::asin(sinDelta)) * afwGeom::radians;
 

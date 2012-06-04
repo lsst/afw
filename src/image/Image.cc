@@ -28,7 +28,11 @@
  */
 #include <iostream>
 #include "boost/mpl/vector.hpp"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/lambda/lambda.hpp"
+#pragma clang diagnostic pop
+#include "boost/bind/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
@@ -281,15 +285,11 @@ void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
 template <typename PixelT>
 typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    typedef lsst::ndarray::detail::ArrayAccess<Array> ArrayAccess;
-    typedef typename ArrayAccess::Core ArrayCore;
-    return ArrayAccess::construct(
+    return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        ArrayCore::create(
-            lsst::ndarray::makeVector(getHeight(), getWidth()),
-            lsst::ndarray::makeVector(rowStride, 1),
-            this->_manager
-        )
+        ndarray::makeVector(getHeight(), getWidth()),
+        ndarray::makeVector(rowStride, 1),
+        this->_manager
     );
 }
 
@@ -297,15 +297,11 @@ typename image::ImageBase<PixelT>::Array image::ImageBase<PixelT>::getArray() {
 template <typename PixelT>
 typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray() const {
     int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    typedef lsst::ndarray::detail::ArrayAccess<Array> ArrayAccess;
-    typedef typename ArrayAccess::Core ArrayCore;
-    return ArrayAccess::construct(
+    return ndarray::external(
         reinterpret_cast<PixelT*>(row_begin(0)),
-        ArrayCore::create(
-            lsst::ndarray::makeVector(getHeight(), getWidth()),
-            lsst::ndarray::makeVector(rowStride, 1),
-            this->_manager
-        )
+        ndarray::makeVector(getHeight(), getWidth()),
+        ndarray::makeVector(rowStride, 1),
+        this->_manager
     );
 }
 //
@@ -526,7 +522,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
 
-    if (!fits_read_image<fits_image_types>(fileName, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_image<fits_image_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
@@ -562,7 +558,7 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
     if (!metadata) {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }
-    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
                           (boost::format("Failed to read FITS HDU %d") % hdu).str());
     }
@@ -574,7 +570,7 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
     std::string const& fileName,                ///< File to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, //!< metadata to write to header or NULL
     std::string const& mode                     //!< "w" to write a new file; "a" to append
 ) const {
     using lsst::daf::base::PropertySet;
@@ -654,6 +650,20 @@ void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
 //    transform_pixels(_gilView, _gilView, std::bind2nd(std::plus<PixelT>(), rhs));
 //
 namespace bl = boost::lambda;
+
+// dstn: being a bear of little brain when it comes to templated lambdas, I found it easier to
+// write out this sqrt function which does the casts explicitly.
+template<typename PixelT>
+static PixelT mysqrt(PixelT x) {
+    return static_cast<PixelT>(std::sqrt(x));
+}
+
+// In-place, per-pixel, sqrt().
+template<typename PixelT>
+void image::Image<PixelT>::sqrt() {
+     transform_pixels(_getRawView(), _getRawView(),
+                      boost::bind(mysqrt<PixelT>, bl::_1));
+}
 
 /// Add scalar rhs to lhs
 template<typename PixelT>

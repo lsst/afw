@@ -83,7 +83,8 @@ cameraGeom::Amp::Amp(
     _originInDetector = afwGeom::Point2I(0, 0);
     _nQuarter = 0;
     _flipLR = false;
-    
+    _diskCoordSys = CAMERA;
+   
     setTrimmedGeom();
 }
 /**
@@ -232,6 +233,41 @@ lsst::afw::geom::Box2I cameraGeom::Amp::_mapFromElectronic(lsst::afw::geom::Box2
         bbox.flipLR(dimensions[0]);
     }
     return cameraGeom::detail::rotateBBoxBy90(bbox, _nQuarter, dimensions);
+}
+
+/**
+ * Prepare the Wcs of an amp based on the orientation for assembly
+ */
+void cameraGeom::Amp::prepareWcsData(afwImage::Wcs::Ptr wcs) {
+    afwGeom::Extent2I size = getDiskDataSec().getDimensions();
+    cameraGeom::Detector::Ptr pccd = getParent();
+    int n90 = 0;
+    if (pccd) 
+      n90 = pccd->getOrientation().getNQuarter();
+
+    switch (_diskCoordSys) {
+        case CAMERA:
+            {
+                break;
+            }
+        case AMP:
+            {
+                wcs->flipImage(_flipLR, false, size);
+                wcs->rotateImageBy90(_nQuarter, size);
+                break;
+            }
+        case SENSOR:
+            {
+                if( n90 > 0)
+                    wcs->rotateImageBy90(n90, size);
+                break;
+            }
+        default:
+            {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Invalid on disk coordinate system.");
+            }
+    }
+    wcs->shiftReferencePixel(getDataSec().getMinX(), getDataSec().getMinY());
 }
 
 /**

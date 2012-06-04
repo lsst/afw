@@ -28,6 +28,7 @@
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
+#include "lsst/afw/cameraGeom/FpPoint.h"
 
 /**
  * @file
@@ -69,28 +70,24 @@ public:
     //
     // Geometry of Detector --- i.e. mm not pixels
     //
-    virtual void setCenter(lsst::afw::geom::Point2D const& center);
-    virtual lsst::afw::geom::Extent2D getSize() const;
+    virtual void setCenter(FpPoint const& center);
+    virtual FpExtent getSize() const;
     //
     // Add a Detector to the DetectorMosaic
     //
-    void addDetector(lsst::afw::geom::Point2I const& index, lsst::afw::geom::Point2D const& center,
+    void addDetector(lsst::afw::geom::Point2I const& index, lsst::afw::cameraGeom::FpPoint const& center,
                      Orientation const& orient, Detector::Ptr det);
     //
     // Find a Detector given an Id or pixel position
     //
     Detector::Ptr findDetector(Id const id) const;
     Detector::Ptr findDetectorPixel(lsst::afw::geom::Point2D const& pixel, bool const fromCenter=false) const;
-    Detector::Ptr findDetectorMm(lsst::afw::geom::Point2D const& posMm) const;
+    Detector::Ptr findDetectorMm(lsst::afw::cameraGeom::FpPoint const& posMm) const;
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2D getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
-    virtual lsst::afw::geom::Point2D getPixelFromPosition(lsst::afw::geom::Point2D const& pos) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2D const& pix, bool const) const {
-        return getPositionFromIndex(pix);
-    }
+    virtual lsst::afw::geom::Point2D getPixelFromPosition(lsst::afw::cameraGeom::FpPoint const& pos) const;
+
 private:
     DetectorSet _detectors;             // The Detectors that make up this DetectorMosaic
     std::pair<int, int> _nDetector;     // the number of columns/rows of Detectors

@@ -32,7 +32,7 @@
 #include "boost/format.hpp"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 
 namespace lsst { namespace afw { namespace geom {
 
@@ -56,6 +56,9 @@ class Box2D;
  */
 class Box2I {
 public:
+
+    typedef Point2I Point;
+    typedef Extent2I Extent;
 
     enum EdgeHandlingEnum { EXPAND, SHRINK };
 
@@ -123,8 +126,8 @@ public:
     int getArea() const { return getWidth() * getHeight(); }
     //@}
 
-    lsst::ndarray::View< 
-        boost::fusion::vector2< lsst::ndarray::index::Range, lsst::ndarray::index::Range > 
+    ndarray::View< 
+        boost::fusion::vector2< ndarray::index::Range, ndarray::index::Range > 
         >
     getSlices() const;
 
@@ -179,6 +182,9 @@ private:
  */
 class Box2D {
 public:
+
+    typedef Point2D Point;
+    typedef Extent2D Extent;
 
     /**
      *  Value the maximum coordinate is multiplied by to increase it by the smallest

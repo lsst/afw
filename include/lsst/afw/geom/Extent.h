@@ -48,6 +48,9 @@ double computeExtentNorm(Extent<double,N> const & s) {
 template <int N>
 int computeExtentNorm(Extent<int,N> const & s) {
     assert(false);
+#if 1                                   // make compilers happy in non-void function
+    return -1;
+#endif
 }
 
 } // namespace detail

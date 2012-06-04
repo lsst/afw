@@ -35,7 +35,7 @@
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
-#include "lsst/ndarray.h"
+#include "ndarray.h"
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -76,10 +76,19 @@ public:
     int getY()  const { return _y; }          ///< Return the y-value
     int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
 
+	bool contains(int x) { return (x >= _x0) && (x <= _x1); }
+	bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
+
     std::string toString() const;    
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
 
+	/* Required to make Span "LessThanComparable" so they can be used
+	 * in sorting, binary search, etc.
+	 * http://www.sgi.com/tech/stl/LessThanComparable.html
+	 */
+	bool operator<(const Span& b) const;
+	
     friend class Footprint;
 private:
     Span() {}
@@ -217,6 +226,10 @@ template<typename MaskT>
 MaskT setMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                            Footprint const& footprint,
                            MaskT const bitmask);
+template<typename MaskT>
+MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
+                             Footprint const& footprint,
+                             MaskT const bitmask);
 
 /************************************************************************************************************/
 /**
@@ -255,10 +268,12 @@ public:
                            );
 
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
+    void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
+
 private:
-    lsst::ndarray::Array<ImagePixelT, 1, 1> _image;
-    lsst::ndarray::Array<MaskPixelT, 1, 1> _mask;
-    lsst::ndarray::Array<VariancePixelT, 1, 1> _variance;
+    ndarray::Array<ImagePixelT, 1, 1> _image;
+    ndarray::Array<MaskPixelT, 1, 1> _mask;
+    ndarray::Array<VariancePixelT, 1, 1> _variance;
 };
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

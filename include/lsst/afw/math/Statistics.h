@@ -90,7 +90,7 @@ Property stringToStatisticsProperty(std::string const property);
  * 
  */
 class StatisticsControl {
-    typedef enum { FALSE=0, TRUE=1, NONE } Boolean; // initial state is NONE
+    typedef enum { WEIGHTS_FALSE=0, WEIGHTS_TRUE=1, WEIGHTS_NONE } WeightsBoolean; // initial state is NONE
 public:
 
     typedef boost::shared_ptr<StatisticsControl> Ptr;
@@ -101,14 +101,14 @@ public:
         int numIter = 3,           ///< Number of iterations
         lsst::afw::image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
         bool isNanSafe = true,     ///< flag NaNs
-        int useWeights = NONE      ///< use weighted statistics (via a vector or an inverse variance)
+        int useWeights = WEIGHTS_NONE      ///< use weighted statistics (via a vector or an inverse variance)
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
         _noGoodPixelsMask(0x0),
         _isNanSafe(isNanSafe),
-        _useWeights(useWeights == 0 ? FALSE : (useWeights == 1) ? TRUE : NONE),
+        _useWeights(useWeights == 0 ? WEIGHTS_FALSE : (useWeights == 1) ? WEIGHTS_TRUE : WEIGHTS_NONE),
         _calcErrorFromInputVariance(false)
     {
         try {
@@ -126,8 +126,8 @@ public:
     int getAndMask() const { return _andMask; }
     int getNoGoodPixelsMask() const { return _noGoodPixelsMask; }
     bool getNanSafe() const { return _isNanSafe; }
-    bool getWeighted() const { return _useWeights == TRUE ? true : false; }
-    bool getWeightedIsSet() const { return _useWeights != NONE ? true : false; }
+    bool getWeighted() const { return _useWeights == WEIGHTS_TRUE ? true : false; }
+    bool getWeightedIsSet() const { return _useWeights != WEIGHTS_NONE ? true : false; }
     bool getCalcErrorFromInputVariance() const { return _calcErrorFromInputVariance; }
         
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
@@ -135,7 +135,7 @@ public:
     void setAndMask(int andMask) { _andMask = andMask; }
     void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
-    void setWeighted(bool useWeights) { _useWeights = useWeights ? TRUE : FALSE; }
+    void setWeighted(bool useWeights) { _useWeights = useWeights ? WEIGHTS_TRUE : WEIGHTS_FALSE; }
     void setCalcErrorFromInputVariance(bool calcErrorFromInputVariance) {
         _calcErrorFromInputVariance = calcErrorFromInputVariance;
     }
@@ -146,7 +146,7 @@ private:
     int _andMask;                         // and-Mask to specify which mask planes to ignore
     int _noGoodPixelsMask;                // mask to set if no values are acceptable
     bool _isNanSafe;                      // Check for NaNs before running (slower)
-    Boolean _useWeights;                  // Calculate weighted statistics (int because of 3-valued logic)
+    WeightsBoolean _useWeights;           // Calculate weighted statistics (enum because of 3-valued logic)
     bool _calcErrorFromInputVariance;     // Calculate errors from the input variances, if available
 };
             

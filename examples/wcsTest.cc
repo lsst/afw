@@ -119,8 +119,8 @@ int main(int argc, char **argv) {
     afwCoord::Coord::ConstPtr raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
     afwCoord::Coord::ConstPtr raDecl2 = makeCoord(afwCoord::FK5, miRa2, miDecl2);
 
-    afwGeom::Point2D pix3 = wcs->skyToPixel(raDecl1);
-    afwGeom::Point2D pix4 = wcs->skyToPixel(raDecl2);
+    afwGeom::Point2D pix3 = wcs->skyToPixel(*raDecl1);
+    afwGeom::Point2D pix4 = wcs->skyToPixel(*raDecl2);
 
     std::cout << "col, row of " << inFilename << " at ("<< (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
         << "col: " << pix3[0] << " row: " << pix3[1] << std::endl << std::endl;

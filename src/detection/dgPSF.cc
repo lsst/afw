@@ -9,7 +9,7 @@
 #include <cmath>
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/detail/dgPsf.h"
-#include "lsst/afw/detection/LocalPsf.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/ImageUtils.h"
 
 namespace afwMath = lsst::afw::math;
@@ -43,32 +43,6 @@ dgPsf::dgPsf(int width,                         ///< Number of columns in realis
         afwMath::DoubleGaussianFunction2<double> dg(sigma1, sigma2, b);
         setKernel(afwMath::Kernel::Ptr(new afwMath::AnalyticKernel(width, height, dg)));
     }
-}
-
-PTR(LocalPsf) dgPsf::doGetLocalPsf(
-    lsst::afw::geom::Point2D const & center,
-    lsst::afw::image::Color const &
-) const {
-    afwMath::shapelets::MultiShapeletFunction multiShapelet;
-    double eps = std::numeric_limits<double>::epsilon();
-    if(_sigma1 <= eps && _sigma2 <= eps){
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::RuntimeErrorException,
-            "This psf is malformed, both sigma1 and sigma2 are zero"
-        );
-    }
-    if(_sigma1 > eps) {
-        afwMath::shapelets::ShapeletFunction element(0, afwMath::shapelets::HERMITE, _sigma1, center);
-        element.getCoefficients()[0]= 1.0;
-        multiShapelet.getElements().push_back(element);
-    }
-    if(_sigma2 > eps) {
-        afwMath::shapelets::ShapeletFunction element(0, afwMath::shapelets::HERMITE, _sigma2, center);
-        element.getCoefficients()[0] = _b;
-        multiShapelet.getElements().push_back(element);
-    }
-
-    return boost::make_shared<ShapeletLocalPsf>(center, multiShapelet);
 }
 
 //

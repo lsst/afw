@@ -92,9 +92,9 @@ def readImage(filename=None):
     #
     threshold = afwDetect.Threshold(5, afwDetect.Threshold.STDEV)
     npixMin = 5                         # we didn't smooth
-    fs = afwDetect.makeFootprintSet(mi, threshold, "DETECTED", npixMin)
+    fs = afwDetect.FootprintSet(mi, threshold, "DETECTED", npixMin)
     grow, isotropic = 1, False
-    fs = afwDetect.makeFootprintSet(fs, grow, isotropic)
+    fs = afwDetect.FootprintSet(fs, grow, isotropic)
     fs.setMask(mi.getMask(), "DETECTED")
 
     return mi, fs
@@ -133,8 +133,8 @@ def SpatialCellSetDemo(filename=None):
         bbox = foot.getBBox()
         xc = (bbox.getMinX() + bbox.getMaxX())/2.0
         yc = (bbox.getMinY() + bbox.getMaxY())/2.0
-
-        cellSet.insertCandidate(testSpatialCellLib.ExampleCandidate(xc, yc, im.getImage(), bbox))
+        tc = testSpatialCellLib.ExampleCandidate(xc, yc, im, bbox)
+        cellSet.insertCandidate(tc)
     #
     # OK, the SpatialCellList is populated.  Let's do something with it
     #
@@ -169,7 +169,7 @@ def SpatialCellSetDemo(filename=None):
                             cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
             j += 1
 
-            im = cand.getImage()
+            im = cand.getMaskedImage()
             if 0 and display:
                 ds9.mtv(im, title="Candidate", frame=1)
     #

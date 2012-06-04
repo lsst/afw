@@ -1,7 +1,10 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE ellipses
-#include <boost/test/unit_test.hpp>
-#include <boost/format.hpp>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+#include "boost/test/unit_test.hpp"
+#pragma clang diagnostic pop
+#include "boost/format.hpp"
 
 #include "lsst/afw/geom/ellipses.h"
 #include "Eigen/LU"
@@ -403,6 +406,17 @@ BOOST_AUTO_TEST_CASE(ParametricTest) {
 
 BOOST_AUTO_TEST_CASE(CoreConversion) {
     afwEllipses::invokeCoreTest<afwEllipses::CoreConversionTest>(false);
+}
+
+BOOST_AUTO_TEST_CASE(Normalization) {
+    afwEllipses::Ellipse a1(afwEllipses::Axes(1.0, 1.5, 0.0));
+    afwEllipses::Ellipse a2(afwEllipses::Axes(0.0, 0.0, 0.0));
+    a2 = a1;
+    BOOST_CHECK_EQUAL(a2.getCore().getParameterVector(), a1.getCore().getParameterVector());
+    afwEllipses::Ellipse a3(afwEllipses::Axes(1.0, 1.0, 0.5));
+    afwEllipses::Ellipse a4(afwEllipses::Axes(0.0, 0.0, 0.0));
+    a3 = a4;
+    BOOST_CHECK_EQUAL(a3.getCore().getParameterVector(), a4.getCore().getParameterVector());    
 }
 
 BOOST_AUTO_TEST_CASE(Transformer) {

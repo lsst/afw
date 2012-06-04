@@ -16,7 +16,6 @@ import eups
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExceptions
 import lsst.pex.logging as logging
-import lsst.pex.policy as policy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
@@ -118,16 +117,6 @@ class dgPsfTestCase(unittest.TestCase):
 
                 iIm = iPsf.computeImage(dimen)
                 self.assertTrue(iIm.getDimensions() == dimen)
-
-    def testLocalPsf(self):
-        image = self.psf.computeImage(afwGeom.Point2D(0.0, 0.0), False)
-        local = self.psf.getLocalPsf(afwGeom.Point2D(0.0, 0.0))
-        footprint = afwDetect.Footprint(image.getBBox(afwImage.PARENT))
-        vector = numpy.zeros(footprint.getArea(), dtype=float)
-        local.evaluatePointSource(footprint, vector)
-        image2 = afwImage.ImageD(image.getBBox(afwImage.PARENT))
-        afwDetect.expandArray(footprint, vector, image2.getArray(), image2.getXY0())
-        self.assert_(numpy.allclose(image.getArray(), image2.getArray(), atol=1E-8, rtol=1E-8))
 
     def testKernel(self):
         """Test the creation of the dgPsf's kernel"""

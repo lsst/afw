@@ -236,7 +236,7 @@ try:
 
             var = gdb.parse_and_eval(opts.eigenObject)
 
-            if not re.search(r"Eigen::(Matrix|Vector)", str(var.type)):
+            if not re.search(r"(Eigen|LinearTransform)::(Matrix|Vector)", str(var.type)):
                 raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
                 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -391,6 +391,25 @@ try:
             return "Source{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"],
                                                           self.val["_xAstrom"], self.val["_yAstrom"])
 
+    class cgIdPrinter(object):
+        "Print a cameraGeom::Id"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "Id{%d %s}" % (self.val["_serial"], self.val["_name"])
+
+    class DetectorPrinter(object):
+        "Print a cameraGeom::Detector"
+
+        def __init__(self, val):
+            self.val = val
+
+        def to_string(self):
+            return "Detector{%s Centre: %smm %spix %s}" % (self.val["_id"], self.val["_center"]["_p"],
+                                                self.val["_centerPixel"], self.val["_trimmedAllPixels"])
+
     class FootprintPrinter(object):
         "Print a Footprint"
 
@@ -445,11 +464,11 @@ try:
             if type.code == gdb.TYPE_CODE_REF:
                 type = type.target ()
 
-            llc = [getEigenValue(self.val["_minimum"]["_vector"], 0, i) for i in range(2)]
-            dims = [getEigenValue(self.val["_dimensions"]["_vector"], 0, i) for i in range(2)]
+            llc = [getEigenValue(self.val["_minimum"]["_vector"], i) for i in range(2)]
+            dims = [getEigenValue(self.val["_dimensions"]["_vector"], i) for i in range(2)]
 
             return "Box2{(%s,%s)--(%s,%s)}" % (llc[0], llc[1],
-                                                 llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
+                                               llc[0] + dims[0] - 1, llc[1] + dims[1] - 1)
 
         def display_hint (self):
             return "array"
@@ -616,10 +635,11 @@ try:
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
-            if not re.search(r"^(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type.unqualified())):
+            if not re.search(r"(lsst::afw::image::)?(Image|Mask|MaskedImage)", str(var.type.unqualified())):
                 raise gdb.GdbError("Please specify an image, not %s" % var.type)
 
-            if re.search(r"MaskedImage", str(var.type)):
+            if re.search(r"MaskedImage", str(var.type)) and \
+                    not re.search(r"::Image(\s*&)?$", str(var.type)):
                 print "N.b. %s is a MaskedImage; showing image" % (opts.image)
                 var = var["_image"]
 
@@ -671,25 +691,93 @@ try:
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+    class BackgroundPrinter(object):
+        "Print a Background"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "Background(%dx%d) %s %s" % (
+                self.val["_imgWidth"], self.val["_imgHeight"],
+                self.val["_grid"], self.val["_bctrl"])
+
+    class BackgroundControlPrinter(object):
+        "Print a BackgroundControl"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "{%s %s %s %s}" % (re.sub(r"lsst::afw::math::Interpolate::", "", str(self.val["_style"])),
+                                        re.sub(r"lsst::afw::math::", "", str(self.val["_prop"])),
+                                        re.sub(r"lsst::afw::math::", "", str(self.val["_undersampleStyle"])),
+                                        self.val["_sctrl"]["px"].dereference())
+
     class KernelPrinter(object):
         "Print a Kernel"
 
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
         def to_string(self):
-            return "%s(%dx%d)" % (self.typeName(),
+            return "%s(%dx%d)" % (self.typename,
                                   self.val["_width"], self.val["_height"])
 
+
+
+    class StatisticsControlPrinter(object):
+        "Print a StatisticsControl"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "{nSigma=%g nIter=%d ignore=0x%x}" % (self.val["_numSigmaClip"],
+                                                         self.val["_numIter"],
+                                                         self.val["_andMask"])
+
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    class TablePrinter(object):
+        "Print a table::Table"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            return "{schema = %s, md=%s}" % (self.val["_schema"], self.val["_metadata"])
+        
+    class TableSchemaPrinter(object):
+        "Print a table::Schema"
+
+        def __init__(self, val):
+            self.typename = str(val.type)
+            self.val = val
+
+        def to_string(self):
+            names = str(self.val["_impl"]["px"]["_names"])
+            names = re.sub(r"^[^{]*{|}|[\[\]\"\"]|\s*=\s*[^,]*", "", names)
+
+            return "%s" % (names)
+        
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     printers = []
 
-    def register(obj):
+    def register(obj=None):
         "Register my pretty-printers with objfile Obj."
 
         if obj is None:
             obj = gdb
 
         for p in printers:
-            gdb.printing.register_pretty_printer(obj, p)
+            gdb.printing.register_pretty_printer(obj, p, replace=True)
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -725,6 +813,11 @@ try:
 
     def build_afw_dictionary():
         printer = gdb.printing.RegexpCollectionPrettyPrinter("afw")
+
+        printer.add_printer('lsst::afw::cameraGeom::Id',
+                            '^lsst::afw::cameraGeom::Id$', cgIdPrinter)
+        printer.add_printer('lsst::afw::cameraGeom::Detector',
+                            '^lsst::afw::cameraGeom::(Amp|Ccd|Detector|DetectorMosaic)$', DetectorPrinter)
 
         printer.add_printer('lsst::afw::detection::Footprint',
                             '^lsst::afw::detection::Footprint$', FootprintPrinter)
@@ -762,8 +855,19 @@ try:
         printer.add_printer('lsst::afw::image::Exposure',
                             '^lsst::afw::image::Exposure', ExposurePrinter)
 
+        printer.add_printer('lsst::afw::math::Background',
+                            '^lsst::afw::math::Background$', BackgroundPrinter)
+        printer.add_printer('lsst::afw::math::BackgroundControl',
+                            '^lsst::afw::math::BackgroundControl$', BackgroundControlPrinter)
         printer.add_printer('lsst::afw::math::Kernel',
-                            '^lsst::afw::math::Kernel', KernelPrinter)
+                            '^lsst::afw::math::.*Kernel', KernelPrinter)
+        printer.add_printer('lsst::afw::math::StatisticsControl',
+                            '^lsst::afw::math::StatisticsControl', StatisticsControlPrinter)
+
+        printer.add_printer('lsst::afw::table::Table',
+                            '^lsst::afw::table::.*Table$', TablePrinter)
+        printer.add_printer('lsst::afw::table::Schema',
+                            '^lsst::afw::table::Schema$', TableSchemaPrinter)
 
         return printer
 
@@ -778,5 +882,6 @@ try:
         return printer
 
     printers.append(build_daf_base_dictionary())
-except ImportError:
+except ImportError, e:
+    print "RHL", e
     from printers_oldgdb import *

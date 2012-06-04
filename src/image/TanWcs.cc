@@ -42,8 +42,6 @@
 namespace except = lsst::pex::exceptions; 
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
-using namespace std;
-
 
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::afw::image::TanWcs TanWcs;
@@ -86,16 +84,16 @@ TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) :
 
     //Check that the header isn't empty
     if(fitsMetadata->nameCount() == 0) {
-        string msg = "Fits metadata contains no cards";
+        std::string msg = "Fits metadata contains no cards";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
     
     //Check for tangent plane projection
-    string ctype1 = fitsMetadata->getAsString("CTYPE1");
-    string ctype2 = fitsMetadata->getAsString("CTYPE2");
+    std::string ctype1 = fitsMetadata->getAsString("CTYPE1");
+    std::string ctype2 = fitsMetadata->getAsString("CTYPE2");
 
     if((ctype1.substr(5, 3) != "TAN") || (ctype2.substr(5, 3) != "TAN") ) {
-        string msg = "One or more axes isn't in TAN projection (ctype1 = \"" + ctype1 + "\", ctype2 = \"" + ctype2 + "\")";
+        std::string msg = "One or more axes isn't in TAN projection (ctype1 = \"" + ctype1 + "\", ctype2 = \"" + ctype2 + "\")";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
@@ -110,7 +108,7 @@ TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) :
             break;
         case 1:
             {//Invalid case. Throw an exception
-                string msg = "Distortion key found for only one CTYPE";
+                std::string msg = "Distortion key found for only one CTYPE";
                 throw LSST_EXCEPT(except::InvalidParameterException, msg);
             }
             break;  //Not necessary, but looks naked without it.
@@ -118,8 +116,8 @@ TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) :
             _hasDistortion = true;
             
             //Hide the distortion from wcslib
-            fitsMetadata->set<string>("CTYPE1", ctype1.substr(0,8));
-            fitsMetadata->set<string>("CTYPE2", ctype2.substr(0,8));
+            fitsMetadata->set<std::string>("CTYPE1", ctype1.substr(0,8));
+            fitsMetadata->set<std::string>("CTYPE2", ctype2.substr(0,8));
             
             //Save SIP information
             decodeSipHeader(fitsMetadata, "A", &_sipA);
@@ -137,12 +135,12 @@ TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) :
     //Check that the existence of forward sip matrices <=> existence of reverse matrices
     if (_hasDistortion) {
         if (_sipA.rows() <= 1 || _sipB.rows() <= 1) {
-                string msg = "Existence of forward distorton matrices suggested, but not found";
+                std::string msg = "Existence of forward distorton matrices suggested, but not found";
                 throw LSST_EXCEPT(except::InvalidParameterException, msg);
         }
 
         if (_sipAp.rows() <= 1 || _sipBp.rows() <= 1) {
-                string msg = "Forward distorton matrices present, but no reverse matrices";
+                std::string msg = "Forward distorton matrices present, but no reverse matrices";
                 throw LSST_EXCEPT(except::InvalidParameterException, msg);
         }
     }

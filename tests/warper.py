@@ -99,7 +99,7 @@ class WarpExposureTestCase(unittest.TestCase):
         nGood1 = (mask1Arr & edgeMask == 0).sum()
         nGood2 = (mask2Arr & edgeMask == 0).sum()
         nGood3 = (mask3Arr & edgeMask == 0).sum()
-        self.assertTrue(nGood1 == nGood2)
+        self.assertEqual(nGood1, nGood2)
         self.assertTrue(nGood3 < nGood1)
 
         self.assertEquals(warpedExposure1.getFilter().getName(), originalFilter.getName())

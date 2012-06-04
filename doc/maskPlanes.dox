@@ -24,7 +24,7 @@ Plane 1 -> SAT
 >>> def showMask(msk, msg="???"):
 ...    print "%-15s" % msg, " ".join(sorted([str(x) for x in msk.getMaskPlaneDict().items()]))
 \endcode
-(where we slipped in a convenient function @c showMask to show masks in bit-order)
+(where we slipped in a convenient function @c showMask to show masks in name-order)
 
 You can add more mask planes:
 \code

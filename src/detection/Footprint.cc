@@ -57,6 +57,24 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+bool Span::operator<(const Span& b) const {
+	if (_y < b._y)
+		return true;
+	if (_y > b._y)
+		return false;
+	// y equal...
+	if (_x0 < b._x0)
+		return true;
+	if (_x0 > b._x0)
+		return false;
+	if (_x1 < b._x1)
+		return true;
+	// if (_x1 > b._x1)
+	// return false;
+    // they're equal.
+	return false;
+}
+
 namespace {
 /*
  * Compare two Span%s by y, then x0, then x1
@@ -115,7 +133,7 @@ double extremum(geom::Point2D a, geom::Point2D b, geom::Point2D c, geom::Point2D
 geom::Point2D transformPoint(double x, double y, 
                              image::Wcs const& source,
                              image::Wcs const& target){
-    return target.skyToPixel(source.pixelToSky(x, y));
+    return target.skyToPixel(*source.pixelToSky(x, y));
 }
 
 
@@ -589,7 +607,7 @@ Footprint::insertIntoImage(
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
 {
-    if (id > std::numeric_limits<PixelT>::max()) {
+    if (id > std::size_t(std::numeric_limits<PixelT>::max())) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::OutOfRangeException,
             "id out of range for image type"
@@ -834,7 +852,7 @@ Footprint::Ptr footprintAndMask(
 
 /************************************************************************************************************/
 /**
- * \brief OR bitmask into all the Mask's pixels which are in the Footprint
+ * \brief OR bitmask into all the Mask's pixels that are in the Footprint
  *
  * \return bitmask
  */
@@ -864,6 +882,45 @@ MaskT setMaskFromFootprint(
         for (typename image::Image<MaskT>::x_iterator ptr = mask->x_at(x0, y),
                  end = mask->x_at(x1 + 1, y); ptr != end; ++ptr) {
             *ptr |= bitmask;
+        }
+    }
+
+    return bitmask;
+}
+
+/************************************************************************************************************/
+/**
+ * \brief (AND ~bitmask) all the Mask's pixels that are in the
+ * Footprint; that is, set to zero in the Mask-intersecting-Footprint
+ * all bits that are 1 in then bitmask.
+ *
+ * \return bitmask
+ */
+template<typename MaskT>
+MaskT clearMaskFromFootprint(
+    image::Mask<MaskT> *mask,              ///< Mask to set
+    Footprint const& foot,      ///< Footprint specifying desired pixels
+    MaskT const bitmask                    ///< Bitmask
+) {
+    int const width = static_cast<int>(mask->getWidth());
+    int const height = static_cast<int>(mask->getHeight());
+
+    for (Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+         siter != foot.getSpans().end(); siter++) {
+        Span::Ptr const span = *siter;
+        int const y = span->getY() - mask->getY0();
+        if (y < 0 || y >= height) {
+            continue;
+        }
+
+        int x0 = span->getX0() - mask->getX0();
+        int x1 = span->getX1() - mask->getX0();
+        x0 = (x0 < 0) ? 0 : (x0 >= width ? width - 1 : x0);
+        x1 = (x1 < 0) ? 0 : (x1 >= width ? width - 1 : x1);
+
+        for (typename image::Image<MaskT>::x_iterator ptr = mask->x_at(x0, y),
+                 end = mask->x_at(x1 + 1, y); ptr != end; ++ptr) {
+            *ptr &= ~bitmask;
         }
     }
 
@@ -1130,8 +1187,7 @@ Footprint::Ptr growFootprintSlow(
     image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
 
-    FootprintSet<int>::Ptr
-        grownList(new FootprintSet<int>(*convolvedImage, 0.5, "", 1));
+    PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1));
 
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
@@ -1223,9 +1279,7 @@ Footprint::Ptr growFootprint(
 
     image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
     // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
-    FootprintSet<int>::Ptr grownList(
-        new FootprintSet<int>(*midImage, Threshold(-ngrow, Threshold::VALUE, false))
-    );
+    PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(-ngrow, Threshold::VALUE, false)));
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
     //
@@ -1687,6 +1741,9 @@ image::MaskPixel setMaskFromFootprintList(
     std::vector<Footprint::Ptr> const& footprints,
     image::MaskPixel const bitmask);
 template image::MaskPixel setMaskFromFootprint(
+    image::Mask<image::MaskPixel> *mask,
+    Footprint const& foot, image::MaskPixel const bitmask);
+template image::MaskPixel clearMaskFromFootprint(
     image::Mask<image::MaskPixel> *mask,
     Footprint const& foot, image::MaskPixel const bitmask);
 

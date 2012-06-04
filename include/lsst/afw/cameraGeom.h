@@ -25,10 +25,12 @@
 
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Amp.h"
+#include "lsst/afw/cameraGeom/FpPoint.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/DetectorMosaic.h"
 #include "lsst/afw/cameraGeom/Ccd.h"
 #include "lsst/afw/cameraGeom/Raft.h"
 #include "lsst/afw/cameraGeom/Camera.h"
+#include "lsst/afw/cameraGeom/Distortion.h"
 
 #endif

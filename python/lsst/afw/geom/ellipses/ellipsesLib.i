@@ -35,8 +35,8 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 #include "lsst/afw/geom/ellipses.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_ELLIPSES_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
-#include "lsst/ndarray/python.h"
-#include "lsst/ndarray/python/eigen.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
 %}
 
 %init%{
@@ -74,7 +74,7 @@ def version(HeadURL = r"$HeadURL$"):
 
 %lsst_exceptions();
 
-%include "lsst/ndarray/ndarray.i"
+%include "ndarray.i"
 %import "lsst/afw/geom/geomLib.i"
 
 %pythondynamic lsst::afw::geom::ellipses::Ellipse;
@@ -173,9 +173,9 @@ def version(HeadURL = r"$HeadURL$"):
 %extend lsst::afw::geom::ellipses::Quadrupole {
     %pythoncode {
     def __repr__(self):
-        return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIXX(), self.getIYY(), self.getIXY())
+        return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIxx(), self.getIyy(), self.getIxy())
     def __str__(self):
-        return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIXX(), self.getIYY(), self.getIXY())
+        return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIxx(), self.getIyy(), self.getIxy())
     }
 }
 
@@ -239,3 +239,5 @@ def version(HeadURL = r"$HeadURL$"):
 
 %include "lsst/afw/geom/ellipses/Ellipse.h"
 %include "lsst/afw/geom/ellipses/Parametric.h"
+%include "lsst/afw/geom/ellipses.h" // just for Separable typedefs
+

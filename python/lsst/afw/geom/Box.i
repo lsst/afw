@@ -27,18 +27,19 @@
 
 %ignore lsst::afw::geom::Box2I::getSlices;
 %rename(set) lsst::afw::geom::Box2I::operator=;
-%rename(__eq__) lsst::afw::geom::Box2I::operator==;
-%rename(__ne__) lsst::afw::geom::Box2I::operator!=;
+%useValueEquality(lsst::afw::geom::Box2I);
 %copyctor lsst::afw::geom::Box2I;
 %rename(set) lsst::afw::geom::Box2D::operator=;
-%rename(__eq__) lsst::afw::geom::Box2D::operator==;
-%rename(__ne__) lsst::afw::geom::Box2D::operator!=;
+%useValueEquality(lsst::afw::geom::Box2D);
 %copyctor lsst::afw::geom::Box2D;
 
 %include "lsst/afw/geom/Box.h"
 
 %extend lsst::afw::geom::Box2I {             
     %pythoncode {
+    Extent = Extent2I
+    Point = Point2I
+
     def __repr__(self):
         return "Box2I(%r, %r)" % (self.getMin(), self.getDimensions())
              
@@ -46,16 +47,29 @@
         return "Box2I(%s, %s)" % (self.getMin(), self.getMax())
 
     def getSlices(self):
-         return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
+        return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
+
+    def getCorners(self):
+        return (
+            self.getMin(),
+            self.Point(self.getMaxX(), self.getMinY()),
+            self.getMax(),
+            self.Point(self.getMinX(), self.getMaxY())
+        )
     }
 }
 
 %extend lsst::afw::geom::Box2D {             
     %pythoncode {
+    Extent = Extent2D
+    Point = Point2D
+
     def __repr__(self):
         return "Box2D(%r, %r)" % (self.getMin(), self.getDimensions())
              
     def __str__(self):
         return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
+
+    getCorners = Box2I.getCorners
     }
 }

@@ -25,11 +25,30 @@
 /// \file
 /// \brief Implementations of Mask class methods
 
+/*
+ * There are a number of classes defined here and in Mask.h
+ *
+ * The fundamental type visible to the user is Mask; a 2-d array of pixels.  Each of these pixels should
+ * be thought of as a set of bits, and the names of these bits are given by MaskPlaneDict (which is
+ * implemented as a std::map)
+ *
+ * Internally to this file, we have a MapWithHash which is like a std::map, but maintains a hash of its
+ * contents;  this is used to check equality efficiently.
+ *
+ * We also have a MaskDict which isa MapWithHash, but also maintains a list of MaskDicts (or equivalently
+ * MapWithHash) allowing us to iterate over these maps, updating them as needed.
+ *
+ * The list of MaskDicts is actually kept as a singleton of a helper class, DictState
+ */
+
 #include <functional>
 #include <list>
 #include <string>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/lambda/lambda.hpp"
+#pragma clang diagnostic pop
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 
@@ -165,19 +184,18 @@ namespace detail {
  * actually kept in a singleton instance of DictState)
  */
 class MaskDict : public MapWithHash {
-    friend class DictState;
+    friend class ::lsst::afw::image::DictState; // actually anonymous within lsst::afw::image; g++ is confused
 
     MaskDict() : MapWithHash() {}
     MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
 public:
-    static PTR(MaskDict) makeMaskDict(detail::MaskPlaneDict const& = MaskPlaneDict());
+    static PTR(MaskDict) makeMaskDict();
+    static PTR(MaskDict) makeMaskDict(detail::MaskPlaneDict const &dict);
     static PTR(MaskDict) setDefaultDict(PTR(MaskDict) dict);
 
     PTR(MaskDict) clone() const;
 
     ~MaskDict();
-
-    int getId();
 
     int getUnusedPlane() const;
     int getMaskPlane(const std::string& name) const;
@@ -221,11 +239,6 @@ namespace {
             _dicts.clear();
         }
 
-        int getId(MapWithHash *dict) const {
-            HandleList::const_iterator pair = _dicts.find(dict);
-            return (pair == _dicts.end()) ? -1 : pair->second;
-        }
-
         template<typename FunctorT>
         void forEachMaskDict(FunctorT func) {
             for (HandleList::const_iterator ptr = _dicts.begin(); ptr != _dicts.end(); ++ptr) {
@@ -235,6 +248,14 @@ namespace {
 
     private:
         PTR(detail::MaskDict) getDefaultDict() {
+            static bool first = true;
+
+            if (first) {
+                setInitMaskBits(_defaultMaskDict);
+                
+                first = false;
+            }
+
             return _defaultMaskDict;
         }
 
@@ -277,16 +298,15 @@ namespace detail {
  * your very very own
  */
 PTR(MaskDict)
+MaskDict::makeMaskDict()
+{
+    return _state.getDefaultDict();
+}
+
+PTR(MaskDict)
 MaskDict::makeMaskDict(detail::MaskPlaneDict const& mpd)
 {
-    static bool first = true;
-
     PTR(MaskDict) dict = _state.getDefaultDict();
-    if (first) {
-        setInitMaskBits(_state.getDefaultDict());
-
-        first = false;
-    }
 
     if (!mpd.empty()) {
         MapWithHash mwh(mpd);
@@ -354,10 +374,6 @@ detail::MaskDict::getMaskPlane(const std::string& name) const
     
     return (i == end()) ? -1 : i->second;
 }
-
-int detail::MaskDict::getId() {
-    return _state.getId(static_cast<MaskDict *>(this));
-}
 }
 
 namespace {
@@ -385,8 +401,7 @@ template<typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     pexLog::Trace("afw.Mask", 5, boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-    _maskDict = planeDefs.empty() ?
-        detail::MaskDict::makeMaskDict() : detail::MaskDict::makeMaskDict(planeDefs);
+    _maskDict = detail::MaskDict::makeMaskDict(planeDefs);
 }
 
 /**
@@ -400,7 +415,6 @@ Mask<MaskPixelT>::Mask(
 ) :
     ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)) {
     _initializePlanes(planeDefs);
-    _maskDict = detail::MaskDict::makeMaskDict(); // after initializePlanes
     *this = 0x0;
 }
 
@@ -498,8 +512,8 @@ Mask<MaskPixelT>::Mask(
 }
 
 template<typename MaskPixelT>
-Mask<MaskPixelT>::Mask(lsst::ndarray::Array<MaskPixelT,2,1> const & array, bool deep,
-                                 geom::Point2I const & xy0) :
+Mask<MaskPixelT>::Mask(ndarray::Array<MaskPixelT,2,1> const & array, bool deep,
+                       geom::Point2I const & xy0) :
         image::ImageBase<MaskPixelT>(array, deep, xy0),
         _maskDict(detail::MaskDict::makeMaskDict()) {
 }
@@ -570,7 +584,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
         metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList);
     }
 
-    if (!fits_read_image<fits_mask_types>(fileName, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_image<fits_mask_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(FitsException,
             str(boost::format("Failed to read %s HDU %d") % fileName % hdu));
     }
@@ -623,7 +637,7 @@ Mask<MaskPixelT>::Mask(
        metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList);
     }
 
-    if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, metadata, hdu, bbox, origin)) {
+    if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(FitsException,
                           str(boost::format("Failed to read RAM FITS HDU %d") % hdu));
     }
@@ -650,7 +664,7 @@ Mask<MaskPixelT>::Mask(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     std::string const& fileName, ///< File to write
-    CONST_PTR(dafBase::PropertySet) metadata_i, ///< metadata to write to header,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, ///< metadata to write to header,
         ///< or a null pointer if none
     std::string const& mode    ///< "w" to write a new file; "a" to append
 ) const {
@@ -680,7 +694,7 @@ template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     char **ramFile,        ///< RAM buffer to receive RAM FITS file
     size_t *ramFileLen,    ///< RAM buffer length
-    CONST_PTR(dafBase::PropertySet) metadata_i, ///< metadata to write to header,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, ///< metadata to write to header,
         ///< or a null pointer if none
     std::string const& mode    ///< "w" to write a new file; "a" to append
 ) const {
@@ -802,7 +816,7 @@ void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, ///< nam
 {
     clearMaskPlane(getMaskPlane(name)); // clear this bits in this Mask
 
-    if (_maskDict->getId() == detail::MaskDict::makeMaskDict()->getId() && removeFromDefault) { // we are the default
+    if (_maskDict == detail::MaskDict::makeMaskDict() && removeFromDefault) { // we are the default
         ;
     } else {
         _maskDict = _maskDict->clone();
@@ -1081,9 +1095,7 @@ bool Mask<MaskPixelT>::operator()(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::checkMaskDictionaries(Mask<MaskPixelT> const &other) {
     if (*_maskDict != *other._maskDict) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
-                          str(boost::format("Mask dictionary versions do not match; %d v. %d") %
-                              _maskDict->getId() % other._maskDict->getId()));
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Mask dictionaries do not match");
     }
 }        
 
@@ -1277,13 +1289,6 @@ template<typename MaskPixelT>
 PTR(detail::MaskDict) Mask<MaskPixelT>::_maskPlaneDict()
 {
     return detail::MaskDict::makeMaskDict();
-}
-
-template<typename MaskPixelT>
-int
-Mask<MaskPixelT>::getMyMaskDictVersion() const
-{
-    return _maskDict->getId();
 }
 
 //

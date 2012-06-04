@@ -93,6 +93,8 @@ geom::Point<T,N> geom::ExtentBase<T,N>::operator+(Point<T,N> const & other) cons
     return Point<T,N>(this->_vector + other.asEigen());
 }
 
+#ifndef DOXYGEN
+
 template class geom::ExtentBase<int,2>;
 template class geom::ExtentBase<int,3>;
 template class geom::ExtentBase<double,2>;
@@ -105,3 +107,5 @@ template geom::Extent<double,2>::Extent(geom::Extent<int,2> const &);
 template geom::Extent<double,3>::Extent(geom::Extent<int,3> const &);
 template geom::Extent<double,2>::Extent(geom::Point<int,2> const &);
 template geom::Extent<double,3>::Extent(geom::Point<int,3> const &);
+
+#endif // !DOXYGEN

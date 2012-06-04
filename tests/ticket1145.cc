@@ -24,7 +24,10 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Ticket1145
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
+#pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/afw/image/MaskedImage.h"

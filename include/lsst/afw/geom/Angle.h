@@ -17,6 +17,8 @@ namespace lsst { namespace afw { namespace geom {
 /*
  * None of C99, C++98, and C++0x define M_PI, so we'll do it ourselves
  */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
 double const PI = boost::math::constants::pi<double>(); ///< The ratio of a circle's circumference to diameter
 double const TWOPI = boost::math::constants::pi<double>() * 2.0;
 double const HALFPI = boost::math::constants::pi<double>() * 0.5;
@@ -24,6 +26,7 @@ double const ONE_OVER_PI = 1.0 / boost::math::constants::pi<double>();
 double const SQRTPI = sqrt(boost::math::constants::pi<double>());
 double const INVSQRTPI = 1.0/sqrt(boost::math::constants::pi<double>());
 double const ROOT2 = boost::math::constants::root_two<double>(); // sqrt(2)
+#pragma clang diagnostic pop
 
 // These shouldn't be necessary if the Angle class is used, but sometimes you just need
 // them.  Better to define them once here than have *180/PI throughout the code...
@@ -108,6 +111,8 @@ public:
     /** Construct an Angle with the specified value (interpreted in the given units) */
     explicit Angle(double val, AngleUnit units=radians) : _val(val*units._val) {}
 	Angle() : _val(0) {}
+    /** Copy constructor. */
+    Angle(Angle const& other) : _val(other._val) {}
     /** Convert an Angle to a double in radians*/
     operator double() const { return _val; }
     /** Convert an Angle to a float in radians*/

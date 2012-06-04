@@ -162,6 +162,9 @@ public:
     
     virtual ~Background() {}
     
+    void operator+=(float const delta);
+    void operator-=(float const delta);
+
     double getPixel(int const x, int const y) const;
 
     template<typename PixelT>
@@ -176,18 +179,19 @@ private:
     int _imgHeight;                     // img.getHeight()
     int _nxSample;                      // number of sub-image squares in x-dimension
     int _nySample;                      // number of sub-image squares in y-dimension
-    int _subimgWidth;                   // width in pixels of a subimage
-    int _subimgHeight;                  // height in pixels of a subimage
     std::vector<double> _xcen;             // x center pix coords of sub images
     std::vector<double> _ycen;          // y center ...
     std::vector<int> _xorig;            // x origin pix coords of sub images
     std::vector<int> _yorig;            // y origin ...
+    std::vector<int> _xsize;            // x size of sub images
+    std::vector<int> _ysize;            // y size ...
     std::vector<std::vector<double> > _grid; // 3-sig clipped means for the grid of sub images.
 
     std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
     BackgroundControl _bctrl;           // control info set by user.
 
     void _checkSampling();
+    void _set_gridcolums(int iX, std::vector<int> const& ypix);
 };
 
 /**
