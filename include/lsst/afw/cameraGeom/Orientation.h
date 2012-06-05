@@ -37,7 +37,9 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 #if defined(SWIG)
-    using lsst::afw::geom::radians;
+    // swig generates incorrect python bindings, putting e.g. "pitch = 0*lsst::afw::geom::radians" into
+    // the .py file.  The other part of the workaround is to make the symbol "radian" available to python
+    // in cameraGeomLib.i
     #define AFW_GEOM_RADIANS radians
 #else
     #define AFW_GEOM_RADIANS lsst::afw::geom::radians

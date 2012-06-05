@@ -75,6 +75,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
     }
 }
 %pythoncode {
+# See comment in Orientation.h
 import lsst.afw.geom			# needed for initialising Orientation
 radians = lsst.afw.geom.radians
 }
