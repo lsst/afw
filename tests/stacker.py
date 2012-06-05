@@ -39,6 +39,7 @@ or
 # An example executible which calls the example 'stack' code 
 
 import unittest
+import numpy
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
@@ -261,6 +262,27 @@ class StackTestCase(unittest.TestCase):
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl)
         self.assertEqual(imgStack.get(0, 0)[1], 0x4)
         
+    def test2145(self):
+        """The how-to-repeat from #2145"""
+        Size = 5
+        statsCtrl = afwMath.StatisticsControl()
+        statsCtrl.setCalcErrorFromInputVariance(True)
+        maskedImageList = afwImage.vectorMaskedImageF()
+        weightList = []
+        for i in range(3):
+            mi = afwImage.MaskedImageF(Size, Size)
+            imArr, maskArr, varArr = mi.getArrays()
+            imArr[:] = numpy.random.normal(10, 0.1, (Size, Size))
+            varArr[:] = numpy.random.normal(10, 0.1, (Size, Size))
+            maskedImageList.append(mi)
+            weightList.append(1.0)
+            
+        stack = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, weightList)
+        if False:
+            print "image=", stack.getImage().getArray()
+            print "variance=", stack.getVariance().getArray()
+        self.assertNotEqual(numpy.sum(stack.getVariance().getArray()), 0.0)
+
 #################################################################
 # Test suite boiler plate
 #################################################################
