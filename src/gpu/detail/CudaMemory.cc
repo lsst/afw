@@ -40,7 +40,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include "lsst/afw/image.h"
+#include "lsst/afw/image/Image.h"
 #include "lsst/afw/gpu/GpuExceptions.h"
 #include "lsst/afw/gpu/detail/GpuBuffer2D.h"
 #include "lsst/afw/gpu/detail/CudaMemory.h"

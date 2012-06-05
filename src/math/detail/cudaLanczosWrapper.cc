@@ -37,11 +37,12 @@
 #include <cuda_runtime.h>
 #endif
 
-#include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/geom/Box.h"
 
-#include "lsst/afw/math.h"
+#include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/warpExposure.h"
 #include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
 
 #include "lsst/afw/gpu/GpuExceptions.h"
