@@ -52,7 +52,7 @@ public:
                          lsst::afw::geom::Angle roll=0*AFW_GEOM_RADIANS,  ///< roll (rotation in XZ)
                          lsst::afw::geom::Angle yaw=0*AFW_GEOM_RADIANS    ///< yaw (rotation in XY)
                         )
-#undef GEOM_RADIANS
+#undef AFW_GEOM_RADIANS
         :
         _nQuarter(nQuarter % 4),
         _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
