@@ -207,7 +207,7 @@ void computeMaskedImageStack(
  * If none of the input images are valid for some pixel,
  * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
  *
- * All the work is done in the function comuteMaskedImageStack.
+ * All the work is done in the function computeMaskedImageStack.
  */
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
