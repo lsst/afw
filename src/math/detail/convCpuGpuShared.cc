@@ -38,13 +38,11 @@
 #include "boost/cstdint.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/image.h"
-#include "lsst/afw/math.h"
-#include "lsst/afw/geom.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/detail/Convolve.h"
 #include "lsst/afw/math/detail/ConvCpuGpuShared.h"
 
-namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace mathDetail = lsst::afw::math::detail;
 
@@ -70,7 +68,7 @@ void mathDetail::assertDimensionsOK(
         << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
-    if (afwGeom::any(inImage.getDimensions().lt(kernel.getDimensions()))) {
+    if (inImage.getWidth() < kernel.getWidth() || inImage.getHeight() < kernel.getHeight()) {
         std::ostringstream os;
         os << "inImage dimensions = ( "
         << inImage.getWidth() << ", " << inImage.getHeight()
