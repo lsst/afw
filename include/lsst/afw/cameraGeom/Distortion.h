@@ -29,7 +29,6 @@
 #include "boost/tuple/tuple.hpp"
 #include <map>
 
-#include "lsst/afw/image.h"
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"

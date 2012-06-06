@@ -41,8 +41,8 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/image.h"
-#include "lsst/afw/math.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/detail/Convolve.h"
 

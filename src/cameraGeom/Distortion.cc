@@ -37,10 +37,11 @@
 #include "Eigen/Geometry"
 
 #include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses.h" 
 #include "lsst/afw/math/warpExposure.h"
-#include "lsst/afw/image.h"
+#include "lsst/afw/image/MaskedImage.h"
 
 #include "lsst/pex/exceptions.h"
 #include "boost/format.hpp"
