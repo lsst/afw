@@ -34,7 +34,7 @@ or
 
 
 import math, os, sys
-import eups
+import numpy
 import unittest
 import lsst.utils.tests as tests
 import lsst.daf.base as dafBase
@@ -188,6 +188,33 @@ class CalibTestCase(unittest.TestCase):
         calibs[0].setFluxMag0(1.001*mag0, mag0Sigma)
         tests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                                   lambda : afwImage.Calib(calibs))
+
+    def testCalibNegativeFlux(self):
+        """Check that we can control if -ve fluxes raise exceptions"""
+        self.calib.setFluxMag0(1e12)
+
+        funcs = [lambda : self.calib.getMagnitude(-10), lambda : self.calib.getMagnitude(-10, 1)]
+
+        for func in funcs:
+            tests.assertRaisesLsstCpp(self, pexExcept.DomainErrorException, func)
+
+        afwImage.Calib.setThrowOnNegativeFlux(False)
+        for func in funcs:
+            mags = func()
+            try:                        # deal with returning mag or [mag, magErr]
+                mags[0]
+            except TypeError:
+                mags = [mags, None]
+
+            for m in mags:
+                if m is not None:
+                    self.assertTrue(numpy.isnan(m))
+        
+        afwImage.Calib.setThrowOnNegativeFlux(True)
+
+        for func in funcs:
+            tests.assertRaisesLsstCpp(self, pexExcept.DomainErrorException, func)
+
 
 def defineSdssFilters():
     # Initialise filters as used for our tests

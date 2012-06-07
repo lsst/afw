@@ -78,6 +78,9 @@ public :
     std::pair<double, double> getFlux(double const mag, double const magErr) const;
     double getMagnitude(double const flux) const;
     std::pair<double, double> getMagnitude(double const flux, double const fluxErr) const;
+
+    static void setThrowOnNegativeFlux(bool raiseException);
+    static bool getThrowOnNegativeFlux();
     /*
      * Compare two Calibs
      */
@@ -88,6 +91,7 @@ private :
     double _exptime;
     double _fluxMag0;
     double _fluxMag0Sigma;
+    static bool _throwOnNegativeFlux;
 };
 
 namespace detail {
