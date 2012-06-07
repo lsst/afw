@@ -1298,88 +1298,6 @@ Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotrop
     return growFootprint(*foot, ngrow, isotropic);
 }
 
-/************************************************************************************************************/
-namespace {
-/*
- * Grow a Footprint by ngrow pixels up and/or down, returning a new Footprint
- */
-PTR(Footprint)
-growFootprint(
-              Footprint & foot,          // The Footprint to grow
-              int ngrow,                 // how much to grow foot
-              bool up, bool down         // grow up or down?
-             )
-{
-    /*
-     * Insert the footprints into an image, do appropriate grows, then extract a footprint from the result
-     */
-    geom::Box2I bbox = foot.getBBox();
-    image::Image<int>::Ptr idImage(new image::Image<int>(bbox.getWidth(), bbox.getHeight() + 2*ngrow));
-    *idImage = 0;
-    idImage->setXY0(bbox.getMinX(), bbox.getMinY() - ngrow);
-    
-    // Set all the pixels in the footprint to 10 + 2*ngrow
-    // Why?  So we won't grow pixels that have are only set because they're already grown, and 2*ngrown
-    // is more than the maximum we can set a pixel too by growing.  The 10 is just cowardice
-    int const fVal = 10 + 2*ngrow;
-    set_footprint_id<int>(idImage, foot, fVal, -bbox.getMinX(), -bbox.getMinY() + ngrow); 
-
-    int const height = idImage->getHeight();
-    int const width = idImage->getWidth();
-    //
-    // We'll process the image column by column.  Whenever we leave the initial Footprint we set the
-    // next ngrow pixels.  Note that we don't then reprocess these pixels (as we've skipped over the
-    // rows as we set them) so there's no danger of growing already-grown pixels
-    //
-    if (up) {
-        // process each column of the image from bottom to top;
-        for (int x = 0; x != width; ++x) {
-            image::Image<int>::y_iterator col = idImage->col_begin(x);
-            bool inFootprint = false;   // we're below the footprint
-            for (int y = 0; y != height; ++y) {
-                if (inFootprint) {
-                    if (col[y] < fVal) {   // not in it now
-                        for (int i = 0; i != ngrow && y + i != height; ++i) {
-                            col[y + i] += 1;
-                        }
-                    }
-                }
-                inFootprint = (col[y] >= fVal) ? true : false;
-            }
-        }
-    }
-
-    if (down) {
-        // process each column of the image from top to bottom;
-        for (int x = 0; x != width; ++x) {
-            image::Image<int>::y_iterator col = idImage->col_begin(x);
-            bool inFootprint = false;   // we're above the footprint
-            for (int y = height - 1; y >= 0; --y) {
-                if (inFootprint) {
-                    if (col[y] < fVal) {   // not in it now
-                        for (int i = 0; i != ngrow && y - i >= 0; ++i) {
-                            col[y - i] += 1;
-                        }
-                    }
-                }
-                inFootprint = (col[y] >= fVal) ? true : false;
-            }
-        }
-    }
-    //
-    // Convert idImage to a MaskedImage and search it for set pixels; these are our new Footprint
-    //
-    image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
-    PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(1, Threshold::VALUE)));
-    assert (grownList->getFootprints()->size() == 1);
-    Footprint::Ptr grown = *grownList->getFootprints()->begin();
-    grown->setRegion(foot.getRegion());
-
-    return grown;
-}
-
-}
-
 /**
  * \brief Grow a Foorprint in at least one of the cardinal directions, returning a new Footprint
  *
@@ -1388,41 +1306,37 @@ growFootprint(
  * as a square, not a cross.
  */
 PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
-                             int ngrow,            ///< How many pixels to grow it
+                             int nGrow,            ///< How many pixels to grow it
                              bool left,            ///< grow to the left
                              bool right,           ///< grow to the right
                              bool up,              ///< grow up
                              bool down             ///< grow down
                             )
 {
-    PTR(Footprint) foot(new Footprint(old));
-
-    if (ngrow > 0 && (left || right)) {
-        for (Footprint::SpanList::iterator siter = foot->getSpans().begin();
-             siter != foot->getSpans().end(); ++siter) {
-            PTR(Span) span = *siter;
-            if (left) {
-                span->getX0() -= ngrow;
-            }
-            if (right) {
-                span->getX1() += ngrow;
-            }
-        }        
-
-        geom::Box2I& bbox = foot->getBBox();
-        if (left) {
-            bbox.include(geom::PointI(bbox.getMinX() - ngrow, bbox.getMinY()));
+	Footprint::Ptr grown(new Footprint(0, old.getRegion()));
+    
+    for (Footprint::SpanList::const_iterator siter = old.getSpans().begin();
+            siter != old.getSpans().end(); ++siter) {
+        CONST_PTR(Span) span = *siter;
+        int y=span->getY();
+        int x0 = (left) ? span->getX0() - nGrow : span->getX0();
+        int x1 = (right) ? span->getX1() + nGrow : span->getX1();
+        grown->addSpan(y, x0, x1);
+        if (up) {
+            for(int i=1; i <=nGrow; i++) {
+                grown->addSpan(y+i,span->getX0(), span->getX1());
+            }				
         }
-        if (right) {
-            bbox.include(geom::PointI(bbox.getMaxX() + ngrow, bbox.getMaxY()));
+        if (down) {
+            for(int i=1; i <=nGrow; i++) {
+                grown->addSpan(y-i, span->getX0(), span->getX1());
+            }
         }
     }
 
-    if (ngrow > 0 && (up || down)) {
-        foot = growFootprint(*foot, ngrow, up, down);
-    }    
-
-    return foot;
+    //normalize to remove overlapped spans and correct bbox
+    grown->normalize();
+    return grown;
 }
 
 /************************************************************************************************************/
