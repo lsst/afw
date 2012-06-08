@@ -40,7 +40,6 @@ def headerToPropertyList(header):
 
 class WcsTestCase(unittest.TestCase):
     def setUp(self):
-        print "setup"
         # Actual WCS from processing Suprime-Cam
         self.width = 2048
         self.height = 4177
@@ -142,14 +141,12 @@ class WcsTestCase(unittest.TestCase):
                        }
 
     def testInputInvariance(self):
-        print "test1"
         pl = headerToPropertyList(self.header)
         wcs = afwImage.makeWcs(pl)
         for key, value in self.header.items():
             self.assertEqual(value, pl.get(key), "%s not invariant: %s vs %s" % (key, value, pl.get(key)))
 
     def testRepeat(self):
-        print "test2"
         pl = headerToPropertyList(self.header)
         wcs1 = afwImage.makeWcs(pl)
         wcs2 = afwImage.makeWcs(pl)
