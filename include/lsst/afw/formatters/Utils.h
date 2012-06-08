@@ -34,6 +34,7 @@
 
 #include <string>
 
+#include "lsst/base.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/pex/policy/Policy.h"
@@ -82,8 +83,8 @@ int extractVisitId(lsst::daf::base::PropertySet::Ptr const& properties);
 int extractCcdId(lsst::daf::base::PropertySet::Ptr const& properties);
 int extractAmpId(lsst::daf::base::PropertySet::Ptr const& properties);
 
-std::string const formatFitsProperties(lsst::daf::base::PropertySet::Ptr prop);
-int countFitsHeaderCards(lsst::daf::base::PropertySet::Ptr prop);
+std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) prop);
+int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) prop);
 
 }}} // namespace lsst::afw::formatters
 

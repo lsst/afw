@@ -24,8 +24,8 @@
 #define LSST_AFW_IMAGE_TANWCS_H
 
 #include "Eigen/Core"
-#include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
+#include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/Wcs.h" 
@@ -35,6 +35,11 @@
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
+namespace daf {
+    namespace base {
+        class PropertySet;
+    }
+}
 namespace afw {
     namespace formatters {
         class TanWcsFormatter;
@@ -67,7 +72,7 @@ namespace image {
 
         //Constructors
         TanWcs();
-        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr metadata, bool);
+        friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) metadata, bool);
         TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
                const Eigen::Matrix2d &CD, 
                double equinox=2000, std::string raDecSys="FK5",
@@ -118,7 +123,7 @@ namespace image {
 
     private:
         //If you want to create a TanWcs object from a fits header, use makeWcs()
-        TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+        TanWcs(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata);
         
         TanWcs(lsst::afw::image::TanWcs const & rhs);
 

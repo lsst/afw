@@ -52,7 +52,7 @@ const int lsstToFitsPixels = +1;
 const int fitsToLsstPixels = -1;
 
 
-static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
+static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata,
                             std::string const& which,
                             Eigen::MatrixXd *m);
 
@@ -72,7 +72,7 @@ afwGeom::Angle TanWcs::pixelScale() const {
 
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
 ///out which (if any) sub-class of Wcs is appropriate
-TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) : 
+TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata) : 
     Wcs(fitsMetadata),
     _hasDistortion(false),
     _sipA(), _sipB(), _sipAp(), _sipBp() {
@@ -116,8 +116,10 @@ TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) :
             _hasDistortion = true;
             
             //Hide the distortion from wcslib
-            fitsMetadata->set<std::string>("CTYPE1", ctype1.substr(0,8));
-            fitsMetadata->set<std::string>("CTYPE2", ctype2.substr(0,8));
+            PTR(PropertySet) hackMetadata = fitsMetadata->deepCopy(); // A copy that we can hack up
+            fitsMetadata = hackMetadata;                              // Now read from the hacked-up version
+            hackMetadata->set<std::string>("CTYPE1", ctype1.substr(0,8));
+            hackMetadata->set<std::string>("CTYPE2", ctype2.substr(0,8));
             
             //Save SIP information
             decodeSipHeader(fitsMetadata, "A", &_sipA);
@@ -151,7 +153,7 @@ TanWcs::TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata) :
 
 
 ///@brief Decode the SIP headers for a given matrix, if present.
-static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
+static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata,
                             std::string const& which,
                             Eigen::MatrixXd *m) {
     std::string header = which + "_ORDER";

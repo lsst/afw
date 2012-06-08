@@ -284,7 +284,7 @@ void dropAllSliceTables(
 }
 
 
-std::string const formatFitsProperties(lsst::daf::base::PropertySet::Ptr prop) {
+std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) prop) {
     typedef std::vector<std::string> NameList;
     std::string sout;
 
@@ -324,7 +324,7 @@ std::string const formatFitsProperties(lsst::daf::base::PropertySet::Ptr prop) {
 }
 
 
-int countFitsHeaderCards(lsst::daf::base::PropertySet::Ptr prop) {
+int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) prop) {
     return prop->paramNames(false).size();
 }
 
