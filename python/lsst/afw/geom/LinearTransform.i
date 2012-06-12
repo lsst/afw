@@ -85,6 +85,8 @@
     %pythoncode {
         def __str__(self):
             return str(self.getMatrix())
+        def __reduce__(self):
+            return (LinearTransform, (self.getMatrix(),))
         def __repr__(self):
             return "LinearTransform(\n%r\n)" % (self.getMatrix(),)
     }

@@ -37,6 +37,7 @@ import lsst.daf.base as dafBase
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.afw.geom  as afwGeom
+import lsst.afw.geom.ellipses as geomEllip
 import lsst.afw.coord as afwCoord
 
 class PickleTestCase(unittest.TestCase):
@@ -52,21 +53,84 @@ class PickleTestCase(unittest.TestCase):
         """Test round-trip pickle"""
         pickled = pickle.dumps(self.data)
         newData = pickle.loads(pickled)
-        self.assertTrue(newData == self.data)
+
+        # handle linear transforms specially
+        if isinstance(self.data, afwGeom.LinearTransform) or isinstance(self.data, afwGeom.AffineTransform):
+            self.assertTrue( (newData.getMatrix() == self.data.getMatrix()).all() )
+        # otherwise just assert
+        else:
+            self.assertTrue(newData == self.data)
 
 
 class AngleTestCase(PickleTestCase):
     def setUp(self):
-	self.data = 1.0*afwGeom.degrees
+        self.data = 1.0*afwGeom.degrees
 
 class CoordTestCase(PickleTestCase):
     def setUp(self):
-	ra = 10.0*afwGeom.degrees
-	dec = 1.0*afwGeom.degrees
-	epoch = 2000.0
-	self.data = afwCoord.makeCoord(afwCoord.FK5, ra, dec, epoch)
+        ra = 10.0*afwGeom.degrees
+        dec = 1.0*afwGeom.degrees
+        epoch = 2000.0
+        self.data = afwCoord.makeCoord(afwCoord.FK5, ra, dec, epoch)
 
+class QuadrupoleTestCase(PickleTestCase):
+    def setUp(self):
+        ixx, iyy, ixy = 1.0, 1.0, 0.0
+        self.data = geomEllip.Quadrupole(ixx, iyy, ixy)
 
+class AxesTestCase(PickleTestCase):
+    def setUp(self):
+        a, b, theta = 1.0, 1.0, 0.0
+        self.data = geomEllip.Axes(a, b, theta)
+        
+class Point2DTestCase(PickleTestCase):
+    def setUp(self):
+        x, y = 1.0, 1.0
+        self.data = afwGeom.Point2D(x, y)
+class Point2ITestCase(PickleTestCase):
+    def setUp(self):
+        x, y = 1, 1
+        self.data = afwGeom.Point2I(x, y)
+class Point3DTestCase(PickleTestCase):
+    def setUp(self):
+        x, y, z = 1.0, 1.0, 1.0
+        self.data = afwGeom.Point3D(x, y, z)
+class Point3ITestCase(PickleTestCase):
+    def setUp(self):
+        x, y, z = 1,1,1
+        self.data = afwGeom.Point3I(x, y, z)
+        
+class Extent2DTestCase(PickleTestCase):
+    def setUp(self):
+        x, y = 1.0, 1.0
+        self.data = afwGeom.Extent2D(x, y)
+class Extent3DTestCase(PickleTestCase):
+    def setUp(self):
+        x, y, z = 1,1,1
+        self.data = afwGeom.Extent3D(x, y, z)
+        
+class Box2DTestCase(PickleTestCase):    
+    def setUp(self):
+        p, e = afwGeom.Point2D(1.0, 1.0), afwGeom.Extent2D(0.5, 0.5)
+        self.data = afwGeom.Box2D(p, e)
+class Box2ITestCase(PickleTestCase):    
+    def setUp(self):
+        p, e = afwGeom.Point2I(1, 2), afwGeom.Extent2I(1, 1)
+        self.data = afwGeom.Box2I(p, e)
+        
+class AffineTransformTestCase(PickleTestCase):
+    def setUp(self):
+        scale = 2.2
+        linear = afwGeom.LinearTransform().makeScaling(scale)
+        dx, dy = 1.1, 3.3
+        trans = afwGeom.Extent2D(dx, dy)
+        self.data = afwGeom.AffineTransform(linear, trans)
+        
+class LinearTransformTestCase(PickleTestCase):
+    def setUp(self):
+        scale = 2.0
+        self.data = afwGeom.LinearTransform().makeScaling(scale)
+        
 class WcsPickleTestCase(PickleTestCase):
     def setUp(self):
         hdr = dafBase.PropertyList()
@@ -180,6 +244,18 @@ def suite():
     suites = []
     suites += unittest.makeSuite(AngleTestCase)
     suites += unittest.makeSuite(CoordTestCase)
+    suites += unittest.makeSuite(QuadrupoleTestCase)
+    suites += unittest.makeSuite(AxesTestCase)
+    suites += unittest.makeSuite(Point2DTestCase)
+    suites += unittest.makeSuite(Point3DTestCase)
+    suites += unittest.makeSuite(Point2ITestCase)
+    suites += unittest.makeSuite(Point3ITestCase)
+    suites += unittest.makeSuite(Extent2DTestCase)
+    suites += unittest.makeSuite(Extent3DTestCase)
+    suites += unittest.makeSuite(Box2DTestCase)
+    suites += unittest.makeSuite(Box2ITestCase)
+    suites += unittest.makeSuite(AffineTransformTestCase)
+    suites += unittest.makeSuite(LinearTransformTestCase)
     suites += unittest.makeSuite(WcsPickleTestCase)
     suites += unittest.makeSuite(TanWcsPickleTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)

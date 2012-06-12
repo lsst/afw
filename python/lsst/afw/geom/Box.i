@@ -39,12 +39,13 @@
     %pythoncode {
     def __repr__(self):
         return "Box2I(%r, %r)" % (self.getMin(), self.getDimensions())
-             
+    def __reduce__(self):
+        return (Box2I, (self.getMin(), self.getMax()))
     def __str__(self):
         return "Box2I(%s, %s)" % (self.getMin(), self.getMax())
 
     def getSlices(self):
-         return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
+        return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
     }
 }
 
@@ -52,7 +53,8 @@
     %pythoncode {
     def __repr__(self):
         return "Box2D(%r, %r)" % (self.getMin(), self.getDimensions())
-             
+    def __reduce__(self):
+        return (Box2D, (self.getMin(), self.getDimensions()))
     def __str__(self):
         return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
     }
