@@ -108,6 +108,14 @@ class Extent3DTestCase(PickleTestCase):
     def setUp(self):
         x, y, z = 1,1,1
         self.data = afwGeom.Extent3D(x, y, z)
+class Extent2ITestCase(PickleTestCase):
+    def setUp(self):
+        x, y = 1, 1
+        self.data = afwGeom.Extent2I(x, y)
+class Extent3ITestCase(PickleTestCase):
+    def setUp(self):
+        x, y, z = 1,1,1
+        self.data = afwGeom.Extent3I(x, y, z)
         
 class Box2DTestCase(PickleTestCase):    
     def setUp(self):
