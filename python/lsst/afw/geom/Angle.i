@@ -28,6 +28,9 @@
 
 %extend lsst::afw::geom::Angle {
     %pythoncode %{
+         def __reduce__(self):
+             return (Angle, (self.asRadians(),))
+
          def __add__(self, rhs):
              return Angle_add(self, rhs)
          def __radd__(self, lhs):
@@ -51,11 +54,14 @@
                  return NotImplemented
          def __ne__(self, rhs):
              return not self == rhs
+
     %}
 }
 
 %extend lsst::afw::geom::AngleUnit {
     %pythoncode %{
+         def __reduce__(self):
+             return (AngleUnit, (1.0*self,))
          def __mul__(self, rhs):
              return AngleUnit_mul(self, rhs)
          def __rmul__(self, lhs):
