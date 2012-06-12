@@ -141,6 +141,20 @@ Python interface to lsst::afw::geom classes
     }
 };
 
+%extend lsst::afw::geom::Extent<int,2> {
+    %pythoncode {
+    def __reduce__(self):
+        return (Extent2I, (self.getX(), self.getY()))
+    }
+};
+
+%extend lsst::afw::geom::Extent<int,3> {
+    %pythoncode {
+    def __reduce__(self):
+        return (Extent3I, (self.getX(), self.getY(), self.getZ()))
+    }
+};
+
 %include "LinearTransform.i"
 %include "AffineTransform.i"
 %include "Box.i"
