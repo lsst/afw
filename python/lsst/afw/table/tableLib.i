@@ -147,6 +147,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
         Py_INCREF(result.get());
         return result.get();
     }
+
 %}
 
 %typemap(out) std::set<std::string> {
@@ -159,6 +160,23 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
     // I'll never understand why swig passes pointers to reference typemaps, but it does.
     $result = convertNameSet(*$1);
 }
+
+// SWIG doesn't understand Schema::forEach, but the Schema interface provides no other
+// way of getting field names in definition order. This forEach functor records field names,
+// allowing the python asList Schema method to return schema items in an order consistent
+// with forEach.
+%{
+    struct _FieldNameExtractor {
+        std::vector<std::string> mutable * _vec;
+
+        _FieldNameExtractor(std::vector<std::string> * vec) : _vec(vec) { }
+
+        template <typename T>
+        void operator()(lsst::afw::table::SchemaItem<T> const & item) const {
+            _vec->push_back(item.field.getName());
+        }
+    };
+%}
 
 // ---------------------------------------------------------------------------------------------------------
 
@@ -216,21 +234,20 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 
     void reset(lsst::afw::table::Schema & other) { *self = other; }
 
+    std::vector<std::string> getOrderedNames() {
+        std::vector<std::string> names;
+        self->forEach(_FieldNameExtractor(&names));
+        return names;
+    }
+
 %pythoncode %{
 
 def asList(self):
-    # This should be replaced by an implementation that uses Schema::forEach
+    # This should be replaced by an implementation that uses Schema::forEach directly
     # if/when SWIG gets better at handling templates or we switch to Boost.Python.
     result = []
-    def extractSortKey(item):
-        key = item.key
-        if type(key) == Key_Flag:
-            return (key.getOffset(), key.getBit())
-        else:
-            return (key.getOffset(), None)
-    for name in self.getNames():
+    for name in self.getOrderedNames():
         result.append(self.find(name))
-    result.sort(key=extractSortKey)
     return result
 
 def __iter__(self):
@@ -444,6 +461,9 @@ def getBits(self, keys=None):
 
 // =============== Field Types ==============================================================================
 
+// Must come after the FlagKeyVector %template, or SWIG bungles the generated code.
+%include "lsst/afw/table/Flag.h"
+
 %pythoncode %{
 from ..geom import Angle, Point2D, Point2I
 from ..geom.ellipses import Quadrupole
@@ -454,20 +474,19 @@ Key = {}
 SchemaItem = {}
 _suffixes = {}
 aliases = {
-    int: "I4",
-    long: "I8",
-    float: "F8",
-    numpy.int32: "I4",
-    numpy.int64: "I8",
-    numpy.float32: "F4",
-    numpy.float64: "F8",
+    int: "I",
+    long: "L",
+    float: "D",
+    numpy.int32: "I",
+    numpy.int64: "L",
+    numpy.float32: "F",
+    numpy.float64: "D",
     Angle: "Angle",
-    Quadrupole: "Angle",
     Coord: "Coord",
     IcrsCoord: "Coord",
-    Point2I: "Point<I4>",
-    Point2D: "Point<F8>",
-    Quadrupole: "Moments<F8>",
+    Point2I: "PointI",
+    Point2D: "PointD",
+    Quadrupole: "MomentsD",
 }
 %}
 
@@ -512,32 +531,32 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %implicitconv FieldBase_ ## PYNAME;
 %enddef
 
-%declareFieldType(boost::int32_t, I4)
-%declareFieldType(boost::int64_t, I8)
-%declareFieldType(float, F4)
-%declareFieldType(double, F8)
+%declareFieldType(boost::int32_t, I)
+%declareFieldType(boost::int64_t, L)
+%declareFieldType(float, F)
+%declareFieldType(double, D)
 %declareFieldType(lsst::afw::table::Flag, Flag)
 %declareFieldType(lsst::afw::geom::Angle, Angle)
 %declareFieldType(lsst::afw::coord::Coord, Coord)
 
-%declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI4)
-%declareFieldType(lsst::afw::table::Point<float>, PointF4)
-%declareFieldType(lsst::afw::table::Point<double>, PointF8)
+%declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI)
+%declareFieldType(lsst::afw::table::Point<float>, PointF)
+%declareFieldType(lsst::afw::table::Point<double>, PointD)
 
-%declareFieldType(lsst::afw::table::Moments<float>, MomentsF4)
-%declareFieldType(lsst::afw::table::Moments<double>, MomentsF8)
+%declareFieldType(lsst::afw::table::Moments<float>, MomentsF)
+%declareFieldType(lsst::afw::table::Moments<double>, MomentsD)
 
-%declareFieldType(lsst::afw::table::Array<float>, ArrayF4)
-%declareFieldType(lsst::afw::table::Array<double>, ArrayF8)
+%declareFieldType(lsst::afw::table::Array<float>, ArrayF)
+%declareFieldType(lsst::afw::table::Array<double>, ArrayD)
 
-%declareFieldType(lsst::afw::table::Covariance<float>, CovF4)
-%declareFieldType(lsst::afw::table::Covariance<double>, CovF8)
+%declareFieldType(lsst::afw::table::Covariance<float>, CovF)
+%declareFieldType(lsst::afw::table::Covariance<double>, CovD)
 
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF4)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointF8)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointD)
 
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF4)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsF8)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF)
+%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsD)
 
 %include "specializations.i"
 

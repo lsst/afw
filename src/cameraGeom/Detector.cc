@@ -26,6 +26,7 @@
 #include <algorithm>
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/cameraGeom/FpPoint.h"
 

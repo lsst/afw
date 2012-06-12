@@ -320,7 +320,7 @@ Statistics makeStatistics(
         StatisticsControl const& sctrl = StatisticsControl() 
                          )
 {
-    if (sctrl.getWeighted()) {
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
     } else {
         MaskImposter<WeightPixel> var;
@@ -340,7 +340,7 @@ Statistics makeStatistics(
         StatisticsControl const& sctrl = StatisticsControl() 
                          )
 {
-    if (sctrl.getWeighted() ||
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() || 
         (!sctrl.getWeightedIsSet() && (weights.getWidth() != 0 && weights.getHeight() != 0))) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), weights, flags, sctrl);
     } else {
@@ -450,7 +450,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
-    if (sctrl.getWeighted()) {
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
     } else {
         MaskImposter<WeightPixel> var;
@@ -470,7 +470,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
                          ) {
     ImageImposter<WeightPixel> weights(vweights);
 
-    if (sctrl.getWeighted()) {
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), weights, flags, sctrl);
     } else {
         MaskImposter<WeightPixel> var;

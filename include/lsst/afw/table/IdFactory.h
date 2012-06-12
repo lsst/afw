@@ -35,6 +35,19 @@ public:
      */
     static PTR(IdFactory) makeSimple();
 
+    /**
+     *  @brief Return an IdFactory that includes another, fixed ID in the higher-order bits. 
+     *
+     *  @param[in] expId     ID to include in the upper bits via a bitwise OR.
+     *  @param[in] reserved  How many bits to reserve for the part of the ID that is unique.
+     *
+     *  The final record ID will be:
+     *  @code
+     *  (upper << reserved) | sequence
+     *  @endcode
+     */
+    static PTR(IdFactory) makeSource(RecordId expId, int reserved);
+
     virtual ~IdFactory() {}
 
 private:

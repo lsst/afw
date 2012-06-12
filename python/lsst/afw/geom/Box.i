@@ -37,6 +37,9 @@
 
 %extend lsst::afw::geom::Box2I {             
     %pythoncode {
+    Extent = Extent2I
+    Point = Point2I
+
     def __repr__(self):
         return "Box2I(%r, %r)" % (self.getMin(), self.getDimensions())
     def __reduce__(self):
@@ -46,16 +49,30 @@
 
     def getSlices(self):
         return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
+
+    def getCorners(self):
+        return (
+            self.getMin(),
+            self.Point(self.getMaxX(), self.getMinY()),
+            self.getMax(),
+            self.Point(self.getMinX(), self.getMaxY())
+        )
+
     }
 }
 
 %extend lsst::afw::geom::Box2D {             
     %pythoncode {
+    Extent = Extent2D
+    Point = Point2D
+
     def __repr__(self):
         return "Box2D(%r, %r)" % (self.getMin(), self.getDimensions())
     def __reduce__(self):
         return (Box2D, (self.getMin(), self.getDimensions()))
     def __str__(self):
         return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
+
+    getCorners = Box2I.getCorners
     }
 }

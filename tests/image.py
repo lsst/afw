@@ -124,7 +124,6 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image2.get(0, 0), self.val1 + self.val2)
 
         self.image1.set(self.val1)
-        print type(self.image1), type(self.function)
         self.image1 += self.function
 
         for j in range(self.image1.getHeight()):
