@@ -91,7 +91,7 @@ lsst::afw::image::Wcs::Wcs() :
 
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
 ///out which (if any) sub-class of Wcs is appropriate
-Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const fitsMetadata):
+Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), 
     _nWcsInfo(0), 
@@ -165,96 +165,96 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
                
     
 ///Parse a fits header, extract the relevant metadata and create a Wcs object
-void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) header){
-    /// Access control for the input metadata
+void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& header){
+    /// Access control for the input header
     ///
     /// We want to hack up the input, and in order to do so we need to do a deep copy on it.
     /// We only want to do that copy once, and would like to avoid doing it altogether.
-    class Metadata {
+    class HeaderAccess {
     public:
         /// Return a readable version of the metadata
-        CONST_PTR(lsst::daf::base::PropertySet) toRead() { return _constMetadata; }
+        CONST_PTR(lsst::daf::base::PropertySet) const& toRead() { return _constHeader; }
         /// Return a writable version of the metadata
-        PTR(lsst::daf::base::PropertySet) toWrite() {
-            if (!_hackMetadata) {
-                _hackMetadata = _constMetadata->deepCopy();
-                _constMetadata = _hackMetadata;
+        PTR(lsst::daf::base::PropertySet) const& toWrite() {
+            if (!_hackHeader) {
+                _hackHeader = _constHeader->deepCopy();
+                _constHeader = _hackHeader;
             }
-            return _hackMetadata;
+            return _hackHeader;
         }
         
         /// Ctor
-        Metadata(CONST_PTR(lsst::daf::base::PropertySet) header) :
-            _constMetadata(header), _hackMetadata() {}
+        HeaderAccess(CONST_PTR(lsst::daf::base::PropertySet) const& header) :
+            _constHeader(header), _hackHeader() {}
 
     private:
-        CONST_PTR(lsst::daf::base::PropertySet) _constMetadata;
-        PTR(lsst::daf::base::PropertySet) _hackMetadata;
+        CONST_PTR(lsst::daf::base::PropertySet) _constHeader;
+        PTR(lsst::daf::base::PropertySet) _hackHeader;
     };
 
-    Metadata md = Metadata(header);
+    HeaderAccess access(header);
 
     // Some headers (e.g. SDSS ones from FNAL) have EQUINOX as a string.  Fix this,
     // as wcslib 4.4.4 refuses to handle it
     {
         std::string const& key = "EQUINOX";
-        if (md.toRead()->exists(key) && md.toRead()->typeOf(key) == typeid(std::string)) {
-            double equinox = ::atof(md.toRead()->getAsString(key).c_str());
-            md.toWrite()->set(key, equinox);
+        if (access.toRead()->exists(key) && access.toRead()->typeOf(key) == typeid(std::string)) {
+            double equinox = ::atof(access.toRead()->getAsString(key).c_str());
+            access.toWrite()->set(key, equinox);
         }
     }
 
     //Check header isn't empty
-    int nCards = lsst::afw::formatters::countFitsHeaderCards(md.toRead());
+    int nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead());
     if (nCards <= 0) {
         string msg = "Could not parse FITS WCS: no header cards found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    //printf("FITS metadata:\n%s\n\n", md.toRead()->toString().c_str());
+    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
     // Scamp produces PVi_xx header cards that are inconsistent with WCS Paper 2
     // and cause WCSLib to choke.  Aggressively, rename all PV keywords to X_PV
     for (int j=1; j<3; j++) {
         for (int i=0; i<=99; i++) {
             std::string key = (boost::format("PV%i_%i") % j % i).str();
             //printf("looking for key: \"%s\"\n", key.c_str());
-            if (!md.toRead()->exists(key))
+            if (!access.toRead()->exists(key))
                 break;
-            double val = md.toRead()->getAsDouble(key);
+            double val = access.toRead()->getAsDouble(key);
             //printf("  found with val %g\n", val);
-            md.toWrite()->remove(key);
-            md.toWrite()->add("X_"+key, val);
+            access.toWrite()->remove(key);
+            access.toWrite()->add("X_"+key, val);
         }
     }
-    //printf("FITS metadata:\n%s\n\n", md.toRead()->toString().c_str());
+    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
     //is almost certain their absence indicates a problem.   
     //Check for CRPIX
-    if( !md.toRead()->exists("CRPIX1") && !md.toRead()->exists("CRPIX1a")) {
+    if( !access.toRead()->exists("CRPIX1") && !access.toRead()->exists("CRPIX1a")) {
         string msg = "Neither CRPIX1 not CRPIX1a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    if( !md.toRead()->exists("CRPIX2") && !md.toRead()->exists("CRPIX2a")) {
+    if( !access.toRead()->exists("CRPIX2") && !access.toRead()->exists("CRPIX2a")) {
         string msg = "Neither CRPIX2 not CRPIX2a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
     //And the same for CRVAL
-    if( !md.toRead()->exists("CRVAL1") && !md.toRead()->exists("CRVAL1a")) {
+    if( !access.toRead()->exists("CRVAL1") && !access.toRead()->exists("CRVAL1a")) {
         string msg = "Neither CRVAL1 not CRVAL1a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    if( !md.toRead()->exists("CRVAL2") && !md.toRead()->exists("CRVAL2a")) {
+    if( !access.toRead()->exists("CRVAL2") && !access.toRead()->exists("CRVAL2a")) {
         string msg = "Neither CRVAL2 not CRVAL2a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
     //Pass the header into wcslib's formatter to extract & setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
-    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(md.toRead());
+    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(access.toRead());
     // We own the data, and wcslib is slack about constness, so no qualms with casting away const
     char *hdrString = const_cast<char*>(metadataStr.c_str());
     //printf("wcspih string:\n%s\n", hdrString);
@@ -286,20 +286,20 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) header){
     //The Wcs standard requires a default value for RADESYS if the keyword
     //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code 
     //conforms to Calabretta & Greisen 2002 \S 3.1
-    if (!(md.toRead()->exists("RADESYS") || md.toRead()->exists("RADESYSa"))) {
+    if (!(access.toRead()->exists("RADESYS") || access.toRead()->exists("RADESYSa"))) {
 
         // If RADECSYS exists, use that (counter to Calabretta & Greisen 2002 \S 3.1, but commonly used).
         // If equinox exist and < 1984, use FK4. If >= 1984, use FK5
-        if (md.toRead()->exists("RADECSYS")) {
-            std::string radecsys = md.toRead()->getAsString("RADECSYS");
+        if (access.toRead()->exists("RADECSYS")) {
+            std::string radecsys = access.toRead()->getAsString("RADECSYS");
             size_t space = radecsys.find(" ");
             if (space != std::string::npos) {
                 radecsys.erase(space);
             }
             snprintf(_wcsInfo->radesys, STRLEN, radecsys.c_str());
-        } else if (md.toRead()->exists("EQUINOX") || md.toRead()->exists("EQUINOXa")) {
-            std::string const EQUINOX = md.toRead()->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
-            double const equinox = md.toRead()->getAsDouble(EQUINOX);
+        } else if (access.toRead()->exists("EQUINOX") || access.toRead()->exists("EQUINOXa")) {
+            std::string const EQUINOX = access.toRead()->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
+            double const equinox = access.toRead()->getAsDouble(EQUINOX);
             if(equinox < 1984) {
                 snprintf(_wcsInfo->radesys, STRLEN, "FK4");
             } else {
@@ -1141,8 +1141,8 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            
  * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12],
  * but there may be others
  */
-int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
-                     CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
+int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
+                     CONST_PTR(Wcs) const& wcs                          ///< A Wcs with (implied) keywords
                     )
 {
     PTR(lsst::daf::base::PropertySet) wcsMetadata = wcs->getFitsMetadata();

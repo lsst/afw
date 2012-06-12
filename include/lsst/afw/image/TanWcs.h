@@ -72,7 +72,7 @@ namespace image {
 
         //Constructors
         TanWcs();
-        friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) metadata, bool);
+        friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& metadata, bool);
         TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
                const Eigen::Matrix2d &CD, 
                double equinox=2000, std::string raDecSys="FK5",
@@ -123,7 +123,7 @@ namespace image {
 
     private:
         //If you want to create a TanWcs object from a fits header, use makeWcs()
-        TanWcs(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata);
+        TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
         
         TanWcs(lsst::afw::image::TanWcs const & rhs);
 

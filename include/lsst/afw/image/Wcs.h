@@ -108,7 +108,7 @@ public:
     
     Wcs();
     //Create a Wcs of the correct class using a fits header.
-    friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata,
+    friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
                             bool stripMetadata);
 
     Wcs(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
@@ -282,7 +282,7 @@ protected:
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.
-    Wcs(CONST_PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
     
     Wcs(lsst::afw::image::Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
@@ -308,7 +308,7 @@ protected:
     ) const;
 
     
-    void initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const fitsMetadata);
+    void initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
     void _initWcs();
     void _setWcslibParams();
     
@@ -328,7 +328,7 @@ namespace detail {
     geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
-Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) fitsMetadata, bool stripMetadata=false);
+Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool stripMetadata=false);
 
 /*
  Note, CD matrix elements must be in degrees/pixel.
@@ -337,8 +337,8 @@ Wcs::Ptr makeWcs(lsst::afw::coord::Coord const & crval, lsst::afw::geom::Point2D
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {
-    int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to be stripped
-                         CONST_PTR(Wcs) wcs                          ///< A Wcs with (implied) keywords
+    int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
+                         CONST_PTR(Wcs) const& wcs ///< A Wcs with (implied) keywords
                         );
 }
 

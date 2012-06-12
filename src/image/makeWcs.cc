@@ -39,7 +39,7 @@ using namespace std;
  * given coordinate system (e.g TanWcs)
  */
 afwImg::Wcs::Ptr afwImg::makeWcs(
-        PTR(lsst::daf::base::PropertySet) metadata, ///< input metadata
+        PTR(lsst::daf::base::PropertySet) const& metadata, ///< input metadata
         bool stripMetadata                              ///< Remove FITS keywords from metadata?
                                 )
 {

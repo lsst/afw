@@ -49,7 +49,7 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-int extractSliceId(CONST_PTR(PropertySet) properties) {
+int extractSliceId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("sliceId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"sliceId\" property has multiple values");
     }
@@ -66,7 +66,7 @@ int extractSliceId(CONST_PTR(PropertySet) properties) {
     return sliceId;
 }
                         
-int extractVisitId(CONST_PTR(PropertySet) properties) {
+int extractVisitId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("visitId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"visitId\" property has multiple values");
     }
@@ -77,7 +77,7 @@ int extractVisitId(CONST_PTR(PropertySet) properties) {
     return visitId;
 }
 
-int64_t extractFpaExposureId(CONST_PTR(PropertySet) properties) {
+int64_t extractFpaExposureId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("fpaExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"fpaExposureId\" property has multiple values");
     }
@@ -91,7 +91,7 @@ int64_t extractFpaExposureId(CONST_PTR(PropertySet) properties) {
     return fpaExposureId;
 }
 
-int extractCcdId(CONST_PTR(PropertySet) properties) {
+int extractCcdId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ccdId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ccdId\" property has multiple values");
     }
@@ -105,7 +105,7 @@ int extractCcdId(CONST_PTR(PropertySet) properties) {
     return static_cast<int>(ccdId);
 }
 
-int extractAmpId(CONST_PTR(PropertySet) properties) {
+int extractAmpId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ampId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampId\" property has multiple values");
     }
@@ -119,7 +119,7 @@ int extractAmpId(CONST_PTR(PropertySet) properties) {
     return (extractCcdId(properties) << 6) + ampId;
 }
 
-int64_t extractCcdExposureId(CONST_PTR(PropertySet) properties) {
+int64_t extractCcdExposureId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ccdExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ccdExposureId\" property has multiple values");
     }
@@ -130,7 +130,7 @@ int64_t extractCcdExposureId(CONST_PTR(PropertySet) properties) {
     return ccdExposureId;
 }
 
-int64_t extractAmpExposureId(CONST_PTR(PropertySet) properties) {
+int64_t extractAmpExposureId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ampExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampExposureId\" property has multiple values");
     }
@@ -148,7 +148,7 @@ int64_t extractAmpExposureId(CONST_PTR(PropertySet) properties) {
  *        If the given pointer is null, or the @c PropertySet pointed
  *        to does not contain a unique property named @c "itemName".
  */
-std::string const getItemName(CONST_PTR(PropertySet) properties) {
+std::string const getItemName(CONST_PTR(PropertySet) const& properties) {
     if (!properties) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Null PropertySet::Ptr");
     }
@@ -164,7 +164,7 @@ std::string const getItemName(CONST_PTR(PropertySet) properties) {
  * unique property with the given name that has type @c bool and a value of @c true.
  */
 bool extractOptionalFlag(
-    CONST_PTR(PropertySet) properties,
+    CONST_PTR(PropertySet) const& properties,
     std::string      const & name
 ) {
     if (properties && properties->exists(name)) {
@@ -190,8 +190,8 @@ bool extractOptionalFlag(
  * @return table name
  */
 std::string const getTableName(
-    CONST_PTR(Policy) policy,
-    CONST_PTR(PropertySet) properties
+    CONST_PTR(Policy) const& policy,
+    CONST_PTR(PropertySet) const& properties
 ) {
     std::string itemName(getItemName(properties));
     return LogicalLocation(policy->getString(itemName + ".tableNamePattern"), properties).locString();
@@ -221,8 +221,8 @@ std::string const getTableName(
  * @sa getTableName()
  */
 std::vector<std::string> getAllSliceTableNames(
-    CONST_PTR(Policy) policy,
-    CONST_PTR(PropertySet) properties
+    CONST_PTR(Policy) const& policy,
+    CONST_PTR(PropertySet) const& properties
 ) {
     std::string itemName(getItemName(properties));
     std::string pattern(policy->getString(itemName + ".tableNamePattern"));
@@ -256,8 +256,8 @@ std::vector<std::string> getAllSliceTableNames(
  */
 void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
-    CONST_PTR(lsst::pex::policy::Policy) policy,
-    CONST_PTR(PropertySet) properties
+    CONST_PTR(lsst::pex::policy::Policy) const& policy,
+    CONST_PTR(PropertySet) const& properties
 ) {
     std::string itemName(getItemName(properties));
     std::string name(getTableName(policy, properties));
@@ -272,8 +272,8 @@ void createTable(
 /** Drops the database table(s) identified by getAllSliceTables(). */
 void dropAllSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
-    CONST_PTR(lsst::pex::policy::Policy) policy,
-    CONST_PTR(PropertySet) properties
+    CONST_PTR(lsst::pex::policy::Policy) const& policy,
+    CONST_PTR(PropertySet) const& properties
 ) {
     std::vector<std::string> names = getAllSliceTableNames(policy, properties);
 
@@ -285,7 +285,7 @@ void dropAllSliceTables(
 }
 
 
-std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) prop) {
+std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& prop) {
     typedef std::vector<std::string> NameList;
     std::string sout;
 
@@ -325,7 +325,7 @@ std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) prop) {
 }
 
 
-int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) prop) {
+int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) const& prop) {
     return prop->paramNames(false).size();
 }
 

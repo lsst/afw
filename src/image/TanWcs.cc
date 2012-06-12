@@ -52,7 +52,7 @@ const int lsstToFitsPixels = +1;
 const int fitsToLsstPixels = -1;
 
 
-static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata,
+static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
                             std::string const& which,
                             Eigen::MatrixXd *m);
 
@@ -72,7 +72,7 @@ afwGeom::Angle TanWcs::pixelScale() const {
 
 ///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
 ///out which (if any) sub-class of Wcs is appropriate
-TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata) : 
+TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata) : 
     Wcs(fitsMetadata),
     _hasDistortion(false),
     _sipA(), _sipB(), _sipAp(), _sipBp() {
@@ -116,20 +116,19 @@ TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata) :
             _hasDistortion = true;
             
             //Hide the distortion from wcslib
-            PTR(PropertySet) hackMetadata = fitsMetadata->deepCopy(); // A copy that we can hack up
-            fitsMetadata = hackMetadata;                              // Now read from the hacked-up version
+            PTR(PropertySet) const& hackMetadata = fitsMetadata->deepCopy(); // A copy that we can hack up
             hackMetadata->set<std::string>("CTYPE1", ctype1.substr(0,8));
             hackMetadata->set<std::string>("CTYPE2", ctype2.substr(0,8));
             
             //Save SIP information
-            decodeSipHeader(fitsMetadata, "A", &_sipA);
-            decodeSipHeader(fitsMetadata, "B", &_sipB);
-            decodeSipHeader(fitsMetadata, "AP", &_sipAp);
-            decodeSipHeader(fitsMetadata, "BP", &_sipBp);
+            decodeSipHeader(hackMetadata, "A", &_sipA);
+            decodeSipHeader(hackMetadata, "B", &_sipB);
+            decodeSipHeader(hackMetadata, "AP", &_sipAp);
+            decodeSipHeader(hackMetadata, "BP", &_sipBp);
 
             // this gets called in the Wcs (base class) constructor
             // We just changed fitsMetadata, so we have to re-init wcslib
-            initWcsLibFromFits(fitsMetadata);
+            initWcsLibFromFits(hackMetadata);
             
             break;
     }
@@ -153,7 +152,7 @@ TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata) :
 
 
 ///@brief Decode the SIP headers for a given matrix, if present.
-static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) fitsMetadata,
+static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
                             std::string const& which,
                             Eigen::MatrixXd *m) {
     std::string header = which + "_ORDER";

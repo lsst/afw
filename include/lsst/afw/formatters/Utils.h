@@ -54,28 +54,28 @@ namespace afw {
 namespace formatters {
 
 bool extractOptionalFlag(
-    CONST_PTR(lsst::daf::base::PropertySet) properties,
+    CONST_PTR(lsst::daf::base::PropertySet) const& properties,
     std::string const & name
 );
 
 std::string const getItemName(
-    CONST_PTR(lsst::daf::base::PropertySet) properties
+    CONST_PTR(lsst::daf::base::PropertySet) const& properties
 );
 
 std::string const getTableName(
-    CONST_PTR(lsst::pex::policy::Policy) policy,
-    CONST_PTR(lsst::daf::base::PropertySet) properties
+    CONST_PTR(lsst::pex::policy::Policy) const& policy,
+    CONST_PTR(lsst::daf::base::PropertySet) const& properties
 );
 
 std::vector<std::string> getAllSliceTableNames(
-    CONST_PTR(lsst::pex::policy::Policy) policy,
-    CONST_PTR(lsst::daf::base::PropertySet) properties
+    CONST_PTR(lsst::pex::policy::Policy) const& policy,
+    CONST_PTR(lsst::daf::base::PropertySet) const& properties
 );
 
 void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
-    CONST_PTR(lsst::pex::policy::Policy) policy,
-    CONST_PTR(lsst::daf::base::PropertySet) properties
+    CONST_PTR(lsst::pex::policy::Policy) const& policy,
+    CONST_PTR(lsst::daf::base::PropertySet) const& properties
 );
 
 void dropAllSliceTables(
@@ -84,16 +84,16 @@ void dropAllSliceTables(
     CONST_PTR(lsst::daf::base::PropertySet) const & properties
 );
 
-int extractSliceId(CONST_PTR(lsst::daf::base::PropertySet) properties);
-int64_t extractFpaExposureId(CONST_PTR(lsst::daf::base::PropertySet) properties);
-int64_t extractCcdExposureId(CONST_PTR(lsst::daf::base::PropertySet) properties);
-int64_t extractAmpExposureId(CONST_PTR(lsst::daf::base::PropertySet) properties);
-int extractVisitId(CONST_PTR(lsst::daf::base::PropertySet) properties);
-int extractCcdId(CONST_PTR(lsst::daf::base::PropertySet) properties);
-int extractAmpId(CONST_PTR(lsst::daf::base::PropertySet) properties);
+int extractSliceId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
+int64_t extractFpaExposureId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
+int64_t extractCcdExposureId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
+int64_t extractAmpExposureId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
+int extractVisitId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
+int extractCcdId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
+int extractAmpId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
 
-std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) prop);
-int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) prop);
+std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& prop);
+int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) const& prop);
 
 }}} // namespace lsst::afw::formatters
 
