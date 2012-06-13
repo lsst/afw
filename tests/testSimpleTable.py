@@ -238,6 +238,29 @@ class SimpleTableTestCase(unittest.TestCase):
             for i in [0, 1]:
                 self.assertEqual(lsst.afw.geom.Angle(array[i]), catalog[i].get(key))
 
+    def testIEEE(self):
+        schema = lsst.afw.table.Schema()
+        k1 = schema.addField("f1", type="F")
+        k2 = schema.addField("f2", type="D")
+        k3 = schema.addField("f3", type="ArrayF", size=2)
+        k4 = schema.addField("f4", type="ArrayD", size=2)
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        self.assert_(numpy.isnan(record.getF(k1)))
+        self.assert_(numpy.isnan(record.getD(k2)))
+        self.assert_(numpy.isnan(record.getArrayF(k3)).all())
+        self.assert_(numpy.isnan(record.getArrayD(k4)).all())
+        record.setF(k1, numpy.float32("inf"))
+        record.setD(k2, numpy.float64("inf"))
+        infArray1 = numpy.array([numpy.float32("inf"), numpy.float32("inf")], dtype=numpy.float32)
+        infArray2 = numpy.array([numpy.float64("inf"), numpy.float64("inf")], dtype=numpy.float64)
+        record.setArrayF(k3, infArray1)
+        record.setArrayD(k4, infArray2)
+        self.assertEqual(record.getF(k1), numpy.float32("inf"))
+        self.assertEqual(record.getD(k2), numpy.float64("inf"))
+        self.assert_((record.getArrayF(k3) == infArray1).all())
+        self.assert_((record.getArrayD(k4) == infArray2).all())
+
     def testIteration(self):
         schema = lsst.afw.table.Schema()
         k = schema.addField("a", type=int)
