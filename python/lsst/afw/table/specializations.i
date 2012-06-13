@@ -37,6 +37,14 @@
     { self->set(key, v); }
 
 }
+%extend lsst::afw::table::BaseColumnView {
+    void __getitem__(Key< Point<U> > const & key) const {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get column view to Point field."
+        );
+    }
+}
 %enddef
 
 %define %specializeMoments(U, PYNAME, VALUE...)
@@ -59,6 +67,14 @@
     void setMoments##PYNAME(lsst::afw::table::Key< Moments<U> > const & key, VALUE const & v)
     { self->set(key, v); }
 
+}
+%extend lsst::afw::table::BaseColumnView {
+    void __getitem__(Key< Moments<U> > const & key) const {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get column view to Moments field."
+        );
+    }
 }
 %enddef
 
@@ -111,7 +127,7 @@
 }
 %enddef
 
-     %define %specializeCovariance(U, PYNAME)
+%define %specializeCovariance(U, PYNAME)
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< U > > {
     lsst::afw::table::Key<U> _getitem_impl(int i, int j) const { return (*self)(i, j); }
     %pythoncode %{
@@ -125,29 +141,37 @@
 %extend lsst::afw::table::BaseRecord {
 
     Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> get(
-        lsst::afw::table::Key< Covariance< U > > const & key
+        lsst::afw::table::Key< lsst::afw::table::Covariance< U > > const & key
     ) const {
         return self->get(key);
     }
 
     Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> getCov##PYNAME(
-        lsst::afw::table::Key< Covariance< U > > const & key
+        lsst::afw::table::Key< lsst::afw::table::Covariance< U > > const & key
     ) const {
         return self->get(key);
     }
 
     void set(
-        lsst::afw::table::Key< Covariance< U > > const & key,
+        lsst::afw::table::Key< lsst::afw::table::Covariance< U > > const & key,
         Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> const & v
     ) {
         self->set(key, v);
     }
 
     void setCov##PYNAME(
-        lsst::afw::table::Key< Covariance< U > > const & key,
+        lsst::afw::table::Key< lsst::afw::table::Covariance< U > > const & key,
         Eigen::Matrix<U,Eigen::Dynamic,Eigen::Dynamic> const & v
     ) {
         self->set(key, v);
+    }
+}
+%extend lsst::afw::table::BaseColumnView {
+    void __getitem__(Key< lsst::afw::table::Covariance<U> > const & key) const {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get column view to Covariance field."
+        );
     }
 }
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< lsst::afw::table::Point< U > > > {
@@ -161,28 +185,38 @@
     int getPackedSize() const { return self->getPackedSize(); }
 }
 %extend lsst::afw::table::BaseRecord {
-    Eigen::Matrix<U,2,2> get(lsst::afw::table::Key< Covariance< Point< U > > > const & key) const {
+    Eigen::Matrix<U,2,2> get(
+        lsst::afw::table::Key< lsst::afw::table::Covariance< lsst::afw::table::Point<U> > > const & key
+    ) const {
         return self->get(key);
     }
 
     Eigen::Matrix<U,2,2> getCovPoint##PYNAME(
-        lsst::afw::table::Key< Covariance< Point< U > > > const & key
+        lsst::afw::table::Key< lsst::afw::table::Covariance< lsst::afw::table::Point<U> > > const & key
     ) const {
         return self->get(key);
     }
 
     void set(
-        lsst::afw::table::Key< Covariance< Point< U > > > const & key,
+        lsst::afw::table::Key< lsst::afw::table::Covariance< lsst::afw::table::Point<U> > > const & key,
         Eigen::Matrix<U,2,2> const & v
     ) {
         self->set(key, v);
     }
 
     void setCovPoint##PYNAME(
-        lsst::afw::table::Key< Covariance< Point< U > > > const & key,
+        lsst::afw::table::Key< lsst::afw::table::Covariance< lsst::afw::table::Point<U> > > const & key,
         Eigen::Matrix<U,2,2> const & v
     ) {
         self->set(key, v);
+    }
+}
+%extend lsst::afw::table::BaseColumnView {
+    void __getitem__(Key< lsst::afw::table::Covariance< lsst::afw::table::Point<U> > > const & key) const {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get column view to Covariance field."
+        );
     }
 }
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Covariance< lsst::afw::table::Moments< U > > > {
@@ -220,6 +254,14 @@
         Eigen::Matrix<U,3,3> const & v
     ) {
         self->set(key, v);
+    }
+}
+%extend lsst::afw::table::BaseColumnView {
+    void __getitem__(Key< lsst::afw::table::Covariance< lsst::afw::table::Moments<U> > > const & key) const {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get column view to Covariance field."
+        );
     }
 }
 %enddef
@@ -281,6 +323,14 @@
         lsst::afw::coord::Coord const & v
     ) {
         self->set(key, v);
+    }
+}
+%extend lsst::afw::table::BaseColumnView {
+    void __getitem__(Key< lsst::afw::coord::Coord > const & key) const {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get column view to Coord field."
+        );
     }
 }
 
