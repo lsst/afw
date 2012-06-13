@@ -32,7 +32,14 @@ public:
     /// @internal @brief Return a sub-field key corresponding to the nth element.
     template <typename T>
     static Key<typename Key<T>::Element> extractElement(KeyBase<T> const & kb, int n) {
-        assert(static_cast<Key<T> const &>(kb).isValid());
+        if (!static_cast<Key<T> const &>(kb).isValid()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                (boost::format("Cannot extract subfield key from invalid key of type '%s' "
+                              "(most often this is caused by failing to setup centroid or shape slots)")
+                 % Key<T>::getTypeString()).str()
+            );
+        }
         return Key<typename Key<T>::Element>(
             static_cast<Key<T> const &>(kb).getOffset() + n * sizeof(typename Key<T>::Element)
         );
