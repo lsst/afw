@@ -15,6 +15,7 @@
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
+#include "lsst/afw/table/SchemaMapper.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -412,7 +413,42 @@ public:
      */
     template <typename InputIterator>
     void insert(iterator pos, InputIterator first, InputIterator last, bool deep=false) {
-        _insert(pos, first, last, deep, (typename std::iterator_traits<InputIterator>::iterator_category*)0);
+        _maybeReserve(
+            pos, first, last, deep, (typename std::iterator_traits<InputIterator>::iterator_category*)0
+        );
+        if (deep) {
+            while (first != last) {
+                pos = insert(pos, *first);
+                ++pos;
+                ++first;
+            }
+        } else {
+            while (first != last) {
+                pos = insert(pos, first);
+                assert(pos != end());
+                ++pos;
+                ++first;
+            }
+        }
+    }
+
+    /// @brief Insert a range of records into the catalog by copying them with a SchemaMapper.
+    template <typename InputIterator>
+    void insert(SchemaMapper const & mapper, iterator pos, InputIterator first, InputIterator last) {
+        if (mapper.getOutputSchema() != _table->getSchema()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterException,
+                "SchemaMapper's output schema does not match catalog's schema"
+            );
+        }
+        _maybeReserve(
+            pos, first, last, true, (typename std::iterator_traits<InputIterator>::iterator_category*)0
+        );
+        while (first != last) {
+            pos = insert(pos, _table->copyRecord(*first, mapper));
+            ++pos;
+            ++first;
+        }
     }
 
     /// Insert a copy of the given record at the given position.
@@ -492,37 +528,21 @@ public:
 private:
 
     template <typename InputIterator>
-    void _insert(
-        iterator pos, InputIterator first, InputIterator last, bool deep,
+    void _maybeReserve(
+        iterator & pos, InputIterator first, InputIterator last, bool deep,
         std::random_access_iterator_tag *
     ) {
         std::ptrdiff_t n = pos - begin();
         _internal.reserve(_internal.size() + last - first);
         pos = begin() + n;
         if (deep) _table->preallocate(last - first);
-        _insert(pos, first, last, deep, (std::input_iterator_tag *)0);
     }
 
     template <typename InputIterator>
-    void _insert(
+    void _maybeReserve(
         iterator pos, InputIterator first, InputIterator last, bool deep,
         std::input_iterator_tag *
-    ) {
-        if (deep) {
-            while (first != last) {
-                pos = insert(pos, *first);
-                ++pos;
-                ++first;
-            }
-        } else {
-            while (first != last) {
-                pos = insert(pos, first);
-                assert(pos != end());
-                ++pos;
-                ++first;
-            }
-        }
-    }
+    ) {}
 
     PTR(Table) _table;
     Internal _internal;
