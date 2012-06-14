@@ -202,7 +202,12 @@ public:
         size_type S = size();
         size_type start, stop = 0;
         // Python doesn't allow step == 0
-        assert(step != 0);
+        if (step == 0) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterException,
+                "Step cannot be zero"
+            );
+        }
         // Basic negative indexing rule: first add size
         if (startd < 0) {
             startd += S;
