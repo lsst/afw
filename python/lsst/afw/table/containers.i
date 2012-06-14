@@ -62,7 +62,37 @@ public:
         }
         return self->get(i);
     }
+    void extend(CatalogT const & other, bool deep) {
+        self->insert(self->end(), other.begin(), other.end(), deep);
+    }
+    void extend(CatalogT const & other, SchemaMapper const & mapper) {
+        self->insert(mapper, self->end(), other.begin(), other.end());
+    }
+    %feature("shadow") extend %{
+    def extend(self, iterable, deep=None, mapper=None):
+        """Append all records in the given iterable to the catalog.
 
+        Arguments:
+          iterable ------ any Python iterable containing records
+          deep ---------- if True, the records will be deep-copied; ignored
+                          if mapper is not None (that always implies True).
+          mapper -------- a SchemaMapper object used to translate records
+        """
+        self._columns = None
+        if isinstance(iterable, type(self)):
+            if mapper is not None:
+                $action(self, iterable, mapper)
+            else:
+                $action(self, iterable, deep)
+        else:
+            for record in iterable:
+                if mapper is not None:
+                    self.append(self.table.copyRecord(record, mapper))
+                elif deep:
+                    self.append(self.table.copyRecord(record))
+                else:
+                    self.append(record.cast(self.Record))
+    %}
     %feature("shadow") __getitem__ %{
     def __getitem__(self, k):
         """Return the record at index k if k is an integer,
@@ -131,10 +161,6 @@ public:
             self._columns = self.getColumnView()
         return self._columns
     columns = property(__getColumns, doc="a column view of the catalog")
-    def extend(self, iterable):
-        """Append all records in the given iterable to the catalog."""
-        for e in iterable:
-            self.append(e)
     def __iter__(self):
         for i in xrange(len(self)):
             yield self[i]
@@ -152,9 +178,7 @@ public:
             table = self.table
         newTable = table.cast(type_.Table)
         copy = type_(newTable)
-        for record in self:
-            newRecord = newTable.copyRecord(record) if deep else record.cast(type_.Record)
-            copy.append(newRecord)
+        copy.extend(self, deep=deep)
         return copy
     def copy(self, deep=False):
         return self.cast(type(self), deep)
