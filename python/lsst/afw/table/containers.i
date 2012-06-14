@@ -41,6 +41,9 @@ public:
     static CatalogT readFits(std::string const & filename, int hdu=2);
 
     ColumnView getColumnView() const;
+
+    bool isContiguous() const;
+
     %pythonappend getColumnView %{
         self._columns = val
     %}

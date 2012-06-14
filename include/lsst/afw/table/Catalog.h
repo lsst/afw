@@ -302,6 +302,9 @@ public:
      */
     ColumnView getColumnView() const { return ColumnView::make(_table, begin(), end()); }
 
+    /// @brief Return true if all records are contiguous.
+    bool isContiguous() const { return ColumnView::isRangeContiguous(_table, begin(), end()); }
+
     //@{
     /**
      *  Iterator access.
