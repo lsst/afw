@@ -92,6 +92,14 @@ public:
         }
     }
 
+    static std::size_t getBufferSize(
+        std::size_t recordSize,
+        ndarray::Manager::Ptr const & manager
+    ) {
+        Ptr block = boost::static_pointer_cast<Block>(manager);
+        return static_cast<std::size_t>(block->_end - block->_next) / recordSize;
+    }
+
     // Get the next chunk from the block, making a new block and installing it into the table
     // if we're all out of space.
     static void * get(std::size_t recordSize, ndarray::Manager::Ptr & manager) {
@@ -142,6 +150,10 @@ private:
 
 void BaseTable::preallocate(std::size_t n) {
     Block::preallocate(_schema.getRecordSize(), n, _manager);
+}
+
+std::size_t BaseTable::getBufferSize() const {
+    return Block::getBufferSize(_schema.getRecordSize(), _manager);
 }
 
 PTR(BaseTable) BaseTable::make(Schema const & schema) {

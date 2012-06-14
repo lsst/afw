@@ -44,6 +44,10 @@ public:
 
     bool isContiguous() const;
 
+    std::size_t capacity() const;
+
+    void reserve(std::size_t n);
+
     %pythonappend getColumnView %{
         self._columns = val
     %}

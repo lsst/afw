@@ -282,6 +282,11 @@ class SimpleTableTestCase(unittest.TestCase):
         cat6 = lsst.afw.table.SourceCatalog(schema2)
         cat6.extend(list(cat1), mapper=mapper)
         self.assertFalse(cat6.isContiguous())
+        cat7 = lsst.afw.table.SourceCatalog(schema2)
+        cat7.reserve(len(cat1) * 2)
+        cat7.extend(list(cat1), mapper=mapper)
+        cat7.extend(cat1, mapper=mapper)
+        self.assert_(cat7.isContiguous())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
