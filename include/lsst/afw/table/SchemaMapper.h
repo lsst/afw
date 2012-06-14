@@ -59,6 +59,16 @@ public:
     template <typename Predicate>
     void addMappingsWhere(Predicate predicate);
 
+    /**
+     *  @brief Add the given minimal schema to the output schema.
+     *
+     *  This is intended to be used to ensure the output schema starts with some minimal schema.
+     *  It must be called before any other fields are added to the output schema.  Any fields
+     *  from the minimal schema that also appear in the input schema will be mapped, while
+     *  those that do not will be added to the output schema with no mapping.
+     */
+    void addMinimalSchema(Schema const & minimal);
+
     /// @brief Swap the input and output schemas in-place.
     void invert();
 
