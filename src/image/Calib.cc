@@ -117,6 +117,28 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
     _fluxMag0 = fluxMag0;
     _fluxMag0Sigma = fluxMag0Sigma;
 }
+/**
+ * Control whether we throw an exception when faced with a negative flux
+ */
+bool Calib::_throwOnNegativeFlux = true;
+/**
+ * Set whether Calib should throw an exception when asked to convert a flux to a magnitude
+ */
+void
+Calib::setThrowOnNegativeFlux(bool raiseException ///< Should the exception be raised?
+                             )
+{
+    _throwOnNegativeFlux = raiseException;
+}
+
+/**
+ * Tell me whether Calib will throw an exception if asked to convert a flux to a magnitude
+ */
+bool
+Calib::getThrowOnNegativeFlux()
+{
+    return _throwOnNegativeFlux;
+}
 
 namespace detail {
 /**
@@ -294,8 +316,12 @@ double Calib::getMagnitude(double const flux ///< the measured flux of the objec
                           (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
     }
     if (flux <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                          (boost::format("Flux must be >= 0: saw %g") % flux).str());
+        if (Calib::getThrowOnNegativeFlux()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                              (boost::format("Flux must be >= 0: saw %g") % flux).str());
+        }
+
+        return std::numeric_limits<double>::quiet_NaN();
     }
     
     using ::log10;
@@ -315,8 +341,13 @@ std::pair<double, double> Calib::getMagnitude(double const flux, ///< the measur
                           (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
     }
     if (flux <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                          (boost::format("Flux must be >= 0: saw %g") % flux).str());
+        if (Calib::getThrowOnNegativeFlux()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                              (boost::format("Flux must be >= 0: saw %g") % flux).str());
+        }
+
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        return std::make_pair(NaN, NaN);
     }
     
     using ::pow; using ::sqrt;

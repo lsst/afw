@@ -160,6 +160,13 @@ class Box2ITestCase(unittest.TestCase):
         self.assertEqual(box.getHeight(), (ymax - ymin  + 1))
         self.assertAlmostEqual(box.getArea(), box.getWidth() * box.getHeight(),
                 places=14)
+        corners = box.getCorners()
+        self.assertEqual(corners[0], box.getMin())
+        self.assertEqual(corners[1].getX(), box.getMaxX())
+        self.assertEqual(corners[1].getY(), box.getMinY())
+        self.assertEqual(corners[2], box.getMax())
+        self.assertEqual(corners[3].getX(), box.getMinX())
+        self.assertEqual(corners[3].getY(), box.getMaxY())
         
     def testRelations(self):
         box = geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(2,1), True)

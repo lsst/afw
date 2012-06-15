@@ -72,7 +72,8 @@
     def __repr__(self):
         return "afwCoord.TYPE(%g*afwGeom.radians, %g*afwGeom.radians)" % \
                 (self[0].asRadians(), self[1].asRadians())
-
+    def __reduce__(self):
+        return (TYPE, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
     def __str__(self):
         return "(%s, %s)" % (self[0], self[1])
 

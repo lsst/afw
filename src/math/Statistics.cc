@@ -200,7 +200,6 @@ namespace {
         double sumx = 0;                // sum(data*weight)
         double sumx2 = 0;               // sum(data*weight^2)
 #if 1
-        double sumvw = 0.0;             // sum(variance*weight)
         double sumvw2 = 0.0;            // sum(variance*weight^2)
 #endif
         double min = (nCrude) ? meanCrude : MAX_DOUBLE;
@@ -232,7 +231,7 @@ namespace {
                             }
                             weight = 1/weight;
                         }
-
+                        
                         sumw   += weight;
                         sumw2  += weight*weight;
                         sumx   += weight*delta;
@@ -240,12 +239,16 @@ namespace {
                         
                         if (calcErrorFromInputVariance) {
                             double const var = *vptr;
-                            sumvw  += var*weight;
                             sumvw2 += var*weight*weight;
                         }
                     } else {
                         sumx += delta;
                         sumx2 += delta*delta;
+
+                        if (calcErrorFromInputVariance) {
+                            double const var = *vptr;
+                            sumvw2 += var;
+                        }
                     }
 
                     allPixelOrMask |= *mptr;

@@ -33,10 +33,6 @@ import lsst.afw.geom as afwGeom
 import lsst.daf.base as dafBase
 import lsst.pex.logging
 
-dataDir = eups.productDir("afwdata")
-if not dataDir:
-    raise RuntimeError("Must set up afwdata to run these tests")
-
 def main():
     DefDataDir = eups.productDir("afwdata") or ""
     

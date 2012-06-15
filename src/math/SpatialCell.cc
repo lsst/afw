@@ -111,6 +111,17 @@ void SpatialCell::insertCandidate(SpatialCellCandidate::Ptr candidate) {
     _candidateList.insert(pos, candidate);
 }
 
+void SpatialCell::removeCandidate(SpatialCellCandidate::Ptr candidate)
+{
+    CandidateList::iterator pos = std::find(_candidateList.begin(), _candidateList.end(), candidate);
+    if (pos == _candidateList.end()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                          (boost::format("Unable to find candidate with ID == %d") %
+                           candidate->getId()).str());
+    }
+    _candidateList.erase(pos);
+}
+
 /**
  * Determine if cell has no usable candidates
  */

@@ -47,8 +47,6 @@ public:
 
     PTR(RecordT) addNew();
 
-    CatalogT copy() const;
-
     CatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 };
 
@@ -147,7 +145,11 @@ public:
         """Return a copy of the catalog with the given type, optionally
         cloning the table and deep-copying all records if deep==True.
         """
-        table = self.table.clone() if deep else self.table
+        if deep:
+            table = self.table.clone()
+            table.preallocate(len(self))
+        else:
+            table = self.table
         newTable = table.cast(type_.Table)
         copy = type_(newTable)
         for record in self:
