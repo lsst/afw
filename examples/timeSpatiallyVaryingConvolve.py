@@ -44,7 +44,7 @@ dataDir = eups.productDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata")
 
-InputMaskedImagePath = os.path.join(dataDir, "med.fits")
+InputMaskedImagePath = os.path.join(dataDir, "data", "med.fits")
 
 def getSpatialParameters(nKernelParams, func):
     """Get basic spatial parameters list
