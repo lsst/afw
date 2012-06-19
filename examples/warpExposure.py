@@ -36,8 +36,8 @@ import lsst.pex.logging
 def main():
     DefDataDir = eups.productDir("afwdata") or ""
     
-    DefOriginalExposurePath = os.path.join(DefDataDir, "med")
-    DefWcsImageOrExposurePath = os.path.join(DefDataDir, "medswarp1lanczos4.fits")
+    DefOriginalExposurePath = os.path.join(DefDataDir, "data", "med")
+    DefWcsImageOrExposurePath = os.path.join(DefDataDir, "data", "medswarp1lanczos4.fits")
     DefOutputExposurePath = "warpedExposure"
     DefKernel = "lanczos4"
     DefVerbosity = 6 # change to 0 once this all works to hide all messages
