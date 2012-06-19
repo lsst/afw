@@ -324,15 +324,33 @@ class TestWcsCompare(unittest.TestCase):
         cd = numpy.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]], dtype=float)
         self.plainWcs = afwImage.Wcs(crval, crpix, cd)
         self.sipWcs = afwImage.TanWcs(crval, crpix, cd)
+        self.distortedWcs = afwImage.TanWcs(crval, crpix, cd, cd, cd, cd, cd)
 
     def tearDown(self):
         del self.plainWcs
         del self.sipWcs
+        del self.distortedWcs
 
     def testEqualityCompare(self):
-        self.assertEqual(type(self.plainWcs), afwImage.Wcs)
-        self.assertEqual(self.plainWcs, self.sipWcs)
-        self.assertEqual(self.sipWcs, self.plainWcs)
+        self.assertNotEqual(self.plainWcs, self.sipWcs)
+        self.assertNotEqual(self.sipWcs, self.plainWcs)
+        self.assertNotEqual(self.distortedWcs, self.sipWcs)
+        self.assertNotEqual(self.sipWcs, self.distortedWcs)
+        plainWcsCopy = self.plainWcs.clone()
+        sipWcsCopy = self.sipWcs.clone()
+        distortedWcsCopy = self.distortedWcs.clone()
+        self.assertEqual(plainWcsCopy, self.plainWcs)
+        self.assertEqual(sipWcsCopy, self.sipWcs)
+        self.assertEqual(distortedWcsCopy, self.distortedWcs)
+        self.assertEqual(self.plainWcs, plainWcsCopy)
+        self.assertEqual(self.sipWcs, sipWcsCopy)
+        self.assertEqual(self.distortedWcs, distortedWcsCopy)
+        self.assertNotEqual(plainWcsCopy, sipWcsCopy)
+        self.assertNotEqual(sipWcsCopy, plainWcsCopy)
+        self.assertNotEqual(distortedWcsCopy, sipWcsCopy)
+        self.assertNotEqual(sipWcsCopy, distortedWcsCopy)
+        
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

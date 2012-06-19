@@ -449,7 +449,16 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _initWcs();
 }
        
-bool Wcs::operator==(const Wcs &rhs) const {
+bool Wcs::operator==(Wcs const & other) const {
+    if (&other == this) return true;
+    // We do a bidirectional test with a virtual member function in case one of us is a derived
+    // class with members we don't know about here.
+    // This is not the most efficient possible implementation, but I think it's the easiest one
+    // with which to ensure correctness, and I think that's more important in this case.
+    return this->_equals(other) && other._equals(*this);
+}
+
+bool Wcs::_equals(Wcs const & rhs) const {
     return _nWcsInfo == rhs._nWcsInfo &&
         _relax == rhs._relax &&
         _wcsfixCtrl == rhs._wcsfixCtrl &&

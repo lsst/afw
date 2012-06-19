@@ -121,7 +121,8 @@ public:
     virtual ~Wcs();
     virtual Ptr clone(void) const;
     
-    bool operator==(const Wcs &) const;
+    bool operator==(Wcs const & other) const;
+    bool operator!=(Wcs const & other) const { return !(*this == other); }
 
     // Returns CRVAL
     lsst::afw::coord::Coord::Ptr getSkyOrigin() const;
@@ -279,6 +280,9 @@ private:
     virtual lsst::afw::geom::Point2D skyToPixelImpl(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
 
 protected:
+
+    // Protected virtual implementation for operator==.
+    virtual bool _equals(Wcs const & other) const;
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.

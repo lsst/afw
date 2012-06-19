@@ -247,13 +247,22 @@ TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
     
 }
 
-bool TanWcs::operator==(const TanWcs &rhs) const {
-    return Wcs::operator==(rhs) &&
-        _hasDistortion == rhs._hasDistortion &&
-        (!_hasDistortion || (_sipA == rhs._sipA &&
-                             _sipB == rhs._sipB &&
-                             _sipAp == rhs._sipAp &&
-                             _sipBp == rhs._sipBp));
+bool TanWcs::_equals(Wcs const & rhs) const {
+    if (!Wcs::_equals(rhs)) {
+        return false;
+    }
+    // We only care about the derived-class part if we have a distortion; this could mean 
+    // a TanWcs with no distortion may be equal to a plain Wcs, but that doesn't happen
+    // in practice because have different wcslib data structures.
+    if (this->hasDistortion()) {
+        TanWcs const * other = dynamic_cast<TanWcs const *>(&rhs);
+        return other && other->_hasDistortion &&
+            _sipA == other->_sipA &&
+            _sipB == other->_sipB &&
+            _sipAp == other->_sipAp &&
+            _sipBp == other->_sipBp;
+    }
+    return true;
 }
 
 ///Assignment operator    

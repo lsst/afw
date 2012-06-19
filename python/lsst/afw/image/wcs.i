@@ -51,6 +51,8 @@ using lsst::afw::image::NoWcs;
 
 %newobject makeWcs;
 
+%useValueEquality(lsst::afw::image::Wcs);
+
 %inline %{
     lsst::afw::image::TanWcs::Ptr
     cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {

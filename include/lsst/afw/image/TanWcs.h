@@ -93,8 +93,6 @@ namespace image {
         
         virtual lsst::afw::image::Wcs::Ptr clone(void) const;
 
-        bool operator==(const TanWcs &) const;
-
         // Returns the pixel scale, in Angle/pixel.
 		lsst::afw::geom::Angle pixelScale() const;
         
@@ -122,6 +120,9 @@ namespace image {
                                  );
 
     private:
+
+        virtual bool _equals(Wcs const &) const;
+
         //If you want to create a TanWcs object from a fits header, use makeWcs()
         TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
         

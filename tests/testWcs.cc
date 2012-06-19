@@ -77,6 +77,46 @@ BOOST_AUTO_TEST_CASE(constructors_test) { /* parasoft-suppress  LsstDm-3-2a Lsst
     image::TanWcs wcs3(crval, crpix, CD, CD, CD, CD, CD);
 }
 
+BOOST_AUTO_TEST_CASE(comparison) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+    geom::Point2D crval = geom::Point2D(30.0, 80.9);
+    geom::Point2D crpix = geom::Point2D(127,127);
+    matrixD CD(2,2);
+
+    //An identity matrix
+    CD(0,0) = CD(1,1) = 1;
+    CD(1,0) = CD(0,1) = 0;
+
+
+    image::Wcs plainWcs(crval, crpix, CD);
+    image::TanWcs sipWcs(crval, crpix, CD);
+
+    PTR(image::Wcs) plainWcsCopy = plainWcs.clone();
+    PTR(image::Wcs) sipWcsCopy = sipWcs.clone();
+
+    BOOST_CHECK(!sipWcs.hasDistortion());
+    BOOST_CHECK(!sipWcsCopy->hasDistortion());
+
+    BOOST_CHECK(plainWcs == *plainWcsCopy);
+    BOOST_CHECK(*plainWcsCopy == plainWcs);
+    BOOST_CHECK(sipWcs == *sipWcsCopy);
+    BOOST_CHECK(*sipWcsCopy == sipWcs);
+
+    image::TanWcs distortedWcs(crval, crpix, CD, CD, CD, CD, CD);
+    PTR(image::Wcs) distortedWcsCopy = distortedWcs.clone();
+
+    BOOST_CHECK(distortedWcs.hasDistortion());
+    BOOST_CHECK(distortedWcsCopy->hasDistortion());
+
+    BOOST_CHECK(sipWcs != distortedWcs);
+    BOOST_CHECK(distortedWcs != sipWcs);
+
+    BOOST_CHECK(*sipWcsCopy != *distortedWcsCopy);
+    BOOST_CHECK(*distortedWcsCopy != *sipWcsCopy);
+
+    BOOST_CHECK(*distortedWcsCopy == distortedWcs);
+    BOOST_CHECK(distortedWcs == *distortedWcsCopy);
+}
+
 //A trivially easy example of the linear constructor
 BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     geom::Point2D crval = geom::Point2D(0.,0.);
