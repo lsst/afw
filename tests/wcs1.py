@@ -35,6 +35,7 @@ import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions.exceptionsLib as exceptions
 import lsst
+import numpy
 
 try:
     type(verbose)
@@ -315,6 +316,24 @@ class WCSTestCaseCFHT(unittest.TestCase):
         self.assertAlmostEqual(self.wcs.pixArea(sky00i), abs(a[a.XX]* a[a.YY] - a[a.XY]*a[a.YX]))
         a.invert()
 
+class TestWcsCompare(unittest.TestCase):
+
+    def setUp(self):
+        crval = afwGeom.Point2D(1.23, 5.67)
+        crpix = afwGeom.Point2D(102., 201.)
+        cd = numpy.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]], dtype=float)
+        self.plainWcs = afwImage.Wcs(crval, crpix, cd)
+        self.sipWcs = afwImage.TanWcs(crval, crpix, cd)
+
+    def tearDown(self):
+        del self.plainWcs
+        del self.sipWcs
+
+    def testEqualityCompare(self):
+        self.assertEqual(type(self.plainWcs), afwImage.Wcs)
+        self.assertEqual(self.plainWcs, self.sipWcs)
+        self.assertEqual(self.sipWcs, self.plainWcs)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -323,6 +342,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(WCSTestCaseSDSS)
+    suites += unittest.makeSuite(TestWcsCompare)
 #    suites += unittest.makeSuite(WCSTestCaseCFHT)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
