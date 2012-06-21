@@ -157,7 +157,7 @@ namespace image {
         typedef typename _const_view_t::y_iterator const_y_iterator;
         /// An mutable ndarray representation of the image
         typedef typename ndarray::Array<PixelT, 2, 1> Array;
-        /// A n immutable ndarray representation of the image
+        /// An immutable ndarray representation of the image
         typedef typename ndarray::Array<PixelT const, 2, 1> ConstArray;
 
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors

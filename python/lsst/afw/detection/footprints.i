@@ -45,8 +45,14 @@
 %shared_ptr(lsst::afw::detection::Span);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
+%include "ndarray.i"
+
+%declareNumPyConverters(ndarray::Array<lsst::afw::image::MaskPixel,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::image::VariancePixel,1,1>);
+
 %define %HeavyFootprintPtr(TYPE)
    %shared_ptr(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+   %declareNumPyConverters(ndarray::Array<TYPE,1,1>);
 %enddef
 
 %HeavyFootprintPtr(int);

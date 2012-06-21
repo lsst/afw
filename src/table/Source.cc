@@ -205,9 +205,9 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
             assert((_heavyPixCol >= 0) && (_heavyMaskCol >= 0) && (_heavyVarCol >= 0));
             PTR(HeavyFootprint) heavy = boost::static_pointer_cast<HeavyFootprint>(record.getFootprint());
             int N = heavy->getArea();
-            _fits->writeTableArray(_row, _heavyPixCol,  N, heavy->getImageData());
-            _fits->writeTableArray(_row, _heavyMaskCol, N, heavy->getMaskData());
-            _fits->writeTableArray(_row, _heavyVarCol,  N, heavy->getVarianceData());
+            _fits->writeTableArray(_row, _heavyPixCol,  N, heavy->getImageArray().getData());
+            _fits->writeTableArray(_row, _heavyMaskCol, N, heavy->getMaskArray().getData());
+            _fits->writeTableArray(_row, _heavyVarCol,  N, heavy->getVarianceArray().getData());
         }
     }
 }
@@ -374,9 +374,9 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
                         ));
             }
             PTR(HeavyFootprint) heavy = boost::make_shared<HeavyFootprint>(*fp);
-            _fits->readTableArray(_row, _heavyPixCol,  N, heavy->getImageData());
-            _fits->readTableArray(_row, _heavyMaskCol, N, heavy->getMaskData());
-            _fits->readTableArray(_row, _heavyVarCol,  N, heavy->getVarianceData());
+            _fits->readTableArray(_row, _heavyPixCol,  N, heavy->getImageArray().getData());
+            _fits->readTableArray(_row, _heavyMaskCol, N, heavy->getMaskArray().getData());
+            _fits->readTableArray(_row, _heavyVarCol,  N, heavy->getVarianceArray().getData());
             record->setFootprint(heavy);
         }
     }

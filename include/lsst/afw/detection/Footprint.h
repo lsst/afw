@@ -277,13 +277,22 @@ public:
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
 
-    // for FITS persistence: direct access to data pointers.
-    const ImagePixelT*    getImageData() const { return _image.getData(); }
-    const MaskPixelT*     getMaskData() const { return _mask.getData(); }
-    const VariancePixelT* getVarianceData() const { return _variance.getData(); }
-    ImagePixelT*    getImageData() { return _image.getData(); }
-    MaskPixelT*     getMaskData() { return _mask.getData(); }
-    VariancePixelT* getVarianceData() { return _variance.getData(); }
+    // for FITS persistence: direct access to data arrays.
+    const ndarray::Array<ImagePixelT    const, 1, 1>     getImageArray() const { return _image; }
+    const ndarray::Array<MaskPixelT     const, 1, 1>      getMaskArray() const { return _mask; }
+    const ndarray::Array<VariancePixelT const, 1, 1>  getVarianceArray() const { return _variance; }
+    const ndarray::Array<ImagePixelT, 1, 1>    getImageArray()    { return _image; }
+    const ndarray::Array<MaskPixelT, 1, 1>     getMaskArray()     { return _mask; }
+    const ndarray::Array<VariancePixelT, 1, 1> getVarianceArray() { return _variance; }
+
+    /* Returns the OR of all the mask pixels held in this HeavyFootprint. */
+    MaskPixelT getMaskBitsSet() const {
+		MaskPixelT maskbits = 0;
+        for (typename ndarray::Array<MaskPixelT,1,1>::Iterator i = _mask.begin(); i != _mask.end(); ++i) {
+			maskbits |= *i;
+		}
+		return maskbits;
+	}
 
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;
