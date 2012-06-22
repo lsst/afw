@@ -30,10 +30,12 @@
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/FootprintArray.cc"
+#include "ndarray.h"
 %}
 
-%shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
+%include "lsst/afw/image/LsstImageTypes.h"
 
+%shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
 
 %ignore lsst::afw::detection::FootprintFunctor::operator();
 
@@ -47,16 +49,53 @@
 
 %include "ndarray.i"
 
+ /*
 %declareNumPyConverters(ndarray::Array<lsst::afw::image::MaskPixel,1,1>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::image::VariancePixel,1,1>);
+%declareNumPyConverters(ndarray::Array<int,1,1>);
+%declareNumPyConverters(ndarray::Array<float,1,1>);
+  */
+ /*
+%declareNumPyConverters(const ndarray::Array<lsst::afw::image::MaskPixel,1,1>);
+%declareNumPyConverters(const ndarray::Array<lsst::afw::image::MaskPixel const,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::image::MaskPixel,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::image::MaskPixel const,1,1>);
 
-%define %HeavyFootprintPtr(TYPE)
-   %shared_ptr(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
-   %declareNumPyConverters(ndarray::Array<TYPE,1,1>);
+%declareNumPyConverters(const ndarray::Array<lsst::afw::image::VariancePixel,1,1>);
+%declareNumPyConverters(const ndarray::Array<lsst::afw::image::VariancePixel const,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::image::VariancePixel,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::image::VariancePixel const,1,1>);
+  */
+
+%define %HeavyFootprintPtr(PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
+    %shared_ptr(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>);
+
+//%declareNumPyConverters(const ndarray::Array<TYPE,1,1>);
+//%declareNumPyConverters(const ndarray::Array<TYPE const,1,1>);
+   %declareNumPyConverters(ndarray::Array<PIXEL_TYPE,1,1>);
+   %declareNumPyConverters(ndarray::Array<MASK_TYPE,1,1>);
+   %declareNumPyConverters(ndarray::Array<VAR_TYPE,1,1>);
+
+/*
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ImageArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ConstImageArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::MaskArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ConstMaskArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::VarianceArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ConstVarianceArray);
+ */
+/*
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ImageArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ConstImageArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::MaskArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ConstMaskArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::VarianceArray);
+%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ConstVarianceArray);
+ */
 %enddef
 
-%HeavyFootprintPtr(int);
-%HeavyFootprintPtr(float);
+%HeavyFootprintPtr(int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+%HeavyFootprintPtr(float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
@@ -90,26 +129,35 @@
 %template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Span> >;
 %template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
 
-%define %heavyFootprints(NAME, PIXEL_TYPE...)
-    %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>;
-    %template(makeHeavyFootprint) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE>;
+%define %heavyFootprints(NAME, PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
+    %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
+
+/*
+%extend lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> {
+    ndarray::Array<PIXEL_TYPE,1,1> getImageArray() { self->getImageArray(); }
+    ndarray::Array<MASK_TYPE,1,1> getMaskArray() { self->getMaskArray(); }
+    ndarray::Array<VAR_TYPE,1,1> getVarianceArray() { self->getVarianceArray(); }
+}
+ */
+
+    %template(makeHeavyFootprint ##NAME) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
 
     %inline %{
-        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>)
+        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>)
             /**
              * Cast a Footprint to a HeavyFootprint of a specified type
              */
             cast_HeavyFootprint##NAME(PTR(lsst::afw::detection::Footprint) foot) {
-            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE> >(foot);
+            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
 
-        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE>)
+        PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>)
             /**
              * Cast a Footprint to a HeavyFootprint; the MaskedImage disambiguates the type
              */
             cast_HeavyFootprint(PTR(lsst::afw::detection::Footprint) foot,
-                                lsst::afw::image::MaskedImage<PIXEL_TYPE> const&) {
-            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE> >(foot);
+                                lsst::afw::image::MaskedImage<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> const&) {
+            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
     %}
 %enddef
@@ -132,6 +180,7 @@
 
 %heavyFootprints(I, int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 %heavyFootprints(F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+
 
 %thresholdOperations(lsst::afw::image::Image);
 %thresholdOperations(lsst::afw::image::MaskedImage);
@@ -222,3 +271,9 @@
 %footprintArrayTemplates(int);
 %footprintArrayTemplates(float);
 %footprintArrayTemplates(double);
+
+
+%pythoncode {
+makeHeavyFootprint = makeHeavyFootprintF
+}
+

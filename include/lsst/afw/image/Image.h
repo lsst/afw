@@ -155,7 +155,7 @@ namespace image {
         typedef typename _view_t::y_iterator xy_y_iterator;
         /// A const iterator for traversing the pixels in a column
         typedef typename _const_view_t::y_iterator const_y_iterator;
-        /// An mutable ndarray representation of the image
+        /// A mutable ndarray representation of the image
         typedef typename ndarray::Array<PixelT, 2, 1> Array;
         /// An immutable ndarray representation of the image
         typedef typename ndarray::Array<PixelT const, 2, 1> ConstArray;
