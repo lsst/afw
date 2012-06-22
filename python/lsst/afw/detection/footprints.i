@@ -47,51 +47,12 @@
 %shared_ptr(lsst::afw::detection::Span);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
-%include "ndarray.i"
-
- /*
-%declareNumPyConverters(ndarray::Array<lsst::afw::image::MaskPixel,1,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::image::VariancePixel,1,1>);
-%declareNumPyConverters(ndarray::Array<int,1,1>);
+%declareNumPyConverters(ndarray::Array<unsigned short,1,1>);
 %declareNumPyConverters(ndarray::Array<float,1,1>);
-  */
- /*
-%declareNumPyConverters(const ndarray::Array<lsst::afw::image::MaskPixel,1,1>);
-%declareNumPyConverters(const ndarray::Array<lsst::afw::image::MaskPixel const,1,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::image::MaskPixel,1,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::image::MaskPixel const,1,1>);
-
-%declareNumPyConverters(const ndarray::Array<lsst::afw::image::VariancePixel,1,1>);
-%declareNumPyConverters(const ndarray::Array<lsst::afw::image::VariancePixel const,1,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::image::VariancePixel,1,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::image::VariancePixel const,1,1>);
-  */
 
 %define %HeavyFootprintPtr(PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
-    %shared_ptr(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>);
-
-//%declareNumPyConverters(const ndarray::Array<TYPE,1,1>);
-//%declareNumPyConverters(const ndarray::Array<TYPE const,1,1>);
-   %declareNumPyConverters(ndarray::Array<PIXEL_TYPE,1,1>);
-   %declareNumPyConverters(ndarray::Array<MASK_TYPE,1,1>);
-   %declareNumPyConverters(ndarray::Array<VAR_TYPE,1,1>);
-
-/*
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ImageArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ConstImageArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::MaskArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ConstMaskArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::VarianceArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>::ConstVarianceArray);
- */
-/*
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ImageArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ConstImageArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::MaskArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ConstMaskArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::VarianceArray);
-%declareNumPyConverters(lsst::afw::detection::HeavyFootprint<TYPE>::ConstVarianceArray);
- */
+%shared_ptr(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>);
+%declareNumPyConverters(ndarray::Array<PIXEL_TYPE,1,1>);
 %enddef
 
 %HeavyFootprintPtr(int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)

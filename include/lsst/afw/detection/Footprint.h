@@ -263,14 +263,7 @@ template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
           typename VariancePixelT=lsst::afw::image::VariancePixel>
 class HeavyFootprint : public Footprint {
 public:
-/*
-    typedef ndarray::Array<ImagePixelT, 1, 1> ImageArray;
-    typedef ndarray::Array<ImagePixelT const, 1, 1> ConstImageArray;
-    typedef ndarray::Array<MaskPixelT, 1, 1> MaskArray;
-    typedef ndarray::Array<MaskPixelT const, 1, 1> ConstMaskArray;
-    typedef ndarray::Array<VariancePixelT, 1, 1> VarianceArray;
-    typedef ndarray::Array<VariancePixelT const, 1, 1> ConstVarianceArray;
- */
+
     explicit HeavyFootprint(
         Footprint const& foot,
         lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
@@ -285,29 +278,13 @@ public:
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
 
-    // for FITS persistence: direct access to data arrays.
-    /*
-    const ndarray::Array<ImagePixelT    const, 1, 1>     getImageArray() const { return _image; }
-    const ndarray::Array<MaskPixelT     const, 1, 1>      getMaskArray() const { return _mask; }
-    const ndarray::Array<VariancePixelT const, 1, 1>  getVarianceArray() const { return _variance; }
-    const ndarray::Array<ImagePixelT, 1, 1>    getImageArray()    { return _image; }
-    const ndarray::Array<MaskPixelT, 1, 1>     getMaskArray()     { return _mask; }
-    const ndarray::Array<VariancePixelT, 1, 1> getVarianceArray() { return _variance; }
-	 */
-//#ifndef SWIG
-/*
-ImageArray getImageArray() { return _image; }
-MaskArray getMaskArray() { return _mask; }
-VarianceArray getVarianceArray() { return _variance; }
-ConstImageArray getImageArray() const { return _image; }
-ConstMaskArray getMaskArray() const { return _mask; }
-ConstVarianceArray getVarianceArray() const { return _variance; }
- */
-//#endif
+    ndarray::Array<ImagePixelT,1,1>     getImageArray() { return _image; }
+    ndarray::Array<MaskPixelT,1,1>      getMaskArray() { return _mask; }
+    ndarray::Array<VariancePixelT,1,1>  getVarianceArray() { return _variance; }
 
-ndarray::Array<ImagePixelT   , 1, 1>     getImageArray() { return _image; }
-ndarray::Array<MaskPixelT    , 1, 1>      getMaskArray() { return _mask; }
-ndarray::Array<VariancePixelT, 1, 1>  getVarianceArray() { return _variance; }
+    ndarray::Array<ImagePixelT const,1,1>     getImageArray() const { return _image; }
+    ndarray::Array<MaskPixelT const,1,1>      getMaskArray() const { return _mask; }
+    ndarray::Array<VariancePixelT const,1,1>  getVarianceArray() const { return _variance; }
 
     /* Returns the OR of all the mask pixels held in this HeavyFootprint. */
     MaskPixelT getMaskBitsSet() const {
