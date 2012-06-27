@@ -1138,7 +1138,7 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            
  * Strip keywords from the input metadata that are related to the generated Wcs
  *
  * It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
- * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12],
+ * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12] and LTV[12],
  * but there may be others
  */
 int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
@@ -1149,6 +1149,8 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     std::vector<std::string> paramNames = wcsMetadata->paramNames();
     paramNames.push_back("CDELT1");
     paramNames.push_back("CDELT2");
+    paramNames.push_back("LTV1");
+    paramNames.push_back("LTV2");
     for (std::vector<std::string>::const_iterator ptr = paramNames.begin(); ptr != paramNames.end(); ++ptr) {
         metadata->remove(*ptr);
     }

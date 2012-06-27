@@ -293,21 +293,6 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
      */
     _calib = PTR(afwImage::Calib)(new afwImage::Calib(metadata));
     afwImage::detail::stripCalibKeywords(metadata);
-
-    //If keywords LTV[1,2] are present, the image on disk is already a subimage, so
-    //we should note this fact. Also, shift the wcs so the crpix values refer to 
-    //pixel positions not pixel index
-    //See writeFits() below
-    std::string key = "LTV1";
-    if( metadata->exists(key)) {
-        _wcs->shiftReferencePixel(-1*metadata->getAsDouble(key), 0);
-        metadata->remove(key);
-    }
-    key = "LTV2";
-    if( metadata->exists(key) ) {
-        _wcs->shiftReferencePixel(0, -1*metadata->getAsDouble(key));
-        metadata->remove(key);
-    }
     /*
      * Set the remaining parts of the metadata
      */
