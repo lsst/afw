@@ -28,6 +28,7 @@ import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
 import eups
+import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
@@ -163,20 +164,24 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
         raDec = afwCoord.makeCoord(afwCoord.ICRS, 244 * afwGeom.degrees, 20 * afwGeom.degrees)
-        print 'testIdentity'
-        print 'wcs:'
-        for x in self.wcs.getFitsMetadata().toList():
-            print '  ', x
-        print 'raDec:', raDec
-        print type(self.wcs)
+        if verbose:
+            print 'testIdentity'
+            print 'wcs:'
+            for x in self.wcs.getFitsMetadata().toList():
+                print '  ', x
+            print 'raDec:', raDec
+            print type(self.wcs)
         rowCol = self.wcs.skyToPixel(raDec)
-        print 'rowCol:', rowCol
         raDec2 = self.wcs.pixelToSky(rowCol)
-        print 'raDec2:', raDec2
+
+        if verbose:
+            print 'rowCol:', rowCol
+            print 'raDec2:', raDec2
 
         p1 = raDec.getPosition()
         p2 = raDec.getPosition()
-        print 'p1,p2', p1,p2
+        if verbose:
+            print 'p1,p2', p1,p2
         self.assertAlmostEqual(p1[0], p2[0])
         self.assertAlmostEqual(p1[1], p2[1])
 
@@ -205,7 +210,61 @@ class WCSTestCaseSDSS(unittest.TestCase):
         a = self.wcs.getLinearTransform()
         l = self.wcs.getCDMatrix()
         #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
-        print a, l
+        #print a, l
+
+    def testXY0(self):
+        """Test that XY0 values are handled correctly when building an exposure and also when
+        reading the WCS header directly.  #2205"""
+        bbox = afwGeom.Box2I(afwGeom.Point2I(1000, 1000), afwGeom.Extent2I(10, 10))
+
+        def makeWcs(crPixPos, crValDeg, projection):
+            ps = dafBase.PropertySet()
+            ctypes = [("%-5s%3s" % (("RA", "DEC")[i], projection)).replace(" ", "-") for i in range(2)]
+            for i in range(2):
+                ip1 = i + 1
+                ps.add("CTYPE%1d" % (ip1,), ctypes[i])
+                ps.add("CRPIX%1d" % (ip1,), crPixPos[i])
+                ps.add("CRVAL%1d" % (ip1,), crValDeg[i])
+            ps.add("RADECSYS", "ICRS")
+            ps.add("EQUINOX", 2000)
+            ps.add("CD1_1", -0.001)
+            ps.add("CD2_1", 0.0)
+            ps.add("CD1_2", 0.0)
+            ps.add("CD2_2", 0.001)
+            return afwImage.makeWcs(ps)
+
+        wcs = makeWcs(
+            crPixPos = (100.0, 100.0),
+            crValDeg = (10.0, 35.0),
+            projection = "STG", # also fails for TAN
+        )
+
+        exposure = afwImage.ExposureF(bbox, wcs)
+        pixPos = afwGeom.Box2D(bbox).getMax()
+        if verbose:
+            print "XY0=", exposure.getXY0()
+            print "pixPos=", pixPos
+        skyPos = wcs.pixelToSky(pixPos)
+
+        tmpFile = "temp.fits"
+        try:
+            exposure.writeFits(tmpFile)
+            for useExposure in (False, True):
+                if useExposure:
+                    unpExp = afwImage.ExposureF(tmpFile)
+                    unpWcs = unpExp.getWcs()
+                else:
+                    md = afwImage.readMetadata("temp.fits")
+                    unpWcs = afwImage.makeWcs(md, False)
+                unpPixPos = unpWcs.skyToPixel(skyPos)
+
+                if verbose:
+                    print "useExposure=%s; unp pixPos=%s" % (useExposure, unpPixPos)
+                    
+                for i in range(2):
+                    self.assertAlmostEqual(unpPixPos[i], 1009.5)
+        finally:
+            os.remove(tmpFile)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
