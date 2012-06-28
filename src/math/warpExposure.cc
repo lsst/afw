@@ -56,6 +56,7 @@
 #include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/math/detail/CudaLanczosWrapper.h"
 #include "lsst/afw/math/detail/SrcPosFunctor.h"
+#include "lsst/afw/math/detail/computeOneWarpedPixel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
@@ -294,16 +295,13 @@ namespace {
                 }
             }
         }
+        
+        afwMath::detail::WarpingKernelInfo kernelInfo(
+            control.getWarpingKernel(), control.getMaskWarpingKernel());
 
         int numGoodPixels = 0;
 
         typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
-
-        // Compute borders; use to prevent applying kernel outside of srcImage
-        int const kernelWidth = warpingKernelPtr->getWidth();
-        int const kernelHeight = warpingKernelPtr->getHeight();
-        int const kernelCtrX = warpingKernelPtr->getCtrX();
-        int const kernelCtrY = warpingKernelPtr->getCtrY();
 
         // Get the source MaskedImage and a pixel accessor to it.
         int const srcWidth = srcImage.getWidth();
@@ -314,11 +312,6 @@ namespace {
         int const destHeight = destImage.getHeight();
 
         pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
-
-        typename DestImageT::SinglePixel edgePixel = padValue;
-
-        std::vector<double> kernelXList(kernelWidth);
-        std::vector<double> kernelYList(kernelHeight);
 
         afwGeom::Box2I srcGoodBBox = warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
 
@@ -429,41 +422,10 @@ namespace {
 
                             srcPosView[col] = srcPos;
 
-                            // Compute associated source pixel index as integer and nonnegative fractional parts;
-                            // the latter is used to compute the remapping kernel.
-                            std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
-                            std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
-                            if (srcIndFracX.second < 0) {
-                                ++srcIndFracX.second;
-                                --srcIndFracX.first;
-                            }
-                            if (srcIndFracY.second < 0) {
-                                ++srcIndFracY.second;
-                                --srcIndFracY.first;
-                            }
-
-                            if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
-                                 ++numGoodPixels;
-
-                                // Offset source pixel index from kernel center to kernel corner (0, 0)
-                                // so we can convolveAtAPoint the pixels that overlap between source and kernel
-                                srcIndFracX.first -= kernelCtrX;
-                                srcIndFracY.first -= kernelCtrY;
-
-                                // Compute warped pixel
-                                std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
-                                warpingKernelPtr->setKernelParameters(srcFracInd);
-                                double kSum = warpingKernelPtr->computeVectors(kernelXList, kernelYList, false);
-
-                                typename SrcImageT::const_xy_locator srcLoc =
-                                    srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
-
-                                *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(
-                                    srcLoc, kernelXList, kernelYList);
-                                *destXIter *= relativeArea/kSum;
-                            } else {
-                               // Edge pixel pixel
-                                *destXIter = edgePixel;
+                            if (afwMath::detail::computeOneWarpedPixel<DestImageT, SrcImageT>(
+                                destXIter, kernelInfo, srcImage, srcGoodBBox, srcPos, relativeArea, padValue,
+                                typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
+                                ++numGoodPixels;
                             }
                         } // for col
                     }   // for col band
@@ -490,42 +452,11 @@ namespace {
                     afwGeom::Point2D srcPos = computeSrcPos(col, row);
                     double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
                     srcPosView[col] = srcPos;
-
-                    // Compute associated source pixel index as integer and nonnegative fractional parts;
-                    // the latter is used to compute the remapping kernel.
-                    std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], afwImage::X);
-                    std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], afwImage::Y);
-                    if (srcIndFracX.second < 0) {
-                        ++srcIndFracX.second;
-                        --srcIndFracX.first;
-                    }
-                    if (srcIndFracY.second < 0) {
-                        ++srcIndFracY.second;
-                        --srcIndFracY.first;
-                    }
-
-                    if (srcGoodBBox.contains(afwGeom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
-                         ++numGoodPixels;
-
-                        // Offset source pixel index from kernel center to kernel corner (0, 0)
-                        // so we can convolveAtAPoint the pixels that overlap between source and kernel
-                        srcIndFracX.first -= kernelCtrX;
-                        srcIndFracY.first -= kernelCtrY;
-
-                        // Compute warped pixel
-                        std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
-                        warpingKernelPtr->setKernelParameters(srcFracInd);
-                        double kSum = warpingKernelPtr->computeVectors(kernelXList, kernelYList, false);
-
-                        typename SrcImageT::const_xy_locator srcLoc =
-                            srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
-
-                        *destXIter = afwMath::convolveAtAPoint<DestImageT,SrcImageT>(
-                            srcLoc, kernelXList, kernelYList);
-                        *destXIter *= relativeArea/kSum;
-                    } else {
-                       // Edge pixel pixel
-                        *destXIter = edgePixel;
+                    
+                    if (afwMath::detail::computeOneWarpedPixel<DestImageT, SrcImageT>(
+                        destXIter, kernelInfo, srcImage, srcGoodBBox, srcPos, relativeArea, padValue,
+                        typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
+                        ++numGoodPixels;
                     }
                 }   // for col
             }   // for row
