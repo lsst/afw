@@ -388,3 +388,10 @@ void afwMath::SeparableKernel::computeCache(
     func = getKernelRowFunction();
     _computeCache(cacheSize, _kernelX, func, &_kernelRowCache);
 }
+
+/**
+ * @brief Get the current cache size (0 if none)
+ */
+int afwMath::SeparableKernel::getCacheSize() const {
+    return _kernelColCache.size();
+};

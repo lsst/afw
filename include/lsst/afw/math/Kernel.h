@@ -358,8 +358,20 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix="") const;
 
-        // Compute a cache of Kernel values if so desired
-        virtual void computeCache(int const) {}
+        /**
+         * @brief Compute a cache of Kernel values, if desired
+         *
+         * @warning: few kernel classes actually support this,
+         * in which case this is a no-op and getCacheSize always returns 0.
+         */
+        virtual void computeCache(
+            int const   ///< desired cache size
+        ) {}
+        
+        /**
+         * @brief Get the current size of the kernel cache (0 if none or if caches not supported)
+         */
+        virtual int getCacheSize() const { return 0; };
         
 #if 0                                   // fails to compile with icc; is it actually used?
         virtual void toFile(std::string fileName) const;
@@ -731,6 +743,8 @@ class FourierLocalKernel;
         virtual std::string toString(std::string const& prefix="") const;
 
         virtual void computeCache(int const cacheSize);
+        
+        virtual int getCacheSize() const;
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;

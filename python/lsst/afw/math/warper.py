@@ -63,6 +63,18 @@ class WarperConfig(pexConfig.Config):
             "lanczos5": "Lanczos kernel of order 5",
         }
     )
+    maskWarpingKernelName = pexConfig.ChoiceField(
+        dtype = str,
+        doc = "Warping kernel for mask (use warpingKernelName if '')",
+        default = "",
+        allowed = {
+            "": "use the regular warping kernel for the mask plane, as well as the image and variance planes",
+            "bilinear": "bilinear interpolation",
+            "lanczos3": "Lanczos kernel of order 3",
+            "lanczos4": "Lanczos kernel of order 4",
+            "lanczos5": "Lanczos kernel of order 5",
+        }
+    )
     interpLength = pexConfig.Field(
         dtype = int,
         doc = "interpLength argument to lsst.afw.math.warpExposure",
@@ -78,17 +90,19 @@ class Warper(object):
     """Warp images
     """
     ConfigClass = WarperConfig
-    def __init__(self, warpingKernelName, interpLength=_DefaultInterpLength, cacheSize=_DefaultCacheSize):
+    def __init__(self, warpingKernelName, interpLength=_DefaultInterpLength, cacheSize=_DefaultCacheSize,
+        maskWarpingKernelName=""):
         """Create a Warper
         
         Inputs:
         - warpingKernelName: argument to lsst.afw.math.makeWarpingKernel
         - interpLength: interpLength argument to lsst.afw.warpExposure
         - cacheSize: size of computeCache
+        - maskWarpingKernelName: name of mask warping kernel (if "" then use warpingKernelName);
+            an argument to lsst.afw.math.makeWarpingKernel
         """
-        self._warpingKernel = mathLib.makeWarpingKernel(warpingKernelName)
-        self._warpingKernel.computeCache(cacheSize)
-        self._interpLength = int(interpLength)
+        self._warpingControl = mathLib.WarpingControl(
+            warpingKernelName, maskWarpingKernelName, cacheSize, interpLength)
 
     @classmethod
     def fromConfig(cls, config):
@@ -100,11 +114,12 @@ class Warper(object):
             warpingKernelName = config.warpingKernelName,
             interpLength = config.interpLength,
             cacheSize = config.cacheSize,
+            maskWarpingKernelName = config.maskWarpingKernelName,
         )
     
     def getWarpingKernel(self):
         """Get the warping kernel"""
-        return self._warpingKernel
+        return self._warpingControl.getWarpingKernel()
 
     def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
         """Warp an exposure
@@ -137,7 +152,7 @@ class Warper(object):
             destBBox = destBBox,
         )
         destExposure = srcExposure.Factory(destBBox, destWcs)
-        mathLib.warpExposure(destExposure, srcExposure, self._warpingKernel, self._interpLength)
+        mathLib.warpExposure(destExposure, srcExposure, self._warpingControl)
         return destExposure
 
     def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
@@ -169,7 +184,7 @@ class Warper(object):
             destBBox = destBBox,
         )
         destImage = srcImage.Factory(destBBox)
-        mathLib.warpImage(destImage, destWcs, srcImage, srcWcs, self._warpingKernel, self._interpLength)
+        mathLib.warpImage(destImage, destWcs, srcImage, srcWcs, self._warpingControl)
         return destImage
 
     def _computeDestBBox(self, destWcs, srcImage, srcWcs, border, maxBBox, destBBox):
