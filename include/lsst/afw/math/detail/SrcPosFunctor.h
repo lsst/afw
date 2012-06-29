@@ -95,6 +95,7 @@ namespace detail {
         AffineTransformSrcPosFunctor(
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
             lsst::afw::geom::AffineTransform const &affineTransform
+                ///< affine transformation mapping source position to destination position
         ) :
             SrcPosFunctor(),
             _destXY0(destXY0),
