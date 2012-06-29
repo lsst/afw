@@ -247,8 +247,8 @@ TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
     
 }
 
-bool TanWcs::_equals(Wcs const & rhs) const {
-    if (!Wcs::_equals(rhs)) {
+bool TanWcs::_isSubset(Wcs const & rhs) const {
+    if (!Wcs::_isSubset(rhs)) {
         return false;
     }
     // We only care about the derived-class part if we have a distortion; this could mean 

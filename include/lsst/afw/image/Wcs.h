@@ -281,8 +281,8 @@ private:
 
 protected:
 
-    // Protected virtual implementation for operator==.
-    virtual bool _equals(Wcs const & other) const;
+    // Protected virtual implementation for operator== (must be true in both directions for equality).
+    virtual bool _isSubset(Wcs const & other) const;
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.

@@ -121,7 +121,7 @@ namespace image {
 
     private:
 
-        virtual bool _equals(Wcs const &) const;
+        virtual bool _isSubset(Wcs const &) const;
 
         //If you want to create a TanWcs object from a fits header, use makeWcs()
         TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
