@@ -174,7 +174,7 @@ template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
     DestExposureT &destExposure,       
     SrcExposureT const &srcExposure,  
-    WarpingControl const &control, 
+    afwMath::WarpingControl const &control, 
     typename DestExposureT::MaskedImageT::SinglePixel padValue
     )
 {
@@ -196,7 +196,7 @@ template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
     DestExposureT &destExposure,       
     SrcExposureT const &srcExposure,   
-    SeparableKernel &warpingKernel,    
+    afwMath::SeparableKernel &warpingKernel,    
     int const interpLength,             
     typename DestExposureT::MaskedImageT::SinglePixel padValue,
     lsst::afw::gpu::DevicePreference devPref 
@@ -470,7 +470,7 @@ int afwMath::warpImage(
     lsst::afw::image::Wcs const &destWcs,
     SrcImageT const &srcImage,
     lsst::afw::image::Wcs const &srcWcs,
-    WarpingControl const &control,
+    afwMath::WarpingControl const &control,
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
@@ -484,14 +484,14 @@ int afwMath::warpImage(
     afwImage::Wcs const &destWcs,
     SrcImageT const &srcImage,
     afwImage::Wcs const &srcWcs,
-    SeparableKernel &warpingKernel,
+    afwMath::SeparableKernel &warpingKernel,
     int const interpLength,
     typename DestImageT::SinglePixel padValue,
     lsst::afw::gpu::DevicePreference devPref
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
     afwMath::detail::WcsSrcPosFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
-    WarpingControl control(warpingKernel, interpLength, devPref);
+    afwMath::WarpingControl control(warpingKernel, interpLength, devPref);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 
@@ -501,7 +501,7 @@ int afwMath::warpImage(
     DestImageT &destImage,
     SrcImageT const &srcImage,
     afwGeom::AffineTransform const &affineTransform,
-    WarpingControl const &control,
+    afwMath::WarpingControl const &control,
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
@@ -514,7 +514,7 @@ template<typename DestImageT, typename SrcImageT>
 int afwMath::warpImage(
     DestImageT &destImage,
     SrcImageT const &srcImage,
-    SeparableKernel &warpingKernel,
+    afwMath::SeparableKernel &warpingKernel,
     afwGeom::AffineTransform const &affineTransform,
     int const interpLength,
     typename DestImageT::SinglePixel padValue,
@@ -523,7 +523,7 @@ int afwMath::warpImage(
 {
     afwGeom::Point2D const destXY0(destImage.getXY0());
     afwMath::detail::AffineTransformSrcPosFunctor const computeSrcPos(destXY0, affineTransform);
-    WarpingControl control(warpingKernel, interpLength, devPref);
+    afwMath::WarpingControl control(warpingKernel, interpLength, devPref);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 
@@ -532,15 +532,11 @@ template<typename DestImageT, typename SrcImageT>
 int afwMath::warpCenteredImage(
     DestImageT &destImage,
     SrcImageT const &srcImage,
-    SeparableKernel &warpingKernel,
     afwGeom::LinearTransform const &linearTransform,
     afwGeom::Point2D const &centerPixel,
-    int const interpLength,
-    typename DestImageT::SinglePixel padValue,
-    lsst::afw::gpu::DevicePreference devPref
-                      )
-{
-
+    afwMath::WarpingControl const &control,
+    typename DestImageT::SinglePixel padValue
+) {
     // force src and dest to be the same size and xy0
     if (
         (destImage.getWidth() != srcImage.getWidth()) ||
@@ -567,19 +563,35 @@ int afwMath::warpCenteredImage(
 #if 0
     static float t = 0.0;
     float t_before = 1.0*clock()/CLOCKS_PER_SEC;
-    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran, interpLength, padValue);
+    int n = warpImage(destImage, srcImageCopy, affTran, control, padValue);
     float t_after = 1.0*clock()/CLOCKS_PER_SEC;
     float dt = t_after - t_before;
     t += dt;
     std::cout <<srcImage.getWidth()<<"x"<<srcImage.getHeight()<<": "<< dt <<" "<< t <<std::endl;
 #else
-    int n = warpImage(destImage, srcImageCopy, warpingKernel, affTran, interpLength, padValue, devPref);
+    int n = warpImage(destImage, srcImageCopy, affTran, control, padValue);
 #endif
 
     // fix the origin and we're done.
     destImage.setXY0(srcImage.getXY0());
 
     return n;
+}
+
+
+template<typename DestImageT, typename SrcImageT>
+int afwMath::warpCenteredImage(
+    DestImageT &destImage,
+    SrcImageT const &srcImage,
+    afwMath::SeparableKernel &warpingKernel,
+    afwGeom::LinearTransform const &linearTransform,
+    afwGeom::Point2D const &centerPixel,
+    int const interpLength,
+    typename DestImageT::SinglePixel padValue,
+    lsst::afw::gpu::DevicePreference devPref
+) {
+    afwMath::WarpingControl control(warpingKernel, interpLength, devPref);
+    return warpCenteredImage(destImage, srcImage, linearTransform, centerPixel, control, padValue);
 }
 
 
@@ -597,7 +609,21 @@ int afwMath::warpCenteredImage(
     template int afwMath::warpCenteredImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        SeparableKernel &warpingKernel, \
+        afwGeom::LinearTransform const &linearTransform, \
+        afwGeom::Point2D const &centerPixel, \
+        afwMath::WarpingControl const &control, \
+        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
+    template int afwMath::warpCenteredImage( \
+        MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
+        MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        afwGeom::LinearTransform const &linearTransform, \
+        afwGeom::Point2D const &centerPixel, \
+        afwMath::WarpingControl const &control, \
+        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
+    template int afwMath::warpCenteredImage( \
+        IMAGE(DESTIMAGEPIXELT) &destImage, \
+        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        afwMath::SeparableKernel &warpingKernel, \
         afwGeom::LinearTransform const &linearTransform, \
         afwGeom::Point2D const &centerPixel, \
         int const interpLength, \
@@ -606,7 +632,7 @@ int afwMath::warpCenteredImage(
     template int afwMath::warpCenteredImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        SeparableKernel &warpingKernel, \
+        afwMath::SeparableKernel &warpingKernel, \
         afwGeom::LinearTransform const &linearTransform, \
         afwGeom::Point2D const &centerPixel, \
         int const interpLength, \
@@ -616,18 +642,18 @@ int afwMath::warpCenteredImage(
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwGeom::AffineTransform const &affineTransform, \
-        WarpingControl const &warpingControl, \
+        afwMath::WarpingControl const &control, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwGeom::AffineTransform const &affineTransform, \
-        WarpingControl const &warpingControl, \
+        afwMath::WarpingControl const &control, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        SeparableKernel &warpingKernel, \
+        afwMath::SeparableKernel &warpingKernel, \
         afwGeom::AffineTransform const &affineTransform, \
         int const interpLength, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
@@ -635,7 +661,7 @@ int afwMath::warpCenteredImage(
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        SeparableKernel &warpingKernel, \
+        afwMath::SeparableKernel &warpingKernel, \
         afwGeom::AffineTransform const &affineTransform, \
         int const interpLength, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
@@ -645,21 +671,21 @@ int afwMath::warpCenteredImage(
         afwImage::Wcs const &destWcs, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        WarpingControl const &warpingControl, \
+        afwMath::WarpingControl const &control, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        WarpingControl const &warpingControl, \
+        afwMath::WarpingControl const &control, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        SeparableKernel &warpingKernel, \
+        afwMath::SeparableKernel &warpingKernel, \
         int const interpLength, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         lsst::afw::gpu::DevicePreference devPref); NL \
@@ -668,19 +694,19 @@ int afwMath::warpCenteredImage(
         afwImage::Wcs const &destWcs, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
-        SeparableKernel &warpingKernel, \
+        afwMath::SeparableKernel &warpingKernel, \
         int const interpLength, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         lsst::afw::gpu::DevicePreference devPref); NL \
     template int afwMath::warpExposure( \
         EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
-        WarpingControl const &control,\
+        afwMath::WarpingControl const &control,\
         EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue); NL \
     template int afwMath::warpExposure( \
         EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
-        SeparableKernel &warpingKernel, \
+        afwMath::SeparableKernel &warpingKernel, \
         int const interpLength, \
         EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue, \
         lsst::afw::gpu::DevicePreference devPref);

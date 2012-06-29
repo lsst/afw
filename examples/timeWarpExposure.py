@@ -54,7 +54,7 @@ if not dataDir:
 
 InputExposurePath = os.path.join(dataDir, "ImSim/calexp/v85408556-fr/R23/S11.fits")
 
-def timeWarp(destExposure, srcExposure, warpingKernel, interpLength):
+def timeWarp(destExposure, srcExposure, warpingControl):
     """Time warpExposure
 
     int warpExposure(
@@ -71,7 +71,7 @@ def timeWarp(destExposure, srcExposure, warpingKernel, interpLength):
     """
     startTime = time.time();
     for nIter in range(1, MaxIter + 1):
-        goodPix = afwMath.warpExposure(destExposure, srcExposure, warpingKernel, interpLength)
+        goodPix = afwMath.warpExposure(destExposure, srcExposure, warpingControl)
         endTime = time.time()
         if endTime - startTime > MaxTime:
             break
@@ -141,6 +141,9 @@ def run():
     destExposure = afwImage.ExposureF(destDim)
     destCtrInd = [int(d / 2) for d in destDim]
     
+    maskKernelName = ""
+    cacheSize = 0
+    
     print "Warping", InputExposurePath
     print "Source (sub)image size:", srcDim
     print "Destination image size:", destDim
@@ -159,6 +162,12 @@ def run():
                     (0.0, "lanczos3"),
                     (45.0, "lanczos3"),
                 ):
+                    warpingControl = afwMath.WarpingContro(
+                        kernelName,
+                        maskKernelName,
+                        cacheSize,
+                        interpLength,
+                    )
                     destWcs = makeWcs(
                         projName = "TAN",
                         destCtrInd = destCtrInd,
@@ -169,8 +178,7 @@ def run():
                         srcCtrInd = srcCtrInd,
                     )
                     destExposure.setWcs(destWcs)
-                    warpingKernel = afwMath.makeWarpingKernel(kernelName)
-                    dTime, nIter, goodPix = timeWarp(destExposure, srcExposure, warpingKernel, interpLength)
+                    dTime, nIter, goodPix = timeWarp(destExposure, srcExposure, warpingControl)
                     print "%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (
                         testNum, interpLength, scaleFac, skyOffsetArcSec[0], skyOffsetArcSec[1],
                         rotAng, kernelName, goodPix, dTime/float(nIter))

@@ -496,7 +496,21 @@ namespace math {
             ///< Specifies whether to use CPU or GPU device
      );
 
+    template<typename DestImageT, typename SrcImageT>
+    int warpCenteredImage(
+        DestImageT &destImage,              ///< remapped %image
+        SrcImageT const &srcImage,          ///< source %image
+        lsst::afw::geom::LinearTransform const &linearTransform, ///< linear transformation to apply
+        lsst::afw::geom::Point2D const &centerPixel,   ///< pixel corresponding to location of linearTransform
+        WarpingControl const &control,      ///< control parameters
+        typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
+            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+            ///< use this value for undefined (edge) pixels
+    );
 
+    /**
+     * @brief A variant of warpCenteredImage that supports the old, deprecated interface
+     */
     template<typename DestImageT, typename SrcImageT>
     int warpCenteredImage(
         DestImageT &destImage,              ///< remapped %image
