@@ -220,8 +220,14 @@ namespace math {
         /**
          * \brief Construct a WarpingControl object
          *
+         * @warning: the GPU code does not yet support warping the mask with
+         * a separate kernel. Thus if maskWarpingKernelName is provided
+         * the GPU is disabled (or an exception is raised if the GPU is required)
+         *
          * @throw pex_exceptions InvalidParameterException if the warping kernel
          * is smaller than the mask warping kernel.
+         * @throw pex_exceptions InvalidParameterException if GPU is required
+         * and maskWarpingKernelName supplied.
          */
         explicit WarpingControl(
             std::string const &warpingKernelName,   ///< name of warping kernel;
@@ -263,6 +269,13 @@ namespace math {
                 if (!kernelBBox.contains(maskKernelBBox)) {
                     throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                         "warping kernel is smaller than mask warping kernel");
+                }
+                
+                if (_devicePreference == lsst::afw::gpu::USE_GPU) {
+                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                        "devicePreference == USE_GPU and maskWarpingKernel specified; not yet supported");
+                } else {
+                    _devicePreference = lsst::afw::gpu::USE_CPU;
                 }
             }
         }

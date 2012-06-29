@@ -267,7 +267,7 @@ namespace {
             boost::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(warpingKernelPtr);
 
         if (lsst::afw::gpu::isGpuEnabled()) {
-            if(NULL == lanczosKernelPtr) {
+            if(!lanczosKernelPtr) {
                 if (devPref == lsst::afw::gpu::USE_GPU) {
                     throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can process only Lanczos kernels");
                 }

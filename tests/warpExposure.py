@@ -362,9 +362,12 @@ class WarpExposureTestCase(unittest.TestCase):
             rtol=rtol, atol=atol)
         if errStr:
             if SAVE_FAILED_FITS_FILES:
-                computedExposure.writeFits(afwWarpedImagePath)
-                print "Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,)
-            self.fail("afw and swarp %s-warped %s (ignoring bad pixels)" % (kernelName, errStr))
+                computedExposure.writeFits(computedExposurePath)
+                expectedExposure.writeFits(expectedExposurePath)
+                print "Saved failed afw-warped exposures as: %s and %s" % \
+                    (computedExposurePath, expectedExposure)
+            self.fail("Separate mask warping failed; warpingKernel=%s; maskWarpingKernel=%s; error=%s" % \
+                (kernelName, maskKernelName, errStr))
 
     def compareToSwarp(self, kernelName, 
         useWarpExposure=True, useSubregion=False, useDeepCopy=False,
