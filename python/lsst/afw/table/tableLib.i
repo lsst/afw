@@ -606,6 +606,31 @@ namespace lsst { namespace afw { namespace table {
      };
 }}}
 
+%define %enableSlotKwArgs(SLOT)
+%extend lsst::afw::table::SourceTable {
+    %feature("shadow") define ## SLOT %{
+    def define ## SLOT(self, meas, err=None, flag=None):
+        if err is None:
+            if flag is None:
+                $action(self, meas)
+            else:
+                $action(self, meas, flag)
+        else:
+            if flag is None:
+                $action(self, meas, err)
+            else:
+                $action(self, meas, err, flag)
+    %}
+}
+%enddef
+
+%enableSlotKwArgs(PsfFlux)
+%enableSlotKwArgs(ApFlux)
+%enableSlotKwArgs(InstFlux)
+%enableSlotKwArgs(ModelFlux)
+%enableSlotKwArgs(Centroid)
+%enableSlotKwArgs(Shape)
+
 %include "lsst/afw/table/Source.h"
 
 %addCastMethod(lsst::afw::table::SourceTable, lsst::afw::table::BaseTable)
