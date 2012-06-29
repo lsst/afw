@@ -68,7 +68,7 @@ public:
     Span(int y,                         //!< Row that Span's in
          int x0,                        //!< Starting column (inclusive)
          int x1)                        //!< Ending column (inclusive)
-        : _y(y), _x0(x0), _x1(x1) {}    
+        : _y(y), _x0(x0), _x1(x1) {}
     ~Span() {}
 
     int getX0() const { return _x0; }         ///< Return the starting x-value
@@ -76,19 +76,19 @@ public:
     int getY()  const { return _y; }          ///< Return the y-value
     int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
 
-	bool contains(int x) { return (x >= _x0) && (x <= _x1); }
-	bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
+    bool contains(int x) { return (x >= _x0) && (x <= _x1); }
+    bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
 
-    std::string toString() const;    
+    std::string toString() const;
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
 
-	/* Required to make Span "LessThanComparable" so they can be used
-	 * in sorting, binary search, etc.
-	 * http://www.sgi.com/tech/stl/LessThanComparable.html
-	 */
-	bool operator<(const Span& b) const;
-	
+    /* Required to make Span "LessThanComparable" so they can be used
+     * in sorting, binary search, etc.
+     * http://www.sgi.com/tech/stl/LessThanComparable.html
+     */
+    bool operator<(const Span& b) const;
+
     friend class Footprint;
 private:
     Span() {}
@@ -132,12 +132,14 @@ public:
     Footprint(Footprint const & other);    
     virtual ~Footprint();
 
+    virtual bool isHeavy() const { return false; }
+
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
     const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
     PeakList & getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
-    int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint
+    int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
 
     const Span& addSpan(const int y, const int x0, const int x1);
@@ -148,7 +150,7 @@ public:
     void shift(geom::ExtentI d) {shift(d.getX(), d.getY());}
 
     /// Return the Footprint's bounding box
-    geom::Box2I getBBox() const { return _bbox; }     
+    geom::Box2I getBBox() const { return _bbox; }
     /// Return the corners of the MaskedImage the footprints live in
     geom::Box2I const & getRegion() const { return _region; }
 
@@ -158,17 +160,17 @@ public:
     void clipTo(geom::Box2I const & bbox);
 
     bool contains(geom::Point2I const& pix) const;
-    
+
     void normalize();
     bool isNormalized() const {return _normalized;}
 
     template<typename PixelT>
-    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
                          boost::uint64_t const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
     template<typename PixelT>
-    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage, 
+    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
                          boost::uint64_t const id,
                          bool const overwriteId, long const idMask,
                          typename std::set<boost::uint64_t> *oldIds,
@@ -179,7 +181,7 @@ public:
 
     template <typename MaskPixelT>
     void intersectMask(
-        image::Mask<MaskPixelT> const & mask, 
+        image::Mask<MaskPixelT> const & mask,
         MaskPixelT bitmask=~0x0
     );
 
@@ -196,13 +198,13 @@ private:
 
     static int id;
     mutable int _fid;                    //!< unique ID
-    int _area;                           //!< number of pixels in this Footprint
+    int _area;                           //!< number of pixels in this Footprint (not the area of the bbox)
      
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
     PeakList _peaks;                     //!< the Peaks lying in this footprint
     mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
-    bool _normalized;                    //!< Are the spans sorted? 
+    bool _normalized;                    //!< Are the spans sorted?
 };
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
@@ -261,14 +263,37 @@ template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
           typename VariancePixelT=lsst::afw::image::VariancePixel>
 class HeavyFootprint : public Footprint {
 public:
+
     explicit HeavyFootprint(
         Footprint const& foot,
         lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
         HeavyFootprintCtrl const* ctrl=NULL
                            );
 
+    explicit HeavyFootprint(Footprint const& foot,
+                            HeavyFootprintCtrl const* ctrl=NULL);
+
+    virtual bool isHeavy() const { return true; }
+
     void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
+
+    ndarray::Array<ImagePixelT,1,1>     getImageArray() { return _image; }
+    ndarray::Array<MaskPixelT,1,1>      getMaskArray() { return _mask; }
+    ndarray::Array<VariancePixelT,1,1>  getVarianceArray() { return _variance; }
+
+    ndarray::Array<ImagePixelT const,1,1>     getImageArray() const { return _image; }
+    ndarray::Array<MaskPixelT const,1,1>      getMaskArray() const { return _mask; }
+    ndarray::Array<VariancePixelT const,1,1>  getVarianceArray() const { return _variance; }
+
+    /* Returns the OR of all the mask pixels held in this HeavyFootprint. */
+    MaskPixelT getMaskBitsSet() const {
+		MaskPixelT maskbits = 0;
+        for (typename ndarray::Array<MaskPixelT,1,1>::Iterator i = _mask.begin(); i != _mask.end(); ++i) {
+			maskbits |= *i;
+		}
+		return maskbits;
+	}
 
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;
@@ -281,10 +306,10 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
     Footprint const& foot,
     lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& img,
     HeavyFootprintCtrl const* ctrl=NULL
-                                                                          )    
+                                                                          )
 {
     return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img, ctrl);
-}    
+}
 
 }}}
 

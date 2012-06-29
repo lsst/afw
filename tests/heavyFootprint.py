@@ -98,6 +98,24 @@ class HeavyFootprintTestCase(unittest.TestCase):
             for x in range(s.getX0(), s.getX1() + 1):
                 self.assertEqual(imi.get(x, y), omi.get(x, y))
 
+        # Check that we can call getImageArray(), etc
+        arr = hfoot.getImageArray()
+        print arr
+        # Check that it's iterable
+        for x in arr:
+            pass
+        arr = hfoot.getMaskArray()
+        print arr
+        for x in arr:
+            pass
+        arr = hfoot.getVarianceArray()
+        print arr
+        # Check that it's iterable
+        for x in arr:
+            pass
+        
+
+
     def testSetFootprint(self):
         """Check that we can create a HeavyFootprint and set the pixels under it"""
 

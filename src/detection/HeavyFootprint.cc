@@ -115,6 +115,22 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 }
 
 /**
+ * Create a HeavyFootprint from a regular Footprint, allocating space
+ * to hold foot.getArea() pixels, but not initializing them.  This is
+ * used when unpersisting a HeavyFootprint.
+ */
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
+    Footprint const& foot,              ///< The Footprint defining the pixels to set
+	HeavyFootprintCtrl const* ctrl)
+	: Footprint(foot),
+	  _image   (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+	  _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+	  _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
+{
+}
+
+/**
  * Replace all the pixels in the image with the values in the HeavyFootprint
  */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -137,6 +153,7 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 {
     expandArray(*this, _image,    image.getArray(),    image.getXY0());
 }
+
 
 /************************************************************************************************************/
 //
