@@ -104,9 +104,9 @@ def imagesDiffer(imageArr1, imageArr2, skipMaskArr=None, rtol=1.0e-05, atol=1e-0
         errArr = numpy.abs(valFilledArr1 - valFilledArr2)
         maxErr = errArr.max()
         maxPosInd = numpy.where(errArr==maxErr)
-        maxPosTuple = (maxPosInd[0][0], maxPosInd[1][0])
+        maxPosTuple = (maxPosInd[1][0], maxPosInd[0][0])
         errStr = "maxDiff=%s at position %s; value=%s vs. %s" % \
-            (maxErr,maxPosTuple, valFilledArr1[maxPosInd][0], valFilledArr2[maxPosInd][0])
+            (maxErr, maxPosTuple, valFilledArr1[maxPosInd][0], valFilledArr2[maxPosInd][0])
         retStrs.insert(0, errStr)
     return "; ".join(retStrs)
 
@@ -134,9 +134,9 @@ def masksDiffer(maskArr1, maskArr2, skipMaskArr=None):
         errArr = numpy.abs(filledArr1 - filledArr2)
         maxErr = errArr.max()
         maxPosInd = numpy.where(errArr==maxErr)
-        maxPosTuple = (maxPosInd[0][0], maxPosInd[1][0])
+        maxPosTuple = (maxPosInd[1][0], maxPosInd[0][0])
         retStr = "maxDiff=%s at position %s; value=%s vs. %s" % \
-            (maxErr,maxPosTuple, filledArr1[maxPosInd][0], filledArr2[maxPosInd][0])
+            (maxErr, maxPosTuple, filledArr1[maxPosInd][0], filledArr2[maxPosInd][0])
         retStr = "masks differ"
     return retStr
 

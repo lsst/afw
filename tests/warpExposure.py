@@ -25,7 +25,6 @@
 """Test warpExposure
 """
 import os
-
 import unittest
 
 import numpy
@@ -39,7 +38,7 @@ import lsst.afw.image.testUtils as imageTestUtils
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
-
+import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
 try:
     display
@@ -89,10 +88,10 @@ class WarpExposureTestCase(unittest.TestCase):
         afwWarpedExposure = afwImage.ExposureF(
             originalExposure.getBBox(afwImage.PARENT),
             originalExposure.getWcs())
-        warpingKernel = afwMath.LanczosWarpingKernel(4)
-        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
+        warpingControl = afwMath.WarpingControl("lanczos4", "", 0, interpLength)
+        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl)
         if SAVE_FITS_FILES:
-            afwWarpedExposure.writeFits("afwWarpedExposureNull")
+            afwWarpedExposure.writeFits("afwWarpedExposureNull.fits")
         
         self.assertEquals(afwWarpedExposure.getFilter().getName(), originalFilter.getName())
         self.assertEquals(afwWarpedExposure.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
@@ -129,9 +128,8 @@ class WarpExposureTestCase(unittest.TestCase):
         afwWarpedImage = afwWarpedExposure.getMaskedImage().getImage()
         originalWcs = originalExposure.getWcs()
         afwWarpedWcs = afwWarpedExposure.getWcs()
-        warpingKernel = afwMath.LanczosWarpingKernel(4)
-        afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage,
-                          originalWcs, warpingKernel, interpLength)
+        warpingControl = afwMath.WarpingControl("lanczos4", "", 0, interpLength)
+        afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage, originalWcs, warpingControl)
         if SAVE_FITS_FILES:
             afwWarpedImage.writeFits("afwWarpedImageNull.fits")
         afwWarpedImageArr = afwWarpedImage.getArray()
@@ -149,14 +147,14 @@ class WarpExposureTestCase(unittest.TestCase):
         exposureWithWcs = afwImage.ExposureF(originalExposurePath)
         mi = exposureWithWcs.getMaskedImage()
         exposureWithoutWcs = afwImage.ExposureF(mi.getDimensions())
-        warpingKernel = afwMath.BilinearWarpingKernel()
+        warpingControl = afwMath.WarpingControl("bilinear", "", 0, interpLength)
         try:
-            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingKernel, interpLength)
+            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingControl)
             self.fail("warping from a source Exception with no Wcs should fail")
         except Exception:
             pass
         try:
-            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingKernel, interpLength)
+            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingControl)
             self.fail("warping into a destination Exception with no Wcs should fail")
         except Exception:
             pass
@@ -165,25 +163,66 @@ class WarpExposureTestCase(unittest.TestCase):
         """Cannot warp in-place
         """
         originalExposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100))
-        warpingKernel = afwMath.BilinearWarpingKernel()
+        warpingControl = afwMath.WarpingControl("bilinear", "", 0, interpLength)
         try:
-            afwMath.warpExposure(originalExposure, originalExposure, warpingKernel, interpLength)
+            afwMath.warpExposure(originalExposure, originalExposure, warpingControl)
             self.fail("warpExposure in place (dest is src) should fail")
         except Exception:
             pass
         try:
             afwMath.warpImage(originalExposure.getMaskedImage(), originalExposure.getWcs(),
-                originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingKernel, interpLength)
+                originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingControl)
             self.fail("warpImage<MaskedImage> in place (dest is src) should fail")
         except Exception:
             pass
         try:
             afwMath.warpImage(originalExposure.getImage(), originalExposure.getWcs(),
-                originalExposure.getImage(), originalExposure.getWcs(), warpingKernel, interpLength)
+                originalExposure.getImage(), originalExposure.getWcs(), warpingControl)
             self.fail("warpImage<Image> in place (dest is src) should fail")
         except Exception:
             pass
+    
+    def testWarpingControlError(self):
+        """Test error handling of WarpingControl
+        """
+        for kernelName, maskKernelName in (
+            ("bilinear", "lanczos3"),
+            ("bilinear", "lanczos4"),
+            ("lanczos3", "lanczos4"),
+        ):
+            self.assertRaises(pexExcept.LsstCppException,
+                afwMath.WarpingControl, kernelName, maskKernelName)
+        for kernelName, maskKernelName in (
+            ("bilinear", "bilinear"),
+            ("lanczos3", "lanczos3"),
+            ("lanczos3", "bilinear"),
+            ("lanczos4", "lanczos3"),
+        ):
+            # this should not raise any exception
+            afwMath.WarpingControl(kernelName, maskKernelName)
+        
+        # invalid kernel names
+        for kernelName, maskKernelName in (
+            ("badname", ""),
+            ("lanczos", ""), # no digit after lanczos
+            ("lanczos3", "badname"),
+            ("lanczos3", "lanczos"),
+        ):
+            self.assertRaises(pexExcept.LsstCppException,
+                afwMath.WarpingControl, kernelName, maskKernelName)
 
+    def testWarpMask(self):
+        """Test that warping the mask plane with a different kernel does the right thing
+        """
+        for kernelName, maskKernelName in (
+            ("bilinear", "bilinear"),
+            ("lanczos3", "lanczos3"),
+            ("lanczos3", "bilinear"),
+            ("lanczos4", "lanczos3"),
+        ):
+            afwMath.WarpingControl(kernelName, maskKernelName)
+            self.verifyMaskWarp(kernelName=kernelName, maskKernelName=maskKernelName)
+        
     def testMatchSwarpBilinearImage(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
         """
@@ -234,11 +273,103 @@ class WarpExposureTestCase(unittest.TestCase):
         """Test that warpExposure matches swarp using a nearest neighbor warping kernel
         """
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
+    
+    def verifyMaskWarp(self, kernelName, maskKernelName, interpLength=10, cacheSize=100000,
+       rtol=4e-05, atol=1e-2):
+        """Verify that using a separate mask warping kernel produces the correct results
+        
+        Inputs:
+        - kernelName: name of warping kernel in the form used by afwImage.makeKernel
+        - maskKernelName: name of mask warping kernel in the form used by afwImage.makeKernel
+        - interpLength: interpLength argument for lsst.afw.math.WarpingControl
+        - cacheSize: cacheSize argument for lsst.afw.math.WarpingControl;
+            0 disables the cache
+            10000 gives some speed improvement but less accurate results (atol must be increased)
+            100000 gives better accuracy but no speed improvement in this test
+        - rtol: relative tolerance as used by numpy.allclose
+        - atol: absolute tolerance as used by numpy.allclose
+        """
+        originalExposure = afwImage.ExposureF(originalExposurePath)
+        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
+
+        swarpedImagePath = os.path.join(dataDir, swarpedImageName)
+        swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
+        swarpedImage = swarpedDecoratedImage.getImage()
+        swarpedMetadata = swarpedDecoratedImage.getMetadata()
+        warpedWcs = afwImage.makeWcs(swarpedMetadata)
+        warpedBBox = swarpedImage.getBBox(afwImage.PARENT)
+        del swarpedImage
+        del swarpedDecoratedImage
+        computedExposurePath = "computedWarpedExposure1_%s_%s.fits" % (kernelName, maskKernelName)        
+        expectedExposurePath = "expectedWarpedExposure1_%s_%s.fits" % (kernelName, maskKernelName)        
+        
+        warpingControl = afwMath.WarpingControl(
+            kernelName,
+            maskKernelName,
+            cacheSize,
+            interpLength,
+        )
+        computedExposure = afwImage.ExposureF(warpedBBox, warpedWcs)
+        afwMath.warpExposure(computedExposure, originalExposure, warpingControl)
+        if SAVE_FITS_FILES:
+            computedExposure.writeFits(computedExposurePath)
+        if display:
+            ds9.mtv(computedExposure, frame=1, title="computedWarped")
+        computedMaskedImage = computedExposure.getMaskedImage()
+        computedMaskedImageArrSet = computedMaskedImage.getArrays()
+
+        imageVarControl = afwMath.WarpingControl(
+            kernelName,
+            "",
+            cacheSize,
+            interpLength,
+        )
+        imageVarExposure = afwImage.ExposureF(warpedBBox, warpedWcs)
+        afwMath.warpExposure(imageVarExposure, originalExposure, imageVarControl)
+
+        maskControl = afwMath.WarpingControl(
+            maskKernelName,
+            "",
+            cacheSize,
+            interpLength,
+        )
+        maskExposure = afwImage.ExposureF(warpedBBox, warpedWcs)
+        afwMath.warpExposure(maskExposure, originalExposure, maskControl)
+        expectedMaskedImage = afwImage.MaskedImageF(
+            imageVarExposure.getMaskedImage().getImage(),
+            maskExposure.getMaskedImage().getMask(),
+            imageVarExposure.getMaskedImage().getVariance(),
+        )
+        expectedExposure = afwImage.ExposureF(expectedMaskedImage, warpedWcs)
+        if SAVE_FITS_FILES:
+            expectedExposure.writeFits(expectedExposurePath)
+        if display:
+            ds9.mtv(expectedExposure, frame=1, title="expectedWarped")
+        
+        expectedMaskedImageArrSet = expectedMaskedImage.getArrays()
+
+        # skip edge bits in computed mask instead of expected,
+        # because the expected mask plane will have more good pixels at the border
+        # than the computed mask plane if the mask kernel is smaller than the regular kernel
+        computedWarpedMask = computedMaskedImage.getMask()
+        edgeBitMask = computedWarpedMask.getPlaneBitMask("EDGE")
+        if edgeBitMask == 0:
+            self.fail("warped mask has no EDGE bit")
+        computedEdgeMaskArr = computedMaskedImageArrSet[1] & edgeBitMask
+
+        errStr = imageTestUtils.maskedImagesDiffer(computedMaskedImageArrSet, expectedMaskedImageArrSet,
+            doImage=True, doMask=True, doVariance=True, skipMaskArr=computedEdgeMaskArr,
+            rtol=rtol, atol=atol)
+        if errStr:
+            if SAVE_FAILED_FITS_FILES:
+                computedExposure.writeFits(afwWarpedImagePath)
+                print "Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,)
+            self.fail("afw and swarp %s-warped %s (ignoring bad pixels)" % (kernelName, errStr))
 
     def compareToSwarp(self, kernelName, 
-                       useWarpExposure=True, useSubregion=False, useDeepCopy=False,
-                       interpLength=10, cacheSize=100000,
-                       rtol=4e-05, atol=1e-2):
+        useWarpExposure=True, useSubregion=False, useDeepCopy=False,
+        interpLength=10, cacheSize=100000,
+        rtol=4e-05, atol=1e-2):
         """Compare warpExposure to swarp for given warping kernel.
         
         Note that swarp only warps the image plane, so only test that plane.
@@ -251,17 +382,20 @@ class WarpExposureTestCase(unittest.TestCase):
             test exposure was extracted) is read and the correct subregion extracted
         - useDeepCopy: if True then the copy of the subimage is a deep copy,
             else it is a shallow copy; ignored if useSubregion is False
-        - interpLength: interpLength argument for lsst.afw.math.warpExposure
-        - cacheSize: cacheSize argument for lsst.afw.math.SeparableKernel.computeCache;
+        - interpLength: interpLength argument for lsst.afw.math.WarpingControl
+        - cacheSize: cacheSize argument for lsst.afw.math.WarpingControl;
             0 disables the cache
             10000 gives some speed improvement but less accurate results (atol must be increased)
             100000 gives better accuracy but no speed improvement in this test
         - rtol: relative tolerance as used by numpy.allclose
         - atol: absolute tolerance as used by numpy.allclose
         """
-        warpingKernel = afwMath.makeWarpingKernel(kernelName)
-        warpingKernel.computeCache(cacheSize)
-
+        warpingControl = afwMath.WarpingControl(
+            kernelName,
+            "", # there is no point to a separate mask kernel since we aren't testing the mask plane
+            cacheSize,
+            interpLength,
+        )
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
@@ -284,7 +418,7 @@ class WarpExposureTestCase(unittest.TestCase):
     
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel, interpLength)
+            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl)
             if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
             if display:
@@ -319,7 +453,7 @@ class WarpExposureTestCase(unittest.TestCase):
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
             afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                              originalWcs, warpingKernel, interpLength)
+                              originalWcs, warpingControl)
             if display:
                 ds9.mtv(afwWarpedImage, frame=1, title="Warped")
                 ds9.mtv(swarpedImage, frame=2, title="SWarped")

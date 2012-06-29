@@ -56,7 +56,7 @@
 #include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/math/detail/CudaLanczosWrapper.h"
 #include "lsst/afw/math/detail/SrcPosFunctor.h"
-#include "lsst/afw/math/detail/computeOneWarpedPixel.h"
+#include "lsst/afw/math/detail/WarpAtOnePoint.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
@@ -296,9 +296,6 @@ namespace {
             }
         }
         
-        afwMath::detail::WarpingKernelInfo kernelInfo(
-            control.getWarpingKernel(), control.getMaskWarpingKernel());
-
         int numGoodPixels = 0;
 
         typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
@@ -330,6 +327,8 @@ namespace {
 
         int const maxCol = destWidth - 1;
         int const maxRow = destHeight - 1;
+        
+        afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
 
         if (interpLength > 0) {
             // Use interpolation. Note that 1 produces the same result as no interpolation
@@ -422,8 +421,7 @@ namespace {
 
                             srcPosView[col] = srcPos;
 
-                            if (afwMath::detail::computeOneWarpedPixel<DestImageT, SrcImageT>(
-                                destXIter, kernelInfo, srcImage, srcGoodBBox, srcPos, relativeArea, padValue,
+                            if (warpAtOnePoint(destXIter, srcPos, relativeArea,
                                 typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
                                 ++numGoodPixels;
                             }
@@ -453,8 +451,7 @@ namespace {
                     double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
                     srcPosView[col] = srcPos;
                     
-                    if (afwMath::detail::computeOneWarpedPixel<DestImageT, SrcImageT>(
-                        destXIter, kernelInfo, srcImage, srcGoodBBox, srcPos, relativeArea, padValue,
+                    if (warpAtOnePoint(destXIter, srcPos, relativeArea,
                         typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
                         ++numGoodPixels;
                     }

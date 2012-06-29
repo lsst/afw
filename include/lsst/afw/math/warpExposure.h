@@ -40,6 +40,7 @@
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/base.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/image/Exposure.h"
@@ -218,6 +219,9 @@ namespace math {
     public:
         /**
          * \brief Construct a WarpingControl object
+         *
+         * @throw pex_exceptions InvalidParameterException if the warping kernel
+         * is smaller than the mask warping kernel.
          */
         explicit WarpingControl(
             std::string const &warpingKernelName,   ///< name of warping kernel;
@@ -236,14 +240,30 @@ namespace math {
             lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                 ///< use GPU acceleration?
         ) :
-            _warpingKernel(makeWarpingKernel(warpingKernelName)),
-            _maskWarpingKernel(),
+            _warpingKernelPtr(makeWarpingKernel(warpingKernelName)),
+            _maskWarpingKernelPtr(),
             _cacheSize(cacheSize),
             _interpLength(interpLength),
             _devicePreference(devicePreference)
         {
             if (!maskWarpingKernelName.empty()) {
-                _maskWarpingKernel = makeWarpingKernel(warpingKernelName);
+                _maskWarpingKernelPtr = makeWarpingKernel(maskWarpingKernelName);
+
+                // test that border of mask kernel <= border of kernel:
+                // compute bounding boxes with 0,0 at kernel center
+                // and make sure kernel bbox includes mask kernel bbox
+                lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
+                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_warpingKernelPtr->getCtr()),
+                    _warpingKernelPtr->getDimensions()
+                );
+                lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
+                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_maskWarpingKernelPtr->getCtr()),
+                    _maskWarpingKernelPtr->getDimensions()
+                );
+                if (!kernelBBox.contains(maskKernelBBox)) {
+                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                        "warping kernel is smaller than mask warping kernel");
+                }
             }
         }
 
@@ -259,8 +279,8 @@ namespace math {
             lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                 ///< use GPU acceleration?
         ) :
-            _warpingKernel(boost::dynamic_pointer_cast<SeparableKernel>(warpingKernel.clone())),
-            _maskWarpingKernel(),
+            _warpingKernelPtr(boost::dynamic_pointer_cast<SeparableKernel>(warpingKernel.clone())),
+            _maskWarpingKernelPtr(),
             _cacheSize(warpingKernel.getCacheSize()),
             _interpLength(interpLength),
             _devicePreference(devicePreference)
@@ -269,22 +289,45 @@ namespace math {
         
         virtual ~WarpingControl() {};
 
+        /**
+         * @brief return true if there is a mask kernel
+         */
+        bool hasMaskKernel() const { return bool(_maskWarpingKernelPtr); }
+
+        /**
+         * @brief get the cache size
+         */
         int getCacheSize() const { return _cacheSize; };
+        
+        /**
+         * @brief get the interpolation length
+         */
         int getInterpLength() const { return _interpLength; };
+        
+        /**
+         * @brief get the GPU device preference
+         */
         lsst::afw::gpu::DevicePreference getDevicePreference() const { return _devicePreference; };
         
+        /**
+         * @brief get the warping kernel (as a shared pointer)
+         */
         SeparableKernel::Ptr getWarpingKernel() const {
             SeparableKernel::Ptr kernelPtr = \
-                boost::dynamic_pointer_cast<SeparableKernel>(_warpingKernel->clone());
+                boost::dynamic_pointer_cast<SeparableKernel>(_warpingKernelPtr->clone());
             if (_cacheSize > 0) {
                 kernelPtr->computeCache(_cacheSize);
             }
             return kernelPtr;
         };
+
+        /**
+         * @brief get the mask warping kernel (as a shared pointer), or a null pointer if none
+         */
         SeparableKernel::Ptr getMaskWarpingKernel() const {
-            if (_maskWarpingKernel) {
+            if (_maskWarpingKernelPtr) {
                 SeparableKernel::Ptr kernelPtr = \
-                    boost::dynamic_pointer_cast<SeparableKernel>(_maskWarpingKernel->clone());
+                    boost::dynamic_pointer_cast<SeparableKernel>(_maskWarpingKernelPtr->clone());
                 if (_cacheSize > 0) {
                     kernelPtr->computeCache(_cacheSize);
                 }
@@ -295,8 +338,8 @@ namespace math {
         }
 
     private:
-        SeparableKernel::Ptr _warpingKernel;
-        SeparableKernel::Ptr _maskWarpingKernel;
+        SeparableKernel::Ptr _warpingKernelPtr;
+        SeparableKernel::Ptr _maskWarpingKernelPtr;
         int _cacheSize;
         int _interpLength;
         lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
@@ -357,7 +400,7 @@ namespace math {
      * \b Algorithm Without Interpolation:
      *
      * For each integer pixel position in the remapped Exposure:
-     * - The associated pixel position on srcImage is determined using the destination and source WCS.
+     * - The associated pixel position on srcImage is determined using the destination and source WCS
      * - The warping kernel's parameters are set based on the fractional part of the pixel position on srcImage
      * - The warping kernel is applied to srcImage at the integer portion of the pixel position
      *   to compute the remapped pixel value
@@ -382,8 +425,8 @@ namespace math {
      * \throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
      * \throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
      *
-     * \todo Should support an additional color-based position correction in the remapping (differential chromatic
-     *   refraction). This can be done either object-by-object or pixel-by-pixel.
+     * \todo Should support an additional color-based position correction in the remapping
+     *   (differential chromatic refraction). This can be done either object-by-object or pixel-by-pixel.
      *
      * \todo Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
      */
