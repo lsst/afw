@@ -25,7 +25,6 @@
 
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
-#include "lsst/afw/math/warpExposure.h"
 
 namespace lsst {
 namespace afw {
