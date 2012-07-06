@@ -310,7 +310,7 @@ namespace math {
         int getCacheSize() const { return _cacheSize; };
         
         /**
-         * @set the cache size for the interpolation kernel(s)
+         * @brief set the cache size for the interpolation kernel(s)
          *
          * A value of 0 disables the cache for maximum accuracy.
          * 10,000 typically results in a warping error of a fraction of a count.
