@@ -125,6 +125,7 @@ afwMath::Kernel::Ptr afwMath::SeparableKernel::clone() const {
     }
     retPtr->setCtrX(this->getCtrX());
     retPtr->setCtrY(this->getCtrY());
+    retPtr->computeCache(this->getCacheSize());
     return retPtr;
 }
 

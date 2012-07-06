@@ -239,10 +239,7 @@ namespace math {
                 ///< interpolated over, so we don't need to worry about bad values spreading very far.
             int cacheSize = 0,      ///< cache size for warping kernel; no cache if 0
                 ///< (used as the argument to the warping kernels' computeCache method)
-            int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated;
-                ///< 0 means no interpolation and uses an optimized branch of the code
-                ///< 1 also performs no interpolation but it runs the interpolation code branch
-                ///< (and so is only intended for unit tests)
+            int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated
             lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
                 ///< use GPU acceleration?
         ) :
@@ -308,14 +305,38 @@ namespace math {
         bool hasMaskKernel() const { return bool(_maskWarpingKernelPtr); }
 
         /**
-         * @brief get the cache size
+         * @brief get the cache size for the interpolation kernel(s)
          */
         int getCacheSize() const { return _cacheSize; };
         
         /**
-         * @brief get the interpolation length
+         * @brief set the cache size for the interpolation kernel(s)
+         *
+         * A value of 0 disables the cache for maximum accuracy.
+         * 10,000 typically results in a warping error of a fraction of a count.
+         * 100,000 typically results in a warping error of less than 0.01 count.
+         * Note the new cache is not computed until getWarpingKernel or getMaskWarpingKernel is called.
+         */
+        void setCacheSize(
+            int cacheSize ///< cache size
+        ) { _cacheSize = cacheSize; };
+        
+        /**
+         * @brief get the interpolation length (pixels)
          */
         int getInterpLength() const { return _interpLength; };
+        
+        /**
+         * @brief set the interpolation length
+         *
+         * Interpolation length is the distance over which the WCS can be linearly interpolated, in pixels:
+         * * 0 means no interpolation and uses an optimized branch of the code
+         * * 1 also performs no interpolation but it runs the interpolation code branch
+         *   (and so is only intended for unit tests)
+         */
+        void setInterpLength(
+            int interpLength ///< interpolation length (pixels)
+        ) { _interpLength = interpLength; };
         
         /**
          * @brief get the GPU device preference
@@ -323,15 +344,20 @@ namespace math {
         lsst::afw::gpu::DevicePreference getDevicePreference() const { return _devicePreference; };
         
         /**
+         * @brief set the GPU device preference
+         */
+        void setDevicePreference(
+            lsst::afw::gpu::DevicePreference devicePreference  ///< device preference
+        ) { _devicePreference = devicePreference; }
+        
+        /**
          * @brief get the warping kernel (as a shared pointer)
          */
         SeparableKernel::Ptr getWarpingKernel() const {
-            SeparableKernel::Ptr kernelPtr = \
-                boost::dynamic_pointer_cast<SeparableKernel>(_warpingKernelPtr->clone());
-            if (_cacheSize > 0) {
-                kernelPtr->computeCache(_cacheSize);
+            if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
+                _warpingKernelPtr->computeCache(_cacheSize);
             }
-            return kernelPtr;
+            return _warpingKernelPtr;
         };
 
         /**
@@ -339,15 +365,11 @@ namespace math {
          */
         SeparableKernel::Ptr getMaskWarpingKernel() const {
             if (_maskWarpingKernelPtr) {
-                SeparableKernel::Ptr kernelPtr = \
-                    boost::dynamic_pointer_cast<SeparableKernel>(_maskWarpingKernelPtr->clone());
-                if (_cacheSize > 0) {
-                    kernelPtr->computeCache(_cacheSize);
+                if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
+                    _maskWarpingKernelPtr->computeCache(_cacheSize);
                 }
-                return kernelPtr;
-            } else {
-                return SeparableKernel::Ptr();
             }
+            return _maskWarpingKernelPtr;
         }
 
     private:

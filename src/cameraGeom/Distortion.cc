@@ -246,12 +246,7 @@ typename ImageT::Ptr cameraGeom::Distortion::_warp(
     // call the warp code 
     //afwMath::LanczosWarpingKernel kernel(_lanczosOrder);
     afwGeom::LinearTransform linTran = this->computeQuadrupoleTransform(pos, forward);
-    int const interpLength = 0;
-    if (! _lanczosInitialized) {
-        _lanczosKernel.computeCache(10000);
-        _lanczosInitialized = true;
-    }
-    afwMath::warpCenteredImage(*warpImg, img, _lanczosKernel, linTran, p, interpLength, padValue);
+    afwMath::warpCenteredImage(*warpImg, img, linTran, p, _warpingControl, padValue);
 
     return warpImg;
 }
