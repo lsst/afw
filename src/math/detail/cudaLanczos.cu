@@ -83,22 +83,25 @@ __device__ T Lanczos(T x, T orderInv)
 
 // Calculates the value of a single output pixel (for MaskedImage)
 template<typename SrcPixelT>
-__device__ PixelIVM<double> ApplyLanczosFilterMI(int kernelSize, double orderInv,
+__device__ PixelIVM<double> ApplyLanczosFilterMI(
         ImageDataPtr<SrcPixelT> srcImage,
         int srcX, int srcY,
-        int kernelCenterX, int kernelCenterY,
+        KernelDescription mainKernel,
+        KernelDescription maskKernel,
         double kernelFracX, double kernelFracY
                                                 )
 {
-    int kerOrd= kernelSize/2;
+    int mainKernelSize = mainKernel.order*2;
+    int mainKernelOrder = mainKernel.order;
+    double mainKernelOrderInv = 1.0/mainKernel.order;
 
-    const int srcTLX = srcX - kernelCenterX;
-    const int srcTLY = srcY - kernelCenterY;
+    const int srcTLX = srcX - mainKernel.kernelCenterX;
+    const int srcTLY = srcY - mainKernel.kernelCenterY;
 
     //calculate values of Lanczos function for rows
     double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
-    for (int kernelX = 0; kernelX < kernelSize; kernelX++) {
-        kernelRowVal[kernelX] = Lanczos(1 - kerOrd - kernelFracX + kernelX, orderInv);
+    for (int kernelX = 0; kernelX < mainKernelSize; kernelX++) {
+        kernelRowVal[kernelX] = Lanczos(1 - mainKernelOrder - kernelFracX + kernelX, mainKernelOrderInv);
     }
 
     double   colSumImg = 0;
@@ -106,7 +109,7 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(int kernelSize, double orderInv
     MskPixel colSumMsk = 0;
 
     double kernelSum = 0;
-    for (int kernelY = 0; kernelY < kernelSize; kernelY++) {
+    for (int kernelY = 0; kernelY < mainKernelSize; kernelY++) {
         double rowSumImg = 0;
         double rowSumVar = 0;
         double rowKernelSum = 0;
@@ -115,7 +118,7 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(int kernelSize, double orderInv
         int srcPosVar = srcTLX + srcImage.strideVar * (srcTLY + kernelY);
         int srcPosMsk = srcTLX + srcImage.strideMsk * (srcTLY + kernelY);
 
-        for (int kernelX = 0; kernelX < kernelSize; kernelX++) {
+        for (int kernelX = 0; kernelX < mainKernelSize; kernelX++) {
             double   srcImgPixel = srcImage.img[srcPosImg++];
             double   srcVarPixel = srcImage.var[srcPosVar++];
             MskPixel srcMskPixel = srcImage.msk[srcPosMsk++];
@@ -128,7 +131,7 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(int kernelSize, double orderInv
             }
         }
 
-        double kernelVal = Lanczos(1 - kerOrd - kernelFracY + kernelY, orderInv);
+        double kernelVal = Lanczos(1 - mainKernelOrder - kernelFracY + kernelY, mainKernelOrderInv);
         if (kernelVal != 0) {
             colSumImg += rowSumImg * kernelVal;
             colSumVar += rowSumVar * kernelVal * kernelVal;
@@ -145,31 +148,33 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(int kernelSize, double orderInv
 
 // Calculates the value of a single output pixel (for plain image)
 template<typename SrcPixelT>
-__device__ double ApplyLanczosFilter(int kernelSize, double orderInv,
-                                     SrcPixelT* srcImgPtr, int srcImgStride, int srcWidth,
+__device__ double ApplyLanczosFilter(SrcPixelT* srcImgPtr, int srcImgStride, int srcWidth,
                                      int srcX, int srcY,
-                                     int kernelCenterX, int kernelCenterY,
+                                     KernelDescription mainKernel,
+                                     KernelDescription maskKernel,
                                      double kernelFracX, double kernelFracY
                                     )
 {
-    int kerOrd= kernelSize/2;
+    int mainKernelSize = mainKernel.order*2;
+    int mainKernelOrder = mainKernel.order;
+    double mainKernelOrderInv = 1.0/mainKernel.order;
 
-    const int srcTLX = srcX - kernelCenterX;
-    const int srcTLY = srcY - kernelCenterY;
+    const int srcTLX = srcX - mainKernel.kernelCenterX;
+    const int srcTLY = srcY - mainKernel.kernelCenterY;
 
     //calculate values of Lanczos function for rows
     double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
-    for (int kernelX = 0; kernelX < kernelSize; kernelX++) {
-        kernelRowVal[kernelX] = Lanczos(1 - kerOrd - kernelFracX + kernelX, orderInv);
+    for (int kernelX = 0; kernelX < mainKernelSize; kernelX++) {
+        kernelRowVal[kernelX] = Lanczos(1 - mainKernelOrder - kernelFracX + kernelX, mainKernelOrderInv);
     }
 
     double colSumImg = 0;
     double kernelSum = 0;
-    for (int kernelY = 0; kernelY < kernelSize; kernelY++) {
+    for (int kernelY = 0; kernelY < mainKernelSize; kernelY++) {
         double rowSumImg = 0;
         double rowKernelSum = 0;
         int srcPosImg = srcTLX + srcImgStride * (srcTLY + kernelY);
-        for (int kernelX = 0; kernelX < kernelSize; kernelX++) {
+        for (int kernelX = 0; kernelX < mainKernelSize; kernelX++) {
             double   srcImgPixel = srcImgPtr[srcPosImg++];
             double kernelVal = kernelRowVal[kernelX];
             if (kernelVal != 0) {
@@ -178,7 +183,7 @@ __device__ double ApplyLanczosFilter(int kernelSize, double orderInv,
             }
         }
 
-        double kernelVal = Lanczos(1 - kerOrd - kernelFracY + kernelY, orderInv);
+        double kernelVal = Lanczos(1 - mainKernelOrder - kernelFracY + kernelY, mainKernelOrderInv);
         if (kernelVal != 0) {
             colSumImg += rowSumImg * kernelVal;
             kernelSum += rowKernelSum * kernelVal;
@@ -211,17 +216,16 @@ __global__ void WarpImageGpuKernelXX(
     bool isMaskedImage,
     ImageDataPtr<DestPixelT> destImage,
     ImageDataPtr<SrcPixelT>  srcImage,
-    int order,
+    KernelDescription mainKernel,
+    KernelDescription maskKernel,
     SBox2I srcGoodBox,
-    int kernelCenterX,
-    int kernelCenterY,
     PixelIVM<DestPixelT> edgePixel,
     BilinearInterp* srcPosInterp,
     int interpLength
 )
 {
-    const double orderInv = 1.0 / order;
-    const int kernelSize = order * 2;
+    const double orderInv = 1.0 / mainKernel.order;
+    const int kernelSize = mainKernel.order * 2;
 
     const int blockSizeX = SIZE_X_WARPING_BLOCK;
     const int blockSizeY = SIZE_Y_WARPING_BLOCK;
@@ -287,9 +291,9 @@ __global__ void WarpImageGpuKernelXX(
             const double relativeArea = fabs(dSrcA.x * dSrcB.y - dSrcA.y * dSrcB.x);
 
             if (isMaskedImage) {
-                const PixelIVM<double> sample = ApplyLanczosFilterMI(kernelSize, orderInv, srcImage,
+                const PixelIVM<double> sample = ApplyLanczosFilterMI(srcImage,
                                                 srcX, srcY,
-                                                kernelCenterX, kernelCenterY, kernelFracX, kernelFracY
+                                                mainKernel, maskKernel, kernelFracX, kernelFracY
                                                                     );
                 const int pixelIimg = pixelY * destImage.strideImg + pixelX;
                 const int pixelIvar = pixelY * destImage.strideVar + pixelX;
@@ -299,10 +303,9 @@ __global__ void WarpImageGpuKernelXX(
                 destImage.var[pixelIvar] = sample.var * relativeArea * relativeArea;
                 destImage.msk[pixelImsk] = sample.msk;
             } else {
-                double sample = ApplyLanczosFilter(kernelSize, orderInv,
-                                                   srcImage.img, srcImage.strideImg, srcImage.width,
+                double sample = ApplyLanczosFilter(srcImage.img, srcImage.strideImg, srcImage.width,
                                                    srcX, srcY,
-                                                   kernelCenterX, kernelCenterY, kernelFracX, kernelFracY
+                                                   mainKernel, maskKernel, kernelFracX, kernelFracY
                                                   );
                 const int pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
                 destImage.img[pixelIimg] = sample * relativeArea;
@@ -326,10 +329,9 @@ template<typename DestPixelT, typename SrcPixelT>
 void WarpImageGpuCallKernel(bool isMaskedImage,
                             ImageDataPtr<DestPixelT> destImageGpu,
                             ImageDataPtr<SrcPixelT>  srcImageGpu,
-                            int order,
+                            KernelDescription mainKernel,
+                            KernelDescription maskKernel,
                             SBox2I srcGoodBox,
-                            int kernelCenterX,
-                            int kernelCenterY,
                             PixelIVM<DestPixelT> edgePixel,
                             BilinearInterp* srcPosInterp,
                             int interpLength
@@ -342,10 +344,9 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
         isMaskedImage,
         destImageGpu,
         srcImageGpu,
-        order,
+        mainKernel,
+        maskKernel,
         srcGoodBox,
-        kernelCenterX,
-        kernelCenterY,
         edgePixel,
         srcPosInterp,
         interpLength
@@ -365,10 +366,9 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
                             bool isMaskedImage, \
                             ImageDataPtr<DESTIMAGEPIXELT> destImageGpu, \
                             ImageDataPtr<SRCIMAGEPIXELT>  srcImageGpu, \
-                            int order, \
+                            KernelDescription mainKernel, \
+                            KernelDescription maskKernel, \
                             SBox2I srcGoodBox, \
-                            int kernelCenterX, \
-                            int kernelCenterY, \
                             PixelIVM<DESTIMAGEPIXELT> edgePixel, \
                             BilinearInterp* srcPosInterp, \
                             int interpLength \

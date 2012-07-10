@@ -206,12 +206,18 @@ int WarpImageGpuWrapper(
 
     SBox2I srcBoxConv(srcBox.getMinX(), srcBox.getMinY(), srcBox.getMaxX() + 1, srcBox.getMaxY() + 1);
 
+    gpu::KernelDescription mainKernel;
+    mainKernel.kernelCenterX = kernelCenterX;
+    mainKernel.kernelCenterY = kernelCenterY;
+    mainKernel.kernelType= gpu::KERNEL_TYPE_LANCZOS;
+    mainKernel.order = order;
+    gpu::KernelDescription maskKernel = mainKernel;
+
     WarpImageGpuCallKernel(false,
                            destImgGpu, srcImgGpu,
-                           order,
+                           mainKernel,
+                           maskKernel,
                            srcBoxConv,
-                           kernelCenterX,
-                           kernelCenterY,
                            edgePixelGpu,
                            srcPosInterpGpu.ptr, interpLength
                           );
@@ -312,12 +318,18 @@ int WarpImageGpuWrapper(
 
     SBox2I srcBoxConv(srcBox.getMinX(), srcBox.getMinY(), srcBox.getMaxX() + 1, srcBox.getMaxY() + 1);
 
+    gpu::KernelDescription mainKernel;
+    mainKernel.kernelCenterX = kernelCenterX;
+    mainKernel.kernelCenterY = kernelCenterY;
+    mainKernel.kernelType= gpu::KERNEL_TYPE_LANCZOS;
+    mainKernel.order = order;
+    gpu::KernelDescription maskKernel = mainKernel;
+
     WarpImageGpuCallKernel(true,
                            destImgGpu, srcImgGpu,
-                           order,
+                           mainKernel,
+                           maskKernel,
                            srcBoxConv,
-                           kernelCenterX,
-                           kernelCenterY,
                            edgePixelGpu,
                            srcPosInterpGpu.ptr, interpLength
                           );
