@@ -34,6 +34,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
