@@ -55,7 +55,10 @@
 #include "lsst/afw/math/detail/CudaLanczosWrapper.h"
 
 using namespace std;
-using namespace lsst::afw::math::detail::gpu;
+using lsst::afw::math::detail::gpu::SPoint2;
+using lsst::afw::math::detail::gpu::SVec2;
+using lsst::afw::math::detail::gpu::SBox2I;
+
 
 namespace mathDetail = lsst::afw::math::detail;
 namespace gpuDetail = lsst::afw::gpu::detail;
@@ -153,7 +156,7 @@ int WarpImageGpuWrapper(
     const lsst::afw::geom::Box2I srcBox,
     const int kernelCenterX,
     const int kernelCenterY,
-    lsst::afw::gpu::detail::GpuBuffer2D<BilinearInterp> const& srcPosInterp,
+    lsst::afw::gpu::detail::GpuBuffer2D<gpu::BilinearInterp> const& srcPosInterp,
     const int interpLength,
     typename afwImage::Image<DestPixelT>::SinglePixel padValue
 )
@@ -162,7 +165,7 @@ int WarpImageGpuWrapper(
 
     typename DestImageT::SinglePixel const edgePixel = padValue;
 
-    PixelIVM<DestPixelT> edgePixelGpu;
+    gpu::PixelIVM<DestPixelT> edgePixelGpu;
     edgePixelGpu.img = edgePixel;
     edgePixelGpu.var = -1;
     edgePixelGpu.msk = -1;
@@ -171,9 +174,9 @@ int WarpImageGpuWrapper(
     const int destHeight = destImage.getHeight();
     gpuDetail::GpuMemOwner<DestPixelT> destBufImgGpu;
     gpuDetail::GpuMemOwner<SrcPixelT> srcBufImgGpu;
-    gpuDetail::GpuMemOwner<BilinearInterp> srcPosInterpGpu;
+    gpuDetail::GpuMemOwner<gpu::BilinearInterp> srcPosInterpGpu;
 
-    ImageDataPtr<DestPixelT> destImgGpu;
+    gpu::ImageDataPtr<DestPixelT> destImgGpu;
     destImgGpu.strideImg = destBufImgGpu.AllocImageBaseBuffer(destImage);
     if (destBufImgGpu.ptr == NULL)  {
         throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output image");
@@ -184,7 +187,7 @@ int WarpImageGpuWrapper(
     destImgGpu.width = destWidth;
     destImgGpu.height = destHeight;
 
-    ImageDataPtr<SrcPixelT> srcImgGpu;
+    gpu::ImageDataPtr<SrcPixelT> srcImgGpu;
     srcImgGpu.strideImg = srcBufImgGpu.TransferFromImageBase(srcImage);
     if (srcBufImgGpu.ptr == NULL)  {
         throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input image");
@@ -235,7 +238,7 @@ int WarpImageGpuWrapper(
     const lsst::afw::geom::Box2I srcBox,
     const int kernelCenterX,
     const int kernelCenterY,
-    lsst::afw::gpu::detail::GpuBuffer2D<BilinearInterp> const& srcPosInterp,
+    lsst::afw::gpu::detail::GpuBuffer2D<gpu::BilinearInterp> const& srcPosInterp,
     const int interpLength,
     typename afwImage::MaskedImage<DestPixelT>::SinglePixel padValue
 )
@@ -244,7 +247,7 @@ int WarpImageGpuWrapper(
 
     typename DestImageT::SinglePixel const edgePixel = padValue;
 
-    PixelIVM<DestPixelT> edgePixelGpu;
+    gpu::PixelIVM<DestPixelT> edgePixelGpu;
     edgePixelGpu.img = edgePixel.image();
     edgePixelGpu.var = edgePixel.variance();
     edgePixelGpu.msk = edgePixel.mask();
@@ -253,16 +256,16 @@ int WarpImageGpuWrapper(
     const int destHeight = dstImage.getHeight();
 
     gpuDetail::GpuMemOwner<DestPixelT> destBufImgGpu;
-    gpuDetail::GpuMemOwner<VarPixel>   destBufVarGpu;
-    gpuDetail::GpuMemOwner<MskPixel>   destBufMskGpu;
+    gpuDetail::GpuMemOwner<gpu::VarPixel>   destBufVarGpu;
+    gpuDetail::GpuMemOwner<gpu::MskPixel>   destBufMskGpu;
 
     gpuDetail::GpuMemOwner<SrcPixelT> srcBufImgGpu;
-    gpuDetail::GpuMemOwner<VarPixel>  srcBufVarGpu;
-    gpuDetail::GpuMemOwner<MskPixel>  srcBufMskGpu;
+    gpuDetail::GpuMemOwner<gpu::VarPixel>  srcBufVarGpu;
+    gpuDetail::GpuMemOwner<gpu::MskPixel>  srcBufMskGpu;
 
-    gpuDetail::GpuMemOwner<BilinearInterp> srcPosInterpGpu;
+    gpuDetail::GpuMemOwner<gpu::BilinearInterp> srcPosInterpGpu;
 
-    ImageDataPtr<DestPixelT> destImgGpu;
+    gpu::ImageDataPtr<DestPixelT> destImgGpu;
     destImgGpu.strideImg = destBufImgGpu.AllocImageBaseBuffer(*dstImage.getImage());
     destImgGpu.strideVar = destBufVarGpu.AllocImageBaseBuffer(*dstImage.getVariance());
     destImgGpu.strideMsk = destBufMskGpu.AllocImageBaseBuffer(*dstImage.getMask());
@@ -281,7 +284,7 @@ int WarpImageGpuWrapper(
     destImgGpu.width = destWidth;
     destImgGpu.height = destHeight;
 
-    ImageDataPtr<SrcPixelT> srcImgGpu;
+    gpu::ImageDataPtr<SrcPixelT> srcImgGpu;
     srcImgGpu.strideImg = srcBufImgGpu.TransferFromImageBase(*srcImage.getImage());
     if (srcBufImgGpu.ptr == NULL)  {
         throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input image");
@@ -341,7 +344,7 @@ int WarpImageGpuWrapper(
 //    destWidth, destHeight - size of function domain
 // output:
 //    srcPosInterp - all members are calculated and set, ready to calculate interpolation values
-void CalculateInterpolationData(gpuDetail::GpuBuffer2D<BilinearInterp>& srcPosInterp, int interpLength,
+void CalculateInterpolationData(gpuDetail::GpuBuffer2D<gpu::BilinearInterp>& srcPosInterp, int interpLength,
                                 int destWidth, int destHeight)
 {
     const int interpBlkNX = InterpBlkN(destWidth , interpLength);
@@ -366,7 +369,7 @@ void CalculateInterpolationData(gpuDetail::GpuBuffer2D<BilinearInterp>& srcPosIn
             const double invInterpLenCol = col + interpLength <= destWidth - 1 ?
                                            invInterpLen : 1.0 / (destWidth - 1 - col);
 
-            BilinearInterp lin = srcPosInterp.Pixel(colBand, rowBand); //sets lin.o
+            gpu::BilinearInterp lin = srcPosInterp.Pixel(colBand, rowBand); //sets lin.o
             lin.deltaY = VecMul(band_dY , invInterpLenRow);
             lin.d0X    = VecMul(band_d0X, invInterpLenCol);
             lin.ddX    = VecMul(band_ddX, invInterpLenCol);
@@ -440,7 +443,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     const int interpBlkNX = InterpBlkN(destWidth , interpLength);
     const int interpBlkNY = InterpBlkN(destHeight, interpLength);
     //GPU kernel input, will contain: for each interpolation block, all interpolation parameters
-    gpuDetail::GpuBuffer2D<BilinearInterp> srcPosInterp(interpBlkNX, interpBlkNY);
+    gpuDetail::GpuBuffer2D<gpu::BilinearInterp> srcPosInterp(interpBlkNX, interpBlkNY);
 
     const int kernelCenterX = lanczosKernel.getCtrX();
     const int kernelCenterY = lanczosKernel.getCtrY();
