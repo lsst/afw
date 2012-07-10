@@ -67,7 +67,6 @@ def main():
     (opt, args) = parser.parse_args()
     
     kernelName = opt.kernel.lower()
-    kernel = afwMath.makeWarpingKernel(kernelName)
     
     def getArg(ind, defValue):
         if ind < len(args):
@@ -80,6 +79,8 @@ def main():
     print "Remapping masked image  ", originalExposurePath
     print "to match wcs and size of", warpedWcsImageOrExposurePath
     print "using", kernelName, "kernel"
+    
+    warpingControl = afwMath.WarpingControl(kernelName)
     
     originalExposure = afwImage.ExposureF(originalExposurePath)
     
@@ -96,7 +97,7 @@ def main():
         print "Verbosity =", opt.verbosity
         lsst.pex.logging.Trace_setVerbosity("lsst.afw.math", opt.verbosity)
     
-    numGoodPixels = afwMath.warpExposure(warpedExposure, originalExposure, kernel)
+    numGoodPixels = afwMath.warpExposure(warpedExposure, originalExposure, warpingControl)
     print "Warped exposure has %s good pixels" % (numGoodPixels)
     
     print "Writing warped exposure to %s" % (outputExposurePath,)

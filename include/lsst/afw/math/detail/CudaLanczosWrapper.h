@@ -31,45 +31,16 @@
  *
  * @ingroup afw
  */
+#ifndef LSST_AFW_MATH_DETAIL_CUDALANCZOSWRAPPER_H
+#define LSST_AFW_MATH_DETAIL_CUDALANCZOSWRAPPER_H
+
+#include "lsst/afw/math/detail/SrcPosFunctor.h"
+#include "lsst/afw/math/warpExposure.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-
-    class SrcPosFunctor {
-    public:
-        SrcPosFunctor() {}
-        typedef boost::shared_ptr<SrcPosFunctor> Ptr;
-        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const = 0;
-    private:
-    };
-
-    class WcsSrcPosFunctor : public SrcPosFunctor {
-    public:
-        WcsSrcPosFunctor(
-                         lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-                         lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
-                         lsst::afw::image::Wcs const &srcWcs         ///< WCS of source %image
-                        ) :
-            SrcPosFunctor(),
-            _destXY0(destXY0),
-            _destWcs(destWcs),
-            _srcWcs(srcWcs) {}
-        typedef boost::shared_ptr<WcsSrcPosFunctor> Ptr;
-
-        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
-            double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
-            double const row = lsst::afw::image::indexToPosition(destRow + _destXY0[1]);
-            lsst::afw::geom::Angle sky1, sky2;
-            _destWcs.pixelToSky(col, row, sky1, sky2);
-            return _srcWcs.skyToPixel(sky1, sky2);
-        }
-    private:
-        lsst::afw::geom::Point2D const &_destXY0;
-        lsst::afw::image::Wcs const &_destWcs;
-        lsst::afw::image::Wcs const &_srcWcs;
-    };
 
 namespace WarpImageGpuStatus
 {
@@ -110,7 +81,7 @@ namespace WarpImageGpuStatus
  *
  */
 template<typename DestImageT, typename SrcImageT>
-std::pair<int,WarpImageGpuStatus::ReturnCode> warpImageGPU(
+std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     DestImageT &destImage,                  ///< remapped %image
     SrcImageT const &srcImage,              ///< source %image
     lsst::afw::math::LanczosWarpingKernel const &warpingKernel,   ///< warping kernel
@@ -122,5 +93,6 @@ std::pair<int,WarpImageGpuStatus::ReturnCode> warpImageGPU(
                                              ///< it is slower then the CPU code path
     );
 
-}}}} //namespace lsst::afw::math::detail ends
+}}}} // lsst::afw::math::detail
 
+#endif // !defined(LSST_AFW_MATH_DETAIL_CUDALANCZOSWRAPPER_H)
