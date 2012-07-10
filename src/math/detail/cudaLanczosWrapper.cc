@@ -442,6 +442,9 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     //GPU kernel input, will contain: for each interpolation block, all interpolation parameters
     gpuDetail::GpuBuffer2D<BilinearInterp> srcPosInterp(interpBlkNX, interpBlkNY);
 
+    const int kernelCenterX = lanczosKernel.getCtrX();
+    const int kernelCenterY = lanczosKernel.getCtrY();
+
     // calculate values of coordinate transform function
     for (int rowBand = 0; rowBand < interpBlkNY; rowBand++) {
         int row = min(maxRow, (rowBand * interpLength - 1));
@@ -450,6 +453,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
             afwGeom::Point2D srcPos = computeSrcPos(col, row);
             SPoint2 sSrcPos(srcPos);
             sSrcPos = MovePoint(sSrcPos, SVec2(-srcImage.getX0(), -srcImage.getY0()));
+            sSrcPos = MovePoint(sSrcPos, SVec2(1-order+kernelCenterX, 1-order+kernelCenterY));
             srcPosInterp.Pixel(colBand, rowBand).o =  sSrcPos;
         }
     }
@@ -465,8 +469,8 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
                                         srcImage,
                                         order,
                                         srcGoodBBox,
-                                        lanczosKernel.getCtrX(),
-                                        lanczosKernel.getCtrY(),
+                                        kernelCenterX,
+                                        kernelCenterY,
                                         srcPosInterp, interpLength, padValue
                                        );
     #endif
