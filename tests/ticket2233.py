@@ -60,14 +60,16 @@ DATA = os.path.join("tests", "data", "ticket2233.fits")
 class WcsFormatterTest(unittest.TestCase):
     """Test the WCS formatter, by round-trip pickling."""
     def setUp(self):
-        self.wcs = afwImage.ExposureF(DATA).getWcs()        
+        exposure = afwImage.ExposureF(DATA)
+        self.wcs = exposure.getWcs()        
 
     def tearDown(self):
         del self.wcs
 
     def testFormat(self):
-        wcs = pickle.loads(pickle.dumps(self.wcs))
-        self.assertEqual(wcs, self.wcs)
+        dumped = pickle.dumps(self.wcs)
+        wcs = pickle.loads(dumped)
+        self.assertEqual(wcs.getFitsMetadata().toString(), self.wcs.getFitsMetadata().toString())
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
