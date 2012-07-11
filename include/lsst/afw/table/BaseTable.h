@@ -197,7 +197,8 @@ private:
      */
     void _destroy(BaseRecord & record);
 
-    // Tables are not assignable to prevent type slicing.
+    // Tables are not assignable to prevent type slicing; this is intentionally not implemented,
+    // so we get linker errors if we do try to use the assignment operator.
     void operator=(BaseTable const & other);
 
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
