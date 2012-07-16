@@ -51,19 +51,20 @@ using lsst::afw::image::NoWcs;
     #include <boost/serialization/serialization.hpp>
     #include <boost/archive/binary_oarchive.hpp>
     #include <boost/archive/binary_iarchive.hpp>
+    #include "lsst/daf/persistence/PropertySetFormatter.h"
     #include <sstream>
-    std::string pickleMetadata(CONST_PTR(lsst::daf::base::PropertyList) pl) {
+    std::string pickleMetadata(CONST_PTR(lsst::daf::base::PropertySet) header) {
         std::stringstream ss;
         boost::archive::binary_oarchive ar(ss);
-        ar << *pl;
+        ar << *header;
         return ss.str();
     }
-    PTR(lsst::daf::base::PropertyList) unpickleMetadata(std::string const& pick) {
+    PTR(lsst::daf::base::PropertySet) unpickleMetadata(std::string const& pick) {
         std::stringstream ss(pick);
         boost::archive::binary_iarchive ar(ss);
-        PTR(lsst::daf::base::PropertyList) pl = boost::make_shared<lsst::daf::base::PropertyList>();
-        ar >> *pl;
-        return pl;
+        PTR(lsst::daf::base::PropertySet) header = boost::make_shared<lsst::daf::base::PropertySet>();
+        ar >> *header;
+        return header;
     }
 %}
 
