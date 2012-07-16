@@ -711,6 +711,24 @@ lsst::afw::geom::Point2D afwCoord::Coord::getOffsetFrom(
     return lsst::afw::geom::Point2D(xi.asAngularUnits(unit), eta.asAngularUnits(unit));
 }
 
+void afwCoord::Coord::offset(
+    afwGeom::Point2D const& offsets,    ///< Separation in each axis
+    afwGeom::AngleUnit unit             ///< Units for separation
+    )
+{
+    afwGeom::Angle xi(offsets.getX(), unit);
+    afwGeom::Angle eta(offsets.getY(), unit);
+
+    double denominator = std::cos(_latitude) - eta.asRadians() * std::sin(_latitude);
+    double ra = std::atan2(xi.asRadians(), denominator);
+
+    double numerator = std::cos(ra) * (std::sin(_latitude) + eta.asRadians() * std::cos(_latitude));
+    double dec = std::atan2(numerator, denominator);
+
+    _longitude += ra * afwGeom::radians;
+    _latitude = dec * afwGeom::radians;
+}
+
 
 /**
  * @brief Convert ourself to Fk5: RA, Dec (precess to new epoch)
