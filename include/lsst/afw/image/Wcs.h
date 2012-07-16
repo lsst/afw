@@ -36,7 +36,6 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -47,11 +46,9 @@ namespace daf {
     }
 }
 namespace afw {
-#if 0
     namespace formatters {
         class WcsFormatter;
     }
-#endif
 namespace image {
     
 /// 

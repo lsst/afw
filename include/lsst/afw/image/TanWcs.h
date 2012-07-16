@@ -31,7 +31,6 @@
 #include "lsst/afw/image/Wcs.h" 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/daf/persistence.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -135,10 +134,7 @@ namespace image {
         virtual lsst::afw::geom::Point2D skyToPixelImpl(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
 
         //Allow the formatter to access private goo
-//        LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
-
-    friend class boost::serialization::access;
-    friend class lsst::afw::formatters::TanWcsFormatter;
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
 
         bool _hasDistortion;
         Eigen::MatrixXd _sipA, _sipB, _sipAp, _sipBp;
@@ -146,10 +142,5 @@ namespace image {
     };
 
 }}}
-
-#ifndef SWIG
-// Swig chokes on this.  Not sure why, but Swig doesn't need to know anyway.
-BOOST_CLASS_EXPORT_KEY(lsst::afw::image::TanWcs)
-#endif
 
 #endif
