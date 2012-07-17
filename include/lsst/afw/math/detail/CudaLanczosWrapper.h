@@ -85,6 +85,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     DestImageT &destImage,                  ///< remapped %image
     SrcImageT const &srcImage,              ///< source %image
     lsst::afw::math::LanczosWarpingKernel const &warpingKernel,   ///< warping kernel
+    lsst::afw::math::SeparableKernel const &maskWarpingKernel,    ///< mask warping kernel
     SrcPosFunctor const &computeSrcPos,      ///< Functor to compute source position
     int const interpLength,                  ///< Distance over which WCS can be linearily interpolated
                                              ///< must be >0

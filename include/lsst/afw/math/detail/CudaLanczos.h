@@ -188,15 +188,6 @@ struct PixelIVM
 enum KernelType
 { KERNEL_TYPE_LANCZOS, KERNEL_TYPE_BILINEAR, KERNEL_TYPE_NEAREST_NEIGHBOUR };
 
-/// defines a pixel having image, variance and mask planes
-struct KernelDescription
-{
-    int kernelCenterX;
-    int kernelCenterY;
-    KernelType kernelType;
-    int order; //valid only for Lanczos kernels
-};
-
 /// defines memory region containing image data
 template<typename T>
 struct ImageDataPtr
@@ -229,8 +220,9 @@ template<typename DestPixelT, typename SrcPixelT>
 void WarpImageGpuCallKernel(bool isMaskedImage,
                             ImageDataPtr<DestPixelT> destImageGpu,
                             ImageDataPtr<SrcPixelT>  srcImageGpu,
-                            KernelDescription mainKernel,
-                            KernelDescription maskKernel,
+                            int mainKernelSize,
+                            KernelType maskKernelType,
+                            int maskKernelSize,
                             SBox2I srcGoodBox,
                             PixelIVM<DestPixelT> edgePixel,
                             BilinearInterp* srcPosInterp,
