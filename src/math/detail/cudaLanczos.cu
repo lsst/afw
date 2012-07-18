@@ -83,36 +83,29 @@ __device__ T Lanczos(T x, T orderInv)
 // Is Lanczos or bilinear function equal zero
 __device__ bool IsEqualZeroLanczosOrBilinear(double x)
 {
-    if (x!=floor(x)) return false;
-    if (x==0) return false;
+    if (x != floor(x)) return false;
+    if (x == 0) return false;
     return true;
 }
-__device__ bool IsEqualZeroLanczosOrBilinear(float x)
-{
-    if (x!=floorf(x)) return false;
-    if (x==0) return false;
-    return true;
-}
-
 
 // Calculates the value of a single output pixel (for MaskedImage)
 template<typename SrcPixelT>
 __device__ PixelIVM<double> ApplyLanczosFilterMI(
-        const ImageDataPtr<SrcPixelT> srcImage,
-        const int srcX, const int srcY,
-        const int mainKernelSize,
-        const KernelType maskKernelType,
-        const int maskKernelSize,
-        const double kernelFracX, const double kernelFracY
-                                                )
+    const ImageDataPtr<SrcPixelT> srcImage,
+    const int srcX, const int srcY,
+    const int mainKernelSize,
+    const KernelType maskKernelType,
+    const int maskKernelSize,
+    const double kernelFracX, const double kernelFracY
+)
 {
-    const int srcTLX = srcX + 1-mainKernelSize/2;
-    const int srcTLY = srcY + 1-mainKernelSize/2;
+    const int srcTLX = srcX + 1 - mainKernelSize / 2;
+    const int srcTLY = srcY + 1 - mainKernelSize / 2;
 
     //calculate values of Lanczos function for rows
     double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
     for (int kernelX = 0; kernelX < mainKernelSize; kernelX++) {
-        kernelRowVal[kernelX] = Lanczos(1 - mainKernelSize/2 - kernelFracX + kernelX, 2.0/mainKernelSize);
+        kernelRowVal[kernelX] = Lanczos(1 - mainKernelSize / 2 - kernelFracX + kernelX, 2.0 / mainKernelSize);
     }
 
     double   colSumImg = 0;
@@ -120,7 +113,7 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(
     MskPixel colSumMsk = 0;
     double kernelSum = 0;
 
-    if (maskKernelType == KERNEL_TYPE_LANCZOS && mainKernelSize==maskKernelSize) {
+    if (maskKernelType == KERNEL_TYPE_LANCZOS && mainKernelSize == maskKernelSize) {
         // mask kernel is identical to main kernel
         for (int kernelY = 0; kernelY < mainKernelSize; kernelY++) {
             double   rowSumImg = 0;
@@ -145,7 +138,7 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(
                 }
             }
 
-            double kernelVal = Lanczos(1 - mainKernelSize/2 - kernelFracY + kernelY, 2.0/mainKernelSize);
+            double kernelVal = Lanczos(1 - mainKernelSize / 2 - kernelFracY + kernelY, 2.0 / mainKernelSize);
             if (kernelVal != 0) {
                 colSumImg += rowSumImg * kernelVal;
                 colSumVar += rowSumVar * kernelVal * kernelVal;
@@ -175,7 +168,7 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(
                 }
             }
 
-            double kernelVal = Lanczos(1 - mainKernelSize/2 - kernelFracY + kernelY, 2.0/mainKernelSize);
+            double kernelVal = Lanczos(1 - mainKernelSize / 2 - kernelFracY + kernelY, 2.0 / mainKernelSize);
             if (kernelVal != 0) {
                 colSumImg += rowSumImg * kernelVal;
                 colSumVar += rowSumVar * kernelVal * kernelVal;
@@ -187,23 +180,22 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(
             const int srcTLXMask = srcX;
             const int srcTLYMask = srcY;
 
-            const int kernelX = int(kernelFracX+0.5);
-            const int kernelY = int(kernelFracY+0.5);
+            const int kernelX = int(kernelFracX + 0.5);
+            const int kernelY = int(kernelFracY + 0.5);
 
-            int srcPosMsk = srcTLXMask+ kernelX + srcImage.strideMsk * (srcTLYMask + kernelY);
+            int srcPosMsk = srcTLXMask + kernelX + srcImage.strideMsk * (srcTLYMask + kernelY);
             MskPixel srcMskPixel = srcImage.msk[srcPosMsk];
             colSumMsk = srcMskPixel;
         } else { // lanczos or bilinear mask kernel
-            const int srcTLXMask = srcX + 1-maskKernelSize/2;
-            const int srcTLYMask = srcY + 1-maskKernelSize/2;
+            const int srcTLXMask = srcX + 1 - maskKernelSize / 2;
+            const int srcTLYMask = srcY + 1 - maskKernelSize / 2;
 
             for (int kernelY = 0; kernelY < maskKernelSize; kernelY++) {
-                if (IsEqualZeroLanczosOrBilinear(1 - maskKernelSize/2 - kernelFracY + kernelY) ) continue;
+                if (IsEqualZeroLanczosOrBilinear(1 - maskKernelSize / 2 - kernelFracY + kernelY) ) continue;
 
                 int srcPosMsk = srcTLXMask + srcImage.strideMsk * (srcTLYMask + kernelY);
                 for (int kernelX = 0; kernelX < maskKernelSize; kernelX++, srcPosMsk++) {
-                    double kernelVal = kernelRowVal[kernelX];
-                    if (!IsEqualZeroLanczosOrBilinear(1 - maskKernelSize/2 - kernelFracX + kernelX)) {
+                    if (!IsEqualZeroLanczosOrBilinear(1 - maskKernelSize / 2 - kernelFracX + kernelX)) {
                         MskPixel srcMskPixel = srcImage.msk[srcPosMsk];
                         colSumMsk |= srcMskPixel;
                     }
@@ -228,13 +220,13 @@ __device__ double ApplyLanczosFilter(const SrcPixelT* srcImgPtr, const int srcIm
                                      const double kernelFracX, const double kernelFracY
                                     )
 {
-    const int srcTLX = srcX + 1 - mainKernelSize/2;
-    const int srcTLY = srcY + 1 - mainKernelSize/2;
+    const int srcTLX = srcX + 1 - mainKernelSize / 2;
+    const int srcTLY = srcY + 1 - mainKernelSize / 2;
 
     //calculate values of Lanczos function for rows
     double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
     for (int kernelX = 0; kernelX < mainKernelSize; kernelX++) {
-        kernelRowVal[kernelX] = Lanczos(1 - mainKernelSize/2 - kernelFracX + kernelX, 2.0/mainKernelSize);
+        kernelRowVal[kernelX] = Lanczos(1 - mainKernelSize / 2 - kernelFracX + kernelX, 2.0 / mainKernelSize);
     }
 
     double colSumImg = 0;
@@ -252,7 +244,7 @@ __device__ double ApplyLanczosFilter(const SrcPixelT* srcImgPtr, const int srcIm
             }
         }
 
-        double kernelVal = Lanczos(1 - mainKernelSize/2 - kernelFracY + kernelY, 2.0/mainKernelSize);
+        double kernelVal = Lanczos(1 - mainKernelSize / 2 - kernelFracY + kernelY, 2.0 / mainKernelSize);
         if (kernelVal != 0) {
             colSumImg += rowSumImg * kernelVal;
             kernelSum += rowKernelSum * kernelVal;
@@ -281,7 +273,7 @@ __device__ SPoint2 GetInterpolatedValue(BilinearInterp* const interpBuf, int int
 
 /// GPU kernel for lanczos resampling
 template<typename DestPixelT, typename SrcPixelT>
-__global__ void WarpImageGpuKernelYY(
+__global__ void WarpImageGpuKernelZZ(
     bool isMaskedImage,
     ImageDataPtr<DestPixelT> destImage,
     ImageDataPtr<SrcPixelT>  srcImage,
@@ -409,7 +401,7 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
     dim3 block(SIZE_X_WARPING_BLOCK * SIZE_Y_WARPING_BLOCK);
     dim3 grid(7 * 16); //divisible by no. of SM's in most GPUs, performs well
 
-    WarpImageGpuKernelYY <<< grid, block, 0>>>(
+    WarpImageGpuKernelZZ <<< grid, block, 0>>>(
         isMaskedImage,
         destImageGpu,
         srcImageGpu,

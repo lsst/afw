@@ -270,7 +270,7 @@ int WarpImageGpuWrapper(
 
     for (int y = 0; y < dimY; y++)
         for (int x = 0; x < dimX; x++)
-            (*dstImage.getImage())(x,y)=x+y;
+            (*dstImage.getImage())(x, y) = x + y;
 
 
     mathDetail::gpu::ImageDataPtr<DestPixelT> destImgGpu;
@@ -422,7 +422,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     pexLog::TTrace<3>("lsst.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
 
     if (!lsst::afw::gpu::isGpuBuild())
-    	throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
 
     gpu::KernelType maskKernelType;
     {
@@ -440,7 +440,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     if (gpuDetail::TryToSelectCudaDevice(!forceProcessing) == false)
         return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::NO_GPU);
 
-    const int mainKernelSize = 2*lanczosKernel.getOrder();
+    const int mainKernelSize = 2 * lanczosKernel.getOrder();
     //do not process if the kernel is too large for allocated GPU local memory
     if (mainKernelSize * 2 > gpu::SIZE_MAX_WARPING_KERNEL)
         return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::KERNEL_TOO_LARGE);
@@ -490,12 +490,12 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     pexLog::TTrace<3>("lsst.afw.math.warp", "using GPU acceleration, remapping masked image");
 
     int maskKernelSize;
-    if (maskKernelType==gpu::KERNEL_TYPE_LANCZOS) {
-        maskKernelSize = 2*dynamic_cast<afwMath::LanczosWarpingKernel const*>(&maskWarpingKernel)->getOrder();
+    if (maskKernelType == gpu::KERNEL_TYPE_LANCZOS) {
+        maskKernelSize = 2 * dynamic_cast<afwMath::LanczosWarpingKernel const*>(&maskWarpingKernel)->getOrder();
     } else {
         maskKernelSize = 2;
     }
-    #ifdef GPU_BUILD
+#ifdef GPU_BUILD
     numGoodPixels = WarpImageGpuWrapper(destImage,
                                         srcImage,
                                         mainKernelSize,
@@ -504,7 +504,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
                                         srcGoodBBox,
                                         srcPosInterp, interpLength, padValue
                                        );
-    #endif
+#endif
     return std::pair<int, WarpImageGpuStatus::ReturnCode>(numGoodPixels, WarpImageGpuStatus::OK);
 }
 
