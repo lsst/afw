@@ -265,17 +265,8 @@ int WarpImageGpuWrapper(
 
     gpuDetail::GpuMemOwner<gpu::BilinearInterp> srcPosInterpGpu;
 
-    const int dimX = dstImage.getImage()->getWidth();
-    const int dimY = dstImage.getImage()->getHeight();
-
-    for (int y = 0; y < dimY; y++)
-        for (int x = 0; x < dimX; x++)
-            (*dstImage.getImage())(x, y) = x + y;
-
-
     mathDetail::gpu::ImageDataPtr<DestPixelT> destImgGpu;
-    //destImgGpu.strideImg = destBufImgGpu.AllocImageBaseBuffer(*dstImage.getImage());
-    destImgGpu.strideImg = destBufImgGpu.TransferFromImageBase(*dstImage.getImage());
+    destImgGpu.strideImg = destBufImgGpu.AllocImageBaseBuffer(*dstImage.getImage());
     destImgGpu.strideVar = destBufVarGpu.AllocImageBaseBuffer(*dstImage.getVariance());
     destImgGpu.strideMsk = destBufMskGpu.AllocImageBaseBuffer(*dstImage.getMask());
     if (destBufImgGpu.ptr == NULL)  {
