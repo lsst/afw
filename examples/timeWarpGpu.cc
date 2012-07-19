@@ -174,24 +174,20 @@ string DecimalPlaces(int places, double val)
 
 template<typename T>
 typename T::SinglePixel const GetEdgePixel(T& x)
-{ 
+{
     return afwMath::edgePixel< T >( typename afwImage::detail::image_traits< T >::image_category() );
 }
 
 template<typename T>
 void TimeOneKernelMI(
     const afwImage::MaskedImage<T>  inImg,
-    const int order,
     const afwImage::Wcs::Ptr destWcs,
     const afwImage::Wcs::Ptr srcWcs,
-    const int interpLen
+    afwMath::WarpingControl wctrlCPU,
+    afwMath::WarpingControl wctrlGPU,
+    int order            // redundant, but easier this way
 )
 {
-    const lsst::afw::gpu::DevicePreference selCPU = lsst::afw::gpu::USE_CPU;
-    const lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::AUTO;
-
-    afwMath::LanczosWarpingKernel lanKernel(order);
-
     afwImage::MaskedImage<T>       resMI   (inImg.getDimensions());
     afwImage::MaskedImage<T>       resMIGpu(inImg.getDimensions());
 
@@ -206,13 +202,13 @@ void TimeOneKernelMI(
     // warp masked image
     time_t maskedImgCpuStart = clock();
     for (int i = 0; i < repCpu; i++) {
-        numGoodPixels = warpImage(resMI, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resMI), selCPU);
+        numGoodPixels = warpImage(resMI, *destWcs, inImg, *srcWcs, wctrlCPU);
     }
     double maskedImgCpuTime = DiffTime(maskedImgCpuStart, clock()) / repCpu;
 
     time_t maskedImgGpuStart = clock();
     for (int i = 0; i < repGpu; i++) {
-        numGoodPixelsGpu = warpImage(resMIGpu, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resMIGpu), selGPU);
+        numGoodPixelsGpu = warpImage(resMIGpu, *destWcs, inImg, *srcWcs, wctrlGPU);
     }
     double maskedImgGpuTime = DiffTime(maskedImgGpuStart, clock()) / repGpu;
 
@@ -244,6 +240,9 @@ void TimeOneKernelPI(
 
     afwMath::LanczosWarpingKernel lanKernel(order);
 
+    afwMath::WarpingControl lanCPU( lanKernel, interpLen, selCPU);
+    afwMath::WarpingControl lanGPU( lanKernel, interpLen, selGPU);
+
     afwImage::Image<T>       resPI   (inImg.getDimensions());
     afwImage::Image<T>       resPIGpu(inImg.getDimensions());
 
@@ -258,13 +257,13 @@ void TimeOneKernelPI(
     // warp plain image
     time_t plainImgCpuStart = clock();
     for (int i = 0; i < repCpu; i++) {
-        numGoodPixels = warpImage(resPI, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resPI), selCPU);
+        numGoodPixels = warpImage(resPI, *destWcs, inImg, *srcWcs, lanCPU);
     }
     double plainImgCpuTime = DiffTime(plainImgCpuStart, clock()) / repCpu;
 
     time_t plainImgGpuStart = clock();
     for (int i = 0; i < repGpu; i++) {
-        numGoodPixelsGpu = warpImage(resPIGpu, *destWcs, inImg, *srcWcs, lanKernel, interpLen, GetEdgePixel(resPIGpu), selGPU);
+        numGoodPixelsGpu = warpImage(resPIGpu, *destWcs, inImg, *srcWcs, lanGPU);
     }
     double plainImgGpuTime = DiffTime(plainImgGpuStart, clock()) / repGpu;
 
@@ -283,6 +282,8 @@ void TestWarpGpu(
     const afwImage::MaskedImage<float>   inImgFlt
 )
 {
+    const lsst::afw::gpu::DevicePreference selCPU = lsst::afw::gpu::USE_CPU;
+    const lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::AUTO;
 
     const afwImage::MaskedImage<double>  inMIDbl = inImgDbl;
     const afwImage::MaskedImage<float>   inMIFlt = inImgFlt;
@@ -305,10 +306,10 @@ void TestWarpGpu(
     {
         // do one warp and discard the result
         // because first warp has to initialize GPU, thus using aditional time
-        lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::USE_GPU;
         afwMath::LanczosWarpingKernel lanKernel(2);
         afwImage::MaskedImage<float>       resGpu(15, 15);
-        warpImage(resGpu, wcs1, inImgFlt, wcs2, lanKernel, 40, GetEdgePixel(resGpu), selGPU);
+        afwMath::WarpingControl lanGPU( lanKernel, 40, lsst::afw::gpu::USE_GPU);
+        warpImage(resGpu, wcs1, inImgFlt, wcs2, lanGPU);
     }
 
     cout << endl;
@@ -335,7 +336,10 @@ void TestWarpGpu(
     PrintSeparator();
 
     for (int i = 2; i < 6; i++) {
-        TimeOneKernelMI(inMIFlt, i, wcs1.clone(), wcs2.clone(), defaultInterpLen);
+	    afwMath::LanczosWarpingKernel lanKernel(i);
+	    afwMath::WarpingControl wctrlCPU( lanKernel, defaultInterpLen, selCPU);
+        afwMath::WarpingControl wctrlGPU( lanKernel, defaultInterpLen, selGPU);
+        TimeOneKernelMI(inMIFlt, wcs1.clone(), wcs2.clone(), wctrlCPU, wctrlGPU, i);
     }
 
     cout << endl;
@@ -344,7 +348,36 @@ void TestWarpGpu(
     PrintSeparator();
 
     for (int i = 2; i < 6; i++) {
-        TimeOneKernelMI(inMIDbl, i, wcs1.clone(), wcs2.clone(), defaultInterpLen);
+        afwMath::LanczosWarpingKernel lanKernel(i);
+        afwMath::WarpingControl wctrlCPU( lanKernel, defaultInterpLen, selCPU);
+        afwMath::WarpingControl wctrlGPU( lanKernel, defaultInterpLen, selGPU);
+        TimeOneKernelMI(inMIDbl, wcs1.clone(), wcs2.clone(), wctrlCPU, wctrlGPU, i);
+    }
+
+    cout << endl;
+    cout << "        Masked Image<float>, Lanczos kernel, bilinear mask kernel" << endl;
+    cout << "Order  CPU time  GPU time  Speedup     Image Dev      Variance Dev   Mask Diff" << endl;
+    PrintSeparator();
+
+    for (int i = 2; i < 6; i++) {
+        char kernelNameBuf[30];
+        sprintf(kernelNameBuf, "lanczos%d",i);
+	    afwMath::WarpingControl wctrlCPU( kernelNameBuf, "bilinear", 0, defaultInterpLen, selCPU);
+        afwMath::WarpingControl wctrlGPU( kernelNameBuf, "bilinear", 0, defaultInterpLen, selGPU);
+        TimeOneKernelMI(inMIFlt, wcs1.clone(), wcs2.clone(), wctrlCPU, wctrlGPU, i);
+    }
+
+    cout << endl;
+    cout << "        Masked Image<double>, Lanczos kernel, bilinear mask kernel" << endl;
+    cout << "Order  CPU time  GPU time  Speedup     Image Dev      Variance Dev   Mask Diff" << endl;
+    PrintSeparator();
+
+    for (int i = 2; i < 6; i++) {
+        char kernelNameBuf[30];
+        sprintf(kernelNameBuf, "lanczos%d",i);
+        afwMath::WarpingControl wctrlCPU( kernelNameBuf, "bilinear", 0, defaultInterpLen, selCPU);
+        afwMath::WarpingControl wctrlGPU( kernelNameBuf, "bilinear", 0, defaultInterpLen, selGPU);
+        TimeOneKernelMI(inMIDbl, wcs1.clone(), wcs2.clone(), wctrlCPU, wctrlGPU, i);
     }
 }
 
