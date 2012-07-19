@@ -173,7 +173,7 @@ bool IsErrorAcceptable(double val, double limit)
 
 template<typename T>
 typename T::SinglePixel const GetEdgePixel(T& x)
-{ 
+{
     return afwMath::edgePixel< T >( typename afwImage::detail::image_traits< T >::image_category() );
 }
 
@@ -182,9 +182,10 @@ bool TestWarpGpu(
     const afwImage::MaskedImage<float>   inImgFlt,
     afwImage::Wcs::Ptr wcs1,
     afwImage::Wcs::Ptr wcs2,
-    const int kernelOrder,
-    const int interpLen,
-    string           wcsStr
+    const afwMath::WarpingControl& wctrCPU,
+    const afwMath::WarpingControl& wctrGPU,
+    string           wcsStr,
+    string           maskKernelStr
 )
 {
     const afwImage::MaskedImage<double>  inMIDbl = inImgDbl;
@@ -195,15 +196,15 @@ bool TestWarpGpu(
     const afwImage::Image<double> inPIDbl = *inMIDbl.getImage();
     const afwImage::Image<float>  inPIFlt = *inMIFlt.getImage();
 
+    boost::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =
+            boost::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(wctrCPU.getWarpingKernel());
+
     cout << "Image size: " << sizeX << " x " << sizeY << "   ";
-    cout << "Kernel order: " << kernelOrder << "   ";
-    cout << "Interpolation length: " << interpLen << "   ";
+    cout << "Interpolation length: " << wctrCPU.getInterpLength() << "   " << endl;
+    cout << "Main (Lanczos) Kernel order: " << lanczosKernelPtr->getOrder() << "   ";
+    cout << "Mask Kernel: " << maskKernelStr << "   ";
+
     cout << endl;
-
-    lsst::afw::gpu::DevicePreference useGpu = lsst::afw::gpu::USE_GPU;
-    lsst::afw::gpu::DevicePreference useCpu = lsst::afw::gpu::USE_CPU;
-
-    afwMath::LanczosWarpingKernel lanKernel(kernelOrder);
 
     afwImage::MaskedImage<double> resMIDbl(inMIDbl.getDimensions());
     afwImage::MaskedImage<float>  resMIFlt(inMIDbl.getDimensions());
@@ -222,10 +223,10 @@ bool TestWarpGpu(
     bool isSuccess = true;
 
     // warp
-    int retPIDblCpu = afwMath::warpImage(resPIDbl   , *wcs1, inPIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIDbl), useCpu);
-    int retPIDblGpu = afwMath::warpImage(resPIDblGpu, *wcs1, inPIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIDbl), useGpu);
-    int retPIFltCpu = afwMath::warpImage(resPIFlt   , *wcs1, inPIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIFlt), useCpu);
-    int retPIFltGpu = afwMath::warpImage(resPIFltGpu, *wcs1, inPIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resPIFlt), useGpu);
+    int retPIDblCpu = afwMath::warpImage(resPIDbl   , *wcs1, inPIDbl, *wcs2, wctrCPU);
+    int retPIDblGpu = afwMath::warpImage(resPIDblGpu, *wcs1, inPIDbl, *wcs2, wctrGPU);
+    int retPIFltCpu = afwMath::warpImage(resPIFlt   , *wcs1, inPIFlt, *wcs2, wctrCPU);
+    int retPIFltGpu = afwMath::warpImage(resPIFltGpu, *wcs1, inPIFlt, *wcs2, wctrGPU);
 
     const double errDbl = 5e-13;
     const double errFlt = 5e-7;
@@ -249,10 +250,10 @@ bool TestWarpGpu(
          << setw(11)     << diffPIFlt << Sel(diffPIFlt > errFlt          , "*  ", "   ")
          << setw(14+9+6) << dretPIFlt << Sel(abs(dretPIFlt) > maxRetDiff , "*", " ") << endl;
 
-    int retMIDblCpu = afwMath::warpImage(resMIDbl   , *wcs1, inMIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIDbl), useCpu);
-    int retMIDblGpu = afwMath::warpImage(resMIDblGpu, *wcs1, inMIDbl, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIDbl), useGpu);
-    int retMIFltCpu = afwMath::warpImage(resMIFlt   , *wcs1, inMIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIFlt), useCpu);
-    int retMIFltGpu = afwMath::warpImage(resMIFltGpu, *wcs1, inMIFlt, *wcs2, lanKernel, interpLen, GetEdgePixel(resMIFlt), useGpu);
+    int retMIDblCpu = afwMath::warpImage(resMIDbl   , *wcs1, inMIDbl, *wcs2, wctrCPU);
+    int retMIDblGpu = afwMath::warpImage(resMIDblGpu, *wcs1, inMIDbl, *wcs2, wctrGPU);
+    int retMIFltCpu = afwMath::warpImage(resMIFlt   , *wcs1, inMIFlt, *wcs2, wctrCPU);
+    int retMIFltGpu = afwMath::warpImage(resMIFltGpu, *wcs1, inMIFlt, *wcs2, wctrGPU);
 
     double diffMIImgDbl = CvRmsd(*resMIDbl.getImage()   , *resMIDblGpu.getImage());
     double diffMIVarDbl = CvRmsd(*resMIDbl.getVariance(), *resMIDblGpu.getVariance());
@@ -294,6 +295,67 @@ bool TestWarpGpu(
     return isSuccess;
 }
 
+bool TestWarpGpuKernels(
+    const afwImage::MaskedImage<double>  inImgDbl,
+    const afwImage::MaskedImage<float>   inImgFlt,
+    afwImage::Wcs::Ptr wcs1,
+    afwImage::Wcs::Ptr wcs2,
+    const int kernelOrder,
+    const int interpLen,
+    string           wcsStr
+)
+{
+    bool isSuccess = true;
+    afwMath::LanczosWarpingKernel lanKernel(kernelOrder);
+    const lsst::afw::gpu::DevicePreference useGpu = lsst::afw::gpu::USE_GPU;
+    const lsst::afw::gpu::DevicePreference useCpu = lsst::afw::gpu::USE_CPU;
+
+    {
+        afwMath::WarpingControl wctrCPU(lanKernel,interpLen, useCpu);
+        afwMath::WarpingControl wctrGPU(lanKernel,interpLen, useGpu);
+        isSuccess = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr, "not set (same as main)");
+    }
+
+    if ( (kernelOrder==4 || kernelOrder==5) && (interpLen==1 || interpLen==7 || interpLen==11)) {
+        bool isSuccess2=true, isSuccess3=true, isSuccess4=true, isSuccess5=true, isSuccess6=true;
+        char lanczosNameBuf[30];
+        sprintf(lanczosNameBuf, "lanczos%d", kernelOrder);
+        char lanczosNameM1Buf[30];
+        sprintf(lanczosNameM1Buf, "lanczos%d", kernelOrder-1);
+        {
+            afwMath::WarpingControl wctrCPU(lanczosNameBuf,"",0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosNameBuf,"",0,interpLen, useGpu);
+            isSuccess2 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr,
+                                     "empty string (same as main)");
+        }
+        {
+            afwMath::WarpingControl wctrCPU(lanczosNameBuf,"bilinear",0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosNameBuf,"bilinear",0,interpLen, useGpu);
+            isSuccess3 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr, "bilinear");
+        }
+        {
+            afwMath::WarpingControl wctrCPU(lanczosNameBuf,"nearest",0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosNameBuf,"nearest",0,interpLen, useGpu);
+            isSuccess4 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr, "nearest");
+        }
+        {
+            afwMath::WarpingControl wctrCPU(lanczosNameBuf,lanczosNameBuf,0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosNameBuf,lanczosNameBuf,0,interpLen, useGpu);
+            isSuccess5 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr,
+                            "identical string (same as main)");
+        }
+        {
+            afwMath::WarpingControl wctrCPU(lanczosNameBuf,lanczosNameM1Buf,0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosNameBuf,lanczosNameM1Buf,0,interpLen, useGpu);
+            isSuccess6 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr,
+                            "lanczos, one order less than main");
+        }
+        isSuccess = isSuccess && isSuccess2 && isSuccess3 && isSuccess4 && isSuccess5 && isSuccess6;
+    }
+
+    return isSuccess;
+}
+
 afwImage::Wcs::Ptr GetLinWcs(double x1, double y1, double x2, double y2,
                           afwGeom::Point2D o1=afwGeom::Point2D(0,0),
                           afwGeom::Point2D o2=afwGeom::Point2D(0,0)
@@ -327,7 +389,7 @@ bool GpuTestAccuracy(
             afwImage::Wcs::Ptr wcs1_1=GetLinWcs(1.3  , -0.2,  -0.4,  0.8  );
             afwImage::Wcs::Ptr wcs1_2=GetLinWcs(0.88 ,0.2, -0.4, 1.12);
 
-            const bool isSuccessLin1 = TestWarpGpu(inMIDbl, inMIFlt, wcs1_1, wcs1_2,
+            const bool isSuccessLin1 = TestWarpGpuKernels(inMIDbl, inMIFlt, wcs1_1, wcs1_2,
                                                   order, interpLen, "[Linear WCS 1]" );
 
             PrintSeparator();
@@ -336,7 +398,7 @@ bool GpuTestAccuracy(
             afwImage::Wcs::Ptr wcs2_2=GetLinWcs(0.88 ,-0.2, 0.4, -1.12,
                                               afwGeom::Point2D(2,1), afwGeom::Point2D(-14,9));
 
-            const bool isSuccessLin2 = TestWarpGpu(inMIDbl, inMIFlt, wcs2_1, wcs2_2,
+            const bool isSuccessLin2 = TestWarpGpuKernels(inMIDbl, inMIFlt, wcs2_1, wcs2_2,
                                                   order, interpLen, "[Linear WCS 2]" );
 
             isSuccess = isSuccess && isSuccessLin1 && isSuccessLin2;
@@ -363,6 +425,11 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     afwMath::LanczosWarpingKernel lanKernel(2);
     afwMath::BilinearWarpingKernel bilKernel;
 
+    afwMath::WarpingControl wctrLanGPU( lanKernel, defaultInterpLen, devPrefUGpu);
+    afwMath::WarpingControl wctrLanCPU( lanKernel, defaultInterpLen, devPrefUCpu);
+    afwMath::WarpingControl wctrLanAUTO(lanKernel, defaultInterpLen, devPrefAuto);
+    afwMath::WarpingControl wctrLanSAFE(lanKernel, defaultInterpLen, devPrefSafe);
+
     afwImage::Wcs::Ptr wcs1=GetLinWcs(1  ,  -1, -0.5,  1  );
     afwImage::Wcs::Ptr wcs2=GetLinWcs(2.2, 1.3,  3.4, -1.1);
 
@@ -370,7 +437,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     bool isThrown;
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLanAUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -383,7 +450,8 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefUGpu);
+        afwMath::WarpingControl wctrBilGPU( bilKernel, defaultInterpLen, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBilGPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -396,7 +464,8 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefSafe);
+        afwMath::WarpingControl wctrBilSAFE(bilKernel, defaultInterpLen, devPrefSafe);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBilSAFE);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -409,7 +478,8 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefAuto);
+        afwMath::WarpingControl wctrLan0AUTO(lanKernel, 0, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0AUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -422,7 +492,8 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUCpu);
+        afwMath::WarpingControl wctrLan0CPU(lanKernel, 0, devPrefUCpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0CPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -435,7 +506,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLanGPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -448,7 +519,8 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUGpu);
+        afwMath::WarpingControl wctrLan0GPU( lanKernel, 0, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0GPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -462,7 +534,8 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefAuto);
+        afwMath::WarpingControl wctrBilAUTO(bilKernel, defaultInterpLen, devPrefSafe);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBilAUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -507,7 +580,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     bool isThrown;
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefAuto);
+        afwMath::WarpingControl wctrLanAUTO( lanKernel, defaultInterpLen, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLanAUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -520,7 +594,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, defaultInterpLen, GetEdgePixel(resImg), devPrefUGpu);
+        afwMath::WarpingControl wctrLanGPU( lanKernel, defaultInterpLen, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLanGPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -533,7 +608,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefSafe);
+        afwMath::WarpingControl wctrLan0SAFE( lanKernel, 0, devPrefSafe);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0SAFE);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -546,7 +622,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefAuto);
+        afwMath::WarpingControl wctrLan0AUTO( lanKernel, 0, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0AUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -559,7 +636,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUCpu);
+        afwMath::WarpingControl wctrLan0CPU( lanKernel, 0, devPrefUCpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0CPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -572,7 +650,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, lanKernel, 0, GetEdgePixel(resImg), devPrefUGpu);
+        afwMath::WarpingControl wctrLan0GPU( lanKernel, 0, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0GPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -585,7 +664,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, 2, GetEdgePixel(resImg), devPrefUGpu);
+        afwMath::WarpingControl wctrBil2GPU( bilKernel, 2, devPrefUGpu);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBil2GPU);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
@@ -598,7 +678,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, bilKernel, 2, GetEdgePixel(resImg), devPrefAuto);
+        afwMath::WarpingControl wctrBil2AUTO( bilKernel, 2, devPrefAuto);
+        afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBil2AUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
     }
