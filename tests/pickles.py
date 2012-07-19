@@ -153,7 +153,7 @@ class TanWcsPickleTestCase(PickleTestCase):
         hdr.add("BP_5_0", 2.8085458107813e-19)
         hdr.add("CTYPE1", "RA---TAN-SIP")
         hdr.add("CTYPE2", "DEC--TAN-SIP")
-        self.data = afwImage.cast_TanWcs(afwImage.makeWcs(hdr))
+        self.data = afwImage.makeWcs(hdr)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

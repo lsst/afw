@@ -46,8 +46,42 @@ using lsst::afw::image::NoWcs;
 %lsst_persistable(lsst::afw::image::Wcs);
 %lsst_persistable(lsst::afw::image::TanWcs);
 
-%boost_picklable(lsst::afw::image::Wcs);
-%boost_picklable(lsst::afw::image::TanWcs);
+%inline %{
+    #include <boost/make_shared.hpp>
+    #include <boost/serialization/serialization.hpp>
+    #include <boost/archive/binary_oarchive.hpp>
+    #include <boost/archive/binary_iarchive.hpp>
+    #include "lsst/daf/persistence/PropertySetFormatter.h"
+    #include <sstream>
+    std::string pickleMetadata(CONST_PTR(lsst::daf::base::PropertySet) header) {
+        std::stringstream ss;
+        boost::archive::binary_oarchive ar(ss);
+        ar << *header;
+        return ss.str();
+    }
+    PTR(lsst::daf::base::PropertySet) unpickleMetadata(std::string const& pick) {
+        std::stringstream ss(pick);
+        boost::archive::binary_iarchive ar(ss);
+        PTR(lsst::daf::base::PropertySet) header = boost::make_shared<lsst::daf::base::PropertySet>();
+        ar >> *header;
+        return header;
+    }
+%}
+
+%pythoncode %{
+    def unpickleWcs(pick):
+        header = unpickleMetadata(pick)
+        return makeWcs(header)
+%}
+
+%extend lsst::afw::image::Wcs {
+    %pythoncode %{
+         def __reduce__(self):
+             self.getFitsMetadata()
+             return (unpickleWcs, (pickleMetadata(self.getFitsMetadata()),),)
+    %}
+ }
+
 
 %newobject makeWcs;
 
