@@ -89,7 +89,10 @@ class Mosaic(object):
 
     def makeMosaic(self, images=None, frame=None, mode=None, title=""):
         """Return a mosaic of all the images provided; if none are specified,
-        use the list accumulated with Mosaic.append()
+        use the list accumulated with Mosaic.append().
+
+        Note that this mosaic is a patchwork of the input images;  if you want to
+        make a mosaic of a set images of the sky, you probably want to use the coadd code
         
         If frame is specified, display it
         """
@@ -141,7 +144,11 @@ class Mosaic(object):
         mosaic = images[0].Factory(
             afwGeom.Extent2I(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
             )
-        mosaic.set(self.background)
+        try:
+            mosaic.set(self.background)
+        except AttributeError:
+            raise RuntimeError("Attempt to mosaic images of type %s which don't support set" %
+                               type(mosaic))
 
         for i in range(len(images)):
             smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx), afwImage.LOCAL)

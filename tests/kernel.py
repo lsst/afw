@@ -108,6 +108,20 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
+        
+        self.verifyCache(kernel, hasCache=False)
+    
+    def verifyCache(self, kernel, hasCache=False):
+        """Verify the kernel cache
+        
+        @param kernel: kernel to test
+        @param hasCache: set True if this kind of kernel supports a cache, False otherwise
+        """
+        for cacheSize in (0, 100, 2000):
+            kernel.computeCache(cacheSize)
+            self.assertEqual(kernel.getCacheSize(), cacheSize if hasCache else 0)
+            kernelCopy = kernel.clone()
+            self.assertEqual(kernelCopy.getCacheSize(), kernel.getCacheSize())
 
     def testShrinkGrowBBox(self):
         """Test Kernel methods shrinkBBox and growBBox
@@ -163,6 +177,8 @@ class KernelTestCase(unittest.TestCase):
                             
         kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.Point2I(1, 1))
         self.basicTests(kernel, 0)
+        
+        self.verifyCache(kernel, hasCache=False)
 
     def testFixedKernel(self):
         """Test FixedKernel using a ramp function
@@ -199,6 +215,8 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernel.clone())
         if errStr:
             self.fail(errStr)
+        
+        self.verifyCache(kernel, hasCache=False)
 
     def testLinearCombinationKernelDelta(self):
         """Test LinearCombinationKernel using a set of delta basis functions
@@ -233,6 +251,8 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
             self.fail(errStr)
+
+        self.verifyCache(kernel, hasCache=False)
 
     def testComputeImageRaise(self):
         """Test Kernel.computeImage raises OverflowException iff doNormalize True and kernel sum exactly 0
@@ -320,6 +340,8 @@ class KernelTestCase(unittest.TestCase):
         if errStr:
             self.fail(errStr)
 
+        self.verifyCache(kernel, hasCache=False)
+
     def testSeparableKernel(self):
         """Test SeparableKernel using a Gaussian function
         """
@@ -359,6 +381,8 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
+        
+        self.verifyCache(kernel, hasCache=True)
 
     def testMakeBadKernels(self):
         """Attempt to make various invalid kernels; make sure the constructor shows an exception

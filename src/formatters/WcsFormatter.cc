@@ -186,40 +186,42 @@ void afwForm::WcsFormatter::delegateSerialize(
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
         ip->_wcsInfo =
-            reinterpret_cast<wcsprm*>(malloc(sizeof(wcsprm)));
+            reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
     }
 
 
-    // If we are loading, initialize the struct first
-    if (Archive::is_loading::value) {
-        ip->_wcsInfo[0].flag = -1;
-        wcsini(1, 2, &(ip->_wcsInfo[0]));
-    }
+    for (int i = 0; i < ip->_nWcsInfo; ++i) {
+        // If we are loading, initialize the struct first
+        if (Archive::is_loading::value) {
+            ip->_wcsInfo[i].flag = -1;
+            wcsini(1, 2, &(ip->_wcsInfo[i]));
+        }
 
-    // Serialize only critical Wcs parameters
-    //wcslib provides support for arrays of wcs', but we only
-    //implement support for one.
-    ar & ip->_wcsInfo[0].naxis;
-    ar & ip->_wcsInfo[0].equinox;
-    ar & ip->_wcsInfo[0].radesys;
-    ar & ip->_wcsInfo[0].crpix[0];
-    ar & ip->_wcsInfo[0].crpix[1];
-    ar & ip->_wcsInfo[0].cd[0];
-    ar & ip->_wcsInfo[0].cd[1];
-    ar & ip->_wcsInfo[0].cd[2];
-    ar & ip->_wcsInfo[0].cd[3];
-    ar & ip->_wcsInfo[0].crval[0];
-    ar & ip->_wcsInfo[0].crval[1];
-    ar & ip->_wcsInfo[0].cunit[0];
-    ar & ip->_wcsInfo[0].cunit[1];
-    ar & ip->_wcsInfo[0].ctype[0];
-    ar & ip->_wcsInfo[0].ctype[1];
-    ar & ip->_wcsInfo[0].altlin;
+        // Serialize only critical Wcs parameters
+        //wcslib provides support for arrays of wcs', but we only
+        //implement support for one.
+        ar & ip->_wcsInfo[i].naxis;
+        ar & ip->_wcsInfo[i].equinox;
+        ar & ip->_wcsInfo[i].radesys;
+        ar & ip->_wcsInfo[i].crpix[0];
+        ar & ip->_wcsInfo[i].crpix[1];
+        ar & ip->_wcsInfo[i].cd[0];
+        ar & ip->_wcsInfo[i].cd[1];
+        ar & ip->_wcsInfo[i].cd[2];
+        ar & ip->_wcsInfo[i].cd[3];
+        ar & ip->_wcsInfo[i].crval[0];
+        ar & ip->_wcsInfo[i].crval[1];
+        ar & ip->_wcsInfo[i].cunit[0];
+        ar & ip->_wcsInfo[i].cunit[1];
+        ar & ip->_wcsInfo[i].ctype[0];
+        ar & ip->_wcsInfo[i].ctype[1];
+        ar & ip->_wcsInfo[i].altlin;
 
-    // If we are loading, compute intermediate values given those above
-    if (Archive::is_loading::value) {
-        ip->_wcsInfo[0].flag = 0;
-        wcsset(&(ip->_wcsInfo[0]));
+        // If we are loading, compute intermediate values given those above
+        if (Archive::is_loading::value) {
+            ip->_wcsInfo[i].flag = 0;
+            wcsset(&(ip->_wcsInfo[i]));
+        }
     }
     execTrace("WcsFormatter delegateSerialize end");
 }

@@ -93,8 +93,8 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
         typically the center of the source exposure
     """
     ps = dafBase.PropertySet()
-    destCtrFitsPix = afwGeom.Point2D([ind + 1.0 for ind in destCtrInd])
-    srcCtrFitsPix = afwGeom.Point2D([ind + 1.0 for ind in srcCtrInd])
+    destCtrFitsPix = afwGeom.Point2D(*[ind + 1.0 for ind in destCtrInd])
+    srcCtrFitsPix = afwGeom.Point2D(*[ind + 1.0 for ind in srcCtrInd])
     srcOffFitsPix = srcCtrFitsPix + afwGeom.Extent2D(1.0, 0.0) # offset 1 pixel in x to compute orient & scale
     try:
         srcCtrSkyPos = srcWcs.pixelToSky(srcCtrFitsPix).getPosition(DegreesFlag)
@@ -137,7 +137,7 @@ def run():
     
     # make the destination exposure small enough that even after rotation and offset
     # (by reasonable amounts) there are no edge pixels
-    destDim = afwGeom.Extent2I([int(sd * 0.5) for sd in srcDim])
+    destDim = afwGeom.Extent2I(*[int(sd * 0.5) for sd in srcDim])
     destExposure = afwImage.ExposureF(destDim)
     destCtrInd = [int(d / 2) for d in destDim]
     
@@ -162,7 +162,7 @@ def run():
                     (0.0, "lanczos3"),
                     (45.0, "lanczos3"),
                 ):
-                    warpingControl = afwMath.WarpingContro(
+                    warpingControl = afwMath.WarpingControl(
                         kernelName,
                         maskKernelName,
                         cacheSize,
