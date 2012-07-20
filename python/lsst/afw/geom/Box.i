@@ -73,6 +73,13 @@
     def __str__(self):
         return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
 
-    getCorners = Box2I.getCorners
+    def getCorners(self):
+        return (
+            self.getMin(),
+            self.Point(self.getMaxX(), self.getMinY()),
+            self.getMax(),
+            self.Point(self.getMinX(), self.getMaxY())
+        )
+
     }
 }

@@ -33,6 +33,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
 
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/CoordinateExpr.h"
 
 namespace lsst { namespace afw { namespace geom {
@@ -47,7 +48,10 @@ double computeExtentNorm(Extent<double,N> const & s) {
 
 template <int N>
 int computeExtentNorm(Extent<int,N> const & s) {
-    assert(false);
+    throw LSST_EXCEPT(
+        pex::exceptions::LogicErrorException,
+        "Cannot compute norm of integer extent"
+    );
 #if 1                                   // make compilers happy in non-void function
     return -1;
 #endif

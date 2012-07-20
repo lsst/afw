@@ -315,7 +315,14 @@ class Box2DTestCase(unittest.TestCase):
         self.assertEqual(box.getCenterY(), 0.5*(pmax.getY() + pmin.getY()))
         self.assertEqual(box.getCenter().getX(), box.getCenterX())
         self.assertEqual(box.getCenter().getY(), box.getCenterY())
-        
+        corners = box.getCorners()
+        self.assertEqual(corners[0], box.getMin())
+        self.assertEqual(corners[1].getX(), box.getMaxX())
+        self.assertEqual(corners[1].getY(), box.getMinY())
+        self.assertEqual(corners[2], box.getMax())
+        self.assertEqual(corners[3].getX(), box.getMinX())
+        self.assertEqual(corners[3].getY(), box.getMaxY())
+
     def testRelations(self):
         box = geom.Box2D(geom.Point2D(-2,-3), geom.Point2D(2,1), True)
         self.assert_(box.contains(geom.Point2D(0,0)))

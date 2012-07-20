@@ -27,6 +27,7 @@
 #include <vector>
 #include "boost/shared_ptr.hpp"
 #include "boost/tuple/tuple.hpp"
+#include "boost/format.hpp"
 #include <map>
 
 #include "lsst/afw/math/warpExposure.h"
@@ -56,11 +57,9 @@ public:
     typedef boost::shared_ptr<const Distortion> ConstPtr;
 
     Distortion(int lanczosOrder=3) :
-        _lanczosInitialized(false),
         _lanczosOrder(lanczosOrder),
-        _kernelCacheSize(10000),
         _maxShear(std::map<Id,double>()),
-        _lanczosKernel(lanczosOrder) {}
+        _warpingControl(boost::str(boost::format("lanczos%d") % lanczosOrder), "", 10000) {}
     
     virtual ~Distortion() {}
 
@@ -70,17 +69,17 @@ public:
     int getLanczosOrder() const { return _lanczosOrder; }
     // Cannot do this.  We cache the kernel.  If you need a different lanczos order
     // you must create a new Distortion object. (note that Kernel cannot be assigned-to
-    // as operator=() is private. So we can't assign to a new _lanczosKernel())
+    // as operator=() is private. So we can't assign to a new Lanczos warping kernel.)
     //void setLanczosOrder(lanczosOrder);
     
+    /**
+     * @brief Set kernel cache size; 0 for no cache
+     *
+     * Note that the new cache is only computed when the kernel is first used to distort an image,
+     * and only if the cache size has changed.
+     */
     void setCacheSize(int cacheSize) {
-        // if it didn't change, do nothing
-        // if it did change, don't recompute, just note that lanczos is no longer initialized
-        // it'll be recomputed only if gets called to distort an image in _warp()
-        if (cacheSize != _kernelCacheSize) {
-            _kernelCacheSize=cacheSize;
-            _lanczosInitialized = false;
-        }
+        _warpingControl.setCacheSize(cacheSize);
     }
     
     // distort a point
@@ -151,11 +150,9 @@ private:
                                    std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
                                                            )
                                ) const;
-    mutable bool _lanczosInitialized;
     int _lanczosOrder;
-    mutable int _kernelCacheSize;
     mutable std::map<Id,double> _maxShear;
-    mutable lsst::afw::math::LanczosWarpingKernel _lanczosKernel;
+    lsst::afw::math::WarpingControl _warpingControl;
 };
 
 

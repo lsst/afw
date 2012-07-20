@@ -182,6 +182,29 @@ class WarpExposureTestCase(unittest.TestCase):
         except Exception:
             pass
     
+    def testWarpingControl(self):
+        """Test the basic mechanics of WarpingControl
+        """
+        for interpLength in (0, 1, 52):
+            wc = afwMath.WarpingControl("lanczos3", "", 0, interpLength)
+            self.assertFalse(wc.hasMaskKernel())
+            self.assertEqual(wc.getInterpLength(), interpLength)
+            for newInterpLength in (3, 7, 9):
+                wc.setInterpLength(newInterpLength)
+                self.assertEqual(wc.getInterpLength(), newInterpLength)
+        
+        for cacheSize in (0, 100):
+            wc = afwMath.WarpingControl("lanczos3", "bilinear", cacheSize)
+            self.assertTrue(wc.hasMaskKernel())
+            self.assertEqual(wc.getCacheSize(), cacheSize)
+            self.assertEqual(wc.getWarpingKernel().getCacheSize(), cacheSize)
+            self.assertEqual(wc.getMaskWarpingKernel().getCacheSize(), cacheSize)
+            for newCacheSize in (1, 50):
+                wc.setCacheSize(newCacheSize)
+                self.assertEqual(wc.getCacheSize(), newCacheSize)
+                self.assertEqual(wc.getWarpingKernel().getCacheSize(), newCacheSize)
+                self.assertEqual(wc.getMaskWarpingKernel().getCacheSize(), newCacheSize)
+    
     def testWarpingControlError(self):
         """Test error handling of WarpingControl
         """
