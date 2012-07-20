@@ -36,6 +36,7 @@
 %shared_ptr(lsst::afw::math::LanczosWarpingKernel);
 %shared_ptr(lsst::afw::math::NearestWarpingKernel);
 
+%import "lsst/afw/gpu/DevicePreference.h"
 %include "lsst/afw/math/warpExposure.h"
 
 %define %WarpFuncsByType(DESTIMAGEPIXEL, SRCIMAGEPIXEL)
