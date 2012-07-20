@@ -48,7 +48,7 @@ namespace WarpImageGpuStatus
 }
 
 /**
- * \brief GPU accelerated image warping for Lanczos resampling
+ * \brief GPU accelerated image warping using Lanczos resampling
  *
  * \return a std::pair<int,WarpImageGpuStatus::ReturnValue> containing:
  *                1) the number of valid pixels in destImage (those that are not edge pixels).
@@ -59,13 +59,15 @@ namespace WarpImageGpuStatus
  *
  * This function will not perform the warping if kernel size is too large.
  * (currently, when the order of the Lanczos kernel is >50)
- * If warping is not performed, the return value will be (X,false).
+ * If warping is not performed, the second elemnt of return value will not equal OK.
  * If forceProcessing is true:
  *       - this function will throw exceptions if a GPU device cannot be selected or used
  * If forceProcessing is false:
  *       - the warping will not be performed if the GPU code path is estimated to be slower
  *              than the CPU code path. That might happen if interpLength is too small (less than 3).
  *       - the warping will not be performed if a GPU device cannot be selected or used
+ * 
+ * \pre maskWarpingKernel must not be greater in size than warpingKernel
  *
  * Also see lsst::afw::math::warpImage()
  *
@@ -75,6 +77,7 @@ namespace WarpImageGpuStatus
  * Calls WarpImageGpuWrapper() to perform the wapring.
  *
  * \throw lsst::pex::exceptions::InvalidParameterException if interpLength < 1
+ * \throw lsst::pex::exceptions::InvalidParameterException if maskWarpingKernel is neither Lanczos, bilinear nor nearest neighbour
  * \throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
  * \throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
  * \throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
@@ -85,7 +88,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     DestImageT &destImage,                  ///< remapped %image
     SrcImageT const &srcImage,              ///< source %image
     lsst::afw::math::LanczosWarpingKernel const &warpingKernel,   ///< warping kernel
-    lsst::afw::math::SeparableKernel const &maskWarpingKernel,    ///< mask warping kernel
+    lsst::afw::math::SeparableKernel const &maskWarpingKernel,    ///< mask warping kernel (can be the same as warping kernel)
     SrcPosFunctor const &computeSrcPos,      ///< Functor to compute source position
     int const interpLength,                  ///< Distance over which WCS can be linearily interpolated
                                              ///< must be >0
