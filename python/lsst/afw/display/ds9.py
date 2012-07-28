@@ -576,6 +576,7 @@ def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", sile
 Possible values are:
         +                Draw a +
         x                Draw an x
+        *                Draw a *
         o                Draw a circle
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
         An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
@@ -621,6 +622,12 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         size = size/math.sqrt(2)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, color)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, color)
+    elif symb == '*':
+        size30 = 0.5*size
+        size60 = 0.5*math.sqrt(3)*size
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r, c-size, r, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size30, r+size60, c+size30, r-size60, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size30, r+size60, c-size30, r-size60, color)
     elif symb == 'o':
         cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
     else:
