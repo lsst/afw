@@ -568,6 +568,7 @@ def dot(symb, c, r, frame=None, size=2, ctype=None):
 Possible values are:
         +                Draw a +
         x                Draw an x
+        *                Draw a *
         o                Draw a circle
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
@@ -596,6 +597,12 @@ Any other value is interpreted as a string to be drawn
         size = size/math.sqrt(2)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, color)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, color)
+    elif symb == '*':
+        size30 = 0.5*size
+        size60 = 0.5*math.sqrt(3)*size
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r, c-size, r, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size30, r+size60, c+size30, r-size60, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size30, r+size60, c-size30, r-size60, color)
     elif symb == 'o':
         cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
     elif re.search(r"^@:", symb):
