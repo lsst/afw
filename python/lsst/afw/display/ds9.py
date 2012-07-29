@@ -326,8 +326,14 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None):
     else:
         return
 
+    cmd = cmd.rstrip()
+    if not cmd:
+        return
+
     try:
-        xpa.set(None, getXpaAccessPoint(), cmd, "", "", 0)
+        ret = xpa.set(None, getXpaAccessPoint(), cmd, "", "", 0)
+        if ret:
+            raise IOError(ret)
     except IOError, e:
         if not trap:
             raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
