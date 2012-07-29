@@ -38,7 +38,10 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
-needShow = True;                        # Used to avoid a bug in ds9 5.4
+try:
+    needShow
+except NameError:
+    needShow = True;                        # Used to avoid a bug in ds9 5.4
 
 ## An error talking to ds9
 class Ds9Error(IOError):
