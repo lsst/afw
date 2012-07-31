@@ -15,6 +15,7 @@
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
+#include "lsst/afw/table/SchemaMapper.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -202,7 +203,12 @@ public:
         size_type S = size();
         size_type start, stop = 0;
         // Python doesn't allow step == 0
-        assert(step != 0);
+        if (step == 0) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterException,
+                "Step cannot be zero"
+            );
+        }
         // Basic negative indexing rule: first add size
         if (startd < 0) {
             startd += S;
@@ -296,6 +302,9 @@ public:
      */
     ColumnView getColumnView() const { return ColumnView::make(_table, begin(), end()); }
 
+    /// @brief Return true if all records are contiguous.
+    bool isContiguous() const { return ColumnView::isRangeContiguous(_table, begin(), end()); }
+
     //@{
     /**
      *  Iterator access.
@@ -317,11 +326,25 @@ public:
     /// Return the maximum number of elements allowed in a catalog.
     size_type max_size() const { return _internal.max_size(); }
 
-    /// Return the capacity of the internal catalog; this is unrelated to the space available in the table.
-    size_type capacity() const { return _internal.capacity(); }
+    /**
+     *  @brief Return the capacity of the catalog.
+     *
+     *  This is computed as the sum of the current size and the unallocated space in the table.  It
+     *  does not reflect the size of the internal vector, and hence cannot be used to judge when
+     *  iterators may be invalidated.
+     */
+    size_type capacity() const { return _internal.size() + _table->getBufferSize(); }
 
-    /// Increase the capacity of the internal catalog to the given size.  This does not affect the table.
-    void reserve(size_type n) { _internal.reserve(n); }
+    /**
+     *  @brief Increase the capacity of the catalog to the given size.
+     *
+     *  This can be used to guarantee that the catalog will be contiguous, but it only affects
+     *  records constructed after reserve().
+     */
+    void reserve(size_type n) {
+        if (n <= _internal.size()) return;
+        _table->preallocate(n - _internal.size());
+    }
 
     /// Return the record at index i.
     reference operator[](size_type i) const { return *_internal[i]; }
@@ -407,7 +430,42 @@ public:
      */
     template <typename InputIterator>
     void insert(iterator pos, InputIterator first, InputIterator last, bool deep=false) {
-        _insert(pos, first, last, deep, (typename std::iterator_traits<InputIterator>::iterator_category*)0);
+        _maybeReserve(
+            pos, first, last, deep, (typename std::iterator_traits<InputIterator>::iterator_category*)0
+        );
+        if (deep) {
+            while (first != last) {
+                pos = insert(pos, *first);
+                ++pos;
+                ++first;
+            }
+        } else {
+            while (first != last) {
+                pos = insert(pos, first);
+                assert(pos != end());
+                ++pos;
+                ++first;
+            }
+        }
+    }
+
+    /// @brief Insert a range of records into the catalog by copying them with a SchemaMapper.
+    template <typename InputIterator>
+    void insert(SchemaMapper const & mapper, iterator pos, InputIterator first, InputIterator last) {
+        if (mapper.getOutputSchema() != _table->getSchema()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterException,
+                "SchemaMapper's output schema does not match catalog's schema"
+            );
+        }
+        _maybeReserve(
+            pos, first, last, true, (typename std::iterator_traits<InputIterator>::iterator_category*)0
+        );
+        while (first != last) {
+            pos = insert(pos, _table->copyRecord(*first, mapper));
+            ++pos;
+            ++first;
+        }
     }
 
     /// Insert a copy of the given record at the given position.
@@ -487,37 +545,21 @@ public:
 private:
 
     template <typename InputIterator>
-    void _insert(
-        iterator pos, InputIterator first, InputIterator last, bool deep,
+    void _maybeReserve(
+        iterator & pos, InputIterator first, InputIterator last, bool deep,
         std::random_access_iterator_tag *
     ) {
         std::ptrdiff_t n = pos - begin();
         _internal.reserve(_internal.size() + last - first);
         pos = begin() + n;
         if (deep) _table->preallocate(last - first);
-        _insert(pos, first, last, deep, (std::input_iterator_tag *)0);
     }
 
     template <typename InputIterator>
-    void _insert(
+    void _maybeReserve(
         iterator pos, InputIterator first, InputIterator last, bool deep,
         std::input_iterator_tag *
-    ) {
-        if (deep) {
-            while (first != last) {
-                pos = insert(pos, *first);
-                ++pos;
-                ++first;
-            }
-        } else {
-            while (first != last) {
-                pos = insert(pos, first);
-                assert(pos != end());
-                ++pos;
-                ++first;
-            }
-        }
-    }
+    ) {}
 
     PTR(Table) _table;
     Internal _internal;

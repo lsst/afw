@@ -130,6 +130,13 @@ public:
     void preallocate(std::size_t nRecords);
 
     /**
+     *  @brief Return the number of additional records space has been already been allocated for.
+     *
+     *  Unlike std::vector::capacity, this does not factor in existing records in any way.
+     */
+    std::size_t getBufferSize() const;
+
+    /**
      *  @brief Construct a new table.
      *
      *  Because BaseTable is an abstract class, this actually returns a hidden trivial subclass

@@ -42,6 +42,28 @@ private:
     Key<T> const & _target;
 };
 
+// Functor used to iterate through a minimal schema and map all fields present in the
+// input schema and add those that are not.
+struct MapMinimalSchema {
+
+    template <typename U>
+    void operator()(SchemaItem<U> const & item) const {
+        Key<U> outputKey;
+        try {
+            SchemaItem<U> inputItem = _mapper->getInputSchema().find(item.key);
+            outputKey = _mapper->addMapping(item.key);
+        } catch (pex::exceptions::NotFoundException &) {
+            outputKey = _mapper->addOutputField(item.field);
+        }
+        assert(outputKey == item.key);
+    }
+
+    explicit MapMinimalSchema(SchemaMapper * mapper) : _mapper(mapper) {}
+
+private:
+    SchemaMapper * _mapper;
+};
+
 } // anonymous
 
 SchemaMapper::SchemaMapper(Schema const & input) :
@@ -92,6 +114,17 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
         _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
+}
+
+void SchemaMapper::addMinimalSchema(Schema const & minimal) {
+    if (getOutputSchema().getFieldCount() > 0) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicErrorException,
+            "Must add minimal schema to mapper before adding any other fields"
+        );
+    }
+    MapMinimalSchema f(this);
+    minimal.forEach(f);
 }
 
 void SchemaMapper::invert() {
