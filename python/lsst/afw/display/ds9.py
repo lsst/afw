@@ -180,12 +180,15 @@ def setMaskTransparency(transparency=None, frame=None):
     if transparency is not None:
         ds9Cmd("mask transparency %d" % transparency, frame=frame)
 
-setMaskTransparency()
-
-def getMaskTransparency():
-    """Return ds9's mask transparency"""
+def getDesiredMaskTransparency():
+    """Return requested ds9's mask transparency"""
 
     return _maskTransparency
+
+def getMaskTransparency(frame=None):
+    """Return the current ds9's mask transparency"""
+
+    return float(ds9Cmd("mask transparency", get=True))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -208,7 +211,7 @@ def getXpaAccessPoint():
 def ds9Version():
     """Return the version of ds9 in use, as a string"""
     try:
-        v = xpa.get(None, getXpaAccessPoint(), "about", "").strip()
+        v = ds9Cmd("about", get=True)
         return v.splitlines()[1].split()[1]
     except Exception, e:
         print >> sys.stderr, "Error reading version: %s (%s)" % (v, e)
@@ -297,8 +300,7 @@ or (the old idiom):
 
     cmdBuffer = Buffer(0)
 
-
-def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None, get=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -308,6 +310,9 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None):
     if cmd:
         if frame is not None:
             cmd = "%s;" % selectFrame(frame) + cmd
+
+        if get:
+            return xpa.get(None, getXpaAccessPoint(), cmd, "").strip()
 
         # Work around xpa's habit of silently truncating long lines
         if cmdBuffer._lenCommands + len(cmd) > XPA_SZ_LINE - 5: # 5 to handle newlines and such like
@@ -426,8 +431,8 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
         mask = data.getMask(True)
         if mask:
             mtv(mask, frame, False, wcs, True, lowOrderBits=lowOrderBits, title=title, settings=settings)
-            if getMaskTransparency() is not None:
-                ds9Cmd("mask transparency %d" % getMaskTransparency())
+            if getDesiredMaskTransparency() is not None:
+                ds9Cmd("mask transparency %d" % getDesiredMaskTransparency())
 
     elif re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
         if wcs:
