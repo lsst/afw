@@ -751,9 +751,9 @@ def interact():
         vals = ds9Cmd("imexam key coordinate", get=True).split()
 
         k = vals.pop(0)
-        if vals:
+        try:
             x = float(vals[0]); y = float(vals[1])
-        else:
+        except:
             x = float("NaN"); y = float("NaN")
 
         try:
@@ -793,7 +793,7 @@ except NameError:
         setCallback(k)
         setCallback(k.upper())
 
-    for k in ('Return',):
+    for k in ('Return', 'XPA$ERROR'):
         setCallback(k)
 
     for k in ('q', 'Escape'):
