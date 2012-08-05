@@ -168,6 +168,11 @@ def getMaskPlaneVisibility(name):
     else:
         return True
 
+try:
+    _maskTransparency
+except NameError:
+    _maskTransparency = None
+
 def setMaskTransparency(transparency=None, frame=None):
     """Specify ds9's mask transparency (percent); or None to not set it when loading masks"""
 
