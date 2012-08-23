@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) { /* parasoft-suppress  LsstDm-3-2a Lsst
     CD(1,0) = CD(0,1) = 0;
 
 
-    image::Wcs wcs();
+    image::Wcs wcs;
 
     image::Wcs wcs2(crval, crpix, CD);
 
