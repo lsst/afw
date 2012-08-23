@@ -52,21 +52,9 @@
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 
-#if __cplusplus < 201103L
 #include "boost/functional/hash.hpp"
 
-namespace std {
-    using boost::hash;                  // in C++0xb
-}
-#endif
-
-#if 1 || __cplusplus < 201103L          // clang++ doesn't find it as of 2011-12-30
 #include "boost/bind.hpp"
-
-namespace std {
-    using boost::bind;                  // in C++0xb
-}
-#endif
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
@@ -164,7 +152,7 @@ namespace {
             _hash = 0x0;
             for (const_iterator ptr = begin(); ptr != end(); ++ptr) {
                 _hash = (_hash << 1) ^
-                    std::hash<std::string>()((*ptr).first + str(boost::format("%d") % ptr->second));
+                    boost::hash<std::string>()((*ptr).first + str(boost::format("%d") % ptr->second));
             }
 
             return _hash;
@@ -347,9 +335,9 @@ MaskDict::getUnusedPlane() const
     }
 
     MapWithHash::const_iterator const it =
-        std::max_element(begin(), end(), std::bind(std::less<int>(),
-                                                   std::bind(&MapWithHash::value_type::second, _1),
-                                                   std::bind(&MapWithHash::value_type::second, _2)
+        std::max_element(begin(), end(), boost::bind(std::less<int>(),
+                                                   boost::bind(&MapWithHash::value_type::second, _1),
+                                                   boost::bind(&MapWithHash::value_type::second, _2)
                                                   )
                         );
     assert(it != end());
@@ -357,8 +345,8 @@ MaskDict::getUnusedPlane() const
         
     for (int i = 0; i < id; ++i) {
         MapWithHash::const_iterator const it = // is i already used in this Mask?
-            std::find_if(begin(), end(), std::bind(std::equal_to<int>(),
-                                                   std::bind(&MapWithHash::value_type::second, _1), i));
+            std::find_if(begin(), end(), boost::bind(std::equal_to<int>(),
+                                                   boost::bind(&MapWithHash::value_type::second, _1), i));
         if (it == end()) {              // Not used; so we'll use it
             return i;
         }
@@ -723,8 +711,8 @@ namespace {
         void operator()(MapWithHash *dict) {
             detail::MaskPlaneDict::const_iterator const it = // is id already used in this Mask?
                 std::find_if(dict->begin(), dict->end(),
-                             std::bind(std::equal_to<int>(),
-                                       std::bind(&detail::MaskPlaneDict::value_type::second, _1), _id));
+                             boost::bind(std::equal_to<int>(),
+                                       boost::bind(&detail::MaskPlaneDict::value_type::second, _1), _id));
             if (it != dict->end()) {          // mask plane is already in use
                 return;
             }

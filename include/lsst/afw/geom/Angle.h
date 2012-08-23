@@ -5,11 +5,7 @@
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
 #include <cmath>
-
-#if __cplusplus < 201103L
-#   include <boost/static_assert.hpp>
-#   define static_assert(EXPR, MSG) BOOST_STATIC_ASSERT(EXPR) // not in C++98
-#endif
+#include <boost/static_assert.hpp>
 
 namespace lsst { namespace afw { namespace geom {
 
@@ -253,8 +249,8 @@ inline
 const Angle operator *(T lhs,              ///< the value to convert
                        AngleUnit const rhs ///< the conversion coefficient
                       ) {
-    static_assert(std::numeric_limits<T>::is_specialized,
-                  "Only numeric types may be converted to Angles using degrees/radians!");
+    BOOST_STATIC_ASSERT_MSG(std::numeric_limits<T>::is_specialized,
+                            "Only numeric types may be converted to Angles using degrees/radians!");
     return Angle(lhs*rhs._val);
 }
 /**
