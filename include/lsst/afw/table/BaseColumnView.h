@@ -40,7 +40,7 @@ public:
 
     typedef boost::int64_t IntT;
 
-    ndarray::Array<IntT const,1,1> getArray() const { return _array; }
+    ndarray::Array<IntT,1,1> getArray() const { return _array; }
 
     IntT getBit(Key<Flag> const & key) const;
     IntT getBit(std::string const & name) const;
@@ -87,11 +87,11 @@ public:
 
     /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
-    ndarray::Array<T const,1> operator[](Key<T> const & key) const;
+    ndarray::ArrayRef<T,1> const operator[](Key<T> const & key) const;
 
     /// @brief Return a 2-d array corresponding to an array field.
     template <typename T>
-    ndarray::Array<T const,2,1> operator[](Key< Array<T> > const & key) const;
+    ndarray::ArrayRef<T,2,1> const operator[](Key< Array<T> > const & key) const;
 
     /**
      *  @brief Return a 1-d array expression corresponding to a flag bit.

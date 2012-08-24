@@ -237,6 +237,14 @@ class SimpleTableTestCase(unittest.TestCase):
             array = columns[key]
             for i in [0, 1]:
                 self.assertEqual(lsst.afw.geom.Angle(array[i]), catalog[i].get(key))
+        for key in [k1, k2, k3]:
+            vals = columns[key].copy()
+            vals *= 2
+            array = columns[key]
+            array *= 2
+            for i in [0, 1]:
+                self.assertEqual(catalog[i].get(key), vals[i])
+                self.assertEqual(array[i], vals[i])
 
     def testIteration(self):
         schema = lsst.afw.table.Schema()
