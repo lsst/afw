@@ -36,6 +36,8 @@ Python interface to lsst::afw::gpu classes
 
 %lsst_exceptions();
 
+%import "lsst/pex/exceptions/exceptionsLib.i"
+
 %{
 #include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/gpu/GpuExceptions.h"
@@ -43,7 +45,7 @@ Python interface to lsst::afw::gpu classes
 %}
 
 %include "lsst/afw/gpu/DevicePreference.h"
-// %include "lsst/afw/gpu/GpuExceptions.h"   //Cosic: uncommenting this produces an error; I don't know how to fix it
+%include "lsst/afw/gpu/GpuExceptions.h"
 %include "lsst/afw/gpu/IsGpuBuild.h"
 
 
