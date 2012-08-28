@@ -48,9 +48,9 @@ namespace gpu {
 typedef lsst::afw::image::VariancePixel VarPixel;
 typedef lsst::afw::image::MaskPixel     MskPixel;
 
-const int SIZE_X_WARPING_BLOCK=16;
-const int SIZE_Y_WARPING_BLOCK=16;
-const int SIZE_MAX_WARPING_KERNEL=100;
+int const SIZE_X_WARPING_BLOCK=16;
+int const SIZE_Y_WARPING_BLOCK=16;
+int const SIZE_MAX_WARPING_KERNEL=100;
 
 /// Simple 2D point (suitable for use on a GPU)
 struct SPoint2
@@ -127,7 +127,7 @@ struct SBox2I
 struct LinearInterp
 {
     SPoint2 o;    /// defines the value at the origin
-    SVec2 deltaX; /// difference of neighbouring values of the function (the gradient)
+    SVec2 deltaX; /// difference of neighboring values of the function (the gradient)
 
     CPU_GPU LinearInterp(SPoint2 par_o, SVec2 par_deltaX) : o(par_o), deltaX(par_deltaX) {};
 
@@ -149,10 +149,10 @@ struct LinearInterp
 struct BilinearInterp
 {
     SPoint2 o;  /// defines the value at origin
-    SVec2 d0X;  /// difference of neighbouring values in the first row (the gradient of a line at y=0)
-    /// difference of difference of neighbouring values in two neighbouring rows (diff. of gradients at x=0 and x=1)
+    SVec2 d0X;  /// difference of neighboring values in the first row (the gradient of a line at y=0)
+    /// difference of difference of neighboring values in two neighbouring rows (diff. of gradients at x=0 and x=1)
     SVec2 ddX;
-    SVec2 deltaY; /// difference of neighbouring values in the first column (gradient of a line at x=0)
+    SVec2 deltaY; /// difference of neighboring values in the first column (gradient of a line at x=0)
 
     BilinearInterp() : o(0,0), d0X(0,0), ddX(0,0), deltaY(0,0) {};
 
@@ -184,6 +184,9 @@ struct PixelIVM
     VarPixel var;
     MskPixel msk;
 };
+
+enum KernelType
+{ KERNEL_TYPE_LANCZOS, KERNEL_TYPE_BILINEAR, KERNEL_TYPE_NEAREST_NEIGHBOR };
 
 /// defines memory region containing image data
 template<typename T>
@@ -217,10 +220,10 @@ template<typename DestPixelT, typename SrcPixelT>
 void WarpImageGpuCallKernel(bool isMaskedImage,
                             ImageDataPtr<DestPixelT> destImageGpu,
                             ImageDataPtr<SrcPixelT>  srcImageGpu,
-                            int order,
+                            int mainKernelSize,
+                            KernelType maskKernelType,
+                            int maskKernelSize,
                             SBox2I srcGoodBox,
-                            int kernelCenterX,
-                            int kernelCenterY,
                             PixelIVM<DestPixelT> edgePixel,
                             BilinearInterp* srcPosInterp,
                             int interpLength

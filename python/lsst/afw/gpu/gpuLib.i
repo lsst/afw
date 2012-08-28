@@ -1,8 +1,8 @@
-// -*- LSST-C++ -*-
+// -*- lsst-c++ -*-
 
 /* 
  * LSST Data Management System
- * Copyright 2008 - 2012 LSST Corporation.
+ * Copyright 2008, 2009, 2010 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -22,29 +22,34 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-#ifndef LSST_AFW_MATH_DETAIL_GPU_EXCEPTIONS_H
-#define LSST_AFW_MATH_DETAIL_GPU_EXCEPTIONS_H
-/**
- * @file
- *
- * @brief additional GPU exceptions
- *
- * @author Kresimir Cosic
- *
- * @ingroup afw
- */
+%define gpuLib_DOCSTRING
+"
+Python interface to lsst::afw::gpu classes
+"
+%enddef
 
-#include "lsst/pex/exceptions.h"
+%feature("autodoc", "1");
+%module(package="lsst.afw.gpu",docstring=gpuLib_DOCSTRING) gpuLib
 
-namespace lsst {
-namespace afw {
-namespace gpu {
 
-LSST_EXCEPTION_TYPE(GpuMemoryException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::gpu::GpuMemoryException)
-LSST_EXCEPTION_TYPE(GpuRuntimeErrorException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::gpu::GpuRuntimeErrorException)
+%include "lsst/p_lsstSwig.i"
 
-}
-}
-}
+%lsst_exceptions();
 
-#endif
+%import "lsst/pex/exceptions/exceptionsLib.i"
+
+%{
+#include "lsst/afw/gpu/DevicePreference.h"
+#include "lsst/afw/gpu/GpuExceptions.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
+%}
+
+%include "lsst/afw/gpu/DevicePreference.h"
+%include "lsst/afw/gpu/GpuExceptions.h"
+%include "lsst/afw/gpu/IsGpuBuild.h"
+
+
+
+
+
+

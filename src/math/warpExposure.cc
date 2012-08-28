@@ -272,11 +272,15 @@ namespace {
                     throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can process only Lanczos kernels");
                 }
             } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
+                afwMath::SeparableKernel::Ptr maskWarpingKernelPtr = control.getWarpingKernel();
+                if (control.getMaskWarpingKernel() )
+                     maskWarpingKernelPtr = control.getMaskWarpingKernel();
                 if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                     try {
                         std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernelPtr,
-                                                                computeSrcPos,  interpLength, padValue, false);
+                                           afwMath::detail::warpImageGPU(destImage, srcImage, 
+                                                             *lanczosKernelPtr, *maskWarpingKernelPtr, 
+                                                             computeSrcPos,  interpLength, padValue, false);
                         if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
                     }
                     catch(lsst::afw::gpu::GpuMemoryException) { }
@@ -284,7 +288,8 @@ namespace {
                     catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
                 } else if (devPref != lsst::afw::gpu::USE_CPU) {
                     std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernelPtr,
+                                           afwMath::detail::warpImageGPU(destImage, srcImage, 
+                                                                      *lanczosKernelPtr, *maskWarpingKernelPtr,
                                                                       computeSrcPos, interpLength, padValue,
                                                                       devPref == lsst::afw::gpu::USE_GPU);
                     if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
