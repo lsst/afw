@@ -180,12 +180,15 @@ def setMaskTransparency(transparency=None, frame=None):
     if transparency is not None:
         ds9Cmd("mask transparency %d" % transparency, frame=frame)
 
-setMaskTransparency()
-
-def getMaskTransparency():
-    """Return ds9's mask transparency"""
+def getDesiredMaskTransparency():
+    """Return requested ds9's mask transparency"""
 
     return _maskTransparency
+
+def getMaskTransparency(frame=None):
+    """Return the current ds9's mask transparency"""
+
+    return float(ds9Cmd("mask transparency", get=True))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -208,7 +211,7 @@ def getXpaAccessPoint():
 def ds9Version():
     """Return the version of ds9 in use, as a string"""
     try:
-        v = xpa.get(None, getXpaAccessPoint(), "about", "").strip()
+        v = ds9Cmd("about", get=True)
         return v.splitlines()[1].split()[1]
     except Exception, e:
         print >> sys.stderr, "Error reading version: %s (%s)" % (v, e)
@@ -297,8 +300,7 @@ or (the old idiom):
 
     cmdBuffer = Buffer(0)
 
-
-def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None, get=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -308,6 +310,9 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None):
     if cmd:
         if frame is not None:
             cmd = "%s;" % selectFrame(frame) + cmd
+
+        if get:
+            return xpa.get(None, getXpaAccessPoint(), cmd, "").strip()
 
         # Work around xpa's habit of silently truncating long lines
         if cmdBuffer._lenCommands + len(cmd) > XPA_SZ_LINE - 5: # 5 to handle newlines and such like
@@ -426,8 +431,8 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
         mask = data.getMask(True)
         if mask:
             mtv(mask, frame, False, wcs, True, lowOrderBits=lowOrderBits, title=title, settings=settings)
-            if getMaskTransparency() is not None:
-                ds9Cmd("mask transparency %d" % getMaskTransparency())
+            if getDesiredMaskTransparency() is not None:
+                ds9Cmd("mask transparency %d" % getDesiredMaskTransparency())
 
     elif re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
         if wcs:
@@ -700,3 +705,71 @@ def pan(colc=None, rowc=None, frame=None):
         return
 
     zoom(None, colc, rowc, frame)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def interact():
+    """Enter an interactive loop, listening for key presses in ds9 and firing callbacks.
+
+    Exit with q, <carriage return>, or <escape>
+"""
+
+    while True:
+        vals = ds9Cmd("imexam key coordinate", get=True).split()
+
+        k = vals.pop(0)
+        if vals:
+            x = float(vals[0]); y = float(vals[1])
+        else:
+            x = float("NaN"); y = float("NaN")
+
+        try:
+            if callbacks[k](k, x, y):
+                break
+        except KeyError:
+            print >> sys.stderr, "No callback is registered for %s" % k
+        except Exception, e:
+            print >> sys.stderr, "ds9.callbacks[%s](%s, %s, %s) failed: %s" % \
+                (k, k, x, y, e)
+
+#
+# Default fallback function
+#
+def noop_callback(k, x, y):
+    """Callback function: arguments key, x, y"""
+    return False
+
+def setCallback(k, func=noop_callback):
+    """Set the callback for key k to be func, returning the old callback
+    """
+
+    ofunc = callbacks.get(k)
+    callbacks[k] = func
+
+    return ofunc
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+try:
+    callbacks
+except NameError:
+    callbacks = {}
+
+    for ik in range(ord('a'), ord('z') + 1):
+        k = "%c" % ik
+        setCallback(k)
+        setCallback(k.upper())
+
+    for k in ('Return',):
+        setCallback(k)
+
+    for k in ('q', 'Escape'):
+        setCallback(k, lambda k, x, y: True)
+
+    def _h_callback(k, x, y):
+        print "Enter q or <ESC> to leave interactive mode, h for this help, or a letter to fire a callback"
+        return False
+
+    setCallback('h', _h_callback)
+
+        
