@@ -80,7 +80,8 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *  @brief Set the measurement used for the $1$2 slot with a field name.
      *
      *  This requires that the measurement adhere to the convention of having
-     *  "<name>", "<name>.err", and "<name>.flags" fields.
+     *  "<name>", "<name>.err", and "<name>.flags" fields for all three fields
+     *  to be attached to slots.  Only the main measurement field is required.
      */
     void define$1$2(std::string const & name) {
         Schema schema = getSchema();
