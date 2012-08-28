@@ -233,7 +233,7 @@ namespace math {
             std::string const &warpingKernelName,   ///< name of warping kernel;
                 ///< used as the argument to makeWarpingKernel
             std::string const &maskWarpingKernelName = "",  ///< name of warping kernel used for
-                ///< the mask plane; if "" then the regular warping kernel is used. 
+                ///< the mask plane; if "" then the regular warping kernel is used.
                 ///< Intended so one can use a bilinear kernel or other compact kernel for the mask plane
                 ///< to avoid smearing mask bits too far. The theory is that bad pixels are already
                 ///< interpolated over, so we don't need to worry about bad values spreading very far.
@@ -267,13 +267,12 @@ namespace math {
                     throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                         "warping kernel is smaller than mask warping kernel");
                 }
-                
-                if (_devicePreference == lsst::afw::gpu::USE_GPU) {
-                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "devicePreference == USE_GPU and maskWarpingKernel specified; not yet supported");
-                } else {
-                    _devicePreference = lsst::afw::gpu::USE_CPU;
-                }
+            }
+            boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
+                    boost::dynamic_pointer_cast<LanczosWarpingKernel>(_warpingKernelPtr);
+            if (_devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                        "devicePreference == USE_GPU specified; GPU supports only Lanczos main kernel");
             }
         }
 
@@ -294,9 +293,16 @@ namespace math {
             _cacheSize(warpingKernel.getCacheSize()),
             _interpLength(interpLength),
             _devicePreference(devicePreference)
-        { }
+        {
+            boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
+                    boost::dynamic_pointer_cast<LanczosWarpingKernel>(_warpingKernelPtr);
+            if (_devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                        "devicePreference == USE_GPU specified; GPU supports only Lanczos main kernel");
+            }
+        }
 
-        
+
         virtual ~WarpingControl() {};
 
         /**
@@ -308,7 +314,7 @@ namespace math {
          * @brief get the cache size for the interpolation kernel(s)
          */
         int getCacheSize() const { return _cacheSize; };
-        
+
         /**
          * @brief set the cache size for the interpolation kernel(s)
          *
@@ -325,7 +331,7 @@ namespace math {
          * @brief get the interpolation length (pixels)
          */
         int getInterpLength() const { return _interpLength; };
-        
+
         /**
          * @brief set the interpolation length
          *
@@ -342,7 +348,7 @@ namespace math {
          * @brief get the GPU device preference
          */
         lsst::afw::gpu::DevicePreference getDevicePreference() const { return _devicePreference; };
-        
+
         /**
          * @brief set the GPU device preference
          */
@@ -379,7 +385,7 @@ namespace math {
         int _interpLength;
         lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
     };
-    
+
 
     /**
      * \brief Warp (remap) one exposure to another.
@@ -413,7 +419,7 @@ namespace math {
         SrcExposureT const &srcExposure,    ///< Source exposure
         SeparableKernel &warpingKernel,     ///< Warping kernel; determines warping algorithm
         int const interpLength=0,           ///< Distance over which WCS can be linearily interpolated
-        typename DestExposureT::MaskedImageT::SinglePixel padValue = 
+        typename DestExposureT::MaskedImageT::SinglePixel padValue =
             lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
             typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category()),
             ///< use this value for undefined (edge) pixels
