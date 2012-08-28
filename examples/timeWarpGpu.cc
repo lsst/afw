@@ -52,7 +52,7 @@
 //Just for PrintCudaDeviceInfo
 #include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 
-const int defaultInterpLen = 20;
+int const defaultInterpLen = 20;
 
 using namespace std;
 using lsst::pex::logging::Trace;
@@ -75,8 +75,8 @@ double DiffTime(clock_t start, clock_t end)
 template <typename T1, typename T2>
 double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
 {
-    const int dimX = imgA.getWidth();
-    const int dimY = imgA.getHeight();
+    int const dimX = imgA.getWidth();
+    int const dimY = imgA.getHeight();
 
     if (dimX != imgB.getWidth() || dimY != imgB.getHeight()) return NAN;
 
@@ -86,14 +86,14 @@ double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
 
     for (int x = 0; x < dimX; x++) {
         for (int y = 0; y < dimY; y++) {
-            const double valA = imgA(x, y);
-            const double valB = imgB(x, y);
+            double const valA = imgA(x, y);
+            double const valB = imgB(x, y);
             if (isnan(valA) && isnan(valB)) continue;
             if (isinf(valA) && isinf(valB)) continue;
 
             cnt++;
             avgSum += (valA + valB) / 2;
-            const double diff = valA - valB;
+            double const diff = valA - valB;
             sqSum += diff * diff;
         }
     }
@@ -105,12 +105,12 @@ double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
 
 //Returns number of different values
 template <typename T>
-double DiffCnt(const afwImage::Mask<T>& imgA, const afwImage::Mask<T>& imgB)
+double DiffCnt(afwImage::Mask<T> const& imgA, afwImage::Mask<T> const& imgB)
 {
     typedef long long unsigned int Bitint;
 
-    const int dimX = imgA.getWidth();
-    const int dimY = imgA.getHeight();
+    int const dimX = imgA.getWidth();
+    int const dimY = imgA.getHeight();
 
     if (dimX != imgB.getWidth() || dimY != imgB.getHeight()) return NAN;
 
@@ -191,10 +191,10 @@ void TimeOneKernelMI(
     afwImage::MaskedImage<T>       resMI   (inImg.getDimensions());
     afwImage::MaskedImage<T>       resMIGpu(inImg.getDimensions());
 
-    const int sizeRepMax = 1;
-    const int GPUrepMul = 20;
-    const int repCpu = sizeRepMax * 5 / order;
-    const int repGpu = GPUrepMul * sizeRepMax * 5 / order;
+    int const sizeRepMax = 1;
+    int const GPUrepMul = 20;
+    int const repCpu = sizeRepMax * 5 / order;
+    int const repGpu = GPUrepMul * sizeRepMax * 5 / order;
 
     int numGoodPixels;
     int numGoodPixelsGpu;
@@ -229,10 +229,10 @@ void TimeOneKernelMI(
 template<typename T>
 void TimeOneKernelPI(
     const afwImage::Image<T>  inImg,
-    const int order,
+    int const order,
     const afwImage::Wcs::Ptr destWcs,
     const afwImage::Wcs::Ptr srcWcs,
-    const int interpLen
+    int const interpLen
 )
 {
     const lsst::afw::gpu::DevicePreference selCPU = lsst::afw::gpu::USE_CPU;
@@ -246,10 +246,10 @@ void TimeOneKernelPI(
     afwImage::Image<T>       resPI   (inImg.getDimensions());
     afwImage::Image<T>       resPIGpu(inImg.getDimensions());
 
-    const int sizeRepMax = 1;
-    const int GPUrepMul = 20;
-    const int repCpu = sizeRepMax * 5 / order;
-    const int repGpu = GPUrepMul * sizeRepMax * 5 / order;
+    int const sizeRepMax = 1;
+    int const GPUrepMul = 20;
+    int const repCpu = sizeRepMax * 5 / order;
+    int const repGpu = GPUrepMul * sizeRepMax * 5 / order;
 
     int numGoodPixels;
     int numGoodPixelsGpu;
@@ -287,8 +287,8 @@ void TestWarpGpu(
 
     const afwImage::MaskedImage<double>  inMIDbl = inImgDbl;
     const afwImage::MaskedImage<float>   inMIFlt = inImgFlt;
-    const int sizeX = inMIDbl.getWidth();
-    const int sizeY = inMIDbl.getHeight();
+    int const sizeX = inMIDbl.getWidth();
+    int const sizeY = inMIDbl.getHeight();
 
     const afwImage::Image<double> inPIDbl = *inMIDbl.getImage();
     const afwImage::Image<float>  inPIFlt = *inMIFlt.getImage();

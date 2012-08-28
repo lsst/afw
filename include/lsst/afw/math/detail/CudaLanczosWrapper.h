@@ -66,7 +66,7 @@ namespace WarpImageGpuStatus
  *       - the warping will not be performed if the GPU code path is estimated to be slower
  *              than the CPU code path. That might happen if interpLength is too small (less than 3).
  *       - the warping will not be performed if a GPU device cannot be selected or used
- * 
+ *
  * \pre maskWarpingKernel must not be greater in size than warpingKernel
  *
  * Also see lsst::afw::math::warpImage()
@@ -77,7 +77,8 @@ namespace WarpImageGpuStatus
  * Calls WarpImageGpuWrapper() to perform the wapring.
  *
  * \throw lsst::pex::exceptions::InvalidParameterException if interpLength < 1
- * \throw lsst::pex::exceptions::InvalidParameterException if maskWarpingKernel is neither Lanczos, bilinear nor nearest neighbour
+ * \throw lsst::pex::exceptions::InvalidParameterException if maskWarpingKernel is neither Lanczos, bilinear
+ *        nor nearest neighbor
  * \throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
  * \throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
  * \throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails

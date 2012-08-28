@@ -52,7 +52,7 @@
 //Just for PrintCudaDeviceInfo
 #include "lsst/afw/gpu/detail/CudaQueryDevice.h"
 
-const int defaultInterpLen = 20;
+int const defaultInterpLen = 20;
 
 typedef int TestResult;
 
@@ -67,8 +67,8 @@ namespace afwGeom  = lsst::afw::geom;
 template <typename T1, typename T2>
 double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
 {
-    const int dimX = imgA.getWidth();
-    const int dimY = imgA.getHeight();
+    int const dimX = imgA.getWidth();
+    int const dimY = imgA.getHeight();
 
     if (dimX != imgB.getWidth() || dimY != imgB.getHeight()) return NAN;
 
@@ -78,14 +78,14 @@ double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
 
     for (int x = 0; x < dimX; x++) {
         for (int y = 0; y < dimY; y++) {
-            const double valA = imgA(x, y);
-            const double valB = imgB(x, y);
+            double const valA = imgA(x, y);
+            double const valB = imgB(x, y);
             if (isnan(valA) || isnan(valB)) continue;
             if (isinf(valA) || isinf(valB)) continue;
 
             cnt++;
             avgSum += (valA + valB) / 2;
-            const double diff = valA - valB;
+            double const diff = valA - valB;
             sqSum += diff * diff;
         }
     }
@@ -97,12 +97,12 @@ double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
 
 //Returns number of different values
 template <typename T>
-double DiffCnt(const afwImage::Mask<T>& imgA, const afwImage::Mask<T>& imgB)
+double DiffCnt(afwImage::Mask<T> const& imgA, afwImage::Mask<T> const& imgB)
 {
     typedef long long unsigned int Bitint;
 
-    const int dimX = imgA.getWidth();
-    const int dimY = imgA.getHeight();
+    int const dimX = imgA.getWidth();
+    int const dimY = imgA.getHeight();
 
     if (dimX != imgB.getWidth() || dimY != imgB.getHeight()) return NAN;
 
@@ -190,8 +190,8 @@ bool TestWarpGpu(
 {
     const afwImage::MaskedImage<double>  inMIDbl = inImgDbl;
     const afwImage::MaskedImage<float>   inMIFlt = inImgFlt;
-    const int sizeX = inMIDbl.getWidth();
-    const int sizeY = inMIDbl.getHeight();
+    int const sizeX = inMIDbl.getWidth();
+    int const sizeY = inMIDbl.getHeight();
 
     const afwImage::Image<double> inPIDbl = *inMIDbl.getImage();
     const afwImage::Image<float>  inPIFlt = *inMIFlt.getImage();
@@ -228,10 +228,10 @@ bool TestWarpGpu(
     int retPIFltCpu = afwMath::warpImage(resPIFlt   , *wcs1, inPIFlt, *wcs2, wctrCPU);
     int retPIFltGpu = afwMath::warpImage(resPIFltGpu, *wcs1, inPIFlt, *wcs2, wctrGPU);
 
-    const double errDbl = 5e-13;
-    const double errFlt = 5e-7;
-    const int maxRetDiff = sqrt(sqrt(sizeX*sizeY))/3;
-    const int maxMskDiff = sqrt(sqrt(sizeX*sizeY))/3;
+    double const errDbl = 5e-13;
+    double const errFlt = 5e-7;
+    int const maxRetDiff = sqrt(sqrt(sizeX*sizeY))/3;
+    int const maxMskDiff = sqrt(sqrt(sizeX*sizeY))/3;
 
     double diffPIDbl = CvRmsd(resPIDbl, resPIDblGpu);
     double diffPIFlt = CvRmsd(resPIFlt, resPIFltGpu);
@@ -300,8 +300,8 @@ bool TestWarpGpuKernels(
     const afwImage::MaskedImage<float>   inImgFlt,
     afwImage::Wcs::Ptr wcs1,
     afwImage::Wcs::Ptr wcs2,
-    const int kernelOrder,
-    const int interpLen,
+    int const kernelOrder,
+    int const interpLen,
     string           wcsStr
 )
 {

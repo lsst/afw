@@ -92,15 +92,15 @@ __device__ bool IsEqualZeroLanczosOrBilinear(double x)
 template<typename SrcPixelT>
 __device__ PixelIVM<double> ApplyLanczosFilterMI(
     const ImageDataPtr<SrcPixelT> srcImage,
-    const int srcX, const int srcY,
-    const int mainKernelSize,
+    int const srcX, int const srcY,
+    int const mainKernelSize,
     const KernelType maskKernelType,
-    const int maskKernelSize,
-    const double kernelFracX, const double kernelFracY
+    int const maskKernelSize,
+    double const kernelFracX, double const kernelFracY
 )
 {
-    const int srcTLX = srcX + 1 - mainKernelSize / 2;
-    const int srcTLY = srcY + 1 - mainKernelSize / 2;
+    int const srcTLX = srcX + 1 - mainKernelSize / 2;
+    int const srcTLY = srcY + 1 - mainKernelSize / 2;
 
     //calculate values of Lanczos function for rows
     double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
@@ -176,19 +176,19 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(
             }
         }
 
-        if (maskKernelType == KERNEL_TYPE_NEAREST_NEIGHBOUR) {
-            const int srcTLXMask = srcX;
-            const int srcTLYMask = srcY;
+        if (maskKernelType == KERNEL_TYPE_NEAREST_NEIGHBOR) {
+            int const srcTLXMask = srcX;
+            int const srcTLYMask = srcY;
 
-            const int kernelX = int(kernelFracX + 0.5);
-            const int kernelY = int(kernelFracY + 0.5);
+            int const kernelX = int(kernelFracX + 0.5);
+            int const kernelY = int(kernelFracY + 0.5);
 
             int srcPosMsk = srcTLXMask + kernelX + srcImage.strideMsk * (srcTLYMask + kernelY);
             MskPixel srcMskPixel = srcImage.msk[srcPosMsk];
             colSumMsk = srcMskPixel;
         } else { // lanczos or bilinear mask kernel
-            const int srcTLXMask = srcX + 1 - maskKernelSize / 2;
-            const int srcTLYMask = srcY + 1 - maskKernelSize / 2;
+            int const srcTLXMask = srcX + 1 - maskKernelSize / 2;
+            int const srcTLYMask = srcY + 1 - maskKernelSize / 2;
 
             for (int kernelY = 0; kernelY < maskKernelSize; kernelY++) {
                 if (IsEqualZeroLanczosOrBilinear(1 - maskKernelSize / 2 - kernelFracY + kernelY) ) continue;
@@ -214,14 +214,14 @@ __device__ PixelIVM<double> ApplyLanczosFilterMI(
 
 // Calculates the value of a single output pixel (for plain image)
 template<typename SrcPixelT>
-__device__ double ApplyLanczosFilter(const SrcPixelT* srcImgPtr, const int srcImgStride, const int srcWidth,
-                                     const int srcX, const int srcY,
-                                     const int mainKernelSize,
-                                     const double kernelFracX, const double kernelFracY
+__device__ double ApplyLanczosFilter(const SrcPixelT* srcImgPtr, int const srcImgStride, int const srcWidth,
+                                     int const srcX, int const srcY,
+                                     int const mainKernelSize,
+                                     double const kernelFracX, double const kernelFracY
                                     )
 {
-    const int srcTLX = srcX + 1 - mainKernelSize / 2;
-    const int srcTLY = srcY + 1 - mainKernelSize / 2;
+    int const srcTLX = srcX + 1 - mainKernelSize / 2;
+    int const srcTLY = srcY + 1 - mainKernelSize / 2;
 
     //calculate values of Lanczos function for rows
     double kernelRowVal[SIZE_MAX_WARPING_KERNEL];
@@ -273,52 +273,52 @@ __device__ SPoint2 GetInterpolatedValue(BilinearInterp* const interpBuf, int int
 
 /// GPU kernel for lanczos resampling
 template<typename DestPixelT, typename SrcPixelT>
-__global__ void WarpImageGpuKernelZZ(
+__global__ void WarpImageGpuKernel(
     bool isMaskedImage,
     ImageDataPtr<DestPixelT> destImage,
     ImageDataPtr<SrcPixelT>  srcImage,
-    const int mainKernelSize,
+    int const mainKernelSize,
     const KernelType maskKernelType,
-    const int maskKernelSize,
+    int const maskKernelSize,
     SBox2I srcGoodBox,
     PixelIVM<DestPixelT> edgePixel,
     BilinearInterp* srcPosInterp,
     int interpLength
 )
 {
-    const int blockSizeX = SIZE_X_WARPING_BLOCK;
-    const int blockSizeY = SIZE_Y_WARPING_BLOCK;
+    int const blockSizeX = SIZE_X_WARPING_BLOCK;
+    int const blockSizeY = SIZE_Y_WARPING_BLOCK;
 
     //number of blocks in X and Y directions
-    const int blockNX = CeilDivide(destImage.width,  blockSizeX);
-    const int blockNY = CeilDivide(destImage.height, blockSizeY);
+    int const blockNX = CeilDivide(destImage.width,  blockSizeX);
+    int const blockNY = CeilDivide(destImage.height, blockSizeY);
 
-    const int totalBlocks = blockNX * blockNY;
+    int const totalBlocks = blockNX * blockNY;
 
     // calculates pitch of srcPosInterp array
-    const int srcPosInterpPitch = CeilDivide(destImage.width, interpLength) + 1;
+    int const srcPosInterpPitch = CeilDivide(destImage.width, interpLength) + 1;
 
     // for each block of destination image
     for (int blkI = blockIdx.x; blkI < totalBlocks; blkI += gridDim.x)
     {
         // claculate coordinates of the block that is being processed
-        const int blkIX = blkI % blockNX;
-        const int blkIY = blkI / blockNX;
+        int const blkIX = blkI % blockNX;
+        int const blkIY = blkI / blockNX;
 
         // coordinate of upper left corner of the block
-        const int blkX = blkIX * blockSizeX;
-        const int blkY = blkIY * blockSizeY;
+        int const blkX = blkIX * blockSizeX;
+        int const blkY = blkIY * blockSizeY;
 
         // Each thread gets its own pixel.
         // The calling function ensures that the number of pixels in a block
         // matches the number of threads in a block
         // (or less pixels than threads for blocks on the edge)
-        const int curBlkPixelX = threadIdx.x % blockSizeX;
-        const int curBlkPixelY = threadIdx.x / blockSizeX;
+        int const curBlkPixelX = threadIdx.x % blockSizeX;
+        int const curBlkPixelY = threadIdx.x / blockSizeX;
 
         // calculate the position of a destination pixel for current thread
-        const int pixelX = blkX + curBlkPixelX;
-        const int pixelY = blkY + curBlkPixelY;
+        int const pixelX = blkX + curBlkPixelX;
+        int const pixelY = blkY + curBlkPixelY;
 
         // On edges: skip calculation for threads that got pixels which are outside the destination image
         if (pixelX >= destImage.width || pixelY >= destImage.height) continue;
@@ -327,13 +327,13 @@ __global__ void WarpImageGpuKernelZZ(
         // calculated as a linear interpolation of the transformation function
         const SPoint2 srcPos = GetInterpolatedValue(srcPosInterp, srcPosInterpPitch,
                                interpLength, pixelX + 1, pixelY + 1);
-        const double roundedSrcPtX = floor(srcPos.x);
-        const double roundedSrcPtY = floor(srcPos.y);
+        double const roundedSrcPtX = floor(srcPos.x);
+        double const roundedSrcPtY = floor(srcPos.y);
         //integer and frac parts of the kernel center
-        const int    srcX = int(roundedSrcPtX);
-        const int    srcY = int(roundedSrcPtY);
-        const double kernelFracX = srcPos.x - roundedSrcPtX;
-        const double kernelFracY = srcPos.y - roundedSrcPtY;
+        int const    srcX = int(roundedSrcPtX);
+        int const    srcY = int(roundedSrcPtY);
+        double const kernelFracX = srcPos.x - roundedSrcPtX;
+        double const kernelFracY = srcPos.y - roundedSrcPtY;
 
         // check that destination pixel is mapped from within the source image
         if (   srcGoodBox.begX <= srcX && srcX < srcGoodBox.endX
@@ -347,7 +347,7 @@ __global__ void WarpImageGpuKernelZZ(
 
             const SVec2 dSrcA = SVec2(leftSrcPos, srcPos);
             const SVec2 dSrcB = SVec2(upSrcPos, srcPos);
-            const double relativeArea = fabs(dSrcA.x * dSrcB.y - dSrcA.y * dSrcB.x);
+            double const relativeArea = fabs(dSrcA.x * dSrcB.y - dSrcA.y * dSrcB.x);
 
             if (isMaskedImage) {
                 const PixelIVM<double> sample = ApplyLanczosFilterMI(srcImage,
@@ -355,9 +355,9 @@ __global__ void WarpImageGpuKernelZZ(
                                                 mainKernelSize, maskKernelType, maskKernelSize,
                                                 kernelFracX, kernelFracY
                                                                     );
-                const int pixelIimg = pixelY * destImage.strideImg + pixelX;
-                const int pixelIvar = pixelY * destImage.strideVar + pixelX;
-                const int pixelImsk = pixelY * destImage.strideMsk + pixelX;
+                int const pixelIimg = pixelY * destImage.strideImg + pixelX;
+                int const pixelIvar = pixelY * destImage.strideVar + pixelX;
+                int const pixelImsk = pixelY * destImage.strideMsk + pixelX;
 
                 destImage.img[pixelIimg] = sample.img * relativeArea;
                 destImage.var[pixelIvar] = sample.var * relativeArea * relativeArea;
@@ -367,16 +367,16 @@ __global__ void WarpImageGpuKernelZZ(
                                                    srcX, srcY,
                                                    mainKernelSize, kernelFracX, kernelFracY
                                                   );
-                const int pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
+                int const pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
                 destImage.img[pixelIimg] = sample * relativeArea;
             }
         } else {
             //set the output pixel to the value of edgePixel
-            const int pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
+            int const pixelIimg = pixelY * destImage.strideImg + pixelX; //pixel index in destination image
             destImage.img[pixelIimg] = edgePixel.img;
             if (isMaskedImage) {
-                const int pixelIvar = pixelY * destImage.strideVar + pixelX;
-                const int pixelImsk = pixelY * destImage.strideMsk + pixelX;
+                int const pixelIvar = pixelY * destImage.strideVar + pixelX;
+                int const pixelImsk = pixelY * destImage.strideMsk + pixelX;
                 destImage.var[pixelIvar] = edgePixel.var;
                 destImage.msk[pixelImsk] = edgePixel.msk;
             }
@@ -401,7 +401,7 @@ void WarpImageGpuCallKernel(bool isMaskedImage,
     dim3 block(SIZE_X_WARPING_BLOCK * SIZE_Y_WARPING_BLOCK);
     dim3 grid(7 * 16); //divisible by no. of SM's in most GPUs, performs well
 
-    WarpImageGpuKernelZZ <<< grid, block, 0>>>(
+    WarpImageGpuKernel <<< grid, block, 0>>>(
         isMaskedImage,
         destImageGpu,
         srcImageGpu,
