@@ -421,7 +421,7 @@ public:
      *
      *  If deep is true, new records will be created by calling copyRecord on the catalog's table.
      *  If deep is false, the new records will not be copied, but they must have been created
-     *  with the catalog's table (not that a table may be shared by multiple catalogs).
+     *  with the catalog's table (note that a table may be shared by multiple catalogs).
      *
      *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
      *  is true, table->preallocate will be used to ensure that the resulting records are
