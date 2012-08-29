@@ -74,11 +74,11 @@ private:
  *  Geometric (point and shape) fields cannot be accessed through a BaseColumnView, but their
  *  scalar components can be.
  *
- *  BaseColumnViews represent a slightly problematic violation of const-correctness, as you
- *  can modify a catalog's values by modifying a ColumnView.  Const-correctness for view
- *  classes and other "smart reference" objects is a tricky business in C++, and in this case
- *  it wasn't judged to be worth the additional code complexity given the low likelihood
- *  of anyone accidentally shooting themselves in the foot in this case.
+ *  BaseColumnView and its subclasses are always non-const views into a catalog, and so cannot
+ *  be obtained from a catalog-of-const (trying this results in an exception, not a compilation
+ *  error).  As a result, all its accessors return arrays of non-const elements, even though
+ *  they are themselves const member functions.  This is no different from a shared_ptr<T>'s
+ *  get() member function returning a non-const T*, even though get() is a const member function.
  */
 class BaseColumnView {
 public:

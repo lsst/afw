@@ -383,6 +383,9 @@ public:
     typedef RecordT Record;
     typedef typename RecordT::Table Table;
 
+    // See the documentation for BaseColumnView for an explanation of why these
+    // accessors *appear* to violate const-correctness.
+
     ndarray::Array<double,1> const getPsfFlux() const {
         return this->operator[](this->getTable()->getPsfFluxKey());
     }
