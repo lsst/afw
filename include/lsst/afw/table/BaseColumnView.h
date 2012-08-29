@@ -133,6 +133,13 @@ public:
     template <typename InputIterator>
     static BaseColumnView make(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
 
+    /**
+     *  @brief Return true if the given record iterator range is continuous and the records all belong
+     *         to the given table.
+     *
+     *  This tests exactly the same requiremetns needed to construct a column view, so if this test
+     *  succeeds, BaseColumnView::make should as well.
+     */
     template <typename InputIterator>
     static bool isRangeContiguous(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
 
