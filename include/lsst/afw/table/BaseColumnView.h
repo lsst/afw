@@ -74,7 +74,11 @@ private:
  *  Geometric (point and shape) fields cannot be accessed through a BaseColumnView, but their
  *  scalar components can be.
  *
- *  BaseColumnViews do not allow table data to be modified.
+ *  BaseColumnViews represent a slightly problematic violation of const-correctness, as you
+ *  can modify a catalog's values by modifying a ColumnView.  Const-correctness for view
+ *  classes and other "smart reference" objects is a tricky business in C++, and in this case
+ *  it wasn't judged to be worth the additional code complexity given the low likelihood
+ *  of anyone accidentally shooting themselves in the foot in this case.
  */
 class BaseColumnView {
 public:
