@@ -327,6 +327,46 @@ class SimpleTableTestCase(unittest.TestCase):
                 for col in d.values():
                     self.assert_(col.flags.c_contiguous)
 
+    def testExtend(self):
+        schema1 = lsst.afw.table.SourceTable.makeMinimalSchema()
+        k1 = schema1.addField("f1", type=int)
+        k2 = schema1.addField("f2", type=float)
+        cat1 = lsst.afw.table.BaseCatalog(schema1)
+        for i in range(1000):
+            record = cat1.addNew()
+            record.setI(k1, i)
+            record.setD(k2, numpy.random.randn())
+        self.assertFalse(cat1.isContiguous())
+        cat2 = lsst.afw.table.BaseCatalog(schema1)
+        cat2.extend(cat1, deep=True)
+        self.assertEqual(len(cat1), len(cat2))
+        self.assert_(cat2.isContiguous())
+        cat3 = lsst.afw.table.BaseCatalog(cat1.table)
+        cat3.extend(cat1, deep=False)
+        self.assertFalse(cat3.isContiguous())
+        cat4 = lsst.afw.table.BaseCatalog(cat1.table)
+        cat4.extend(list(cat1), deep=False)
+        self.assertFalse(cat4.isContiguous())
+        cat4 = lsst.afw.table.BaseCatalog(schema1)
+        cat4.extend(list(cat1), deep=True)
+        self.assertFalse(cat4.isContiguous())
+        mapper = lsst.afw.table.SchemaMapper(schema1)
+        mapper.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema())
+        k2a = mapper.addMapping(k2)
+        schema2 = mapper.getOutputSchema()
+        self.assert_(mapper.getOutputSchema().contains(lsst.afw.table.SourceTable.makeMinimalSchema()))
+        cat5 = lsst.afw.table.BaseCatalog(schema2)
+        cat5.extend(cat1, mapper=mapper)
+        self.assert_(cat5.isContiguous())
+        cat6 = lsst.afw.table.SourceCatalog(schema2)
+        cat6.extend(list(cat1), mapper=mapper)
+        self.assertFalse(cat6.isContiguous())
+        cat7 = lsst.afw.table.SourceCatalog(schema2)
+        cat7.reserve(len(cat1) * 2)
+        cat7.extend(list(cat1), mapper=mapper)
+        cat7.extend(cat1, mapper=mapper)
+        self.assert_(cat7.isContiguous())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

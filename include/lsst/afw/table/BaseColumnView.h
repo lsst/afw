@@ -133,6 +133,16 @@ public:
     template <typename InputIterator>
     static BaseColumnView make(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
 
+    /**
+     *  @brief Return true if the given record iterator range is continuous and the records all belong
+     *         to the given table.
+     *
+     *  This tests exactly the same requiremetns needed to construct a column view, so if this test
+     *  succeeds, BaseColumnView::make should as well.
+     */
+    template <typename InputIterator>
+    static bool isRangeContiguous(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
+
     ~BaseColumnView();
 
 protected:
@@ -172,7 +182,6 @@ protected:
 
 };
 
-
 template <typename InputIterator>
 BaseColumnView BaseColumnView::make(PTR(BaseTable) const & table, InputIterator first, InputIterator last) {
     if (first == last) {
@@ -193,6 +202,25 @@ BaseColumnView BaseColumnView::make(PTR(BaseTable) const & table, InputIterator 
         }
     }
     return BaseColumnView(table, recordCount, buf, manager);
+}
+
+template <typename InputIterator>
+bool BaseColumnView::isRangeContiguous(
+    PTR(BaseTable) const & table, InputIterator first, InputIterator last
+) {
+    if (first == last) return true;
+    Schema schema = table->getSchema();
+    std::size_t recordSize = schema.getRecordSize();
+    std::size_t recordCount = 1;
+    void * buf = first->_data;
+    ndarray::Manager::Ptr manager = first->_manager;
+    char * expected = reinterpret_cast<char*>(buf) + recordSize;
+    for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
+        if (first->_data != expected || first->_manager != manager) {
+            return false;
+        }
+    }
+    return true;
 }
 
 }}} // namespace lsst::afw::table
