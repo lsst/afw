@@ -124,6 +124,33 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %shared_ptr(lsst::afw::table::IdFactory);
 %ignore lsst::afw::table::IdFactory::operator=;
 
+%pythoncode %{
+from ..geom import Angle, Point2D, Point2I
+from ..geom.ellipses import Quadrupole
+from ..coord import Coord, IcrsCoord
+from . import _syntax
+import numpy
+Field = {}
+Key = {}
+SchemaItem = {}
+_suffixes = {}
+aliases = {
+    int: "I4",
+    long: "I8",
+    float: "F8",
+    numpy.int32: "I4",
+    numpy.int64: "I8",
+    numpy.float32: "F4",
+    numpy.float64: "F8",
+    Angle: "Angle",
+    Coord: "Coord",
+    IcrsCoord: "Coord",
+    Point2I: "Point<I4>",
+    Point2D: "Point<F8>",
+    Quadrupole: "Moments<F8>",
+}
+%}
+
 %include "lsst/afw/table/misc.h"
 %include "lsst/afw/table/IdFactory.h"
 
@@ -242,6 +269,8 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 
 %pythoncode %{
 
+extract = _syntax.Schema_extract
+
 def asList(self):
     # This should be replaced by an implementation that uses Schema::forEach directly
     # if/when SWIG gets better at handling templates or we switch to Boost.Python.
@@ -308,6 +337,7 @@ def addField(self, field, type=None, doc="", units="", size=None):
 
 %extend lsst::afw::table::SubSchema {
 %pythoncode %{
+
 def find(self, k):
     for suffix in _suffixes.itervalues():
          attr = "_find_" + suffix
@@ -316,7 +346,8 @@ def find(self, k):
              return method(k)
          except Exception:
              pass
-    raise KeyError("Field '%s' not found in Schema." % self.getPrefix())    
+    raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
+
 def asField(self):
     for suffix in _suffixes.itervalues():
          attr = "_asField_" + suffix
@@ -326,6 +357,7 @@ def asField(self):
          except Exception:
              pass
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
+
 def asKey(self):
     for suffix in _suffixes.itervalues():
          attr = "_asKey_" + suffix
@@ -335,6 +367,7 @@ def asKey(self):
          except Exception:
              pass
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
+
 %}
 } // %extend SubSchema
 
@@ -349,9 +382,9 @@ def asKey(self):
 
 %extend lsst::afw::table::BaseTable {
     %pythoncode %{
-         schema = property(getSchema)
-         def cast(self, type_):
-             return type_._cast(self)
+        schema = property(getSchema)
+        def cast(self, type_):
+            return type_._cast(self)
     %}
 }
 
@@ -360,6 +393,7 @@ def asKey(self):
 
 %extend lsst::afw::table::BaseRecord {
     %pythoncode %{
+        extract = _syntax.BaseRecord_extract
         table = property(lambda self: self.getTable()) # extra lambda allows for polymorphism in property
         schema = property(getSchema)
         def cast(self, type_):
@@ -446,6 +480,7 @@ def getBits(self, keys=None):
 
 %extend lsst::afw::table::BaseColumnView {
     %pythoncode %{
+        extract = _syntax.BaseColumnView_extract
         table = property(getTable)
         schema = property(getSchema)
         def get(self, key):
@@ -605,6 +640,31 @@ namespace lsst { namespace afw { namespace table {
          typedef Eigen::Matrix<double,3,3> ErrValue;
      };
 }}}
+
+%define %enableSlotKwArgs(SLOT)
+%extend lsst::afw::table::SourceTable {
+    %feature("shadow") define ## SLOT %{
+    def define ## SLOT(self, meas, err=None, flag=None):
+        if err is None:
+            if flag is None:
+                $action(self, meas)
+            else:
+                $action(self, meas, flag)
+        else:
+            if flag is None:
+                $action(self, meas, err)
+            else:
+                $action(self, meas, err, flag)
+    %}
+}
+%enddef
+
+%enableSlotKwArgs(PsfFlux)
+%enableSlotKwArgs(ApFlux)
+%enableSlotKwArgs(InstFlux)
+%enableSlotKwArgs(ModelFlux)
+%enableSlotKwArgs(Centroid)
+%enableSlotKwArgs(Shape)
 
 %include "lsst/afw/table/Source.h"
 

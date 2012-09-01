@@ -96,7 +96,7 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(record[name], value1)
         self.assertEqual(record.get(name), value1)
         self.assertEqual(fastGetter(key), value1)
-        
+        self.assert_(key.subfields is None)
 
     def checkGeomAccessors(self, record, key, name, value):
         fastSetter = getattr(record, "set" + key.getTypeString())
@@ -157,21 +157,32 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkGeomAccessors(record, k5, "f5", lsst.afw.geom.Point2I(5, 3))
         self.checkGeomAccessors(record, k6, "f6", lsst.afw.geom.Point2D(5.5, 3.5))
         self.checkGeomAccessors(record, k7, "f7", lsst.afw.geom.Point2D(5.5, 3.5))
+        for k in (k5, k6, k7): self.assertEqual(k.subfields, ("x", "y"))
         self.checkGeomAccessors(record, k8, "f8", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
         self.checkGeomAccessors(record, k9, "f9", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
+        for k in (k8, k9): self.assertEqual(k.subfields, ("xx", "yy", "xy"))
         self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
+        for k in (k10, k11): self.assertEqual(k.subfields, tuple(range(k.getSize())))
         self.checkArrayAccessors(record, k12, "f12", makeCov(k12.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k13, "f13", makeCov(k13.getSize(), dtype=numpy.float64))
         self.checkArrayAccessors(record, k14, "f14", makeCov(k14.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k15, "f15", makeCov(k15.getSize(), dtype=numpy.float64))
         self.checkArrayAccessors(record, k16, "f16", makeCov(k16.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k17, "f17", makeCov(k17.getSize(), dtype=numpy.float64))
+        for k in (k12, k13, k14, k15, k16, k17):
+            n = 0
+            for idx, subkey in zip(k.subfields, k.subkeys):
+                self.assertEqual(k[idx], subkey)
+                n += 1
+            self.assertEqual(n, k.getElementCount())
         self.checkGeomAccessors(record, k18, "f18", lsst.afw.geom.Angle(1.2))
+        self.assert_(k18.subfields is None)
         self.checkGeomAccessors(
             record, k19, "f19", 
             lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
             )
+        self.assertEqual(k19.subfields, ("ra", "dec"))
         k0a = lsst.afw.table.Key["D"]()
         k0b = lsst.afw.table.Key["Flag"]()
         lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0a)
@@ -247,7 +258,114 @@ class SimpleTableTestCase(unittest.TestCase):
             record[k] = n
         for n, r in enumerate(catalog):
             self.assertEqual(n, r[k])
+
+    def testTicket2262(self):
+        """Test that we can construct an array field in Python"""
+        f1 = lsst.afw.table.Field["ArrayF"]("name", "doc", "units", 5)
+        f2 = lsst.afw.table.Field["ArrayD"]("name", "doc", 5)
+        self.assertEqual(f1.getSize(), 5)
+        self.assertEqual(f2.getSize(), 5)
         
+    def testExtract(self):
+        schema = lsst.afw.table.Schema()
+        schema.addField("a.b.c1", type=numpy.float64)
+        schema.addField("a.b.c2", type="Flag")
+        schema.addField("a.d1", type=numpy.int32)
+        schema.addField("a.d2", type="ArrayF", size=2)
+        schema.addField("q.e1", type="PointI")
+        covKey = schema.addField("q.e2", type="CovF", size=3)
+        self.assertEqual(schema.extract("a.b.*", ordered=True).keys(), ["a.b.c1", "a.b.c2"])
+        self.assertEqual(schema.extract("*1", ordered=True).keys(), ["a.b.c1", "a.d1", "q.e1"])
+        self.assertEqual(schema.extract("a.b.*", "*2", ordered=True).keys(),
+                         ["a.b.c1", "a.b.c2", "a.d2", "q.e2"])
+        self.assertEqual(schema.extract(regex=r"a\.(.+)1", sub=r"\1f", ordered=True).keys(), ["b.cf", "df"])
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        for i in range(5):
+            record = catalog.addNew()
+            record.set("a.b.c1", numpy.random.randn())
+            record.set("a.b.c2", True)
+            record.set("a.d1", numpy.random.randint(100))
+            record.set("a.d2", numpy.random.randn(2).astype(numpy.float32))
+            record.set("q.e1", lsst.afw.geom.Point2I(numpy.random.randint(10), numpy.random.randint(10)))
+            record.set("q.e2", numpy.random.randn(3,3).astype(numpy.float32))
+        d = record.extract("*")
+        self.assertEqual(set(d.keys()), set(schema.getNames()))
+        self.assertEqual(d["a.b.c1"], record.get("a.b.c1"))
+        self.assertEqual(d["a.b.c2"], record.get("a.b.c2"))
+        self.assertEqual(d["a.d1"], record.get("a.d1"))
+        self.assert_(numpy.all(d["a.d2"] == record.get("a.d2")))
+        self.assertEqual(d["q.e1"], record.get("q.e1"))
+        self.assert_(numpy.all(d["q.e2"] == record.get("q.e2")))
+        d = record.extract("q.e1", split=True)
+        self.assertEqual(d["q.e1.x"], record.get("q.e1.x"))
+        self.assertEqual(d["q.e1.y"], record.get("q.e1.y"))
+        self.assert_("q.e1" not in d)
+        allIdx = slice(None)
+        sliceIdx = slice(0, 4, 2)
+        boolIdx = numpy.array([True, False, False, True, True])
+        for kwds, idx in [
+            ({}, allIdx),
+            ({"copy": True}, allIdx),
+            ({"where": boolIdx}, boolIdx),
+            ({"where": sliceIdx}, sliceIdx),
+            ({"where": boolIdx, "copy": True}, boolIdx),
+            ({"where": sliceIdx, "copy": True}, sliceIdx),
+            ]:
+            
+            d = catalog.extract("*", **kwds)
+            self.assert_(numpy.all(d["a.b.c1"] == catalog.get("a.b.c1")[idx]))
+            self.assert_(numpy.all(d["a.b.c2"] == catalog.get("a.b.c2")[idx]))
+            self.assert_(numpy.all(d["a.d1"] == catalog.get("a.d1")[idx]))
+            self.assert_(numpy.all(d["a.d2"] == catalog.get("a.d2")[idx]))
+            self.assert_(numpy.all(d["q.e1.x"] == catalog.get("q.e1.x")[idx]))
+            self.assert_(numpy.all(d["q.e1.y"] == catalog.get("q.e1.y")[idx]))
+            cov = d["q.e2"]
+            for i in range(covKey.getSize()):
+                for j in range(covKey.getSize()):
+                    self.assert_(numpy.all(cov[:,i,j] == catalog.get(covKey[i,j])[idx]))
+            if "copy" in kwds or idx is boolIdx:
+                for col in d.values():
+                    self.assert_(col.flags.c_contiguous)
+
+    def testExtend(self):
+        schema1 = lsst.afw.table.SourceTable.makeMinimalSchema()
+        k1 = schema1.addField("f1", type=int)
+        k2 = schema1.addField("f2", type=float)
+        cat1 = lsst.afw.table.BaseCatalog(schema1)
+        for i in range(1000):
+            record = cat1.addNew()
+            record.setI(k1, i)
+            record.setD(k2, numpy.random.randn())
+        self.assertFalse(cat1.isContiguous())
+        cat2 = lsst.afw.table.BaseCatalog(schema1)
+        cat2.extend(cat1, deep=True)
+        self.assertEqual(len(cat1), len(cat2))
+        self.assert_(cat2.isContiguous())
+        cat3 = lsst.afw.table.BaseCatalog(cat1.table)
+        cat3.extend(cat1, deep=False)
+        self.assertFalse(cat3.isContiguous())
+        cat4 = lsst.afw.table.BaseCatalog(cat1.table)
+        cat4.extend(list(cat1), deep=False)
+        self.assertFalse(cat4.isContiguous())
+        cat4 = lsst.afw.table.BaseCatalog(schema1)
+        cat4.extend(list(cat1), deep=True)
+        self.assertFalse(cat4.isContiguous())
+        mapper = lsst.afw.table.SchemaMapper(schema1)
+        mapper.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema())
+        k2a = mapper.addMapping(k2)
+        schema2 = mapper.getOutputSchema()
+        self.assert_(mapper.getOutputSchema().contains(lsst.afw.table.SourceTable.makeMinimalSchema()))
+        cat5 = lsst.afw.table.BaseCatalog(schema2)
+        cat5.extend(cat1, mapper=mapper)
+        self.assert_(cat5.isContiguous())
+        cat6 = lsst.afw.table.SourceCatalog(schema2)
+        cat6.extend(list(cat1), mapper=mapper)
+        self.assertFalse(cat6.isContiguous())
+        cat7 = lsst.afw.table.SourceCatalog(schema2)
+        cat7.reserve(len(cat1) * 2)
+        cat7.extend(list(cat1), mapper=mapper)
+        cat7.extend(cat1, mapper=mapper)
+        self.assert_(cat7.isContiguous())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
