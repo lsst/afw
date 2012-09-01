@@ -270,13 +270,13 @@ int WarpImageGpuWrapper(
     destImgGpu.strideVar = destBufVarGpu.AllocImageBaseBuffer(*dstImage.getVariance());
     destImgGpu.strideMsk = destBufMskGpu.AllocImageBaseBuffer(*dstImage.getMask());
     if (destBufImgGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input image");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output image");
     }
     if (destBufVarGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input variance");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output variance");
     }
     if (destBufMskGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input mask");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output mask");
     }
     destImgGpu.img = destBufImgGpu.ptr;
     destImgGpu.var = destBufVarGpu.ptr;
