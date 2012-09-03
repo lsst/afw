@@ -34,6 +34,7 @@
 #include <vector>
 #include <cmath>
 #include "boost/math/special_functions/round.hpp"
+#include "lsst/utils/ieee.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
@@ -61,7 +62,7 @@ namespace {
         std::vector<double> vRet;
         std::vector<double>::const_iterator pVal = values.begin();
         for (std::vector<double>::const_iterator pRef = refs.begin(); pRef != refs.end(); ++pRef, ++pVal) {
-            if (!isnan(*pRef)) {
+            if (!lsst::utils::isnan(*pRef)) {
                 vRet.push_back(*pVal);
             }
         }

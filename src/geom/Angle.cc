@@ -1,12 +1,15 @@
 
 #include <iostream>
+
+#include "boost/static_assert.hpp"
+
 #include "lsst/afw/geom/Angle.h"
 
 namespace lsst { namespace afw { namespace geom {
 
 template<typename T>
 double operator /(T const lhs, Angle const rhs) {
-    static_assert((sizeof(T) == 0), "You may not divide by an Angle");
+    BOOST_STATIC_ASSERT_MSG((sizeof(T) == 0), "You may not divide by an Angle");
     return 0.0;
 }
 
