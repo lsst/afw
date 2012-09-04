@@ -77,7 +77,7 @@ struct BaseColumnView::Impl {
 PTR(BaseTable) BaseColumnView::getTable() const { return _impl->table; }
 
 template <typename T>
-typename ndarray::Array<T const,1> BaseColumnView::operator[](Key<T> const & key) const {
+typename ndarray::ArrayRef<T,1> const BaseColumnView::operator[](Key<T> const & key) const {
     return ndarray::external(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
@@ -89,7 +89,7 @@ typename ndarray::Array<T const,1> BaseColumnView::operator[](Key<T> const & key
 }
 
 template <typename T>
-typename ndarray::Array<T const,2,1> BaseColumnView::operator[](Key< Array<T> > const & key) const {
+typename ndarray::ArrayRef<T,2,1> const BaseColumnView::operator[](Key< Array<T> > const & key) const {
     return ndarray::external(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()
@@ -181,7 +181,7 @@ BaseColumnView::BaseColumnView(
 // =============== Explicit instantiations ==================================================================
 
 #define INSTANTIATE_COLUMNVIEW_SCALAR(r, data, elem)                    \
-    template ndarray::Array< elem const, 1> BaseColumnView::operator[](Key< elem > const &) const;
+    template ndarray::ArrayRef< elem, 1> const BaseColumnView::operator[](Key< elem > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_SCALAR, _,
@@ -189,7 +189,7 @@ BOOST_PP_SEQ_FOR_EACH(
 )
 
 #define INSTANTIATE_COLUMNVIEW_ARRAY(r, data, elem)                    \
-    template ndarray::Array< elem const, 2, 1 > BaseColumnView::operator[](Key< Array< elem > > const &) const;
+    template ndarray::ArrayRef< elem, 2, 1 > const BaseColumnView::operator[](Key< Array< elem > > const &) const;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_COLUMNVIEW_ARRAY, _,

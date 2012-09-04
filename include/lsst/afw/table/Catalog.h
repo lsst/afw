@@ -299,8 +299,19 @@ public:
      *  @brief Return a ColumnView of this catalog's records.
      *
      *  Will throw RuntimeErrorException if records are not contiguous.
+     *
+     *  Note that this is a 
      */
-    ColumnView getColumnView() const { return ColumnView::make(_table, begin(), end()); }
+    ColumnView getColumnView() const {
+        if (boost::is_const<RecordT>::value) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
+                "non-const views)."
+            );
+        }
+        return ColumnView::make(_table, begin(), end());
+    }
 
     /// @brief Return true if all records are contiguous.
     bool isContiguous() const { return ColumnView::isRangeContiguous(_table, begin(), end()); }

@@ -183,3 +183,16 @@ BOOST_AUTO_TEST_CASE(testFits) {
     boost::filesystem::remove(filename);
 
 }
+
+BOOST_AUTO_TEST_CASE(ticket2164) {
+    using namespace lsst::afw::table;
+    Schema schema;
+    schema.addField<int>("i", "test int field");
+    schema.addField<double>("d", "test double field");
+    BaseCatalog cat(schema);
+    cat.addNew();
+    cat.addNew();
+    ConstBaseCatalog constCat(cat);
+    BOOST_CHECK_THROW( constCat.getColumnView(), lsst::pex::exceptions::LogicErrorException );
+
+}

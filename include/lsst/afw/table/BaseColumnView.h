@@ -40,7 +40,7 @@ public:
 
     typedef boost::int64_t IntT;
 
-    ndarray::Array<IntT const,1,1> getArray() const { return _array; }
+    ndarray::Array<IntT,1,1> getArray() const { return _array; }
 
     IntT getBit(Key<Flag> const & key) const;
     IntT getBit(std::string const & name) const;
@@ -74,7 +74,11 @@ private:
  *  Geometric (point and shape) fields cannot be accessed through a BaseColumnView, but their
  *  scalar components can be.
  *
- *  BaseColumnViews do not allow table data to be modified.
+ *  BaseColumnView and its subclasses are always non-const views into a catalog, and so cannot
+ *  be obtained from a catalog-of-const (trying this results in an exception, not a compilation
+ *  error).  As a result, all its accessors return arrays of non-const elements, even though
+ *  they are themselves const member functions.  This is no different from a shared_ptr<T>'s
+ *  get() member function returning a non-const T*, even though get() is a const member function.
  */
 class BaseColumnView {
 public:
@@ -87,11 +91,11 @@ public:
 
     /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
-    ndarray::Array<T const,1> operator[](Key<T> const & key) const;
+    ndarray::ArrayRef<T,1> const operator[](Key<T> const & key) const;
 
     /// @brief Return a 2-d array corresponding to an array field.
     template <typename T>
-    ndarray::Array<T const,2,1> operator[](Key< Array<T> > const & key) const;
+    ndarray::ArrayRef<T,2,1> const operator[](Key< Array<T> > const & key) const;
 
     /**
      *  @brief Return a 1-d array expression corresponding to a flag bit.
