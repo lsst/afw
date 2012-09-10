@@ -47,13 +47,13 @@ void BaseRecord::assign(BaseRecord const & other) {
 }
 
 void BaseRecord::assign(BaseRecord const & other, SchemaMapper const & mapper) {
-    if (other.getSchema() != mapper.getInputSchema()) {
+    if (!other.getSchema().contains(mapper.getInputSchema())) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Unequal schemas between input record and mapper."
         );
     }
-    if (this->getSchema() != mapper.getOutputSchema()) {
+    if (!this->getSchema().contains(mapper.getOutputSchema())) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Unequal schemas between output record and mapper."
