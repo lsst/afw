@@ -375,6 +375,27 @@ class SimpleTableTestCase(unittest.TestCase):
         cat7.extend(cat1, mapper=mapper)
         self.assert_(cat7.isContiguous())
 
+    def testTicket2308(self):
+        inputSchema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        mapper1 = lsst.afw.table.SchemaMapper(inputSchema)
+        mapper1.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema(), True)
+        mapper2 = lsst.afw.table.SchemaMapper(inputSchema)
+        mapper2.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema(), False)
+        inputTable = lsst.afw.table.SourceTable.make(inputSchema)
+        inputRecord = inputTable.makeRecord()
+        inputRecord.set("id", 42)
+        outputTable1 = lsst.afw.table.SourceTable.make(mapper1.getOutputSchema())
+        outputTable2 = lsst.afw.table.SourceTable.make(mapper2.getOutputSchema())
+        outputRecord1 = outputTable1.makeRecord()
+        outputRecord2 = outputTable2.makeRecord()
+        self.assertEqual(outputRecord1.getId(), outputRecord2.getId())
+        self.assertNotEqual(outputRecord1.getId(), inputRecord.getId())
+        outputRecord1.assign(inputRecord, mapper1)
+        self.assertEqual(outputRecord1.getId(), inputRecord.getId())
+        outputRecord2.assign(inputRecord, mapper2)
+        self.assertNotEqual(outputRecord2.getId(), inputRecord.getId())
+        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
