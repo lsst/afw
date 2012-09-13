@@ -38,6 +38,11 @@ Python interface to lsst::afw::coord
 %include "std_pair.i"
 %template(pairSS) std::pair<std::string, std::string>;
 
+%{
+#include <lsst/afw/geom/Angle.h>
+%}
+%template(pairAngleAngle) std::pair<lsst::afw::geom::Angle, lsst::afw::geom::Angle>;
+
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %include "observatory.i"
