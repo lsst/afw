@@ -66,7 +66,7 @@ class WarperConfig(pexConfig.Config):
     maskWarpingKernelName = pexConfig.ChoiceField(
         dtype = str,
         doc = "Warping kernel for mask (use warpingKernelName if '')",
-        default = "",
+        default = "bilinear",
         allowed = {
             "": "use the regular warping kernel for the mask plane, as well as the image and variance planes",
             "bilinear": "bilinear interpolation",
