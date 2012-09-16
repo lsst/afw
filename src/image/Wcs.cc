@@ -993,14 +993,15 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     //
     const double side = 10;             // length of the square's sides in pixels
     GeomPoint const sky00 = coord.getPosition(skyUnit);
-    GeomPoint const dsky10 = coord.getOffsetFrom(*pixelToSky(pix00 + afwGeom::Extent2D(side, 0)), skyUnit);
-    GeomPoint const dsky01 = coord.getOffsetFrom(*pixelToSky(pix00 + afwGeom::Extent2D(0, side)), skyUnit);
+    typedef std::pair<lsst::afw::geom::Angle, lsst::afw::geom::Angle> AngleAngle;
+    AngleAngle const dsky10 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + afwGeom::Extent2D(side, 0)));
+    AngleAngle const dsky01 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + afwGeom::Extent2D(0, side)));
 
     Eigen::Matrix2d m;
-    m(0, 0) = dsky10.getX()/side;
-    m(0, 1) = dsky01.getX()/side;
-    m(1, 0) = dsky10.getY()/side;
-    m(1, 1) = dsky01.getY()/side;
+    m(0, 0) = dsky10.first.asAngularUnits(skyUnit)/side;
+    m(0, 1) = dsky01.first.asAngularUnits(skyUnit)/side;
+    m(1, 0) = dsky10.second.asAngularUnits(skyUnit)/side;
+    m(1, 1) = dsky01.second.asAngularUnits(skyUnit)/side;
 
     Eigen::Vector2d sky00v;
     sky00v << sky00.getX(), sky00.getY();

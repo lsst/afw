@@ -66,7 +66,47 @@ CoordSystemMap const getCoordSystemMap() {
     idMap["TOPOCENTRIC"] = afwCoord::TOPOCENTRIC;
     return idMap;
 }
-    
+
+/// Calculate angular distance between two points using the Haversine formula
+///
+/// Besides the differences between the two coordinates, we also input the
+/// cosine of the two declinations, so as to be thrifty with the use of trig functions.
+afwGeom::Angle haversine(afwGeom::Angle const dAlpha, /// Difference between RAs (or longitudes), alpha1-alpha2
+                         afwGeom::Angle const dDelta, /// Difference between Decs (or latitudes), delta1-delta2
+                         double const cosDelta1, /// Cosine of the first Dec, cos(delta1)
+                         double const cosDelta2 /// Cosine of the second Dec, cos(delta2)
+    )
+{
+    double const havDDelta = std::sin(dDelta/2.0) * std::sin(dDelta/2.0);
+    double const havDAlpha = std::sin(dAlpha/2.0) * std::sin(dAlpha/2.0);
+    double const havD = havDDelta + cosDelta1 * cosDelta2 * havDAlpha;
+    double const sinDHalf = std::sqrt(havD);
+    afwGeom::Angle dist = (2.0 * std::asin(sinDHalf)) * afwGeom::radians;
+    return dist;
+}
+
+double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
+
+// Put a pair of coordinates in a common FK5 system
+std::pair<afwCoord::Fk5Coord, afwCoord::Fk5Coord> commonFk5(afwCoord::Coord const& c1,
+                                                            afwCoord::Coord const& c2
+    )
+{
+    // make sure they're fk5
+    afwCoord::Fk5Coord fk51 = c1.toFk5();
+    afwCoord::Fk5Coord fk5tmp = c2.toFk5();
+
+    // make sure they have the same epoch
+    afwCoord::Fk5Coord fk52;
+    if (fabs(fk51.getEpoch() - fk5tmp.getEpoch()) > epochTolerance) {
+        fk52 = fk5tmp.precess(fk51.getEpoch());
+    } else {
+        fk52 = fk5tmp;
+    }
+
+    return std::make_pair(fk51, fk52);
+}
+
 } // end anonymous namespace
 
 
@@ -157,7 +197,6 @@ afwGeom::Angle meanSiderealTimeGreenwich(
     return (280.46061837 + 360.98564736629*(jd - 2451545.0) + 0.000387933*T*T - (T*T*T/38710000.0)) * afwGeom::degrees;
 }
     
-double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
 
 /*
  * A pair of utility functions to go from cartesian to spherical
@@ -635,66 +674,71 @@ afwGeom::Angle afwCoord::Coord::angularSeparation(
     Coord const &c ///< coordinate to compute our separation from
     ) const {
 
-    // make sure they're fk5
-    Fk5Coord fk51 = this->toFk5();
-    Fk5Coord fk5tmp = c.toFk5();
-    
-    // make sure they have the same epoch
-    Fk5Coord fk52;
-    if ( fabs(fk51.getEpoch() - fk5tmp.getEpoch()) > epochTolerance ) {
-        fk52 = fk5tmp.precess(fk51.getEpoch());
-    } else {
-        fk52 = fk5tmp;
-    }
-
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
     // we'll put them in the same system.
-    afwGeom::Angle const alpha1 = fk51.getRa();
-    afwGeom::Angle const delta1 = fk51.getDec();
-    afwGeom::Angle const alpha2 = fk52.getRa();
-    afwGeom::Angle const delta2 = fk52.getDec();
-    
-#if 0
-    // this formula breaks down near 0 and 180
-    double const cosd    = sin(delta1)*sin(delta2) + cos(delta1)*cos(delta2)*cos(alpha1 - alpha2);
-    double const distDeg = radToDeg*acos(cosd);
-#endif
+    std::pair<afwCoord::Fk5Coord, afwCoord::Fk5Coord> const& fk5 = commonFk5(*this, c);
+    afwGeom::Angle const alpha1 = fk5.first.getRa();
+    afwGeom::Angle const delta1 = fk5.first.getDec();
+    afwGeom::Angle const alpha2 = fk5.second.getRa();
+    afwGeom::Angle const delta2 = fk5.second.getDec();
 
-    // use haversine form.  it's stable near 0 and 180.
-    afwGeom::Angle const dDelta = delta1 - delta2;
-    afwGeom::Angle const dAlpha = alpha1 - alpha2;
-    double const havDDelta = std::sin(dDelta/2.0) * std::sin(dDelta/2.0);
-    double const havDAlpha = std::sin(dAlpha/2.0) * std::sin(dAlpha/2.0);
-    double const havD = havDDelta + std::cos(delta1) * std::cos(delta2) * havDAlpha;
-    double const sinDHalf = std::sqrt(havD);
-    afwGeom::Angle dist = (2.0 * std::asin(sinDHalf)) * afwGeom::radians;
-    return dist;
+    return haversine(alpha1 - alpha2, delta1 - delta2, std::cos(delta1), std::cos(delta2));
 }
+
 
 /**
  * @brief Compute the offset from a coordinate
  *
+ * The resulting angles are suitable for input to Coord::offset
+ *
+ * @return pair of Angles: bearing (angle wrt a declination parallel) and distance
  */
-lsst::afw::geom::Point2D afwCoord::Coord::getOffsetFrom(
-    Coord const &c,       ///< Coordinate from which to compute offset
-    afwGeom::AngleUnit unit                  ///< Units for separation
-    ) const {
-    Fk5Coord fk51 = this->toFk5();
-    Fk5Coord fk5tmp = c.toFk5();
-    
-    // make sure they have the same epoch
-    Fk5Coord fk52;
-    if ( fabs(fk51.getEpoch() - fk5tmp.getEpoch()) > epochTolerance ) {
-        fk52 = fk5tmp.precess(fk51.getEpoch());
-    } else {
-        fk52 = fk5tmp;
-    }
+std::pair<afwGeom::Angle, afwGeom::Angle>
+afwCoord::Coord::getOffsetFrom(afwCoord::Coord const &c ///< Coordinate from which to compute offset
+    ) const
+{
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
     // we'll put them in the same system.
-    double const alpha1 = fk51.getRa();
-    double const delta1 = fk51.getDec();
-    double const alpha2 = fk52.getRa();
-    double const delta2 = fk52.getDec();
+    std::pair<afwCoord::Fk5Coord, afwCoord::Fk5Coord> const& fk5 = commonFk5(*this, c);
+    afwGeom::Angle const alpha1 = fk5.first.getRa();
+    afwGeom::Angle const delta1 = fk5.first.getDec();
+    afwGeom::Angle const alpha2 = fk5.second.getRa();
+    afwGeom::Angle const delta2 = fk5.second.getDec();
+
+    afwGeom::Angle const dAlpha = alpha1-alpha2;
+    afwGeom::Angle const dDelta = delta1-delta2;
+
+    double const cosDelta1 = std::cos(delta1);
+    double const cosDelta2 = std::cos(delta2);
+
+    afwGeom::Angle separation = haversine(dAlpha, dDelta, cosDelta1, cosDelta2);
+
+    // Formula from http://www.movable-type.co.uk/scripts/latlong.html
+    double const y = std::sin(dAlpha)*cosDelta2;
+    double const x = cosDelta1*std::sin(delta2) - std::sin(delta1)*cosDelta2*std::cos(dAlpha);
+    afwGeom::Angle bearing = std::atan2(y, x)*afwGeom::radians - 90.0*afwGeom::degrees;
+
+    return std::make_pair(bearing, separation);
+}
+
+/**
+ * @brief Get the offset on the tangent plane
+ *
+ * This is suitable only for small angles.
+ *
+ * @return pair of Angles: Longitude and Latitude offsets
+ */
+std::pair<afwGeom::Angle, afwGeom::Angle>
+afwCoord::Coord::getTangentPlaneOffset(afwCoord::Coord const &c ///< Coordinate from which to compute offset
+    ) const
+{
+    // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
+    // we'll put them in the same system.
+    std::pair<afwCoord::Fk5Coord, afwCoord::Fk5Coord> const& fk5 = commonFk5(*this, c);
+    afwGeom::Angle const alpha1 = fk5.first.getRa();
+    afwGeom::Angle const delta1 = fk5.first.getDec();
+    afwGeom::Angle const alpha2 = fk5.second.getRa();
+    afwGeom::Angle const delta2 = fk5.second.getDec();
 
     // This is a projection of coord2 to the tangent plane at coord1
     double const sinDelta1 = std::sin(delta1);
@@ -705,10 +749,10 @@ lsst::afw::geom::Point2D afwCoord::Coord::getOffsetFrom(
     double const sinAlphaDiff = std::sin(alpha2 - alpha1);
 
     double const div = cosDelta1 * cosAlphaDiff * cosDelta2 + sinDelta1 * sinDelta2;
-    afwGeom::Angle xi = (cosDelta1 * sinAlphaDiff / div) * afwGeom::radians;
-    afwGeom::Angle eta = ((cosDelta1 * cosAlphaDiff * sinDelta2 - sinDelta1 * cosDelta2) / div) * afwGeom::radians;
+    double const xi = cosDelta1 * sinAlphaDiff / div;
+    double const eta = (cosDelta1 * cosAlphaDiff * sinDelta2 - sinDelta1 * cosDelta2) / div;
 
-    return lsst::afw::geom::Point2D(xi.asAngularUnits(unit), eta.asAngularUnits(unit));
+    return std::make_pair(xi*afwGeom::radians, eta*afwGeom::radians);
 }
 
 

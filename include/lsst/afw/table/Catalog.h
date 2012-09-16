@@ -463,7 +463,7 @@ public:
     /// @brief Insert a range of records into the catalog by copying them with a SchemaMapper.
     template <typename InputIterator>
     void insert(SchemaMapper const & mapper, iterator pos, InputIterator first, InputIterator last) {
-        if (mapper.getOutputSchema() != _table->getSchema()) {
+        if (!_table->getSchema().contains(mapper.getOutputSchema())) {
             throw LSST_EXCEPT(
                 pex::exceptions::InvalidParameterException,
                 "SchemaMapper's output schema does not match catalog's schema"
