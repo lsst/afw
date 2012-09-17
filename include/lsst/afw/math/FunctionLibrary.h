@@ -893,6 +893,10 @@ using boost::serialization::make_nvp;
             const int nParams = static_cast<int>(this->_params.size());
             const int order = this->_order;
 
+            if (order == 0) {
+                return this->_params[0];  // No caching required
+            }
+
             if ((yPrime != _oldYPrime) || !this->_isCacheValid) {
                 // update cached _yCheby and _xCoeffs
                 _yCheby[0] = 1.0;
@@ -920,9 +924,7 @@ using boost::serialization::make_nvp;
 
             // Clenshaw function for solving the Chebyshev polynomial
             // Non-recursive version from Kresimir Cosic
-            if (order == 0) {
-                return _xCoeffs[0];
-            } else if (order == 1) {
+            if (order == 1) {
                 return _xCoeffs[0] + (_xCoeffs[1] * xPrime);
             }
             double cshPrev = _xCoeffs[order];
