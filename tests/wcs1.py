@@ -409,6 +409,9 @@ class TestWcsCompare(unittest.TestCase):
         self.assertNotEqual(distortedWcsCopy, sipWcsCopy)
         self.assertNotEqual(sipWcsCopy, distortedWcsCopy)
         
+        wcs1 = afwImage.Wcs()
+        wcs2 = afwImage.Wcs()
+        self.assertEqual(wcs1, wcs2)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
