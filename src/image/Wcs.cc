@@ -458,7 +458,38 @@ bool Wcs::operator==(Wcs const & other) const {
     return this->_isSubset(other) && other._isSubset(*this);
 }
 
+// convenience functions and a macro for implementing isSubset
+namespace {
+
+inline bool compareArrays(double const * a, double const * b, int n) {
+    for (int i = 0; i < n; ++i) if (a[i] != b[i]) return false;
+    return true;
+}
+
+template <typename T>
+inline bool compareStringArrays(T a, T b, int n) {
+    for (int i = 0; i < n; ++i) if (strcmp(a[i], b[i]) != 0) return false;
+    return true;
+}
+
+#define CHECK_NULLS(a, b)                       \
+    do {                                        \
+        if ((a) == NULL) {                      \
+            if ((b) == NULL) return true;       \
+            return false;                       \
+        }                                       \
+        if ((b) == NULL) return false;          \
+    } while (false)
+
+} // anonymous
+
 bool Wcs::_isSubset(Wcs const & rhs) const {
+    CHECK_NULLS(_wcsInfo, rhs._wcsInfo);
+    CHECK_NULLS(_wcsInfo->crval, rhs._wcsInfo->crval);
+    CHECK_NULLS(_wcsInfo->cd, rhs._wcsInfo->cd);
+    CHECK_NULLS(_wcsInfo->crpix, rhs._wcsInfo->crpix);
+    CHECK_NULLS(_wcsInfo->cunit, rhs._wcsInfo->cunit);
+    CHECK_NULLS(_wcsInfo->ctype, rhs._wcsInfo->ctype);
     return _nWcsInfo == rhs._nWcsInfo &&
         _relax == rhs._relax &&
         _wcsfixCtrl == rhs._wcsfixCtrl &&
@@ -467,24 +498,18 @@ bool Wcs::_isSubset(Wcs const & rhs) const {
         _coordSystem == rhs._coordSystem &&
         _wcsInfo->naxis == rhs._wcsInfo->naxis &&
         _wcsInfo->equinox == rhs._wcsInfo->equinox &&
-        _wcsInfo->crpix[0] == rhs._wcsInfo->crpix[0] &&
-        _wcsInfo->crpix[1] == rhs._wcsInfo->crpix[1] &&
-        _wcsInfo->cd[0] == rhs._wcsInfo->cd[0] &&
-        _wcsInfo->cd[1] == rhs._wcsInfo->cd[1] &&
-        _wcsInfo->cd[2] == rhs._wcsInfo->cd[2] &&
-        _wcsInfo->cd[3] == rhs._wcsInfo->cd[3] &&
-        _wcsInfo->crval[0] == rhs._wcsInfo->crval[0] &&
-        _wcsInfo->crval[1] == rhs._wcsInfo->crval[1] &&
-        strcmp(_wcsInfo->cunit[0], rhs._wcsInfo->cunit[0]) == 0 &&
-        strcmp(_wcsInfo->cunit[1], rhs._wcsInfo->cunit[1]) == 0 &&
-        strcmp(_wcsInfo->ctype[0], rhs._wcsInfo->ctype[0]) == 0 &&
-        strcmp(_wcsInfo->ctype[1], rhs._wcsInfo->ctype[1]) == 0 &&
         _wcsInfo->altlin == rhs._wcsInfo->altlin &&
+        compareArrays(_wcsInfo->crval, rhs._wcsInfo->crval, 2) &&
+        compareArrays(_wcsInfo->crpix, rhs._wcsInfo->crpix, 2) &&
+        compareArrays(_wcsInfo->cd, rhs._wcsInfo->cd, 4) &&
+        compareStringArrays(_wcsInfo->cunit, rhs._wcsInfo->cunit, 2) &&
+        compareStringArrays(_wcsInfo->ctype, rhs._wcsInfo->ctype, 2) &&
         skyToPixel(_wcsInfo->crval[0] * afwGeom::degrees,
                    _wcsInfo->crval[1] * afwGeom::degrees) ==
         rhs.skyToPixel(_wcsInfo->crval[0] * afwGeom::degrees,
                        _wcsInfo->crval[1] * afwGeom::degrees) &&
-        *pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]) == *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
+        *pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]) ==
+        *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
 }
 
 ///Assignment operator    
