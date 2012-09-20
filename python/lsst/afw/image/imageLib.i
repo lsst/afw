@@ -166,6 +166,7 @@ namespace boost {
 %shared_ptr(lsst::afw::image::Calib);
 %include "lsst/afw/image/Calib.h"
 %template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
+%template(pairVectorDVectorD) std::pair<std::vector<double>, std::vector<double> >;
 
 %{
 #include "lsst/afw/detection.h"
