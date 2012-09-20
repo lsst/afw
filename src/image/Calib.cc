@@ -251,6 +251,12 @@ void Calib::setFluxMag0(double fluxMag0,      ///< The flux in question (ADUs)
     _fluxMag0 = fluxMag0;
     _fluxMag0Sigma = fluxMag0Sigma;
 }
+void Calib::setFluxMag0(std::pair<double, double> fluxMag0AndSigma ///< The flux and error (ADUs)
+                       )
+{
+    _fluxMag0 = fluxMag0AndSigma.first;
+    _fluxMag0Sigma = fluxMag0AndSigma.second;
+}
 
 /**
  * Return the flux, and error in flux, of a zero-magnitude object
@@ -260,18 +266,70 @@ std::pair<double, double> Calib::getFluxMag0() const
     return std::make_pair(_fluxMag0, _fluxMag0Sigma);
 }
 
+namespace {
+inline void checkNegativeFlux0(double fluxMag0) {
+    if (fluxMag0 <= 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                          (boost::format("Flux of 0-mag object must be >= 0: saw %g") % fluxMag0).str());
+    }
+}
+inline bool isNegativeFlux(double flux, bool doThrow)
+{
+    if (flux <= 0) {
+        if (doThrow) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                              (boost::format("Flux must be >= 0: saw %g") % flux).str());
+        }
+        return true;
+    }
+    return false;
+}
+inline double convertToFlux(double fluxMag0, double mag) {
+    return fluxMag0 * ::pow(10.0, -0.4 * mag);
+}
+inline double convertToFluxErr(double fluxMag0InvSNR, double flux, double magErr) {
+    // Want to:
+    //     return flux * hypot(_fluxMag0Sigma/_fluxMag0, 0.4*std::log(10)*magSigma/mag);
+    // But hypot is not standard C++ so use <http://en.wikipedia.org/wiki/Hypot#Implementation>
+    double a = fluxMag0InvSNR;
+    double b = 0.4 * std::log(10.0) * magErr;
+    if (std::abs(a) < std::abs(b)) {
+        std::swap(a, b);
+    }
+    return flux * std::abs(a) * std::sqrt(1 + std::pow(b / a, 2));
+}
+inline double convertToMag(double fluxMag0, double flux) {
+    return -2.5*::log10(flux/fluxMag0);
+}
+inline void convertToMagWithErr(double *mag, double *magErr, double fluxMag0, double fluxMag0InvSNR,
+                                double flux, double fluxErr)
+{
+    double const rat = flux/fluxMag0;
+    double const ratErr = ::sqrt((::pow(fluxErr, 2) + ::pow(flux*fluxMag0InvSNR, 2))/::pow(fluxMag0, 2));
+    
+    *mag = -2.5*::log10(rat);
+    *magErr = 2.5/::log(10.0)*ratErr/rat;
+}
+
+} // anonymous namespace
+
 /**
  * Return a flux (in ADUs) given a magnitude
  */
 double Calib::getFlux(double const mag ///< the magnitude of the object
                         ) const {
-    
-    if (_fluxMag0 <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                          (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
+    checkNegativeFlux0(_fluxMag0);
+    return convertToFlux(_fluxMag0, mag);
+}
+std::vector<double> Calib::getFlux(std::vector<double> const& mag) const {
+    checkNegativeFlux0(_fluxMag0);
+    std::vector<double> flux(mag.size());
+    std::vector<double>::const_iterator inIter = mag.begin();
+    std::vector<double>::iterator outIter = flux.begin();
+    for (; inIter != mag.end(); ++inIter, ++outIter) {
+        *outIter = convertToFlux(_fluxMag0, *inIter);
     }
-    
-    return _fluxMag0 * ::pow(10.0, -0.4 * mag);
+    return flux;
 }
 
 /**
@@ -282,27 +340,38 @@ double Calib::getFlux(double const mag ///< the magnitude of the object
 std::pair<double, double> Calib::getFlux(
         double const mag,       ///< the magnitude of the object
         double const magSigma   ///< the error in the magnitude
-                
-                        ) const {
-    
-    if (_fluxMag0 <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                          (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
+    ) const
+{
+    checkNegativeFlux0(_fluxMag0);
+    double const flux = convertToFlux(_fluxMag0, mag);
+    double const fluxErr = convertToFluxErr(_fluxMag0Sigma/_fluxMag0, flux, magSigma);
+    return std::make_pair(flux, fluxErr);
+}
+
+std::pair<std::vector<double>, std::vector<double> > Calib::getFlux(std::vector<double> const& mag,
+                                                                    std::vector<double> const& magErr
+    ) const
+{
+    checkNegativeFlux0(_fluxMag0);
+    if (mag.size() != magErr.size()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Size of mag (%d) and magErr (%d) don't match") % 
+                           mag.size() % magErr.size()).str());
     }
-    
-    double const flux = getFlux(mag);
-    
-//    double const fluxSigma = flux * hypot(_fluxMag0Sigma / _fluxMag0, 0.4 * std::log(10) * magSigma / mag);
-    // hypot is not standard C++ so use <http://en.wikipedia.org/wiki/Hypot#Implementation>
-    double a = _fluxMag0Sigma / _fluxMag0;
-    double b = 0.4 * std::log(10.0) * magSigma;
-    if (std::abs(a) < std::abs(b)) {
-        double temp = a;
-        a = b;
-        b = temp;
+
+    std::vector<double> flux(mag.size()), fluxErr(mag.size());
+    std::vector<double>::const_iterator magIter = mag.begin();
+    std::vector<double>::const_iterator magErrIter = magErr.begin();
+    std::vector<double>::iterator fluxIter = flux.begin();
+    std::vector<double>::iterator fluxErrIter = fluxErr.begin();
+
+    double fluxMag0InvSNR = _fluxMag0Sigma/_fluxMag0;
+    for (; magIter != mag.end(); ++magIter, ++magErrIter, ++fluxIter, ++fluxErrIter) {
+        *fluxIter = convertToFlux(_fluxMag0, *magIter);
+        *fluxErrIter = convertToFluxErr(fluxMag0InvSNR, *fluxIter, *magErrIter);
     }
-    double const fluxSigma = flux * std::abs(a) * std::sqrt(1 + std::pow(b / a, 2));
-    return std::make_pair(flux, fluxSigma);
+
+    return std::make_pair(flux, fluxErr);
 }
 
 /**
@@ -311,22 +380,11 @@ std::pair<double, double> Calib::getFlux(
 double Calib::getMagnitude(double const flux ///< the measured flux of the object (ADUs)
                          ) const
 {
-    if (_fluxMag0 <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                          (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
-    }
-    if (flux <= 0) {
-        if (Calib::getThrowOnNegativeFlux()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                              (boost::format("Flux must be >= 0: saw %g") % flux).str());
-        }
-
+    checkNegativeFlux0(_fluxMag0);
+    if (isNegativeFlux(flux, Calib::getThrowOnNegativeFlux())) {
         return std::numeric_limits<double>::quiet_NaN();
     }
-    
-    using ::log10;
-    
-    return -2.5*log10(flux/_fluxMag0);
+    return convertToMag(_fluxMag0, flux);
 }
 
 /**
@@ -336,29 +394,78 @@ std::pair<double, double> Calib::getMagnitude(double const flux, ///< the measur
                                               double const fluxErr ///< the error in the measured flux (ADUs)
                                               ) const
 {
-    if (_fluxMag0 <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                          (boost::format("Flux of 0-mag object must be >= 0: saw %g") % _fluxMag0).str());
-    }
-    if (flux <= 0) {
-        if (Calib::getThrowOnNegativeFlux()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                              (boost::format("Flux must be >= 0: saw %g") % flux).str());
-        }
-
+    checkNegativeFlux0(_fluxMag0);
+    if (isNegativeFlux(flux, Calib::getThrowOnNegativeFlux())) {
         double const NaN = std::numeric_limits<double>::quiet_NaN();
         return std::make_pair(NaN, NaN);
     }
-    
-    using ::pow; using ::sqrt;
-    using ::log; using ::log10;
-    
-    double const rat = flux/_fluxMag0;
-    double const ratErr = sqrt((pow(fluxErr, 2) + pow(flux*_fluxMag0Sigma/_fluxMag0, 2))/pow(_fluxMag0, 2));
-    
-    double const mag = -2.5*log10(rat);
-    double const magErr = 2.5/log(10.0)*ratErr/rat;
+
+    double mag, magErr;
+    convertToMagWithErr(&mag, &magErr, _fluxMag0, _fluxMag0Sigma/_fluxMag0, flux, fluxErr);
     return std::make_pair(mag, magErr);
 }
+
+std::vector<double> Calib::getMagnitude(std::vector<double> const& flux) const
+{
+    checkNegativeFlux0(_fluxMag0);
+    std::vector<double> mag(flux.size());
+    std::vector<double>::const_iterator fluxIter = flux.begin();
+    std::vector<double>::iterator magIter = mag.begin();
+    int nonPositive = 0;
+    for (; fluxIter != flux.end(); ++fluxIter, ++magIter) {
+        if (isNegativeFlux(*fluxIter, false)) {
+            ++nonPositive;
+            *magIter = std::numeric_limits<double>::quiet_NaN();
+            continue;
+        }
+        *magIter = convertToMag(_fluxMag0, *fluxIter);
+    }
+    if (nonPositive && Calib::getThrowOnNegativeFlux()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                          (boost::format("Flux must be >= 0: %d non-positive seen") % nonPositive).str());
+    }
+    return mag;
+}
+
+std::pair<std::vector<double>, std::vector<double> > Calib::getMagnitude(std::vector<double> const& flux,
+                                                                         std::vector<double> const& fluxErr
+    ) const
+{
+    checkNegativeFlux0(_fluxMag0);
+    if (flux.size() != fluxErr.size()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Size of flux (%d) and fluxErr (%d) don't match") % 
+                           flux.size() % fluxErr.size()).str());
+    }
+
+    std::vector<double> mag(flux.size()), magErr(flux.size());
+    std::vector<double>::const_iterator fluxIter = flux.begin();
+    std::vector<double>::const_iterator fluxErrIter = fluxErr.begin();
+    std::vector<double>::iterator magIter = mag.begin();
+    std::vector<double>::iterator magErrIter = magErr.begin();
+    int nonPositive = 0;
+    double fluxMag0InvSNR = _fluxMag0Sigma/_fluxMag0;
+    for (; fluxIter != flux.end(); ++fluxIter, ++fluxErrIter, ++magIter, ++magErrIter) {
+        if (isNegativeFlux(*fluxIter, false)) {
+            ++nonPositive;
+            double const NaN = std::numeric_limits<double>::quiet_NaN();
+            *magIter = NaN;
+            *magErrIter = NaN;
+            continue;
+        }
+        double f, df;
+        convertToMagWithErr(&f, &df, _fluxMag0, fluxMag0InvSNR, *fluxIter, *fluxErrIter);
+        *magIter = f;
+        *magErrIter = df;
+    }
+    if (nonPositive && Calib::getThrowOnNegativeFlux()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                          (boost::format("Flux must be >= 0: %d non-positive seen") % nonPositive).str());
+    }
+    return std::make_pair(mag, magErr);
+}
+   
+
+
 
 }}}  // lsst::afw::image

@@ -119,6 +119,38 @@ class CalibTestCase(unittest.TestCase):
             self.assertAlmostEqual(flux, self.calib.getFlux(mag, magErr)[0])
             self.assertTrue(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]) < 1.0e-4)
 
+    def testPhotomMulti(self):
+        self.calib.setFluxMag0(1e12, 1e10)
+        flux, fluxErr = 1000.0, 10.0
+        num = 5
+
+        mag, magErr = self.calib.getMagnitude(flux, fluxErr) # Result assumed to be true: tested elsewhere
+        
+        fluxList = [flux for i in range(num)]
+        fluxErrList = [fluxErr for i in range(num)]
+
+        magList = self.calib.getMagnitude(fluxList)
+        for m in magList:
+            self.assertEqual(m, mag)
+        
+        magnitudes = self.calib.getMagnitude(fluxList, fluxErrList)
+        for m, dm in zip(magnitudes[0], magnitudes[1]):
+            self.assertEqual(m, mag)
+            self.assertEqual(dm, magErr)
+
+        flux, fluxErr = self.calib.getFlux(mag, magErr) # Result assumed to be true: tested elsewhere
+
+        fluxList = self.calib.getFlux(magList)
+        for f in fluxList:
+            self.assertEqual(f, flux)
+
+        fluxes = self.calib.getFlux(magnitudes[0], magnitudes[1])
+        for f, df in zip(fluxes[0], fluxes[1]):
+            self.assertAlmostEqual(f, flux)
+            self.assertAlmostEqual(df, fluxErr)
+
+
+
     def testCtorFromMetadata(self):
         """Test building a Calib from metadata"""
         
