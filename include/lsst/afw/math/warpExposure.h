@@ -43,6 +43,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/gpu/DevicePreference.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/math/Function.h"
@@ -240,14 +241,17 @@ namespace math {
             int cacheSize = 0,      ///< cache size for warping kernel; no cache if 0
                 ///< (used as the argument to the warping kernels' computeCache method)
             int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated
-            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
+            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE,
                 ///< use GPU acceleration?
+            lsst::afw::image::MaskPixel growFullMask = lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE")
+                ///< mask bits to grow to full width of image/variance kernel
         ) :
             _warpingKernelPtr(makeWarpingKernel(warpingKernelName)),
             _maskWarpingKernelPtr(),
             _cacheSize(cacheSize),
             _interpLength(interpLength),
-            _devicePreference(devicePreference)
+            _devicePreference(devicePreference),
+            _growFullMask(growFullMask)
         {
             if (!maskWarpingKernelName.empty()) {
                 _maskWarpingKernelPtr = makeWarpingKernel(maskWarpingKernelName);
@@ -292,7 +296,8 @@ namespace math {
             _maskWarpingKernelPtr(),
             _cacheSize(warpingKernel.getCacheSize()),
             _interpLength(interpLength),
-            _devicePreference(devicePreference)
+            _devicePreference(devicePreference),
+            _growFullMask(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE"))
         {
             boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
                     boost::dynamic_pointer_cast<LanczosWarpingKernel>(_warpingKernelPtr);
@@ -367,7 +372,7 @@ namespace math {
         };
 
         /**
-         * @brief get the mask warping kernel (as a shared pointer), or a null pointer if none
+         * @brief get mask bits to grow to full width of image/variance kernel
          */
         SeparableKernel::Ptr getMaskWarpingKernel() const {
             if (_maskWarpingKernelPtr) {
@@ -378,12 +383,25 @@ namespace math {
             return _maskWarpingKernelPtr;
         }
 
+        /**
+         * @brief set mask bits to grow to full width of image/variance kernel
+         */
+        lsst::afw::image::MaskPixel getGrowFullMask() const { return _growFullMask; };
+
+        /**
+         * @brief set the mask
+         */
+        void setGrowFullMask(
+            lsst::afw::image::MaskPixel growFullMask  ///< device preference
+        ) { _growFullMask = growFullMask; }
+
     private:
         SeparableKernel::Ptr _warpingKernelPtr;
         SeparableKernel::Ptr _maskWarpingKernelPtr;
         int _cacheSize;
         int _interpLength;
         lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
+        lsst::afw::image::MaskPixel _growFullMask;
     };
 
 
