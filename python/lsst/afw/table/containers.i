@@ -4,9 +4,22 @@
 #include "lsst/afw/table/Source.h"
 %}
 
+%include "cdata.i"
+
 %pythondynamic;  // We want to add attributes in Python for the classes wrapped here.
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst { namespace afw {
+
+namespace fits {
+
+struct MemFileManager {
+     MemFileManager();
+     MemFileManager(std::size_t len);
+     void* getData() const;
+     std::size_t getLength() const;
+};
+
+} namespace table {
 
 template <typename RecordT>
 class CatalogT {
@@ -37,8 +50,10 @@ public:
     ) CatalogT;
 
     void writeFits(std::string const & filename, std::string const & mode="w") const;
+    void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const;
 
     static CatalogT readFits(std::string const & filename, int hdu=2);
+    static CatalogT readFits(fits::MemFileManager & manager, int hdu=2);
 
     ColumnView getColumnView() const;
 
@@ -204,8 +219,22 @@ public:
             return getattr(self.columns, name)
     table = property(getTable)
     schema = property(getSchema)
+    def __reduce__(self):
+        manager = MemFileManager()
+        self.writeFits(manager)
+        size = manager.getLength()
+        data = cdata(manager.getData(), size);
+        return (lsst.afw.table.unpickleCatalog, (self.__class__, data, size))
     %}
 }
+
+%pythoncode %{
+def unpickleCatalog(cls, data, size):
+    """Unpickle a catalog with data produced by its __reduce__ method"""
+    manager = MemFileManager(size)
+    memmove(manager.getData(), data)
+    return cls.readFits(manager)
+%}
 
 template <typename RecordT>
 class SimpleCatalogT : public CatalogT<RecordT> {
@@ -227,6 +256,7 @@ public:
     ) SimpleCatalogT;
 
     static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
+    static SimpleCatalogT readFits(fits::MemFileManager & manager, int hdu=2);
 
     bool isSorted() const;
     void sort();

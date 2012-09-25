@@ -154,6 +154,12 @@ struct MemFileManager : private boost::noncopyable {
 
     ~MemFileManager() { reset(); }
 
+    /// @brief Return the buffer
+    void* getData() const { return _ptr; }
+
+    /// @brief Return the buffer length
+    std::size_t getLength() const { return _len; }
+
 private:
 
     friend class Fits;

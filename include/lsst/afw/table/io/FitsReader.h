@@ -81,9 +81,9 @@ public:
      *  This does the work of opening the file, calling FitsReader::make, and then calling
      *  Reader::read.
      */
-    template <typename ContainerT>
-    static ContainerT apply(std::string const & filename, int hdu) {
-        Fits fits(filename, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    template <typename ContainerT, typename SourceT>
+    static ContainerT apply(SourceT & source, int hdu) {
+        Fits fits(source, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
         fits.setHdu(hdu);
         PTR(FitsReader) reader = make(&fits);
         return reader->template read<ContainerT>();

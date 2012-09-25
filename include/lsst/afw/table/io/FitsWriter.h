@@ -29,9 +29,9 @@ public:
      *  which opens the FITS file, calls makeFitsWriter on the container's table, and
      *  then calls Writer::write on it.
      */
-    template <typename ContainerT>
-    static void apply(std::string const & filename, std::string const & mode, ContainerT const & container) {
-        Fits fits(filename, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
+    template <typename OutputT, typename ContainerT>
+    static void apply(OutputT & output, std::string const & mode, ContainerT const & container) {
+        Fits fits(output, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
         PTR(FitsWriter) writer 
             = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits);
         writer->write(container);

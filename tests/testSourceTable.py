@@ -37,6 +37,7 @@ import os
 import unittest
 import numpy
 import tempfile
+import pickle
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -147,6 +148,18 @@ class SourceTableTestCase(unittest.TestCase):
         self.assertEqual(table2.getPsfFluxKey(), fluxKey2)
         self.assertEqual(table2.getPsfFluxFlagKey(), fluxFlagKey2)
         self.assertFalse(self.table.getPsfFluxErrKey().isValid())
+
+    def testPickle(self):
+        p = pickle.dumps(self.catalog)
+        catalog = pickle.loads(p)
+
+        self.assertEqual(self.catalog.schema.getNames(), catalog.schema.getNames())
+        self.assertEqual(len(self.catalog), len(catalog))
+        for r1, r2 in zip(self.catalog, catalog):
+            for field in ("a", "a.err", "id"): # Columns that are easy to test
+                k1 = self.catalog.schema.find(field).getKey()
+                k2 = catalog.schema.find(field).getKey()
+                self.assertTrue(r1[k1] == r2[k2])
 
 
     def testCoordUpdate(self):
