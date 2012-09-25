@@ -188,20 +188,27 @@ class SimpleTableTestCase(unittest.TestCase):
         lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0a)
         lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0b)
 
-    def testBaseFits(self):
+    def _testBaseFits(self, target):
         schema = lsst.afw.table.Schema()
         k = schema.addField("f", type="D")
         cat1 = lsst.afw.table.BaseCatalog(schema)
         for i in range(50):
             record = cat1.addNew()
             record.set(k, numpy.random.randn())
-        cat1.writeFits("testBaseTable.fits")
-        cat2 = lsst.afw.table.BaseCatalog.readFits("testBaseTable.fits")
+        cat1.writeFits(target)
+        cat2 = lsst.afw.table.BaseCatalog.readFits(target)
         self.assertEqual(len(cat1), len(cat2))
         for r1, r2 in zip(cat1, cat2):
             self.assertEqual(r1.get(k), r2.get(k))
+
+    def testBaseFits(self):
+        self._testBaseFits("testBaseTable.fits")
         os.remove("testBaseTable.fits")
         self.assertRaises(Exception, lsst.afw.table.BaseCatalog.readFits, "nonexistentfile.fits")
+
+    def testMemoryFits(self):
+        mem = lsst.afw.table.MemFileManager()
+        self._testBaseFits(mem)
 
     def testColumnView(self):
         schema = lsst.afw.table.Schema()

@@ -817,7 +817,9 @@ Fits::Fits(std::string const & filename, std::string const & mode, int behavior_
         LSST_FITS_CHECK_STATUS(*this, boost::format("Opening file '%s' with mode '%s'") % filename % mode);
 }
 
-Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior) {
+Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior_)
+    : fptr(0), status(0), behavior(behavior_)
+{
     typedef void * (*Reallocator)(void *, std::size_t);
     // It's a shame this logic is essentially a duplicate of above, but the innards are different enough
     // we can't really reuse it.
