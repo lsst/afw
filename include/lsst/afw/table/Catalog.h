@@ -280,9 +280,12 @@ public:
         return cat;
     }
 
-    /// Write a FITS binary table.
+    /// Write a FITS binary table
     void writeFits(std::string const & filename, std::string const & mode="w") const {
         io::FitsWriter::apply(filename, mode, *this);
+    }
+    void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const {
+        io::FitsWriter::apply(manager, mode, *this);
     }
 
     /**
@@ -293,6 +296,9 @@ public:
      */
     static CatalogT readFits(std::string const & filename, int hdu=2) {
         return io::FitsReader::apply<CatalogT>(filename, hdu);
+    }
+    static CatalogT readFits(fits::MemFileManager & manager, int hdu=2) {
+        return io::FitsReader::apply<CatalogT>(manager, hdu);
     }
 
     /**

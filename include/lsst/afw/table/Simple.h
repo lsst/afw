@@ -287,6 +287,9 @@ public:
     static SimpleCatalogT readFits(std::string const & filename, int hdu=2) {
         return io::FitsReader::apply<SimpleCatalogT>(filename, hdu);
     }
+    static SimpleCatalogT readFits(fits::MemFileManager & manager, int hdu=2) {
+        return io::FitsReader::apply<SimpleCatalogT>(manager, hdu);
+    }
 
     /**
      * @brief Shallow copy a subset of another SimpleCatalog.  Mostly here for

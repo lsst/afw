@@ -37,6 +37,7 @@ import os
 import unittest
 import numpy
 import tempfile
+import pickle
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -125,6 +126,40 @@ class SourceTableTestCase(unittest.TestCase):
         self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.checkCanonical()
+
+    def testTicket2165(self):
+        """Check that we can define the slots without all the keys."""
+        self.table.definePsfFlux(self.fluxKey)
+        self.assertEqual(self.table.getPsfFluxDefinition(), "a")
+        self.assertEqual(self.table.getPsfFluxKey(), self.fluxKey)
+        self.assertFalse(self.table.getPsfFluxFlagKey().isValid())
+        self.assertFalse(self.table.getPsfFluxErrKey().isValid())
+        self.table.defineCentroid(self.centroidKey, flag=self.centroidFlagKey)
+        self.assertEqual(self.table.getCentroidDefinition(), "b")
+        self.assertEqual(self.table.getCentroidKey(), self.centroidKey)
+        self.assertEqual(self.table.getCentroidFlagKey(), self.centroidFlagKey)
+        self.assertFalse(self.table.getCentroidErrKey().isValid())
+        schema2 = lsst.afw.table.SourceTable.makeMinimalSchema()
+        fluxKey2 = schema2.addField("a", type="D")
+        fluxFlagKey2 = schema2.addField("a.flags", type="Flag")
+        table2 = lsst.afw.table.SourceTable.make(schema2)
+        table2.definePsfFlux("a")
+        self.assertEqual(table2.getPsfFluxDefinition(), "a")
+        self.assertEqual(table2.getPsfFluxKey(), fluxKey2)
+        self.assertEqual(table2.getPsfFluxFlagKey(), fluxFlagKey2)
+        self.assertFalse(self.table.getPsfFluxErrKey().isValid())
+
+    def testPickle(self):
+        p = pickle.dumps(self.catalog)
+        catalog = pickle.loads(p)
+
+        self.assertEqual(self.catalog.schema.getNames(), catalog.schema.getNames())
+        self.assertEqual(len(self.catalog), len(catalog))
+        for r1, r2 in zip(self.catalog, catalog):
+            for field in ("a", "a.err", "id"): # Columns that are easy to test
+                k1 = self.catalog.schema.find(field).getKey()
+                k2 = catalog.schema.find(field).getKey()
+                self.assertTrue(r1[k1] == r2[k2])
 
     def testCoordUpdate(self):
         wcs = makeWcs()
