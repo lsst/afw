@@ -151,14 +151,14 @@ class SourceTableTestCase(unittest.TestCase):
 
     def testPickle(self):
         p = pickle.dumps(self.catalog)
-        catalog = pickle.loads(p)
+        new = pickle.loads(p)
 
-        self.assertEqual(self.catalog.schema.getNames(), catalog.schema.getNames())
-        self.assertEqual(len(self.catalog), len(catalog))
-        for r1, r2 in zip(self.catalog, catalog):
+        self.assertEqual(self.catalog.schema.getNames(), new.schema.getNames())
+        self.assertEqual(len(self.catalog), len(new))
+        for r1, r2 in zip(self.catalog, new):
             for field in ("a", "a.err", "id"): # Columns that are easy to test
                 k1 = self.catalog.schema.find(field).getKey()
-                k2 = catalog.schema.find(field).getKey()
+                k2 = new.schema.find(field).getKey()
                 self.assertTrue(r1[k1] == r2[k2])
 
 
