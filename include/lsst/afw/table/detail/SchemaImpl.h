@@ -182,8 +182,8 @@ private:
     int _lastFlagBit;     // Bit of the last flag field.
     ItemContainer _items; // Vector of variants of SchemaItem<T>.
     NameMap _names;       // Field name to vector-index map.
-    OffsetMap _offsets;       // Offset to vector-index map.
-    FlagMap _flags;       // Offset to vector-index map.
+    OffsetMap _offsets;   // Offset to vector-index map for regular fields.
+    FlagMap _flags;       // Offset to vector-index map for flags.
 };
 
 #endif

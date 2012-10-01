@@ -607,9 +607,11 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
 //----- Schema implementation -------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-Schema::Schema() : _impl(boost::make_shared<Impl>()) {};
+Schema::Schema() : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {};
 
-Schema::Schema(daf::base::PropertyList & metadata, bool stripMetadata) : _impl(boost::make_shared<Impl>()) {
+Schema::Schema(daf::base::PropertyList & metadata, bool stripMetadata) :
+    _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>())
+{
     io::FitsReader::_readSchema(*this, metadata, stripMetadata);
 }
 
@@ -629,7 +631,14 @@ std::set<std::string> Schema::getNames(bool topOnly) const {
 }
 
 template <typename T>
-SchemaItem<T> Schema::find(std::string const & name) const {
+SchemaItem<T> Schema::find(std::string name) const {
+    AliasMap::const_iterator i = _aliases->lower_bound(name);
+    if (i != _aliases->end()) {
+        // if name.startswith(alias)
+        if (name.size() >= i->first.size() && name.compare(0, i->first.size(), i->first) == 0) {
+            name.replace(0, i->first.size(), i->second);
+        }
+    }
     return _impl->find<T>(name);
 }
 
@@ -677,6 +686,25 @@ int Schema::compare(Schema const & other, int flags) const {
 template <typename T>
 int Schema::contains(SchemaItem<T> const & item, int flags) const {
     return _impl->contains(item, flags);
+}
+
+void Schema::setAlias(std::string const & alias, std::string const & target) {
+    _aliases->insert(std::make_pair(alias, target));
+}
+
+void Schema::dropAlias(std::string const & alias) {
+    _aliases->erase(alias);
+}
+
+void Schema::clearAliases() {
+    _aliases->clear();
+}
+
+void Schema::disconnectAliases() {
+    if (!_aliases.unique()) {
+        boost::shared_ptr<AliasMap> tmp(boost::make_shared<AliasMap>(*_aliases));
+        _aliases.swap(tmp);
+    }
 }
 
 //----- Stringification -------------------------------------------------------------------------------------
@@ -733,7 +761,7 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const {
 
 #define INSTANTIATE_LAYOUT(r, data, elem)                               \
     template Key< elem > Schema::addField(Field< elem > const &, bool);            \
-    template SchemaItem< elem > Schema::find(std::string const & ) const; \
+    template SchemaItem< elem > Schema::find(std::string) const; \
     template SchemaItem< elem > Schema::find(Key< elem > const & ) const; \
     template SchemaItem< elem > detail::SchemaImpl::find(std::string const & name ) const; \
     template int Schema::contains(SchemaItem< elem > const &, int) const;   \

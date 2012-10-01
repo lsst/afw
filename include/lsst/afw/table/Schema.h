@@ -67,7 +67,7 @@ public:
      *  with only the name changed.
      */
     template <typename T>
-    SchemaItem<T> find(std::string const & name) const;
+    SchemaItem<T> find(std::string name) const;
 
     /**
      *  @brief Find a SchemaItem in the Schema by key.
@@ -81,7 +81,7 @@ public:
     SchemaItem<T> find(Key<T> const & key) const;
 
     /**
-     *  @brief Lookup a (possibly incomplete) name in the Schema.
+     *  @brief Look up a (possibly incomplete) name in the Schema.
      *
      *  See SubSchema for more information.
      *
@@ -102,6 +102,8 @@ public:
      *  topOnly==true will return ['a', 'e'].
      *
      *  Returns an instance of Python's builtin set in Python.
+     *
+     *  Aliases are not returned.
      */
     std::set<std::string> getNames(bool topOnly=false) const;
 
@@ -223,11 +225,35 @@ public:
     template <typename T>
     int contains(SchemaItem<T> const & item, int flags=EQUAL_KEYS) const;
 
+    /*
+     *  @brief Add an alias to the schema or replace an existing one.
+     *
+     *  Aliases need not be complete, but they must map to the beginning of a field name to be useful.
+     *  For example, if "a.b.c" is a true field name, "x.y->a.b" is a valid alias that will cause
+     *  "x.y.c" to map to "a.b.c", but "y.z->b.c" will not cause "a.y.z" to be matched.
+     *
+     *  Aliases are not checked to see if they match any existing fields, and if an alias has the same
+     *  name as a field name, it will take precedence and hide the true field.
+     *
+     *  Unlike the other components of a Schema, aliases can be modified and removed, and they are
+     *  shared between Schemas after copying unless the the disconnectAliases() method is called.
+     */
+    void setAlias(std::string const & alias, std::string const & target);
+
+    /// @brief Remove an alias from the schema if it is present.
+    void dropAlias(std::string const & alias);
+
+    /// @brief Remove all aliases from the schema.
+    void clearAliases();
+
+    /// @brief Ensure this Schema does not share aliases with any other Schemas.
+    void disconnectAliases();
+
     /// @brief Construct an empty Schema.
     explicit Schema();
 
     /// @brief Copy constructor.
-    Schema(Schema const & other) : _impl(other._impl) {}
+    Schema(Schema const & other) : _impl(other._impl), _aliases(other._aliases) {}
 
     /**
      *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
@@ -272,11 +298,15 @@ private:
 
     friend class detail::Access;
     friend class SubSchema;
-    
+
+    // A map from aliases to field names.
+    typedef std::map<std::string,std::string> AliasMap;
+
     /// @brief Copy on write; should be called by all mutators.
     void _edit();
 
     boost::shared_ptr<Impl> _impl;
+    boost::shared_ptr<AliasMap> _aliases;
 };
 
 /**
