@@ -121,7 +121,7 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
                               err_msg(fd, status,
                                       boost::format("Attempted to select absolute HDU %d") % real_hdu));
         }
-        if (hdu == 0) {                 // they asked for the "default" HDU
+        if (!headerOnly && hdu == 0) { // they asked for the "default" HDU, but don't want an empty PHU
             int nAxis = 0;              // number of axes in file
             if (fits_get_img_dim(fd, &nAxis, &status) != 0) {
                 throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fd, status, "Getting NAXIS"));
@@ -129,11 +129,9 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
 
             if (nAxis == 0) {
                 if (fits_movrel_hdu(fd, 1, NULL, &status) != 0) {
-                    if (!headerOnly) {
-                        throw LSST_EXCEPT(FitsException,
-                                          err_msg(fd, status,
-                                                  boost::format("Attempted to skip data-less hdu %d") % hdu));
-                    }
+                    throw LSST_EXCEPT(FitsException,
+                                      err_msg(fd, status,
+                                              boost::format("Attempted to skip data-less hdu %d") % hdu));
                 }
             }
         }
