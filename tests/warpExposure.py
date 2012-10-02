@@ -24,6 +24,7 @@
 
 """Test warpExposure
 """
+import math
 import os
 import unittest
 
@@ -63,6 +64,43 @@ subExposureName = "medsub"
 subExposurePath = os.path.join(dataDir, originalExposureName)
 originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1")
 originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
+
+def makeWcs(pixelScale, crPixPos, crValCoord, posAng, doFlipX=False, projection="TAN"):
+    """Make a Wcs
+    
+    @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
+    @param[in] crPixPos: crPix for WCS, using the LSST standard; a pair of floats
+    @param[in] crValCoord: crVal for WCS (afwCoord.Coord)
+    @param[in] posAng: position angle (afwGeom.Angle)
+    @param[in] doFlipX: flip X axis?
+    @param[in] projection: WCS projection (e.g. "TAN" or "STG")
+    """
+    if len(projection) != 3:
+        raise RuntimeError("projection=%r; must have length 3" % (projection,))
+    ctypeList = [("%-5s%3s" % (("RA", "DEC")[i], projection)).replace(" ", "-")
+        for i in range(2)]
+    ps = dafBase.PropertySet()
+    crPixFits = [ind + 1.0 for ind in crPixPos] # convert pix position to FITS standard
+    crValDeg = crValCoord.getPosition(afwGeom.degrees)
+    posAngRad = posAng.asRadians()
+    pixelScaleDeg = pixelScale.asDegrees()
+    cdMat = numpy.array([[ math.cos(posAngRad), math.sin(posAngRad)],
+                         [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
+    if doFlipX:
+        cdMat[:,0] = -cdMat[:,0]
+    for i in range(2):
+        ip1 = i + 1
+        ps.add("CTYPE%1d" % (ip1,), ctypeList[i])
+        ps.add("CRPIX%1d" % (ip1,), crPixFits[i])
+        ps.add("CRVAL%1d" % (ip1,), crValDeg[i])
+    ps.add("RADECSYS", "ICRS")
+    ps.add("EQUINOX", 2000)
+    ps.add("CD1_1", cdMat[0, 0])
+    ps.add("CD2_1", cdMat[1, 0])
+    ps.add("CD1_2", cdMat[0, 1])
+    ps.add("CD2_2", cdMat[1, 1])
+    return afwImage.makeWcs(ps)
+
 
 class WarpExposureTestCase(unittest.TestCase):
     """Test case for warpExposure
