@@ -372,6 +372,7 @@ def initDS9(execDs9=True):
         sys.stdout.flush()
 
         raise Ds9Error
+    setMaskTransparency(85)
 
 def show(frame=None):
     """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
