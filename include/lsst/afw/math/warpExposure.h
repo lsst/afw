@@ -77,7 +77,7 @@ namespace math {
 
         virtual ~LanczosWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         int getOrder() const;
     };
@@ -99,7 +99,7 @@ namespace math {
 
         virtual ~BilinearWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         /**
          * \brief 1-dimensional bilinear interpolation function.
@@ -113,7 +113,7 @@ namespace math {
 #endif
         class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
+            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
              * \brief Construct a Bilinear interpolation function
@@ -154,7 +154,7 @@ namespace math {
 
         virtual ~NearestWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         /**
          * \brief 1-dimensional nearest neighbor interpolation function.
@@ -168,7 +168,7 @@ namespace math {
 #endif
         class NearestFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
+            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
              * \brief Construct a Nearest interpolation function
@@ -211,7 +211,7 @@ namespace math {
      *   (width/2, /height/2). This is because the kernel is used to map source positions that range from
      *   centered on on pixel (width/2, height/2) to nearly centered on pixel (width/2 + 1, height/2 + 1).
      */
-    SeparableKernel::Ptr makeWarpingKernel(std::string name);
+    PTR(SeparableKernel) makeWarpingKernel(std::string name);
 
     /**
      * \brief Parameters to control convolution
@@ -368,9 +368,9 @@ namespace math {
         ) { _devicePreference = devicePreference; }
         
         /**
-         * @brief get the warping kernel (as a shared pointer)
+         * @brief get the warping kernel
          */
-        SeparableKernel::Ptr getWarpingKernel() const {
+        PTR(SeparableKernel) getWarpingKernel() const {
             if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
                 _warpingKernelPtr->computeCache(_cacheSize);
             }
@@ -378,9 +378,9 @@ namespace math {
         };
 
         /**
-         * @brief get mask bits to grow to full width of image/variance kernel
+         * @brief get the mask warping kernel
          */
-        SeparableKernel::Ptr getMaskWarpingKernel() const {
+        PTR(SeparableKernel) getMaskWarpingKernel() const {
             if (_maskWarpingKernelPtr) {
                 if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
                     _maskWarpingKernelPtr->computeCache(_cacheSize);
@@ -390,20 +390,20 @@ namespace math {
         }
 
         /**
-         * @brief set mask bits to grow to full width of image/variance kernel
+         * @brief get mask bits to grow to full width of image/variance kernel
          */
         lsst::afw::image::MaskPixel getGrowFullMask() const { return _growFullMask; };
 
         /**
-         * @brief set the mask
+         * @brief set mask bits to grow to full width of image/variance kernel
          */
         void setGrowFullMask(
             lsst::afw::image::MaskPixel growFullMask  ///< device preference
         ) { _growFullMask = growFullMask; }
 
     private:
-        SeparableKernel::Ptr _warpingKernelPtr;
-        SeparableKernel::Ptr _maskWarpingKernelPtr;
+        PTR(SeparableKernel) _warpingKernelPtr;
+        PTR(SeparableKernel) _maskWarpingKernelPtr;
         int _cacheSize;
         int _interpLength;
         lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
