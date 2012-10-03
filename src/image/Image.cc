@@ -514,10 +514,13 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         boost::uint64_t
     > fits_image_types;
 
-    if (!boost::filesystem::exists(fileName)) {
+    // Strip off any instructions about extensions, compression, etc intended for cfitsio
+    std::string sysFileName = fileName.substr(0, fileName.find('['))
+    if (!boost::filesystem::exists(sysFileName)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                          (boost::format("File %s doesn't exist") % fileName).str());
+                          (boost::format("File %s doesn't exist") % sysFileName).str());
     }
+
     if (!metadata) {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
     }

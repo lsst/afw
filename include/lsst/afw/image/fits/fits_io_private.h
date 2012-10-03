@@ -335,6 +335,16 @@ protected:
     ImageOrigin _origin;
 
     void init(bool headerOnly=false) {
+        if (_hdu == 0) {
+            // User asked for the default 'automatic' header positioning.
+            // Make sure they haven't already moved the header cursor by
+            // specifying an extension name when opening the file.
+            int hduNum = -1;
+            fits_get_hdu_num(_fd.get(), &hduNum);
+            if (hduNum != 1) {
+                _hdu = hduNum;
+            }
+        }
 
         move_to_hdu(_fd.get(), _hdu, false, headerOnly);
 
