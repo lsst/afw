@@ -515,11 +515,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     > fits_image_types;
 
     // Strip off any instructions about extensions, compression, etc intended for cfitsio
-    std::string sysFileName(fileName);
-    std::size_t bracket = sysFileName.find('[');
-    if (bracket != std::string::npos) {
-        sysFileName.erase(bracket);
-    }
+    std::string sysFileName = fileName.substr(0, fileName.find('['))
     if (!boost::filesystem::exists(sysFileName)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
                           (boost::format("File %s doesn't exist") % sysFileName).str());
