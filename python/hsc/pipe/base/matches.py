@@ -68,6 +68,9 @@ def copyCatalog(catalog, target, sourceSchema=None, targetPrefix=None, sourcePre
 def matchesToCatalog(matches, matchMeta):
     """Denormalise matches into a Catalog of "unpacked matches" """
 
+    if len(matches) == 0:
+        raise RuntimeError("No matches provided.")
+
     refSchema = matches[0].first.getSchema()
     srcSchema = matches[0].second.getSchema()
 
