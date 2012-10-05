@@ -173,6 +173,8 @@ class SourceTableTestCase(unittest.TestCase):
         self.assertFalse(self.table.getPsfFluxErrKey().isValid())
 
     def testPickle(self):
+        self.table.definePsfFlux(self.fluxKey)
+        self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         p = pickle.dumps(self.catalog)
         new = pickle.loads(p)
 
@@ -183,6 +185,7 @@ class SourceTableTestCase(unittest.TestCase):
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertTrue(r1[k1] == r2[k2])
+        self.assertEqual(new.table.getPsfFluxDefinition(), self.table.getPsfFluxDefinition())
 
 
     def testCoordUpdate(self):
