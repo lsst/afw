@@ -31,9 +31,12 @@ import unittest
 import numpy
 
 import eups
+import lsst.daf.base as dafBase
+import lsst.afw.coord as afwCoord
+import lsst.afw.geom as afwGeom
+import lsst.afw.gpu as afwGpu
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.afw.image.utils as imageUtils
 import lsst.afw.image.testUtils as imageTestUtils
 import lsst.utils.tests as utilsTests
@@ -65,7 +68,7 @@ subExposurePath = os.path.join(dataDir, originalExposureName)
 originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1")
 originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
-def makeWcs(pixelScale, crPixPos, crValCoord, posAng, doFlipX=False, projection="TAN"):
+def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN"):
     """Make a Wcs
     
     @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
@@ -246,6 +249,7 @@ class WarpExposureTestCase(unittest.TestCase):
     def testWarpingControlError(self):
         """Test error handling of WarpingControl
         """
+        # error: mask kernel smaller than main kernel
         for kernelName, maskKernelName in (
             ("bilinear", "lanczos3"),
             ("bilinear", "lanczos4"),
@@ -253,6 +257,8 @@ class WarpExposureTestCase(unittest.TestCase):
         ):
             self.assertRaises(pexExcept.LsstCppException,
                 afwMath.WarpingControl, kernelName, maskKernelName)
+
+        # OK: main kernel at least as big as mask kernel
         for kernelName, maskKernelName in (
             ("bilinear", "bilinear"),
             ("lanczos3", "lanczos3"),
@@ -281,8 +287,12 @@ class WarpExposureTestCase(unittest.TestCase):
             ("lanczos3", "bilinear"),
             ("lanczos4", "lanczos3"),
         ):
-            afwMath.WarpingControl(kernelName, maskKernelName)
-            self.verifyMaskWarp(kernelName=kernelName, maskKernelName=maskKernelName)
+            for growFullMask in (0, 1, 3, 0xFFFF):
+                self.verifyMaskWarp(
+                    kernelName=kernelName,
+                    maskKernelName=maskKernelName,
+                    growFullMask=growFullMask,
+                )
         
     def testMatchSwarpBilinearImage(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
@@ -335,7 +345,7 @@ class WarpExposureTestCase(unittest.TestCase):
         """
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
     
-    def verifyMaskWarp(self, kernelName, maskKernelName, interpLength=10, cacheSize=100000,
+    def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):
         """Verify that using a separate mask warping kernel produces the correct results
         
@@ -350,76 +360,62 @@ class WarpExposureTestCase(unittest.TestCase):
         - rtol: relative tolerance as used by numpy.allclose
         - atol: absolute tolerance as used by numpy.allclose
         """
-        originalExposure = afwImage.ExposureF(originalExposurePath)
-        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
-
-        swarpedImagePath = os.path.join(dataDir, swarpedImageName)
-        swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
-        swarpedImage = swarpedDecoratedImage.getImage()
-        swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        warpedWcs = afwImage.makeWcs(swarpedMetadata)
-        warpedBBox = swarpedImage.getBBox(afwImage.PARENT)
-        del swarpedImage
-        del swarpedDecoratedImage
-        computedExposurePath = "computedWarpedExposure1_%s_%s.fits" % (kernelName, maskKernelName)        
-        expectedExposurePath = "expectedWarpedExposure1_%s_%s.fits" % (kernelName, maskKernelName)        
+        srcWcs = makeWcs(
+            pixelScale = afwGeom.Angle(0.2, afwGeom.degrees),
+            crPixPos = (10.0, 11.0),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(41.7, 32.9)),
+        )
+        destWcs = makeWcs(
+            pixelScale = afwGeom.Angle(0.17, afwGeom.degrees),
+            crPixPos = (9.0, 10.0),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95)),
+            posAng = afwGeom.Angle(31, afwGeom.degrees),
+        )
         
-        warpingControl = afwMath.WarpingControl(
+        srcMaskedImage = afwImage.MaskedImageF(100, 101)
+        srcExposure = afwImage.ExposureF(srcMaskedImage, srcWcs)
+
+        destMaskedImage = afwImage.MaskedImageF(110, 121)
+        destExposure = afwImage.ExposureF(destMaskedImage, destWcs)
+        
+        srcArrays = srcMaskedImage.getArrays()
+        shape = srcArrays[0].shape
+        numpy.random.seed(0)
+        srcArrays[0][:] = numpy.random.normal(10000, 1000, size=shape)
+        srcArrays[2][:] = numpy.random.normal( 9000,  900, size=shape)
+        srcArrays[1][:] = numpy.reshape(numpy.arange(0, shape[0] * shape[1], 1, dtype=numpy.uint16), shape)
+        
+        warpControl = afwMath.WarpingControl(
             kernelName,
             maskKernelName,
             cacheSize,
             interpLength,
+            afwGpu.DEFAULT_DEVICE_PREFERENCE,
+            growFullMask
         )
-        computedExposure = afwImage.ExposureF(warpedBBox, warpedWcs)
-        afwMath.warpExposure(computedExposure, originalExposure, warpingControl)
-        if SAVE_FITS_FILES:
-            computedExposure.writeFits(computedExposurePath)
-        if display:
-            ds9.mtv(computedExposure, frame=1, title="computedWarped")
-        computedMaskedImage = computedExposure.getMaskedImage()
-        computedMaskedImageArrSet = computedMaskedImage.getArrays()
+        afwMath.warpExposure(destExposure, srcExposure, warpControl)
+        afwArrays = [numpy.copy(arr) for arr in destExposure.getMaskedImage().getArrays()]
 
-        imageVarControl = afwMath.WarpingControl(
-            kernelName,
-            "",
-            cacheSize,
-            interpLength,
-        )
-        imageVarExposure = afwImage.ExposureF(warpedBBox, warpedWcs)
-        afwMath.warpExposure(imageVarExposure, originalExposure, imageVarControl)
+        # now compute with two separate mask planes        
+        warpControl.setGrowFullMask(0)
+        afwMath.warpExposure(destExposure, srcExposure, warpControl)
+        narrowArrays = [numpy.copy(arr) for arr in destExposure.getMaskedImage().getArrays()]
 
-        maskControl = afwMath.WarpingControl(
-            maskKernelName,
-            "",
-            cacheSize,
-            interpLength,
-        )
-        maskExposure = afwImage.ExposureF(warpedBBox, warpedWcs)
-        afwMath.warpExposure(maskExposure, originalExposure, maskControl)
-        expectedMaskedImage = afwImage.MaskedImageF(
-            imageVarExposure.getMaskedImage().getImage(),
-            maskExposure.getMaskedImage().getMask(),
-            imageVarExposure.getMaskedImage().getVariance(),
-        )
-        expectedExposure = afwImage.ExposureF(expectedMaskedImage, warpedWcs)
-        if SAVE_FITS_FILES:
-            expectedExposure.writeFits(expectedExposurePath)
-        if display:
-            ds9.mtv(expectedExposure, frame=1, title="expectedWarped")
+        warpControl.setMaskWarpingKernelName("")
+        afwMath.warpExposure(destExposure, srcExposure, warpControl)
+        broadArrays = [numpy.copy(arr) for arr in destExposure.getMaskedImage().getArrays()]
+
+
+        if (kernelName != maskKernelName) and (growFullMask != 0xFFFF):
+            # we expect the mask planes to differ
+            if numpy.allclose(broadArrays[1], narrowArrays[1]):
+                self.fail("No difference between broad and narrow mask")
+
+        predMask = (broadArrays[1] & growFullMask) | (narrowArrays[1] & ~growFullMask)
+        predArraySet = (broadArrays[0], predMask, broadArrays[2])
         
-        expectedMaskedImageArrSet = expectedMaskedImage.getArrays()
-
-        # skip edge bits in computed mask instead of expected,
-        # because the expected mask plane will have more good pixels at the border
-        # than the computed mask plane if the mask kernel is smaller than the regular kernel
-        computedWarpedMask = computedMaskedImage.getMask()
-        edgeBitMask = computedWarpedMask.getPlaneBitMask("EDGE")
-        if edgeBitMask == 0:
-            self.fail("warped mask has no EDGE bit")
-        computedEdgeMaskArr = computedMaskedImageArrSet[1] & edgeBitMask
-
-        errStr = imageTestUtils.maskedImagesDiffer(computedMaskedImageArrSet, expectedMaskedImageArrSet,
-            doImage=True, doMask=True, doVariance=True, skipMaskArr=computedEdgeMaskArr,
+        errStr = imageTestUtils.maskedImagesDiffer(afwArrays, predArraySet,
+            doImage=True, doMask=True, doVariance=True,
             rtol=rtol, atol=atol)
         if errStr:
             if SAVE_FAILED_FITS_FILES:

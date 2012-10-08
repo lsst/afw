@@ -249,7 +249,7 @@ namespace math {
             int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated
             lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE,
                 ///< use GPU acceleration?
-            lsst::afw::image::MaskPixel growFullMask = lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE")
+            lsst::afw::image::MaskPixel growFullMask = 0
                 ///< mask bits to grow to full width of image/variance kernel
         ) :
             _warpingKernelPtr(makeWarpingKernel(warpingKernelName)),
@@ -259,31 +259,8 @@ namespace math {
             _devicePreference(devicePreference),
             _growFullMask(growFullMask)
         {
-            if (!maskWarpingKernelName.empty()) {
-                _maskWarpingKernelPtr = makeWarpingKernel(maskWarpingKernelName);
-
-                // test that border of mask kernel <= border of kernel:
-                // compute bounding boxes with 0,0 at kernel center
-                // and make sure kernel bbox includes mask kernel bbox
-                lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
-                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_warpingKernelPtr->getCtr()),
-                    _warpingKernelPtr->getDimensions()
-                );
-                lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
-                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_maskWarpingKernelPtr->getCtr()),
-                    _maskWarpingKernelPtr->getDimensions()
-                );
-                if (!kernelBBox.contains(maskKernelBBox)) {
-                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "warping kernel is smaller than mask warping kernel");
-                }
-            }
-            boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
-                    boost::dynamic_pointer_cast<LanczosWarpingKernel>(_warpingKernelPtr);
-            if (_devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "devicePreference == USE_GPU specified; GPU supports only Lanczos main kernel");
-            }
+            setMaskWarpingKernelName(maskWarpingKernelName);
+            _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }
 
         /**
@@ -305,21 +282,11 @@ namespace math {
             _devicePreference(devicePreference),
             _growFullMask(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE"))
         {
-            boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
-                    boost::dynamic_pointer_cast<LanczosWarpingKernel>(_warpingKernelPtr);
-            if (_devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "devicePreference == USE_GPU specified; GPU supports only Lanczos main kernel");
-            }
+            _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }
 
 
         virtual ~WarpingControl() {};
-
-        /**
-         * @brief return true if there is a mask kernel
-         */
-        bool hasMaskKernel() const { return bool(_maskWarpingKernelPtr); }
 
         /**
          * @brief get the cache size for the interpolation kernel(s)
@@ -365,29 +332,55 @@ namespace math {
          */
         void setDevicePreference(
             lsst::afw::gpu::DevicePreference devicePreference  ///< device preference
-        ) { _devicePreference = devicePreference; }
+        ) {
+            _testDevicePreference(devicePreference, _warpingKernelPtr);
+            _devicePreference = devicePreference;
+        }
         
         /**
          * @brief get the warping kernel
          */
-        PTR(SeparableKernel) getWarpingKernel() const {
-            if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
-                _warpingKernelPtr->computeCache(_cacheSize);
-            }
-            return _warpingKernelPtr;
-        };
+        PTR(SeparableKernel) getWarpingKernel() const;
+        
+        /**
+         * @brief set the warping kernel by name
+         */
+        void setWarpingKernelName(
+            std::string warpingKernelName   ///< name of warping kernel
+        );
+
+        /**
+         * @brief set the warping kernel
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if new kernel pointer is empty.
+         */
+        void setWarpingKernel(
+            PTR(SeparableKernel) warpingKernelPtr   ///< mask warping kernel
+        );
 
         /**
          * @brief get the mask warping kernel
          */
-        PTR(SeparableKernel) getMaskWarpingKernel() const {
-            if (_maskWarpingKernelPtr) {
-                if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
-                    _maskWarpingKernelPtr->computeCache(_cacheSize);
-                }
-            }
-            return _maskWarpingKernelPtr;
-        }
+        PTR(SeparableKernel) getMaskWarpingKernel() const;
+
+        /**
+         * @brief return true if there is a mask kernel
+         */
+        bool hasMaskKernel() const { return static_cast<bool>(_maskWarpingKernelPtr); }
+        
+        /**
+         * @brief set or clear the mask warping kernel by name
+         */
+        void setMaskWarpingKernelName(
+            std::string maskWarpingKernelName   ///< name of mask warping kernel; use "" to clear the kernel
+        );
+
+        /**
+         * @brief set or clear the mask warping kernel
+         */
+        void setMaskWarpingKernel(
+            PTR(SeparableKernel) maskWarpingKernelPtr   ///< mask warping kernel
+        );
 
         /**
          * @brief get mask bits to grow to full width of image/variance kernel
@@ -402,6 +395,27 @@ namespace math {
         ) { _growFullMask = growFullMask; }
 
     private:
+        /**
+         * @brief Throw an exception if the two kernels are not compatible in shape
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if the two kernels
+         * are not compatible in shape
+         */
+        void _testWarpingKernels(
+            PTR(SeparableKernel) const &warpingKernel,       ///< warping kernel
+            PTR(SeparableKernel) const &maskWarpingKernel    ///< mask warping kernel
+        ) const;
+        
+        /**
+         * @brief test if GPU device preference and main warping kernel are compatible
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if the parameters are incompatible
+         */
+        void _testDevicePreference(
+            lsst::afw::gpu::DevicePreference const &devicePreference,   ///< GPU device preference
+            PTR(SeparableKernel) const &warpingKernelPtr                ///< warping kernel
+        ) const;
+
         PTR(SeparableKernel) _warpingKernelPtr;
         PTR(SeparableKernel) _maskWarpingKernelPtr;
         int _cacheSize;

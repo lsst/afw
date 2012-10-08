@@ -169,6 +169,100 @@ boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::stri
     }
 }
 
+PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getWarpingKernel() const {
+    if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
+        _warpingKernelPtr->computeCache(_cacheSize);
+    }
+    return _warpingKernelPtr;
+};
+
+void afwMath::WarpingControl::setWarpingKernelName(
+    std::string warpingKernelName
+) {
+    PTR(SeparableKernel) warpingKernelPtr(makeWarpingKernel(warpingKernelName));
+    setWarpingKernel(warpingKernelPtr);
+}
+
+void afwMath::WarpingControl::setWarpingKernel(
+    PTR(SeparableKernel) warpingKernelPtr
+) {
+    if (warpingKernelPtr) {
+        _testWarpingKernels(warpingKernelPtr, _maskWarpingKernelPtr);
+        _testDevicePreference(_devicePreference, warpingKernelPtr);
+        _warpingKernelPtr = warpingKernelPtr;
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "warping kernel is a null pointer");
+    }
+}
+
+
+PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getMaskWarpingKernel() const {
+    if (_maskWarpingKernelPtr) { // lazily update kernel cache
+        if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
+            _maskWarpingKernelPtr->computeCache(_cacheSize);
+        }
+    }
+    return _maskWarpingKernelPtr;
+}
+
+void afwMath::WarpingControl::setMaskWarpingKernelName(
+    std::string maskWarpingKernelName
+) {
+    if (!maskWarpingKernelName.empty()) {
+        PTR(SeparableKernel) maskWarpingKernelPtr(makeWarpingKernel(maskWarpingKernelName));
+        setMaskWarpingKernel(maskWarpingKernelPtr);
+    } else {
+        _maskWarpingKernelPtr.reset();
+    }
+}
+
+void afwMath::WarpingControl::setMaskWarpingKernel(
+    PTR(SeparableKernel) maskWarpingKernelPtr
+) {
+    if (maskWarpingKernelPtr) {
+        _testWarpingKernels(_warpingKernelPtr, maskWarpingKernelPtr);
+        _maskWarpingKernelPtr = maskWarpingKernelPtr;
+    } else {
+        _maskWarpingKernelPtr.reset();
+    }
+}
+
+
+void afwMath::WarpingControl::_testWarpingKernels(
+    PTR(SeparableKernel) const &warpingKernelPtr,
+    PTR(SeparableKernel) const &maskWarpingKernelPtr
+) const {
+    if (!maskWarpingKernelPtr) {
+        return;
+    }
+    lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
+        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(warpingKernelPtr->getCtr()),
+        warpingKernelPtr->getDimensions()
+    );
+    lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
+        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(maskWarpingKernelPtr->getCtr()),
+        maskWarpingKernelPtr->getDimensions()
+    );
+    if (!kernelBBox.contains(maskKernelBBox)) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "warping kernel is smaller than mask warping kernel");
+    }
+}
+
+void afwMath::WarpingControl::_testDevicePreference(
+    lsst::afw::gpu::DevicePreference const &devicePreference,
+    PTR(SeparableKernel) const &warpingKernelPtr
+) const {
+    boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
+        boost::dynamic_pointer_cast<LanczosWarpingKernel>(warpingKernelPtr);
+    if (devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "devicePreference = USE_GPU, but warping kernel not Lanczos");
+    }
+}
+
+
 
 template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
