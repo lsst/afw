@@ -130,8 +130,6 @@ namespace {
     
     void checkCast(dafBase::Persistable const* persistable) {
         afwImage::Image<float> const* ip = dynamic_cast<afwImage::Image<float> const*>(persistable);
-        std::cout << "IP = " << ip << " " << typeid(persistable).name()
-                  << " " << typeid(ip).name() << std::endl;
     }
 }
 
