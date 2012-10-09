@@ -137,9 +137,9 @@ class FourierLocalKernel;
 
     public:
         typedef double Pixel;
-        typedef boost::shared_ptr<Kernel> Ptr;
-        typedef boost::shared_ptr<const Kernel> ConstPtr;
-        typedef boost::shared_ptr<lsst::afw::math::Function2<double> > SpatialFunctionPtr;
+        typedef PTR(Kernel) Ptr;
+        typedef CONST_PTR(Kernel) ConstPtr;
+        typedef PTR(lsst::afw::math::Function2<double>) SpatialFunctionPtr;
         typedef lsst::afw::math::Function2<double> SpatialFunction;
         typedef lsst::afw::math::NullFunction2<double> NullSpatialFunction;
 
@@ -165,7 +165,7 @@ class FourierLocalKernel;
          *
          * @return a pointer to a deep copy of the kernel
          */
-        virtual Kernel::Ptr clone() const = 0;
+        virtual PTR(Kernel) clone() const = 0;
 
         /**
          * @brief Compute an image (pixellized representation of the kernel) in place
@@ -400,7 +400,7 @@ class FourierLocalKernel;
         virtual void _setKernelXY() {}
     };
 
-    typedef std::vector<Kernel::Ptr> KernelList;
+    typedef std::vector<PTR(Kernel)> KernelList;
 
     /**
      * @brief A kernel created from an Image
@@ -411,8 +411,8 @@ class FourierLocalKernel;
      */
     class FixedKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<FixedKernel> Ptr;
-        typedef boost::shared_ptr<const FixedKernel> ConstPtr;
+        typedef PTR(FixedKernel) Ptr;
+        typedef CONST_PTR(FixedKernel) ConstPtr;
 
         explicit FixedKernel();
 
@@ -427,7 +427,7 @@ class FourierLocalKernel;
 
         virtual ~FixedKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -472,10 +472,10 @@ class FourierLocalKernel;
      */
     class AnalyticKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<AnalyticKernel> Ptr;
-        typedef boost::shared_ptr<const AnalyticKernel> ConstPtr;
+        typedef PTR(AnalyticKernel) Ptr;
+        typedef CONST_PTR(AnalyticKernel) ConstPtr;
         typedef lsst::afw::math::Function2<Pixel> KernelFunction;
-        typedef boost::shared_ptr<lsst::afw::math::Function2<Pixel> > KernelFunctionPtr;
+        typedef PTR(lsst::afw::math::Function2<Pixel>) KernelFunctionPtr;
 
         explicit AnalyticKernel();
 
@@ -495,7 +495,7 @@ class FourierLocalKernel;
 
         virtual ~AnalyticKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -534,8 +534,8 @@ class FourierLocalKernel;
      */
     class DeltaFunctionKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<DeltaFunctionKernel> Ptr;
-        typedef boost::shared_ptr<const DeltaFunctionKernel> ConstPtr;
+        typedef PTR(DeltaFunctionKernel) Ptr;
+        typedef CONST_PTR(DeltaFunctionKernel) ConstPtr;
         // Traits values for this class of Kernel
         typedef deltafunction_kernel_tag kernel_fill_factor;
 
@@ -547,7 +547,7 @@ class FourierLocalKernel;
 
         virtual ~DeltaFunctionKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -590,8 +590,8 @@ class FourierLocalKernel;
      */
     class LinearCombinationKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<LinearCombinationKernel> Ptr;
-        typedef boost::shared_ptr<const LinearCombinationKernel> ConstPtr;
+        typedef PTR(LinearCombinationKernel) Ptr;
+        typedef CONST_PTR(LinearCombinationKernel) ConstPtr;
 
         explicit LinearCombinationKernel();
 
@@ -612,7 +612,7 @@ class FourierLocalKernel;
 
         virtual ~LinearCombinationKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -639,7 +639,7 @@ class FourierLocalKernel;
          */
         bool isDeltaFunctionBasis() const { return _isDeltaFunctionBasis; };
         
-        Kernel::Ptr refactor() const;
+        PTR(Kernel) refactor() const;
 
         virtual std::string toString(std::string const& prefix="") const;
 
@@ -650,7 +650,7 @@ class FourierLocalKernel;
         void _setKernelList(KernelList const &kernelList);
         
         KernelList _kernelList; ///< basis kernels
-        std::vector<boost::shared_ptr<lsst::afw::image::Image<Pixel> > > _kernelImagePtrList;
+        std::vector<PTR(lsst::afw::image::Image<Pixel>)> _kernelImagePtrList;
             ///< image of each basis kernel (a cache)
         std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
@@ -688,10 +688,10 @@ class FourierLocalKernel;
      */
     class SeparableKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<SeparableKernel> Ptr;
-        typedef boost::shared_ptr<const SeparableKernel> ConstPtr;
+        typedef PTR(SeparableKernel) Ptr;
+        typedef CONST_PTR(SeparableKernel) ConstPtr;
         typedef lsst::afw::math::Function1<Pixel> KernelFunction;
-        typedef boost::shared_ptr<KernelFunction> KernelFunctionPtr;
+        typedef PTR(KernelFunction) KernelFunctionPtr;
 
         explicit SeparableKernel();
 
@@ -708,7 +708,7 @@ class FourierLocalKernel;
                                  std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList);
         virtual ~SeparableKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,

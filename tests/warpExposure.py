@@ -228,7 +228,7 @@ class WarpExposureTestCase(unittest.TestCase):
         """
         for interpLength in (0, 1, 52):
             wc = afwMath.WarpingControl("lanczos3", "", 0, interpLength)
-            self.assertFalse(wc.hasMaskKernel())
+            self.assertFalse(wc.hasMaskWarpingKernel())
             self.assertEqual(wc.getInterpLength(), interpLength)
             for newInterpLength in (3, 7, 9):
                 wc.setInterpLength(newInterpLength)
@@ -236,7 +236,7 @@ class WarpExposureTestCase(unittest.TestCase):
         
         for cacheSize in (0, 100):
             wc = afwMath.WarpingControl("lanczos3", "bilinear", cacheSize)
-            self.assertTrue(wc.hasMaskKernel())
+            self.assertTrue(wc.hasMaskWarpingKernel())
             self.assertEqual(wc.getCacheSize(), cacheSize)
             self.assertEqual(wc.getWarpingKernel().getCacheSize(), cacheSize)
             self.assertEqual(wc.getMaskWarpingKernel().getCacheSize(), cacheSize)

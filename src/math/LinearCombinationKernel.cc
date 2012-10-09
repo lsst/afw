@@ -133,8 +133,8 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::clone() const {
-    Kernel::Ptr retPtr;
+PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::clone() const {
+    PTR(Kernel) retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
     } else {
@@ -208,7 +208,7 @@ double afwMath::LinearCombinationKernel::computeImage(
     
     image = 0.0;
     double imSum = 0.0;
-    std::vector<afwImage::Image<Pixel>::Ptr>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<PTR(afwImage::Image<Pixel>)>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
@@ -285,13 +285,13 @@ std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() cons
 *
 * @return a shared pointer to new kernel, or empty pointer if refactoring not possible
 */
-afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
+PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
     if (!this->isSpatiallyVarying()) {
-        return Kernel::Ptr();
+        return PTR(Kernel)();
     }
     Kernel::SpatialFunctionPtr const firstSpFuncPtr = this->_spatialFunctionList[0];
     if (!firstSpFuncPtr->isLinearCombination()) {
-        return Kernel::Ptr();
+        return PTR(Kernel)();
     }
     
     typedef lsst::afw::image::Image<Kernel::Pixel> KernelImage;
@@ -313,7 +313,7 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
     afwMath::KernelList::const_iterator const kEnd = _kernelList.end();
     for ( ; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
         if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
-            return Kernel::Ptr();
+            return PTR(Kernel)();
         }
     
         (**kIter).computeImage(kernelImage, false);
@@ -331,7 +331,7 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
     KernelImageList::iterator newKImPtrIter = newKernelImagePtrList.begin();
     KernelImageList::iterator const newKImPtrEnd = newKernelImagePtrList.end();
     for ( ; newKImPtrIter != newKImPtrEnd; ++newKImPtrIter) {
-        newKernelList.push_back(Kernel::Ptr(new afwMath::FixedKernel(**newKImPtrIter)));
+        newKernelList.push_back(PTR(Kernel)(new afwMath::FixedKernel(**newKImPtrIter)));
     }
     std::vector<SpatialFunctionPtr> newSpFunctionPtrList;
     for (int i = 0; i < nSpatialParameters; ++i) {
@@ -341,7 +341,7 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
         newSpFunctionPtr->setParameters(newSpParameters);
         newSpFunctionPtrList.push_back(newSpFunctionPtr);
     }
-    LinearCombinationKernel::Ptr refactoredKernel(
+    PTR(LinearCombinationKernel) refactoredKernel(
         new LinearCombinationKernel(newKernelList, newSpFunctionPtrList));
     refactoredKernel->setCtr(this->getCtr());
     return refactoredKernel;
@@ -384,12 +384,12 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
     _isDeltaFunctionBasis = true;
     for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end();
         kIter != kEnd; ++kIter) {
-        Kernel::Ptr basisKernelPtr = (*kIter)->clone();
+        PTR(Kernel) basisKernelPtr = (*kIter)->clone();
         if (dynamic_cast<afwMath::DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
             _isDeltaFunctionBasis = false;
         }
         _kernelList.push_back(basisKernelPtr);
-        afwImage::Image<Pixel>::Ptr kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
+        PTR(afwImage::Image<Pixel>) kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
         _kernelSumList.push_back(basisKernelPtr->computeImage(*kernelImagePtr, false));
         _kernelImagePtrList.push_back(kernelImagePtr);
     }

@@ -140,7 +140,7 @@ void mathDetail::convolveRegionWithInterpolation(
     typedef KernelImagesForRegion::Image KernelImage;
     typedef KernelImage::const_xy_locator KernelConstLocator;
     
-    afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
+    CONST_PTR(afwMath::Kernel) kernelPtr = region.getKernel();
     geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
     workingImages.leftImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_LEFT);
     workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);

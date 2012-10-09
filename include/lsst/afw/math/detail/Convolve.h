@@ -113,12 +113,12 @@ namespace detail {
         public lsst::daf::base::Persistable
     {
     public:
-        typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
+        typedef CONST_PTR(lsst::afw::math::Kernel) KernelConstPtr;
         typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
-        typedef boost::shared_ptr<Image> ImagePtr;
-        typedef boost::shared_ptr<const Image> ImageConstPtr;
-        typedef boost::shared_ptr<const KernelImagesForRegion> ConstPtr;
-        typedef boost::shared_ptr<KernelImagesForRegion> Ptr;
+        typedef PTR(Image) ImagePtr;
+        typedef CONST_PTR(Image) ImageConstPtr;
+        typedef CONST_PTR(KernelImagesForRegion) ConstPtr;
+        typedef PTR(KernelImagesForRegion) Ptr;
 
         /**
          * locations of various points in the region
@@ -204,7 +204,7 @@ namespace detail {
      */
     class RowOfKernelImagesForRegion {
     public:
-        typedef std::vector<KernelImagesForRegion::Ptr> RegionList;
+        typedef std::vector<PTR(KernelImagesForRegion)> RegionList;
         typedef RegionList::iterator Iterator;
         typedef RegionList::const_iterator ConstIterator;
         
@@ -228,11 +228,11 @@ namespace detail {
         /**
          * @brief Return the first region in the list
          */
-        KernelImagesForRegion::Ptr front() { return _regionList.front(); };
+        PTR(KernelImagesForRegion) front() { return _regionList.front(); };
         /**
          * @brief Return the last region in the list
          */
-        KernelImagesForRegion::Ptr back() { return _regionList.back(); };
+        PTR(KernelImagesForRegion) back() { return _regionList.back(); };
         int getNX() const { return _nx; };
         int getNY() const { return _ny; };
         int getYInd() const { return _yInd; };
@@ -241,7 +241,7 @@ namespace detail {
          *
          * @throw std::range_error if ind out of range
          */
-        KernelImagesForRegion::ConstPtr getRegion(int ind) const { return _regionList.at(ind); };
+        CONST_PTR(KernelImagesForRegion) getRegion(int ind) const { return _regionList.at(ind); };
         bool hasData() const { return static_cast<bool>(_regionList[0]); };
         bool isLastRow() const { return _yInd + 1 >= _ny; };
         int incrYInd() { return ++_yInd; };
