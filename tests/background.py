@@ -213,7 +213,7 @@ class BackgroundTestCase(unittest.TestCase):
                 rampimg.set(x, y, dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl()
+        bctrl = afwMath.BackgroundControl(10, 10)
         bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(6)
         bctrl.setNySample(6)
@@ -328,7 +328,7 @@ class BackgroundTestCase(unittest.TestCase):
         img = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         
         # make a background control object
-        bctrl = afwMath.BackgroundControl()
+        bctrl = afwMath.BackgroundControl(10, 10)
         bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(2)
         bctrl.setNySample(2)
@@ -370,7 +370,7 @@ class BackgroundTestCase(unittest.TestCase):
                 img.set(x, y, dzdx*x + dzdy*y + z0)
         
         # make a background control object
-        bctrl = afwMath.BackgroundControl()
+        bctrl = afwMath.BackgroundControl(10, 10)
         bctrl.setInterpStyle(afwMath.Interpolate.CONSTANT)
         bctrl.setNxSample(1)
         bctrl.setNySample(1)
