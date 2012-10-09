@@ -60,8 +60,8 @@ afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
     }
 }
 
-afwMath::Kernel::Ptr afwMath::DeltaFunctionKernel::clone() const {
-    afwMath::Kernel::Ptr retPtr(new afwMath::DeltaFunctionKernel(this->getWidth(), this->getHeight(),
+PTR(afwMath::Kernel) afwMath::DeltaFunctionKernel::clone() const {
+    PTR(afwMath::Kernel) retPtr(new afwMath::DeltaFunctionKernel(this->getWidth(), this->getHeight(),
         this->_pixel));
     retPtr->setCtrX(this->getCtrX());
     retPtr->setCtrY(this->getCtrY());

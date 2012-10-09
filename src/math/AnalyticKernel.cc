@@ -91,8 +91,8 @@ afwMath::AnalyticKernel::AnalyticKernel(
     }
 }
 
-afwMath::Kernel::Ptr afwMath::AnalyticKernel::clone() const {
-    afwMath::Kernel::Ptr retPtr;
+PTR(afwMath::Kernel) afwMath::AnalyticKernel::clone() const {
+    PTR(afwMath::Kernel) retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::AnalyticKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelFunctionPtr), this->_spatialFunctionList));

@@ -50,6 +50,7 @@ namespace detail {
             _hasMaskKernel(control.getMaskWarpingKernel()),
             _kernelCtr(_kernelPtr->getCtr()),
             _maskKernelCtr(_maskKernelPtr ? _maskKernelPtr->getCtr() : lsst::afw::geom::Point2I(0, 0)),
+            _growFullMask(control.getGrowFullMask()),
             _xList(_kernelPtr->getWidth()),
             _yList(_kernelPtr->getHeight()),
             _maskXList(_maskKernelPtr ? _maskKernelPtr->getWidth() : 0),
@@ -173,7 +174,7 @@ namespace detail {
                         srcMaskLoc += lsst::afw::image::detail::difference_type(-_maskXList.size(), 1);
                     }
         
-                    destXIter.mask() = destMaskValue;
+                    destXIter.mask() = (destXIter.mask() & _growFullMask) | destMaskValue;
                 }
                 return true;
             } else {
@@ -201,11 +202,12 @@ namespace detail {
         }
 
         SrcImageT _srcImage;
-        lsst::afw::math::SeparableKernel::Ptr _kernelPtr;
-        lsst::afw::math::SeparableKernel::Ptr _maskKernelPtr;
+        PTR(lsst::afw::math::SeparableKernel) _kernelPtr;
+        PTR(lsst::afw::math::SeparableKernel) _maskKernelPtr;
         bool _hasMaskKernel;
         lsst::afw::geom::Point2I _kernelCtr;
         lsst::afw::geom::Point2I _maskKernelCtr;
+        lsst::afw::image::MaskPixel _growFullMask;
         std::vector<double> _xList;
         std::vector<double> _yList;
         std::vector<double> _maskXList;

@@ -114,8 +114,8 @@ afwMath::SeparableKernel::SeparableKernel(
     _setKernelXY();
 }
 
-afwMath::Kernel::Ptr afwMath::SeparableKernel::clone() const {
-    afwMath::Kernel::Ptr retPtr;
+PTR(afwMath::Kernel) afwMath::SeparableKernel::clone() const {
+    PTR(afwMath::Kernel) retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr), this->_spatialFunctionList));

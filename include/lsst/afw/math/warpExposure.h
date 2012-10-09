@@ -43,6 +43,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/gpu/DevicePreference.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/math/Function.h"
@@ -76,7 +77,7 @@ namespace math {
 
         virtual ~LanczosWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         int getOrder() const;
     };
@@ -98,7 +99,7 @@ namespace math {
 
         virtual ~BilinearWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         /**
          * \brief 1-dimensional bilinear interpolation function.
@@ -109,7 +110,7 @@ namespace math {
          */
         class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
+            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
              * \brief Construct a Bilinear interpolation function
@@ -150,7 +151,7 @@ namespace math {
 
         virtual ~NearestWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         /**
          * \brief 1-dimensional nearest neighbor interpolation function.
@@ -161,7 +162,7 @@ namespace math {
          */
         class NearestFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
+            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
              * \brief Construct a Nearest interpolation function
@@ -204,7 +205,7 @@ namespace math {
      *   (width/2, /height/2). This is because the kernel is used to map source positions that range from
      *   centered on on pixel (width/2, height/2) to nearly centered on pixel (width/2 + 1, height/2 + 1).
      */
-    SeparableKernel::Ptr makeWarpingKernel(std::string name);
+    PTR(SeparableKernel) makeWarpingKernel(std::string name);
 
     /**
      * \brief Parameters to control convolution
@@ -240,40 +241,20 @@ namespace math {
             int cacheSize = 0,      ///< cache size for warping kernel; no cache if 0
                 ///< (used as the argument to the warping kernels' computeCache method)
             int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated
-            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
+            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE,
                 ///< use GPU acceleration?
+            lsst::afw::image::MaskPixel growFullMask = 0
+                ///< mask bits to grow to full width of image/variance kernel
         ) :
             _warpingKernelPtr(makeWarpingKernel(warpingKernelName)),
             _maskWarpingKernelPtr(),
             _cacheSize(cacheSize),
             _interpLength(interpLength),
-            _devicePreference(devicePreference)
+            _devicePreference(devicePreference),
+            _growFullMask(growFullMask)
         {
-            if (!maskWarpingKernelName.empty()) {
-                _maskWarpingKernelPtr = makeWarpingKernel(maskWarpingKernelName);
-
-                // test that border of mask kernel <= border of kernel:
-                // compute bounding boxes with 0,0 at kernel center
-                // and make sure kernel bbox includes mask kernel bbox
-                lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
-                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_warpingKernelPtr->getCtr()),
-                    _warpingKernelPtr->getDimensions()
-                );
-                lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
-                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_maskWarpingKernelPtr->getCtr()),
-                    _maskWarpingKernelPtr->getDimensions()
-                );
-                if (!kernelBBox.contains(maskKernelBBox)) {
-                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "warping kernel is smaller than mask warping kernel");
-                }
-            }
-            boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
-                    boost::dynamic_pointer_cast<LanczosWarpingKernel>(_warpingKernelPtr);
-            if (_devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "devicePreference == USE_GPU specified; GPU supports only Lanczos main kernel");
-            }
+            setMaskWarpingKernelName(maskWarpingKernelName);
+            _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }
 
         /**
@@ -292,23 +273,14 @@ namespace math {
             _maskWarpingKernelPtr(),
             _cacheSize(warpingKernel.getCacheSize()),
             _interpLength(interpLength),
-            _devicePreference(devicePreference)
+            _devicePreference(devicePreference),
+            _growFullMask(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE"))
         {
-            boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
-                    boost::dynamic_pointer_cast<LanczosWarpingKernel>(_warpingKernelPtr);
-            if (_devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "devicePreference == USE_GPU specified; GPU supports only Lanczos main kernel");
-            }
+            _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }
 
 
         virtual ~WarpingControl() {};
-
-        /**
-         * @brief return true if there is a mask kernel
-         */
-        bool hasMaskKernel() const { return bool(_maskWarpingKernelPtr); }
 
         /**
          * @brief get the cache size for the interpolation kernel(s)
@@ -354,36 +326,99 @@ namespace math {
          */
         void setDevicePreference(
             lsst::afw::gpu::DevicePreference devicePreference  ///< device preference
-        ) { _devicePreference = devicePreference; }
+        ) {
+            _testDevicePreference(devicePreference, _warpingKernelPtr);
+            _devicePreference = devicePreference;
+        }
         
         /**
-         * @brief get the warping kernel (as a shared pointer)
+         * @brief get the warping kernel
          */
-        SeparableKernel::Ptr getWarpingKernel() const {
-            if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
-                _warpingKernelPtr->computeCache(_cacheSize);
-            }
-            return _warpingKernelPtr;
-        };
+        PTR(SeparableKernel) getWarpingKernel() const;
+        
+        /**
+         * @brief set the warping kernel by name
+         */
+        void setWarpingKernelName(
+            std::string const &warpingKernelName    ///< name of warping kernel
+        );
 
         /**
-         * @brief get the mask warping kernel (as a shared pointer), or a null pointer if none
+         * @brief set the warping kernel
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if new kernel pointer is empty.
          */
-        SeparableKernel::Ptr getMaskWarpingKernel() const {
-            if (_maskWarpingKernelPtr) {
-                if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
-                    _maskWarpingKernelPtr->computeCache(_cacheSize);
-                }
-            }
-            return _maskWarpingKernelPtr;
-        }
+        void setWarpingKernel(
+            SeparableKernel const &warpingKernel   ///< warping kernel
+        );
+
+        /**
+         * @brief get the mask warping kernel
+         */
+        PTR(SeparableKernel) getMaskWarpingKernel() const;
+
+        /**
+         * @brief return true if there is a mask kernel
+         */
+        bool hasMaskWarpingKernel() const { return static_cast<bool>(_maskWarpingKernelPtr); }
+        
+        /**
+         * @brief set or clear the mask warping kernel by name
+         */
+        void setMaskWarpingKernelName(
+            std::string const &maskWarpingKernelName
+                ///< name of mask warping kernel; use "" to clear the kernel
+        );
+
+        /**
+         * @brief set the mask warping kernel
+         *
+         * @note To clear the mask warping kernel use setMaskWarpingKernelName("").
+         */
+        void setMaskWarpingKernel(
+            SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
+        );
+
+        /**
+         * @brief get mask bits to grow to full width of image/variance kernel
+         */
+        lsst::afw::image::MaskPixel getGrowFullMask() const { return _growFullMask; };
+
+        /**
+         * @brief set mask bits to grow to full width of image/variance kernel
+         */
+        void setGrowFullMask(
+            lsst::afw::image::MaskPixel growFullMask  ///< device preference
+        ) { _growFullMask = growFullMask; }
 
     private:
-        SeparableKernel::Ptr _warpingKernelPtr;
-        SeparableKernel::Ptr _maskWarpingKernelPtr;
+        /**
+         * @brief Throw an exception if the two kernels are not compatible in shape
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if the two kernels
+         * are not compatible in shape
+         */
+        void _testWarpingKernels(
+            SeparableKernel const &warpingKernel,       ///< warping kernel
+            SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
+        ) const;
+        
+        /**
+         * @brief test if GPU device preference and main warping kernel are compatible
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if the parameters are incompatible
+         */
+        void _testDevicePreference(
+            lsst::afw::gpu::DevicePreference const &devicePreference,   ///< GPU device preference
+            PTR(SeparableKernel) const &warpingKernelPtr                ///< warping kernel
+        ) const;
+
+        PTR(SeparableKernel) _warpingKernelPtr;
+        PTR(SeparableKernel) _maskWarpingKernelPtr;
         int _cacheSize;
         int _interpLength;
         lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
+        lsst::afw::image::MaskPixel _growFullMask;
     };
 
 

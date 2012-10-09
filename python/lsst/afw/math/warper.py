@@ -24,6 +24,7 @@ import lsst.pex.config as pexConfig
 import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+import lsst.afw.gpu as afwGpu
 import mathLib
 
 __all__ = ["Warper", "WarperConfig"]
@@ -85,13 +86,29 @@ class WarperConfig(pexConfig.Config):
         doc = "cacheSize argument to lsst.afw.math.SeparableKernel.computeCache",
         default = _DefaultCacheSize,
     )
+    devicePreference = pexConfig.Field(
+        dtype = int,
+        doc = "use GPU acceleration?",
+        default = afwGpu.DEFAULT_DEVICE_PREFERENCE,
+    )
+    growFullMask = pexConfig.Field(
+        dtype = int,
+        doc = "mask bits to grow to full width of image/variance kernel,",
+        default = afwImage.MaskU.getPlaneBitMask("EDGE"),
+    )
 
 class Warper(object):
     """Warp images
     """
     ConfigClass = WarperConfig
-    def __init__(self, warpingKernelName, interpLength=_DefaultInterpLength, cacheSize=_DefaultCacheSize,
-        maskWarpingKernelName=""):
+    def __init__(self,
+        warpingKernelName,
+        interpLength = _DefaultInterpLength,
+        cacheSize = _DefaultCacheSize,
+        maskWarpingKernelName = "",
+        devicePreference = afwGpu.DEFAULT_DEVICE_PREFERENCE,
+        growFullMask = afwImage.MaskU.getPlaneBitMask("EDGE"),
+    ):
         """Create a Warper
         
         Inputs:
@@ -102,7 +119,7 @@ class Warper(object):
             an argument to lsst.afw.math.makeWarpingKernel
         """
         self._warpingControl = mathLib.WarpingControl(
-            warpingKernelName, maskWarpingKernelName, cacheSize, interpLength)
+            warpingKernelName, maskWarpingKernelName, cacheSize, interpLength, devicePreference, growFullMask)
 
     @classmethod
     def fromConfig(cls, config):
@@ -112,14 +129,20 @@ class Warper(object):
         """
         return cls(
             warpingKernelName = config.warpingKernelName,
+            maskWarpingKernelName = config.maskWarpingKernelName,
             interpLength = config.interpLength,
             cacheSize = config.cacheSize,
-            maskWarpingKernelName = config.maskWarpingKernelName,
+            devicePreference = config.devicePreference,
+            growFullMask = config.growFullMask,
         )
     
     def getWarpingKernel(self):
         """Get the warping kernel"""
         return self._warpingControl.getWarpingKernel()
+    
+    def getMaskWarpingKernel(self):
+        """Get the mask warping kernel"""
+        return self._warpingControl.getMaskWarpingKernel()
 
     def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
         """Warp an exposure

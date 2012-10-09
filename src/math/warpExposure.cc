@@ -40,6 +40,7 @@
 #include <ctime>
 
 #include "boost/shared_ptr.hpp"
+#include "boost/pointer_cast.hpp"
 #include "boost/cstdint.hpp"
 #include "boost/regex.hpp"
 
@@ -65,8 +66,8 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwCoord = lsst::afw::coord;
 namespace afwMath = lsst::afw::math;
 
-afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
-    return afwMath::Kernel::Ptr(new afwMath::LanczosWarpingKernel(this->getOrder()));
+PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
+    return PTR(afwMath::Kernel)(new afwMath::LanczosWarpingKernel(this->getOrder()));
 }
 
 /**
@@ -76,8 +77,8 @@ int afwMath::LanczosWarpingKernel::getOrder() const {
     return this->getWidth() / 2;
 }
 
-afwMath::Kernel::Ptr afwMath::BilinearWarpingKernel::clone() const {
-    return afwMath::Kernel::Ptr(new afwMath::BilinearWarpingKernel());
+PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
+    return PTR(afwMath::Kernel)(new afwMath::BilinearWarpingKernel());
 }
 
 /**
@@ -117,8 +118,8 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::str
     return os.str();
 }
 
-afwMath::Kernel::Ptr afwMath::NearestWarpingKernel::clone() const {
-    return afwMath::Kernel::Ptr(new afwMath::NearestWarpingKernel());
+PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
+    return PTR(afwMath::Kernel)(new afwMath::NearestWarpingKernel());
 }
 
 /**
@@ -168,6 +169,91 @@ boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::stri
             "unknown warping kernel name: \"" + name + "\"");
     }
 }
+
+PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getWarpingKernel() const {
+    if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
+        _warpingKernelPtr->computeCache(_cacheSize);
+    }
+    return _warpingKernelPtr;
+};
+
+void afwMath::WarpingControl::setWarpingKernelName(
+    std::string const &warpingKernelName
+) {
+    PTR(SeparableKernel) warpingKernelPtr(makeWarpingKernel(warpingKernelName));
+    setWarpingKernel(*warpingKernelPtr);
+}
+
+void afwMath::WarpingControl::setWarpingKernel(
+    SeparableKernel const &warpingKernel
+) {
+    if (_maskWarpingKernelPtr) {
+        _testWarpingKernels(warpingKernel, *_maskWarpingKernelPtr);
+    }
+    PTR(SeparableKernel) warpingKernelPtr(boost::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
+    _testDevicePreference(_devicePreference, warpingKernelPtr);
+    _warpingKernelPtr = warpingKernelPtr;
+}
+
+
+PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getMaskWarpingKernel() const {
+    if (_maskWarpingKernelPtr) { // lazily update kernel cache
+        if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
+            _maskWarpingKernelPtr->computeCache(_cacheSize);
+        }
+    }
+    return _maskWarpingKernelPtr;
+}
+
+void afwMath::WarpingControl::setMaskWarpingKernelName(
+    std::string const &maskWarpingKernelName
+) {
+    if (!maskWarpingKernelName.empty()) {
+        PTR(SeparableKernel) maskWarpingKernelPtr(makeWarpingKernel(maskWarpingKernelName));
+        setMaskWarpingKernel(*maskWarpingKernelPtr);
+    } else {
+        _maskWarpingKernelPtr.reset();
+    }
+}
+
+void afwMath::WarpingControl::setMaskWarpingKernel(
+    SeparableKernel const & maskWarpingKernel
+) {
+    _testWarpingKernels(*_warpingKernelPtr, maskWarpingKernel);
+    _maskWarpingKernelPtr = boost::static_pointer_cast<SeparableKernel>(maskWarpingKernel.clone());
+}
+
+
+void afwMath::WarpingControl::_testWarpingKernels(
+    SeparableKernel const &warpingKernel,
+    SeparableKernel const &maskWarpingKernel
+) const {
+    lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
+        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(warpingKernel.getCtr()),
+        warpingKernel.getDimensions()
+    );
+    lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
+        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(maskWarpingKernel.getCtr()),
+        maskWarpingKernel.getDimensions()
+    );
+    if (!kernelBBox.contains(maskKernelBBox)) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "warping kernel is smaller than mask warping kernel");
+    }
+}
+
+void afwMath::WarpingControl::_testDevicePreference(
+    lsst::afw::gpu::DevicePreference const &devicePreference,
+    PTR(SeparableKernel) const &warpingKernelPtr
+) const {
+    boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
+        boost::dynamic_pointer_cast<LanczosWarpingKernel>(warpingKernelPtr);
+    if (devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "devicePreference = USE_GPU, but warping kernel not Lanczos");
+    }
+}
+
 
 
 template<typename DestExposureT, typename SrcExposureT>
@@ -259,7 +345,7 @@ namespace {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 "destImage is srcImage; cannot warp in place");
         }
-        afwMath::SeparableKernel::Ptr warpingKernelPtr = control.getWarpingKernel();
+        PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
         int interpLength = control.getInterpLength();
         lsst::afw::gpu::DevicePreference devPref = control.getDevicePreference();
 
@@ -272,7 +358,7 @@ namespace {
                     throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can process only Lanczos kernels");
                 }
             } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
-                afwMath::SeparableKernel::Ptr maskWarpingKernelPtr = control.getWarpingKernel();
+                PTR(afwMath::SeparableKernel) maskWarpingKernelPtr = control.getWarpingKernel();
                 if (control.getMaskWarpingKernel() )
                      maskWarpingKernelPtr = control.getMaskWarpingKernel();
                 if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
