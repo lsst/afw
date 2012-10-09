@@ -346,7 +346,7 @@ namespace math {
          * @brief set the warping kernel by name
          */
         void setWarpingKernelName(
-            std::string warpingKernelName   ///< name of warping kernel
+            std::string const &warpingKernelName    ///< name of warping kernel
         );
 
         /**
@@ -355,7 +355,7 @@ namespace math {
          * @throw lsst::pex::exceptions::InvalidParameterException if new kernel pointer is empty.
          */
         void setWarpingKernel(
-            PTR(SeparableKernel) warpingKernelPtr   ///< mask warping kernel
+            SeparableKernel const &warpingKernel   ///< warping kernel
         );
 
         /**
@@ -366,20 +366,23 @@ namespace math {
         /**
          * @brief return true if there is a mask kernel
          */
-        bool hasMaskKernel() const { return static_cast<bool>(_maskWarpingKernelPtr); }
+        bool hasMaskWarpingKernel() const { return static_cast<bool>(_maskWarpingKernelPtr); }
         
         /**
          * @brief set or clear the mask warping kernel by name
          */
         void setMaskWarpingKernelName(
-            std::string maskWarpingKernelName   ///< name of mask warping kernel; use "" to clear the kernel
+            std::string const &maskWarpingKernelName
+                ///< name of mask warping kernel; use "" to clear the kernel
         );
 
         /**
-         * @brief set or clear the mask warping kernel
+         * @brief set the mask warping kernel
+         *
+         * @note To clear the mask warping kernel use setMaskWarpingKernelName("").
          */
         void setMaskWarpingKernel(
-            PTR(SeparableKernel) maskWarpingKernelPtr   ///< mask warping kernel
+            SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
         );
 
         /**
@@ -402,8 +405,8 @@ namespace math {
          * are not compatible in shape
          */
         void _testWarpingKernels(
-            PTR(SeparableKernel) const &warpingKernel,       ///< warping kernel
-            PTR(SeparableKernel) const &maskWarpingKernel    ///< mask warping kernel
+            SeparableKernel const &warpingKernel,       ///< warping kernel
+            SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
         ) const;
         
         /**

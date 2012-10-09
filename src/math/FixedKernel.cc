@@ -94,8 +94,8 @@ afwMath::FixedKernel::FixedKernel(
 //
 // Member Functions
 //
-afwMath::Kernel::Ptr afwMath::FixedKernel::clone() const {
-    afwMath::Kernel::Ptr retPtr(new afwMath::FixedKernel(_image));
+PTR(afwMath::Kernel) afwMath::FixedKernel::clone() const {
+    PTR(afwMath::Kernel) retPtr(new afwMath::FixedKernel(_image));
     retPtr->setCtrX(this->getCtrX());
     retPtr->setCtrY(this->getCtrY());
     return retPtr;

@@ -42,8 +42,7 @@ int main() {
         for (unsigned int row = 0; row < kernelRows; ++row) {
             for (unsigned int col = 0; col < kernelCols; ++col) {
                 std::cout << boost::format("Delta function kernel %3d: col=%d, row=%d\n") % ind % col % row;
-                afwMath::Kernel::Ptr
-                    kernelPtr(new afwMath::DeltaFunctionKernel(kernelCols, kernelRows,
+                PTR(afwMath::Kernel) kernelPtr(new afwMath::DeltaFunctionKernel(kernelCols, kernelRows,
                                                                lsst::afw::geom::Point2I(col, row))
                              );
                 kernelList.push_back(kernelPtr);
