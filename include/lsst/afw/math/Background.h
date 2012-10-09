@@ -26,7 +26,7 @@
 #define LSST_AFW_MATH_BACKGROUND_H
 /**
  * @file Background.h
- * @brief Use bi-cubic interpolation to estimate image background
+ * @brief Estimate image backgrounds
  * @ingroup afw
  * @author Steve Bickerton
  */
@@ -59,9 +59,44 @@ UndersampleStyle stringToUndersampleStyle(std::string const style);
  */
 class BackgroundControl {
 public:
-    
     BackgroundControl(
-        Interpolate::Style const style = Interpolate::AKIMA_SPLINE, ///< Style of the interpolation
+        int const nxSample,                                  ///< Num. grid samples in x
+        int const nySample,                                  ///< Num. grid samples in y
+        StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
+        Property const prop = MEANCLIP ///< statistical property to use for grid points
+                     )
+        : _style(Interpolate::AKIMA_SPLINE),
+          _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(THROW_EXCEPTION),
+          _sctrl(new StatisticsControl(sctrl)),
+          _prop(prop) {
+        assert(nxSample > 0);
+        assert(nySample > 0);
+    }
+    
+    /**
+     * Overload constructor to handle string for statistical operator
+     */
+    BackgroundControl(
+        int const nxSample,             ///< num. grid samples in x
+        int const nySample,             ///< num. grid samples in y
+        StatisticsControl const sctrl,  ///< configuration for stats to be computed
+        std::string const prop          ///< statistical property to use for grid points
+                     )
+        : _style(Interpolate::AKIMA_SPLINE),
+          _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(THROW_EXCEPTION),
+          _sctrl(new StatisticsControl(sctrl)),
+          _prop(stringToStatisticsProperty(prop)) {
+        assert(nxSample > 0);
+        assert(nySample > 0);
+    }
+    // And now the two old APIs (preserved for backward compatibility)
+    /**
+     * \deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     */
+    BackgroundControl(
+        Interpolate::Style const style, ///< Style of the interpolation
         int const nxSample = 10,        ///< Num. grid samples in x
         int const nySample = 10,        ///< Num. grid samples in y
         UndersampleStyle const undersampleStyle = THROW_EXCEPTION, ///< Behaviour if there are too few points
@@ -77,7 +112,11 @@ public:
         assert(nySample > 0);
     }
     
-    // overload constructor to handle strings for both interp and undersample styles.
+    /**
+     * Overload constructor to handle strings for both interp and undersample styles.
+     *
+     * \deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     */
     BackgroundControl(
         std::string const style, ///< Style of the interpolation
         int const nxSample = 10, ///< num. grid samples in x
@@ -94,7 +133,6 @@ public:
         assert(nxSample > 0);
         assert(nySample > 0);
     }
-                      
 
     virtual ~BackgroundControl() {}
     void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
@@ -114,7 +152,14 @@ public:
     
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
-    Interpolate::Style getInterpStyle() const { return _style; }
+    Interpolate::Style getInterpStyle() const {
+        if (_style < 0 || _style >= Interpolate::NUM_STYLES) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              str(boost::format("Style %d is invalid") % _style));
+
+        }
+        return _style;
+    }
     UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
     StatisticsControl::Ptr getStatisticsControl() { return _sctrl; }
 
@@ -158,7 +203,7 @@ public:
     
     template<typename ImageT>
     explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
-                        BackgroundControl const& bgCtrl = BackgroundControl()); ///< Control Parameters
+                        BackgroundControl const& bgCtrl); ///< Control Parameters
     
     virtual ~Background() {}
     
@@ -166,9 +211,23 @@ public:
     void operator-=(float const delta);
 
     double getPixel(int const x, int const y) const;
-
+    /**
+     * \deprecated New code should specify the interpolation style in getImage, not the ctor
+     */
     template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr getImage() const;
+    typename lsst::afw::image::Image<PixelT>::Ptr getImage() const {
+        return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
+    }
+    /**
+     * \brief Method to compute the background for entire image and return a background image
+     *
+     * \return A boost shared-pointer to an image containing the estimated background
+     */
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr getImage(
+        Interpolate::Style const style,                           ///< Style of the interpolation
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION   ///< Behaviour if there are too few points
+                                                          ) const;
     
     BackgroundControl getBackgroundControl() const { return _bctrl; }
     
@@ -200,7 +259,7 @@ private:
  * cf. std::make_pair()
  */
 template<typename ImageT>
-Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl = BackgroundControl()) {
+Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
     return Background(img, bgCtrl);
 }
     

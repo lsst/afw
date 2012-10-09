@@ -258,15 +258,12 @@ double math::Background::getPixel(int const x, int const y) const {
     
 }
 
-
-/**
- * @brief Method to compute the background for entire image and return a background image
- *
- * @return A boost shared-pointer to an image containing the estimated background
- */
 template<typename PixelT>
-typename image::Image<PixelT>::Ptr math::Background::getImage() const {
-
+typename image::Image<PixelT>::Ptr math::Background::getImage(
+        Interpolate::Style const style, // Style of the interpolation
+        UndersampleStyle const undersampleStyle // Behaviour if there are too few points
+                                                             ) const
+{
     // create a shared_ptr to put the background image in and return to caller
     typename image::Image<PixelT>::Ptr bg = typename image::Image<PixelT>::Ptr(
         new typename image::Image<PixelT>(
