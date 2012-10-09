@@ -180,21 +180,19 @@ private:
  * @class Background
  * @brief A class to evaluate %image background levels
  *
- * Break an image up into nx*ny sub-images and use 3-sigma clipped means to
- * estimate the background levels in each square.  Then use a bicubic spline or
- * bilinear interpolation (not currently implemented) algorithm to estimate background
- * at a given pixel coordinate.
- * Methods are available return background at a point (inefficiently), or an entire background image.
- * BackgroundControl contains public StatisticsControl and InterpolateControl members to allow
- * user control of how the backgrounds are computed.
+ * Break an image up into nx*ny sub-images and use a statistical to estimate the background levels in each
+ * square.  Then use a user-specified or algorithm to estimate background at a given pixel coordinate.
+ *
+ * Methods are available to return the background at a point (inefficiently), or an entire background image.
+ * BackgroundControl contains a public StatisticsControl member to allow user control of how the backgrounds are computed.
  * @code
-       math::BackgroundControl bctrl(math::Interpolate::NATURAL_SPLINE);
-       bctrl.setNxSample(7);            // number of sub-image squares in x-dimension
-       bctrl.setNySample(7);            // number of sub-image squares in y-dimention
-       bctrl.sctrl.setNumSigmaClip(5.0); // use 5-sigma clipping for the sub-image means
+       math::BackgroundControl bctrl(7, 7);  // number of sub-image squares in {x,y}-dimensions
+       bctrl.sctrl.setNumSigmaClip(5.0);     // use 5-sigma clipping for the sub-image means
        math::Background backobj = math::makeBackground(img, bctrl);
-       double somepoint = backobj.getPixel(i_x,i_y); // get the background at a pixel at i_x,i_y
-       ImageT back = backobj.getImage();             // get a whole background image
+       // get the background at a pixel at i_x,i_y
+       double somepoint = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
+       // get a whole background image
+       ImageT back = backobj.getImage(math::Interpolate::NATURAL_SPLINE);
  * @endcode
  *
  */
@@ -210,7 +208,7 @@ public:
     void operator+=(float const delta);
     void operator-=(float const delta);
 
-    double getPixel(int const x, int const y) const;
+    double getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
      * \deprecated New code should specify the interpolation style in getImage, not the ctor
      */
