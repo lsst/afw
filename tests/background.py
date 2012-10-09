@@ -129,14 +129,14 @@ class BackgroundTestCase(unittest.TestCase):
 
 
         xcen, ycen = 50, 100
-        bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
+        bgCtrl = afwMath.BackgroundControl(10, 10)
         bgCtrl.setNxSample(5)
         bgCtrl.setNySample(5)
         bgCtrl.getStatisticsControl().setNumIter(3)
         bgCtrl.getStatisticsControl().setNumSigmaClip(3)
         back = afwMath.makeBackground(self.image, bgCtrl)
         
-        self.assertEqual(back.getPixel(xcen, ycen), self.val)
+        self.assertEqual(back.getPixel(bgCtrl.getInterpStyle(), xcen, ycen), self.val)
 
 
     def testBackgroundTestImages(self):
@@ -190,7 +190,7 @@ class BackgroundTestCase(unittest.TestCase):
             stdevInterp = reqStdev/math.sqrt(pixPerSubimage)
             
             # test getPixel()
-            testval = backobj.getPixel(naxis1/2, naxis2/2)
+            testval = backobj.getPixel(bctrl.getInterpStyle(), naxis1/2, naxis2/2)
             self.assertAlmostEqual( testval, centerValue, places=12 )
             self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
@@ -225,7 +225,7 @@ class BackgroundTestCase(unittest.TestCase):
         ypixels = [0, ny/2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(xpix, ypix)
+                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
                 self.assertAlmostEqual( testval, rampimg.get(xpix, ypix), 10 )
 
     def getParabolaImage(self, nx, ny):
@@ -282,7 +282,7 @@ class BackgroundTestCase(unittest.TestCase):
         ypixels = [segmentCenter, ny/2, ny - segmentCenter]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(xpix, ypix)
+                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
                 realval = parabimg.get(xpix, ypix)
                 #print "Parab: ", xpix, ypix, realval, -(testval - realval)
                 # quadratic terms skew the averages of the subimages and the clipped mean for
@@ -381,7 +381,7 @@ class BackgroundTestCase(unittest.TestCase):
         ypixels = [0, ny/2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(xpix, ypix)
+                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
                 self.assertAlmostEqual(testval, mean, 10)
 
         

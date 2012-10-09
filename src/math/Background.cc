@@ -240,16 +240,16 @@ void math::Background::operator-=(float const delta ///< Value to subtract
  *
  * @return an estimated background at x,y (double)
  */
-double math::Background::getPixel(int const x, int const y) const {
-
+double math::Background::getPixel(Interpolate::Style const interpStyle, int const x, int const y) const
+{
     // build an interpobj along the row y and get the x'th value
     vector<double> bg_x(_nxSample);
     for (int iX = 0; iX < _nxSample; iX++) {
         bg_x[iX] = _gridcolumns[iX][y];
     }
 
-    if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
-        math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
+    if (interpStyle != Interpolate::CONSTANT) {
+        math::Interpolate intobj(_xcen, bg_x, interpStyle);
         return static_cast<double>(intobj.interpolate(x));
     } else {
         int const iGridX = (_nxSample * x) / _imgWidth;
