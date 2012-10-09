@@ -46,6 +46,7 @@ class Interpolate {
 public:
 
     enum Style {
+        UNKNOWN = -1,
         CONSTANT = 0,
         LINEAR = 1,
         NATURAL_SPLINE = 2,
