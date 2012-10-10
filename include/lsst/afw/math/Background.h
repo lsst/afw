@@ -161,7 +161,7 @@ public:
         return _style;
     }
     UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
-    StatisticsControl::Ptr getStatisticsControl() { return _sctrl; }
+    PTR(StatisticsControl) getStatisticsControl() { return _sctrl; }
 
     Property getStatisticsProperty() { return _prop; }
     void setStatisticsProperty(Property prop) { _prop = prop; }
@@ -172,7 +172,7 @@ private:
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
-    StatisticsControl::Ptr _sctrl;           // statistics control object
+    PTR(StatisticsControl) _sctrl;           // statistics control object
     Property _prop;                          // statistics Property
 };
     
@@ -213,7 +213,7 @@ public:
      * \deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr getImage() const {
+    PTR(lsst::afw::image::Image<PixelT>) getImage() const {
         return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
     }
     /**
@@ -222,33 +222,38 @@ public:
      * \return A boost shared-pointer to an image containing the estimated background
      */
     template<typename PixelT>
-    typename lsst::afw::image::Image<PixelT>::Ptr getImage(
-        Interpolate::Style const style,                           ///< Style of the interpolation
+    PTR(lsst::afw::image::Image<PixelT>) getImage(
+        Interpolate::Style const interpStyle,                           ///< Style of the interpolation
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION   ///< Behaviour if there are too few points
                                                           ) const;
     
     BackgroundControl getBackgroundControl() const { return _bctrl; }
-    
+    /**
+     * Return the Interpolate::Style that we actually used
+     */
+    Interpolate::Style getAsUsedInterpStyle() const {
+        return _asUsedInterpStyle;
+    }
 private:
-    int _n;                             // number of pixels in the image
-    double _meanclip;                   // n-sigma clipped mean
     int _imgWidth;                      // img.getWidth()
     int _imgHeight;                     // img.getHeight()
     int _nxSample;                      // number of sub-image squares in x-dimension
     int _nySample;                      // number of sub-image squares in y-dimension
-    std::vector<double> _xcen;             // x center pix coords of sub images
+    BackgroundControl _bctrl;           // control info set by user.
+    mutable Interpolate::Style _asUsedInterpStyle; // the style we actually used
+
+    std::vector<double> _xcen;          // x center pix coords of sub images
     std::vector<double> _ycen;          // y center ...
     std::vector<int> _xorig;            // x origin pix coords of sub images
     std::vector<int> _yorig;            // y origin ...
     std::vector<int> _xsize;            // x size of sub images
     std::vector<int> _ysize;            // y size ...
-    std::vector<std::vector<double> > _grid; // 3-sig clipped means for the grid of sub images.
 
-    std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
-    BackgroundControl _bctrl;           // control info set by user.
+    mutable std::vector<std::vector<double> > _grid; // 3-sig clipped means for the grid of sub images.
+    mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
 
-    void _checkSampling();
-    void _set_gridcolums(int iX, std::vector<int> const& ypix);
+    void _set_gridcolumns(Interpolate::Style const interpStyle,
+                          int const iX, std::vector<int> const& ypix) const;
 };
 
 /**
