@@ -33,19 +33,17 @@
 #include <limits>
 #include <vector>
 #include <cmath>
-#include "boost/math/special_functions/round.hpp"
 #include "lsst/utils/ieee.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
 #include "lsst/afw/math/Statistics.h"
 
-using namespace std;
-namespace geom = lsst::afw::geom;
-namespace image = lsst::afw::image;
-namespace math = lsst::afw::math;
-namespace ex = lsst::pex::exceptions;
-namespace bm = boost::math;
+namespace lsst {
+namespace ex = pex::exceptions;
+
+namespace afw {
+namespace math {
 
 namespace {
 
@@ -78,7 +76,7 @@ namespace {
  * method is called
  */
 template<typename ImageT>
-math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
+Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
                              BackgroundControl const& bgCtrl ///< Control how the Background is estimated
                             ) :
     _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
@@ -124,7 +122,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
                                                     geom::Extent2I(_xsize[iX], _ysize[iY])
                                                    ), image::LOCAL);
             
-            std::pair<double, double> res = math::makeStatistics(subimg, _bctrl.getStatisticsProperty(),
+            std::pair<double, double> res = makeStatistics(subimg, _bctrl.getStatisticsProperty(),
                                                                  *_bctrl.getStatisticsControl()).getResult();
             _grid[iX][iY] = res.first;
             // error = res.second
@@ -132,7 +130,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     }
 }
 
-void math::Background::_set_gridcolumns(Interpolate::Style const interpStyle,
+void Background::_set_gridcolumns(Interpolate::Style const interpStyle,
                                         int const iX, std::vector<int> const& ypix) const
 {
     _gridcolumns[iX].resize(_imgHeight);
@@ -148,7 +146,7 @@ void math::Background::_set_gridcolumns(Interpolate::Style const interpStyle,
         cullNan(_ycen, _grid[iX], ycenTmp, gridTmp);
 
         try {
-            math::Interpolate intobj(ycenTmp, gridTmp, interpStyle);
+            Interpolate intobj(ycenTmp, gridTmp, interpStyle);
             
             for (int iY = 0; iY < _imgHeight; ++iY) {
                 _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
@@ -171,7 +169,7 @@ void math::Background::_set_gridcolumns(Interpolate::Style const interpStyle,
 /**
  * @brief Add a scalar to the Background (equivalent to adding a constant to the original image)
  */
-void math::Background::operator+=(float const delta ///< Value to add
+void Background::operator+=(float const delta ///< Value to add
                                   )
 {
     for (int x = 0; x != _nxSample; ++x) {
@@ -184,7 +182,7 @@ void math::Background::operator+=(float const delta ///< Value to add
 /**
  * @brief Subtract a scalar from the Background (equivalent to subtracting a constant from the original image)
  */
-void math::Background::operator-=(float const delta ///< Value to subtract
+void Background::operator-=(float const delta ///< Value to subtract
                                   )
 {
     *this += -delta;
@@ -201,19 +199,19 @@ void math::Background::operator-=(float const delta ///< Value to subtract
  *
  * @return an estimated background at x,y (double)
  */
-double math::Background::getPixel(Interpolate::Style const interpStyle, int const x, int const y) const
+double Background::getPixel(Interpolate::Style const interpStyle, int const x, int const y) const
 {
     (void)getImage<double>(interpStyle);        // setup the splines
 
     // build an interpobj along the row y and get the x'th value
-    vector<double> bg_x(_nxSample);
+    std::vector<double> bg_x(_nxSample);
     for (int iX = 0; iX < _nxSample; iX++) {
         bg_x[iX] = _gridcolumns[iX][y];
     }
 
     if (interpStyle != Interpolate::CONSTANT) {
         try {
-            math::Interpolate intobj(_xcen, bg_x, interpStyle);
+            Interpolate intobj(_xcen, bg_x, interpStyle);
             return static_cast<double>(intobj.interpolate(x));
         } catch(ex::Exception &e) {
             LSST_EXCEPT_ADD(e, "in getPixel()");
@@ -227,7 +225,7 @@ double math::Background::getPixel(Interpolate::Style const interpStyle, int cons
 }
 
 template<typename PixelT>
-PTR(image::Image<PixelT>) math::Background::getImage(
+PTR(image::Image<PixelT>) Background::getImage(
         Interpolate::Style const interpStyle_,  // Style of the interpolation
         UndersampleStyle const undersampleStyle // Behaviour if there are too few points
                                                              ) const
@@ -243,7 +241,7 @@ PTR(image::Image<PixelT>) math::Background::getImage(
     bool const isYundersampled = (nySample < lookupMinInterpPoints(interpStyle));
 
     switch (undersampleStyle) {
-      case math::THROW_EXCEPTION:
+      case THROW_EXCEPTION:
         if (isXundersampled && isYundersampled) {
             throw LSST_EXCEPT(ex::InvalidParameterException,
                               "nxSample and nySample have too few points for requested interpolation style.");
@@ -255,15 +253,15 @@ PTR(image::Image<PixelT>) math::Background::getImage(
                               "nySample has too few points for requested interpolation style.");
         }
         break;
-      case math::REDUCE_INTERP_ORDER:
+      case REDUCE_INTERP_ORDER:
         if (isXundersampled || isYundersampled) {
-            math::Interpolate::Style const xStyle = math::lookupMaxInterpStyle(nxSample);
-            math::Interpolate::Style const yStyle = math::lookupMaxInterpStyle(nySample);
+            Interpolate::Style const xStyle = lookupMaxInterpStyle(nxSample);
+            Interpolate::Style const yStyle = lookupMaxInterpStyle(nySample);
             interpStyle = (nxSample < nySample) ? xStyle : yStyle;
             _asUsedInterpStyle = interpStyle;
         }
         break;
-      case math::INCREASE_NXNYSAMPLE:
+      case INCREASE_NXNYSAMPLE:
         if (isXundersampled || isYundersampled) {
             throw LSST_EXCEPT(ex::InvalidParameterException,
                               "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
@@ -284,7 +282,7 @@ PTR(image::Image<PixelT>) math::Background::getImage(
     // make a vector containing the y pixel coords for the column
     // --> We'll store _nxSample fully-interpolated columns to spline the rows over
     // make a vector containing the y pixel coords for the column
-    vector<int> ypix(_imgHeight);
+    std::vector<int> ypix(_imgHeight);
     for (int iY = 0; iY < _imgHeight; ++iY) {
         ypix[iY] = iY;
     }
@@ -302,7 +300,7 @@ PTR(image::Image<PixelT>) math::Background::getImage(
     );
 
     // need a vector of all x pixel coords to spline over
-    vector<int> xpix(bg->getWidth());
+    std::vector<int> xpix(bg->getWidth());
     for (int iX = 0; iX < bg->getWidth(); ++iX) { xpix[iX] = iX; }
     
     // go through row by row
@@ -311,14 +309,14 @@ PTR(image::Image<PixelT>) math::Background::getImage(
     for (int iY = 0; iY < bg->getHeight(); ++iY) {
 
         // build an interp object for this row
-        vector<double> bg_x(nxSample);
+        std::vector<double> bg_x(nxSample);
         for (int iX = 0; iX < nxSample; iX++) {
             bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]);
         }
         
         if (interpStyle != Interpolate::CONSTANT) {
             try {
-                math::Interpolate intobj(_xcen, bg_x, interpStyle);
+                Interpolate intobj(_xcen, bg_x, interpStyle);
                 // fill the image with interpolated objects.
                 int iX = 0;
                 for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
@@ -348,7 +346,7 @@ PTR(image::Image<PixelT>) math::Background::getImage(
 /**
  * @brief Conversion function to switch a string to an UndersampleStyle
  */
-math::UndersampleStyle math::stringToUndersampleStyle(std::string const style) {
+UndersampleStyle stringToUndersampleStyle(std::string const style) {
     static std::map<std::string, UndersampleStyle> undersampleStrings;
     if (undersampleStrings.size() == 0) {
         undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
@@ -368,14 +366,15 @@ math::UndersampleStyle math::stringToUndersampleStyle(std::string const style) {
  * \cond
  */
 #define INSTANTIATE_BACKGROUND(TYPE)                                    \
-    template math::Background::Background(image::Image<TYPE> const& img, \
-                                          math::BackgroundControl const& bgCtrl); \
-    template math::Background::Background(image::MaskedImage<TYPE> const& img, \
-                                          math::BackgroundControl const& bgCtrl); \
-    template PTR(image::Image<TYPE>) math::Background::getImage<TYPE>() const;
+    template Background::Background(image::Image<TYPE> const& img, \
+                                          BackgroundControl const& bgCtrl); \
+    template Background::Background(image::MaskedImage<TYPE> const& img, \
+                                          BackgroundControl const& bgCtrl); \
+    template PTR(image::Image<TYPE>) Background::getImage<TYPE>() const;
 
 INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)
 INSTANTIATE_BACKGROUND(int)
 
 // \endcond
+}}}
