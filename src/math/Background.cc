@@ -346,7 +346,7 @@ PTR(image::Image<PixelT>) Background::getImage(
 /**
  * @brief Conversion function to switch a string to an UndersampleStyle
  */
-UndersampleStyle stringToUndersampleStyle(std::string const style) {
+UndersampleStyle stringToUndersampleStyle(std::string const &style) {
     static std::map<std::string, UndersampleStyle> undersampleStrings;
     if (undersampleStrings.size() == 0) {
         undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
