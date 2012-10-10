@@ -416,7 +416,7 @@ namespace math {
          */
         void _testDevicePreference(
             lsst::afw::gpu::DevicePreference const &devicePreference,   ///< GPU device preference
-            PTR(SeparableKernel) const &warpingKernelPtr                ///< warping kernel
+            CONST_PTR(SeparableKernel) const &warpingKernelPtr          ///< warping kernel
         ) const;
 
         PTR(SeparableKernel) _warpingKernelPtr;
