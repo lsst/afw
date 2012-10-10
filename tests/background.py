@@ -340,7 +340,7 @@ class BackgroundTestCase(unittest.TestCase):
             ds9.mtv(mi, frame = 0)
 
         im = mi.getImage()
-        im -= backobj.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
+        im -= backobj.getImageF("AKIMA_SPLINE")
 
         if display:
             ds9.mtv(mi, frame = 1)
@@ -381,7 +381,7 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl.setUndersampleStyle("THROW_EXCEPTION")
         def tst(img, bctrl):
             backobj = afwMath.makeBackground(img, bctrl)
-            backobj.getImageF(afwMath.Interpolate.CUBIC_SPLINE) # only now do we see that we have too few points
+            backobj.getImageF("CUBIC_SPLINE") # only now do we see that we have too few points
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
                                        tst, img, bctrl)
 
@@ -464,12 +464,15 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl = afwMath.BackgroundControl(nx, ny, sctrl, "MEANCLIP")
 
         bkgd = afwMath.makeBackground(image, bctrl)
-        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
+        bkgdImage = bkgd.getImageF("NATURAL_SPLINE", "THROW_EXCEPTION")
         if display:
             ds9.mtv(image)
             ds9.mtv(bkgdImage, frame=1)
 
         self.assertFalse(np.isnan(bkgdImage.get(0,0)))
+
+        # Check that the non-string API works too
+        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
         
 def suite():
     """Returns a suite containing all the test cases in this module."""
