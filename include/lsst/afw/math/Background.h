@@ -51,7 +51,7 @@ enum UndersampleStyle {
     REDUCE_INTERP_ORDER,
     INCREASE_NXNYSAMPLE
 };
-UndersampleStyle stringToUndersampleStyle(std::string const style);
+UndersampleStyle stringToUndersampleStyle(std::string const &style);
     
 /**
  * @class BackgroundControl
@@ -80,8 +80,8 @@ public:
     BackgroundControl(
         int const nxSample,             ///< num. grid samples in x
         int const nySample,             ///< num. grid samples in y
-        StatisticsControl const sctrl,  ///< configuration for stats to be computed
-        std::string const prop          ///< statistical property to use for grid points
+        StatisticsControl const &sctrl, ///< configuration for stats to be computed
+        std::string const &prop         ///< statistical property to use for grid points
                      )
         : _style(Interpolate::AKIMA_SPLINE),
           _nxSample(nxSample), _nySample(nySample),
@@ -118,12 +118,12 @@ public:
      * \deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
      */
     BackgroundControl(
-        std::string const style, ///< Style of the interpolation
+        std::string const &style, ///< Style of the interpolation
         int const nxSample = 10, ///< num. grid samples in x
         int const nySample = 10, ///< num. grid samples in y
-        std::string const undersampleStyle = "THROW_EXCEPTION", ///< behaviour if there are too few points
+        std::string const &undersampleStyle = "THROW_EXCEPTION", ///< behaviour if there are too few points
         StatisticsControl const sctrl = StatisticsControl(), ///< configuration for stats to be computed
-        std::string const prop = "MEANCLIP" ///< statistical property to use for grid points
+        std::string const &prop = "MEANCLIP" ///< statistical property to use for grid points
                      )
         : _style(math::stringToInterpStyle(style)),
           _nxSample(nxSample), _nySample(nySample),
@@ -140,13 +140,13 @@ public:
 
     void setInterpStyle (Interpolate::Style const style) { _style = style; }
     // overload to take a string
-    void setInterpStyle (std::string const style) { _style = math::stringToInterpStyle(style); }
+    void setInterpStyle (std::string const &style) { _style = math::stringToInterpStyle(style); }
     
     void setUndersampleStyle (UndersampleStyle const undersampleStyle) {
         _undersampleStyle = undersampleStyle;
     }
     // overload to take a string
-    void setUndersampleStyle (std::string const undersampleStyle) {
+    void setUndersampleStyle (std::string const &undersampleStyle) {
         _undersampleStyle = math::stringToUndersampleStyle(undersampleStyle);
     }
     
@@ -210,6 +210,17 @@ public:
 
     double getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
+     * Return the background value at a point
+     *
+     * \note This is very inefficient -- only use it for debugging, if then.
+     *
+     * \deprecated New code should specify the interpolation style in getPixel, not the ctor
+     */
+    double getPixel(int const x, int const y) const {
+        return getPixel(_bctrl.getInterpStyle(), x, y);
+    }
+
+    /**
      * \deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template<typename PixelT>
@@ -226,6 +237,14 @@ public:
         Interpolate::Style const interpStyle,                           ///< Style of the interpolation
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION   ///< Behaviour if there are too few points
                                                           ) const;
+    template<typename PixelT>
+    PTR(lsst::afw::image::Image<PixelT>) getImage(
+        std::string const &interpStyle, ///< Style of the interpolation
+        std::string const &undersampleStyle="THROW_EXCEPTION"   ///< Behaviour if there are too few points
+                                                 ) const {
+        return getImage<PixelT>(math::stringToInterpStyle(interpStyle),
+                                stringToUndersampleStyle(undersampleStyle));
+    }
     
     BackgroundControl getBackgroundControl() const { return _bctrl; }
     /**
