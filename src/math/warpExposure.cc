@@ -244,10 +244,10 @@ void afwMath::WarpingControl::_testWarpingKernels(
 
 void afwMath::WarpingControl::_testDevicePreference(
     lsst::afw::gpu::DevicePreference const &devicePreference,
-    PTR(SeparableKernel) const &warpingKernelPtr
+    CONST_PTR(SeparableKernel) const &warpingKernelPtr
 ) const {
-    boost::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
-        boost::dynamic_pointer_cast<LanczosWarpingKernel>(warpingKernelPtr);
+    CONST_PTR(LanczosWarpingKernel) const lanczosKernelPtr =
+        boost::dynamic_pointer_cast<const LanczosWarpingKernel>(warpingKernelPtr);
     if (devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
             "devicePreference = USE_GPU, but warping kernel not Lanczos");
