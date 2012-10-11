@@ -112,7 +112,7 @@ Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose pro
 
     // =============================================================
     // Loop over the cells in the image, computing statistical properties
-    // of each cell in turn and using them to set _grid
+    // of each cell in turn and using them to set _statsImage
     _statsImage.reset(new image::MaskedImage<float>(_nxSample, _nySample));
 
     image::MaskedImage<float>::Image &im = *_statsImage->getImage();
@@ -129,31 +129,32 @@ Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose pro
             var(iX, iY) = res.second;
         }
     }
-    // Now set _grid as a transitional measure
-    _grid.resize(_nxSample);
-    for (int iX = 0; iX < _nxSample; ++iX) {
-        _grid[iX].resize(_nySample);
-
-        for (int iY = 0; iY < _nySample; ++iY) {
-            _grid[iX][iY] = im(iX, iY);
-        }
-    }
 }
 
 void Background::_set_gridcolumns(Interpolate::Style const interpStyle,
-                                        int const iX, std::vector<int> const& ypix) const
+                                  int const iX, std::vector<int> const& ypix) const
 {
+    image::MaskedImage<float>::Image &im = *_statsImage->getImage();
+
     _gridcolumns[iX].resize(_imgHeight);
 
-    // there isn't actually any way to interpolate as a constant ... do that manually here
-    if (interpStyle != Interpolate::CONSTANT) {
-        // this is the real interpolation
+    if (interpStyle == Interpolate::CONSTANT) {
+        // A constant only makes sense when n[xy]Sample are both 1, but this should still work for other grid
+        // sizes too.
+        for (int iY = 0; iY < _imgHeight; ++iY) {
+            int const iGridY = (_nySample*iY)/_imgHeight;
+            _gridcolumns[iX][iY] = im(iX, iGridY);
+        }
+    } else {
+        // Set _grid as a transitional measure
+        std::vector<double> _grid(_nySample);
+        std::copy(im.col_begin(iX), im.col_end(iX), _grid.begin());
 
         // remove nan from the grid values before computing columns
         // if we do it here (ie. in set_gridcolumns), it should
-        // take care of all future occurances, so we don't need to do this elsewhere
+        // take care of all future occurrences, so we don't need to do this elsewhere
         std::vector<double> ycenTmp, gridTmp;
-        cullNan(_ycen, _grid[iX], ycenTmp, gridTmp);
+        cullNan(_ycen, _grid, ycenTmp, gridTmp);
 
         try {
             Interpolate intobj(ycenTmp, gridTmp, interpStyle);
@@ -165,14 +166,6 @@ void Background::_set_gridcolumns(Interpolate::Style const interpStyle,
             LSST_EXCEPT_ADD(e, "setting _gridcolumns");
             throw e;
         }
-    } else {
-        // this is the constant interpolation
-        // it should only be used sanely when nx,nySample are both 1,
-        //  but this should still work for other grid sizes.
-        for (int iY = 0; iY < _imgHeight; ++iY) {
-            int const iGridY = (_nySample * iY) / _imgHeight;
-            _gridcolumns[iX][iY] = _grid[iX][iGridY];
-        }
     }
 }
 
@@ -182,11 +175,7 @@ void Background::_set_gridcolumns(Interpolate::Style const interpStyle,
 void Background::operator+=(float const delta ///< Value to add
                                   )
 {
-    for (int x = 0; x != _nxSample; ++x) {
-        for (int y = 0; y != _nySample; ++y) {
-            _grid[x][y] += delta;
-        }
-    }
+    *_statsImage += delta;
 }
 
 /**
@@ -195,7 +184,7 @@ void Background::operator+=(float const delta ///< Value to add
 void Background::operator-=(float const delta ///< Value to subtract
                                   )
 {
-    *this += -delta;
+    *_statsImage -= delta;
 }
 
 /**
