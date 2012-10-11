@@ -299,7 +299,6 @@ private:
     std::vector<int> _ysize;            // y size ...
 
     PTR(lsst::afw::image::MaskedImage<float>) _statsImage;  // statistical properties for the grid of subimages
-    mutable std::vector<std::vector<double> > _grid; // statistical properties for the grid of sub images
     mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
 
     void _set_gridcolumns(Interpolate::Style const interpStyle,
