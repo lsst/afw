@@ -298,7 +298,8 @@ private:
     std::vector<int> _xsize;            // x size of sub images
     std::vector<int> _ysize;            // y size ...
 
-    mutable std::vector<std::vector<double> > _grid; // 3-sig clipped means for the grid of sub images.
+    PTR(lsst::afw::image::MaskedImage<float>) _statsImage;  // statistical properties for the grid of subimages
+    mutable std::vector<std::vector<double> > _grid; // statistical properties for the grid of sub images
     mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
 
     void _set_gridcolumns(Interpolate::Style const interpStyle,
