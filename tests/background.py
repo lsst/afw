@@ -331,7 +331,7 @@ class BackgroundTestCase(unittest.TestCase):
                                                 "CFHT", "D4", "cal-53535-i-797722_1"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
-        bctrl = afwMath.BackgroundControl(16, 16)
+        bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
         bctrl.getStatisticsControl().setNumSigmaClip(3.0)  
         bctrl.getStatisticsControl().setNumIter(2)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
@@ -345,6 +345,14 @@ class BackgroundTestCase(unittest.TestCase):
         if display:
             ds9.mtv(mi, frame = 1)
 
+        statsImage = backobj.getStatsImage()
+        self.assertEqual(afwGeom.ExtentI(backobj.getBackgroundControl().getNxSample(),
+                                         backobj.getBackgroundControl().getNySample()),
+                         statsImage.getDimensions())
+
+        if display:
+            ds9.mtv(backobj.getStatsImage(), frame=2)
+            ds9.mtv(backobj.getStatsImage().getVariance(), frame=3)
             
     def testUndersample(self):
         """Test how the program handles nx,ny being too small for requested interp style."""
