@@ -85,7 +85,8 @@ Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose pro
     _asUsedInterpStyle(Interpolate::UNKNOWN),
     _xcen(_nxSample),  _ycen(_nySample),
     _xorig(_nxSample), _yorig(_nySample),
-    _xsize(_nxSample), _ysize(_nySample)    
+    _xsize(_nxSample), _ysize(_nySample),
+    _statsImage(PTR(image::MaskedImage<float>)())
 {
     if (_imgWidth*_imgHeight == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
@@ -112,20 +113,29 @@ Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose pro
     // =============================================================
     // Loop over the cells in the image, computing statistical properties
     // of each cell in turn and using them to set _grid
-    _grid.resize(_nxSample);
+    _statsImage.reset(new image::MaskedImage<float>(_nxSample, _nySample));
 
+    image::MaskedImage<float>::Image &im = *_statsImage->getImage();
+    image::MaskedImage<float>::Variance &var = *_statsImage->getVariance();
+
+    for (int iX = 0; iX < _nxSample; ++iX) {
+        for (int iY = 0; iY < _nySample; ++iY) {
+            ImageT subimg = ImageT(img, geom::Box2I(geom::Point2I(_xorig[iX], _yorig[iY]),
+                                                    geom::Extent2I(_xsize[iX], _ysize[iY])), image::LOCAL);
+            
+            std::pair<double, double> res = makeStatistics(subimg, _bctrl.getStatisticsProperty(),
+                                                                 *_bctrl.getStatisticsControl()).getResult();
+            im(iX, iY) = res.first;
+            var(iX, iY) = res.second;
+        }
+    }
+    // Now set _grid as a transitional measure
+    _grid.resize(_nxSample);
     for (int iX = 0; iX < _nxSample; ++iX) {
         _grid[iX].resize(_nySample);
 
         for (int iY = 0; iY < _nySample; ++iY) {
-            ImageT subimg = ImageT(img, geom::Box2I(geom::Point2I(_xorig[iX], _yorig[iY]),
-                                                    geom::Extent2I(_xsize[iX], _ysize[iY])
-                                                   ), image::LOCAL);
-            
-            std::pair<double, double> res = makeStatistics(subimg, _bctrl.getStatisticsProperty(),
-                                                                 *_bctrl.getStatisticsControl()).getResult();
-            _grid[iX][iY] = res.first;
-            // error = res.second
+            _grid[iX][iY] = im(iX, iY);
         }
     }
 }
