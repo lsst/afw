@@ -439,7 +439,7 @@ class BackgroundTestCase(unittest.TestCase):
             
         delta = 123
         bkd += delta
-        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky + 123)
+        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky + delta)
         bkd -= delta
         self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky)
 
