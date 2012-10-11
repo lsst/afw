@@ -191,7 +191,7 @@ class BackgroundTestCase(unittest.TestCase):
             
             # test getPixel()
             testval = backobj.getPixel(naxis1/2, naxis2/2)
-            self.assertAlmostEqual( testval, centerValue, places=12 )
+            self.assertAlmostEqual(testval/centerValue, 1, places=7)
             self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
             # test getImage() by checking the center pixel
@@ -226,7 +226,7 @@ class BackgroundTestCase(unittest.TestCase):
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = backobj.getPixel(xpix, ypix)
-                self.assertAlmostEqual( testval, rampimg.get(xpix, ypix), 10 )
+                self.assertAlmostEqual(testval/rampimg.get(xpix, ypix), 1, 6)
 
     def getParabolaImage(self, nx, ny):
         parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
@@ -413,8 +413,7 @@ class BackgroundTestCase(unittest.TestCase):
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
-                self.assertAlmostEqual(testval, mean, 10)
-
+                self.assertAlmostEqual(testval/mean, 1)
         
     def testTicket1681OffByOne(self):
         if False:                       # doesn't seem to actually test anything, and writes b?im.fits
