@@ -123,8 +123,8 @@ Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose pro
             ImageT subimg = ImageT(img, geom::Box2I(geom::Point2I(_xorig[iX], _yorig[iY]),
                                                     geom::Extent2I(_xsize[iX], _ysize[iY])), image::LOCAL);
             
-            std::pair<double, double> res = makeStatistics(subimg, _bctrl.getStatisticsProperty(),
-                                                                 *_bctrl.getStatisticsControl()).getResult();
+            std::pair<double, double> res = makeStatistics(subimg, _bctrl.getStatisticsProperty() | ERRORS,
+                                                           *_bctrl.getStatisticsControl()).getResult();
             im(iX, iY) = res.first;
             var(iX, iY) = res.second;
         }
