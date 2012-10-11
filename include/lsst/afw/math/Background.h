@@ -36,7 +36,6 @@
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Interpolate.h"
 
-
 namespace lsst {
 namespace afw {
 namespace math {
@@ -70,8 +69,12 @@ public:
           _undersampleStyle(THROW_EXCEPTION),
           _sctrl(new StatisticsControl(sctrl)),
           _prop(prop) {
-        assert(nxSample > 0);
-        assert(nySample > 0);
+        if (nxSample <= 0 || nySample <= 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              str(boost::format("You must specify at least one point, not %dx%d")
+                                  % nxSample % nySample)
+                             );
+        }
     }
     
     /**
@@ -88,8 +91,12 @@ public:
           _undersampleStyle(THROW_EXCEPTION),
           _sctrl(new StatisticsControl(sctrl)),
           _prop(stringToStatisticsProperty(prop)) {
-        assert(nxSample > 0);
-        assert(nySample > 0);
+        if (nxSample <= 0 || nySample <= 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              str(boost::format("You must specify at least one point, not %dx%d")
+                                  % nxSample % nySample)
+                             );
+        }
     }
     // And now the two old APIs (preserved for backward compatibility)
     /**
@@ -108,8 +115,12 @@ public:
           _undersampleStyle(undersampleStyle),
           _sctrl(new StatisticsControl(sctrl)),
           _prop(prop) {
-        assert(nxSample > 0);
-        assert(nySample > 0);
+        if (nxSample <= 0 || nySample <= 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              str(boost::format("You must specify at least one point, not %dx%d")
+                                  % nxSample % nySample)
+                             );
+        }
     }
     
     /**
@@ -130,13 +141,29 @@ public:
           _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)),
           _sctrl(new StatisticsControl(sctrl)),
           _prop(stringToStatisticsProperty(prop)) {
-        assert(nxSample > 0);
-        assert(nySample > 0);
+        if (nxSample <= 0 || nySample <= 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              str(boost::format("You must specify at least one point, not %dx%d")
+                                  % nxSample % nySample)
+                             );
+        }
     }
 
     virtual ~BackgroundControl() {}
-    void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
-    void setNySample (int nySample) { assert(nySample > 0); _nySample = nySample; }
+    void setNxSample (int nxSample) {
+        if (nxSample <= 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              str(boost::format("nxSample must be position, not %d") % nxSample));
+        }
+        _nxSample = nxSample;
+    }
+    void setNySample (int nySample) {
+        if (nySample <= 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              str(boost::format("nySample must be position, not %d") % nySample));
+        }
+        _nySample = nySample;
+    }
 
     void setInterpStyle (Interpolate::Style const style) { _style = style; }
     // overload to take a string
