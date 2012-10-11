@@ -216,21 +216,24 @@ private:
        math::BackgroundControl bctrl(7, 7);  // number of sub-image squares in {x,y}-dimensions
        bctrl.sctrl.setNumSigmaClip(5.0);     // use 5-sigma clipping for the sub-image means
        math::Background backobj = math::makeBackground(img, bctrl);
-       // get the background at a pixel at i_x,i_y
-       double somepoint = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
        // get a whole background image
-       ImageT back = backobj.getImage(math::Interpolate::NATURAL_SPLINE);
+       Image<PixelT> back = backobj.getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
  * @endcode
  *
+ * \deprecated
+ * there is also
+ * \code
+ // get the background at a pixel at i_x,i_y
+ double someValue = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
+ * \endcode
  */
 class Background {
 public:
-    
     template<typename ImageT>
     explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
                         BackgroundControl const& bgCtrl); ///< Control Parameters
     
-    virtual ~Background() {}
+    ~Background() { }
     
     void operator+=(float const delta);
     void operator-=(float const delta);
