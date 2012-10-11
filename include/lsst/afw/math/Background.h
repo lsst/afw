@@ -283,6 +283,13 @@ public:
     Interpolate::Style getAsUsedInterpStyle() const {
         return _asUsedInterpStyle;
     }
+    /**
+     * Return the image of statistical quantities extracted from the image
+     */
+    CONST_PTR(lsst::afw::image::MaskedImage<float>) getStatsImage() const {
+        return _statsImage;
+    }
+
 private:
     int _imgWidth;                      // img.getWidth()
     int _imgHeight;                     // img.getHeight()
