@@ -37,14 +37,16 @@
         """
         __iadd__(self, float scalar) -> self
         """
-        _mathLib.Background___iadd__(*args)
+        _mathLib.Background___iadd__(*args) # clears thisown as it things args[0] is returned
+        args[0].thisown = True
         return args[0]
 
     def __isub__(*args):
         """
         __isub__(self, float scalar) -> self
         """
-        _mathLib.Background___isub__(*args)
+        _mathLib.Background___isub__(*args) # clears thisown as it things args[0] is returned
+        args[0].thisown = True
         return args[0]
     }
 }
