@@ -147,6 +147,9 @@ double math::Interpolate::interpolate(double const x) {
         return ::gsl_interp_akima;
       case Interpolate::AKIMA_SPLINE_PERIODIC:
         return ::gsl_interp_akima_periodic;
+      case Interpolate::UNKNOWN:
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "I am unable to make an interpolator of type UNKNOWN");
       case Interpolate::NUM_STYLES:
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
                           str(boost::format("You can't get here: style == %") % style));
