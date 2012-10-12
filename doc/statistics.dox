@@ -1,6 +1,9 @@
 // -*- lsst-c++ -*-
+//
+// These are needed to get doxygen to create links to the examples files
+// (we \dontinclude them)
+//
 namespace lsst { namespace afw { namespace math {
-     
     /**
        \page imageStatistics
        \example imageStatistics.cc
@@ -13,7 +16,6 @@ namespace lsst { namespace afw { namespace math {
     
     /**
        \page imageBackground
-       \example imageBackground.cc
+       \example estimateBackground.py
     */
-    
 }}}
