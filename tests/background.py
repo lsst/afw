@@ -236,6 +236,33 @@ class BackgroundTestCase(unittest.TestCase):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
         return parabimg
 
+    def testTicket987(self):
+        """This code used to abort; so the test is that it doesn't"""
+        afwdataDir = eups.productDir("afwdata")
+        if not afwdataDir:
+            print >> sys.stderr, "Skipping testTicket987 as afwdata is not setup"
+            return
+
+        imagePath = os.path.join(afwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci")
+        mimg      = afwImage.MaskedImageF(imagePath)
+        binsize   = 512
+        bctrl     = afwMath.BackgroundControl("NATURAL_SPLINE")
+
+        ###  Adding this line solves the problem  ###
+        # note: by default undersampleStyle is THROW_EXCEPTION 
+        bctrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
+        ################################################
+
+        nx = int(mimg.getWidth()/binsize) + 1
+        ny = int(mimg.getHeight()/binsize) + 1
+
+        #print 'Binning', nx, ny
+        bctrl.setNxSample(nx)
+        bctrl.setNySample(ny)
+        image   = mimg.getImage()
+        backobj = afwMath.makeBackground(image, bctrl)
+        image  -= backobj.getImageF()
+
     def testTicket1781(self):
         # make an unusual-sized image
         nx = 526
