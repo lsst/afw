@@ -190,15 +190,15 @@ void Background::operator-=(float const delta ///< Value to subtract
 /**
  * @brief Method to retrieve the background level at a pixel coord.
  *
- * @param x x-pixel coordinate (column)
- * @param y y-pixel coordinate (row)
- *
  * @warning This can be a very costly function to get a single pixel
  *          If you want an image, use the getImage() method.
  *
  * @return an estimated background at x,y (double)
  */
-double Background::getPixel(Interpolate::Style const interpStyle, int const x, int const y) const
+double Background::getPixel(Interpolate::Style const interpStyle, ///< How to interpolate
+                            int const x, ///< x-pixel coordinate (column)
+                            int const y ///< y-pixel coordinate (row)
+                           ) const
 {
     (void)getImage<double>(interpStyle);        // setup the splines
 
