@@ -636,6 +636,9 @@ void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const 
         _wcsInfo->cd[3] = -_wcsInfo->cd[3];
         _wcsInfo->crpix[1] = -_wcsInfo->crpix[1]+dimensions.getY();
     }
+
+    // tells libwcs to invalidate cached data, since transformation has been modified
+    _wcsInfo->flag = 0;
 }
 
 void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
@@ -685,6 +688,9 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
             _wcsInfo->crpix[1] = -crpx + dimensions.getX();
             break;
     }
+
+    // tells libwcs to invalidate cached data, since transformation has been modified
+    _wcsInfo->flag = 0;
 }
 ///Return the Wcs as a fits header
 PropertyList::Ptr Wcs::getFitsMetadata() const {
@@ -1095,6 +1101,9 @@ void Wcs::shiftReferencePixel(double dx, double dy) {
         _wcsInfo->crpix[0] += dx;
         _wcsInfo->crpix[1] += dy;
     }
+
+    // tells libwcs to invalidate cached data, since transformation has been modified
+    _wcsInfo->flag = 0;
 }
 
 /************************************************************************************************************/
