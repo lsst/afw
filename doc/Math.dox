@@ -1,4 +1,4 @@
-namespace lsst { namespace afw { namespace detection {
+namespace lsst { namespace afw { namespace math {
 /**
  \page Math
  */
@@ -40,4 +40,63 @@ be tidy and return success (unnecessary; unlike C, C++ will return this 0 for yo
 
 \example statistics.cc
  */
+
+/**
+ \page BackgroundExample Background
+
+ \dontinclude estimateBackground.py
+
+Using the Background class; the code's in \link estimateBackground.py\endlink.
+
+The basic strategy is
+ - Measure the properties of the image (e.g. the mean level) -- the Background object
+ - Interpolate the Background to provide an estimate of the background
+
+Start by importing needed packages
+\skip import
+\until afwMath
+Read an Image
+\skip def getImage
+\until return
+\code
+image = getImage()
+\endcode
+
+We'll do the simplest case first.
+Start by creating a BackgroundControl object that's used to configure the algorithm that's
+used to estimate the background levels.
+\skip def simple
+\until bctrl
+Estimate the background levels
+\until makeBackground
+
+We can ask for the resulting heavily-binned image:
+\until getStatsImage
+
+or subtract this background estimate from the input image,
+interpolating our estimated values using a \c NATURAL_SPLINE
+\skipline SPLINE
+
+We actually have a lot more control over the whole process than that.
+We'll start by building a StatisticsControl object, and telling it our desires:
+\skip sctrl
+\until setNanSafe
+(actually I could have set most of those options in the ctor)
+
+We then build the BackgroundControl object, passing it \c sctrl and also my desired statistic.
+\skipline bctrl
+
+Making the Background is the same as before
+\skipline makeBack
+
+We can get the statistics image, and its variance:
+\skipline getStats
+\skipline mtv
+
+Finally, we can interpolate in a number of ways, e.g.
+\skip dict
+\until LINEAR
+
+ */
+ 
 }}}
