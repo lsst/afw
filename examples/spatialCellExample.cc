@@ -150,10 +150,10 @@ readImage() {
 
     afwImage::Image<PixelT>::Ptr im = mi->getImage();
     try {
-        *mi->getImage() -= *afwMath::makeBackground(*im, bctrl).getImage<PixelT>();
+        *mi->getImage() -= *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>();
     } catch(std::exception &) {
         bctrl.setInterpStyle(afwMath::Interpolate::CONSTANT);
-        *mi->getImage() -= *afwMath::makeBackground(*im, bctrl).getImage<PixelT>();
+        *mi->getImage() -= *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>();
     }
     /*
      * Find sources

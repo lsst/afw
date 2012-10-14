@@ -204,6 +204,94 @@ private:
 };
     
 /**
+ * @class BackgroundBase
+ * @brief A virtual base class to evaluate %image background levels
+ */
+class BackgroundBase {
+protected:
+    template<typename ImageT>
+    explicit BackgroundBase(ImageT const& img, ///< Image (or MaskedImage) whose background we want
+                            BackgroundControl const& bgCtrl); ///< Control Parameters
+    
+    virtual ~BackgroundBase() { }
+public:
+    virtual void operator+=(float const delta) = 0;
+    virtual void operator-=(float const delta) = 0;
+    /**
+     * \brief Method to interpolate and return the background for entire image
+     *
+     * \return A boost shared-pointer to an image containing the estimated background
+     */
+    template<typename PixelT>
+    PTR(lsst::afw::image::Image<PixelT>) getImage(
+        Interpolate::Style const interpStyle,                           ///< Style of the interpolation
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION   ///< Behaviour if there are too few points
+                                                 ) const {
+        PixelT disambiguate = 0;
+        return _getImage(interpStyle, undersampleStyle, disambiguate);
+    }
+    /**
+     * \brief Method to interpolate and return the background for entire image
+     *
+     * \return A boost shared-pointer to an image containing the estimated background
+     */
+    template<typename PixelT>
+    PTR(lsst::afw::image::Image<PixelT>) getImage(
+        std::string const &interpStyle, ///< Style of the interpolation
+        std::string const &undersampleStyle="THROW_EXCEPTION"   ///< Behaviour if there are too few points
+                                                 ) const {
+        return getImage<PixelT>(math::stringToInterpStyle(interpStyle),
+                                stringToUndersampleStyle(undersampleStyle));
+    }
+
+    /**
+     * \deprecated New code should specify the interpolation style in getImage, not the ctor
+     */
+    template<typename PixelT>
+    PTR(lsst::afw::image::Image<PixelT>) getImage() const {
+        return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
+    }
+    
+    BackgroundControl getBackgroundControl() const { return _bctrl; }
+    /**
+     * Return the Interpolate::Style that we actually used
+     */
+    Interpolate::Style getAsUsedInterpStyle() const {
+        return _asUsedInterpStyle;
+    }
+protected:
+    int _imgWidth;                      // img.getWidth()
+    int _imgHeight;                     // img.getHeight()
+    int _nxSample;                      // number of sub-image squares in x-dimension
+    int _nySample;                      // number of sub-image squares in y-dimension
+    BackgroundControl _bctrl;           // control info set by user.
+    mutable Interpolate::Style _asUsedInterpStyle; // the style we actually used
+
+    std::vector<double> _xcen;          // x center pix coords of sub images
+    std::vector<double> _ycen;          // y center ...
+    std::vector<int> _xorig;            // x origin pix coords of sub images
+    std::vector<int> _yorig;            // y origin ...
+    std::vector<int> _xsize;            // x size of sub images
+    std::vector<int> _ysize;            // y size ...
+    /*
+     * We want getImage to be present in the base class, but a templated virtual function
+     * is impossible.  So we'll solve the dilemma with a hack: explicitly defined
+     * virtual functions for the image types we need
+     */
+#if !defined(SWIG)
+#define makeBackground_getImage(T) \
+    virtual PTR(lsst::afw::image::Image<T>) _getImage( \
+        Interpolate::Style const interpStyle,                           /* Style of the interpolation */\
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION,   /* Behaviour if there are too few points */\
+        T = 0                                                      /* disambiguate */ \
+                                                   ) const
+    makeBackground_getImage(double) = 0;
+    makeBackground_getImage(float) = 0;
+    makeBackground_getImage(int) = 0;
+#endif
+};
+    
+/**
  * @class Background
  * @brief A class to evaluate %image background levels
  *
@@ -227,16 +315,14 @@ private:
  double someValue = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
  * \endcode
  */
-class Background {
+class Background : public BackgroundBase {
 public:
     template<typename ImageT>
     explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
                         BackgroundControl const& bgCtrl); ///< Control Parameters
     
-    ~Background() { }
-    
-    void operator+=(float const delta);
-    void operator-=(float const delta);
+    virtual void operator+=(float const delta);
+    virtual void operator-=(float const delta);
 
     double getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
@@ -249,40 +335,6 @@ public:
     double getPixel(int const x, int const y) const {
         return getPixel(_bctrl.getInterpStyle(), x, y);
     }
-
-    /**
-     * \deprecated New code should specify the interpolation style in getImage, not the ctor
-     */
-    template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage() const {
-        return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
-    }
-    /**
-     * \brief Method to compute the background for entire image and return a background image
-     *
-     * \return A boost shared-pointer to an image containing the estimated background
-     */
-    template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage(
-        Interpolate::Style const interpStyle,                           ///< Style of the interpolation
-        UndersampleStyle const undersampleStyle=THROW_EXCEPTION   ///< Behaviour if there are too few points
-                                                          ) const;
-    template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage(
-        std::string const &interpStyle, ///< Style of the interpolation
-        std::string const &undersampleStyle="THROW_EXCEPTION"   ///< Behaviour if there are too few points
-                                                 ) const {
-        return getImage<PixelT>(math::stringToInterpStyle(interpStyle),
-                                stringToUndersampleStyle(undersampleStyle));
-    }
-    
-    BackgroundControl getBackgroundControl() const { return _bctrl; }
-    /**
-     * Return the Interpolate::Style that we actually used
-     */
-    Interpolate::Style getAsUsedInterpStyle() const {
-        return _asUsedInterpStyle;
-    }
     /**
      * Return the image of statistical quantities extracted from the image
      */
@@ -291,25 +343,23 @@ public:
     }
 
 private:
-    int _imgWidth;                      // img.getWidth()
-    int _imgHeight;                     // img.getHeight()
-    int _nxSample;                      // number of sub-image squares in x-dimension
-    int _nySample;                      // number of sub-image squares in y-dimension
-    BackgroundControl _bctrl;           // control info set by user.
-    mutable Interpolate::Style _asUsedInterpStyle; // the style we actually used
-
-    std::vector<double> _xcen;          // x center pix coords of sub images
-    std::vector<double> _ycen;          // y center ...
-    std::vector<int> _xorig;            // x origin pix coords of sub images
-    std::vector<int> _yorig;            // y origin ...
-    std::vector<int> _xsize;            // x size of sub images
-    std::vector<int> _ysize;            // y size ...
-
     PTR(lsst::afw::image::MaskedImage<float>) _statsImage;  // statistical properties for the grid of subimages
     mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
 
     void _set_gridcolumns(Interpolate::Style const interpStyle,
                           int const iX, std::vector<int> const& ypix) const;
+#if !defined(SWIG) && defined(makeBackground_getImage)
+    makeBackground_getImage(double);
+    makeBackground_getImage(float);
+    makeBackground_getImage(int);
+#undef makeBackground_getImage
+#endif
+    // Here's the worker function for _getImage (it's templated in Background)
+    template<typename PixelT>
+    PTR(image::Image<PixelT>) doGetImage(
+    Interpolate::Style const interpStyle_,       ///< Style of the interpolation
+        UndersampleStyle const undersampleStyle ///< Behaviour if there are too few points
+        ) const;
 };
 
 /**
@@ -318,8 +368,8 @@ private:
  * cf. std::make_pair()
  */
 template<typename ImageT>
-Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
-    return Background(img, bgCtrl);
+PTR(BackgroundBase) makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
+    return PTR(Background)(new Background(img, bgCtrl));
 }
     
 }}}

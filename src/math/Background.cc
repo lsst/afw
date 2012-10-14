@@ -79,37 +79,8 @@ template<typename ImageT>
 Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
                              BackgroundControl const& bgCtrl ///< Control how the Background is estimated
                             ) :
-    _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
-    _nxSample(bgCtrl.getNxSample()), _nySample(bgCtrl.getNySample()),
-    _bctrl(bgCtrl),
-    _asUsedInterpStyle(Interpolate::UNKNOWN),
-    _xcen(_nxSample),  _ycen(_nySample),
-    _xorig(_nxSample), _yorig(_nySample),
-    _xsize(_nxSample), _ysize(_nySample),
-    _statsImage(PTR(image::MaskedImage<float>)())
+    BackgroundBase(img, bgCtrl), _statsImage(PTR(image::MaskedImage<float>)())
 {
-    if (_imgWidth*_imgHeight == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
-    }
-
-    // Check that an int's large enough to hold the number of pixels
-    assert(_imgWidth*static_cast<double>(_imgHeight) < std::numeric_limits<int>::max());
-
-    // Compute the centers and origins for the cells
-    for (int iX = 0; iX < _nxSample; ++iX) {
-        const int endx = std::min(((iX+1)*_imgWidth + _nxSample/2) / _nxSample, _imgWidth);
-        _xorig[iX] = (iX == 0) ? 0 : _xorig[iX-1] + _xsize[iX-1];
-        _xsize[iX] = endx - _xorig[iX];
-        _xcen [iX] = _xorig[iX] + (0.5 * _xsize[iX]) - 0.5;
-    }
-
-    for (int iY = 0; iY < _nySample; ++iY) {
-        const int endy = std::min(((iY+1)*_imgHeight + _nySample/2) / _nySample, _imgHeight);
-        _yorig[iY] = (iY == 0) ? 0 : _yorig[iY-1] + _ysize[iY-1];
-        _ysize[iY] = endy - _yorig[iY];
-        _ycen [iY] = _yorig[iY] + (0.5 * _ysize[iY]) - 0.5;
-    }
-
     // =============================================================
     // Loop over the cells in the image, computing statistical properties
     // of each cell in turn and using them to set _statsImage
@@ -224,14 +195,14 @@ double Background::getPixel(Interpolate::Style const interpStyle, ///< How to in
 }
 
 template<typename PixelT>
-PTR(image::Image<PixelT>) Background::getImage(
-        Interpolate::Style const interpStyle_,  // Style of the interpolation
+PTR(image::Image<PixelT>) Background::doGetImage(
+        Interpolate::Style const interpStyle_,   // Style of the interpolation
         UndersampleStyle const undersampleStyle // Behaviour if there are too few points
-                                                             ) const
+                                                ) const
 {
-    Interpolate::Style interpStyle = interpStyle_; // not const -- may be modified if REDUCE_INTERP_ORDER
     int const nxSample = _bctrl.getNxSample();
     int const nySample = _bctrl.getNySample();
+    Interpolate::Style interpStyle = interpStyle_; // not const -- may be modified if REDUCE_INTERP_ORDER
     /*
      * Check if the requested nx,ny are sufficient for the requested interpolation style,
      * making suitable adjustments
@@ -341,24 +312,6 @@ PTR(image::Image<PixelT>) Background::getImage(
     return bg;
 }
 
-/************************************************************************************************************/
-/**
- * @brief Conversion function to switch a string to an UndersampleStyle
- */
-UndersampleStyle stringToUndersampleStyle(std::string const &style) {
-    static std::map<std::string, UndersampleStyle> undersampleStrings;
-    if (undersampleStrings.size() == 0) {
-        undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
-        undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
-        undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
-    }
-
-    if (undersampleStrings.find(style) == undersampleStrings.end()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Understample style not defined: "+style);
-    }
-    return undersampleStrings[style];
-}
-
 /*
  * Explicit instantiations
  *
@@ -369,7 +322,15 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
                                           BackgroundControl const& bgCtrl); \
     template Background::Background(image::MaskedImage<TYPE> const& img, \
                                           BackgroundControl const& bgCtrl); \
-    template PTR(image::Image<TYPE>) Background::getImage<TYPE>() const;
+    PTR(image::Image<TYPE>)                                             \
+    Background::_getImage(                                              \
+        Interpolate::Style const interpStyle,                    /* Style of the interpolation */ \
+        UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
+        TYPE                                                     /* disambiguate */    \
+                         ) const                                        \
+    {                                                                   \
+        return Background::doGetImage<TYPE>(interpStyle, undersampleStyle); \
+    }
 
 INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)
