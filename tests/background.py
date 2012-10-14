@@ -136,7 +136,7 @@ class BackgroundTestCase(unittest.TestCase):
         bgCtrl.getStatisticsControl().setNumSigmaClip(3)
         back = afwMath.makeBackground(self.image, bgCtrl)
         
-        self.assertEqual(back.getPixel(xcen, ycen), self.val)
+        self.assertEqual(afwMath.cast_Background(back).getPixel(xcen, ycen), self.val)
 
 
     def testBackgroundTestImages(self):
@@ -190,7 +190,7 @@ class BackgroundTestCase(unittest.TestCase):
             stdevInterp = reqStdev/math.sqrt(pixPerSubimage)
             
             # test getPixel()
-            testval = backobj.getPixel(naxis1/2, naxis2/2)
+            testval = afwMath.cast_Background(backobj).getPixel(naxis1/2, naxis2/2)
             self.assertAlmostEqual(testval/centerValue, 1, places=7)
             self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
@@ -225,7 +225,7 @@ class BackgroundTestCase(unittest.TestCase):
         ypixels = [0, ny/2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(xpix, ypix)
+                testval = afwMath.cast_Background(backobj).getPixel(xpix, ypix)
                 self.assertAlmostEqual(testval/rampimg.get(xpix, ypix), 1, 6)
 
     def getParabolaImage(self, nx, ny):
@@ -309,7 +309,7 @@ class BackgroundTestCase(unittest.TestCase):
         ypixels = [segmentCenter, ny/2, ny - segmentCenter]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
+                testval = afwMath.cast_Background(backobj).getPixel(bctrl.getInterpStyle(), xpix, ypix)
                 realval = parabimg.get(xpix, ypix)
                 #print "Parab: ", xpix, ypix, realval, -(testval - realval)
                 # quadratic terms skew the averages of the subimages and the clipped mean for
@@ -372,7 +372,7 @@ class BackgroundTestCase(unittest.TestCase):
         if display:
             ds9.mtv(mi, frame = 1)
 
-        statsImage = backobj.getStatsImage()
+        statsImage = afwMath.cast_Background(backobj).getStatsImage()
         self.assertEqual(afwGeom.ExtentI(backobj.getBackgroundControl().getNxSample(),
                                          backobj.getBackgroundControl().getNySample()),
                          statsImage.getDimensions())
@@ -447,7 +447,7 @@ class BackgroundTestCase(unittest.TestCase):
         ypixels = [0, ny/2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
+                testval = afwMath.cast_Background(backobj).getPixel(bctrl.getInterpStyle(), xpix, ypix)
                 self.assertAlmostEqual(testval/mean, 1)
         
     def testTicket1681OffByOne(self):

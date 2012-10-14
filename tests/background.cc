@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         // test methods for public stats objects in bgCtrl
         bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
         bgCtrl.getStatisticsControl()->setNumIter(3);
-        math::Background back = math::makeBackground(img, bgCtrl);
-        double const TESTVAL = back.getPixel(xcen, ycen);
+        PTR(math::BackgroundBase) back = math::makeBackground(img, bgCtrl);
+        double const TESTVAL = boost::shared_dynamic_cast<math::Background>(back)->getPixel(xcen, ycen);
         
-        image::Image<float>::Ptr bImage = back.getImage<float>();
+        image::Image<float>::Ptr bImage = back->getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
         
         BOOST_CHECK_EQUAL(TESTVAL, pixVal);
@@ -116,14 +116,14 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
             float stdevSubimg = reqStdev / sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
-            math::Background backobj = math::makeBackground(*img, bctrl);
+            PTR(math::BackgroundBase) backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
-            float testval = static_cast<float>(backobj.getPixel(width/2, height/2));
+            float testval = boost::shared_dynamic_cast<math::Background>(backobj)->getPixel(width/2, height/2);
             BOOST_REQUIRE( fabs(testval - reqMean) < 2.0*stdevSubimg );
 
             // test getImage() by checking the center pixel
-            image::Image<float>::Ptr bimg = backobj.getImage<float>();
+            image::Image<float>::Ptr bimg = backobj->getImage<float>();
             float testImgval = static_cast<float>(*(bimg->xy_at(width/2, height/2)));
             BOOST_REQUIRE( fabs(testImgval - reqMean) < 2.0*stdevSubimg );
             
