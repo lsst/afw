@@ -170,13 +170,12 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
                 int ypix = j*(nY - 1)/(ntest - 1);
                 double testval = backobj.getPixel(xpix, ypix);
                 double realval = *rampimg.xy_at(xpix, ypix);
-                BOOST_CHECK_CLOSE( testval, realval, 1.0e-10 );
+                BOOST_CHECK_CLOSE(testval/realval, 1.0, 2.5e-5);
             }
-        }
-                    
+        }                    
     }
-
 }
+
 BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     {
