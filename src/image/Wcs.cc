@@ -1100,10 +1100,10 @@ void Wcs::shiftReferencePixel(double dx, double dy) {
     if(isInitialized()) {
         _wcsInfo->crpix[0] += dx;
         _wcsInfo->crpix[1] += dy;
-    }
 
-    // tells libwcs to invalidate cached data, since transformation has been modified
-    _wcsInfo->flag = 0;
+	// tells libwcs to invalidate cached data, since transformation has been modified
+	_wcsInfo->flag = 0;
+    }
 }
 
 /************************************************************************************************************/
