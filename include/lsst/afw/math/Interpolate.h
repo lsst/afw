@@ -64,13 +64,13 @@ public:
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
                 std::string style);
     
-    void initialize(std::vector<double> const &x, std::vector<double> const &y,
-                    ::gsl_interp_type const *gslInterpType);
-
     virtual ~Interpolate();
     double interpolate(double const x);
     
 private:
+    void _initialize(std::vector<double> const &x, std::vector<double> const &y,
+                     ::gsl_interp_type const *gslInterpType);
+
     std::vector<double> const &_x;
     std::vector<double> const &_y;
     ::gsl_interp_accel *_acc;

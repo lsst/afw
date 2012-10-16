@@ -44,7 +44,7 @@ namespace ex = lsst::pex::exceptions;
 
 math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
                                ::gsl_interp_type const *gslInterpType) : _x(x), _y(y) {
-    initialize(_x, _y, gslInterpType);
+    _initialize(_x, _y, gslInterpType);
 }
 
 math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
@@ -52,7 +52,7 @@ math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double>
     if (style == Interpolate::CONSTANT) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "CONSTANT interpolation not supported.");
     }
-    initialize(_x, _y, math::styleToGslInterpType(style));
+    _initialize(_x, _y, math::styleToGslInterpType(style));
 }
 
 math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
@@ -60,11 +60,11 @@ math::Interpolate::Interpolate(std::vector<double> const &x, std::vector<double>
     if (style == "CONSTANT") {
         throw LSST_EXCEPT(ex::InvalidParameterException, "CONSTANT interpolation not supported.");
     }
-    initialize(_x, _y, math::stringToGslInterpType(style));
+    _initialize(_x, _y, math::stringToGslInterpType(style));
 }
     
-void math::Interpolate::initialize(std::vector<double> const &x, std::vector<double> const &y,
-                                   ::gsl_interp_type const *gslInterpType) {
+void math::Interpolate::_initialize(std::vector<double> const &x, std::vector<double> const &y,
+                                    ::gsl_interp_type const *gslInterpType) {
     _acc    = ::gsl_interp_accel_alloc();
     if (!_acc) {
         throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "gsl_interp_accel_alloc failed");
