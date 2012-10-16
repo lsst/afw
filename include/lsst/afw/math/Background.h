@@ -25,7 +25,6 @@
 #if !defined(LSST_AFW_MATH_BACKGROUND_H)
 #define LSST_AFW_MATH_BACKGROUND_H
 /**
- * @file Background.h
  * @brief Estimate image backgrounds
  * @ingroup afw
  * @author Steve Bickerton
@@ -204,16 +203,16 @@ private:
 };
     
 /**
- * @class BackgroundBase
+ * @class Background
  * @brief A virtual base class to evaluate %image background levels
  */
-class BackgroundBase {
+class Background {
 protected:
     template<typename ImageT>
-    explicit BackgroundBase(ImageT const& img, ///< Image (or MaskedImage) whose background we want
+    explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
                             BackgroundControl const& bgCtrl); ///< Control Parameters
     
-    virtual ~BackgroundBase() { }
+    virtual ~Background() { }
 public:
     virtual void operator+=(float const delta) = 0;
     virtual void operator-=(float const delta) = 0;
@@ -292,7 +291,7 @@ protected:
 };
     
 /**
- * @class Background
+ * @class BackgroundMI
  * @brief A class to evaluate %image background levels
  *
  * Break an image up into nx*ny sub-images and use a statistical to estimate the background levels in each
@@ -303,9 +302,9 @@ protected:
  * @code
        math::BackgroundControl bctrl(7, 7);  // number of sub-image squares in {x,y}-dimensions
        bctrl.sctrl.setNumSigmaClip(5.0);     // use 5-sigma clipping for the sub-image means
-       math::Background backobj = math::makeBackground(img, bctrl);
+       PTR(math::Background) backobj = math::makeBackground(img, bctrl);
        // get a whole background image
-       Image<PixelT> back = backobj.getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
+       Image<PixelT> back = backobj->getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
  * @endcode
  *
  * \deprecated
@@ -315,10 +314,10 @@ protected:
  double someValue = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
  * \endcode
  */
-class Background : public BackgroundBase {
+class BackgroundMI : public Background {
 public:
     template<typename ImageT>
-    explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
+    explicit BackgroundMI(ImageT const& img, ///< Image (or MaskedImage) whose background we want
                         BackgroundControl const& bgCtrl); ///< Control Parameters
     
     virtual void operator+=(float const delta);
@@ -354,7 +353,7 @@ private:
     makeBackground_getImage(int);
 #undef makeBackground_getImage
 #endif
-    // Here's the worker function for _getImage (it's templated in Background)
+    // Here's the worker function for _getImage (non-virtual; it's templated in BackgroundMI, not Background)
     template<typename PixelT>
     PTR(image::Image<PixelT>) doGetImage(
     Interpolate::Style const interpStyle_,       ///< Style of the interpolation
@@ -368,8 +367,8 @@ private:
  * cf. std::make_pair()
  */
 template<typename ImageT>
-PTR(BackgroundBase) makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
-    return PTR(Background)(new Background(img, bgCtrl));
+PTR(Background) makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
+    return PTR(Background)(new BackgroundMI(img, bgCtrl));
 }
     
 }}}

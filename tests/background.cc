@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         // test methods for public stats objects in bgCtrl
         bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
         bgCtrl.getStatisticsControl()->setNumIter(3);
-        PTR(math::BackgroundBase) back = math::makeBackground(img, bgCtrl);
-        double const TESTVAL = boost::shared_dynamic_cast<math::Background>(back)->getPixel(xcen, ycen);
+        PTR(math::Background) back = math::makeBackground(img, bgCtrl);
+        double const TESTVAL = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
         
         image::Image<float>::Ptr bImage = back->getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
@@ -116,10 +116,10 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
             float stdevSubimg = reqStdev / sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
-            PTR(math::BackgroundBase) backobj = math::makeBackground(*img, bctrl);
+            PTR(math::Background) backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
-            float testval = boost::shared_dynamic_cast<math::Background>(backobj)->getPixel(width/2, height/2);
+            float testval = boost::shared_dynamic_cast<math::BackgroundMI>(backobj)->getPixel(width/2, height/2);
             BOOST_REQUIRE( fabs(testval - reqMean) < 2.0*stdevSubimg );
 
             // test getImage() by checking the center pixel
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         bctrl.setNySample(6);
         bctrl.getStatisticsControl()->setNumSigmaClip(20.0); //something large enough to avoid clipping entirely
         bctrl.getStatisticsControl()->setNumIter(1);
-        math::Background backobj = math::Background(rampimg, bctrl);
+        math::BackgroundMI backobj = math::BackgroundMI(rampimg, bctrl);
 
         // test the values at the corners and in the middle
         int ntest = 3;
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         bctrl.setNySample(24);
         bctrl.getStatisticsControl()->setNumSigmaClip(10.0);
         bctrl.getStatisticsControl()->setNumIter(1);
-        math::Background backobj = math::Background(parabimg, bctrl);
+        math::BackgroundMI backobj = math::BackgroundMI(parabimg, bctrl);
 
         // debug
         //bimg = backobj.getImageD()
