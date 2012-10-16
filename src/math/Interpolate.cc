@@ -118,8 +118,6 @@ Interpolate::InterpolateGslImpl::~InterpolateGslImpl() {
     ::gsl_interp_free(_interp);
     ::gsl_interp_accel_free(_acc);
 }
-    
-/************************************************************************************************************/
 
 /************************************************************************************************************/
 
@@ -127,32 +125,6 @@ Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const
                                Interpolate::Style const style) :
     _gslImpl(new InterpolateGslImpl(x, y, style))
 {
-    if (style == Interpolate::CONSTANT) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "CONSTANT interpolation not supported.");
-    }
-
-    _gslImpl->_acc = ::gsl_interp_accel_alloc();
-    if (!_gslImpl->_acc) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "gsl_interp_accel_alloc failed");
-    }
-    
-    _gslImpl->_interp = ::gsl_interp_alloc(_gslImpl->_interpType, _gslImpl->_y.size());
-    if (!_gslImpl->_interp) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                          (boost::format("Failed to initialise spline for type %s, length %d")
-                           % _gslImpl->_interpType->name % _gslImpl->_y.size()).str());
-
-    }
-    // Note, "x" and "y" are vector<double>; gsl_inter_init requires double[].
-    // The &(x[0]) here is valid because std::vector guarantees that the values are
-    // stored contiguously in memory (for types other than bool); C++0X 23.3.6.1 for
-    // those of you reading along.
-    int const status = ::gsl_interp_init(_gslImpl->_interp, &x[0], &y[0], _gslImpl->_y.size());
-    if (status != 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          str(boost::format("gsl_interp_init failed: %s [%d]")
-                              % ::gsl_strerror(status) % status));
-    }
 }
 
 Interpolate::~Interpolate() {
@@ -224,35 +196,47 @@ Interpolate::Style stringToInterpStyle(std::string const &style)
  */
 Interpolate::Style lookupMaxInterpStyle(int const n) {
     if (n < 1) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "nx,ny must be greater than 0");
-    }
-    if (n > 4) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "n must be greater than 0");
+    } else if (n > 4) {
         return Interpolate::AKIMA_SPLINE;
+    } else {
+        static std::vector<Interpolate::Style> styles;
+        if (styles.empty()) {
+            styles.resize(4);
+            
+            styles[0] = Interpolate::CONSTANT;
+            styles[1] = Interpolate::LINEAR;
+            styles[2] = Interpolate::CUBIC_SPLINE;
+            styles[3] = Interpolate::CUBIC_SPLINE;
+        }
+        return styles[n - 1];
     }
-    
-    std::vector<Interpolate::Style> styles(4);
-    styles[0] = Interpolate::CONSTANT;
-    styles[1] = Interpolate::LINEAR;
-    styles[2] = Interpolate::CUBIC_SPLINE;
-    styles[3] = Interpolate::CUBIC_SPLINE;
-    return styles[n - 1];
 }
 
-    
 /**
  * @brief Get the minimum number of points needed to use the requested interpolation style
  *
  */
 int lookupMinInterpPoints(Interpolate::Style const style) {
-    std::vector<int> minPoints(Interpolate::NUM_STYLES);
-    minPoints[Interpolate::CONSTANT]               = 1;
-    minPoints[Interpolate::LINEAR]                 = 2;
-    minPoints[Interpolate::NATURAL_SPLINE]         = 3;
-    minPoints[Interpolate::CUBIC_SPLINE]           = 3;
-    minPoints[Interpolate::CUBIC_SPLINE_PERIODIC]  = 3;
-    minPoints[Interpolate::AKIMA_SPLINE]           = 5;
-    minPoints[Interpolate::AKIMA_SPLINE_PERIODIC]  = 5;
-    return minPoints[style];
+    static std::vector<int> minPoints;
+    if (minPoints.empty()) {
+        minPoints.resize(Interpolate::NUM_STYLES);
+        minPoints[Interpolate::CONSTANT]               = 1;
+        minPoints[Interpolate::LINEAR]                 = 2;
+        minPoints[Interpolate::NATURAL_SPLINE]         = 3;
+        minPoints[Interpolate::CUBIC_SPLINE]           = 3;
+        minPoints[Interpolate::CUBIC_SPLINE_PERIODIC]  = 3;
+        minPoints[Interpolate::AKIMA_SPLINE]           = 5;
+        minPoints[Interpolate::AKIMA_SPLINE_PERIODIC]  = 5;
+    }
+
+    if (style >= 0 && style < Interpolate::NUM_STYLES) {
+        return minPoints[style];
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
+                          str(boost::format("Style %d is out of range 0..%d")
+                              % style % (Interpolate::NUM_STYLES - 1)));
+    }
 }
 
 /**
