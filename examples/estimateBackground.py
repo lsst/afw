@@ -48,7 +48,7 @@ def simpleBackground(image):
 
     bkgd = afwMath.makeBackground(image, bctrl)
 
-    statsImage = bkgd.getStatsImage()
+    statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
     
     image  -= bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE)
 
@@ -73,7 +73,7 @@ def complexBackground(image):
 
     bkgd = afwMath.makeBackground(image, bctrl)
 
-    statsImage = bkgd.getStatsImage()
+    statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
     ds9.mtv(statsImage.getVariance())
 
     bkdgImages = dict(SPLINE = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE),
@@ -93,7 +93,7 @@ def main():
 
     if display:
         ds9.mtv(image, frame=1)
-        ds9.mtv(bkgd.getStatsImage(), frame=2)
+        ds9.mtv(afwMath.cast_BackgroundMI(bkgd).getStatsImage(), frame=2)
 
 #################################################
 if __name__ == '__main__':
