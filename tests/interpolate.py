@@ -81,7 +81,7 @@ class InterpolateTestCase(unittest.TestCase):
         
         # === test the Spline interpolator =======================
         # specify interp type with the string interface
-        yinterpS = afwMath.Interpolate(self.x, self.y1, "NATURAL_SPLINE")
+        yinterpS = afwMath.Interpolate(self.x, self.y1, afwMath.Interpolate.NATURAL_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
         
         self.assertEqual(youtS, self.y1test)
