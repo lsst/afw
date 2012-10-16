@@ -24,40 +24,17 @@
 #include "lsst/afw/math/Background.h"
 %}
 
-%shared_ptr(lsst::afw::math::BackgroundBase);
 %shared_ptr(lsst::afw::math::Background);
+%shared_ptr(lsst::afw::math::BackgroundMI);
 
 %include "lsst/afw/math/Background.h"
 
 %inline %{
-   PTR(lsst::afw::math::Background)
-   cast_Background(PTR(lsst::afw::math::BackgroundBase) bback) {
-        return boost::shared_dynamic_cast<lsst::afw::math::Background>(bback);
+   PTR(lsst::afw::math::BackgroundMI)
+   cast_BackgroundMI(PTR(lsst::afw::math::Background) bback) {
+        return boost::shared_dynamic_cast<lsst::afw::math::BackgroundMI>(bback);
     }
 %}
-%extend lsst::afw::math::BackgroundBase {
-    %pythoncode {
-    #
-    # Deal with incorrect swig wrappers for C++ "void operator op=()"
-    #
-    def __iadd__(*args):
-        """
-        __iadd__(self, float scalar) -> self
-        """
-        _mathLib.BackgroundBase___iadd__(*args) # clears thisown as it things args[0] is returned
-        args[0].thisown = True
-        return args[0]
-
-    def __isub__(*args):
-        """
-        __isub__(self, float scalar) -> self
-        """
-        _mathLib.BackgroundBase___isub__(*args) # clears thisown as it things args[0] is returned
-        args[0].thisown = True
-        return args[0]
-    }
-}
-
 %extend lsst::afw::math::Background {
     %pythoncode {
     #
@@ -81,12 +58,35 @@
     }
 }
 
+%extend lsst::afw::math::BackgroundMI {
+    %pythoncode {
+    #
+    # Deal with incorrect swig wrappers for C++ "void operator op=()"
+    #
+    def __iadd__(*args):
+        """
+        __iadd__(self, float scalar) -> self
+        """
+        _mathLib.BackgroundMI___iadd__(*args) # clears thisown as it things args[0] is returned
+        args[0].thisown = True
+        return args[0]
+
+    def __isub__(*args):
+        """
+        __isub__(self, float scalar) -> self
+        """
+        _mathLib.BackgroundMI___isub__(*args) # clears thisown as it things args[0] is returned
+        args[0].thisown = True
+        return args[0]
+    }
+}
+
 %define %declareBack(PIXTYPE, SUFFIX)
     %template(makeBackground) lsst::afw::math::makeBackground<lsst::afw::image::Image<PIXTYPE> >;
     %template(makeBackground) lsst::afw::math::makeBackground<lsst::afw::image::MaskedImage<PIXTYPE> >;
-    %template(Background ## SUFFIX) lsst::afw::math::Background::Background<lsst::afw::image::Image<PIXTYPE> >;
-    %template(getImage ## SUFFIX) lsst::afw::math::BackgroundBase::getImage<PIXTYPE>;
+    %template(BackgroundMI ## SUFFIX) lsst::afw::math::BackgroundMI::BackgroundMI<lsst::afw::image::Image<PIXTYPE> >;
     %template(getImage ## SUFFIX) lsst::afw::math::Background::getImage<PIXTYPE>;
+    %template(getImage ## SUFFIX) lsst::afw::math::BackgroundMI::getImage<PIXTYPE>;
 %enddef
 
 %declareBack(double, D)
