@@ -70,7 +70,8 @@ used to estimate the background levels.
 Estimate the background levels
 \until makeBackground
 
-We can ask for the resulting heavily-binned image:
+We can ask for the resulting heavily-binned image (but only after casting the base class Background
+to one that includes such an image, a BackgroundMI)
 \until getStatsImage
 
 or subtract this background estimate from the input image,
