@@ -322,9 +322,9 @@ def addField(self, field, type=None, doc="", units="", size=None):
         try:
             prefix, suffix = __builtins__.type(field).__name__.split("_")
         except Exception:
-            raise TypeError("First argument to Schema.find must be a Field if 'type' is not given.")
+            raise TypeError("First argument to Schema.addField must be a Field if 'type' is not given.")
         if prefix != "Field":
-            raise TypeError("First argument to Schema.find must be a Field if 'type' is not given.")
+            raise TypeError("First argument to Schema.addField must be a Field if 'type' is not given.")
         attr = "_addField_" + suffix
         method = getattr(self, attr)
         return method(field)
