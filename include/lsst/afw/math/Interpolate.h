@@ -23,18 +23,17 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * @brief Interpolate values for a set of x,y vector<>s
- * @ingroup afw
- * @author Steve Bickerton
- */
 #include "lsst/base.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
 
+ /**
+ * @brief Interpolate values for a set of x,y vector<>s
+ * @ingroup afw
+ * @author Steve Bickerton
+ */
 class Interpolate {
 public:
     enum Style {
@@ -48,33 +47,31 @@ public:
         AKIMA_SPLINE_PERIODIC = 6,
         NUM_STYLES
     };
-    
-    virtual ~Interpolate() {}
-    virtual double interpolate(double const x) const;
-    
-private:
+
     friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
-
-    Interpolate(std::vector<double> const &x, std::vector<double> const &y, Interpolate::Style const style);
     
-    struct InterpolateGslImpl;
-    PTR(InterpolateGslImpl) _gslImpl;
+    virtual ~Interpolate() {}
+    virtual double interpolate(double const x) const = 0;
+protected:
+    /**
+     * Base class ctor
+     */
+    Interpolate(std::vector<double> const &x, ///< the x-values of points
+                std::vector<double> const &y, ///< the values at x[]
+                Interpolate::Style const style=UNKNOWN ///< desired interpolator
+               ) : _x(x), _y(y), _style(style) {}
+
+    std::vector<double> const _x;
+    std::vector<double> const _y;
+    Interpolate::Style const _style;
 };
 
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
     
 Interpolate::Style stringToInterpStyle(std::string const &style);
-
-/**
- * @brief Get the highest order Interpolation::Style available for 'n' points.
- */
 Interpolate::Style lookupMaxInterpStyle(int const n);
-    
-/**
- * @brief Get the minimum number of points needed to use the requested interpolation style
- */
 int lookupMinInterpPoints(Interpolate::Style const style);
         
 }}}

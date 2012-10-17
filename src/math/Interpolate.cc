@@ -41,6 +41,7 @@ namespace lsst {
 namespace ex = pex::exceptions;
 namespace afw {
 namespace math {
+
 namespace {
 /*
  * Conversion function to switch an Interpolate::Style to a gsl_interp_type.
@@ -72,23 +73,26 @@ styleToGslInterpType(Interpolate::Style const style)
     }
 }
 }
+    
+class InterpolateGsl : public Interpolate {
+    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                            Interpolate::Style const style);
+public:
+    virtual ~InterpolateGsl();
+    virtual double interpolate(double const x) const;
+private:
+    InterpolateGsl(std::vector<double> const &x, std::vector<double> const &y, Interpolate::Style const style);
 
-struct Interpolate::InterpolateGslImpl {
-    InterpolateGslImpl(std::vector<double> const &x, std::vector<double> const &y,
-                       Interpolate::Style const style);
-    ~InterpolateGslImpl();
-
-    std::vector<double> const &_x;
-    std::vector<double> const &_y;
     ::gsl_interp_type const *_interpType;
     ::gsl_interp_accel *_acc;
     ::gsl_interp *_interp;
 };
 
-Interpolate::InterpolateGslImpl::InterpolateGslImpl(std::vector<double> const &x,
-                                                    std::vector<double> const &y,
-                                                    Interpolate::Style const style) :
-    _x(x), _y(y), _interpType(styleToGslInterpType(style))
+InterpolateGsl::InterpolateGsl(std::vector<double> const &x, ///< the x-values of points
+                               std::vector<double> const &y, ///< the values at x[]
+                               Interpolate::Style const style ///< desired interpolator
+                              ) :
+    Interpolate(x, y), _interpType(styleToGslInterpType(style))
 {
     _acc = ::gsl_interp_accel_alloc();
     if (!_acc) {
@@ -114,31 +118,15 @@ Interpolate::InterpolateGslImpl::InterpolateGslImpl(std::vector<double> const &x
     }
 }
 
-Interpolate::InterpolateGslImpl::~InterpolateGslImpl() {
+InterpolateGsl::~InterpolateGsl() {
     ::gsl_interp_free(_interp);
     ::gsl_interp_accel_free(_acc);
 }
 
 /************************************************************************************************************/
 
-PTR(Interpolate) makeInterpolate(std::vector<double> const &x,
-                                 std::vector<double> const &y,
-                                 Interpolate::Style const style)
+double InterpolateGsl::interpolate(double const xInterp) const
 {
-    return PTR(Interpolate)(new Interpolate(x, y, style));
-}
-
-Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                               Interpolate::Style const style) :
-    _gslImpl(new InterpolateGslImpl(x, y, style))
-{
-}
-
-double Interpolate::interpolate(double const xInterp) const
-{
-    const std::vector<double> &_x = _gslImpl->_x;
-    const std::vector<double> &_y = _gslImpl->_y;
-
     // New GSL versions refuse to extrapolate.
     // gsl_interp_init() requires x to be ordered, so can just check
     // the array endpoints for out-of-bounds.
@@ -161,21 +149,22 @@ double Interpolate::interpolate(double const xInterp) const
             y0 = _y.back();
         }
         // first derivative at endpoint
-        double d = ::gsl_interp_eval_deriv(_gslImpl->_interp, &_x[0], &_y[0], x0, _gslImpl->_acc);
+        double d = ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], x0, _acc);
         // second derivative at endpoint
-        double d2 = ::gsl_interp_eval_deriv2(_gslImpl->_interp, &_x[0], &_y[0], x0, _gslImpl->_acc);
+        double d2 = ::gsl_interp_eval_deriv2(_interp, &_x[0], &_y[0], x0, _acc);
         return y0 + (xInterp - x0)*d + 0.5*(xInterp - x0)*(xInterp - x0)*d2;
     }
     assert(xInterp >= _x.front());
     assert(xInterp <= _x.back());
-    return ::gsl_interp_eval(_gslImpl->_interp, &_x[0], &_y[0], xInterp, _gslImpl->_acc);
+    return ::gsl_interp_eval(_interp, &_x[0], &_y[0], xInterp, _acc);
 }
     
 /**
  * @brief Conversion function to switch a string to an Interpolate::Style.
  *
  */
-Interpolate::Style stringToInterpStyle(std::string const &style)
+Interpolate::Style stringToInterpStyle(std::string const &style ///< desired type of interpolation
+                                      )
 {
     static std::map<std::string, Interpolate::Style> gslInterpTypeStrings;
     if (gslInterpTypeStrings.empty()) {
@@ -196,9 +185,9 @@ Interpolate::Style stringToInterpStyle(std::string const &style)
     
 /**
  * @brief Get the highest order Interpolation::Style available for 'n' points.
- *
  */
-Interpolate::Style lookupMaxInterpStyle(int const n) {
+Interpolate::Style lookupMaxInterpStyle(int const n ///< Number of points
+                                       ) {
     if (n < 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "n must be greater than 0");
     } else if (n > 4) {
@@ -219,9 +208,9 @@ Interpolate::Style lookupMaxInterpStyle(int const n) {
 
 /**
  * @brief Get the minimum number of points needed to use the requested interpolation style
- *
  */
-int lookupMinInterpPoints(Interpolate::Style const style) {
+int lookupMinInterpPoints(Interpolate::Style const style ///< The style in question
+                         ) {
     static std::vector<int> minPoints;
     if (minPoints.empty()) {
         minPoints.resize(Interpolate::NUM_STYLES);
@@ -241,6 +230,18 @@ int lookupMinInterpPoints(Interpolate::Style const style) {
                           str(boost::format("Style %d is out of range 0..%d")
                               % style % (Interpolate::NUM_STYLES - 1)));
     }
+}
+
+/************************************************************************************************************/
+/**
+ * A factory function to make Interpolate objects
+ */
+PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values of points
+                                 std::vector<double> const &y, ///< the values at x[]
+                                 Interpolate::Style const style ///< desired interpolator
+                                )
+{
+    return PTR(Interpolate)(new InterpolateGsl(x, y, style));
 }
 
 }}}
