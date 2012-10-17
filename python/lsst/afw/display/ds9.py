@@ -568,7 +568,9 @@ flush = lambda : cmdBuffer.flush(silent=True)
 
 class Buffering(object):
     """A class intended to be used with python's with statement:
-
+E.g.
+    with ds9.Buffering():
+        ds9.dot("+", xc, yc)
     """
     def __enter__(self):
         buffer(True)
