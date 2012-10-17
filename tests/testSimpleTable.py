@@ -401,7 +401,12 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(outputRecord1.getId(), inputRecord.getId())
         outputRecord2.assign(inputRecord, mapper2)
         self.assertNotEqual(outputRecord2.getId(), inputRecord.getId())
-        
+
+    def testTicket2393(self):
+        schema = lsst.afw.table.Schema()
+        k = schema.addField(lsst.afw.table.Field[int]("i", "doc for i"))
+        item = schema.find("i")
+        self.assertEqual(k, item.key)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
