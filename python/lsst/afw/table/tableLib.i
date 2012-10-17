@@ -320,7 +320,7 @@ def find(self, k):
 def addField(self, field, type=None, doc="", units="", size=None):
     if type is None:
         try:
-            prefix, suffix = __builtins__.type(field).__name__.split("_")
+            prefix, suffix = __builtins__['type'](field).__name__.split("_")
         except Exception:
             raise TypeError("First argument to Schema.addField must be a Field if 'type' is not given.")
         if prefix != "Field":
