@@ -128,10 +128,10 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
         cullNan(_ycen, _grid, ycenTmp, gridTmp);
 
         try {
-            Interpolate intobj(ycenTmp, gridTmp, interpStyle);
+            PTR(Interpolate) intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
             
             for (int iY = 0; iY < _imgHeight; ++iY) {
-                _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
+                _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
             }
         } catch(ex::Exception &e) {
             LSST_EXCEPT_ADD(e, "setting _gridcolumns");
@@ -181,8 +181,8 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
 
     if (interpStyle != Interpolate::CONSTANT) {
         try {
-            Interpolate intobj(_xcen, bg_x, interpStyle);
-            return static_cast<double>(intobj.interpolate(x));
+            PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
+            return static_cast<double>(intobj->interpolate(x));
         } catch(ex::Exception &e) {
             LSST_EXCEPT_ADD(e, "in getPixel()");
             throw e;
@@ -286,12 +286,12 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         
         if (interpStyle != Interpolate::CONSTANT) {
             try {
-                Interpolate intobj(_xcen, bg_x, interpStyle);
+                PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
                 // fill the image with interpolated objects.
                 int iX = 0;
                 for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
                          end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                    *ptr = static_cast<PixelT>(intobj.interpolate(xpix[iX]));
+                    *ptr = static_cast<PixelT>(intobj->interpolate(xpix[iX]));
                 }
             } catch(ex::Exception &e) {
                 LSST_EXCEPT_ADD(e, "Interpolating in x");

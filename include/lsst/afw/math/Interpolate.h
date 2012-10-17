@@ -49,16 +49,21 @@ public:
         NUM_STYLES
     };
     
-    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                Interpolate::Style const style=AKIMA_SPLINE);
-    
-    virtual ~Interpolate();
-    double interpolate(double const x);
+    virtual ~Interpolate() {}
+    virtual double interpolate(double const x) const;
     
 private:
+    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                            Interpolate::Style const style);
+
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y, Interpolate::Style const style);
+    
     struct InterpolateGslImpl;
     PTR(InterpolateGslImpl) _gslImpl;
 };
+
+PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                 Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
     
 Interpolate::Style stringToInterpStyle(std::string const &style);
 
@@ -71,12 +76,6 @@ Interpolate::Style lookupMaxInterpStyle(int const n);
  * @brief Get the minimum number of points needed to use the requested interpolation style
  */
 int lookupMinInterpPoints(Interpolate::Style const style);
-    
-/**
- * @brief Get the minimum number of points needed to use the requested interpolation style
- * Overload of lookupMinInterpPoints() which takes a string
- */
-int lookupMinInterpPoints(std::string const style);
         
 }}}
                      

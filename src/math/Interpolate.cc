@@ -121,16 +121,20 @@ Interpolate::InterpolateGslImpl::~InterpolateGslImpl() {
 
 /************************************************************************************************************/
 
+PTR(Interpolate) makeInterpolate(std::vector<double> const &x,
+                                 std::vector<double> const &y,
+                                 Interpolate::Style const style)
+{
+    return PTR(Interpolate)(new Interpolate(x, y, style));
+}
+
 Interpolate::Interpolate(std::vector<double> const &x, std::vector<double> const &y,
                                Interpolate::Style const style) :
     _gslImpl(new InterpolateGslImpl(x, y, style))
 {
 }
 
-Interpolate::~Interpolate() {
-}
-
-double Interpolate::interpolate(double const xInterp)
+double Interpolate::interpolate(double const xInterp) const
 {
     const std::vector<double> &_x = _gslImpl->_x;
     const std::vector<double> &_y = _gslImpl->_y;
@@ -237,16 +241,6 @@ int lookupMinInterpPoints(Interpolate::Style const style) {
                           str(boost::format("Style %d is out of range 0..%d")
                               % style % (Interpolate::NUM_STYLES - 1)));
     }
-}
-
-/**
- * @brief Get the minimum number of points needed to use the requested interpolation style
- *
- * Overload of lookupMinInterpPoints() which takes a string
- *
- */
-int lookupMinInterpPoints(std::string const style) {
-    return lookupMinInterpPoints(stringToInterpStyle(style));
 }
 
 }}}
