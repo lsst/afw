@@ -160,7 +160,8 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         bctrl.setNySample(6);
         bctrl.getStatisticsControl()->setNumSigmaClip(20.0); //something large enough to avoid clipping entirely
         bctrl.getStatisticsControl()->setNumIter(1);
-        math::BackgroundMI backobj = math::BackgroundMI(rampimg, bctrl);
+        PTR(math::BackgroundMI) backobj =
+            boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(rampimg, bctrl));
 
         // test the values at the corners and in the middle
         int ntest = 3;
@@ -168,7 +169,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
             int xpix = i*(nX - 1)/(ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j*(nY - 1)/(ntest - 1);
-                double testval = backobj.getPixel(xpix, ypix);
+                double testval = backobj->getPixel(xpix, ypix);
                 double realval = *rampimg.xy_at(xpix, ypix);
                 BOOST_CHECK_CLOSE(testval/realval, 1.0, 2.5e-5);
             }
@@ -202,22 +203,16 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         bctrl.setNySample(24);
         bctrl.getStatisticsControl()->setNumSigmaClip(10.0);
         bctrl.getStatisticsControl()->setNumIter(1);
-        math::BackgroundMI backobj = math::BackgroundMI(parabimg, bctrl);
+        PTR(math::BackgroundMI) backobj =
+            boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(parabimg, bctrl));
 
-        // debug
-        //bimg = backobj.getImageD()
-        //ds9.mtv(parabimg)
-        //ds9.mtv(bimg, frame=1)
-        //parabimg.writeFits("a.fits")
-        //bimg.writeFits("b.fits")
-
-        // check the values at the corners and int he middle
+        // check the values at the corners and in the middle
         int const ntest = 3;
         for (int i = 0; i < ntest; ++i) {
             int xpix = i*(nX - 1)/(ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j*(nY - 1)/(ntest - 1);
-                double testval = backobj.getPixel(xpix, ypix);
+                double testval = backobj->getPixel(xpix, ypix);
                 double realval = *parabimg.xy_at(xpix, ypix);
                 //print xpix, ypix, testval, realval
                 // quadratic terms skew the averages of the subimages and the clipped mean for
