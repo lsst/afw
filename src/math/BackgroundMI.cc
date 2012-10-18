@@ -109,34 +109,25 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
 
     _gridcolumns[iX].resize(_imgHeight);
 
-    if (interpStyle == Interpolate::CONSTANT) {
-        // A constant only makes sense when n[xy]Sample are both 1, but this should still work for other grid
-        // sizes too.
+    // Set _grid as a transitional measure
+    std::vector<double> _grid(_nySample);
+    std::copy(im.col_begin(iX), im.col_end(iX), _grid.begin());
+    
+    // remove nan from the grid values before computing columns
+    // if we do it here (ie. in set_gridcolumns), it should
+    // take care of all future occurrences, so we don't need to do this elsewhere
+    std::vector<double> ycenTmp, gridTmp;
+    cullNan(_ycen, _grid, ycenTmp, gridTmp);
+    
+    try {
+        PTR(Interpolate) intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
+        
         for (int iY = 0; iY < _imgHeight; ++iY) {
-            int const iGridY = (_nySample*iY)/_imgHeight;
-            _gridcolumns[iX][iY] = im(iX, iGridY);
+            _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
         }
-    } else {
-        // Set _grid as a transitional measure
-        std::vector<double> _grid(_nySample);
-        std::copy(im.col_begin(iX), im.col_end(iX), _grid.begin());
-
-        // remove nan from the grid values before computing columns
-        // if we do it here (ie. in set_gridcolumns), it should
-        // take care of all future occurrences, so we don't need to do this elsewhere
-        std::vector<double> ycenTmp, gridTmp;
-        cullNan(_ycen, _grid, ycenTmp, gridTmp);
-
-        try {
-            PTR(Interpolate) intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
-            
-            for (int iY = 0; iY < _imgHeight; ++iY) {
-                _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
-            }
-        } catch(ex::Exception &e) {
-            LSST_EXCEPT_ADD(e, "setting _gridcolumns");
-            throw e;
-        }
+    } catch(ex::Exception &e) {
+        LSST_EXCEPT_ADD(e, "setting _gridcolumns");
+        throw e;
     }
 }
 
@@ -179,19 +170,13 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
         bg_x[iX] = _gridcolumns[iX][y];
     }
 
-    if (interpStyle != Interpolate::CONSTANT) {
-        try {
-            PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
-            return static_cast<double>(intobj->interpolate(x));
-        } catch(ex::Exception &e) {
-            LSST_EXCEPT_ADD(e, "in getPixel()");
-            throw e;
-        }
-    } else {
-        int const iGridX = (_nxSample * x) / _imgWidth;
-        return static_cast<double>(_gridcolumns[iGridX][y]);
+    try {
+        PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
+        return static_cast<double>(intobj->interpolate(x));
+    } catch(ex::Exception &e) {
+        LSST_EXCEPT_ADD(e, "in getPixel()");
+        throw e;
     }
-    
 }
 
 template<typename PixelT>
@@ -284,29 +269,18 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
             bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]);
         }
         
-        if (interpStyle != Interpolate::CONSTANT) {
-            try {
-                PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
-                // fill the image with interpolated objects.
-                int iX = 0;
-                for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
-                         end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                    *ptr = static_cast<PixelT>(intobj->interpolate(xpix[iX]));
-                }
-            } catch(ex::Exception &e) {
-                LSST_EXCEPT_ADD(e, "Interpolating in x");
-                throw e;
-            }
-        } else {
+        try {
+            PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
             // fill the image with interpolated objects.
             int iX = 0;
             for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
                      end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                int const iGridX = (nxSample * iX) / _imgWidth;
-                *ptr = static_cast<PixelT>(_gridcolumns[iGridX][iY]);
+                *ptr = static_cast<PixelT>(intobj->interpolate(xpix[iX]));
             }
+        } catch(ex::Exception &e) {
+            LSST_EXCEPT_ADD(e, "Interpolating in x");
+            throw e;
         }
-
     }
 
     return bg;
