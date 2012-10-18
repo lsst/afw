@@ -57,10 +57,12 @@ protected:
     /**
      * Base class ctor
      */
-    Interpolate(std::vector<double> const &x, ///< the x-values of points
+    Interpolate(std::vector<double> const &x, ///< the ordinates of points
                 std::vector<double> const &y, ///< the values at x[]
                 Interpolate::Style const style=UNKNOWN ///< desired interpolator
                ) : _x(x), _y(y), _style(style) {}
+    Interpolate(std::pair<std::vector<double>, std::vector<double> > const xy,
+                Interpolate::Style const style=UNKNOWN);
 
     std::vector<double> const _x;
     std::vector<double> const _y;
