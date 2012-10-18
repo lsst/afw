@@ -28,6 +28,7 @@
  * @author Steve Bickerton
  */
 #include <limits>
+#include <algorithm>
 #include <map>
 #include "boost/format.hpp"
 #include "boost/shared_ptr.hpp"
@@ -42,6 +43,95 @@ namespace ex = pex::exceptions;
 namespace afw {
 namespace math {
 
+/************************************************************************************************************/
+    
+namespace {
+    std::pair<std::vector<double>, std::vector<double> >
+    recenter(std::vector<double> const &x,
+             std::vector<double> const &y)
+    {
+        if (x.size() != y.size()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              str(boost::format("Dimensions of x and y must match; %ul != %ul")
+                                  % x.size() % y.size()));
+        }
+        unsigned int const len = x.size();
+        if (len == 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "You must provide at least 1 point");
+        } else if (len == 1) {
+            return std::make_pair(x, y);
+        }
+
+        std::vector<double> recentered_x(len + 1);
+        std::vector<double> recentered_y(len + 1);
+
+        int j = 0; 
+        recentered_x[j] = 0.5*(3*x[0] - x[1]);
+        recentered_y[j] = y[0];
+
+        for (unsigned int i = 0; i < x.size(); ++i) {
+            ++j;
+            recentered_x[j] = 0.5*(x[i] + x[i + 1]);
+            recentered_y[j] = 0.5*(y[i] + y[i + 1]);
+        }
+        recentered_x[j] = 0.5*(3*x[len - 1] - x[len - 2]);
+        recentered_y[j] = y[len - 1];
+
+        return std::make_pair(recentered_x, recentered_y);        
+    }
+}
+
+class InterpolateConstant : public Interpolate {
+    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                            Interpolate::Style const style);
+public:
+    virtual ~InterpolateConstant() {}
+    virtual double interpolate(double const x) const;
+private:
+    InterpolateConstant(std::vector<double> const &x, ///< the x-values of points
+                        std::vector<double> const &y, ///< the values at x[]
+                        Interpolate::Style const style ///< desired interpolator
+                       ) :
+        Interpolate(recenter(x, y)), _old(_x.begin()) {}
+    mutable std::vector<double>::const_iterator _old; // last position we found xInterp at
+};
+    
+    
+double InterpolateConstant::interpolate(double const xInterp) const
+{
+    // We start by searching up from _old
+    if (xInterp < *_old) {
+        if (_old == _x.begin()) {
+            return _y[0];
+        }
+        _old = _x.begin();
+    } else {                            // see if we're still in the same interval
+        if (_old < _x.end() - 1 and xInterp < *(_old + 1)) {
+            return _y[_old - _x.begin()];
+        }
+    }
+    // No.  So search up from _old
+    std::vector<double>::const_iterator low = std::upper_bound(_old, _x.end(), xInterp);
+    //
+    // Did that work?
+    if (low == _old && _old != _x.begin()) {
+        // No.  Sigh.  Search the entire range.
+        low = std::upper_bound(_x.begin(), low + 1, xInterp);
+    }
+    
+    if (low == _x.end()) {
+        return _y[_y.size() - 1];
+    } else if (low == _x.begin()) {
+        return _y[0];
+    } else {
+        --low;
+        _old = low;
+        return _y[low - _x.begin()];
+    }
+}
+
+/************************************************************************************************************/
 namespace {
 /*
  * Conversion function to switch an Interpolate::Style to a gsl_interp_type.
@@ -123,8 +213,6 @@ InterpolateGsl::~InterpolateGsl() {
     ::gsl_interp_accel_free(_acc);
 }
 
-/************************************************************************************************************/
-
 double InterpolateGsl::interpolate(double const xInterp) const
 {
     // New GSL versions refuse to extrapolate.
@@ -158,7 +246,8 @@ double InterpolateGsl::interpolate(double const xInterp) const
     assert(xInterp <= _x.back());
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], xInterp, _acc);
 }
-    
+
+/************************************************************************************************************/
 /**
  * @brief Conversion function to switch a string to an Interpolate::Style.
  *
@@ -234,6 +323,23 @@ int lookupMinInterpPoints(Interpolate::Style const style ///< The style in quest
 
 /************************************************************************************************************/
 /**
+ * Base class ctor.  Note that we should use rvalue references when
+ * available as the vectors in xy will typically be movable (although the
+ * returned-value-optimisation might suffice for the cases we care about)
+ *
+ * \note this is here, not in the .h file, so as to permit the compiler
+ * to avoid copying those vectors
+ */
+Interpolate::Interpolate(
+        std::pair<std::vector<double>, std::vector<double> > const xy, ///< pair (x,y) where
+        /// x are the ordinates of points and y are the values at x[]
+        Interpolate::Style const style ///< desired interpolator
+                        ) : _x(xy.first), _y(xy.second), _style(style)
+{
+    ;
+}
+
+/**
  * A factory function to make Interpolate objects
  */
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values of points
@@ -241,7 +347,12 @@ PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values
                                  Interpolate::Style const style ///< desired interpolator
                                 )
 {
-    return PTR(Interpolate)(new InterpolateGsl(x, y, style));
+    switch (style) {
+      case Interpolate::CONSTANT:
+        return PTR(Interpolate)(new InterpolateConstant(x, y, style));
+      default:                            // use GSL
+        return PTR(Interpolate)(new InterpolateGsl(x, y, style));
+    }
 }
 
 }}}
