@@ -786,7 +786,7 @@ using boost::serialization::make_nvp;
      * where:
      * * Tn(x) is the nth Chebyshev function of the first kind:
      *      T0(x) = 1
-     *      T1(x) = 2
+     *      T1(x) = x
      *      Tn+1(x) = 2xTn(x) + Tn-1(x)
      * * x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
      * * y' is y offset and scaled to range [-1, 1] as y ranges over [minY, maxY]

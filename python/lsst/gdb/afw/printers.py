@@ -701,7 +701,7 @@ try:
         def to_string(self):
             return "Background(%dx%d) %s %s" % (
                 self.val["_imgWidth"], self.val["_imgHeight"],
-                self.val["_grid"], self.val["_bctrl"])
+                self.val["_bctrl"])
 
     class BackgroundControlPrinter(object):
         "Print a BackgroundControl"
