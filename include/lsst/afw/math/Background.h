@@ -319,6 +319,9 @@ protected:
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, = 0, LSST_makeBackground_getImage_types)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, = 0, LSST_makeBackground_getApproximate_types)
 #endif
+private:
+    Background(Background const&);
+    Background& operator=(Background const&);    
 };
     
 /**
