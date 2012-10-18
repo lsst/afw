@@ -67,6 +67,9 @@ protected:
     std::vector<double> const _x;
     std::vector<double> const _y;
     Interpolate::Style const _style;
+private:
+    Interpolate(Interpolate const&);
+    Interpolate& operator=(Interpolate const&);
 };
 
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
