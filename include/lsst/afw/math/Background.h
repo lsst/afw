@@ -288,6 +288,9 @@ protected:
     makeBackground_getImage(float) = 0;
     makeBackground_getImage(int) = 0;
 #endif
+private:
+    Background(Background const&);
+    Background& operator=(Background const&);    
 };
     
 /**
