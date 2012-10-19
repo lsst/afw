@@ -661,6 +661,46 @@ class ConvolveTestCase(unittest.TestCase):
                 maxInterpDist = maxInterpDist,
                 rtol = rtol)
 
+    def testConvolveMask(self):
+        """Test convolution with a thresholded Mask (#2400)
+        """
+        kSize = 13
+        threshold = 0.5
+
+        kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, math.radians(45))
+        kernel = afwMath.AnalyticKernel(kSize, kSize, kFunc)
+        
+        im = afwImage.ImageD(kernel.getDimensions())
+        kernel.computeImage(im, True)
+        # Set values in the Kernel which are below threshold to 0
+        imarray = im.getArray()
+        im /= numpy.max(imarray)
+        imarray[numpy.where(imarray < threshold)] = 0.0
+        del imarray
+        # Build a thresholded Kernel
+        kernel = afwMath.FixedKernel(im)
+        
+        msk = afwImage.MaskU(51, 51)
+        msk.set(25, 25, 0x1)
+        msk.set(24, 27, 0x2)
+        if display:
+            ds9.mtv(msk, frame=0)
+        # Do the convolution
+        cmsk = msk.Factory(msk.getDimensions())
+        afwMath.convolve(cmsk, msk, kernel)
+
+        if display:
+            ds9.mtv(cmsk, frame=1)
+
+        EDGE = msk.getPlaneBitMask("EDGE")
+        for x, y, val in [(0, 0, EDGE),
+                          (5, 5, EDGE),
+                          (6, 6, 0x0),
+                          (22, 24, 0x0), (22, 25, 0x2), (23, 24, 0x1), (23, 25, 0x3),
+                          (26, 27, 0x3), (27, 27, 0x1), (26, 28, 0x2), (27, 28, 0x0),
+                          ]:
+            self.assertEqual(cmsk.get(x, y), val)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
