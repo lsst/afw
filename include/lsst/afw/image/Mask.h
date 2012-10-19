@@ -75,6 +75,8 @@ public:
     
     typedef detail::Mask_tag image_category;
 
+    enum {MASK_EDGE_BIT = 4}; // value is checked in setInitMaskBits
+
 #if !defined(SWIG)
     /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
     template<typename MaskPT=MaskPixelT>

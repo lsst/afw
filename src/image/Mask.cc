@@ -377,6 +377,7 @@ namespace {
         dict->add("INTRP", ++i);         // should be INTERPOLATED
         dict->add("CR", ++i);            // 
         dict->add("EDGE", ++i);          // 
+        assert(i == Mask<MaskPixel>::MASK_EDGE_BIT);
         dict->add("DETECTED", ++i);      // 
         dict->add("DETECTED_NEGATIVE", ++i);
     }
