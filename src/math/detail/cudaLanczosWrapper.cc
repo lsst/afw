@@ -452,7 +452,9 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     typedef typename  SrcImageT::SinglePixel SrcPixelT;
 
     // Compute borders; use to prevent applying kernel outside of srcImage
+#ifdef GPU_BUILD
     afwGeom::Box2I srcGoodBBox = lanczosKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+#endif
 
     int const interpBlkNX = InterpBlkN(destWidth , interpLength);
     int const interpBlkNY = InterpBlkN(destHeight, interpLength);

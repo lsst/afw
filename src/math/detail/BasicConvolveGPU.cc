@@ -638,7 +638,6 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
     int const cnvStartY = kernel.getCtrY();
 
     KernelImage kernelImage(kernel.getDimensions());
-    KernelXYLocator const kernelLoc = kernelImage.xy_at(0, 0);
 
     pexLog::TTrace<3>("lsst.afw.math.convolve",
                       "convolveSpatiallyInvariantGPU: using GPU acceleration, "
@@ -754,7 +753,6 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
     }
 
     KernelImage kernelImage(kernel.getDimensions());
-    KernelXYLocator const kernelLoc = kernelImage.xy_at(0, 0);
 
     pexLog::TTrace<3>("lsst.afw.math.convolve",
                       "convolveSpatiallyInvariantGPU: using GPU acceleration, "
