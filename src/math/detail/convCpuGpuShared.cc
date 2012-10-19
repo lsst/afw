@@ -90,8 +90,8 @@ void mathDetail::assertDimensionsOK(
  */
 /// \cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
+#define MASK(PIXTYPE) afwImage::Mask<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
-#define NL /* */
 // Instantiate Image or MaskedImage versions
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
     template void mathDetail::assertDimensionsOK(     \
@@ -114,4 +114,7 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+
+INSTANTIATE_IM_OR_MI(MASK, afwImage::MaskPixel, afwImage::MaskPixel);
+
 /// \endcond

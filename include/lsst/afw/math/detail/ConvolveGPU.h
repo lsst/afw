@@ -78,6 +78,14 @@ ConvolveGpuStatus::ReturnCode convolveLinearCombinationGPU(
 
 template <typename OutPixelT, typename InPixelT>
 ConvolveGpuStatus::ReturnCode convolveLinearCombinationGPU(
+        lsst::afw::image::Mask<OutPixelT>& convolvedImage,      ///< convolved %image
+        lsst::afw::image::Mask<InPixelT> const& inImage,        ///< %image to convolve
+        lsst::afw::math::LinearCombinationKernel const& kernel,
+        lsst::afw::math::ConvolutionControl const& convolutionControl
+                                 );
+
+template <typename OutPixelT, typename InPixelT>
+ConvolveGpuStatus::ReturnCode convolveLinearCombinationGPU(
         lsst::afw::image::Image<OutPixelT>& convolvedImage,      ///< convolved %image
         lsst::afw::image::Image<InPixelT > const& inImage,        ///< %image to convolve
         lsst::afw::math::LinearCombinationKernel const& kernel,
@@ -88,6 +96,14 @@ template <typename OutPixelT, typename InPixelT>
 ConvolveGpuStatus::ReturnCode convolveSpatiallyInvariantGPU(
         lsst::afw::image::MaskedImage<OutPixelT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>& convolvedImage,      ///< convolved %image
         lsst::afw::image::MaskedImage<InPixelT , lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> const& inImage,        ///< %image to convolve
+        lsst::afw::math::Kernel const& kernel,  ///< convolution kernel
+        lsst::afw::math::ConvolutionControl const& convolutionControl
+                                  );
+
+template <typename OutPixelT, typename InPixelT>
+ConvolveGpuStatus::ReturnCode convolveSpatiallyInvariantGPU(
+        lsst::afw::image::Mask<OutPixelT>& convolvedImage,      ///< convolved %image
+        lsst::afw::image::Mask<InPixelT> const& inImage,        ///< %image to convolve
         lsst::afw::math::Kernel const& kernel,  ///< convolution kernel
         lsst::afw::math::ConvolutionControl const& convolutionControl
                                   );

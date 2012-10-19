@@ -385,6 +385,26 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
     return mathDetail::ConvolveGpuStatus::OK;
 }
 
+/************************************************************************************************************/
+/**
+ * @brief GPU convolution for Mask class used when convolving a LinearCombinationKernel
+ *
+ * Always delegates calculation to basicConvolve, as this got added after the GPU support.
+ * We might want to reconsider this at some point
+ */
+template <typename OutPixelT, typename InPixelT>
+mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationGPU(
+    afwImage::Mask<OutPixelT>& convolvedImage,      ///< convolved %image
+    afwImage::Mask<InPixelT> const& inImage,        ///< %image to convolve
+    afwMath::LinearCombinationKernel const& kernel,         ///< convolution kernel
+    afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+{
+    pexLog::TTrace<3>("lsst.afw.math.convolve",
+                      "convolveLinearCombinationGPU: always delegate Mask convolutions");
+    return mathDetail::ConvolveGpuStatus::NO_GPU;
+}
+
+/************************************************************************************************************/
 /**
  * @brief GPU convolution for Image class used when convolving a LinearCombinationKernel
  *
@@ -669,6 +689,26 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
     return mathDetail::ConvolveGpuStatus::OK;
 }
 
+/************************************************************************************************************/
+/**
+ * @brief GPU convolution for Mask class used when convolving a SpatiallyInvariantKernel.
+ *
+ * Always delegates calculation to basicConvolve, as this got added after the GPU support.
+ * We might want to reconsider this at some point
+ */
+template <typename OutPixelT, typename InPixelT>
+mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariantGPU(
+    afwImage::Mask<OutPixelT>& convolvedImage,      ///< convolved %image
+    afwImage::Mask<InPixelT> const& inImage,        ///< %image to convolve
+    afwMath::Kernel const& kernel,                  ///< convolution kernel
+    afwMath::ConvolutionControl const & convolutionControl ///< convolution control parameters
+                                                                                   )
+{
+    pexLog::TTrace<3>("lsst.afw.math.convolve",
+                      "convolveSpatiallyInvariantGPU: always delegate Mask convolutions");
+    return mathDetail::ConvolveGpuStatus::NO_GPU;
+}
+
 /**
  * @brief Convolve an MaskedImage with a spatially invariant Kernel.
  *
@@ -786,6 +826,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
  */
 /// \cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
+#define MASK(PIXTYPE) afwImage::Mask<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
 // Instantiate Image or MaskedImage versions
@@ -813,6 +854,7 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, boost::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(boost::uint16_t, boost::uint16_t)
+
+INSTANTIATE_IM_OR_MI(MASK, afwImage::MaskPixel, afwImage::MaskPixel)
+
 /// \endcond
-
-
