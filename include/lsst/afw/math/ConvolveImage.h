@@ -146,6 +146,18 @@ namespace math {
     }
 
     /**
+     * \brief Return an edge pixel appropriate for a given Mask type
+     */
+    template <typename ImageT>
+    typename ImageT::SinglePixel edgePixel(
+            lsst::afw::image::detail::Mask_tag
+                ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
+    ) {
+        typedef typename ImageT::SinglePixel SinglePixelT;
+        return SinglePixelT(1 << ImageT::MASK_EDGE_BIT);
+    }
+
+    /**
      * \brief Return an edge pixel appropriate for a given MaskedImage type
      *
      * The components are:
