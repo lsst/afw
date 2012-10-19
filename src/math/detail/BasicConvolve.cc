@@ -63,39 +63,55 @@ namespace {
      *
      * @return computed dot product
      *
+     * This function's implemented as a static member so that I can specialise the
+     * class to handle Masks differently
+     *
      * The pixel computed belongs at position imageIter + kernel center.
      *
      * @todo get rid of KernelPixelT parameter if possible by not computing local variable kVal,
      * or by using iterator traits:
      *     typedef typename std::iterator_traits<KernelIterT>::value_type KernelPixel;
-     * Unfortunately, in either case compilation fails with this sort of message:
-\verbatim
-include/lsst/afw/image/Pixel.h: In instantiation of ‘lsst::afw::image::pixel::exprTraits<boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > > >’:
-include/lsst/afw/image/Pixel.h:385:   instantiated from ‘lsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, std::multiplies<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_multiplies<float> >’
-src/math/ConvolveImage.cc:59:   instantiated from ‘OutPixelT<unnamed>::kernelDotProduct(ImageIterT, KernelIterT, int) [with OutPixelT = lsst::afw::image::pixel::SinglePixel<int, short unsigned int, float>, ImageIterT = lsst::afw::image::MaskedImage<int, short unsigned int, float>::const_MaskedImageIterator<boost::gil::gray32s_pixel_t*, boost::gil::gray16_pixel_t*, boost::gil::gray32f_noscale_pixel_t*>, KernelIterT = const boost::gil::gray64f_noscalec_pixel_t*]’
-src/math/ConvolveImage.cc:265:   instantiated from ‘void lsst::afw::math::basicConvolve(OutImageT&, const InImageT&, const lsst::afw::math::Kernel&, bool) [with OutImageT = lsst::afw::image::MaskedImage<int, short unsigned int, float>, InImageT = lsst::afw::image::MaskedImage<int, short unsigned int, float>]’
-src/math/ConvolveImage.cc:451:   instantiated from ‘void lsst::afw::math::convolve(OutImageT&, const InImageT&, const KernelT&, bool, int) [with OutImageT = lsst::afw::image::MaskedImage<int, short unsigned int, float>, InImageT = lsst::afw::image::MaskedImage<int, short unsigned int, float>, KernelT = lsst::afw::math::AnalyticKernel]’
-src/math/ConvolveImage.cc:587:   instantiated from here
-include/lsst/afw/image/Pixel.h:210: error: no type named ‘ImagePixelT’ in ‘struct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >’
-include/lsst/afw/image/Pixel.h:211: error: no type named ‘MaskPixelT’ in ‘struct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >’
-include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in ‘struct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >’
-\endverbatim
      */
-    template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
-    inline OutPixelT kernelDotProduct(
+    template <typename image_category>
+    struct KernelDP {
+        template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
+        static OutPixelT DotProduct(
             ImageIterT imageIter,       ///< start of input %image that overlaps kernel vector
             KernelIterT kernelIter,     ///< start of kernel vector
-            int kWidth)                 ///< width of kernel
-    {
-        OutPixelT outPixel(0);
-        for (int x = 0; x < kWidth; ++x, ++imageIter, ++kernelIter) {
-            KernelPixelT kVal = *kernelIter;
-            if (kVal != 0) {
-                outPixel += static_cast<OutPixelT>((*imageIter) * kVal);
+            int kWidth                  ///< width of kernel
+                                     )
+        {
+            OutPixelT outPixel(0);
+            for (int x = 0; x < kWidth; ++x, ++imageIter, ++kernelIter) {
+                KernelPixelT kVal = *kernelIter;
+                if (kVal != 0) {
+                    outPixel += static_cast<OutPixelT>((*imageIter) * kVal);
+                }
             }
+            return outPixel;
         }
-        return outPixel;
-    }
+    };
+
+    ///< specialisation for Mask
+    template <>
+    struct KernelDP<afwImage::detail::Mask_tag> {
+        template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
+        static OutPixelT DotProduct(
+            ImageIterT imageIter,       ///< start of input %image that overlaps kernel vector
+            KernelIterT kernelIter,     ///< start of kernel vector
+            int kWidth                  ///< width of kernel
+                                     )
+        {
+            OutPixelT outPixel(0);
+            for (int x = 0; x < kWidth; ++x, ++imageIter, ++kernelIter) {
+                KernelPixelT kVal = *kernelIter;
+                if (kVal != 0) {
+                    outPixel |= static_cast<OutPixelT>(*imageIter);
+                }
+            }
+            return outPixel;
+        }
+    };
 
     /**
      * @brief Throws exception when trying to USE_GPU without GPU support
@@ -336,6 +352,7 @@ void mathDetail::basicConvolve(
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef typename std::vector<KernelPixel> KernelVector;
     typedef KernelVector::const_iterator KernelIterator;
+    typedef typename InImageT::image_category image_category;
     typedef typename InImageT::const_x_iterator InXIterator;
     typedef typename InImageT::const_xy_locator InXYLocator;
     typedef typename OutImageT::x_iterator OutXIterator;
@@ -403,8 +420,10 @@ void mathDetail::basicConvolve(
             OutXIterator const bufXEnd = buffer.x_at(goodBBox.getWidth(), yInd);
             InXIterator inXIter = inImage.x_at(0, yInd);
             for ( ; bufXIter != bufXEnd; ++bufXIter, ++inXIter) {
-                *bufXIter = kernelDotProduct<OutPixel, InXIterator, KernelIterator, KernelPixel>(
-                    inXIter, kernelXVecBegin, kernel.getWidth());
+                *bufXIter =
+                    KernelDP<image_category>::template DotProduct<OutPixel, InXIterator,
+                                                                  KernelIterator, KernelPixel>(
+                                                            inXIter, kernelXVecBegin, kernel.getWidth());
             }
         }
 
@@ -420,12 +439,14 @@ void mathDetail::basicConvolve(
             for (int bufX = 0; bufX < goodBBox.getWidth(); ++bufX, ++cnvXIter, ++bufXIter, ++inXIter) {
                 // note: bufXIter points to the row of the buffer that is being updated,
                 // whereas bufYIter points to row 0 of the buffer
-                *bufXIter = kernelDotProduct<OutPixel, InXIterator, KernelIterator, KernelPixel>(
-                    inXIter, kernelXVecBegin, kernel.getWidth());
+                *bufXIter = KernelDP<image_category>::template DotProduct<OutPixel, InXIterator,
+                                                                 KernelIterator, KernelPixel>(
+                                                             inXIter, kernelXVecBegin, kernel.getWidth());
 
                 OutYIterator bufYIter = buffer.y_at(bufX, 0);
-                *cnvXIter = kernelDotProduct<OutPixel, OutYIterator, KernelIterator, KernelPixel>(
-                    bufYIter, kernelYVecBegin, kernel.getHeight());
+                *cnvXIter = KernelDP<image_category>::template DotProduct<OutPixel, OutYIterator,
+                                                                 KernelIterator, KernelPixel>(
+                                                             bufYIter, kernelYVecBegin, kernel.getHeight());
             }
 
             // test for done now, instead of the start of the loop,
@@ -478,6 +499,7 @@ void mathDetail::convolveWithBruteForce(
 
     typedef typename KernelImage::const_x_iterator KernelXIterator;
     typedef typename KernelImage::const_xy_locator KernelXYLocator;
+    typedef typename InImageT::image_category image_category;
     typedef typename InImageT::const_x_iterator InXIterator;
     typedef typename InImageT::const_xy_locator InXYLocator;
     typedef typename OutImageT::x_iterator OutXIterator;
@@ -554,7 +576,8 @@ void mathDetail::convolveWithBruteForce(
             InXIterator inXIter = inImage.x_at(0, inStartY);
             OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
             for (int x = 0; x < cnvWidth; ++x, ++cnvXIter, ++inXIter) {
-                *cnvXIter = kernelDotProduct<OutPixel, InXIterator, KernelXIterator, KernelPixel>(
+                *cnvXIter = KernelDP<image_category>::template DotProduct<OutPixel, InXIterator,
+                                                                 KernelXIterator, KernelPixel>(
                     inXIter, kernelXIter, kWidth);
             }
             for (int kernelY = 1, inY = inStartY + 1; kernelY < kHeight; ++inY, ++kernelY) {
@@ -562,7 +585,8 @@ void mathDetail::convolveWithBruteForce(
                 InXIterator inXIter = inImage.x_at(0, inY);
                 OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
                 for (int x = 0; x < cnvWidth; ++x, ++cnvXIter, ++inXIter) {
-                    *cnvXIter += kernelDotProduct<OutPixel, InXIterator, KernelXIterator, KernelPixel>(
+                    *cnvXIter += KernelDP<image_category>::template DotProduct<OutPixel, InXIterator,
+                                                                      KernelXIterator, KernelPixel>(
                         inXIter, kernelXIter, kWidth);
                 }
             }
@@ -575,7 +599,16 @@ void mathDetail::convolveWithBruteForce(
  */
 /// \cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
+#define MASK(PIXTYPE) afwImage::Mask<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
+/* NL's a newline for debugging these macros
+ *
+ * Cut-and-paste the compilation line for this file, then change
+ *   "-o .../BasicConvolve.os" to "-C -E -o foo.cc"
+ * and run it. Then
+ *   perl -pi -e 's/ NL /\n/g' foo.cc
+ * and compile or read foo.cc (no -I flags will be needed)
+ */
 #define NL /* */
 // Instantiate Image or MaskedImage versions
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
@@ -593,19 +626,22 @@ void mathDetail::convolveWithBruteForce(
             afwMath::ConvolutionControl const&); NL \
     template void mathDetail::convolveWithBruteForce( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
-            afwMath::ConvolutionControl const&);
+            afwMath::ConvolutionControl const&)
 // Instantiate both Image and MaskedImage versions
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
-    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
+    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE); NL \
     INSTANTIATE_IM_OR_MI(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
 
-INSTANTIATE(double, double)
-INSTANTIATE(double, float)
-INSTANTIATE(double, int)
-INSTANTIATE(double, boost::uint16_t)
-INSTANTIATE(float, float)
-INSTANTIATE(float, int)
-INSTANTIATE(float, boost::uint16_t)
-INSTANTIATE(int, int)
-INSTANTIATE(boost::uint16_t, boost::uint16_t)
+INSTANTIATE(double, double);
+INSTANTIATE(double, float);
+INSTANTIATE(double, int);
+INSTANTIATE(double, boost::uint16_t);
+INSTANTIATE(float, float);
+INSTANTIATE(float, int);
+INSTANTIATE(float, boost::uint16_t);
+INSTANTIATE(int, int);
+INSTANTIATE(boost::uint16_t, boost::uint16_t);
+
+INSTANTIATE_IM_OR_MI(MASK, afwImage::MaskPixel, afwImage::MaskPixel);
+
 /// \endcond
