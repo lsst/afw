@@ -72,7 +72,7 @@ namespace {
                 ///< %image whose edge pixels are to be copied; ignored if doCopyEdge is false
             bool doCopyEdge,            ///< if false (default), set edge pixels to the standard edge pixel;
                                         ///< if true, copy edge pixels from input and set EDGE bit of mask
-            lsst::afw::image::detail::Image_tag)
+            lsst::afw::image::detail::basic_tag)
                 ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
 
     {
