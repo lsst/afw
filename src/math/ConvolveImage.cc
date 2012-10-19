@@ -368,14 +368,20 @@ void afwMath::convolve(
  * it should be instantiated in the swig wrappers.
  */
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
+#define MASK(PIXTYPE) afwImage::Mask<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 //
 // Next a macro to generate needed instantiations for IMGMACRO (either IMAGE or MASKEDIMAGE)
 // and the specified pixel types
 //
-/* NL's a newline for debugging -- don't define it and say
- g++ -C -E -I$(eups list -s -d boost)/include Convolve.cc | perl -pe 's| *NL *|\n|g'
-*/
+/* NL's a newline for debugging these macros
+ *
+ * Cut-and-paste the compilation line for this file, then change
+ *   "-o .../convolveImage.os" to "-C -E -o foo.cc"
+ * and run it. Then
+ *   perl -pi -e 's/ NL /\n/g' foo.cc
+ * and compile or read foo.cc (no -I flags will be needed)
+ */
 #define NL /* */
 //
 // Instantiate one kernel-specific specializations of convolution functions for Image or MaskedImage
@@ -386,38 +392,48 @@ void afwMath::convolve(
     template void afwMath::convolve( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, bool, bool); NL \
     template void afwMath::convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, ConvolutionControl const&); NL
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, ConvolutionControl const&)
+//
+// Instantiate Image, Mask, or MaskedImage versions of all functions defined in this file.
+// Call INSTANTIATE_IM_M_MI_KERNEL once for each kernel class.
+// IMGMACRO = IMAGE, MASK, or MASKEDIMAGE
+//
+#define INSTANTIATE_IM_M_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::AnalyticKernel); NL \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::DeltaFunctionKernel); NL \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::FixedKernel); NL \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::LinearCombinationKernel); NL \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::SeparableKernel); NL \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::Kernel)
 //
 // Instantiate Image or MaskedImage versions of all functions defined in this file.
 // Call INSTANTIATE_IM_OR_MI_KERNEL once for each kernel class.
-// IMGMACRO = IMAGE or MASKEDIMAGE
+// IMGMACRO = IMAGE or MASKEDIMAGE (note that Masks don't support scaledPlus)
 //
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
     template void afwMath::scaledPlus( \
         IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double, IMGMACRO(INPIXTYPE) const&); NL \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::AnalyticKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::DeltaFunctionKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::FixedKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::LinearCombinationKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::SeparableKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::Kernel) \
+    INSTANTIATE_IM_M_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE)
 //
 // Instantiate all functions defined in this file for one specific output and input pixel type
 //
 /// \cond
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
-    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
+    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE); NL \
     INSTANTIATE_IM_OR_MI(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
 //
 // Instantiate all functions defined in this file
 //
-INSTANTIATE(double, double)
-INSTANTIATE(double, float)
-INSTANTIATE(double, int)
-INSTANTIATE(double, boost::uint16_t)
-INSTANTIATE(float, float)
-INSTANTIATE(float, int)
-INSTANTIATE(float, boost::uint16_t)
-INSTANTIATE(int, int)
-INSTANTIATE(boost::uint16_t, boost::uint16_t)
+INSTANTIATE(double, double);
+INSTANTIATE(double, float);
+INSTANTIATE(double, int);
+INSTANTIATE(double, boost::uint16_t);
+INSTANTIATE(float, float);
+INSTANTIATE(float, int);
+INSTANTIATE(float, boost::uint16_t);
+INSTANTIATE(int, int);
+INSTANTIATE(boost::uint16_t, boost::uint16_t);
+
+INSTANTIATE_IM_M_MI_KERNEL(MASK, afwImage::MaskPixel, afwImage::MaskPixel);
+
 /// \endcond

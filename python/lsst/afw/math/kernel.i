@@ -58,9 +58,13 @@
 // Functions to convolve a MaskedImage or Image with a Kernel.
 // There are a lot of these, so write a set of macros to do the instantiations
 //
-// First a couple of macros (%IMAGE and %MASKEDIMAGE) to provide MaskedImage's default arguments,
+// First some macros (%IMAGE, %MASK, and %MASKEDIMAGE) to provide MaskedImage's default arguments,
 %define %IMAGE(PIXTYPE)
 lsst::afw::image::Image<PIXTYPE>
+%enddef
+
+%define %MASK(PIXTYPE)
+lsst::afw::image::Mask<PIXTYPE>
 %enddef
 
 %define %MASKEDIMAGE(PIXTYPE)
@@ -85,14 +89,16 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
-    %template(scaledPlus) lsst::afw::math::scaledPlus<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
 %enddef
 //
-// Now a macro to specify Image and MaskedImage
+// Now a macro to specify Image and MaskedImage (and add scaledPlus which Mask doesn't need)
 //
 %define %templateKernel(PIXTYPE1, PIXTYPE2)
     %templateKernelByType(%IMAGE,       PIXTYPE1, PIXTYPE2);
     %templateKernelByType(%MASKEDIMAGE, PIXTYPE1, PIXTYPE2);
+
+    %template(scaledPlus) lsst::afw::math::scaledPlus<%IMAGE(PIXTYPE1), %IMAGE(PIXTYPE2)>;
+    %template(scaledPlus) lsst::afw::math::scaledPlus<%MASKEDIMAGE(PIXTYPE1), %MASKEDIMAGE(PIXTYPE2)>;
 %enddef
 //
 // Finally, specify the functions we want
@@ -106,7 +112,9 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %templateKernel(float, boost::uint16_t);
 %templateKernel(int, int);
 %templateKernel(boost::uint16_t, boost::uint16_t);
-         
+
+%templateKernelByType(%MASK, lsst::afw::image::MaskPixel, lsst::afw::image::MaskPixel);
+
 //
 // When swig sees a Kernel it doesn't know about KERNEL_TYPE; all it knows is that it
 // has a Kernel, and Kernels don't know about e.g. LinearCombinationKernel's getKernelParameters()
