@@ -41,13 +41,15 @@ namespace math {
 
 /************************************************************************************************************/
 
+namespace {
+
 template<typename PixelT>
 class ApproximateChebyshev : public Approximate<PixelT> {
     template<typename T>
     friend PTR(Approximate<T>)
-    makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
-                    image::MaskedImage<T> const& im,
-                    ApproximateControl::Style const& style);
+    math::makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
+                          image::MaskedImage<T> const& im,
+                          ApproximateControl::Style const& style);
 public:
     virtual ~ApproximateChebyshev();
     virtual double approximate(double const x, double const y) const;
@@ -74,6 +76,7 @@ template<typename PixelT>
 double ApproximateChebyshev<PixelT>::approximate(double const x, double const y) const
 {
     return 0.0;
+}
 }
 
 /************************************************************************************************************/
