@@ -49,7 +49,7 @@ public:
         NUM_STYLES
     };
 
-    ApproximateControl(Style style, int orderX, int orderY=0);
+    ApproximateControl(Style style, int orderX, int orderY=-1);
 
     Style getStyle() const { return _style; }
     int getOrderX() const { return _orderX; }
