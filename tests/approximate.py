@@ -49,54 +49,69 @@ except NameError:
 
 class ApproximateTestCase(unittest.TestCase):
     
-    """A test case for Approximate Lienar"""
+    """A test case for Approximate"""
     def setUp(self):
         pass
     
     def tearDown(self):
         pass
 
-    def testLinearRamp(self):
-        """Make a ramp and fit it"""
+    def makeRamp(self, binsize=1):
         #
-        # Here's the image to fit
+        # make a linear ramp
         #
-        im = afwImage.MaskedImageF(20, 40)
-        binsize = 2
+        ramp = afwImage.MaskedImageF(20, 40)
 
         x = []
-        for i in range(im.getWidth()):
-            x.append((i + 0.5)*binsize)
+        for i in range(ramp.getWidth()):
+            x.append((i + 0.5)*binsize - 0.5)
 
         y = []
-        for j in range(im.getHeight()):
-            y.append((j + 0.5)*binsize)
+        for j in range(ramp.getHeight()):
+            y.append((j + 0.5)*binsize - 0.5)
 
         var = 1
-        c = (1000, 1, 1)
-        for i in range(im.getHeight()):
-            for j in range(im.getWidth()):
-                im.set(j, i, (c[0] + c[1]*x[j] + c[2]*y[i], 0x0, var))
+        rampCoeffs = (1000, 1, 1)
+        for i in range(ramp.getHeight()):
+            for j in range(ramp.getWidth()):
+                ramp.set(j, i, (rampCoeffs[0] + rampCoeffs[1]*x[j] + rampCoeffs[2]*y[i], 0x0, var))
 
-        im.set(10, 20, (0, 0x1, np.nan))
+        return ramp, rampCoeffs, x, y
+
+    def testLinearRamp(self):
+        """Fit a ramp"""
         
-        if display:
-            ds9.mtv(im, title="Input", frame=0)
+        binsize = 1
+        ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
         #
-        # Here's the bounding box of the 
+        # Add a (labelled) bad value
         #
-        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*im.getWidth() - 1,
-                                                                 binsize*im.getHeight() - 1))
+        ramp.set(ramp.getWidth()//2, ramp.getHeight()//2, (0, 0x1, np.nan))
 
-        approx = afwMath.makeApproximate(x, y, im, bbox,
-                                         afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, 1))
-        aim = approx.getImage()
-        w, h = aim.getDimensions()
         if display:
-            ds9.mtv(aim, title="interpolated", frame=1)
+            ds9.mtv(ramp, title="Input", frame=0)
+        #
+        # Here's the range that the approximation should be valid (and also the
+        # bbox of the image returned by getImage)
+        #
+        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth()  - 1,
+                                                                 binsize*ramp.getHeight() - 1))
 
-        for x, y in [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1),]:
-            self.assertEqual(aim.getImage().get(x, y), c[0] + c[1]*x + c[1]*y)
+        order = 3                       # 1 would be enough to fit the ramp
+        actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
+        approx = afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl)
+
+        for i, aim in enumerate([approx.getImage(), approx.getMaskedImage().getImage(), ]):
+            if i == 0 and display:
+                ds9.mtv(aim, title="interpolated", frame=1)
+                with ds9.Buffering():
+                    for x in xVec:
+                        for y in yVec:
+                            ds9.dot('+', x, y, size=0.4, frame=1)
+                
+            w, h = aim.getDimensions()
+            for x, y in [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1),]:
+                self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

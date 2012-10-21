@@ -44,8 +44,7 @@ namespace afw {
 namespace math {
 
 ApproximateControl::ApproximateControl(Style style, int orderX, int orderY) :
-    _style(style), _orderX(orderX), _orderY(orderY > 0 ? orderY : orderX) {
-    
+    _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY) {
     if (_orderX != _orderY) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                           str(boost::format("X- and Y-orders must be equal (%d != %d) "
@@ -73,8 +72,10 @@ private:
     ApproximateChebyshev(std::vector<double> const &xVec, std::vector<double> const &yVec,
                          image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                          ApproximateControl const& ctrl);
+    virtual PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
+            doGetImage(int orderX, int orderY) const;
     virtual PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
-                                                                 doGetImage(bool const getMaskedImage) const;
+            doGetMaskedImage(int orderX, int orderY) const;
 };
 
 /************************************************************************************************************/
@@ -205,21 +206,50 @@ ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {
 }
 
 template<typename PixelT>
+PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
+ApproximateChebyshev<PixelT>::doGetImage(int orderX, int orderY) const
+{
+    if (orderX < 0) orderX = Approximate<PixelT>::_ctrl.getOrderX();
+    if (orderY < 0) orderY = Approximate<PixelT>::_ctrl.getOrderY();
+
+    math::Chebyshev1Function2<double> poly =
+        (orderX == Approximate<PixelT>::_ctrl.getOrderX() &&
+         orderY == Approximate<PixelT>::_ctrl.getOrderY()) ? _poly : _poly.truncate(orderX);
+    
+    typedef typename image::Image<typename Approximate<PixelT>::OutPixelT> ImageT;
+
+    PTR(ImageT) im(new ImageT(Approximate<PixelT>::_bbox));
+    for (int iy = 0; iy != im->getHeight(); ++iy) {
+        double const y = iy;
+
+        int ix = 0;
+        for (typename ImageT::x_iterator ptr = im->row_begin(iy),
+                 end = im->row_end(iy); ptr != end; ++ptr, ++ix) {
+            double const x = ix;
+
+            *ptr = poly(x, y);
+        }
+    }
+
+    return im;
+}
+
+template<typename PixelT>
 PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
-ApproximateChebyshev<PixelT>::doGetImage(bool const getMaskedImage) const
+ApproximateChebyshev<PixelT>::doGetMaskedImage(int orderX, int orderY) const
 {
     typedef typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT> MImageT;
 
     PTR(MImageT) mi(new MImageT(Approximate<PixelT>::_bbox));
-    typename MImageT::Image &im = *mi->getImage();
+    PTR(typename MImageT::Image) im = mi->getImage();
 
-    for (int iy = 0; iy != im.getHeight(); ++iy) {
-        double const y = iy; // Approximate<PixelT>::_yVec[iy];
+    for (int iy = 0; iy != im->getHeight(); ++iy) {
+        double const y = iy;
 
         int ix = 0;
-        for (typename MImageT::Image::x_iterator ptr = im.row_begin(iy),
-                 end = im.row_end(iy); ptr != end; ++ptr, ++ix) {
-            double const x = ix; // Approximate<PixelT>::_xVec[ix];
+        for (typename MImageT::Image::x_iterator ptr = im->row_begin(iy),
+                 end = im->row_end(iy); ptr != end; ++ptr, ++ix) {
+            double const x = ix;
 
             *ptr = _poly(x, y);
         }
