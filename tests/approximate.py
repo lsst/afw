@@ -113,6 +113,52 @@ class ApproximateTestCase(unittest.TestCase):
             for x, y in [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1),]:
                 self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
+    def testChebyshevEqualOrder(self):
+        """Check that we enforce the condition orderX == orderY"""
+
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                                       lambda : 
+                                       afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, 1, 2))
+
+    def testLinearRampAsBackground(self):
+        """Fit a ramp"""
+
+        ramp, rampCoeffs = self.makeRamp()[0:2]
+
+        if display:
+            ds9.mtv(ramp, title="Input", frame=0)
+        #
+        # Here's the range that the approximation should be valid (and also the
+        # bbox of the image returned by getImage)
+        #
+        bkgd = afwMath.makeBackground(ramp, afwMath.BackgroundControl(10, 10))
+
+        orderMax = 3                    # 1 would be enough to fit the ramp
+        for order in range(orderMax + 1):
+            actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
+
+            approx = bkgd.getApproximate(actrl)
+            #
+            # Get the Image, the MaskedImage, and the Image with a truncated expansion
+            #
+            for i, aim in enumerate([approx.getImage(), approx.getMaskedImage().getImage(),
+                                     approx.getImage(order - 1 if order > 1 else -1),
+                                     ]):
+                if display and (i == 0 and order == 1):
+                    ds9.mtv(aim, title="Interpolated", frame=1)
+
+                w, h = aim.getDimensions()
+                for x, y in [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1),]:
+                    val = np.mean(aim.getArray()) if order == 0 else \
+                        rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y
+
+                    self.assertEqual(aim.get(x, y), val)
+        #
+        # Check that we can't "truncate" the expansion to a higher order than we requested
+        #
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                                       lambda : approx.getImage(orderMax + 1, orderMax + 1))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
