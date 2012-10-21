@@ -76,8 +76,11 @@ public:
     
     virtual ~Approximate() {}
 
-    PTR(image::MaskedImage<OutPixelT>) getImage(bool const getMaskedImage=true) const {
-        return doGetImage(getMaskedImage);
+    PTR(image::Image<OutPixelT>) getImage(int orderX=-1, int orderY=-1) const {
+        return doGetImage(orderX, orderY);
+    }
+    PTR(image::MaskedImage<OutPixelT>) getMaskedImage(int orderX=-1, int orderY=-1) const {
+        return doGetMaskedImage(orderX, orderY);
     }
 protected:
     /**
@@ -96,7 +99,8 @@ protected:
 private:
     Approximate(Approximate const&);
     Approximate& operator=(Approximate const&);
-    virtual PTR(image::MaskedImage<OutPixelT>) doGetImage(bool const getMaskedImage) const = 0;
+    virtual PTR(image::Image<OutPixelT>) doGetImage(int orderX, int orderY) const = 0;
+    virtual PTR(image::MaskedImage<OutPixelT>) doGetMaskedImage(int orderX, int orderY) const = 0;
 };
 
 template<typename PixelT>
