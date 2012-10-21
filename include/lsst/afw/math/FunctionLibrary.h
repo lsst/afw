@@ -862,7 +862,7 @@ using boost::serialization::make_nvp;
          */
         virtual Chebyshev1Function2 truncate(
                 int truncOrder ///< order of truncated polynomial
-        ) {
+        ) const {
             if (truncOrder > this->_order) {
                 std::ostringstream os;
                 os << "truncated order=" << truncOrder << " must be <= original order=" << this->_order;
