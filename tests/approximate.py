@@ -58,9 +58,11 @@ class ApproximateTestCase(unittest.TestCase):
 
     def testLinearRamp(self):
         """Make a ramp and fit it"""
-
-        im = afwImage.MaskedImageF(10, 20)
-        binsize = 10
+        #
+        # Here's the image to fit
+        #
+        im = afwImage.MaskedImageF(20, 40)
+        binsize = 2
 
         x = []
         for i in range(im.getWidth()):
@@ -70,25 +72,31 @@ class ApproximateTestCase(unittest.TestCase):
         for j in range(im.getHeight()):
             y.append((j + 0.5)*binsize)
 
+        var = 1
+        c = (1000, 1, 1)
         for i in range(im.getHeight()):
             for j in range(im.getWidth()):
-                im.set(j, i, (1000 + x[j] + y[i], 0x0, 1))
-        
-        if True or display:
-            ds9.mtv(im, frame=0)
+                im.set(j, i, (c[0] + c[1]*x[j] + c[2]*y[i], 0x0, var))
 
+        im.set(10, 20, (0, 0x1, np.nan))
+        
+        if display:
+            ds9.mtv(im, title="Input", frame=0)
+        #
+        # Here's the bounding box of the 
+        #
         bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*im.getWidth() - 1,
                                                                  binsize*im.getHeight() - 1))
 
         approx = afwMath.makeApproximate(x, y, im, bbox,
                                          afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, 1))
         aim = approx.getImage()
-        aim_im = aim.getImage()
-        if True or display:
-            ds9.mtv(aim, frame=1)
+        w, h = aim.getDimensions()
+        if display:
+            ds9.mtv(aim, title="interpolated", frame=1)
 
-        print aim.getDimensions(), aim_im.get(0, 0),  aim_im.get(0, 199), \
-                                   aim_im.get(99, 0), aim_im.get(99, 199)
+        for x, y in [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1),]:
+            self.assertEqual(aim.getImage().get(x, y), c[0] + c[1]*x + c[1]*y)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
