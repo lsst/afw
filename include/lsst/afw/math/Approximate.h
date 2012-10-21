@@ -66,9 +66,9 @@ private:
  */
 template<typename PixelT>
 class Approximate {
-protected:
-    typedef float OutPixelT;
 public:
+    typedef float OutPixelT;
+
     friend PTR(Approximate<PixelT>)
     makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
                     image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
