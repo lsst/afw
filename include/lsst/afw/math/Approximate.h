@@ -27,6 +27,9 @@
 
 namespace lsst {
 namespace afw {
+namespace geom {
+    class Box2I;
+}
 namespace image {
 template<typename PixelT> class Image;
 template<typename PixelT, typename U, typename V> class MaskedImage;
@@ -45,14 +48,16 @@ public:
         CHEBYSHEV,
         NUM_STYLES
     };
-    template<typename T> friend class Approximate;
 
-    ApproximateControl(Style style, int orderX, int orderY) :
-        _style(style), _orderX(orderX), _orderY(orderY) {}
+    ApproximateControl(Style style, int orderX, int orderY=0);
+
+    Style getStyle() const { return _style; }
+    int getOrderX() const { return _orderX; }
+    int getOrderY() const { return _orderY; }
 private:
-    Style _style;
-    int _orderX;
-    int _orderY;
+    Style const _style;
+    int const _orderX;
+    int const _orderY;
 };
 
 /**
@@ -61,35 +66,44 @@ private:
  */
 template<typename PixelT>
 class Approximate {
+protected:
+    typedef float OutPixelT;
 public:
     friend PTR(Approximate<PixelT>)
     makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
-                    image::MaskedImage<PixelT> const& im,
-                    ApproximateControl::Style const& style);
+                    image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
+                    ApproximateControl const& ctrl);
     
     virtual ~Approximate() {}
-    virtual double approximate(double const x, double const y) const = 0;
+
+    PTR(image::MaskedImage<OutPixelT>) getImage(bool const getMaskedImage=true) const {
+        return doGetImage(getMaskedImage);
+    }
 protected:
     /**
      * Base class ctor
      */
     Approximate(std::vector<double> const &x,         ///< the x-values of points
                 std::vector<double> const &y,         ///< the y-values of points
-                ApproximateControl::Style const& style ///< desired approximation algorithm
-               ) : _x(x), _y(y), _style(style) {}
+                geom::Box2I const& bbox,              ///< Range where approximation should be valid
+                ApproximateControl const& ctrl        ///< desired approximation algorithm
+               ) : _xVec(x), _yVec(y), _bbox(bbox), _ctrl(ctrl) {}
 
-    std::vector<double> const _x;           ///< the x-values of points
-    std::vector<double> const _y;           ///< the y-values of points
-    ApproximateControl::Style const _style; ///< desired approximation algorithm
+    std::vector<double> const _xVec;    ///< the x-values of points
+    std::vector<double> const _yVec;    ///< the y-values of points
+    geom::Box2I const _bbox;            ///< Domain for approximation
+    ApproximateControl const _ctrl;     ///< desired approximation algorithm
 private:
     Approximate(Approximate const&);
     Approximate& operator=(Approximate const&);
+    virtual PTR(image::MaskedImage<OutPixelT>) doGetImage(bool const getMaskedImage) const = 0;
 };
 
 template<typename PixelT>
 PTR(Approximate<PixelT>)
 makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
-                image::MaskedImage<PixelT> const& im, ApproximateControl::Style const& style);
+                image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
+                ApproximateControl const& ctrl);
 
 }}}
                      
