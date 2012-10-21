@@ -29,7 +29,7 @@
  * @ingroup afw
  * @author Steve Bickerton
  */
-
+#include <boost/preprocessor/seq.hpp>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Statistics.h"
@@ -38,6 +38,8 @@
 namespace lsst {
 namespace afw {
 namespace math {
+class ApproximateControl;
+template<typename T> class Approximate;
 
 //
 // Remember to update stringToUndersampleStyle if you change this.
@@ -214,6 +216,8 @@ protected:
     
     virtual ~Background() { }
 public:
+    typedef float InternalPixelT;    // type used for any internal images, and returned by getApproximate
+
     virtual void operator+=(float const delta) = 0;
     virtual void operator-=(float const delta) = 0;
     /**
@@ -223,8 +227,8 @@ public:
      */
     template<typename PixelT>
     PTR(lsst::afw::image::Image<PixelT>) getImage(
-        Interpolate::Style const interpStyle,                           ///< Style of the interpolation
-        UndersampleStyle const undersampleStyle=THROW_EXCEPTION   ///< Behaviour if there are too few points
+        Interpolate::Style const interpStyle,                   ///< Style of the interpolation
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION ///< Behaviour if there are too few points
                                                  ) const {
         PixelT disambiguate = 0;
         return _getImage(interpStyle, undersampleStyle, disambiguate);
@@ -254,9 +258,21 @@ public:
     BackgroundControl getBackgroundControl() const { return _bctrl; }
     /**
      * Return the Interpolate::Style that we actually used
+     *
+     * Interpolate can fallback to a lower order if there aren't enough samples
      */
     Interpolate::Style getAsUsedInterpStyle() const {
         return _asUsedInterpStyle;
+    }
+    /**
+     * \brief Method to return an approximation to the background
+     */
+    PTR(math::Approximate<InternalPixelT>) getApproximate(
+        ApproximateControl const& actrl,                        ///< Approximation style
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION ///< Behaviour if there are too few points
+                                                 ) const {
+        InternalPixelT disambiguate = 0;
+        return _getApproximate(actrl, undersampleStyle, disambiguate);
     }
 protected:
     int _imgWidth;                      // img.getWidth()
@@ -278,15 +294,29 @@ protected:
      * virtual functions for the image types we need
      */
 #if !defined(SWIG)
-#define makeBackground_getImage(T) \
+// We'll evaluate LSST_makeBackground_get{Approximation,Image} for each type in
+// LSST_makeBackground_get{Approximation,Image}_types,
+// setting v to the second arg (i.e. "= 0" for the first invocation).  The first agument, m, is ignores
+
+// Desired types
+#define LSST_makeBackground_getImage_types            (double)(float)(int)
+#define LSST_makeBackground_getApproximate_types      (Background::InternalPixelT)
+#define LSST_makeBackground_getImage(m, v, T)                \
     virtual PTR(lsst::afw::image::Image<T>) _getImage( \
-        Interpolate::Style const interpStyle,                           /* Style of the interpolation */\
-        UndersampleStyle const undersampleStyle=THROW_EXCEPTION,   /* Behaviour if there are too few points */\
-        T = 0                                                      /* disambiguate */ \
-                                                   ) const
-    makeBackground_getImage(double) = 0;
-    makeBackground_getImage(float) = 0;
-    makeBackground_getImage(int) = 0;
+        Interpolate::Style const interpStyle,                     /* Style of the interpolation */ \
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION,  /* Behaviour if there are too few points */\
+        T = 0                                                     /* disambiguate */ \
+                                                     ) const v;
+
+#define LSST_makeBackground_getApproximate(m, v, T)           \
+    virtual PTR(Approximate<T>) _getApproximate( \
+        ApproximateControl const& actrl,                          /* Approximation style */ \
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION,  /* Behaviour if there are too few points */\
+        T = 0                                                     /* disambiguate */ \
+                                                      ) const v;
+
+    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, = 0, LSST_makeBackground_getImage_types)
+    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, = 0, LSST_makeBackground_getApproximate_types)
 #endif
 private:
     Background(Background const&);
@@ -340,30 +370,35 @@ public:
     /**
      * Return the image of statistical quantities extracted from the image
      */
-    CONST_PTR(lsst::afw::image::MaskedImage<float>) getStatsImage() const {
+    CONST_PTR(lsst::afw::image::MaskedImage<InternalPixelT>) getStatsImage() const {
         return _statsImage;
     }
 
 private:
-    PTR(lsst::afw::image::MaskedImage<float>) _statsImage;  // statistical properties for the grid of subimages
+    PTR(lsst::afw::image::MaskedImage<InternalPixelT>) _statsImage; // statistical properties for the grid of subimages
     mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
 
     void _set_gridcolumns(Interpolate::Style const interpStyle,
                           int const iX, std::vector<int> const& ypix) const;
-#if !defined(SWIG) && defined(makeBackground_getImage)
-    makeBackground_getImage(double);
-    makeBackground_getImage(float);
-    makeBackground_getImage(int);
-#undef makeBackground_getImage
+#if !defined(SWIG) && defined(LSST_makeBackground_getImage)
+    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, , LSST_makeBackground_getImage_types)
+    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, , LSST_makeBackground_getApproximate_types)
+#if 0                                   // keep for use in Background instantiations
+#undef LSST_makeBackground_getImage_types
+#undef LSST_makeBackground_getApproximate_types
+#endif
+#undef LSST_makeBackground_getImage
+#undef LSST_makeBackground_getApproximate
 #endif
     // Here's the worker function for _getImage (non-virtual; it's templated in BackgroundMI, not Background)
     template<typename PixelT>
-    PTR(image::Image<PixelT>) doGetImage(
-    Interpolate::Style const interpStyle_,       ///< Style of the interpolation
-        UndersampleStyle const undersampleStyle ///< Behaviour if there are too few points
-        ) const;
+    PTR(image::Image<PixelT>) doGetImage(Interpolate::Style const interpStyle_,
+                                         UndersampleStyle const undersampleStyle) const;
+    // and for _getApproximate
+    template<typename PixelT>
+    PTR(Approximate<PixelT>) doGetApproximate(ApproximateControl const& actrl,
+                                              UndersampleStyle const undersampleStyle) const;
 };
-
 /**
  * @brief A convenience function that uses function overloading to make the correct type of Background
  *

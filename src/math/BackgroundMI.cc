@@ -36,6 +36,7 @@
 #include "lsst/utils/ieee.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
+#include "lsst/afw/math/Approximate.h"
 #include "lsst/afw/math/Background.h"
 #include "lsst/afw/math/Statistics.h"
 
@@ -79,15 +80,15 @@ template<typename ImageT>
 BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
                              BackgroundControl const& bgCtrl ///< Control how the BackgroundMI is estimated
                             ) :
-    Background(img, bgCtrl), _statsImage(PTR(image::MaskedImage<float>)())
+    Background(img, bgCtrl), _statsImage(PTR(image::MaskedImage<InternalPixelT>)())
 {
     // =============================================================
     // Loop over the cells in the image, computing statistical properties
     // of each cell in turn and using them to set _statsImage
-    _statsImage.reset(new image::MaskedImage<float>(_nxSample, _nySample));
+    _statsImage.reset(new image::MaskedImage<InternalPixelT>(_nxSample, _nySample));
 
-    image::MaskedImage<float>::Image &im = *_statsImage->getImage();
-    image::MaskedImage<float>::Variance &var = *_statsImage->getVariance();
+    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage->getImage();
+    image::MaskedImage<InternalPixelT>::Variance &var = *_statsImage->getVariance();
 
     for (int iX = 0; iX < _nxSample; ++iX) {
         for (int iY = 0; iY < _nySample; ++iY) {
@@ -105,7 +106,7 @@ BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose
 void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
                                   int const iX, std::vector<int> const& ypix) const
 {
-    image::MaskedImage<float>::Image &im = *_statsImage->getImage();
+    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage->getImage();
 
     _gridcolumns[iX].resize(_imgHeight);
 
@@ -286,18 +287,31 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     return bg;
 }
 
+/************************************************************************************************************/
+
+template<typename PixelT>
+PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
+        ApproximateControl const& actrl,                          /* Approximation style */
+        UndersampleStyle const undersampleStyle                   /* Behaviour if there are too few points */
+                                    ) const
+{
+    geom::Box2I const bbox(geom::PointI(0, 0), geom::ExtentI(_imgWidth, _imgHeight));
+
+    return makeApproximate(_xcen, _ycen, *_statsImage, bbox, actrl);
+}
+
 /*
- * Explicit instantiations
+ * Create the versions we need of _get{Approximate,Image} and Explicit instantiations
  *
  * \cond
  */
-#define INSTANTIATE_BACKGROUND(TYPE)                                    \
+#define CREATE_BACKGROUND(m, v, TYPE)                              \
     template BackgroundMI::BackgroundMI(image::Image<TYPE> const& img, \
                                           BackgroundControl const& bgCtrl); \
     template BackgroundMI::BackgroundMI(image::MaskedImage<TYPE> const& img, \
                                           BackgroundControl const& bgCtrl); \
-    PTR(image::Image<TYPE>)                                             \
-    BackgroundMI::_getImage(                                              \
+    PTR(image::Image<TYPE>)                                     \
+    BackgroundMI::_getImage(                                            \
         Interpolate::Style const interpStyle,                    /* Style of the interpolation */ \
         UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
         TYPE                                                     /* disambiguate */    \
@@ -306,9 +320,18 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         return BackgroundMI::doGetImage<TYPE>(interpStyle, undersampleStyle); \
     }
 
-INSTANTIATE_BACKGROUND(double)
-INSTANTIATE_BACKGROUND(float)
-INSTANTIATE_BACKGROUND(int)
+#define CREATE_getApproximate(m, v, TYPE)                               \
+PTR(Approximate<TYPE>) BackgroundMI::_getApproximate(                   \
+        ApproximateControl const& actrl,                         /* Approximation style */ \
+        UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
+        TYPE                                                     /* disambiguate */ \
+                                               ) const                  \
+    {                                                                   \
+        return BackgroundMI::doGetApproximate<TYPE>(actrl, undersampleStyle); \
+    }
+
+BOOST_PP_SEQ_FOR_EACH(CREATE_BACKGROUND, , LSST_makeBackground_getImage_types)
+BOOST_PP_SEQ_FOR_EACH(CREATE_getApproximate, , LSST_makeBackground_getApproximate_types)
 
 // \endcond
 }}}
