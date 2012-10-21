@@ -214,12 +214,12 @@ ApproximateChebyshev<PixelT>::doGetImage(bool const getMaskedImage) const
     typename MImageT::Image &im = *mi->getImage();
 
     for (int iy = 0; iy != im.getHeight(); ++iy) {
-        double const y = Approximate<PixelT>::_yVec[iy];
+        double const y = iy; // Approximate<PixelT>::_yVec[iy];
 
         int ix = 0;
         for (typename MImageT::Image::x_iterator ptr = im.row_begin(iy),
                  end = im.row_end(iy); ptr != end; ++ptr, ++ix) {
-            double const x = Approximate<PixelT>::_xVec[ix];
+            double const x = ix; // Approximate<PixelT>::_xVec[ix];
 
             *ptr = _poly(x, y);
         }
