@@ -51,6 +51,7 @@ Using the Background class; the code's in \link estimateBackground.py\endlink.
 The basic strategy is
  - Measure the properties of the image (e.g. the mean level) -- the Background object
  - Interpolate the Background to provide an estimate of the background
+ - Or generate an approximation to the Background, and use that to estimate the background
 
 Start by importing needed packages
 \skip import
@@ -98,6 +99,18 @@ Finally, we can interpolate in a number of ways, e.g.
 \skip dict
 \until LINEAR
 
+If we wish to use an approximation to the background (instead of interpolating the values) we
+proceed slightly differently.  First we need an object to specify our interpolation strategy:
+\skip order
+\until actrl
+and then we can Approximate the Background with (in this case a Chebyshev polynomial)
+\until getApprox
+
+We can get an Image or MaskedImage from \c approx with
+\until getMaskedImage
+or truncate the expansion (as is often a good idea with a Chebyshev expansion); in this case to
+order one lower than the original fit.
+\until getImage
  */
  
 }}}
