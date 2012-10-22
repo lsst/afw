@@ -254,8 +254,6 @@ public:
     PTR(lsst::afw::image::Image<PixelT>) getImage() const {
         return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
     }
-    
-    BackgroundControl getBackgroundControl() const { return _bctrl; }
     /**
      * Return the Interpolate::Style that we actually used
      *

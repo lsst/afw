@@ -373,9 +373,6 @@ class BackgroundTestCase(unittest.TestCase):
             ds9.mtv(mi, frame = 1)
 
         statsImage = afwMath.cast_BackgroundMI(backobj).getStatsImage()
-        self.assertEqual(afwGeom.ExtentI(backobj.getBackgroundControl().getNxSample(),
-                                         backobj.getBackgroundControl().getNySample()),
-                         statsImage.getDimensions())
 
         if display:
             ds9.mtv(backobj.getStatsImage(), frame=2)
