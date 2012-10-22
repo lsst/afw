@@ -190,8 +190,9 @@ public:
     }
     UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
     PTR(StatisticsControl) getStatisticsControl() { return _sctrl; }
+    CONST_PTR(StatisticsControl) getStatisticsControl() const { return _sctrl; }
 
-    Property getStatisticsProperty() { return _prop; }
+    Property getStatisticsProperty() const { return _prop; }
     void setStatisticsProperty(Property prop) { _prop = prop; }
     void setStatisticsProperty(std::string prop) { _prop = stringToStatisticsProperty(prop); }
     
