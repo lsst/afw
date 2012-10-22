@@ -179,7 +179,9 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
         throw e;
     }
 }
-
+/*
+ * Worker routine for getImage
+ */
 template<typename PixelT>
 PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         Interpolate::Style const interpStyle_,   // Style of the interpolation

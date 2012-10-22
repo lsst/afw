@@ -95,6 +95,14 @@ def main():
         ds9.mtv(image, frame=1)
         ds9.mtv(afwMath.cast_BackgroundMI(bkgd).getStatsImage(), frame=2)
 
+    order = 2
+    actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order, order)
+    approx = bkgd.getApproximate(actrl)
+
+    approx.getImage()
+    approx.getMaskedImage()
+    approx.getImage(order - 1)
+
 #################################################
 if __name__ == '__main__':
     main()

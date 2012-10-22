@@ -212,14 +212,15 @@ private:
 class Background {
 protected:
     template<typename ImageT>
-    explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
-                            BackgroundControl const& bgCtrl); ///< Control Parameters
-    
+    explicit Background(ImageT const& img, BackgroundControl const& bgCtrl);
+    /// dtor
     virtual ~Background() { }
 public:
-    typedef float InternalPixelT;    // type used for any internal images, and returned by getApproximate
+    typedef float InternalPixelT;    ///< type used for any internal images, and returned by getApproximate
 
+    /// Add a constant level to a background
     virtual void operator+=(float const delta) = 0;
+    /// Subtract a constant level from a background
     virtual void operator-=(float const delta) = 0;
     /**
      * \brief Method to interpolate and return the background for entire image
@@ -249,6 +250,7 @@ public:
     }
 
     /**
+     * \brief Method to interpolate and return the background for entire image
      * \deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template<typename PixelT>
@@ -274,19 +276,19 @@ public:
         return _getApproximate(actrl, undersampleStyle, disambiguate);
     }
 protected:
-    int _imgWidth;                      // img.getWidth()
-    int _imgHeight;                     // img.getHeight()
-    int _nxSample;                      // number of sub-image squares in x-dimension
-    int _nySample;                      // number of sub-image squares in y-dimension
-    BackgroundControl _bctrl;           // control info set by user.
-    mutable Interpolate::Style _asUsedInterpStyle; // the style we actually used
+    int _imgWidth;                      ///< Width of input image
+    int _imgHeight;                     ///< Height of input image
+    int _nxSample;                      ///< number of sub-image squares in x-dimension
+    int _nySample;                      ///< number of sub-image squares in y-dimension
+    BackgroundControl _bctrl;           ///< control info set by user.
+    mutable Interpolate::Style _asUsedInterpStyle; ///< the style we actually used
 
-    std::vector<double> _xcen;          // x center pix coords of sub images
-    std::vector<double> _ycen;          // y center ...
-    std::vector<int> _xorig;            // x origin pix coords of sub images
-    std::vector<int> _yorig;            // y origin ...
-    std::vector<int> _xsize;            // x size of sub images
-    std::vector<int> _ysize;            // y size ...
+    std::vector<double> _xcen;          ///< x center pix coords of sub images
+    std::vector<double> _ycen;          ///< y center ...
+    std::vector<int> _xorig;            ///< x origin pix coords of sub images
+    std::vector<int> _yorig;            ///< y origin ...
+    std::vector<int> _xsize;            ///< x size of sub images
+    std::vector<int> _ysize;            ///< y size ...
     /*
      * We want getImage to be present in the base class, but a templated virtual function
      * is impossible.  So we'll solve the dilemma with a hack: explicitly defined
@@ -349,17 +351,17 @@ private:
 class BackgroundMI : public Background {
 public:
     template<typename ImageT>
-    explicit BackgroundMI(ImageT const& img, ///< Image (or MaskedImage) whose background we want
-                        BackgroundControl const& bgCtrl); ///< Control Parameters
+    explicit BackgroundMI(ImageT const& img,
+                        BackgroundControl const& bgCtrl);
     
     virtual void operator+=(float const delta);
     virtual void operator-=(float const delta);
 
     double getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
-     * Return the background value at a point
+     * \brief Return the background value at a point
      *
-     * \note This is very inefficient -- only use it for debugging, if then.
+     * \warning This is very inefficient -- only use it for debugging, if then.
      *
      * \deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
@@ -367,7 +369,7 @@ public:
         return getPixel(_bctrl.getInterpStyle(), x, y);
     }
     /**
-     * Return the image of statistical quantities extracted from the image
+     * \brief Return the image of statistical quantities extracted from the image
      */
     CONST_PTR(lsst::afw::image::MaskedImage<InternalPixelT>) getStatsImage() const {
         return _statsImage;

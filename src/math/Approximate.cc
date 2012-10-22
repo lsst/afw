@@ -43,7 +43,11 @@ namespace ex = pex::exceptions;
 namespace afw {
 namespace math {
 
-ApproximateControl::ApproximateControl(Style style, int orderX, int orderY) :
+/// \brief ctor
+ApproximateControl::ApproximateControl(Style style, ///< Type of approximation
+                                       int orderX,  ///< Order of approximation to use in x-direction
+                                       int orderY   ///< Order of approximation to use in y-direction
+                                       ) :
     _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY) {
     if (_orderX != _orderY) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
@@ -56,7 +60,9 @@ ApproximateControl::ApproximateControl(Style style, int orderX, int orderY) :
 /************************************************************************************************************/
 
 namespace {
-
+/**
+ * \brief Specialisation of Approximate in Chebyshev polynomials
+ */
 template<typename PixelT>
 class ApproximateChebyshev : public Approximate<PixelT> {
     template<typename T>
@@ -92,7 +98,7 @@ namespace {
 }
 
 /**
- * Fit a grid of points to a afw::math::Chebyshev1Function2D
+ * \brief Fit a grid of points to a afw::math::Chebyshev1Function2D
  */
 template<typename PixelT>
 ApproximateChebyshev<PixelT>::ApproximateChebyshev(
@@ -105,14 +111,6 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
     : Approximate<PixelT>(xVec, yVec, bbox, ctrl),
       _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), geom::Box2D(bbox)))    
 {
-/*
-    bbox, degree, X, Y, Z, dZ):
-        @param degree order of polynomial (0 for constant)
-        @param Z list or array of the values to be fit
-        @param dZ list or array of the error on values to be fit.
-        @return an afw.math.Chebyshev1Function2D that fits the grid supplied
-        """
-*/
 #if !defined(NDEBUG)
     {
         std::vector<double> const& coeffs = _poly.getParameters();
@@ -200,14 +198,24 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
     
     _poly.setParameters(cvec);
 }
-    
+
+/// \brief dtor
 template<typename PixelT>
 ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {
 }
 
+/**
+ * \brief worker function for getImage
+ *
+ * If orderX/orderY are specified the expansion will be truncated to that order
+ *
+ * \note As in the ApproximateControl ctor, the x- and y-orders must be equal
+ */
 template<typename PixelT>
 PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
-ApproximateChebyshev<PixelT>::doGetImage(int orderX, int orderY) const
+ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximation to use in x-direction
+                                         int orderY   ///< Order of approximation to use in y-direction
+                                        ) const
 {
     if (orderX < 0) orderX = Approximate<PixelT>::_ctrl.getOrderX();
     if (orderY < 0) orderY = Approximate<PixelT>::_ctrl.getOrderY();
@@ -233,10 +241,20 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX, int orderY) const
 
     return im;
 }
-
+/**
+ * \brief Return a MaskedImage
+ *
+ *
+ * If orderX/orderY are specified the expansion will be truncated to that order
+ *
+ * \note As in the ApproximateControl ctor, the x- and y-orders must be equal
+ */
 template<typename PixelT>
 PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
-ApproximateChebyshev<PixelT>::doGetMaskedImage(int orderX, int orderY) const
+ApproximateChebyshev<PixelT>::doGetMaskedImage(
+        int orderX,                     ///< Order of approximation to use in x-direction
+        int orderY                      ///< Order of approximation to use in y-direction
+                                              ) const
 {
     typedef typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT> MImageT;
 
@@ -261,7 +279,7 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(int orderX, int orderY) const
 
 /************************************************************************************************************/
 /**
- * A factory function to make Approximate objects
+ * \brief A factory function to make Approximate objects
  */
 template<typename PixelT>
 PTR(Approximate<PixelT>)
