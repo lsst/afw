@@ -279,9 +279,10 @@ namespace lsst { namespace afw { namespace math {
 \page afwSecMath Mathematical Operations
 \section afwSecMath Mathematical Operations
 
- - Statistics
+ - Statistics.
 Annotated examples are available for \link StatisticsExample Statistics\endlink.
- - Background estimation of images
+ - Background estimation of images.
+Annotated examples are available for \link BackgroundExample Background Estimation\endlink.
  - Interpolate
  - Convolution of images is handled by convolve()
  - Warping Images is handled by warpImage()

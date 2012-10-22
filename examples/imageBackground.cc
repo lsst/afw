@@ -34,7 +34,6 @@ namespace math = lsst::afw::math;
 namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
-typedef math::Background Back;
 
 int main() {
 
@@ -87,12 +86,12 @@ int main() {
     bgCtrl.getStatisticsControl()->setNumIter(3);
     bgCtrl.getStatisticsControl()->setNumSigmaClip(2.5);
 
-    // initialize a background object (derivates for interpolation are computed in the constructor
-    Back back = math::makeBackground(img, bgCtrl);
+    // initialize a background object
+    PTR(math::Background) back = math::makeBackground(img, bgCtrl);
     
     // can get an individual pixel or a whole frame.
-    float const MID = back.getPixel(xcen, ycen);
-    ImageF::Ptr bg = back.getImage<ImageF::Pixel>();
+    float const MID = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
+    ImageF::Ptr bg = back->getImage<ImageF::Pixel>();
     
     // create a background-subtracted image
     ImageF sub(img.getDimensions());
