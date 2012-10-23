@@ -37,6 +37,7 @@
 #include "gsl/gsl_spline.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Interpolate.h"
+#include "lsst/afw/math/detail/InterpolateTaut.h"
 
 namespace lsst {
 namespace ex = pex::exceptions;
@@ -44,7 +45,7 @@ namespace afw {
 namespace math {
 
 /************************************************************************************************************/
-    
+
 namespace {
     std::pair<std::vector<double>, std::vector<double> >
     recenter(std::vector<double> const &x,
@@ -409,6 +410,11 @@ PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values
     switch (style) {
       case Interpolate::CONSTANT:
         return PTR(Interpolate)(new InterpolateConstant(x, y, style));
+      case Interpolate::TAUT_SPLINE:
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          str(boost::format("You must use an InterpolateControl to create a %d")
+                              % style // % interpStyleToString(style)
+                             ));
       default:                            // use GSL
         return PTR(Interpolate)(new InterpolateGsl(x, y, style));
     }
@@ -423,6 +429,10 @@ PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values
                                 )
 {
     switch (ictrl.getStyle()) {
+      case Interpolate::TAUT_SPLINE:
+        return PTR(Interpolate)(
+          new detail::InterpolateTautSpline(x, y,
+                                            dynamic_cast<detail::InterpolateControlTautSpline const&>(ictrl)));
       default:                            // all we need is a style
         return makeInterpolate(x, y, ictrl.getStyle());
     }

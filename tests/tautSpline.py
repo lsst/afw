@@ -33,18 +33,23 @@ or
 """
 
 import math, os, sys
+import numpy as np
 import unittest
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions
-import lsst.daf.base
-import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import eups
-import lsst.afw.display.ds9 as ds9
 
 try:
-    type(display)
+    import matplotlib.pyplot as plt
+    try:
+        fig
+    except NameError:
+        fig = None
+except ImportError:
+    plt = None
+
+try:
+    display
 except NameError:
     display = False
 
@@ -91,7 +96,7 @@ class SplineTestCase(unittest.TestCase):
     def testNaturalSpline1(self):
         """Test fitting a natural spline to a smooth function"""
         gamma = 0
-        sp = afwMath.TautSpline(self.x, self.ySin, gamma)
+        sp = afwMath.makeInterpolate(self.x, self.ySin, afwMath.InterpolateControlTautSpline(gamma))
 
         y2 = afwMath.vectorD()
         sp.interpolate(self.x2, y2)
@@ -101,7 +106,8 @@ class SplineTestCase(unittest.TestCase):
 
     def testNaturalSplineDerivative1(self):
         """Test fitting a natural spline to a smooth function and finding its derivative"""
-        sp = afwMath.TautSpline(self.x, self.ySin)
+        gamma = 0
+        sp = afwMath.makeInterpolate(self.x, self.ySin, afwMath.InterpolateControlTautSpline(gamma))
 
         y2 = afwMath.vectorD()
         sp.derivative(self.x2, y2)
@@ -112,7 +118,7 @@ class SplineTestCase(unittest.TestCase):
     def testNaturalSpline2(self):
         """Test fitting a natural spline to a non-differentiable function (we basically fail)"""
         gamma = 0
-        sp = afwMath.TautSpline(self.x, self.yND, gamma)
+        sp = afwMath.makeInterpolate(self.x, self.yND, afwMath.InterpolateControlTautSpline(gamma))
 
         y2 = afwMath.vectorD()
         sp.interpolate(self.x2, y2)
@@ -120,10 +126,10 @@ class SplineTestCase(unittest.TestCase):
         for x, y in zip(self.x2, y2):
             self.assertAlmostEqual(y, self.noDerivative(x), 1) # fails at 2 places!
 
-    def testTautSpline1(self):
+    def testInterpolateTautSpline1(self):
         """Test fitting a taut spline to a smooth function"""
         gamma = 2.5
-        sp = afwMath.TautSpline(self.x, self.ySin, gamma)
+        sp = afwMath.makeInterpolate(self.x, self.ySin, afwMath.InterpolateControlTautSpline(gamma))
 
         y2 = afwMath.vectorD()
         sp.interpolate(self.x2, y2)
@@ -131,10 +137,10 @@ class SplineTestCase(unittest.TestCase):
         for x, y in zip(self.x2, y2):
             self.assertAlmostEqual(y, self.smooth(x), 4)
 
-    def testTautSpline2(self):
+    def testInterpolateTautSpline2(self):
         """Test fitting a taut spline to a non-differentiable function"""
         gamma = 2.5
-        sp = afwMath.TautSpline(self.x, self.yND, gamma)
+        sp = afwMath.makeInterpolate(self.x, self.yND, afwMath.InterpolateControlTautSpline(gamma))
 
         y2 = afwMath.vectorD()
         sp.interpolate(self.x2, y2)
@@ -142,11 +148,52 @@ class SplineTestCase(unittest.TestCase):
         for x, y in zip(self.x2, y2):
             self.assertAlmostEqual(y, self.noDerivative(x))
 
+        if display and plt:
+            global fig
+            if fig is None:
+                fig = plt.figure()
+            else:
+                fig.clf()
+            axes = fig.add_axes((0.1, 0.1, 0.85, 0.80))
+            axes.plot(self.x, self.yND, "b.", label="Data")
+            axes.plot(self.x2, y2,      "r", label="Taut Spline")
+            axes.set_ylim(-0.1, axes.get_ylim()[1] + 0.1)
+            axes.set_xlim(-0.1, axes.get_xlim()[1] + 0.1)
+
+            sp = afwMath.makeInterpolate(self.x, self.yND, afwMath.Interpolate.AKIMA_SPLINE)
+            sp.interpolate(self.x2, y2)
+            axes.plot(self.x2, y2,      "g", label="Akima Spline")
+
+            sp = afwMath.makeInterpolate(self.x, self.yND, afwMath.Interpolate.NATURAL_SPLINE)
+            sp.interpolate(self.x2, y2)
+            axes.plot(self.x2, y2,      "b", label="Natural Spline")
+
+            sp = afwMath.makeInterpolate(self.x, self.yND, afwMath.Interpolate.CUBIC_SPLINE)
+            sp.interpolate(self.x2, y2)
+            axes.plot(self.x2, y2,      "m", label="Cubic Spline")
+
+            plt.legend(loc="upper right", ncol=1)
+            fig.show()
+            raw_input("Continue? ")
+
+    def testInterpolateTaut_AkimaSpline(self):
+        """Compare Taut and Akima splines"""
+        gamma = 2.5
+        taut  = afwMath.makeInterpolate(self.x, self.yND, afwMath.InterpolateControlTautSpline(gamma))
+        akima = afwMath.makeInterpolate(self.x, self.yND, afwMath.Interpolate.AKIMA_SPLINE)
+
+        yAkima, yTaut = afwMath.vectorD(), afwMath.vectorD()
+        akima.interpolate(self.x2, yAkima)
+        taut.interpolate(self.x2, yTaut)
+
+        for ya, yt in zip(yAkima, yTaut):
+            self.assertAlmostEqual(ya, yt)
+
     def testRootFinding(self):
         """Test finding roots of Spline = value"""
 
         gamma = 2.5
-        sp = afwMath.TautSpline(self.x, self.yND, gamma)
+        sp = afwMath.makeInterpolate(self.x, self.yND, afwMath.InterpolateControlTautSpline(gamma))
 
         for value in (0.1, 0.5):
             self.assertEqual(sp.roots(value, self.x[0], self.x[-1])[0], 1 - value)
@@ -159,10 +206,10 @@ class SplineTestCase(unittest.TestCase):
         #
         # Solve sin(x) = 0.5
         #
-        sp = afwMath.TautSpline(self.x, self.ySin)
+        sp = afwMath.makeInterpolate(self.x, self.ySin, afwMath.InterpolateControlTautSpline(gamma))
         roots = [math.degrees(x) for x in sp.roots(0.5, self.x[0], self.x[-1])]
-        self.assertAlmostEqual(roots[0], 30, 5)
-        self.assertAlmostEqual(roots[1], 150, 5)
+        self.assertAlmostEqual(roots[0]/30,  1, 6)
+        self.assertAlmostEqual(roots[1]/150, 1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -24,10 +24,12 @@
  
 %{
 #include "lsst/afw/math/Interpolate.h"
-#include "lsst/afw/math/detail/Spline.h"
+#include "lsst/afw/math/detail/InterpolateTaut.h"
 %}
 
 %shared_ptr(lsst::afw::math::Interpolate);
+%shared_ptr(lsst::afw::math::detail::InterpolateSdssSpline);
+%shared_ptr(lsst::afw::math::detail::InterpolateTautSpline);
 
 %include "lsst/afw/math/Interpolate.h"
-%include "lsst/afw/math/detail/Spline.h"
+%include "lsst/afw/math/detail/InterpolateTaut.h"
