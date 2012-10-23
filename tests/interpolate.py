@@ -76,6 +76,7 @@ class InterpolateTestCase(unittest.TestCase):
 
         self.assertEqual(youtL, self.y1test)
 
+        self.assertEqual(yinterpL.derivative(self.xtest), self.dydx)
 
     def testNaturalSplineRamp(self):
         
@@ -86,14 +87,17 @@ class InterpolateTestCase(unittest.TestCase):
         
         self.assertEqual(youtS, self.y1test)
 
+        self.assertEqual(yinterpS.derivative(self.xtest), self.dydx)
+
     def testAkimaSplineParabola(self):
         """test the Spline interpolator"""
         # specify interp type with the enum style interface
         yinterpS = afwMath.makeInterpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
         
-
         self.assertEqual(youtS, self.y2test)
+
+        self.assertEqual(yinterpS.derivative(self.xtest), self.dydx + 2*self.xtest*self.d2ydx2)
 
     def testConstant(self):
         """test the constant interpolator"""
