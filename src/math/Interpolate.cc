@@ -85,9 +85,12 @@ namespace {
 class InterpolateConstant : public Interpolate {
     friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
+    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                            InterpolateControl const& ictrl);
 public:
     virtual ~InterpolateConstant() {}
     virtual double interpolate(double const x) const;
+    virtual double derivative(double const x) const;
 private:
     InterpolateConstant(std::vector<double> const &x, ///< the x-values of points
                         std::vector<double> const &y, ///< the values at x[]
@@ -131,6 +134,11 @@ double InterpolateConstant::interpolate(double const xInterp) const
     }
 }
 
+double InterpolateConstant::derivative(double const x) const
+{
+    return 0.0;
+}
+
 /************************************************************************************************************/
 namespace {
 /*
@@ -154,9 +162,12 @@ styleToGslInterpType(Interpolate::Style const style)
         return ::gsl_interp_akima;
       case Interpolate::AKIMA_SPLINE_PERIODIC:
         return ::gsl_interp_akima_periodic;
+      case Interpolate::TAUT_SPLINE:
       case Interpolate::UNKNOWN:
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                          "I am unable to make an interpolator of type UNKNOWN");
+                          str(boost::format("I am unable to make an interpolator of type %d")
+                              % style // % interpStyleToString(style)
+                             ));
       case Interpolate::NUM_STYLES:
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
                           str(boost::format("You can't get here: style == %") % style));
@@ -167,9 +178,12 @@ styleToGslInterpType(Interpolate::Style const style)
 class InterpolateGsl : public Interpolate {
     friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
+    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                            InterpolateControl const& ictrl);
 public:
     virtual ~InterpolateGsl();
     virtual double interpolate(double const x) const;
+    virtual double derivative(double const) const;
 private:
     InterpolateGsl(std::vector<double> const &x, std::vector<double> const &y, Interpolate::Style const style);
 
@@ -245,6 +259,15 @@ double InterpolateGsl::interpolate(double const xInterp) const
     assert(xInterp >= _x.front());
     assert(xInterp <= _x.back());
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], xInterp, _acc);
+}
+
+/************************************************************************************************************/
+/// \brief return the derivative at the point xInterp
+double
+InterpolateGsl::derivative(double const xInterp ///< the x-value to use
+                          ) const
+{
+    return ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], xInterp, _acc);
 }
 
 /************************************************************************************************************/
@@ -339,6 +362,42 @@ Interpolate::Interpolate(
     ;
 }
 
+/// Interpolate all the values in x, setting y
+void Interpolate::interpolate(std::vector<double> const& xInterp, ///< Desired abscissas
+                              std::vector<double> &y              ///< Returned ordinates
+                             ) const {
+    y.resize(xInterp.size());
+    for (unsigned int i = 0; i != xInterp.size(); ++i) {
+        y[i] = interpolate(xInterp[i]);
+    }
+}
+
+
+/// Evaluate the derivatives at all the values in x, setting dydx
+void Interpolate::derivative(std::vector<double> const& xInterp, ///< Desired abscissas
+                             std::vector<double> &dydx           ///< Returned derivatives
+                            ) const {
+    dydx.resize(xInterp.size());
+    for (unsigned int i = 0; i != xInterp.size(); ++i) {
+        dydx[i] = derivative(xInterp[i]);
+    }
+}
+
+/**
+ * \brief Solve spline = value in [x0, x1)
+ *
+ * \note Not implemented in the base class
+ */
+std::vector<double>
+Interpolate::roots(double const value,  ///< Desired value
+                   double const x0,     ///< Roots must be >= x0
+                   double const x1      ///< Roots must be <  x1
+                  ) const
+{
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Not implemented");
+}
+
+/************************************************************************************************************/
 /**
  * A factory function to make Interpolate objects
  */
@@ -352,6 +411,20 @@ PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values
         return PTR(Interpolate)(new InterpolateConstant(x, y, style));
       default:                            // use GSL
         return PTR(Interpolate)(new InterpolateGsl(x, y, style));
+    }
+}
+
+/**
+ * A factory function to make Interpolate objects
+ */
+PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values of points
+                                 std::vector<double> const &y, ///< the values at x[]
+                                 InterpolateControl const& ictrl ///< desired interpolator
+                                )
+{
+    switch (ictrl.getStyle()) {
+      default:                            // all we need is a style
+        return makeInterpolate(x, y, ictrl.getStyle());
     }
 }
 

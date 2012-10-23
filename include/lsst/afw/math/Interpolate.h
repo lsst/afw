@@ -29,30 +29,39 @@ namespace lsst {
 namespace afw {
 namespace math {
 
+class InterpolateControl;
+
  /**
- * @brief Interpolate values for a set of x,y vector<>s
- * @ingroup afw
- * @author Steve Bickerton
- */
+  * @brief Interpolate values for a set of x,y vector<>s
+  * @ingroup afw
+  * @author Steve Bickerton
+  */
 class Interpolate {
 public:
     enum Style {
         UNKNOWN = -1,
         CONSTANT = 0,
-        LINEAR = 1,
-        NATURAL_SPLINE = 2,
-        CUBIC_SPLINE = 3,
-        CUBIC_SPLINE_PERIODIC = 4,
-        AKIMA_SPLINE = 5,
-        AKIMA_SPLINE_PERIODIC = 6,
+        LINEAR,
+        NATURAL_SPLINE,
+        CUBIC_SPLINE,
+        CUBIC_SPLINE_PERIODIC,
+        AKIMA_SPLINE,
+        AKIMA_SPLINE_PERIODIC,
+        TAUT_SPLINE,
         NUM_STYLES
     };
 
     friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
+    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                            InterpolateControl const& ictrl);
     
     virtual ~Interpolate() {}
     virtual double interpolate(double const x) const = 0;
+    virtual void interpolate(std::vector<double> const& x, std::vector<double> &y) const;
+    virtual double derivative(double const x) const = 0;
+    virtual void derivative(std::vector<double>  const& x, std::vector<double> &dydx) const;
+    virtual std::vector<double> roots(double const value, double const x0, double const x1) const;
 protected:
     /**
      * Base class ctor
@@ -72,8 +81,24 @@ private:
     Interpolate& operator=(Interpolate const&);
 };
 
+/**
+ * \brief Control interpolation
+ *
+ * A base class to pass to makeInterpolate;  subclass if you have real information to share
+ */
+class InterpolateControl {
+public:
+    explicit InterpolateControl(Interpolate::Style style) : _style(style) {}
+    virtual ~InterpolateControl() {}
+    Interpolate::Style getStyle() const { return _style; }
+private:
+    Interpolate::Style _style;
+};
+
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
+PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+                                 InterpolateControl const& ictrl);
     
 Interpolate::Style stringToInterpStyle(std::string const &style);
 Interpolate::Style lookupMaxInterpStyle(int const n);
