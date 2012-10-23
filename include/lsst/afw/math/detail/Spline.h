@@ -33,27 +33,6 @@ protected:
     std::vector<std::vector<double> > _coeffs; // and associated coefficients
 };
 
-class TautSpline : public Spline {
-public:
-    enum Symmetry { Unknown, Odd, Even };
-
-    TautSpline(std::vector<double> const& x,
-               std::vector<double> const& y,
-               double const gamma=0,
-               Symmetry type=Unknown
-          );
-private:
-    void calculateTautSpline(std::vector<double> const& x,
-                             std::vector<double> const& y,
-                             double const gamma0
-                            );
-    void calculateTautSplineEvenOdd(std::vector<double> const& x,
-                                    std::vector<double> const& y,
-                                    double const gamma0,
-                                    bool even
-                                );
-};
-
 class SmoothedSpline : public Spline {
 public:
     SmoothedSpline(std::vector<double> const& x,  ///< points where function's specified; monotonic increasing
