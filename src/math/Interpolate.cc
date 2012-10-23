@@ -268,6 +268,33 @@ double
 InterpolateGsl::derivative(double const xInterp ///< the x-value to use
                           ) const
 {
+    // New GSL versions refuse to extrapolate.
+    // gsl_interp_init() requires x to be ordered, so can just check
+    // the array endpoints for out-of-bounds.
+    if ((xInterp < _x.front() || (xInterp > _x.back()))) {
+        /* could also just fail via: */
+#if 0
+         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                           str(boost::format("Interpolation point %f outside range [%f, %f]")
+                               % x % _x.front() % _x.back()));
+#endif
+        double x0, y0;
+        if (xInterp < _x.front()) {
+            x0 = _x.front();
+            y0 = _y.front();
+        } else {
+            x0 = _x.back();
+            y0 = _y.back();
+        }
+        // first derivative at endpoint
+        double d = ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], x0, _acc);
+        // second derivative at endpoint
+        double d2 = ::gsl_interp_eval_deriv2(_interp, &_x[0], &_y[0], x0, _acc);
+        return d + (xInterp - x0)*d2;
+    }
+    assert(xInterp >= _x.front());
+    assert(xInterp <= _x.back());
+
     return ::gsl_interp_eval_deriv(_interp, &_x[0], &_y[0], xInterp, _acc);
 }
 
