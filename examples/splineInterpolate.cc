@@ -25,15 +25,12 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-
-#include "boost/shared_ptr.hpp"
 #include "lsst/afw/math/Interpolate.h"
 
 using namespace std;
 namespace math = lsst::afw::math;
 
 int main() {
-
     // create x,y vector<>s containing a sin() function
     int const nX = 20;
     vector<double> x(nX);
@@ -52,20 +49,21 @@ int main() {
     int const nX2 = 100;
     vector<double> x2(nX2);
     for (int i = 0; i < nX2; ++i) {
-        x2[i] = xLo + ( ((nX + 2.0)/nX)*static_cast<double>(i)/(nX2 - 1) - 1.0/nX) * range;
+        x2[i] = xLo + ((i*(nX + 2.0)/nX)/(nX2 - 1) - 1.0/nX)*range;
     }
     
-    // declare an spline interpolate object.  the constructor computes the first derivatives
-    PTR(math::Interpolate) yinterpS = math::makeInterpolate(x, y, math::Interpolate::LINEAR);
+    // Build a linear interpolate object.
+    PTR(math::Interpolate) yinterpL = math::makeInterpolate(x, y, math::Interpolate::LINEAR);
     
-    // declare a linear interpolate object. the constructor computes the second derivatives
-    PTR(math::Interpolate) yinterpL = math::makeInterpolate(x, y, math::Interpolate::CUBIC_SPLINE);
+    // Build a spline interpolate object.
+    PTR(math::Interpolate) yinterpS = math::makeInterpolate(x, y, math::Interpolate::CUBIC_SPLINE);
     
-    // output the interpolated y values, 1st derivatives, and 2nd derivatives.
+    // output the interpolated y values and derivatives.
     for (int i = 0; i < nX2; ++i) {
         cout << i << " " << x2[i] << " " <<
             yinterpL->interpolate(x2[i]) << " " <<
             yinterpS->interpolate(x2[i]) << " " <<
+            yinterpS->derivative(x2[i]) << " " <<
             endl;
     }
 

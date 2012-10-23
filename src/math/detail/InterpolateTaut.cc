@@ -23,9 +23,9 @@
  */
  
 /**
- * @brief Interpolate values for a set of x,y vector<>s
- * @ingroup afw
- * @author Steve Bickerton
+ * \file
+ * \brief Calculate a taut spline interpolant for a set of x,y vectors
+ * \ingroup afw
  */
 #include <limits>
 #include <algorithm>
@@ -46,11 +46,12 @@ namespace {
 }
 
 /*****************************************************************************/
-/*
- * Allocate the storage a Spline needs
+/**
+ * \brief Allocate the storage a Spline needs
  */
 void
-InterpolateSdssSpline::_allocateSpline(int const nknot)
+InterpolateSdssSpline::_allocateSpline(int const nknot ///< Number of knots
+                                      )
 {
     _knots.resize(nknot);
     _coeffs.resize(4);
@@ -76,7 +77,7 @@ InterpolateSdssSpline::interpolate(double const xInterp) const
 }
 
 /**
- * Interpolate a Spline.
+ * \brief Interpolate a Spline.
  */
 void
 InterpolateSdssSpline::interpolate(std::vector<double> const& x, ///< points to interpolate at
@@ -176,65 +177,6 @@ InterpolateControlTautSpline::InterpolateControlTautSpline(
 /************************************************************************************************************/
 /**
  * \brief Construct cubic spline interpolant to given data.
- *
- * If gamma .gt. 0., additional knots are introduced where needed to
- * make the interpolant more flexible locally. this avoids extraneous
- * inflection points typical of cubic spline interpolation at knots to
- * rapidly changing data. Values for gamma are:
- *
- *          = 0., no additional knots
- *          in (0.,3.), under certain conditions on the given data at
- *                points i-1, i, i+1, and i+2, a knot is added in the
- *                i-th interval, i=1,...,ntau-3. see description of method
- *                below. the interpolant gets rounded with increasing
- *                gamma. a value of  2.5  for gamma is typical.
- *          in (3.,6.), same , except that knots might also be added in
- *                intervals in which an inflection point would be permitted.
- *                a value of  5.5  for gamma is typical.
- *
- *  ------  m e t h o d  ------
- *  on the i-th interval, (tau[i], tau[i+1]), the interpolant is of the
- *  form
- *  (*)  f(u(x)) = a + b*u + c*h(u,z) + d*h(1-u,1-z) ,
- *  with u = u(x) = (x - tau[i])/dtau[i].  Here,
- *       z = z(i) = addg(i+1)/(addg(i) + addg(i+1))
- *  (= .5, in case the denominator vanishes). with
- *       ddg(j) = dg(j+1) - dg(j),
- *       addg(j) = abs(ddg(j)),
- *       dg(j) = divdif(j) = (gtau[j+1] - gtau[j])/dtau[j]
- *  and
- *       h(u,z) = alpha*u**3 + (1 - alpha)*(max(((u-zeta)/(1-zeta)),0)**3
- *  with
- *       alpha(z) = (1-gamma/3)/zeta
- *       zeta(z) = 1 - gamma*min((1 - z), 1/3)
- *  thus, for 1/3 .le. z .le. 2/3,  f  is just a cubic polynomial on
- *  the interval i. otherwise, it has one additional knot, at
- *         tau[i] + zeta*dtau[i] .
- *  as  z  approaches  1, h(.,z) has an increasingly sharp bend  near 1,
- *  thus allowing  f  to turn rapidly near the additional knot.
- *     in terms of f(j) = gtau[j] and
- *       fsecnd[j] = 2*derivative of f at tau[j],
- *  the coefficients for (*) are given as
- *       a = f(i) - d
- *       b = (f(i+1) - f(i)) - (c - d)
- *       c = fsecnd[i+1]*dtau[i]**2/hsecnd(1,z)
- *       d = fsecnd[i]*dtau[i]**2/hsecnd(1,1-z)
- *  hence can be computed once fsecnd[i],i=0,...,ntau-1, is fixed.
- *
- *   f  is automatically continuous and has a continuous second derivat-
- *  ive (except when z = 0 or 1 for some i). we determine fscnd(.) from
- *  the requirement that also the first derivative of  f  be continuous.
- *  in addition, we require that the third derivative be continuous
- *  across  tau[1] and across tau[ntau-2] . this leads to a strictly
- *  diagonally dominant tridiagonal linear system for the fsecnd[i]
- *  which we solve by gauss elimination without pivoting.
- *
- *  There must be at least 4 interpolation points for us to fit a taut
- * cubic spline, but if you provide fewer we'll fit a quadratic or linear
- * polynomial (but you must provide at least 2)
- *
- * See also phSplineFindTautEven and phSplineFindTautOdd for splining
- * functions with known symmetries
  */
 InterpolateTautSpline::InterpolateTautSpline(
         std::vector<double> const& x,   ///< points where function's specified
@@ -334,8 +276,7 @@ InterpolateTautSpline::_calculateTautSpline(
  *     s[1][...] = diag = diagonal in linear system
  *     s[2][...] = u = upper diagonal in linear system
  *     s[3][...] = r = right side for linear system (initially)
- *               = fsecnd = solution of linear system , namely the second
- *                          derivatives of interpolant at  tau
+ *               = fsecnd = solution of linear system, namely the second derivatives of interpolant at tau
  *     s[4][...] = z = indicator of additional knots
  *     s[5][...] = 1/hsecnd(1,x) with x = z or = 1-z. see below.
  */
@@ -374,6 +315,9 @@ InterpolateTautSpline::_calculateTautSpline(
         method = 1;
     } else if(gamma > 3) {
         gamma -= 3;
+        if (gamma >= 3) {
+            gamma = 3*(1 - std::numeric_limits<double>::epsilon());
+        }
         method = 3;
     } else {
         method = 2;
@@ -960,11 +904,9 @@ do_cubic(double a, double b, double c, double d, std::vector<double> & roots)
 
 /*****************************************************************************/
 /*
- * <AUTO EXTRACT>
+ * \brief Find the roots of Spline - val = 0 in the range [x0, x1).
  *
- * Find the roots of
- *   Spline - val = 0
- * in the range [x0, x1). Return a vector of all the roots found
+ * \returns a vector of all the roots found
  */
 std::vector<double>
 InterpolateSdssSpline::roots(double const value,       ///< desired value

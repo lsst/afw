@@ -99,5 +99,31 @@ Finally, we can interpolate in a number of ways, e.g.
 \until LINEAR
 
  */
- 
+
+/**
+ \page InterpolateExample Interpolate
+
+ \dontinclude splineInterpolate.cc
+
+Using the Interpolate class; the code's in \link splineInterpolate.cc\endlink.
+
+The usual preliminaries:
+\skip iostream
+\until lsst::afw
+
+Create some data to interpolate:
+\until x2[i]
+\until }
+
+Build two different Interpolate objects:
+\until CUBIC_SPLINE
+
+And use them
+\until endl
+\until }
+
+\until }
+
+*/
+
 }}}

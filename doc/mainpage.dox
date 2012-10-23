@@ -283,7 +283,8 @@ namespace lsst { namespace afw { namespace math {
 Annotated examples are available for \link StatisticsExample Statistics\endlink.
  - Background estimation of images.
 Annotated examples are available for \link BackgroundExample Background Estimation\endlink.
- - Interpolate
+ - Interpolate and Approximate
+Annotated examples are available for \link InterpolateExample Interpolate\endlink.
  - Convolution of images is handled by convolve()
  - Warping Images is handled by warpImage()
  - Manipulating spatially-distributed sets of objects (e.g. PSF candidates);
