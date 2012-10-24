@@ -35,6 +35,10 @@ BaseCore::GridTransform::GridTransform(BaseCore const & input) :
     _eig(Quadrupole(input).getMatrix())
 {}
 
+LinearTransform::Matrix BaseCore::GridTransform::getMatrix() const {
+    return _eig.operatorInverseSqrt();
+}
+
 BaseCore::GridTransform::operator LinearTransform () const {
     return LinearTransform(_eig.operatorInverseSqrt());
 }
@@ -97,11 +101,21 @@ LinearTransform BaseCore::GridTransform::invert() const {
     return LinearTransform(_eig.operatorSqrt());
 }
 
+Ellipse::GridTransform::GridTransform(Ellipse const & input) : _input(input), _coreGt(input.getCore()) {}
+
+AffineTransform::Matrix Ellipse::GridTransform::getMatrix() const {
+    AffineTransform::Matrix r = AffineTransform::Matrix::Zero();
+    r.block<2,2>(0,0) = _coreGt.getMatrix();
+    r.block<2,1>(0,2) = -r.block<2,2>(0,0) * _input.getCenter().asEigen();
+    r(2,2) = 1.0;
+    return r;
+}
+
 Ellipse::GridTransform::DerivativeMatrix 
 Ellipse::GridTransform::d() const {
     DerivativeMatrix r = DerivativeMatrix::Zero();
-    LinearTransform linear = _input.getCore().getGridTransform();
-    r.block<4,3>(0,0) = _input.getCore().getGridTransform().d();
+    LinearTransform linear = _coreGt;
+    r.block<4,3>(0,0) = _coreGt.d();
     double x = -_input.getCenter().getX();
     double y = -_input.getCenter().getY();
     r(AffineTransform::X, Ellipse::X) = -linear[LinearTransform::XX];
@@ -117,8 +131,12 @@ Ellipse::GridTransform::d() const {
     return r;
 }
 
+double Ellipse::GridTransform::getDeterminant() const {
+    return _coreGt.getDeterminant();
+}
+
 Ellipse::GridTransform::operator AffineTransform () const {
-    LinearTransform linear = _input.getCore().getGridTransform();
+    LinearTransform linear = _coreGt;
     return AffineTransform(linear, linear(Point2D() - _input.getCenter()));
 }
 
