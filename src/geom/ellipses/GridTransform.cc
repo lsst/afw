@@ -22,19 +22,18 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include "lsst/afw/geom/ellipses/GridTransform.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 
 namespace lsst { namespace afw { namespace geom {
 namespace ellipses {
 
+BaseCore::GridTransform::GridTransform(BaseCore const & input) :
+    _input(input),
+    _eig(Quadrupole(input).getMatrix())
+{}
+
 BaseCore::GridTransform::operator LinearTransform () const {
-    double a, b, theta;
-    _input._assignToAxes(a, b, theta);
-    LinearTransform result = LinearTransform::makeRotation(-theta);
-    result[LinearTransform::XX] /= a;
-    result[LinearTransform::XY] /= a;
-    result[LinearTransform::YX] /= b;
-    result[LinearTransform::YY] /= b;
-    return result;
+    return LinearTransform(_eig.operatorInverseSqrt());
 }
 
 BaseCore::GridTransform::DerivativeMatrix
@@ -44,22 +43,30 @@ BaseCore::GridTransform::d() const {
     Eigen::Matrix<double,4,3> mid = Eigen::Matrix<double,4,3>::Zero();
     double cos_t = std::cos(theta);
     double sin_t = std::sin(theta);
-    mid(LinearTransform::XX, 0) = -cos_t / (a*a);
-    mid(LinearTransform::XY, 0) = -sin_t / (a*a);
-    mid(LinearTransform::YX, 1) = sin_t / (b*b);
-    mid(LinearTransform::YY, 1) = -cos_t / (b*b);
-    mid(LinearTransform::XX, 2) = -sin_t / a;
-    mid(LinearTransform::XY, 2) = cos_t / a;
-    mid(LinearTransform::YX, 2) = -cos_t / b;
-    mid(LinearTransform::YY, 2) = -sin_t / b;
+    double cc = cos_t * cos_t;
+    double ss = sin_t * sin_t;
+    double cs = cos_t * sin_t;
+    double aa = a*a;
+    double bb = b*b;
+    double v = 1.0 / b - 1.0 / a;
+    mid(LinearTransform::XX, 0) = -cc / aa;
+    mid(LinearTransform::XY, 0) = mid(LinearTransform::YX, 0) = -cs / aa;
+    mid(LinearTransform::YY, 0) = -ss / aa;
+    mid(LinearTransform::XX, 1) = -ss / bb;
+    mid(LinearTransform::XY, 1) = mid(LinearTransform::YX, 1) = cs / bb;
+    mid(LinearTransform::YY, 1) = -cc / bb;
+    mid(LinearTransform::XX, 2) = 2.0 * v * cs;
+    mid(LinearTransform::XY, 2) = mid(LinearTransform::YX, 2) = v * (ss - cc);
+    mid(LinearTransform::YY, 2) = -2.0 * v * cs;
     return mid * rhs;
-
 }
 
 double BaseCore::GridTransform::getDeterminant() const {
-    double a, b, theta;
-    _input._assignToAxes(a, b, theta);
-    return 1.0 / (a * b);
+    return sqrt(1.0 / _eig.eigenvalues().prod());
+}
+
+LinearTransform BaseCore::GridTransform::invert() const {
+    return LinearTransform(_eig.operatorSqrt());
 }
 
 Ellipse::GridTransform::DerivativeMatrix 
