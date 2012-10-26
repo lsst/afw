@@ -32,7 +32,8 @@
  *  @note Do not include directly; use the main ellipse header file.
  */
 
-#include <boost/tuple/tuple.hpp>
+#include "boost/tuple/tuple.hpp"
+#include "Eigen/Eigenvalues"
 
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 #include "lsst/afw/geom/AffineTransform.h"
@@ -50,24 +51,27 @@ public:
     typedef Eigen::Matrix<double,4,3> DerivativeMatrix;
 
     /// @brief Standard constructor.
-    explicit GridTransform(BaseCore const & input) : _input(input) {}
-
-    /// @brief Return the derivative of the transform with respect to input core.
-    DerivativeMatrix d() const;
+    explicit GridTransform(BaseCore const & input);
     
     /// @brief Convert the proxy to a LinearTransform.
     operator LinearTransform () const;
+
+    /// @brief Return the transform matrix as an Eigen object.
+    LinearTransform::Matrix getMatrix() const;
+
+    /// @brief Return the derivative of the transform with respect to input core.
+    DerivativeMatrix d() const;
 
     /// @brief Return the determinant of the LinearTransform.
     double getDeterminant() const;
 
     /// @brief Return the inverse of the LinearTransform;
-    LinearTransform invert() const { return LinearTransform(*this).invert(); }
+    LinearTransform invert() const;
 
 private:
 
     BaseCore const & _input; ///< \internal input core to be transformed
-
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> _eig;
 };
 
 /**
@@ -81,21 +85,27 @@ public:
     typedef Eigen::Matrix<double,6,5> DerivativeMatrix;
 
     /// @brief Standard constructor.
-    explicit GridTransform(Ellipse const & input) : _input(input) {}
+    explicit GridTransform(Ellipse const & input);
+
+    /// @brief Return the transform matrix as an Eigen object.
+    AffineTransform::Matrix getMatrix() const;
     
     /// @brief Return the derivative of transform with respect to input ellipse.
     DerivativeMatrix d() const;
     
+    /// @brief Return the determinant of the AffineTransform.
+    double getDeterminant() const;
+
     /// @brief Convert the proxy to a AffineTransform.
     operator AffineTransform () const;
 
     /// @brief Return the inverse of the AffineTransform.
-    AffineTransform invert() const { return AffineTransform(*this).invert(); }
+    AffineTransform invert() const;
 
 private:
 
     Ellipse const & _input; ///< \internal input ellipse to be transformed
-
+    BaseCore::GridTransform _coreGt;
 };
 
 inline BaseCore::GridTransform const BaseCore::getGridTransform() const{

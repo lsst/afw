@@ -325,6 +325,14 @@ struct GridTransformTest {
     static void apply(T const & core) {
         Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
         AffineTransform output = input.getGridTransform();
+        BOOST_CHECK_MESSAGE(
+            output.getMatrix().isApprox(input.getGridTransform().getMatrix(), 1E-12),
+            boost::str(
+                boost::format("GridTransform::getMatrix incorrect %s:\ngetMatrix:\n%s\nTransform:\n%s\n")
+                % core.getName() % input.getGridTransform().getMatrix() % output.getMatrix()
+            )            
+        );
+        BOOST_CHECK_CLOSE(output.getLinear().getMatrix()(0,1), output.getLinear().getMatrix()(1,0), 1E-8);
         Ellipse unit_circle = input.transform(output);
         Axes unit_circle_axes(unit_circle.getCore());
         BOOST_CHECK_CLOSE(unit_circle_axes.getA(), 1.0, 1E-8);
@@ -424,7 +432,7 @@ BOOST_AUTO_TEST_CASE(Transformer) {
 }
 
 BOOST_AUTO_TEST_CASE(GridTransform) {
-    afwEllipses::invokeCoreTest<afwEllipses::GridTransformTest>(true);
+    afwEllipses::invokeCoreTest<afwEllipses::GridTransformTest>(false);
 }
 
 BOOST_AUTO_TEST_CASE(Convolution) {
@@ -438,5 +446,3 @@ BOOST_AUTO_TEST_CASE(Radii) {
     afwEllipses::TraceRadius ar;
     //ar = gr; // this line should fail to compile
 }
-
-
