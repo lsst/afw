@@ -26,10 +26,10 @@
 Tests for Approximate
 
 Run with:
-   ./Approximate.py
+   ./approximate.py
 or
    python
-   >>> import Approximate; Approximate.run()
+   >>> import approximate; approximate.run()
 """
 import unittest
 import numpy as np
@@ -101,7 +101,9 @@ class ApproximateTestCase(unittest.TestCase):
         actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
         approx = afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl)
 
-        for i, aim in enumerate([approx.getImage(), approx.getMaskedImage().getImage(), ]):
+        for i, aim in enumerate([approx.getImage(),
+                                 approx.getMaskedImage().getImage(),
+                                 ]):
             if i == 0 and display:
                 ds9.mtv(aim, title="interpolated", frame=1)
                 with ds9.Buffering():
@@ -109,8 +111,7 @@ class ApproximateTestCase(unittest.TestCase):
                         for y in yVec:
                             ds9.dot('+', x, y, size=0.4, frame=1)
                 
-            w, h = aim.getDimensions()
-            for x, y in [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1),]:
+            for x, y in aim.getBBox().getCorners():
                 self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
     def testChebyshevEqualOrder(self):
@@ -141,14 +142,14 @@ class ApproximateTestCase(unittest.TestCase):
             #
             # Get the Image, the MaskedImage, and the Image with a truncated expansion
             #
-            for i, aim in enumerate([approx.getImage(), approx.getMaskedImage().getImage(),
+            for i, aim in enumerate([approx.getImage(),
+                                     approx.getMaskedImage().getImage(),
                                      approx.getImage(order - 1 if order > 1 else -1),
                                      ]):
                 if display and (i == 0 and order == 1):
                     ds9.mtv(aim, title="Interpolated", frame=1)
 
-                w, h = aim.getDimensions()
-                for x, y in [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1),]:
+                for x, y in aim.getBBox().getCorners():
                     val = np.mean(aim.getArray()) if order == 0 else \
                         rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y
 
