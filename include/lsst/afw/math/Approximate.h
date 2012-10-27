@@ -85,7 +85,7 @@ public:
     PTR(image::Image<OutPixelT>) getImage(int orderX=-1, int orderY=-1) const {
         return doGetImage(orderX, orderY);
     }
-    /// \brief Return the approximate image b%as a MaskedImage
+    /// \brief Return the approximate %image as a MaskedImage
     PTR(image::MaskedImage<OutPixelT>) getMaskedImage(int orderX=-1, int orderY=-1) const {
         return doGetMaskedImage(orderX, orderY);
     }
