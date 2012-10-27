@@ -87,7 +87,9 @@ private:
 /************************************************************************************************************/
 
 namespace {
-    void
+    // N.b. physically inlining these routines into ApproximateChebyshev
+    // causes clang++ 3.1 problems; I suspect a clang bug (see http://llvm.org/bugs/show_bug.cgi?id=14162)
+    inline void
     solveMatrix_Eigen(Eigen::MatrixXd &a,
                       Eigen::VectorXd &b,
                       Eigen::Map<Eigen::VectorXd> &c
@@ -189,12 +191,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
     std::vector<double> cvec(nTerm);
     Eigen::Map<Eigen::VectorXd> c(&cvec[0], nTerm); // N.b. c shares memory with cvec
 
-#if 1
     solveMatrix_Eigen(A, b, c);
-#else  // inlining these two statements doesn't compile
-    Eigen::PartialPivLU<Eigen::MatrixXd> lu(A);
-    c = lu.solve(b);
-#endif
     
     _poly.setParameters(cvec);
 }
