@@ -59,17 +59,16 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
     {
         int xcen = nX/2;
         int ycen = nY/2;
-        math::BackgroundControl bgCtrl("AKIMA_SPLINE");
-        // test methods native BackgroundControl
-        bgCtrl.setNxSample(5);
-        bgCtrl.setNySample(5);
+        math::BackgroundControl bgCtrl(5, 5);
         // test methods for public stats objects in bgCtrl
         bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
         bgCtrl.getStatisticsControl()->setNumIter(3);
         PTR(math::Background) back = math::makeBackground(img, bgCtrl);
-        double const TESTVAL = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
+        math::Interpolate::Style const style = math::Interpolate::AKIMA_SPLINE;
+        double const TESTVAL =
+            boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(style, xcen, ycen);
         
-        image::Image<float>::Ptr bImage = back->getImage<float>();
+        image::Image<float>::Ptr bImage = back->getImage<float>(style);
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
         
         BOOST_CHECK_EQUAL(TESTVAL, pixVal);
@@ -110,20 +109,20 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
             int const height = img->getHeight();
             
             // create a background control object
-            math::BackgroundControl bctrl(math::Interpolate::AKIMA_SPLINE);
-            bctrl.setNxSample(5);
-            bctrl.setNySample(5);
-            float stdevSubimg = reqStdev / sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
+            math::BackgroundControl bctrl(5, 5);
+            float stdevSubimg = reqStdev/sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
             PTR(math::Background) backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
-            float testval = boost::shared_dynamic_cast<math::BackgroundMI>(backobj)->getPixel(width/2, height/2);
+            math::Interpolate::Style const style = math::Interpolate::AKIMA_SPLINE;            
+            float testval =
+                boost::shared_dynamic_cast<math::BackgroundMI>(backobj)->getPixel(style, width/2, height/2);
             BOOST_REQUIRE( fabs(testval - reqMean) < 2.0*stdevSubimg );
 
             // test getImage() by checking the center pixel
-            image::Image<float>::Ptr bimg = backobj->getImage<float>();
+            image::Image<float>::Ptr bimg = backobj->getImage<float>(style);
             float testImgval = static_cast<float>(*(bimg->xy_at(width/2, height/2)));
             BOOST_REQUIRE( fabs(testImgval - reqMean) < 2.0*stdevSubimg );
             
@@ -155,21 +154,20 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         }
         
         // check corner, edge, and center pixels
-        math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::AKIMA_SPLINE);
-        bctrl.setNxSample(6);
-        bctrl.setNySample(6);
+        math::BackgroundControl bctrl = math::BackgroundControl(6, 6);
         bctrl.getStatisticsControl()->setNumSigmaClip(20.0); //something large enough to avoid clipping entirely
         bctrl.getStatisticsControl()->setNumIter(1);
         PTR(math::BackgroundMI) backobj =
             boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(rampimg, bctrl));
 
         // test the values at the corners and in the middle
+        math::Interpolate::Style const style = math::Interpolate::AKIMA_SPLINE;
         int ntest = 3;
         for (int i = 0; i < ntest; ++i) {
             int xpix = i*(nX - 1)/(ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j*(nY - 1)/(ntest - 1);
-                double testval = backobj->getPixel(xpix, ypix);
+                double testval = backobj->getPixel(style, xpix, ypix);
                 double realval = *rampimg.xy_at(xpix, ypix);
                 BOOST_CHECK_CLOSE(testval/realval, 1.0, 2.5e-5);
             }
@@ -198,21 +196,20 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         }
         
         // check corner, edge, and center pixels
-        math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::CUBIC_SPLINE);
-        bctrl.setNxSample(24);
-        bctrl.setNySample(24);
+        math::BackgroundControl bctrl = math::BackgroundControl(24, 24);
         bctrl.getStatisticsControl()->setNumSigmaClip(10.0);
         bctrl.getStatisticsControl()->setNumIter(1);
         PTR(math::BackgroundMI) backobj =
             boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(parabimg, bctrl));
 
         // check the values at the corners and in the middle
+        math::Interpolate::Style const style = math::Interpolate::CUBIC_SPLINE;
         int const ntest = 3;
         for (int i = 0; i < ntest; ++i) {
             int xpix = i*(nX - 1)/(ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j*(nY - 1)/(ntest - 1);
-                double testval = backobj->getPixel(xpix, ypix);
+                double testval = backobj->getPixel(style, xpix, ypix);
                 double realval = *parabimg.xy_at(xpix, ypix);
                 //print xpix, ypix, testval, realval
                 // quadratic terms skew the averages of the subimages and the clipped mean for

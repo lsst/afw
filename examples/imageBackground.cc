@@ -73,14 +73,7 @@ int main() {
     }
 
     // declare a background control object for a natural spline
-    math::BackgroundControl bgCtrl(math::Interpolate::NATURAL_SPLINE);
-
-    // could also use a string! (commented-out, but will work)
-    //math::BackgroundControl bgCtrl("NATURAL_SPLINE");
-    
-    // we can control the background estimate
-    bgCtrl.setNxSample(5);
-    bgCtrl.setNySample(5);
+    math::BackgroundControl bgCtrl(5, 5);
 
     // we can also control the statistics
     bgCtrl.getStatisticsControl()->setNumIter(3);
@@ -90,12 +83,12 @@ int main() {
     PTR(math::Background) back = math::makeBackground(img, bgCtrl);
     
     // can get an individual pixel or a whole frame.
-    float const MID = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
-    ImageF::Ptr bg = back->getImage<ImageF::Pixel>();
+    math::Interpolate::Style const style = math::Interpolate::NATURAL_SPLINE;
+    float const MID = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(style, xcen, ycen);
+    ImageF::Ptr bg = back->getImage<ImageF::Pixel>(style);
     
     // create a background-subtracted image
-    ImageF sub(img.getDimensions());
-    sub <<= img;
+    ImageF sub(img, true); // make a deep copy
     sub -= *bg;
     
     // output what we've made

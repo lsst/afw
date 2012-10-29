@@ -142,18 +142,17 @@ readImage() {
      * Subtract the background.  We can't fix those pesky cosmic rays, as that's in a dependent product
      * (meas/algorithms)
      */
-    afwMath::BackgroundControl bctrl(afwMath::Interpolate::NATURAL_SPLINE);
-    bctrl.setNxSample(mi->getWidth()/256 + 1);
-    bctrl.setNySample(mi->getHeight()/256 + 1);
+    afwMath::BackgroundControl bctrl(mi->getWidth()/256 + 1, mi->getHeight()/256 + 1);
     bctrl.getStatisticsControl()->setNumSigmaClip(3.0);
     bctrl.getStatisticsControl()->setNumIter(2);
 
     afwImage::Image<PixelT>::Ptr im = mi->getImage();
     try {
-        *mi->getImage() -= *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>();
+        *mi->getImage() -=
+            *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>(afwMath::Interpolate::NATURAL_SPLINE);
     } catch(std::exception &) {
-        bctrl.setInterpStyle(afwMath::Interpolate::CONSTANT);
-        *mi->getImage() -= *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>();
+        *mi->getImage() -=
+            *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>(afwMath::Interpolate::CONSTANT);
     }
     /*
      * Find sources

@@ -61,85 +61,11 @@ public:
         int const nxSample,                                  ///< Num. grid samples in x
         int const nySample,                                  ///< Num. grid samples in y
         StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
-        Property const prop = MEANCLIP ///< statistical property to use for grid points
+        Property const prop = MEANCLIP                       ///< statistical property to use for grid points
                      )
-        : _style(Interpolate::AKIMA_SPLINE),
-          _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(THROW_EXCEPTION),
+        : _nxSample(nxSample), _nySample(nySample),
           _sctrl(new StatisticsControl(sctrl)),
           _prop(prop) {
-        if (nxSample <= 0 || nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              str(boost::format("You must specify at least one point, not %dx%d")
-                                  % nxSample % nySample)
-                             );
-        }
-    }
-    
-    /**
-     * Overload constructor to handle string for statistical operator
-     */
-    BackgroundControl(
-        int const nxSample,             ///< num. grid samples in x
-        int const nySample,             ///< num. grid samples in y
-        StatisticsControl const &sctrl, ///< configuration for stats to be computed
-        std::string const &prop         ///< statistical property to use for grid points
-                     )
-        : _style(Interpolate::AKIMA_SPLINE),
-          _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(THROW_EXCEPTION),
-          _sctrl(new StatisticsControl(sctrl)),
-          _prop(stringToStatisticsProperty(prop)) {
-        if (nxSample <= 0 || nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              str(boost::format("You must specify at least one point, not %dx%d")
-                                  % nxSample % nySample)
-                             );
-        }
-    }
-    // And now the two old APIs (preserved for backward compatibility)
-    /**
-     * \deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
-     */
-    BackgroundControl(
-        Interpolate::Style const style, ///< Style of the interpolation
-        int const nxSample = 10,        ///< Num. grid samples in x
-        int const nySample = 10,        ///< Num. grid samples in y
-        UndersampleStyle const undersampleStyle = THROW_EXCEPTION, ///< Behaviour if there are too few points
-        StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
-        Property const prop = MEANCLIP ///< statistical property to use for grid points
-                     )
-        : _style(style),
-          _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(undersampleStyle),
-          _sctrl(new StatisticsControl(sctrl)),
-          _prop(prop) {
-        if (nxSample <= 0 || nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              str(boost::format("You must specify at least one point, not %dx%d")
-                                  % nxSample % nySample)
-                             );
-        }
-    }
-    
-    /**
-     * Overload constructor to handle strings for both interp and undersample styles.
-     *
-     * \deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
-     */
-    BackgroundControl(
-        std::string const &style, ///< Style of the interpolation
-        int const nxSample = 10, ///< num. grid samples in x
-        int const nySample = 10, ///< num. grid samples in y
-        std::string const &undersampleStyle = "THROW_EXCEPTION", ///< behaviour if there are too few points
-        StatisticsControl const sctrl = StatisticsControl(), ///< configuration for stats to be computed
-        std::string const &prop = "MEANCLIP" ///< statistical property to use for grid points
-                     )
-        : _style(math::stringToInterpStyle(style)),
-          _nxSample(nxSample), _nySample(nySample),
-          _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)),
-          _sctrl(new StatisticsControl(sctrl)),
-          _prop(stringToStatisticsProperty(prop)) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               str(boost::format("You must specify at least one point, not %dx%d")
@@ -163,41 +89,18 @@ public:
         }
         _nySample = nySample;
     }
-
-    void setInterpStyle (Interpolate::Style const style) { _style = style; }
-    // overload to take a string
-    void setInterpStyle (std::string const &style) { _style = math::stringToInterpStyle(style); }
-    
-    void setUndersampleStyle (UndersampleStyle const undersampleStyle) {
-        _undersampleStyle = undersampleStyle;
-    }
-    // overload to take a string
-    void setUndersampleStyle (std::string const &undersampleStyle) {
-        _undersampleStyle = math::stringToUndersampleStyle(undersampleStyle);
-    }
     
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
-    Interpolate::Style getInterpStyle() const {
-        if (_style < 0 || _style >= Interpolate::NUM_STYLES) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              str(boost::format("Style %d is invalid") % _style));
-
-        }
-        return _style;
-    }
-    UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
     PTR(StatisticsControl) getStatisticsControl() { return _sctrl; }
 
     Property getStatisticsProperty() { return _prop; }
     void setStatisticsProperty(Property prop) { _prop = prop; }
-    void setStatisticsProperty(std::string prop) { _prop = stringToStatisticsProperty(prop); }
+    void setStatisticsProperty(std::string prop) { setStatisticsProperty(stringToStatisticsProperty(prop)); }
     
 private:
-    Interpolate::Style _style;                       // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
-    UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
     PTR(StatisticsControl) _sctrl;           // statistics control object
     Property _prop;                          // statistics Property
 };
@@ -241,14 +144,6 @@ public:
                                                  ) const {
         return getImage<PixelT>(math::stringToInterpStyle(interpStyle),
                                 stringToUndersampleStyle(undersampleStyle));
-    }
-
-    /**
-     * \deprecated New code should specify the interpolation style in getImage, not the ctor
-     */
-    template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage() const {
-        return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
     }
     
     BackgroundControl getBackgroundControl() const { return _bctrl; }
@@ -310,12 +205,13 @@ private:
        Image<PixelT> back = backobj->getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
  * @endcode
  *
- * \deprecated
- * there is also
+ * There is also
  * \code
  // get the background at a pixel at i_x,i_y
  double someValue = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
  * \endcode
+ * \note This method may be inefficient, but is necessary for e.g. asking for the background level
+ * at the position of an object
  */
 class BackgroundMI : public Background {
 public:
@@ -327,16 +223,6 @@ public:
     virtual void operator-=(float const delta);
 
     double getPixel(Interpolate::Style const style, int const x, int const y) const;
-    /**
-     * Return the background value at a point
-     *
-     * \note This is very inefficient -- only use it for debugging, if then.
-     *
-     * \deprecated New code should specify the interpolation style in getPixel, not the ctor
-     */
-    double getPixel(int const x, int const y) const {
-        return getPixel(_bctrl.getInterpStyle(), x, y);
-    }
     /**
      * Return the image of statistical quantities extracted from the image
      */
