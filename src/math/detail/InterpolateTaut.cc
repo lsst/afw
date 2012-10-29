@@ -332,12 +332,6 @@ InterpolateTautSpline::_calculateTautSpline(
     double zeta = 0.0;
     double alpha = 0.0;
     double ratio = 0.0;
-
-    //double c, d;
-    //double z, denom, factr2;
-    //double onemzt, zt2, del;
-
-
     double entry3 = 0.0;
     double factor = 0.0;
     double onemzt = 0;
@@ -348,7 +342,7 @@ InterpolateTautSpline::_calculateTautSpline(
         /*
          * construct z[i] and zeta[i]
          */
-        double z = .5;
+        double z = 0.5;
         if((method == 2 && s[3][i]*s[3][i + 1] >= 0) || method == 3) {
             double const temp = fabs(s[3][i + 1]);
             double const denom = fabs(s[3][i]) + temp;
