@@ -28,6 +28,7 @@
  */
 #include <limits>
 #include <algorithm>
+#include <numeric>
 #include "Eigen/Core"
 #include "Eigen/LU"
 #include "boost/format.hpp"
