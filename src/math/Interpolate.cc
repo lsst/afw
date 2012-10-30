@@ -294,14 +294,15 @@ Interpolate::Style lookupMaxInterpStyle(int const n ///< Number of points
     } else {
         static std::vector<Interpolate::Style> styles;
         if (styles.empty()) {
-            styles.resize(4);
+            styles.resize(5);
             
-            styles[0] = Interpolate::CONSTANT;
-            styles[1] = Interpolate::LINEAR;
-            styles[2] = Interpolate::CUBIC_SPLINE;
+            styles[0] = Interpolate::UNKNOWN; // impossible to reach as we check for n < 1
+            styles[1] = Interpolate::CONSTANT;
+            styles[2] = Interpolate::LINEAR;
             styles[3] = Interpolate::CUBIC_SPLINE;
+            styles[4] = Interpolate::CUBIC_SPLINE;
         }
-        return styles[n - 1];
+        return styles[n];
     }
 }
 
