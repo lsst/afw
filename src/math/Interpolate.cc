@@ -98,20 +98,28 @@ private:
 };
     
     
-double InterpolateConstant::interpolate(double const xInterp) const
+/// Interpolate a constant to the point \c xInterp
+double InterpolateConstant::interpolate(double const xInterp // the value we want to interpolate to
+                                       ) const
 {
+    //
+    // Look for the interval wherein lies xInterp.  We could naively use std::upper_bound, but that requires a
+    // logarithmic time lookup so we'll cache the previous answer in _old -- this is a good idea if people
+    // usually call this routine repeatedly for a range of x
+    //
     // We start by searching up from _old
-    if (xInterp < *_old) {
-        if (_old == _x.begin()) {
+    //
+    if (xInterp < *_old) {              // We're to the left of the cache
+        if (_old == _x.begin()) {       // ... actually off the array
             return _y[0];
         }
-        _old = _x.begin();
+        _old = _x.begin();              // reset the cached point to the start of the array
     } else {                            // see if we're still in the same interval
-        if (_old < _x.end() - 1 and xInterp < *(_old + 1)) {
+        if (_old < _x.end() - 1 and xInterp < *(_old + 1)) { // we are, so we're done
             return _y[_old - _x.begin()];
         }
     }
-    // No.  So search up from _old
+    // We're to the right of the cached point and not in the same inverval, so search up from _old
     std::vector<double>::const_iterator low = std::upper_bound(_old, _x.end(), xInterp);
     //
     // Did that work?
@@ -119,7 +127,9 @@ double InterpolateConstant::interpolate(double const xInterp) const
         // No.  Sigh.  Search the entire range.
         low = std::upper_bound(_x.begin(), low + 1, xInterp);
     }
-    
+    //
+    // OK, we've found the right interval.  Return the desired value, being careful at the ends
+    //
     if (low == _x.end()) {
         return _y[_y.size() - 1];
     } else if (low == _x.begin()) {
