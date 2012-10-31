@@ -27,5 +27,7 @@
 #include "lsst/afw/math/detail/Spline.h"
 %}
 
+%shared_ptr(lsst::afw::math::Interpolate);
+
 %include "lsst/afw/math/Interpolate.h"
 %include "lsst/afw/math/detail/Spline.h"
