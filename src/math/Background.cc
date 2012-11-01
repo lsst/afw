@@ -118,8 +118,7 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
     template Background::Background(image::MaskedImage<TYPE> const& img, \
                                           BackgroundControl const& bgCtrl); \
     template PTR(image::Image<TYPE>) Background::getImage<TYPE>(Interpolate::Style const, \
-                                                                    UndersampleStyle const) const;
-
+        geom::Box2I const& bbox, UndersampleStyle const) const;
 
 INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)

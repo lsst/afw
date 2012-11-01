@@ -185,7 +185,8 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
 template<typename PixelT>
 PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         Interpolate::Style const interpStyle_,   // Style of the interpolation
-        UndersampleStyle const undersampleStyle // Behaviour if there are too few points
+        geom::Box2I const& bbox_,                // Bounding box for returned image
+        UndersampleStyle const undersampleStyle  // Behaviour if there are too few points
                                                 ) const
 {
     int const nxSample = _bctrl.getNxSample();
@@ -249,17 +250,20 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     for (int iX = 0; iX < _nxSample; ++iX) {
         _set_gridcolumns(interpStyle, iX, ypix);
     }
-
+    // Do they want a subimage?
+    geom::Box2I const bbox = bbox_.isEmpty() ?
+        geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(_imgWidth, _imgHeight)) : bbox_;
+    int const X0 = bbox.getBeginX();
+    int const Y0 = bbox.getBeginY();
     // create a shared_ptr to put the background image in and return to caller
     PTR(image::Image<PixelT>) bg = PTR(image::Image<PixelT>) (
-        new typename image::Image<PixelT>(
-            geom::Extent2I(_imgWidth, _imgHeight)
-        )
-    );
+                                       new typename image::Image<PixelT>(bbox.getDimensions()));
 
     // need a vector of all x pixel coords to spline over
     std::vector<int> xpix(bg->getWidth());
-    for (int iX = 0; iX < bg->getWidth(); ++iX) { xpix[iX] = iX; }
+    for (int iX = 0; iX < bg->getWidth(); ++iX) {
+        xpix[iX] = X0 + iX;
+    }
     
     // go through row by row
     // - spline on the gridcolumns that were pre-computed by the constructor
@@ -269,7 +273,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         // build an interp object for this row
         std::vector<double> bg_x(nxSample);
         for (int iX = 0; iX < nxSample; iX++) {
-            bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]);
+            bg_x[iX] = static_cast<double>(_gridcolumns[iX][Y0 + iY]);
         }
         
         try {
@@ -277,7 +281,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
             // fill the image with interpolated objects.
             int iX = 0;
             for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
-                     end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
+                     end = bg->row_end(iY); ptr != end; ++ptr, ++iX) {
                 *ptr = static_cast<PixelT>(intobj->interpolate(xpix[iX]));
             }
         } catch(ex::Exception &e) {
@@ -315,11 +319,12 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
     PTR(image::Image<TYPE>)                                     \
     BackgroundMI::_getImage(                                            \
         Interpolate::Style const interpStyle,                    /* Style of the interpolation */ \
+        geom::Box2I const& bbox,                                 /* Bounding box for returned image */ \
         UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
         TYPE                                                     /* disambiguate */    \
                          ) const                                        \
     {                                                                   \
-        return BackgroundMI::doGetImage<TYPE>(interpStyle, undersampleStyle); \
+        return BackgroundMI::doGetImage<TYPE>(interpStyle, bbox, undersampleStyle); \
     }
 
 #define CREATE_getApproximate(m, v, TYPE)                               \
