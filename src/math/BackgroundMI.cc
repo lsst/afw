@@ -256,8 +256,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     int const X0 = bbox.getBeginX();
     int const Y0 = bbox.getBeginY();
     // create a shared_ptr to put the background image in and return to caller
-    PTR(image::Image<PixelT>) bg = PTR(image::Image<PixelT>) (
-                                       new typename image::Image<PixelT>(bbox.getDimensions()));
+    PTR(image::Image<PixelT>) bg(new typename image::Image<PixelT>(bbox));
 
     // need a vector of all x pixel coords to spline over
     std::vector<int> xpix(bg->getWidth());
