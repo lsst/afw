@@ -80,9 +80,9 @@ private:
                          image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                          ApproximateControl const& ctrl);
     virtual PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
-            doGetImage(int orderX, int orderY) const;
+            doGetImage(geom::Box2I const& bbox, int orderX, int orderY) const;
     virtual PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
-            doGetMaskedImage(int orderX, int orderY) const;
+            doGetMaskedImage(geom::Box2I const& bbox, int orderX, int orderY) const;
 };
 
 /************************************************************************************************************/
@@ -211,8 +211,10 @@ ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {
  */
 template<typename PixelT>
 PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
-ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximation to use in x-direction
-                                         int orderY   ///< Order of approximation to use in y-direction
+ApproximateChebyshev<PixelT>::doGetImage(
+        geom::Box2I const& bbox_,       ///< The desired bounding box of the returned image (empty: all)
+        int orderX,                     ///< Order of approximation to use in x-direction
+        int orderY                      ///< Order of approximation to use in y-direction
                                         ) const
 {
     if (orderX < 0) orderX = Approximate<PixelT>::_ctrl.getOrderX();
@@ -224,7 +226,10 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximatio
     
     typedef typename image::Image<typename Approximate<PixelT>::OutPixelT> ImageT;
 
-    PTR(ImageT) im(new ImageT(Approximate<PixelT>::_bbox));
+    geom::Box2I const& bbox = bbox_.isEmpty() ? Approximate<PixelT>::_bbox : bbox_;
+    PTR(ImageT) im(new ImageT(bbox));
+    int const x0 = im->getX0();
+    int const y0 = im->getY0();
     for (int iy = 0; iy != im->getHeight(); ++iy) {
         double const y = iy;
 
@@ -233,12 +238,13 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximatio
                  end = im->row_end(iy); ptr != end; ++ptr, ++ix) {
             double const x = ix;
 
-            *ptr = poly(x, y);
+            *ptr = poly(x0 + x, y0 + y);
         }
     }
 
     return im;
 }
+
 /**
  * \brief Return a MaskedImage
  *
@@ -250,13 +256,17 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximatio
 template<typename PixelT>
 PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
 ApproximateChebyshev<PixelT>::doGetMaskedImage(
+        geom::Box2I const& bbox_,        ///< The desired bounding box of the returned image (empty: all)
         int orderX,                     ///< Order of approximation to use in x-direction
         int orderY                      ///< Order of approximation to use in y-direction
                                               ) const
 {
     typedef typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT> MImageT;
 
-    PTR(MImageT) mi(new MImageT(Approximate<PixelT>::_bbox));
+    geom::Box2I const& bbox = bbox_.isEmpty() ? Approximate<PixelT>::_bbox : bbox_;
+    PTR(MImageT) mi(new MImageT(bbox));
+    int const x0 = mi->getX0();
+    int const y0 = mi->getY0();
     PTR(typename MImageT::Image) im = mi->getImage();
 
     for (int iy = 0; iy != im->getHeight(); ++iy) {
@@ -267,7 +277,7 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(
                  end = im->row_end(iy); ptr != end; ++ptr, ++ix) {
             double const x = ix;
 
-            *ptr = _poly(x, y);
+            *ptr = _poly(x0 + x, y0 + y);
         }
     }
 

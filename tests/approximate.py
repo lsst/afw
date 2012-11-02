@@ -160,6 +160,33 @@ class ApproximateTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                                        lambda : approx.getImage(orderMax + 1, orderMax + 1))
 
+    def testLinearRampSubimage(self):
+        """Fit a ramp, and return a subimage"""
+        
+        binsize = 1
+        ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
+        #
+        # Here's the range that the approximation should be valid (and also the
+        # bbox of the image returned by getImage)
+        #
+        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth()  - 1,
+                                                                 binsize*ramp.getHeight() - 1))
+
+        order = 1
+        actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
+        approx = afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl)
+
+        x0, y0 = 10, 15
+        bboxOut = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.PointI(binsize*ramp.getWidth()  - 3,
+                                                                    binsize*ramp.getHeight() - 2))
+        for aim in [approx.getImage(bboxOut),
+                    approx.getMaskedImage(bboxOut).getImage(),
+                    ]:
+            ds9.mtv(aim)
+            for x, y in aim.getBBox().getCorners():
+                self.assertEqual(aim.get(x, y),
+                                 rampCoeffs[0] + rampCoeffs[1]*(x + x0) + rampCoeffs[1]*(y + y0))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

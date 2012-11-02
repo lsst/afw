@@ -81,13 +81,35 @@ public:
                     ApproximateControl const& ctrl);
     /// \brief dtor
     virtual ~Approximate() {}
+
+    /// \brief Return the approximate %image as a Image
+    PTR(image::Image<OutPixelT>)
+    getImage(geom::Box2I const& bbox,   ///< The desired bounding box of the returned image (empty: all)
+             int orderX=-1,             ///< Order of approximation to use in x-direction (<= that in ctor)
+             int orderY=-1              ///< Order of approximation to use in y-direction (<= that in ctor)
+            ) const {
+        return doGetImage(bbox, orderX, orderY);
+    }
+
     /// \brief Return the approximate %image as a Image
     PTR(image::Image<OutPixelT>) getImage(int orderX=-1, int orderY=-1) const {
-        return doGetImage(orderX, orderY);
+        geom::Box2I const bbox;
+        return doGetImage(bbox, orderX, orderY);
     }
+
+    /// \brief Return the approximate %image as a MaskedImage
+    PTR(image::MaskedImage<OutPixelT>)
+    getMaskedImage(geom::Box2I const& bbox, ///< The desired bounding box of the returned image (empty: all)
+                   int orderX=-1,       ///< Order of approximation to use in x-direction (<= that in ctor)
+                   int orderY=-1        ///< Order of approximation to use in y-direction (<= that in ctor)
+                  ) const {
+        return doGetMaskedImage(bbox, orderX, orderY);
+    }
+
     /// \brief Return the approximate %image as a MaskedImage
     PTR(image::MaskedImage<OutPixelT>) getMaskedImage(int orderX=-1, int orderY=-1) const {
-        return doGetMaskedImage(orderX, orderY);
+        geom::Box2I const bbox;
+        return doGetMaskedImage(bbox, orderX, orderY);
     }
 protected:
     /**
@@ -106,8 +128,10 @@ protected:
 private:
     Approximate(Approximate const&);
     Approximate& operator=(Approximate const&);
-    virtual PTR(image::Image<OutPixelT>) doGetImage(int orderX, int orderY) const = 0;
-    virtual PTR(image::MaskedImage<OutPixelT>) doGetMaskedImage(int orderX, int orderY) const = 0;
+    virtual PTR(image::Image<OutPixelT>) doGetImage(geom::Box2I const& bbox,
+                                                    int orderX, int orderY) const = 0;
+    virtual PTR(image::MaskedImage<OutPixelT>) doGetMaskedImage(geom::Box2I const& bbox,
+                                                                int orderX, int orderY) const = 0;
 };
 
 template<typename PixelT>

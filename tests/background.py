@@ -281,6 +281,31 @@ class BackgroundTestCase(unittest.TestCase):
         #backobj.getImageF().writeFits('out.fits')
 
 
+    def testSubImage(self):
+        # make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
+        nx = 256
+        ny = 256
+
+        parabimg = self.getParabolaImage(nx, ny)
+        
+        # check corner, edge, and center pixels
+        bctrl = afwMath.BackgroundControl(12, 12)
+        bctrl.getStatisticsControl().setNumSigmaClip(10.0)  
+        bctrl.getStatisticsControl().setNumIter(1)
+        backobj = afwMath.makeBackground(parabimg, bctrl)
+
+        x0, y0 = 20, 10
+        bboxOut = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.PointI(nx - 30, ny - 40))
+        backImage = backobj.getImageF(afwMath.Interpolate.CUBIC_SPLINE, bboxOut)
+
+        for xpix, ypix in backImage.getBBox().getCorners():
+            testval = backImage.get(xpix, ypix)
+            realval = parabimg.get(x0 + xpix, y0 + ypix)
+            # quadratic terms skew the averages of the subimages and the clipped mean for
+            # a subimage != value of center pixel.  1/20 counts on a 10000 count sky
+            #  is a fair (if arbitrary) test.
+            self.assertTrue( abs(testval - realval) < 0.05 )
+
     def testParabola(self):
 
         # make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
@@ -315,7 +340,7 @@ class BackgroundTestCase(unittest.TestCase):
                 # quadratic terms skew the averages of the subimages and the clipped mean for
                 # a subimage != value of center pixel.  1/20 counts on a 10000 count sky
                 #  is a fair (if arbitrary) test.
-                self.assertTrue( abs(testval - realval) < 0.5 )
+                self.assertTrue( abs(testval - realval) < 0.05 )
 
     def testCFHT_oldAPI(self):
         """Test background subtraction on some real CFHT data"""
