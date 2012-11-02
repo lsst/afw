@@ -60,19 +60,36 @@ public:
          int x1)                        //!< Ending column (inclusive)
         : _y(y), _x0(x0), _x1(x1) {}
 
+    Span() : _y(0), _x0(0), _x1(-1) {}
+
     int getX0() const { return _x0; }         ///< Return the starting x-value
     int getX1() const { return _x1; }         ///< Return the ending x-value
     int getY()  const { return _y; }          ///< Return the y-value
     int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
+    int getMinX() const { return _x0; }       ///< Minimum x-value.
+    int getMaxX() const { return _x1; }       ///< Maximum x-value.
+    int getBeginX() const { return _x0; }       ///< Begin (inclusive) x-value.
+    int getEndX() const { return _x1+1; }       ///< End (exclusive) x-value.
+    Point2I const getMin() const { return Point2I(_x0, _y); } ///< Point corresponding to minimum x.
+    Point2I const getMax() const { return Point2I(_x1, _y); } ///< Point corresponding to maximum x.
+    Point2I const getBegin() const { return Point2I(_x0, _y); } ///< Box-like inclusive start point.
+    Point2I const getEnd() const { return Point2I(_x1+1, _y+1); } ///< Box-like exclusive end point.
 
-    bool contains(int x) { return (x >= _x0) && (x <= _x1); }
-    bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
+    bool contains(int x) const { return (x >= _x0) && (x <= _x1); }
+    bool contains(int x, int y) const { return (x >= _x0) && (x <= _x1) && (y == _y); }
+    bool contains(Point2I const & point) const { return contains(point.getX(), point.getY()); }
+
+    bool isEmpty() const { return _x1 < _x0; }
 
     /// Return a string-representation of a Span
     std::string toString() const;
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
 
+    bool operator==(Span const & other) const {
+        return other.getY() == getY() && other.getMinX() == getMinX() && other.getMaxX() == getMaxX();
+    }
+    bool operator!=(Span const & other) const { return !(*this == other); }
 
     /* Required to make Span "LessThanComparable" so they can be used
      * in sorting, binary search, etc.
@@ -82,7 +99,6 @@ public:
 
     friend class detection::Footprint;
 private:
-    Span() {}
 
     friend class boost::serialization::access;
     template <typename Archive>
