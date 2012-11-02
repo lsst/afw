@@ -189,7 +189,7 @@ Footprint::Footprint(
     _normalized(true)
 {    
     geom::AffineTransform egt(ellipse.getGridTransform());    
-    geom::Box2D envelope(ellipse.computeEnvelope());
+    geom::Box2D envelope(ellipse.computeBBox());
     
     if(ellipse.getCore().getArea() < 1e-4)        
         return;
