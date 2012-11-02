@@ -57,22 +57,6 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-bool Span::operator<(const Span& b) const {
-	if (_y < b._y)
-		return true;
-	if (_y > b._y)
-		return false;
-	// y equal; check x0...
-	if (_x0 < b._x0)
-		return true;
-	if (_x0 > b._x0)
-		return false;
-	// x0 equal; check x1...
-	if (_x1 < b._x1)
-		return true;
-	return false;
-}
-
 // anonymous namespace
 namespace {
 
@@ -127,14 +111,6 @@ geom::Point2D transformPoint(double x, double y,
 
 
 } //end namespace
-
-/******************************************************************************/
-/**
- * Return a string-representation of a Span
- */
-std::string Span::toString() const {
-    return str(boost::format("%d: %d..%d") % _y % _x0 % _x1);
-}
 
 /*****************************************************************************/
 /// Counter for Footprint IDs
