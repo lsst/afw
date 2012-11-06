@@ -29,7 +29,7 @@ Run with:
    ./Coordinates.py
 or
    python
-   >>> import Coordinates; Coordinates.run()
+   >>> import coordinates; coordinates.run()
 """
 
 import unittest
@@ -135,6 +135,12 @@ class PointTestCase(CoordinateTestCase):
             p1.shift(Extent(p2))
             vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
             self.assertClose(tuple(p1), tuple(vector1))
+
+    def testSpanIteration(self):
+        span = geom.Span(4, 3, 8)
+        points = list(span)
+        self.assertEqual(len(span), len(points))
+        self.assertEqual(points, [geom.Point2I(x, 4) for x in xrange(3, 9)])
 
     def testConstructors(self):
         #test 2-d
