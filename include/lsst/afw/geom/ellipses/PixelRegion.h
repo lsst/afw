@@ -35,10 +35,12 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 class PixelRegion {
 public:
 
+#ifndef SWIG
     class Iterator;
 
     Iterator begin() const;
     Iterator end() const;
+#endif
 
     Box2I const & getBBox() const { return _bbox; }
 
@@ -53,6 +55,8 @@ private:
     double _alpha;
     Box2I _bbox;
 };
+
+#ifndef SWIG
 
 class PixelRegion::Iterator :
         public boost::iterator_facade<PixelRegion::Iterator,Span const,boost::random_access_traversal_tag> {
@@ -91,6 +95,7 @@ inline PixelRegion::Iterator PixelRegion::end() const {
     return Iterator(getSpanAt(_bbox.getEndY()), this);
 }
 
+#endif
 
 }}}} // namespace lsst::afw::geom::ellipses
 

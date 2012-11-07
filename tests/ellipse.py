@@ -37,8 +37,10 @@ import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
-import lsst.afw.geom as geom
-import lsst.afw.geom.ellipses as geomEllipse
+import lsst.afw.geom.ellipses
+import lsst.afw.image
+
+numpy.random.seed(500)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -46,11 +48,11 @@ class EllipseTestCase(unittest.TestCase):
     
     def setUp(self):
         self.cores = [
-            geom.ellipses.Axes(4, 3, 1),
-            geom.ellipses.Quadrupole(5, 3, -1)
+            lsst.afw.geom.ellipses.Axes(4, 3, 1),
+            lsst.afw.geom.ellipses.Quadrupole(5, 3, -1)
             ]
-        self.classes = [geom.ellipses.Axes, geom.ellipses.Quadrupole]
-        for s in geom.ellipses.Separable.values():
+        self.classes = [lsst.afw.geom.ellipses.Axes, lsst.afw.geom.ellipses.Quadrupole]
+        for s in lsst.afw.geom.ellipses.Separable.values():
             self.cores.append(s(0.5, 0.3, 2.1))
             self.classes.append(s)
 
@@ -81,29 +83,52 @@ class EllipseTestCase(unittest.TestCase):
             vec = numpy.random.randn(3) * 1E-3 + core.getParameterVector()
             core.setParameterVector(vec)
             self.assert_((core.getParameterVector()==vec).all())
-            center = geom.Point2D(*numpy.random.randn(2))
-            ellipse = geomEllipse.Ellipse(core, center)
+            center = lsst.afw.geom.Point2D(*numpy.random.randn(2))
+            ellipse = lsst.afw.geom.ellipses.Ellipse(core, center)
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
-            self.assertEqual(geom.Point2D, type(ellipse.getCenter()))
-            newcore = geomEllipse.Axes(1,2,3);            
+            self.assertEqual(lsst.afw.geom.Point2D, type(ellipse.getCenter()))
+            newcore = lsst.afw.geom.ellipses.Axes(1,2,3);            
             newcore.normalize()
             core.assign(newcore)
             ellipse.setCore(core)
             self.assertClose(core.getParameterVector(), ellipse.getCore().getParameterVector())
             self.assert_((core.clone().getParameterVector()==core.getParameterVector()).all())
             self.assert_(core is not core.clone())
-            self.assert_((geomEllipse.Ellipse(ellipse).getParameterVector()
+            self.assert_((lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector()
                           == ellipse.getParameterVector()).all())
-            self.assert_(ellipse is not geomEllipse.Ellipse(ellipse))
+            self.assert_(ellipse is not lsst.afw.geom.ellipses.Ellipse(ellipse))
 
     def testTransform(self):
         for core in self.cores:
-            transform = geom.LinearTransform(numpy.random.randn(2,2))
+            transform = lsst.afw.geom.LinearTransform(numpy.random.randn(2,2))
             t1 = core.transform(transform)
             core.transformInPlace(transform)
             self.assert_(t1 is not core)
             self.assertClose(t1.getParameterVector(), core.getParameterVector())
+
+    def testPixelRegion(self):
+        for core in self.cores:
+            e = lsst.afw.geom.ellipses.Ellipse(core, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
+            region = lsst.afw.geom.ellipses.PixelRegion(e)
+            bbox = region.getBBox()
+            bbox.grow(2)
+            array = numpy.zeros((bbox.getHeight(), bbox.getWidth()), dtype=bool)
+            for span in region:
+                for point in span:
+                    adjusted = point - bbox.getMin()
+                    array[adjusted.getY(), adjusted.getX()] = True
+            gt = e.getGridTransform()
+            for i in range(bbox.getBeginY(), bbox.getEndY()):
+                for j in range(bbox.getBeginX(), bbox.getEndX()):
+                    point = lsst.afw.geom.Point2I(j, i)
+                    adjusted = point - bbox.getMin()
+                    transformed = gt(lsst.afw.geom.Point2D(point))
+                    r = (transformed.getX()**2 + transformed.getY()**2)**0.5
+                    if array[adjusted.getY(), adjusted.getX()]:
+                        self.assert_(r <= 1.0, "Point %s is in region but r=%f" % (point, r))
+                    else:
+                        self.assert_(r > 1.0, "Point %s is outside region but r=%f" % (point, r))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

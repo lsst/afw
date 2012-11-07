@@ -43,6 +43,7 @@
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/ellipses/Separable.h"
+#include "lsst/afw/geom/ellipses/PixelRegion.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 

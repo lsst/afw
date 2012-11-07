@@ -392,7 +392,7 @@ struct ConvolutionTest {
     
     }
 };
-  
+
 }}}} // namespace lsst::afw::geom::ellipses
 
 namespace afwEllipses = lsst::afw::geom::ellipses;
