@@ -341,8 +341,8 @@ GeomPoint TanWcs::skyToPixelImpl(afwGeom::Angle sky1, // RA
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
+            status % sky1.asDegrees() % sky2.asDegrees() % wcs_errmsg[status]).str());
     }
 
     
@@ -452,8 +452,8 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle sky[2]) cons
 	double skyTmp[2];
     if (wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status) > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of  %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at pixel %s, %s: %s") %
+            status % pixel1 % pixel2 % wcs_errmsg[status]).str());
     }
 	sky[0] = skyTmp[0] * afwGeom::degrees;
 	sky[1] = skyTmp[1] * afwGeom::degrees;
