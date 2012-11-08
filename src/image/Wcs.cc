@@ -794,8 +794,8 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
+            status % sky1.asDegrees() % sky2.asDegrees() % wcs_errmsg[status]).str());
     }
 
     // wcslib assumes 1-indexed coords
@@ -855,8 +855,8 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
+            status % skyTmp[0] % skyTmp[1] % wcs_errmsg[status]).str());
     }
     /*
      printf("->iwc (%.3f, %.3f)\n", imgcrd[0], imgcrd[1]);
@@ -888,8 +888,8 @@ Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) cons
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, sky, &status);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at pixel %s, %s: %s") %
+            status % pixel1 % pixel2 % wcs_errmsg[status]).str());
     }
     // FIXME -- _wcsInfo.lat, _wcsInfo.lng ?
     skyTmp[0] = sky[0] * afwGeom::degrees;
