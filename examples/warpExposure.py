@@ -23,28 +23,20 @@
 #
 
 import optparse
-import os
-
-import eups
 
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.daf.base as dafBase
 import lsst.pex.logging
 
 def main():
-    DefDataDir = eups.productDir("afwdata") or ""
-    
     DefKernel = "lanczos4"
-    DefVerbosity = 0
+    DefVerbosity = 1
     
-    usage = """usage: %%prog [options] [srcExposure [refExposure [destExposure]]]
+    usage = """usage: %%prog [options] srcExposure refExposure destExposure
 
-    Computes destExposure = srcExposure warped to match refExposure's WCS and size
-
-    where exposure arguments are paths to Exposure fits files
-    """
+Computes destExposure = srcExposure warped to match refExposure's WCS and bounding box,
+where exposure arguments are paths to Exposure fits files"""
     
     parser = optparse.OptionParser(usage)
     parser.add_option("-k", "--kernel",
@@ -60,15 +52,13 @@ def main():
     kernelName = opt.kernel.lower()
     
     if len(args) != 3:
-        print "error: requires three arguments"
-        print usage
-        sys.exit(1)
+        parser.error("You must supply three arguments")
     
     srcExposurePath = args[0]
     refExposurePath = args[1]
     destExposurePath = args[2]
-    print "Remapping exposure  ", srcExposurePath
-    print "to match wcs and size of", refExposurePath
+    print "Remapping exposure      :", srcExposurePath
+    print "to match wcs and bbox of:", refExposurePath
     print "using", kernelName, "kernel"
     
     warpingControl = afwMath.WarpingControl(kernelName)
