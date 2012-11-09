@@ -40,6 +40,7 @@
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/utils/ieee.h"
 
 #include <boost/archive/text_iarchive.hpp>
@@ -187,39 +188,14 @@ Footprint::Footprint(
     _bbox(geom::Box2I()),
     _region(region),
     _normalized(true)
-{    
-    geom::AffineTransform egt(ellipse.getGridTransform());    
-    geom::Box2D envelope(ellipse.computeBBox());
-    
-    if(ellipse.getCore().getArea() < 1e-4)        
-        return;
-
-    geom::Box2I bbox(envelope);
-
-
-    int const minY = bbox.getMinY();
-    int const minX = bbox.getMinX();
-    int const maxY = bbox.getMaxY();
-    int const maxX = bbox.getMaxX();
-
-
-    for (int y = minY; y <= maxY; ++y) {
-        int x = minX;
-        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() > 1.0) {
-            if (x >= maxX) {
-                if (++y >= maxY) 
-                    return;
-                x = minX;
-            } else {
-                ++x;
-            }
+{
+    geom::ellipses::PixelRegion pr(ellipse);
+    for (geom::ellipses::PixelRegion::Iterator spanIter = pr.begin(); spanIter != pr.end(); ++spanIter) {
+        if (!spanIter->isEmpty()) {
+            addSpan(*spanIter);
         }
-        int start = x;
-        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() <= 1.0 && x <= maxX) 
-            ++x;
-        addSpan(y, start, x-1);
     }
-    _normalized=true;
+    _normalized = true;
 }
 
 /**
