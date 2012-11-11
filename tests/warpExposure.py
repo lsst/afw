@@ -369,6 +369,34 @@ class WarpExposureTestCase(unittest.TestCase):
         """Test that warpExposure matches swarp using a nearest neighbor warping kernel
         """
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
+
+    def testTicket2441(self):
+        """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
+        fromWcs = makeWcs(
+            pixelScale = afwGeom.Angle(1.0e-8, afwGeom.degrees),
+            projection = "TAN",
+            crPixPos = (0, 0),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+        )
+        fromMI = afwImage.MaskedImageF(10, 10)
+        fromExp = afwImage.ExposureF(fromMI, fromWcs)
+        
+        toWcs = makeWcs(
+            pixelScale = afwGeom.Angle(0.00011, afwGeom.degrees),
+            projection = "CEA",
+            crPixPos = (410000.0, 11441.0),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(45, 0), afwGeom.degrees),
+            doFlipX = True,
+        )
+        toMI = afwImage.MaskedImageF(10, 10)
+        toMI.setXY0(817970, 1877)
+        toExp = afwImage.ExposureF(toMI, toWcs)
+        
+        warper = afwMath.Warper("lanczos3")
+        toWcs = toExp.getWcs()
+        toBBox = toExp.getBBox(afwImage.PARENT)
+        # if the bug is present, this will raise an exception:
+        warper.warpExposure(destWcs = toWcs, srcExposure = fromExp, maxBBox=toBBox)
     
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):
@@ -388,12 +416,12 @@ class WarpExposureTestCase(unittest.TestCase):
         srcWcs = makeWcs(
             pixelScale = afwGeom.Angle(0.2, afwGeom.degrees),
             crPixPos = (10.0, 11.0),
-            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(41.7, 32.9)),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(41.7, 32.9), afwGeom.degrees),
         )
         destWcs = makeWcs(
             pixelScale = afwGeom.Angle(0.17, afwGeom.degrees),
             crPixPos = (9.0, 10.0),
-            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95)),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
             posAng = afwGeom.Angle(31, afwGeom.degrees),
         )
         

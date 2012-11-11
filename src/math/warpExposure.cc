@@ -345,6 +345,9 @@ namespace {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 "destImage is srcImage; cannot warp in place");
         }
+        if (destImage.getBBox(afwImage::LOCAL).isEmpty()) {
+            return 0;
+        }
         PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
         int interpLength = control.getInterpLength();
         lsst::afw::gpu::DevicePreference devPref = control.getDevicePreference();
