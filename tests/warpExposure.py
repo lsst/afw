@@ -57,9 +57,10 @@ except:
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-dataDir = os.path.join(eups.productDir("afwdata"), "data")
-if not dataDir:
+afwDataDir = eups.productDir("afwdata")
+if not afwDataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
+dataDir = os.path.join(afwDataDir, "data")
 
 originalExposureName = "med"
 originalExposurePath = os.path.join(dataDir, originalExposureName)
@@ -378,8 +379,7 @@ class WarpExposureTestCase(unittest.TestCase):
             crPixPos = (0, 0),
             crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
         )
-        fromMI = afwImage.MaskedImageF(10, 10)
-        fromExp = afwImage.ExposureF(fromMI, fromWcs)
+        fromExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), fromWcs)
         
         toWcs = makeWcs(
             pixelScale = afwGeom.Angle(0.00011, afwGeom.degrees),
@@ -388,22 +388,38 @@ class WarpExposureTestCase(unittest.TestCase):
             crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(45, 0), afwGeom.degrees),
             doFlipX = True,
         )
-        toMI = afwImage.MaskedImageF(10, 10)
-        toMI.setXY0(817970, 1877)
-        toExp = afwImage.ExposureF(toMI, toWcs)
+        toExp = afwImage.ExposureF(afwImage.MaskedImageF(0,0), toWcs)
         
-        warper = afwMath.Warper("lanczos3")
-        toWcs = toExp.getWcs()
-        toBBox = toExp.getBBox(afwImage.PARENT)
-
-        # if the bug is present, this will raise an exception:
-        warper.warpExposure(destWcs = toWcs, srcExposure = fromExp, maxBBox=toBBox)
-
-        # this raised a different exception due to the bbox being too small
-        smallSrcBBox = afwGeom.Box2I(fromExp.getXY0(), afwGeom.Extent2I(1,1))
-        smallFromView = afwImage.ExposureF(fromExp, smallSrcBBox)
         warpControl = afwMath.WarpingControl("lanczos3")
-        afwMath.warpExposure(toExp, smallFromView, warpControl)
+        # if a bug described in ticket #2441 is present, this will raise an exception:
+        numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
+        self.assertEqual(numGoodPix, 0)
+    
+    def testSmallSrc(self):
+        """Verify that a source image that is too small will not raise an exception
+        
+        This tests another bug that was fixed in ticket #2441
+        """
+        fromWcs = makeWcs(
+            pixelScale = afwGeom.Angle(1.0e-8, afwGeom.degrees),
+            projection = "TAN",
+            crPixPos = (0, 0),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+        )
+        fromExp = afwImage.ExposureF(afwImage.MaskedImageF(1, 1), fromWcs)
+        
+        toWcs = makeWcs(
+            pixelScale = afwGeom.Angle(1.1e-8, afwGeom.degrees),
+            projection = "TAN",
+            crPixPos = (0, 0),
+            crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(358, 0), afwGeom.degrees),
+        )
+        toExp = afwImage.ExposureF(afwImage.MaskedImageF(10,10), toWcs)
+
+        warpControl = afwMath.WarpingControl("lanczos3")
+        # if a bug described in ticket #2441 is present, this will raise an exception:
+        numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
+        self.assertEqual(numGoodPix, 0)
     
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):
