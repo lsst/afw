@@ -395,8 +395,15 @@ class WarpExposureTestCase(unittest.TestCase):
         warper = afwMath.Warper("lanczos3")
         toWcs = toExp.getWcs()
         toBBox = toExp.getBBox(afwImage.PARENT)
+
         # if the bug is present, this will raise an exception:
         warper.warpExposure(destWcs = toWcs, srcExposure = fromExp, maxBBox=toBBox)
+
+        # this raised a different exception due to the bbox being too small
+        smallSrcBBox = afwGeom.Box2I(fromExp.getXY0(), afwGeom.Extent2I(1,1))
+        smallFromView = afwImage.ExposureF(fromExp, smallSrcBBox)
+        warpControl = afwMath.WarpingControl("lanczos3")
+        afwMath.warpExposure(toExp, smallFromView, warpControl)
     
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):

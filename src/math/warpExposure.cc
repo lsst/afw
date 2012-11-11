@@ -348,6 +348,19 @@ namespace {
         if (destImage.getBBox(afwImage::LOCAL).isEmpty()) {
             return 0;
         }
+        // if src image is too small then don't try to warp
+        try {
+            PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
+            warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+        } catch(...) {
+            for (int y = 0, height = srcImage.getHeight(); y < height; ++y) {
+                for (typename SrcImageT::x_iterator srcPtr = srcImage.row_begin(y), end = srcImage.row_end(y);
+                    srcPtr != end; ++srcPtr) {
+                    *srcPtr = padValue;
+                }
+            }
+            return 0;
+        }
         PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
         int interpLength = control.getInterpLength();
         lsst::afw::gpu::DevicePreference devPref = control.getDevicePreference();
