@@ -464,7 +464,8 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delega
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Exposure");
     }
-    ar & *ip->getMetadata() & ip->_maskedImage & ip->_wcs;
+    PTR(afwImg::Wcs) wcs = ip->getWcs();
+    ar & *ip->getMetadata() & ip->_maskedImage & wcs;
     execTrace("ExposureFormatter delegateSerialize end");
 }
 

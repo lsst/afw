@@ -103,13 +103,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
@@ -121,13 +116,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
@@ -139,13 +129,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 /** @brief Construct an Exposure from a MaskedImage
   */               
@@ -156,14 +141,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib()),
-    _psf(PTR(lsst::afw::detection::Psf)())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 
 /** @brief Copy an Exposure
@@ -175,18 +154,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), deep),
-    _wcs(_cloneWcs(src.getWcs())),
-    _detector(src._detector),
-    _filter(src._filter),
-    _calib(_cloneCalib(src.getCalib())),
-    _psf(_clonePsf(src.getPsf()))
-{
-/*
-  * N.b. You'll need to update the subExposure cctor and the generalised cctor in Exposure.h
-  * when you add new data members --- this note is here as you'll be making the same changes here!
-  */
-    setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
-}
+    _info(new ExposureInfo(*src.getInfo()))
+{}
 
 /** @brief Construct a subExposure given an Exposure and a bounding box
   *
@@ -202,14 +171,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, origin, deep),
-    _wcs(_cloneWcs(src.getWcs())),
-    _detector(src._detector),
-    _filter(src._filter),
-    _calib(_cloneCalib(src.getCalib())),
-    _psf(_clonePsf(src.getPsf()))
-{
-    setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
-}
+    _info(new ExposureInfo(*src.getInfo()))
+{}
 
 /** @brief Construct an Image from FITS files.
  *
@@ -237,7 +200,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     ImageOrigin const origin,       ///< Coordinate system for bbox
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :
-    lsst::daf::base::Citizen(typeid(this))
+    lsst::daf::base::Citizen(typeid(this)),
+    _maskedImage(),
+    _info(new ExposureInfo())
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
 
@@ -259,7 +224,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     ImageOrigin const origin,       ///< Coordinate system for bbox
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :
-    lsst::daf::base::Citizen(typeid(this))
+    lsst::daf::base::Citizen(typeid(this)),
+    _maskedImage(),
+    _info(new ExposureInfo())
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
@@ -282,57 +249,22 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
 ) {
     // true: strip keywords that are related to the created WCS from the input
     // metadata
-    _wcs = afwImage::makeWcs(metadata, true);
+    _info->setWcs(afwImage::makeWcs(metadata, true));
     /*
      * Filter
      */
-    _filter = Filter(metadata, true);
+    _info->setFilter(Filter(metadata, true));
     afwImage::detail::stripFilterKeywords(metadata);
     /*
      * Calib
      */
-    _calib = PTR(afwImage::Calib)(new afwImage::Calib(metadata));
+    PTR(afwImage::Calib) newCalib(new afwImage::Calib(metadata));
+    _info->setCalib(newCalib);
     afwImage::detail::stripCalibKeywords(metadata);
     /*
      * Set the remaining parts of the metadata
      */
-    setMetadata(metadata);
-}
-
-/**
- * Clone a Psf; defined here so that we don't have to expose the insides of Psf in Exposure.h
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
-    CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
-) {
-    if (psf)
-        return psf->clone();
-    return PTR(afwDetection::Psf)();
-}
-
-/**
- * Clone a Calib; defined here so that we don't have to expose the insides of Calib in Exposure.h
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(afwImage::Calib) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneCalib(
-    CONST_PTR(afwImage::Calib) calib    // the Calib to clone
-) {
-    if (calib)
-        return PTR(afwImage::Calib)(new afwImage::Calib(*calib));
-    return PTR(afwImage::Calib)();
-}
-
-/**
- * Clone a Wcs; defined here so that we don't have to expose the insides of Wcs in Exposure.h
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(afwImage::Wcs) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneWcs(
-    CONST_PTR(afwImage::Wcs) wcs    // the Wcs to clone
-) {
-    if (wcs)
-        return wcs->clone();
-    return PTR(afwImage::Wcs)();
+    _info->setMetadata(metadata);
 }
 
 // SET METHODS
@@ -347,8 +279,8 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const& origin) {
     afwGeom::Point2I old(_maskedImage.getXY0());
-    if (_wcs)
-        _wcs->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
+    if (_info->hasWcs())
+        _info->getWcs()->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
     _maskedImage.setXY0(origin);
 }
 
@@ -368,8 +300,8 @@ lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::
     //image coordinates. When saving an image we convert from pixel to index coordinates.
     //In the case where this image is a parent image, the reference pixels are unchanged
     //by this transformation
-    if (_wcs) {
-        afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
+    if (_info->hasWcs()) {
+        afwImage::Wcs::Ptr newWcs = _info->getWcs()->clone(); //Create a copy
         newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
 
         // Copy wcsMetadata over to fits header
@@ -391,18 +323,18 @@ lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::
     outputMetadata->set("LTV1", -1*mi.getX0());
     outputMetadata->set("LTV2", -1*mi.getY0());
 
-    outputMetadata->set("FILTER", _filter.getName());
-    if (_detector) {
-        outputMetadata->set("DETNAME", _detector->getId().getName());
-        outputMetadata->set("DETSER", _detector->getId().getSerial());
+    outputMetadata->set("FILTER", _info->getFilter().getName());
+    if (_info->hasDetector()) {
+        outputMetadata->set("DETNAME", _info->getDetector()->getId().getName());
+        outputMetadata->set("DETSER", _info->getDetector()->getId().getSerial());
     }
     /**
      * We need to define these keywords properly! XXX
      */
-    outputMetadata->set("TIME-MID", _calib->getMidTime().toString());
-    outputMetadata->set("EXPTIME", _calib->getExptime());
-    outputMetadata->set("FLUXMAG0", _calib->getFluxMag0().first);
-    outputMetadata->set("FLUXMAG0ERR", _calib->getFluxMag0().second);
+    outputMetadata->set("TIME-MID", _info->getCalib()->getMidTime().toString());
+    outputMetadata->set("EXPTIME", _info->getCalib()->getExptime());
+    outputMetadata->set("FLUXMAG0", _info->getCalib()->getFluxMag0().first);
+    outputMetadata->set("FLUXMAG0ERR", _info->getCalib()->getFluxMag0().second);
     
     return outputMetadata;
 }
