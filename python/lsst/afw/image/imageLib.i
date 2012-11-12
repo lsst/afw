@@ -206,6 +206,7 @@ namespace lsst { namespace afw { namespace detection {
     class Psf;
 }}}
 %shared_ptr(lsst::afw::detection::Psf);
+%shared_ptr(lsst::afw::image::ExposureInfo);
 
 %include "lsst/afw/image/ExposureInfo.h"
 
