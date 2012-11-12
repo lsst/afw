@@ -353,10 +353,10 @@ namespace {
             PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
             warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
         } catch(...) {
-            for (int y = 0, height = srcImage.getHeight(); y < height; ++y) {
-                for (typename SrcImageT::x_iterator srcPtr = srcImage.row_begin(y), end = srcImage.row_end(y);
-                    srcPtr != end; ++srcPtr) {
-                    *srcPtr = padValue;
+            for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
+                for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
+                    destPtr != end; ++destPtr) {
+                    *destPtr = padValue;
                 }
             }
             return 0;

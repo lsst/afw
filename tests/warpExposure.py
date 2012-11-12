@@ -420,6 +420,11 @@ class WarpExposureTestCase(unittest.TestCase):
         # if a bug described in ticket #2441 is present, this will raise an exception:
         numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
         self.assertEqual(numGoodPix, 0)
+        imArr, maskArr, varArr = toExp.getMaskedImage().getArrays()
+        self.assertTrue(numpy.alltrue(numpy.isnan(imArr)))
+        self.assertTrue(numpy.alltrue(numpy.isinf(varArr)))
+        edgeMask = afwImage.MaskU.getPlaneBitMask("EDGE")
+        self.assertTrue(numpy.alltrue(maskArr == edgeMask))
     
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):
