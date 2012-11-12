@@ -345,6 +345,22 @@ namespace {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 "destImage is srcImage; cannot warp in place");
         }
+        if (destImage.getBBox(afwImage::LOCAL).isEmpty()) {
+            return 0;
+        }
+        // if src image is too small then don't try to warp
+        try {
+            PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
+            warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+        } catch(...) {
+            for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
+                for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
+                    destPtr != end; ++destPtr) {
+                    *destPtr = padValue;
+                }
+            }
+            return 0;
+        }
         PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
         int interpLength = control.getInterpLength();
         lsst::afw::gpu::DevicePreference devPref = control.getDevicePreference();

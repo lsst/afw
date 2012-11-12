@@ -232,6 +232,6 @@ class Warper(object):
             destBBox = computeWarpedBBox(destWcs, srcImage.getBBox(afwImage.PARENT), srcWcs)
             if border:
                 destBBox.grow(border)
-            if maxBBox:
+            if maxBBox is not None:
                 destBBox.clip(maxBBox)
         return destBBox
