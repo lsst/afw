@@ -150,8 +150,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
         xy = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(xy)
         
-        self.assertAlmostEqual(raDec[0], raDec2[0])
-        self.assertAlmostEqual(raDec[1], raDec2[1])
+        self.assertAlmostEqual(raDec[0].asDegrees(), raDec2[0].asDegrees())
+        self.assertAlmostEqual(raDec[1].asDegrees(), raDec2[1].asDegrees())
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
