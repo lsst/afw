@@ -170,6 +170,7 @@ namespace boost {
 
 %{
 #include "lsst/afw/detection.h"
+#include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Exposure.h"
 %}
 
@@ -205,6 +206,8 @@ namespace lsst { namespace afw { namespace detection {
     class Psf;
 }}}
 %shared_ptr(lsst::afw::detection::Psf);
+
+%include "lsst/afw/image/ExposureInfo.h"
 
 %include "lsst/afw/image/Exposure.h"
 
