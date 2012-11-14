@@ -1,4 +1,9 @@
 EXAMPLE_PATH = examples
 EXCLUDE += include/lsst/afw/detection/FootprintArray.cc
+EXCLUDE += include/lsst/afw/detection/detail/dgPsf.cc
 EXCLUDE += src/math/Stack.cc
+EXCLUDE += src/table
+EXCLUDE += src/geom
+EXCLUDE += src/geom/ellipses
+EXCLUDE += src/fits.cc
 EXCLUDE_SYMBOLS += _swig_property
