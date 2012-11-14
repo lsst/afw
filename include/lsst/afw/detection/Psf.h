@@ -11,6 +11,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
+#include "lsst/afw/table/generators.h"
 
 namespace lsst {
 namespace afw {
@@ -21,9 +22,6 @@ namespace detection {
 
 class PsfFormatter;
 class PsfFactoryBase;
-
-class PsfTableWriter;
-class PsfTableReader;
 
 /**
  * Create a particular sort of Psf.
@@ -130,6 +128,25 @@ public:
 
         return true;
     }
+
+    /**
+     *  @brief Return objects that allow the Psf to be written to one or more RecordOutputGenerators.
+     *
+     *  The resulting records can be fed into one more RecordInputGenerators to create an equivalent
+     *  Psf by using readFromRecords().  This is used to implement persisting a Psf to FITS.
+     *
+     *  The default implementation throws an exception.
+     */
+    virtual afw::table::RecordOutputGeneratorSet writeToRecords() const;
+
+    /**
+     *  @brief Create a Psf from one or more RecordInputGenerators.
+     *
+     *  The records should have been created by writeToRecords.  This is used to implement
+     *  persisting a Psf to FITS, and is itself implemented by RecordGeneratorPsfFactory.
+     */
+    static PTR(Psf) readFromRecords(afw::table::RecordInputGeneratorSet const & inputs);
+
 protected:
     PTR(lsst::afw::cameraGeom::Detector) _detector;
     
