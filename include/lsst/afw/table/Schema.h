@@ -219,6 +219,9 @@ public:
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
+    /// @brief Get the Citizen corresponding to this Schema (SchemaImpl is what inherits from Citizen).
+    daf::base::Citizen & getCitizen() { return *_impl; }
+
 private:
 
     friend class detail::Access;

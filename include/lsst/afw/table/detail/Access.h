@@ -62,11 +62,6 @@ public:
         schema._impl->_recordSize += bytes;
     }
 
-    /// @internal @brief Mark a schema as persistent (SchemaImpl is what inherits from Citizen).
-    static void markPersistent(Schema const & schema) {
-        schema._impl->markPersistent();
-    }
-
 };
 
 }}}} // namespace lsst::afw::table::detail
