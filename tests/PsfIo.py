@@ -90,6 +90,14 @@ class DoubleGaussianPsfTestCase(unittest.TestCase):
         self.comparePsfs(psf1, psf2)
         self.comparePsfs(psf1, psf3)
 
+    def testFitsPersistence(self):
+        psf1 = afwDetect.DoubleGaussianPsf(self.ksize, self.ksize, self.sigma1, self.sigma2, self.b)
+        filename = "tests/data/psf1-1.fits"
+        psf1.writeFits("tests/data/psf1-1.fits")
+        psf2 = afwDetect.Psf.readFits("tests/data/psf1-1.fits")
+        psf2 = afwDetect.DoubleGaussianPsf.swigConvert(psf2)
+        self.comparePsfs(psf1, psf2)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
