@@ -26,6 +26,7 @@
 
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
+#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace lsst { namespace afw {
@@ -151,6 +152,20 @@ public:
 
     // Destructor defined in source file because we need access to destructors of forward-declared components
     ~ExposureInfo();
+
+    /**
+     *  @brief Generate the metadata that saves some components of the ExposureInfo to a FITS header.
+     *
+     *  FITS persistence is separated into getFitsMetadata() and writeFits() so that
+     *  the Primary FITS header can be at least mostly written before the main image HDUs
+     *  are written, while the additional ExposureInfo HDUs are written afterwards. This
+     *  is desirable in order to reduce the chance that we'll have to shift the images on
+     *  disk in order to make space for addition header entries.
+     *
+     *  @param[in]  xy0   The origin of the exposure associated with this object, used to
+     *                    install a linear offset-only WCS in the FITS header.
+     */
+    PTR(daf::base::PropertySet) getFitsMetadata(geom::Point2I const & xy0=geom::Point2I()) const;
 
 private:
 
