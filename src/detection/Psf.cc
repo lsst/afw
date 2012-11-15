@@ -15,6 +15,8 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/math/offsetImage.h"
+#include "lsst/afw/fits.h"
+#include "lsst/afw/table/Catalog.h"
 
 /************************************************************************************************************/
 
@@ -336,5 +338,73 @@ namespace {
         Psf::registerMe<KernelPsf, afwMath::Kernel::Ptr>("Kernel");
 }
 // \endcond
-}}}
+
+void Psf::writeFits(std::string const & filename) const {
+    afw::fits::Fits fitsfile(filename, "w", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
+}
+
+void Psf::writeFits(afw::fits::MemFileManager & manager) const {
+    afw::fits::Fits fitsfile(manager, "w", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
+}
+
+void Psf::writeFits(afw::fits::Fits & fitsfile) const {
+    afw::table::RecordOutputGeneratorSet outputs = writeToRecords();
+    daf::base::PropertyList metadata;
+    metadata.set("PSF_NAME", outputs.name, "Name of the Psf class stored in this file.");
+    for (
+        afw::table::RecordOutputGeneratorSet::Vector::iterator iter = outputs.generators.begin();
+        iter != outputs.generators.end();
+        ++iter
+    ) {
+        afw::table::RecordOutputGenerator & g = **iter;
+        afw::table::BaseCatalog cat(g.getSchema());
+        cat.reserve(g.getRecordCount());
+        for (int n = 0; n < g.getRecordCount(); ++n) {
+            g.fill(*cat.addNew());
+        }
+        cat.writeFits(fitsfile);
+        int extHdu = fitsfile.getHdu();
+        metadata.add("PSF_HDU", extHdu, "Index of HDU(s) containing Psf (1==Primary)");
+    }
+    fitsfile.setHdu(1);
+    fitsfile.writeMetadata(metadata);
+}
+
+PTR(Psf) Psf::readFits(std::string const & filename) {
+    afw::fits::Fits fitsfile(filename, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    return readFits(fitsfile);
+}
+
+PTR(Psf) Psf::readFits(afw::fits::MemFileManager & manager) {
+    afw::fits::Fits fitsfile(manager, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    return readFits(fitsfile);
+}
+
+PTR(Psf) Psf::readFits(afw::fits::Fits & fitsfile) {
+    fitsfile.setHdu(1); // should always have an index to the correct HDUs in the primary
+    daf::base::PropertyList metadata;
+    fitsfile.readMetadata(metadata, true);
+    afw::table::RecordInputGeneratorSet inputs(metadata.get<std::string>("PSF_NAME"));
+    std::vector<int> hdus = metadata.getArray<int>("PSF_HDU");
+    // We need to keep a vector of catalogs rather than use and discard them one-by-one
+    // because we need to keep their iterators and records alive until the end of the
+    // function.
+    std::vector<afw::table::BaseCatalog> catalogs;
+    catalogs.reserve(hdus.size());
+    inputs.generators.reserve(hdus.size());
+    for (std::size_t n = 0; n < hdus.size(); ++n) {
+        fitsfile.setHdu(hdus[n]);
+        catalogs.push_back(afw::table::BaseCatalog::readFits(fitsfile));
+        inputs.generators.push_back(
+            afw::table::RecordInputGenerator::make(
+                catalogs.back().getSchema(), catalogs.back().begin(), catalogs.back().end()
+            )
+        );
+    }
+    return readFromRecords(inputs);
+}
+
+}}} // namespace lsst::afw::detection
 

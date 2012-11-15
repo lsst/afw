@@ -16,7 +16,11 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-    class Detector;
+class Detector;
+}
+namespace fits {
+class Fits;
+class MemFileManager;
 }
 namespace detection {
 
@@ -136,6 +140,9 @@ public:
      *  Psf by using readFromRecords().  This is used to implement persisting a Psf to FITS.
      *
      *  The default implementation throws an exception.
+     *
+     *  The user is responsible for ensuring that the lifetime of the returned object does not
+     *  exceed the lifetime of the Psf, as it may contain a non-owning back reference to the Psf.
      */
     virtual afw::table::RecordOutputGeneratorSet writeToRecords() const;
 
@@ -147,7 +154,26 @@ public:
      */
     static PTR(Psf) readFromRecords(afw::table::RecordInputGeneratorSet const & inputs);
 
+    /// Write the Psf to a regular FITS file.
+    void writeFits(std::string const & filename) const;
+
+    /// Write the Psf to a RAM FITS file.
+    void writeFits(fits::MemFileManager & manager) const;
+
+    /// Write the Psf to an already-open FITS file object.
+    void writeFits(fits::Fits & fitsfile) const;
+
+    /// @brief Read a Psf from a regular FITS file.
+    static PTR(Psf) readFits(std::string const & filename);
+
+    /// @brief Read a Psf from a RAM FITS file.
+    static PTR(Psf) readFits(fits::MemFileManager & manager);
+
+    /// @brief Read a Psf from a  FITS file object already at the correct extension.
+    static PTR(Psf) readFits(fits::Fits & fitsfile);
+
 protected:
+
     PTR(lsst::afw::cameraGeom::Detector) _detector;
     
     virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
