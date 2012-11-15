@@ -497,7 +497,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
                             geom::Box2I const& bbox,                           ///< Only read these pixels
                             ImageOrigin const origin    ///< specify the coordinate system of the bbox
                            ) :
@@ -522,7 +522,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     }
 
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata.reset(new daf::base::PropertyList());
     }
 
     if (!fits_read_image<fits_image_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
@@ -541,7 +541,7 @@ template<typename PixelT>
 image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
                             size_t *ramFileLen,      ///< Pointer to the length of the FITS file in memory
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
                             geom::Box2I const& bbox,                           ///< Only read these pixels
                             ImageOrigin const origin    ///< specify the coordinate system of the bbox
                            ) :
@@ -559,7 +559,7 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
     > fits_image_types;
 
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata.reset(new daf::base::PropertyList());
     }
     if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
         throw LSST_EXCEPT(image::FitsException,
@@ -583,8 +583,8 @@ void image::Image<PixelT>::writeFits(
         return;
     }
 
-    lsst::daf::base::PropertySet::Ptr metadata;
-    PropertySet::Ptr wcsAMetadata =
+    PTR(PropertySet) metadata;
+    PTR(PropertySet) wcsAMetadata =
         image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                      this->getX0(), this->getY0());
     
@@ -615,8 +615,8 @@ void image::Image<PixelT>::writeFits(
         return;
     }
 
-    lsst::daf::base::PropertySet::Ptr metadata;
-    PropertySet::Ptr wcsAMetadata =
+    PTR(PropertySet) metadata;
+    PTR(PropertySet) wcsAMetadata =
         image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                      this->getX0(), this->getY0());
     

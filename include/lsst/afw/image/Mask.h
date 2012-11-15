@@ -109,14 +109,14 @@ public:
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     explicit Mask(
         std::string const& fileName, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const = LOCAL, 
         bool const conformMasks=false
     );                      
     explicit Mask(
         char **ramFile, size_t *ramFileLen, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const& bbox=geom::Box2I(), 
         ImageOrigin const = LOCAL, 
         bool const conformMasks=false
@@ -182,7 +182,7 @@ public:
     void clearAllMaskPlanes();
     void clearMaskPlane(int plane);
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
-    static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::PropertySet::Ptr const);
+    static MaskPlaneDict parseMaskPlaneMetadata(PTR(daf::base::PropertySet));
     //
     // Operations on the mask plane dictionary
     //
@@ -199,7 +199,7 @@ public:
     MaskPlaneDict const& getMaskPlaneDict() const;
     void printMaskPlanes() const;
 
-    static void addMaskPlanesToMetadata(lsst::daf::base::PropertySet::Ptr);
+    static void addMaskPlanesToMetadata(PTR(daf::base::PropertySet));
     //
     // This one isn't static, it fixes up a given Mask's planes
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);

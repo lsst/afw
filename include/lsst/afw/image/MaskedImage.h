@@ -144,17 +144,17 @@ public:
             _iter(boost::make_zip_iterator(boost::make_tuple(img, msk, var))) {
         }
         /// Return (a reference to) the image part of the Pixel pointed at by the iterator
-        typename Ref<typename Image::Pixel>::type image() {
+        typename Ref<ImagePixelT>::type image() {
             return _iter->template get<0>()[0];
         }
 
         /// Return (a reference to) the mask part of the Pixel pointed at by the iterator
-        typename Ref<typename Mask::Pixel>::type mask() {
+        typename Ref<MaskPixelT>::type mask() {
             return _iter->template get<1>()[0];
         }
 
         /// Return (a reference to) the variance part of the Pixel pointed at by the iterator
-        typename Ref<typename Variance::Pixel>::type variance() {
+        typename Ref<VariancePixelT>::type variance() {
             return _iter->template get<2>()[0];
         }
 
@@ -322,15 +322,15 @@ public:
                              (*(X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())()))[0]);
             }
 
-            typename Ref<typename Image::Pixel>::type image() {
+            typename Ref<ImagePixelT>::type image() {
                 // Equivalent to "return (*_mil->_loc.template get<0>().x())[0];"
 
                 return (*(X_OR_Y<ImageLocator>(_mil->_loc.template get<0>())()))[0];
             }
-            typename Ref<typename Mask::Pixel>::type mask() {
+            typename Ref<MaskPixelT>::type mask() {
                 return (*(X_OR_Y<MaskLocator>(_mil->_loc.template get<1>())()))[0];
             }
-            typename Ref<typename Variance::Pixel>::type variance() {
+            typename Ref<VariancePixelT>::type variance() {
                 return (*(X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())()))[0];
             }
         protected:
@@ -453,41 +453,41 @@ public:
         // Use those templated classes to implement image/mask/variance
         //
         /// Return a reference to the %image at the offset set when we created the \c cached_location_t
-        typename Ref<typename Image::Pixel>::type image(cached_location_t const& cached_loc) {
+        typename Ref<ImagePixelT>::type image(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<0> >(cached_loc);
         }
         /// Return a reference to the %image at the current position of the locator
-        typename Ref<typename Image::Pixel>::type image() {
+        typename Ref<ImagePixelT>::type image() {
             return apply_IMV<boost::mpl::int_<0> >();
         }
         /// Return a reference to the %image offset by <tt>(x, y)</tt> from the current position of the locator
-        typename Ref<typename Image::Pixel>::type image(int x, int y) {
+        typename Ref<ImagePixelT>::type image(int x, int y) {
             return apply_IMV<boost::mpl::int_<0> >(x, y);
         }
 
         /// Return a reference to the mask at the offset set when we created the \c cached_location_t
-        typename Ref<typename Mask::Pixel>::type mask(cached_location_t const& cached_loc) {
+        typename Ref<MaskPixelT>::type mask(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<1> >(cached_loc);
         }
         /// Return a reference to the mask at the current position of the locator
-        typename Ref<typename Mask::Pixel>::type mask() {
+        typename Ref<MaskPixelT>::type mask() {
             return apply_IMV<boost::mpl::int_<1> >();
         }
         /// Return a reference to the mask offset by <tt>(x, y)</tt> from the current position of the locator
-        typename Ref<typename Mask::Pixel>::type mask(int x, int y) {
+        typename Ref<MaskPixelT>::type mask(int x, int y) {
             return apply_IMV<boost::mpl::int_<1> >(x, y);
         }
 
         /// Return a reference to the variance at the offset set when we created the \c cached_location_t
-        typename Ref<typename Variance::Pixel>::type variance(cached_location_t const& cached_loc) {
+        typename Ref<VariancePixelT>::type variance(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<2> >(cached_loc);
         }
         /// Return a reference to the variance at the current position of the locator
-        typename Ref<typename Variance::Pixel>::type variance() {
+        typename Ref<VariancePixelT>::type variance() {
             return apply_IMV<boost::mpl::int_<2> >();
         }
         /// Return a reference to the variance offset by <tt>(x, y)</tt> from the current position of the locator
-        typename Ref<typename Variance::Pixel>::type variance(int x, int y) {
+        typename Ref<VariancePixelT>::type variance(int x, int y) {
             return apply_IMV<boost::mpl::int_<2> >(x, y);
         }
 
@@ -625,13 +625,13 @@ public:
     );
     explicit MaskedImage(
         std::string const& baseName, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     );
     explicit MaskedImage(
         char **ramFile, size_t *ramFileLen, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
     ); 
@@ -727,13 +727,13 @@ public:
 
     void writeFits(
         std::string const& baseName,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w",
         bool const writeMef=false
     ) const;
     void writeFits(
         char **ramFile, size_t *ramFileLen,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w",
         bool const writeMef=true    //writeMef==false is not supported, it will throw an exception
     ) const;

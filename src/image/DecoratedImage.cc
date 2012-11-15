@@ -35,7 +35,9 @@ namespace geom = lsst::afw::geom;
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::init() {
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
+    // safer to initialize a smart pointer as a named variable
+    PTR(daf::base::PropertySet) metadata(new daf::base::PropertyList);
+    setMetadata(metadata);
     _gain = 0;
 }
 
@@ -70,7 +72,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    typename Image<PixelT>::Ptr rhs ///< Image to go into DecoratedImage
+    PTR(Image<PixelT>) rhs ///< Image to go into DecoratedImage
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(rhs)
@@ -152,12 +154,12 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
     std::string const& fileName,                        ///< the file to write
-    lsst::daf::base::PropertySet::ConstPtr metadata_i, ///< metadata to write to header; or NULL
+    CONST_PTR(daf::base::PropertySet) metadata_i, ///< metadata to write to header; or NULL
     std::string const& mode                              ///< "w" to write a new file; "a" to append
 ) const {
     lsst::daf::base::PropertySet::Ptr metadata;
 
-    if (metadata_i.get()) {
+    if (metadata_i) {
         metadata = getMetadata()->deepCopy();
         metadata->combine(metadata_i);
     } else {

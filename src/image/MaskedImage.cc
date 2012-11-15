@@ -117,7 +117,7 @@ template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     std::string const& baseName,    //!< The file's baseName (e.g. foo reads foo_{img.msk.var}.fits)
     const int hdu,                  //!< The HDU in the file (default: 1)
-    lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+    PTR(daf::base::PropertySet) metadata, //!< Filled out with metadata from file (default: NULL)
     geom::Box2I const& bbox,                           //!< Only read these pixels
     ImageOrigin const origin,                   //!< Coordinate system for bbox
     bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
@@ -147,14 +147,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
      * We need to read the metadata so's to check that the EXTTYPEs are correct
      */
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata.reset(new lsst::daf::base::PropertyList);
     }
 
     if (isMef) {
         int real_hdu = (hdu == 0) ? 2 : hdu;
 
         if (hdu == 0) {                 // may be an old file with no PDU
-            lsst::daf::base::PropertySet::Ptr hdr = readMetadata(baseName, 1);
+            PTR(daf::base::PropertySet) hdr = readMetadata(baseName, 1);
             if (hdr->get<int>("NAXIS") != 0) { // yes, an old-style file
                 real_hdu = 1;
             }
@@ -262,7 +262,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     char **ramFile,                                ///< RAM buffer to receive RAM FITS file
     size_t *ramFileLen,                            ///< RAM buffer length
     const int hdu,                              //!< The HDU in the file (default: 1)
-    lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+    PTR(daf::base::PropertySet) metadata, //!< Filled out with metadata from file (default: NULL)
     geom::Box2I const& bbox,                    //!< Only read these pixels
     ImageOrigin const origin,                   //!< Coordinate system for bbox
     bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
@@ -274,13 +274,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
      * We need to read the metadata so's to check that the EXTTYPEs are correct
      */
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata.reset(new lsst::daf::base::PropertyList);
     }
     
     int real_hdu = (hdu == 0) ? 2 : hdu;
     
     if (hdu == 0) {                 // may be an old file with no PDU
-        lsst::daf::base::PropertySet::Ptr hdr = readMetadata(ramFile, ramFileLen, 1);
+        PTR(daf::base::PropertySet) hdr = readMetadata(ramFile, ramFileLen, 1);
         if (hdr->get<int>("NAXIS") != 0) { // yes, an old-style file
             real_hdu = 1;
         }
@@ -655,11 +655,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
     }
 
-    lsst::daf::base::PropertySet::Ptr metadata;
+    PTR(daf::base::PropertySet) metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
     }
 
     static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
@@ -681,27 +681,27 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         if (mode == "w" || mode == "wb") {
             _image->writeFits(baseName, metadata, "pdu");
 #if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
-            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+            metadata.reset(new lsst::daf::base::PropertyList());
 #endif
         }
 
         metadata->set("EXTTYPE", "IMAGE");
         _image->writeFits(baseName, metadata, "a");
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
         metadata->set("EXTTYPE", "MASK");
         _mask->writeFits(baseName, metadata, "a");
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
         metadata->set("EXTTYPE", "VARIANCE");
         _variance->writeFits(baseName, metadata, "a");
     } else {
         _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
         _mask->writeFits(MaskedImage::maskFileName(baseName), metadata, mode);
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
         _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
     }
 }
@@ -731,11 +731,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
     }
 
-    lsst::daf::base::PropertySet::Ptr metadata;
+    PTR(daf::base::PropertySet) metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
     }
 
     static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
@@ -746,18 +746,18 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         if (mode == "w" || mode == "wb") {
             _image->writeFits(ramFile, ramFileLen, metadata, "pdu");
 #if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
-            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+            metadata.reset(new lsst::daf::base::PropertyList());
 #endif
         }
 
         metadata->set("EXTTYPE", "IMAGE");
         _image->writeFits(ramFile, ramFileLen, metadata, "w");    //First one can't be 'a', must be 'w'
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
         metadata->set("EXTTYPE", "MASK");
         _mask->writeFits(ramFile, ramFileLen, metadata, "a");
 
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
         metadata->set("EXTTYPE", "VARIANCE");
         _variance->writeFits(ramFile, ramFileLen, metadata, "a");
     } else {
