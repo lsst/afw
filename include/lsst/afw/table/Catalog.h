@@ -280,25 +280,40 @@ public:
         return cat;
     }
 
-    /// Write a FITS binary table
+    /// Write a FITS binary table to a regular file.
     void writeFits(std::string const & filename, std::string const & mode="w") const {
         io::FitsWriter::apply(filename, mode, *this);
     }
+    /// Write a FITS binary table to a RAM file.
     void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const {
         io::FitsWriter::apply(manager, mode, *this);
     }
+    /// Write a FITS binary table to an open file object.
+    void writeFits(fits::Fits & fitsfile) const {
+        io::FitsWriter::apply(fitsfile, *this);
+    }
 
     /**
-     *  @brief Read a FITS binary table.
+     *  @brief Read a FITS binary table from a regular file.
      *
      *  We look in HDU 2 by default, because HDU one is the Primary HDU, and must
-     *  be an image HDU (even if its an empty image).
+     *  be an image HDU (even if it's an empty image).
      */
     static CatalogT readFits(std::string const & filename, int hdu=2) {
         return io::FitsReader::apply<CatalogT>(filename, hdu);
     }
+    /**
+     *  @brief Read a FITS binary table from a RAM file.
+     *
+     *  We look in HDU 2 by default, because HDU one is the Primary HDU, and must
+     *  be an image HDU (even if it's an empty image).
+     */
     static CatalogT readFits(fits::MemFileManager & manager, int hdu=2) {
         return io::FitsReader::apply<CatalogT>(manager, hdu);
+    }
+    /// @brief Read a FITS binary table from a file object already at the correct extension.
+    static CatalogT readFits(fits::Fits & fitsfile) {
+        return io::FitsReader::apply<CatalogT>(fitsfile);
     }
 
     /**
