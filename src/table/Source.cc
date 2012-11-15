@@ -434,7 +434,7 @@ SourceTable::SourceTable(SourceTable const & other) :
 SourceTable::MinimalSchema::MinimalSchema() {
     schema = SimpleTable::makeMinimalSchema();
     parent = schema.addField<RecordId>("parent", "unique ID of parent source");
-    detail::Access::markPersistent(schema);
+    schema.getCitizen().markPersistent();
 }
 
 SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {

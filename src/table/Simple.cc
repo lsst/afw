@@ -149,7 +149,7 @@ SimpleTable::SimpleTable(SimpleTable const & other) :
 SimpleTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");
     coord = schema.addField<Coord>("coord", "position in ra/dec", "IRCS; radians");
-    detail::Access::markPersistent(schema);
+    schema.getCitizen().markPersistent();
 }
 
 SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
