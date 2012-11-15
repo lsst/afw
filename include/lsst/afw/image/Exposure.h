@@ -233,16 +233,14 @@ public:
     // FITS
     void writeFits(std::string const &expOutFile) const;
     void writeFits(char **ramFile, size_t *ramFileLen) const;
-    
+
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
     
     /// Finish initialization after constructing from a FITS file
     void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
-    lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
-
-    MaskedImageT _maskedImage;             
+    MaskedImageT _maskedImage;
     PTR(ExposureInfo) _info;
 };
 

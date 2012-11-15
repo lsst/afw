@@ -287,101 +287,39 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const
 
 // Write FITS
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::generateOutputMetadata() const {
-    using lsst::daf::base::PropertySet;
-    
-    //Create fits header
-    PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
-    afwImage::MaskedImage<ImageT> mi = getMaskedImage();
-
-    //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
-    //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
-    //image coordinates. When saving an image we convert from pixel to index coordinates.
-    //In the case where this image is a parent image, the reference pixels are unchanged
-    //by this transformation
-    if (_info->hasWcs()) {
-        afwImage::Wcs::Ptr newWcs = _info->getWcs()->clone(); //Create a copy
-        newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
-
-        // Copy wcsMetadata over to fits header
-        PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
-        outputMetadata->combine(wcsMetadata);
-    }
-    
-    //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
-    //indicate the origin (the position of the bottom left corner) of the sub-image with 
-    //respect to the origin of the parent image.
-    //This is stored in the fits header using the LTV convention used by STScI 
-    //(see \S2.6.2 of HST Data Handbook for STIS, version 5.0
-    // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287). 
-    //This is not a fits standard keyword, but is recognised by ds9
-    //LTV keywords use the opposite convention to the LSST, in that they represent
-    //the position of the origin of the parent image relative to the origin of the sub-image.
-    // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
-  
-    outputMetadata->set("LTV1", -1*mi.getX0());
-    outputMetadata->set("LTV2", -1*mi.getY0());
-
-    outputMetadata->set("FILTER", _info->getFilter().getName());
-    if (_info->hasDetector()) {
-        outputMetadata->set("DETNAME", _info->getDetector()->getId().getName());
-        outputMetadata->set("DETSER", _info->getDetector()->getId().getSerial());
-    }
-    /**
-     * We need to define these keywords properly! XXX
-     */
-    outputMetadata->set("TIME-MID", _info->getCalib()->getMidTime().toString());
-    outputMetadata->set("EXPTIME", _info->getCalib()->getExptime());
-    outputMetadata->set("FLUXMAG0", _info->getCalib()->getFluxMag0().first);
-    outputMetadata->set("FLUXMAG0ERR", _info->getCalib()->getFluxMag0().second);
-    
-    return outputMetadata;
-}
-
-/** @brief Write the Exposure's Image files.  Update the fits image header card
-  * to reflect the Wcs information.
-  *
-  * Member takes the Exposure's base output file name (as a std::string without
-  * the _img.fits, _var.fits, or _msk.fits suffixes) and uses the MaskedImage
-  * Class to write the MaskedImage files, _img.fits, _var.fits, and _msk.fits to
-  * disk.  Method also uses the metadata information to update the Exposure's
-  * fits header cards.
-  *
-  * @note LSST and Fits use a different convention for Wcs coordinates.
-  * Fits measures crpix relative to the bottom left hand corner of the image
-  * saved in that file (what ds9 calls image coordinates). Lsst measures it 
-  * relative to the bottom left hand corner of the parent image (what 
-  * ds9 calls the physical coordinates). This may cause confusion when you
-  * write an image to disk and discover that the values of crpix in the header
-  * are not what you expect.
-  *
-  * exposure = afwImage.ExposureF(filename) 
-  * fitsHeader = afwImage.readMetadata(filename)
-  * 
-  * exposure.getWcs().getPixelOrigin() ---> (128,128)
-  * fitsHeader.get("CRPIX1") --> 108
-  *
-  * This is expected. If you look at the value of
-  * fitsHeader.get("LTV1") --> -20
-  * you will find that CRPIX - LTV == getPixelOrigin.
-  *
-  * This implementation means that if you open the image in ds9 (say)
-  * the wcs translations for a given pixel are correct
-  *
-  * @note The MaskedImage Class will throw an pex Exception if the base
-  * filename is not found.
-  */
+/** @brief Save the Exposure and all its components to a multi-extension FITS file.
+ *
+ * @note LSST and FITS use a different convention for WCS coordinates.
+ * Fits measures crpix relative to the bottom left hand corner of the image
+ * saved in that file (what ds9 calls image coordinates). Lsst measures it 
+ * relative to the bottom left hand corner of the parent image (what 
+ * ds9 calls the physical coordinates). This may cause confusion when you
+ * write an image to disk and discover that the values of crpix in the header
+ * are not what you expect.
+ *
+ * exposure = afwImage.ExposureF(filename) 
+ * fitsHeader = afwImage.readMetadata(filename)
+ * 
+ * exposure.getWcs().getPixelOrigin() ---> (128,128)
+ * fitsHeader.get("CRPIX1") --> 108
+ *
+ * This is expected. If you look at the value of
+ * fitsHeader.get("LTV1") --> -20
+ * you will find that CRPIX - LTV == getPixelOrigin.
+ *
+ * This implementation means that if you open the image in ds9 (say)
+ * the wcs translations for a given pixel are correct
+ */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    const std::string &expOutFile ///< Exposure's base output file name
+    std::string const & expOutFile ///< Exposure's base output file name
 ) const {
-    lsst::daf::base::PropertySet::Ptr outputMetadata = generateOutputMetadata();
+    lsst::daf::base::PropertySet::Ptr outputMetadata = _info->getFitsMetadata(getXY0());
     _maskedImage.writeFits(expOutFile, outputMetadata);
 }
 
 /**
- See writeFits(string) for a basic description of this function.
+ * See writeFits(string) for a basic description of this function.
  *
  * This function differs from the string version in that rather than writing a FITS file to disk
  * it writes a FITS file to a RAM buffer.
@@ -391,8 +329,9 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
     char **ramFile,        ///< RAM buffer to receive RAM FITS file
     size_t *ramFileLen    ///< RAM buffer length
 ) const {
-    lsst::daf::base::PropertySet::Ptr outputMetadata = generateOutputMetadata();
+    lsst::daf::base::PropertySet::Ptr outputMetadata = _info->getFitsMetadata(getXY0());
     _maskedImage.writeFits(ramFile, ramFileLen, outputMetadata, "a", true);
+    
 }
 
 // Explicit instantiations

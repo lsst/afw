@@ -98,4 +98,53 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
 
 ExposureInfo::~ExposureInfo() {}
 
+PTR(daf::base::PropertySet) ExposureInfo::getFitsMetadata(afw::geom::Point2I const & xy0) const {
+    
+    //Create fits header
+    PTR(daf::base::PropertySet) outputMetadata = getMetadata()->deepCopy();
+
+    //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
+    //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
+    //image coordinates. When saving an image we convert from pixel to index coordinates.
+    //In the case where this image is a parent image, the reference pixels are unchanged
+    //by this transformation
+    if (hasWcs()) {
+        PTR(Wcs) newWcs = getWcs()->clone(); //Create a copy
+        newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY() );
+
+        // Copy wcsMetadata over to fits header
+        PTR(daf::base::PropertySet) wcsMetadata = newWcs->getFitsMetadata();
+        outputMetadata->combine(wcsMetadata);
+    }
+    
+    //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
+    //indicate the origin (the position of the bottom left corner) of the sub-image with
+    //respect to the origin of the parent image.
+    //This is stored in the fits header using the LTV convention used by STScI
+    //(see \S2.6.2 of HST Data Handbook for STIS, version 5.0
+    // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287).
+    //This is not a fits standard keyword, but is recognised by ds9
+    //LTV keywords use the opposite convention to the LSST, in that they represent
+    //the position of the origin of the parent image relative to the origin of the sub-image.
+    // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
+  
+    outputMetadata->set("LTV1", -xy0.getX());
+    outputMetadata->set("LTV2", -xy0.getY());
+
+    outputMetadata->set("FILTER", getFilter().getName());
+    if (hasDetector()) {
+        outputMetadata->set("DETNAME", getDetector()->getId().getName());
+        outputMetadata->set("DETSER", getDetector()->getId().getSerial());
+    }
+    /**
+     * We need to define these keywords properly! XXX
+     */
+    outputMetadata->set("TIME-MID", getCalib()->getMidTime().toString());
+    outputMetadata->set("EXPTIME", getCalib()->getExptime());
+    outputMetadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
+    outputMetadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
+    
+    return outputMetadata;
+}
+
 }}} // namespace lsst::afw::image
