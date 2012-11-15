@@ -34,10 +34,9 @@ public:
 
 protected:
 
-    RecordOutputGenerator(Schema const & schema, int recordCount) :
+    RecordOutputGenerator(Schema const & schema, int recordCount=1) :
         _schema(schema), _recordCount(recordCount) {}
 
-private:
     Schema _schema;
     int _recordCount;
 };
@@ -121,7 +120,7 @@ struct RecordOutputGeneratorSet {
     std::string name;
     Vector generators;
 
-    RecordOutputGeneratorSet(std::string const & name_, Vector const & generators_) :
+    explicit RecordOutputGeneratorSet(std::string const & name_, Vector const & generators_=Vector()) :
         name(name_), generators(generators_) {}
 };
 
@@ -136,7 +135,7 @@ struct RecordInputGeneratorSet {
     std::string name;
     Vector generators;
 
-    RecordInputGeneratorSet(std::string const & name_, Vector const & generators_) :
+    explicit RecordInputGeneratorSet(std::string const & name_, Vector const & generators_=Vector()) :
         name(name_), generators(generators_) {}
 };
 
