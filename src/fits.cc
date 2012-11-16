@@ -161,7 +161,14 @@ int Fits::getHdu() {
 }
 
 void Fits::setHdu(int hdu) {
-    fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+    if (hdu != 0) {
+        fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+    }
+    if (hdu == 0 && getHdu() == 1 && getImageDim() == 0) {
+        // want a silent failure here
+        int tmpStatus = status;
+        fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), 1, 0, &tmpStatus);
+    }
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
 }
 
@@ -768,16 +775,20 @@ void Fits::writeImageImpl(T const * data, int nElements) {
         LSST_FITS_CHECK_STATUS(*this, "Writing image");
 }
 
+int Fits::getImageDim() {
+    int nAxis = 0;
+    fits_get_img_dim(reinterpret_cast<fitsfile*>(fptr), &nAxis, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting NAXIS");
+    return nAxis;
+}
+
 // ---- Manipulating files ----------------------------------------------------------------------------------
 
 Fits::Fits(std::string const & filename, std::string const & mode, int behavior_)
     : fptr(0), status(0), behavior(behavior_)
 {
     if (mode == "r" || mode == "rb") {
-        if (!boost::filesystem::exists(filename)) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                              (boost::format("File %s doesn't exist") % filename).str());
-        }
         fits_open_file(
             reinterpret_cast<fitsfile**>(&fptr),
             const_cast<char*>(filename.c_str()), 
