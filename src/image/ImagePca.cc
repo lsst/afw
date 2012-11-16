@@ -172,8 +172,7 @@ void ImagePca<ImageT>::analyze()
     int const nImage = _imageList.size();
 
     if (nImage == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                          "Please provide at least one Image for me to analyze");
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException, "No images provided for PCA analysis");
     }
     /*
      * Eigen doesn't like 1x1 matrices, but we don't really need it to handle a single matrix...
