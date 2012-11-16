@@ -50,7 +50,7 @@ namespace lsst { namespace afw { namespace image {
 
 /************************************************************************************************************/
 
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0, bool strip=false);
+PTR(daf::base::PropertySet) readMetadata(std::string const & fileName, int hdu=0, bool strip=false);
 
 /************************************************************************************************************/
 /**
