@@ -599,9 +599,9 @@ void Fits::writeMetadata(daf::base::PropertySet const & metadata) {
         if (!isKeyIgnored(*i)) {
             if (pl) {
                 writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
+            } else {
+                writeKeyFromProperty(*this, metadata, *i);
             }
-        } else {
-            if (pl) writeKeyFromProperty(*this, metadata, *i);
         }
     }
 }
