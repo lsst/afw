@@ -31,6 +31,7 @@
 #include "boost/filesystem.hpp"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/fits.h"
 
 using namespace std;
 
@@ -160,35 +161,6 @@ void test2()
 }
 
 /**
- Test Coadd::map().
- */
-/*
-void test3()
-{
-	if (gFilename == "")
-		throw runtime_error("Must specify SDSS image filename on command line");
-	
-	pair<boost::shared_ptr<char>, long> file = readFile(gFilename);
-	
-	string queriesStrsSerialized = string("QUERY_1.099e-4_0_1000000_") + gFilter + "_" + gQueryBounds + "\n";
-	
-	if (file.first != NULL)
-	{
-		vector<pair<char*, int> > intersections =
-			Coadd::map(queriesStrsSerialized, file.first.get(), file.second, gFilename, gDebugData);
-		
-		cout << "Map done, Intersection details per query:" << endl;
-		for (int i = 0; i < intersections.size(); ++i)
-		{
-			if (intersections[i].first)
-				cout << "  Intersection ramFITS length: " << intersections[i].second << endl;
-			else cout << "  Empty intersection" << endl;
-		}
-	}
-}
-*/
-
-/**
  Read in a FITS file from disk, copy it to another FITS file, then write the copy to disk.
  */
 void test4()
@@ -305,16 +277,15 @@ void test6()
 	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, 0, miMetadata));
 	
 	//Write the Image to a RAM FITS file
-	char *ramFile = NULL;
-	size_t ramFileLen = 0;
 	image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
-	image->writeFits(&ramFile, &ramFileLen);
+    lsst::afw::fits::MemFileManager manager;
+	image->writeFits(manager);
 	
 	//Write the RAM FITS file to disk
 	ofstream ofs;
 	ofs.open(string(gFilenameStripped + "_imageRamOut.fit").c_str());
 	if (ofs)
-		ofs.write(ramFile, ramFileLen);
+		ofs.write(reinterpret_cast<char*>(manager.getData()), manager.getLength());
 	ofs.close();
 }
 
@@ -326,9 +297,6 @@ void test7()
 	if (gFilename == "")
 		throw runtime_error("Must specify SDSS image filename on command line");
 	
-	char *ramFile = NULL;
-	size_t ramFileLen = 0;
-	
 	//Read FITS file from disk into an Exposure
 	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
 	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, 0, miMetadata));
@@ -337,62 +305,16 @@ void test7()
 	ExposureF exposure(maskedImage, wcsFromFITS);
 	
 	//Write the Exposure to a RAM FITS file
-	exposure.writeFits(&ramFile, &ramFileLen);
+    lsst::afw::fits::MemFileManager manager;
+	exposure.writeFits(manager);
 	
 	//Write the RAM FITS file to disk
 	ofstream ofs;
 	ofs.open(string(gFilenameStripped + "_exposureRamOut.fit").c_str());
 	if (ofs)
-		ofs.write(ramFile, ramFileLen);
+		ofs.write(reinterpret_cast<char*>(manager.getData()), manager.getLength());
 	ofs.close();
 }
-
-/**
- Test Coadd::reduce().
- */
- /*
-void test8()
-{
-	cout << "This test will work best if given two images and a query that all overlap." << endl;
-	cout << "  e.g.:   fpC-002570-r6-0199.fit    fpC-005902-r6-0677.fit    37.8-39 x 1-1.3" << endl;
-	
-	if (gFilename == "" || gFilename2 == "")
-		throw runtime_error("Must specify two SDSS image filenames on command line");
-	
-	pair<boost::shared_ptr<char>, long> file1 = readFile(gFilename);
-	pair<boost::shared_ptr<char>, long> file2 = readFile(gFilename2);
-	
-	vector<pair<char*, int> > intersections1, intersections2;	//Vectors by query of intersections for one input image
-	
-	string queriesStrsSerialized = string("QUERY_1.099e-4_0_1000000_") + gFilter + "_" + gQueryBounds + "\n";
-	
-	if (file1.first != NULL)
-	{
-		intersections1 = Coadd::map(queriesStrsSerialized, file1.first.get(), file1.second, gFilename, gDebugData);
-		
-		cout << "Map done, File 1 intersection lengths (bytes):" << endl;
-		for (int i = 0; i < intersections1.size(); ++i)
-			cout << intersections1[i].second << endl;
-	}
-	if (file2.first != NULL)
-	{
-		intersections2 = Coadd::map(queriesStrsSerialized, file2.first.get(), file2.second, gFilename2, gDebugData);
-		
-		cout << "Map done, File 2 intersection lengths (bytes):" << endl;
-		for (int i = 0; i < intersections2.size(); ++i)
-			cout << intersections2[i].second << endl;
-	}
-	
-	vector<pair<char*, int> > intersections;	//Vector by input image of intersections for one query
-	
-	if (intersections1[0].first)
-		intersections.push_back(intersections1[0]);
-	if (intersections2[0].first)
-		intersections.push_back(intersections2[0]);
-	
-	Coadd::reduce(intersections);
-}
-*/
 
 //================================================================================
 //test entry point

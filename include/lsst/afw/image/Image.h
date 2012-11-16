@@ -57,6 +57,11 @@ namespace formatters {
     template <typename PixelT> class DecoratedImageFormatter;
 }
 
+namespace fits {
+class Fits;
+class MemFileManager;
+}
+
 namespace image {
     namespace detail {
         //
@@ -455,16 +460,43 @@ namespace image {
         Image& operator=(const PixelT rhs);
         Image& operator=(const Image& rhs);
 
-        //void readFits(std::string const& fileName, ...); // replaced by constructor
+        /**
+         *  @brief Write an image to a regular FITS file.
+         *
+         *  @param[in] fileName      Name of the file to write.
+         *  @param[in] metadata      Additional values to write to the header (may be null).
+         *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+         */
         void writeFits(
             std::string const& fileName,
             boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
         ) const;
-        void writeFits(char **ramFile, size_t *ramFileLen,
-            boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
+
+        /**
+         *  @brief Write an image to a FITS RAM file.
+         *
+         *  @param[in] manager       Manager object for the memory block to write to.
+         *  @param[in] metadata      Additional values to write to the header (may be null).
+         *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+         */
+        void writeFits(
+            fits::MemFileManager & manager,
+            CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
             std::string const& mode="w"
         ) const;
+
+        /**
+         *  @brief Write an image to an open FITS file object.
+         *
+         *  @param[in] fitsfile      A FITS file already open to the desired HDU.
+         *  @param[in] metadata      Additional values to write to the header (may be null).
+         */
+        void writeFits(
+            fits::Fits & fitsfile,
+            CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+        ) const;
+
 
         void swap(Image &rhs);
         //
@@ -553,13 +585,12 @@ namespace image {
 
         void swap(DecoratedImage &rhs);
         
-        //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(
             std::string const& fileName,
             lsst::daf::base::PropertySet::ConstPtr metadata = lsst::daf::base::PropertySet::Ptr(),
             std::string const& mode="w"
         ) const;
-        
+
         /// Return a shared_ptr to the DecoratedImage's Image
         ImagePtr      getImage()       { return _image; }
         /// Return a shared_ptr to the DecoratedImage's Image as const
