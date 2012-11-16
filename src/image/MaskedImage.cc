@@ -40,6 +40,7 @@
 
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/fits/fits_io.h"
+#include "lsst/afw/fits.h"
 
 namespace bl = boost::lambda;
 namespace image = lsst::afw::image;
@@ -634,33 +635,13 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
     *_variance /= rhs*rhs;
 }
 
-/**
- * Write \c this to a FITS file
- *
- * \deprecated Please avoid using the interface that writes three separate files;  it may be
- * removed in some future release.
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-        std::string const& baseName, ///< The desired file's baseName (e.g. foo reads foo_{img.msk.var}.fits),
-                                     ///< unless file's has a .fits suffix (or you set writeMef to true)
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file
-                                                                          ///< or NULL
-        std::string const& mode,                    //!< "w" to write a new file; "a" to append
-        bool const writeMef  ///< write an MEF file,
-                             ///< even if basename doesn't look like a fully qualified FITS file
-    ) const {
-
-    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
-    }
-
-    PTR(daf::base::PropertySet) metadata;
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-    } else {
-        metadata.reset(new lsst::daf::base::PropertyList());
-    }
+    std::string const& baseName,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode,
+    bool const writeMef
+) const {
 
     static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
     if (writeMef ||
@@ -675,61 +656,37 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
             throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException,
                               "I don't know how to write a compressed MEF: " + baseName);
         }
-        //
-        // Write the PDU
-        //
-        if (mode == "w" || mode == "wb") {
-            _image->writeFits(baseName, metadata, "pdu");
-#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
-            metadata.reset(new lsst::daf::base::PropertyList());
-#endif
-        }
 
-        metadata->set("EXTTYPE", "IMAGE");
-        _image->writeFits(baseName, metadata, "a");
+        fits::Fits fitsfile(baseName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
 
-        metadata.reset(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "MASK");
-        _mask->writeFits(baseName, metadata, "a");
+        writeFits(fitsfile, metadata);
 
-        metadata.reset(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "VARIANCE");
-        _variance->writeFits(baseName, metadata, "a");
     } else {
         _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
 
-        metadata.reset(new lsst::daf::base::PropertyList());
-        _mask->writeFits(MaskedImage::maskFileName(baseName), metadata, mode);
+        _mask->writeFits(MaskedImage::maskFileName(baseName), CONST_PTR(daf::base::PropertySet)(), mode);
 
-        metadata.reset(new lsst::daf::base::PropertyList());
-        _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
+        _variance->writeFits(
+            MaskedImage::varianceFileName(baseName), CONST_PTR(daf::base::PropertySet)(), mode
+        );
     }
 }
 
-/**
- * Write \c this to a FITS RAM file
- *
- * \deprecated Please avoid using the interface that writes three separate files;  it may be
- * removed in some future release.
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-        char **ramFile,        ///< RAM buffer to receive RAM FITS file
-        size_t *ramFileLen,    ///< RAM buffer length
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file
-                                                                          ///< or NULL
-        std::string const& mode,                    //!< "w" to write a new file; "a" to append
-        bool const writeMef  ///< write an MEF file,
-                             ///< even if basename doesn't look like a fully qualified FITS file
-    ) const {
+    fits::MemFileManager & manager,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const& mode
+) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata);
+}
 
-    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
-    }
-    
-    if (!writeMef) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
-    }
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+    fits::Fits & fitsfile,
+    CONST_PTR(daf::base::PropertySet) metadata_i
+) const {
 
     PTR(daf::base::PropertySet) metadata;
     if (metadata_i) {
@@ -738,32 +695,25 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         metadata.reset(new lsst::daf::base::PropertyList());
     }
 
-    static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
-    if (writeMef) {
-        //
-        // Write the PDU
-        //
-        if (mode == "w" || mode == "wb") {
-            _image->writeFits(ramFile, ramFileLen, metadata, "pdu");
-#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
-            metadata.reset(new lsst::daf::base::PropertyList());
-#endif
+    if (fitsfile.getHdu() <= 1) {
+        // Don't ever write images to primary; instead we make an empty primary.
+        fitsfile.createEmpty();
+        if (metadata) {
+            fitsfile.writeMetadata(*metadata);
         }
-
-        metadata->set("EXTTYPE", "IMAGE");
-        _image->writeFits(ramFile, ramFileLen, metadata, "w");    //First one can't be 'a', must be 'w'
-
-        metadata.reset(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "MASK");
-        _mask->writeFits(ramFile, ramFileLen, metadata, "a");
-
-        metadata.reset(new lsst::daf::base::PropertyList());
-        metadata->set("EXTTYPE", "VARIANCE");
-        _variance->writeFits(ramFile, ramFileLen, metadata, "a");
-    } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "nonMEF files not supported.");
-
     }
+
+    metadata->set("EXTTYPE", "IMAGE");
+    _image->writeFits(fitsfile, metadata);
+
+    metadata.reset(new lsst::daf::base::PropertyList());
+    metadata->set("EXTTYPE", "MASK");
+    _mask->writeFits(fitsfile, metadata);
+    
+    metadata.reset(new lsst::daf::base::PropertyList());
+    metadata->set("EXTTYPE", "VARIANCE");
+    _variance->writeFits(fitsfile, metadata);
+
 }
 
 /************************************************************************************************************/

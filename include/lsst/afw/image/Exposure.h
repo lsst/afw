@@ -230,9 +230,9 @@ public:
     /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
     CONST_PTR(ExposureInfo) getInfo() const { return _info; }
 
-    // FITS
-    void writeFits(std::string const &expOutFile) const;
-    void writeFits(char **ramFile, size_t *ramFileLen) const;
+    void writeFits(std::string const & fileName) const;
+    void writeFits(fits::MemFileManager & manager) const;
+    void writeFits(fits::Fits & fitsfile) const;
 
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)

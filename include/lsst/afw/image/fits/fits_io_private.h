@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -43,6 +44,7 @@
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/fits.h"
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
@@ -86,6 +88,7 @@ namespace cfitsio {
 
     void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
                    std::string const& keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata);
+
     int getNumKeys(fitsfile* fd);
     void getKey(fitsfile* fd, int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 
@@ -530,86 +533,6 @@ public:
         } else {
             return _bbox.getDimensions();
         }    
-    }
-};
-    
-class fits_writer : public fits_file_mgr {
-    void init() {
-        ;
-    }
-public:
-    fits_writer(cfitsio::fitsfile *file) :     fits_file_mgr(file)           { init(); }
-    fits_writer(std::string const& filename, std::string const&mode) : fits_file_mgr(filename, mode) { init(); }
-    fits_writer(char **ramFile, size_t *ramFileLen, std::string const&mode) :
-        fits_file_mgr(ramFile, ramFileLen, mode) { init(); }
-    ~fits_writer() { }
-    
-    template <typename ImageT>
-    void apply(
-        ImageT const & image,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata
-    ) {
-        const int nAxis = 2;
-        long nAxes[nAxis];
-        nAxes[0] = image.getWidth();
-        nAxes[1] = image.getHeight();
-        long imageSize = nAxes[0]*nAxes[1];
-
-        const int BITPIX = detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
-
-        int status = 0;
-        if (_flags == "pdu") {
-            if (fits_create_img(_fd.get(), 8, 0, nAxes, &status) != 0) {
-                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
-            }
-        } else {
-            if (fits_create_img(_fd.get(), BITPIX, nAxis, nAxes, &status) != 0) {
-                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
-            }
-        }
-        /*
-         * Write metadata to header.  
-         * Ugliness is required to avoid multiple SIMPLE, etc keywords in Fits file,
-         * since cfitsio will put in its own in any case.
-         */
-#if 1
-        if (metadata != NULL) {
-            typedef std::vector<std::string> NameList;
-            NameList paramNames;
-
-            boost::shared_ptr<lsst::daf::base::PropertyList const> pl =
-                boost::dynamic_pointer_cast<lsst::daf::base::PropertyList const,
-                lsst::daf::base::PropertySet const>(metadata);
-            if (pl) {
-                paramNames = pl->getOrderedNames();
-            } else {
-                paramNames = metadata->paramNames(false);
-            }
-            for (NameList::const_iterator i = paramNames.begin(), e = paramNames.end(); i != e; ++i) {
-                if (*i != "SIMPLE" && *i != "BITPIX" &&
-                    *i != "NAXIS" && *i != "NAXIS1" && *i != "NAXIS2" && *i != "EXTEND") {
-                    cfitsio::appendKey(_fd.get(), *i, "", metadata);
-                }
-            }
-        }
-#endif
-        if (_flags == "pdu") {            // no data to write
-            return;
-        }
-        
-        /*
-         * Write the data itself.
-         */
-        int const ttype = cfitsio::ttypeFromBitpix(BITPIX);
-        status = 0;                     // cfitsio function return status
-
-        ndarray::Array<const typename ImageT::Pixel, 2, 2> array = ndarray::dynamic_dimension_cast<2>(image.getArray());
-        if(array.empty())
-            array = ndarray::copy(image.getArray());
-        typename ImageT::Pixel * data = const_cast<typename ImageT::Pixel *>(array.getData());
-        if (fits_write_img(_fd.get(), ttype, 1, imageSize, data, &status) != 0) {
-            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
-        }
     }
 };
 

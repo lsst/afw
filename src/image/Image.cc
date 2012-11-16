@@ -41,6 +41,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/fits.h"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
@@ -567,67 +568,42 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
     }
 }
 
-/**
- * Write an Image to the specified file
- */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-    std::string const& fileName,                ///< File to write
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, //!< metadata to write to header or NULL
-    std::string const& mode                     //!< "w" to write a new file; "a" to append
+    std::string const & fileName,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::string const & mode
 ) const {
-    using lsst::daf::base::PropertySet;
-
-    if (mode == "pdu") {
-        image::fits_write_image(fileName, *this, metadata_i, mode);
-        return;
-    }
-
-    PTR(PropertySet) metadata;
-    PTR(PropertySet) wcsAMetadata =
-        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                     this->getX0(), this->getY0());
-    
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-        metadata->combine(wcsAMetadata);
-    } else {
-        metadata = wcsAMetadata;
-    }
-
-    image::fits_write_image(fileName, *this, metadata, mode);
+    fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata_i);
 }
 
-/**
- * Write an Image to the specified file
- */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-    char **ramFile,     ///< Pointer to a pointer to the FITS file in memory
-    size_t *ramFileLen, ///< Pointer to the length of the FITS file in memory
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
-    std::string const& mode                     //!< "w" to write a new file; "a" to append
+    fits::MemFileManager & manager,
+    CONST_PTR(daf::base::PropertySet) metadata_i,
+    std::string const & mode
 ) const {
-    using lsst::daf::base::PropertySet;
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata_i);
+}
 
-    if (mode == "pdu") {
-        image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata_i, mode);
-        return;
-    }
-
-    PTR(PropertySet) metadata;
-    PTR(PropertySet) wcsAMetadata =
+template<typename PixelT>
+void image::Image<PixelT>::writeFits(
+    fits::Fits & fitsfile,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i
+) const {
+    PTR(daf::base::PropertySet) metadata;
+    PTR(daf::base::PropertySet) wcsAMetadata =
         image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                      this->getX0(), this->getY0());
-    
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
         metadata->combine(wcsAMetadata);
     } else {
         metadata = wcsAMetadata;
     }
-
-    image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata, mode);
+    image::fits_write_image(fitsfile, *this, metadata);
 }
 
 /************************************************************************************************************/

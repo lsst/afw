@@ -163,20 +163,43 @@ public:
                                                                    CheckIndices const&) const;
     bool operator()(int x, int y, int plane, CheckIndices const&) const;
 
-    // I/O and FITS metadata
-    
-    //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
+    /**
+     *  @brief Write a mask to a regular FITS file.
+     *
+     *  @param[in] fileName      Name of the file to write.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     */
     void writeFits(
         std::string const& fileName,
         CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
+
+    /**
+     *  @brief Write a mask to a FITS RAM file.
+     *
+     *  @param[in] manager       Manager object for the memory block to write to.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     */
     void writeFits(
-        char **ramFile, size_t *ramFileLen,
+        fits::MemFileManager & manager,
         CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
-    
+
+    /**
+     *  @brief Write a mask to an open FITS file object.
+     *
+     *  @param[in] fitsfile      A FITS file already open to the desired HDU.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+    ) const;
+
     // Mask Plane ops
     
     void clearAllMaskPlanes();

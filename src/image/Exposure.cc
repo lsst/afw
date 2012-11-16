@@ -312,10 +312,10 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    std::string const & expOutFile ///< Exposure's base output file name
+    std::string const & fileName ///< Exposure's output file name
 ) const {
-    lsst::daf::base::PropertySet::Ptr outputMetadata = _info->getFitsMetadata(getXY0());
-    _maskedImage.writeFits(expOutFile, outputMetadata);
+    fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
 }
 
 /**
@@ -326,12 +326,18 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    char **ramFile,        ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen    ///< RAM buffer length
+    fits::MemFileManager & manager
+) const {
+    fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
+    fits::Fits & fitsfile
 ) const {
     lsst::daf::base::PropertySet::Ptr outputMetadata = _info->getFitsMetadata(getXY0());
-    _maskedImage.writeFits(ramFile, ramFileLen, outputMetadata, "a", true);
-    
+    _maskedImage.writeFits(fitsfile, outputMetadata);
 }
 
 // Explicit instantiations

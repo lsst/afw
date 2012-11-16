@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -41,7 +42,7 @@
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/pex/exceptions.h"
 #include "fits_io_private.h"
-
+#include "lsst/afw/fits.h"
 #include "ndarray.h"
 
 namespace lsst { namespace afw { namespace image {
@@ -142,29 +143,17 @@ inline void fits_read_image(const std::string& filename,
 /// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
 /// Throws lsst::afw::image::FitsException if it fails to create the file.
 template <typename ImageT>
-inline void fits_write_image(const std::string& filename, const ImageT & image,
-                            boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
-                            std::string const& mode="w"
-                           ) {
+inline void fits_write_image(
+    fits::Fits & fitsfile, const ImageT & image,
+    CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+) {
     BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
+    fitsfile.createImage<typename ImageT::Pixel>(image.getArray().getShape());
 
-    detail::fits_writer m(filename, mode);
-    m.apply(image, metadata);
-}
-
-/// \ingroup FITS_IO
-/// \brief Saves the view to a fits RAM-file.
-/// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
-/// Throws lsst::afw::image::FitsException if it fails to create the RAM-file.
-template <typename ImageT>
-inline void fits_write_ramImage(char **ramFile, size_t *ramFileLen, const ImageT & image,
-                            boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
-                            std::string const& mode="w"
-                           ) {
-    BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
-
-    detail::fits_writer m(ramFile, ramFileLen, mode);
-    m.apply(image, metadata);
+    if (metadata) {
+        fitsfile.writeMetadata(*metadata);
+    }
+    fitsfile.writeImage(image.getArray());
 }
 
 }}}                                     // namespace lsst::afw::image

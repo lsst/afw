@@ -725,17 +725,53 @@ public:
     static std::string maskFileName(std::string const& baseName) { return baseName + "_msk.fits"; }
     static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
 
+    /**
+     *  @brief Write a MaskedImage to a regular FITS file.
+     *
+     *  @param[in] baseName      Name of the file to write.  When writing separate files, this is
+     *                           the "base" of the filename (e.g. foo reads foo_{img.msk.var}.fits).
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *  @param[in] writeMef      Whether to write to a single file (recommended) or three separate
+     *                           files (deprecated).  If baseName ends with ".fits", a single file
+     *                           will be written regardless of the value of writeMef.
+     *
+     *  In the MEF format, the primary data unit is ignored and all image planes are written to
+     *  extensions.
+     */
     void writeFits(
         std::string const& baseName,
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w",
         bool const writeMef=false
     ) const;
+
+    /**
+     *  @brief Write a MaskedImage to a FITS RAM file.
+     *
+     *  @param[in] manager       Manager object for the memory block to write to.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *
+     *  Only MEF format is supported.
+     */
     void writeFits(
-        char **ramFile, size_t *ramFileLen,
+        fits::MemFileManager & manager,
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const& mode="w",
-        bool const writeMef=true    //writeMef==false is not supported, it will throw an exception
+        std::string const& mode="w"
+    ) const;
+
+    /**
+     *  @brief Write a MaskedImage to a FITS RAM file.
+     *
+     *  @param[in] fitsfile      A FITS file already open to the desired HDU.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *
+     *  Only MEF format is supported.
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
     // Getters

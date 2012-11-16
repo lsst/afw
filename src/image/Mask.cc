@@ -646,46 +646,32 @@ Mask<MaskPixelT>::Mask(
                                         // defined by Mask::_maskPlaneDict
 }
 
-/**
- * \brief Write a Mask to the specified file
- */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
-    std::string const& fileName, ///< File to write
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, ///< metadata to write to header,
-        ///< or a null pointer if none
-    std::string const& mode    ///< "w" to write a new file; "a" to append
+    std::string const & fileName,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::string const & mode
 ) const {
-
-    PTR(dafBase::PropertySet) metadata;
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-    } else {
-        metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList());
-    }
-    addMaskPlanesToMetadata(metadata);
-    //
-    // Add WCS with (X0, Y0) information
-    //
-    PTR(dafBase::PropertySet) wcsAMetadata = detail::createTrivialWcsAsPropertySet(
-        detail::wcsNameForXY0, this->getX0(), this->getY0()
-    );
-    metadata->combine(wcsAMetadata);
-
-    fits_write_image(fileName, *this, metadata, mode);
+    fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata_i);
 }
 
-/**
- * \brief Write a Mask to the specified RAM file
- */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
-    char **ramFile,        ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen,    ///< RAM buffer length
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, ///< metadata to write to header,
-        ///< or a null pointer if none
-    std::string const& mode    ///< "w" to write a new file; "a" to append
+    fits::MemFileManager & manager,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::string const & mode
 ) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata_i);
+}
+
+template<typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(
+    fits::Fits & fitsfile,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i
+) const {
+
     PTR(dafBase::PropertySet) metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
@@ -701,7 +687,7 @@ void Mask<MaskPixelT>::writeFits(
     );
     metadata->combine(wcsAMetadata);
 
-    fits_write_ramImage(ramFile, ramFileLen, *this, metadata, mode);
+    fits_write_image(fitsfile, *this, metadata);
 }
 
 namespace {
