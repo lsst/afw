@@ -96,16 +96,7 @@ public:
         ImageOrigin const origin=LOCAL,
         bool const conformMasks=false
     );
-    
-    explicit Exposure(
-        char **ramFile,
-        size_t *ramFileLen,
-        int const hdu=0, 
-        geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const origin=LOCAL, 
-        bool const conformMasks=false
-    );
-    
+        
     Exposure(
         Exposure const &src, 
         bool const deep=false

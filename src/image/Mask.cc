@@ -592,60 +592,6 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
                                         // defined by Mask::_maskPlaneDict
 }
 
-/**
- * \brief Create a Mask from a FITS file in RAM
- *
- * See filename ctor for more information.
- * Admittedly, much of this function is duplicated in the filename ctor.
- * I couldn't quite decide if there was enough code in question
- * to pull it out into a tertiary function, but be aware...
- */
-template<typename MaskPixelT>
-Mask<MaskPixelT>::Mask(
-        char **ramFile,                                        ///< RAM buffer to receive RAM FITS file
-        size_t *ramFileLen,                                    ///< RAM buffer length
-        int const hdu,                                     ///< HDU to read 
-        PTR(dafBase::PropertySet) metadata,        ///< file metadata (may point to NULL)
-        afwGeom::Box2I const& bbox,                                  ///< Only read these pixels
-        ImageOrigin const origin,                          ///< coordinate system of the bbox
-        bool const conformMasks                            ///< Make Mask conform to mask layout in file?
-) :
-    ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) 
-{
-    //
-    // These are the permitted input file types
-    //
-    typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short,
-        short
-    >fits_mask_types;
-
-   if (!metadata) {
-       metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList);
-    }
-
-    if (!fits_read_ramImage<fits_mask_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(FitsException,
-                          str(boost::format("Failed to read RAM FITS HDU %d") % hdu));
-    }
-
-    // look for mask planes in the file
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
-    PTR(detail::MaskDict) fileMD = detail::MaskDict::makeMaskDict(fileMaskDict);
-
-    if (*fileMD == *detail::MaskDict::makeMaskDict()) { // file is already consistent with Mask
-        return;
-    }
-    
-    if (conformMasks) {                 // adopt the definitions in the file
-        _maskDict = detail::MaskDict::setDefaultDict(fileMD);
-    }
-
-    conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
-                                        // defined by Mask::_maskPlaneDict
-}
-
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     std::string const & fileName,

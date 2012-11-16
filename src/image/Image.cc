@@ -532,42 +532,6 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     }
 }
 
-/**
- * Construct an Image from a FITS RAM file
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- */
-template<typename PixelT>
-image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
-                            size_t *ramFileLen,      ///< Pointer to the length of the FITS file in memory
-                            int const hdu,               ///< Desired HDU
-                            PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
-                            geom::Box2I const& bbox,                           ///< Only read these pixels
-                            ImageOrigin const origin    ///< specify the coordinate system of the bbox
-                           ) :
-    image::ImageBase<PixelT>() {
-
-    typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short, 
-        short, 
-        int,
-        unsigned int,
-        float,
-        double,
-        boost::uint64_t
-    > fits_image_types;
-
-    if (!metadata) {
-        metadata.reset(new daf::base::PropertyList());
-    }
-    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(image::FitsException,
-                          (boost::format("Failed to read FITS HDU %d") % hdu).str());
-    }
-}
-
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
     std::string const & fileName,
