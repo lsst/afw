@@ -60,15 +60,15 @@ namespace image {
         geom::Extent2I const getDimensions() const { return _dimensions; }
 
         typename ImageT::Ptr getMean() const;
-        void analyze();
-        double updateBadPixels(unsigned long mask, int const ncomp);
+        virtual void analyze();
+        virtual double updateBadPixels(unsigned long mask, int const ncomp);
         
         /// Return Eigen values
         std::vector<double> const& getEigenValues() const { return _eigenValues; }
         /// Return Eigen images
         ImageList const& getEigenImages() const { return _eigenImages; }
 
-    private:
+    protected:
         double getFlux(int i) const { return _fluxList[i]; }
 
         ImageList _imageList;           // image to analyze
@@ -81,6 +81,8 @@ namespace image {
         std::vector<double> _eigenValues; // Eigen values
         ImageList _eigenImages;           // Eigen images
     };
+
+
 
 template <typename Image1T, typename Image2T>
 double innerProduct(Image1T const& lhs, Image2T const& rhs, int const border=0);
