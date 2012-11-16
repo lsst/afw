@@ -431,15 +431,15 @@ void addKV(lsst::daf::base::PropertySet & metadata, std::string const& key, std:
 /**
  * \brief Return the metadata from a fits file
  */
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///< File to read
-                                               const int hdu,               ///< HDU to read
-                                               bool strip       ///< Should I strip e.g. NAXIS1 from header?
-                                              ) {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList);
-
-    detail::fits_reader m(fileName, *metadata, hdu, true);
-    cfitsio::getMetadata(m.get(), *metadata, strip);
-
+PTR(daf::base::PropertySet) readMetadata(
+    std::string const& fileName, ///< File to read
+    int hdu,               ///< HDU to read
+    bool strip       ///< Should I strip e.g. NAXIS1 from header?
+) {
+    PTR(daf::base::PropertySet) metadata(new lsst::daf::base::PropertyList);
+    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    fitsfile.readMetadata(*metadata, strip);
     return metadata;
 }
     
