@@ -277,48 +277,6 @@ protected:
         _fd = boost::shared_ptr<FD>(_fd_s, close_cfitsio());
     }
 
-    fits_file_mgr(char **ramFile, size_t *ramFileLen, const std::string& flags) :
-        _fd(static_cast<FD *>(NULL)), _flags(flags) {
-        if (flags == "r" || flags == "rb") {
-            int status = 0;
-            if (fits_open_memfile(&_fd_s, "UnusedFilenameParameter", READONLY, (void**)ramFile,
-                    ramFileLen, 0, NULL/*Memory allocator unnecessary for READONLY*/, &status) != 0) {
-                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
-            }
-        } else if (flags == "w" || flags == "wb" || flags == "pdu") {
-           int status = 0;
-            //If ramFile is NULL, we will allocate it here.
-            //Otherwise we will assume that ramFileLen is correct for ramFile.
-            if (ramFile == NULL)
-            {
-                *ramFileLen = 2880;    //Initial buffer size (file length)
-                *ramFile = new char[*ramFileLen];
-            }
-            size_t deltaSize = 0;    //0 is a flag that this parameter will be ignored and the default 2880 used instead
-            if (fits_create_memfile(&_fd_s, (void**)ramFile,
-                                    ramFileLen, deltaSize, &realloc, &status) != 0) {
-                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_create_memfile", status));
-            }
-        } else if (flags == "a" || flags == "ab") {
-            int status = 0;
-            size_t deltaSize = 0;    //0 is a flag that this parameter will be ignored and the default 2880 used instead
-            if (fits_open_memfile(&_fd_s, "UnusedFilenameParameter", READWRITE, (void**)ramFile,
-                    ramFileLen, deltaSize, &realloc, &status) != 0) {
-                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_open_memfile", status));
-            }
-            //Seek to end of the file
-            int nHdu = 0;
-            if (fits_get_num_hdus(_fd_s, &nHdu, &status) != 0 ||
-                fits_movabs_hdu(_fd_s, nHdu, NULL, &status) != 0) {
-                (void)cfitsio::fits_close_file(_fd_s, &status);
-                throw LSST_EXCEPT(FitsException, cfitsio::err_msg("fits_close_file", status));
-            }
-        } else {
-            throw LSST_EXCEPT(FitsException, "Unknown mode " + flags);
-        }
-
-        _fd = boost::shared_ptr<FD>(_fd_s, close_cfitsio());
-    }
     virtual ~fits_file_mgr() {}
 public:
     FD* get() { return _fd.get(); }
@@ -436,14 +394,6 @@ public:
                 int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
                 ImageOrigin const origin = LOCAL
     ) : fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) { 
-        init(); 
-    }
-
-    fits_reader(char **ramFile, size_t *ramFileLen,
-                lsst::daf::base::PropertySet & metadata,
-                int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
-                ImageOrigin const origin = LOCAL
-    ) : fits_file_mgr(ramFile, ramFileLen, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox), _origin(origin) { 
         init(); 
     }
 

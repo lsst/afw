@@ -117,28 +117,6 @@ inline void fits_read_image(const std::string& filename,
 }
 
 /// \ingroup FITS_IO
-/// \brief Allocates a new image whose dimensions are determined by the given fits image RAM-file, and loads the
-/// pixels into it.
-///
-/// Triggers a compile assert if the image channel depth is not supported by the FITS library or by the I/O
-/// extension.  Throws lsst::afw::image::FitsException if the RAM-file is not a valid FITS file, or
-/// if its color space or channel depth are not compatible with the ones specified by Image
- template <typename PixelT>
- inline void fits_read_ramImage(char **ramFile, size_t *ramFileLen,
-                             ndarray::Array<PixelT,2,2> & array,
-                             geom::Point2I & xy0,
-                             lsst::daf::base::PropertySet &metadata,
-                             int hdu=1,
-                             geom::Box2I const& bbox=geom::Box2I(),
-                             ImageOrigin const origin = LOCAL
- ) {
-    BOOST_STATIC_ASSERT(fits_read_support<PixelT>::is_supported);
-
-    detail::fits_reader m(ramFile, ramFileLen, metadata, hdu, bbox, origin);
-    m.read_image(array, xy0);
-}
-
-/// \ingroup FITS_IO
 /// \brief Saves the view to a fits file specified by the given fits image file name.
 /// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
 /// Throws lsst::afw::image::FitsException if it fails to create the file.

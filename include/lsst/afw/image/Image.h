@@ -439,10 +439,6 @@ namespace image {
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        geom::Box2I const& bbox=geom::Box2I(), 
                        ImageOrigin const origin=LOCAL);
-        explicit Image(char **ramFile, size_t *ramFileLen, const int hdu=0,
-                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                       geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin=LOCAL);
 
         // generalised copy constructor
         template<typename OtherPixelT>

@@ -114,13 +114,6 @@ public:
         ImageOrigin const = LOCAL, 
         bool const conformMasks=false
     );                      
-    explicit Mask(
-        char **ramFile, size_t *ramFileLen, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const = LOCAL, 
-        bool const conformMasks=false
-    );     
 
     // generalised copy constructor
     template<typename OtherPixelT>

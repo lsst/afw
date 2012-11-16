@@ -92,53 +92,6 @@ private:
     lsst::afw::image::ImageOrigin _origin;
 };
 
-template<typename ImageT, typename ExceptionT>
-class try_fits_read_ramImage {
-public:
-    try_fits_read_ramImage(char **ramFile, size_t *ramFileLen,
-                        ndarray::Array<typename ImageT::Pixel,2,2> & array,
-                        lsst::afw::geom::Point2I & xy0,
-                        lsst::daf::base::PropertySet & metadata,
-                        int hdu,
-                        lsst::afw::geom::Box2I const& bbox,
-                        lsst::afw::image::ImageOrigin const origin
-    ) : _ramFile(ramFile), _ramFileLen(ramFileLen), _array(array), _xy0(xy0), 
-        _metadata(metadata), _hdu(hdu), _bbox(bbox), _origin(origin) { }
-    
-    // read directly into the desired type if the file's the same type
-    void operator()(typename ImageT::Pixel) {
-        try {
-            lsst::afw::image::fits_read_ramImage(_ramFile, _ramFileLen, _array, _xy0, _metadata, _hdu, _bbox, _origin);
-            throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::image::FitsWrongTypeException const&) {
-            // ah well.  We'll try another image type
-        }
-    }
-
-    template <typename OtherPixel> 
-        void operator()(OtherPixel) { // read and convert into the desired type
-        try {
-            ndarray::Array<OtherPixel,2,2> array;
-            lsst::afw::image::fits_read_ramImage(_ramFile, _ramFileLen, array, _xy0, _metadata, _hdu, _bbox, _origin);
-            //copy and convert
-            _array = ndarray::allocate(array.getShape());
-            _array.deep() = array;
-            throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::image::FitsWrongTypeException const&) {
-            // pass
-        }
-    }
-private:
-    char **_ramFile;
-    size_t *_ramFileLen;
-    ndarray::Array<typename ImageT::Pixel,2,2> & _array;
-    lsst::afw::geom::Point2I & _xy0;
-    lsst::daf::base::PropertySet & _metadata;
-    int _hdu;
-    lsst::afw::geom::Box2I const& _bbox;
-    lsst::afw::image::ImageOrigin _origin;
-};
-
 }
 
 namespace lsst { namespace afw { namespace image {
@@ -182,46 +135,6 @@ bool fits_read_image(
     return fits_read_image<supported_fits_types, ImageT>(file, img, (metadata ? *metadata : metadata_s),
                                                          hdu, bbox, origin);
 }
-            
-template<typename supported_fits_types, typename ImageT>
-bool fits_read_ramImage(
-    char **ramFile, size_t *ramFileLen, ImageT& img,
-    lsst::daf::base::PropertySet & metadata,
-    int hdu=0,
-    geom::Box2I const& bbox = geom::Box2I(),
-    ImageOrigin const origin = LOCAL
-)
-{
-    ndarray::Array<typename ImageT::Pixel,2,2> array;
-    geom::Point2I xy0;
-    try {
-        boost::mpl::for_each<supported_fits_types>(
-            try_fits_read_ramImage<ImageT, found_type>(
-                ramFile, ramFileLen, array, xy0, metadata, hdu, bbox, origin
-            )
-        );
-    } catch (found_type &) {
-        img = ImageT(array, false, xy0);
-        return true;                    // success
-    }
-
-    return false;
-}
-            
-template<typename supported_fits_types, typename ImageT>
-bool fits_read_ramImage(
-    char **ramFile, size_t *ramFileLen, ImageT& img,
-    lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-    int hdu=0,
-    geom::Box2I const& bbox = geom::Box2I(),
-    ImageOrigin const origin = LOCAL
-)
-{
-    lsst::daf::base::PropertySet metadata_s;
-    return fits_read_ramImage<supported_fits_types, ImageT>(ramFile, ramFileLen, img,
-                                                            (metadata ? *metadata : metadata_s),
-                                                            hdu, bbox, origin);
-}            
 
 }}}                                     // lsst::afw::image
 /// \endcond

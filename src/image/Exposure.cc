@@ -247,28 +247,6 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     postFitsCtorInit(metadata);
 }
 
-/**
-This ctor is conceptually identical to the ctor which takes a FITS file base name,
-except that the FITS file resides in RAM.
-*/
-template<typename ImageT, typename MaskT, typename VarianceT> 
-afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    char **ramFile,                    ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen,                ///< RAM buffer length
-    int const hdu,                  ///< Desired HDU
-    afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,       ///< Coordinate system for bbox
-    bool conformMasks               //!< Make Mask conform to mask layout in file?
-) :
-    lsst::daf::base::Citizen(typeid(this))
-{
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
-
-    _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, origin, conformMasks);
-    
-    postFitsCtorInit(metadata);
-}
-
 /** Destructor
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
