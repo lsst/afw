@@ -129,41 +129,6 @@ namespace {
             return a.first > b.first;   // N.b. sort on greater
         }
     };
-/*
- * Some metafunctions to extract an Image::Ptr from a MaskedImage::Ptr (or return the original Image::Ptr)
- *
- * GetImage is the public interface (it forwards the tag --- just for the sake of the UI); the real work
- * is in GetImage_ which defines a typedef for the Image and a static function, getImage
- *
- * E.g.
- * In the function
- *
- * template<typename ImageT>
- * void func(typename ImageT::Ptr image) {
- *    typename GetImage<ImageT>::type::Ptr im = GetImage<ImageT>::getImage(image);
- * }
- *
- * "im" is an Image::Ptr irrespective of whether ImageT is Masked or not.
- */
-    template<typename ImageT, typename TagT>
-    struct GetImage_ {
-        typedef ImageT type;
-        static typename type::Ptr getImage(typename ImageT::Ptr image) {
-            return image;
-        }
-    };
-
-    template<typename ImageT>
-    struct GetImage_<ImageT, typename image::detail::MaskedImage_tag> {
-        typedef typename ImageT::Image type;
-        static typename type::Ptr getImage(typename ImageT::Ptr image) {
-            return image->getImage();
-        }
-    };
-
-    template<typename ImageT>
-    struct GetImage : public GetImage_<ImageT, typename ImageT::image_category> {
-    };
 }
 
 template <typename ImageT>
