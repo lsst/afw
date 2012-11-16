@@ -293,22 +293,12 @@ public:
         io::FitsWriter::apply(fitsfile, *this);
     }
 
-    /**
-     *  @brief Read a FITS binary table from a regular file.
-     *
-     *  We look in HDU 2 by default, because HDU one is the Primary HDU, and must
-     *  be an image HDU (even if it's an empty image).
-     */
-    static CatalogT readFits(std::string const & filename, int hdu=2) {
+    /// @brief Read a FITS binary table from a regular file.
+    static CatalogT readFits(std::string const & filename, int hdu=0) {
         return io::FitsReader::apply<CatalogT>(filename, hdu);
     }
-    /**
-     *  @brief Read a FITS binary table from a RAM file.
-     *
-     *  We look in HDU 2 by default, because HDU one is the Primary HDU, and must
-     *  be an image HDU (even if it's an empty image).
-     */
-    static CatalogT readFits(fits::MemFileManager & manager, int hdu=2) {
+    /// @brief Read a FITS binary table from a RAM file.
+    static CatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<CatalogT>(manager, hdu);
     }
     /// @brief Read a FITS binary table from a file object already at the correct extension.

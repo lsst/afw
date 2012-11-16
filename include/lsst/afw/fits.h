@@ -198,7 +198,14 @@ public:
     /// @brief Return the current HDU (1-indexed; 1 is the Primary HDU).
     int getHdu();
 
-    /// @brief Set the current HDU (1-indexed; 1 is the Primary HDU).
+    /**
+     *  @brief Set the current HDU.
+     *
+     *  @param[in] hdu                 The HDU to move to (1-indexed; 1 is the Primary HDU).
+     *                                 The special value of 0 moves to the first extension
+     *                                 if the Primary HDU is empty (has NAXIS==0) and the
+     *                                 the Primary HDU is the current one.
+     */
     void setHdu(int hdu);
 
     /// @brief Return the number of HDUs in the file.
@@ -355,6 +362,9 @@ public:
 
     /// @brief Create a new binary table extension.
     void createTable();
+
+    /// @brief Return the number of dimensions in the current HDU.
+    int getImageDim();
 
     /**
      *  @brief Add a column to a table
