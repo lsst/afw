@@ -623,8 +623,16 @@ public:
         geom::Box2I const & bbox, 
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
+
     explicit MaskedImage(
         std::string const& baseName, int const hdu=0,
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
+        bool const conformMasks=false, bool const needAllHdus=false
+    );
+
+    explicit MaskedImage(
+        fits::Fits & fitsfile,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false

@@ -107,12 +107,21 @@ public:
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     explicit Mask(geom::Box2I const & bbox, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
+
     explicit Mask(
-        std::string const& fileName, int const hdu=0,
-        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-        geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const = LOCAL, 
-        bool const conformMasks=false
+        std::string const & fileName, int const hdu=0,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)(),
+        geom::Box2I const & bbox = geom::Box2I(),
+        ImageOrigin const = LOCAL,
+        bool const conformMasks = false
+    );                      
+
+    explicit Mask(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)(),
+        geom::Box2I const & bbox = geom::Box2I(),
+        ImageOrigin const = LOCAL,
+        bool const conformMasks = false
     );                      
 
     // generalised copy constructor

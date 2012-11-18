@@ -496,14 +496,34 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
  * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
-                            int const hdu,               ///< Desired HDU
-                            PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
-                            geom::Box2I const& bbox,                           ///< Only read these pixels
-                            ImageOrigin const origin    ///< specify the coordinate system of the bbox
-                           ) :
-    image::ImageBase<PixelT>() {
+image::Image<PixelT>::Image(
+    std::string const& fileName, ///< File to read
+    int const hdu,               ///< Desired HDU
+    PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
+    geom::Box2I const& bbox,                           ///< Only read these pixels
+    ImageOrigin const origin    ///< specify the coordinate system of the bbox
+) : image::ImageBase<PixelT>() {
 
+    // Strip off any instructions about extensions, compression, etc intended for cfitsio
+    std::string sysFileName = fileName.substr(0, fileName.find('['));
+    if (!boost::filesystem::exists(sysFileName)) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                          (boost::format("File %s doesn't exist") % sysFileName).str());
+    }
+
+    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    *this = Image(fitsfile, metadata, bbox, origin);
+}
+
+template<typename PixelT>
+image::Image<PixelT>::Image(
+    fits::Fits & fitsfile,                ///< FITS file object open to the desired HDU
+    PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
+    geom::Box2I const& bbox,              ///< Only read these pixels
+    ImageOrigin const origin    ///< specify the coordinate system of the bbox
+) : image::ImageBase<PixelT>() {
+    
     typedef boost::mpl::vector<
         unsigned char, 
         unsigned short, 
@@ -515,21 +535,11 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         boost::uint64_t
     > fits_image_types;
 
-    // Strip off any instructions about extensions, compression, etc intended for cfitsio
-    std::string sysFileName = fileName.substr(0, fileName.find('['));
-    if (!boost::filesystem::exists(sysFileName)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                          (boost::format("File %s doesn't exist") % sysFileName).str());
-    }
-
     if (!metadata) {
         metadata.reset(new daf::base::PropertyList());
     }
 
-    if (!fits_read_image<fits_image_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(image::FitsException,
-                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
-    }
+    fits_read_image<fits_image_types>(fitsfile, *this, *metadata, bbox, origin);
 }
 
 template<typename PixelT>
