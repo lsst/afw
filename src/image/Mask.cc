@@ -545,12 +545,40 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
  * on-disk version
  */
 template<typename MaskPixelT>
-Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
-        int const hdu,                              ///< HDU to read 
-        PTR(dafBase::PropertySet) metadata,         ///< file metadata (may point to NULL)
-        afwGeom::Box2I const& bbox,                 ///< Only read these pixels
-        ImageOrigin const origin,                   ///< coordinate system of the bbox
-        bool const conformMasks                     ///< Make Mask conform to mask layout in file?
+Mask<MaskPixelT>::Mask(
+    std::string const& fileName,                ///< Name of file to read
+    int const hdu,                              ///< HDU to read 
+    PTR(daf::base::PropertySet) metadata,         ///< file metadata (may point to NULL)
+    afw::geom::Box2I const & bbox,                ///< Only read these pixels
+    ImageOrigin const origin,                   ///< coordinate system of the bbox
+    bool const conformMasks                     ///< Make Mask conform to mask layout in file?
+) : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
+
+    if (!boost::filesystem::exists(fileName)) {
+        throw LSST_EXCEPT(pexExcept::NotFoundException,
+                          str(boost::format("File %s doesn't exist") % fileName));
+    }
+    
+    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
+}
+
+/**
+ * \brief Create a Mask from a FITS file on disk
+ *
+ * The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+ * the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+ * bitvalues will be left alone, but Mask's dictionary will be modified to match the
+ * on-disk version
+ */
+template<typename MaskPixelT>
+Mask<MaskPixelT>::Mask(
+    fits::Fits & fitsfile,                      ///< An open FITS file object
+    PTR(daf::base::PropertySet) metadata,         ///< file metadata (may point to NULL)
+    afw::geom::Box2I const & bbox,                ///< Only read these pixels
+    ImageOrigin const origin,                   ///< coordinate system of the bbox
+    bool const conformMasks                     ///< Make Mask conform to mask layout in file?
 ) :
     ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) 
 {
@@ -563,19 +591,12 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
         short
     >fits_mask_types;
 
-    if (!boost::filesystem::exists(fileName)) {
-        throw LSST_EXCEPT(pexExcept::NotFoundException,
-                          str(boost::format("File %s doesn't exist") % fileName));
-    }
-
     if (!metadata) {
-        metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList);
+        metadata = PTR(daf::base::PropertySet)(new daf::base::PropertyList);
     }
 
-    if (!fits_read_image<fits_mask_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(FitsException,
-            str(boost::format("Failed to read %s HDU %d") % fileName % hdu));
-    }
+    fits_read_image<fits_mask_types>(fitsfile, *this, *metadata, bbox, origin);
+
     // look for mask planes in the file
     MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
     PTR(detail::MaskDict) fileMD = detail::MaskDict::makeMaskDict(fileMaskDict);
@@ -595,7 +616,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, ///< Name of file to read
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     std::string const & fileName,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    CONST_PTR(daf::base::PropertySet) metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -605,7 +626,7 @@ void Mask<MaskPixelT>::writeFits(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     fits::MemFileManager & manager,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    CONST_PTR(daf::base::PropertySet) metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);

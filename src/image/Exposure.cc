@@ -241,9 +241,21 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::base::Citizen(typeid(this))
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
-
     _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, origin, conformMasks);
-    
+    postFitsCtorInit(metadata);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    fits::Fits & fitsfile,
+    afwGeom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool conformMasks
+) :
+    lsst::daf::base::Citizen(typeid(this))
+{
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
+    _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks);
     postFitsCtorInit(metadata);
 }
 

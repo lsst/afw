@@ -95,6 +95,9 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
 #define LSST_FITS_CHECK_STATUS(fitsObj, ...)                            \
     if ((fitsObj).status != 0) throw LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
 
+/// Return the cfitsio integer BITPIX code for the given data type.
+template <typename T> int getBitPix();
+
 /**
  *  @brief Lifetime-management for memory that goes into FITS memory files.
  */
@@ -186,14 +189,19 @@ private:
  *  calls are all 1-indexed.
  */
 class Fits : private boost::noncopyable {
-    template <typename T> void createImageImpl(int naxis, long * naxes);
+    template <typename T> void createImageImpl(int nAxis, long * nAxes);
     template <typename T> void writeImageImpl(T const * data, int nElements);
+    template <typename T> void readImageImpl(int nAxis, T * data, long * begin, long * end, long * increment);
+    void getImageShapeImpl(int nAxis, long * nAxes);
 public:
 
     enum BehaviorFlags {
         AUTO_CLOSE = 0x01, // Close files when the Fits object goes out of scope if fptr != NULL
         AUTO_CHECK = 0x02  // Call LSST_FITS_CHECK_STATUS after every cfitsio call
     };
+
+    /// @brief Return the file name associated with the FITS object or "<unknown>" if there is none.
+    std::string getFileName() const;
 
     /// @brief Return the current HDU (1-indexed; 1 is the Primary HDU).
     int getHdu();
@@ -329,9 +337,8 @@ public:
      */
     template <typename PixelT, int N>
     void createImage(ndarray::Vector<int,N> const & shape) {
-        boost::scoped_array<long> naxes(new long[N]);
-        for (int i = 0; i < N; ++i) naxes[i] = shape[N-i-1];
-        createImageImpl<PixelT>(N, naxes.get());
+        ndarray::Vector<long,N> nAxes(shape.reverse());
+        createImageImpl<PixelT>(N, nAxes.elems);
     }
 
     /**
@@ -360,11 +367,55 @@ public:
         writeImageImpl(contiguous.getData(), contiguous.getNumElements());
     }
 
-    /// @brief Create a new binary table extension.
-    void createTable();
-
     /// @brief Return the number of dimensions in the current HDU.
     int getImageDim();
+
+    /**
+     *  @brief Return the shape of the current (image) HDU.
+     *
+     *  The order of dimensions is reversed from the FITS ordering, reflecting the usual
+     *  (y,x) ndarray convention.
+     *
+     *  The template parameter must match the actual number of dimension in the image.
+     */
+    template <int N>
+    ndarray::Vector<int,N> getImageShape() {
+        ndarray::Vector<long,N> nAxes(1);
+        getImageShapeImpl(N, nAxes.elems);
+        ndarray::Vector<int,N> shape;
+        for (int i = 0; i < N; ++i) shape[i] = nAxes[N-i-1];
+        return shape;
+    }
+
+    /**
+     *  @brief Return true if the current HDU has the given pixel type..
+     *
+     *  This takes into account the BUNIT and BSCALE keywords, which can allow integer
+     *  images to be interpreted as floating point.
+     */
+    template <typename T>
+    bool checkImageType();
+
+    /**
+     *  @brief Read an array from a FITS image.
+     *
+     *  @param[out]  array    Array to be filled.  Must already be allocated to the desired shape.
+     *  @param[in]   offset   Indices of the first pixel to be read from the image.
+     */
+    template <typename T, int N>
+    void readImage(
+        ndarray::Array<T,N,N> const & array,
+        ndarray::Vector<int,N> const & offset
+    ) {
+        ndarray::Vector<long,N> begin(offset.reverse());
+        ndarray::Vector<long,N> end = begin + array.getShape().reverse();
+        ndarray::Vector<long,N> increment(1);
+        begin += increment;
+        readImageImpl(N, array.getData(), begin.elems, end.elems, increment.elems);
+    }
+
+    /// @brief Create a new binary table extension.
+    void createTable();
 
     /**
      *  @brief Add a column to a table

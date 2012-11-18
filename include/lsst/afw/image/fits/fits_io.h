@@ -36,8 +36,9 @@
 #include <cstdio>
 #include <algorithm>
 #include <string>
-#include <boost/static_assert.hpp>
-#include <boost/shared_ptr.hpp>
+#include "boost/static_assert.hpp"
+#include "boost/shared_ptr.hpp"
+#include "boost/format.hpp"
 #include "boost/gil/extension/io/io_error.hpp"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/pex/exceptions.h"
@@ -74,46 +75,72 @@ inline geom::Extent2I fits_read_dimensions(const std::string& filename) {
     return fits_read_dimensions(filename.c_str());
 }
 
-#if 0
-/// \ingroup FITS_IO
-/// \brief Loads the image specified by the given fits image file name into the given view.
-/// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O
-/// extension.  Throws lsst::afw::image::FitsException if the file is not a valid FITS file, or
-/// if its color space or channel depth are not compatible with the ones specified by View, or if its
-/// dimensions don't match the ones of the view.
-template <typename View>
-inline void fits_read_view(std::string const& filename,const View& view,
-                           lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr()
-                          ) {
-    BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
-
-    detail::fits_reader m(filename, metadata);
-    m.apply(view);
-}
-#endif
-
-/// \ingroup FITS_IO
-/// \brief Allocates a new image whose dimensions are determined by the given fits image file, and loads the
-/// pixels into it.
-///
-/// Triggers a compile assert if the image channel depth is not supported by the FITS library or by the I/O
-/// extension.  Throws lsst::afw::image::FitsException if the file is not a valid FITS file, or
-/// if its color space or channel depth are not compatible with the ones specified by Image
-
 template <typename PixelT>
-inline void fits_read_image(const std::string& filename,
-                            ndarray::Array<PixelT,2,2> & array,
-                            geom::Point2I & xy0,
-                            lsst::daf::base::PropertySet & metadata,
-                            int hdu=1,
-                            geom::Box2I const& bbox=geom::Box2I(),
-                            ImageOrigin const origin = LOCAL
-                           )
-{
+inline void fits_read_array(
+    fits::Fits & fitsfile,
+    ndarray::Array<PixelT,2,2> & array,
+    geom::Point2I & xy0,
+    lsst::daf::base::PropertySet & metadata,
+    geom::Box2I bbox = geom::Box2I(),
+    ImageOrigin origin = LOCAL
+) {
     BOOST_STATIC_ASSERT(fits_read_support<PixelT>::is_supported);
 
-    detail::fits_reader m(filename, metadata, hdu, bbox, origin);
-    m.read_image(array, xy0);
+    if (!fitsfile.checkImageType<PixelT>()) {
+        throw LSST_FITS_EXCEPT(
+            fits::FitsTypeError,
+            fitsfile,
+            "Incorrect image type for FITS image"
+        );  
+    }
+
+    int nAxis = fitsfile.getImageDim();
+    ndarray::Vector<int,2> shape;
+    if (nAxis == 2) {
+        shape = fitsfile.getImageShape<2>();
+    } else if (nAxis == 3) {
+        ndarray::Vector<int,3> shape3 = fitsfile.getImageShape<3>();
+        if (shape3[0] != 1) {
+            throw LSST_EXCEPT(
+                fits::FitsError,
+                boost::str(boost::format("3rd dimension %d is not 1") % shape3[0])
+            );
+        }
+        shape = shape3.last<2>();
+    }
+
+    fitsfile.readMetadata(metadata, true);
+
+    // Origin of part of image to read
+    xy0 = geom::Point2I();
+
+    geom::Extent2I xyOffset(detail::getImageXY0FromMetadata(detail::wcsNameForXY0, &metadata));
+    geom::Extent2I dimensions = geom::Extent2I(shape[1], shape[0]);
+
+    if (!bbox.isEmpty()) {
+        if(origin == PARENT) {
+            bbox.shift(-xyOffset);
+        }
+        xy0 = bbox.getMin();
+
+        if (bbox.getMinX() < 0 || bbox.getMinY() < 0 ||
+            bbox.getWidth() > dimensions.getX() || bbox.getHeight() > dimensions.getY()
+        ) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LengthErrorException,
+                (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+                 bbox.getMinX() % bbox.getMinY() % bbox.getWidth() % bbox.getHeight() %
+                 dimensions.getX() % dimensions.getY()).str()
+            );
+        }
+        dimensions = bbox.getDimensions();
+    }
+
+    array = ndarray::allocate(dimensions.getY(), dimensions.getX());
+    
+    fitsfile.readImage(array, ndarray::makeVector(xy0.getY(), xy0.getX()));
+
+    xy0 += xyOffset;
 }
 
 /// \ingroup FITS_IO

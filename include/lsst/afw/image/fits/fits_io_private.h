@@ -474,7 +474,7 @@ public:
     template <typename PixelT>
     void read_image(ndarray::Array<PixelT,2,2> & array, geom::Point2I & xy0) {
         array = ndarray::allocate(getDimensions().getY(), getDimensions().getX());
-        xy0 = apply(array);        
+        xy0 = apply(array);
     }
 
     geom::Extent2I getDimensions() const {

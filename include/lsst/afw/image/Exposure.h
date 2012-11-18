@@ -108,6 +108,13 @@ public:
         ImageOrigin const origin=LOCAL,
         bool const conformMasks=false
     );
+
+    explicit Exposure(
+        fits::Fits & fitsfile,
+        geom::Box2I const& bbox=geom::Box2I(), 
+        ImageOrigin const origin=LOCAL,
+        bool const conformMasks=false
+    );
         
     Exposure(
         Exposure const &src, 

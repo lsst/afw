@@ -435,10 +435,20 @@ namespace image {
         explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=LOCAL, 
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
-        explicit Image(std::string const& fileName, const int hdu=0,
-                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                       geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin=LOCAL);
+
+        explicit Image(
+            std::string const& fileName, const int hdu=0,
+            PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+            geom::Box2I const& bbox=geom::Box2I(), 
+            ImageOrigin const origin=LOCAL
+        );
+
+        explicit Image(
+            fits::Fits & fitsfile,
+            PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+            geom::Box2I const& bbox=geom::Box2I(), 
+            ImageOrigin const origin=LOCAL
+        );
 
         // generalised copy constructor
         template<typename OtherPixelT>

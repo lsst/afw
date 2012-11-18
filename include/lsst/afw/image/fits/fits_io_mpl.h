@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -41,30 +42,30 @@
 #include "lsst/afw/geom.h"
 
 #include "lsst/afw/image/lsstGil.h"
+#include "lsst/afw/fits.h"
 #include "fits_io.h"
 
 namespace {
 struct found_type : public std::exception { }; // type to throw when we've read our data
 
 template<typename ImageT, typename ExceptionT>
-class try_fits_read_image {
+class try_fits_read_array {
 public:
-    try_fits_read_image(const std::string& file,
+    try_fits_read_array(lsst::afw::fits::Fits & fitsfile,
                         ndarray::Array<typename ImageT::Pixel,2,2> & array,
                         lsst::afw::geom::Point2I & xy0,
                         lsst::daf::base::PropertySet & metadata,
-                        int hdu,
                         lsst::afw::geom::Box2I const& bbox,
                         lsst::afw::image::ImageOrigin const origin
-    ) : _file(file), _array(array), _xy0(xy0), 
-        _metadata(metadata), _hdu(hdu), _bbox(bbox), _origin(origin) { }
+    ) : _fitsfile(&fitsfile), _array(array), _xy0(xy0), 
+        _metadata(metadata), _bbox(bbox), _origin(origin) { }
     
     // read directly into the desired type if the file's the same type
     void operator()(typename ImageT::Pixel) {
         try {
-            lsst::afw::image::fits_read_image(_file, _array, _xy0, _metadata, _hdu, _bbox, _origin);
+            lsst::afw::image::fits_read_array(*_fitsfile, _array, _xy0, _metadata, _bbox, _origin);
             throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::image::FitsWrongTypeException const&) {
+        } catch(lsst::afw::fits::FitsTypeError const&) {
             // ah well.  We'll try another image type
         }
     }
@@ -73,21 +74,20 @@ public:
         void operator()(OtherPixel) { // read and convert into the desired type
         try {
             ndarray::Array<OtherPixel,2,2> array;
-            lsst::afw::image::fits_read_image(_file, array, _xy0, _metadata, _hdu, _bbox, _origin);
+            lsst::afw::image::fits_read_array(*_fitsfile, array, _xy0, _metadata, _bbox, _origin);
             //copy and convert
             _array = ndarray::allocate(array.getShape());
             _array.deep() = array;
             throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::image::FitsWrongTypeException const&) {
+        } catch(lsst::afw::fits::FitsTypeError const&) {
             // pass
         }
     }
 private:
-    std::string _file;
+    lsst::afw::fits::Fits * _fitsfile;
     ndarray::Array<typename ImageT::Pixel,2,2> & _array;
     lsst::afw::geom::Point2I & _xy0;
     lsst::daf::base::PropertySet & _metadata;
-    int _hdu;
     lsst::afw::geom::Box2I const& _bbox;
     lsst::afw::image::ImageOrigin _origin;
 };
@@ -97,43 +97,43 @@ private:
 namespace lsst { namespace afw { namespace image {
             
 template<typename supported_fits_types, typename ImageT>
-bool fits_read_image(
-    std::string const& file, ImageT& img,
+void fits_read_image(
+    fits::Fits & fitsfile, ImageT& img,
     lsst::daf::base::PropertySet &metadata,
-    int hdu=0,
     geom::Box2I const& bbox = geom::Box2I(),
     ImageOrigin const origin = LOCAL
-)
-{
+) {
     ndarray::Array<typename ImageT::Pixel,2,2> array;
     geom::Point2I xy0;
     try {
         boost::mpl::for_each<supported_fits_types>(
-            try_fits_read_image<ImageT, found_type>(
-                file, array, xy0, metadata, hdu, bbox, origin
+            try_fits_read_array<ImageT, found_type>(
+                fitsfile, array, xy0, metadata, bbox, origin
             )
         );
     } catch (found_type &) {
         img = ImageT(array, false, xy0);
-        return true;                    // success
+        return;
     }
 
-    return false;
+    throw LSST_FITS_EXCEPT(
+        fits::FitsError,
+        fitsfile,
+        "FITS file does not have one of the expected types"
+    );
 }
 
 
 template<typename supported_fits_types, typename ImageT>
-bool fits_read_image(
-    std::string const& file, ImageT& img,
+void fits_read_image(
+    fits::Fits & fitsfile, ImageT& img,
     PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
-    int hdu=0,
     geom::Box2I const& bbox = geom::Box2I(),
     ImageOrigin const origin = LOCAL
-)
-{
+) {
     lsst::daf::base::PropertySet metadata_s;
-    return fits_read_image<supported_fits_types, ImageT>(file, img, (metadata ? *metadata : metadata_s),
-                                                         hdu, bbox, origin);
+    fits_read_image<supported_fits_types, ImageT>(fitsfile, img, (metadata ? *metadata : metadata_s),
+                                                  bbox, origin);
 }
 
 }}}                                     // lsst::afw::image
