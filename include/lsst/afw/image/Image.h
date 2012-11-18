@@ -39,7 +39,7 @@
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
-#include "boost/shared_array.hpp"
+
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"

@@ -21,59 +21,19 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-/**
- * \file
- * \brief  Internal support for reading and writing FITS files
- *
- * Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
- * \author Robert Lupton (rhl@astro.princeton.edu)
- *         Princeton University
- * \date   September 2008
- */
-#if !defined(LSST_FITS_IO_H)
-#define LSST_FITS_IO_H
+#ifndef LSST_AFW_IMAGE_fits_io_h_INCLUDED
+#define LSST_AFW_IMAGE_fits_io_h_INCLUDED
 
-#include <cstdio>
-#include <algorithm>
 #include <string>
-#include "boost/static_assert.hpp"
-#include "boost/shared_ptr.hpp"
+
 #include "boost/format.hpp"
-#include "boost/gil/extension/io/io_error.hpp"
-#include "lsst/afw/image/lsstGil.h"
 #include "lsst/pex/exceptions.h"
-#include "fits_io_private.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/image/Wcs.h"
 #include "ndarray.h"
 
 namespace lsst { namespace afw { namespace image {
-
-/// \ingroup FITS_IO
-/// \brief Determines whether the given view type is supported for reading
-template <typename PixelT>
-struct fits_read_support {
-#if !defined(SWIG)
-    BOOST_STATIC_CONSTANT(bool, is_supported = detail::fits_read_support_private<PixelT>::is_supported);
-    BOOST_STATIC_CONSTANT(int,  BITPIX = detail::fits_read_support_private<PixelT>::BITPIX);
-    BOOST_STATIC_CONSTANT(bool, value = is_supported);
-#endif
-};
-
-/// \ingroup FITS_IO
-/// \brief Returns the width and height of the FITS file at the specified location.
-/// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
-inline geom::Extent2I fits_read_dimensions(const char* filename) {
-    lsst::daf::base::PropertySet metadata;
-    detail::fits_reader m(filename, metadata);
-    return m.getDimensions();
-}
-
-/// \ingroup FITS_IO
-/// \brief Returns the width and height of the FITS file at the specified location.
-/// Throws lsst::afw::image::FitsException if the location does not correspond to a valid FITS file
-inline geom::Extent2I fits_read_dimensions(const std::string& filename) {
-    return fits_read_dimensions(filename.c_str());
-}
 
 template <typename PixelT>
 inline void fits_read_array(
@@ -84,8 +44,6 @@ inline void fits_read_array(
     geom::Box2I bbox = geom::Box2I(),
     ImageOrigin origin = LOCAL
 ) {
-    BOOST_STATIC_ASSERT(fits_read_support<PixelT>::is_supported);
-
     if (!fitsfile.checkImageType<PixelT>()) {
         throw LSST_FITS_EXCEPT(
             fits::FitsTypeError,
@@ -143,18 +101,12 @@ inline void fits_read_array(
     xy0 += xyOffset;
 }
 
-/// \ingroup FITS_IO
-/// \brief Saves the view to a fits file specified by the given fits image file name.
-/// Triggers a compile assert if the view channel depth is not supported by the FITS library or by the I/O extension.
-/// Throws lsst::afw::image::FitsException if it fails to create the file.
 template <typename ImageT>
 inline void fits_write_image(
     fits::Fits & fitsfile, const ImageT & image,
     CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
 ) {
-    BOOST_STATIC_ASSERT(fits_read_support<typename ImageT::Pixel>::is_supported);
     fitsfile.createImage<typename ImageT::Pixel>(image.getArray().getShape());
-
     if (metadata) {
         fitsfile.writeMetadata(*metadata);
     }
@@ -162,5 +114,5 @@ inline void fits_write_image(
 }
 
 }}}                                     // namespace lsst::afw::image
-/// \endcond
-#endif
+
+#endif // !LSST_AFW_IMAGE_fits_io_h_INCLUDED

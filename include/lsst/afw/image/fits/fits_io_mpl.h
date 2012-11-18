@@ -21,29 +21,18 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-/**
- * \file
- * \brief  Internal support for reading and writing FITS files
- *
- * Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
- * \author Robert Lupton (rhl@astro.princeton.edu)
- *         Princeton University
- * \date   September 2008
- */
-#if !defined(LSST_FITS_IO_MPL_H)
-#define LSST_FITS_IO_MPL_H 1
+#ifndef LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED
+#define LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED
 
-#include <exception>
 #include "boost/mpl/for_each.hpp"
 #include "boost/mpl/vector.hpp"
 
-#include "boost/gil/gil_all.hpp"
-
 #include "lsst/afw/geom.h"
-
-#include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/fits.h"
-#include "fits_io.h"
+#include "lsst/afw/image/fits/fits_io.h"
+#include "lsst/afw/image/Image.h"
+
+namespace lsst { namespace afw { namespace image {
 
 namespace {
 struct found_type : public std::exception { }; // type to throw when we've read our data
@@ -51,21 +40,21 @@ struct found_type : public std::exception { }; // type to throw when we've read 
 template<typename ImageT, typename ExceptionT>
 class try_fits_read_array {
 public:
-    try_fits_read_array(lsst::afw::fits::Fits & fitsfile,
+    try_fits_read_array(fits::Fits & fitsfile,
                         ndarray::Array<typename ImageT::Pixel,2,2> & array,
-                        lsst::afw::geom::Point2I & xy0,
-                        lsst::daf::base::PropertySet & metadata,
-                        lsst::afw::geom::Box2I const& bbox,
-                        lsst::afw::image::ImageOrigin const origin
+                        geom::Point2I & xy0,
+                        daf::base::PropertySet & metadata,
+                        geom::Box2I const& bbox,
+                        ImageOrigin const origin
     ) : _fitsfile(&fitsfile), _array(array), _xy0(xy0), 
         _metadata(metadata), _bbox(bbox), _origin(origin) { }
     
     // read directly into the desired type if the file's the same type
     void operator()(typename ImageT::Pixel) {
         try {
-            lsst::afw::image::fits_read_array(*_fitsfile, _array, _xy0, _metadata, _bbox, _origin);
+            fits_read_array(*_fitsfile, _array, _xy0, _metadata, _bbox, _origin);
             throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::fits::FitsTypeError const&) {
+        } catch(fits::FitsTypeError const&) {
             // ah well.  We'll try another image type
         }
     }
@@ -74,27 +63,25 @@ public:
         void operator()(OtherPixel) { // read and convert into the desired type
         try {
             ndarray::Array<OtherPixel,2,2> array;
-            lsst::afw::image::fits_read_array(*_fitsfile, array, _xy0, _metadata, _bbox, _origin);
+            fits_read_array(*_fitsfile, array, _xy0, _metadata, _bbox, _origin);
             //copy and convert
             _array = ndarray::allocate(array.getShape());
             _array.deep() = array;
             throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::fits::FitsTypeError const&) {
+        } catch(fits::FitsTypeError const&) {
             // pass
         }
     }
 private:
-    lsst::afw::fits::Fits * _fitsfile;
+    fits::Fits * _fitsfile;
     ndarray::Array<typename ImageT::Pixel,2,2> & _array;
-    lsst::afw::geom::Point2I & _xy0;
-    lsst::daf::base::PropertySet & _metadata;
-    lsst::afw::geom::Box2I const& _bbox;
-    lsst::afw::image::ImageOrigin _origin;
+    geom::Point2I & _xy0;
+    daf::base::PropertySet & _metadata;
+    geom::Box2I const& _bbox;
+    ImageOrigin _origin;
 };
 
-}
-
-namespace lsst { namespace afw { namespace image {
+} // anonymous
             
 template<typename supported_fits_types, typename ImageT>
 void fits_read_image(
@@ -115,14 +102,12 @@ void fits_read_image(
         img = ImageT(array, false, xy0);
         return;
     }
-
     throw LSST_FITS_EXCEPT(
         fits::FitsError,
         fitsfile,
         "FITS file does not have one of the expected types"
     );
 }
-
 
 template<typename supported_fits_types, typename ImageT>
 void fits_read_image(
@@ -136,6 +121,5 @@ void fits_read_image(
                                                   bbox, origin);
 }
 
-}}}                                     // lsst::afw::image
-/// \endcond
-#endif
+}}} // lsst::afw::image
+#endif // !LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED
