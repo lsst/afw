@@ -26,11 +26,11 @@
  *
  * This version knows about LSST data structures
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cassert>
+#include <cctype>
 #ifndef DOXYGEN // Doxygen doesn't like includes inside namespaces
 namespace posix {
 #   include <unistd.h>
@@ -41,8 +41,8 @@ using namespace posix;
 
 #include "lsst/pex/exceptions.h"
 #include "boost/any.hpp"
+#include "lsst/afw/fits.h"
 
-#include "lsst/afw/image/fits/fits_io_private.h"
 #include "simpleFits.h"
 
 namespace image = lsst::afw::image;
@@ -370,7 +370,7 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * What sort if image is it?
      */
-    int bitpix = image::detail::fits_read_support_private<typename ImageT::Pixel>::BITPIX;
+    int bitpix = lsst::afw::fits::getBitPix<typename ImageT::Pixel>();
     if (bitpix == 20) {                 // cfitsio for "Unsigned short"
         cards.push_back(Card("BZERO",  32768.0, ""));
         cards.push_back(Card("BSCALE", 1.0,     ""));
