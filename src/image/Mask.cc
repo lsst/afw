@@ -545,12 +545,6 @@ Mask<MaskPixelT>::Mask(
     ImageOrigin origin,
     bool conformMasks
 ) : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
-
-    if (!boost::filesystem::exists(fileName)) {
-        throw LSST_EXCEPT(pexExcept::NotFoundException,
-                          str(boost::format("File %s doesn't exist") % fileName));
-    }
-    
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
