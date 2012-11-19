@@ -51,6 +51,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Calib.h"
+#include "lsst/afw/fits.h" // just for exceptions
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
@@ -93,6 +94,7 @@ namespace boost {
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/coord/coordLib.i"
+%import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions
 
 %include "ndarray.i"
 
