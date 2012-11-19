@@ -613,9 +613,6 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     if (fitsfile.getHdu() <= 1) {
         // Don't ever write images to primary; instead we make an empty primary.
         fitsfile.createEmpty();
-        if (metadata) {
-            fitsfile.writeMetadata(*metadata);
-        }
     }
 
     metadata->set("EXTTYPE", "IMAGE");
