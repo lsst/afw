@@ -436,25 +436,58 @@ namespace image {
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
 
+        /**
+         *  @brief Construct an Image by reading a regular FITS file.
+         *
+         *  @param[in]      fileName    File to read.
+         *  @param[in]      hdu         HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+         *                              of 0 reads the Primary HDU unless it is empty, in which case it
+         *                              reads the first extension HDU.
+         *  @param[in,out]  metadata    Metadata read from the header (may be null).
+         *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
+         *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
+         *                              should take into account the xy0 saved with the image.
+         */
         explicit Image(
-            std::string const& fileName, const int hdu=0,
+            std::string const & fileName, int hdu=0,
             PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-            geom::Box2I const& bbox=geom::Box2I(), 
-            ImageOrigin const origin=LOCAL
+            geom::Box2I const & bbox=geom::Box2I(), 
+            ImageOrigin origin=LOCAL
         );
 
+        /**
+         *  @brief Construct an Image by reading a FITS image in memory.
+         *
+         *  @param[in]      manager     An object that manages the memory buffer to read.
+         *  @param[in]      hdu         HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+         *                              of 0 reads the Primary HDU unless it is empty, in which case it
+         *                              reads the first extension HDU.
+         *  @param[in,out]  metadata    Metadata read from the header (may be null).
+         *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
+         *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
+         *                              should take into account the xy0 saved with the image.
+         */
         explicit Image(
-            fits::MemFileManager & manager, const int hdu=0,
+            fits::MemFileManager & manager, int hdu=0,
             PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-            geom::Box2I const& bbox=geom::Box2I(), 
-            ImageOrigin const origin=LOCAL
+            geom::Box2I const & bbox=geom::Box2I(), 
+            ImageOrigin origin=LOCAL
         );
 
+        /**
+         *  @brief Construct an Image from an already-open FITS object.
+         *
+         *  @param[in]      fitsfile    A FITS object to read from, already at the desired HDU.
+         *  @param[in,out]  metadata    Metadata read from the header (may be null).
+         *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
+         *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
+         *                              should take into account the xy0 saved with the image.
+         */
         explicit Image(
             fits::Fits & fitsfile,
             PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-            geom::Box2I const& bbox=geom::Box2I(), 
-            ImageOrigin const origin=LOCAL
+            geom::Box2I const & bbox=geom::Box2I(), 
+            ImageOrigin origin=LOCAL
         );
 
         // generalised copy constructor
@@ -537,7 +570,7 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>)
     };
-
+    
     template<typename LhsPixelT, typename RhsPixelT>
     void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
     template<typename LhsPixelT, typename RhsPixelT>
@@ -572,9 +605,9 @@ namespace image {
         explicit DecoratedImage(PTR(Image<PixelT>) rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(
-            std::string const& fileName,
-            const int hdu=0,
-            geom::Box2I const& bbox=geom::Box2I(),
+            std::string const& fileName, 
+            const int hdu=0, 
+            geom::Box2I const& bbox=geom::Box2I(), 
             ImageOrigin const origin = LOCAL
         );
 
@@ -587,7 +620,7 @@ namespace image {
         int getWidth() const { return _image->getWidth(); }
         /// Return the number of rows in the %image
         int getHeight() const { return _image->getHeight(); }
-
+        
         /// Return the %image's column-origin
         int getX0() const { return _image->getX0(); }
         /// Return the %image's row-origin
@@ -597,7 +630,7 @@ namespace image {
         const geom::Extent2I getDimensions() const { return _image->getDimensions(); }
 
         void swap(DecoratedImage &rhs);
-
+        
         void writeFits(
             std::string const& fileName,
             CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
@@ -621,7 +654,7 @@ namespace image {
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
         PTR(Image<PixelT>) _image;
         PTR(daf::base::PropertySet) _metadata;
-
+        
         double _gain;
 
         void init();
