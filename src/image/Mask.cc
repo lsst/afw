@@ -536,22 +536,14 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
     return *this;
 }
 
-/**
- * \brief Create a Mask from a FITS file on disk
- *
- * The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
- * the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
- * bitvalues will be left alone, but Mask's dictionary will be modified to match the
- * on-disk version
- */
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(
-    std::string const& fileName,                ///< Name of file to read
-    int const hdu,                              ///< HDU to read 
-    PTR(daf::base::PropertySet) metadata,         ///< file metadata (may point to NULL)
-    afw::geom::Box2I const & bbox,                ///< Only read these pixels
-    ImageOrigin const origin,                   ///< coordinate system of the bbox
-    bool const conformMasks                     ///< Make Mask conform to mask layout in file?
+    std::string const & fileName,
+    int hdu,
+    PTR(daf::base::PropertySet) metadata,
+    afw::geom::Box2I const & bbox,
+    ImageOrigin origin,
+    bool conformMasks
 ) : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
 
     if (!boost::filesystem::exists(fileName)) {
@@ -566,12 +558,12 @@ Mask<MaskPixelT>::Mask(
 
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(
-    fits::MemFileManager & manager,                ///< Manager for memory to read from
-    int const hdu,                              ///< HDU to read 
-    PTR(daf::base::PropertySet) metadata,         ///< file metadata (may point to NULL)
-    afw::geom::Box2I const & bbox,                ///< Only read these pixels
-    ImageOrigin const origin,                   ///< coordinate system of the bbox
-    bool const conformMasks                     ///< Make Mask conform to mask layout in file?
+    fits::MemFileManager & manager,
+    int hdu,
+    PTR(daf::base::PropertySet) metadata,
+    afw::geom::Box2I const & bbox,
+    ImageOrigin origin,
+    bool conformMasks
 ) : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
 
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -579,27 +571,17 @@ Mask<MaskPixelT>::Mask(
     *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
 }
 
-/**
- * \brief Create a Mask from a FITS file on disk
- *
- * The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
- * the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
- * bitvalues will be left alone, but Mask's dictionary will be modified to match the
- * on-disk version
- */
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(
-    fits::Fits & fitsfile,                      ///< An open FITS file object
-    PTR(daf::base::PropertySet) metadata,         ///< file metadata (may point to NULL)
-    afw::geom::Box2I const & bbox,                ///< Only read these pixels
-    ImageOrigin const origin,                   ///< coordinate system of the bbox
-    bool const conformMasks                     ///< Make Mask conform to mask layout in file?
+    fits::Fits & fitsfile,
+    PTR(daf::base::PropertySet) metadata,
+    afw::geom::Box2I const & bbox,
+    ImageOrigin const origin,
+    bool const conformMasks
 ) :
     ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) 
 {
-    //
     // These are the permitted input file types
-    //
     typedef boost::mpl::vector<
         unsigned char, 
         unsigned short,

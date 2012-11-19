@@ -624,27 +624,72 @@ public:
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
 
+    /**
+     *  @brief Construct a MaskedImage by reading a regular FITS file.
+     *
+     *  @param[in]      fileName      File to read.
+     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
+     *                                missing.  If false, silently initialize them to zero.
+     *
+     *  MaskedImages may also be read from three separate files, in which the fileName argument is
+     *  interpreted as the base file name and "_img.fits", "_msk.fits", and "_var.fits" are appended to it.
+     *  This format is deprecated and is only provided temporarily for backwards compatibility.
+     */
     explicit MaskedImage(
-        std::string const& baseName, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false, bool const needAllHdus=false
-    );
-
-    explicit MaskedImage(
-        fits::MemFileManager & manager, int const hdu=0,
+        std::string const & fileName, int hdu=0,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false, bool const needAllHdus=false
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
+        bool conformMasks=false, bool needAllHdus=false
     );
 
+    /**
+     *  @brief Construct a MaskedImage by reading a FITS image in memory.
+     *
+     *  @param[in]      manager       An object that manages the memory buffer to read.
+     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
+     *                                missing.  If false, silently initialize them to zero.
+     */
+    explicit MaskedImage(
+        fits::MemFileManager & manager, int hdu=0,
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
+        bool conformMasks=false, bool needAllHdus=false
+    );
+
+    /**
+     *  @brief Construct a MaskedImage from an already-open FITS object.
+     *
+     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
+     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
+     *                                missing.  If false, silently initialize them to zero.
+     */
     explicit MaskedImage(
         fits::Fits & fitsfile,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false, bool const needAllHdus=false
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
+        bool conformMasks=false, bool needAllHdus=false
     );
-
 
     MaskedImage(
         MaskedImage const& rhs,

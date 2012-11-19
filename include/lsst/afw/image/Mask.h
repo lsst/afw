@@ -108,28 +108,79 @@ public:
     explicit Mask(geom::Box2I const & bbox, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
 
+    /**
+     *  @brief Construct a Mask by reading a regular FITS file.
+     *
+     *  @param[in]      fileName      File to read.
+     *  @param[in]      hdu           HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *
+     *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+     *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+     *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
+     *  on-disk version.
+     */
     explicit Mask(
-        std::string const & fileName, int const hdu=0,
+        std::string const & fileName, int hdu=0,
         PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)(),
         geom::Box2I const & bbox = geom::Box2I(),
-        ImageOrigin const = LOCAL,
-        bool const conformMasks = false
+        ImageOrigin origin = LOCAL,
+        bool conformMasks = false
     );
 
+    /**
+     *  @brief Construct a Mask by reading a FITS image in memory.
+     *
+     *  @param[in]      manager       An object that manages the memory buffer to read.
+     *  @param[in]      hdu           HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *
+     *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+     *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+     *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
+     *  on-disk version.
+     */
     explicit Mask(
-        fits::MemFileManager & manager, int const hdu=0,
+        fits::MemFileManager & manager, int hdu=0,
         PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)(),
         geom::Box2I const & bbox = geom::Box2I(),
-        ImageOrigin const = LOCAL,
-        bool const conformMasks = false
+        ImageOrigin origin = LOCAL,
+        bool conformMasks = false
     );
 
+    /**
+     *  @brief Construct a Mask from an already-open FITS object.
+     *
+     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
+     *  @param[in,out]  metadata      Metadata read from the header (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *
+     *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+     *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+     *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
+     *  on-disk version.
+     */
     explicit Mask(
         fits::Fits & fitsfile,
         PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)(),
         geom::Box2I const & bbox = geom::Box2I(),
-        ImageOrigin const = LOCAL,
-        bool const conformMasks = false
+        ImageOrigin origin = LOCAL,
+        bool conformMasks = false
     );
 
     // generalised copy constructor

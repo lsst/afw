@@ -21,24 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
-  * @file
-  *
-  * @brief Declaration of the templated Exposure Class for LSST.
-  *
-  * Create an Exposure from a lsst::afw::image::MaskedImage.
-  *
-  * @ingroup afw
-  *
-  * @author Nicole M. Silvestri, University of Washington
-  *
-  * Contact: nms@astro.washington.edu
-  *
-  * Created on: Mon Apr 23 1:01:14 2007
-  *
-  * @version 
-  */
 
 #ifndef LSST_AFW_IMAGE_EXPOSURE_H
 #define LSST_AFW_IMAGE_EXPOSURE_H
@@ -101,27 +83,56 @@ public:
     explicit Exposure(MaskedImageT & maskedImage,
                       CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)());
 
+    /**
+     *  @brief Construct an Exposure by reading a regular FITS file.
+     *
+     *  @param[in]      fileName      File to read.
+     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *
+     *  Exposures may also be read from three separate files, in which the fileName argument is
+     *  interpreted as the base file name and "_img.fits", "_msk.fits", and "_var.fits" are appended to it.
+     *  This format is deprecated and is only provided temporarily for backwards compatibility.
+     */
     explicit Exposure(
-        std::string const &baseName,
-        int const hdu=0,
-        geom::Box2I const& bbox=geom::Box2I(),
-        ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false
+        std::string const & fileName, int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
+        ImageOrigin origin=LOCAL, bool conformMasks=false
     );
 
+    /**
+     *  @brief Construct an Exposure by reading a FITS image in memory.
+     *
+     *  @param[in]      manager       An object that manages the memory buffer to read.
+     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     */
     explicit Exposure(
-        fits::MemFileManager & manager,
-        int const hdu=0,
-        geom::Box2I const& bbox=geom::Box2I(),
-        ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false
+        fits::MemFileManager & manager, int hdu=0, geom::Box2I const & bbox=geom::Box2I(),
+        ImageOrigin origin=LOCAL, bool conformMasks=false
     );
 
+    /**
+     *  @brief Construct an Exposure from an already-open FITS object.
+     *
+     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     */
     explicit Exposure(
-        fits::Fits & fitsfile,
-        geom::Box2I const& bbox=geom::Box2I(),
-        ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false
+        fits::Fits & fitsfile, geom::Box2I const & bbox=geom::Box2I(),
+        ImageOrigin origin=LOCAL, bool conformMasks=false
     );
 
     Exposure(

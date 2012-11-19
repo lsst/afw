@@ -489,28 +489,21 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 }
 
 /************************************************************************************************************/
-/**
- * Construct an Image from a FITS file
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- */
+
 template<typename PixelT>
 image::Image<PixelT>::Image(
-    std::string const& fileName, ///< File to read
-    int const hdu,               ///< Desired HDU
-    PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
-    geom::Box2I const& bbox,                           ///< Only read these pixels
-    ImageOrigin const origin    ///< specify the coordinate system of the bbox
+    std::string const & fileName,
+    int hdu,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox,
+    ImageOrigin origin
 ) : image::ImageBase<PixelT>() {
-
     // Strip off any instructions about extensions, compression, etc intended for cfitsio
     std::string sysFileName = fileName.substr(0, fileName.find('['));
     if (!boost::filesystem::exists(sysFileName)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
                           (boost::format("File %s doesn't exist") % sysFileName).str());
     }
-
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     *this = Image(fitsfile, metadata, bbox, origin);
@@ -518,10 +511,10 @@ image::Image<PixelT>::Image(
 template<typename PixelT>
 image::Image<PixelT>::Image(
     fits::MemFileManager & manager,
-    int const hdu,               ///< Desired HDU
-    PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
-    geom::Box2I const& bbox,                           ///< Only read these pixels
-    ImageOrigin const origin    ///< specify the coordinate system of the bbox
+    int const hdu,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const& bbox,
+    ImageOrigin const origin
 ) : image::ImageBase<PixelT>() {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
@@ -530,10 +523,10 @@ image::Image<PixelT>::Image(
 
 template<typename PixelT>
 image::Image<PixelT>::Image(
-    fits::Fits & fitsfile,                ///< FITS file object open to the desired HDU
-    PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
-    geom::Box2I const& bbox,              ///< Only read these pixels
-    ImageOrigin const origin    ///< specify the coordinate system of the bbox
+    fits::Fits & fitsfile,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const& bbox,
+    ImageOrigin const origin
 ) : image::ImageBase<PixelT>() {
     
     typedef boost::mpl::vector<

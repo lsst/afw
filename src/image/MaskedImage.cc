@@ -104,49 +104,34 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *_variance = 0;
 }
 
-/**
- * \brief Construct from an HDU in a FITS file.  Set metadata if it isn't a NULL pointer
- *
- * @note If baseName doesn't exist and ends ".fits" it's taken to be a single MEF file, with data, mask, and
- * variance in three successive HDUs; otherwise it's taken to be the basename of three separate files,
- * imageFileName(baseName), maskFileName(baseName), and varianceFileName(baseName)
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we politely interpret 0 as meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    std::string const& baseName,    //!< The file's baseName (e.g. foo reads foo_{img.msk.var}.fits)
-    const int hdu,                  //!< The HDU in the file (default: 1)
-    lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
-    geom::Box2I const& bbox,                           //!< Only read these pixels
-    ImageOrigin const origin,                   //!< Coordinate system for bbox
-    bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
-    bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+    std::string const & fileName, int hdu, PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus
 ) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance() 
 {
     // Does it looks like an MEF file?
     static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
-    bool isMef = boost::regex_search(baseName, fitsFile_RE_compiled);
+    bool isMef = boost::regex_search(fileName, fitsFile_RE_compiled);
     //
     // If foo.fits doesn't exist, revert to old behaviour and read foo.fits_{img,msk,var}.fits;
     // contrariwise, if foo_img.fits doesn't exist but foo does, read it as an MEF file
     //
     if (isMef) {
-        if (!boost::filesystem::exists(baseName) &&
-            boost::filesystem::exists(MaskedImage::imageFileName(baseName))) {
+        if (!boost::filesystem::exists(fileName) &&
+            boost::filesystem::exists(MaskedImage::imageFileName(fileName))) {
             isMef = false;
         }
     } else {
-        if (boost::filesystem::exists(baseName) &&
-            !boost::filesystem::exists(MaskedImage::imageFileName(baseName))) {
+        if (boost::filesystem::exists(fileName) &&
+            !boost::filesystem::exists(MaskedImage::imageFileName(fileName))) {
             isMef = true;
         }
     }
 
     if (isMef) {
-        fits::Fits fitsfile(baseName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+        fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
         fitsfile.setHdu(hdu);
         *this = MaskedImage(fitsfile, metadata, bbox, origin, conformMasks, needAllHdus);
     } else {
@@ -158,33 +143,33 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             metadata.reset(new lsst::daf::base::PropertyList);
         }
 
-        _image.reset(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox, origin));
+        _image.reset(new Image(MaskedImage::imageFileName(fileName), hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "IMAGE") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                            (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
-                            MaskedImage::imageFileName(baseName) % hdu % exttype).str());
+                            MaskedImage::imageFileName(fileName) % hdu % exttype).str());
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
-        _mask.reset(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, bbox, origin, conformMasks));
+        _mask.reset(new Mask(MaskedImage::maskFileName(fileName), hdu, metadata, bbox, origin, conformMasks));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "MASK") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                            (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
-                            MaskedImage::maskFileName(baseName) % hdu % exttype).str());
+                            MaskedImage::maskFileName(fileName) % hdu % exttype).str());
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
-        _variance.reset(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata, bbox, origin));
+        _variance.reset(new Variance(MaskedImage::varianceFileName(fileName), hdu, metadata, bbox, origin));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "VARIANCE") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                            (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
-                            MaskedImage::varianceFileName(baseName) % hdu % exttype).str());
+                            MaskedImage::varianceFileName(fileName) % hdu % exttype).str());
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
     }
@@ -192,13 +177,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    fits::MemFileManager & manager,    //!< The memory to be read from.
-    const int hdu,                  //!< The HDU in the file (default: 1)
-    PTR(daf::base::PropertySet) metadata, //!< Filled out with metadata from file (default: NULL)
-    geom::Box2I const& bbox,                           //!< Only read these pixels
-    ImageOrigin const origin,                   //!< Coordinate system for bbox
-    bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
-    bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+    fits::MemFileManager & manager, int hdu, PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus
 ) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance() 
 {
@@ -207,20 +187,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *this = MaskedImage(fitsfile, metadata, bbox, origin, conformMasks, needAllHdus);
 }
 
-/**
- * @brief Construct from open FITS file object already set to the desired HDU.
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we politely interpret 0 as meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    fits::Fits & fitsfile,                //!< FITS file object already opened for reading.
-    PTR(daf::base::PropertySet) metadata, //!< Filled out with metadata from file (default: NULL)
-    geom::Box2I const& bbox,                    //!< Only read these pixels
-    ImageOrigin const origin,                   //!< Coordinate system for bbox
-    bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
-    bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+    fits::Fits & fitsfile, PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus
 ) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance() 
 {
@@ -582,7 +552,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-    std::string const& baseName,
+    std::string const& fileName,
     CONST_PTR(daf::base::PropertySet) metadata,
     std::string const& mode,
     bool const writeMef
@@ -591,28 +561,28 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
     if (writeMef ||
         // write an MEF if they call it *.fits"
-        boost::regex_search(baseName, fitsFile_RE_compiled)) {
+        boost::regex_search(fileName, fitsFile_RE_compiled)) {
 
         static boost::regex const compressedFileNoMEF_RE_compiled(image::detail::compressedFileNoMEF_RE);
-        bool const isCompressed = boost::regex_search(baseName, compressedFileNoMEF_RE_compiled);
+        bool const isCompressed = boost::regex_search(fileName, compressedFileNoMEF_RE_compiled);
 
         if (isCompressed) {
             // cfitsio refuses to write the 2nd HDU of the compressed MEF
             throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException,
-                              "I don't know how to write a compressed MEF: " + baseName);
+                              "I don't know how to write a compressed MEF: " + fileName);
         }
 
-        fits::Fits fitsfile(baseName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+        fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
 
         writeFits(fitsfile, metadata);
 
     } else {
-        _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
+        _image->writeFits(MaskedImage::imageFileName(fileName), metadata, mode);
 
-        _mask->writeFits(MaskedImage::maskFileName(baseName), CONST_PTR(daf::base::PropertySet)(), mode);
+        _mask->writeFits(MaskedImage::maskFileName(fileName), CONST_PTR(daf::base::PropertySet)(), mode);
 
         _variance->writeFits(
-            MaskedImage::varianceFileName(baseName), CONST_PTR(daf::base::PropertySet)(), mode
+            MaskedImage::varianceFileName(fileName), CONST_PTR(daf::base::PropertySet)(), mode
         );
     }
 }
