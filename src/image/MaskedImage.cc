@@ -190,6 +190,23 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     }
 }
 
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+    fits::MemFileManager & manager,    //!< The memory to be read from.
+    const int hdu,                  //!< The HDU in the file (default: 1)
+    PTR(daf::base::PropertySet) metadata, //!< Filled out with metadata from file (default: NULL)
+    geom::Box2I const& bbox,                           //!< Only read these pixels
+    ImageOrigin const origin,                   //!< Coordinate system for bbox
+    bool const conformMasks,                    //!< Make Mask conform to mask layout in file?
+    bool const needAllHdus                      ///< Need all HDUs be present in file? (default: false)
+) : lsst::daf::base::Citizen(typeid(this)),
+    _image(), _mask(), _variance() 
+{
+    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    *this = MaskedImage(fitsfile, metadata, bbox, origin, conformMasks, needAllHdus);
+}
+
 /**
  * @brief Construct from open FITS file object already set to the desired HDU.
  *

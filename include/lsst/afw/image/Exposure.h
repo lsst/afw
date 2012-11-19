@@ -81,10 +81,10 @@ public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
     typedef boost::shared_ptr<Exposure> Ptr;
     typedef boost::shared_ptr<Exposure const> ConstPtr;
-    
+
     // Class Constructors and Destructor
     explicit Exposure(
-        unsigned int width, unsigned int height, 
+        unsigned int width, unsigned int height,
         CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
     );
 
@@ -102,29 +102,37 @@ public:
                       CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)());
 
     explicit Exposure(
-        std::string const &baseName, 
-        int const hdu=0, 
-        geom::Box2I const& bbox=geom::Box2I(), 
+        std::string const &baseName,
+        int const hdu=0,
+        geom::Box2I const& bbox=geom::Box2I(),
+        ImageOrigin const origin=LOCAL,
+        bool const conformMasks=false
+    );
+
+    explicit Exposure(
+        fits::MemFileManager & manager,
+        int const hdu=0,
+        geom::Box2I const& bbox=geom::Box2I(),
         ImageOrigin const origin=LOCAL,
         bool const conformMasks=false
     );
 
     explicit Exposure(
         fits::Fits & fitsfile,
-        geom::Box2I const& bbox=geom::Box2I(), 
+        geom::Box2I const& bbox=geom::Box2I(),
         ImageOrigin const origin=LOCAL,
         bool const conformMasks=false
     );
-        
+
     Exposure(
-        Exposure const &src, 
+        Exposure const &src,
         bool const deep=false
     );
 
     Exposure(
-        Exposure const &src, 
-        lsst::afw::geom::Box2I const& bbox, 
-        ImageOrigin const origin=LOCAL, 
+        Exposure const &src,
+        lsst::afw::geom::Box2I const& bbox,
+        ImageOrigin const origin=LOCAL,
         bool const deep=false
     );
 
@@ -152,7 +160,7 @@ public:
         setMetadata(deep ? rhs.getMetadata()->deepCopy() : rhs.getMetadata());
     }
 
-    virtual ~Exposure(); 
+    virtual ~Exposure();
 
     // Get Members
     /// Return the MaskedImage
@@ -175,7 +183,7 @@ public:
     int getHeight() const { return _maskedImage.getHeight(); }
     /// Return the Exposure's size
     geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
-    
+
     /**
      * Return the Exposure's row-origin
      *
@@ -244,7 +252,7 @@ public:
 
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
-    
+
     /// Finish initialization after constructing from a FITS file
     void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 

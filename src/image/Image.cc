@@ -515,6 +515,18 @@ image::Image<PixelT>::Image(
     fitsfile.setHdu(hdu);
     *this = Image(fitsfile, metadata, bbox, origin);
 }
+template<typename PixelT>
+image::Image<PixelT>::Image(
+    fits::MemFileManager & manager,
+    int const hdu,               ///< Desired HDU
+    PTR(daf::base::PropertySet) metadata, ///< file metadata (may point to NULL)
+    geom::Box2I const& bbox,                           ///< Only read these pixels
+    ImageOrigin const origin    ///< specify the coordinate system of the bbox
+) : image::ImageBase<PixelT>() {
+    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    *this = Image(fitsfile, metadata, bbox, origin);
+}
 
 template<typename PixelT>
 image::Image<PixelT>::Image(

@@ -444,6 +444,13 @@ namespace image {
         );
 
         explicit Image(
+            fits::MemFileManager & manager, const int hdu=0,
+            PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+            geom::Box2I const& bbox=geom::Box2I(), 
+            ImageOrigin const origin=LOCAL
+        );
+
+        explicit Image(
             fits::Fits & fitsfile,
             PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
             geom::Box2I const& bbox=geom::Box2I(), 
@@ -530,7 +537,7 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>)
     };
-    
+
     template<typename LhsPixelT, typename RhsPixelT>
     void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
     template<typename LhsPixelT, typename RhsPixelT>
@@ -565,9 +572,9 @@ namespace image {
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(
-            std::string const& fileName, 
-            const int hdu=0, 
-            geom::Box2I const& bbox=geom::Box2I(), 
+            std::string const& fileName,
+            const int hdu=0,
+            geom::Box2I const& bbox=geom::Box2I(),
             ImageOrigin const origin = LOCAL
         );
 
@@ -580,7 +587,7 @@ namespace image {
         int getWidth() const { return _image->getWidth(); }
         /// Return the number of rows in the %image
         int getHeight() const { return _image->getHeight(); }
-        
+
         /// Return the %image's column-origin
         int getX0() const { return _image->getX0(); }
         /// Return the %image's row-origin
@@ -590,7 +597,7 @@ namespace image {
         const geom::Extent2I getDimensions() const { return _image->getDimensions(); }
 
         void swap(DecoratedImage &rhs);
-        
+
         void writeFits(
             std::string const& fileName,
             lsst::daf::base::PropertySet::ConstPtr metadata = lsst::daf::base::PropertySet::Ptr(),

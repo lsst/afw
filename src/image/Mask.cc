@@ -564,6 +564,21 @@ Mask<MaskPixelT>::Mask(
     *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
 }
 
+template<typename MaskPixelT>
+Mask<MaskPixelT>::Mask(
+    fits::MemFileManager & manager,                ///< Manager for memory to read from
+    int const hdu,                              ///< HDU to read 
+    PTR(daf::base::PropertySet) metadata,         ///< file metadata (may point to NULL)
+    afw::geom::Box2I const & bbox,                ///< Only read these pixels
+    ImageOrigin const origin,                   ///< coordinate system of the bbox
+    bool const conformMasks                     ///< Make Mask conform to mask layout in file?
+) : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
+
+    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
+}
+
 /**
  * \brief Create a Mask from a FITS file on disk
  *
