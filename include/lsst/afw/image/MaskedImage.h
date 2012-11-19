@@ -607,25 +607,32 @@ public:
 
     // Constructors
     explicit MaskedImage(
-        unsigned int width, unsigned int height, 
+        unsigned int width, unsigned int height,
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
     explicit MaskedImage(
-        geom::Extent2I const & dimensions=geom::Extent2I(), 
+        geom::Extent2I const & dimensions=geom::Extent2I(),
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
     explicit MaskedImage(
-        ImagePtr image, 
-        MaskPtr mask = MaskPtr(), 
+        ImagePtr image,
+        MaskPtr mask = MaskPtr(),
         VariancePtr variance = VariancePtr()
     );
     explicit MaskedImage(
-        geom::Box2I const & bbox, 
+        geom::Box2I const & bbox,
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
 
     explicit MaskedImage(
         std::string const& baseName, int const hdu=0,
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
+        bool const conformMasks=false, bool const needAllHdus=false
+    );
+
+    explicit MaskedImage(
+        fits::MemFileManager & manager, int const hdu=0,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
         bool const conformMasks=false, bool const needAllHdus=false
@@ -640,13 +647,13 @@ public:
 
 
     MaskedImage(
-        MaskedImage const& rhs, 
+        MaskedImage const& rhs,
         bool const deep=false
     );
     MaskedImage(
-        MaskedImage const & rhs, 
-        geom::Box2I const & bbox, 
-        ImageOrigin const origin=LOCAL, 
+        MaskedImage const & rhs,
+        geom::Box2I const & bbox,
+        ImageOrigin const origin=LOCAL,
         bool const deep=false
     );
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -656,7 +663,7 @@ public:
     template<typename OtherPixelT>
     MaskedImage(
         MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, //!< Input image
-        
+
         const bool deep     //!< Must be true; needed to disambiguate
     ) :
         lsst::daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
@@ -781,7 +788,7 @@ public:
     ImagePtr getImage(bool const noThrow=false) const {
         if (!_image && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException, 
+                lsst::pex::exceptions::RuntimeErrorException,
                 "MaskedImage's Image is NULL"
             );
         }
@@ -791,7 +798,7 @@ public:
     MaskPtr getMask(bool const noThrow=false) const {
         if (!_mask && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException, 
+                lsst::pex::exceptions::RuntimeErrorException,
                 "MaskedImage's Mask is NULL"
             );
         }
@@ -802,7 +809,7 @@ public:
     VariancePtr getVariance(bool const noThrow=false) const {
         if (!_variance && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException, 
+                lsst::pex::exceptions::RuntimeErrorException,
                 "MaskedImage's Variance is NULL"
             );
         }

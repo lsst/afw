@@ -211,6 +211,23 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    fits::MemFileManager & manager, ///< Exposure's base input file name
+    int const hdu,                  ///< Desired HDU
+    afwGeom::Box2I const& bbox,     //!< Only read these pixels
+    ImageOrigin const origin,       ///< Coordinate system for bbox
+    bool conformMasks               //!< Make Mask conform to mask layout in file?
+) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _maskedImage(),
+    _info(new ExposureInfo())
+{
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
+    _maskedImage = MaskedImageT(manager, hdu, metadata, bbox, origin, conformMasks);
+    postFitsCtorInit(metadata);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     fits::Fits & fitsfile,
     afwGeom::Box2I const& bbox,
     ImageOrigin const origin,

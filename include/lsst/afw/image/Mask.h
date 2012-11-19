@@ -114,7 +114,15 @@ public:
         geom::Box2I const & bbox = geom::Box2I(),
         ImageOrigin const = LOCAL,
         bool const conformMasks = false
-    );                      
+    );
+
+    explicit Mask(
+        fits::MemFileManager & manager, int const hdu=0,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)(),
+        geom::Box2I const & bbox = geom::Box2I(),
+        ImageOrigin const = LOCAL,
+        bool const conformMasks = false
+    );
 
     explicit Mask(
         fits::Fits & fitsfile,
@@ -122,7 +130,7 @@ public:
         geom::Box2I const & bbox = geom::Box2I(),
         ImageOrigin const = LOCAL,
         bool const conformMasks = false
-    );                      
+    );
 
     // generalised copy constructor
     template<typename OtherPixelT>

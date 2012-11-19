@@ -39,6 +39,7 @@ namespace dafBase = lsst::daf::base;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
+namespace afwFits = lsst::afw::fits;
 
 typedef afwImage::Image<float> ImageF;
 typedef afwImage::MaskedImage<float> MaskedImageF;
@@ -61,10 +62,10 @@ static string gQueryBounds = "37.8_39_1_1.3";	//This query is good for pairing 2
 //================================================================================
 //tools
 
-pair<boost::shared_ptr<char>, long> readFile(string filename)
+PTR(afwFits::MemFileManager) readFile(string filename)
 {
-	boost::shared_ptr<char> fileContents;
-	long fileLen = 0;
+    PTR(afwFits::MemFileManager) result;
+    std::size_t fileLen = 0;
 	ifstream ifs;
 	ifs.open(filename.c_str(), ios::in|ios::binary|ios::ate);
 	if (!ifs)
@@ -72,15 +73,15 @@ pair<boost::shared_ptr<char>, long> readFile(string filename)
 	if (ifs)
 	{
 		fileLen = ifs.tellg();
-		fileContents = boost::shared_ptr<char>(new char[fileLen]);
+        result.reset(new afwFits::MemFileManager(fileLen));
 		ifs.seekg(0, ios::beg);
-		ifs.read(fileContents.get(), fileLen);
+		ifs.read(reinterpret_cast<char*>(result->getData()), result->getLength());
 		ifs.close();
 	}
 	
 	cout << "Filename/length: " << gFilename << " / " << fileLen << " bytes" << endl;
 	
-	return pair<boost::shared_ptr<char>, long>(fileContents, fileLen);
+	return result;
 }
 
 string stripHierarchyFromPath(string filepath)
@@ -96,174 +97,6 @@ string stripHierarchyFromPath(string filepath)
 	return filepath;
 }
 
-//================================================================================
-//tests
-
-/**
- Read a FITS file from disk into a ram buffer.  Read the ram buffer into a cfitsio object.
- Copy the cfitsio object to another object.  Dump the cfitsio object to a FITS file.
- */
-void test1()
-{
-	if (gFilename == "")
-		throw runtime_error("Must specify SDSS image filename on command line");
-	
-	pair<boost::shared_ptr<char>, size_t> file = readFile(gFilename);
-	
-	cfitsio::fitsfile *ff_in = 0; 
-	int status = 0;
-	char *fileContents = file.first.get();
-	if (fits_open_memfile(&ff_in, "UnusedFilenameParameter", READONLY, (void**)&fileContents,
-						  &file.second, 0,
-						  NULL/*Memory allocator unnecessary for READONLY*/, &status) != 0)
-	{
-		cout << "fits_open_memfile err" << endl;
-	}
-	else
-	{
-		cfitsio::fitsfile *ff_out = 0;
-		if (fits_create_file(&ff_out, string("!" + gFilenameStripped + "_cfitsioInOut.fit").c_str(), &status) != 0)
-		{
-			cout << "fits_create_file err" << endl;
-		}
-		else
-		{
-			if (fits_copy_file(ff_in, ff_out, 1, 1, 1, &status) != 0)
-			{
-				cout << "fits_copy_file err" << endl;
-			}
-			else
-			{
-				if (fits_close_file(ff_out, &status) != 0)
-				{
-					cout << "fits_close_file err" << endl;
-				}
-			}
-		}
-	}
-}
-
-/**
-Read a FITS file from disk into a ram buffer.  Read the ram buffer into an Image.  Dump the Image to a FITS file.
- */
-void test2()
-{
-	if (gFilename == "")
-		throw runtime_error("Must specify SDSS image filename on command line");
-	
-	pair<boost::shared_ptr<char>, size_t> file = readFile(gFilename);
-	
-	char* ramFile = file.first.get();
-	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
-	ImageF::Ptr image = ImageF::Ptr(new ImageF(&ramFile, &file.second, 0, miMetadata));
-	
-	image->writeFits(string("!" + gFilenameStripped + "_imageInOut.fit").c_str());
-}
-
-/**
- Read in a FITS file from disk, copy it to another FITS file, then write the copy to disk.
- */
-void test4()
-{
-	if (gFilename == "")
-		throw runtime_error("Must specify SDSS image filename on command line");
-	
-	cfitsio::fitsfile *ff_in = 0; 
-	int status = 0;
-	if (fits_open_file(&ff_in, gFilename.c_str(), READONLY, &status) != 0)
-		throw runtime_error("fits_open_file err");
-	
-	cfitsio::fitsfile *ff_out = 0;
-	if (fits_create_file(&ff_out, string("!" + gFilenameStripped + "_fitsOut.fit").c_str(), &status) != 0)
-	{
-		cout << "status: " << status << endl;
-		throw runtime_error("fits_create_file err");
-	}
-	
-	if (fits_copy_file(ff_in, ff_out, 1, 1, 1, &status) != 0)
-	{
-		cout << "status: " << status << endl;
-		throw runtime_error("fits_copy_file err");
-	}
-	
-	if (fits_close_file(ff_out, &status) != 0)
-	{
-		cout << "status: " << status << endl;
-		throw runtime_error("fits_close_file err");
-	}
-}
-
-/**
- Read in a FITS file from disk, copy it to a RAM FITS file, then write the RAM FITS file to disk.
- */
-void test5()
-{
-	if (gFilename == "")
-		throw runtime_error("Must specify SDSS image filename on command line");
-	
-	//Open a FITS file from disk
-	cfitsio::fitsfile *ff_in = 0; 
-	int status = 0;
-	if (fits_open_file(&ff_in, gFilename.c_str(), READONLY, &status) != 0)
-		throw runtime_error("fits_open_file err");
-	
-	//Create a RAM FITS file
-	cfitsio::fitsfile *ff_out = 0;
-	size_t ramFileLen = 2880;	//Initial buffer size (file length)
-	size_t deltaSize = 0;	//0 is a flag that this parameter will be ignored and the default 2880 used instead
-	char *ramFile = new char[ramFileLen];	//Mem allocation will be handled by cfitsio
-	
-	cout << "ramFile: " << (long)ramFile << endl;
-	cout << "ramFileLen: " << ramFileLen << endl;
-	
-	if (fits_create_memfile(&ff_out, (void**)&ramFile,
-		&ramFileLen, deltaSize, &realloc, &status) != 0)
-	{
-		cout << "status: " << status << endl;
-		throw runtime_error("fits_create_memfile err");
-	}
-	
-	cout << "ramFile: " << (long)ramFile << endl;
-	cout << "ramFileLen: " << ramFileLen << endl;
-	
-	//Copy the file read from disk to the RAM file
-	if (fits_copy_file(ff_in, ff_out, 1, 1, 1, &status) != 0)
-	{
-		cout << "status: " << status << endl;
-		throw runtime_error("fits_copy_file err");
-	}
-	
-	cout << "ramFile: " << (long)ramFile << endl;
-	cout << "ramFileLen: " << ramFileLen << endl;
-	
-	//This must be done after fits_copy_file() or the subsequently reading the FITS buffer will not retrieve all the data
-	if (fits_flush_file(ff_out, &status) != 0)
-	{
-		cout << "status: " << status << endl;
-		throw runtime_error("fits_flush_file err");
-	}
-	
-	//Write the RAM FITS file to disk
-	ofstream ofs;
-        std::string oFilename = boost::filesystem::path(gFilename).filename().stem().native();
-        oFilename += "_fitsRamOut.fit";
-
-	ofs.open(oFilename.c_str());
-	if (ofs)
-		ofs.write(ramFile, ramFileLen);
-	ofs.close();
-        ::unlink(oFilename.c_str());
-	
-	cout << "ramFile: " << (long)ramFile << endl;
-	cout << "ramFileLen: " << ramFileLen << endl;
-	
-	if (fits_close_file(ff_out, &status) != 0)
-	{
-		cout << "status: " << status << endl;
-		throw runtime_error("fits_close_file err");
-	}
-}
-
 /**
  Read a FITS file into an Image, write the Image to a RAM FITS file, then write the RAM FITS file to disk.
  */
@@ -273,12 +106,12 @@ void test6()
 		throw runtime_error("Must specify SDSS image filename on command line");
 	
 	//Read FITS file from disk into an Image
-	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
-	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, 0, miMetadata));
+	PTR(dafBase::PropertySet) miMetadata(new dafBase::PropertySet);
+	PTR(ImageF) image(new ImageF(gFilename, 0, miMetadata));
 	
 	//Write the Image to a RAM FITS file
 	image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
-    lsst::afw::fits::MemFileManager manager;
+    afwFits::MemFileManager manager;
 	image->writeFits(manager);
 	
 	//Write the RAM FITS file to disk
@@ -305,7 +138,7 @@ void test7()
 	ExposureF exposure(maskedImage, wcsFromFITS);
 	
 	//Write the Exposure to a RAM FITS file
-    lsst::afw::fits::MemFileManager manager;
+    afwFits::MemFileManager manager;
 	exposure.writeFits(manager);
 	
 	//Write the RAM FITS file to disk
@@ -383,31 +216,13 @@ int main(int argc, char **argv)
 	int numerrs = 0;
 	
 	cout << "Testing RAM FITS..." << endl;
-	
-	numerrs += test(&test1, "1") ? 1 : 0;
-	if (numerrs != 0)
-		return EXIT_FAILURE;
-	numerrs += test(&test2, "2") ? 1 : 0;
-	if (numerrs != 0)
-		return EXIT_FAILURE;
-	//numerrs += test(&test3, "3") ? 1 : 0;
-	//if (numerrs != 0)
-	//	return EXIT_FAILURE;
-	numerrs += test(&test4, "4") ? 1 : 0;
-	if (numerrs != 0)
-		return EXIT_FAILURE;
-	numerrs += test(&test5, "5") ? 1 : 0;
-	if (numerrs != 0)
-		return EXIT_FAILURE;
+
 	numerrs += test(&test6, "6") ? 1 : 0;
 	if (numerrs != 0)
 		return EXIT_FAILURE;
 	numerrs += test(&test7, "7") ? 1 : 0;
 	if (numerrs != 0)
 		return EXIT_FAILURE;
-	//numerrs += test(&test8, "8") ? 1 : 0;
-	//if (numerrs != 0)
-	//	return EXIT_FAILURE;
 	
 	cout << "Done testing.  Num failed tests: " << numerrs << endl;
 	

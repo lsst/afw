@@ -28,6 +28,6 @@ else:
         ramFitsIO =       "%s %s" % (inFileRamFitsIO1, inFileRamFitsIO2),
     )
     
-    scripts.BasicSConscript.tests(args=testArgs, noBuildList=["ramFitsIO.cc"])
+    scripts.BasicSConscript.tests(args=testArgs)
 
 env.Clean(targets["tests"], "#testTable.fits")
