@@ -2,6 +2,7 @@ EXAMPLE_PATH = examples
 EXCLUDE += include/lsst/afw/detection/FootprintArray.cc
 EXCLUDE += include/lsst/afw/detection/detail/dgPsf.cc
 EXCLUDE += src/math/Stack.cc
+EXCLUDE += src/image/Utils.cc
 EXCLUDE += src/table
 EXCLUDE += src/geom
 EXCLUDE += src/geom/ellipses
