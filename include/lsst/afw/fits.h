@@ -27,6 +27,18 @@
 namespace lsst { namespace afw { namespace fits {
 
 /**
+ * @brief An exception thrown when problems are found when reading or writing FITS files.
+ */
+LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::Exception, lsst::afw::fits::FitsError)
+
+/**
+ * @brief An exception thrown when a FITS file has the wrong type.
+ */
+LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::FitsTypeError)
+
+#ifndef SWIG // only want SWIG to see the exceptions; everything else is too low-level for Python.
+
+/**
  *  @brief Base class for polymorphic functors used to iterator over FITS key headers.
  *
  *  Subclass this, and then pass an instance to Fits::forEachKey to iterate over all the
@@ -44,16 +56,6 @@ public:
     virtual ~HeaderIterationFunctor() {}
 
 };
-
-/**
- * @brief An exception thrown when problems are found when reading or writing FITS files.
- */
-LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::Exception, lsst::afw::fits::FitsError)
-
-/**
- * @brief An exception thrown when a FITS file has the wrong type.
- */
-LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::FitsTypeError)
 
 /**
  *  @brief Return an error message reflecting FITS I/O errors.
@@ -481,6 +483,8 @@ public:
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
     int behavior; // bitwise OR of BehaviorFlags
 }; 
+
+#endif // !SWIG
 
 }}} /// namespace lsst::afw::fits
 
