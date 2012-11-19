@@ -498,12 +498,6 @@ image::Image<PixelT>::Image(
     geom::Box2I const & bbox,
     ImageOrigin origin
 ) : image::ImageBase<PixelT>() {
-    // Strip off any instructions about extensions, compression, etc intended for cfitsio
-    std::string sysFileName = fileName.substr(0, fileName.find('['));
-    if (!boost::filesystem::exists(sysFileName)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                          (boost::format("File %s doesn't exist") % sysFileName).str());
-    }
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     *this = Image(fitsfile, metadata, bbox, origin);
