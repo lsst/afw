@@ -555,7 +555,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     std::string const& fileName,
     CONST_PTR(daf::base::PropertySet) metadata,
     std::string const& mode,
-    bool const writeMef
+    bool const writeMef,
+    CONST_PTR(daf::base::PropertySet) maskMetadata,
+    CONST_PTR(daf::base::PropertySet) varianceMetadata
 ) const {
 
     static boost::regex const fitsFile_RE_compiled(image::detail::fitsFile_RE);
@@ -579,10 +581,10 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     } else {
         _image->writeFits(MaskedImage::imageFileName(fileName), metadata, mode);
 
-        _mask->writeFits(MaskedImage::maskFileName(fileName), CONST_PTR(daf::base::PropertySet)(), mode);
+        _mask->writeFits(MaskedImage::maskFileName(fileName), maskMetadata, mode);
 
         _variance->writeFits(
-            MaskedImage::varianceFileName(fileName), CONST_PTR(daf::base::PropertySet)(), mode
+            MaskedImage::varianceFileName(fileName), varianceMetadata, mode
         );
     }
 }
@@ -591,7 +593,9 @@ template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     fits::MemFileManager & manager,
     CONST_PTR(daf::base::PropertySet) metadata,
-    std::string const& mode
+    std::string const& mode,
+    CONST_PTR(daf::base::PropertySet) maskMetadata,
+    CONST_PTR(daf::base::PropertySet) varianceMetadata
 ) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata);
@@ -600,7 +604,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     fits::Fits & fitsfile,
-    CONST_PTR(daf::base::PropertySet) metadata_i
+    CONST_PTR(daf::base::PropertySet) metadata_i,
+    CONST_PTR(daf::base::PropertySet) maskMetadata,
+    CONST_PTR(daf::base::PropertySet) varianceMetadata
 ) const {
 
     lsst::daf::base::PropertySet::Ptr metadata;
@@ -618,11 +624,19 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     metadata->set("EXTTYPE", "IMAGE");
     _image->writeFits(fitsfile, metadata);
 
-    metadata.reset(new lsst::daf::base::PropertyList());
+    if (maskMetadata) {
+        metadata = maskMetadata->deepCopy();
+    } else {
+        metadata.reset(new lsst::daf::base::PropertyList());
+    }
     metadata->set("EXTTYPE", "MASK");
     _mask->writeFits(fitsfile, metadata);
     
-    metadata.reset(new lsst::daf::base::PropertyList());
+    if (varianceMetadata) {
+        metadata = varianceMetadata->deepCopy();
+    } else {
+        metadata.reset(new lsst::daf::base::PropertyList());
+    }
     metadata->set("EXTTYPE", "VARIANCE");
     _variance->writeFits(fitsfile, metadata);
 }

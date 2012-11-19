@@ -789,6 +789,8 @@ public:
      *  @param[in] writeMef      Whether to write to a single file (recommended) or three separate
      *                           files (deprecated).  If baseName ends with ".fits", a single file
      *                           will be written regardless of the value of writeMef.
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
      *
      *  In the MEF format, the primary data unit is ignored and all image planes are written to
      *  extensions.
@@ -797,7 +799,9 @@ public:
         std::string const& baseName,
         boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
         std::string const& mode="w",
-        bool const writeMef=false
+        bool const writeMef=false,
+        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
     /**
@@ -806,13 +810,17 @@ public:
      *  @param[in] manager       Manager object for the memory block to write to.
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
      *
      *  Only MEF format is supported.
      */
     void writeFits(
         fits::MemFileManager & manager,
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const& mode="w"
+        std::string const& mode="w",
+        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
     /**
@@ -820,12 +828,16 @@ public:
      *
      *  @param[in] fitsfile      A FITS file already open to the desired HDU.
      *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
      *
      *  Only MEF format is supported.
      */
     void writeFits(
         fits::Fits & fitsfile,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
     // Getters
