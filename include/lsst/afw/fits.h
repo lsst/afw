@@ -215,8 +215,9 @@ public:
      *                                 The special value of 0 moves to the first extension
      *                                 if the Primary HDU is empty (has NAXIS==0) and the
      *                                 the Primary HDU is the current one.
+     *  @param[in] relative            If true, move relative to the current HDU.
      */
-    void setHdu(int hdu);
+    void setHdu(int hdu, bool relative=false);
 
     /// @brief Return the number of HDUs in the file.
     int countHdus();
