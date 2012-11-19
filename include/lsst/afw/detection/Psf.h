@@ -154,23 +154,62 @@ public:
      */
     static PTR(Psf) readFromRecords(afw::table::RecordInputGeneratorSet const & inputs);
 
-    /// Write the Psf to a regular FITS file.
-    void writeFits(std::string const & filename) const;
+    /**
+     *  @brief Write the Psf to a regular FITS file.
+     *
+     *  @param[in] fileName     Name of the file to write to.
+     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
+     *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
+     *                          "a", new HDUs will be appended to an existing file.
+     */
+    void writeFits(
+        std::string const & fileName,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const & mode="w"
+    ) const;
 
-    /// Write the Psf to a RAM FITS file.
-    void writeFits(fits::MemFileManager & manager) const;
+    /**
+     *  @brief Write the Psf to a FITS image in memory.
+     *
+     *  @param[in] manager      Name of the file to write to.
+     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
+     *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
+     *                          "a", new HDUs will be appended to an existing file.
+     */
+    void writeFits(
+        fits::MemFileManager & manager,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const & mode="w"
+    ) const;
 
-    /// Write the Psf to an already-open FITS file object.
-    void writeFits(fits::Fits & fitsfile) const;
+    /**
+     *  @brief Write the Psf to an already-open FITS object.
+     *
+     *  @param[in] manager      Open FITS object to write to.
+     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+    ) const;
 
     /// @brief Read a Psf from a regular FITS file.
-    static PTR(Psf) readFits(std::string const & filename);
+    static PTR(Psf) readFits(
+        std::string const & filename, int hdu=0,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
 
     /// @brief Read a Psf from a RAM FITS file.
-    static PTR(Psf) readFits(fits::MemFileManager & manager);
+    static PTR(Psf) readFits(
+        fits::MemFileManager & manager, int hdu=0,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
 
     /// @brief Read a Psf from a  FITS file object already at the correct extension.
-    static PTR(Psf) readFits(fits::Fits & fitsfile);
+    static PTR(Psf) readFits(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
 
 protected:
 

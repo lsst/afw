@@ -7,10 +7,20 @@
 #include "boost/make_shared.hpp"
 
 #include "lsst/base.h"
+#include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseRecord.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst { namespace afw {
+
+namespace fits {
+
+class Fits;
+
+} // namespace fits
+
+
+namespace table {
 
 /**
  *  @brief An interface base class for objects that fill a sequence of records.
@@ -46,7 +56,7 @@ protected:
  *
  *  This is essentially a type-erasure wrapper for a Catalog iterator pair; it provides
  *  a consistent, minimal interface for any kind of catalog iterator range that can be used
- *  without templates or copying the catalog.
+ *  without templates.
  */
 class RecordInputGenerator {
 public:
@@ -60,14 +70,9 @@ public:
     /// @brief Return the next record in the sequence, or an empty pointer if at the end.
     virtual CONST_PTR(BaseRecord) next() = 0;
 
-    /**
-     *  @brief Create a RecordInputGenerator from a schema and a random-access iterator range.
-     *
-     *  The user is responsible for ensuring that the given iterator pair is not invalidated
-     *  while the returned RecordInputGenerator exists.
-     */
-    template <typename IteratorT>
-    static PTR(RecordInputGenerator) make(Schema const & schema, IteratorT begin, IteratorT end);
+    /// @brief Create a RecordInputGenerator from a catalog.
+    template <typename CatT>
+    static PTR(RecordInputGenerator) make(CatT const & catalog);
 
     virtual ~RecordInputGenerator() {}
 
@@ -78,35 +83,35 @@ protected:
 
 private:
 
-    template <typename IteratorT> class RangeRecordInputGenerator;
+    template <typename CatT> class RangeRecordInputGenerator;
 
     Schema _schema;
     int _recordCount;
 };
 
 // Private implementation class for RecordInputGenerator::make.
-// Can't go in a source file because we don't know all of the possible types
-// for IteratorT.
-template <typename IteratorT>
+// Can't go in a source file because we don't know all of the possible types for CatT.
+template <typename CatT>
 class RecordInputGenerator::RangeRecordInputGenerator : public RecordInputGenerator {
 public:
     
     virtual CONST_PTR(BaseRecord) next() {
-        if (_current == _end) return CONST_PTR(BaseRecord)();
+        if (_current == _catalog.end()) return CONST_PTR(BaseRecord)();
         return _current;
     }
-    
-    RangeRecordInputGenerator(Schema const & schema, IteratorT begin, IteratorT end) :
-        RecordInputGenerator(schema, end - begin), _current(begin), _end(end) {}
+
+    RangeRecordInputGenerator(CatT const & catalog) :
+        RecordInputGenerator(catalog.getSchema(), catalog.size()),
+        _catalog(catalog), _current(_catalog.begin()) {}
     
 private:
-    IteratorT _current;
-    IteratorT _end;
+    CatT const _catalog;
+    typename CatT::const_iterator _current;
 };
 
-template <typename IteratorT>
-PTR(RecordInputGenerator) RecordInputGenerator::make(Schema const & schema, IteratorT begin, IteratorT end) {
-    return boost::make_shared< RangeRecordInputGenerator<IteratorT> >(schema, begin, end);
+template <typename CatT>
+PTR(RecordInputGenerator) RecordInputGenerator::make(CatT const & catalog) {
+    return boost::make_shared< RangeRecordInputGenerator<CatT> >(catalog);
 }
 
 /**
@@ -122,6 +127,20 @@ struct RecordOutputGeneratorSet {
 
     explicit RecordOutputGeneratorSet(std::string const & name_, Vector const & generators_=Vector()) :
         name(name_), generators(generators_) {}
+
+    /**
+     *  @brief Use the record generators to write binary table HDUs to a FITS file.
+     *
+     *  @param[in]   fitsfile        A FITS file object to which additional HDUs will be appended.
+     *  @param[in]   kind            A string used for a number of header entries; EXTTYPE="<kind>"
+     *                               will be set for all HDUs, and <kind>_NAME and <kind>_NHDU will
+     *                               be set in the first HDU, containing name and generators.size().
+     *  @param[in]   metadata        Additional metadata to be saved to the first HDU's header.
+     */
+    void writeFits(
+        fits::Fits & fitsfile, std::string const & kind,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+    ) const;
 };
 
 /**
@@ -137,6 +156,11 @@ struct RecordInputGeneratorSet {
 
     explicit RecordInputGeneratorSet(std::string const & name_, Vector const & generators_=Vector()) :
         name(name_), generators(generators_) {}
+
+    static RecordInputGeneratorSet readFits(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
 };
 
 }}} // namespace lsst::afw::table
