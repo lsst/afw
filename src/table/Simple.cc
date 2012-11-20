@@ -165,7 +165,7 @@ SimpleTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
 template class CatalogT<SimpleRecord>;
 template class CatalogT<SimpleRecord const>;
 
-template class SimpleCatalogT<SimpleRecord>;
-template class SimpleCatalogT<SimpleRecord const>;
+template class SortedCatalogT<SimpleRecord>;
+template class SortedCatalogT<SimpleRecord const>;
 
 }}} // namespace lsst::afw::table
