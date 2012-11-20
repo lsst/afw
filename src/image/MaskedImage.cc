@@ -214,6 +214,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
     ++hdu;
     fitsfile.setHdu(hdu);
+    metadata.reset(new lsst::daf::base::PropertyList);
     try {
         _mask.reset(new Mask(fitsfile, metadata, bbox, origin, conformMasks));
     } catch(fits::FitsError &e) {
@@ -235,6 +236,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
     ++hdu;
     fitsfile.setHdu(hdu);
+    metadata.reset(new lsst::daf::base::PropertyList);
     try {
         _variance.reset(new Variance(fitsfile, metadata, bbox, origin));
     } catch(fits::FitsError &e) {
