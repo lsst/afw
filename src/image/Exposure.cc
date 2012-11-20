@@ -302,8 +302,12 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
     fits::Fits & fitsfile
 ) const {
-    lsst::daf::base::PropertySet::Ptr outputMetadata = _info->getFitsMetadata(getXY0());
-    _maskedImage.writeFits(fitsfile, outputMetadata);
+    int hdu = fitsfile.getHdu();
+    if (hdu <= 1) hdu = 2; // image is never written to Primary HDU
+    std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList)> metadata 
+        = _info->getFitsMetadata(hdu, getXY0());
+    _maskedImage.writeFits(fitsfile, metadata.first, metadata.second, metadata.second);
+    _info->writeFitsHdus(fitsfile);
 }
 
 // Explicit instantiations

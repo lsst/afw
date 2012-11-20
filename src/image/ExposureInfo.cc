@@ -26,6 +26,7 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -98,10 +99,16 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
 
 ExposureInfo::~ExposureInfo() {}
 
-PTR(daf::base::PropertySet) ExposureInfo::getFitsMetadata(afw::geom::Point2I const & xy0) const {
+std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList)>
+ExposureInfo::getFitsMetadata(int hdu, afw::geom::Point2I const & xy0) const {
+
+    hdu += 3;
     
     //Create fits header
-    PTR(daf::base::PropertySet) outputMetadata = getMetadata()->deepCopy();
+    std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList>) result;
+    result.first.reset(new daf::base::PropertyList());
+    result.second.reset(new daf::base::PropertyList());
+    result.first->combine(getMetadata());
 
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
@@ -112,11 +119,14 @@ PTR(daf::base::PropertySet) ExposureInfo::getFitsMetadata(afw::geom::Point2I con
         PTR(Wcs) newWcs = getWcs()->clone(); //Create a copy
         newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY() );
 
-        // Copy wcsMetadata over to fits header
-        PTR(daf::base::PropertySet) wcsMetadata = newWcs->getFitsMetadata();
-        outputMetadata->combine(wcsMetadata);
+        // We want the WCS to appear in all HDUs
+        result.second->combine(newWcs->getFitsMetadata());
     }
-    
+
+    if (hasPsf()) {
+        result.first->set("PSF_HDU0", hdu++, "First HDU containing the PSF model");
+    }
+
     //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
     //indicate the origin (the position of the bottom left corner) of the sub-image with
     //respect to the origin of the parent image.
@@ -128,23 +138,31 @@ PTR(daf::base::PropertySet) ExposureInfo::getFitsMetadata(afw::geom::Point2I con
     //the position of the origin of the parent image relative to the origin of the sub-image.
     // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
   
-    outputMetadata->set("LTV1", -xy0.getX());
-    outputMetadata->set("LTV2", -xy0.getY());
+    result.second->set("LTV1", -xy0.getX());
+    result.second->set("LTV2", -xy0.getY());
 
-    outputMetadata->set("FILTER", getFilter().getName());
+    result.first->combine(result.second);
+
+    result.first->set("FILTER", getFilter().getName());
     if (hasDetector()) {
-        outputMetadata->set("DETNAME", getDetector()->getId().getName());
-        outputMetadata->set("DETSER", getDetector()->getId().getSerial());
+        result.first->set("DETNAME", getDetector()->getId().getName());
+        result.first->set("DETSER", getDetector()->getId().getSerial());
     }
     /**
      * We need to define these keywords properly! XXX
      */
-    outputMetadata->set("TIME-MID", getCalib()->getMidTime().toString());
-    outputMetadata->set("EXPTIME", getCalib()->getExptime());
-    outputMetadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
-    outputMetadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
+    result.first->set("TIME-MID", getCalib()->getMidTime().toString());
+    result.first->set("EXPTIME", getCalib()->getExptime());
+    result.first->set("FLUXMAG0", getCalib()->getFluxMag0().first);
+    result.first->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
     
-    return outputMetadata;
+    return result;
+}
+
+void ExposureInfo::writeFitsHdus(fits::Fits & fitsfile) const {
+    if (hasPsf()) {
+        getPsf()->writeFits(fitsfile);
+    }
 }
 
 }}} // namespace lsst::afw::image

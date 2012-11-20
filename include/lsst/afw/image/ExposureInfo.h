@@ -32,11 +32,15 @@
 namespace lsst { namespace afw {
 
 namespace cameraGeom {
-    class Detector;
+class Detector;
 }
 
 namespace detection {
-    class Psf;
+class Psf;
+}
+
+namespace fits {
+class Fits;
 }
 
 namespace image {
@@ -156,16 +160,36 @@ public:
     /**
      *  @brief Generate the metadata that saves some components of the ExposureInfo to a FITS header.
      *
-     *  FITS persistence is separated into getFitsMetadata() and writeFits() so that
+     *  This returns a pair of PropertySets; the first contains the metadata that is generally written
+     *  to the main image HDU and is read to reconstruct the ExposureInfo, while the second contains
+     *  additional metadata intended for the mask and variance headers.
+     *
+     *  FITS persistence is separated into getFitsMetadata() and writeFitsHdus() so that
      *  the Primary FITS header can be at least mostly written before the main image HDUs
      *  are written, while the additional ExposureInfo HDUs are written afterwards. This
      *  is desirable in order to reduce the chance that we'll have to shift the images on
      *  disk in order to make space for addition header entries.
      *
+     *  @param[in]  hdu   The number of the HDU that will hold the main metadata.  Used
+     *                    to compute which HDUs will be used for non-MaskedImage components
+     *                    (such as the Psf), assuming three MaskedImage planes.
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to
      *                    install a linear offset-only WCS in the FITS header.
      */
-    PTR(daf::base::PropertySet) getFitsMetadata(geom::Point2I const & xy0=geom::Point2I()) const;
+    std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList)>
+    getFitsMetadata(int hdu, geom::Point2I const & xy0=geom::Point2I()) const;
+
+    /**
+     *  @brief Write any additional non-image HDUs to a FITS file.
+     *
+     *  @param[in]  fitsfile   Open FITS object to write to.  Does not need to be positioned to any
+     *                         particular HDU.
+     *
+     *  The additional HDUs will be appended to the FITS file, and should line up with the HDU index
+     *  keys included in the result of getFitsMetadata() if this is called after writing the
+     *  MaskedImage HDUs.
+     */
+    void writeFitsHdus(fits::Fits & fitsfile) const;
 
 private:
 
