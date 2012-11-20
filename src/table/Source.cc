@@ -505,7 +505,7 @@ KeyTuple<Flux> addFluxFields(
 template class CatalogT<SourceRecord>;
 template class CatalogT<SourceRecord const>;
 
-template class SimpleCatalogT<SourceRecord>;
-template class SimpleCatalogT<SourceRecord const>;
+template class SortedCatalogT<SourceRecord>;
+template class SortedCatalogT<SourceRecord const>;
 
 }}} // namespace lsst::afw::table

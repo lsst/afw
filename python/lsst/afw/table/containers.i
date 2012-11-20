@@ -237,36 +237,36 @@ def unpickleCatalog(cls, data, size):
 %}
 
 template <typename RecordT>
-class SimpleCatalogT : public CatalogT<RecordT> {
+class SortedCatalogT : public CatalogT<RecordT> {
 public:
 
     typedef typename RecordT::Table Table;
 
-    explicit SimpleCatalogT(PTR(Table) const & table);
+    explicit SortedCatalogT(PTR(Table) const & table);
 
-    explicit SimpleCatalogT(Schema const & table);
+    explicit SortedCatalogT(Schema const & table);
 
-    SimpleCatalogT(SimpleCatalogT const & other);
+    SortedCatalogT(SortedCatalogT const & other);
 
     %feature(
         "autodoc", 
         "Constructors:  __init__(self, table) -> empty catalog with the given table\n"
         "               __init__(self, schema) -> empty catalog with a new table with the given schema\n"
         "               __init__(self, catalog) -> shallow copy of the given catalog\n"
-    ) SimpleCatalogT;
+    ) SortedCatalogT;
 
-    static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
-    static SimpleCatalogT readFits(fits::MemFileManager & manager, int hdu=2);
+    static SortedCatalogT readFits(std::string const & filename, int hdu=2);
+    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=2);
 
     bool isSorted() const;
     void sort();
 
-    SimpleCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
+    SortedCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 };
 
-%extend SimpleCatalogT {
+%extend SortedCatalogT {
     PTR(RecordT) find(RecordId id) {
-        lsst::afw::table::SimpleCatalogT< RecordT >::iterator i = self->find(id);
+        lsst::afw::table::SortedCatalogT< RecordT >::iterator i = self->find(id);
         if (i == self->end()) {
             return PTR(RecordT)();
         }
@@ -304,8 +304,8 @@ PREFIX ## ColumnView.Catalog = PREFIX ## Catalog
 
 
 %declareCatalog(CatalogT, Base)
-%declareCatalog(SimpleCatalogT, Simple);
-%declareCatalog(SimpleCatalogT, Source);
+%declareCatalog(SortedCatalogT, Simple);
+%declareCatalog(SortedCatalogT, Source);
 
 }}} // namespace lsst::afw::table
 
