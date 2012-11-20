@@ -243,7 +243,7 @@ class BackgroundTestCase(unittest.TestCase):
             print >> sys.stderr, "Skipping testTicket987 as afwdata is not setup"
             return
 
-        imagePath = os.path.join(afwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci")
+        imagePath = os.path.join(afwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
         mimg      = afwImage.MaskedImageF(imagePath)
         binsize   = 512
         bctrl     = afwMath.BackgroundControl("NATURAL_SPLINE")
@@ -326,7 +326,7 @@ class BackgroundTestCase(unittest.TestCase):
             return
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
-                                                "CFHT", "D4", "cal-53535-i-797722_1"))
+                                                "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
@@ -355,7 +355,7 @@ class BackgroundTestCase(unittest.TestCase):
             return
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
-                                                "CFHT", "D4", "cal-53535-i-797722_1"))
+                                                "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)

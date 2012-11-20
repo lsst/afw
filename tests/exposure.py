@@ -60,8 +60,8 @@ dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests") 
 
-InputMaskedImageName = "871034p_1_MI"
-InputMaskedImageNameSmall = "small_MI"
+InputMaskedImageName = "871034p_1_MI.fits"
+InputMaskedImageNameSmall = "small_MI.fits"
 InputImageNameSmall = "small"
 OutputMaskedImageName = "871034p_1_MInew.fits"
 
@@ -80,7 +80,7 @@ class ExposureTestCase(unittest.TestCase):
 
     def setUp(self):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
-        maskedImageMD = afwImage.readMetadata(inFilePathSmall + "_img.fits")
+        maskedImageMD = afwImage.readMetadata(inFilePathSmall)
 
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width =  maskedImage.getWidth()
