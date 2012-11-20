@@ -254,8 +254,10 @@ public:
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
 
-    /// Finish initialization after constructing from a FITS file
-    void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
+    void _readFits(
+        fits::Fits & fitsfile, geom::Box2I const & bbox,
+        ImageOrigin origin, bool conformMasks
+    );
 
     MaskedImageT _maskedImage;
     PTR(ExposureInfo) _info;

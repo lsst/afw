@@ -168,9 +168,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _maskedImage(),
     _info(new ExposureInfo())
 {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
-    _maskedImage = MaskedImageT(fileName, hdu, metadata, bbox, origin, conformMasks);
-    postFitsCtorInit(metadata);
+    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
 template<typename ImageT, typename MaskT, typename VarianceT> 
@@ -182,9 +182,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _maskedImage(),
     _info(new ExposureInfo())
 {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
-    _maskedImage = MaskedImageT(manager, hdu, metadata, bbox, origin, conformMasks);
-    postFitsCtorInit(metadata);
+    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
 template<typename ImageT, typename MaskT, typename VarianceT> 
@@ -196,42 +196,24 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _maskedImage(),
     _info(new ExposureInfo())
 {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
-    _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks);
-    postFitsCtorInit(metadata);
+    _readFits(fitsfile, bbox, origin, conformMasks);
 }
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::_readFits(
+    fits::Fits & fitsfile, afwGeom::Box2I const & bbox,
+    ImageOrigin origin, bool conformMasks
+) {
+    PTR(daf::base::PropertySet) metadata(new lsst::daf::base::PropertyList());
+    _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks);
+    _info->readFits(fitsfile, metadata);
+}
+
 
 /** Destructor
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
-
-/**
-Finish initialization after constructing from a FITS file
-*/
-template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
-    lsst::daf::base::PropertySet::Ptr metadata
-) {
-    // true: strip keywords that are related to the created WCS from the input
-    // metadata
-    _info->setWcs(afwImage::makeWcs(metadata, true));
-    /*
-     * Filter
-     */
-    _info->setFilter(Filter(metadata, true));
-    afwImage::detail::stripFilterKeywords(metadata);
-    /*
-     * Calib
-     */
-    PTR(afwImage::Calib) newCalib(new afwImage::Calib(metadata));
-    _info->setCalib(newCalib);
-    afwImage::detail::stripCalibKeywords(metadata);
-    /*
-     * Set the remaining parts of the metadata
-     */
-    _info->setMetadata(metadata);
-}
 
 // SET METHODS
 

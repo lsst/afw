@@ -344,6 +344,16 @@ class ExposureTestCase(unittest.TestCase):
         self.assertEqual(midMjd, readExposure.getCalib().getMidTime().get())
         self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
 
+        psf = readExposure.getPsf()
+        self.assert_(psf is not None)
+        psf = afwDetection.DoubleGaussianPsf.swigConvert(psf)
+        self.assert_(psf is not None)
+        self.assertEqual(psf.getKernel().getWidth(), self.psf.getKernel().getWidth())
+        self.assertEqual(psf.getKernel().getHeight(), self.psf.getKernel().getHeight())
+        self.assertEqual(psf.getSigma1(), self.psf.getSigma1())
+        self.assertEqual(psf.getSigma2(), self.psf.getSigma2())
+        self.assertEqual(psf.getB(), self.psf.getB())
+
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
            By using the function indexToPosition, we should be able to convert the indices

@@ -191,6 +191,15 @@ public:
      */
     void writeFitsHdus(fits::Fits & fitsfile) const;
 
+    /**
+     *  @brief Read from a FITS file and metadata.
+     *
+     *  This operates in-place on this instead of returning a new object, because it will usually
+     *  only be called by the exposure constructor, which starts by default-constructing the
+     *  ExposureInfo.
+     */
+    void readFits(fits::Fits & fitsfile, PTR(daf::base::PropertySet) metadata);
+
 private:
 
     static PTR(detection::Psf) _clonePsf(CONST_PTR(detection::Psf) psf);

@@ -165,4 +165,28 @@ void ExposureInfo::writeFitsHdus(fits::Fits & fitsfile) const {
     }
 }
 
+void ExposureInfo::readFits(
+    fits::Fits & fitsfile,
+    PTR(daf::base::PropertySet) metadata
+) {
+    // true: strip keywords that are related to the created WCS from the input metadata
+    _wcs = makeWcs(metadata, true) ;
+
+    _filter = Filter(metadata, true);
+    detail::stripFilterKeywords(metadata);
+
+    PTR(Calib) newCalib(new Calib(metadata));
+    setCalib(newCalib);
+    detail::stripCalibKeywords(metadata);
+
+    if (metadata->exists("PSF_HDU0")) {
+        int psfHdu0 = metadata->get<int>("PSF_HDU0");
+        metadata->remove("PSF_HDU0");
+        fitsfile.setHdu(psfHdu0);
+        _psf = detection::Psf::readFits(fitsfile);
+    }
+
+    _metadata = metadata;
+}
+
 }}} // namespace lsst::afw::image
