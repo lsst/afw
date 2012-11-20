@@ -309,8 +309,7 @@ class ExposureTestCase(unittest.TestCase):
         det = subExposure.getDetector()
         self.assertTrue(det)
         
-        hdu = 0
-        subExposure = afwImage.ExposureF(inFilePathSmall, hdu, subBBox)
+        subExposure = afwImage.ExposureF(inFilePathSmall, subBBox)
         
         self.checkWcs(mainExposure, subExposure)
         

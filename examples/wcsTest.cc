@@ -77,8 +77,7 @@ int main(int argc, char **argv) {
     std::cout << "Opening file " << inFilename << std::endl;
 
     PropertySet::Ptr miMetadata(new PropertySet);
-    int const hdu = 0;
-    afwImage::MaskedImage<Pixel> mskdImage(inFilename, hdu, miMetadata);
+    afwImage::MaskedImage<Pixel> mskdImage(inFilename, miMetadata);
     afwImage::Wcs::Ptr wcs = afwImage::makeWcs(miMetadata);
     
     // Testing input col, row values 

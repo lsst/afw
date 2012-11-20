@@ -323,7 +323,6 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
     } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
         execTrace("ExposureFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
-        int hdu = additionalData->get<int>("hdu", 0);
         afwGeom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
@@ -351,7 +350,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         }
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(
-                fits->getPath(), hdu, box, origin);
+                fits->getPath(), box, origin);
         execTrace("ExposureFormatter read end");
         return ip;
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
