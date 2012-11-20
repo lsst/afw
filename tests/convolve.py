@@ -61,7 +61,7 @@ if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 
 # input image contains a saturated star, a bad column, and a faint star
-InputMaskedImagePath = os.path.join(dataDir, "med")
+InputMaskedImagePath = os.path.join(dataDir, "medexp.fits")
 InputBBox = afwGeom.Box2I(afwGeom.Point2I(52, 574), afwGeom.Extent2I(76, 80))
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve fully overwrites it

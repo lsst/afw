@@ -70,10 +70,10 @@ class MaskedImageTestCase(unittest.TestCase):
             mask.addMaskPlane(p)
 
         if False:
-            self.baseName = os.path.join(dataDir, "Small_MI")
+            self.fileName = os.path.join(dataDir, "Small_MI.fits")
         else:
-            self.baseName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1")
-        self.mi = afwImage.MaskedImageF(self.baseName)
+            self.fileName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+        self.mi = afwImage.MaskedImageF(self.fileName)
 
     def tearDown(self):
         del self.mi
@@ -94,7 +94,7 @@ class MaskedImageTestCase(unittest.TestCase):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
         hdu, metadata, bbox, conformMasks = 0, None, afwGeom.Box2I(), True
-        self.mi = afwImage.MaskedImageF(self.baseName, hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
+        self.mi = afwImage.MaskedImageF(self.fileName, hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         image = self.mi.getImage()
         mask = self.mi.getMask()
@@ -107,7 +107,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadNoConform2(self):
         """Check that reading a mask doesn't invalidate the plane dictionary"""
 
-        testMask = afwImage.MaskU(afwImage.MaskedImageF_maskFileName(self.baseName))
+        testMask = afwImage.MaskU(self.fileName, 3)
 
         mask = self.mi.getMask()
         mask |= testMask
@@ -115,8 +115,8 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform2(self):
         """Check that conforming a mask invalidates the plane dictionary"""
 
-        hdu, metadata, bbox, conformMasks = 0, None, afwGeom.Box2I(), True
-        testMask = afwImage.MaskU(afwImage.MaskedImageF_maskFileName(self.baseName),
+        hdu, metadata, bbox, conformMasks = 3, None, afwGeom.Box2I(), True
+        testMask = afwImage.MaskU(self.fileName,
                                   hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         mask = self.mi.getMask()

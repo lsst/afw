@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
             std::cerr << "Is afwdata set up?\n" << std::endl;
             exit(EXIT_FAILURE);
         } else {
-            mimg = afwdata + "/small_MI";
+            mimg = afwdata + "/small_MI.fits";
             std::cerr << "Using " << mimg << std::endl;
         }
     } else {

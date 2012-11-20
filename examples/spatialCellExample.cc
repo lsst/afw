@@ -124,7 +124,7 @@ readImage() {
     try {
         std::string dataDir = lsst::utils::eups::productDir("afwdata");
 
-        std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1";
+        std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1.fits";
         
         afwGeom::Box2I bbox = afwGeom::Box2I(
             afwGeom::Point2I(270, 2530), 
