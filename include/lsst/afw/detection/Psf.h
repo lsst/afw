@@ -42,7 +42,7 @@ template<typename PsfT, typename PsfFactorySignatureT> class PsfFactory;
 /*!
  * \brief Represent an image's Point Spread Function
  *
- * \note A polymorphic base class for Psf%s
+ * A polymorphic base class for Psf%s
  */
 class Psf : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
 public:
@@ -133,6 +133,12 @@ public:
         return true;
     }
 
+    /// @name Table-based Persistence
+    ///@{
+
+    /// @brief Return true if the writeToRecords() and readFromRecords() methods are supported for this Psf.
+    virtual bool hasRecordPersistence() const { return false; }
+
     /**
      *  @brief Return objects that allow the Psf to be written to one or more RecordOutputGenerators.
      *
@@ -185,7 +191,7 @@ public:
     /**
      *  @brief Write the Psf to an already-open FITS object.
      *
-     *  @param[in] manager      Open FITS object to write to.
+     *  @param[in] fitsfile     Open FITS object to write to.
      *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
      */
     void writeFits(
@@ -193,23 +199,44 @@ public:
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
-    /// @brief Read a Psf from a regular FITS file.
+    /**
+     *  @brief Read a Psf from a regular FITS file.
+     *
+     *  @param[in]  fileName     Name of the file to read.
+     *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
+     *                           skips the primary HDU if it is empty.
+     *  @param[out] metadata     Additional metadata read from the header (may be null).
+     */
     static PTR(Psf) readFits(
-        std::string const & filename, int hdu=0,
+        std::string const & fileName, int hdu=0,
         PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
     );
 
-    /// @brief Read a Psf from a RAM FITS file.
+    /**
+     *  @brief Read a Psf from a FITS file in memory.
+     *
+     *  @param[in]  manager      Manager for the memory to read from.
+     *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
+     *                           skips the primary HDU if it is empty.
+     *  @param[out] metadata     Additional metadata read from the header (may be null).
+     */
     static PTR(Psf) readFits(
         fits::MemFileManager & manager, int hdu=0,
         PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
     );
 
-    /// @brief Read a Psf from a  FITS file object already at the correct extension.
+    /**
+     *  @brief Read a Psf from an already open FITS object.
+     *
+     *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
+     *  @param[out] metadata     Additional metadata read from the header (may be null).
+     */
     static PTR(Psf) readFits(
         fits::Fits & fitsfile,
         PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
     );
+
+    ///@}
 
 protected:
 

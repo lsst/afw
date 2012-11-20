@@ -782,12 +782,12 @@ public:
     /**
      *  @brief Write a MaskedImage to a regular FITS file.
      *
-     *  @param[in] baseName      Name of the file to write.  When writing separate files, this is
+     *  @param[in] fileName      Name of the file to write.  When writing separate files, this is
      *                           the "base" of the filename (e.g. foo reads foo_{img.msk.var}.fits).
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] writeMef      Whether to write to a single file (recommended) or three separate
-     *                           files (deprecated).  If baseName ends with ".fits", a single file
+     *                           files (deprecated).  If fileName ends with ".fits", a single file
      *                           will be written regardless of the value of writeMef.
      *  @param[in] maskMetadata       Metadata to be written to the mask header.
      *  @param[in] varianceMetadata   Metadata to be written to the variance header.
@@ -796,7 +796,7 @@ public:
      *  extensions.
      */
     void writeFits(
-        std::string const& baseName,
+        std::string const& fileName,
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w",
         bool const writeMef=false,

@@ -132,8 +132,8 @@ struct RecordOutputGeneratorSet {
      *  @brief Use the record generators to write binary table HDUs to a FITS file.
      *
      *  @param[in]   fitsfile        A FITS file object to which additional HDUs will be appended.
-     *  @param[in]   kind            A string used for a number of header entries; EXTTYPE="<kind>"
-     *                               will be set for all HDUs, and <kind>_NAME and <kind>_NHDU will
+     *  @param[in]   kind            A string used for a number of header entries; EXTTYPE="{kind}"
+     *                               will be set for all HDUs, and {kind}_NAME and {kind}_NHDU will
      *                               be set in the first HDU, containing name and generators.size().
      *  @param[in]   metadata        Additional metadata to be saved to the first HDU's header.
      */

@@ -235,55 +235,20 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const
 
 // Write FITS
 
-/** @brief Save the Exposure and all its components to a multi-extension FITS file.
- *
- * @note LSST and FITS use a different convention for WCS coordinates.
- * Fits measures crpix relative to the bottom left hand corner of the image
- * saved in that file (what ds9 calls image coordinates). Lsst measures it 
- * relative to the bottom left hand corner of the parent image (what 
- * ds9 calls the physical coordinates). This may cause confusion when you
- * write an image to disk and discover that the values of crpix in the header
- * are not what you expect.
- *
- * exposure = afwImage.ExposureF(filename) 
- * fitsHeader = afwImage.readMetadata(filename)
- * 
- * exposure.getWcs().getPixelOrigin() ---> (128,128)
- * fitsHeader.get("CRPIX1") --> 108
- *
- * This is expected. If you look at the value of
- * fitsHeader.get("LTV1") --> -20
- * you will find that CRPIX - LTV == getPixelOrigin.
- *
- * This implementation means that if you open the image in ds9 (say)
- * the wcs translations for a given pixel are correct
- */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    std::string const & fileName ///< Exposure's output file name
-) const {
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(std::string const & fileName) const {
     fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile);
 }
 
-/**
- * See writeFits(string) for a basic description of this function.
- *
- * This function differs from the string version in that rather than writing a FITS file to disk
- * it writes a FITS file to a RAM buffer.
- */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    fits::MemFileManager & manager
-) const {
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager & manager) const {
     fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile);
 }
 
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    fits::Fits & fitsfile
-) const {
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits & fitsfile) const {
     int hdu = fitsfile.getHdu();
     if (hdu <= 1) hdu = 2; // image is never written to Primary HDU
     std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList)> metadata 

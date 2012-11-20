@@ -536,6 +536,8 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
     return *this;
 }
 
+#ifndef DOXYGEN // doc for this section is already in header
+
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(
     std::string const & fileName,
@@ -647,6 +649,8 @@ void Mask<MaskPixelT>::writeFits(
 
     fits_write_image(fitsfile, *this, metadata);
 }
+
+#endif // !DOXYGEN
 
 namespace {
     struct addPlaneFunctor {

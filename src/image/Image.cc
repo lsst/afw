@@ -490,6 +490,8 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 
 /************************************************************************************************************/
 
+#ifndef DOXYGEN // doc for this section has been moved to header
+
 template<typename PixelT>
 image::Image<PixelT>::Image(
     std::string const & fileName,
@@ -578,6 +580,8 @@ void image::Image<PixelT>::writeFits(
     }
     image::fits_write_image(fitsfile, *this, metadata);
 }
+
+#endif // !DOXYGEN
 
 /************************************************************************************************************/
 

@@ -82,10 +82,6 @@ public:
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
-     *
-     *  Exposures may also be read from three separate files, in which the fileName argument is
-     *  interpreted as the base file name and "_img.fits", "_msk.fits", and "_var.fits" are appended to it.
-     *  This format is deprecated and is only provided temporarily for backwards compatibility.
      */
     explicit Exposure(
         std::string const & fileName, int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
@@ -247,8 +243,38 @@ public:
     /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
     CONST_PTR(ExposureInfo) getInfo() const { return _info; }
 
+    /**
+     *  @brief Write an Exposure to a regular multi-extension FITS file.
+     *
+     *  @param[in] fileName      Name of the file to write.
+     *
+     *  As with MaskedImage persistence, an empty primary HDU will be created and all images planes
+     *  will be saved to extension HDUs.  Most metadata will be saved only to the header of the
+     *  main image HDU, but the WCS will be saved to the header of the mask and variance as well.
+     *  If present, the Psf will be written to one or more additional HDUs.
+     *
+     *  Note that the LSST pixel origin differs from the FITS convention by one, so the values
+     *  of CRPIX and LTV saved in the file are not the same as those in the C++ objects in memory,
+     *  but are rather modified so they are interpreted by external tools (like ds9).
+     */
     void writeFits(std::string const & fileName) const;
+
+    /**
+     *  @brief Write an Exposure to a multi-extension FITS file in memory.
+     *
+     *  @param[in] manager       Manager for the memory to write to.
+     *
+     *  @sa writeFits
+     */
     void writeFits(fits::MemFileManager & manager) const;
+
+    /**
+     *  @brief Write an Exposure to an already-open FITS file object.
+     *
+     *  @param[in] fitsfile       FITS object to write.
+     *
+     *  @sa writeFits
+     */
     void writeFits(fits::Fits & fitsfile) const;
 
 private:
