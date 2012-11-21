@@ -142,7 +142,7 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     dafBase::PropertyList::Ptr wcsProps(new dafBase::PropertyList());
 
-    if (!wcs) {                  // if wcs hasn't been initialised
+    if (!wcs.isInitialized()) {                  // if wcs hasn't been initialised
         return wcsProps;
     }
 

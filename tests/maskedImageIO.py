@@ -206,7 +206,7 @@ class MaskedImageTestCase(unittest.TestCase):
         exp.writeFits(tmpFile)
 
         exp2 = type(exp)(tmpFile)
-        self.assertFalse(exp2.getWcs())
+        self.assertFalse(exp2.getWcs().isInitialized())
 
         os.remove(tmpFile)
 
