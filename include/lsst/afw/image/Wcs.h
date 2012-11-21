@@ -140,9 +140,6 @@ public:
     
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
     
-    // Return true iff Wcs is valid
-    operator bool() const { return _nWcsInfo != 0; }
-    
     // Does the Wcs follow the convention of North=Up, East=Left or not
     // [This actually just measures the sign of the determinant of the CD matrix
     //  to determine the "handedness" of the coordinate system.]

@@ -116,7 +116,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         MaskedImage's metadata and using that.
         """
         wcs = afwImage.Wcs()
-        self.assertFalse(wcs)
+        self.assertFalse(wcs.isInitialized())
 
         # Using MaskedImage with corrupt metadata
         infile = afwImage.MaskedImageF_imageFileName(InputCorruptFilePath)
