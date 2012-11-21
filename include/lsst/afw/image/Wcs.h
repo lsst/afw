@@ -36,6 +36,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/table/generators.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -49,6 +50,10 @@ namespace afw {
     namespace formatters {
         class WcsFormatter;
     }
+namespace fits {
+class Fits;
+class MemFileManager;
+}
 namespace image {
     
 /// 
@@ -264,6 +269,125 @@ public:
     void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
     void shiftReferencePixel(double dx, double dy);
 
+    /**
+     *  @name Table-based Persistence
+     *
+     *  While the FITS standard for WCS representation is header-based, we also provide custom persistence
+     *  to one or more FITS binary tables for two reasons:
+     *   - It allows us to persist complex, custom astrometric models that do not have a FITS standard
+     *     representation.
+     *   - It allows us to save many Wcs objects in a single FITS file more efficiently, which allows
+     *     us to save the coordinate systems of all input exposures in a coadd FITS file.
+     *
+     *  @sa Exposure::writeFits
+     */
+    ///@{
+
+    /// @brief Return true if the writeToRecords() and readFromRecords() methods are supported for this Wcs.
+    virtual bool hasRecordPersistence() const { return false; }
+
+#ifndef SWIG // only expose high-level interface to Python
+
+    /**
+     *  @brief Return objects that allow the Wcs to be written to one or more RecordOutputGenerators.
+     *
+     *  The resulting records can be fed into one more RecordInputGenerators to create an equivalent
+     *  Wcs by using readFromRecords().
+     *
+     *  The default implementation throws an exception.
+     *
+     *  The user is responsible for ensuring that the lifetime of the returned object does not
+     *  exceed the lifetime of the Wcs, as it may contain a non-owning back reference to the Wcs.
+     */
+    virtual afw::table::RecordOutputGeneratorSet writeToRecords() const;
+
+    /**
+     *  @brief Create a Wcs from one or more RecordInputGenerators.
+     *
+     *  The records should have been created by writeToRecords.  This is implemented by
+     *  RecordGeneratorWcsFactory.
+     */
+    static PTR(Wcs) readFromRecords(afw::table::RecordInputGeneratorSet const & inputs);
+
+    /**
+     *  @brief Write the Wcs to an already-open FITS object.
+     *
+     *  @param[in] fitsfile     Open FITS object to write to.
+     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
+     */
+    void writeFitsTables(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+    ) const;
+
+    /**
+     *  @brief Read a Wcs from an already open FITS object.
+     *
+     *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
+     *  @param[out] metadata     Additional metadata read from the header (may be null).
+     */
+    static PTR(Wcs) readFitsTables(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
+
+#endif // !SWIG
+
+    /**
+     *  @brief Write the Wcs to a regular FITS file.
+     *
+     *  @param[in] fileName     Name of the file to write to.
+     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
+     *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
+     *                          "a", new HDUs will be appended to an existing file.
+     */
+    void writeFitsTables(
+        std::string const & fileName,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const & mode="w"
+    ) const;
+
+    /**
+     *  @brief Write the Wcs to a FITS image in memory.
+     *
+     *  @param[in] manager      Name of the file to write to.
+     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
+     *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
+     *                          "a", new HDUs will be appended to an existing file.
+     */
+    void writeFitsTables(
+        fits::MemFileManager & manager,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        std::string const & mode="w"
+    ) const;
+
+    /**
+     *  @brief Read a Wcs from a regular FITS file.
+     *
+     *  @param[in]  fileName     Name of the file to read.
+     *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
+     *                           skips the primary HDU if it is empty.
+     *  @param[out] metadata     Additional metadata read from the header (may be null).
+     */
+    static PTR(Wcs) readFitsTables(
+        std::string const & fileName, int hdu=0,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
+
+    /**
+     *  @brief Read a Wcs from a FITS file in memory.
+     *
+     *  @param[in]  manager      Manager for the memory to read from.
+     *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
+     *                           skips the primary HDU if it is empty.
+     *  @param[out] metadata     Additional metadata read from the header (may be null).
+     */
+    static PTR(Wcs) readFitsTables(
+        fits::MemFileManager & manager, int hdu=0,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
+
+    ///@}
         
 private:
     //Allow the formatter to access private goo

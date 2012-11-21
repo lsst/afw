@@ -1106,13 +1106,48 @@ void Wcs::shiftReferencePixel(double dx, double dy) {
     }
 }
 
-/************************************************************************************************************/
-/*
- * Now WCSA, pixel coordinates, but allowing for X0 and Y0
- */
 namespace lsst {
 namespace afw {
 namespace image {
+
+void Wcs::writeFitsTables(
+    std::string const & filename,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const & mode
+) const {
+    afw::fits::Fits fitsfile(filename, mode, afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    writeFitsTables(fitsfile, metadata);
+}
+
+void Wcs::writeFitsTables(
+    afw::fits::MemFileManager & manager,
+    CONST_PTR(daf::base::PropertySet) metadata,
+    std::string const & mode
+) const {
+    afw::fits::Fits fitsfile(manager, mode, afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    writeFitsTables(fitsfile, metadata);
+}
+
+void Wcs::writeFitsTables(afw::fits::Fits & fitsfile, CONST_PTR(daf::base::PropertySet) metadata) const {
+    afw::table::RecordOutputGeneratorSet outputs = writeToRecords();
+    outputs.writeFits(fitsfile, "PSF", metadata);
+}
+
+PTR(Wcs) Wcs::readFitsTables(std::string const & filename, int hdu, PTR(daf::base::PropertySet) metadata) {
+    afw::fits::Fits fitsfile(filename, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    return readFitsTables(fitsfile);
+}
+
+PTR(Wcs) Wcs::readFitsTables(fits::MemFileManager & manager, int hdu, PTR(daf::base::PropertySet) metadata) {
+    afw::fits::Fits fitsfile(manager, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    return readFitsTables(fitsfile);
+}
+
+PTR(Wcs) Wcs::readFitsTables(afw::fits::Fits & fitsfile, PTR(daf::base::PropertySet) metadata) {
+    return readFromRecords(afw::table::RecordInputGeneratorSet::readFits(fitsfile, metadata));
+}
 
 namespace detail {
 
@@ -1202,4 +1237,4 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     return 0;                           // would be ncard if remove returned a status
 }
 
-}}}}
+}}}} // namespace lsst::afw::image::detail

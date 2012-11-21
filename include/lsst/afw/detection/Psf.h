@@ -139,6 +139,8 @@ public:
     /// @brief Return true if the writeToRecords() and readFromRecords() methods are supported for this Psf.
     virtual bool hasRecordPersistence() const { return false; }
 
+#ifndef SWIG // only expose the higher-level interfaces to Python
+
     /**
      *  @brief Return objects that allow the Psf to be written to one or more RecordOutputGenerators.
      *
@@ -159,6 +161,30 @@ public:
      *  persisting a Psf to FITS, and is itself implemented by RecordGeneratorPsfFactory.
      */
     static PTR(Psf) readFromRecords(afw::table::RecordInputGeneratorSet const & inputs);
+
+    /**
+     *  @brief Write the Psf to an already-open FITS object.
+     *
+     *  @param[in] fitsfile     Open FITS object to write to.
+     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+    ) const;
+
+    /**
+     *  @brief Read a Psf from an already open FITS object.
+     *
+     *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
+     *  @param[out] metadata     Additional metadata read from the header (may be null).
+     */
+    static PTR(Psf) readFits(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
+    );
+
+#endif // !SWIG
 
     /**
      *  @brief Write the Psf to a regular FITS file.
@@ -189,17 +215,6 @@ public:
     ) const;
 
     /**
-     *  @brief Write the Psf to an already-open FITS object.
-     *
-     *  @param[in] fitsfile     Open FITS object to write to.
-     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
-     */
-    void writeFits(
-        fits::Fits & fitsfile,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
-    ) const;
-
-    /**
      *  @brief Read a Psf from a regular FITS file.
      *
      *  @param[in]  fileName     Name of the file to read.
@@ -222,17 +237,6 @@ public:
      */
     static PTR(Psf) readFits(
         fits::MemFileManager & manager, int hdu=0,
-        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
-    );
-
-    /**
-     *  @brief Read a Psf from an already open FITS object.
-     *
-     *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
-     *  @param[out] metadata     Additional metadata read from the header (may be null).
-     */
-    static PTR(Psf) readFits(
-        fits::Fits & fitsfile,
         PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
     );
 
