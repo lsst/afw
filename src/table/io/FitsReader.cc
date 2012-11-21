@@ -113,7 +113,7 @@ struct FitsSchemaItem {
             } else if (cls == "Array") {
                 schema.addField< Array<U> >(name, doc, units, 1);
             } else if (cls == "Covariance") {
-                schema.addField< Covariance<U> >(name, doc, units, 1);
+                schema.addField< Covariance<float> >(name, doc, units, 1);
             } else {
                 schema.addField<U>(name, doc, units);
             }
@@ -133,12 +133,12 @@ struct FitsSchemaItem {
                 return;
             }
             if (cls == "Covariance(Point)") {
-                schema.addField< Covariance< Point<U> > >(name, doc, units);
+                schema.addField< Covariance< Point<float> > >(name, doc, units);
                 return;
             }
         } else if (size == 6) {
             if (cls == "Covariance(Moments)") {
-                schema.addField< Covariance< Moments<U> > >(name, doc, units);
+                schema.addField< Covariance< Moments<float> > >(name, doc, units);
                 return;
             }
         }
@@ -151,7 +151,7 @@ struct FitsSchemaItem {
                     "Covariance field has invalid size."
                 );
             }
-            schema.addField< Covariance<U> >(name, doc, units, n);
+            schema.addField< Covariance<float> >(name, doc, units, n);
         } else {
             schema.addField< Array<U> >(name, doc, units, size);
         }

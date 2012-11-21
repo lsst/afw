@@ -593,13 +593,10 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Array<double>, ArrayD)
 
 %declareFieldType(lsst::afw::table::Covariance<float>, CovF)
-%declareFieldType(lsst::afw::table::Covariance<double>, CovD)
 
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointD)
 
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsD)
 
 %include "specializations.i"
 
@@ -637,15 +634,15 @@ namespace lsst { namespace afw { namespace table {
      };
      struct Centroid {
          typedef Key< Point<double> > MeasKey;
-         typedef Key< Covariance< Point<double> > > ErrKey;
+         typedef Key< Covariance< Point<float> > > ErrKey;
          typedef lsst::afw::geom::Point<double,2> MeasValue;
-         typedef Eigen::Matrix<double,2,2> ErrValue;
+         typedef Eigen::Matrix<float,2,2> ErrValue;
      };
      struct Shape {
          typedef Key< Moments<double> > MeasKey;
-         typedef Key< Covariance< Moments<double> > > ErrKey;
+         typedef Key< Covariance< Moments<float> > > ErrKey;
          typedef lsst::afw::geom::ellipses::Quadrupole MeasValue;
-         typedef Eigen::Matrix<double,3,3> ErrValue;
+         typedef Eigen::Matrix<float,3,3> ErrValue;
      };
 }}}
 
