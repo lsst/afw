@@ -401,4 +401,3 @@
 %specializeArray(float, F)
 %specializeArray(double, D)
 %specializeCovariance(float, F)
-%specializeCovariance(double, D)
