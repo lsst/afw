@@ -92,6 +92,9 @@ struct FitsSchemaItem {
         case 'D':
             addFloatField<double>(schema, size);
             break;
+        case 'A': // strings
+            schema.addField<std::string>(name, doc, units, size);
+            break;
         default:
             // We throw if we encounter a column type we can't handle.
             // This raises probem when we want to save footprints as variable length arrays
@@ -347,6 +350,14 @@ struct FitsReader::ProcessRecords {
     void operator()(SchemaItem<T> const & item) const {
         if (col == flagCol) ++col;
         fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        ++col;
+    }
+
+    void operator()(SchemaItem<std::string> const & item) const {
+        if (col == flagCol) ++col;
+        std::string s;
+        fits->readTableScalar(row, col, s);
+        record->set(item.key, s);
         ++col;
     }
 

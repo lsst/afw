@@ -595,6 +595,74 @@ protected:
 
 };
 
+/**
+ *  @brief Field base class specialization for strings.
+ */
+template <>
+struct FieldBase< std::string > {
+
+    typedef std::string Value; ///< @brief the type returned by BaseRecord::get
+
+    /// @brief the type returned by BaseRecord::operator[]
+    typedef char * Reference;
+
+    /// @brief the type returned by BaseRecord::operator[] (const)
+    typedef char const * ConstReference;
+
+    typedef char Element;  ///< @brief the type of subfields and array elements
+
+    /**
+     *  @brief Construct a FieldBase with the given size.
+     *
+     *  This constructor is implicit and has an invalid default so it can be used in the Field
+     *  constructor (as if it were an int argument) without specializing Field.  In other words,
+     *  it allows one to construct a 25-character string field like this:
+     *  @code
+     *  Field< std::string >("name", "documentation", 25);
+     *  @endcode
+     *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
+     */
+    FieldBase(int size=-1);
+
+    /// @brief Return a string description of the field type.
+    static std::string getTypeString();
+
+    /// @brief Return the number of subfield elements (equal to the size of the string,
+    ///        including a null terminator).
+    int getElementCount() const { return _size; }
+
+    /// @brief Return the maximum length of the string, including a null terminator
+    ///        (equal to the number of subfield elements).
+    int getSize() const { return _size; }
+
+protected:
+
+    /// Needed to allow Keys to be default-constructed.
+    static FieldBase makeDefault() { return FieldBase(0); }
+
+    /// Defines how Fields are printed.
+    void stream(std::ostream & os) const { os << ", size=" << _size; }
+
+    /// Used to implement RecordBase::operator[] (non-const).
+    Reference getReference(Element * p, ndarray::Manager::Ptr const & m) const {
+        return p;
+    }
+
+    /// Used to implement RecordBase::operator[] (const).
+    ConstReference getConstReference(Element const * p, ndarray::Manager::Ptr const & m) const {
+        return p;
+    }
+
+    /// Used to implement RecordBase::get.
+    Value getValue(Element const * p, ndarray::Manager::Ptr const & m) const;
+
+    /// Used to implement RecordBase::set
+    void setValue(Element * p, ndarray::Manager::Ptr const &, std::string const & value) const;
+
+private:
+    int _size;
+};
+
 }}} // namespace lsst::afw::table
 
 #endif // !AFW_TABLE_FieldBase_h_INCLUDED
