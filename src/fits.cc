@@ -41,6 +41,8 @@ std::string strip(std::string const & s) {
 // ---- FITS binary table format codes for various C++ types. -----------------------------------------------
 
 char getFormatCode(bool*) { return 'X'; }
+char getFormatCode(std::string*) { return 'A'; }
+char getFormatCode(boost::int8_t*) { return 'S'; }
 char getFormatCode(boost::uint8_t*) { return 'B'; }
 char getFormatCode(boost::int16_t*) { return 'I'; }
 char getFormatCode(boost::uint16_t*) { return 'U'; }
@@ -73,6 +75,7 @@ std::string makeColumnFormat(int size = 1) {
 template <typename T> struct FitsType;
 
 template <> struct FitsType<bool> { static int const CONSTANT = TLOGICAL; };
+template <> struct FitsType<char> { static int const CONSTANT = TSTRING; };
 template <> struct FitsType<unsigned char> { static int const CONSTANT = TBYTE; };
 template <> struct FitsType<short> { static int const CONSTANT = TSHORT; };
 template <> struct FitsType<unsigned short> { static int const CONSTANT = TUSHORT; };
@@ -703,11 +706,29 @@ std::size_t Fits::countRows() {
 template <typename T>
 void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value) {
     fits_write_col(
-        reinterpret_cast<fitsfile*>(fptr), 
-        FitsTableType<T>::CONSTANT, 
-        col + 1, row + 1, 
+        reinterpret_cast<fitsfile*>(fptr),
+        FitsTableType<T>::CONSTANT,
+        col + 1, row + 1,
         1, nElements,
         const_cast<T*>(value),
+        &status
+    );
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Writing value at table cell (%d, %d)") % row % col);
+}
+
+void Fits::writeTableScalar(std::size_t row, int col, std::string const & value) {
+    // cfitsio doesn't let us specify the size of a string, it just looks for null terminator.
+    // Using std::string::c_str() guarantees that we have one.  But we can't store arbitrary
+    // data in a string field because cfitsio will also chop off anything after the first null
+    // terminator.
+    char const * tmp = value.c_str();
+    fits_write_col(
+        reinterpret_cast<fitsfile*>(fptr), 
+        TSTRING,
+        col + 1, row + 1,
+        1, 1,
+        const_cast<char const**>(&tmp),
         &status
     );
     if (behavior & AUTO_CHECK)
@@ -729,6 +750,29 @@ void Fits::readTableArray(std::size_t row, int col, int nElements, T * value) {
     );
     if (behavior & AUTO_CHECK)
         LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
+}
+
+void Fits::readTableScalar(std::size_t row, int col, std::string & value) {
+    int anynul = false;
+    long size = getTableArraySize(col);
+    // We can't directly write into a std::string (may be changing in C++11).
+    std::vector<char> buf(size+1, 0);
+    // cfitsio wants a char** because they imagine we might want an array of strings,
+    // but we only want one element.
+    char * tmp = &buf.front();
+    fits_read_col(
+        reinterpret_cast<fitsfile*>(fptr), 
+        TSTRING, 
+        col + 1, row + 1, 
+        1, 1,
+        0,
+        &tmp,
+        &anynul,
+        &status
+    );
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
+    value = std::string(tmp);
 }
 
 long Fits::getTableArraySize(int col) {
@@ -956,7 +1000,8 @@ void Fits::closeFile() {
 
 #define INSTANTIATE_TABLE_OPS(r, data, T)                               \
     template int Fits::addColumn<T>(std::string const & ttype, int size); \
-    template int Fits::addColumn<T>(std::string const & ttype, int size, std::string const & comment); \
+    template int Fits::addColumn<T>(std::string const & ttype, int size, std::string const & comment);
+#define INSTANTIATE_TABLE_ARRAY_OPS(r, data, T)                         \
     template void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value); \
     template void Fits::readTableArray(std::size_t row, int col, int nElements, T * value);
 
@@ -968,8 +1013,12 @@ void Fits::closeFile() {
     (bool)(unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
     (float)(double)(std::complex<float>)(std::complex<double>)(std::string)
 
-#define COLUMN_TYPES                            \
-    (bool)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
+#define COLUMN_TYPES                                                    \
+    (bool)(std::string)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
+    (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
+
+#define COLUMN_ARRAY_TYPES                                              \
+    (bool)(char)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
     (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define IMAGE_TYPES                                                     \
@@ -978,6 +1027,7 @@ void Fits::closeFile() {
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY_OPS, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_OPS, _, COLUMN_TYPES)
+BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_ARRAY_OPS, _, COLUMN_ARRAY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_IMAGE_OPS, _, IMAGE_TYPES)
 
 }}} // namespace lsst::afw::fits

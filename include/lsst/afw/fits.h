@@ -452,6 +452,9 @@ public:
     template <typename T>
     void writeTableScalar(std::size_t row, int col, T value) { writeTableArray(row, col, 1, &value); }
 
+    /// @brief Write a string to a binary table.
+    void writeTableScalar(std::size_t row, int col, std::string const & value);
+
     /// @brief Read an array value from a binary table.
     template <typename T>
     void readTableArray(std::size_t row, int col, int nElements, T * value);
@@ -459,7 +462,10 @@ public:
     /// @brief Read an array scalar from a binary table.
     template <typename T>
     void readTableScalar(std::size_t row, int col, T & value) { readTableArray(row, col, 1, &value); }
-    
+
+    /// @brief Read a string from a binary table.
+    void readTableScalar(std::size_t row, int col, std::string & value);
+
     /// @brief Return the size of an array column.
     long getTableArraySize(int col);
 
