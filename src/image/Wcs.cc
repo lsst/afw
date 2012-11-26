@@ -512,43 +512,6 @@ bool Wcs::_isSubset(Wcs const & rhs) const {
         *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
 }
 
-///Assignment operator    
-Wcs & Wcs::operator = (const Wcs & rhs){
-    if (this != &rhs) {
-        if (_nWcsInfo > 0) {
-            wcsvfree(&_nWcsInfo, &_wcsInfo);
-        }
-        _nWcsInfo = 0;
-        _wcsInfo = NULL;
-        _relax = rhs._relax;
-        _wcsfixCtrl = rhs._wcsfixCtrl;
-        _wcshdrCtrl = rhs._wcshdrCtrl;
-        _nReject = rhs._nReject;
-
-        if (rhs._nWcsInfo > 0) {
-            // allocate wcs structs
-            _wcsInfo = static_cast<struct wcsprm *>(calloc(1, sizeof(struct wcsprm)));
-            if (_wcsInfo == NULL) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
-            }
-            _wcsInfo->flag = -1;
-            _nWcsInfo = 1;
-
-            _wcsInfo[0].flag = -1;
-            int status = wcscopy(1, rhs._wcsInfo, _wcsInfo);
-            if (status != 0) {
-                wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                    (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
-                     status % wcs_errmsg[status]).str());
-            }
-        }
-    }
-    
-    return *this;
-}
-
-
 Wcs::~Wcs() {
     if (_wcsInfo != NULL) {
         wcsvfree(&_nWcsInfo, &_wcsInfo);
