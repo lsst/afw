@@ -56,7 +56,7 @@ private:
     }
 };
 
-RecordGeneratorWcsFactory registration("Simple");
+RecordGeneratorWcsFactory registration("Base");
 
 } // anonymous
 
@@ -69,7 +69,8 @@ Wcs::WcsRecordOutputGenerator::WcsRecordOutputGenerator(
 
 void Wcs::WcsRecordOutputGenerator::fill(afw::table::BaseRecord & record) {
     WcsSchema const & keys = WcsSchema::get();
-    record.set(keys.crval, _wcs->getSkyOrigin()->getPosition(afw::geom::degrees));
+    record.set(keys.crval.getX(), _wcs->_wcsInfo[0].crval[0]);
+    record.set(keys.crval.getY(), _wcs->_wcsInfo[0].crval[1]);
     record.set(keys.crpix, _wcs->getPixelOrigin());
     Eigen::Matrix2d cdIn = _wcs->getCDMatrix();
     Eigen::Map<Eigen::Matrix2d> cdOut(record[keys.cd].getData());
@@ -94,8 +95,6 @@ PTR(Wcs) RecordGeneratorWcsFactory::operator()(table::RecordInputGeneratorSet co
 
 bool Wcs::hasRecordPersistence() const {
     if (_wcsInfo[0].naxis != 2) return false;
-    if (std::strcmp(_wcsInfo[0].cunit[0], "deg") != 0) return false;
-    if (std::strcmp(_wcsInfo[0].cunit[1], "deg") != 0) return false;
     return true;
 }
 
@@ -106,7 +105,7 @@ table::RecordOutputGeneratorSet Wcs::writeToRecords() const {
             "Record persistence is not implemented for this Wcs"
         );
     }
-    afw::table::RecordOutputGeneratorSet result("Simple");
+    afw::table::RecordOutputGeneratorSet result("Base");
     result.generators.push_back(
         boost::make_shared<WcsRecordOutputGenerator>(*this, WcsSchema::get().schema, 1)
     );

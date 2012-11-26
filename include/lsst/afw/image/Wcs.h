@@ -473,6 +473,8 @@ Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool str
 Wcs::Ptr makeWcs(lsst::afw::coord::Coord const & crval, lsst::afw::geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
 
+#ifndef SWIG
+
 class Wcs::WcsRecordOutputGenerator : public afw::table::RecordOutputGenerator {
 public:
     
@@ -484,7 +486,7 @@ protected:
     Wcs const * _wcs;
 };
 
-
+#endif // !SWIG
 
 }}} // lsst::afw::image
 
