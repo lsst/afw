@@ -116,6 +116,15 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image1.get0(3,4), self.val1)
         self.assertEqual(self.image1.get(0,0), self.val1)
 
+    def testAllocateLargeImages(self):
+        """Try to allocate a Very large image"""
+        bbox = afwGeom.BoxI(afwGeom.PointI(-1<<30, -1<<30), afwGeom.PointI(1<<30, 1<<30))
+
+        def tst():
+            im = afwImage.ImageF(bbox)
+
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
+
     def testAddImages(self):
         self.image2 += self.image1
         self.image1 += self.val1

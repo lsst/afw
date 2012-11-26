@@ -52,7 +52,13 @@ template <typename PixelT>
 typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateView(
     geom::Extent2I const & dimensions,
     Manager::Ptr & manager
-) {    
+) {
+    if (dimensions.getX() < 0 || dimensions.getY() < 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          str(boost::format("Both width and height must be non-negative: %d, %d")
+                              % dimensions.getX() % dimensions.getY()));
+    }
+
     std::pair<Manager::Ptr,PixelT*> r = ndarray::SimpleManager<PixelT>::allocate(
         dimensions.getX() * dimensions.getY()
     );
