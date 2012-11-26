@@ -224,51 +224,6 @@ bool TanWcs::_isSubset(Wcs const & rhs) const {
     return true;
 }
 
-TanWcs & TanWcs::operator = (const TanWcs & rhs){
-    if (this != &rhs) {
-
-        if (_nWcsInfo > 0) {
-            wcsvfree(&_nWcsInfo, &_wcsInfo);
-        }
-        _nWcsInfo = 0;
-        _wcsInfo = NULL;
-        _relax = rhs._relax;
-        _wcsfixCtrl = rhs._wcsfixCtrl;
-        _wcshdrCtrl = rhs._wcshdrCtrl;
-        _nReject = rhs._nReject;
-
-        if (rhs._nWcsInfo > 0) {
-            // allocate wcs structs
-            _wcsInfo = static_cast<struct wcsprm *>(calloc(1, sizeof(struct wcsprm)));
-            if (_wcsInfo == NULL) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
-            }
-            _wcsInfo->flag = -1;
-            _nWcsInfo = 1;
-
-            _wcsInfo[0].flag = -1;
-            int status = wcscopy(1, rhs._wcsInfo, _wcsInfo);
-            if (status != 0) {
-                wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                    (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
-                     status % wcs_errmsg[status]).str());
-            }
-        }
-
-        _hasDistortion = false;
-        if (rhs._hasDistortion) {
-            _hasDistortion = true;
-            _sipA = rhs._sipA;
-            _sipB = rhs._sipB;
-            _sipAp = rhs._sipAp;
-            _sipBp = rhs._sipBp;
-        }
-    }
-
-    return *this;
-}
-
 PTR(Wcs) TanWcs::clone(void) const {
     return PTR(Wcs)(new TanWcs(*this));
 }
