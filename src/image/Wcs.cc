@@ -1110,6 +1110,8 @@ namespace lsst {
 namespace afw {
 namespace image {
 
+// Note that writeToRecords and readFromRecords are implemented in RecordGeneratorWcsFactory.
+
 void Wcs::writeFitsTables(
     std::string const & filename,
     CONST_PTR(daf::base::PropertySet) metadata,
@@ -1130,7 +1132,7 @@ void Wcs::writeFitsTables(
 
 void Wcs::writeFitsTables(afw::fits::Fits & fitsfile, CONST_PTR(daf::base::PropertySet) metadata) const {
     afw::table::RecordOutputGeneratorSet outputs = writeToRecords();
-    outputs.writeFits(fitsfile, "PSF", metadata);
+    outputs.writeFits(fitsfile, "WCS", metadata);
 }
 
 PTR(Wcs) Wcs::readFitsTables(std::string const & filename, int hdu, PTR(daf::base::PropertySet) metadata) {

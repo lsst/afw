@@ -281,7 +281,7 @@ public:
     ///@{
 
     /// @brief Return true if the writeToRecords() and readFromRecords() methods are supported for this Wcs.
-    virtual bool hasRecordPersistence() const { return false; }
+    virtual bool hasRecordPersistence() const;
 
 #ifndef SWIG // only expose high-level interface to Python
 
@@ -402,12 +402,20 @@ private:
 
 protected:
 
+    // Inner class used for record persistence, defined here so subclasses of Wcs can subclass it.
+    class WcsRecordOutputGenerator;
+
+    friend class RecordGeneratorWcsFactory;
+
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.
     Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
+
+    // Constructor used in record persistence, implemented in RecordGeneratorWcsFactory.cc
+    Wcs(afw::table::BaseRecord const & record);
     
     Wcs(lsst::afw::image::Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
@@ -451,7 +459,11 @@ namespace detail {
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
     
     geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
-}
+
+    int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
+                         CONST_PTR(Wcs) const& wcs ///< A Wcs with (implied) keywords
+                        );
+} // namespace detail
 
 Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool stripMetadata=false);
 
@@ -460,12 +472,19 @@ Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool str
  */
 Wcs::Ptr makeWcs(lsst::afw::coord::Coord const & crval, lsst::afw::geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
+
+class Wcs::WcsRecordOutputGenerator : public afw::table::RecordOutputGenerator {
+public:
     
-namespace detail {
-    int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
-                         CONST_PTR(Wcs) const& wcs ///< A Wcs with (implied) keywords
-                        );
-}
+    virtual void fill(afw::table::BaseRecord & record);
+
+    WcsRecordOutputGenerator(Wcs const & wcs, afw::table::Schema const & schema, int recordCount);
+
+protected:
+    Wcs const * _wcs;
+};
+
+
 
 }}} // lsst::afw::image
 

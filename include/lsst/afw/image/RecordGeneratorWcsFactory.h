@@ -19,7 +19,7 @@ public:
 
     explicit RecordGeneratorWcsFactory(std::string const & name);
 
-    virtual PTR(Wcs) operator()(table::RecordInputGeneratorSet const & inputs) const = 0;
+    virtual PTR(Wcs) operator()(table::RecordInputGeneratorSet const & inputs) const;
 
     virtual ~RecordGeneratorWcsFactory() {}
 
