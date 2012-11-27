@@ -491,10 +491,6 @@ bool Wcs::_isSubset(Wcs const & rhs) const {
     CHECK_NULLS(_wcsInfo->cunit, rhs._wcsInfo->cunit);
     CHECK_NULLS(_wcsInfo->ctype, rhs._wcsInfo->ctype);
     return _nWcsInfo == rhs._nWcsInfo &&
-        _relax == rhs._relax &&
-        _wcsfixCtrl == rhs._wcsfixCtrl &&
-        _wcshdrCtrl == rhs._wcshdrCtrl &&
-        _nReject == rhs._nReject &&
         _coordSystem == rhs._coordSystem &&
         _wcsInfo->naxis == rhs._wcsInfo->naxis &&
         _wcsInfo->equinox == rhs._wcsInfo->equinox &&
