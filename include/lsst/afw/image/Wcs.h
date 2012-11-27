@@ -302,7 +302,7 @@ public:
      *  @brief Create a Wcs from one or more RecordInputGenerators.
      *
      *  The records should have been created by writeToRecords.  This is implemented by
-     *  WcsRecordFactory.
+     *  WcsRecordGeneratorFactory.
      */
     static PTR(Wcs) readFromRecords(afw::table::RecordInputGeneratorSet const & inputs);
 
@@ -405,7 +405,7 @@ protected:
     // Inner class used for record persistence, defined here so subclasses of Wcs can subclass it.
     friend class WcsRecordOutputGenerator;
 
-    friend class WcsRecordFactory;
+    friend class WcsRecordGeneratorFactory;
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
@@ -414,7 +414,7 @@ protected:
     //This is protected because the derived classes need to be able to see it.
     Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
 
-    // Constructor used in record persistence, implemented in WcsRecordFactory.cc
+    // Constructor used in record persistence, implemented in WcsRecordGeneratorFactory.cc
     Wcs(afw::table::BaseRecord const & record);
     
     Wcs(lsst::afw::image::Wcs const & rhs);

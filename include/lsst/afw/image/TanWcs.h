@@ -167,7 +167,7 @@ private:
 
     friend Wcs::Ptr makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
 
-    friend class TanWcsRecordFactory;;
+    friend class TanWcsRecordGeneratorFactory;;
 
     friend class TanWcsRecordOutputGenerator;
 
