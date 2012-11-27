@@ -60,27 +60,36 @@ RecordGeneratorWcsFactory registration("Base");
 
 } // anonymous
 
-Wcs::WcsRecordOutputGenerator::WcsRecordOutputGenerator(
-    Wcs const & wcs, afw::table::Schema const & schema, int recordCount
-) :
-    afw::table::RecordOutputGenerator(schema, recordCount),
-    _wcs(&wcs)
-{}
+class WcsRecordOutputGenerator : public table::RecordOutputGenerator {
+public:
 
-void Wcs::WcsRecordOutputGenerator::fill(afw::table::BaseRecord & record) {
-    WcsSchema const & keys = WcsSchema::get();
-    record.set(keys.crval.getX(), _wcs->_wcsInfo[0].crval[0]);
-    record.set(keys.crval.getY(), _wcs->_wcsInfo[0].crval[1]);
-    record.set(keys.crpix, _wcs->getPixelOrigin());
-    Eigen::Matrix2d cdIn = _wcs->getCDMatrix();
-    Eigen::Map<Eigen::Matrix2d> cdOut(record[keys.cd].getData());
-    cdOut = cdIn;
-    record.set(keys.ctype1, std::string(_wcs->_wcsInfo[0].ctype[0]));
-    record.set(keys.ctype2, std::string(_wcs->_wcsInfo[0].ctype[1]));
-    record.set(keys.equinox, _wcs->_wcsInfo[0].equinox);
-    record.set(keys.radesys, std::string(_wcs->_wcsInfo[0].radesys));
-    record.set(keys.cunit1, std::string(_wcs->_wcsInfo[0].cunit[0]));
-    record.set(keys.cunit2, std::string(_wcs->_wcsInfo[0].cunit[1]));
+    WcsRecordOutputGenerator(Wcs const & wcs, table::Schema const & schema, int recordCount) :
+        table::RecordOutputGenerator(schema, recordCount),
+        _wcs(&wcs)
+        {}
+    
+    virtual void fill(table::BaseRecord & record) {
+        WcsSchema const & keys = WcsSchema::get();
+        record.set(keys.crval.getX(), _wcs->_wcsInfo[0].crval[0]);
+        record.set(keys.crval.getY(), _wcs->_wcsInfo[0].crval[1]);
+        record.set(keys.crpix, _wcs->getPixelOrigin());
+        Eigen::Matrix2d cdIn = _wcs->getCDMatrix();
+        Eigen::Map<Eigen::Matrix2d> cdOut(record[keys.cd].getData());
+        cdOut = cdIn;
+        record.set(keys.ctype1, std::string(_wcs->_wcsInfo[0].ctype[0]));
+        record.set(keys.ctype2, std::string(_wcs->_wcsInfo[0].ctype[1]));
+        record.set(keys.equinox, _wcs->_wcsInfo[0].equinox);
+        record.set(keys.radesys, std::string(_wcs->_wcsInfo[0].radesys));
+        record.set(keys.cunit1, std::string(_wcs->_wcsInfo[0].cunit[0]));
+        record.set(keys.cunit2, std::string(_wcs->_wcsInfo[0].cunit[1]));
+    }
+
+protected:
+    Wcs const * _wcs;
+};
+
+table::Schema RecordGeneratorWcsFactory::getSchema() {
+    return WcsSchema::get().schema;
 }
 
 RecordGeneratorWcsFactory::RecordGeneratorWcsFactory(std::string const & name) {
@@ -122,6 +131,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
     _nReject(0),
     _coordSystem(static_cast<afw::coord::CoordSystem>(-1))
 {
+    _setWcslibParams();
     WcsSchema const & keys = WcsSchema::get();
     if (!record.getSchema().contains(keys.schema)) {
         throw LSST_EXCEPT(
@@ -129,7 +139,6 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
             "Incorrect schema for Wcs persistence"
         );
     }
-    _setWcslibParams();
     Eigen::Matrix2d cd = Eigen::Map<Eigen::Matrix2d const>(record[keys.cd].getData());
     initWcsLib(
         record.get(keys.crval), record.get(keys.crpix), cd,

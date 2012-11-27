@@ -39,6 +39,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/RecordGeneratorWcsFactory.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -416,5 +417,139 @@ void TanWcs::setDistortionMatrices(
     _sipAp = sipAp;
     _sipBp = sipBp;
 }
+
+// -------------- Record Persistence ------------------------------------------------------------------------
+
+/*
+ *  We use the Wcs base class persistence to write one table, and then add another containing
+ *  the SIP coefficients only if hasDistortion() is true.
+ *
+ *  The second table's schema depends on the SIP orders, so it will not necessarily be the same
+ *  for all TanWcs objects.
+ */
+class TanWcsRecordOutputGenerator : public table::RecordOutputGenerator {
+public:
+
+    TanWcsRecordOutputGenerator(TanWcs const & wcs) :
+        table::RecordOutputGenerator(table::Schema(), 1),
+        _wcs(&wcs),
+        _keyA(_schema.addField< table::Array<double> >(
+                  "A", "x forward transform coefficients (column-major)", _wcs->_sipA.size()
+              )),
+        _keyB(_schema.addField< table::Array<double> >(
+                  "B", "y forward transform coefficients (column-major)", _wcs->_sipB.size()
+              )),
+        _keyAp(_schema.addField< table::Array<double> >(
+                   "Ap", "x reverse transform coefficients (column-major)", _wcs->_sipAp.size()
+               )),
+        _keyBp(_schema.addField< table::Array<double> >(
+                   "Bp", "y reverse transform coefficients (column-major)", _wcs->_sipBp.size()
+               ))
+        {}
+
+    virtual void fill(table::BaseRecord & record) {
+        Eigen::Map<Eigen::MatrixXd> mapA(record[_keyA].getData(), _wcs->_sipA.rows(), _wcs->_sipA.cols());
+        mapA = _wcs->_sipA;
+        Eigen::Map<Eigen::MatrixXd> mapB(record[_keyB].getData(), _wcs->_sipB.rows(), _wcs->_sipB.cols());
+        mapB = _wcs->_sipB;
+        Eigen::Map<Eigen::MatrixXd> mapAp(record[_keyAp].getData(), _wcs->_sipAp.rows(), _wcs->_sipAp.cols());
+        mapAp = _wcs->_sipAp;
+        Eigen::Map<Eigen::MatrixXd> mapBp(record[_keyBp].getData(), _wcs->_sipBp.rows(), _wcs->_sipBp.cols());
+        mapBp = _wcs->_sipBp;
+    }
+
+private:
+    TanWcs const * _wcs;
+    table::Key< table::Array<double> > _keyA;
+    table::Key< table::Array<double> > _keyB;
+    table::Key< table::Array<double> > _keyAp;
+    table::Key< table::Array<double> > _keyBp;
+};
+
+afw::table::RecordOutputGeneratorSet TanWcs::writeToRecords() const {
+    afw::table::RecordOutputGeneratorSet result = Wcs::writeToRecords();
+    result.name = "TAN";
+    if (hasDistortion()) {
+        result.generators.push_back(
+            boost::make_shared<TanWcsRecordOutputGenerator>(*this)
+        );
+    }
+    return result;
+}
+
+class TanWcsRecordGeneratorWcsFactory : public RecordGeneratorWcsFactory {
+public:
+
+    explicit TanWcsRecordGeneratorWcsFactory(std::string const & name) :
+        RecordGeneratorWcsFactory(name) {}
+
+    virtual PTR(Wcs) operator()(table::RecordInputGeneratorSet const & inputs) const {
+        CONST_PTR(table::BaseRecord) sipRecord;
+        if (inputs.generators.size() > 1u) {
+            sipRecord = inputs.generators.back()->next();
+        }
+        PTR(Wcs) result(new TanWcs(*inputs.generators.front()->next(), sipRecord));
+        return result;
+    }
+};
+
+TanWcs::TanWcs(
+    afw::table::BaseRecord const & mainRecord,
+    CONST_PTR(afw::table::BaseRecord) sipRecord
+) : Wcs(mainRecord), _hasDistortion(sipRecord)
+{
+    if (_hasDistortion) {
+        typedef afw::table::Array<double> T;
+        afw::table::SchemaItem<T> sA = sipRecord->getSchema().find<T>("A");
+        afw::table::SchemaItem<T> sB = sipRecord->getSchema().find<T>("B");
+        afw::table::SchemaItem<T> sAp = sipRecord->getSchema().find<T>("Ap");
+        afw::table::SchemaItem<T> sBp = sipRecord->getSchema().find<T>("Bp");
+        // Adding 0.5 and truncating the result here guarantees we'll get the right answer
+        // for small ints even when round-off error is involved.
+        int nA = int(std::sqrt(sA.field.getSize() + 0.5));
+        int nB = int(std::sqrt(sB.field.getSize() + 0.5));
+        int nAp = int(std::sqrt(sAp.field.getSize() + 0.5));
+        int nBp = int(std::sqrt(sBp.field.getSize() + 0.5));
+        if (nA * nA != sA.field.getSize()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeErrorException,
+                "Forward X SIP matrix is not square."
+            );
+        }
+        if (nB * nB != sB.field.getSize()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeErrorException,
+                "Forward Y SIP matrix is not square."
+            );
+        }
+        if (nAp * nAp != sAp.field.getSize()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeErrorException,
+                "Reverse X SIP matrix is not square."
+            );
+        }
+        if (nBp * nBp != sBp.field.getSize()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeErrorException,
+                "Reverse Y SIP matrix is not square."
+            );
+        }
+        Eigen::Map<Eigen::MatrixXd const> mapA((*sipRecord)[sA.key].getData(), nA, nA);
+        _sipA = mapA;
+        Eigen::Map<Eigen::MatrixXd const> mapB((*sipRecord)[sB.key].getData(), nB, nB);
+        _sipB = mapB;
+        Eigen::Map<Eigen::MatrixXd const> mapAp((*sipRecord)[sAp.key].getData(), nAp, nAp);
+        _sipAp = mapAp;
+        Eigen::Map<Eigen::MatrixXd const> mapBp((*sipRecord)[sBp.key].getData(), nBp, nBp);
+        _sipBp = mapBp;
+    }
+}
+
+
+namespace {
+
+TanWcsRecordGeneratorWcsFactory registration("TAN");
+
+} // anonymous
 
 }}} // namespace lsst::afw::image

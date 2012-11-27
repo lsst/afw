@@ -167,6 +167,12 @@ private:
 
     friend Wcs::Ptr makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
 
+    friend class TanWcsRecordGeneratorWcsFactory;;
+
+    friend class TanWcsRecordOutputGenerator;
+
+    virtual afw::table::RecordOutputGeneratorSet writeToRecords() const;
+
     virtual bool _isSubset(Wcs const &) const;
 
     /*
@@ -178,6 +184,11 @@ private:
     TanWcs(CONST_PTR(daf::base::PropertySet) const & fitsMetadata);
 
     TanWcs(TanWcs const & rhs);
+
+    explicit TanWcs(
+        afw::table::BaseRecord const & mainRecord,
+        CONST_PTR(afw::table::BaseRecord) sipRecord
+    );
 
     TanWcs & operator = (const TanWcs &);
 

@@ -403,7 +403,7 @@ private:
 protected:
 
     // Inner class used for record persistence, defined here so subclasses of Wcs can subclass it.
-    class WcsRecordOutputGenerator;
+    friend class WcsRecordOutputGenerator;
 
     friend class RecordGeneratorWcsFactory;
 
@@ -472,21 +472,6 @@ Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool str
  */
 Wcs::Ptr makeWcs(lsst::afw::coord::Coord const & crval, lsst::afw::geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
-
-#ifndef SWIG
-
-class Wcs::WcsRecordOutputGenerator : public afw::table::RecordOutputGenerator {
-public:
-    
-    virtual void fill(afw::table::BaseRecord & record);
-
-    WcsRecordOutputGenerator(Wcs const & wcs, afw::table::Schema const & schema, int recordCount);
-
-protected:
-    Wcs const * _wcs;
-};
-
-#endif // !SWIG
 
 }}} // lsst::afw::image
 

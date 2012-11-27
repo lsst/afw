@@ -17,8 +17,13 @@ class Wcs;
 class RecordGeneratorWcsFactory : private boost::noncopyable {
 public:
 
+    /// Return the (immutable) schema used by the base class implementation.
+    static table::Schema getSchema();
+
+    /// Construct a factory and register it in the singleton registry.
     explicit RecordGeneratorWcsFactory(std::string const & name);
 
+    /// Use the factory to create a Wcs object.
     virtual PTR(Wcs) operator()(table::RecordInputGeneratorSet const & inputs) const;
 
     virtual ~RecordGeneratorWcsFactory() {}
