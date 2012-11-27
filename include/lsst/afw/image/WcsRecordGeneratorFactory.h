@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_IMAGE_RecordGeneratorWcsFactory_h_INCLUDED
-#define AFW_IMAGE_RecordGeneratorWcsFactory_h_INCLUDED
+#ifndef AFW_IMAGE_WcsRecordFactory_h_INCLUDED
+#define AFW_IMAGE_WcsRecordFactory_h_INCLUDED
 
 #include "lsst/afw/table/generators.h"
 
@@ -14,22 +14,22 @@ class Wcs;
  *  Subclasses should be instantiated in a file scope variable exactly once; the base class constructor
  *  will then add that factory to the singleton registry.
  */
-class RecordGeneratorWcsFactory : private boost::noncopyable {
+class WcsRecordFactory : private boost::noncopyable {
 public:
 
     /// Return the (immutable) schema used by the base class implementation.
     static table::Schema getSchema();
 
     /// Construct a factory and register it in the singleton registry.
-    explicit RecordGeneratorWcsFactory(std::string const & name);
+    explicit WcsRecordFactory(std::string const & name);
 
     /// Use the factory to create a Wcs object.
     virtual PTR(Wcs) operator()(table::RecordInputGeneratorSet const & inputs) const;
 
-    virtual ~RecordGeneratorWcsFactory() {}
+    virtual ~WcsRecordFactory() {}
 
 };
 
 }}} // namespace lsst::afw::image
 
-#endif // !AFW_IMAGE_RecordGeneratorWcsFactory_h_INCLUDED
+#endif // !AFW_IMAGE_WcsRecordFactory_h_INCLUDED

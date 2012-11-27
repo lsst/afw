@@ -158,7 +158,7 @@ public:
      *  @brief Create a Psf from one or more RecordInputGenerators.
      *
      *  The records should have been created by writeToRecords.  This is used to implement
-     *  persisting a Psf to FITS, and is itself implemented by RecordGeneratorPsfFactory.
+     *  persisting a Psf to FITS, and is itself implemented by PsfRecordGeneratorFactory.
      */
     static PTR(Psf) readFromRecords(afw::table::RecordInputGeneratorSet const & inputs);
 

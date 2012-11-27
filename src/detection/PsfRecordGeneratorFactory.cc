@@ -3,14 +3,14 @@
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/detection/RecordGeneratorPsfFactory.h"
+#include "lsst/afw/detection/PsfRecordGeneratorFactory.h"
 #include "lsst/afw/detection/Psf.h"
 
 namespace lsst { namespace afw { namespace detection {
 
 namespace {
 
-typedef std::map<std::string,RecordGeneratorPsfFactory*> Registry;
+typedef std::map<std::string,PsfRecordGeneratorFactory*> Registry;
 
 Registry & getRegistry() {
     static Registry registry;
@@ -19,7 +19,7 @@ Registry & getRegistry() {
 
 } // anonymous
 
-RecordGeneratorPsfFactory::RecordGeneratorPsfFactory(std::string const & name) {
+PsfRecordGeneratorFactory::PsfRecordGeneratorFactory(std::string const & name) {
     getRegistry()[name] = this;
 }
 
@@ -35,7 +35,7 @@ PTR(Psf) Psf::readFromRecords(afw::table::RecordInputGeneratorSet const & inputs
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
             pex::exceptions::LogicErrorException,
-            boost::str(boost::format("No RecordGeneratorPsfFactory with name '%s'") % inputs.name)
+            boost::str(boost::format("No PsfRecordGeneratorFactory with name '%s'") % inputs.name)
         );
     }
     return (*i->second)(inputs);

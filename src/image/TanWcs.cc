@@ -39,7 +39,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"
-#include "lsst/afw/image/RecordGeneratorWcsFactory.h"
+#include "lsst/afw/image/WcsRecordFactory.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -477,11 +477,11 @@ afw::table::RecordOutputGeneratorSet TanWcs::writeToRecords() const {
     return result;
 }
 
-class TanWcsRecordGeneratorWcsFactory : public RecordGeneratorWcsFactory {
+class TanWcsRecordFactory : public WcsRecordFactory {
 public:
 
-    explicit TanWcsRecordGeneratorWcsFactory(std::string const & name) :
-        RecordGeneratorWcsFactory(name) {}
+    explicit TanWcsRecordFactory(std::string const & name) :
+        WcsRecordFactory(name) {}
 
     virtual PTR(Wcs) operator()(table::RecordInputGeneratorSet const & inputs) const {
         CONST_PTR(table::BaseRecord) sipRecord;
@@ -548,7 +548,7 @@ TanWcs::TanWcs(
 
 namespace {
 
-TanWcsRecordGeneratorWcsFactory registration("TAN");
+TanWcsRecordFactory registration("TAN");
 
 } // anonymous
 

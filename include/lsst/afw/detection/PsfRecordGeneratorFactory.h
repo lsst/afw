@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef AFW_DETECTION_RecordGeneratorPsfFactory_h_INCLUDED
-#define AFW_DETECTION_RecordGeneratorPsfFactory_h_INCLUDED
+#ifndef AFW_DETECTION_PsfRecordGeneratorFactory_h_INCLUDED
+#define AFW_DETECTION_PsfRecordGeneratorFactory_h_INCLUDED
 
 #include "lsst/afw/table/generators.h"
 
@@ -14,17 +14,17 @@ class Psf;
  *  Subclasses should be instantiated in a file scope variable exactly once; the base class constructor
  *  will then add that factory to the singleton registry.
  */
-class RecordGeneratorPsfFactory : private boost::noncopyable {
+class PsfRecordGeneratorFactory : private boost::noncopyable {
 public:
 
-    explicit RecordGeneratorPsfFactory(std::string const & name);
+    explicit PsfRecordGeneratorFactory(std::string const & name);
 
     virtual PTR(Psf) operator()(table::RecordInputGeneratorSet const & inputs) const = 0;
 
-    virtual ~RecordGeneratorPsfFactory() {}
+    virtual ~PsfRecordGeneratorFactory() {}
 
 };
 
 }}} // namespace lsst::afw::detection
 
-#endif // !AFW_DETECTION_RecordGeneratorPsfFactory_h_INCLUDED
+#endif // !AFW_DETECTION_PsfRecordGeneratorFactory_h_INCLUDED

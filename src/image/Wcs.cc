@@ -1069,7 +1069,7 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-// Note that writeToRecords and readFromRecords are implemented in RecordGeneratorWcsFactory.
+// Note that writeToRecords and readFromRecords are implemented in WcsRecordFactory.
 
 void Wcs::writeFitsTables(
     std::string const & filename,

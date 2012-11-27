@@ -5,14 +5,14 @@
 #include "wcslib/wcs.h"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/image/RecordGeneratorWcsFactory.h"
+#include "lsst/afw/image/WcsRecordFactory.h"
 #include "lsst/afw/image/Wcs.h"
 
 namespace lsst { namespace afw { namespace image {
 
 namespace {
 
-typedef std::map<std::string,RecordGeneratorWcsFactory*> Registry;
+typedef std::map<std::string,WcsRecordFactory*> Registry;
 
 Registry & getRegistry() {
     static Registry registry;
@@ -56,7 +56,7 @@ private:
     }
 };
 
-RecordGeneratorWcsFactory registration("Base");
+WcsRecordFactory registration("Base");
 
 } // anonymous
 
@@ -88,15 +88,15 @@ protected:
     Wcs const * _wcs;
 };
 
-table::Schema RecordGeneratorWcsFactory::getSchema() {
+table::Schema WcsRecordFactory::getSchema() {
     return WcsSchema::get().schema;
 }
 
-RecordGeneratorWcsFactory::RecordGeneratorWcsFactory(std::string const & name) {
+WcsRecordFactory::WcsRecordFactory(std::string const & name) {
     getRegistry()[name] = this;
 }
 
-PTR(Wcs) RecordGeneratorWcsFactory::operator()(table::RecordInputGeneratorSet const & inputs) const {
+PTR(Wcs) WcsRecordFactory::operator()(table::RecordInputGeneratorSet const & inputs) const {
     CONST_PTR(afw::table::BaseRecord) record = inputs.generators.front()->next();
     PTR(Wcs) result(new Wcs(*record));
     return result;
@@ -154,7 +154,7 @@ PTR(Wcs) Wcs::readFromRecords(afw::table::RecordInputGeneratorSet const & inputs
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
             pex::exceptions::LogicErrorException,
-            boost::str(boost::format("No RecordGeneratorWcsFactory with name '%s'") % inputs.name)
+            boost::str(boost::format("No WcsRecordFactory with name '%s'") % inputs.name)
         );
     }
     return (*i->second)(inputs);

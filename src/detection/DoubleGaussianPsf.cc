@@ -2,7 +2,7 @@
 #include <cmath>
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/DoubleGaussianPsf.h"
-#include "lsst/afw/detection/RecordGeneratorPsfFactory.h"
+#include "lsst/afw/detection/PsfRecordGeneratorFactory.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/ImageUtils.h"
 
@@ -92,7 +92,7 @@ private:
     DoubleGaussianPsf const * _psf;
 };
 
-class DoubleGaussianPsfRecordGeneratorPsfFactory : public RecordGeneratorPsfFactory {
+class DoubleGaussianPsfRecordGeneratorFactory : public PsfRecordGeneratorFactory {
 public:
 
     virtual PTR(Psf) operator()(table::RecordInputGeneratorSet const & inputs) const {
@@ -113,11 +113,11 @@ public:
         );
     }
 
-    DoubleGaussianPsfRecordGeneratorPsfFactory(std::string const & name) : RecordGeneratorPsfFactory(name) {}
+    DoubleGaussianPsfRecordGeneratorFactory(std::string const & name) : PsfRecordGeneratorFactory(name) {}
 
 };
 
-DoubleGaussianPsfRecordGeneratorPsfFactory registration("DoubleGaussian");
+DoubleGaussianPsfRecordGeneratorFactory registration("DoubleGaussian");
 
 } // anonymous
 
