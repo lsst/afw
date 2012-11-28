@@ -158,12 +158,18 @@ public:
     // Destructor defined in source file because we need access to destructors of forward-declared components
     ~ExposureInfo();
 
+#ifndef SWIG
+
     /**
      *  @brief A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
      *
      *  FITS has to start with ExposureInfo (for header info), then go to Exposure (to write the templated
      *  MaskedImage), and then go back to ExposureInfo (for table-persisted Psf and Wcs), and this
      *  struct is used to allow data to be passed from step 1 to step 3.
+     *
+     *  @note I could have made this (and the rest of persistence for ExposureInfo) private and friended
+     *        Exposure, but it may be that other classes besides Exposure may want to carry around an
+     *        ExposureInfo in the future, and there's really no harm in making it public.
      */
     struct FitsWriteData {
         PTR(daf::base::PropertyList) metadata;
@@ -180,6 +186,8 @@ public:
      *
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to
      *                    install a linear offset-only WCS in the FITS header.
+     *
+     *  @sa FitsWriteData
      */
     FitsWriteData startWriteFits(geom::Point2I const & xy0=geom::Point2I()) const;
 
@@ -192,6 +200,8 @@ public:
      *  The additional HDUs will be appended to the FITS file, and should line up with the HDU index
      *  keys included in the result of getFitsMetadata() if this is called after writing the
      *  MaskedImage HDUs.
+     *
+     *  @sa FitsWriteData
      */
     void finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & datax) const;
 
@@ -207,6 +217,8 @@ public:
         PTR(daf::base::PropertySet) metadata,
         PTR(daf::base::PropertySet) imageMetadata
     );
+
+#endif
 
 private:
 
