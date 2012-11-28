@@ -63,6 +63,8 @@ public:
 
     double getB() const { return _b; }
 
+    virtual bool hasRecordPersistence() const { return true; }
+
     /**
      *  @brief Return objects that allow the Psf to be written to one or more RecordOutputGenerators.
      *
