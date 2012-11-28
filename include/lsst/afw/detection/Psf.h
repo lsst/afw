@@ -166,23 +166,15 @@ public:
      *  @brief Write the Psf to an already-open FITS object.
      *
      *  @param[in] fitsfile     Open FITS object to write to.
-     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
      */
-    void writeFits(
-        fits::Fits & fitsfile,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
-    ) const;
+    void writeFits(fits::Fits & fitsfile) const;
 
     /**
      *  @brief Read a Psf from an already open FITS object.
      *
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
-     *  @param[out] metadata     Additional metadata read from the header (may be null).
      */
-    static PTR(Psf) readFits(
-        fits::Fits & fitsfile,
-        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
-    );
+    static PTR(Psf) readFits(fits::Fits & fitsfile);
 
 #endif // !SWIG
 
@@ -190,29 +182,19 @@ public:
      *  @brief Write the Psf to a regular FITS file.
      *
      *  @param[in] fileName     Name of the file to write to.
-     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
      *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
      *                          "a", new HDUs will be appended to an existing file.
      */
-    void writeFits(
-        std::string const & fileName,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const & mode="w"
-    ) const;
+    void writeFits(std::string const & fileName, std::string const & mode="w") const;
 
     /**
      *  @brief Write the Psf to a FITS image in memory.
      *
      *  @param[in] manager      Name of the file to write to.
-     *  @param[in] metadata     Additional metadata to write to the first extension. May be null.
      *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
      *                          "a", new HDUs will be appended to an existing file.
      */
-    void writeFits(
-        fits::MemFileManager & manager,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const & mode="w"
-    ) const;
+    void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const;
 
     /**
      *  @brief Read a Psf from a regular FITS file.
@@ -220,12 +202,8 @@ public:
      *  @param[in]  fileName     Name of the file to read.
      *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
      *                           skips the primary HDU if it is empty.
-     *  @param[out] metadata     Additional metadata read from the header (may be null).
      */
-    static PTR(Psf) readFits(
-        std::string const & fileName, int hdu=0,
-        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
-    );
+    static PTR(Psf) readFits(std::string const & fileName, int hdu=0);
 
     /**
      *  @brief Read a Psf from a FITS file in memory.
@@ -233,12 +211,8 @@ public:
      *  @param[in]  manager      Manager for the memory to read from.
      *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
      *                           skips the primary HDU if it is empty.
-     *  @param[out] metadata     Additional metadata read from the header (may be null).
      */
-    static PTR(Psf) readFits(
-        fits::MemFileManager & manager, int hdu=0,
-        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
-    );
+    static PTR(Psf) readFits(fits::MemFileManager & manager, int hdu=0);
 
     ///@}
 

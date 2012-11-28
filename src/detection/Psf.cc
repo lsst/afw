@@ -339,43 +339,35 @@ namespace {
 }
 // \endcond
 
-void Psf::writeFits(
-    std::string const & filename,
-    CONST_PTR(daf::base::PropertySet) metadata,
-    std::string const & mode
-) const {
+void Psf::writeFits(std::string const & filename, std::string const & mode) const {
     afw::fits::Fits fitsfile(filename, mode, afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
-    writeFits(fitsfile, metadata);
+    writeFits(fitsfile);
 }
 
-void Psf::writeFits(
-    afw::fits::MemFileManager & manager,
-    CONST_PTR(daf::base::PropertySet) metadata,
-    std::string const & mode
-) const {
+void Psf::writeFits(afw::fits::MemFileManager & manager, std::string const & mode) const {
     afw::fits::Fits fitsfile(manager, mode, afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
-    writeFits(fitsfile, metadata);
+    writeFits(fitsfile);
 }
 
-void Psf::writeFits(afw::fits::Fits & fitsfile, CONST_PTR(daf::base::PropertySet) metadata) const {
+void Psf::writeFits(afw::fits::Fits & fitsfile) const {
     afw::table::RecordOutputGeneratorSet outputs = writeToRecords();
-    outputs.writeFits(fitsfile, "PSF", metadata);
+    outputs.writeFits(fitsfile, "PSF");
 }
 
-PTR(Psf) Psf::readFits(std::string const & filename, int hdu, PTR(daf::base::PropertySet) metadata) {
+PTR(Psf) Psf::readFits(std::string const & filename, int hdu) {
     afw::fits::Fits fitsfile(filename, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     return readFits(fitsfile);
 }
 
-PTR(Psf) Psf::readFits(afw::fits::MemFileManager & manager, int hdu, PTR(daf::base::PropertySet) metadata) {
+PTR(Psf) Psf::readFits(afw::fits::MemFileManager & manager, int hdu) {
     afw::fits::Fits fitsfile(manager, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     return readFits(fitsfile);
 }
 
-PTR(Psf) Psf::readFits(afw::fits::Fits & fitsfile, PTR(daf::base::PropertySet) metadata) {
-    return readFromRecords(afw::table::RecordInputGeneratorSet::readFits(fitsfile, metadata));
+PTR(Psf) Psf::readFits(afw::fits::Fits & fitsfile) {
+    return readFromRecords(afw::table::RecordInputGeneratorSet::readFits(fitsfile));
 }
 
 }}} // namespace lsst::afw::detection

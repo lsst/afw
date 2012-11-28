@@ -1038,43 +1038,35 @@ namespace image {
 
 // Note that writeToRecords and readFromRecords are implemented in WcsRecordGeneratorFactory.
 
-void Wcs::writeFitsTables(
-    std::string const & filename,
-    CONST_PTR(daf::base::PropertySet) metadata,
-    std::string const & mode
-) const {
+void Wcs::writeFitsTables(std::string const & filename, std::string const & mode) const {
     afw::fits::Fits fitsfile(filename, mode, afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
-    writeFitsTables(fitsfile, metadata);
+    writeFitsTables(fitsfile);
 }
 
-void Wcs::writeFitsTables(
-    afw::fits::MemFileManager & manager,
-    CONST_PTR(daf::base::PropertySet) metadata,
-    std::string const & mode
-) const {
+void Wcs::writeFitsTables(afw::fits::MemFileManager & manager, std::string const & mode) const {
     afw::fits::Fits fitsfile(manager, mode, afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
-    writeFitsTables(fitsfile, metadata);
+    writeFitsTables(fitsfile);
 }
 
-void Wcs::writeFitsTables(afw::fits::Fits & fitsfile, CONST_PTR(daf::base::PropertySet) metadata) const {
+void Wcs::writeFitsTables(afw::fits::Fits & fitsfile) const {
     afw::table::RecordOutputGeneratorSet outputs = writeToRecords();
-    outputs.writeFits(fitsfile, "WCS", metadata);
+    outputs.writeFits(fitsfile, "WCS");
 }
 
-PTR(Wcs) Wcs::readFitsTables(std::string const & filename, int hdu, PTR(daf::base::PropertySet) metadata) {
+PTR(Wcs) Wcs::readFitsTables(std::string const & filename, int hdu) {
     afw::fits::Fits fitsfile(filename, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     return readFitsTables(fitsfile);
 }
 
-PTR(Wcs) Wcs::readFitsTables(fits::MemFileManager & manager, int hdu, PTR(daf::base::PropertySet) metadata) {
+PTR(Wcs) Wcs::readFitsTables(fits::MemFileManager & manager, int hdu) {
     afw::fits::Fits fitsfile(manager, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     return readFitsTables(fitsfile);
 }
 
-PTR(Wcs) Wcs::readFitsTables(afw::fits::Fits & fitsfile, PTR(daf::base::PropertySet) metadata) {
-    return readFromRecords(afw::table::RecordInputGeneratorSet::readFits(fitsfile, metadata));
+PTR(Wcs) Wcs::readFitsTables(afw::fits::Fits & fitsfile) {
+    return readFromRecords(afw::table::RecordInputGeneratorSet::readFits(fitsfile));
 }
 
 namespace detail {

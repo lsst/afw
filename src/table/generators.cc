@@ -5,21 +5,16 @@
 
 namespace lsst { namespace afw { namespace table {
 
-void RecordOutputGeneratorSet::writeFits(
-    afw::fits::Fits & fitsfile, std::string const & kind, CONST_PTR(daf::base::PropertySet) metadata_i
-) const {
-    bool firstHdu = true;
-    for (Vector::const_iterator iter = generators.begin(); iter != generators.end(); ++iter) {
+void RecordOutputGeneratorSet::writeFits(afw::fits::Fits & fitsfile, std::string const & kind) const {
+    int idx = 0;
+    PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
+    metadata->set("EXTTYPE", kind);
+    metadata->set(kind + "_NAME", name, "Name of the " + kind + " class stored here");
+    metadata->set(kind + "_NHDU", int(generators.size()), "Total number of HDUs for this " + kind);
+    for (Vector::const_iterator iter = generators.begin(); iter != generators.end(); ++iter, ++idx) {
         RecordOutputGenerator & g = **iter;
         BaseCatalog cat(g.getSchema());
-        PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
-        metadata->set("EXTTYPE", kind);
-        if (firstHdu) {
-            metadata->set(kind + "_NAME", name, "Name of the " + kind + " class stored here.");
-            metadata->set(kind + "_NHDU", int(generators.size()), "Number of HDUs for this " + kind);
-            if (metadata_i) metadata->combine(metadata_i);
-            firstHdu = false;
-        }
+        metadata->set(kind + "_IDX", idx, "Index of this HDU out of all for this " + kind);
         cat.getTable()->setMetadata(metadata);
         cat.reserve(g.getRecordCount());
         for (int n = 0; n < g.getRecordCount(); ++n) {
@@ -29,36 +24,47 @@ void RecordOutputGeneratorSet::writeFits(
     }
 }
 
-RecordInputGeneratorSet RecordInputGeneratorSet::readFits(
-    fits::Fits & fitsfile,
-    PTR(daf::base::PropertySet) metadata
-) {
+RecordInputGeneratorSet RecordInputGeneratorSet::readFits(fits::Fits & fitsfile) {
     BaseCatalog firstCat = BaseCatalog::readFits(fitsfile);
-    if (metadata) {
-        metadata->combine(firstCat.getTable()->getMetadata());
-    } else {
-        metadata = firstCat.getTable()->getMetadata();
-    }
+    PTR(daf::base::PropertyList) metadata = firstCat.getTable()->getMetadata();
     std::string kind = metadata->get<std::string>("EXTTYPE");
     metadata->remove("EXTTYPE");
     std::string nameKey = kind + "_NAME";
     std::string nHduKey = kind + "_NHDU";
+    std::string idxKey = kind + "_IDX";
     RecordInputGeneratorSet result(metadata->get<std::string>(nameKey));
     metadata->remove(nameKey);
     int nHdu = metadata->get<int>(nHduKey);
+    int idx = metadata->get<int>(idxKey);
+    if (idx != 0) {
+        throw LSST_FITS_EXCEPT(
+            fits::FitsError,
+            fitsfile,
+            boost::format("Current HDU has %s=%d, not 0") % idxKey % idx
+        );
+    }
     metadata->remove(nHduKey);
     result.generators.reserve(nHdu);
     result.generators.push_back(RecordInputGenerator::make(firstCat));
     for (int n = 1; n < nHdu; ++n) {
         fitsfile.setHdu(1, true);
         BaseCatalog cat = BaseCatalog::readFits(fitsfile);
-        if (kind != cat.getTable()->getMetadata()->get<std::string>("EXTTYPE")) {
+        metadata = cat.getTable()->getMetadata();
+        std::string exttype = metadata->get<std::string>("EXTTYPE");
+        if (kind != exttype) {
             throw LSST_FITS_EXCEPT(
                 fits::FitsError,
                 fitsfile,
                 boost::format("Wrong EXTTYPE for HDU %d; expected '%s', got '%s'")
-                % fitsfile.getHdu() % kind % 
-                cat.getTable()->getMetadata()->get<std::string>("EXTTYPE")
+                % fitsfile.getHdu() % kind % exttype
+            );
+        }
+        idx = metadata->get<int>(idxKey);
+        if (idx != n) {
+            throw LSST_FITS_EXCEPT(
+                fits::FitsError,
+                fitsfile,
+                boost::format("HDU %d has %s=%d, not %d") % fitsfile.getHdu() % idxKey % idx % n
             );
         }
         result.generators.push_back(RecordInputGenerator::make(cat));

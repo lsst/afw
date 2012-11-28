@@ -125,22 +125,18 @@ struct RecordOutputGeneratorSet {
     std::string name;
     Vector generators;
 
-    explicit RecordOutputGeneratorSet(std::string const & name_, Vector const & generators_=Vector()) :
+    explicit RecordOutputGeneratorSet(std::string const & name_="", Vector const & generators_=Vector()) :
         name(name_), generators(generators_) {}
 
     /**
      *  @brief Use the record generators to write binary table HDUs to a FITS file.
      *
      *  @param[in]   fitsfile        A FITS file object to which additional HDUs will be appended.
-     *  @param[in]   kind            A string used for a number of header entries; EXTTYPE="{kind}"
-     *                               will be set for all HDUs, and {kind}_NAME and {kind}_NHDU will
-     *                               be set in the first HDU, containing name and generators.size().
-     *  @param[in]   metadata        Additional metadata to be saved to the first HDU's header.
+     *  @param[in]   kind            A string used for a number of header entries: EXTTYPE="{kind}"
+     *                               {kind}_NAME={name}, {kind}_NHDU={generators.size()}, and
+     *                               {kind}_IDX, giving the index of the generator saved to that HDU.
      */
-    void writeFits(
-        fits::Fits & fitsfile, std::string const & kind,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
-    ) const;
+    void writeFits(fits::Fits & fitsfile, std::string const & kind) const;
 };
 
 /**
@@ -154,13 +150,10 @@ struct RecordInputGeneratorSet {
     std::string name;
     Vector generators;
 
-    explicit RecordInputGeneratorSet(std::string const & name_, Vector const & generators_=Vector()) :
+    explicit RecordInputGeneratorSet(std::string const & name_="", Vector const & generators_=Vector()) :
         name(name_), generators(generators_) {}
 
-    static RecordInputGeneratorSet readFits(
-        fits::Fits & fitsfile,
-        PTR(daf::base::PropertySet) metadata = PTR(daf::base::PropertySet)()
-    );
+    static RecordInputGeneratorSet readFits(fits::Fits & fitsfile);
 };
 
 }}} // namespace lsst::afw::table
