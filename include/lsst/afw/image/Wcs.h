@@ -110,8 +110,7 @@ class Wcs : public lsst::daf::base::Persistable,
 public:
     typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
     typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
-    
-    Wcs();
+
     //Create a Wcs of the correct class using a fits header.
     friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
                             bool stripMetadata);
@@ -150,8 +149,6 @@ public:
     
     // Returns the pixel scale [Angle/pixel]
     lsst::afw::geom::Angle pixelScale() const;
-
-    bool isInitialized() const;
     
     // Convert from raDec to pixel space. Formerly called raDecToXY() and
     // xyToRaDec(), but the name now reflects their increased generality. They
@@ -409,6 +406,9 @@ protected:
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
+
+    // Default constructor, only used by WcsFormatter.x
+    Wcs();
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.

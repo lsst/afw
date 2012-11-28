@@ -136,15 +136,12 @@ void afwForm::WcsFormatter::update(
     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
-
 dafBase::PropertyList::Ptr
 afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     dafBase::PropertyList::Ptr wcsProps(new dafBase::PropertyList());
 
-    if (!wcs.isInitialized()) {                  // if wcs hasn't been initialised
-        return wcsProps;
-    }
+    assert(wcs._wcsInfo); // default ctor is private, so an unitialized Wcs should not exist in the wild
 
     wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis, "number of data axes");
     wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox, "Equinox of coordinates");

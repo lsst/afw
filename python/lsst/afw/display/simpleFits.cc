@@ -415,7 +415,7 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * Was there something else?
      */
-    if (Wcs != NULL && Wcs->isInitialized()) {
+    if (Wcs != NULL) {
         typedef std::vector<std::string> NameList;
 
         image::Wcs::Ptr newWcs = Wcs->clone(); //Create a copy

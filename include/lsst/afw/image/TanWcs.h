@@ -78,9 +78,6 @@ public:
         Eigen::MatrixXd & m
     );
 
-    /// Create an empty, invalid TanWcs.  Only useful so you (or swig) can assign to it later.
-    TanWcs();
-
     /**
      *  @brief Construct a tangent plane wcs without distortion terms
      *
@@ -174,6 +171,9 @@ private:
     virtual afw::table::RecordOutputGeneratorSet writeToRecords() const;
 
     virtual bool _isSubset(Wcs const &) const;
+
+    // Create an empty, invalid TanWcs.  Only used by TanWcsFormatter.
+    TanWcs();
 
     /*
      *  Create a Wcs from a fits header.
