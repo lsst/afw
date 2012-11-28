@@ -109,23 +109,6 @@ class WCSTestCaseSDSS(unittest.TestCase):
         """Test operator bool() (== isValid)"""
         pass
 
-    def testInvalidWcs(self):
-        """Test operator bool() (== isValid)
-        This test has been improved by deleting some essential
-        metadata (in this case, CRPIX1, and CRPIX2) from the
-        MaskedImage's metadata and using that.
-        """
-        wcs = afwImage.Wcs()
-        self.assertFalse(wcs.isInitialized())
-
-        # Using MaskedImage with corrupt metadata
-        infile = afwImage.MaskedImageF_imageFileName(InputCorruptFilePath)
-        decoratedImage = afwImage.DecoratedImageF(infile)
-        metadata = decoratedImage.getMetadata()
-
-        
-        self.assertRaises(exceptions.LsstCppException, afwImage.makeWcs, metadata)
-
     def testCrpix(self):
         metadata = self.im.getMetadata()
         crpix0 = metadata.getAsDouble("CRPIX1")
@@ -408,11 +391,6 @@ class TestWcsCompare(unittest.TestCase):
         self.assertNotEqual(sipWcsCopy, plainWcsCopy)
         self.assertNotEqual(distortedWcsCopy, sipWcsCopy)
         self.assertNotEqual(sipWcsCopy, distortedWcsCopy)
-        
-        wcs1 = afwImage.Wcs()
-        wcs2 = afwImage.Wcs()
-        self.assertEqual(wcs1, wcs2)
-
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
