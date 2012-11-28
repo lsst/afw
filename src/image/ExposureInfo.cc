@@ -215,6 +215,8 @@ void ExposureInfo::readFits(
         _psf = detection::Psf::readFits(fitsfile);
     }
 
+    // Note that if there's a table-persisted Wcs, we use that instead of the one
+    // from the headers, because the one in the headers might be an approximation.
     if (metadata->exists("WCS_HDU0")) {
         int wcsHdu0 = metadata->get<int>("WCS_HDU0");
         metadata->remove("WCS_HDU0");
