@@ -105,10 +105,6 @@ class WCSTestCaseSDSS(unittest.TestCase):
         del self.wcs
         del self.im
 
-    def testValidWcs(self):
-        """Test operator bool() (== isValid)"""
-        pass
-
     def testCrpix(self):
         metadata = self.im.getMetadata()
         crpix0 = metadata.getAsDouble("CRPIX1")
