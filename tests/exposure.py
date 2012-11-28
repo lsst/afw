@@ -310,8 +310,7 @@ class ExposureTestCase(unittest.TestCase):
         det = subExposure.getDetector()
         self.assertTrue(det)
         
-        hdu = 0
-        subExposure = afwImage.ExposureF(inFilePathSmall, hdu, subBBox)
+        subExposure = afwImage.ExposureF(inFilePathSmall, subBBox)
         
         self.checkWcs(mainExposure, subExposure)
         
@@ -334,6 +333,7 @@ class ExposureTestCase(unittest.TestCase):
 
         readExposure = type(mainExposure)(outFile)
 
+        print outFile
         os.remove(outFile)
         #
         # Check the round-tripping

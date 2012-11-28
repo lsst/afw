@@ -28,6 +28,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/table/generators.h"
 
 namespace lsst { namespace afw {
 
@@ -158,26 +159,29 @@ public:
     ~ExposureInfo();
 
     /**
-     *  @brief Generate the metadata that saves some components of the ExposureInfo to a FITS header.
+     *  @brief A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
      *
-     *  This returns a pair of PropertySets; the first contains the metadata that is generally written
-     *  to the main image HDU and is read to reconstruct the ExposureInfo, while the second contains
-     *  additional metadata intended for the mask and variance headers.
+     *  FITS has to start with ExposureInfo (for header info), then go to Exposure (to write the templated
+     *  MaskedImage), and then go back to ExposureInfo (for table-persisted Psf and Wcs), and this
+     *  struct is used to allow data to be passed from step 1 to step 3.
+     */
+    struct FitsWriteData {
+        PTR(daf::base::PropertyList) metadata;
+        PTR(daf::base::PropertyList) imageMetadata;
+        PTR(daf::base::PropertyList) maskMetadata;
+        PTR(daf::base::PropertyList) varianceMetadata;
+
+        table::RecordOutputGeneratorSet psfRecords;
+        table::RecordOutputGeneratorSet wcsRecords;
+    };
+
+    /**
+     *  @brief Start the process of writing an exposure to FITS.
      *
-     *  FITS persistence is separated into getFitsMetadata() and writeFitsHdus() so that
-     *  the Primary FITS header can be at least mostly written before the main image HDUs
-     *  are written, while the additional ExposureInfo HDUs are written afterwards. This
-     *  is desirable in order to reduce the chance that we'll have to shift the images on
-     *  disk in order to make space for addition header entries.
-     *
-     *  @param[in]  hdu   The number of the HDU that will hold the main metadata.  Used
-     *                    to compute which HDUs will be used for non-MaskedImage components
-     *                    (such as the Psf), assuming three MaskedImage planes.
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to
      *                    install a linear offset-only WCS in the FITS header.
      */
-    std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList)>
-    getFitsMetadata(int hdu, geom::Point2I const & xy0=geom::Point2I()) const;
+    FitsWriteData startWriteFits(geom::Point2I const & xy0=geom::Point2I()) const;
 
     /**
      *  @brief Write any additional non-image HDUs to a FITS file.
@@ -189,7 +193,7 @@ public:
      *  keys included in the result of getFitsMetadata() if this is called after writing the
      *  MaskedImage HDUs.
      */
-    void writeFitsHdus(fits::Fits & fitsfile) const;
+    void finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & datax) const;
 
     /**
      *  @brief Read from a FITS file and metadata.
@@ -198,7 +202,11 @@ public:
      *  only be called by the exposure constructor, which starts by default-constructing the
      *  ExposureInfo.
      */
-    void readFits(fits::Fits & fitsfile, PTR(daf::base::PropertySet) metadata);
+    void readFits(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata,
+        PTR(daf::base::PropertySet) imageMetadata
+    );
 
 private:
 

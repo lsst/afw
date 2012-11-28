@@ -75,16 +75,13 @@ public:
      *  @brief Construct an Exposure by reading a regular FITS file.
      *
      *  @param[in]      fileName      File to read.
-     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
-     *                                reads the first extension HDU.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
     explicit Exposure(
-        std::string const & fileName, int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
+        std::string const & fileName, geom::Box2I const& bbox=geom::Box2I(),
         ImageOrigin origin=LOCAL, bool conformMasks=false
     );
 
@@ -92,23 +89,20 @@ public:
      *  @brief Construct an Exposure by reading a FITS image in memory.
      *
      *  @param[in]      manager       An object that manages the memory buffer to read.
-     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
-     *                                reads the first extension HDU.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
     explicit Exposure(
-        fits::MemFileManager & manager, int hdu=0, geom::Box2I const & bbox=geom::Box2I(),
+        fits::MemFileManager & manager, geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=LOCAL, bool conformMasks=false
     );
 
     /**
      *  @brief Construct an Exposure from an already-open FITS object.
      *
-     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
+     *  @param[in]      fitsfile      A FITS object to read from.  Current HDU is ignored.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.

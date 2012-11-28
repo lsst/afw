@@ -99,16 +99,36 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
 
 ExposureInfo::~ExposureInfo() {}
 
-std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList)>
-ExposureInfo::getFitsMetadata(int hdu, afw::geom::Point2I const & xy0) const {
-
-    hdu += 3;
+ExposureInfo::FitsWriteData
+ExposureInfo::startWriteFits(afw::geom::Point2I const & xy0) const {
     
-    //Create fits header
-    std::pair<PTR(daf::base::PropertyList),PTR(daf::base::PropertyList>) result;
-    result.first.reset(new daf::base::PropertyList());
-    result.second.reset(new daf::base::PropertyList());
-    result.first->combine(getMetadata());
+    FitsWriteData data;
+
+    data.metadata.reset(new daf::base::PropertyList());
+    data.imageMetadata.reset(new daf::base::PropertyList());
+    data.maskMetadata = data.imageMetadata;
+    data.varianceMetadata = data.imageMetadata;
+
+    data.metadata->combine(getMetadata());
+
+    int hdu = 5;  // primary=1, image=2, mask=3, variance=4
+    if (hasPsf() && _psf->hasRecordPersistence()) {
+        data.psfRecords = _psf->writeToRecords();
+        int nPsfHdu = data.psfRecords.generators.size();
+        data.metadata->set("PSF_NAME", data.psfRecords.name, "Name of the PSF class stored here");
+        data.metadata->set("PSF_HDU0", hdu, "First HDU containing the PSF model");
+        data.metadata->set("PSF_NHDU", nPsfHdu, "Total number of HDUs for PSF model");
+        hdu += nPsfHdu;
+    }
+
+    if (hasWcs() && _wcs->hasRecordPersistence()) {
+        data.wcsRecords = _wcs->writeToRecords();
+        int nWcsHdu = data.wcsRecords.generators.size();
+        data.metadata->set("WCS_NAME", data.wcsRecords.name, "Name of the WCS class stored here");
+        data.metadata->set("WCS_HDU0", hdu, "First HDU containing the WCS model");
+        data.metadata->set("WCS_NHDU", nWcsHdu, "Total number of HDUs for WCS model");
+        hdu += nWcsHdu;
+    }
 
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
@@ -120,11 +140,7 @@ ExposureInfo::getFitsMetadata(int hdu, afw::geom::Point2I const & xy0) const {
         newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY() );
 
         // We want the WCS to appear in all HDUs
-        result.second->combine(newWcs->getFitsMetadata());
-    }
-
-    if (hasPsf()) {
-        result.first->set("PSF_HDU0", hdu++, "First HDU containing the PSF model");
+        data.imageMetadata->combine(newWcs->getFitsMetadata());
     }
 
     //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
@@ -138,39 +154,50 @@ ExposureInfo::getFitsMetadata(int hdu, afw::geom::Point2I const & xy0) const {
     //the position of the origin of the parent image relative to the origin of the sub-image.
     // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
   
-    result.second->set("LTV1", -xy0.getX());
-    result.second->set("LTV2", -xy0.getY());
+    data.imageMetadata->set("LTV1", -xy0.getX());
+    data.imageMetadata->set("LTV2", -xy0.getY());
 
-    result.first->combine(result.second);
-
-    result.first->set("FILTER", getFilter().getName());
+    data.metadata->set("FILTER", getFilter().getName());
     if (hasDetector()) {
-        result.first->set("DETNAME", getDetector()->getId().getName());
-        result.first->set("DETSER", getDetector()->getId().getSerial());
+        data.metadata->set("DETNAME", getDetector()->getId().getName());
+        data.metadata->set("DETSER", getDetector()->getId().getSerial());
     }
     /**
      * We need to define these keywords properly! XXX
      */
-    result.first->set("TIME-MID", getCalib()->getMidTime().toString());
-    result.first->set("EXPTIME", getCalib()->getExptime());
-    result.first->set("FLUXMAG0", getCalib()->getFluxMag0().first);
-    result.first->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
+    data.metadata->set("TIME-MID", getCalib()->getMidTime().toString());
+    data.metadata->set("EXPTIME", getCalib()->getExptime());
+    data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
+    data.metadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
     
-    return result;
+    return data;
 }
 
-void ExposureInfo::writeFitsHdus(fits::Fits & fitsfile) const {
-    if (hasPsf()) {
-        getPsf()->writeFits(fitsfile);
+void ExposureInfo::finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const {
+    if (!data.psfRecords.generators.empty()) {
+        data.psfRecords.writeFits(fitsfile, "PSF");
+    }
+    if (!data.wcsRecords.generators.empty()) {
+        data.wcsRecords.writeFits(fitsfile, "WCS");
     }
 }
 
 void ExposureInfo::readFits(
     fits::Fits & fitsfile,
-    PTR(daf::base::PropertySet) metadata
+    PTR(daf::base::PropertySet) metadata,
+    PTR(daf::base::PropertySet) imageMetadata
 ) {
     // true: strip keywords that are related to the created WCS from the input metadata
-    _wcs = makeWcs(metadata, true) ;
+    _wcs = makeWcs(imageMetadata, true);
+
+    if (!imageMetadata->exists("INHERIT")) {
+        // New-style exposures put everything but the Wcs in the primary HDU, use
+        // INHERIT keyword in the others.  For backwards compatibility, if we don't
+        // find the INHERIT keyword, we ignore the primary HDU metadata and expect
+        // everything to be in the image HDU metadata.  Note that we can't merge them,
+        // because they're probably duplicates.
+        metadata = imageMetadata;
+    }
 
     _filter = Filter(metadata, true);
     detail::stripFilterKeywords(metadata);
@@ -182,8 +209,19 @@ void ExposureInfo::readFits(
     if (metadata->exists("PSF_HDU0")) {
         int psfHdu0 = metadata->get<int>("PSF_HDU0");
         metadata->remove("PSF_HDU0");
+        metadata->remove("PSF_NAME");
+        metadata->remove("PSF_NHDU");
         fitsfile.setHdu(psfHdu0);
         _psf = detection::Psf::readFits(fitsfile);
+    }
+
+    if (metadata->exists("WCS_HDU0")) {
+        int wcsHdu0 = metadata->get<int>("WCS_HDU0");
+        metadata->remove("WCS_HDU0");
+        metadata->remove("WCS_NAME");
+        metadata->remove("WCS_NHDU");
+        fitsfile.setHdu(wcsHdu0);
+        _wcs = Wcs::readFitsTables(fitsfile);
     }
 
     _metadata = metadata;
