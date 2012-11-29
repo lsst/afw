@@ -278,7 +278,7 @@ protected:
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
 
-    // Default constructor, only used by WcsFormatter.x
+    // Default constructor, only used by WcsFormatter
     Wcs();
 
     //If you want to create a Wcs from a fits header, use makeWcs(). 
