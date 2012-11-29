@@ -22,8 +22,6 @@ else:
     testArgs = dict(
         maskedImage1 =   "%s %s file:maskedImage1_output_1.fits file:maskedImage1_output_2.fits" % \
             (inFile, inFile),
-        maskedImageIo1 = inFile,
-        maskedImageIo2 = inFile,
         ramFitsIO =       "%s %s" % (inFileRamFitsIO1, inFileRamFitsIO2),
     )
     
