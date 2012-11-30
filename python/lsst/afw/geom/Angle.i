@@ -30,7 +30,8 @@
     %pythoncode %{
          def __reduce__(self):
              return (Angle, (self.asRadians(),))
-
+         def __abs__(self):
+             return abs(self.asRadians())*radians;
          def __add__(self, rhs):
              return Angle_add(self, rhs)
          def __radd__(self, lhs):
