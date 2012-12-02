@@ -386,7 +386,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdDescription=ccdPol, ccdId=ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
         raft.addDetector(afwGeom.Point2I(Col, Row),
-                         cameraGeom.FpPoint(xc, yc),
+                         cameraGeom.FpPoint(xc*ccd.getPixelSize(), yc*ccd.getPixelSize()),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
 
         if raftInfo is not None:
