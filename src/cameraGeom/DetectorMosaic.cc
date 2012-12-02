@@ -132,7 +132,6 @@ void cameraGeom::DetectorMosaic::addDetector(
         }
     }
     */
-    det->setOrientation(orient);
     //
     // If this is the first detector, set the center pixel.  We couldn't do this earlier as
     // we didn't know the detector size
@@ -153,6 +152,9 @@ void cameraGeom::DetectorMosaic::addDetector(
         geom::Extent2I(iX*detPixels.getWidth(), iY*detPixels.getHeight())
     );
     getAllPixels().include(detPixels);
+    
+    // In order to use the 'grid' location method (i.e. iX*width), rotation must be after getWidth/Height calls.
+    det->setOrientation(orient);
     
     afwGeom::Point2D centerPixel(
         iX*detPixels.getWidth() + detPixels.getWidth()/2,

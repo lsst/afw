@@ -36,7 +36,7 @@ Raft: {
         ptype: "vendor1"                 # Type of CCD
         index: 0 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 -2.02             # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 2                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -45,7 +45,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 1 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 -2.02              # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 0                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -54,7 +54,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 0 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 0.0               # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 0                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -63,7 +63,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 1 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 0.0                # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 0                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -72,7 +72,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 0 2                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 2.02              # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 2                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -81,7 +81,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 1 2                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 2.02               # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 2                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
 }
