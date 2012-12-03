@@ -66,6 +66,12 @@ private:
     int const _orderY;
 };
 
+template<typename PixelT>
+PTR(Approximate<PixelT>)
+makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
+                image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
+                ApproximateControl const& ctrl);
+
 /**
  * @brief Approximate values for a MaskedImage
  * @ingroup afw
@@ -76,7 +82,7 @@ public:
     typedef float OutPixelT;            ///< The pixel type of returned images
 
     friend PTR(Approximate<PixelT>)
-    makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
+    makeApproximate<>(std::vector<double> const &x, std::vector<double> const &y,
                     image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                     ApproximateControl const& ctrl);
     /// \brief dtor
@@ -109,12 +115,6 @@ private:
     virtual PTR(image::Image<OutPixelT>) doGetImage(int orderX, int orderY) const = 0;
     virtual PTR(image::MaskedImage<OutPixelT>) doGetMaskedImage(int orderX, int orderY) const = 0;
 };
-
-template<typename PixelT>
-PTR(Approximate<PixelT>)
-makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
-                image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
-                ApproximateControl const& ctrl);
 
 }}}
                      
