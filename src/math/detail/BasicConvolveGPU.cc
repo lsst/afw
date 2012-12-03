@@ -289,13 +289,19 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
         }
 
         int order = 0;
+#ifdef GPU_BUILD
         SpatialFunctionType_t sfType;
+#endif
         if (isAllPoly) {
             order = dynamic_cast<const afwMath::PolynomialFunction2<double>*>( sFn[0].get() ) ->getOrder();
+#ifdef GPU_BUILD
             sfType = sftPolynomial;
+#endif
         } else if(isAllCheby) {
             order = dynamic_cast<const afwMath::Chebyshev1Function2<double>*>( sFn[0].get() ) ->getOrder();
+#ifdef GPU_BUILD
             sfType = sftChebyshev;
+#endif
         } else
             return mathDetail::ConvolveGpuStatus::SFN_TYPE_ERROR;
 
@@ -481,13 +487,19 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
             }
 
             int order = 0;
+#ifdef GPU_BUILD
             SpatialFunctionType_t sfType;
+#endif
             if (isAllPoly) {
                 order = dynamic_cast<const afwMath::PolynomialFunction2<double>*>( sFn[0].get() ) ->getOrder();
+#ifdef GPU_BUILD
                 sfType = sftPolynomial;
+#endif
             } else if(isAllCheby) {
                 order = dynamic_cast<const afwMath::Chebyshev1Function2<double>*>( sFn[0].get() ) ->getOrder();
+#ifdef GPU_BUILD
                 sfType = sftChebyshev;
+#endif
             } else {
                 return mathDetail::ConvolveGpuStatus::SFN_TYPE_ERROR;
             }
@@ -638,7 +650,6 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
     int const cnvStartY = kernel.getCtrY();
 
     KernelImage kernelImage(kernel.getDimensions());
-    KernelXYLocator const kernelLoc = kernelImage.xy_at(0, 0);
 
     pexLog::TTrace<3>("lsst.afw.math.convolve",
                       "convolveSpatiallyInvariantGPU: using GPU acceleration, "
@@ -754,7 +765,6 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
     }
 
     KernelImage kernelImage(kernel.getDimensions());
-    KernelXYLocator const kernelLoc = kernelImage.xy_at(0, 0);
 
     pexLog::TTrace<3>("lsst.afw.math.convolve",
                       "convolveSpatiallyInvariantGPU: using GPU acceleration, "
