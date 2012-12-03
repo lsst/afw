@@ -133,30 +133,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %ignore lsst::afw::table::IdFactory::operator=;
 
 %pythoncode %{
-from ..geom import Angle, Point2D, Point2I
-from ..geom.ellipses import Quadrupole
-from ..coord import Coord, IcrsCoord
 from . import _syntax
-import numpy
-Field = {}
-Key = {}
-SchemaItem = {}
-_suffixes = {}
-aliases = {
-    int: "I4",
-    long: "I8",
-    float: "F8",
-    numpy.int32: "I4",
-    numpy.int64: "I8",
-    numpy.float32: "F4",
-    numpy.float64: "F8",
-    Angle: "Angle",
-    Coord: "Coord",
-    IcrsCoord: "Coord",
-    Point2I: "Point<I4>",
-    Point2D: "Point<F8>",
-    Quadrupole: "Moments<F8>",
-}
 %}
 
 %include "lsst/afw/table/misc.h"
@@ -520,6 +497,7 @@ aliases = {
     int: "I",
     long: "L",
     float: "D",
+    str: "String",
     numpy.int32: "I",
     numpy.int64: "L",
     numpy.float32: "F",
@@ -578,6 +556,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(boost::int64_t, L)
 %declareFieldType(float, F)
 %declareFieldType(double, D)
+%declareFieldType(std::string, String)
 %declareFieldType(lsst::afw::table::Flag, Flag)
 %declareFieldType(lsst::afw::geom::Angle, Angle)
 %declareFieldType(lsst::afw::coord::Coord, Coord)
@@ -593,13 +572,10 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Array<double>, ArrayD)
 
 %declareFieldType(lsst::afw::table::Covariance<float>, CovF)
-%declareFieldType(lsst::afw::table::Covariance<double>, CovD)
 
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointD)
 
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsD)
 
 %include "specializations.i"
 
@@ -637,15 +613,15 @@ namespace lsst { namespace afw { namespace table {
      };
      struct Centroid {
          typedef Key< Point<double> > MeasKey;
-         typedef Key< Covariance< Point<double> > > ErrKey;
+         typedef Key< Covariance< Point<float> > > ErrKey;
          typedef lsst::afw::geom::Point<double,2> MeasValue;
-         typedef Eigen::Matrix<double,2,2> ErrValue;
+         typedef Eigen::Matrix<float,2,2> ErrValue;
      };
      struct Shape {
          typedef Key< Moments<double> > MeasKey;
-         typedef Key< Covariance< Moments<double> > > ErrKey;
+         typedef Key< Covariance< Moments<float> > > ErrKey;
          typedef lsst::afw::geom::ellipses::Quadrupole MeasValue;
-         typedef Eigen::Matrix<double,3,3> ErrValue;
+         typedef Eigen::Matrix<float,3,3> ErrValue;
      };
 }}}
 

@@ -82,11 +82,41 @@ std::string FieldBase< Covariance< Point<U> > >::getTypeString() {
     return (boost::format("CovPoint%s") % TypeTraits<U>::getName()).str();
 }
 
-//----- Moments covariance ------------------------------------------------------------------------------------
+//----- Moments covariance ----------------------------------------------------------------------------------
 
 template <typename U>
 std::string FieldBase< Covariance< Moments<U> > >::getTypeString() {
     return (boost::format("CovMoments%s") % TypeTraits<U>::getName()).str();
+}
+
+//----- String ----------------------------------------------------------------------------------------------
+
+FieldBase< std::string >::FieldBase(int size) : _size(size) {
+    if (size < 0) throw LSST_EXCEPT(
+        lsst::pex::exceptions::LengthErrorException,
+        "Size must be provided when constructing a string field."
+    );
+}
+
+std::string FieldBase< std::string >::getTypeString() { return "String"; }
+
+std::string FieldBase< std::string >::getValue(Element const * p, ndarray::Manager::Ptr const & m) const {
+    Element const * end = p + _size;
+    end = std::find(p, end, 0);
+    return std::string(p, end);
+}
+
+void FieldBase< std::string >::setValue(
+    Element * p, ndarray::Manager::Ptr const &, std::string const & value
+) const {
+    if (value.size() > std::size_t(_size)) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LengthErrorException,
+            (boost::format("String (%d) is too large for field (%d).") % value.size() % _size).str()
+        );
+    }
+    std::copy(value.begin(), value.end(), p);
+    std::fill(p + value.size(), p + _size, char(0));
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

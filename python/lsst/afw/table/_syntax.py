@@ -159,7 +159,7 @@ def BaseColumnView_extract(self, *patterns, **kwds):
     (i.e. non-triangular packed) arrays with dimension (N,M,M), where N is the number of
     records and M is the dimension of the covariance matrix.  Fields with named subfields
     (e.g. points) are always split into separate dictionary items, as is done in
-    BaseRecord.extract(..., split=True).
+    BaseRecord.extract(..., split=True).  String fields are silently ignored.
 
     Additional optional arguments may be passed as keywords:
 
@@ -223,6 +223,8 @@ def BaseColumnView_extract(self, *patterns, **kwds):
                 if i != j:
                     unpacked[:,j,i] = array
             d[name] = unpacked
+        elif key.getTypeString() == "String":
+            del d[name]
         else:
             d[name] = processArray(self.get(schemaItem.key))
     return d

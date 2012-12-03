@@ -154,10 +154,10 @@ struct Measurement {
 struct Flux : public Measurement<double,double> {};
 
 /// A collection of types useful for centroid measurement algorithms.
-struct Centroid : public Measurement< Point<double>, Covariance< Point<double> > > {};
+struct Centroid : public Measurement< Point<double>, Covariance< Point<float> > > {};
 
 /// A collection of types useful for shape measurement algorithms.
-struct Shape : public Measurement< Moments<double>, Covariance< Moments<double> > > {};
+struct Shape : public Measurement< Moments<double>, Covariance< Moments<float> > > {};
 
 /// An enum for all the special flux aliases in Source.
 enum FluxSlotEnum {
