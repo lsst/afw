@@ -165,13 +165,17 @@ int Fits::getHdu() {
 
 void Fits::setHdu(int hdu) {
     fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
+    }
 }
 
 int Fits::countHdus() {
     int n = 0;
     fits_get_num_hdus(reinterpret_cast<fitsfile*>(fptr), &n, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting number of HDUs in file.");
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Getting number of HDUs in file.");
+    }
     return n;
 }
 
@@ -268,57 +272,65 @@ void writeKeyImpl(Fits & fits, char const * key, bool const & value, char const 
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value, std::string const & comment) {
     updateKeyImpl(*this, key.c_str(), value, comment.c_str());
-    if (behavior & AUTO_CHECK) 
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value, std::string const & comment) {
     writeKeyImpl(*this, key.c_str(), value, comment.c_str());
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value) {
     updateKeyImpl(*this, key.c_str(), value, 0);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value) {
     writeKeyImpl(*this, key.c_str(), value, 0);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 // ---- Reading header keys ---------------------------------------------------------------------------------
@@ -357,7 +369,9 @@ void readKeyImpl(Fits & fits, char const * key, std::string & value) {
 template <typename T>
 void Fits::readKey(std::string const & key, T & value) {
     readKeyImpl(*this, key.c_str(), value);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % key);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % key);
+    }
 }
 
 void Fits::forEachKey(HeaderIterationFunctor & functor) {
@@ -412,7 +426,9 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
             }
             ++i;
         }
-        if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
+        }
         functor(keyStr, valueStr, commentStr);
     }
 }
@@ -575,8 +591,9 @@ void writeKeyFromProperty(
             )
         );
     }
-    if (fits.behavior & Fits::AUTO_CHECK)
+    if (fits.behavior & Fits::AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(fits, boost::format("Writing key '%s'") % key);
+    }
 }
 
 } // anonymous
@@ -615,7 +632,9 @@ void Fits::createTable() {
     char * ttype = 0;
     char * tform = 0;
     fits_create_tbl(reinterpret_cast<fitsfile*>(fptr), BINARY_TBL, 0, 0, &ttype, &tform, 0, 0, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Creating binary table");
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Creating binary table");
+    }
 }
 
 template <typename T>
@@ -634,8 +653,9 @@ int Fits::addColumn(std::string const & ttype, int size) {
         const_cast<char*>(tform.c_str()),
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Adding column '%s' with size %d") % ttype % size);
+    }
     return nCols;
 }
 
@@ -643,8 +663,9 @@ template <typename T>
 int Fits::addColumn(std::string const & ttype, int size, std::string const & comment) {
     int nCols = addColumn<T>(ttype, size);
     updateColumnKey("TTYPE", nCols, ttype, comment);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Adding column '%s' with size %d") % ttype % size);
+    }
     return nCols;
 }
 
@@ -661,8 +682,9 @@ std::size_t Fits::addRows(std::size_t nRows) {
         nRows,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Adding %d rows to binary table") % nRows);
+    }
     return first;
 }
 
@@ -673,8 +695,9 @@ std::size_t Fits::countRows() {
         &r,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Checking how many rows are in table");
+    }
     return r;
 }
 
@@ -688,8 +711,9 @@ void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * va
         const_cast<T*>(value),
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing value at table cell (%d, %d)") % row % col);
+    }
 }
 
 void Fits::writeTableScalar(std::size_t row, int col, std::string const & value) {
@@ -706,8 +730,9 @@ void Fits::writeTableScalar(std::size_t row, int col, std::string const & value)
         const_cast<char const**>(&tmp),
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing value at table cell (%d, %d)") % row % col);
+    }
 }
 
 template <typename T>
@@ -723,8 +748,9 @@ void Fits::readTableArray(std::size_t row, int col, int nElements, T * value) {
         &anynul,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
+    }
 }
 
 void Fits::readTableScalar(std::size_t row, int col, std::string & value) {
@@ -745,8 +771,9 @@ void Fits::readTableScalar(std::size_t row, int col, std::string & value) {
         &anynul,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
+    }
     value = std::string(tmp);
 }
 
@@ -762,8 +789,9 @@ long Fits::getTableArraySize(int col) {
         &width,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Looking up array size for column %d") % col);
+    }
     return result;
 }
 
@@ -778,8 +806,9 @@ long Fits::getTableArraySize(std::size_t row, int col) {
         &offset,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Looking up array size for cell (%d, %d)") % row % col);
+    }
     return result;
 }
 
@@ -788,15 +817,17 @@ long Fits::getTableArraySize(std::size_t row, int col) {
 void Fits::createEmpty() {
     long naxes = 0;
     fits_create_img(reinterpret_cast<fitsfile*>(fptr), 8, 0, &naxes, &status);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Creating empty image HDU");    
+    }
 }
 
 template <typename T>
 void Fits::createImageImpl(int naxis, long * naxes) {
     fits_create_img(reinterpret_cast<fitsfile*>(fptr), FitsBitPix<T>::CONSTANT, naxis, naxes, &status);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Creating new image HDU");
+    }
 }
 
 template <typename T>
@@ -808,8 +839,9 @@ void Fits::writeImageImpl(T const * data, int nElements) {
         const_cast<T*>(data),
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Writing image");
+    }
 }
 
 // ---- Manipulating files ----------------------------------------------------------------------------------
@@ -857,8 +889,9 @@ Fits::Fits(std::string const & filename, std::string const & mode, int behavior_
             (boost::format("Invalid mode '%s' given when opening file '%s'") % mode % filename).str()
         );
     }
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Opening file '%s' with mode '%s'") % filename % mode);
+    }
 }
 
 Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior_)
@@ -913,10 +946,11 @@ Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior_)
              % mode % manager._ptr).str()
         );
     }
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(
             *this, boost::format("Opening memory file at '%s' with mode '%s'") % manager._ptr % mode
         );
+    }
 }
 
 void Fits::closeFile() {
