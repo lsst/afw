@@ -50,27 +50,15 @@
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/ExposureInfo.h"
 
-namespace lsst {
-namespace afw {
-
-namespace cameraGeom {
-    class Detector;
-}
-
-namespace detection {
-    class Psf;
-}
+namespace lsst { namespace afw {
 
 namespace formatters {
     template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
 }
 
 namespace image {
-
-    class Calib;
-    class Wcs;
 
 /// A class to contain the data, WCS, and other information needed to describe an %image of the sky
 template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
@@ -140,18 +128,12 @@ public:
     ) :
         lsst::daf::base::Citizen(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
-        _wcs(_cloneWcs(rhs.getWcs())),
-        _detector(rhs.getDetector()),
-        _filter(rhs.getFilter()),
-        _calib(_cloneCalib(rhs.getCalib())),
-        _psf(_clonePsf(rhs.getPsf()))
+        _info(new ExposureInfo(*rhs.getInfo(), deep))
     {
         if (not deep) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "Exposure's converting copy constructor must make a deep copy");
         }
-
-        setMetadata(deep ? rhs.getMetadata()->deepCopy() : rhs.getMetadata());
     }
 
     virtual ~Exposure(); 
@@ -162,14 +144,16 @@ public:
     /// Return the MaskedImage
     MaskedImageT getMaskedImage() const { return _maskedImage; }
 
-    CONST_PTR(Wcs) getWcs() const { return _wcs; }
+    CONST_PTR(Wcs) getWcs() const { return _info->getWcs(); }
+    PTR(Wcs) getWcs() { return _info->getWcs(); }
+
     /// Return the Exposure's Detector information
-    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
+    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _info->getDetector(); }
     /// Return the Exposure's filter
-    Filter getFilter() const { return _filter; }
+    Filter getFilter() const { return _info->getFilter(); }
     /// Return flexible metadata
-    lsst::daf::base::PropertySet::Ptr getMetadata() const { return _metadata; }
-    void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _metadata = metadata; }
+    lsst::daf::base::PropertySet::Ptr getMetadata() const { return _info->getMetadata(); }
+    void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _info->setMetadata(metadata); }
 
     /// Return the Exposure's width
     int getWidth() const { return _maskedImage.getWidth(); }
@@ -215,54 +199,49 @@ public:
 
     // Set Members
     void setMaskedImage(MaskedImageT &maskedImage);
-    void setWcs(PTR(Wcs) wcs) { _wcs = wcs; }
+    void setWcs(PTR(Wcs) wcs) { _info->setWcs(wcs); }
     /// Set the Exposure's Detector information
-    void setDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) detector) { _detector = detector; }
+    void setDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) detector) { _info->setDetector(detector); }
     /// Set the Exposure's filter
-    void setFilter(Filter const& filter) { _filter = filter; }
+    void setFilter(Filter const& filter) { _info->setFilter(filter); }
     /// Set the Exposure's Calib object
-    void setCalib(PTR(Calib) calib) { _calib = calib; }
+    void setCalib(PTR(Calib) calib) { _info->setCalib(calib); }
     /// Return the Exposure's Calib object
-    PTR(Calib) getCalib() { return _calib; }
+    PTR(Calib) getCalib() { return _info->getCalib(); }
     /// Return the Exposure's Calib object
-    CONST_PTR(Calib) getCalib() const { return _calib; }
+    CONST_PTR(Calib) getCalib() const { return _info->getCalib(); }
     /// Set the Exposure's Psf
-    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _psf = _clonePsf(psf); }
+    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _info->setPsf(psf); }
 
     /// Return the Exposure's Psf object
-    PTR(lsst::afw::detection::Psf) getPsf() { return _psf; }
+    PTR(lsst::afw::detection::Psf) getPsf() { return _info->getPsf(); }
     /// Return the Exposure's Psf object
-    CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _psf; }
+    CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _info->getPsf(); }
     
     /// Does this Exposure have a Psf?
-    bool hasPsf() const { return static_cast<bool>(_psf); }
+    bool hasPsf() const { return _info->hasPsf(); }
 
     /// Does this Exposure have a Wcs?
-    bool hasWcs() const { return static_cast<bool>(_wcs); }
-    
+    bool hasWcs() const { return _info->hasWcs(); }
+
+    /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
+    PTR(ExposureInfo) getInfo() { return _info; }
+
+    /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
+    CONST_PTR(ExposureInfo) getInfo() const { return _info; }
+
     // FITS
     void writeFits(std::string const &expOutFile) const;
     void writeFits(char **ramFile, size_t *ramFileLen) const;
-    
+
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
     
     /// Finish initialization after constructing from a FITS file
     void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
-    lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
-
-    MaskedImageT _maskedImage;             
-    PTR(Wcs) _wcs;
-    CONST_PTR(lsst::afw::cameraGeom::Detector) _detector;
-    Filter _filter;
-    PTR(Calib) _calib;
-    PTR(lsst::afw::detection::Psf) _psf;
-    lsst::daf::base::PropertySet::Ptr _metadata;
-
-    static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
-    static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
-    static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
+    MaskedImageT _maskedImage;
+    PTR(ExposureInfo) _info;
 };
 
 /**
