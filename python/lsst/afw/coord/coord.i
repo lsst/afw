@@ -66,14 +66,12 @@
 %include "lsst/afw/coord/Utils.h"
 %include "lsst/afw/coord/Coord.h"
 
-%define extendCoord(TYPE)
+%define strCoord(TYPE)
 %extend lsst::afw::coord::TYPE {
     %pythoncode {
     def __repr__(self):
         return "afwCoord.TYPE(%g*afwGeom.radians, %g*afwGeom.radians)" % \
                 (self[0].asRadians(), self[1].asRadians())
-    def __reduce__(self):
-        return (TYPE, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
     def __str__(self):
         return "(%s, %s)" % (self[0], self[1])
 
@@ -81,8 +79,34 @@
 }
 %enddef
 
-extendCoord(Coord);
-extendCoord(Fk5Coord);
-extendCoord(IcrsCoord);
-extendCoord(GalacticCoord);
-extendCoord(EclipticCoord);
+strCoord(Coord);
+strCoord(Fk5Coord);
+strCoord(IcrsCoord);
+strCoord(GalacticCoord);
+strCoord(EclipticCoord);
+
+// Add __reduce__ for Coord subclasses that take 3 arguments
+%define reduceCoord3(TYPE)
+%extend lsst::afw::coord::TYPE {
+    %pythoncode {
+    def __reduce__(self):
+        return (TYPE, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
+    }
+}
+%enddef
+
+// Add __reduce__ for Coord subclasses that take 3 arguments
+%define reduceCoord2(TYPE)
+%extend lsst::afw::coord::TYPE {
+    %pythoncode {
+    def __reduce__(self):
+        return (TYPE, (self.getLongitude(), self.getLatitude()))
+    }
+}
+%enddef
+
+reduceCoord3(Coord);
+reduceCoord3(Fk5Coord);
+reduceCoord2(GalacticCoord);
+reduceCoord2(GalacticCoord);
+reduceCoord3(EclipticCoord);
