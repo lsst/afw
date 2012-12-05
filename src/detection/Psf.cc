@@ -123,6 +123,8 @@ Psf::Image::Ptr Psf::doComputeImage(
         bool distort                           ///< generate an image that includes the known camera distortion
                                            ) const
 {
+    std::cerr << "XXX Psf::doComputeImage() called\n";
+
     if (distort) {
         if (!_detector) {
             distort = false;
@@ -139,9 +141,11 @@ Psf::Image::Ptr Psf::doComputeImage(
     if (!kernel) {
         throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
     }
+
     int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
     int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
-    
+    int ctrX = kernel->getCtrX();
+    int ctrY = kernel->getCtrY();
     
     // if they want it distorted, assume they want the PSF as it would appear
     // at ccdXY.  We'll undistort ccdXY to figure out where that point started
@@ -198,13 +202,16 @@ Psf::Image::Ptr Psf::doComputeImage(
         sim <<= snative_im;
         im->setXY0(snative_im.getX0() + (x0.second - x0.first),
                    snative_im.getY0() + (y0.second - y0.first));
+
+	ctrX += (x0.first - x0.second);
+	ctrY += (y0.first - y0.second);
     }
     
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?
     //
     if (normalizePeak) {
-        double const centralPixelValue = (*im)(kernel->getCtrX(), kernel->getCtrY());
+	double const centralPixelValue = (*im)(ctrX,ctrY);
         *im /= centralPixelValue;
     }
     // "ir" : (integer, residual)
@@ -216,8 +223,8 @@ Psf::Image::Ptr Psf::doComputeImage(
         unsigned int const warpBuffer = 5; // Buffer to use in warping        
         im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
     }
-    im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
-               ir_dy.first - kernel->getCtrY() + (ir_dy.second <= 0.5 ? 0 : 1));
+    im->setXY0(ir_dx.first - ctrX + (ir_dx.second <= 0.5 ? 0 : 1),
+               ir_dy.first - ctrY + (ir_dy.second <= 0.5 ? 0 : 1));
 
             
     // distort the image according to the camera distortion
