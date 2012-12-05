@@ -101,9 +101,8 @@ template <> struct FitsBitPix<short> { static int const CONSTANT = SHORT_IMG; };
 template <> struct FitsBitPix<unsigned short> { static int const CONSTANT = USHORT_IMG; };
 template <> struct FitsBitPix<int> { static int const CONSTANT = LONG_IMG; }; // not a typo!
 template <> struct FitsBitPix<unsigned int> { static int const CONSTANT = ULONG_IMG; };
-template <> struct FitsBitPix<long> { static int const CONSTANT = LONG_IMG; };
-template <> struct FitsBitPix<unsigned long> { static int const CONSTANT = ULONG_IMG; };
-template <> struct FitsBitPix<LONGLONG> { static int const CONSTANT = LONGLONG_IMG; };
+template <> struct FitsBitPix<boost::int64_t> { static int const CONSTANT = LONGLONG_IMG; };
+template <> struct FitsBitPix<boost::uint64_t> { static int const CONSTANT = LONGLONG_IMG; };
 template <> struct FitsBitPix<float> { static int const CONSTANT = FLOAT_IMG; };
 template <> struct FitsBitPix<double> { static int const CONSTANT = DOUBLE_IMG; };
 
@@ -153,9 +152,22 @@ void MemFileManager::reset(std::size_t len) {
     _managed = true;
 }
 
+template <typename T> int getBitPix() {
+    return FitsBitPix<T>::CONSTANT;
+}
+
 // ----------------------------------------------------------------------------------------------------------
 // ---- Implementations for Fits class ----------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
+
+std::string Fits::getFileName() const {
+    std::string fileName = "<unknown>";
+    fitsfile * fd = reinterpret_cast<fitsfile*>(fptr);
+    if (fd != 0 && fd->Fptr != 0 && fd->Fptr->filename != 0) {
+        fileName = fd->Fptr->filename;
+    }
+    return fileName;
+}
 
 int Fits::getHdu() {
     int n = 0;
@@ -164,7 +176,14 @@ int Fits::getHdu() {
 }
 
 void Fits::setHdu(int hdu) {
-    fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+    if (hdu != 0) {
+        fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+    }
+    if (hdu == 0 && getHdu() == 1 && getImageDim() == 0) {
+        // want a silent failure here
+        int tmpStatus = status;
+        fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), 1, 0, &tmpStatus);
+    }
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
     }
@@ -619,9 +638,9 @@ void Fits::writeMetadata(daf::base::PropertySet const & metadata) {
         if (!isKeyIgnored(*i)) {
             if (pl) {
                 writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
+            } else {
+                writeKeyFromProperty(*this, metadata, *i);
             }
-        } else {
-            if (pl) writeKeyFromProperty(*this, metadata, *i);
         }
     }
 }
@@ -844,16 +863,48 @@ void Fits::writeImageImpl(T const * data, int nElements) {
     }
 }
 
+template <typename T>
+void Fits::readImageImpl(int nAxis, T * data, long * begin, long * end, long * increment) {
+    fits_read_subset(
+        reinterpret_cast<fitsfile*>(fptr),
+        FitsType<T>::CONSTANT,
+        begin, end, increment, 0,
+        data, 0,
+        &status
+    );
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Reading image");
+}
+
+int Fits::getImageDim() {
+    int nAxis = 0;
+    fits_get_img_dim(reinterpret_cast<fitsfile*>(fptr), &nAxis, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting NAXIS");
+    return nAxis;
+}
+
+void Fits::getImageShapeImpl(int nAxis, long * nAxes) {
+    fits_get_img_size(reinterpret_cast<fitsfile*>(fptr), nAxis, nAxes, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting NAXES");
+}
+
+template <typename T>
+bool Fits::checkImageType() {
+    int bitpix = 0;
+    fits_get_img_equivtype(reinterpret_cast<fitsfile*>(fptr), &bitpix, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting image type");
+    return bitpix == FitsBitPix<T>::CONSTANT;
+}
+
 // ---- Manipulating files ----------------------------------------------------------------------------------
 
 Fits::Fits(std::string const & filename, std::string const & mode, int behavior_)
     : fptr(0), status(0), behavior(behavior_)
 {
     if (mode == "r" || mode == "rb") {
-        if (!boost::filesystem::exists(filename)) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                              (boost::format("File %s doesn't exist") % filename).str());
-        }
         fits_open_file(
             reinterpret_cast<fitsfile**>(&fptr),
             const_cast<char*>(filename.c_str()), 
@@ -970,7 +1021,10 @@ void Fits::closeFile() {
 
 #define INSTANTIATE_IMAGE_OPS(r, data, T)                        \
     template void Fits::createImageImpl<T>(int, long *);         \
-    template void Fits::writeImageImpl(T const *, int);
+    template void Fits::writeImageImpl(T const *, int);          \
+    template void Fits::readImageImpl(int, T *, long *, long *, long *); \
+    template bool Fits::checkImageType<T>();                            \
+    template int getBitPix<T>();
 
 #define INSTANTIATE_TABLE_OPS(r, data, T)                               \
     template int Fits::addColumn<T>(std::string const & ttype, int size); \
@@ -995,8 +1049,8 @@ void Fits::closeFile() {
     (bool)(char)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
     (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
 
-#define IMAGE_TYPES                                                       \
-    (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
+#define IMAGE_TYPES                                                     \
+    (unsigned char)(short)(unsigned short)(int)(unsigned int)(boost::int64_t)(boost::uint64_t) \
     (float)(double)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY_OPS, _, KEY_TYPES)

@@ -47,6 +47,7 @@ import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
+import lsst.afw.fits
 
 try:
     type(VERBOSITY)
@@ -317,7 +318,7 @@ class ExposureTestCase(unittest.TestCase):
         def getExposure():
             afwImage.ExposureF(inFilePathSmallImage)
         
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
+        utilsTests.assertRaisesLsstCpp(self, lsst.afw.fits.FitsError, getExposure)
         
         # Make sure we can write without an exception
         mainExposure.getCalib().setExptime(10)

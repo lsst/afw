@@ -46,6 +46,7 @@ Python interface to lsst::afw::table classes
 #include "lsst/pex/logging.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/cameraGeom.h"
+#include "lsst/afw/fits.h"
 // Instead of pulling in all of detection.h we just grab specific things.
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
@@ -112,6 +113,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/fits/fitsLib.i"
 %import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
