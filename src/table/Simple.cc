@@ -103,9 +103,6 @@ protected:
 
     virtual PTR(BaseTable) _readTable();
 
-private:
-    int _spanCol;
-    int _peakCol;
 };
 
 PTR(BaseTable) SimpleFitsReader::_readTable() {
