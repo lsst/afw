@@ -123,8 +123,6 @@ Psf::Image::Ptr Psf::doComputeImage(
         bool distort                           ///< generate an image that includes the known camera distortion
                                            ) const
 {
-    std::cerr << "XXX Psf::doComputeImage() called\n";
-
     if (distort) {
         if (!_detector) {
             distort = false;
@@ -203,6 +201,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         im->setXY0(snative_im.getX0() + (x0.second - x0.first),
                    snative_im.getY0() + (y0.second - y0.first));
 
+	// Shift image center for consistency with updated image boundaries (unit test in tests/psf.cc)
 	ctrX += (x0.first - x0.second);
 	ctrY += (y0.first - y0.second);
     }
