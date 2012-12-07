@@ -66,6 +66,9 @@ private:
     int const _orderY;
 };
 
+/**
+ *  @brief Construct a new Approximate object, inferring the type from the type of the given MaskedImage.
+ */
 template<typename PixelT>
 PTR(Approximate<PixelT>)
 makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
