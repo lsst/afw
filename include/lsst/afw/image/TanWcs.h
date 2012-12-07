@@ -97,7 +97,7 @@ public:
     );
 
     /**
-     *  @brief Construct a tangent plane wcs without distortion terms
+     *  @brief Construct a tangent plane wcs with distortion terms
      *
      *  @param crval    The sky position of the reference point
      *  @param crpix    The pixel position corresponding to crval in Lsst units
@@ -162,7 +162,7 @@ public:
 
 private:
 
-    friend Wcs::Ptr makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
+    friend PTR(Wcs) makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
 
     virtual bool _isSubset(Wcs const &) const;
 
