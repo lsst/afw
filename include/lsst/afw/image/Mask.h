@@ -182,7 +182,7 @@ public:
     void clearAllMaskPlanes();
     void clearMaskPlane(int plane);
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
-    static MaskPlaneDict parseMaskPlaneMetadata(PTR(daf::base::PropertySet));
+    static MaskPlaneDict parseMaskPlaneMetadata(CONST_PTR(daf::base::PropertySet));
     //
     // Operations on the mask plane dictionary
     //
