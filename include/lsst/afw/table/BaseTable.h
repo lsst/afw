@@ -67,6 +67,13 @@ public:
     /// @brief Set the flexible metadata associated with the table.  May be null.
     void setMetadata(PTR(daf::base::PropertyList) const & metadata) { _metadata = metadata; }
 
+    /// @brief Return the metadata and set the internal metadata to a null pointer.
+    PTR(daf::base::PropertyList) popMetadata() {
+        PTR(daf::base::PropertyList) tmp;
+        _metadata.swap(tmp);
+        return tmp;
+    }
+
     /**
      *  @brief Return a polymorphic deep copy of the table.
      *
