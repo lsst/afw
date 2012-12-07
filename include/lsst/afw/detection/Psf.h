@@ -22,9 +22,6 @@ namespace detection {
 class PsfFormatter;
 class PsfFactoryBase;
 
-class PsfTableWriter;
-class PsfTableReader;
-
 /**
  * Create a particular sort of Psf.
  *
