@@ -70,65 +70,65 @@ definitions: {
                 }
 
 
-		Distortion: {
-		    type: Policy
-		    dictionary: {
-			target: Distortion
-			definitions: {
+        Distortion: {
+            type: Policy
+            dictionary: {
+            target: Distortion
+            definitions: {
                             active: {
                                 type: string
                                 description: "Which distortion is to be used."
                                 minOccurs: 0
                                 maxOccurs: 1
-				default: "NullDistortion"
+                default: "NullDistortion"
                             }
 
-			    NullDistortion: {
-				type: policy
-				description: "An identity (ie. no-op) distortion."
-				minOccurs: 0
-				maxOccurs: 1
-				dictionary: {
-				    target: NullDistortion
-				    definitions: {
+                NullDistortion: {
+                type: policy
+                description: "An identity (ie. no-op) distortion."
+                minOccurs: 0
+                maxOccurs: 1
+                dictionary: {
+                    target: NullDistortion
+                    definitions: {
                                         x: {
                                             type: int
-					    description: "Dummy so pexPolicy sees NullDistortion Policy"
-					    minOccurs: 0
-					    maxOccurs: 1
-					    default: 0
-					}
-				    }
-				}
-			    }
-			    RadialPolyDistortion: {
-				type: policy
-				description: "A radial polynomial distortion."
-				minOccurs: 0
-				maxOccurs: 1
-				dictionary: {
-				    target: RadialPolyDistortion
-				    definitions: {
-					coeffs: {
-					    type: double
-					    description: "Polynomial terms for radial distortion."
-					    minOccurs: 0
-					    maxOccurs: 7
-					    default: 0.0 1.0
-					}
-					coefficientsDistort: {
-					    type: bool
-					    description: "Polynomial describes the *forward* transform."
-					    minOccurs: 0
-					    maxOccurs: 1
-					    default: true
-					}
-				    }
-				}
-			    }
-			}
-		    }
-		}
+                        description: "Dummy so pexPolicy sees NullDistortion Policy"
+                        minOccurs: 0
+                        maxOccurs: 1
+                        default: 0
+                    }
+                    }
+                }
+                }
+                RadialPolyDistortion: {
+                type: policy
+                description: "A radial polynomial distortion."
+                minOccurs: 0
+                maxOccurs: 1
+                dictionary: {
+                    target: RadialPolyDistortion
+                    definitions: {
+                    coeffs: {
+                        type: double
+                        description: "Polynomial terms for radial distortion."
+                        minOccurs: 0
+                        maxOccurs: 7
+                        default: 0.0 1.0
+                    }
+                    coefficientsDistort: {
+                        type: bool
+                        description: "Polynomial describes the *forward* transform."
+                        minOccurs: 0
+                        maxOccurs: 1
+                        default: true
+                    }
+                    }
+                }
+                }
+            }
+            }
+        }
             }
         }
     }
@@ -240,6 +240,21 @@ definitions: {
                     maxOccurs: 1
                 }
 
+                offsetUnit: {
+                    type: string
+                    description: "Units used for 'offset' values of CCD centers."
+                    minOccurs: 1
+                    maxOccurs: 1
+                    default: "mm"
+                    allowed: {
+                        value: "mm"
+                        description: "Millimeters"
+                    }
+                    allowed: {
+                        value: "pixels"
+                        description: "Pixels"
+                    }
+                }
                 nCol: {
                     type: int
                     description: "Number of columns of amps; 2 == Left and Right"
