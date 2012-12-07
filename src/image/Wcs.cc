@@ -296,18 +296,18 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             if (space != std::string::npos) {
                 radecsys.erase(space);
             }
-            snprintf(_wcsInfo->radesys, STRLEN, radecsys.c_str());
+            strncpy(_wcsInfo->radesys, radecsys.c_str(), STRLEN);
         } else if (access.toRead()->exists("EQUINOX") || access.toRead()->exists("EQUINOXa")) {
             std::string const EQUINOX = access.toRead()->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
             double const equinox = access.toRead()->getAsDouble(EQUINOX);
             if(equinox < 1984) {
-                snprintf(_wcsInfo->radesys, STRLEN, "FK4");
+                strncpy(_wcsInfo->radesys, "FK4", STRLEN);
             } else {
-                snprintf(_wcsInfo->radesys, STRLEN, "FK5");
+                strncpy(_wcsInfo->radesys, "FK5", STRLEN);
             }
         } else {
             //If Equinox doesn't exist, default to ICRS
-            snprintf(_wcsInfo->radesys, STRLEN, "ICRS");
+            strncpy(_wcsInfo->radesys, "ICRS", STRLEN);
         }
     }
 }
