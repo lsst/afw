@@ -141,7 +141,7 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     dafBase::PropertyList::Ptr wcsProps(new dafBase::PropertyList());
 
-    assert(wcs._wcsInfo); // default ctor is private, so an unitialized Wcs should not exist in the wild
+    assert(wcs._wcsInfo); // default ctor is private, so an uninitialized Wcs should not exist in the wild
 
     wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis, "number of data axes");
     wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox, "Equinox of coordinates");
