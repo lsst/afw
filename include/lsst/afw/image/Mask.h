@@ -266,7 +266,7 @@ public:
     void clearAllMaskPlanes();
     void clearMaskPlane(int plane);
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
-    static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::PropertySet::Ptr const);
+    static MaskPlaneDict parseMaskPlaneMetadata(CONST_PTR(daf::base::PropertySet));
     //
     // Operations on the mask plane dictionary
     //
@@ -283,7 +283,7 @@ public:
     MaskPlaneDict const& getMaskPlaneDict() const;
     void printMaskPlanes() const;
 
-    static void addMaskPlanesToMetadata(lsst::daf::base::PropertySet::Ptr);
+    static void addMaskPlanesToMetadata(PTR(daf::base::PropertySet));
     //
     // This one isn't static, it fixes up a given Mask's planes
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);

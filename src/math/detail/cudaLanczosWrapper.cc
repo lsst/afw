@@ -412,9 +412,11 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     int const srcHeight = srcImage.getHeight();
     pexLog::TTrace<3>("lsst.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
 
-    if (!lsst::afw::gpu::isGpuBuild())
+    if (!lsst::afw::gpu::isGpuBuild()) {
         throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+    }
 
+#ifdef GPU_BUILD
     gpu::KernelType maskKernelType;
     {
         if (dynamic_cast<afwMath::LanczosWarpingKernel const*>(&maskWarpingKernel)) {
@@ -427,14 +429,17 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, "unknown type of mask warping kernel");
         }
     }
+#endif
 
-    if (gpuDetail::TryToSelectCudaDevice(!forceProcessing) == false)
+    if (gpuDetail::TryToSelectCudaDevice(!forceProcessing) == false) {
         return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::NO_GPU);
-
+    }
+        
     int const mainKernelSize = 2 * lanczosKernel.getOrder();
     //do not process if the kernel is too large for allocated GPU local memory
-    if (mainKernelSize * 2 > gpu::SIZE_MAX_WARPING_KERNEL)
+    if (mainKernelSize * 2 > gpu::SIZE_MAX_WARPING_KERNEL) {
         return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::KERNEL_TOO_LARGE);
+    }
 
     //do not process if the interpolation data is too large to make any speed gains
     if (!forceProcessing && interpLength < 3) {
@@ -451,8 +456,10 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     typedef typename DestImageT::SinglePixel DestPixelT;
     typedef typename  SrcImageT::SinglePixel SrcPixelT;
 
+#ifdef GPU_BUILD
     // Compute borders; use to prevent applying kernel outside of srcImage
     afwGeom::Box2I srcGoodBBox = lanczosKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+#endif
 
     int const interpBlkNX = InterpBlkN(destWidth , interpLength);
     int const interpBlkNY = InterpBlkN(destHeight, interpLength);
@@ -477,13 +484,13 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 
     pexLog::TTrace<3>("lsst.afw.math.warp", "using GPU acceleration, remapping masked image");
 
+#ifdef GPU_BUILD
     int maskKernelSize;
     if (maskKernelType == gpu::KERNEL_TYPE_LANCZOS) {
         maskKernelSize = 2 * dynamic_cast<afwMath::LanczosWarpingKernel const*>(&maskWarpingKernel)->getOrder();
     } else {
         maskKernelSize = 2;
     }
-#ifdef GPU_BUILD
     numGoodPixels = WarpImageGpuWrapper(destImage,
                                         srcImage,
                                         mainKernelSize,

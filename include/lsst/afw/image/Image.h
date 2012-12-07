@@ -515,7 +515,7 @@ namespace image {
          */
         void writeFits(
             std::string const& fileName,
-            boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
+            CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
             std::string const& mode="w"
         ) const;
 
@@ -583,7 +583,7 @@ namespace image {
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
 
-    /************************************************************************************************************/
+/************************************************************************************************************/
     /**
      * \brief A container for an Image and its associated metadata
      */
@@ -596,13 +596,13 @@ namespace image {
         /// shared_ptr to a const DecoratedImage
         typedef boost::shared_ptr<const DecoratedImage> ConstPtr;
         /// shared_ptr to the Image
-        typedef typename Image<PixelT>::Ptr ImagePtr;
+        typedef PTR(Image<PixelT>) ImagePtr;
         /// shared_ptr to the Image as const
-        typedef typename Image<PixelT>::ConstPtr ImageConstPtr;
+        typedef CONST_PTR(Image<PixelT>) ImageConstPtr;
 
         explicit DecoratedImage(const geom::Extent2I & dimensions=geom::Extent2I());
         explicit DecoratedImage(const geom::Box2I & bbox);
-        explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
+        explicit DecoratedImage(PTR(Image<PixelT>) rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(
             std::string const& fileName, 
@@ -613,8 +613,8 @@ namespace image {
 
         DecoratedImage& operator=(const DecoratedImage& image);
 
-        lsst::daf::base::PropertySet::Ptr getMetadata() const { return _metadata; }
-        void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _metadata = metadata; }
+        PTR(daf::base::PropertySet) getMetadata() const { return _metadata; }
+        void setMetadata(PTR(daf::base::PropertySet) metadata) { _metadata = metadata; }
 
         /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
@@ -633,7 +633,7 @@ namespace image {
         
         void writeFits(
             std::string const& fileName,
-            lsst::daf::base::PropertySet::ConstPtr metadata = lsst::daf::base::PropertySet::Ptr(),
+            CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
             std::string const& mode="w"
         ) const;
 
@@ -652,8 +652,8 @@ namespace image {
         void setGain(double gain) { _gain = gain; }
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
-        typename Image<PixelT>::Ptr _image;
-        daf::base::PropertySet::Ptr _metadata;
+        PTR(Image<PixelT>) _image;
+        PTR(daf::base::PropertySet) _metadata;
         
         double _gain;
 

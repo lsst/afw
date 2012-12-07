@@ -541,7 +541,7 @@ image::Image<PixelT>::Image(
     > fits_image_types;
 
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata.reset(new daf::base::PropertyList());
     }
 
     fits_read_image<fits_image_types>(fitsfile, *this, *metadata, bbox, origin);

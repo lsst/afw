@@ -197,19 +197,16 @@ void TimeOneKernelMI(
     int const repCpu = sizeRepMax * 5 / order;
     int const repGpu = GPUrepMul * sizeRepMax * 5 / order;
 
-    int numGoodPixels;
-    int numGoodPixelsGpu;
-
     // warp masked image
     time_t maskedImgCpuStart = clock();
     for (int i = 0; i < repCpu; i++) {
-        numGoodPixels = warpImage(resMI, *destWcs, inImg, *srcWcs, wctrlCPU);
+        warpImage(resMI, *destWcs, inImg, *srcWcs, wctrlCPU);
     }
     double maskedImgCpuTime = DiffTime(maskedImgCpuStart, clock()) / repCpu;
 
     time_t maskedImgGpuStart = clock();
     for (int i = 0; i < repGpu; i++) {
-        numGoodPixelsGpu = warpImage(resMIGpu, *destWcs, inImg, *srcWcs, wctrlGPU);
+        warpImage(resMIGpu, *destWcs, inImg, *srcWcs, wctrlGPU);
     }
     double maskedImgGpuTime = DiffTime(maskedImgGpuStart, clock()) / repGpu;
 
@@ -252,19 +249,16 @@ void TimeOneKernelPI(
     int const repCpu = sizeRepMax * 5 / order;
     int const repGpu = GPUrepMul * sizeRepMax * 5 / order;
 
-    int numGoodPixels;
-    int numGoodPixelsGpu;
-
     // warp plain image
     time_t plainImgCpuStart = clock();
     for (int i = 0; i < repCpu; i++) {
-        numGoodPixels = warpImage(resPI, *destWcs, inImg, *srcWcs, lanCPU);
+        warpImage(resPI, *destWcs, inImg, *srcWcs, lanCPU);
     }
     double plainImgCpuTime = DiffTime(plainImgCpuStart, clock()) / repCpu;
 
     time_t plainImgGpuStart = clock();
     for (int i = 0; i < repGpu; i++) {
-        numGoodPixelsGpu = warpImage(resPIGpu, *destWcs, inImg, *srcWcs, lanGPU);
+        warpImage(resPIGpu, *destWcs, inImg, *srcWcs, lanGPU);
     }
     double plainImgGpuTime = DiffTime(plainImgGpuStart, clock()) / repGpu;
 

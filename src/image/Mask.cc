@@ -1161,8 +1161,8 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(PTR(dafBase::PropertySet) metadat
  */
 template<typename MaskPixelT>
 typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadata(
-        PTR(dafBase::PropertySet) const metadata ///< metadata from a Mask
-                                                                                               ) {
+    CONST_PTR(dafBase::PropertySet) metadata ///< metadata from a Mask
+) {
     MaskPlaneDict newDict;
 
     // First, clear existing MaskPlane metadata

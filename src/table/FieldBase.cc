@@ -122,7 +122,7 @@ void FieldBase< std::string >::setValue(
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_FIELD_BASE(r, data, elem)            \
-    template class FieldBase< elem >;
+    template struct FieldBase< elem >;
 
 BOOST_PP_SEQ_FOR_EACH(
     INSTANTIATE_FIELD_BASE, _,

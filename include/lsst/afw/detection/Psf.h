@@ -21,6 +21,7 @@ namespace detection {
 
 class PsfFormatter;
 class PsfFactoryBase;
+
 /**
  * Create a particular sort of Psf.
  *
@@ -62,9 +63,6 @@ public:
     CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const {
         return _detector;
     }
-    
-    /// Return true iff Psf is valid
-    operator bool() const { return getKernel().get() != NULL; }
 
     PTR(Image) computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true,
                             bool distort=true) const;

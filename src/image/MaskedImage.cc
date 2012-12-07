@@ -609,11 +609,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     CONST_PTR(daf::base::PropertySet) varianceMetadata
 ) const {
 
-    lsst::daf::base::PropertySet::Ptr metadata;
+    PTR(daf::base::PropertySet) metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList());
+        metadata.reset(new lsst::daf::base::PropertyList());
     }
 
     if (fitsfile.getHdu() <= 1) {
