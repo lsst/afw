@@ -323,7 +323,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
 """
 
     if raftInfo is None:
-        ccdInfo = None
+        ccdInfo = {}
     else:
         ccdInfo = {"ampSerial" : raftInfo.get("ampSerial", [0])}
 
