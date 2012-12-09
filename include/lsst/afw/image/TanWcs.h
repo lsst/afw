@@ -65,8 +65,7 @@ namespace image {
  *  For the reverse, radec -> pixels, convert the radec to undistorted coords, and then use the _sipAp and
  *  _sipBp matrices to add in the distortion terms.
  */
-class TanWcs : public lsst::afw::image::Wcs
-{
+class TanWcs : public afw::table::io::PersistableFacade<TanWcs>, public lsst::afw::image::Wcs {
 public:
     typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;
     typedef boost::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;

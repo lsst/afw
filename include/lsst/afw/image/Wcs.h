@@ -36,6 +36,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -100,7 +101,9 @@ namespace image {
 /// present when reading a header (keywords CRPIX1a etc are also accepted)
 
 class Wcs : public lsst::daf::base::Persistable,
-            public lsst::daf::base::Citizen
+            public lsst::daf::base::Citizen,
+            public afw::table::io::PersistableFacade<Wcs>,
+            public afw::table::io::Persistable
 {
 public:
     typedef boost::shared_ptr<Wcs> Ptr;
@@ -276,6 +279,8 @@ public:
     void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
     void shiftReferencePixel(double dx, double dy);
 
+    /// @brief Whether the Wcs is persistable using afw::table::io archives.
+    virtual bool isPersistable() const;
         
 private:
     //Allow the formatter to access private goo
@@ -292,6 +297,8 @@ private:
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
 protected:
+
+    virtual void write(OutputArchive::Handle const & handle) const;
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
