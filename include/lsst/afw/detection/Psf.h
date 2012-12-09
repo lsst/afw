@@ -11,6 +11,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
 namespace afw {
@@ -39,7 +40,9 @@ template<typename PsfT, typename PsfFactorySignatureT> class PsfFactory;
  *
  * \note A polymorphic base class for Psf%s
  */
-class Psf : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
+class Psf : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable,
+            public afw::table::io::PersistableFacade<Psf>, public afw::table::io::Persistable
+ {
 public:
     typedef boost::shared_ptr<Psf> Ptr;            ///< shared_ptr to a Psf
     typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
@@ -179,7 +182,7 @@ private:
 /**
  * A Psf built from a Kernel
  */
-class KernelPsf : public Psf {
+class KernelPsf : public afw::table::io::PersistableFacade<KernelPsf>, public Psf {
 public:
     KernelPsf(
         lsst::afw::math::Kernel::Ptr kernel=lsst::afw::math::Kernel::Ptr() ///< This PSF's Kernel

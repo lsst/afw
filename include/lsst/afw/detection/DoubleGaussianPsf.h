@@ -34,7 +34,7 @@ namespace lsst { namespace afw { namespace detection {
 /*!
  * \brief Represent a Psf as a circularly symmetrical double Gaussian
  */
-class DoubleGaussianPsf : public KernelPsf {
+class DoubleGaussianPsf : public afw::table::io::PersistableFacade<DoubleGaussianPsf>, public KernelPsf {
 public:
     typedef PTR(DoubleGaussianPsf) Ptr;
     typedef CONST_PTR(DoubleGaussianPsf) ConstPtr;
