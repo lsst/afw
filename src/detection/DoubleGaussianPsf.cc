@@ -35,7 +35,71 @@ namespace {
 volatile bool isInstance =
     Psf::registerMe<DoubleGaussianPsf, boost::tuple<int, int, double, double, double> >("DoubleGaussian");
 
+// Read-only singleton struct containing the schema and keys that a double-Gaussian Psf is mapped
+// to in record persistence.
+struct DoubleGaussianPsfSchema : private boost::noncopyable {
+    afw::table::Schema schema;
+    afw::table::Key<int> width;
+    afw::table::Key<int> height;
+    afw::table::Key<double> sigma1;
+    afw::table::Key<double> sigma2;
+    afw::table::Key<double> b;
+
+    static DoubleGaussianPsfSchema const & get() {
+        static DoubleGaussianPsfSchema instance;
+        return instance;
+    }
+
+private:
+    DoubleGaussianPsfSchema() :
+        schema(),
+        width(schema.addField<int>("width", "number of columns in realization of Psf", "pixels")),
+        height(schema.addField<int>("height", "number of rows in realization of Psf", "pixels")),
+        sigma1(schema.addField<double>("sigma1", "radius of inner Gaussian", "pixels")),
+        sigma2(schema.addField<double>("sigma2", "radius of outer Gaussian", "pixels")),
+        b(schema.addField<double>("b", "central amplitude of outer Gaussian (inner amplitude == 1)"))
+    {
+        schema.getCitizen().markPersistent();
+    }
+};
+
+class DoubleGaussianPsfFactory : public table::io::PersistableFactory {
+public:
+
+    virtual PTR(table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
+        assert(catalogs.size() == 1u && catalogs.front().size() == 1u);
+        table::BaseRecord const & record = catalogs.front().front();
+        assert(record.getSchema() == keys.schema);
+        return boost::make_shared<DoubleGaussianPsf>(
+            record.get(keys.width),
+            record.get(keys.height),
+            record.get(keys.sigma1),
+            record.get(keys.sigma2),
+            record.get(keys.b)
+        );
+    }
+
+    DoubleGaussianPsfFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+
+};
+
+DoubleGaussianPsfFactory registration("DoubleGaussianPsf");
+
 } // anonymous
+
+std::string DoubleGaussianPsf::getPersistenceName() const { return "DoubleGaussianPsf"; }
+
+void DoubleGaussianPsf::write(OutputArchive::Handle & handle) const {
+    static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
+    PTR(afw::table::BaseRecord) record = handle.addCatalog(keys.schema).addRecord();
+    (*record)[keys.width] = getKernel()->getWidth();
+    (*record)[keys.height] = getKernel()->getHeight();
+    (*record)[keys.sigma1] = getSigma1();
+    (*record)[keys.sigma2] = getSigma2();
+    (*record)[keys.b] = getB();
+}
 
 }}} // namespace lsst::afw::detection
 

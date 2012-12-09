@@ -63,6 +63,14 @@ public:
 
     double getB() const { return _b; }
 
+    virtual bool isPersistable() const { return true; }
+
+protected:
+
+    virtual std::string getPersistenceName() const;
+
+    virtual void write(OutputArchive::Handle & handle) const;
+
 private:
     double _sigma1;                     ///< Width of inner Gaussian
     double _sigma2;                     ///< Width of outer Gaussian
