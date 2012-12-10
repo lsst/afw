@@ -5,19 +5,12 @@
 #include "wcslib/wcs.h"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/image/RecordGeneratorWcsFactory.h"
+#include "lsst/afw/image/WcsFactory.h"
 #include "lsst/afw/image/Wcs.h"
 
 namespace lsst { namespace afw { namespace image {
 
 namespace {
-
-typedef std::map<std::string,RecordGeneratorWcsFactory*> Registry;
-
-Registry & getRegistry() {
-    static Registry registry;
-    return registry;
-}
 
 // Read-only singleton struct containing the schema and keys that a simple Wcs is mapped
 // to in record persistence.
@@ -56,61 +49,33 @@ private:
     }
 };
 
-RecordGeneratorWcsFactory registration("Simple");
+WcsFactory registration("Wcs");
 
 } // anonymous
 
-Wcs::WcsRecordOutputGenerator::WcsRecordOutputGenerator(
-    Wcs const & wcs, afw::table::Schema const & schema, int recordCount
-) :
-    afw::table::RecordOutputGenerator(schema, recordCount),
-    _wcs(&wcs)
-{}
+std::string Wcs::getPersistenceName() const { return "Wcs"; }
 
-void Wcs::WcsRecordOutputGenerator::fill(afw::table::BaseRecord & record) {
+void Wcs::write(OutputArchive::Handle & handle) const {
     WcsSchema const & keys = WcsSchema::get();
-    record.set(keys.crval, _wcs->getSkyOrigin()->getPosition(afw::geom::degrees));
-    record.set(keys.crpix, _wcs->getPixelOrigin());
-    Eigen::Matrix2d cdIn = _wcs->getCDMatrix();
-    Eigen::Map<Eigen::Matrix2d> cdOut(record[keys.cd].getData());
+    PTR(afw::table::BaseRecord) record = handle.addCatalog(keys.schema).addRecord();
+    record->set(keys.crval, getSkyOrigin()->getPosition(afw::geom::degrees));
+    record->set(keys.crpix, getPixelOrigin());
+    Eigen::Matrix2d cdIn = getCDMatrix();
+    Eigen::Map<Eigen::Matrix2d> cdOut((*record)[keys.cd].getData());
     cdOut = cdIn;
-    record.set(keys.ctype1, std::string(_wcs->_wcsInfo[0].ctype[0]));
-    record.set(keys.ctype2, std::string(_wcs->_wcsInfo[0].ctype[1]));
-    record.set(keys.equinox, _wcs->_wcsInfo[0].equinox);
-    record.set(keys.radesys, std::string(_wcs->_wcsInfo[0].radesys));
-    record.set(keys.cunit1, std::string(_wcs->_wcsInfo[0].cunit[0]));
-    record.set(keys.cunit2, std::string(_wcs->_wcsInfo[0].cunit[1]));
+    record->set(keys.ctype1, std::string(_wcsInfo[0].ctype[0]));
+    record->set(keys.ctype2, std::string(_wcsInfo[0].ctype[1]));
+    record->set(keys.equinox, _wcsInfo[0].equinox);
+    record->set(keys.radesys, std::string(_wcsInfo[0].radesys));
+    record->set(keys.cunit1, std::string(_wcsInfo[0].cunit[0]));
+    record->set(keys.cunit2, std::string(_wcsInfo[0].cunit[1]));
 }
 
-RecordGeneratorWcsFactory::RecordGeneratorWcsFactory(std::string const & name) {
-    getRegistry()[name] = this;
-}
-
-PTR(Wcs) RecordGeneratorWcsFactory::operator()(table::RecordInputGeneratorSet const & inputs) const {
-    CONST_PTR(afw::table::BaseRecord) record = inputs.generators.front()->next();
-    PTR(Wcs) result(new Wcs(*record));
-    return result;
-}
-
-bool Wcs::hasRecordPersistence() const {
+bool Wcs::isPersistable() const {
     if (_wcsInfo[0].naxis != 2) return false;
     if (std::strcmp(_wcsInfo[0].cunit[0], "deg") != 0) return false;
     if (std::strcmp(_wcsInfo[0].cunit[1], "deg") != 0) return false;
     return true;
-}
-
-table::RecordOutputGeneratorSet Wcs::writeToRecords() const {
-    if (!hasRecordPersistence()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
-            "Record persistence is not implemented for this Wcs"
-        );
-    }
-    afw::table::RecordOutputGeneratorSet result("Simple");
-    result.generators.push_back(
-        boost::make_shared<WcsRecordOutputGenerator>(*this, WcsSchema::get().schema, 1)
-    );
-    return result;
 }
 
 Wcs::Wcs(afw::table::BaseRecord const & record) :
@@ -141,15 +106,15 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
     _initWcs();
 }
 
-PTR(Wcs) Wcs::readFromRecords(afw::table::RecordInputGeneratorSet const & inputs) {
-    Registry::iterator i = getRegistry().find(inputs.name);
-    if (i == getRegistry().end()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
-            boost::str(boost::format("No RecordGeneratorWcsFactory with name '%s'") % inputs.name)
-        );
-    }
-    return (*i->second)(inputs);
+PTR(table::io::Persistable)
+WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) const {
+    WcsSchema const & keys = WcsSchema::get();
+    assert(catalogs.front().size() == 1u);
+    assert(catalogs.front().getSchema() == keys.schema);
+    PTR(Wcs) result(new Wcs(catalogs.front().front()));
+    return result;
 }
+
+WcsFactory::WcsFactory(std::string const & name) : table::io::PersistableFactory(name) {}
 
 }}} // namespace lsst::afw::image

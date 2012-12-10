@@ -51,7 +51,9 @@ namespace afw {
         class WcsFormatter;
     }
 namespace image {
-    
+
+class WcsFactory;
+
 /// 
 /// @brief Implementation of the WCS standard for a any projection
 /// 
@@ -298,7 +300,11 @@ private:
 
 protected:
 
-    virtual void write(OutputArchive::Handle const & handle) const;
+    friend class WcsFactory;
+
+    // Implemented in WcsFactory.cc; see also afw::table::io::Persistable
+    virtual std::string getPersistenceName() const;
+    virtual void write(OutputArchive::Handle & handle) const;
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
@@ -309,6 +315,9 @@ protected:
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.
     Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
+
+    // Construct from a record; used by WcsFactory for afw::table::io persistence.
+    explicit Wcs(afw::table::BaseRecord const & record);
     
     Wcs(Wcs const & rhs);
     Wcs& operator= (const Wcs &);        

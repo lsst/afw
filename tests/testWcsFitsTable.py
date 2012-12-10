@@ -65,8 +65,8 @@ class WcsFitsTableTestCase(unittest.TestCase):
 
     def doFitsRoundTrip(self, wcsIn):
         fileName = "wcs-table-test.fits"
-        wcsIn.writeFitsTables(fileName)
-        wcsOut = lsst.afw.image.Wcs.readFitsTables(fileName)
+        wcsIn.writeFits(fileName)
+        wcsOut = lsst.afw.image.Wcs.readFits(fileName)
         os.remove(fileName)
         return wcsOut
         
