@@ -163,6 +163,12 @@ private:
 
     friend PTR(Wcs) makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
 
+    friend class TanWcsFactory;
+
+    virtual std::string getPersistenceName() const;
+
+    virtual void write(OutputArchive::Handle & handle) const;
+
     virtual bool _isSubset(Wcs const &) const;
 
     // Create an empty, invalid TanWcs.  Only used by TanWcsFormatter.
@@ -177,6 +183,8 @@ private:
     TanWcs(CONST_PTR(daf::base::PropertySet) const & fitsMetadata);
 
     TanWcs(TanWcs const & rhs);
+
+    TanWcs(afw::table::BaseRecord const & mainRecord, CONST_PTR(afw::table::BaseRecord) sipRecord);
 
     TanWcs & operator = (const TanWcs &);
 
