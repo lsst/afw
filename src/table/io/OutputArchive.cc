@@ -205,7 +205,7 @@ int OutputArchive::Handle::put(Persistable const * obj) {
 }
 
 OutputArchive::Handle::Handle(int id, std::string const & name, PTR(Impl) impl) :
-    _id(id), _name(name), _catPersistable(0), _impl(impl)
+    _id(id), _catPersistable(0), _name(name), _impl(impl)
 {}
 
 OutputArchive::Handle::~Handle() {}
