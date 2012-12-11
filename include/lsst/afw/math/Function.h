@@ -46,6 +46,8 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 
+#include "lsst/afw/table/io/Persistable.h"
+
 namespace lsst {
 namespace afw {
 namespace math {
@@ -84,8 +86,10 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class Function : public lsst::daf::base::Citizen {
-    
+    class Function : public lsst::daf::base::Citizen,
+                     public afw::table::io::PersistableFacade< Function<ReturnT> >,
+                     public afw::table::io::Persistable
+    {
     public:
         /**
          * @brief Construct a Function given the number of function parameters.
@@ -220,7 +224,9 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class Function1 : public Function<ReturnT> {
+    class Function1 : public afw::table::io::PersistableFacade< Function1<ReturnT> >,
+                      public Function<ReturnT>
+    {
     public:
         typedef boost::shared_ptr<Function1<ReturnT> > Ptr;
 
@@ -289,7 +295,9 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     template<typename ReturnT>
-    class Function2 : public Function<ReturnT> {
+    class Function2 : public afw::table::io::PersistableFacade< Function2<ReturnT> >,
+                      public Function<ReturnT>
+    {
     public:
         typedef boost::shared_ptr<Function2<ReturnT> > Ptr;
 

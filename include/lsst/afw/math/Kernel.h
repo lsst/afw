@@ -55,6 +55,8 @@
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
 
+#include "lsst/afw/table/io/Persistable.h"
+
 namespace lsst {
 namespace afw {
 
@@ -129,7 +131,10 @@ using boost::serialization::make_nvp;
      *
      * @ingroup afw
      */
-    class Kernel : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
+    class Kernel : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable,
+                   public afw::table::io::PersistableFacade<Kernel>,
+                   public afw::table::io::Persistable
+    {
 
     public:
         typedef double Pixel;
@@ -405,7 +410,7 @@ using boost::serialization::make_nvp;
      *
      * @ingroup afw
      */
-    class FixedKernel : public Kernel {
+    class FixedKernel : public afw::table::io::PersistableFacade<FixedKernel>, public Kernel {
     public:
         typedef PTR(FixedKernel) Ptr;
         typedef CONST_PTR(FixedKernel) ConstPtr;
@@ -466,7 +471,7 @@ using boost::serialization::make_nvp;
      *
      * @ingroup afw
      */
-    class AnalyticKernel : public Kernel {
+    class AnalyticKernel : public afw::table::io::PersistableFacade<AnalyticKernel>, public Kernel {
     public:
         typedef PTR(AnalyticKernel) Ptr;
         typedef CONST_PTR(AnalyticKernel) ConstPtr;
@@ -528,7 +533,9 @@ using boost::serialization::make_nvp;
      *
      * @ingroup afw
      */
-    class DeltaFunctionKernel : public Kernel {
+    class DeltaFunctionKernel : public afw::table::io::PersistableFacade<DeltaFunctionKernel>,
+                                public Kernel
+    {
     public:
         typedef PTR(DeltaFunctionKernel) Ptr;
         typedef CONST_PTR(DeltaFunctionKernel) ConstPtr;
@@ -584,7 +591,9 @@ using boost::serialization::make_nvp;
      *
      * @ingroup afw
      */
-    class LinearCombinationKernel : public Kernel {
+    class LinearCombinationKernel : public afw::table::io::PersistableFacade<LinearCombinationKernel>,
+                                    public Kernel
+    {
     public:
         typedef PTR(LinearCombinationKernel) Ptr;
         typedef CONST_PTR(LinearCombinationKernel) ConstPtr;
@@ -682,7 +691,7 @@ using boost::serialization::make_nvp;
      *
      * @ingroup afw
      */
-    class SeparableKernel : public Kernel {
+    class SeparableKernel : public afw::table::io::PersistableFacade<SeparableKernel>, public Kernel {
     public:
         typedef PTR(SeparableKernel) Ptr;
         typedef CONST_PTR(SeparableKernel) ConstPtr;
