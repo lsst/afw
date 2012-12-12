@@ -302,7 +302,7 @@ protected:
 
     friend class WcsFactory;
 
-    // Implemented in WcsFactory.cc; see also afw::table::io::Persistable
+    // See afw::table::io::Persistable
     virtual std::string getPersistenceName() const;
     virtual void write(OutputArchive::Handle & handle) const;
 

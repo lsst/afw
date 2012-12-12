@@ -39,7 +39,6 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"
-#include "lsst/afw/image/WcsFactory.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -520,11 +519,11 @@ TanWcs::TanWcs(
     }
 }
 
-class TanWcsFactory : public WcsFactory {
+class TanWcsFactory : public table::io::PersistableFactory {
 public:
 
     explicit TanWcsFactory(std::string const & name) :
-        WcsFactory(name) {}
+        table::io::PersistableFactory(name) {}
 
     virtual PTR(table::io::Persistable) read(
         InputArchive const & archive, 
