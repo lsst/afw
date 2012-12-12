@@ -89,36 +89,6 @@ private:
 };
 
 /**
- *  @brief An append-only catalog proxy used by implementations of Persistable::write.
- *
- *  A CatalogProxy can only be obtained by calling Handle::addCatalog, and provides
- *  an interface for adding records to a single catalog (and pretty much nothing else).
- */
-class OutputArchive::CatalogProxy {
-public:
-
-    /// Append a new record to the catalogand return it.
-    PTR(BaseRecord) addRecord();
-
-    /// Shallow copy constructor.
-    CatalogProxy(CatalogProxy const & other);
-
-    /// Shallow assignment operator.
-    CatalogProxy & operator=(CatalogProxy const & other);
-
-    ~CatalogProxy();
-
-private:
-
-    friend class OutputArchive::Handle;
-
-    CatalogProxy(PTR(BaseRecord) index, PTR(Impl) impl);
-
-    PTR(BaseRecord) _index;
-    PTR(Impl) _impl;
-};
-
-/**
  *  @brief An object passed to Persistable::write to allow it to persist itself.
  *
  *  Handle provides an interface to add additional catalogs and save nested
@@ -128,13 +98,20 @@ class OutputArchive::Handle : private boost::noncopyable {
 public:
 
     /**
-     *  @brief Start a new catalog with the given schema.
+     *  @brief Return a new, empty catalog with the given schema.
      *
-     *  The returned object may actually point to a new catalog in the archive,
-     *  or it may just append records to an existing catalog in the archive that
-     *  has the same schema.
+     *  All catalogs passed to saveCatalog should be originally
+     *  created by makeCatalog, or at least share the same table.
      */
-    CatalogProxy addCatalog(Schema const & schema);
+    BaseCatalog makeCatalog(Schema const & schema);
+
+    /**
+     *  @brief Save a catalog in the archive.
+     *
+     *  The catalog must have been created using makeCatalog,
+     *  or be a shallow copy or subset of such a catalog.
+     */
+    void saveCatalog(BaseCatalog const & catalog);
 
     /**
      *  @brief Save a nested Persistable to the same archive.

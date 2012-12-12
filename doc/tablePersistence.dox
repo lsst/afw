@@ -35,8 +35,8 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  base class for Persistables that adds static member functions for reading from FITS
  *  and returning a derived type.
  *
- *   - *OutputArchive::Handle* and *OutputArchive::CatalogProxy* are lightweight proxy
- *  classes used by Persistable::write to save itself to an OutputArchive.
+ *   - *OutputArchive::Handle* is a lightweight proxy class used by Persistable::write
+ *  to save itself to an OutputArchive.
  *
  *   - *ArchiveIndexSchema* is a singleton class that holds the schema and keys for the
  *  index catalog that describes an archive.  It also serves as a useful example of how
@@ -156,15 +156,18 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  void Derived::write(OutputArchive::Handle & handle) const {
  *      DerivedSchema const & keys = DerivedSchema::get()
  *      int var3id = handle.put(var3); // save the nested thing and get an ID we can save instead
- *      PTR(BaseRecord) record1 = handle.addCatalog(keys.schema1).addRecord();
+ *      BaseCatalog catalog1 = handle.makeCatalog(keys.schema1);
+ *      BaseCatalog catalog2 = handle.makeCatalog(keys.schema2);
+ *      PTR(BaseRecord) record1 = catalog1.addNew();
  *      record1->set(keys.var1, var1);
  *      record1->set(keys.var3, var3id);
- *      OutputArchive::CatalogProxy cat2 = handle.addCatalog(keys.schema2);
  *      for (auto i = var2.begin(); i != var2.end(); ++i) {
- *          PTR(BaseRecord) record2 = cat2.addRecord();
+ *          PTR(BaseRecord) record2 = catalog2.addNew();
  *          record2->set(keys.var2first, i->first);
  *          record2->set(keys.var2second, i->second);
  *      }
+ *      handle.saveCatalog(catalog1);
+ *      handle.saveCatalog(catalog2);
  *  }
  *  @endcode
  *

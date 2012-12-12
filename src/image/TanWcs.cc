@@ -454,7 +454,8 @@ void TanWcs::write(OutputArchive::Handle & handle) const {
                 "Bp", "y reverse transform coefficients (column-major)", _sipBp.size()
             )
         );
-        PTR(afw::table::BaseRecord) record = handle.addCatalog(schema).addRecord();
+        afw::table::BaseCatalog catalog = handle.makeCatalog(schema);
+        PTR(afw::table::BaseRecord) record = catalog.addNew();
         Eigen::Map<Eigen::MatrixXd> mapA((*record)[keyA].getData(), _sipA.rows(), _sipA.cols());
         mapA = _sipA;
         Eigen::Map<Eigen::MatrixXd> mapB((*record)[keyB].getData(), _sipB.rows(), _sipB.cols());
@@ -463,6 +464,7 @@ void TanWcs::write(OutputArchive::Handle & handle) const {
         mapAp = _sipAp;
         Eigen::Map<Eigen::MatrixXd> mapBp((*record)[keyBp].getData(), _sipBp.rows(), _sipBp.cols());
         mapBp = _sipBp;
+        handle.saveCatalog(catalog);
     }
 }
 

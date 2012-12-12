@@ -93,12 +93,14 @@ std::string DoubleGaussianPsf::getPersistenceName() const { return "DoubleGaussi
 
 void DoubleGaussianPsf::write(OutputArchive::Handle & handle) const {
     static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
-    PTR(afw::table::BaseRecord) record = handle.addCatalog(keys.schema).addRecord();
+    afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    PTR(afw::table::BaseRecord) record = catalog.addNew();
     (*record)[keys.width] = getKernel()->getWidth();
     (*record)[keys.height] = getKernel()->getHeight();
     (*record)[keys.sigma1] = getSigma1();
     (*record)[keys.sigma2] = getSigma2();
     (*record)[keys.b] = getB();
+    handle.saveCatalog(catalog);
 }
 
 }}} // namespace lsst::afw::detection

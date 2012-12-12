@@ -29,12 +29,7 @@ typedef Map::value_type MapItem;
 
 struct OutputArchive::Impl {
 
-    PTR(BaseRecord) addCatalog(Schema const & schema, int id, std::string const & name, int catPersistable) {
-        PTR(BaseRecord) indexRecord = _index.addNew();
-        indexRecord->set(indexKeys.id, id);
-        indexRecord->set(indexKeys.name, name);
-        indexRecord->set(indexKeys.catPersistable, catPersistable);
-        indexRecord->set(indexKeys.nRows, 0);
+    BaseCatalog makeCatalog(Schema const & schema) {
         int catArchive = 1;
         CatalogVector::iterator iter = _catalogs.begin();
         int const flags = table::Schema::EQUAL_KEYS | table::Schema::EQUAL_NAMES;
@@ -45,7 +40,6 @@ struct OutputArchive::Impl {
         }
         if (iter == _catalogs.end()) {
             iter = _catalogs.insert(_catalogs.end(), BaseCatalog(schema));
-
         }
         if (!iter->getTable()->getMetadata()) {
             PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
@@ -53,24 +47,32 @@ struct OutputArchive::Impl {
             metadata->set("EXTTYPE", "ARCHIVE_DATA");
             metadata->set("AR_CATN", catArchive, "# of this catalog relative to the start of this archive");
         }
+        return BaseCatalog(iter->getTable());
+    }
+
+    void saveCatalog(BaseCatalog const & catalog, int id, std::string const & name, int catPersistable) {
+        PTR(BaseRecord) indexRecord = _index.addNew();
+        indexRecord->set(indexKeys.id, id);
+        indexRecord->set(indexKeys.name, name);
+        indexRecord->set(indexKeys.catPersistable, catPersistable);
+        indexRecord->set(indexKeys.nRows, catalog.size());
+        int catArchive = 1;
+        CatalogVector::iterator iter = _catalogs.begin();
+        for (; iter != _catalogs.end(); ++iter, ++catArchive) {
+            if (iter->getTable() == catalog.getTable()) {
+                break;
+            }
+        }
+        if (iter == _catalogs.end()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "All catalogs passed to Handle::saveCatalog must be created by Handle::makeCatalog"
+            );
+        }
         iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
         indexRecord->set(indexKeys.row0, iter->size());
         indexRecord->set(indexKeys.catArchive, catArchive);
-        return indexRecord;
-    }
-
-    PTR(BaseRecord) addRecord(BaseRecord & indexRecord) {
-        BaseCatalog & catalog = _catalogs[indexRecord.get(indexKeys.catArchive)-1];
-        // check to make sure the block of rows hasn't been interrupted by a row from another object.
-        if (int(catalog.size()) != indexRecord.get(indexKeys.row0) + indexRecord.get(indexKeys.nRows)) {
-            throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
-                "Logic error in nested persistence: classes should not alternate calls to 'put' "
-                "and 'addRecord' if a nested object may reuse the parent object's schema."
-            );
-        }
-        ++indexRecord[indexKeys.nRows];
-        return catalog.addNew();
+        iter->insert(iter->end(), catalog.begin(), catalog.end(), false);
     }
 
     int put(Persistable const * obj, PTR(Impl) const & self) {
@@ -163,39 +165,14 @@ void OutputArchive::writeFits(fits::Fits & fitsfile) const {
     _impl->writeFits(fitsfile);
 }
 
-// ----- OutputArchive::CatalogProxy ------------------------------------------------------------------------
-
-PTR(BaseRecord) OutputArchive::CatalogProxy::addRecord() {
-    if (!_index) {
-        throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
-            "Cannot create a new record without first creating a catalog."
-        );
-    }
-    return _impl->addRecord(*_index);
-}
-
-OutputArchive::CatalogProxy::CatalogProxy(PTR(BaseRecord) index, PTR(Impl) impl) :
-    _index(index), _impl(impl)
-{}
-
-OutputArchive::CatalogProxy::CatalogProxy(CatalogProxy const & other) :
-    _index(other._index), _impl(other._impl)
-{}
-
-OutputArchive::CatalogProxy & OutputArchive::CatalogProxy::operator=(CatalogProxy const & other) {
-    _index = other._index;
-    _impl = other._impl;
-    return *this;
-}
-
-OutputArchive::CatalogProxy::~CatalogProxy() {}
-
 // ----- OutputArchive::Handle ------------------------------------------------------------------------------
 
-OutputArchive::CatalogProxy OutputArchive::Handle::addCatalog(Schema const & schema) {
-    PTR(BaseRecord) index = _impl->addCatalog(schema, _id, _name, _catPersistable);
-    return CatalogProxy(index, _impl);
+BaseCatalog OutputArchive::Handle::makeCatalog(Schema const & schema) {
+    return _impl->makeCatalog(schema);
+}
+
+void OutputArchive::Handle::saveCatalog(BaseCatalog const & catalog) {
+    _impl->saveCatalog(catalog, _id, _name, _catPersistable);
 }
 
 int OutputArchive::Handle::put(Persistable const * obj) {

@@ -57,7 +57,8 @@ std::string Wcs::getPersistenceName() const { return "Wcs"; }
 
 void Wcs::write(OutputArchive::Handle & handle) const {
     WcsSchema const & keys = WcsSchema::get();
-    PTR(afw::table::BaseRecord) record = handle.addCatalog(keys.schema).addRecord();
+    afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    PTR(afw::table::BaseRecord) record = catalog.addNew();
     record->set(keys.crval, getSkyOrigin()->getPosition(afw::geom::degrees));
     record->set(keys.crpix, getPixelOrigin());
     Eigen::Matrix2d cdIn = getCDMatrix();
@@ -69,6 +70,7 @@ void Wcs::write(OutputArchive::Handle & handle) const {
     record->set(keys.radesys, std::string(_wcsInfo[0].radesys));
     record->set(keys.cunit1, std::string(_wcsInfo[0].cunit[0]));
     record->set(keys.cunit2, std::string(_wcsInfo[0].cunit[1]));
+    handle.saveCatalog(catalog);
 }
 
 bool Wcs::isPersistable() const {

@@ -68,10 +68,12 @@ public:
         Key<int> k1 = schema.addField<int>("var1", "doc for var1");
         Key<double> k2 = schema.addField<double>("var2", "doc for var2");
         Key< Array<float> > k3 = schema.addField< Array<float> >("var3", "doc for var3", var3.getSize<0>());
-        PTR(BaseRecord) record = handle.addCatalog(schema).addRecord();
+        BaseCatalog catalog = handle.makeCatalog(schema);
+        PTR(BaseRecord) record = catalog.addNew();
         record->set(k1, var1);
         record->set(k2, var2);
         record->set(k3, var3);
+        handle.saveCatalog(catalog);
     }
 
     class Factory : public PersistableFactory {
@@ -120,11 +122,15 @@ public:
         Key<int> k1 = schema1.addField<int>("var1", "doc for var1");
         Schema schema2;
         Key<double> k2 = schema2.addField<double>("var2", "doc for var2");
-        handle.addCatalog(schema1).addRecord()->set(k1, var1);
-        OutputArchive::CatalogProxy catalog = handle.addCatalog(schema2);
+        BaseCatalog catalog1 = handle.makeCatalog(schema1);
+        PTR(BaseRecord) record1 = catalog1.addNew();
+        record1->set(k1, var1);
+        BaseCatalog catalog2 = handle.makeCatalog(schema2);
         for (std::vector<double>::const_iterator i = var2.begin(); i != var2.end(); ++i) {
-            catalog.addRecord()->set(k2, *i);
+            catalog2.addNew()->set(k2, *i);
         }
+        handle.saveCatalog(catalog1);
+        handle.saveCatalog(catalog2);
     }
 
     class Factory : public PersistableFactory {
@@ -195,10 +201,12 @@ public:
         Key<int> k3 = schema.addField<int>("var3", "doc for var3");
         int id2 = handle.put(var2.get());
         int id3 = handle.put(var3.get());
-        PTR(BaseRecord) record = handle.addCatalog(schema).addRecord();
+        BaseCatalog catalog = handle.makeCatalog(schema);
+        PTR(BaseRecord) record = catalog.addNew();
         record->set(k1, var1);
         record->set(k2, id2);
         record->set(k3, id3);
+        handle.saveCatalog(catalog);
     }
 
     class Factory : public PersistableFactory {
