@@ -5,6 +5,7 @@
 #include "boost/noncopyable.hpp"
 
 #include "lsst/base.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
@@ -19,6 +20,32 @@ class MemFileManager;
 } // namespace fits
 
 namespace table { namespace io {
+
+/**
+ *  @brief An exception thrown when problems occur during persistence.
+ */
+LSST_EXCEPTION_TYPE(PersistenceError, lsst::pex::exceptions::IoErrorException,
+                    lsst::afw::table::io::PersistenceError)
+
+/**
+ *  @brief An exception thrown when an InputArchive's contents do not make sense.
+ *
+ *  This is the exception thrown by the LSST_ARCHIVE_ASSERT macro.
+ */
+LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceError,
+                    lsst::afw::table::io::MalformedArchiveError)
+
+/**
+ *  @brief An assertion macro used to validate the structure of an InputArchive.
+ *
+ *  This assertion is not enabled/disabled by NDEBUG, and throws an exception rather than aborting,
+ *  and should be reserved for errors that should only occur when an InputArchive is found to be
+ *  in a state that could not have been produced by an OutputArchive.
+ */
+#define LSST_ARCHIVE_ASSERT(EXPR)                                       \
+    if (!(EXPR)) throw LSST_EXCEPT(                                     \
+        lsst::afw::table::io::MalformedArchiveError,                    \
+        "Archive assertion failed: " # EXPR)
 
 /**
  *  @brief A base class for objects that can be persisted via afw::table::io Archive classes.

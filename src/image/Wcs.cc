@@ -1108,7 +1108,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
     WcsSchema const & keys = WcsSchema::get();
     if (!record.getSchema().contains(keys.schema)) {
         throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
+            afw::table::io::MalformedArchiveError,
             "Incorrect schema for Wcs persistence"
         );
     }
@@ -1126,8 +1126,9 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
 PTR(table::io::Persistable)
 WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) const {
     WcsSchema const & keys = WcsSchema::get();
-    assert(catalogs.front().size() == 1u);
-    assert(catalogs.front().getSchema() == keys.schema);
+    LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
+    LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+    LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
     PTR(Wcs) result(new Wcs(catalogs.front().front()));
     return result;
 }

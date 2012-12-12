@@ -474,47 +474,58 @@ TanWcs::TanWcs(
 {
     if (_hasDistortion) {
         typedef afw::table::Array<double> T;
-        afw::table::SchemaItem<T> sA = sipRecord->getSchema().find<T>("A");
-        afw::table::SchemaItem<T> sB = sipRecord->getSchema().find<T>("B");
-        afw::table::SchemaItem<T> sAp = sipRecord->getSchema().find<T>("Ap");
-        afw::table::SchemaItem<T> sBp = sipRecord->getSchema().find<T>("Bp");
+        afw::table::Key<T> kA;
+        afw::table::Key<T> kB;
+        afw::table::Key<T> kAp;
+        afw::table::Key<T> kBp;
+        try {
+            kA = sipRecord->getSchema()["A"];
+            kB = sipRecord->getSchema()["B"];
+            kAp = sipRecord->getSchema()["Ap"];
+            kBp = sipRecord->getSchema()["Bp"];
+        } catch (...) {
+            throw LSST_EXCEPT(
+                afw::table::io::MalformedArchiveError,
+                "Incorrect schema for TanWcs distortion terms"
+            );
+        }
         // Adding 0.5 and truncating the result here guarantees we'll get the right answer
         // for small ints even when round-off error is involved.
-        int nA = int(std::sqrt(sA.field.getSize() + 0.5));
-        int nB = int(std::sqrt(sB.field.getSize() + 0.5));
-        int nAp = int(std::sqrt(sAp.field.getSize() + 0.5));
-        int nBp = int(std::sqrt(sBp.field.getSize() + 0.5));
-        if (nA * nA != sA.field.getSize()) {
+        int nA = int(std::sqrt(kA.getSize() + 0.5));
+        int nB = int(std::sqrt(kB.getSize() + 0.5));
+        int nAp = int(std::sqrt(kAp.getSize() + 0.5));
+        int nBp = int(std::sqrt(kBp.getSize() + 0.5));
+        if (nA * nA != kA.getSize()) {
             throw LSST_EXCEPT(
-                pex::exceptions::RuntimeErrorException,
+                afw::table::io::MalformedArchiveError,
                 "Forward X SIP matrix is not square."
             );
         }
-        if (nB * nB != sB.field.getSize()) {
+        if (nB * nB != kB.getSize()) {
             throw LSST_EXCEPT(
-                pex::exceptions::RuntimeErrorException,
+                afw::table::io::MalformedArchiveError,
                 "Forward Y SIP matrix is not square."
             );
         }
-        if (nAp * nAp != sAp.field.getSize()) {
+        if (nAp * nAp != kAp.getSize()) {
             throw LSST_EXCEPT(
-                pex::exceptions::RuntimeErrorException,
+                afw::table::io::MalformedArchiveError,
                 "Reverse X SIP matrix is not square."
             );
         }
-        if (nBp * nBp != sBp.field.getSize()) {
+        if (nBp * nBp != kBp.getSize()) {
             throw LSST_EXCEPT(
-                pex::exceptions::RuntimeErrorException,
+                afw::table::io::MalformedArchiveError,
                 "Reverse Y SIP matrix is not square."
             );
         }
-        Eigen::Map<Eigen::MatrixXd const> mapA((*sipRecord)[sA.key].getData(), nA, nA);
+        Eigen::Map<Eigen::MatrixXd const> mapA((*sipRecord)[kA].getData(), nA, nA);
         _sipA = mapA;
-        Eigen::Map<Eigen::MatrixXd const> mapB((*sipRecord)[sB.key].getData(), nB, nB);
+        Eigen::Map<Eigen::MatrixXd const> mapB((*sipRecord)[kB].getData(), nB, nB);
         _sipB = mapB;
-        Eigen::Map<Eigen::MatrixXd const> mapAp((*sipRecord)[sAp.key].getData(), nAp, nAp);
+        Eigen::Map<Eigen::MatrixXd const> mapAp((*sipRecord)[kAp].getData(), nAp, nAp);
         _sipAp = mapAp;
-        Eigen::Map<Eigen::MatrixXd const> mapBp((*sipRecord)[sBp.key].getData(), nBp, nBp);
+        Eigen::Map<Eigen::MatrixXd const> mapBp((*sipRecord)[kBp].getData(), nBp, nBp);
         _sipBp = mapBp;
     }
 }
@@ -529,9 +540,12 @@ public:
         InputArchive const & archive, 
         CatalogVector const & catalogs
     ) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
         CONST_PTR(table::BaseRecord) sipRecord;
         if (catalogs.size() > 1u) {
-            assert(catalogs.size() == 2u && catalogs.front().size() == 1u && catalogs.back().size() == 1u);
+            LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
+            LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+            LSST_ARCHIVE_ASSERT(catalogs.back().size() == 1u);
             sipRecord = catalogs.back().begin();
         }
         PTR(TanWcs) result(new TanWcs(catalogs.front().front(), sipRecord));

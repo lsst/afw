@@ -36,14 +36,15 @@ Python interface to lsst::afw::table::io classes
 #pragma SWIG nowarn=401                 // nothing known about base class
 #pragma SWIG nowarn=302                 // redefine identifier (SourceSet<> -> SourceSet)
 
-%lsst_exceptions();
-
 %{
 #include "lsst/afw/table/io/Persistable.h"
 %}
 
 %include "boost_shared_ptr.i"
 %include "lsst/p_lsstSwig.i"
+%import "lsst/pex/exceptions/exceptionsLib.i"
+
+%lsst_exceptions();
 
 // =============== Persistable ==============================================================================
 

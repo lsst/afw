@@ -69,9 +69,10 @@ public:
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
-        assert(catalogs.size() == 1u && catalogs.front().size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();
-        assert(record.getSchema() == keys.schema);
+        LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
         return boost::make_shared<DoubleGaussianPsf>(
             record.get(keys.width),
             record.get(keys.height),

@@ -54,7 +54,7 @@ public:
                     name = indexIter->get(indexKeys.name);
                 } else if (name != indexIter->get(indexKeys.name)) {
                     throw LSST_EXCEPT(
-                        pex::exceptions::RuntimeErrorException,
+                        MalformedArchiveError,
                         (boost::format(
                             "Inconsistent name in index for ID %d; got '%s', expected '%s'"
                         ) % indexIter->get(indexKeys.id) % indexIter->get(indexKeys.name) % name).str()
@@ -63,7 +63,7 @@ public:
                 std::size_t catN = indexIter->get(indexKeys.catArchive)-1;
                 if (catN >= _catalogs.size()) {
                     throw LSST_EXCEPT(
-                        pex::exceptions::RuntimeErrorException,
+                        MalformedArchiveError,
                         (boost::format(
                             "Invalid catalog number in index for ID %d; got '%d', max is '%d'"
                         ) % indexIter->get(indexKeys.id) % catN % _catalogs.size()).str()
@@ -74,7 +74,7 @@ public:
                 std::size_t i2 = i1 + indexIter->get(indexKeys.nRows);
                 if (i2 > fullCatalog.size()) {
                     throw LSST_EXCEPT(
-                        pex::exceptions::RuntimeErrorException,
+                        MalformedArchiveError,
                         (boost::format(
                             "Index and data catalogs do not agree for ID %d; catalog %d has %d rows, not %d"
                         ) % indexIter->get(indexKeys.id)
@@ -85,8 +85,15 @@ public:
                     BaseCatalog(fullCatalog.getTable(), fullCatalog.begin() + i1, fullCatalog.begin() + i2)
                 );
             }
-            PersistableFactory const & factory = PersistableFactory::lookup(name);
-            r.first->second = factory.read(self, factoryArgs);
+            try {
+                PersistableFactory const & factory = PersistableFactory::lookup(name);
+                r.first->second = factory.read(self, factoryArgs);
+            } catch (pex::exceptions::Exception & err) {
+                LSST_EXCEPT_ADD(
+                    err, (boost::format("loading object with id=%d, name='%s'") % id % name).str()
+                );
+                throw;
+            }
         }
         assert(r.first->second);
         return r.first->second;
