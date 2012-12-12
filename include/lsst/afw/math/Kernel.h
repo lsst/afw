@@ -378,6 +378,8 @@ using boost::serialization::make_nvp;
         virtual void toFile(std::string fileName) const;
 #endif
 
+        struct KernelSchema;
+
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
