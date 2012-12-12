@@ -13,6 +13,7 @@
 #include <map>
 
 #include "boost/filesystem.hpp"
+#include "Eigen/Core"
 
 #include "lsst/utils/ieee.h"
 #include "lsst/afw/table/io/Persistable.h"
@@ -21,6 +22,8 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "ndarray.h"
+
+#include "lsst/afw/math/FunctionLibrary.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -234,6 +237,8 @@ static ExampleA::Factory const registrationA("ExampleA");
 static ExampleB::Factory const registrationB("ExampleB");
 static ExampleC::Factory const registrationC("ExampleC");
 
+
+
 template <int M, int N>
 std::vector< ndarray::Vector<PTR(Comparable),M> >
 roundtripAndCompare(
@@ -410,4 +415,52 @@ BOOST_AUTO_TEST_CASE(Nested) {
         BOOST_CHECK_EQUAL(c3->var3, r3[i][0]);
     }
 
+}
+
+namespace {
+
+std::vector<double> makeRandomVector(int size) {
+    std::vector<double> v(size);
+    Eigen::Map<Eigen::VectorXd>(&v.front(), size).setRandom();
+    return v;
+}
+
+template <typename T>
+PTR(T) roundtrip(T const * input) {
+    using namespace lsst::afw::table::io;
+    using namespace lsst::afw::fits;
+    OutputArchive outArchive;
+    int id = outArchive.put(input);
+    MemFileManager manager;
+    Fits outFits(manager, "w", Fits::AUTO_CHECK);
+    outArchive.writeFits(outFits);
+    outFits.closeFile();
+    Fits inFits(manager, "r", Fits::AUTO_CHECK);
+    inFits.setHdu(0);
+    InputArchive inArchive = InputArchive::readFits(inFits);
+    inFits.closeFile();
+    return boost::dynamic_pointer_cast<T>(inArchive.get(id));
+}
+
+} // anonymous
+
+BOOST_AUTO_TEST_CASE(PolynomialFunction2) {
+    namespace afwMath = lsst::afw::math;
+    PTR(afwMath::PolynomialFunction2<double>) p1(new afwMath::PolynomialFunction2<double>(makeRandomVector(15)));
+    PTR(afwMath::PolynomialFunction2<double>) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getNParameters(), p2->getNParameters());
+    for (unsigned int i = 0; i < p1->getNParameters(); ++i) {
+        BOOST_CHECK_EQUAL(p1->getParameter(i), p2->getParameter(i));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Chebyshev1Function2) {
+    namespace afwMath = lsst::afw::math;
+    PTR(afwMath::Chebyshev1Function2<double>) p1(new afwMath::Chebyshev1Function2<double>(makeRandomVector(15)));
+    PTR(afwMath::Chebyshev1Function2<double>) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getNParameters(), p2->getNParameters());
+    for (unsigned int i = 0; i < p1->getNParameters(); ++i) {
+        BOOST_CHECK_EQUAL(p1->getParameter(i), p2->getParameter(i));
+    }
+    BOOST_CHECK(p1->getXYRange() == p2->getXYRange());
 }
