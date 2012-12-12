@@ -23,12 +23,6 @@
  */
  
 /************************************************************************************************************/
-%{
-namespace lsst { namespace afw { namespace image {
-    extern Wcs NoWcs;
-}}}
-using lsst::afw::image::NoWcs;
-%}
 
 %import "lsst/afw/table/io/ioLib.i"
 
