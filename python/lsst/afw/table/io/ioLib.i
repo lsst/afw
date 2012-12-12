@@ -29,6 +29,7 @@ Python interface to lsst::afw::table::io classes
 %feature("autodoc", "1");
 %module(package="lsst.afw.table.io", docstring=ioLib_DOCSTRING) ioLib
 
+#pragma SWIG nowarn=362                 // operator=  ignored
 #pragma SWIG nowarn=389                 // operator[]  ignored
 #pragma SWIG nowarn=503                 // comparison operators ignored
 #pragma SWIG nowarn=520                 // base class not similarly marked as smart pointer
