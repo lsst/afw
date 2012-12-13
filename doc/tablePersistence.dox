@@ -35,13 +35,15 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  base class for Persistables that adds static member functions for reading from FITS
  *  and returning a derived type.
  *
- *   - *OutputArchive::Handle* is a lightweight proxy class used by Persistable::write
+ *   - *OutputArchiveHandle* is a lightweight proxy class used by Persistable::write
  *  to save itself to an OutputArchive.
  *
  *   - *ArchiveIndexSchema* is a singleton class that holds the schema and keys for the
  *  index catalog that describes an archive.  It also serves as a useful example of how
  *  to handle key and schema objects for Persistable subclasses whose size is fixed.
  *
+ *   - *CatalogVector* is a trivial subclass of std::vector<BaseCatalog> that's really
+ *  just a forward-declarable typedef.
  *
  *  @section afwTablePersistenceHowTo Implementing a Persistable Subclass
  *
@@ -75,6 +77,9 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  Here's a complete example for an abstract base class @c Base and derived class @c Derived,
  *  starting with the header file:
  *  @code
+ *  #include "lsst/afw/table/io/Persistable.h"
+ *  using namespace lsst::afw::table::io;  // just for brevity; not actually recommended
+ *
  *  class Base : public PersistableFacade<Base>, public Persistable {
  *      // no new code needed here, unless the base class is also concrete
  *      // (see Wcs for an example of that).
@@ -91,7 +96,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *
  *  protected:
  *      virtual std::string getPersistenceName() const { return "Derived"; }
- *      virtual void write(OutputArchive::Handle & handle) const;
+ *      virtual void write(OutputArchiveHandle & handle) const;
  *  };
  *  @endcode
  *
@@ -101,6 +106,12 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *
  *  Here's the source file:
  *  @code
+ *  #include "BaseAndDerived.h" # the example header above
+ *  // Some the additional includes - together, these pull in almost all of afw::table, so we don't
+ *  // want to include them in the header.
+ *  #include "lsst/afw/table/io/OutputArchive.h"
+ *  #include "lsst/afw/table/io/InputArchive.h"
+ *  #include "lsst/afw/table/io/CatalogVector.h"
  *  namespace {
  *
  *  // singleton class to hold schema and keys, since those are fixed at compile-time in this case
@@ -153,7 +164,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *
  *  } // anonymous
  *
- *  void Derived::write(OutputArchive::Handle & handle) const {
+ *  void Derived::write(OutputArchiveHandle & handle) const {
  *      DerivedSchema const & keys = DerivedSchema::get()
  *      int var3id = handle.put(var3); // save the nested thing and get an ID we can save instead
  *      BaseCatalog catalog1 = handle.makeCatalog(keys.schema1);
