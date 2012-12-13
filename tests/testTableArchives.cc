@@ -21,9 +21,10 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
-#include "ndarray.h"
+#include "ndarray/eigen.h"
 
 #include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/math/Kernel.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -425,6 +426,12 @@ std::vector<double> makeRandomVector(int size) {
     return v;
 }
 
+ndarray::Array<double,2,2> makeRandomArray(int width, int height) {
+    ndarray::Array<double,2,2> array(ndarray::allocate(height, width));
+    array.asEigen().setRandom();
+    return array;
+}
+
 template <typename T>
 PTR(T) roundtrip(T const * input) {
     using namespace lsst::afw::table::io;
@@ -446,7 +453,8 @@ PTR(T) roundtrip(T const * input) {
 
 BOOST_AUTO_TEST_CASE(PolynomialFunction2) {
     namespace afwMath = lsst::afw::math;
-    PTR(afwMath::PolynomialFunction2<double>) p1(new afwMath::PolynomialFunction2<double>(makeRandomVector(15)));
+    PTR(afwMath::PolynomialFunction2<double>)
+        p1(new afwMath::PolynomialFunction2<double>(makeRandomVector(15)));
     PTR(afwMath::PolynomialFunction2<double>) p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getNParameters(), p2->getNParameters());
     for (unsigned int i = 0; i < p1->getNParameters(); ++i) {
@@ -456,11 +464,27 @@ BOOST_AUTO_TEST_CASE(PolynomialFunction2) {
 
 BOOST_AUTO_TEST_CASE(Chebyshev1Function2) {
     namespace afwMath = lsst::afw::math;
-    PTR(afwMath::Chebyshev1Function2<double>) p1(new afwMath::Chebyshev1Function2<double>(makeRandomVector(15)));
+    PTR(afwMath::Chebyshev1Function2<double>)
+        p1(new afwMath::Chebyshev1Function2<double>(makeRandomVector(15)));
     PTR(afwMath::Chebyshev1Function2<double>) p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getNParameters(), p2->getNParameters());
     for (unsigned int i = 0; i < p1->getNParameters(); ++i) {
         BOOST_CHECK_EQUAL(p1->getParameter(i), p2->getParameter(i));
     }
     BOOST_CHECK(p1->getXYRange() == p2->getXYRange());
+}
+
+BOOST_AUTO_TEST_CASE(FixedKernel) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    afwImage::Image<double> image1(makeRandomArray(5,7));
+    PTR(afwMath::FixedKernel) p1(new afwMath::FixedKernel(image1));
+    PTR(afwMath::FixedKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    afwImage::Image<double> image2(p2->getDimensions());
+    double s1 = p1->computeImage(image1, false);
+    double s2 = p2->computeImage(image2, false);
+    BOOST_CHECK_EQUAL(s1, s2);
+    BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
 }

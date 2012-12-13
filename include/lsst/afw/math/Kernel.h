@@ -445,6 +445,16 @@ using boost::serialization::make_nvp;
             return _sum;
         }
 
+        virtual bool isPersistable() const { return true; }
+
+        class Factory;
+
+    protected:
+
+        virtual std::string getPersistenceName() const { return "FixedKernel"; }
+
+        virtual void write(OutputArchiveHandle & handle) const;
+
     private:
         lsst::afw::image::Image<Pixel> _image;
         Pixel _sum;
