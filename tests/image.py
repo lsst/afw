@@ -383,9 +383,9 @@ class DecoratedImageTestCase(unittest.TestCase):
             )
         self.dimage1.getImage().set(self.val1)
 
-        dataDir = os.path.join(eups.productDir("afwdata"), "data")
+        dataDir = eups.productDir("afwdata")
         if dataDir:
-            self.fileForMetadata = os.path.join(dataDir, "small_MI_img.fits")
+            self.fileForMetadata = os.path.join(dataDir, "data", "small_MI_img.fits")
             self.trueMetadata = {"RELHUMID" : 10.69}
         else:
             self.fileForMetadata = None
@@ -419,8 +419,10 @@ class DecoratedImageTestCase(unittest.TestCase):
     def testReadFits(self):
         """Test reading FITS files"""
         
-        dataDir = os.path.join(eups.productDir("afwdata"), "data")
-        if not dataDir:
+        dataDir = eups.productDir("afwdata")
+        if dataDir:
+            dataDir = os.path.join(dataDir, "data")
+        else:
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
         
