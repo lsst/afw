@@ -68,10 +68,6 @@ namespace math {
 using boost::serialization::make_nvp;
 #endif
 
-//forward declaration of LocalKernel Classes
-class ImageLocalKernel;
-class FourierLocalKernel;
-
     /**
      * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
      *
