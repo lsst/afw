@@ -3,6 +3,8 @@
 #include <map>
 
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
@@ -27,7 +29,7 @@ void Persistable::writeFits(fits::MemFileManager & manager, std::string const & 
 
 std::string Persistable::getPersistenceName() const { return std::string(); }
 
-void Persistable::write(OutputArchive::Handle & handle) const {
+void Persistable::write(OutputArchiveHandle &) const {
     assert(!isPersistable());
     throw LSST_EXCEPT(
         pex::exceptions::LogicErrorException,

@@ -50,9 +50,10 @@ namespace afw {
     namespace formatters {
         class WcsFormatter;
     }
+    namespace table {
+        class BaseRecord;
+    }
 namespace image {
-
-class WcsFactory;
 
 /// 
 /// @brief Implementation of the WCS standard for a any projection
@@ -304,7 +305,7 @@ protected:
 
     // See afw::table::io::Persistable
     virtual std::string getPersistenceName() const;
-    virtual void write(OutputArchive::Handle & handle) const;
+    virtual void write(OutputArchiveHandle & handle) const;
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;

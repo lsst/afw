@@ -69,7 +69,7 @@ protected:
 
     virtual std::string getPersistenceName() const;
 
-    virtual void write(OutputArchive::Handle & handle) const;
+    virtual void write(OutputArchiveHandle & handle) const;
 
 private:
     double _sigma1;                     ///< Width of inner Gaussian

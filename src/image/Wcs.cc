@@ -42,6 +42,9 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
@@ -1070,7 +1073,7 @@ WcsFactory registration("Wcs");
 
 std::string Wcs::getPersistenceName() const { return "Wcs"; }
 
-void Wcs::write(OutputArchive::Handle & handle) const {
+void Wcs::write(OutputArchiveHandle & handle) const {
     WcsSchema const & keys = WcsSchema::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();

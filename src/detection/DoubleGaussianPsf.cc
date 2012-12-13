@@ -4,6 +4,9 @@
 #include "lsst/afw/detection/DoubleGaussianPsf.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/ImageUtils.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 namespace afwMath = lsst::afw::math;
 
@@ -92,7 +95,7 @@ DoubleGaussianPsfFactory registration("DoubleGaussianPsf");
 
 std::string DoubleGaussianPsf::getPersistenceName() const { return "DoubleGaussianPsf"; }
 
-void DoubleGaussianPsf::write(OutputArchive::Handle & handle) const {
+void DoubleGaussianPsf::write(OutputArchiveHandle & handle) const {
     static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();

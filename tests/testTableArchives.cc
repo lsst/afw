@@ -17,6 +17,9 @@
 #include "lsst/utils/ieee.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/ArchiveIndexSchema.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 #include "ndarray.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
@@ -63,7 +66,7 @@ public:
 
     virtual std::string getPersistenceName() const { return "ExampleA"; }
 
-    virtual void write(OutputArchive::Handle & handle) const {
+    virtual void write(OutputArchiveHandle & handle) const {
         Schema schema;
         Key<int> k1 = schema.addField<int>("var1", "doc for var1");
         Key<double> k2 = schema.addField<double>("var2", "doc for var2");
@@ -117,7 +120,7 @@ public:
 
     virtual std::string getPersistenceName() const { return "ExampleB"; }
 
-    virtual void write(OutputArchive::Handle & handle) const {
+    virtual void write(OutputArchiveHandle & handle) const {
         Schema schema1;
         Key<int> k1 = schema1.addField<int>("var1", "doc for var1");
         Schema schema2;
@@ -194,7 +197,7 @@ public:
 
     virtual std::string getPersistenceName() const { return "ExampleC"; }
 
-    virtual void write(OutputArchive::Handle & handle) const {
+    virtual void write(OutputArchiveHandle & handle) const {
         Schema schema;
         Key<int> k1 = schema.addField<int>("var1", "doc for var1");
         Key<int> k2 = schema.addField<int>("var2", "doc for var2");

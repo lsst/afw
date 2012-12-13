@@ -167,7 +167,7 @@ private:
 
     virtual std::string getPersistenceName() const;
 
-    virtual void write(OutputArchive::Handle & handle) const;
+    virtual void write(OutputArchiveHandle & handle) const;
 
     virtual bool _isSubset(Wcs const &) const;
 

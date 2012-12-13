@@ -6,9 +6,6 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/table/Catalog.h"
-#include "lsst/afw/table/io/OutputArchive.h"
-#include "lsst/afw/table/io/InputArchive.h"
 
 namespace lsst { namespace afw {
 
@@ -20,6 +17,11 @@ class MemFileManager;
 } // namespace fits
 
 namespace table { namespace io {
+
+class InputArchive;
+class OutputArchive;
+class OutputArchiveHandle;
+class CatalogVector;
 
 /**
  *  @brief An exception thrown when problems occur during persistence.
@@ -105,7 +107,8 @@ public:
 
 protected:
 
-    typedef io::OutputArchive OutputArchive; // convenient for derived classes not in afw::table::io
+    // convenient for derived classes not in afw::table::io
+    typedef io::OutputArchiveHandle OutputArchiveHandle;
 
     /**
      *  @brief Return the unique name used to persist this object and look up its factory.
@@ -119,9 +122,9 @@ protected:
      *
      *  The handle object passed to this function provides an interface for adding new catalogs
      *  and adding nested objects to the same archive (while checking for duplicates).  See
-     *  OutputArchive::Handle and OutputArchive::CatalogProxy for more information.
+     *  OutputArchiveHandle for more information.
      */
-    virtual void write(OutputArchive::Handle & handle) const;
+    virtual void write(OutputArchiveHandle & handle) const;
 
     Persistable() {}
 

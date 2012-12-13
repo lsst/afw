@@ -2,27 +2,20 @@
 #ifndef AFW_TABLE_IO_InputArchive_h_INCLUDED
 #define AFW_TABLE_IO_InputArchive_h_INCLUDED
 
-#include <vector>
 #include <map>
 
 #include "lsst/base.h"
-#include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { 
+namespace lsst { namespace afw { namespace table {
 
-namespace fits {
+class BaseRecord;
+template <typename RecordT> class CatalogT;
+typedef CatalogT<BaseRecord> BaseCatalog;
 
-class Fits;
+namespace io {
 
-} // namespace fits
-
-namespace table { namespace io {
-
-class Persistable;
-class PersistableFactory;
-
-typedef std::vector<BaseCatalog> CatalogVector;
-
+class CatalogVector;
 
 /**
  *  @brief A multi-catalog archive object used to load table::io::Persistable objects.

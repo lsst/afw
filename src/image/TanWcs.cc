@@ -39,6 +39,9 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -429,7 +432,7 @@ void TanWcs::setDistortionMatrices(
 
 std::string TanWcs::getPersistenceName() const { return "TanWcs"; }
 
-void TanWcs::write(OutputArchive::Handle & handle) const {
+void TanWcs::write(OutputArchiveHandle & handle) const {
     Wcs::write(handle);
     if (hasDistortion()) {
         afw::table::Schema schema;

@@ -5,19 +5,19 @@
 #include "boost/noncopyable.hpp"
 
 #include "lsst/base.h"
-#include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { 
+namespace lsst { namespace afw { namespace table {
 
-namespace fits {
+class Schema;
+class BaseRecord;
+template <typename RecordT> class CatalogT;
+typedef CatalogT<BaseRecord> BaseCatalog;
 
-class Fits;
-
-} // namespace fits
-
-namespace table { namespace io {
+namespace io {
 
 class Persistable;
+class OutputArchiveHandle;
 
 /**
  *  @brief A multi-catalog archive object used to save table::io::Persistable objects.
@@ -33,8 +33,7 @@ class Persistable;
 class OutputArchive {
 public:
 
-    class Handle;
-    class CatalogProxy;
+    friend class OutputArchiveHandle;
 
     /// Construct an empty OutputArchive containing no objects.
     OutputArchive();
@@ -91,10 +90,10 @@ private:
 /**
  *  @brief An object passed to Persistable::write to allow it to persist itself.
  *
- *  Handle provides an interface to add additional catalogs and save nested
+ *  OutputArchiveHandle provides an interface to add additional catalogs and save nested
  *  Persistables to the same archive.
  */
-class OutputArchive::Handle : private boost::noncopyable {
+class OutputArchiveHandle : private boost::noncopyable {
 public:
 
     /**
@@ -120,18 +119,18 @@ public:
      */
     int put(Persistable const * obj);
 
-    ~Handle();
+    ~OutputArchiveHandle();
 
 private:
 
     friend class OutputArchive::Impl;
 
-    Handle(int id, std::string const & name, PTR(Impl) impl);
+    OutputArchiveHandle(int id, std::string const & name, PTR(OutputArchive::Impl) impl);
 
     int _id;
     int _catPersistable;
     std::string _name;
-    PTR(Impl) _impl;
+    PTR(OutputArchive::Impl) _impl;
 };
 
 }}}} // namespace lsst::afw::table::io

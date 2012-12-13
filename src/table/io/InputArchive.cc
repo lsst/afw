@@ -6,7 +6,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/ArchiveIndexSchema.h"
-#include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {

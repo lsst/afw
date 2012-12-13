@@ -10,7 +10,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/ArchiveIndexSchema.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
@@ -66,7 +66,7 @@ struct OutputArchive::Impl {
         if (iter == _catalogs.end()) {
             throw LSST_EXCEPT(
                 pex::exceptions::LogicErrorException,
-                "All catalogs passed to Handle::saveCatalog must be created by Handle::makeCatalog"
+                "All catalogs passed to saveCatalog must be created by makeCatalog"
             );
         }
         iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
@@ -83,7 +83,7 @@ struct OutputArchive::Impl {
             // insertion successful, which means it's a new object and we should tell it to save itself now
             try {
                 ++_nextId;
-                Handle handle(r.first->second, obj->getPersistenceName(), self);
+                OutputArchiveHandle handle(r.first->second, obj->getPersistenceName(), self);
                 obj->write(handle);
             } catch (...) {
                 --_nextId;
@@ -165,26 +165,26 @@ void OutputArchive::writeFits(fits::Fits & fitsfile) const {
     _impl->writeFits(fitsfile);
 }
 
-// ----- OutputArchive::Handle ------------------------------------------------------------------------------
+// ----- OutputArchiveHandle ------------------------------------------------------------------------------
 
-BaseCatalog OutputArchive::Handle::makeCatalog(Schema const & schema) {
+BaseCatalog OutputArchiveHandle::makeCatalog(Schema const & schema) {
     return _impl->makeCatalog(schema);
 }
 
-void OutputArchive::Handle::saveCatalog(BaseCatalog const & catalog) {
+void OutputArchiveHandle::saveCatalog(BaseCatalog const & catalog) {
     _impl->saveCatalog(catalog, _id, _name, _catPersistable);
 }
 
-int OutputArchive::Handle::put(Persistable const * obj) {
+int OutputArchiveHandle::put(Persistable const * obj) {
     // Handle doesn't worry about copy-on-write, because Handles should only exist
     // while an OutputArchive::put() call is active.
     return _impl->put(obj, _impl);
 }
 
-OutputArchive::Handle::Handle(int id, std::string const & name, PTR(Impl) impl) :
+OutputArchiveHandle::OutputArchiveHandle(int id, std::string const & name, PTR(OutputArchive::Impl) impl) :
     _id(id), _catPersistable(0), _name(name), _impl(impl)
 {}
 
-OutputArchive::Handle::~Handle() {}
+OutputArchiveHandle::~OutputArchiveHandle() {}
 
 }}}} // namespace lsst::afw::table::io
