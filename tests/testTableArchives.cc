@@ -449,17 +449,30 @@ PTR(T) roundtrip(T const * input) {
     return boost::dynamic_pointer_cast<T>(inArchive.get(id));
 }
 
+template <typename T>
+void compareFunctions(lsst::afw::math::Function<T> const & a, lsst::afw::math::Function<T> const & b) {
+    BOOST_REQUIRE_EQUAL(a.getNParameters(), b.getNParameters());
+    for (unsigned int i = 0; i < a.getNParameters(); ++i) {
+        BOOST_CHECK_EQUAL(a.getParameter(i), b.getParameter(i));
+    }
+}
+
 } // anonymous
+
+BOOST_AUTO_TEST_CASE(GaussianFunction2) {
+    namespace afwMath = lsst::afw::math;
+    PTR(afwMath::PolynomialFunction2<double>)
+        p1(new afwMath::PolynomialFunction2<double>(makeRandomVector(15)));
+    PTR(afwMath::PolynomialFunction2<double>) p2 = roundtrip(p1.get());
+    compareFunctions(*p1, *p2);
+}
 
 BOOST_AUTO_TEST_CASE(PolynomialFunction2) {
     namespace afwMath = lsst::afw::math;
     PTR(afwMath::PolynomialFunction2<double>)
         p1(new afwMath::PolynomialFunction2<double>(makeRandomVector(15)));
     PTR(afwMath::PolynomialFunction2<double>) p2 = roundtrip(p1.get());
-    BOOST_CHECK_EQUAL(p1->getNParameters(), p2->getNParameters());
-    for (unsigned int i = 0; i < p1->getNParameters(); ++i) {
-        BOOST_CHECK_EQUAL(p1->getParameter(i), p2->getParameter(i));
-    }
+    compareFunctions(*p1, *p2);
 }
 
 BOOST_AUTO_TEST_CASE(Chebyshev1Function2) {
@@ -467,10 +480,7 @@ BOOST_AUTO_TEST_CASE(Chebyshev1Function2) {
     PTR(afwMath::Chebyshev1Function2<double>)
         p1(new afwMath::Chebyshev1Function2<double>(makeRandomVector(15)));
     PTR(afwMath::Chebyshev1Function2<double>) p2 = roundtrip(p1.get());
-    BOOST_CHECK_EQUAL(p1->getNParameters(), p2->getNParameters());
-    for (unsigned int i = 0; i < p1->getNParameters(); ++i) {
-        BOOST_CHECK_EQUAL(p1->getParameter(i), p2->getParameter(i));
-    }
+    compareFunctions(*p1, *p2);
     BOOST_CHECK(p1->getXYRange() == p2->getXYRange());
 }
 
