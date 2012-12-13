@@ -451,6 +451,7 @@ PTR(T) roundtrip(T const * input) {
 
 template <typename T>
 void compareFunctions(lsst::afw::math::Function<T> const & a, lsst::afw::math::Function<T> const & b) {
+    BOOST_CHECK( typeid(a) == typeid(b) );
     BOOST_REQUIRE_EQUAL(a.getNParameters(), b.getNParameters());
     for (unsigned int i = 0; i < a.getNParameters(); ++i) {
         BOOST_CHECK_EQUAL(a.getParameter(i), b.getParameter(i));
@@ -492,9 +493,67 @@ BOOST_AUTO_TEST_CASE(FixedKernel) {
     PTR(afwMath::FixedKernel) p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
     BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
     afwImage::Image<double> image2(p2->getDimensions());
     double s1 = p1->computeImage(image1, false);
     double s2 = p2->computeImage(image2, false);
     BOOST_CHECK_EQUAL(s1, s2);
     BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+}
+
+BOOST_AUTO_TEST_CASE(AnalyticKernel1) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    PTR(afwMath::AnalyticKernel) p1(
+        new afwMath::AnalyticKernel(5, 6, afwMath::DoubleGaussianFunction2<double>(1.0, 2.0, 0.1))
+    );
+    PTR(afwMath::AnalyticKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
+    compareFunctions(*p1->getKernelFunction(), *p2->getKernelFunction());
+    afwImage::Image<double> image1(p1->getDimensions());
+    afwImage::Image<double> image2(p2->getDimensions());
+    double s1 = p1->computeImage(image1, false);
+    double s2 = p2->computeImage(image2, false);
+    BOOST_CHECK_EQUAL(s1, s2);
+    BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+}
+
+BOOST_AUTO_TEST_CASE(AnalyticKernel2) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    std::vector<PTR(afwMath::Kernel::SpatialFunction)> spatialFunctions(3);
+    spatialFunctions[0].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(10)));
+    spatialFunctions[1].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(6)));
+    spatialFunctions[2].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(21)));
+    PTR(afwMath::AnalyticKernel) p1(
+        new afwMath::AnalyticKernel(5, 6, afwMath::GaussianFunction2<double>(1.0, 1.0),
+                                    spatialFunctions)
+    );
+    PTR(afwMath::AnalyticKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
+    compareFunctions(*p1->getKernelFunction(), *p2->getKernelFunction());
+    BOOST_CHECK(p1->getSpatialParameters() == p2->getSpatialParameters());
+    afwImage::Image<double> image1(p1->getDimensions());
+    afwImage::Image<double> image2(p2->getDimensions());
+    Eigen::VectorXd x = Eigen::VectorXd::Random(10);
+    Eigen::VectorXd y = Eigen::VectorXd::Random(10);
+    for (int i = 0; i < 10; ++i) {
+        double s1 = p1->computeImage(image1, false, x[i], y[i]);
+        double s2 = p2->computeImage(image2, false, x[i], y[i]);
+        BOOST_CHECK_EQUAL(s1, s2);
+        BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+    }
 }
