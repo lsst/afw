@@ -26,18 +26,18 @@
  *
  * This version knows about LSST data structures
  */
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <cassert>
-#include <cctype>
 #ifndef DOXYGEN // Doxygen doesn't like includes inside namespaces
-namespace posix {
+namespace posix {                       // here so no-one includes them first outside namespace posix {} 
 #   include <unistd.h>
 #   include <fcntl.h>
 }
 #endif //!DOXYGEN
 using namespace posix;
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cassert>
+#include <cctype>
 
 #include "lsst/pex/exceptions.h"
 #include "boost/any.hpp"
