@@ -257,9 +257,11 @@ class ImageTestCase(unittest.TestCase):
     def testGeneralisedCopyConstructors(self):
         imageU = self.image1.convertU() # these are generalised (templated) copy constructors in C++
         imageF = imageU.convertF()
+        imageD = imageF.convertD()
 
         self.assertEqual(imageU.get(0, 0), self.val1)
         self.assertEqual(imageF.get(0, 0), self.val1)
+        self.assertEqual(imageD.get(0, 0), self.val1)
             
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""

@@ -215,6 +215,10 @@
 }
 
 %extend lsst::afw::image::Image<float> {
+    %newobject convertD;
+    lsst::afw::image::Image<double> convertD() {
+        return lsst::afw::image::Image<double>(*self, true);
+    }
     %newobject convertU;
     lsst::afw::image::Image<boost::uint16_t> convertU() {
         return lsst::afw::image::Image<boost::uint16_t>(*self, true);
