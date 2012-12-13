@@ -50,6 +50,11 @@ class PickleTestCase(unittest.TestCase):
         del self.data
 
     def assertPickled(self, new):
+        """Assert that the pickled data is the same as the original
+
+        Subclasses should override this method if the particular data
+        doesn't support the == operator.
+        """
         self.assertTrue(new == self.data)
 
     def testPickle(self):
