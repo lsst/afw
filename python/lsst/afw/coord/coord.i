@@ -95,7 +95,7 @@ strCoord(EclipticCoord);
 }
 %enddef
 
-// Add __reduce__ for Coord subclasses that take 3 arguments
+// Add __reduce__ for Coord subclasses that take 2 arguments
 %define reduceCoord2(TYPE)
 %extend lsst::afw::coord::TYPE {
     %pythoncode {
@@ -107,6 +107,6 @@ strCoord(EclipticCoord);
 
 reduceCoord3(Coord);
 reduceCoord3(Fk5Coord);
-reduceCoord2(GalacticCoord);
+reduceCoord2(IcrsCoord);
 reduceCoord2(GalacticCoord);
 reduceCoord3(EclipticCoord);
