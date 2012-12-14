@@ -53,7 +53,8 @@ public:
     virtual Ptr clone() const = 0;
 
     // static helper functions for computeImage(); see documentation in Psf.cc
-    static lsst::afw::geom::Point2I resizeKernelImage(Image &dst, const Image &src, const lsst::afw::geom::Point2I &ctr);
+    static lsst::afw::geom::Point2I  resizeKernelImage(Image &dst, const Image &src, const lsst::afw::geom::Point2I &ctr);
+    static void recenterKernelImage(PTR(Image) &im, const lsst::afw::geom::Point2I &ctr, const lsst::afw::geom::Point2D &xy);
 
     // accessors for distortion
     void setDetector(PTR(lsst::afw::cameraGeom::Detector) det) {

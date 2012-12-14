@@ -95,6 +95,32 @@ afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwG
 }
 
 
+//
+// This helper function converts a kernel image (i.e. xy0 not meaningful; center given by
+// parameter @ctr) to a psf image (i.e. xy0 is meaningful)
+//
+// The point with integer coordinates @ctr in the source image corresponds to the point
+// @xy in the destination image.  If @xy is not integer-valued then we will need to fractionally
+// shift the image using interpolation (lanczos5 currently hardcoded)
+//
+void Psf::recenterKernelImage(PTR(Image) &im, const afwGeom::Point2I &ctr, const afwGeom::Point2D &xy)
+{
+    // "ir" : (integer, residual)
+    std::pair<int,double> const ir_dx = lsst::afw::image::positionToIndex(xy.getX(), true);
+    std::pair<int,double> const ir_dy = lsst::afw::image::positionToIndex(xy.getY(), true);
+    
+    if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
+        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
+        unsigned int const warpBuffer = 5; // Buffer to use in warping        
+        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
+    }
+
+    im->setXY0(ir_dx.first - ctr.getX() + (ir_dx.second <= 0.5 ? 0 : 1),
+	       ir_dy.first - ctr.getY() + (ir_dy.second <= 0.5 ? 0 : 1));
+}
+
+
+
 /************************************************************************************************************/
 /** Return an Image of the PSF
  *
@@ -245,18 +271,8 @@ Psf::Image::Ptr Psf::doComputeImage(
 	double const centralPixelValue = (*im)(ctr.getX(),ctr.getY());
         *im /= centralPixelValue;
     }
-    // "ir" : (integer, residual)
-    std::pair<int, double> const ir_dx = lsst::afw::image::positionToIndex(ccdXYundist.getX(), true);
-    std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXYundist.getY(), true);
     
-    if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
-        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
-        unsigned int const warpBuffer = 5; // Buffer to use in warping        
-        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
-    }
-    im->setXY0(ir_dx.first - ctr.getX() + (ir_dx.second <= 0.5 ? 0 : 1),
-               ir_dy.first - ctr.getY() + (ir_dy.second <= 0.5 ? 0 : 1));
-
+    recenterKernelImage(im, ctr, ccdXYundist);
             
     // distort the image according to the camera distortion
     if (distort) {        
