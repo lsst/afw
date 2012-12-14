@@ -680,7 +680,16 @@ using boost::serialization::make_nvp;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+        virtual bool isPersistable() const { return true; }
+
+        class Factory;
+
     protected:
+
+        virtual std::string getPersistenceName() const { return "LinearCombinationKernel"; }
+
+        virtual void write(OutputArchiveHandle & handle) const;
+
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
     private:
