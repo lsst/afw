@@ -410,9 +410,10 @@ public:
         ndarray::Vector<int,N> const & offset
     ) {
         ndarray::Vector<long,N> begin(offset.reverse());
-        ndarray::Vector<long,N> end = begin + array.getShape().reverse();
+        ndarray::Vector<long,N> end(begin);
+        end += array.getShape().reverse();
         ndarray::Vector<long,N> increment(1);
-        begin += increment;
+        begin += increment;  // first FITS pixel is 1, not 0
         readImageImpl(N, array.getData(), begin.elems, end.elems, increment.elems);
     }
 
