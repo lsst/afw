@@ -256,7 +256,15 @@ protected:
     /// Clone a KernelPsf
     virtual Ptr clone() const { return boost::make_shared<KernelPsf>(*this); }
 
+    /// Whether this object is persistable; just delegates to the kernel.
+    virtual bool isPersistable() const { return _kernel->isPersistable(); }
+
 protected:
+
+    virtual std::string getPersistenceName() const;
+
+    virtual void write(OutputArchiveHandle & handle) const;
+
     void setKernel(lsst::afw::math::Kernel::Ptr kernel) { _kernel = kernel; }
     
 private:

@@ -15,6 +15,9 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/math/offsetImage.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 /************************************************************************************************************/
 
@@ -404,7 +407,57 @@ Psf::Ptr createPsf(std::string const& name,             ///< desired variety
 namespace {
     volatile bool isInstance =
         Psf::registerMe<KernelPsf, afwMath::Kernel::Ptr>("Kernel");
+
+
+// Read-only singleton struct containing the schema and key used in persistence.
+struct KernelPsfSchema : private boost::noncopyable {
+    afw::table::Schema schema;
+    afw::table::Key<int> kernel;
+
+    static KernelPsfSchema const & get() {
+        static KernelPsfSchema instance;
+        return instance;
+    }
+
+private:
+    KernelPsfSchema() :
+        schema(),
+        kernel(schema.addField<int>("kernel", "archive ID of nested kernel object"))
+    {
+        schema.getCitizen().markPersistent();
+    }
+};
+
+class KernelPsfFactory : public table::io::PersistableFactory {
+public:
+
+    virtual PTR(table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        static KernelPsfSchema const & keys = KernelPsfSchema::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        table::BaseRecord const & record = catalogs.front().front();
+        LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
+        return boost::make_shared<KernelPsf>(archive.get<math::Kernel>(record.get(keys.kernel)));
+    }
+
+    KernelPsfFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+
+};
+
+KernelPsfFactory registration("KernelPsf");
+
+} // anonymous
+
+std::string KernelPsf::getPersistenceName() const { return "KernelPsf"; }
+
+void KernelPsf::write(OutputArchiveHandle & handle) const {
+    static KernelPsfSchema const & keys = KernelPsfSchema::get();
+    afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    catalog.addNew()->set(keys.kernel, handle.put(_kernel));
+    handle.saveCatalog(catalog);
 }
+
 // \endcond
 }}}
 
