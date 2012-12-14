@@ -34,6 +34,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelSchema.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
@@ -100,3 +101,67 @@ std::string afwMath::DeltaFunctionKernel::toString(std::string const& prefix) co
     os << Kernel::toString(prefix + "\t");
     return os.str();
 }
+
+// ------ Persistence ---------------------------------------------------------------------------------------
+
+namespace lsst { namespace afw { namespace math {
+
+namespace {
+
+struct DeltaFunctionKernelSchema : public Kernel::KernelSchema, private boost::noncopyable {
+    table::Key< table::Point<int> > pixel;
+
+    static DeltaFunctionKernelSchema const & get() {
+        static DeltaFunctionKernelSchema const instance;
+        return instance;
+    }
+
+private:
+
+    explicit DeltaFunctionKernelSchema() :
+        Kernel::KernelSchema(0),
+        pixel(schema.addField< table::Point<int> >("pixel", "position of nonzero pixel"))
+    {
+       schema.getCitizen().markPersistent();
+    }
+
+};
+
+} // anonymous
+
+class DeltaFunctionKernel::Factory : public afw::table::io::PersistableFactory {
+public:
+
+    virtual PTR(afw::table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        DeltaFunctionKernelSchema const & keys = DeltaFunctionKernelSchema::get();
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        afw::table::BaseRecord const & record = catalogs.front().front();
+        geom::Extent2I dimensions(record.get(keys.dimensions));
+        geom::Point2I center(record.get(keys.center));
+        geom::Point2I pixel(record.get(keys.pixel));
+        PTR(DeltaFunctionKernel) result(
+            new DeltaFunctionKernel(dimensions.getX(), dimensions.getY(), pixel)
+        );
+        result->setCtr(center);
+        return result;
+    }
+
+    explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
+};
+
+namespace {
+
+DeltaFunctionKernel::Factory registration("DeltaFunctionKernel");
+
+} // anonymous
+
+void DeltaFunctionKernel::write(OutputArchiveHandle & handle) const {
+    DeltaFunctionKernelSchema const & keys = DeltaFunctionKernelSchema::get();
+    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    record->set(keys.pixel, _pixel);
+}
+
+}}} // namespace lsst::afw::math

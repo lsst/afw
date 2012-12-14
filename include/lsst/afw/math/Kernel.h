@@ -585,6 +585,16 @@ using boost::serialization::make_nvp;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+        virtual bool isPersistable() const { return true; }
+
+        class Factory;
+
+    protected:
+
+        virtual std::string getPersistenceName() const { return "DeltaFunctionKernel"; }
+
+        virtual void write(OutputArchiveHandle & handle) const;
+
     private:
         lsst::afw::geom::Point2I _pixel;
 
