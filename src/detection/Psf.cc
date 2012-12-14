@@ -29,6 +29,72 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+
+/************************************************************************************************************/
+//
+// Static helper functions for Psf::computeImage()
+//
+
+//
+// Helper function for resizeKernelImage(); this is called twice for x,y directions
+//
+// Setup: we have a 1D array of data of legnth @nsrc, with special point ("center") at @src_ctr.
+//
+// We want to copy this into an array of length @ndst; the lengths need not be the same so we may
+// need to zero-pad or truncate.
+//
+// Outputs:
+//   @nout = length of buffer to be copied
+//   @dst_base = index of copied output in dst array
+//   @src_base = index of copied output in src array
+//   @dst_ctr = location of special point in dst array after copy
+//
+static inline void setup_1d_resize(int ndst, int nsrc, int src_ctr, int &nout, int &dst_base, int &src_base, int &dst_ctr)
+{
+    if (nsrc > ndst) {
+	nout = ndst;
+	dst_base = 0;
+	src_base = (nsrc-ndst)/2;
+	dst_ctr = src_ctr - src_base;
+    }
+    else {
+	nout = nsrc;
+	dst_base = (ndst-nsrc)/2;
+	src_base = 0;
+	dst_ctr = src_ctr + dst_base;
+    }
+}
+
+//
+// Takes a kernel image @src, with central pixel @ctr (presumably equal to kernel->getCtr())
+// and stuffs it into an output image @dst, which need not have the same dimensions as @src.
+// Returns the central pixel for the output image.
+//
+// The image xy0 fields are ignored, since these are generally not meaningful for the output
+// of Kernel::computeImage() anyway (in contrast to Psf::computeImage())
+//
+afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwGeom::Point2I &ctr)
+{
+    int nx, dst_x0, src_x0, ctr_x0;
+    int ny, dst_y0, src_y0, ctr_y0;
+
+    setup_1d_resize(dst.getWidth(), src.getWidth(), ctr.getX(), nx, dst_x0, src_x0, ctr_x0);
+    setup_1d_resize(dst.getHeight(), src.getHeight(), ctr.getY(), ny, dst_y0, src_y0, ctr_y0);
+
+    lsst::afw::geom::Extent2I subimage_size(nx,ny);
+
+    Image sub_dst(dst, afwGeom::Box2I(afwGeom::Point2I(dst_x0,dst_y0),
+				      afwGeom::Extent2I(nx,ny)));
+
+    Image sub_src(src, afwGeom::Box2I(afwGeom::Point2I(src_x0,src_y0),
+				      afwGeom::Extent2I(nx,ny)));
+
+    dst = 0.;
+    sub_dst <<= sub_src;
+    return afwGeom::Point2I(ctr_x0,ctr_y0);
+}
+
+
 /************************************************************************************************************/
 /** Return an Image of the PSF
  *
@@ -142,8 +208,7 @@ Psf::Image::Ptr Psf::doComputeImage(
 
     int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
     int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
-    int ctrX = kernel->getCtrX();
-    int ctrY = kernel->getCtrY();
+    afwGeom::Point2I ctr = kernel->getCtr();
     
     // if they want it distorted, assume they want the PSF as it would appear
     // at ccdXY.  We'll undistort ccdXY to figure out where that point started
@@ -168,49 +233,16 @@ Psf::Image::Ptr Psf::doComputeImage(
         afwGeom::Extent2I kwid = kernel->getDimensions();
         Psf::Image::Ptr native_im = boost::make_shared<Psf::Image>(kwid);
         kernel->computeImage(*native_im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
+
         // copy the native image into the requested one
-        *im = 0.0;
-
-        std::pair<int, int> x0, y0;
-        int w, h;
-        if (native_im->getWidth() > im->getWidth()) {
-            x0.first = 0;
-            x0.second = (native_im->getWidth() - im->getWidth())/2;
-            w = im->getWidth();
-        } else {
-            x0.first = (im->getWidth() - native_im->getWidth())/2;
-            x0.second = 0;
-            w = native_im->getWidth();
-        }
-        
-        if (native_im->getHeight() > im->getHeight()) {
-            y0.first = 0;
-            y0.second = (native_im->getHeight() - im->getHeight())/2;
-            h = im->getHeight();
-        } else {
-            y0.first = (im->getHeight() - native_im->getHeight())/2;
-            y0.second = 0;
-            h = native_im->getHeight();
-        }
-
-        Psf::Image sim(*im, afwGeom::Box2I(afwGeom::Point2I(x0.first, y0.first),
-                                           afwGeom::Extent2I(w, h)));
-        Psf::Image snative_im(*native_im, afwGeom::Box2I(afwGeom::Point2I(x0.second, y0.second),
-                                                         afwGeom::Extent2I(w, h)));
-        sim <<= snative_im;
-        im->setXY0(snative_im.getX0() + (x0.second - x0.first),
-                   snative_im.getY0() + (y0.second - y0.first));
-
-	// Shift image center for consistency with updated image boundaries (unit test in tests/psf.cc)
-	ctrX += (x0.first - x0.second);
-	ctrY += (y0.first - y0.second);
+	ctr = resizeKernelImage(*im, *native_im, ctr);
     }
     
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?
     //
     if (normalizePeak) {
-	double const centralPixelValue = (*im)(ctrX,ctrY);
+	double const centralPixelValue = (*im)(ctr.getX(),ctr.getY());
         *im /= centralPixelValue;
     }
     // "ir" : (integer, residual)
@@ -222,8 +254,8 @@ Psf::Image::Ptr Psf::doComputeImage(
         unsigned int const warpBuffer = 5; // Buffer to use in warping        
         im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
     }
-    im->setXY0(ir_dx.first - ctrX + (ir_dx.second <= 0.5 ? 0 : 1),
-               ir_dy.first - ctrY + (ir_dy.second <= 0.5 ? 0 : 1));
+    im->setXY0(ir_dx.first - ctr.getX() + (ir_dx.second <= 0.5 ? 0 : 1),
+               ir_dy.first - ctr.getY() + (ir_dy.second <= 0.5 ? 0 : 1));
 
             
     // distort the image according to the camera distortion
