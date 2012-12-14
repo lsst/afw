@@ -47,6 +47,7 @@ public:
     // (trivial) destructor must be defined in the source for pimpl idiom.
     ~OutputArchive();
 
+    //@{
     /**
      *  @brief Save an object to the archive and return a unique ID that can be used
      *         to retrieve it from an InputArchive.
@@ -56,8 +57,15 @@ public:
      *
      *  If the given pointer is null, the returned ID is always 0, which may be used
      *  to retrieve null pointers from an InputArchive.
+     *
+     *  It is expected that the CONST_PTR form will usually be used, as Persistables
+     *  are typically held by PTR.  But we expose the lower-level raw-pointer form
+     *  so users aren't forced to clone objects before persisting them if they don't
+     *  already have a PTR.
      */
     int put(Persistable const * obj);
+    int put(CONST_PTR(Persistable) obj) { return put(obj.get()); }
+    //@}
 
     /**
      *  @brief Return the index catalog that specifies where objects are stored in the
@@ -112,12 +120,15 @@ public:
      */
     void saveCatalog(BaseCatalog const & catalog);
 
+    //@{
     /**
      *  @brief Save a nested Persistable to the same archive.
      *
      *  @copydoc OutputArchive::put.
      */
     int put(Persistable const * obj);
+    int put(CONST_PTR(Persistable) obj) { return put(obj.get()); }
+    //@}
 
     ~OutputArchiveHandle();
 

@@ -50,6 +50,14 @@ public:
      */
     PTR(Persistable) get(int id) const;
 
+    /// @brief Load an object of the given type and ID with error checking.
+    template <typename T>
+    PTR(T) get(int id) const {
+        PTR(T) p = boost::dynamic_pointer_cast<T>(get(id));
+        LSST_ARCHIVE_ASSERT(p || id == 0);
+        return p;
+    }
+
     /// Load and return all objects in the archive.
     Map const & getAll() const;
 
