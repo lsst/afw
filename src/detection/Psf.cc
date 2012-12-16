@@ -99,24 +99,29 @@ afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwG
 // This helper function converts a kernel image (i.e. xy0 not meaningful; center given by
 // parameter @ctr) to a psf image (i.e. xy0 is meaningful)
 //
+// @warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear", or "lanczosN"
+// @warpBuffer zero-pads the image before recentering (recommend 1 for bilinera, N for lanczosN)
+//
 // The point with integer coordinates @ctr in the source image corresponds to the point
 // @xy in the destination image.  If @xy is not integer-valued then we will need to fractionally
 // shift the image using interpolation (lanczos5 currently hardcoded)
 //
-void Psf::recenterKernelImage(PTR(Image) &im, const afwGeom::Point2I &ctr, const afwGeom::Point2D &xy)
+// Note: if fractional recentering is performed, then a new image will be allocated and returned.
+// If not, then the original image will be returned (after setting XY0)
+//
+PTR(afwImage::Image<double>) Psf::recenterKernelImage(PTR(Image) im, const afwGeom::Point2I &ctr, const afwGeom::Point2D &xy, std::string const &warpAlgorithm, unsigned int warpBuffer)
 {
     // "ir" : (integer, residual)
     std::pair<int,double> const ir_dx = lsst::afw::image::positionToIndex(xy.getX(), true);
     std::pair<int,double> const ir_dy = lsst::afw::image::positionToIndex(xy.getY(), true);
     
-    if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
-        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
-        unsigned int const warpBuffer = 5; // Buffer to use in warping        
+    if (ir_dx.second != 0.0 || ir_dy.second != 0.0)
         im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
-    }
 
     im->setXY0(ir_dx.first - ctr.getX() + (ir_dx.second <= 0.5 ? 0 : 1),
 	       ir_dy.first - ctr.getY() + (ir_dy.second <= 0.5 ? 0 : 1));
+
+    return im;
 }
 
 
@@ -272,7 +277,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         *im /= centralPixelValue;
     }
     
-    recenterKernelImage(im, ctr, ccdXYundist);
+    im = recenterKernelImage(im, ctr, ccdXYundist);
             
     // distort the image according to the camera distortion
     if (distort) {        
