@@ -118,9 +118,7 @@ PTR(afwImage::Image<double>) Psf::recenterKernelImage(PTR(Image) im, const afwGe
     if (ir_dx.second != 0.0 || ir_dy.second != 0.0)
         im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
 
-    im->setXY0(ir_dx.first - ctr.getX() + (ir_dx.second <= 0.5 ? 0 : 1),
-	       ir_dy.first - ctr.getY() + (ir_dy.second <= 0.5 ? 0 : 1));
-
+    im->setXY0(ir_dx.first - ctr.getX(), ir_dy.first - ctr.getY());
     return im;
 }
 
