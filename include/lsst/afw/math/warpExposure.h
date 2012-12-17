@@ -101,6 +101,9 @@ namespace math {
 
         virtual PTR(Kernel) clone() const;
 
+  protected:
+	virtual void setKernelParameter(unsigned int ind, double value) const;
+
         /**
          * \brief 1-dimensional bilinear interpolation function.
          *
