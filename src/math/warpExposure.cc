@@ -86,27 +86,57 @@ PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
 *
 * \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
 */
-afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (
-    double x
-) const {
-#if 0 && !defined(NDEBUG)
-    if (x == 0.0) {
-        return 1.0 - this->_params[0];
-    } else if (x == 1.0) {
-        return this->_params[0];
-    } else {                            // the mere presence of this check slows the call by 3 times
-        std::ostringstream errStream;
-        errStream << "x = " << x << "; must be 0 or 1";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
-    }
-#else
-    if (x == 0.0) {
-        return 1.0 - this->_params[0];
-    } else {
-        return this->_params[0];
-    }
-#endif
+afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const 
+{
+    //
+    // this->_params[0] = value of x where we want to interpolate the function
+    // x = integer value of x where we evaluate the function in the interpolation
+    // 
+    // The following weird-looking expression has no if/else statements, is roundoff-tolerant,
+    // and works in the following two cases:
+    //     0 < this->_params[0] < 1,  x \in {0,1}
+    //     -1 < this->_params[0] < 0,  x \in {-1,0}
+    //
+    // The checks in BilinearWarpingKernel::setKernelParameter() ensure that one of these
+    // conditions is satisfied
+    //
+    return 0.5 + (1-2*fabs(this->_params[0])) * (0.5-fabs(x));
 }
+
+
+//
+// Provides error-checking: the bilinear kernel is designed to work in two cases
+//    0 < x < 1  and ctrX=0
+//    -1 < x < 0  and ctrX=1
+// (and analogously for y).  Note that to get the second case, Kernel::setCtrX(1) must be
+// called before calling Kernel::setKernelParameter().  [see afw::math::offsetImage() for
+// an example]
+//
+void afwMath::BilinearWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    int ctr;
+
+    if (ind == 0)
+	ctr = this->getCtrX();
+    else if (ind == 1)
+	ctr = this->getCtrY();
+    else
+	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in BilinearWarpingKernel::setKernelParameter()");
+
+    if (ctr == 0) {
+	if (value < -1e-6 || value > 1+1e-6)
+	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in BilinearWarpingKernel::setKernelParameter()");
+    }
+    else if (ctr == 1) {
+	if (value < -1-1e-6 || value > 1e-6)
+	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in BilinearWarpingKernel::setKernelParameter()");
+    }
+    else
+	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in BilinearWarpingKernel::setKernelParameter()");
+
+    SeparableKernel::setKernelParameter(ind, value);
+}
+
 
 /**
  * \brief Return string representation.
