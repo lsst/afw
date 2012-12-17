@@ -27,6 +27,7 @@
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/table/io/InputArchive.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -111,6 +112,18 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
 
     data.metadata->combine(getMetadata());
 
+    // In the future, we might not have exactly three image HDUs, but we always do right now,
+    // so 1=primary, 2=image, 3=mask, 4=variance, 5+=archive
+    data.metadata->set("AR_HDU", 5, "HDU containing the archive used to store ancillary objects");
+    if (hasPsf() && getPsf()->isPersistable()) {
+        int psfId = data.archive.put(getPsf());
+        data.metadata->set("PSF_ID", psfId, "archive ID for the Exposure's main Psf");
+    }
+    if (hasWcs() && getWcs()->isPersistable()) {
+        int wcsId = data.archive.put(getWcs());
+        data.metadata->set("WCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
+    }
+
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
     //image coordinates. When saving an image we convert from pixel to index coordinates.
@@ -154,7 +167,9 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     return data;
 }
 
-void ExposureInfo::_finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const {}
+void ExposureInfo::_finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const {
+    data.archive.writeFits(fitsfile);
+}
 
 void ExposureInfo::_readFits(
     fits::Fits & fitsfile,
@@ -179,6 +194,19 @@ void ExposureInfo::_readFits(
     PTR(Calib) newCalib(new Calib(metadata));
     setCalib(newCalib);
     detail::stripCalibKeywords(metadata);
+
+    if (metadata->exists("AR_HDU")) {
+        fitsfile.setHdu(metadata->get<int>("AR_HDU"));
+        table::io::InputArchive archive = table::io::InputArchive::readFits(fitsfile);
+        // Load the Psf and Wcs from the archive; id=0 results in a null pointer.
+        // Note that the binary table Wcs, if present, clobbers the FITS header one,
+        // because the former might be an approximation to something we can't represent
+        // using the FITS WCS standard but can represent with binary tables.
+        int psfId = metadata->get<int>("PSF_ID", 0);
+        _psf = archive.get<detection::Psf>(psfId);
+        int wcsId = metadata->get<int>("WCS_ID", 0);
+        _wcs = archive.get<Wcs>(wcsId);        
+    }
 
     _metadata = metadata;
 }

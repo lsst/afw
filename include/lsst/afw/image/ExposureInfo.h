@@ -28,6 +28,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 
 namespace lsst { namespace afw {
 
@@ -173,6 +174,7 @@ private:
         PTR(daf::base::PropertyList) imageMetadata;
         PTR(daf::base::PropertyList) maskMetadata;
         PTR(daf::base::PropertyList) varianceMetadata;
+        table::io::OutputArchive archive;
     };
 
     /**

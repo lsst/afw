@@ -86,6 +86,7 @@ class ExposureTestCase(unittest.TestCase):
         self.width =  maskedImage.getWidth()
         self.height = maskedImage.getHeight()
         self.wcs = afwImage.makeWcs(maskedImageMD)
+        self.psf = afwDetection.DoubleGaussianPsf(11, 11, 3.0, 6.0, 0.1)
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -103,6 +104,7 @@ class ExposureTestCase(unittest.TestCase):
     def tearDown(self):
         del self.smallExposure
         del self.wcs
+        del self.psf
 
         del self.exposureBlank 
         del self.exposureMiOnly
@@ -223,12 +225,11 @@ class ExposureTestCase(unittest.TestCase):
         #
         w, h = 11, 11
         self.assertFalse(exposure.hasPsf())
-        psf = afwDetection.createPsf("DoubleGaussian", w, h, 3)
-        exposure.setPsf(psf)
+        exposure.setPsf(self.psf)
         self.assertTrue(exposure.hasPsf())
         self.assertEqual(exposure.getPsf().getKernel().getDimensions(), afwGeom.Extent2I(w, h))
 
-        exposure.setPsf(afwDetection.createPsf("DoubleGaussian", w, h, 1)) # we can reset the Psf
+        exposure.setPsf(afwDetection.DoubleGaussianPsf(w, h, 4.0, 8.0, 0.2)) # we can reset the Psf
          
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
@@ -319,6 +320,8 @@ class ExposureTestCase(unittest.TestCase):
         
         utilsTests.assertRaisesLsstCpp(self, lsst.afw.fits.FitsError, getExposure)
         
+        mainExposure.setPsf(self.psf)
+
         # Make sure we can write without an exception
         mainExposure.getCalib().setExptime(10)
         mainExposure.getCalib().setMidTime(dafBase.DateTime())
@@ -330,6 +333,7 @@ class ExposureTestCase(unittest.TestCase):
 
         readExposure = type(mainExposure)(outFile)
 
+        print outFile
         os.remove(outFile)
         #
         # Check the round-tripping
@@ -339,6 +343,16 @@ class ExposureTestCase(unittest.TestCase):
         self.assertEqual(mainExposure.getCalib().getExptime(), readExposure.getCalib().getExptime())
         self.assertEqual(midMjd, readExposure.getCalib().getMidTime().get())
         self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
+
+        psf = readExposure.getPsf()
+        self.assert_(psf is not None)
+        psf = afwDetection.DoubleGaussianPsf.swigConvert(psf)
+        self.assert_(psf is not None)
+        self.assertEqual(psf.getKernel().getWidth(), self.psf.getKernel().getWidth())
+        self.assertEqual(psf.getKernel().getHeight(), self.psf.getKernel().getHeight())
+        self.assertEqual(psf.getSigma1(), self.psf.getSigma1())
+        self.assertEqual(psf.getSigma2(), self.psf.getSigma2())
+        self.assertEqual(psf.getB(), self.psf.getB())
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
