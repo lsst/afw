@@ -31,15 +31,54 @@
 #include "lsst/afw/detection.h"
 
 using namespace std;
+using namespace boost;
 using namespace lsst::afw::geom;
 using namespace lsst::afw::math;
 using namespace lsst::afw::image;
 using namespace lsst::afw::detection;
 
 
-static boost::random::mt19937 rng(0);  // RNG deliberately initialized with same seed every time
-static boost::random::uniform_int_distribution<> uni_int(0,100);
-static boost::random::uniform_01<> uni_double;
+static random::mt19937 rng(0);  // RNG deliberately initialized with same seed every time
+static random::uniform_int_distribution<> uni_int(0,100);
+static random::uniform_01<> uni_double;
+
+
+static void fill_random(Image<double> &im)
+{
+    int nx = im.getWidth();
+    int ny = im.getHeight();
+
+    double sum = 0.0;
+    for (int i = 0; i < nx; i++) {
+	for (int j = 0; j < ny; j++) {
+	    im(i,j) = uni_double(rng);
+	    sum += im(i,j);
+	}
+    }
+
+    // image must be normalized to sum 1, due to current confusion in Psf::computeImage()
+    for (int i = 0; i < nx; i++)
+	for (int j = 0; j < ny; j++)
+	    im(i,j) /= sum;
+}
+
+
+static void show_image(const Image<double> &im)
+{
+    int nx = im.getWidth();
+    int ny = im.getHeight();
+
+    for (int i = 0; i < nx; i++) {
+	for (int j = 0; j < ny; j++)
+	    cerr << " " << im(i,j);
+	cerr << endl;
+    }
+}
+
+
+// -------------------------------------------------------------------------------------------------
+//
+// testPsfOffsets
 
 
 // returns 0 on success, 1 on failure
@@ -51,23 +90,11 @@ static int testOnePsfOffset(int dst_nx, int dst_ny, int src_nx, int src_ny, int 
     string s = os.str();
 
     // initialize PSF to random image
-    // image must be normalized to sum 1, due to confusion in Psf::computeImage()
-
     Image<double> src(src_nx, src_ny);
-
-    double sum = 0.0;
-    for (int i = 0; i < src_nx; i++) {
-	for (int j = 0; j < src_ny; j++) {
-	    src(i,j) = uni_double(rng);
-	    sum += src(i,j);
-	}
-    }
-    for (int i = 0; i < src_nx; i++)
-	for (int j = 0; j < src_ny; j++)
-	    src(i,j) /= sum;
+    fill_random(src);
 
     // construct PSF object
-    Kernel::Ptr ker = boost::make_shared<FixedKernel>(src);
+    Kernel::Ptr ker = make_shared<FixedKernel>(src);
     ker->setCtr(Point2I(ctrx,ctry));
     KernelPsf psf(ker);
 
@@ -94,17 +121,10 @@ static int testOnePsfOffset(int dst_nx, int dst_ny, int src_nx, int src_ny, int 
 #if 0
     cerr << s << endl;
     cerr << "source image follows\n";
-    for (int i = 0; i < src_nx; i++) {
-	for (int j = 0; j < src_ny; j++)
-	    cerr << " " << src(i,j);
-	cerr << endl;
-    }
-    cerr << "(x,y)=(" << x << "," << y << ")  (x0,y0)=(" << x0 << "," << y0 << ")\n";
-    for (int i = 0; i < dst_nx; i++) {
-	for (int j = 0; j < dst_ny; j++)
-	    cerr << " " << (*dst)(i,j);
-	cerr << endl;
-    }
+    show_image(src);
+
+    cerr << "dst image follows (x,y)=(" << x << "," << y << ")  (x0,y0)=(" << x0 << "," << y0 << ")\n";
+    show_image(*dst);
 #endif    
 
     for (int i = 0; i < dst_nx; i++) {
@@ -121,7 +141,7 @@ static int testOnePsfOffset(int dst_nx, int dst_ny, int src_nx, int src_ny, int 
 	}
     }
 
-    cerr << s << ": pass\n";  // remove
+    cerr << s << ": pass\n";
     return 0;
 }
 	
@@ -142,13 +162,102 @@ static int testPsfOffsets()
 }
 
 
+// -------------------------------------------------------------------------------------------------
+//
+// testPsfRecenter
+//
+
+// returns 0 on success, 1 on failure
+static int testOnePsfRecenter(int nx, int ny, int ctrx, int ctry, double px, double py)
+{
+    // identifier string which will be displayed on failure
+    ostringstream os;
+    os << "testOnePsfRecenter(" << nx << "," << ny << "," << ctrx << "," << ctry << "," << px << "," << py << ")";
+    string s = os.str();
+
+    // initialize PSF to random image
+    PTR(Image<double>) src = make_shared<Image<double> >(nx,ny);
+    fill_random(*src);
+
+    // use bilinear interpolation for simplest machine-precision test 
+    // (can't go through Psf::computeImage() since this will use lanczos5)
+    PTR(Image<double>) dst = Psf::recenterKernelImage(src, Point2I(ctrx,ctry), Point2D(px,py), "bilinear", 1);
+
+    // test correctness...
+
+    if ((dst->getWidth() != nx) || (dst->getHeight() != ny)) {
+	cerr << s << ": mismatched dst dimensions\n";
+	return 1;
+    }
+
+    int x0 = dst->getX0();
+    int y0 = dst->getY0();
+
+    if ((fabs(x0+ctrx-px) > 0.5+1.0e-13) || (fabs(y0+ctry-py) > 0.5+1.0e-13)) {
+	cerr << s << ": wrong image location\n";
+	return 1;
+    }
+
+    for (int i = 1; i < nx-1; i++) {
+	double si = i+x0-px+ctrx;  // location in src image
+	int si0 = floor(si);
+	double sx = si-si0;
+
+	for (int j = 1; j < ny-1; j++) {
+	    double sj = j+y0-py+ctry;  // location in src image
+	    int sj0 = floor(sj);
+	    double sy = sj-sj0;
+	    
+	    // quick-and-dirty bilinear interpolation by hand
+	    double t00 = (si0 >= 0 && sj0 >= 0) ? (*src)(si0,sj0) : 0.0;
+	    double t01 = (si0 >= 0 && sj0 < ny-1) ? (*src)(si0,sj0+1) : 0.0;
+	    double t10 = (si0 < nx-1 && sj0 >= 0) ? (*src)(si0+1,sj0) : 0.0;
+	    double t11 = (si0 < nx-1 && sj0 < ny-1) ? (*src)(si0+1,sj0+1) : 0.0;
+	    double t = t00*(1-sx)*(1-sy) + t01*(1-sx)*sy + t10*sx*(1-sy) + t11*sx*sy;
+	    
+	    // offsetImage() includes some single-precision arithmetic, so threshold is 10^-6 here
+	    if (fabs((*dst)(i,j)-t) > 1.0e-6) {
+		cerr << s << ": incorrect output image at i=" << i << ", j=" << j << endl;
+		cerr << setprecision(17) << "got " << (*dst)(i,j) << ", expected " << t << endl;
+		cerr << setprecision(17) << "t00=" << t00 << " t01=" << t01 << " t10=" << t10 << " t11=" << t11 << endl;
+		cerr << "complete source image follows\n";
+		show_image(*src);
+		return 1;
+	    }
+	}
+    }
+
+    cerr << s << ": pass\n";
+    return 0;
+}
+
+
+static int testPsfRecenter()
+{
+    int n = 0;
+    n += testOnePsfRecenter(5, 5, 2, 2, 10.0, 10.0);
+    n += testOnePsfRecenter(5, 5, 2, 2, 9.71, 9.65);
+    n += testOnePsfRecenter(5, 5, 2, 2, 9.9, 10.2);
+    n += testOnePsfRecenter(5, 5, 2, 2, 10.1, 9.8);
+    n += testOnePsfRecenter(5, 5, 2, 2, 10.1, 10.2);
+    return n;
+}
+
+
+// -------------------------------------------------------------------------------------------------
+
+
 int main(int argc, char **argv)
 {
-    int n = testPsfOffsets();
-    if (n > 0)
-	cerr << "testPsfOffsets: " << n << " failures\n";
+    int n1 = testPsfOffsets();
+    if (n1 > 0)
+	cerr << "testPsfOffsets: " << n1 << " failures\n";
 
-    return (n > 0);
+    int n2 = testPsfRecenter();
+    if (n2 > 0)
+	cerr << "testPsfRecenter: " << n2 << " failures\n";
+
+    return (n1+n2 > 0);
 }
 
 /*
