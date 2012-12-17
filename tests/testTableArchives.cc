@@ -44,7 +44,7 @@ public:
 
 };
 
-class ExampleA : public Comparable, public PersistableFacade<ExampleA> {
+class ExampleA : public public PersistableFacade<ExampleA>, Comparable {
 public:
 
     int var1;
@@ -95,7 +95,7 @@ public:
     };
 };
 
-class ExampleB : public Comparable, public PersistableFacade<ExampleB> {
+class ExampleB : public PersistableFacade<ExampleB>, public Comparable {
 public:
 
     int var1;
@@ -157,7 +157,7 @@ public:
     };
 };
 
-class ExampleC : public Comparable, public PersistableFacade<ExampleC> {
+class ExampleC : public PersistableFacade<ExampleC>, public Comparable {
 public:
 
     int var1;

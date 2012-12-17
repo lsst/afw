@@ -55,7 +55,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *
  *   - The base class of the class hierarchy should inherit from Persistable.
  *
- *   - All classes should inherit from PersistableFactory<T>, and this should be the
+ *   - All classes should inherit from PersistableFacade<T>, and this should be the
  *  *first* in the list of base classes (or at least ahead of Persistable or any other
  *  class that inherits from it).  It is not necessary to do this at every level, but
  *  it can save users from having to do dynamic casts themselves, e.g.:

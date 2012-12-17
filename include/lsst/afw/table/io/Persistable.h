@@ -54,19 +54,22 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
  *
  *  Inheriting from Persistable provides a public API for reading/writing individual objects to
  *  FITS that is fully defined in the base class, with derived classes only needing to implement
- *  the archive visitor interface.  It is expected that objects that contain multiple persistables
+ *  persistence to catalogs.  It is expected that objects that contain multiple persistables
  *  (such as Exposures) will create their own InputArchives and OutputArchives, and use these
  *  to avoid writing the same object twice (which would otherwise be a big concern for future
  *  objects like ExposureCatalog and CoaddPsf).
  *
  *  Generally speaking, an abstract base class that inherits from Persistable should
- *  also inherit from PersistableFacade.
- *  A concrete class that inherits (indirectly) from Persistable should inherit (again) from
- *  PersistableFacade (though this just provides a slightly nicer interface to users), implement
- *  isPersistable and visitOutputArchive, and define a subclass of PersistenceFactory.
+ *  also inherit from PersistableFacade<Base>.
+ *  A concrete class that inherits (possibly indirectly) from Persistable should inherit from
+ *  PersistableFacade<Derived> (though this just provides a slightly nicer interface to users),
+ *  implement isPersistable(), getPersistenceName(), and write(), and define a subclass of
+ *  PersistenceFactory.  Inheritance from PersistableFacade should always precede inheritance
+ *  from Persistable.
  *
  *  Persistable has no pure virtual member functions, and instead contains a default implementation
- *  that throws LogicErrorException when the user attempts to save them.
+ *  that throws LogicErrorException when the user attempts to save an object for which persistence
+ *  has not actually been implemented.
  */
 class Persistable {
 public:
@@ -113,7 +116,7 @@ protected:
     /**
      *  @brief Return the unique name used to persist this object and look up its factory.
      *
-     *  Must be less than ArchiveIndexSchema::MAX_NAME_LENGTHT characters.
+     *  Must be less than ArchiveIndexSchema::MAX_NAME_LENGTH characters.
      */
     virtual std::string getPersistenceName() const;
 
@@ -155,7 +158,7 @@ private:
  *  with Psfs:
  *  @code
  *  class Psf: public PersistableFacade<Psf>, public Persistable { ... };
- *  class DoubleGaussianPsf: public PersistableFacade<Psf>, public Psf { ... };
+ *  class DoubleGaussianPsf: public PersistableFacade<DoubleGaussianPsf>, public Psf { ... };
  *  @endcode
  *
  *  Inheriting from PersistableFacade is not required for any classes but the base of
