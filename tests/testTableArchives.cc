@@ -44,7 +44,7 @@ public:
 
 };
 
-class ExampleA : public public PersistableFacade<ExampleA>, Comparable {
+class ExampleA : public PersistableFacade<ExampleA>,  public Comparable {
 public:
 
     int var1;
