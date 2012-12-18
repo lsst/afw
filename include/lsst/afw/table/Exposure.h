@@ -52,11 +52,7 @@ class ExposureTable;
 template <typename RecordT> class ExposureCatalogT;
 
 /**
- *  @brief Record class that must contain a unique ID field and a celestial coordinate field.
- *
- *  ExposureTable / ExposureRecord are intended to be the base class for records representing astronomical
- *  objects.  In additional to the minimal schema and the convenience accessors it allows, a ExposureTable
- *  may hold an IdFactory object that is used to assign unique IDs to new records.
+ *  @brief Record class used to store exposure metadata.
  */
 class ExposureRecord : public BaseRecord {
 public:
@@ -105,14 +101,14 @@ public:
     bool overlaps(geom::Box2D const & box, Wcs const & wcs) const;
 
     //@{
-    /// Get/Set the the attached Wcs or Psf.  Setting always results in a deep copy.
+    /// Get/Set the the attached Wcs or Psf.  No copies are made.
     PTR(Wcs) getWcs() { return _wcs; }
     CONST_PTR(Wcs) getWcs() const { return _wcs; }
-    void setWcs(CONST_PTR(Wcs) wcs);
+    void setWcs(PTR(Wcs) wcs) { _wcs = wcs; }
 
     PTR(Psf) getPsf() { return _psf; }
     CONST_PTR(Psf) getPsf() const { return _psf; }
-    void setPsf(CONST_PTR(Psf) psf);
+    void setPsf(PTR(Psf) psf) { _psf = psf; }
     //@}
 
 protected:
@@ -124,7 +120,7 @@ protected:
 };
 
 /**
- *  @brief Table class that must contain a unique ID field and a celestial coordinate field.
+ *  @brief Table class used to store exposure metadata.
  *
  *  @copydetails ExposureRecord
  */
