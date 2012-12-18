@@ -230,10 +230,10 @@ namespace {
 class SourceFitsReader : public io::FitsReader {
 public:
 
-    explicit SourceFitsReader(Fits * fits) : io::FitsReader(fits), _spanCol(-1), _peakCol(-1),
-                                             _heavyPixCol(-1),
-                                             _heavyMaskCol(-1),
-                                             _heavyVarCol(-1) {}
+    explicit SourceFitsReader(Fits * fits, PTR(io::InputArchive) archive) :
+        io::FitsReader(fits, archive), _spanCol(-1), _peakCol(-1),
+        _heavyPixCol(-1), _heavyMaskCol(-1), _heavyVarCol(-1)
+        {}
 
 protected:
 

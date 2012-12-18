@@ -5,6 +5,7 @@
 #include "lsst/afw/fits.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/io/Reader.h"
+#include "lsst/afw/table/io/InputArchive.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -41,7 +42,7 @@ public:
     public:
 
         /// Create a new FITS reader from a cfitsio pointer holder.
-        virtual PTR(FitsReader) operator()(Fits * fits) const = 0;
+        virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive) const = 0;
 
         virtual ~Factory() {}
 
@@ -62,7 +63,9 @@ public:
     public:
 
         /// Create a new FITS reader from a cfitsio pointer holder.
-        virtual PTR(FitsReader) operator()(Fits * fits) const { return boost::make_shared<ReaderT>(fits); }
+        virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive) const {
+            return boost::make_shared<ReaderT>(fits, archive);
+        }
 
         /// Create a factory that will be used when the AFW_TYPE fits key matches the given name.
         explicit FactoryT(std::string const & name) : Factory(name) {}
@@ -73,7 +76,7 @@ public:
      *  @brief Look for the header key (AFW_TYPE) that tells us the type of the FitsReader to use,
      *         then make it using the registered factory.
      */
-    static PTR(FitsReader) make(Fits * fits);
+    static PTR(FitsReader) make(Fits * fits, PTR(io::InputArchive) archive);
 
     /**
      *  @brief Entry point for reading FITS files into arbitrary containers.
@@ -90,13 +93,19 @@ public:
 
     /// @brief Low-level entry point for reading FITS files into arbitrary containers.
     template <typename ContainerT>
-    static ContainerT apply(Fits & fits) {
-        PTR(FitsReader) reader = make(&fits);
+    static ContainerT apply(Fits & fits, PTR(io::InputArchive) archive = PTR(io::InputArchive)()) {
+        PTR(FitsReader) reader = make(&fits, archive);
         return reader->template read<ContainerT>();
     }
 
-    /// @brief Construct from a wrapped cfitsio pointer. 
-    explicit FitsReader(Fits * fits) : _fits(fits) {}
+    /**
+     *  @brief Construct from a wrapped cfitsio pointer and (ignored) InputArchive.
+     *
+     *  Subclasses that require an InputArchive should accept the one that is passed in,
+     *  but may need to construct their own from the HDUs following the catalog HDU(s)
+     *  if this pointer is null.
+     */
+    explicit FitsReader(Fits * fits, PTR(InputArchive)) : _fits(fits) {}
 
 protected:
 

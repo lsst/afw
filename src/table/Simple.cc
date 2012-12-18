@@ -97,7 +97,7 @@ namespace {
 class SimpleFitsReader : public io::FitsReader {
 public:
 
-    explicit SimpleFitsReader(Fits * fits) : io::FitsReader(fits) {}
+    explicit SimpleFitsReader(Fits * fits, PTR(io::InputArchive) archive) : io::FitsReader(fits, archive) {}
 
 protected:
 
