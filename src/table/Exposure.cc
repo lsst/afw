@@ -62,12 +62,24 @@ namespace {
 class ExposureFitsWriter : public io::FitsWriter {
 public:
 
-    explicit ExposureFitsWriter(Fits * fits) : io::FitsWriter(fits) {}
+    ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive = PTR(io::OutputArchive)())
+        : io::FitsWriter(fits), _doWriteArchive(false), _archive(archive) {
+        if (!_archive) {
+            _doWriteArchive = true;
+            _archive.reset(new io::OutputArchive());
+        }
+    }
 
 protected:
     
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
+    virtual void _finish() {
+        if (_doWriteArchive) _archive->writeFits(*_fits);
+    }
+
+    bool _doWriteArchive;
+    PTR(io::OutputArchive) _archive;
 };
 
 void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
@@ -96,12 +108,22 @@ namespace {
 class ExposureFitsReader : public io::FitsReader {
 public:
 
-    explicit ExposureFitsReader(Fits * fits) : io::FitsReader(fits) {}
+    explicit ExposureFitsReader(Fits * fits, PTR(io::InputArchive) archive) :
+        io::FitsReader(fits, archive), _archive(archive)
+    {
+        if (!_archive) {
+            int oldHdu = _fits->getHdu();
+            _fits->setHdu(oldHdu + 1);
+            _archive.reset(new io::InputArchive(io::InputArchive::readFits(*_fits)));
+            _fits->setHdu(oldHdu);
+        }
+    }
 
 protected:
 
     virtual PTR(BaseTable) _readTable();
 
+    PTR(io::InputArchive) _archive;
 };
 
 PTR(BaseTable) ExposureFitsReader::_readTable() {
@@ -195,6 +217,11 @@ ExposureTable::MinimalSchema & ExposureTable::getMinimalSchema() {
 PTR(io::FitsWriter)
 ExposureTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
     return boost::make_shared<ExposureFitsWriter>(fits);
+}
+
+PTR(io::FitsWriter)
+ExposureTable::makeFitsWriter(io::FitsWriter::Fits * fits, PTR(io::OutputArchive) archive) const {
+    return boost::make_shared<ExposureFitsWriter>(fits, archive);
 }
 
 template class CatalogT<ExposureRecord>;

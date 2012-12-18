@@ -29,6 +29,7 @@
 #include "lsst/afw/table/SortedCatalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 
 namespace lsst { namespace afw {
 
@@ -214,8 +215,11 @@ private:
 
     friend class io::FitsWriter;
 
+    template <typename RecordT> friend class ExposureCatalogT;
+
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
+    PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits, PTR(io::OutputArchive) archive) const;
 };
 
 #ifndef SWIG
@@ -274,6 +278,20 @@ public:
     template <typename OtherRecordT>
     ExposureCatalogT(ExposureCatalogT<OtherRecordT> const & other) : Base(other) {}
 
+    using Base::writeFits;
+
+    /**
+     *  @brief Write a FITS binary table to an open file object.
+     *
+     *  Instead of writing nested Persistables to an internal archive and appending it
+     *  to the FITS file, this overload inserts nested Persistables into the given
+     *  archive and does not save it, leaving it to the user to save it later.
+     */
+    void writeFits(fits::Fits & fitsfile, PTR(io::OutputArchive) archive) const {
+        PTR(io::FitsWriter) writer = this->getTable()->makeFitsWriter(&fitsfile, archive);
+        writer->write(*this);
+    }
+
     /// @brief Read a FITS binary table.
     static ExposureCatalogT readFits(std::string const & filename, int hdu=0) {
         return io::FitsReader::apply<ExposureCatalogT>(filename, hdu);
@@ -281,6 +299,19 @@ public:
     /// @brief Read a FITS binary table.
     static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<ExposureCatalogT>(manager, hdu);
+    }
+    /// @brief Read a FITS binary table from a file object already at the correct extension.
+    static ExposureCatalogT readFits(fits::Fits & fitsfile) {
+        return io::FitsReader::apply<ExposureCatalogT>(fitsfile);
+    }
+    /**
+     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *
+     *  This overload reads nested Persistables from the given archive instead of loading
+     *  a new archive from the HDUs following the catalog.
+     */
+    static ExposureCatalogT readFits(fits::Fits & fitsfile, PTR(io::InputArchive) archive) {
+        return io::FitsReader::apply<ExposureCatalogT>(fitsfile, archive);
     }
 
     /**
