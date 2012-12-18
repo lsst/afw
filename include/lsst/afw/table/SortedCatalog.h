@@ -118,6 +118,10 @@ public:
     static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<SortedCatalogT>(manager, hdu);
     }
+    /// @brief Read a FITS binary table.
+    static SortedCatalogT readFits(fits::Fits & fitsfile) {
+        return io::FitsReader::apply<SortedCatalogT>(fitsfile);
+    }
 
     /**
      * @brief Shallow copy a subset of another SortedCatalog.  Mostly here for
