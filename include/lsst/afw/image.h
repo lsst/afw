@@ -39,5 +39,6 @@
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/ImageSlice.h"
+#include "lsst/afw/image/XYTransform.h"
 
 #endif // LSST_IMAGE_H
