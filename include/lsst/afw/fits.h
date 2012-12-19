@@ -103,7 +103,8 @@ template <typename T> int getBitPix();
 /**
  *  @brief Lifetime-management for memory that goes into FITS memory files.
  */
-struct MemFileManager : private boost::noncopyable {
+class MemFileManager : private boost::noncopyable {
+public:
 
     /**
      *  @brief Construct a MemFileManager with no initial memory buffer.
