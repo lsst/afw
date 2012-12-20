@@ -22,8 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_GEOM_PointIterator_h_INCLUDED
-#define LSST_AFW_GEOM_PointIterator_h_INCLUDED
+#ifndef LSST_AFW_GEOM_SpanPixelIterator_h_INCLUDED
+#define LSST_AFW_GEOM_SpanPixelIterator_h_INCLUDED
 
 #include "boost/iterator/iterator_facade.hpp"
 
@@ -37,12 +37,12 @@ namespace lsst { namespace afw { namespace geom {
  *  This is used to iterate over the pixels in a Span, and by extension to iterate over
  *  regions like boxes and ellipses.
  */
-class PointIterator : 
-        public boost::iterator_facade<PointIterator,Point2I const,boost::random_access_traversal_tag>
+class SpanPixelIterator : 
+        public boost::iterator_facade<SpanPixelIterator,Point2I const,boost::random_access_traversal_tag>
 {
 public:
 
-    explicit PointIterator(Point2I const & p = Point2I()) : _p(p) {}
+    explicit SpanPixelIterator(Point2I const & p = Point2I()) : _p(p) {}
 
 private:
 
@@ -56,11 +56,11 @@ private:
 
     void advance(int n) { _p.getX(); }
 
-    bool equal(PointIterator const & other) const {
+    bool equal(SpanPixelIterator const & other) const {
         return _p.getX() == other._p.getX() && _p.getY() == other._p.getY();
     }
 
-    int distance_to(PointIterator const & other) const {
+    int distance_to(SpanPixelIterator const & other) const {
         assert(other._p.getY() == _p.getY());
         return other._p.getX() - _p.getX();
     }
@@ -70,4 +70,4 @@ private:
 
 }}} // namespace lsst::afw::geom
 
-#endif // !LSST_AFW_GEOM_PointIterator_h_INCLUDED
+#endif // !LSST_AFW_GEOM_SpanPixelIterator_h_INCLUDED

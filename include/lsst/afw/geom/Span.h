@@ -32,7 +32,7 @@
 #include "lsst/base.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/PointIterator.h"
+#include "lsst/afw/geom/SpanPixelIterator.h"
 
 namespace boost{
 namespace serialization{
@@ -58,7 +58,7 @@ public:
     typedef boost::shared_ptr<Span const> ConstPtr;
 
     /// An iterator over points in the Span.
-    typedef PointIterator Iterator;
+    typedef SpanPixelIterator Iterator;
 
     Span(int y,                         //!< Row that Span's in
          int x0,                        //!< Starting column (inclusive)
