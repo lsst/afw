@@ -311,8 +311,8 @@ template<typename U>
 Extent<T, 2>::Extent(Extent<U, 2> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
 };
 
 template<typename T>
@@ -320,8 +320,8 @@ template<typename U>
 Extent<T, 2>::Extent(Point<U, 2> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
 };
 
 // Constructor for any 3D type from 3I type
@@ -330,9 +330,9 @@ template<typename U>
 Extent<T, 3>::Extent(Extent<U, 3> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
-    setZ((T) other.getZ());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
+    this->setZ(static_cast<T>(other.getZ()));
 };
 
 // Constructor for any 3D type from 3I type
@@ -341,9 +341,9 @@ template<typename U>
 Extent<T, 3>::Extent(Point<U, 3> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
-    setZ((T) other.getZ());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
+    this->setZ(static_cast<T>(other.getZ()));
 };
 
 typedef Extent<int,2> ExtentI;
