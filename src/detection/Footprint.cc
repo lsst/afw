@@ -190,7 +190,11 @@ Footprint::Footprint(
     _normalized(true)
 {
     geom::ellipses::PixelRegion pr(ellipse);
-    for (geom::ellipses::PixelRegion::Iterator spanIter = pr.begin(); spanIter != pr.end(); ++spanIter) {
+    for (
+        geom::ellipses::PixelRegion::Iterator spanIter = pr.begin(), end = pr.end();
+        spanIter != end;
+        ++spanIter
+    ) {
         if (!spanIter->isEmpty()) {
             addSpan(*spanIter);
         }

@@ -44,7 +44,7 @@ public:
 
     Box2I const & getBBox() const { return _bbox; }
 
-    Span getSpanAt(int y) const;
+    Span const getSpanAt(int y) const;
 
     explicit PixelRegion(Ellipse const & ellipse);
 

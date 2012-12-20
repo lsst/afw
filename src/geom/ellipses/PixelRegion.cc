@@ -40,7 +40,7 @@ PixelRegion::PixelRegion(Ellipse const & ellipse) :
     }
 }
 
-Span PixelRegion::getSpanAt(int y) const {
+Span const PixelRegion::getSpanAt(int y) const {
     double yt = y - _center.getY();
     double d = _invQxx - yt*yt/_detQ;
     double x0 = _center.getX() + yt * _alpha;
