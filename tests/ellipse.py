@@ -45,7 +45,7 @@ numpy.random.seed(500)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class EllipseTestCase(unittest.TestCase):
-    
+
     def setUp(self):
         self.cores = [
             lsst.afw.geom.ellipses.Axes(4, 3, 1),
@@ -76,7 +76,7 @@ class EllipseTestCase(unittest.TestCase):
                 self.assertClose(conv.getDeterminantRadius(), detRadius * 3)
                 self.assertClose(conv.getTraceRadius(), traceRadius * 3)
                 self.assertClose(conv.getArea(), area * 9)
-                
+
 
     def testAccessors(self):
         for core in self.cores:
@@ -88,7 +88,7 @@ class EllipseTestCase(unittest.TestCase):
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
             self.assertEqual(lsst.afw.geom.Point2D, type(ellipse.getCenter()))
-            newcore = lsst.afw.geom.ellipses.Axes(1,2,3);            
+            newcore = lsst.afw.geom.ellipses.Axes(1,2,3)
             newcore.normalize()
             core.assign(newcore)
             ellipse.setCore(core)

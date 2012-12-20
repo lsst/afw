@@ -20,7 +20,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_GEOM_Span_h_INCLUDED
 #define LSST_AFW_GEOM_Span_h_INCLUDED
 
@@ -40,7 +40,7 @@ namespace serialization{
 }}
 
 namespace lsst {
-namespace afw { 
+namespace afw {
 
 namespace detection {
 class Footprint;

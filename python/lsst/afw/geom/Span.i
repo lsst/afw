@@ -21,7 +21,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 %{
 #include "lsst/afw/geom/Span.h"
 %}
@@ -41,7 +41,7 @@
 
 %newobject lsst::afw::geom::Span::__iter__;
 %extend lsst::afw::geom::Span {
-    
+
     %fragment("SwigPyIterator_T");
 
     // This is the same recipe used to support the STL iterators in SWIG.

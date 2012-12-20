@@ -37,7 +37,7 @@ namespace lsst { namespace afw { namespace geom {
  *  This is used to iterate over the pixels in a Span, and by extension to iterate over
  *  regions like boxes and ellipses.
  */
-class SpanPixelIterator : 
+class SpanPixelIterator :
         public boost::iterator_facade<SpanPixelIterator,Point2I const,boost::random_access_traversal_tag>
 {
 public:

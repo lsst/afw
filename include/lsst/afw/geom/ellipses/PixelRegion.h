@@ -61,24 +61,24 @@ private:
 class PixelRegion::Iterator :
         public boost::iterator_facade<PixelRegion::Iterator,Span const,boost::random_access_traversal_tag> {
 public:
-    
+
     explicit Iterator(Span const & s = Span(0,0,0), PixelRegion const * region = NULL) :
         _s(s), _region(region) {}
-    
+
 private:
-    
+
     friend class boost::iterator_core_access;
-    
+
     Span const & dereference() const { return _s; }
-    
+
     void increment() { _s = _region->getSpanAt(_s.getY()+1); }
-    
+
     void decrement() { _s = _region->getSpanAt(_s.getY()-1); }
-    
+
     void advance(int n) { _s = _region->getSpanAt(_s.getY() + n); }
 
     bool equal(Iterator const & other) const { return _s == other._s; }
-    
+
     int distance_to(Iterator const & other) const {
         return other._s.getY() - _s.getY();
     }

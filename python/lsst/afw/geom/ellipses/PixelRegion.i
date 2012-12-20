@@ -39,7 +39,7 @@
 
 %newobject lsst::afw::geom::ellipses::__iter__;
 %extend lsst::afw::geom::ellipses::PixelRegion {
-    
+
     %fragment("SwigPyIterator_T");
 
     // This is the same recipe used to support the STL iterators in SWIG.
