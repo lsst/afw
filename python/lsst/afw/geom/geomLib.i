@@ -159,3 +159,4 @@ Python interface to lsst::afw::geom classes
 %include "AffineTransform.i"
 %include "Box.i"
 %include "Angle.i"
+%include "Span.i"

@@ -83,4 +83,6 @@ Python interface to lsst::afw::detection classes
 %import "lsst/afw/table/tableLib.i"
 %include "footprintset.i"
 
-
+%pythoncode %{
+from lsst.afw.geom import Span
+%}

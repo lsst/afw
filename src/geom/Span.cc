@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -19,24 +20,31 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::geom
- *
- * Does not include lsst/afw/geom/ellipses.h.
- */
-#ifndef LSST_GEOM_H
-#define LSST_GEOM_H
 
-#include "lsst/afw/geom/CoordinateBase.h"
-#include "lsst/afw/geom/CoordinateExpr.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/geom/LinearTransform.h"
-#include "lsst/afw/geom/Box.h"
+#include "boost/format.hpp"
+
 #include "lsst/afw/geom/Span.h"
 
-#endif // LSST_GEOM_H
+namespace lsst { namespace afw { namespace geom {
+
+bool Span::operator<(const Span& b) const {
+	if (_y < b._y)
+		return true;
+	if (_y > b._y)
+		return false;
+	// y equal; check x0...
+	if (_x0 < b._x0)
+		return true;
+	if (_x0 > b._x0)
+		return false;
+	// x0 equal; check x1...
+	if (_x1 < b._x1)
+		return true;
+	return false;
+}
+
+std::string Span::toString() const {
+    return str(boost::format("%d: %d..%d") % _y % _x0 % _x1);
+}
+
+}}} // namespace lsst::afw::geom

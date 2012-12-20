@@ -49,9 +49,9 @@ void Ellipse::writeParameters(double * iter) const {
     iter[4] = _center.getY();
 }
 
-Ellipse::Envelope Ellipse::computeEnvelope() const {
+Box2D Ellipse::computeBBox() const {
     Extent2D dimensions = getCore().computeDimensions();
-    return Envelope(getCenter() - dimensions * 0.5, dimensions);
+    return Box2D(getCenter() - dimensions * 0.5, dimensions);
 }
 
 Ellipse & Ellipse::operator=(Ellipse const & other) { 
