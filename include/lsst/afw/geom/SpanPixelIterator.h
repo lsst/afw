@@ -54,7 +54,7 @@ private:
 
     void decrement() { --_p.getX(); }
 
-    void advance(int n) { _p.getX(); }
+    void advance(int n) { _p.getX() += n; }
 
     bool equal(SpanPixelIterator const & other) const {
         return _p.getX() == other._p.getX() && _p.getY() == other._p.getY();
