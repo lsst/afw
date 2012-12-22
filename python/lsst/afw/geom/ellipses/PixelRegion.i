@@ -52,34 +52,10 @@
 #else // So here's more workaround for the SWIG bug, where we re-implement some of its iterator stuff
       // without templates.
 
-%inline %{
-
-class PyPixelRegionIterator : private boost::noncopyable {
-public:
-
-    lsst::afw::geom::Span get() const { return *_current; }
-
-    void increment() { ++_current; }
-
-    bool atEnd() const { return _current == _end; }
-
-    PyPixelRegionIterator(
-        lsst::afw::geom::ellipses::PixelRegion::Iterator const & begin,
-        lsst::afw::geom::ellipses::PixelRegion::Iterator const & end,
-        PyObject * owner = NULL
-    ) : _current(begin), _end(end), _owner(owner) {
-        Py_XINCREF(_owner);
-    }
-
-    ~PyPixelRegionIterator() { Py_XDECREF(_owner); }
-
-private:
-    lsst::afw::geom::ellipses::PixelRegion::Iterator _current;
-    lsst::afw::geom::ellipses::PixelRegion::Iterator _end;
-    PyObject * _owner;
-};
-
+%{
+#include "lsst/afw/geom/ellipses/PyPixelRegion.h"
 %}
+%include "lsst/afw/geom/ellipses/PyPixelRegion.h"
 
 %extend PyPixelRegionIterator {
 %pythoncode %{
