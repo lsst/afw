@@ -506,7 +506,15 @@ image::Image<PixelT>::Image(
 ) : image::ImageBase<PixelT>() {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
-    *this = Image(fitsfile, metadata, bbox, origin);
+    try {
+        *this = Image(fitsfile, metadata, bbox, origin);
+    } catch(lsst::afw::fits::FitsError &e) {
+        fitsfile.status = 0;               // reset so we can read NAXIS
+        if (fitsfile.getImageDim() == 0) { // no pixels to read
+            LSST_EXCEPT_ADD(e, str(boost::format("HDU %d has NAXIS == 0") % hdu));
+        }
+        throw e;
+    }
 }
 template<typename PixelT>
 image::Image<PixelT>::Image(
