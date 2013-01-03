@@ -68,7 +68,7 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
 }
 /**
  * Add an Amp to the Ccd if the disk orientation has already been set up (via
- * setDisktoChipLayout)
+ * setElectronicToChipLayout)
  */
 void cameraGeom::Ccd::addAmp(
                              cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
