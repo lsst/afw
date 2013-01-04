@@ -141,9 +141,18 @@ the proper Box2I"""
             raise IndexError("Images may only be indexed as a 2-D slice not %s",
                              imageSlice[0], imageSlice[1])
         
-        imageSlice = [_ if isinstance(_, slice) else
-                      slice(_, _ + 1) if isinstance(_, int) else
-                      slice(0, wh) for _, wh in zip(imageSlice, img.getDimensions())]
+        imageSlice, _imageSlice = [], imageSlice
+        for s, wh in zip(_imageSlice, img.getDimensions()):
+            if isinstance(s, slice):
+                pass
+            elif isinstance(s, int):
+                if s < 0:
+                    s += wh
+                s = slice(s, s + 1)
+            else:
+                s = slice(0, wh)
+
+            imageSlice.append(s)
 
         afwGeom = lsst.afw.geom.geomLib
         x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
