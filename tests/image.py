@@ -369,11 +369,11 @@ class ImageTestCase(unittest.TestCase):
         self.image1 = factory(dims)
         self.assertEqual(self.image1.get(10, 10), 0)
 
-
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.ImageF(10, 20)
         im[4,10] = 10
+        im[-3:, -2:] = 100
         sim = im[1:4, 6:10]
         sim[:] = -1
         im[0:4, 0:4] = im[2:6, 8:12]
@@ -382,6 +382,9 @@ class ImageTestCase(unittest.TestCase):
             ds9.mtv(im)
 
         self.assertEqual(im.get(0,  6),  0)
+        self.assertEqual(im.get(6, 17),  0)
+        self.assertEqual(im.get(7, 18),100)
+        self.assertEqual(im.get(9, 19),100)
         self.assertEqual(im.get(1,  6), -1)
         self.assertEqual(im.get(3,  9), -1)
         self.assertEqual(im.get(4, 10), 10)

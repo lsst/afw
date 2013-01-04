@@ -246,6 +246,8 @@ the proper Box2I"""
     Factory = clone
     }
 }
+%supportSlicing(lsst::afw::image::Exposure,
+                PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %enddef
 
 %exposurePtr(boost::uint16_t);

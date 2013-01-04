@@ -146,6 +146,7 @@
         return args[0]
     }
 }
+%supportSlicing(lsst::afw::image::MaskedImage, PIXEL_TYPES);
 %enddef
 
 /************************************************************************************************************/
