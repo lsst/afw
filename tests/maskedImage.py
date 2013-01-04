@@ -578,6 +578,13 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(im.get(2,  2), (10, 0x2, 100))
         self.assertEqual(im.get(0,  0), (-1, 0x8, nan))
 
+    def testConversionToScalar(self):
+        """Test that even 1-pixel MaskedImages can't be converted to scalars"""
+        im = afwImage.MaskedImageF(10, 20)
+
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):

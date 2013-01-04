@@ -183,10 +183,15 @@ the proper Box2I"""
 
     def __float__(self):
         """Convert a 1x1 image to a floating scalar"""
-        if self.getDimensions() == lsst.afw.geom.geomLib.Extent2I(1, 1):
-            return float(self.get(0, 0))
-        else:
+        if self.getDimensions() != lsst.afw.geom.geomLib.Extent2I(1, 1):
             raise TypeError("Only single-pixel images may be converted to python scalars")
+
+        try:
+            return float(self.get(0, 0))
+        except AttributeError:
+            raise TypeError("Unable to extract a single pixel for type %s" % "TYPE")
+        except TypeError:
+            raise TypeError("Unable to convert a %s<%s> pixel to a scalar" % ("TYPE", "PIXEL_TYPES"))
 
     def __int__(self):
         """Convert a 1x1 image to a integral scalar"""

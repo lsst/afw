@@ -424,6 +424,13 @@ class ExposureTestCase(unittest.TestCase):
         self.assertEqual(sexp.getMaskedImage().get(sexp.getWidth() - 1, sexp.getHeight() - 1),
                           exp.getMaskedImage().get( exp.getWidth() - 1,  exp.getHeight() - 1))
 
+    def testConversionToScalar(self):
+        """Test that even 1-pixel Exposures can't be converted to scalars"""
+        im = afwImage.ExposureF(10, 20)
+
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
