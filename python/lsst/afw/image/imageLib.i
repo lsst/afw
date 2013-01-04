@@ -191,9 +191,10 @@ namespace boost {
 
 %extend lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %pythoncode {
-    def Factory(self, *args):
+    def clone(self, *args):
         """Return an Exposure of this type"""
         return Exposure##TYPE(*args)
+    Factory = clone
     }
 }
 %enddef

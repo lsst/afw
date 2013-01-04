@@ -72,9 +72,10 @@
     }
     
     %pythoncode {
-    def Factory(self, *args):
+    def clone(self, *args):
         """Return a Mask of this type"""
         return NAME##TYPE(*args)
+    Factory = clone
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"
     #
