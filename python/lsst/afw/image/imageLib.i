@@ -180,6 +180,17 @@ the proper Box2I"""
             lhs <<= rhs
         except TypeError:
             lhs.set(rhs)
+
+    def __float__(self):
+        """Convert a 1x1 image to a floating scalar"""
+        if self.getDimensions() == lsst.afw.geom.geomLib.Extent2I(1, 1):
+            return float(self.get(0, 0))
+        else:
+            raise TypeError("Only single-pixel images may be converted to python scalars")
+
+    def __int__(self):
+        """Convert a 1x1 image to a integral scalar"""
+        return int(float(self))
     }
 }
 

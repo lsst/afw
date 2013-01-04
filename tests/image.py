@@ -398,6 +398,20 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(im.get(2,  2), 10)
         self.assertEqual(im.get(0,  0), -1)
 
+    def testConversionToScalar(self):
+        """Test that 1-pixel images can be converted to scalars"""
+        self.assertEqual(int(afwImage.ImageI(1, 1)), 0.0)
+        self.assertEqual(float(afwImage.ImageI(1, 1)), 0.0)
+
+        im = afwImage.ImageF(10, 20)
+        im.set(666)
+
+        self.assertEqual(float(im[0,0]), 666)
+        self.assertEqual(int(im[0,0]), 666)
+
+        self.assertRaises(TypeError, int, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DecoratedImageTestCase(unittest.TestCase):
