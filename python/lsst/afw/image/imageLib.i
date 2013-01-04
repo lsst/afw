@@ -131,8 +131,31 @@ namespace boost {
 
 %pythoncode {
     def _getBBoxFromSliceTuple(img, imageSlice):
-        """Given a slice specification (typically a tuple (xslice, yslice)) return
-the proper Box2I"""
+        """Given a slice specification return the proper Box2I
+    This is the worker routine behind __getitem__ and __setitem__
+
+    The imageSlice may be:
+       lsst.afw.geom.Box2I
+       slice, slice
+       :
+    Only the first one or two parts of the slice are recognised (no stride), a single int is
+    interpreted as n:n+1, and negative indices are interpreted relative to the end of the array,
+    so supported slices include:
+       2
+       -1
+       1:10
+       :-2
+       ... (python's Ellipsis)
+
+    E.g.
+     im[-1,  ...]
+     im[..., 18]
+     im[4,  10]
+     im[-3:, -2:]
+     im[-2, -2]
+     im[1:4, 6:10]
+     im[:]
+    """
         afwGeom = lsst.afw.geom.geomLib
 
         if isinstance(imageSlice, afwGeom.Box2I):
