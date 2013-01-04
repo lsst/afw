@@ -133,6 +133,11 @@ namespace boost {
     def _getBBoxFromSliceTuple(img, imageSlice):
         """Given a slice specification (typically a tuple (xslice, yslice)) return
 the proper Box2I"""
+        afwGeom = lsst.afw.geom.geomLib
+
+        if isinstance(imageSlice, afwGeom.Box2I):
+            return imageSlice
+
         if isinstance(imageSlice, slice) and imageSlice.start is None and imageSlice.stop is None:
             imageSlice = (Ellipsis, Ellipsis,)
 
@@ -154,7 +159,6 @@ the proper Box2I"""
 
             imageSlice.append(s)
 
-        afwGeom = lsst.afw.geom.geomLib
         x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
         return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1))
 }

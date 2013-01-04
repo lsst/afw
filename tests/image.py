@@ -398,6 +398,19 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(im.get(2,  2), 10)
         self.assertEqual(im.get(0,  0), -1)
 
+    def testImageSliceFromBox(self):
+        """Test using a Box2I to index an Image"""
+        im = afwImage.ImageF(10, 20)
+        bbox = afwGeom.BoxI(afwGeom.PointI(1, 3), afwGeom.PointI(6, 9))
+        im[bbox] = -1
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0,  6),  0)
+        self.assertEqual(im.get(1,  6), -1)
+        self.assertEqual(im.get(3,  9), -1)
+
     def testConversionToScalar(self):
         """Test that 1-pixel images can be converted to scalars"""
         self.assertEqual(int(afwImage.ImageI(1, 1)), 0.0)
