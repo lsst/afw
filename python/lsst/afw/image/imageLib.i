@@ -128,6 +128,55 @@ namespace boost {
 %template(mapStringInt)     std::map<std::string, int>;
 
 /************************************************************************************************************/
+
+%pythoncode {
+    def _getBBoxFromSliceTuple(img, imageSlice):
+        """Given a slice specification (typically a tuple (xslice, yslice)) return
+the proper Box2I"""
+        if isinstance(imageSlice, slice) and imageSlice.start is None and imageSlice.stop is None:
+            imageSlice = (Ellipsis, Ellipsis,)
+
+        if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and \
+                    sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
+            raise IndexError("Images may only be indexed as a 2-D slice not %s",
+                             imageSlice[0], imageSlice[1])
+        
+        imageSlice = [_ if isinstance(_, slice) else
+                      slice(_, _ + 1) if isinstance(_, int) else
+                      slice(0, wh) for _, wh in zip(imageSlice, img.getDimensions())]
+
+        afwGeom = lsst.afw.geom.geomLib
+        x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
+        return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1))
+}
+
+%define %supportSlicing(TYPE, PIXEL_TYPES...)
+%extend TYPE<PIXEL_TYPES> {
+    %pythoncode {
+    #
+    # Support image slicing
+    #
+    def __getitem__(self, imageSlice):
+        """
+        __getitem__(self, imageSlice) -> NAME""" + """PIXEL_TYPES
+        """
+        return self.clone(self, _getBBoxFromSliceTuple(self, imageSlice))
+
+    def __setitem__(self, imageSlice, rhs):
+        """
+        __setitem__(self, imageSlice, value)
+        """
+        lhs = self.clone(self, _getBBoxFromSliceTuple(self, imageSlice))
+        try:
+            lhs <<= rhs
+        except TypeError:
+            lhs.set(rhs)
+    }
+}
+
+%enddef
+
+/************************************************************************************************************/
 // Images, Masks, and MaskedImages
 %include "lsst/afw/image/LsstImageTypes.h"
 

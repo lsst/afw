@@ -133,42 +133,10 @@
         """
         _imageLib.NAME##TYPE##___idiv__(*args)
         return args[0]
-
-    def __getBBox(self, imageSlice):
-        if isinstance(imageSlice, slice) and imageSlice.start is None and imageSlice.stop is None:
-            imageSlice = (Ellipsis, Ellipsis,)
-
-        if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and \
-                    sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
-            raise IndexError("Images may only be indexed as a 2-D slice not %s",
-                             imageSlice[0], imageSlice[1])
-        
-        imageSlice = [_ if isinstance(_, slice) else
-                      slice(_, _ + 1) if isinstance(_, int) else
-                      slice(0, wh) for _, wh in zip(imageSlice, self.getDimensions())]
-
-        afwGeom = lsst.afw.geom.geomLib
-        x, y = [_.indices(wh) for _, wh in zip(imageSlice, self.getDimensions())]
-        return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1))
-
-    def __getitem__(self, imageSlice):
-        """
-        __getitem__(self, imageSlice) -> NAME##TYPE
-        """
-        return self.clone(self, self.__getBBox(imageSlice))
-
-    def __setitem__(self, imageSlice, rhs):
-        """
-        __setitem__(self, imageSlice, value)
-        """
-        lhs = self.clone(self, self.__getBBox(imageSlice))
-        import numbers
-        if isinstance(rhs, numbers.Number):
-            lhs.set(rhs)
-        else:
-            lhs <<= rhs
     }
 }
+
+%supportSlicing(lsst::afw::image::Image, PIXEL_TYPE);
 %enddef
 
 
