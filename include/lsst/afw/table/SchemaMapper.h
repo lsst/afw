@@ -71,6 +71,18 @@ public:
      */
     void addMinimalSchema(Schema const & minimal, bool doMap=true);
 
+    /**
+     *  @brief Create a mapper by removing fields from the front of a schema.
+     *
+     *  The returned mapper maps all fields in the input schema to all fields that are not
+     *  in the minimal schema (compared by keys, so the overlap must appear at the beginning
+     *  of the input schema).
+     *
+     *  @param[in] input       Input schema for the mapper.
+     *  @param[in] minimal     The minimal schema the input schema starts with.
+     */
+    static SchemaMapper removeMinimalSchema(Schema const & input, Schema const & minimal);
+
     /// @brief Swap the input and output schemas in-place.
     void invert();
 

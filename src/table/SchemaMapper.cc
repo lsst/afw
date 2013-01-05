@@ -73,7 +73,7 @@ private:
 struct AddMapped {
 
     template <typename T>
-    void operator()(SchemaItem<T> const & item) {
+    void operator()(SchemaItem<T> const & item) const {
         Field<T> field(prefix + item.field.getName(), item.field.getDoc(), item.field.getUnits(), item.field);
         mapper->addMapping(item.key, field);
     }
@@ -88,7 +88,7 @@ struct AddMapped {
 struct AddUnmapped {
 
     template <typename T>
-    void operator()(SchemaItem<T> const & item) {
+    void operator()(SchemaItem<T> const & item) const {
         Field<T> field(prefix + item.field.getName(), item.field.getDoc(), item.field.getUnits(), item.field);
         mapper->addOutputField(field);
     }
@@ -97,6 +97,22 @@ struct AddUnmapped {
 
     SchemaMapper * mapper;
     std::string prefix;
+};
+
+struct RemoveMinimalSchema {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        if (!minimal.contains(item)) {
+            mapper->addMapping(item.key);
+        }
+    }
+
+    RemoveMinimalSchema(SchemaMapper * mapper_, Schema const & minimal_) :
+        mapper(mapper_), minimal(minimal_) {}
+
+    SchemaMapper * mapper;
+    Schema minimal;
 };
 
 } // anonymous
@@ -169,6 +185,13 @@ void SchemaMapper::addMinimalSchema(Schema const & minimal, bool doMap) {
     }
     MapMinimalSchema f(this, doMap);
     minimal.forEach(f);
+}
+
+SchemaMapper SchemaMapper::removeMinimalSchema(Schema const & input, Schema const & minimal) {
+    SchemaMapper mapper(input);
+    RemoveMinimalSchema f(&mapper, minimal);
+    input.forEach(boost::ref(f));
+    return mapper;
 }
 
 void SchemaMapper::invert() {
