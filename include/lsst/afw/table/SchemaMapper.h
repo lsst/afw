@@ -16,7 +16,7 @@ class BaseRecord;
  */
 class SchemaMapper {
 public:
-    
+
     /// @brief Return the input schema (copy-on-write).
     Schema getInputSchema() const { return _impl->_input; }
 
@@ -102,8 +102,31 @@ public:
         std::for_each(_impl->_map.begin(), _impl->_map.end(), visitor);
     }
 
-    /// @brief Construct a mapper from the given input Schema.  
+    /// @brief Construct an empty mapper; useless unless you assign a fully-constructed one to it.
+    explicit SchemaMapper();
+
+    /// @brief Construct a mapper from the given input Schema.
     explicit SchemaMapper(Schema const & input);
+
+    /// @brief Copy construct (copy-on-write).
+    SchemaMapper(SchemaMapper const & other);
+
+    /// @brief Assignement (copy-on-write).
+    SchemaMapper & operator=(SchemaMapper const & other);
+
+    /**
+     *  @brief Combine a sequence of schemas into one, creating a SchemaMapper for each.
+     *
+     *  @param[in]  inputs    A vector of input schemas to merge.
+     *  @param[in]  prefixes  An optional vector of prefixes for the output field names,
+     *                        either empty or of the same size as the inputs vector.
+     *
+     *  Each of the returned SchemaMappers has the same output schema.
+     */
+    static std::vector<SchemaMapper> join(
+        std::vector<Schema> const & inputs,
+        std::vector<std::string> const & prefixes = std::vector<std::string>()
+    );
 
 private:
 

@@ -51,7 +51,7 @@ except NameError:
 
 class SchemaTestCase(unittest.TestCase):
 
-    def _testSchema(self):
+    def testSchema(self):
         schema = lsst.afw.table.Schema();
         ab_k = schema.addField("a.b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a.b.i", type=int, doc="int")
@@ -99,7 +99,7 @@ class SchemaTestCase(unittest.TestCase):
         keys2 = map(lambda x: x.key, schema4.asList())
         self.assertEqual(keys, keys2)
 
-    def _testInspection(self):
+    def testInspection(self):
         schema = lsst.afw.table.Schema()
         keys = []
         keys.append(schema.addField("d", type=int))
@@ -117,7 +117,7 @@ class SchemaTestCase(unittest.TestCase):
         self.assertFalse(otherKey in schema)
         self.assertNotEqual(keys[0], keys[1])
 
-    def _testKeyAccessors(self):
+    def testKeyAccessors(self):
         schema = lsst.afw.table.Schema()
         arrayKey = schema.addField("a", type="ArrayF", doc="doc for array field", size=5)
         arrayElementKey = arrayKey[1]
@@ -157,6 +157,37 @@ class SchemaTestCase(unittest.TestCase):
         self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_UNITS)
         self.assertFalse(schema1.compare(schema3, lsst.afw.table.Schema.EQUAL_NAMES))
 
+class SchemaMapperTestCase(unittest.TestCase):
+    
+    def testJoin(self):
+        inputs = [lsst.afw.table.Schema(), lsst.afw.table.Schema(), lsst.afw.table.Schema()]
+        inputs = lsst.afw.table.SchemaVector(inputs)
+        prefixes = ["u", "v", "w"]
+        ka = inputs[0].addField("a", type=numpy.float64, doc="doc for a")
+        kb = inputs[0].addField("b", type=numpy.int32, doc="doc for b")
+        kc = inputs[1].addField("c", type=numpy.float32, doc="doc for c")
+        kd = inputs[2].addField("d", type=numpy.int64, doc="doc for d")
+        flags1 = lsst.afw.table.Schema.IDENTICAL
+        flags2 = flags1 & ~lsst.afw.table.Schema.EQUAL_NAMES
+        mappers1 = lsst.afw.table.SchemaMapper.join(inputs)
+        mappers2 = lsst.afw.table.SchemaMapper.join(inputs, prefixes)
+        records = [lsst.afw.table.BaseTable.make(schema).makeRecord() for schema in inputs]
+        records[0].set(ka, 3.14159)
+        records[0].set(kb, 21623)
+        records[1].set(kc, 1.5616)
+        records[2].set(kd, 1261236)
+        for mappers, flags in zip((mappers1, mappers2), (flags1, flags2)):
+            output = lsst.afw.table.BaseTable.make(mappers[0].getOutputSchema()).makeRecord()
+            for mapper, record in zip(mappers, records):
+                output.assign(record, mapper)
+                self.assertEqual(mapper.getOutputSchema().compare(output.getSchema(), flags), flags)
+                self.assertEqual(mapper.getInputSchema().compare(record.getSchema(), flags), flags)
+            names = output.getSchema().getOrderedNames()
+            self.assertEqual(output.get(names[0]), records[0].get(ka))
+            self.assertEqual(output.get(names[1]), records[0].get(kb))
+            self.assertEqual(output.get(names[2]), records[1].get(kc))
+            self.assertEqual(output.get(names[3]), records[2].get(kd))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -166,6 +197,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SchemaTestCase)
+    suites += unittest.makeSuite(SchemaMapperTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

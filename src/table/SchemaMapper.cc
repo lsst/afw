@@ -69,11 +69,50 @@ private:
     bool _doMap;
 };
 
+// Schema::forEach functor that copies all fields from an schema to a schema mapper without mapping them.
+struct AddMapped {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) {
+        Field<T> field(prefix + item.field.getName(), item.field.getDoc(), item.field.getUnits(), item.field);
+        mapper->addMapping(item.key, field);
+    }
+
+    explicit AddMapped(SchemaMapper * mapper_) : mapper(mapper_) {}
+
+    SchemaMapper * mapper;
+    std::string prefix;
+};
+
+// Schema::forEach functor that copies all fields from an schema to a schema mapper without mapping them.
+struct AddUnmapped {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) {
+        Field<T> field(prefix + item.field.getName(), item.field.getDoc(), item.field.getUnits(), item.field);
+        mapper->addOutputField(field);
+    }
+
+    explicit AddUnmapped(SchemaMapper * mapper_) : mapper(mapper_) {}
+
+    SchemaMapper * mapper;
+    std::string prefix;
+};
+
 } // anonymous
+
+SchemaMapper::SchemaMapper() : _impl(boost::make_shared<Impl>(Schema())) {}
+
+SchemaMapper::SchemaMapper(SchemaMapper const & other) : _impl(other._impl) {}
 
 SchemaMapper::SchemaMapper(Schema const & input) :
     _impl(boost::make_shared<Impl>(input))
 {}
+
+SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {
+    _impl = other._impl;
+    return *this;
+}
 
 void SchemaMapper::_edit() {
     if (!_impl.unique()) {
@@ -161,6 +200,31 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
         );
     }
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
+}
+
+std::vector<SchemaMapper> SchemaMapper::join(
+    std::vector<Schema> const & inputs,
+    std::vector<std::string> const & prefixes
+) {
+    std::size_t const size = inputs.size();
+    std::vector<SchemaMapper> result;
+    for (std::size_t i = 0; i < size; ++i) {
+        result.push_back(SchemaMapper(inputs[i]));
+    }
+    for (std::size_t i = 0; i < size; ++i) {
+        for (std::size_t j = 0; j < size; ++j) {
+            if (i == j) {
+                AddMapped functor(&result[j]);
+                if (!prefixes.empty()) functor.prefix = prefixes[i];
+                inputs[i].forEach(functor);
+            } else {
+                AddUnmapped functor(&result[j]);
+                if (!prefixes.empty()) functor.prefix = prefixes[i];
+                inputs[i].forEach(functor);
+            }
+        }
+    }
+    return result;
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

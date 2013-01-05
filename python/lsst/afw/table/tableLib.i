@@ -360,6 +360,10 @@ def asKey(self):
 
 %include "lsst/afw/table/SchemaMapper.h"
 
+%template(SchemaVector) std::vector<lsst::afw::table::Schema>;
+%template(SchemaMapperVector) std::vector<lsst::afw::table::SchemaMapper>;
+
+
 // =============== BaseTable and BaseRecord =================================================================
 
 %shared_ptr(lsst::afw::table::BaseTable);
